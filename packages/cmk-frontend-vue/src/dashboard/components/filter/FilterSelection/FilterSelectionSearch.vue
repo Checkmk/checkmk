@@ -12,6 +12,7 @@ import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import FilterSelectionActiveIcon from './FilterSelectionActiveIcon.vue'
 import FilterSelectionSearchBox from './FilterSelectionSearchBox.vue'
 import type { FlatFilter } from './types'
 
@@ -110,14 +111,7 @@ onUnmounted(() => {
             @click="selectFilterFromDropdown(filter.id)"
           >
             <div class="db-filter-selection-search__result-content">
-              <span
-                class="db-filter-selection-search__result-checkmark"
-                :class="{
-                  'db-filter-selection-search__result-checkmark--active': activeFilters.includes(
-                    filter.id
-                  )
-                }"
-              ></span>
+              <FilterSelectionActiveIcon :is-active="activeFilters.includes(filter.id)" />
               <CmkParagraph>
                 <!-- eslint-disable-next-line vue/no-v-html -->
                 <span v-html="formatFilterDisplay(filter)" />
@@ -177,27 +171,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--dimension-4);
+
+  --db-filter-selection-active-color: var(--color-corporate-green-70);
 }
 
-.db-filter-selection-search__result-checkmark {
-  width: var(--dimension-6);
-  height: var(--dimension-6);
-  min-width: var(--dimension-6);
-  min-height: var(--dimension-6);
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: var(--dimension-6) var(--dimension-6);
-  flex-shrink: 0;
-}
-
-.db-filter-selection-search__result-checkmark--active {
-  background-image: url('~cmk-frontend/themes/facelift/images/icon_checkmark.svg');
-  border-radius: 100%;
+body[data-theme='modern-dark'] .db-filter-selection-search__result-content {
+  --db-filter-selection-active-color: var(--color-corporate-green-50);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 :deep(.db-filter-selection-search__result-highlight) {
-  color: var(--success);
+  color: var(--db-filter-selection-active-color);
 }
 </style>

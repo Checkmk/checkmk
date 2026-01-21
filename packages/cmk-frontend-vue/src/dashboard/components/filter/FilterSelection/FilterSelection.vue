@@ -16,6 +16,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import type { Filters } from '../composables/useFilters.ts'
 import type { FilterType } from '../types.ts'
+import FilterSelectionActiveIcon from './FilterSelectionActiveIcon.vue'
 import FilterSelectionSearch from './FilterSelectionSearch.vue'
 import type { FlatFilter } from './types'
 import { type CategoryDefinition, type FilterGroup, buildProcessedCategories } from './utils'
@@ -220,12 +221,7 @@ onMounted(() => {
                 class="filter-menu__filter-item"
                 @click="filters.toggleFilter(entry.id)"
               >
-                <span
-                  class="filter-menu__filter-checkmark"
-                  :class="{
-                    'filter-menu__filter-checkmark--active': filters.isFilterActive(entry.id)
-                  }"
-                ></span>
+                <FilterSelectionActiveIcon :is-active="filters.isFilterActive(entry.id)" />
                 <div class="filter-menu__filter-title">
                   <CmkLabel>{{ entry.title }}</CmkLabel>
                 </div>
@@ -233,12 +229,7 @@ onMounted(() => {
 
               <div v-else-if="entry.type === 'group'" class="filter-menu__group">
                 <div class="filter-menu__group-header">
-                  <span
-                    class="filter-menu__filter-checkmark"
-                    :class="{
-                      'filter-menu__filter-checkmark--active': isGroupActive(entry)
-                    }"
-                  ></span>
+                  <FilterSelectionActiveIcon :is-active="isGroupActive(entry)" />
                   <CmkCollapsibleTitle
                     :title="untranslated(getGroupTitle(entry))"
                     :side-title="untranslated(getGroupSideTitle(entry))"
@@ -254,19 +245,11 @@ onMounted(() => {
                       v-for="filterItem in entry.entries"
                       :key="filterItem.id"
                       class="filter-menu__filter-item filter-menu__filter-item--grouped"
-                      :class="{
-                        'filter-menu__filter-item--active': filters.isFilterActive(filterItem.id)
-                      }"
                       @click="filters.toggleFilter(filterItem.id)"
                     >
-                      <span
-                        class="filter-menu__filter-checkmark"
-                        :class="{
-                          'filter-menu__filter-checkmark--active': filters.isFilterActive(
-                            filterItem.id
-                          )
-                        }"
-                      ></span>
+                      <FilterSelectionActiveIcon
+                        :is-active="filters.isFilterActive(filterItem.id)"
+                      />
                       <span class="filter-menu__filter-title">{{ filterItem.title }}</span>
                     </div>
                   </div>
@@ -363,25 +346,6 @@ onMounted(() => {
 .filter-menu__filter-title {
   color: var(--font-color);
   flex: 1;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu__filter-checkmark {
-  width: var(--dimension-6);
-  height: var(--dimension-6);
-  min-width: var(--dimension-6);
-  min-height: var(--dimension-6);
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: var(--dimension-6) var(--dimension-6);
-  flex-shrink: 0;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu__filter-checkmark--active {
-  background-image: url('~cmk-frontend/themes/facelift/images/icon_checkmark.svg');
-  border-radius: 100%;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

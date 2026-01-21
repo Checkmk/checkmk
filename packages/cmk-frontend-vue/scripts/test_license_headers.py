@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-import sys
 from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
@@ -101,7 +100,7 @@ class Checker:
         except StopIteration:
             return []
 
-    def check(self, path: Path, header: Sequence[re.Pattern]) -> bool:
+    def check(self, path: Path, header: Sequence[re.Pattern[str]]) -> bool:
         result = []
         lines = self._read(path)
         if not lines:
@@ -123,51 +122,48 @@ CHECKER = {
 }
 
 
-def check(suffix: str, path: Path) -> bool:
+def check(suffix: str, abs_path: Path, rel_path: Path) -> bool:
     try:
         return CHECKER[suffix].check(
-            path,
+            abs_path,
             HEADER_CEE
-            if path.is_relative_to(Path("src/graph-designer"))
-            or path.is_relative_to(Path("src/metric-backend"))
-            or path in ENTERPRISE_LICENSED_FILES_FORM_SPECS
+            if rel_path.is_relative_to(Path("src/graph-designer"))
+            or rel_path.is_relative_to(Path("src/metric-backend"))
+            or rel_path in ENTERPRISE_LICENSED_FILES_FORM_SPECS
             else HEADER,
         )
     except Exception as e:
-        raise RuntimeError(f"Could not find Checker for {path}") from e
+        raise RuntimeError(f"Could not find Checker for {rel_path}") from e
 
 
-def main() -> int:
-    sys.stdout.write("Checking license headers...\n")
+def test_license_headers() -> None:
+    package_root = Path(__file__).resolve().parent.parent
     problems = []
-    for root, _dirs, files in Path(".").walk():
-        if root.parts and root.parts[0] in ROOT_FOLDERS_IGNORED:
+    for root, _dirs, files in package_root.walk():
+        relative_root = root.relative_to(package_root)
+
+        if relative_root.parts and relative_root.parts[0] in ROOT_FOLDERS_IGNORED:
             continue
         for file in files:
-            path = root / file
+            rel_path = relative_root / file  # Relative path for comparisons
+            abs_path = root / file  # Absolute path for file operations
 
-            if path.suffix in SUFFIX_IGNORED:
+            if rel_path.suffix in SUFFIX_IGNORED:
                 continue
 
-            if any(path.match(glob) for glob in GLOB_IGNORED):
+            if any(rel_path.match(glob) for glob in GLOB_IGNORED):
                 continue
 
-            if path in FILES_IGNORED:
+            if rel_path in FILES_IGNORED:
                 continue
 
-            if not (suffix := path.suffix):
-                suffix = PATH_TO_SUFFIX[path]
+            if not (suffix := rel_path.suffix):
+                suffix = PATH_TO_SUFFIX[rel_path]
 
-            if not check(suffix, path):
-                problems.append(path)
+            if not check(suffix, abs_path, rel_path):
+                problems.append(rel_path)
 
-    if problems:
-        sys.stdout.write("Please check the license header for the following files:\n")
-        sys.stdout.write("\n".join(str(p) for p in problems) + "\n")
-        return 1
-    sys.stdout.write("Done!\n")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    assert len(problems) == 0, (
+        "Please check the license header for the following files:\n"
+        + "\n".join(str(p) for p in problems)
+    )

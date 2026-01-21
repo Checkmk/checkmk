@@ -7,7 +7,8 @@
 # mypy: disable-error-code="mutable-override"
 
 import http
-from typing import NewType
+from dataclasses import dataclass
+from typing import NewType, Self
 
 from cmk.gui.exceptions import MKHTTPException
 
@@ -59,3 +60,25 @@ skype_mobile_devices = [
     ("ipad", "iPad", "45/a"),
     ("mac", "Mac", "23/a"),
 ]
+
+
+@dataclass(frozen=True, kw_only=True)
+class Linear:
+    slope: float
+    intercept: float
+
+    @classmethod
+    def fit_to_two_points(
+        cls,
+        *,
+        p_1: tuple[float, float],
+        p_2: tuple[float, float],
+    ) -> Self:
+        slope = (p_2[1] - p_1[1]) / (p_2[0] - p_1[0])
+        return cls(
+            slope=slope,
+            intercept=p_1[1] - slope * p_1[0],
+        )
+
+    def __call__(self, value: int | float) -> float:
+        return self.slope * value + self.intercept

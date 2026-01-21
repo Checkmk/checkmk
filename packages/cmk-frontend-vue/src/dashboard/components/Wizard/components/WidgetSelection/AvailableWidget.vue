@@ -42,13 +42,13 @@ defineProps<AvailableWidgetProps>()
   padding: var(--dimension-4);
   max-width: 72px;
   text-align: center;
-  height: 80%;
 }
 
 .db-available-widget__item-button {
   cursor: pointer;
   border: 1px solid var(--ux-theme-6);
   border-radius: var(--dimension-4);
+  height: 85%;
 
   &:hover {
     background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);

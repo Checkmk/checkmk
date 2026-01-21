@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { unref } from 'vue'
+
 import AvailableWidget from './AvailableWidget.vue'
 import type { WidgetItemList } from './types'
 
@@ -26,7 +28,7 @@ const emit = defineEmits<AvailableWidgetsEmits>()
       v-for="(item, index) in availableItems"
       :key="index"
       role="button"
-      :aria-label="item.label"
+      :aria-label="unref(item.label)"
       class="db-available-widgets__item"
       @click="
         () => {

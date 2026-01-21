@@ -20,6 +20,10 @@ export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
 export type CmkMultitoneIconColor = VariantProps<typeof cmkMultitoneIconVariants>['color']
 export type IconSizeNames = keyof typeof iconSizes
 
+export interface CustomIconColor {
+  custom: string
+}
+
 export interface CmkIconProps {
   /** @property {SimpleIcons} name - Name of the icon */
   name: SimpleIcons

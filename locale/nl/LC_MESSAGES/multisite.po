@@ -54995,6 +54995,17 @@ msgstr "Beperken tot kennisgevingsnummer"
 msgid "Restricted address mismatch"
 msgstr "Adres met beperkingen komt niet overeen"
 
+#, fuzzy
+msgid ""
+"Restricts the list of contacts created by the previous options to those who "
+"are members of the selected contact groups. If more than one contact group "
+"is selected, the contact must be a member of all selected groups."
+msgstr ""
+"Hier kunt u <i>de lijst van contactpersonen die door de vorige opties is "
+"opgebouwd beperken</i> tot die contactpersonen die lid zijn van "
+"geselecteerde contactgroepen. Als u hier meer dan één contactgroep "
+"selecteert, moet de gebruiker lid zijn van <i>alle</i> deze groepen."
+
 msgid "Result"
 msgstr "Resultaat"
 

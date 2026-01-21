@@ -55487,6 +55487,17 @@ msgstr "Restreindre au numéro de notification"
 msgid "Restricted address mismatch"
 msgstr "Mauvaise concordance de l'adresse restreinte"
 
+#, fuzzy
+msgid ""
+"Restricts the list of contacts created by the previous options to those who "
+"are members of the selected contact groups. If more than one contact group "
+"is selected, the contact must be a member of all selected groups."
+msgstr ""
+"Ici, vous pouvez <i>restreindre</i> la liste des contacts qui a été "
+"construite par les options précédentes à ceux qui sont membres des groupes "
+"de contacts sélectionnés. Si vous sélectionnez ici plus d'un groupe de "
+"contacts, l'utilisateur doit être membre de <i>tous</i> ces groupes."
+
 msgid "Result"
 msgstr "Résultat"
 

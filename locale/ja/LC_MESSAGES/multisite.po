@@ -51573,6 +51573,17 @@ msgstr "通知番号に制限する"
 msgid "Restricted address mismatch"
 msgstr "制限付きアドレスの不一致"
 
+#, fuzzy
+msgid ""
+"Restricts the list of contacts created by the previous options to those who "
+"are members of the selected contact groups. If more than one contact group "
+"is selected, the contact must be a member of all selected groups."
+msgstr ""
+"ここでは、前のオプションで作成された連絡先のリストを、選択した連絡先グループ"
+"のメンバーである連絡先に<i>制限</i>できます。ここで複数の連絡先グループを選択"
+"する場合、ユーザーはこれらのグループの<i>すべて</i>のメンバーである必要があり"
+"ます。"
+
 msgid "Result"
 msgstr "結果"
 

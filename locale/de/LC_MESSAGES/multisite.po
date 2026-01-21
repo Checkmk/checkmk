@@ -52878,6 +52878,17 @@ msgstr "Auf Benachrichtigungsnummer einschränken"
 msgid "Restricted address mismatch"
 msgstr "Fehlende Übereinstimmung der Adressbeschränkung"
 
+#, fuzzy
+msgid ""
+"Restricts the list of contacts created by the previous options to those who "
+"are members of the selected contact groups. If more than one contact group "
+"is selected, the contact must be a member of all selected groups."
+msgstr ""
+"Hier können Sie die Kontaktgruppen, die von den vorherigen Optionen "
+"ausgewählt wurden, wieder <i>reduzieren</i>. Wenn Sie hier mehr als eine "
+"Gruppe auswählen, dann muss der Benutzer Mitglied von <i>allen</i> diesen "
+"Gruppen sein, um alarmiert zu werden."
+
 msgid "Result"
 msgstr "Ergebnis"
 

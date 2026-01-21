@@ -54595,6 +54595,17 @@ msgstr "Limitare al numero di notifica"
 msgid "Restricted address mismatch"
 msgstr "Disadattamento dell'indirizzo limitato"
 
+#, fuzzy
+msgid ""
+"Restricts the list of contacts created by the previous options to those who "
+"are members of the selected contact groups. If more than one contact group "
+"is selected, the contact must be a member of all selected groups."
+msgstr ""
+"Qui puoi <i>restringere</i> la lista di contatti che è stata costruita dalle "
+"opzioni precedenti a quelli che sono membri dei gruppi di contatto "
+"selezionati. Se selezioni più di un gruppo di contatto qui, l'utente deve "
+"essere membro di <i>tutti</i> questi gruppi."
+
 msgid "Result"
 msgstr "Risultato"
 

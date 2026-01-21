@@ -15,6 +15,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 PS_DISCOVERY_RULE_NAME = "inventory_processes_rules"
 RABBITMQ_RULE_ID = "65a3dca4-8d71-45d8-8887-53ef0c63d06f"
+AUTOMATION_HELPER_RULE_ID = "94190e27-2836-488a-b6b4-f23f694a455e"
 
 
 class UpdatePSDiscovery(UpdateAction):
@@ -73,6 +74,16 @@ def overwrite_ps_discovery_rules(logger: Logger, all_rulesets: RulesetCollection
     rabbitmq_ps_descr = "self-monitoring of RabbitMQ"
     overwrite_ps_discovery_rule(
         logger, ps_discovery_rules, RABBITMQ_RULE_ID, rabbitmq_old_rule_match, rabbitmq_ps_descr
+    )
+
+    automation_helper_old_rule_match = "~gunicorn:.*automation-helper"
+    automation_helper_logging_id = "self-monitoring of automation helper"
+    overwrite_ps_discovery_rule(
+        logger,
+        ps_discovery_rules,
+        AUTOMATION_HELPER_RULE_ID,
+        automation_helper_old_rule_match,
+        automation_helper_logging_id,
     )
 
 

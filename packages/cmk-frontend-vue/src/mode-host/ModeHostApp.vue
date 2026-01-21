@@ -38,6 +38,7 @@ const ipv6InputElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv6InputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const relayInputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const ipAddressFamilySelectElement: Ref<HTMLSelectElement | null> = ref(null)
+const ipAddressFamilyDefaultElement: Ref<HTMLDivElement | null> = ref(null)
 const ipAddressFamilyInputElement: Ref<HTMLInputElement | null> = ref(null)
 const tagAgentInputSelectElement: Ref<HTMLSelectElement | null> = ref(null)
 const tagAgentInputButtonElement: Ref<HTMLInputElement | null> = ref(null)
@@ -66,6 +67,9 @@ onMounted(() => {
   siteSelectElement.value = getElementBySelector(`select[name="${props.form_keys.site}"]`)
   ipAddressFamilySelectElement.value = getElementBySelector(
     `select[name="${props.form_keys.ip_address_family}"]`
+  )
+  ipAddressFamilyDefaultElement.value = getElementBySelector(
+    `div[id="attr_default_${props.form_keys.ip_address_family}"]`
   )
   ipAddressFamilyInputElement.value = getElementBySelector(
     `input[id="${props.form_keys.cb_change}_${props.form_keys.ip_address_family}"]`
@@ -111,6 +115,7 @@ function getElementBySelector<T>(selector: string): T {
       ipv4InputElement &&
       ipv6InputElement &&
       ipAddressFamilySelectElement &&
+      ipAddressFamilyDefaultElement &&
       ipAddressFamilyInputElement &&
       ipv4InputButtonElement &&
       ipv6InputButtonElement
@@ -118,6 +123,7 @@ function getElementBySelector<T>(selector: string): T {
     :i18n="i18n_ping_host"
     :form-element="formElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
+    :ip-address-family-default-element="ipAddressFamilyDefaultElement"
     :ip-address-family-input-element="ipAddressFamilyInputElement"
     :hostname-input-element="hostnameInputElement"
     :ipv4-input-element="ipv4InputElement"
@@ -138,6 +144,7 @@ function getElementBySelector<T>(selector: string): T {
       ipv6InputButtonElement &&
       ipv6InputElement &&
       ipAddressFamilySelectElement &&
+      ipAddressFamilyDefaultElement &&
       ipAddressFamilyInputElement &&
       tagAgentInputSelectElement &&
       tagAgentInputButtonElement &&
@@ -154,6 +161,7 @@ function getElementBySelector<T>(selector: string): T {
     :ipv6-input-button-element="ipv6InputButtonElement"
     :site-select-element="siteSelectElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
+    :ip-address-family-default-element="ipAddressFamilyDefaultElement"
     :ip-address-family-input-element="ipAddressFamilyInputElement"
     :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"
     :sites="sites"

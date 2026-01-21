@@ -15,6 +15,7 @@ const props = defineProps<{
   i18n: I18NPingHost
   formElement: HTMLFormElement
   ipAddressFamilySelectElement: HTMLSelectElement
+  ipAddressFamilyDefaultElement: HTMLDivElement
   ipAddressFamilyInputElement: HTMLInputElement
   hostnameInputElement: HTMLInputElement
   ipv4InputElement: HTMLInputElement
@@ -53,7 +54,9 @@ interface Result {
 
 const statusElements: Ref<Record<string, Result>> = ref({})
 const isNoIP = ref(
-  props.ipAddressFamilyInputElement.checked && props.ipAddressFamilySelectElement.value === 'no-ip'
+  (props.ipAddressFamilyInputElement.checked &&
+    props.ipAddressFamilySelectElement.value === 'no-ip') ||
+    props.ipAddressFamilyDefaultElement.textContent?.includes('No IP')
 )
 const isRelay = ref(props.relayInputButtonElement?.checked)
 const controller = ref(new AbortController())
@@ -84,7 +87,16 @@ onMounted(() => {
       case props.formElement:
         switch (props.ipAddressFamilySelectElement.value) {
           case 'ip-v4-only':
+            callPingHostOnElement(props.hostnameInputElement, PingCmd.Ping, false)
+            isNoIP.value = false
+            break
           case 'ip-v6-only':
+            if (props.ipv6InputElement.value) {
+              isNoIP.value = false
+            } else {
+              isNoIP.value = true
+            }
+            break
           case 'ip-v4v6':
             isNoIP.value = false
             break
@@ -96,8 +108,10 @@ onMounted(() => {
         break
       case props.ipAddressFamilyInputElement:
         isNoIP.value =
-          props.ipAddressFamilyInputElement.checked &&
-          props.ipAddressFamilySelectElement.value === 'no-ip'
+          (props.ipAddressFamilyInputElement.checked &&
+            props.ipAddressFamilySelectElement.value === 'no-ip') ||
+          (!props.ipAddressFamilyInputElement.checked &&
+            props.ipAddressFamilyDefaultElement.textContent?.includes('No IP'))
         break
       case props.relayInputButtonElement:
         isRelay.value = props.relayInputButtonElement?.checked
@@ -129,6 +143,15 @@ onMounted(() => {
       return
     }
     callPingHostOnElement(props.ipv6InputElement, PingCmd.Ping6, true)
+  })
+  props.ipAddressFamilyInputElement.addEventListener('change', () => {
+    if (
+      props.ipAddressFamilyInputElement.checked &&
+      props.ipAddressFamilySelectElement.value === 'ip-v4-only'
+    ) {
+      callPingHostOnElement(props.hostnameInputElement, PingCmd.Ping, false)
+      return
+    }
   })
 })
 

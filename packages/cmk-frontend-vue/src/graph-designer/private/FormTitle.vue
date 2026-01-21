@@ -11,7 +11,7 @@ import FormEdit from '@/form/FormEdit.vue'
 import { makeString } from '@/graph-designer/private/specs'
 
 const data = defineModel('data', { type: String, default: '' })
-const spec = makeString('', '', null)
+const spec = makeString('', '', null, 'LARGE')
 const backendValidation: ValidationMessages = []
 </script>
 

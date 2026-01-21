@@ -138,7 +138,8 @@ async function activateAllChanges() {
             (site) =>
               site.changes > 0 &&
               ['online', 'disabled'].includes(site.onlineStatus) &&
-              selectedSites.value.includes(site.siteId)
+              selectedSites.value.includes(site.siteId) &&
+              site.loggedIn
           )
           .map((site) => site.siteId),
         force_foreign_changes: true

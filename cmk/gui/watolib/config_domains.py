@@ -116,6 +116,11 @@ class ConfigDomainCore(ABCConfigDomain):
         return wato_root_dir()
 
     @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # see if we can / should move something from activate() here
+        return []
+
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         # Import cycle
         from cmk.gui.watolib.check_mk_automations import reload, restart
@@ -164,6 +169,11 @@ class ConfigDomainGUI(ABCConfigDomain):
     @override
     def config_dir(self) -> Path:
         return multisite_dir()
+
+    @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # see if we can / should move something from activate() here
+        return []
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
@@ -241,6 +251,11 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
     ) -> None:
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
         self.activate()
+
+    @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # see if we can / should move something from activate() here
+        return []
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
@@ -410,7 +425,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             self.update_remote_sites_cas(current_config["trusted_cas"])
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
             warnings = self._update_trusted_cas(active_config.trusted_certificate_authorities)
             reload_stunnel()
@@ -420,6 +435,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 f"Failed to create trusted CA file '{self.trusted_cas_file}': {traceback.format_exc()}"
             ]
         return warnings
+
+    @override
+    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        return []
 
     def _update_trusted_cas(
         self, current_config: TrustedCertificateAuthorities
@@ -548,11 +567,15 @@ class ConfigDomainSiteCertificate(ABCConfigDomain):
         return multisite_dir() / "site_certificate"
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         SiteCA.load(cert_dir(cmk.utils.paths.omd_root)).create_site_certificate(
             omd_site(),
             additional_sans=active_config.site_subject_alternative_names,
         )
+        return []
+
+    @override
+    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         reload_stunnel()
         reload_agent_receiver()
 
@@ -659,6 +682,11 @@ class ConfigDomainOMD(ABCConfigDomain):
             )
 
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
+
+    @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # see if we can / should move something from activate() here
+        return []
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

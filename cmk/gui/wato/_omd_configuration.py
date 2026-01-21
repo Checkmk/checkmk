@@ -236,6 +236,10 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return "diskspace"
 
     @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        return []
+
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         return []
 
@@ -363,6 +367,11 @@ class ConfigDomainApache(ABCConfigDomain):
         return cmk.utils.paths.default_config_dir / "apache.d/wato"
 
     @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # see if we can / should move something from activate() here
+        return []
+
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
             self._write_config_file()
@@ -481,6 +490,11 @@ class ConfigDomainRRDCached(ABCConfigDomain):
     @override
     def config_dir(self) -> Path:
         return cmk.utils.paths.default_config_dir / "rrdcached.d/wato"
+
+    @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # see if we can / should move something from activate() here
+        return []
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

@@ -57,6 +57,10 @@ class ConfigDomainProductTelemetry(ABCConfigDomain):
         return self.config_dir() / PRODUCT_TELEMETRY_CONFIG_FILENAME
 
     @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        return []
+
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         return []
 

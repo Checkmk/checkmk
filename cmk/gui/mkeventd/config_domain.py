@@ -46,6 +46,11 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         return ec.create_paths(cmk.utils.paths.omd_root).rule_pack_dir.value
 
     @override
+    def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        # see if we can / should move something from activate() here
+        return []
+
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         if getattr(active_config, "mkeventd_enabled", False):
             log_audit(

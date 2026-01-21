@@ -2817,6 +2817,18 @@ def execute_activate_changes(
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:
         with tracer.span(
+            f"artifacts[{domain_request.name}]",
+            attributes={
+                "cmk.activate_changes.domain.name": domain_request.name,
+                "cmk.activate_changes.domain.settings": repr(domain_request.settings),
+            },
+        ):
+            warnings = get_config_domain(domain_request.name).create_artifacts(
+                domain_request.settings
+            )
+            results[domain_request.name] = warnings or []
+    for domain_request in all_domain_requests:
+        with tracer.span(
             f"activate[{domain_request.name}]",
             attributes={
                 "cmk.activate_changes.domain.name": domain_request.name,
@@ -2824,7 +2836,7 @@ def execute_activate_changes(
             },
         ):
             warnings = get_config_domain(domain_request.name).activate(domain_request.settings)
-            results[domain_request.name] = warnings or []
+            results[domain_request.name].extend(warnings or [])
 
     _add_extensions_for_license_usage()
     _update_links_for_agent_receiver()

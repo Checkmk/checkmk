@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <ctime>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -822,17 +823,22 @@ int broker_log(int callback_type, void *data) {
     return 0;
 }
 
+// NOTE: We will get called from the main Nagios thread here, so we don't have
+// to care about locking Nagios data structures etc. here.
 int broker_external_command(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_external_command_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
         case NEBTYPE_EXTERNALCOMMAND_START:
             counterIncrement(Counter::commands);
-            if (info->command_type == CMD_CUSTOM_COMMAND &&
-                info->command_string == "_LOG"s) {
-                write_to_all_logs(info->command_args, -1);
-                counterIncrement(Counter::log_messages);
-                fl_core->triggers().notify_all(Triggers::Kind::log);
+            if (info->command_type == CMD_CUSTOM_COMMAND) {
+                if (info->command_string == "_LOG"s) {
+                    write_to_all_logs(info->command_args, -1);
+                    counterIncrement(Counter::log_messages);
+                    fl_core->triggers().notify_all(Triggers::Kind::log);
+                } else if (info->command_string == "_ROTATE_LOGFILE"s) {
+                    rotate_log_file(std::time(nullptr));
+                }
             }
             fl_core->triggers().notify_all(Triggers::Kind::command);
             break;

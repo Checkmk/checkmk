@@ -46,7 +46,7 @@ from ._graph_specification import (
 from ._metric_backend_registry import FetchTimeSeries
 from ._time_series import TimeSeries, TimeSeriesValue
 from ._unit import user_specific_unit, UserSpecificUnit
-from ._utils import SizeEx
+from ._utils import Linear, SizeEx
 
 Seconds = int
 
@@ -547,9 +547,21 @@ def _render_scalar_value(
 
 
 def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
-    nth_value = (pin_time - rrddata.start) // rrddata.step
-    if 0 <= nth_value < len(rrddata):
-        return rrddata[nth_value]
+    if not rrddata:
+        return None
+
+    rrddata_values = list(rrddata)
+    rrddata_values.append(rrddata[-1])
+    by_ts: list[tuple[int | float, int | float | None]] = list(
+        zip(range(rrddata.start, rrddata.end, rrddata.step), rrddata_values)
+    )
+    for (left_x, left_y), (right_x, right_y) in zip(by_ts, by_ts[1:]):
+        if left_x == pin_time:
+            return left_y
+        if right_x == pin_time:
+            return right_y
+        if left_y is not None and right_y is not None and left_x < pin_time < right_x:
+            return Linear.fit_to_two_points(p_1=(left_x, left_y), p_2=(right_x, right_y))(pin_time)
     return None
 
 

@@ -27,6 +27,7 @@ from ._from_api import RegisteredMetric
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, DecimalNotation, user_specific_unit
+from ._utils import Linear
 
 type Quantity = (
     str
@@ -172,28 +173,6 @@ def _perfometer_plugin_matches(
 MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
 
 
-@dataclass(frozen=True, kw_only=True)
-class _Linear:
-    slope: float
-    intercept: float
-
-    @classmethod
-    def fit_to_two_points(
-        cls,
-        *,
-        p_1: tuple[float, float],
-        p_2: tuple[float, float],
-    ) -> Self:
-        slope = (p_2[1] - p_1[1]) / (p_2[0] - p_1[0])
-        return cls(
-            slope=slope,
-            intercept=p_1[1] - slope * p_1[0],
-        )
-
-    def __call__(self, value: int | float) -> float:
-        return self.slope * value + self.intercept
-
-
 class _Cutoff: ...
 
 
@@ -256,7 +235,7 @@ class _ProjectionFromMetricValueToPerfFillLevel:
     start_of_focus_range: float
     end_of_focus_range: float
     lower_end_projection: _Cutoff | _ArcTan
-    focus_projection: _Linear
+    focus_projection: Linear
     upper_end_projection: _Cutoff | _ArcTan
 
     def __call__(self, value: int | float) -> float:
@@ -355,7 +334,7 @@ def _make_projection(
             start_of_focus_range=float("nan"),
             end_of_focus_range=float("nan"),
             lower_end_projection=_Cutoff(),
-            focus_projection=_Linear(slope=float("nan"), intercept=float("nan")),
+            focus_projection=Linear(slope=float("nan"), intercept=float("nan")),
             upper_end_projection=_Cutoff(),
         )
 
@@ -368,7 +347,7 @@ def _make_projection(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
                 lower_end_projection=_Cutoff(),
-                focus_projection=_Linear.fit_to_two_points(
+                focus_projection=Linear.fit_to_two_points(
                     p_1=(lower_x, projection_parameters.perfometer_empty_at),
                     p_2=(upper_x, projection_parameters.perfometer_full_at),
                 ),
@@ -376,7 +355,7 @@ def _make_projection(
             )
 
         case perfometers_api.Open(), perfometers_api.Closed():
-            linear = _Linear.fit_to_two_points(
+            linear = Linear.fit_to_two_points(
                 p_1=(lower_x, projection_parameters.lower_open_end),
                 p_2=(upper_x, projection_parameters.perfometer_full_at),
             )
@@ -395,7 +374,7 @@ def _make_projection(
             )
 
         case perfometers_api.Closed(), perfometers_api.Open():
-            linear = _Linear.fit_to_two_points(
+            linear = Linear.fit_to_two_points(
                 p_1=(lower_x, projection_parameters.perfometer_empty_at),
                 p_2=(upper_x, projection_parameters.upper_open_start),
             )
@@ -414,7 +393,7 @@ def _make_projection(
             )
 
         case perfometers_api.Open(), perfometers_api.Open():
-            linear = _Linear.fit_to_two_points(
+            linear = Linear.fit_to_two_points(
                 p_1=(lower_x, projection_parameters.lower_open_end),
                 p_2=(upper_x, projection_parameters.upper_open_start),
             )

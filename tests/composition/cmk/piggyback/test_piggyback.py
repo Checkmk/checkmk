@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
+import logging
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -22,6 +22,7 @@ from tests.testlib.site import Site
 
 _HOSTNAME_SOURCE_CENTRAL = "source_central_host"
 _HOSTNAME_SOURCE_REMOTE = "source_remote_host"
+LOGGER = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -34,11 +35,13 @@ def _setup_source_host(
         "tag_agent": "cmk-agent",
     }
     try:
+        LOGGER.info("Creating host '%s' in site '%s'", hostname_source, site_id_source)
         central_site.openapi.hosts.create(
             hostname=hostname_source, attributes=host_attributes, bake_agent=False
         )
         yield
     finally:
+        LOGGER.info("Deleting host '%s' from site '%s'", hostname_source, site_id_source)
         central_site.openapi.hosts.delete(hostname_source)
 
 
@@ -47,6 +50,7 @@ def _setup_piggyback_host(
     source_site: Site, site_id_target: str, hostname_piggyback: str
 ) -> Iterator[None]:
     try:
+        LOGGER.info("Creating piggyback host '%s' in site '%s'", hostname_piggyback, site_id_target)
         source_site.openapi.hosts.create(
             hostname=hostname_piggyback,
             attributes={
@@ -59,6 +63,9 @@ def _setup_piggyback_host(
         source_site.openapi.changes.activate_and_wait_for_completion()
         yield
     finally:
+        LOGGER.info(
+            "Deleting piggyback host '%s' from site '%s'", hostname_piggyback, site_id_target
+        )
         source_site.openapi.hosts.delete(hostname_piggyback)
         source_site.openapi.changes.activate_and_wait_for_completion()
 
@@ -87,25 +94,38 @@ def _trace_broker_messages(site: Site) -> Iterator[None]:
         site.execute(["cmk-monitor-broker", "--disable_tracing"])
 
 
-@pytest.fixture(name="prepare_piggyback_environment", scope="module")
-def _prepare_piggyback_environment(
+@pytest.fixture(name="piggyback_env_two_site_setup", scope="module")
+def _piggyback_env_two_site_setup(
     central_site: Site,
     remote_site: Site,
-    remote_site_2: Site,
-) -> Iterator[None]:
+) -> Iterator[tuple[Site, Site]]:
     try:
         with (
             _setup_source_host(central_site, central_site.id, _HOSTNAME_SOURCE_CENTRAL),
             _setup_source_host(central_site, remote_site.id, _HOSTNAME_SOURCE_REMOTE),
             set_omd_config_piggyback_hub(central_site, "on"),
             set_omd_config_piggyback_hub(remote_site, "on"),
-            set_omd_config_piggyback_hub(remote_site_2, "on"),
             _trace_broker_messages(central_site),
             _trace_broker_messages(remote_site),
+        ):
+            central_site.openapi.changes.activate_and_wait_for_completion()
+            yield central_site, remote_site
+    finally:
+        central_site.openapi.changes.activate_and_wait_for_completion()
+
+
+@pytest.fixture(name="piggyback_env_three_site_setup", scope="module")
+def _piggyback_env_three_site_setup(
+    piggyback_env_two_site_setup: tuple[Site, Site], remote_site_2: Site
+) -> Iterator[tuple[Site, Site, Site]]:
+    central_site, remote_site = piggyback_env_two_site_setup
+    try:
+        with (
+            set_omd_config_piggyback_hub(remote_site_2, "on"),
             _trace_broker_messages(remote_site_2),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
-            yield
+            yield central_site, remote_site, remote_site_2
     finally:
         central_site.openapi.changes.activate_and_wait_for_completion()
 
@@ -115,14 +135,11 @@ def _schedule_check_and_discover(site: Site, hostname_source: str, hostname_pigg
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname_piggyback)
 
 
-def test_piggyback_services_source_remote(
-    central_site: Site,
-    remote_site: Site,
-    prepare_piggyback_environment: None,
-) -> None:
+def test_piggyback_services_source_remote(piggyback_env_two_site_setup: tuple[Site, Site]) -> None:
     """
     Service for host _HOSTNAME_PIGGYBACKED, generated on site central_site, is monitored on remote_site
     """
+    central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_source_remote"
     with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
@@ -132,14 +149,12 @@ def test_piggyback_services_source_remote(
 
 
 def test_piggyback_services_remote_remote(
-    central_site: Site,
-    remote_site: Site,
-    remote_site_2: Site,
-    prepare_piggyback_environment: None,
+    piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:
     """
     Service for host _HOSTNAME_PIGGYBACKED, generated on site remote_site, is monitored on remote_site2
     """
+    central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_remote_remote"
     with (
         create_local_check(
@@ -169,15 +184,13 @@ def _turn_off_piggyback_hub(site: Site) -> Iterator[None]:
 
 
 def test_piggyback_services_remote_remote_central_ph_off(
-    central_site: Site,
-    remote_site: Site,
-    remote_site_2: Site,
-    prepare_piggyback_environment: None,
+    piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:
     """
     Service for host _HOSTNAME_PIGGYBACKED, generated on site remote_site, is monitored on remote_site2
     with the central site's piggyback hub disabled
     """
+    central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_remote_remote"
     with (
         _turn_off_piggyback_hub(central_site),
@@ -225,18 +238,14 @@ def _create_and_rename_host(
         source_site.openapi.changes.activate_and_wait_for_completion()
 
 
-def test_piggyback_rename_host(
-    central_site: Site,
-    remote_site: Site,
-    prepare_piggyback_environment: None,
-) -> None:
+def test_piggyback_rename_host(piggyback_env_two_site_setup: tuple[Site, Site]) -> None:
     """
     Scenario: Host renaming triggers piggyback config re-distribution
     - host "other_host" is created on remote_site
     - host "other_host" is renamed to _HOSTNAME_PIGGYBACKED
     - piggyback data for _HOSTNAME_PIGGYBACKED is monitored on remote_site
     """
-
+    central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_rename"
     with (
         create_local_check(
@@ -278,11 +287,7 @@ def _piggybacked_service_gets_updated(
     return False
 
 
-def test_piggyback_hub_disabled_globally(
-    central_site: Site,
-    remote_site: Site,
-    prepare_piggyback_environment: None,
-) -> None:
+def test_piggyback_hub_disabled_globally(piggyback_env_two_site_setup: tuple[Site, Site]) -> None:
     """
     Scenario: Disabling global piggyback hub stops piggyback data distribution
     - piggyback hub is enabled globally
@@ -292,7 +297,7 @@ def test_piggyback_hub_disabled_globally(
     - piggyback hub is enabled globally
     - piggyback data for _HOSTNAME_PIGGYBACKED is monitored again on remote_site
     """
-
+    central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_hub_disabled"
     with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
@@ -316,9 +321,7 @@ def test_piggyback_hub_disabled_globally(
 
 
 def test_piggyback_hub_disabled_remote_site(
-    central_site: Site,
-    remote_site: Site,
-    prepare_piggyback_environment: None,
+    piggyback_env_two_site_setup: tuple[Site, Site],
 ) -> None:
     """
     Scenario: Disabling piggyback hub for remote site stops piggyback data distribution for that site
@@ -329,6 +332,7 @@ def test_piggyback_hub_disabled_remote_site(
     - piggyback hub is enabled for remote_site
     - piggyback data for _HOSTNAME_PIGGYBACKED is monitored again on remote_site
     """
+    central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_hub_disabled_remote_site"
     with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
@@ -360,10 +364,7 @@ def _move_host(central_site: Site, to_remote_site: str, hostname_piggyback: str)
 
 
 def test_piggyback_services_move_host(
-    central_site: Site,
-    remote_site: Site,
-    remote_site_2: Site,
-    prepare_piggyback_environment: None,
+    piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:
     """
     Scenario: Moving host to another site makes the piggyback data to be monitored on the new site
@@ -371,7 +372,7 @@ def test_piggyback_services_move_host(
     - piggyback data for _HOSTNAME_PIGGYBACKED is not monitored and not updated on remote_site
     - piggyback data for _HOSTNAME_PIGGYBACKED is monitored again on remote_site2
     """
-
+    central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_move_host"
     with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
         _move_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED)
@@ -388,9 +389,7 @@ def test_piggyback_services_move_host(
 
 
 def test_piggyback_host_removal(
-    central_site: Site,
-    remote_site: Site,
-    prepare_piggyback_environment: None,
+    piggyback_env_two_site_setup: tuple[Site, Site],
 ) -> None:
     """
     Scenario: Host removal stops distribution
@@ -398,7 +397,7 @@ def test_piggyback_host_removal(
         - remove _HOSTNAME_PIGGYBACKED from remote_site
         - piggyback data for _HOSTNAME_PIGGYBACKED is not monitored and not updated on remote_site
     """
-
+    central_site, remote_site = piggyback_env_two_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_removal"
     with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
@@ -415,9 +414,7 @@ def test_piggyback_host_removal(
 
 
 def test_piggyback_status_file_deletion_transport(
-    central_site: Site,
-    remote_site: Site,
-    prepare_piggyback_environment: None,
+    piggyback_env_two_site_setup: tuple[Site, Site],
 ) -> None:
     """
     Scenario: Deletion of status file on a piggybacked host is transported to target host so that
@@ -426,6 +423,7 @@ def test_piggyback_status_file_deletion_transport(
         When source status file on central_site is removed
         Then source status file is removed on remote_site as well
     """
+    central_site, remote_site = piggyback_env_two_site_setup
     # given
     piggybacked_host_name = "remote_host_removal"
 

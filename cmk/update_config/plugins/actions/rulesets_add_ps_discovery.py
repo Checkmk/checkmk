@@ -44,28 +44,36 @@ def add_ps_discovery_rules(
         )
 
 
+def overwrite_ps_discovery_rule(
+    logger: Logger, ps_discovery_rules: Ruleset, rule_id: str, old_rule_match: str, ps_descr: str
+) -> None:
+    try:
+        rule = ps_discovery_rules.get_rule_by_id(rule_id)
+    except KeyError:
+        logger.debug("No default rule for %s.", ps_descr)
+        return
+
+    if rule.value["match"] == old_rule_match:
+        try:
+            default_rule = next(rule for rule in PS_DISCOVERY_RULES if rule["id"] == rule_id)
+        except StopIteration:
+            logger.debug("No actual rule for %s.", ps_descr)
+            return
+        rule.value["match"] = default_rule["value"]["match"]
+        logger.info("Overwriting default value: %s", rule.rule_options.description)
+    else:
+        logger.debug("Rule for %s was changed. Nothing to do.", ps_descr)
+
+
 def overwrite_ps_discovery_rules(logger: Logger, all_rulesets: RulesetCollection) -> None:
     if (ps_discovery_rules := all_rulesets.get_rulesets().get(PS_DISCOVERY_RULE_NAME)) is None:
         return
 
-    try:
-        rabbitmq_rule = ps_discovery_rules.get_rule_by_id(RABBITMQ_RULE_ID)
-    except KeyError:
-        logger.debug("No default rule for self-monitoring of RabbitMQ.")
-        return
-
-    if rabbitmq_rule.value["match"] == "~(?:/omd/versions/.*/lib/erlang)|(?:.*bin/rabbitmq)":
-        try:
-            default_rule = next(
-                rule for rule in PS_DISCOVERY_RULES if rule["id"] == RABBITMQ_RULE_ID
-            )
-        except StopIteration:
-            logger.debug("No actual rule for self-monitoring of RabbitMQ.")
-            return
-        rabbitmq_rule.value["match"] = default_rule["value"]["match"]
-        logger.info("Overwriting default value: %s", rabbitmq_rule.rule_options.description)
-    else:
-        logger.debug("Rule for self-monitoring of RabbitMQ was changed. Nothing to do.")
+    rabbitmq_old_rule_match = "~(?:/omd/versions/.*/lib/erlang)|(?:.*bin/rabbitmq)"
+    rabbitmq_ps_descr = "self-monitoring of RabbitMQ"
+    overwrite_ps_discovery_rule(
+        logger, ps_discovery_rules, RABBITMQ_RULE_ID, rabbitmq_old_rule_match, rabbitmq_ps_descr
+    )
 
 
 def _some_shipped_rules_present(current_rules: Ruleset) -> bool:

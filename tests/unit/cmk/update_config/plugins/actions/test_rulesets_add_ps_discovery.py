@@ -53,25 +53,36 @@ def test_update_with_preexisting_rulesets() -> None:
 
 @pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
-    ["preexisting", "expected"],
+    ["rule_id", "preexisting", "expected"],
     [
-        pytest.param(None, "~(?:.*bin/rabbitmq-server)", id="no preexisting rule"),
         pytest.param(
+            RABBITMQ_RULE_ID,
+            None,
+            "~(?:.*bin/rabbitmq-server)",
+            id="no preexisting rule for rabbitmq",
+        ),
+        pytest.param(
+            RABBITMQ_RULE_ID,
             "~(?:/omd/versions/.*/lib/erlang)|(?:.*bin/rabbitmq)",
             "~(?:.*bin/rabbitmq-server)",
-            id="overwrite old default value in rule",
+            id="overwrite old default value in rule for rabbitmq",
         ),
-        pytest.param("foobar", "foobar", id="keep manually changed value in rule"),
+        pytest.param(
+            RABBITMQ_RULE_ID,
+            "foobar",
+            "foobar",
+            id="keep manually changed value in rule for rabbitmq",
+        ),
     ],
 )
-def test_update_rule_default_for_rabbitmq(preexisting: str | None, expected: str) -> None:
+def test_update_rule_default(rule_id: str, preexisting: str | None, expected: str) -> None:
     ruleset = Ruleset(PS_DISCOVERY_RULE_NAME)
     if preexisting is not None:
         folder = folder_tree().root_folder()
         ruleset.append_rule(
             folder,
             Rule(
-                id_=RABBITMQ_RULE_ID,
+                id_=rule_id,
                 folder=folder,
                 ruleset=ruleset,
                 conditions=RuleConditions(folder.path()),
@@ -94,5 +105,5 @@ def test_update_rule_default_for_rabbitmq(preexisting: str | None, expected: str
         assert ruleset.num_rules() == 0
     else:
         assert ruleset.num_rules() == 1
-        rule = ruleset.get_rule_by_id(RABBITMQ_RULE_ID)
+        rule = ruleset.get_rule_by_id(rule_id)
         assert rule.value["match"] == expected

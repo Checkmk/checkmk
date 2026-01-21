@@ -76,7 +76,8 @@ def main() {
     dir("${checkout_dir}") {
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(
-                edition: edition,
+                // use the cross edition target or fall back to the value of edition
+                edition: cross_edition_target ?: edition,
                 distro: distro,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
@@ -100,7 +101,8 @@ def main() {
                     dir("${checkout_dir}/tests") {
                         single_tests.run_make_target(
                             result_path: "${checkout_dir}/test-results/${distro}",
-                            edition: edition,
+                            // use the cross edition target or fall back to the value of edition
+                            edition: cross_edition_target ?: edition,
                             docker_tag: setup_values.docker_tag,
                             version: "daily",
                             distro: distro,

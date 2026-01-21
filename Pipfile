@@ -14,7 +14,7 @@ beautifulsoup4 = "==4.12.3"  # used by the GUI crawler and various tests
 boto3-stubs = {extras = ["logs"], version = "==1.34.15"}  # used for type checking, keep version in sync with boto3
 botocore-stubs = "==1.34.15"  # used for type checking, keep version in sync with botocore
 bson = "==0.5.10"  # used by test_mk_mongodb unit test
-checkmk-dev-tools = "==2.0.1"  # provides tooling for build artifacts
+checkmk-dev-tools = "==2.0.2"  # provides tooling for build artifacts
 compiledb = "==0.10.1"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 devpi-client = "==7.0.2" # Managing the devpi server
 dill = "==0.3.8"

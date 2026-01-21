@@ -2248,11 +2248,15 @@ def _handle_spoolfile(
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
     data = None
+    spoolfile_path = Path(spoolfile)
     try:
-        if not Path(spoolfile).exists():
+        if not spoolfile_path.exists():
             logger.warning("Skipping missing spoolfile %s.", notif_uuid[:8])
             return 2
-        data = store.load_object_from_file(Path(spoolfile), default={}, lock=True)
+
+        with store.locked(spoolfile_path):
+            data = store.load_object_from_file(spoolfile_path, default={})
+
         if not data:
             logger.warning("Skipping empty spool file %s", notif_uuid[:8])
             return 2

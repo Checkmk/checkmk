@@ -23,7 +23,9 @@ const maxRecentlyViewed = 5
 
 const { _t } = usei18n()
 
-defineProps<{ error?: UnifiedSearchError | undefined }>()
+defineProps<{
+  error?: UnifiedSearchError | undefined
+}>()
 
 const searchUtils = getSearchUtils()
 const recentlyViewed = ref<HistoryEntry[]>(

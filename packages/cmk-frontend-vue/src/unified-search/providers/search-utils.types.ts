@@ -21,7 +21,7 @@ export interface FilterOption {
   type: 'provider' | 'inline'
   value: string
   title: string
-  notAvailableFor?: string[]
+  notAvailableFor?: QueryProvider[]
 }
 
 export type SearchProviderKeys = 'monitoring' | 'customize' | 'setup'

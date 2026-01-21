@@ -12,7 +12,11 @@ import useClickOutside from '@/lib/useClickOutside'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
-import type { FilterOption, ProviderOption } from '@/unified-search/providers/search-utils.types'
+import type {
+  FilterOption,
+  ProviderOption,
+  QueryProvider
+} from '@/unified-search/providers/search-utils.types'
 
 import FilterOptionEntry from './FilterOptionEntry.vue'
 import { availableFilterOptions, availableProviderOptions } from './QueryOptions'
@@ -115,7 +119,7 @@ function getFilterOptions(): FilterOption[] {
           0) &&
       (fo.type === 'inline' &&
         searchUtils.query.filters.value.findIndex(
-          (f) => fo.notAvailableFor && fo.notAvailableFor?.indexOf(f.value) >= 0
+          (f) => fo.notAvailableFor && fo.notAvailableFor?.indexOf(f.value as QueryProvider) >= 0
         )) === -1
     )
   })

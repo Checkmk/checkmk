@@ -27,6 +27,7 @@ def _parameter_form() -> Dictionary:
                     form_spec_template=Integer(),
                     prefill_fixed_levels=DefaultValue(value=(60, 80)),
                     help_text=Help(
+                        # xgettext: no-python-format
                         "The device utilization data reported to the Meraki "
                         "dashboard is based on a load average measured over a "
                         "period of one minute. The load value is returned in "

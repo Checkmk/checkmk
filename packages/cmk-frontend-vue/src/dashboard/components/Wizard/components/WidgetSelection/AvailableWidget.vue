@@ -28,7 +28,7 @@ defineProps<AvailableWidgetProps>()
       class="db-available-widget__item-label"
       :class="disabled ? 'db-available-widget__item-label-disabled' : ''"
     >
-      <CmkLabel cursor="pointer">{{ label }}</CmkLabel>
+      <CmkLabel :cursor="disabled ? 'default' : 'pointer'">{{ label }}</CmkLabel>
     </div>
   </div>
 </template>

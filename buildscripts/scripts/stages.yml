@@ -125,7 +125,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^package.json\\|^pnpm-' || true"
 
     - NAME: CHANGED_CMK_PLUGINS
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/plugins/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'cmk/plugins/' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_CMK_CHECKENGINE

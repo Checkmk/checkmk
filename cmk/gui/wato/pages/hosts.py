@@ -1104,7 +1104,15 @@ class PageAjaxPingHost(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
-        ip_or_dns_name = request.get_ascii_input_mandatory("ip_or_dns_name")
+
+        try:
+            ip_or_dns_name = request.get_validated_type_input_mandatory(HostName, "ip_or_dns_name")
+        except Exception:
+            return {
+                "status_code": 99,
+                "message": "The given hostname must only contain ASCII characters.",
+            }
+
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
 
         result = ping_host(
@@ -1117,7 +1125,7 @@ class PageAjaxPingHost(AjaxPage):
         )
         return {
             "status_code": result.return_code,
-            "output": result.response,
+            "message": result.response,
         }
 
 

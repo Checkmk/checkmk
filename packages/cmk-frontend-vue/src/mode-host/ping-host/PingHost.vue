@@ -252,6 +252,11 @@ function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean):
               : props.i18n.success_host_dns_resolvable,
             status: 'success'
           }
+        case 99:
+          return {
+            tooltip: response.result.message,
+            status: 'error'
+          }
         default:
           return {
             tooltip: isIpAddress

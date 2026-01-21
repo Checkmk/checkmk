@@ -53,8 +53,8 @@ impl EngineTag {
 #[derive(PartialEq, Debug, Clone)]
 pub struct Connection {
     hostname: HostName,         // "localhost" if not defined
-    port: Port,                 // 1521 if not defined
-    timeout: u64,               // 5 if not defined
+    port: Option<Port>,         // 1521 if not defined
+    timeout: Option<u64>,       // 5 if not defined
     tns_admin: Option<PathBuf>, // config dir if not defined
     oracle_local_registry: Option<PathBuf>,
     service_name: Option<ServiceName>,
@@ -64,6 +64,31 @@ pub struct Connection {
 }
 
 impl Connection {
+    pub fn from_connection(
+        s: &Connection,
+        service_name: &Option<ServiceName>,
+        instance_name: &Option<InstanceName>,
+    ) -> Self {
+        Self {
+            hostname: s.hostname.clone(),
+            port: s.port.clone(),
+            timeout: s.timeout,
+            tns_admin: s.tns_admin.clone(),
+            oracle_local_registry: s.oracle_local_registry.clone(),
+            service_name: if service_name.is_some() {
+                service_name.clone()
+            } else {
+                s.service_name().cloned()
+            },
+            instance_name: if instance_name.is_some() {
+                instance_name.clone()
+            } else {
+                s.instance_name().cloned()
+            },
+            service_type: s.service_type.clone(),
+            engine: s.engine.clone(),
+        }
+    }
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let conn = yaml.get(keys::CONNECTION);
         if conn.is_badvalue() {
@@ -86,20 +111,17 @@ impl Connection {
             oracle_local_registry: conn
                 .get_string(keys::ORACLE_LOCAL_REGISTRY)
                 .map(PathBuf::from),
-            service_name: conn.get_string(keys::SERVICE_NAME).map(ServiceName::from),
+            service_name: conn
+                .get_string(keys::SERVICE_NAME)
+                .as_deref()
+                .map(ServiceName::from),
             service_type: conn.get_string(keys::SERVICE_TYPE).map(ServiceType::from),
             instance_name: conn
                 .get_string(keys::INSTANCE_NAME)
                 .as_deref()
                 .map(InstanceName::from),
-            port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
-                log::debug!("no port specified, using default");
-                defaults::CONNECTION_PORT
-            })),
-            timeout: conn.get_int::<u64>(keys::TIMEOUT).unwrap_or_else(|| {
-                log::debug!("no timeout specified, using default");
-                defaults::CONNECTION_TIMEOUT
-            }),
+            port: conn.get_int::<u16>(keys::PORT).map(Port::from),
+            timeout: conn.get_int::<u64>(keys::TIMEOUT),
             engine: {
                 let value: String = conn
                     .get_string(keys::ENGINE)
@@ -117,10 +139,12 @@ impl Connection {
         self.hostname.clone()
     }
     pub fn port(&self) -> Port {
-        self.port.clone()
+        self.port
+            .clone()
+            .unwrap_or(Port::from(defaults::CONNECTION_PORT))
     }
     pub fn timeout(&self) -> Duration {
-        Duration::from_secs(self.timeout)
+        Duration::from_secs(self.timeout.unwrap_or(defaults::CONNECTION_TIMEOUT))
     }
     pub fn tns_admin(&self) -> Option<&PathBuf> {
         self.tns_admin.as_ref()
@@ -176,8 +200,8 @@ impl Default for Connection {
             service_name: None,
             service_type: None,
             instance_name: None,
-            port: Port(defaults::CONNECTION_PORT),
-            timeout: defaults::CONNECTION_TIMEOUT,
+            port: None,
+            timeout: None,
             engine: EngineTag::default(),
         }
     }
@@ -218,8 +242,8 @@ connection:
                 .unwrap(),
             Connection {
                 hostname: HostName::from("alice".to_string()),
-                port: Port(9999),
-                timeout: 341,
+                port: Some(Port(9999)),
+                timeout: Some(341),
                 tns_admin: Some(PathBuf::from("/path/to/oracle/config/files/")),
                 oracle_local_registry: Some(PathBuf::from("/etc/oracle/olr.loc")),
                 service_name: Some(ServiceName::from("service_NAME")),
@@ -240,8 +264,8 @@ connection:
                 service_name: None,
                 service_type: None,
                 instance_name: None,
-                port: Port(1521),
-                timeout: 5,
+                port: None,
+                timeout: None,
                 engine: EngineTag::default(),
             }
         );
@@ -251,6 +275,7 @@ connection:
             r#"
 connection:
     hostname: "localhost"
+    service_name: "will not be used"
     engine: {value}
 "#
         )
@@ -262,8 +287,12 @@ connection:
             Connection::from_yaml(&create_connection_yaml_default())
                 .unwrap()
                 .unwrap(),
-            Connection::default()
+            Connection {
+                service_name: Some(ServiceName::from("")),
+                ..Default::default()
+            }
         );
+        assert!(Connection::from_yaml(&create_connection_yaml_no_service_name()).is_ok());
         assert_eq!(
             Connection::from_yaml(&create_connection_yaml_empty_host())
                 .unwrap()
@@ -286,6 +315,16 @@ connection:
     }
 
     fn create_connection_yaml_default() -> Yaml {
+        const SOURCE: &str = r#"
+connection:
+    hostname: "localhost"
+    _nothing: "nothing"
+    service_name: ''
+"#;
+        create_yaml(SOURCE)
+    }
+
+    fn create_connection_yaml_no_service_name() -> Yaml {
         const SOURCE: &str = r#"
 connection:
     hostname: "localhost"
@@ -346,6 +385,35 @@ connection:
                 "for value `{value}`"
             );
         }
+    }
+
+    #[test]
+    fn test_from_connection() {
+        let base = Connection {
+            hostname: HostName::from("host1".to_string()),
+            port: Some(Port(1234)),
+            timeout: Some(10),
+            tns_admin: Some(PathBuf::from("/path/to/tns_admin")),
+            oracle_local_registry: Some(PathBuf::from("/path/to/olr.loc")),
+            service_name: Some(ServiceName::from("service1")),
+            instance_name: Some(InstanceName::from("instance1")),
+            service_type: Some(ServiceType::from("dedicated")),
+            engine: EngineTag::Jdbc,
+        };
+        let custom = Connection::from_connection(&base, &None, &None);
+        assert_eq!(custom, base);
+
+        let custom_service = Some(ServiceName::from("new_service"));
+        let custom = Connection::from_connection(&base, &custom_service, &None);
+        let mut expected = base.clone();
+        expected.service_name = custom_service;
+        assert_eq!(custom, expected);
+
+        let custom_instance = Some(InstanceName::from("new_instance"));
+        let mut expected = base.clone();
+        expected.instance_name = custom_instance.clone();
+        let custom = Connection::from_connection(&base, &None, &custom_instance);
+        assert_eq!(custom, expected);
     }
 
     #[test]

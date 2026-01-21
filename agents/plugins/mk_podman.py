@@ -10,6 +10,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from shutil import which
 from typing import Literal, TypedDict, Union
 
 __version__ = "2.6.0b1"
@@ -22,6 +23,17 @@ DEFAULT_CFG_SECTION = {
 }
 
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
+
+
+# The checks below result in agent sections being created. This
+# is a way to end the plugin in case it is being executed on a non-podman host
+if (
+    not os.path.isdir("/var/lib/podman")
+    and not os.path.isdir("/run/podman")
+    and not which("podman")
+):
+    sys.stderr.write("mk_podman.py: Does not seem to be a podman host. Terminating.\n")
+    sys.exit(1)
 
 
 class AutomaticSocketDetectionMethod(Enum):

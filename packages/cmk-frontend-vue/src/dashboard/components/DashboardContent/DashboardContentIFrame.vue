@@ -9,11 +9,19 @@ import { type IFrameContent } from '@/dashboard/types/widget.ts'
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
-defineProps<ContentProps<IFrameContent>>()
+interface DashboardContentIFrameProps extends ContentProps<IFrameContent> {
+  contentCenter?: boolean
+}
+
+const { contentCenter } = defineProps<DashboardContentIFrameProps>()
 </script>
 
 <template>
-  <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
+  <DashboardContentContainer
+    :effective-title="effectiveTitle"
+    :general_settings="general_settings"
+    :content-center="contentCenter"
+  >
     <div class="db-content-i-frame__div">
       <iframe class="db-content-i-frame__iframe" allowtransparency="true" :src="content.url" />
     </div>

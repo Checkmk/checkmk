@@ -24,7 +24,7 @@ const iFrameProps = computed(() => {
   return {
     ...props,
     content: iFrameContent
-  }
+  } as ContentProps<IFrameContent>
 })
 </script>
 

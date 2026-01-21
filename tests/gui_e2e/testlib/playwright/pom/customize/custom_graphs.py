@@ -126,7 +126,7 @@ class DesignGraph(BaseGraph):
         self.main_area.check_page_title(self.page_title)
 
     def add_graph_line_otel(self, metric_name: str) -> None:
-        self.main_area.get_text("Metric name").click()
+        self.main_area.get_text("Metric name", exact=False).click()
         self.main_area.get_text(metric_name).click()
         self.main_area.get_text("Add").click()
 

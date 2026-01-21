@@ -465,7 +465,7 @@ test('dropdown does not show required if required is not passed', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  expect(dropdown.textContent).toMatch(/Select an/)
+  expect(dropdown.textContent).toBe('Select an option')
 })
 
 test('dropdown still clickable if only option is already selected', async () => {

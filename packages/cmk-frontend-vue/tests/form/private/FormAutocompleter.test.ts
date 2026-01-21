@@ -32,10 +32,13 @@ describe('FormAutocompleter', () => {
       props: {
         placeholder: 'Search...',
         size: 7,
-        id: 'test'
+        id: 'test',
+        label: 'Some label'
       }
     })
-    expect(screen.getByLabelText('Search...')).toBeInTheDocument()
+    const autocompleter = screen.getByRole('combobox', { name: 'Some label' })
+
+    expect(autocompleter.textContent).toBe('Search...')
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {

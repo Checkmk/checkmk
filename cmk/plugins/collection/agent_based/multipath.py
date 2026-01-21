@@ -162,10 +162,8 @@ agent_section_multipath = AgentSection(
 # Length of UUID is 360a9800043346937686f456f59386741
 def discover_multipath(params: Mapping[str, Any], section: multipath.Section) -> DiscoveryResult:
     for uuid, group in section.items():
-        # take current number of paths as target value
         yield Service(
-            item=group.alias if group.alias is not None and params.get("use_alias") else uuid,
-            parameters={"levels": group.numpaths},
+            item=group.alias if group.alias is not None and params.get("use_alias") else uuid
         )
 
 
@@ -199,14 +197,12 @@ def check_multipath(
     else:
         aliasinfo = ""
 
-    all_paths = mmap.paths
     broken_paths = mmap.broken_paths
-    num_paths = len(all_paths)
+    num_paths = mmap.numpaths
     num_broken = len(broken_paths)
     num_active = num_paths - num_broken
 
     levels = params.get("levels")
-
     yield from check_levels_v1(
         num_active / num_paths * 100.0,
         levels_lower=(levels[0], levels[1]) if isinstance(levels, tuple) else None,
@@ -216,16 +212,19 @@ def check_multipath(
 
     state = State.OK
     infotext = f"{num_active} of {num_paths}"
-    if isinstance(levels, int):
-        infotext += f" (expected: {levels})"
-        if num_active < levels:
-            state = State.CRIT
-        elif num_active > levels:
+    if not isinstance(levels, tuple):
+        target_levels, alert_level = (
+            (levels, State.CRIT) if levels is not None else (num_paths, State.WARN)
+        )
+        infotext += f" (expected: {target_levels})"
+        if num_active < target_levels:
+            state = alert_level
+        elif num_active > target_levels:
             state = State.WARN
     yield Result(state=state, summary=infotext)
 
     if num_broken > 0:
-        yield Result(state=State.CRIT, summary="Broken paths: %s" % ",".join(broken_paths))
+        yield Result(state=State.OK, summary="Broken paths: %s" % ",".join(broken_paths))
 
 
 check_plugin_multipath = CheckPlugin(

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="misc"
 
+from collections.abc import Mapping
 from typing import Final
 
 import pytest
@@ -125,9 +126,9 @@ def test_parse_multipath_groups(
 
 def test_discovery(section: Section) -> None:
     assert sorted(discover_multipath({"use_alias": False}, section)) == [
-        Service(item="3600601604d40310047cf93ce66f7e111", parameters={"levels": 4}),
-        Service(item="broken_paths", parameters={"levels": 2}),
-        Service(item="prefix.3600601604d403100912ab0b365f7e111", parameters={"levels": 1}),
+        Service(item="3600601604d40310047cf93ce66f7e111"),
+        Service(item="broken_paths"),
+        Service(item="prefix.3600601604d403100912ab0b365f7e111"),
     ]
 
 
@@ -178,16 +179,30 @@ def test_check_count_levels(levels: int, state: State, section: Section) -> None
     ]
 
 
-def test_check_broken_paths_no_level_configuration(section: Section) -> None:
-    assert list(
+@pytest.mark.parametrize(
+    "item,state,summary",
+    [
+        ("3600601604d40310047cf93ce66f7e111", State.OK, "4 of 4 (expected: 4)"),
+        # WARN cause no rules are present, othervise it will be CRIT
+        ("broken_paths", State.WARN, "0 of 2 (expected: 2)"),
+    ],
+)
+def test_check_count_levels_no_configuration_uses_total_paths(
+    item: str, state: State, summary: str, section: Section
+) -> None:
+    results = list(
         check_multipath(
-            "broken_paths",
+            item,
             {},
             section,
         )
-    )[-1] == Result(
-        state=State.CRIT,
-        summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)",
+    )
+    assert (
+        Result(
+            state=state,
+            summary=summary,
+        )
+        in results
     )
 
 
@@ -201,10 +216,7 @@ def test_check_branch_broken_paths_result_added_with_levels_int(section: Section
     ) == [
         Result(state=State.OK, summary="(BROKEN_PATH): Paths active: 0%"),
         Result(state=State.CRIT, summary="0 of 2 (expected: 2)"),
-        Result(
-            state=State.CRIT,
-            summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)",
-        ),
+        Result(state=State.OK, summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)"),
     ]
 
 
@@ -228,8 +240,47 @@ def test_check_branch_broken_paths_result_added_with_levels_tuple(section: Secti
             state=State.OK,
             summary="0 of 2",
         ),
-        Result(
-            state=State.CRIT,
-            summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)",
-        ),
+        Result(state=State.OK, summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)"),
     ]
+
+
+def test_ok_summary_diff_with_default_levels_vs_none(section: Section) -> None:
+    item = "3600601604d40310047cf93ce66f7e111"
+    default_levels = section[item].numpaths
+
+    out_with_default = list(
+        check_multipath(
+            item,
+            {"levels": default_levels},
+            section,
+        )
+    )
+
+    out_with_none = list(
+        check_multipath(
+            item,
+            {},
+            section,
+        )
+    )
+
+    assert out_with_default == out_with_none
+
+
+@pytest.mark.parametrize(
+    "params",
+    [{"levels": 3}, {"levels": (110.0, 40.0)}, {}],
+)
+def test_check_broken_paths_always_called(
+    params: Mapping[str, int | tuple[float, float]], section: Section
+) -> None:
+    assert list(
+        check_multipath(
+            "broken_paths",
+            params,
+            section,
+        )
+    )[-1] == Result(
+        state=State.OK,
+        summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)",
+    )

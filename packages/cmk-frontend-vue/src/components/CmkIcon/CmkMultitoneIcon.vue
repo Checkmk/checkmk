@@ -12,6 +12,7 @@ import { cmkMultitoneIconVariants, oneColorIcons, twoColorIcons } from './icons.
 import type {
   CmkMultitoneIconColor,
   CmkMultitoneIconNames,
+  CustomIconColor,
   IconSizeNames,
   OneColorIcons,
   TwoColorIcons
@@ -20,8 +21,8 @@ import { iconSizeNametoNumber } from './utils'
 
 const props = defineProps<{
   name: IconName
-  primaryColor: CmkMultitoneIconColor
-  secondaryColor?: IconName extends OneColorIcons ? never : CmkMultitoneIconColor
+  primaryColor: CmkMultitoneIconColor | CustomIconColor
+  secondaryColor?: IconName extends OneColorIcons ? never : CmkMultitoneIconColor | CustomIconColor
   size?: IconSizeNames | undefined
   title?: string | undefined
   rotate?: number | undefined
@@ -32,9 +33,24 @@ function getTransformRotate(): string {
 
 const iconSize = computed(() => iconSizeNametoNumber(props.size))
 
-function getColorClass(color: CmkMultitoneIconColor, prefix: string): string {
+function getCustomColor(color: CmkMultitoneIconColor | CustomIconColor): string {
+  if (!color) {
+    return 'unset'
+  }
+  if (typeof color === 'object' && 'custom' in color) {
+    return color.custom
+  }
+  return 'unset'
+}
+const customColorPrimary = computed(() => getCustomColor(props.primaryColor))
+const customColorSecondary = computed(() => getCustomColor(props.secondaryColor ?? null))
+
+function getColorClass(color: CmkMultitoneIconColor | CustomIconColor, prefix: string): string {
   if (!color) {
     return ''
+  }
+  if (typeof color === 'object' && 'custom' in color) {
+    return `${prefix}-custom`
   }
   return `${prefix}-${cmkMultitoneIconVariants({ color: color || null })}`
 }
@@ -145,6 +161,10 @@ immediateWatch(
     --icon-primary-color: var(--font-color);
   }
 
+  &.color-custom {
+    --icon-primary-color: v-bind(customColorPrimary);
+  }
+
   /* Secondary icon colors */
   &.color-secondary-green {
     --icon-secondary-color: var(--color-corporate-green-60);
@@ -188,6 +208,10 @@ immediateWatch(
 
   &.color-secondary-font {
     --icon-secondary-color: var(--font-color);
+  }
+
+  &.color-secondary-custom {
+    --icon-secondary-color: v-bind(customColorSecondary);
   }
 
   /* Secondary icon colors */

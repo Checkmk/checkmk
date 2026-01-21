@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import assert_never, Literal, NotRequired, TypedDict, TypeVar
+from typing import assert_never, Literal, NotRequired, Self, TypedDict, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
@@ -557,11 +557,44 @@ def _render_scalar_value(
     return value, unit_renderer(value)
 
 
+@dataclass(frozen=True, kw_only=True)
+class Linear:
+    slope: float
+    intercept: float
+
+    @classmethod
+    def fit_to_two_points(
+        cls,
+        *,
+        p_1: tuple[float, float],
+        p_2: tuple[float, float],
+    ) -> Self:
+        slope = (p_2[1] - p_1[1]) / (p_2[0] - p_1[0])
+        return cls(
+            slope=slope,
+            intercept=p_1[1] - slope * p_1[0],
+        )
+
+    def __call__(self, value: int | float) -> float:
+        return self.slope * value + self.intercept
+
+
 def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
-    start_time, _, step = rrddata.twindow
-    nth_value = (pin_time - start_time) // step
-    if 0 <= nth_value < len(rrddata):
-        return rrddata[nth_value]
+    if not rrddata:
+        return None
+
+    rrddata_values = list(rrddata)
+    rrddata_values.append(rrddata[-1])
+    by_ts: list[tuple[int | float, int | float | None]] = list(
+        zip(range(rrddata.start, rrddata.end, rrddata.step), rrddata_values)
+    )
+    for (left_x, left_y), (right_x, right_y) in zip(by_ts, by_ts[1:]):
+        if left_x == pin_time:
+            return left_y
+        if right_x == pin_time:
+            return right_y
+        if left_y is not None and right_y is not None and left_x < pin_time < right_x:
+            return Linear.fit_to_two_points(p_1=(left_x, left_y), p_2=(right_x, right_y))(pin_time)
     return None
 
 

@@ -1,5 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
 load("@npm//:stylelint/package_json.bzl", stylelint_bin = "bin")
@@ -279,4 +281,12 @@ pkg_tar(
     srcs = [":frontend_vue_dist_pkg"],
     stamp = 1,
     visibility = ["//omd:__pkg__"],
+)
+
+py_test(
+    name = "test-license-headers",
+    srcs = ["scripts/test_license_headers.py"],
+    data = glob(["**"]),
+    pytest_main = True,
+    deps = [requirement("pytest")],
 )

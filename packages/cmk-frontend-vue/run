@@ -185,12 +185,7 @@ run_format() {
 }
 
 run_tests() {
-    bazel test :unit-test
-    # this should be a `bazel run` target which can operate on the workspace
-    # but since we don't have any dependencies here and test_license_headers.py
-    # is subject to vanish system-python3 is ok here
-    setup_venv
-    python3 scripts/test_license_headers.py
+    bazel test :unit-test :test-license-headers
 }
 
 main() {

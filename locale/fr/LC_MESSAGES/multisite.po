@@ -1262,6 +1262,10 @@ msgstr "Niveaux supérieurs de la sortie 3,3 volts"
 msgid "30 minutes"
 msgstr "30 minutes"
 
+#, fuzzy
+msgid "32-bit packaged binary"
+msgstr "Binaire conditionné 64 bits"
+
 msgid "389 Directory Server"
 msgstr "389 Serveur d'annuaire"
 
@@ -1323,6 +1327,10 @@ msgstr "Taux d'erreur 5xx"
 
 msgid "6 months"
 msgstr "6 mois"
+
+#, fuzzy
+msgid "64-bit packaged binary"
+msgstr "Binaire conditionné 64 bits"
 
 #, no-python-format
 msgid "68% - One standard deviation"
@@ -3520,16 +3528,6 @@ msgstr ""
 "un accès en écriture à ce module peut apporter des modifications arbitraires "
 "à la configuration en restaurant les instantanés téléchargés."
 
-#, fuzzy
-msgid ""
-"Access to the module <i>Snapshots</i>. Please note: a user with write access "
-"to this module can make arbitrary changes to the configuration by restoring "
-"uploaded snapshots."
-msgstr ""
-"Accès au module <i>Snaphsots</i>. Remarque : un utilisateur ayant un accès "
-"en écriture à ce module peut apporter des modifications arbitraires à la "
-"configuration en restaurant les instantanés téléchargés."
-
 msgid "Access to the module <i>Time periods</i>"
 msgstr "Accès au module <i>Périodes de temps</i>"
 
@@ -4196,6 +4194,14 @@ msgstr "Ajouter une nouvelle configuration utilisateur"
 msgid "Add Prefix"
 msgstr "Ajouter un préfixe"
 
+#, fuzzy
+msgid "Add Relay"
+msgstr "Ajouter une clé"
+
+#, fuzzy
+msgid "Add Relay configuration"
+msgstr "Configuration de l'ARR"
+
 msgid "Add Rule ID"
 msgstr "Ajouter une règle ID"
 
@@ -4650,14 +4656,6 @@ msgstr "Ajouter des hôtes aléatoires"
 #, fuzzy
 msgid "Add recipient"
 msgstr "Bénéficiaire"
-
-#, fuzzy
-msgid "Add relay"
-msgstr "Ajouter une clé"
-
-#, fuzzy
-msgid "Add relay configuration"
-msgstr "Configuration de l'ARR"
 
 #, fuzzy
 msgid "Add remote site"
@@ -5896,8 +5894,8 @@ msgstr "Alerte en cas de consommation électrique trop élevée"
 msgid "Alert overview"
 msgstr "Aperçu de l'alerte"
 
-#, python-format
-msgid "Alert overview - %s"
+#, fuzzy
+msgid "Alert overview - $TIME_RANGE$"
 msgstr "Vue d'ensemble des alertes - %s"
 
 msgid "Alert rule names"
@@ -24381,7 +24379,7 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr "Activer l'accès au Livestatus via le réseau (TCP)"
 
 #, fuzzy
-msgid "Enable OpenTelemetry Collector (experimental)"
+msgid "Enable OpenTelemetry Collector"
 msgstr "Ajouter une configuration d'état"
 
 msgid "Enable SMTP AUTH (LOGIN)"
@@ -33054,6 +33052,9 @@ msgstr "Hôtes"
 msgid "Hosts & services:"
 msgstr "Hôtes et services :"
 
+msgid "Hosts : $SHORT_STATE_NAME$"
+msgstr ""
+
 msgid "Hosts Connected"
 msgstr "Hôtes connectés"
 
@@ -37988,10 +37989,6 @@ msgstr "La clé de résolution temporelle \"%s\" n'est pas valide"
 msgid "Invalid time specific data"
 msgstr "Le type spécifié n'est pas valide."
 
-#, python-format
-msgid "Invalid timestep \"%d\" given"
-msgstr "Invalide timestep \"%d\" donné"
-
 msgid "Invalid topic"
 msgstr "Sujet non valide"
 
@@ -42476,8 +42473,8 @@ msgid "Manage OAuth2 connections"
 msgstr "Ajouter une connexion"
 
 #, fuzzy
-msgid "Manage OpenTelemetry configurations (experimental)"
-msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
+msgid "Manage OpenTelemetry configurations"
+msgstr "Ajouter une nouvelle configuration utilisateur"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Gérer ses propres rapports programmés"
@@ -42552,9 +42549,6 @@ msgstr ""
 
 msgid "Manage services"
 msgstr "Gérer les services"
-
-msgid "Manage snapshots"
-msgstr "Gérer les instantanés"
 
 msgid "Manage tags"
 msgstr "Gérer les étiquettes"
@@ -46947,6 +46941,10 @@ msgstr "Configuration de l'hôte"
 msgid "No PNP templates using the deprecated API"
 msgstr "Pas de contrôle des plugins utilisant l'API obsolète"
 
+#, fuzzy
+msgid "No Relay configuration yet"
+msgstr "Configuration de l'hôte"
+
 msgid "No SNMP"
 msgstr "Non SNMP"
 
@@ -47304,10 +47302,6 @@ msgstr "Résultats"
 
 #, fuzzy
 msgid "No relay ID specified."
-msgstr "Configuration de l'hôte"
-
-#, fuzzy
-msgid "No relay configuration yet"
 msgstr "Configuration de l'hôte"
 
 #, fuzzy
@@ -50325,15 +50319,7 @@ msgid "OpenTelemetry"
 msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
-msgid "OpenTelemetry (experimental)"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
 msgid "OpenTelemetry Collector"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
-msgid "OpenTelemetry Collector (Experimental)"
 msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
@@ -50353,11 +50339,11 @@ msgid "OpenTelemetry Collector receiver configurations"
 msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
-msgid "OpenTelemetry Collector: Prometheus scraping (experimental)"
+msgid "OpenTelemetry Collector: Prometheus scraping"
 msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
-msgid "OpenTelemetry Collector: Receiver (experimental)"
+msgid "OpenTelemetry Collector: Receiver"
 msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
@@ -50567,11 +50553,10 @@ msgstr ""
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
-"automatically regardless of this rule. The binary format yields a broader "
-"compatibility, while the Python script is small and editable.<br> Concrete "
-"requirements are:<br> <b>packaged binary:</b> x86-64 Linux system with glibc "
-"2.17 or newer. <b>Python script:</b> Python3 with modules _cryptography_, "
-"_requests_ and _pysocks_ (for SOCKS proxy support)."
+"automatically regardless of this rule. The binary formats yield a broader "
+"compatibility whereas the python script is small and editable. Please note "
+"that the Checkmk team can offer no support for issues about the target "
+"system's python environment when choosing \"Script\"."
 msgstr ""
 "Il est possible de choisir le format du fichier excecutable de l'agent de "
 "mise à jour. Cette option n'est pertinente que pour Linux. Sur les autres "
@@ -55367,10 +55352,6 @@ msgstr "Prob."
 msgid "Probe State"
 msgstr "État de la sonde"
 
-#, python-format
-msgid "Problem %s"
-msgstr "Problème %s"
-
 msgid "Problem acknowledged"
 msgstr "Problème reconnu"
 
@@ -55586,10 +55567,6 @@ msgstr "Services personnalisés Prometheus"
 #, fuzzy
 msgid "Prometheus scraping"
 msgstr "Alertmanager"
-
-#, fuzzy
-msgid "Prometheus scraping (Experimental)"
-msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
 msgid "Prometheus targets"
@@ -55934,10 +55911,6 @@ msgid ""
 "after the file path using a colon or a semicolon as a separator. Examples:"
 "<br><tt>path/vars.yaml</tt><br><tt>set_environment.py:testing</tt>"
 msgstr ""
-
-#, fuzzy
-msgid "Python script"
-msgstr "Script Python exécutable"
 
 #, fuzzy
 msgid "Python version for execution of Python agent plug-ins"
@@ -56538,8 +56511,8 @@ msgid "Read Latency"
 msgstr "Latence de lecture"
 
 #, fuzzy
-msgid "Read OpenTelemetry configurations (experimental)"
-msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
+msgid "Read OpenTelemetry configurations"
+msgstr "Ajouter une nouvelle configuration utilisateur"
 
 #, fuzzy
 msgid "Read OpenTelemetry configurations."
@@ -58874,6 +58847,17 @@ msgstr "Mauvaise concordance de l'adresse restreinte"
 msgid "Restriction tags enabled but no tags defined."
 msgstr "Aucune source de données définie."
 
+#, fuzzy
+msgid ""
+"Restricts the list of contacts created by the previous options to those who "
+"are members of the selected contact groups. If more than one contact group "
+"is selected, the contact must be a member of all selected groups."
+msgstr ""
+"Ici, vous pouvez <i>restreindre</i> la liste des contacts qui a été "
+"construite par les options précédentes à ceux qui sont membres des groupes "
+"de contacts sélectionnés. Si vous sélectionnez ici plus d'un groupe de "
+"contacts, l'utilisateur doit être membre de <i>tous</i> ces groupes."
+
 msgid "Result"
 msgstr "Résultat"
 
@@ -60557,6 +60541,9 @@ msgstr "Intervalle de balayage"
 msgid "Scratch Pool"
 msgstr ""
 
+msgid "Script (Limited support, see inline help)"
+msgstr "Script (support limité, voir l'aide en ligne)"
+
 msgid "Script Pattern"
 msgstr "Modèle de script"
 
@@ -60993,12 +60980,6 @@ msgstr "Sélectionné"
 
 msgid "Select a time period"
 msgstr "Sélectionner une période"
-
-msgid ""
-"Select a time period over which the alerts or notifications are added up"
-msgstr ""
-"Sélectionnez une période sur laquelle les alertes ou les notifications sont "
-"cumulées"
 
 msgid "Select all checkboxes"
 msgstr "Sélectionner toutes les cases à cocher"
@@ -62267,6 +62248,9 @@ msgstr "Services"
 msgid "Services (regular expressions)"
 msgstr "Services (Expressions régulières)"
 
+msgid "Services : $SHORT_STATE_NAME$"
+msgstr ""
+
 msgid "Services colored according to state"
 msgstr "Des services colorés selon l'état"
 
@@ -63477,12 +63461,6 @@ msgstr "Afficher uniquement les règles inutilisées"
 
 msgid "Show page navigation"
 msgstr "Afficher la navigation de la page"
-
-msgid "Show per day"
-msgstr "Spectacle par jour"
-
-msgid "Show per hour"
-msgstr "Spectacle par heure"
 
 msgid "Show pin"
 msgstr "Afficher l'épingle"
@@ -79586,9 +79564,6 @@ msgstr ""
 "peut entraîner l'absence d'informations de piggyback provenant de certaines "
 "sources."
 
-msgid "Time resolution"
-msgstr "Résolution du temps"
-
 msgid "Time series graph"
 msgstr "Graphique de séries temporelles"
 
@@ -94580,10 +94555,6 @@ msgstr ""
 msgid "over threshold"
 msgstr "au-delà du seuil"
 
-#, fuzzy
-msgid "packaged binary"
-msgstr "Binaire conditionné 32 bits"
-
 msgid "packets/s"
 msgstr "paquets/s"
 
@@ -96424,6 +96395,15 @@ msgstr "Modifier les paramètres"
 msgid "Choose a visualization type."
 msgstr "Visualisation de la BI"
 
+msgid "Time resolution"
+msgstr "Résolution du temps"
+
+msgid "Show per hour"
+msgstr "Spectacle par heure"
+
+msgid "Show per day"
+msgstr "Spectacle par jour"
+
 #, fuzzy
 msgid "Show notifications for hosts and services"
 msgstr "Afficher les %ss pour les hôtes et les services"
@@ -96933,6 +96913,16 @@ msgstr "Supprimé : %s"
 msgid "and not"
 msgstr "n'est pas"
 
+msgid ""
+"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
+"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Nom du service : "
+
 #, fuzzy
 msgid "explicit password"
 msgstr "Nouveau mot de passe"
@@ -97220,23 +97210,6 @@ msgid "Agent connection failed"
 msgstr "Mode de connexion de l'agent Checkmk"
 
 #, fuzzy
-msgid "Failed to connect to the Checkmk agent"
-msgstr "Port TCP pour la connexion à l'agent Checkmk"
-
-msgid ""
-"This may be because the agent is not installed or not running on the target "
-"system."
-msgstr ""
-
-#, fuzzy
-msgid "Download & install agent"
-msgstr "Agent téléchargé"
-
-#, fuzzy
-msgid "Download Checkmk agent"
-msgstr "Télécharger l'agent Checkmk Vanilla"
-
-#, fuzzy
 msgid "Agent not registered"
 msgstr "Non enregistré"
 
@@ -97264,6 +97237,25 @@ msgid "Provide TLS connection"
 msgstr "Nouvelles connexions TLS"
 
 #, fuzzy
+msgid "Failed to connect to the Checkmk agent"
+msgstr "Port TCP pour la connexion à l'agent Checkmk"
+
+#, fuzzy
+msgid ""
+"This problem might be caused by a missing agent or the firewall settings."
+msgstr ""
+"Les problèmes ci-dessus peuvent être dus à des caches manquants. Veuillez "
+"déclencher un nouveau balayage."
+
+#, fuzzy
+msgid "Download & install agent"
+msgstr "Agent téléchargé"
+
+#, fuzzy
+msgid "Download Checkmk agent"
+msgstr "Télécharger l'agent Checkmk Vanilla"
+
+#, fuzzy
 msgid "Test agent connection"
 msgstr "Mode de connexion de l'agent Checkmk"
 
@@ -97274,6 +97266,10 @@ msgstr "Mode de connexion de l'agent Checkmk"
 #, fuzzy
 msgid "Successfully connected to agent."
 msgstr "Le mot de passe a été changé avec succès."
+
+#, fuzzy
+msgid "Error: "
+msgstr "Erreur : %s"
 
 #, fuzzy
 msgid "Close slideout"
@@ -97591,12 +97587,39 @@ msgstr ""
 "Spécifiez à quelle période un nouveau fichier pour l'historique des "
 "événements sera créé."
 
-msgid "Download the relay to your environment"
+#, fuzzy
+msgid "Download and register the Relay with your Checkmk site"
+msgstr "Affichage de l'état des sites Checkmk\n"
+
+msgid ""
+"The script will automatically download, register, and run the Relay with "
+"your Checkmk site."
+msgstr ""
+
+msgid "Before executing the script, visit "
 msgstr ""
 
 #, fuzzy
-msgid "Download the Relay container image."
+msgid "this page"
+msgstr "Première page"
+
+#, fuzzy
+msgid ""
+" to get an automation secret and replace [automation-secret] in the command "
+"below."
+msgstr "Secret d'automatisation valide pour l'utilisateur d'automatisation"
+
+msgid "Replace [your password] in the command below with your user password."
+msgstr ""
+
+#, fuzzy
+msgid "Download the Relay installation script to your environment"
 msgstr "Déployer le plugin de conteneur docker"
+
+msgid ""
+"Download the Relay installation script. The script orchestrates downloading "
+"the Relay and registering it with your Checkmk site."
+msgstr ""
 
 #, fuzzy
 msgid "Name the relay"
@@ -97609,29 +97632,6 @@ msgstr "Nom d'affichage alternatif pour les services"
 msgid ""
 "The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
-msgstr ""
-
-#, fuzzy
-msgid "Register the relay with your Checkmk site and run it"
-msgstr "Affichage de l'état des sites Checkmk\n"
-
-#, fuzzy
-msgid ""
-"Register the Relay to authorize it for communication with your Checkmk site."
-msgstr "Affichage de l'état des sites Checkmk\n"
-
-msgid " Go to "
-msgstr ""
-
-#, fuzzy
-msgid "this page"
-msgstr "Première page"
-
-#, fuzzy
-msgid " and get an automation secret. Use it in place of [automation-secret]"
-msgstr "Secret d'automatisation valide pour l'utilisateur d'automatisation"
-
-msgid "After successful registration, start the Relay daemon."
 msgstr ""
 
 #, fuzzy
@@ -97717,13 +97717,6 @@ msgstr "Modifier le paramètre global"
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
 msgstr "Toujours installer Python avec l'agent"
-
-#, fuzzy
-msgid ""
-"This problem might be caused by a missing agent or the firewall settings."
-msgstr ""
-"Les problèmes ci-dessus peuvent être dus à des caches manquants. Veuillez "
-"déclencher un nouveau balayage."
 
 #, fuzzy
 msgid "Already registered the Checkmk agent?"
@@ -98155,13 +98148,12 @@ msgid "2-5 min"
 msgstr "5 minutes"
 
 msgid ""
-"Each host includes a number of services that represent what you want to "
-"monitor, for example,\n"
-"  CPU usage, disk space, running processes, or hardware sensors. Checkmk "
-"makes this easy with the\n"
-"  Service Discovery, which automatically detects relevant services on your "
-"host, so you can start\n"
-"  monitoring with minimal setup."
+"In Checkmk, a host is any standalone physical or virtual system that is "
+"monitored.\n"
+"Each host has services which represent what is monitored, for example CPU "
+"usage, disk space, processes, or hardware sensors.\n"
+"The service discovery of Checkmk automatically detects these services.\n"
+"This allows monitoring to start with minimal configuration effort."
 msgstr ""
 
 #, fuzzy
@@ -98405,14 +98397,76 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "64-bit packaged binary"
-#~ msgstr "Binaire conditionné 64 bits"
+#~ msgid ""
+#~ "Access to the module <i>Snapshots</i>. Please note: a user with write "
+#~ "access to this module can make arbitrary changes to the configuration by "
+#~ "restoring uploaded snapshots."
+#~ msgstr ""
+#~ "Accès au module <i>Snaphsots</i>. Remarque : un utilisateur ayant un "
+#~ "accès en écriture à ce module peut apporter des modifications arbitraires "
+#~ "à la configuration en restaurant les instantanés téléchargés."
+
+#, fuzzy
+#~ msgid "Enable OpenTelemetry Collector (experimental)"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, python-format
+#~ msgid "Invalid timestep \"%d\" given"
+#~ msgstr "Invalide timestep \"%d\" donné"
+
+#, fuzzy
+#~ msgid "Manage OpenTelemetry configurations (experimental)"
+#~ msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
+
+#~ msgid "Manage snapshots"
+#~ msgstr "Gérer les instantanés"
+
+#, fuzzy
+#~ msgid "OpenTelemetry (experimental)"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector (Experimental)"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector: Receiver (experimental)"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, python-format
+#~ msgid "Problem %s"
+#~ msgstr "Problème %s"
+
+#, fuzzy
+#~ msgid "Prometheus scraping (Experimental)"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+#~ msgid "Python script"
+#~ msgstr "Script Python exécutable"
+
+#, fuzzy
+#~ msgid "Read OpenTelemetry configurations (experimental)"
+#~ msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
+
+#~ msgid ""
+#~ "Select a time period over which the alerts or notifications are added up"
+#~ msgstr ""
+#~ "Sélectionnez une période sur laquelle les alertes ou les notifications "
+#~ "sont cumulées"
+
+#, fuzzy
+#~ msgid "packaged binary"
+#~ msgstr "Binaire conditionné 32 bits"
+
+#, fuzzy
+#~ msgid ""
+#~ "Register the Relay to authorize it for communication with your Checkmk "
+#~ "site."
+#~ msgstr "Affichage de l'état des sites Checkmk\n"
 
 #~ msgid "RAM installed"
 #~ msgstr "RAM installée"
-
-#~ msgid "Script (Limited support, see inline help)"
-#~ msgstr "Script (support limité, voir l'aide en ligne)"
 
 #, fuzzy
 #~ msgid "Check HTTP service (deprecated)"
@@ -101752,10 +101806,6 @@ msgstr ""
 
 #~ msgid "Discovered host label synchronization"
 #~ msgstr "Synchronisation des étiquettes des hôtes découverts"
-
-#, python-format
-#~ msgid "Error: %s"
-#~ msgstr "Erreur : %s"
 
 #~ msgid "Host registration"
 #~ msgstr "Inscription de l'hôte"

@@ -1271,6 +1271,10 @@ msgstr "Niveluri superioare de ieșire de 3,3 volți"
 msgid "30 minutes"
 msgstr "30 de minute"
 
+#, fuzzy
+msgid "32-bit packaged binary"
+msgstr "64bit binar împachetat"
+
 msgid "389 Directory Server"
 msgstr "389 Directory Server"
 
@@ -1332,6 +1336,10 @@ msgstr "Rata de eroare 5xx"
 
 msgid "6 months"
 msgstr "6 luni"
+
+#, fuzzy
+msgid "64-bit packaged binary"
+msgstr "64bit binar împachetat"
 
 #, no-python-format
 msgid "68% - One standard deviation"
@@ -3509,16 +3517,6 @@ msgstr ""
 "acces în scris la acest modul poate efectua modificări arbitrare ale "
 "configurației prin restaurarea instantaneelor încărcate."
 
-#, fuzzy
-msgid ""
-"Access to the module <i>Snapshots</i>. Please note: a user with write access "
-"to this module can make arbitrary changes to the configuration by restoring "
-"uploaded snapshots."
-msgstr ""
-"Acces la modulul <i>Snaphsots</i>. Vă rugăm să rețineți: un utilizator cu "
-"acces în scris la acest modul poate efectua modificări arbitrare ale "
-"configurației prin restaurarea instantaneelor încărcate."
-
 msgid "Access to the module <i>Time periods</i>"
 msgstr "Accesul la modul <i>Perioade de timp</i>."
 
@@ -4186,6 +4184,14 @@ msgstr "Adaugp o noua configurație de utilizator"
 msgid "Add Prefix"
 msgstr "Adăugați prefixul"
 
+#, fuzzy
+msgid "Add Relay"
+msgstr "Adăugați cheia"
+
+#, fuzzy
+msgid "Add Relay configuration"
+msgstr "Configurația RRA"
+
 msgid "Add Rule ID"
 msgstr "Adăugați ID-ul regulii"
 
@@ -4633,14 +4639,6 @@ msgstr "Adăugați gazde aleatorii"
 #, fuzzy
 msgid "Add recipient"
 msgstr "Destinatarul"
-
-#, fuzzy
-msgid "Add relay"
-msgstr "Adăugați cheia"
-
-#, fuzzy
-msgid "Add relay configuration"
-msgstr "Configurația RRA"
 
 #, fuzzy
 msgid "Add remote site"
@@ -5872,8 +5870,8 @@ msgstr "Alertă privind consumul prea mare de energie"
 msgid "Alert overview"
 msgstr "Prezentare generală a alertelor"
 
-#, python-format
-msgid "Alert overview - %s"
+#, fuzzy
+msgid "Alert overview - $TIME_RANGE$"
 msgstr "Prezentare generală a alertelor - %s"
 
 msgid "Alert rule names"
@@ -24274,7 +24272,7 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr "Activarea accesului la Livestatus prin rețea (TCP)"
 
 #, fuzzy
-msgid "Enable OpenTelemetry Collector (experimental)"
+msgid "Enable OpenTelemetry Collector"
 msgstr "Configurația stilului selectat"
 
 msgid "Enable SMTP AUTH (LOGIN)"
@@ -32895,6 +32893,9 @@ msgstr "Gazde"
 msgid "Hosts & services:"
 msgstr "Gazde & servicii:"
 
+msgid "Hosts : $SHORT_STATE_NAME$"
+msgstr ""
+
 msgid "Hosts Connected"
 msgstr "Gazde conectate"
 
@@ -37828,10 +37829,6 @@ msgstr "Cheia de rezoluție a timpului \"%s\" nu este validă"
 msgid "Invalid time specific data"
 msgstr "Tipul specificat nu este valid."
 
-#, python-format
-msgid "Invalid timestep \"%d\" given"
-msgstr "Intervalul de timp \"%d\" nevalabil dat"
-
 msgid "Invalid topic"
 msgstr "Subiect nevalabil"
 
@@ -42285,8 +42282,8 @@ msgid "Manage OAuth2 connections"
 msgstr "Adăugați o conexiune"
 
 #, fuzzy
-msgid "Manage OpenTelemetry configurations (experimental)"
-msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
+msgid "Manage OpenTelemetry configurations"
+msgstr "Adaugp o noua configurație de utilizator"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Gestionați propriile rapoarte programate"
@@ -42355,9 +42352,6 @@ msgstr ""
 
 msgid "Manage services"
 msgstr "Gestionați serviciile"
-
-msgid "Manage snapshots"
-msgstr "Gestionarea instantaneelor"
 
 msgid "Manage tags"
 msgstr "Gestionați etichetele"
@@ -46730,6 +46724,10 @@ msgstr "Configurație gazdă"
 msgid "No PNP templates using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
+#, fuzzy
+msgid "No Relay configuration yet"
+msgstr "Configurație gazdă"
+
 msgid "No SNMP"
 msgstr "Nu SNMP"
 
@@ -47082,10 +47080,6 @@ msgstr "Nu există rezultate"
 
 #, fuzzy
 msgid "No relay ID specified."
-msgstr "Configurație gazdă"
-
-#, fuzzy
-msgid "No relay configuration yet"
 msgstr "Configurație gazdă"
 
 #, fuzzy
@@ -50085,15 +50079,7 @@ msgid "OpenTelemetry"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
-msgid "OpenTelemetry (experimental)"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy
 msgid "OpenTelemetry Collector"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy
-msgid "OpenTelemetry Collector (Experimental)"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -50113,11 +50099,11 @@ msgid "OpenTelemetry Collector receiver configurations"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
-msgid "OpenTelemetry Collector: Prometheus scraping (experimental)"
+msgid "OpenTelemetry Collector: Prometheus scraping"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
-msgid "OpenTelemetry Collector: Receiver (experimental)"
+msgid "OpenTelemetry Collector: Receiver"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -50327,11 +50313,10 @@ msgstr ""
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
-"automatically regardless of this rule. The binary format yields a broader "
-"compatibility, while the Python script is small and editable.<br> Concrete "
-"requirements are:<br> <b>packaged binary:</b> x86-64 Linux system with glibc "
-"2.17 or newer. <b>Python script:</b> Python3 with modules _cryptography_, "
-"_requests_ and _pysocks_ (for SOCKS proxy support)."
+"automatically regardless of this rule. The binary formats yield a broader "
+"compatibility whereas the python script is small and editable. Please note "
+"that the Checkmk team can offer no support for issues about the target "
+"system's python environment when choosing \"Script\"."
 msgstr ""
 "Alegeți opțional formatul fișierului executabil al agentului de actualizare. "
 "Relevant numai pentru Linux. Pe alte sisteme de operare, formatul executabil "
@@ -55069,10 +55054,6 @@ msgstr "Prob."
 msgid "Probe State"
 msgstr "Starea sondei"
 
-#, python-format
-msgid "Problem %s"
-msgstr "Problema %s"
-
 msgid "Problem acknowledged"
 msgstr "Problemă recunoscută"
 
@@ -55289,10 +55270,6 @@ msgstr "Servicii personalizate Prometheus"
 #, fuzzy
 msgid "Prometheus scraping"
 msgstr "Alertmanager"
-
-#, fuzzy
-msgid "Prometheus scraping (Experimental)"
-msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "Prometheus targets"
@@ -55637,10 +55614,6 @@ msgstr ""
 "Exemple:\n"
 "<tt>path/vars.yaml</tt>\n"
 "<tt>set_environment.py:testing</tt>"
-
-#, fuzzy
-msgid "Python script"
-msgstr "Script Python executabil"
 
 #, fuzzy
 msgid "Python version for execution of Python agent plug-ins"
@@ -56237,8 +56210,8 @@ msgid "Read Latency"
 msgstr "Latență de citire"
 
 #, fuzzy
-msgid "Read OpenTelemetry configurations (experimental)"
-msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
+msgid "Read OpenTelemetry configurations"
+msgstr "Adaugp o noua configurație de utilizator"
 
 #, fuzzy
 msgid "Read OpenTelemetry configurations."
@@ -58533,6 +58506,17 @@ msgstr "Necorespundere de adresă restricționată"
 msgid "Restriction tags enabled but no tags defined."
 msgstr "Nu este definită nicio sursă de date."
 
+#, fuzzy
+msgid ""
+"Restricts the list of contacts created by the previous options to those who "
+"are members of the selected contact groups. If more than one contact group "
+"is selected, the contact must be a member of all selected groups."
+msgstr ""
+"Aici puteți <i>restricționa</i> lista de contacte care a fost construită "
+"prin opțiunile anterioare la cele care sunt membre ale grupurilor de "
+"contacte selectate. Dacă selectați aici mai multe grupuri de contacte, "
+"atunci utilizatorul trebuie să fie membru al <i>toate</i> acestor grupuri."
+
 msgid "Result"
 msgstr "Rezultat"
 
@@ -60208,6 +60192,9 @@ msgstr "Interval de scanare"
 msgid "Scratch Pool"
 msgstr ""
 
+msgid "Script (Limited support, see inline help)"
+msgstr "Script (suport limitat, consultați ajutorul în linie)"
+
 msgid "Script Pattern"
 msgstr "Modelul Script"
 
@@ -60639,11 +60626,6 @@ msgstr "Selectată"
 
 msgid "Select a time period"
 msgstr "Selectați o perioadă de timp"
-
-msgid ""
-"Select a time period over which the alerts or notifications are added up"
-msgstr ""
-"Selectați o perioadă de timp în care se însumează alertele sau notificările"
 
 msgid "Select all checkboxes"
 msgstr "Selectați toate casetele de selectare"
@@ -61948,6 +61930,9 @@ msgstr "Servicii"
 msgid "Services (regular expressions)"
 msgstr "Servicii (expresii regulate)"
 
+msgid "Services : $SHORT_STATE_NAME$"
+msgstr ""
+
 msgid "Services colored according to state"
 msgstr "Servicii colorate în funcție de stat"
 
@@ -63163,12 +63148,6 @@ msgstr "Afișați numai regulile neutilizate"
 
 msgid "Show page navigation"
 msgstr "Afișați navigarea paginii"
-
-msgid "Show per day"
-msgstr "Spectacol pe zi"
-
-msgid "Show per hour"
-msgstr "Spectacol pe oră"
 
 msgid "Show pin"
 msgstr "Arată acul"
@@ -79213,9 +79192,6 @@ msgstr ""
 "directorul 'tmp' care are nevoie de mai mult timp pentru a se inițializa și "
 "poate duce la lipsa informațiilor piggyback din unele surse."
 
-msgid "Time resolution"
-msgstr "Rezoluția timpului"
-
 msgid "Time series graph"
 msgstr "Graficul seriilor de timp"
 
@@ -94020,10 +93996,6 @@ msgstr ""
 msgid "over threshold"
 msgstr "peste treshold"
 
-#, fuzzy
-msgid "packaged binary"
-msgstr "32bit binar împachetat"
-
 msgid "packets/s"
 msgstr "pachete/s"
 
@@ -95875,6 +95847,15 @@ msgstr "Editați setările"
 msgid "Choose a visualization type."
 msgstr "Afișați vizualizarea barei"
 
+msgid "Time resolution"
+msgstr "Rezoluția timpului"
+
+msgid "Show per hour"
+msgstr "Spectacol pe oră"
+
+msgid "Show per day"
+msgstr "Spectacol pe zi"
+
 #, fuzzy
 msgid "Show notifications for hosts and services"
 msgstr "Afișați %ss pentru gazde și servicii"
@@ -96383,6 +96364,16 @@ msgstr "Eliminat: %s"
 msgid "and not"
 msgstr "nu este"
 
+msgid ""
+"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
+"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Denumirea serviciului"
+
 #, fuzzy
 msgid "explicit password"
 msgstr "Parolă nouă"
@@ -96670,23 +96661,6 @@ msgid "Agent connection failed"
 msgstr "Modul de conectare a agentului Checkmk"
 
 #, fuzzy
-msgid "Failed to connect to the Checkmk agent"
-msgstr "Port TCP pentru conectarea la agentul Checkmk"
-
-msgid ""
-"This may be because the agent is not installed or not running on the target "
-"system."
-msgstr ""
-
-#, fuzzy
-msgid "Download & install agent"
-msgstr "Agent descărcat"
-
-#, fuzzy
-msgid "Download Checkmk agent"
-msgstr "Descărcați Checkmk agent Vanilla"
-
-#, fuzzy
 msgid "Agent not registered"
 msgstr "Neînregistrat"
 
@@ -96714,6 +96688,25 @@ msgid "Provide TLS connection"
 msgstr "Noi conexiuni TLS"
 
 #, fuzzy
+msgid "Failed to connect to the Checkmk agent"
+msgstr "Port TCP pentru conectarea la agentul Checkmk"
+
+#, fuzzy
+msgid ""
+"This problem might be caused by a missing agent or the firewall settings."
+msgstr ""
+"Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
+"declanșați o rescanare."
+
+#, fuzzy
+msgid "Download & install agent"
+msgstr "Agent descărcat"
+
+#, fuzzy
+msgid "Download Checkmk agent"
+msgstr "Descărcați Checkmk agent Vanilla"
+
+#, fuzzy
 msgid "Test agent connection"
 msgstr "Modul de conectare a agentului Checkmk"
 
@@ -96724,6 +96717,10 @@ msgstr "Modul de conectare a agentului Checkmk"
 #, fuzzy
 msgid "Successfully connected to agent."
 msgstr "Copiat cu succes în clipboard."
+
+#, fuzzy
+msgid "Error: "
+msgstr "Eroare: %s"
 
 #, fuzzy
 msgid "Close slideout"
@@ -97045,12 +97042,39 @@ msgstr ""
 "Specificați la ce perioadă de timp va fi creat un nou fișier pentru "
 "istoricul evenimentelor."
 
-msgid "Download the relay to your environment"
+#, fuzzy
+msgid "Download and register the Relay with your Checkmk site"
+msgstr "Afișarea stării site-urilor Checkmk\n"
+
+msgid ""
+"The script will automatically download, register, and run the Relay with "
+"your Checkmk site."
+msgstr ""
+
+msgid "Before executing the script, visit "
 msgstr ""
 
 #, fuzzy
-msgid "Download the Relay container image."
+msgid "this page"
+msgstr "Prima pagină"
+
+#, fuzzy
+msgid ""
+" to get an automation secret and replace [automation-secret] in the command "
+"below."
+msgstr "Secret de automatizare valabil pentru utilizatorul de automatizare"
+
+msgid "Replace [your password] in the command below with your user password."
+msgstr ""
+
+#, fuzzy
+msgid "Download the Relay installation script to your environment"
 msgstr "Implementați plugin-ul containerului docker"
+
+msgid ""
+"Download the Relay installation script. The script orchestrates downloading "
+"the Relay and registering it with your Checkmk site."
+msgstr ""
 
 #, fuzzy
 msgid "Name the relay"
@@ -97063,29 +97087,6 @@ msgstr "Denumire alternativă de afișare pentru servicii"
 msgid ""
 "The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
-msgstr ""
-
-#, fuzzy
-msgid "Register the relay with your Checkmk site and run it"
-msgstr "Afișarea stării site-urilor Checkmk\n"
-
-#, fuzzy
-msgid ""
-"Register the Relay to authorize it for communication with your Checkmk site."
-msgstr "Afișarea stării site-urilor Checkmk\n"
-
-msgid " Go to "
-msgstr ""
-
-#, fuzzy
-msgid "this page"
-msgstr "Prima pagină"
-
-#, fuzzy
-msgid " and get an automation secret. Use it in place of [automation-secret]"
-msgstr "Secret de automatizare valabil pentru utilizatorul de automatizare"
-
-msgid "After successful registration, start the Relay daemon."
 msgstr ""
 
 #, fuzzy
@@ -97171,13 +97172,6 @@ msgstr "Editarea setării globale"
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
 msgstr "Instalați întotdeauna Python cu agentul"
-
-#, fuzzy
-msgid ""
-"This problem might be caused by a missing agent or the firewall settings."
-msgstr ""
-"Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
-"declanșați o rescanare."
 
 #, fuzzy
 msgid "Already registered the Checkmk agent?"
@@ -97612,13 +97606,12 @@ msgid "2-5 min"
 msgstr "5 minute"
 
 msgid ""
-"Each host includes a number of services that represent what you want to "
-"monitor, for example,\n"
-"  CPU usage, disk space, running processes, or hardware sensors. Checkmk "
-"makes this easy with the\n"
-"  Service Discovery, which automatically detects relevant services on your "
-"host, so you can start\n"
-"  monitoring with minimal setup."
+"In Checkmk, a host is any standalone physical or virtual system that is "
+"monitored.\n"
+"Each host has services which represent what is monitored, for example CPU "
+"usage, disk space, processes, or hardware sensors.\n"
+"The service discovery of Checkmk automatically detects these services.\n"
+"This allows monitoring to start with minimal configuration effort."
 msgstr ""
 
 #, fuzzy
@@ -97865,14 +97858,76 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-#~ msgid "64-bit packaged binary"
-#~ msgstr "64bit binar împachetat"
+#~ msgid ""
+#~ "Access to the module <i>Snapshots</i>. Please note: a user with write "
+#~ "access to this module can make arbitrary changes to the configuration by "
+#~ "restoring uploaded snapshots."
+#~ msgstr ""
+#~ "Acces la modulul <i>Snaphsots</i>. Vă rugăm să rețineți: un utilizator cu "
+#~ "acces în scris la acest modul poate efectua modificări arbitrare ale "
+#~ "configurației prin restaurarea instantaneelor încărcate."
+
+#, fuzzy
+#~ msgid "Enable OpenTelemetry Collector (experimental)"
+#~ msgstr "Configurația stilului selectat"
+
+#, python-format
+#~ msgid "Invalid timestep \"%d\" given"
+#~ msgstr "Intervalul de timp \"%d\" nevalabil dat"
+
+#, fuzzy
+#~ msgid "Manage OpenTelemetry configurations (experimental)"
+#~ msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
+
+#~ msgid "Manage snapshots"
+#~ msgstr "Gestionarea instantaneelor"
+
+#, fuzzy
+#~ msgid "OpenTelemetry (experimental)"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector (Experimental)"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector: Receiver (experimental)"
+#~ msgstr "Configurația stilului selectat"
+
+#, python-format
+#~ msgid "Problem %s"
+#~ msgstr "Problema %s"
+
+#, fuzzy
+#~ msgid "Prometheus scraping (Experimental)"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "Python script"
+#~ msgstr "Script Python executabil"
+
+#, fuzzy
+#~ msgid "Read OpenTelemetry configurations (experimental)"
+#~ msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
+
+#~ msgid ""
+#~ "Select a time period over which the alerts or notifications are added up"
+#~ msgstr ""
+#~ "Selectați o perioadă de timp în care se însumează alertele sau "
+#~ "notificările"
+
+#, fuzzy
+#~ msgid "packaged binary"
+#~ msgstr "32bit binar împachetat"
+
+#, fuzzy
+#~ msgid ""
+#~ "Register the Relay to authorize it for communication with your Checkmk "
+#~ "site."
+#~ msgstr "Afișarea stării site-urilor Checkmk\n"
 
 #~ msgid "RAM installed"
 #~ msgstr "RAM instalat"
-
-#~ msgid "Script (Limited support, see inline help)"
-#~ msgstr "Script (suport limitat, consultați ajutorul în linie)"
 
 #, fuzzy
 #~ msgid "Check HTTP service (deprecated)"
@@ -101306,10 +101361,6 @@ msgstr ""
 
 #~ msgid "Discovered host label synchronization"
 #~ msgstr "Sincronizarea etichetelor gazdă descoperite"
-
-#, python-format
-#~ msgid "Error: %s"
-#~ msgstr "Eroare: %s"
 
 #~ msgid "Host registration"
 #~ msgstr "Înregistrare gazdă"

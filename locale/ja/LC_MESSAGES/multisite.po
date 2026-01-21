@@ -1230,6 +1230,10 @@ msgstr "3.3ボルト出力の上位レベル"
 msgid "30 minutes"
 msgstr "30分"
 
+#, fuzzy
+msgid "32-bit packaged binary"
+msgstr "64ビットパッケージバイナリ"
+
 msgid "389 Directory Server"
 msgstr "389ディレクトリサーバー"
 
@@ -1286,6 +1290,10 @@ msgstr "5xxエラー率"
 
 msgid "6 months"
 msgstr "6ヶ月"
+
+#, fuzzy
+msgid "64-bit packaged binary"
+msgstr "64ビットパッケージバイナリ"
 
 #, no-python-format
 msgid "68% - One standard deviation"
@@ -3360,15 +3368,6 @@ msgstr ""
 "持つユーザーは、アップロードされたスナップショットをリストアすることで、設定"
 "に任意の変更を加えることができます。"
 
-msgid ""
-"Access to the module <i>Snapshots</i>. Please note: a user with write access "
-"to this module can make arbitrary changes to the configuration by restoring "
-"uploaded snapshots."
-msgstr ""
-"<i>スナップショット</i>モジュールへのアクセス。注意: このモジュールへの書き込"
-"み権限を持つユーザーは、アップロードされたスナップショットをリストアすること"
-"で、設定に任意の変更を与えることができます。"
-
 msgid "Access to the module <i>Time periods</i>"
 msgstr "モジュール<i>タイムピリオド</i>へのアクセス"
 
@@ -3989,6 +3988,14 @@ msgstr "OpenTelemetryコレクターの設定を追加する"
 msgid "Add Prefix"
 msgstr "プレフィックスを追加"
 
+#, fuzzy
+msgid "Add Relay"
+msgstr "リレーを追加"
+
+#, fuzzy
+msgid "Add Relay configuration"
+msgstr "リレー設定の追加"
+
 msgid "Add Rule ID"
 msgstr "ルールIDを追加"
 
@@ -4415,13 +4422,6 @@ msgstr "ランダムなホストを追加する"
 
 msgid "Add recipient"
 msgstr "受取人の追加"
-
-#, fuzzy
-msgid "Add relay"
-msgstr "リレーを追加"
-
-msgid "Add relay configuration"
-msgstr "リレー設定の追加"
 
 #, fuzzy
 msgid "Add remote site"
@@ -5576,8 +5576,8 @@ msgstr "消費電力が高すぎる場合のアラート"
 msgid "Alert overview"
 msgstr "アラートの概要"
 
-#, python-format
-msgid "Alert overview - %s"
+#, fuzzy
+msgid "Alert overview - $TIME_RANGE$"
 msgstr "アラート概要 - %s"
 
 msgid "Alert rule names"
@@ -22909,8 +22909,8 @@ msgid "Enable Livestatus access via network (TCP)"
 msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にする"
 
 #, fuzzy
-msgid "Enable OpenTelemetry Collector (experimental)"
-msgstr "OpenTelemetryコレクター（実験的）"
+msgid "Enable OpenTelemetry Collector"
+msgstr "Opentelemetry コレクターデータ"
 
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH(LOGIN)を有効にする"
@@ -30896,6 +30896,9 @@ msgstr "ホスト"
 msgid "Hosts & services:"
 msgstr "ホスト&サービスイベント:"
 
+msgid "Hosts : $SHORT_STATE_NAME$"
+msgstr ""
+
 msgid "Hosts Connected"
 msgstr "接続されているホスト"
 
@@ -35565,10 +35568,6 @@ msgstr "無効な時間解決キー \"%s\" が指定されました"
 msgid "Invalid time specific data"
 msgstr "無効な時間指定データ"
 
-#, python-format
-msgid "Invalid timestep \"%d\" given"
-msgstr "無効なタイムステップ \"%d\"が指定されました"
-
 msgid "Invalid topic"
 msgstr "無効なトピック"
 
@@ -39810,8 +39809,9 @@ msgstr "InfluxDBコネクションの管理"
 msgid "Manage OAuth2 connections"
 msgstr "接続を追加"
 
-msgid "Manage OpenTelemetry configurations (experimental)"
-msgstr "OpenTelemetry の設定を管理する（実験的機能）"
+#, fuzzy
+msgid "Manage OpenTelemetry configurations"
+msgstr "OpenTelemetryコレクターの設定を追加する"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "スケジュールされたレポートの管理"
@@ -39876,9 +39876,6 @@ msgstr ""
 
 msgid "Manage services"
 msgstr "サービス管理"
-
-msgid "Manage snapshots"
-msgstr "スナップショット管理"
 
 msgid "Manage tags"
 msgstr "タグ管理"
@@ -43997,6 +43994,10 @@ msgstr "%sの設定はまだありません"
 msgid "No PNP templates using the deprecated API"
 msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
 
+#, fuzzy
+msgid "No Relay configuration yet"
+msgstr "%sの設定はまだありません"
+
 msgid "No SNMP"
 msgstr "SNMPなし"
 
@@ -44326,10 +44327,6 @@ msgstr "結果なし"
 #, fuzzy
 msgid "No relay ID specified."
 msgstr "まだリレーが設定されていません。"
-
-#, fuzzy
-msgid "No relay configuration yet"
-msgstr "%sの設定はまだありません"
 
 msgid "No relays configured yet."
 msgstr "まだリレーが設定されていません。"
@@ -47159,16 +47156,9 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry"
 msgstr "OpenTelemetry（実験的）"
 
-msgid "OpenTelemetry (experimental)"
-msgstr "OpenTelemetry（実験的）"
-
 #, fuzzy
 msgid "OpenTelemetry Collector"
 msgstr "Opentelemetry コレクターデータ"
-
-#, fuzzy
-msgid "OpenTelemetry Collector (Experimental)"
-msgstr "OpenTelemetryコレクター（実験的）"
 
 #, fuzzy
 msgid "OpenTelemetry Collector Prometheus scraping configurations"
@@ -47187,12 +47177,12 @@ msgid "OpenTelemetry Collector receiver configurations"
 msgstr "Open Telemetryコレクターの構成"
 
 #, fuzzy
-msgid "OpenTelemetry Collector: Prometheus scraping (experimental)"
+msgid "OpenTelemetry Collector: Prometheus scraping"
 msgstr "OpenTelemetryコレクター（実験的）"
 
 #, fuzzy
-msgid "OpenTelemetry Collector: Receiver (experimental)"
-msgstr "OpenTelemetryコレクター（実験的）"
+msgid "OpenTelemetry Collector: Receiver"
+msgstr "Opentelemetry コレクターデータ"
 
 #, fuzzy
 msgid "OpenTelemetry RED Errors"
@@ -47396,11 +47386,10 @@ msgstr ""
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
-"automatically regardless of this rule. The binary format yields a broader "
-"compatibility, while the Python script is small and editable.<br> Concrete "
-"requirements are:<br> <b>packaged binary:</b> x86-64 Linux system with glibc "
-"2.17 or newer. <b>Python script:</b> Python3 with modules _cryptography_, "
-"_requests_ and _pysocks_ (for SOCKS proxy support)."
+"automatically regardless of this rule. The binary formats yield a broader "
+"compatibility whereas the python script is small and editable. Please note "
+"that the Checkmk team can offer no support for issues about the target "
+"system's python environment when choosing \"Script\"."
 msgstr ""
 "オプションで、エージェントアップデータの実行可能ファイルの形式を選択します。"
 "Linuxにのみ関連します。他のOSでは、このルールに関係なく、実行可能形式が自動的"
@@ -51683,10 +51672,6 @@ msgstr "確率."
 msgid "Probe State"
 msgstr "プローブの状態"
 
-#, python-format
-msgid "Problem %s"
-msgstr "問題 %s"
-
 msgid "Problem acknowledged"
 msgstr "問題が承認されました"
 
@@ -51889,10 +51874,6 @@ msgstr "プロメテウスカスタムサービス"
 #, fuzzy
 msgid "Prometheus scraping"
 msgstr "Prometheus アラートマネージャ"
-
-#, fuzzy
-msgid "Prometheus scraping (Experimental)"
-msgstr "OpenTelemetryコレクター（実験的）"
 
 msgid "Prometheus targets"
 msgstr "Prometheus ターゲット"
@@ -52226,10 +52207,6 @@ msgstr ""
 "variable files</a>)。変数ファイルへの引数は、ファイルパスの後にコロンまたはセ"
 "ミコロンを区切り文字として指定することができる。例：<br><tt>path/vars.yaml</"
 "tt><br><tt>set_environment.py:testing</tt>"
-
-#, fuzzy
-msgid "Python script"
-msgstr "実行可能なPythonスクリプト"
 
 msgid "Python version for execution of Python agent plug-ins"
 msgstr "Pythonエージェントプラグインを実行するためのPythonバージョン"
@@ -52789,8 +52766,8 @@ msgid "Read Latency"
 msgstr "読み取りレイテンシ"
 
 #, fuzzy
-msgid "Read OpenTelemetry configurations (experimental)"
-msgstr "OpenTelemetry の設定を管理する（実験的機能）"
+msgid "Read OpenTelemetry configurations"
+msgstr "OpenTelemetryコレクターの設定を追加する"
 
 #, fuzzy
 msgid "Read OpenTelemetry configurations."
@@ -54974,6 +54951,17 @@ msgstr "制限付きアドレスの不一致"
 msgid "Restriction tags enabled but no tags defined."
 msgstr "制限タグが有効化されていますが、定義されたタグがありません。"
 
+#, fuzzy
+msgid ""
+"Restricts the list of contacts created by the previous options to those who "
+"are members of the selected contact groups. If more than one contact group "
+"is selected, the contact must be a member of all selected groups."
+msgstr ""
+"ここでは、前のオプションで作成された連絡先のリストを、選択した連絡先グループ"
+"のメンバーである連絡先に<i>制限</i>できます。ここで複数の連絡先グループを選択"
+"する場合、ユーザーはこれらのグループの<i>すべて</i>のメンバーである必要があり"
+"ます。"
+
 msgid "Result"
 msgstr "結果"
 
@@ -56552,6 +56540,9 @@ msgstr "スクレイピング間隔"
 msgid "Scratch Pool"
 msgstr ""
 
+msgid "Script (Limited support, see inline help)"
+msgstr "スクリプト(限定的なサポート、インラインヘルプを参照)"
+
 msgid "Script Pattern"
 msgstr "スクリプトパターン"
 
@@ -56958,10 +56949,6 @@ msgstr "選択済み"
 
 msgid "Select a time period"
 msgstr "期間を選択してください"
-
-msgid ""
-"Select a time period over which the alerts or notifications are added up"
-msgstr "アラートまたは通知を集計する期間を選択する"
 
 msgid "Select all checkboxes"
 msgstr "すべてのチェックボックスを選択します"
@@ -58184,6 +58171,9 @@ msgstr "サービス"
 msgid "Services (regular expressions)"
 msgstr "サービス(正規表現)"
 
+msgid "Services : $SHORT_STATE_NAME$"
+msgstr ""
+
 msgid "Services colored according to state"
 msgstr "ステートに応じて色分けされたサービス"
 
@@ -59309,12 +59299,6 @@ msgstr "未使用のルールのみを表示する"
 
 msgid "Show page navigation"
 msgstr "ナビゲーションを表示"
-
-msgid "Show per day"
-msgstr "1日あたりの表示"
-
-msgid "Show per hour"
-msgstr "1時間あたりの表示"
 
 msgid "Show pin"
 msgstr "ピンを表示"
@@ -74589,9 +74573,6 @@ msgstr ""
 "の時間範囲。これは'tmp'ディレクトリが初期化により多くの時間を必要とし、いくつ"
 "かのソースからのピギーバック情報が欠落することが原因です。"
 
-msgid "Time resolution"
-msgstr "時間分解能"
-
 msgid "Time series graph"
 msgstr "時系列グラフ"
 
@@ -88228,10 +88209,6 @@ msgstr ""
 msgid "over threshold"
 msgstr "しきい値超過"
 
-#, fuzzy
-msgid "packaged binary"
-msgstr "32ビット パッケージ バイナリ"
-
 msgid "packets/s"
 msgstr "パケット/秒"
 
@@ -90023,6 +90000,15 @@ msgstr "設定を編集する"
 msgid "Choose a visualization type."
 msgstr "可視化タイプを選択してください。"
 
+msgid "Time resolution"
+msgstr "時間分解能"
+
+msgid "Show per hour"
+msgstr "1時間あたりの表示"
+
+msgid "Show per day"
+msgstr "1日あたりの表示"
+
 #, fuzzy
 msgid "Show notifications for hosts and services"
 msgstr "ホストとサービスの %ss を表示"
@@ -90519,6 +90505,16 @@ msgstr "削除：%r"
 msgid "and not"
 msgstr "ではありません"
 
+msgid ""
+"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
+"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+#, fuzzy
+msgid "Service name template"
+msgstr "サービス名: "
+
 #, fuzzy
 msgid "explicit password"
 msgstr "新しいパスワード"
@@ -90787,22 +90783,6 @@ msgid "Agent connection failed"
 msgstr "Checkmkエージェント接続モード"
 
 #, fuzzy
-msgid "Failed to connect to the Checkmk agent"
-msgstr "Checkmkエージェントに接続するためのTCPポート"
-
-msgid ""
-"This may be because the agent is not installed or not running on the target "
-"system."
-msgstr ""
-
-msgid "Download & install agent"
-msgstr "ダウンロード済・インストール済のエージェント"
-
-#, fuzzy
-msgid "Download Checkmk agent"
-msgstr "CheckmkエージェントVanillaをダウンロード"
-
-#, fuzzy
 msgid "Agent not registered"
 msgstr "未登録"
 
@@ -90830,6 +90810,23 @@ msgid "Provide TLS connection"
 msgstr "新しいTLS接続"
 
 #, fuzzy
+msgid "Failed to connect to the Checkmk agent"
+msgstr "Checkmkエージェントに接続するためのTCPポート"
+
+msgid ""
+"This problem might be caused by a missing agent or the firewall settings."
+msgstr ""
+"この問題は、エージェントが欠落しているか、ファイアウォールの設定が原因である"
+"可能性があります。"
+
+msgid "Download & install agent"
+msgstr "ダウンロード済・インストール済のエージェント"
+
+#, fuzzy
+msgid "Download Checkmk agent"
+msgstr "CheckmkエージェントVanillaをダウンロード"
+
+#, fuzzy
 msgid "Test agent connection"
 msgstr "Checkmkエージェント接続モード"
 
@@ -90839,6 +90836,10 @@ msgstr "Checkmkエージェント接続テスト中..."
 #, fuzzy
 msgid "Successfully connected to agent."
 msgstr "クリップボードへのコピーに成功しました。"
+
+#, fuzzy
+msgid "Error: "
+msgstr "エラー: %s"
 
 #, fuzzy
 msgid "Close slideout"
@@ -91153,12 +91154,39 @@ msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 msgid "Select the folder your host(s) will be created in."
 msgstr "ホストが作成される場所を指定してください。"
 
-msgid "Download the relay to your environment"
+#, fuzzy
+msgid "Download and register the Relay with your Checkmk site"
+msgstr "Checkmkサイトにリレーを登録する"
+
+msgid ""
+"The script will automatically download, register, and run the Relay with "
+"your Checkmk site."
+msgstr ""
+
+msgid "Before executing the script, visit "
 msgstr ""
 
 #, fuzzy
-msgid "Download the Relay container image."
+msgid "this page"
+msgstr "1ページ目"
+
+#, fuzzy
+msgid ""
+" to get an automation secret and replace [automation-secret] in the command "
+"below."
+msgstr "自動化ユーザーの有効な自動化シークレット"
+
+msgid "Replace [your password] in the command below with your user password."
+msgstr ""
+
+#, fuzzy
+msgid "Download the Relay installation script to your environment"
 msgstr "Dockerコンテナプラグインをデプロイする"
+
+msgid ""
+"Download the Relay installation script. The script orchestrates downloading "
+"the Relay and registering it with your Checkmk site."
+msgstr ""
 
 #, fuzzy
 msgid "Name the relay"
@@ -91171,28 +91199,6 @@ msgstr "リレーの表示名を入力してください。"
 msgid ""
 "The alias you enter here will be automatically inserted into the terminal "
 "code in the next step."
-msgstr ""
-
-#, fuzzy
-msgid "Register the relay with your Checkmk site and run it"
-msgstr "Checkmkサイトにリレーを登録する"
-
-msgid ""
-"Register the Relay to authorize it for communication with your Checkmk site."
-msgstr "リレーを登録し、Checkmkサイトとの通信を許可してください。"
-
-msgid " Go to "
-msgstr ""
-
-#, fuzzy
-msgid "this page"
-msgstr "1ページ目"
-
-#, fuzzy
-msgid " and get an automation secret. Use it in place of [automation-secret]"
-msgstr "自動化ユーザーの有効な自動化シークレット"
-
-msgid "After successful registration, start the Relay daemon."
 msgstr ""
 
 #, fuzzy
@@ -91276,12 +91282,6 @@ msgstr "グローバル設定を編集する"
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
 msgstr "すでにエージェントはインストール済？"
-
-msgid ""
-"This problem might be caused by a missing agent or the firewall settings."
-msgstr ""
-"この問題は、エージェントが欠落しているか、ファイアウォールの設定が原因である"
-"可能性があります。"
 
 #, fuzzy
 msgid "Already registered the Checkmk agent?"
@@ -91706,13 +91706,12 @@ msgid "2-5 min"
 msgstr "5分"
 
 msgid ""
-"Each host includes a number of services that represent what you want to "
-"monitor, for example,\n"
-"  CPU usage, disk space, running processes, or hardware sensors. Checkmk "
-"makes this easy with the\n"
-"  Service Discovery, which automatically detects relevant services on your "
-"host, so you can start\n"
-"  monitoring with minimal setup."
+"In Checkmk, a host is any standalone physical or virtual system that is "
+"monitored.\n"
+"Each host has services which represent what is monitored, for example CPU "
+"usage, disk space, processes, or hardware sensors.\n"
+"The service discovery of Checkmk automatically detects these services.\n"
+"This allows monitoring to start with minimal configuration effort."
 msgstr ""
 
 #, fuzzy
@@ -91952,15 +91951,71 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid ""
+#~ "Access to the module <i>Snapshots</i>. Please note: a user with write "
+#~ "access to this module can make arbitrary changes to the configuration by "
+#~ "restoring uploaded snapshots."
+#~ msgstr ""
+#~ "<i>スナップショット</i>モジュールへのアクセス。注意: このモジュールへの書"
+#~ "き込み権限を持つユーザーは、アップロードされたスナップショットをリストアす"
+#~ "ることで、設定に任意の変更を与えることができます。"
+
 #, fuzzy
-#~ msgid "64-bit packaged binary"
-#~ msgstr "64ビットパッケージバイナリ"
+#~ msgid "Enable OpenTelemetry Collector (experimental)"
+#~ msgstr "OpenTelemetryコレクター（実験的）"
+
+#, python-format
+#~ msgid "Invalid timestep \"%d\" given"
+#~ msgstr "無効なタイムステップ \"%d\"が指定されました"
+
+#~ msgid "Manage OpenTelemetry configurations (experimental)"
+#~ msgstr "OpenTelemetry の設定を管理する（実験的機能）"
+
+#~ msgid "Manage snapshots"
+#~ msgstr "スナップショット管理"
+
+#~ msgid "OpenTelemetry (experimental)"
+#~ msgstr "OpenTelemetry（実験的）"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector (Experimental)"
+#~ msgstr "OpenTelemetryコレクター（実験的）"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector: Receiver (experimental)"
+#~ msgstr "OpenTelemetryコレクター（実験的）"
+
+#, python-format
+#~ msgid "Problem %s"
+#~ msgstr "問題 %s"
+
+#, fuzzy
+#~ msgid "Prometheus scraping (Experimental)"
+#~ msgstr "OpenTelemetryコレクター（実験的）"
+
+#, fuzzy
+#~ msgid "Python script"
+#~ msgstr "実行可能なPythonスクリプト"
+
+#, fuzzy
+#~ msgid "Read OpenTelemetry configurations (experimental)"
+#~ msgstr "OpenTelemetry の設定を管理する（実験的機能）"
+
+#~ msgid ""
+#~ "Select a time period over which the alerts or notifications are added up"
+#~ msgstr "アラートまたは通知を集計する期間を選択する"
+
+#, fuzzy
+#~ msgid "packaged binary"
+#~ msgstr "32ビット パッケージ バイナリ"
+
+#~ msgid ""
+#~ "Register the Relay to authorize it for communication with your Checkmk "
+#~ "site."
+#~ msgstr "リレーを登録し、Checkmkサイトとの通信を許可してください。"
 
 #~ msgid "RAM installed"
 #~ msgstr "インストールされたRAM"
-
-#~ msgid "Script (Limited support, see inline help)"
-#~ msgstr "スクリプト(限定的なサポート、インラインヘルプを参照)"
 
 #~ msgid "Check HTTP service (deprecated)"
 #~ msgstr "チェック HTTPサービス（非推奨）"
@@ -95437,10 +95492,6 @@ msgstr ""
 
 #~ msgid "Discovered host label synchronization"
 #~ msgstr "発見されたホストラベルの同期"
-
-#, python-format
-#~ msgid "Error: %s"
-#~ msgstr "エラー: %s"
 
 #~ msgid "Host registration"
 #~ msgstr "ホスト登録"

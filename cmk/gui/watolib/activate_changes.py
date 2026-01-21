@@ -3755,6 +3755,14 @@ def _raise_for_license_block() -> None:
         raise MKLicensingError(block_effect.message_raw)
 
 
+def _get_site_status(site_id: SiteId, site: SiteConfiguration) -> SiteStatus:
+    return (
+        SiteStatus({"state": "disabled"})
+        if site.get("disabled")
+        else sites_states().get(site_id, SiteStatus({}))
+    )
+
+
 def _check_sites_that_cannot_be_activated(
     site_configurations: SiteConfigurations,
 ) -> None:
@@ -3768,7 +3776,8 @@ def _check_sites_that_cannot_be_activated(
             for site_id, site in site_configurations.items()
             if (
                 not (site_is_local(site) or "secret" in site)
-                or sites_states().get(site_id, SiteStatus({})).get("state", "unknown") != "online"
+                or _get_site_status(site_id, site).get("state", "unknown")
+                not in ["online", "disabled"]
             )
         }
     )
@@ -3808,7 +3817,8 @@ def _check_sites_that_can_be_activated(
             for site_id, site in site_configurations.items()
             if (
                 (site_is_local(site) or "secret" in site)
-                and sites_states().get(site_id, SiteStatus({})).get("state", "unknown") == "online"
+                and _get_site_status(site_id, site).get("state", "unknown")
+                in ["online", "disabled"]
             )
         }
     )

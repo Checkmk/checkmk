@@ -63,7 +63,8 @@ const switchVisibility = () => {
   showTest.value = true
   if (
     props.ipAddressFamilyInputElement.checked &&
-    props.ipAddressFamilySelectElement.value === 'no-ip'
+    (props.ipAddressFamilySelectElement.value === 'no-ip' ||
+      props.ipAddressFamilySelectElement.value === 'ip-v4v6')
   ) {
     showTest.value = false
     return

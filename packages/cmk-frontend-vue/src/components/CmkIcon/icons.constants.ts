@@ -30,6 +30,7 @@ export const emblems = [
 
 export const oneColorIcons = [
   'changes',
+  'check-circle',
   'customize',
   'error',
   'help',

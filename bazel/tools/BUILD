@@ -115,6 +115,7 @@ bazel_env(
     toolchains = {},
     tools = {
         "bandit": ":bandit",
+        "mypy": ":mypy_cli_original",
         "osslsigncode": "@osslsigncode",
         "pnpm": "@pnpm",
         "semgrep": ":semgrep",

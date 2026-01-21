@@ -1,0 +1,12 @@
+diff --git a/mypy/private/mypy_runner.py b/mypy/private/mypy_runner.py
+index 84ffefb..0327322 100644
+--- a/mypy/private/mypy_runner.py
++++ b/mypy/private/mypy_runner.py
+@@ -74,6 +74,7 @@ def run_mypy(
+             "--explicit-package-bases",
+             # speedup
+             "--fast-module-lookup",
++            "--show-column-numbers",
+         ]
+         + srcs
+     )

@@ -109,7 +109,10 @@ git_override(
     module_name = "rules_mypy",
     commit = "cda38312dbdc003592818d667c68346acea5672d",  # v0.37.0
     patch_strip = 1,
-    patches = ["bazel/patches/rules_mypy.patch"],
+    patches = [
+        "bazel/patches/rules_mypy.patch",
+        "bazel/patches/rules_mypy-show_column_numbers.patch",
+    ],
     remote = "https://github.com/bazel-contrib/rules_mypy.git",
 )
 

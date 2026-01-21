@@ -10,3 +10,10 @@ py_binary(
     tags = ["manual"],
     deps = [requirement("sarif-tools")],
 )
+
+py_binary(
+    name = "collect_mypy",
+    srcs = ["collect_mypy.py"],
+    main = "collect_mypy.py",
+    tags = ["manual"],
+)

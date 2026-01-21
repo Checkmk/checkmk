@@ -94,7 +94,7 @@ jobs:
             - name: Lint repo
               run: bazel lint --fixes=false ...
             - name: Check typing
-              run: make -C tests test-mypy-gpl
+              run: bazel build --config=mypy ...
             - name: Run Bandit
               run: make -C tests test-bandit
             - name: Run unit tests

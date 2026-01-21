@@ -213,8 +213,6 @@ VARIABLES:
     - NAME: CHANGED_CMK_OTEL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-otel-collector/' || true"
 
-    - NAME: CHANGED_CMK_PLUGIN_APIS_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugin-apis/' || true"
     - NAME: CHANGED_OTEL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/otel-collector/' || true"
 
@@ -258,33 +256,6 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-relay-engine/' || true"
 
 STAGES:
-    - NAME: "Python Typing lib cmk"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_UVENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_TRACE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_CMK_RELAY_PROTOCOLS_FILES,CHANGED_SHARED_TYPING_FILES
-      DIR: "tests"
-      COMMAND: |
-          set +e
-          make --quiet test-mypy-cmk &> ${RESULTS}/mypy_cmk.txt
-          make_rc=$?
-          set -e
-          cp ../bazel-bin/cmk/lib_cmk_repo.mypy_stdout ${RESULTS}/lib_cmk_repo.txt || :
-          exit $make_rc
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No Python files changed"
-      RESULT_CHECK_TYPE: "MYPY"
-      RESULT_CHECK_FILE_PATTERN: "results/lib_cmk_repo.txt"
-
-    - NAME: "Python Typing not cmk"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_UVENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_TRACE_FILES,CHANGED_CMK_CCC_FILES
-      DIR: "tests"
-      ENV_VARS:
-          MYPY_ADDOPTS: "--no-color-output --junit-xml ${RESULTS}/mypy_not_cmk.xml --no-incremental"
-      COMMAND: "make --quiet test-mypy-not-cmk &> ${RESULTS}/mypy_not_cmk.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No Python files changed"
-      RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/mypy_not_cmk.xml"
-      JENKINS_TEST_RESULT_PATH: "testReport/mypy/mypy/"
-
     - NAME: "Python Cyclic Dependencies"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_TESTS_MAKEFILE,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_WERKS_FILES,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_CMK_TRACE_FILES,CHANGED_CMK_CCC_FILES
       DIR: "tests"
@@ -566,22 +537,6 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
 
-    - NAME: "Package cmk-plugin-apis"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_PLUGIN_APIS_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-plugin-apis"
-      BAZEL_LOCKS_AMOUNT: 1
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-plugin-apis.txt"
-      TEXT_ON_SKIP: "No cmk-plugin-apis files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-plugin-apis.txt"
-
-    - NAME: "Package cmk-plugins"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_PLUGINS_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-plugins"
-      BAZEL_LOCKS_AMOUNT: 1
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-plugins.txt"
-      TEXT_ON_SKIP: "No cmk-plugins files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-plugins.txt"
-
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
       DIR: "packages/cmk-agent-ctl"
@@ -593,7 +548,7 @@ STAGES:
     - NAME: "Package cmk-agent-receiver"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_RECEIVER_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_RELAY_PROTOCOLS_FILES
       DIR: "packages/cmk-agent-receiver"
-      COMMAND: "./run --component-tests --testlib-tests --lint=mypy &> ${RESULTS}/cmk-agent-receiver.txt"
+      COMMAND: "./run --component-tests --testlib-tests &> ${RESULTS}/cmk-agent-receiver.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-agent-receiver files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-receiver.txt"
@@ -601,144 +556,32 @@ STAGES:
     - NAME: "Package cmk-astrein"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_ASTREIN_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-astrein"
-      COMMAND: "./run --unit-tests --lint=mypy &> ${RESULTS}/cmk-astrein.txt"
+      COMMAND: "./run --unit-tests &> ${RESULTS}/cmk-astrein.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-astrein files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-astrein.txt"
 
-    - NAME: "Package cmk-ccc"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-ccc"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-ccc.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-ccc files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-ccc.txt"
-
-    - NAME: "Package cmk-check-engine"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_CMK_CHECK_ENGINE_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-check-engine"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-check-engine.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-check-engine files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-check-engine.txt"
-
-    - NAME: "Package cmk-core-helpers"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_CMK_CORE_HELPERS_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_RELAY_PROTOCOLS_FILES
-      DIR: "non-free/packages/cmk-core-helpers"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-core-helpers.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-core-helpers files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-core-helpers.txt"
-
-    - NAME: "Package cmk-crypto"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CRYPTO_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-crypto"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-crypto.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-crypto files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-crypto.txt"
-
     - NAME: "Package cmk-ec"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EC_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-ec"
-      COMMAND: "./run --unit-tests --lint=mypy &> ${RESULTS}/cmk-ec.txt"
+      COMMAND: "./run --unit-tests &> ${RESULTS}/cmk-ec.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-ec files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-ec.txt"
-
-    - NAME: "Package cmk-events"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EVENTS_FILES,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-mkp-tool"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-events.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-events files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-events.txt"
-
-    - NAME: "Package cmk-livestatus-client"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-livestatus-client"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-livestatus-client.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-livestatus-client files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
-
-    - NAME: "Package cmk-messaging"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MESSAGING_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-messaging"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-messaging.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-messaging files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-messaging.txt"
-
-    - NAME: "Package cmk-metric-backend"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_METRIC_BACKEND_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "non-free/packages/cmk-metric-backend"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-metric-backend.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-metric-backend files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-metric-backend.txt"
-
-    - NAME: "Package cmk-mknotifyd"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKNOTIFYD_FILES,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "non-free/packages/cmk-mknotifyd"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-mknotifyd.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-mknotifyd files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-mknotifyd.txt"
-
-    - NAME: "Package cmk-mkp-tool"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKP_TOOL_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-mkp-tool"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-mkp-tool.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-mkp-tool files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
-
-    - NAME: "Package cmk-relay-protocols"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_RELAY_PROTOCOLS_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-relay-protocols"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-relay-protocols.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-relay-protocols files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-protocols.txt"
-
-    - NAME: "Package cmk-otel-collector"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_OTEL_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "non-free/packages/cmk-otel-collector"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-otel-collector.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-otel-collector files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-otel-collector.txt"
 
     - NAME: "Package otel-collector"
       ONLY_WHEN_NOT_EMPTY: CHANGED_OTEL_FILES, CHANGED_GO_MOD
       DIR: "non-free/packages/otel-collector"
       # No entry point for linters
-      COMMAND: "./run --lint=mypy --check-format  &> ${RESULTS}/otel-collector.txt"
+      COMMAND: "./run --check-format  &> ${RESULTS}/otel-collector.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No otel-collector files changed"
       RESULT_CHECK_FILE_PATTERN: "results/otel-collector.txt"
 
-    - NAME: "Package cmk-werks"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-werks"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-werks.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-werks package files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
-
-    - NAME: "Package cmk-trace"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_TRACE_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-trace"
-      COMMAND: "./run --lint=mypy &> ${RESULTS}/cmk-trace.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-trace package files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-trace.txt"
-
     - NAME: "Package cmk-update-agent"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_UPDATE_AGENT_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "non-free/packages/cmk-update-agent"
-      COMMAND: "./run --unit-tests --lint=mypy &> ${RESULTS}/cmk-update-agent.txt"
+      COMMAND: "./run --unit-tests &> ${RESULTS}/cmk-update-agent.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-update-agent files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-update-agent.txt"
@@ -807,7 +650,7 @@ STAGES:
     - NAME: "Package cmk-relay-engine"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_RELAY_ENGINE_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_RELAY_PROTOCOLS_FILES
       DIR: "non-free/packages/cmk-relay-engine"
-      COMMAND: "./run --unit-tests --component-tests --testlib-tests --lint=mypy &> ${RESULTS}/cmk-relay-engine.txt"
+      COMMAND: "./run --unit-tests --component-tests --testlib-tests &> ${RESULTS}/cmk-relay-engine.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-relay-engine files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-engine.txt"
@@ -848,6 +691,31 @@ STAGES:
       # https://github.com/semgrep/semgrep/issues/6658
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/semgrep.xml"
+
+    - NAME: "Type repository (mypy)"
+      DIR: ""
+      COMMAND: |
+          set +e
+          bazel \
+             build \
+             --keep_going \
+             --aspects=//bazel/tools:aspects.bzl%mypy_aspect \
+             --output_groups=mypy \
+             ...
+          exit_code=$?
+          set -e
+          bazel \
+             --run_under="cd $PWD &&" \
+             run \
+             //scripts:collect_mypy \
+             -- \
+             bazel-out/k8-fastbuild/bin \
+             > results/mypy-results.xml
+          exit $exit_code
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "inconditional"
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/mypy-results.xml"
 
     - NAME: "Enforced package build"
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_MAKEFILE

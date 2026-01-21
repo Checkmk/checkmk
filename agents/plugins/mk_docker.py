@@ -40,14 +40,7 @@ import pathlib
 import struct
 import sys
 import time
-
-
-def which(prg):
-    for path in os.environ["PATH"].split(os.pathsep):
-        if os.path.isfile(os.path.join(path, prg)) and os.access(os.path.join(path, prg), os.X_OK):
-            return os.path.join(path, prg)
-    return None
-
+from shutil import which
 
 # The "import docker" checks below result in agent sections being created. This
 # is a way to end the plugin in case it is being executed on a non docker host

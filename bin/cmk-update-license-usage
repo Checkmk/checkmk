@@ -41,7 +41,7 @@ def _parse_arguments() -> argparse.Namespace:
 
 
 def active_metric_series_retriever() -> int | None:
-    from cmk.metric_backend.client import ClickHouseClient
+    from cmk.metric_backend.client import ClickHouseClient # type: ignore[import-untyped, unused-ignore]
     try:
         client = ClickHouseClient.read_only_from_omd_root(paths.omd_root)
     except RuntimeError:
@@ -49,7 +49,7 @@ def active_metric_series_retriever() -> int | None:
         # the customer has not configured the metric backend at all
         return None
 
-    return client.active_series_count()
+    return client.active_series_count()  # type: ignore[no-any-return, unused-ignore]
 
 def main() -> int:
     args = _parse_arguments()

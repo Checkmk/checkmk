@@ -58,7 +58,9 @@ void main() {
 
         lock(label: lock_label, quantity: 1, resource : null) {
             inside_container(inside_container_args) {
-                withCredentials(secret_list(params.SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
+                withCredentials(secret_list(params.SECRET_VARS).collect {
+                    string(credentialsId: it, variable: it)
+                }) {
                     helper.execute_test([
                         name       : params.PACKAGE_PATH,
                         cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",

@@ -8,8 +8,8 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkDropdown from '@/components/CmkDropdown'
-import CmkIndent from '@/components/CmkIndent.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
 
 import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
@@ -35,6 +35,7 @@ interface Stage1Props {
   widgetActiveFilters: string[]
   isInFilterSelectionMenuFocus: (objectType: ObjectType) => boolean
   inventoryPaths: Suggestion[]
+  validationError?: string | undefined
 }
 
 const props = defineProps<Stage1Props>()
@@ -81,28 +82,29 @@ const displayHwSwPropertySelection = ref(true)
     @toggle-open="displayHwSwPropertySelection = !displayHwSwPropertySelection"
   />
   <CollapsibleContent :open="displayHwSwPropertySelection">
-    <CmkIndent>
-      <TableForm>
-        <TableFormRow>
-          <FieldDescription>
-            {{ _t('HW/SW inventory property') }}
-          </FieldDescription>
-          <FieldComponent>
-            <div class="db-stage-contents__field-component-item">
-              <CmkDropdown
-                v-model:selected-option="inventoryPath"
-                :input-hint="_t('Select inventory path')"
-                :label="_t('Inventory path')"
-                :options="{
-                  type: 'fixed',
-                  suggestions: props.inventoryPaths
-                }"
-              />
-            </div>
-          </FieldComponent>
-        </TableFormRow>
-      </TableForm>
-    </CmkIndent>
+    <TableForm>
+      <TableFormRow>
+        <FieldDescription>
+          {{ _t('HW/SW inventory property') }}
+        </FieldDescription>
+        <FieldComponent>
+          <div class="db-stage-contents__field-component-item">
+            <CmkDropdown
+              v-model:selected-option="inventoryPath"
+              :input-hint="_t('Select inventory path')"
+              :label="_t('Inventory path')"
+              :options="{
+                type: 'fixed',
+                suggestions: props.inventoryPaths
+              }"
+            />
+          </div>
+          <CmkAlertBox v-if="props.validationError" variant="error">
+            {{ props.validationError }}
+          </CmkAlertBox>
+        </FieldComponent>
+      </TableFormRow>
+    </TableForm>
   </CollapsibleContent>
 </template>
 

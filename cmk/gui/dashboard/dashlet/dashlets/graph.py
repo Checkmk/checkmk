@@ -38,6 +38,9 @@ from cmk.gui.graphing import (
     GraphSpecification,
     metrics_from_api,
     MKCombinedGraphLimitExceededError,
+    MKGraphDashletTooSmallError,
+    MKGraphRecipeCalculationError,
+    MKGraphRecipeNotFoundError,
     RegisteredMetric,
     TemplateGraphSpecification,
     translated_metrics_from_row,
@@ -196,11 +199,15 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:
+            raise make_mk_missing_data_error(reason=_("Service or host not found."))
+        except (
+            MKGraphRecipeCalculationError,
+            MKGraphRecipeNotFoundError,
+            MKGraphDashletTooSmallError,
+        ):
             raise make_mk_missing_data_error()
-        except MKUserError as e:
-            raise MKGeneralException(_("Failed to calculate a graph recipe. (%s)") % str(e))
         except MKCombinedGraphLimitExceededError as limit_exceeded_error:
-            raise limit_exceeded_error
+            raise make_mk_missing_data_error(reason=str(limit_exceeded_error))
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 

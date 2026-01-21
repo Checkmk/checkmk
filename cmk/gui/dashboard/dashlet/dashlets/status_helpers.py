@@ -132,5 +132,7 @@ def _transform_user_specific_unit_for_js(
     }
 
 
-def make_mk_missing_data_error() -> MKMissingDataError:
-    return MKMissingDataError(_("No data was found with the current parameters of this widget."))
+def make_mk_missing_data_error(reason: str | None = None) -> MKMissingDataError:
+    """Standardized missing data error for the dashboard."""
+    message = _("No data was found with the current parameters of this widget.")
+    return MKMissingDataError(f"{reason}" if reason else message)

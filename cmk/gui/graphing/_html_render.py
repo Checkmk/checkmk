@@ -77,7 +77,12 @@ from ._metric_backend_registry import (
     metric_backend_registry,
 )
 from ._unit import get_temperature_unit, user_specific_unit
-from ._utils import SizeEx
+from ._utils import (
+    MKGraphDashletTooSmallError,
+    MKGraphRecipeCalculationError,
+    MKGraphRecipeNotFoundError,
+    SizeEx,
+)
 
 RenderOutput = HTML | str
 
@@ -1228,38 +1233,25 @@ def host_service_graph_dashlet_cmk(
             debug=debug,
             temperature_unit=temperature_unit,
         )
-    except MKLivestatusNotFoundError:
-        return render_graph_error_html(
-            title=_("Cannot calculate graph recipes"),
-            msg_or_exc=(
-                "%s\n\n%s: %r"
-                % (
-                    _("Cannot fetch data via Livestatus"),
-                    _("The graph specification is"),
-                    graph_specification,
-                )
-            ),
-            debug=debug,
-        )
-    except MKMissingDataError as e:
-        # In case of missing data, the according message is rendered without a traceback. This
-        # specific exception handling is needed for the Vue dashboard rendering.
-        return html.render_message(str(e))
+    except MKLivestatusNotFoundError as e:
+        raise MKGraphRecipeCalculationError(
+            "%s\n\n%s: %r"
+            % (
+                _("Cannot fetch data via Livestatus"),
+                _("The graph specification is"),
+                graph_specification,
+            )
+        ) from e
+    except MKMissingDataError:
+        # In case of missing data, re-raise to be handled at call-sites
+        raise
     except Exception as e:
-        return render_graph_error_html(
-            title=_("Cannot calculate graph recipes"),
-            msg_or_exc=e,
-            debug=debug,
-        )
+        raise MKGraphRecipeCalculationError(_("Cannot calculate graph recipes")) from e
 
     if graph_recipes:
         graph_recipe = graph_recipes[0]
     else:
-        return render_graph_error_html(
-            title=_("No graph recipe found"),
-            msg_or_exc=_("Failed to calculate a graph recipe."),
-            debug=debug,
-        )
+        raise MKGraphRecipeNotFoundError(_("Failed to calculate a graph recipe."))
 
     graph_render_config.size = (width, height)
 
@@ -1308,10 +1300,8 @@ def host_service_graph_dashlet_cmk(
             3.0 + (len(list(graph_artwork.curves)) + len(graph_artwork.horizontal_rules)) * 1.3
         )
         if height <= 0:
-            return render_graph_error_html(
-                title=_("Dashlet too short to render graph"),
-                msg_or_exc=_("Either increase the dashlet height or disable the graph legend."),
-                debug=debug,
+            raise MKGraphDashletTooSmallError(
+                _("Either increase the dashlet height or disable the graph legend.")
             )
         graph_render_config.size = (width, height)
 

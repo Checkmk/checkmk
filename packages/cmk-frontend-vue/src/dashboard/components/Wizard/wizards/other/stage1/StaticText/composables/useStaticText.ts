@@ -3,14 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, computed, ref, watch } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type { UseWidgetHandler, WidgetProps } from '@/dashboard/components/Wizard/types'
-import { useDebounceFn } from '@/dashboard/composables/useDebounce'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { StaticTextContent, WidgetSpec } from '@/dashboard/types/widget'
@@ -61,9 +60,7 @@ export function useStaticText(
     })
   )
 
-  const widgetProps = ref<WidgetProps>(_buildWidgetProps())
-
-  function _buildWidgetProps(): WidgetProps {
+  const widgetProps = computed<WidgetProps>(() => {
     return {
       general_settings: widgetGeneralSettings.value,
       content: content.value,
@@ -75,14 +72,7 @@ export function useStaticText(
         dashboardConstants
       )
     }
-  }
-  watch(
-    [widgetGeneralSettings, content],
-    useDebounceFn(() => {
-      widgetProps.value = _buildWidgetProps()
-    }, 300),
-    { deep: true }
-  )
+  })
 
   return {
     title,

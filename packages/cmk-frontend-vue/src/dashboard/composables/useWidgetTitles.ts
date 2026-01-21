@@ -86,7 +86,7 @@ export async function computePreviewWidgetTitle(
 
 export function usePreviewWidgetTitle(widget: Ref<PreviewTitleProps>) {
   const previewTitle = ref<string | undefined>()
-  const debounced = useDebounceRef(widget, 300)
+  const debounced = useDebounceRef(widget, 300, true)
   watch(
     debounced,
     () => {

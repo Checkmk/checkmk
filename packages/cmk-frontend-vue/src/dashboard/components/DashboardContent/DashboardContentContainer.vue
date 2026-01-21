@@ -32,20 +32,28 @@ const titleRenderClass = computed<string>(() => {
 const hasBackground = computed<boolean>(() => {
   return !!generalSettings.render_background
 })
+
+const displayTitle = computed<string | undefined>(() => {
+  if (effectiveTitle) {
+    return effectiveTitle
+  }
+  if (generalSettings.title?.text && generalSettings.title.render_mode !== 'hidden') {
+    return generalSettings.title.text
+  }
+  return undefined
+})
 </script>
 
 <template>
   <div class="db-content-container">
     <div
-      v-if="effectiveTitle && generalSettings.title?.render_mode !== 'hidden'"
+      v-if="displayTitle && generalSettings.title?.render_mode !== 'hidden'"
       class="db-content-container__title"
       :class="titleRenderClass"
       role="heading"
     >
-      <a v-if="generalSettings.title?.url" :href="generalSettings.title.url">{{
-        effectiveTitle
-      }}</a>
-      <span v-else>{{ effectiveTitle }}</span>
+      <a v-if="generalSettings.title?.url" :href="generalSettings.title.url">{{ displayTitle }}</a>
+      <span v-else>{{ displayTitle }}</span>
     </div>
     <div
       class="db-content-container__content"

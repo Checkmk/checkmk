@@ -307,16 +307,20 @@ def test_t_axis_labels_week() -> None:
         ]
 
 
-def test_halfstep_interpolation() -> None:
-    assert _halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
-        5.0,
-        5.0,
-        5.0,
-        6.0,
-        7.0,
-        7.0,
-        None,
-    ]
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        pytest.param([], [], id="empty"),
+        pytest.param([5.0, 6.0, 7.0], [5.0, 5.5, 6.0, 6.5, 7.0], id="no-gaps"),
+        pytest.param([None, 6.0, 7.0], [None, None, 6.0, 6.5, 7.0], id="left-gap"),
+        pytest.param([5.0, None, 7.0], [5.0, None, None, None, 7.0], id="middle-gap"),
+        pytest.param([5.0, 6.0, None], [5.0, 5.5, 6.0, None, None], id="right-gap"),
+    ],
+)
+def test_halfstep_interpolation(
+    values: Sequence[TimeSeriesValue], expected: Sequence[TimeSeriesValue]
+) -> None:
+    assert list(_halfstep_interpolation(TimeSeries(values, (123, 234, 10)))) == expected
 
 
 @pytest.mark.parametrize(
@@ -412,7 +416,7 @@ def test_fringe(
                         line_width=2,
                     ),
                 ],
-                "range": (1668502320, 1668516720),
+                "range": (1668502380, 1668516660),
                 "title": "2022-11-15 @ 1m",
             },
             id="4h",
@@ -455,7 +459,7 @@ def test_fringe(
                         line_width=2,
                     ),
                 ],
-                "range": (1668426600, 1668516600),
+                "range": (1668426900, 1668516300),
                 "title": "2022-11-14 — 2022-11-15 @ 5m",
             },
             id="25h",
@@ -548,7 +552,7 @@ def test_fringe(
                         line_width=0,
                     ),
                 ],
-                "range": (1667826000, 1668517200),
+                "range": (1667827800, 1668515400),
                 "title": "2022-11-07 — 2022-11-15 @ 30m",
             },
             id="8d",
@@ -616,7 +620,7 @@ def test_fringe(
                         line_width=2,
                     ),
                 ],
-                "range": (1665486000, 1668519000),
+                "range": (1665495000, 1668510000),
                 "title": "2022-10-11 — 2022-11-15 @ 2h",
             },
             id="35d",
@@ -659,7 +663,7 @@ def test_fringe(
                         line_width=2,
                     ),
                 ],
-                "range": (1633910400, 1668470400),
+                "range": (1633996800, 1668384000),
                 "title": "2021-10-12 — 2022-11-14 @ 1d",
             },
             id="400d",

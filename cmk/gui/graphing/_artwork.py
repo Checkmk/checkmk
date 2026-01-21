@@ -252,7 +252,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
     layouted_curves = []
     for curve in curves:
         line_type = curve["line_type"]
-        raw_points = _halfstep_interpolation(curve["rrddata"])
+        raw_points = list(_halfstep_interpolation(curve["rrddata"]))
 
         if line_type == "ref":  # Only for forecast graphs
             stacks[1] = raw_points
@@ -388,26 +388,20 @@ def compute_graph_artwork_curves(
     return curves
 
 
-# Result is a list with len(rrddata)*2 + 1 vertical values
-def _halfstep_interpolation(rrddata: TimeSeries) -> list[TimeSeriesValue]:
+def _halfstep_interpolation(rrddata: TimeSeries) -> Iterator[TimeSeriesValue]:
     if not rrddata:
-        return []
+        return
 
-    points = [rrddata[0]] * 3
-    last_point = rrddata[0]
-    for point in list(rrddata)[1:]:
-        if last_point is None and point is None:
-            points += [None, None]
-        elif last_point is None:
-            points += [point, point]
-        elif point is None:
-            points += [last_point, None]
+    # These steps have to be in sync with graphs.ts. There we start from 'start_time' and
+    # go through the points with a stepsize of 'step / 2'.
+    rrddata_values = list(rrddata)
+    for left, right in zip(rrddata_values, rrddata_values[1:]):
+        yield left
+        if left is not None and right is not None:
+            yield (left + right) / 2.0
         else:
-            points += [(point + last_point) / 2.0, point]
-
-        last_point = point
-
-    return points
+            yield None
+    yield rrddata_values[-1]
 
 
 _TCurveType = TypeVar("_TCurveType", Curve, LayoutedCurve)
@@ -1153,7 +1147,7 @@ def _compute_graph_t_axis(  # pylint: disable=too-many-branches
 
     return TimeAxis(
         labels=labels,
-        range=(int(start_time - step), int(end_time + step)),
+        range=(start_time, end_time),
         title=_add_step_to_title(title_label, step),
     )
 

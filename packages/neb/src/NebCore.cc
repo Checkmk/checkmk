@@ -708,23 +708,25 @@ bool NebCore::handleGet(InputBuffer &input, OutputBuffer &output,
 }
 
 void NebCore::answerCommandRequest(const ExternalCommand &command) {
-    if (command.name() == "MK_LOGWATCH_ACKNOWLEDGE") {
+    const auto name{command.name()};
+    if (name == "MK_LOGWATCH_ACKNOWLEDGE") {
         answerCommandMkLogwatchAcknowledge(command);
         return;
     }
-    if (command.name() == "DEL_CRASH_REPORT") {
+    if (name == "DEL_CRASH_REPORT") {
         answerCommandDelCrashReport(command);
         return;
     }
-    if (command.name().starts_with("EC_")) {
-        answerCommandEventConsole("COMMAND " + command.name().substr(3) +
+    if (name.starts_with("EC_")) {
+        answerCommandEventConsole("COMMAND " + name.substr(3) +
                                   command.arguments());
         return;
     }
-    // Nagios doesn't have a LOG command, so we map it to the custom command
-    // _LOG, which we implement for ourselves.
-    answerCommandNagios(command.name() == "LOG" ? command.withName("_LOG")
-                                                : command);
+    // Nagios doesn't have a LOG or ROTATE_LOGFILE command, so we map it to a
+    // custom command which we handle in broker_external_command().
+    answerCommandNagios(name == "LOG" || name == "ROTATE_LOGFILE"
+                            ? command.withName("_" + name)
+                            : command);
 }
 
 void NebCore::answerCommandMkLogwatchAcknowledge(

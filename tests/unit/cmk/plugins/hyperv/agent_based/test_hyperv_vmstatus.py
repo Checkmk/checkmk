@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.base.legacy_checks.hyperv_vmstatus import (
+from cmk.plugins.hyperv.agent_based.hyperv_vmstatus import (
     check_hyperv_vmstatus,
     discover_hyperv_vmstatus,
     parse_hyperv_vmstatus,

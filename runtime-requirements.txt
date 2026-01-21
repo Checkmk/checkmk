@@ -285,16 +285,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.42.30 \
-    --hash=sha256:ba9cd2f7819637d15bfbeb63af4c567fcc8a7dcd7b93dd12734ec58601169538 \
-    --hash=sha256:d7e548bea65e0ae2c465c77de937bc686b591aee6a352d5a19a16bc751e591c1
+boto3==1.42.31 \
+    --hash=sha256:7f04b4cd7c375e4d88cc2cba3022c40805012ce8f57468b82cedb1bcd6b3a58a \
+    --hash=sha256:b2038fc5dbcd6746a16ada8d55fe73659b8cf95c7b6aeb63fe782e831485edaa
     # via
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-botocore==1.42.30 \
-    --hash=sha256:97070a438cac92430bb7b65f8ebd7075224f4a289719da4ee293d22d1e98db02 \
-    --hash=sha256:9bf1662b8273d5cc3828a49f71ca85abf4e021011c1f0a71f41a2ea5769a5116
+botocore==1.42.31 \
+    --hash=sha256:021346ad57cc3018acf4a46edc1f649b9818b33c07a08674ce1c36e9edbb5859 \
+    --hash=sha256:62f2c31e229df625612dd4d7c72618948e4064436d71a647102f36fcddfa0f4d
     # via
     #   -c constraints.txt
     #   -c requirements.txt

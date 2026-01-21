@@ -11,12 +11,14 @@ import type { WidgetGeneralSettings } from '@/dashboard/types/widget'
 interface DashboardContentContainerProps {
   effectiveTitle: string | undefined
   general_settings: WidgetGeneralSettings
+  contentOverflow?: string
   contentCenter?: boolean
 }
 
 const {
   effectiveTitle,
   general_settings: generalSettings,
+  contentOverflow = 'auto',
   contentCenter = false
 } = defineProps<DashboardContentContainerProps>()
 
@@ -88,7 +90,7 @@ const hasBackground = computed<boolean>(() => {
   display: flex;
   flex: 1;
   flex-direction: column;
-  overflow: auto;
+  overflow: v-bind('contentOverflow');
 
   &.db-content-container__content-background {
     background-color: var(--db-content-bg-color);

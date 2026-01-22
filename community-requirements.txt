@@ -397,29 +397,29 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.42.31 \
-    --hash=sha256:7f04b4cd7c375e4d88cc2cba3022c40805012ce8f57468b82cedb1bcd6b3a58a \
-    --hash=sha256:b2038fc5dbcd6746a16ada8d55fe73659b8cf95c7b6aeb63fe782e831485edaa
+boto3==1.42.32 \
+    --hash=sha256:0ba535985f139cf38455efd91f3801fe72e5cce6ded2df5aadfd63177d509675 \
+    --hash=sha256:695ac7e62dfde28cc1d3b28a581cce37c53c729d48ea0f4cd0dbf599856850cf
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.42.31 \
-    --hash=sha256:5abda7807fb0a04ea87309d7a5ab983c856a1d339a911b92d0edcfbce91834be \
-    --hash=sha256:bb0d8c936e29381d38cb724bf52197b1fdb63811707e052e842c1223545a0df7
+boto3-stubs[logs]==1.42.32 \
+    --hash=sha256:6fe9c8fd16aec68e4693d53b2155ad5c11d0a1984610622bcd3a6eb003787648 \
+    --hash=sha256:722629d882efacc9a7c4744748493c8bec1d0441ce81b1537f4238c293202082
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.42.31 \
-    --hash=sha256:021346ad57cc3018acf4a46edc1f649b9818b33c07a08674ce1c36e9edbb5859 \
-    --hash=sha256:62f2c31e229df625612dd4d7c72618948e4064436d71a647102f36fcddfa0f4d
+botocore==1.42.32 \
+    --hash=sha256:4c0a9fe23e060c019e327cd5e4ea1976a1343faba74e5301ebfc9549cc584ccb \
+    --hash=sha256:9c1ce43687cc4c0bba12054b229b3464265c699e2de4723998d86791254a5a37
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.42.31 \
-    --hash=sha256:b6ae47a39a6c185e610b7bbf087923dc83e54a52378ad74aff76a6708850d38d \
-    --hash=sha256:e7e762e37b205c7ba79782c67cc5c35151748ce267470a70ac9c026083655d9f
+botocore-stubs==1.42.32 \
+    --hash=sha256:53027f37ffd7d440d9a2d8dd84571717e11d8404f1e8dbbe75119640ad3fc8f9 \
+    --hash=sha256:b11fd20ee281283b84857eac7a1a75e25dc16f0fa611f36c2970a7e9498a7848
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -668,9 +668,9 @@ charset-normalizer==3.4.4 \
     #   -c requirements.txt
     #   reportlab
     #   requests
-checkmk-dev-tools==2.0.1 \
-    --hash=sha256:7c04610da9c4cafb505b258cacc1ec34150618312cdc4082dcd75537cbff1f8d \
-    --hash=sha256:d2ffdc170bcbba2a655f6e84dc5e53447eccb3b6b2c5409a4068040eead221de
+checkmk-dev-tools==2.0.2 \
+    --hash=sha256:09aac2e87234fc118fa8ca25b72ed9ddea2e24e1b217fed9af92fa14675337a6 \
+    --hash=sha256:ad9efbfb90edfc802284dbdcc2ba5614eb87c7fcde96729cd55ff44aaa6828e9
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -2624,9 +2624,9 @@ lz4==4.4.5 \
     # via
     #   -c requirements.txt
     #   clickhouse-connect
-markdown==3.10 \
-    --hash=sha256:37062d4f2aa4b2b6b32aefb80faa300f82cc790cb949a35b8caede34f2b68c0e \
-    --hash=sha256:b5b99d6951e2e4948d939255596523444c0e677c669700b1d17aa4a8a464cb7c
+markdown==3.10.1 \
+    --hash=sha256:1c19c10bd5c14ac948c53d0d762a04e2fa35a6d58a6b7b1e6bfcbe6fefc0001a \
+    --hash=sha256:867d788939fe33e4b736426f5b9f651ad0c0ae0ecf89df0ca5d1176c70812fe3
     # via
     #   -c requirements.txt
     #   -r packages/cmk-werks/requirements.in
@@ -3422,9 +3422,9 @@ oracledb==3.4.1 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-packaging==25.0 \
-    --hash=sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484 \
-    --hash=sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f
+packaging==26.0 \
+    --hash=sha256:00243ae351a257117b6a241061796684b084ed1c516a08c48a3f7e147a9d80b4 \
+    --hash=sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529
     # via
     #   -c requirements.txt
     #   apispec
@@ -3963,9 +3963,9 @@ pycairo==1.29.0 \
     # via
     #   -c requirements.txt
     #   rlpycairo
-pycparser==2.23 \
-    --hash=sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2 \
-    --hash=sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934
+pycparser==3.0 \
+    --hash=sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29 \
+    --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992
     # via
     #   -c requirements.txt
     #   cffi
@@ -5869,9 +5869,9 @@ tqdm==4.67.1 \
     #   -c requirements.txt
     #   djlint
     #   pysmb
-trickkiste==0.3.4 \
-    --hash=sha256:468ea9dc180ac5b76e9d62ce4f8a6ba2748aaf7e82dc63263cac5ca60897b29f \
-    --hash=sha256:d9168574d20f1d78b17fd2cc352943dcb930b9273bfd62d13c4e94aabcb1ca34
+trickkiste==0.3.5 \
+    --hash=sha256:43a82e9832b722240288b7879ac588841330199b583653f5e2ec23a4c40acad6 \
+    --hash=sha256:58925e59981494723fec664bd319121bc08a0313f5ae75ca8c8c808d7053b329
     # via
     #   -c requirements.txt
     #   checkmk-dev-tools

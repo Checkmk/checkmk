@@ -279,15 +279,15 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.42.31 \
-    --hash=sha256:7f04b4cd7c375e4d88cc2cba3022c40805012ce8f57468b82cedb1bcd6b3a58a \
-    --hash=sha256:b2038fc5dbcd6746a16ada8d55fe73659b8cf95c7b6aeb63fe782e831485edaa
+boto3==1.42.32 \
+    --hash=sha256:0ba535985f139cf38455efd91f3801fe72e5cce6ded2df5aadfd63177d509675 \
+    --hash=sha256:695ac7e62dfde28cc1d3b28a581cce37c53c729d48ea0f4cd0dbf599856850cf
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-botocore==1.42.31 \
-    --hash=sha256:021346ad57cc3018acf4a46edc1f649b9818b33c07a08674ce1c36e9edbb5859 \
-    --hash=sha256:62f2c31e229df625612dd4d7c72618948e4064436d71a647102f36fcddfa0f4d
+botocore==1.42.32 \
+    --hash=sha256:4c0a9fe23e060c019e327cd5e4ea1976a1343faba74e5301ebfc9549cc584ccb \
+    --hash=sha256:9c1ce43687cc4c0bba12054b229b3464265c699e2de4723998d86791254a5a37
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -1459,9 +1459,9 @@ lz4==4.4.5 \
     # via
     #   -c requirements.txt
     #   clickhouse-connect
-markdown==3.10 \
-    --hash=sha256:37062d4f2aa4b2b6b32aefb80faa300f82cc790cb949a35b8caede34f2b68c0e \
-    --hash=sha256:b5b99d6951e2e4948d939255596523444c0e677c669700b1d17aa4a8a464cb7c
+markdown==3.10.1 \
+    --hash=sha256:1c19c10bd5c14ac948c53d0d762a04e2fa35a6d58a6b7b1e6bfcbe6fefc0001a \
+    --hash=sha256:867d788939fe33e4b736426f5b9f651ad0c0ae0ecf89df0ca5d1176c70812fe3
     # via
     #   -c requirements.txt
     #   -r packages/cmk-werks/requirements.in
@@ -2027,9 +2027,9 @@ oracledb==3.4.1 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-packaging==25.0 \
-    --hash=sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484 \
-    --hash=sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f
+packaging==26.0 \
+    --hash=sha256:00243ae351a257117b6a241061796684b084ed1c516a08c48a3f7e147a9d80b4 \
+    --hash=sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529
     # via
     #   -c requirements.txt
     #   apispec
@@ -2441,9 +2441,9 @@ pyasn1-modules==0.4.2 \
     #   -c requirements.txt
     #   google-auth
     #   python-ldap
-pycparser==2.23 \
-    --hash=sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2 \
-    --hash=sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934
+pycparser==3.0 \
+    --hash=sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29 \
+    --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992
     # via
     #   -c requirements.txt
     #   cffi

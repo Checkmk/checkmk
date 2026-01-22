@@ -217,6 +217,13 @@ def with_update_logging_stderr(logfile: Path) -> Iterator[None]:
 #   '----------------------------------------------------------------------'
 
 
+def is_stopped(site_name: str) -> bool:
+    return (
+        subprocess.run(["omd", "status", site_name], capture_output=True, check=False).returncode
+        == 1
+    )
+
+
 def start_site(version_info: VersionInfo, site: SiteContext, config: Config) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     site_home = SitePaths.from_site_name(site.name).home
@@ -2059,7 +2066,7 @@ def main_disable(
         sys.exit(0)
 
     site = site_environment_as_root(site_name, global_opts.verbose)
-    if not site.is_stopped(global_opts.verbose):
+    if not is_stopped(site_name):
         call_init_scripts(site_home, "stop")
     unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
@@ -2166,7 +2173,7 @@ def main_mv_or_cp(
     sitename_must_be_valid(new_site.name, Path(new_site_home), reuse)
 
     old_site = site_environment_as_root(old_site_name, global_opts.verbose)
-    if not old_site.is_stopped(global_opts.verbose):
+    if not is_stopped(old_site.name):
         sys.exit(f"Cannot {action} site '{old_site.name}' while it is running.")
 
     pids = find_processes_of_user(old_site.name)
@@ -2604,12 +2611,7 @@ def main_umount(
                 continue
 
             # Skip the site even when it is partly running
-            if (
-                subprocess.run(
-                    ["omd", "status", site.name], capture_output=True, check=False
-                ).returncode
-                != 1
-            ):
+            if is_stopped(site_id):
                 sys.stderr.write(
                     "Cannot unmount tmpfs of site '%s' while it is running.\n" % site.name
                 )

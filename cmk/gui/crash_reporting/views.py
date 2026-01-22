@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import json
@@ -20,7 +19,7 @@ from cmk.gui.data_source import (
     DataSourceLivestatus,
     query_livestatus,
     query_row,
-    RowTable,
+    RowTableLivestatus,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -69,19 +68,22 @@ class DataSourceCrashReports(DataSourceLivestatus):
         return ["crash"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[str]:
         return ["crash_id"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[str]:
         return ["crash_id"]
 
     @property
-    def table(self):
+    def table(self) -> RowTableLivestatus:
         return CrashReportsRowTable()
 
 
-class CrashReportsRowTable(RowTable):
+class CrashReportsRowTable(RowTableLivestatus):
+    def __init__(self) -> None:
+        super().__init__("crashreports")
+
     # TODO: Handle headers / all_active_filters, limit, ...
     def query(
         self,
@@ -277,7 +279,7 @@ class PainterCrashTime(Painter):
         return ["crash_time"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -419,10 +421,10 @@ class PainterCrashHost(Painter):
     def ident(self) -> str:
         return "crash_host"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash host")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Host")
 
     @property
@@ -450,10 +452,10 @@ class PainterCrashItem(Painter):
     def ident(self) -> str:
         return "crash_item"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash service item")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Item")
 
     @property
@@ -469,10 +471,10 @@ class PainterCrashCheckType(Painter):
     def ident(self) -> str:
         return "crash_check_type"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash check type")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Check")
 
     @property
@@ -488,10 +490,10 @@ class PainterCrashServiceName(Painter):
     def ident(self) -> str:
         return "crash_service_name"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Crash service name")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Service")
 
     @property

@@ -16,8 +16,10 @@ if [ -z "${MK_LIBDIR}" ] || [ ! -d "${MK_LIBDIR}" ]; then
     exit 1
 fi
 
-if [ ! -x "${MK_LIBDIR}/mk-oracle" ]; then
-    echo "mk-oracle in ${MK_LIBDIR} is not executable or not found"
+bin_exe="${MK_LIBDIR}/plugins/packages/mk-oracle/mk-oracle"
+
+if [ ! -x "${bin_exe}" ]; then
+    echo "${bin_exe} is not executable or not found"
     exit 1
 fi
 
@@ -31,4 +33,4 @@ if [ ! -f "${MK_CONFDIR}/oracle.yml" ]; then
     exit 1
 fi
 
-"${MK_LIBDIR}/plugins/packages/mk-oracle/mk-oracle" -c "${MK_CONFDIR}/oracle.yml" --filter async
+${bin_exe} -c "${MK_CONFDIR}/oracle.yml" --filter sync

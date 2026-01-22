@@ -8,7 +8,7 @@
 from collections.abc import Callable, Iterable
 
 from cmk.ccc.user import UserId
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
@@ -155,7 +155,7 @@ def page_list(
                 back_url=request.get_url_input("back", visual_type.show_url)
             )
             flash(_("Your %s has been deleted.") % visual_type.title)
-            html.reload_whole_page()
+            raise HTTPRedirect(url=html.request.path, code=303)
         except MKUserError as e:
             html.user_error(e)
 

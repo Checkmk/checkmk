@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -19,6 +18,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import availability, bi
 from cmk.gui.availability import (
+    AVAnnotationKey,
     AVAnnotations,
     AVData,
     AVEntry,
@@ -1238,7 +1238,7 @@ def _edit_annotation_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-def _validate_reclassify_of_states(value, varprefix):
+def _validate_reclassify_of_states(value: dict[str, object], varprefix: str) -> None:
     host_state = value.get("host_state")
     if host_state is not None:
         if not value.get("host"):
@@ -1255,7 +1255,7 @@ def _validate_reclassify_of_states(value, varprefix):
             )
 
 
-def _vs_annotation():
+def _vs_annotation() -> Dictionary:
     elements: list[DictionaryEntry] = [
         ("site", TextInput(title=_("Site"))),
         ("host", TextInput(title=_("Host name"))),
@@ -1317,7 +1317,7 @@ def _vs_annotation():
 
 
 # Called at the beginning of every availability page
-def handle_delete_annotations():
+def handle_delete_annotations() -> None:
     if request.var("_delete_annotation"):
         (
             _site_id,
@@ -1355,7 +1355,9 @@ def _handle_edit_annotations(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     return finished
 
 
-def _handle_anno_request_vars():
+def _handle_anno_request_vars() -> tuple[
+    str, str, str | None, str | None, str | None, float, float, AVAnnotationKey
+]:
     site_id = request.var("anno_site") or ""
     hostname = request.get_str_input_mandatory("anno_host")
     host_state = request.var("anno_host_state") or None
@@ -1364,7 +1366,11 @@ def _handle_anno_request_vars():
     fromtime = request.get_float_input_mandatory("anno_from")
     untiltime = request.get_float_input_mandatory("anno_until")
 
-    site_host_svc = (site_id, hostname, service)
+    site_host_svc: AVAnnotationKey = (
+        SiteId(site_id),
+        HostName(hostname),
+        ServiceName(service) if service else None,
+    )
 
     return site_id, hostname, host_state, service, service_state, fromtime, untiltime, site_host_svc
 

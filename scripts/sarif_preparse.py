@@ -31,7 +31,7 @@ def load_all(root_dir: Path) -> SarifFileSet:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root_dir", type=Path, default="bazel-bin")
+    parser.add_argument("--root_dir", type=Path, default="bazel-out")
     parser.add_argument("--output", type=Path, default="out.sarif")
     args = parser.parse_args(sys.argv[1:])
     results = load_all(args.root_dir)

@@ -279,7 +279,8 @@ void withHotCache(Map args, Closure body) {
     body.delegate = [:];
 
     // TODO: Remove me as soon as this is stable
-    if (env.USE_STASHED_BAZEL_FOLDER == "0") {
+    // Skip restoring "All unit tests" as it might take up to 30min due to massive 27GB and high disk utilization
+    if (env.USE_STASHED_BAZEL_FOLDER == "0" || "${args.target_name}" == "All unit tests") {
         body();
         return;
     }

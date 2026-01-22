@@ -16,7 +16,7 @@ def test_has_dynamic_library(name, src, pattern):
         data = [src],
     )
 
-def test_no_dynamic_library(name, src, pattern):
+def test_no_dynamic_library(name, src, pattern, tags = []):
     name_sh = name + ".sh"
     write_file(
         # We use perl instead of grep because we want perl regex
@@ -30,4 +30,5 @@ def test_no_dynamic_library(name, src, pattern):
         srcs = [name_sh],
         args = ["$(location %s)" % src, pattern],
         data = [src],
+        tags = tags,
     )

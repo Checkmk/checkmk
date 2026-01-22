@@ -42,5 +42,6 @@ cc_test(
     name = "test",
     size = "small",
     srcs = ["test/test.cc"],
+    tags = ["cpp"],
     deps = [":unixcat"],
 )

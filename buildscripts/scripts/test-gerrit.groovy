@@ -225,6 +225,27 @@ void main() {
                     ];
                     update_result_table(current_description, analyse_mapping);
 
+                    if (item.RESULT_CHECK_TYPE == "GoogleTest") {
+                        try {
+                            xunit(
+                                checksName: item.NAME,
+                                tools: [
+                                    GoogleTest(
+                                        deleteOutputFiles: false,
+                                        failIfNotNew: false,
+                                        // do not change the next line, it HAS to be "checkout/..."
+                                        pattern: "checkout/${item.RESULT_CHECK_FILE_PATTERN}",
+                                        skipNoTestFiles: true,
+                                        stopProcessingIfError: true,
+                                    )
+                                ]
+                            );
+                        } catch (Exception exc) {
+                            print("ERROR: ran into exception while running xunit() for ${item.NAME} (GoogleTest): ${exc}");
+                        }
+                        return;
+                    }
+
                     // ensure the parser and publisher are able to find the files
                     dir("${checkout_dir}") {
                         // as issue analysis can not be run in parallel, do it sequential, old school

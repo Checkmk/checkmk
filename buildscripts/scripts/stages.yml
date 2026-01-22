@@ -309,6 +309,8 @@ STAGES:
     - NAME: "All unit tests"
       SEC_VAR_LIST:
         - "CI_TEST_SQL_DB_ENDPOINT"
+      ENV_VARS:
+        BAZEL_TEST_LOGS_DEST: "../results/unit"
       DIR: "tests"
       COMMAND: |
           set +e
@@ -332,8 +334,30 @@ STAGES:
           exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/testlogs/**/test.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/unit/**/test.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/"
+
+    - NAME: "C++ unit tests"
+      DIR: "tests"
+      ENV_VARS:
+        BAZEL_TEST_LOGS_DEST: "../results/cpp"
+      COMMAND: |
+        set +e
+        bazel test --test_verbose_timeout_warnings \
+            --test_env=TZ="America/Chicago" \
+            --test_tag_filters=cpp \
+            --keep_going \
+            --//:use_faked_artifacts=True \
+            -- //... \
+            -//agents/... -//omd/...
+        make_rc=$?
+        set -e
+        ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
+        exit $make_rc
+      BAZEL_LOCKS_AMOUNT: 1
+      RESULT_CHECK_TYPE: "GoogleTest"
+      RESULT_CHECK_FILE_PATTERN: "results/cpp/**/test.xml"
+      JENKINS_TEST_RESULT_PATH: "testReport/(root)/"
 
     - NAME: "Python License Headers Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
@@ -536,7 +560,7 @@ STAGES:
     - NAME: "Package cmc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES
       DIR: "non-free/packages/cmc"
-      COMMAND: "./run --build --unit-tests --lint=iwyu &> ${RESULTS}/cmc.txt"
+      COMMAND: "./run --build --lint=iwyu &> ${RESULTS}/cmc.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmc files changed"
       RESULT_CHECK_TYPE: "GCC"
@@ -757,7 +781,7 @@ STAGES:
     - NAME: "Package neb"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES
       DIR: "packages/neb"
-      COMMAND: "./run --build --unit-tests --lint=iwyu &> ${RESULTS}/neb.txt"
+      COMMAND: "./run --build --lint=iwyu &> ${RESULTS}/neb.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No neb files changed"
       RESULT_CHECK_TYPE: "GCC"
@@ -766,7 +790,7 @@ STAGES:
     - NAME: "Package unixcat"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_UNIXCAT_FILES
       DIR: "packages/unixcat"
-      COMMAND: "./run --build --unit-tests --lint=iwyu &> ${RESULTS}/unixcat.txt"
+      COMMAND: "./run --build --lint=iwyu &> ${RESULTS}/unixcat.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No unixcat files changed"
       RESULT_CHECK_TYPE: "GCC"

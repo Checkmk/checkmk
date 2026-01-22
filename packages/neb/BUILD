@@ -141,6 +141,7 @@ cc_test(
     copts = [
         "-std=c++20",
     ],
+    tags = ["cpp"],
     deps = [
         ":dummy_nagios",
         ":test_utilities",

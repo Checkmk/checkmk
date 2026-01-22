@@ -5,8 +5,9 @@
 
 # Merges all bazel xunit output files to a single directory hierarchy.
 
-BAZEL_TEST_LOGS_SRC=$(bazel info bazel-testlogs)
-BAZEL_TEST_LOGS_DEST="../results"
+BAZEL_BIN_PATH=$(bazel info bazel-bin)
+BAZEL_TEST_LOGS_SRC=$(dirname "$(dirname "$BAZEL_BIN_PATH")")
+BAZEL_TEST_LOGS_DEST="${BAZEL_TEST_LOGS_DEST:-../results}"
 
 if [ -z "${BAZEL_TEST_LOGS_SRC}" ]; then
     echo BAZEL_TEST_LOGS_SRC is empty!
@@ -24,9 +25,9 @@ if [ -z "${RSYNC_PATH}" ]; then
     exit 3
 fi
 
-if [ -d ${BAZEL_TEST_LOGS_DEST} ]; then
+if [ ! -d "${BAZEL_TEST_LOGS_DEST}" ]; then
     echo "Making destination directory ${BAZEL_TEST_LOGS_DEST}."
-    mkdir --parents ${BAZEL_TEST_LOGS_DEST}
+    mkdir --parents "${BAZEL_TEST_LOGS_DEST}"
 fi
 
 ${RSYNC_PATH} --recursive \

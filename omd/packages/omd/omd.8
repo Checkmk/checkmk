@@ -413,8 +413,8 @@ Creates a gzipped backup tarball (.tar.gz) containing the whole site. When execu
 this command as root, you need to specify the name of the site, otherwise your current
 site will be used.
 
-This command does not backup data from \fBClickHouse\fP. Restoring \fBClickHouse\fP to an
-older state causes false alarms. The restore command will leave the data in
+This command does not backup data from the \fBmetric backend\fP. Restoring the \metric backend\fP
+to an older state causes false alarms. The restore command will leave the data in
 \fBvar/clickhouse-server\fP unchanged.
 
 You need to provide either a path where the tarball will be created or specify \fB-\fP

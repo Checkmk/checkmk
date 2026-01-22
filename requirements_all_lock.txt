@@ -603,9 +603,9 @@ check-manifest==0.51 \
     --hash=sha256:9801c7637675755a563f33e3c48ee59a59b37a7677297c05c910c16c5b9b6d67 \
     --hash=sha256:f5f35ed561012fc2115bb070e42a748ac2e034cf8904ab4dfaae893859085ca4
     # via devpi-client
-checkmk-dev-tools==2.0.1 \
-    --hash=sha256:7c04610da9c4cafb505b258cacc1ec34150618312cdc4082dcd75537cbff1f8d \
-    --hash=sha256:d2ffdc170bcbba2a655f6e84dc5e53447eccb3b6b2c5409a4068040eead221de
+checkmk-dev-tools==2.0.2 \
+    --hash=sha256:09aac2e87234fc118fa8ca25b72ed9ddea2e24e1b217fed9af92fa14675337a6 \
+    --hash=sha256:ad9efbfb90edfc802284dbdcc2ba5614eb87c7fcde96729cd55ff44aaa6828e9
     # via -r requirements_dev.txt
 click==8.3.1 \
     --hash=sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a \
@@ -2719,9 +2719,9 @@ oracledb==2.5.1 \
     --hash=sha256:f42524b586733daa896f675acad8b9f2fc2f4380656d60a22a109a573861fc93 \
     --hash=sha256:fcf446f6250d8edad5367ff03ad73dbbe672a2e4b060c51a774821dd723b0283
     # via -r requirements_all.txt
-packaging==25.0 \
-    --hash=sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484 \
-    --hash=sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f
+packaging==26.0 \
+    --hash=sha256:00243ae351a257117b6a241061796684b084ed1c516a08c48a3f7e147a9d80b4 \
+    --hash=sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529
     # via
     #   -r requirements_all.txt
     #   apispec
@@ -3232,9 +3232,9 @@ pycodestyle==2.12.1 \
     --hash=sha256:46f0fb92069a7c28ab7bb558f05bfc0110dac69a0cd23c61ea0040283a9d78b3 \
     --hash=sha256:6838eae08bbce4f6accd5d5572075c63626a15ee3e6f842df996bf62f6d73521
     # via flake8
-pycparser==2.23 \
-    --hash=sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2 \
-    --hash=sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934
+pycparser==3.0 \
+    --hash=sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29 \
+    --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992
     # via
     #   -r requirements_all.txt
     #   cffi
@@ -4580,9 +4580,9 @@ tqdm==4.67.1 \
     # via
     #   -r requirements_all.txt
     #   pysmb
-trickkiste==0.3.4 \
-    --hash=sha256:468ea9dc180ac5b76e9d62ce4f8a6ba2748aaf7e82dc63263cac5ca60897b29f \
-    --hash=sha256:d9168574d20f1d78b17fd2cc352943dcb930b9273bfd62d13c4e94aabcb1ca34
+trickkiste==0.3.5 \
+    --hash=sha256:43a82e9832b722240288b7879ac588841330199b583653f5e2ec23a4c40acad6 \
+    --hash=sha256:58925e59981494723fec664bd319121bc08a0313f5ae75ca8c8c808d7053b329
     # via checkmk-dev-tools
 twine==6.0.1 \
     --hash=sha256:36158b09df5406e1c9c1fb8edb24fc2be387709443e7376689b938531582ee27 \

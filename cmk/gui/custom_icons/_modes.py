@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import os
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
+from typing import Any
 
 import cmk.utils.paths
 from cmk.gui.config import active_config, Config
@@ -18,7 +18,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult, DynamicIconName, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
@@ -57,11 +57,11 @@ class ModeIcons(WatoMode):
     def title(self) -> str:
         return _("Custom icons")
 
-    def _load_custom_icons(self):
+    def _load_custom_icons(self) -> Mapping[str, str]:
         s = IconSelector(show_builtin_icons=False, with_emblem=False)
         return s.available_icons(only_local=True)
 
-    def _vs_upload(self):
+    def _vs_upload(self) -> Dictionary:
         return Dictionary(
             title=_("Upload icon"),
             optional_keys=False,
@@ -109,7 +109,7 @@ class ModeIcons(WatoMode):
 
         return redirect(self.mode_url())
 
-    def _upload_icon(self, icon_info):
+    def _upload_icon(self, icon_info: dict[str, Any]) -> None:
         dest_dir = cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"
         dest_dir.mkdir(mode=0o770, exist_ok=True, parents=True)
         try:
@@ -155,7 +155,7 @@ class ModeIcons(WatoMode):
                 )
                 html.icon_button(delete_url, _("Delete this Icon"), StaticIcon(IconNames.delete))
 
-                table.cell(_("Icon"), html.render_icon(icon_name), css=["buttons"])
+                table.cell(_("Icon"), html.render_icon(DynamicIconName(icon_name)), css=["buttons"])
                 table.cell(_("Name"), icon_name)
                 table.cell(_("Category"), category)
 

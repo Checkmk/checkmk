@@ -5,9 +5,9 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="redundant-expr"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+
+from __future__ import annotations
 
 import abc
 import base64
@@ -19,13 +19,13 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping, Sequence
-from typing import override, Protocol, Self, TypedDict
+from typing import cast, override, Protocol, Self, TypedDict
 
 import livestatus
 
-import cmk.ccc.crash_reporting
 import cmk.ccc.version as cmk_version
 from cmk.ccc.crash_reporting import CrashInfo, SENSITIVE_KEYWORDS
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import (
@@ -262,7 +262,7 @@ class PageCrash(Page):
         self, info: CrashInfo, site_id: str
     ) -> Iterator[PageMenuEntry]:
         renderer = self._crash_type_renderer(info["crash_type"])
-        yield from renderer.page_menu_entries_related_monitoring(info, site_id)
+        yield from renderer.page_menu_entries_related_monitoring(info, SiteId(site_id))
 
     def _handle_report_form(
         self,
@@ -274,8 +274,9 @@ class PageCrash(Page):
         details = ReportSubmitDetails(name="", mail="")
         try:
             vs = self._vs_crash_report()
-            details = vs.from_html_vars("_report")
-            vs.validate_value(details, "_report")
+            raw_details = vs.from_html_vars("_report")
+            vs.validate_value(raw_details, "_report")
+            details = cast(ReportSubmitDetails, raw_details)
 
             # Make the resulting page execute the crash report post request
             url_encoded_params = urlencode_vars(
@@ -342,7 +343,7 @@ class PageCrash(Page):
     def _get_version(self) -> str:
         return cmk_version.__version__
 
-    def _vs_crash_report(self):
+    def _vs_crash_report(self) -> Dictionary:
         return Dictionary(
             title=_("Crash Report"),
             elements=[
@@ -409,7 +410,7 @@ class PageCrash(Page):
         with html.form_context("report", method="GET"):
             html.show_user_errors()
             vs = self._vs_crash_report()
-            vs.render_input("_report", details)
+            vs.render_input("_report", dict(details))
             vs.set_focus("report")
             forms.end()
             html.button("_report", _("Submit report"), cssclass="hot")
@@ -475,7 +476,7 @@ class PageCrash(Page):
     def _show_crash_report_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
         self._crash_type_renderer(crash_info["crash_type"]).show_details(crash_info, row)
 
-    def _crash_type_renderer(self, crash_type):
+    def _crash_type_renderer(self, crash_type: str) -> ABCReportRenderer:
         return report_renderer_registry.get(crash_type, report_renderer_registry["generic"])()
 
 
@@ -498,8 +499,8 @@ class ABCReportRenderer(abc.ABC):
         raise NotImplementedError()
 
 
-class ReportRendererRegistry(cmk.ccc.plugin_registry.Registry[type[ABCReportRenderer]]):
-    def plugin_name(self, instance):
+class ReportRendererRegistry(Registry[type[ABCReportRenderer]]):
+    def plugin_name(self, instance: type[ABCReportRenderer]) -> str:
         return instance.type()
 
 
@@ -508,7 +509,7 @@ report_renderer_registry = ReportRendererRegistry()
 
 class ReportRendererGeneric(ABCReportRenderer):
     @classmethod
-    def type(cls):
+    def type(cls) -> str:
         return "generic"
 
     def page_menu_entries_related_monitoring(
@@ -531,7 +532,7 @@ class ReportRendererGeneric(ABCReportRenderer):
 
 class ReportRendererSection(ABCReportRenderer):
     @classmethod
-    def type(cls):
+    def type(cls) -> str:
         return "section"
 
     def page_menu_entries_related_monitoring(
@@ -575,7 +576,7 @@ class ReportRendererSection(ABCReportRenderer):
 
 class ReportRendererCheck(ABCReportRenderer):
     @classmethod
-    def type(cls):
+    def type(cls) -> str:
         return "check"
 
     def page_menu_entries_related_monitoring(
@@ -663,7 +664,7 @@ class ReportRendererCheck(ABCReportRenderer):
 
 class ReportRendererGUI(ABCReportRenderer):
     @classmethod
-    def type(cls):
+    def type(cls) -> str:
         return "gui"
 
     def page_menu_entries_related_monitoring(
@@ -713,11 +714,11 @@ def _crash_row(
 
 # Local vars are a base64 encoded repr of the python dict containing the local vars of
 # the exception context. Decode it!
-def format_local_vars(local_vars):
+def format_local_vars(local_vars: str) -> str:
     return base64.b64decode(local_vars).decode()
 
 
-def format_params(params):
+def format_params(params: object) -> str:
     return pprint.pformat(params)
 
 

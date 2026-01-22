@@ -2844,15 +2844,14 @@ def main_config(
 def main_su(
     _version_info: object,
     site_name: str,
-    global_opts: GlobalOptions,
+    _global_opts: object,
     _args: object,
     _options: object,
 ) -> None:
-    site = site_environment_as_root(site_name, global_opts.verbose)
     try:
-        os.execl("/bin/su", "su", "-", "%s" % site.name)
+        os.execl("/bin/su", "su", "-", "%s" % site_name)
     except OSError:
-        sys.exit("Cannot open a shell for user %s" % site.name)
+        sys.exit("Cannot open a shell for user %s" % site_name)
 
 
 def _process_backup_tar(

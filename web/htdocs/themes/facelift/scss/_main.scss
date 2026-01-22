@@ -1549,3 +1549,82 @@ div.swal2-popup {
 svg text {
   fill: $font-color;
 }
+
+div.modal_overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba($bg-color, 0.75);
+  backdrop-filter: blur(5px);
+  z-index: 9999;
+
+  div.container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 15px 30px;
+    border-radius: 5px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background-color: $bg-color-secondary;
+    box-sizing: border-box;
+
+    h2 {
+      font-size: 1.5em;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-bottom: 5px;
+    }
+
+    p,
+    li {
+      margin-bottom: 24px;
+      color: $font-color;
+    }
+
+    .content {
+      padding: 10px 20px;
+    }
+
+    a.button.hot {
+      color: $font-color-light-bg;
+      background-color: $success-dimmed;
+      border: 1px solid $success-dimmed;
+      padding: 8px 16px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: $theme-border-radius;
+
+      &:visited {
+        color: $font-color-light-bg;
+      }
+
+      &:hover {
+        background-color: $success;
+        border-color: $success;
+      }
+
+      &:active {
+        background-color: $success-dimmed;
+      }
+    }
+
+    .footer {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+  }
+}

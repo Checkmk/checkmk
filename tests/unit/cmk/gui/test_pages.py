@@ -153,6 +153,7 @@ def test_registered_pages() -> None:
         "ajax_initial_topology_filters",
         "noauth:ajax_graph_images",
         "gui_timings",
+        "download_product_usage",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:

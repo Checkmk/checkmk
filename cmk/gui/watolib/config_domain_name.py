@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Final, Literal
 
 import cmk.utils.plugin_registry
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
@@ -311,6 +311,9 @@ class ConfigVariable:
         return True
 
     def hint(self) -> HTML:
+        return HTML()
+
+    def domain_hint(self) -> HTML:
         return HTML()
 
 

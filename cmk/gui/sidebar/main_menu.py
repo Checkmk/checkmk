@@ -19,6 +19,7 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, mega_menu_registry
 from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.product_usage_analytics_popup import render_product_usage_analytics_popup
 from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -39,6 +40,7 @@ class MainMenuRenderer:
     def show(self) -> None:
         html.open_ul(id_="main_menu")
         self._show_main_menu_content()
+        render_product_usage_analytics_popup(user=user, request=request, response=response)
         html.close_ul()
 
     def _show_main_menu_content(self) -> None:

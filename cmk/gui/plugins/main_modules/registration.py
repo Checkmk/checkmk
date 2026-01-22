@@ -275,6 +275,8 @@ def register() -> None:
         config_domain_registry,
         config_variable_registry,
         config_variable_group_registry,
+        page_registry,
+        permission_registry,
     )
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)

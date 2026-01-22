@@ -11,9 +11,8 @@ from typing import Any, Callable, Final
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.forms as forms
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -37,6 +36,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
+from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
@@ -420,6 +420,10 @@ class ABCEditGlobalSettingMode(WatoMode):
         value = self._current_settings.get(
             self._varname, self._global_settings.get(self._varname, defvalue)
         )
+
+        domain_hint = self._config_variable.domain_hint()
+        if domain_hint:
+            html.show_warning(domain_hint)
 
         hint = self._config_variable.hint()
         if hint:

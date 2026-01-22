@@ -63,20 +63,6 @@ case "$1" in
           if test -f /etc/systemd/system/omd.service; then
               rm -f /etc/systemd/system/omd.service
           fi
-	  # Try to remove empty directories
-	  if test -d /opt/omd/versions; then
-	    rmdir --ignore-fail-on-non-empty /opt/omd/versions
-	  fi
-	  if test -d /opt/omd/sites; then
-	    rmdir --ignore-fail-on-non-empty /opt/omd/sites
-	  fi
-	  if test -d /opt/omd/apache; then
-	    rmdir --ignore-fail-on-non-empty /opt/omd/apache
-	  fi
-	  if test -d /opt/omd; then
-	    rmdir --ignore-fail-on-non-empty /opt/omd
-	  fi
-
       fi
     ;;
 

@@ -2,7 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
@@ -58,6 +58,25 @@ file_from_flag(
         "cmk_version": "@cmk//version",
     },
     tags = ["manual"],
+)
+
+pkg_mkdirs(
+    name = "omd_global_dirs",
+    attributes = pkg_attributes(
+        group = "root",
+        mode = "0755",
+        user = "root",
+    ),
+    dirs = [
+        "/opt/omd/apache",
+        "/opt/omd/sites",
+    ],
+)
+
+pkg_tar(
+    name = "omd_global_dirs_tar",
+    srcs = [":omd_global_dirs"],
+    package_dir = "/",
 )
 
 run_binary(
@@ -411,13 +430,28 @@ pkg_files(
 ]]
 
 [pkg_tar(
-    name = "deps_install_compressed_" + edition,
+    name = "complete_install_" + edition,
+    tags = ["manual"],
+    deps = [
+        ":deps_install_" + edition,
+        ":omd_global_dirs_tar",
+    ],
+) for edition in [
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
+    "cloud",
+]]
+
+[pkg_tar(
+    name = "complete_install_compressed_" + edition,
     compressor = "@zstd//:zstd_cli",
     compressor_args = "-19",
     extension = "tar.zst",
     tags = ["manual"],
     deps = [
-        ":deps_install_" + edition,
+        ":complete_install_" + edition,
     ],
 ) for edition in [
     "community",
@@ -567,7 +601,7 @@ pkg_tar(
     name = "deb_" + edition,
     architecture = "amd64",
     config = "//omd/debian:config",
-    data = "deps_install_compressed_" + edition,
+    data = "complete_install_compressed_" + edition,
     depends_file = "//omd/distros:dependencies",
     description = "Checkmk - Best-in-class infrastructure & application monitoring",
     homepage = "https://checkmk.com",
@@ -640,7 +674,7 @@ write_omd_spec(
         "//conditions:default": "",
     }),
     edition = "@cmk//edition",
-    input_tarball = "deps_install_" + edition,
+    input_tarball = "complete_install_" + edition,
     omd_spec = ":omd_spec",
     rpm = "cmk_rpm_" + edition,
     tags = ["manual"],

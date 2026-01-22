@@ -10,7 +10,11 @@ export interface FilterEmits {
 }
 
 export interface ComponentEmits {
-  'update-component-values': [componentId: string, values: ConfiguredValues]
+  'update-component-values': [
+    componentId: string,
+    values: ConfiguredValues,
+    mode?: 'merge' | 'overwrite'
+  ]
 }
 
 export interface FilterComponentProps<T> {

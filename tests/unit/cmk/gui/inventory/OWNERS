@@ -2,7 +2,7 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/hw_sw_inventory/OWNERS_DEFINITION
 
-per-file test_openapi_get_inventory_trees.py=file:/component_owners/rest_api/OWNERS_DEFINITION
+per-file test_openapi_get_inventory_trees.py=file:/component_owners/rest_api_framework/OWNERS_DEFINITION
 per-file test_openapi_get_inventory_trees.py=set noparent
 
 # Please

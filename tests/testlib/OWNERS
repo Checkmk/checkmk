@@ -1,6 +1,6 @@
 
 
-per-file openapi_session.py=file:/component_owners/rest_api/OWNERS_DEFINITION
+per-file openapi_session.py=file:/component_owners/rest_api_framework/OWNERS_DEFINITION
 per-file openapi_session.py=set noparent
 
 # Please

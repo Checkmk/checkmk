@@ -1,5 +1,5 @@
 type = "Component"
-display_name = "REST API"
+display_name = "REST API Framework"
 has_support_component = true
 members_required = 4
 description = """

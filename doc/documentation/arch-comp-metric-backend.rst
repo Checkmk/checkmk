@@ -25,7 +25,7 @@ Note that Checkmk has another system for storing time series data, :doc:`RRDs <a
 RRDs are used to store metric data produced by check plugins.
 The metric backend works the other way round: We create services based on data stored in the metric backend.
 Also, the metric backend offers a much richer feature set, both in terms of storage and querying capabilities.
-One promiment example are attributes that uniquely identify a concrete time series.
+One prominent example are attributes that uniquely identify a concrete time series.
 Finally, the data we store in the metric backend currently has a time-to-live of 14 days, compared to years for RRDs.
 In the future, we might move the data currently stored in the RRDs to the metric backend as well.
 However, this requires further evaluation and there are no concrete plans yet.

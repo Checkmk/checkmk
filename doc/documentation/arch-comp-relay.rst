@@ -7,7 +7,7 @@ Introduction and goals
 
 The relay is a separate installable component to collect monitoring data in segregated networks, i.e. the relay can talk to the site but not vice versa.
 For simplicity the relay acts like a very lite remote site, it will collect monitoring data for hosts and forwards them to a site. However, it only runs the fetchers and not the checkers.
-Once installed the relay is very hands off for the user, checkmk will take care to sync configuration and version updates to it.
+Once installed the relay is very hands off for the user, Checkmk will take care to sync configuration and version updates to it.
 
 * Monitor hosts in a segregated network.
 * Regularly push monitoring data to a site.
@@ -20,7 +20,7 @@ Architecture
 White-box overall system
 ------------------------
 
-The relay component consists of multiple packages in checkmk
+The relay component consists of multiple packages in Checkmk
 
 **Relay Engine**:
 The relay engine is installed on a remote host, together with the fetchers.
@@ -40,7 +40,7 @@ Relay Engine
 ------------
 The relay-engine consists of a single main loop that reads from a queue and distributes the message on the queue to a bunch of processors.
 In addition there are scheduler objects that can schedule recurring tasks.
-Processors are simple classes that run asynchronsosly and act on tasks from the main loop.
+Processors are simple classes that run asynchronously and act on tasks from the main loop.
 Processors do not directly communicate back to the main loop, instead they submit to a main queue.
 The main loop wakes up periodically and empties the main queue.
 Here is an abstract picture of the architecture.
@@ -51,7 +51,7 @@ Here is an abstract picture of the architecture.
 Examples for a Processor is the FetcherPool.
 It can fetch data from a host and provides the result back to the main loop via the Main Queue.
 Another example is the Site which is responsible for sending monitoring data from a fetcher to the site.
-Here is a more concrete example with the fetcherpool and site as processors.
+Here is a more concrete example with the fetcher pool and site as processors.
 
 .. uml:: arch-comp-relay-example.puml
 

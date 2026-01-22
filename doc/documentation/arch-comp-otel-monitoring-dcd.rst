@@ -29,4 +29,4 @@ Risks and technical debts
 =========================
 Each special agent execution requires spawning a new Python process.
 This limits the performance of the DCD-based monitoring, in particular when many hosts are created.
-In the future, we will likely implement something alongs the lines of a dedicated process pool or a dedicated fetcher.
+In the future, we will likely implement something along the lines of a dedicated process pool or a dedicated fetcher.

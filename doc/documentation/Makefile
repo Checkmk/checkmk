@@ -17,7 +17,7 @@ help:
 
 .PHONY: spell
 spell:
-	@PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(SPHINXBUILD) -b spelling "$(SOURCEDIR)" "$(BUILDDIR)"
+	@PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(SPHINXBUILD) -b spelling "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
 .PHONY: htmlhelp html
 htmlhelp html: Makefile spell

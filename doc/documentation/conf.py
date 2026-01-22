@@ -62,6 +62,7 @@ plantuml = " ".join(
 plantuml_output_format = "svg"
 
 spelling_show_suggestions = True
+spelling_warning = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

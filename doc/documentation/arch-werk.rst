@@ -6,7 +6,7 @@ A "Werk" (German for work) is a changelog element. Normally it is added with the
 commit that implements the feature or fix. It holds a title, a description and
 some metadata.
 
-Currently the metadata also contains the checkmk version when the change
+Currently the metadata also contains the Checkmk version when the change
 connected to the Werk will be released. This is why a special tool is needed to
 pick changes from one branch to another, so the version can be adapted.
 
@@ -14,7 +14,7 @@ Versions
 ========
 
 There are two different versions of Werk files (not to be confused with the
-version field inside the Werk that specifies in which checkmk version the Werk
+version field inside the Werk that specifies in which Checkmk version the Werk
 was introduced!)
 
 * markdown (2.3 and higher)
@@ -51,11 +51,11 @@ This is a current design flaw and should be fixed in the future.
 Precompiled Werks
 ~~~~~~~~~~~~~~~~~
 
-Precompiled Werks is the "database" (a json dump) that is shipped with checkmk
+Precompiled Werks is the "database" (a json dump) that is shipped with Checkmk
 which contains Werks relevant for this release.
 
 Version 2.2 and below shipped Werks from all versions, suggesting that the
-database shipped with checkmk contains all Werks from all versions. But this is
+database shipped with Checkmk contains all Werks from all versions. But this is
 not true. It only contains:
 
 * all versions of the current major version
@@ -66,21 +66,21 @@ not true. It only contains:
 Version 2.3 and higher ship only Werks from the current major version.
 
 Precompiled Werks consist of multiple files: one for each edition. It is created
-while building checkmk. A make-target is executing ``python -m cmk.werks.utils precompile``
+while building Checkmk. A make-target is executing ``python -m cmk.werks.utils precompile``
 
 
 Website
 -------
 
-You can search and filter Werks on the official checkmk website: https://checkmk.com/werks
+You can search and filter Werks on the official Checkmk website: https://Checkmk.com/werks
 
 To compile a list of all Werks, you have to look for Werks in all branches of
-checkmk. This is done via ``python -m cmk.werks.utils collect``. There is a
+Checkmk. This is done via ``python -m cmk.werks.utils collect``. There is a
 jenkins job that executes this command in a 10 minutes interval. The command
 creates a json dump, which will then be copied to the server hosting the
 homepage and read by a cron job.
 
-Beside the checkmk git repository, also the repository for the checkmk appliance and
+Beside the Checkmk git repository, also the repository for the Checkmk appliance and
 the kubernetes repository contain Werks (robotmk will join this club eventually).
 As all of them have different configuration and version numbers you have to
 specify the flavor for collecting Werks from there. In the jenkins job those
@@ -123,15 +123,15 @@ Checkmk also includes a Werk browser which reads the precompiled Werks created
 during the build process.
 
 Werks can be marked as incompatible. This means that the user has to do
-something in their checkmk installation if they use the feature that was
+something in their Checkmk installation if they use the feature that was
 modified with this Werk. In order to keep track of the to-dos, incompatible Werks
 need to be acknowledged.
 
 When updating to the next major version the user is warned when there are still
 unacknowledged Werks from the previous version: Those can not be displayed in
-the updated checkmk, as it only ships with Werks from the current major version.
+the updated Checkmk, as it only ships with Werks from the current major version.
 
-This is also why checkmk 2.3.0 still needs code to read v1 Werks from the
+This is also why Checkmk 2.3.0 still needs code to read v1 Werks from the
 precompiled Werks file: The code warning about the unacknowledged Werks is
 execute from 2.3.0, but reads the Werks and unacknowledged Werks from a 2.2.0
 site.
@@ -172,4 +172,4 @@ But this is only true when talking about Werks in 2.3 or higher. Werks in 2.2
 and below have two different render targets with slightly different behavior:
 The description may contain markdown formatting which is interpreted when
 displayed on the website, but not interpreted when displayed in the built in
-Werks viewer of checkmk 2.2. and below.
+Werks viewer of Checkmk 2.2. and below.

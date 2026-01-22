@@ -65,7 +65,7 @@ const props = defineProps<DashboardPageProperties>()
 
 const isDashboardLoading = ref(false)
 const loadingError = ref<Error | null>(null)
-const isDashboardEditingMode = ref(props.mode === 'edit_layout')
+const isDashboardEditingMode = ref(props.mode === 'edit_layout' && !!props.dashboard)
 const openDashboardFilterSettings = ref(false)
 const openDashboardSettings = ref(props.mode === 'edit_settings')
 const openAddWidgetDialog = ref(false)
@@ -144,6 +144,9 @@ useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApp
 
 watch(dashboardsManager.activeDashboard, (value) => {
   selectedDashboardBreadcrumb.value = value?.metadata?.display?.topic?.breadcrumb ?? null
+  if (!value) {
+    isDashboardEditingMode.value = false
+  }
 })
 
 const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: DashboardLayout) => {
@@ -511,7 +514,7 @@ function deepClone<T>(obj: T): T {
         @open-widget-workflow="openAddWidgetDialog = true"
         @open-share-workflow="openDashboardShareDialog = true"
         @save="saveDashboard"
-        @enter-edit="isDashboardEditingMode = true"
+        @enter-edit="dashboardsManager.activeDashboard.value && (isDashboardEditingMode = true)"
         @cancel-edit="cancelEdit"
         @set-dashboard="handleSelectDashboard"
       />

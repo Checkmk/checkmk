@@ -18,7 +18,7 @@ def _read_fingerprint(site: Site, cert: Path) -> str:
     return fp
 
 
-def test_rotate_site_certificate(central_site: Site) -> None:
+def test_rotate_central_site_certificate(central_site: Site) -> None:
     old_fingerprint = _read_fingerprint(central_site, Path(f"etc/ssl/sites/{central_site.id}.pem"))
 
     central_site.check_output(["cmk-cert", "rotate", "site"])
@@ -26,6 +26,16 @@ def test_rotate_site_certificate(central_site: Site) -> None:
     assert old_fingerprint != _read_fingerprint(
         central_site, Path(f"etc/ssl/sites/{central_site.id}.pem")
     ), "Site certificate fingerprint did not change"
+
+
+def test_rotate_remote_site_certificate(central_site: Site, remote_site: Site) -> None:
+    old_fingerprint = _read_fingerprint(remote_site, Path(f"etc/ssl/sites/{remote_site.id}.pem"))
+
+    central_site.check_output(["cmk-cert", "rotate", "site", "--remote-site", remote_site.id])
+
+    assert old_fingerprint != _read_fingerprint(
+        remote_site, Path(f"etc/ssl/sites/{remote_site.id}.pem")
+    ), "Remote site site certificate fingerprint did not change"
 
 
 def test_rotate_central_site_ca(central_site: Site) -> None:
@@ -41,6 +51,9 @@ def test_rotate_central_site_ca(central_site: Site) -> None:
         "Found unexpected pending_certificate_rotation directory before CA rotation"
     )
     old_fingerprint = _read_fingerprint(central_site, Path("etc/ssl/ca.pem"))
+    old_site_cert_fingerprint = _read_fingerprint(
+        central_site, Path(f"etc/ssl/sites/{central_site.id}.pem")
+    )
 
     central_site.check_output(["cmk-cert", "rotate", "site-ca"])
 
@@ -58,6 +71,9 @@ def test_rotate_central_site_ca(central_site: Site) -> None:
     assert old_fingerprint != _read_fingerprint(central_site, Path("etc/ssl/ca.pem")), (
         "Central site CA certificate fingerprint did not change"
     )
+    assert old_site_cert_fingerprint != _read_fingerprint(
+        central_site, Path(f"etc/ssl/sites/{central_site.id}.pem")
+    ), "Remote site site certificate fingerprint did not change"
 
 
 def _get_trusted_ca_certs(site: Site) -> list[str]:

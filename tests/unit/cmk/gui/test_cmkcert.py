@@ -165,7 +165,10 @@ def test_init_cert_does_not_replace_existing(
         )
 
 
-def test_rotate_site(omd_root: Path, site_ca: Path) -> None:
+def test_rotate_site(mocker: MockerFixture, omd_root: Path, site_ca: Path) -> None:
+    mocker.patch("cmk.gui.cmkcert_rotate._site_gui_context").return_value = _mock_site_gui_context(
+        mocker
+    )
     _create_dummy(omd_root, "site-ca")
     _create_dummy(omd_root, "site")
 
@@ -187,7 +190,11 @@ def test_rotate_site(omd_root: Path, site_ca: Path) -> None:
     )
 
 
-def test_rotate_site_wo_site_ca(omd_root: Path) -> None:
+def test_rotate_site_wo_site_ca(mocker: MockerFixture, omd_root: Path) -> None:
+    mocker.patch("cmk.gui.cmkcert_rotate._site_gui_context").return_value = _mock_site_gui_context(
+        mocker
+    )
+
     _create_dummy(omd_root, "site")
 
     with pytest.raises(FileNotFoundError):
@@ -198,27 +205,6 @@ def test_rotate_site_wo_site_ca(omd_root: Path) -> None:
             expiry=90,
             finalize=True,
         )
-
-
-def test_rotate_agent_ca(omd_root: Path, agent_ca: Path) -> None:
-    _create_dummy(omd_root, "agent-ca")
-
-    _run_rotate(
-        omd_root=omd_root,
-        site_id=_site_id(),
-        target_certificate="agent-ca",
-        expiry=90,
-        finalize=False,
-    )
-
-    assert (
-        "BEGIN CERTIFICATE"
-        in _certificate_path(
-            omd_root=omd_root,
-            site_id=_site_id(),
-            target_certificate="agent-ca",
-        ).read_text()
-    )
 
 
 def _mock_site_gui_context(mocker: MockerFixture) -> MagicMock:

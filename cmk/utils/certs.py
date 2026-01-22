@@ -102,7 +102,7 @@ def initialize_site_certificate(
     site_ca.create_site_certificate(
         site_id=site_id,
         additional_sans=[],
-        expiry=relativedelta(days=expiry) if expiry is not None else relativedelta(years=2),
+        expiry=relativedelta(days=expiry) if expiry is not None else relativedelta(years=10),
         key_size=key_size or 4096,
     )
 

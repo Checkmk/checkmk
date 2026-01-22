@@ -15,8 +15,9 @@ import json
 import os
 import shutil
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
+from datetime import date
 from pathlib import Path
 
 from dateutil.relativedelta import relativedelta
@@ -27,7 +28,7 @@ import cmk.gui.site_config
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.global_settings
 from cmk.ccc.site import SiteId
-from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
+from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.gui import main_modules
 from cmk.gui.config import Config, load_config
 from cmk.gui.utils.script_helpers import gui_context
@@ -41,10 +42,8 @@ from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainSiteCertificate
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
-    agent_root_ca_path,
     cert_dir,
     CertManagementEvent,
-    RootCA,
     SiteCA,
 )
 from cmk.utils.log.security_event import log_security_event
@@ -75,6 +74,17 @@ def _site_gui_context(site_id: SiteId) -> Iterator[tuple[SiteConfiguration, Conf
         yield site_config, config
 
 
+def _days_until_10_years_from_today() -> int:
+    """Calculate the number of days from today until 10 years later."""
+    today = date.today()
+    if today.month == 2 and today.day == 29:
+        # We gift a free day on leap years
+        today = date(today.year, 3, 1)
+
+    ten_years_later = today.replace(year=today.year + 10)
+    return (ten_years_later - today).days
+
+
 def _scratch_dir(omd_root: Path) -> Path:
     scratch_dir = cert_dir(omd_root) / "pending_certificate_rotation"
     scratch_dir.mkdir(parents=True, exist_ok=True)
@@ -99,7 +109,7 @@ def start_rotate_site_ca_certificate(
     2. Storing this new certificate in a temporary folder.
     3. Adding the new certificate to the trusted certificate store alongside the existing one.
     """
-    expiry_ = relativedelta(days=expiry) if expiry is not None else relativedelta(years=10)
+    expiry_ = _days_until_10_years_from_today() if expiry is None else expiry
 
     state_file = _ca_rotation_state_file_path(omd_root)
     if state_file.exists():
@@ -109,21 +119,31 @@ def start_rotate_site_ca_certificate(
             "before initiating a new rotation."
         )
 
-    # TODO detect if this is a local rotation on a remote site and warn about it
-
     with _site_gui_context(site_id) as (site, config):
         current_settings = cmk.gui.watolib.global_settings.load_configuration_settings()
         new_settings = dict(current_settings)
+
+        is_local_rotation = cmk.gui.site_config.site_is_local(site)
+
+        if sys.stdout.isatty():
+            answer = input(
+                "cmk-cert: Warning: rotating the site CA certificate requires manual re-registration "
+                f"of all agents.\nYou are now rotating {'the local' if is_local_rotation else 'a remote'} "
+                "site-ca certificate, do you want to continue? (y/N): "
+            )
+            if answer.strip().lower() not in ("y", "yes"):
+                sys.stdout.write("Aborted.\n")
+                sys.exit(1)
 
         # Record the target site for which the rotation is initiated
         state_file.write_text(json.dumps({"target_site": str(site_id)}))
 
         # Stage local site certificate rotation
-        if cmk.gui.site_config.site_is_local(site):
+        if is_local_rotation:
             site_ca = SiteCA.create(
                 cert_dir=_scratch_dir(omd_root),
                 site_id=SiteId(site_id),
-                expiry=expiry_,
+                expiry=relativedelta(days=expiry_),
                 key_size=key_size,
             )
             new_ca_certificate = site_ca.root_ca.certificate.dump_pem().bytes.decode("utf-8")
@@ -135,10 +155,10 @@ def start_rotate_site_ca_certificate(
 
             automation_response = do_remote_automation(
                 automation_config,
-                "stage-certificate-rotation",
+                "stage-site-ca-certificate-rotation",
                 vars_=[
                     ("site_id", site_id),
-                    ("expiry", str(expiry_.days)),
+                    ("expiry", str(expiry_)),
                     ("key_size", str(key_size)),
                 ],
                 timeout=120,
@@ -194,7 +214,7 @@ def finalize_rotate_site_ca_certificate(
     It performs the final step of rotation by replacing the current Site CA certificate
     with the new certificate from the temporary folder.
     """
-    expiry_ = relativedelta(days=expiry) if expiry is not None else relativedelta(years=10)
+    expiry_ = _days_until_10_years_from_today() if expiry is None else expiry
 
     state_file = _ca_rotation_state_file_path(omd_root)
     if not state_file.exists():
@@ -234,10 +254,10 @@ def finalize_rotate_site_ca_certificate(
 
             automation_response = do_remote_automation(
                 automation_config,
-                "finalize-certificate-rotation",
+                "finalize-site-ca-certificate-rotation",
                 vars_=[
                     ("site_id", site_id),
-                    ("expiry", str(expiry_.days)),
+                    ("expiry", str(expiry_)),
                     ("key_size", str(key_size)),
                 ],
                 timeout=120,
@@ -259,54 +279,18 @@ def finalize_rotate_site_ca_certificate(
         )
 
 
-def rotate_agent_ca_certificate(
-    omd_root: Path,
+def rotate_local_site_certificate(
+    certificate_directory: Path,
     site_id: SiteId,
-    expiry: int | None = None,
+    additional_sans: Sequence[str],
+    expiry: int,
     key_size: int = 4096,
 ) -> None:
-    if sys.stdout.isatty():
-        answer = input(
-            "cmk-cert: Warning: rotating the agent CA certificate is experimental and requires manual "
-            "re-registration of all agents.\nDo you want to continue? (y/N): "
-        )
-        if answer.strip().lower() not in ("y", "yes"):
-            sys.stdout.write("Aborted.")
-            sys.exit(1)
-
-    new_ca = RootCA.create(
-        path=agent_root_ca_path(site_root_dir=omd_root),
-        name=f"Site '{site_id}' agent signing CA",
-        validity=relativedelta(days=expiry) if expiry is not None else relativedelta(years=10),
-        key_size=key_size or 4096,
-    )
-
-    log_security_event(
-        CertManagementEvent(
-            event="certificate rotated",
-            component="agent certificate authority",
-            actor="cmk-cert",
-            cert=new_ca.certificate,
-        )
-    )
-
-
-def rotate_site_certificate(
-    omd_root: Path,
-    site_id: SiteId,
-    expiry: int | None = None,
-    key_size: int = 4096,
-) -> CertificateWithPrivateKey:
-    sans = (
-        ConfigDomainSiteCertificate().load_full_config().get("site_subject_alternative_names", [])
-    )
-
-    certificate_directory = cert_dir(omd_root)
     site_ca = SiteCA.load(certificate_directory)
     site_ca.create_site_certificate(
         site_id=site_id,
-        additional_sans=sans,
-        expiry=relativedelta(days=expiry) if expiry is not None else relativedelta(years=2),
+        additional_sans=additional_sans,
+        expiry=relativedelta(days=expiry),
         key_size=key_size or 4096,
     )
 
@@ -323,4 +307,42 @@ def rotate_site_certificate(
         )
     )
 
-    return site_cert
+
+def rotate_site_certificate(
+    omd_root: Path,
+    site_id: SiteId,
+    expiry: int | None = None,
+    key_size: int = 4096,
+) -> None:
+    expiry_ = _days_until_10_years_from_today() if expiry is None else expiry
+
+    with _site_gui_context(site_id) as (site, config):
+        if cmk.gui.site_config.site_is_local(site):
+            sans = (
+                ConfigDomainSiteCertificate()
+                .load_full_config()
+                .get("site_subject_alternative_names", [])
+            )
+            rotate_local_site_certificate(cert_dir(omd_root), site_id, sans, expiry_, key_size)
+
+        else:
+            automation_config = make_automation_config(site)
+            assert isinstance(automation_config, RemoteAutomationConfig)
+
+            automation_response = do_remote_automation(
+                automation_config,
+                "site-certificate-rotation",
+                vars_=[
+                    ("site_id", site_id),
+                    ("expiry", str(expiry_)),
+                    ("key_size", str(key_size)),
+                ],
+                timeout=120,
+                debug=True,
+            )
+            assert isinstance(automation_response, str)
+            if automation_response != "success":
+                raise ValueError(
+                    f"automation response for {site_id} was not 'success', instead "
+                    f"it was received: {automation_response}"
+                )

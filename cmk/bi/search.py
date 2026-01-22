@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations

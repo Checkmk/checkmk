@@ -23001,7 +23001,8 @@ msgstr "Activarea/dezactivarea verificărilor active"
 msgid "Enable/Disable passive checks"
 msgstr "Activarea/Dezactivarea verificărilor pasive"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "Activarea/dezactivarea verificărilor active pentru servicii"
 
 msgid "Enable/disable checks"
@@ -37753,6 +37754,10 @@ msgstr "Niveluri de așteptare IO (numai pentru UNIX)"
 msgid "Levels on Web ACL requests"
 msgstr "Niveluri privind solicitările Web ACL"
 
+#, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "Niveluri pe decalaj de timp"
+
 msgid "Levels on availability in percent"
 msgstr "Niveluri de disponibilitate în procente"
 
@@ -43635,6 +43640,10 @@ msgstr "Descoperirea portului Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoperirea unității de alimentare Netapp"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Masca de rețea"
@@ -73889,10 +73898,10 @@ msgstr ""
 "problemele unui serviciu. În mod implicit, toate notificările sunt activate."
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
 msgstr ""
-"Această setare vă permite să dezactivați sau să activați verificările active "
-"pentru un serviciu."
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -90095,6 +90104,12 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr ""
+#~ "Această setare vă permite să dezactivați sau să activați verificările "
+#~ "active pentru un serviciu."
+
 #~ msgid "RAM installed"
 #~ msgstr "RAM instalat"
 
@@ -90901,9 +90916,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Netapp instance state"
 #~ msgstr "Starea instanței Netapp"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
 
 #~ msgid "Never logged in"
 #~ msgstr "Niciodată conectat"

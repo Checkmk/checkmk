@@ -23162,7 +23162,8 @@ msgstr "Désactiver les contrôles actifs"
 msgid "Enable/Disable passive checks"
 msgstr "Activer/désactiver les contrôles"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "Activer/désactiver les contrôles actifs des services"
 
 msgid "Enable/disable checks"
@@ -38010,6 +38011,10 @@ msgstr "Niveaux d'attente d'E/S (UNIX uniquement)"
 msgid "Levels on Web ACL requests"
 msgstr "Niveaux sur les requêtes Web ACL"
 
+#, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "Niveaux sur le décalage horaire"
+
 msgid "Levels on availability in percent"
 msgstr "Niveaux de disponibilité en pourcentage"
 
@@ -43926,6 +43931,10 @@ msgstr "Découverte des ports Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Découverte du bloc d'alimentation de Netapp"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "Système Netapp"
 
 msgid "Netmask"
 msgstr "Masque de réseau"
@@ -74347,10 +74356,10 @@ msgstr ""
 "sont activées."
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
 msgstr ""
-"Ce paramètre vous permet de désactiver ou d'activer les contrôles actifs "
-"pour un service."
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -90771,6 +90780,12 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr ""
+#~ "Ce paramètre vous permet de désactiver ou d'activer les contrôles actifs "
+#~ "pour un service."
+
 #~ msgid "RAM installed"
 #~ msgstr "RAM installée"
 
@@ -91553,9 +91568,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 #, fuzzy
 #~ msgid "Netapp instance state"
 #~ msgstr "État de l'instance Netapp"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Système Netapp"
 
 #~ msgid "Never logged in"
 #~ msgstr "Jamais connecté"

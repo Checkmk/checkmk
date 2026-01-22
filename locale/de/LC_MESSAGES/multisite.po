@@ -22230,7 +22230,8 @@ msgstr "Aktive Checks aktivieren/deaktivieren"
 msgid "Enable/Disable passive checks"
 msgstr "Passive Checks aktivieren/deaktivieren"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "Aktive Checks für Services aktivieren/deaktivieren"
 
 msgid "Enable/disable checks"
@@ -36348,6 +36349,10 @@ msgstr "Levels für E/A-Wait (nur Unix)"
 msgid "Levels on Web ACL requests"
 msgstr "Levels für die Web-ACL-Anfragen"
 
+#, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "Levels für Zeitversatz"
+
 msgid "Levels on availability in percent"
 msgstr "Levels für die Verfügbarkeit in Prozent"
 
@@ -42040,6 +42045,10 @@ msgstr "Netapp Port-Erkennung"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Erkennung des Netapp-Netzteils"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "NetApp-Systemzeit"
 
 msgid "Netmask"
 msgstr "Netzmaske"
@@ -71536,8 +71545,10 @@ msgstr ""
 "der Grundeinstellung sind alle Benachrichtigungen eingeschaltet."
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
-msgstr "Damit aktivieren/deaktivieren Sie aktive Checks für einen Service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
+msgstr ""
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -86959,6 +86970,10 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr "Damit aktivieren/deaktivieren Sie aktive Checks für einen Service."
+
 #~ msgid "RAM installed"
 #~ msgstr "installierter RAM"
 
@@ -87753,9 +87768,6 @@ msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Netapp instance state"
 #~ msgstr "NetApp Instanzstatus"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "NetApp-Systemzeit"
 
 #~ msgid "Never logged in"
 #~ msgstr "Noch nie angemeldet"

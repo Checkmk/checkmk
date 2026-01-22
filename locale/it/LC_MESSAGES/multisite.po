@@ -22813,7 +22813,8 @@ msgstr "Abilitazione/disabilitazione dei controlli attivi"
 msgid "Enable/Disable passive checks"
 msgstr "Abilitare/disabilitare i controlli passivi"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "Abilita/disabilita i controlli attivi per i servizi"
 
 msgid "Enable/disable checks"
@@ -37426,6 +37427,10 @@ msgstr "Livelli di attesa IO (solo UNIX)"
 msgid "Levels on Web ACL requests"
 msgstr "Livelli su richieste Web ACL"
 
+#, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "Livelli a tempo compensato"
+
 msgid "Levels on availability in percent"
 msgstr "Livelli di disponibilità in percentuale"
 
@@ -43248,6 +43253,10 @@ msgstr "Scoperta della porta Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Scoperta dell'alimentatore Netapp"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Netmask"
@@ -73124,10 +73133,10 @@ msgstr ""
 "problemi di un servizio. Per default tutte le notifiche sono abilitate."
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
 msgstr ""
-"Questa impostazione permette di disabilitare o abilitare i controlli attivi "
-"per un servizio."
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -89184,6 +89193,12 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "⚠ <b>non disponibile</b> poiché lo MKP di Robotmk Core è stato installato"
 
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr ""
+#~ "Questa impostazione permette di disabilitare o abilitare i controlli "
+#~ "attivi per un servizio."
+
 #~ msgid "RAM installed"
 #~ msgstr "RAM installata"
 
@@ -89949,9 +89964,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Netapp instance state"
 #~ msgstr "Stato dell'istanza Netapp"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
 
 #~ msgid "Never logged in"
 #~ msgstr "Mai entrato"

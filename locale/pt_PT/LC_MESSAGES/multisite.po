@@ -22952,7 +22952,8 @@ msgstr "Ativar/desativar verificações activas"
 msgid "Enable/Disable passive checks"
 msgstr "Ativar/desativar os controlos passivos"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "Habilitar/desabilitar verificações ativas de serviços"
 
 msgid "Enable/disable checks"
@@ -37662,6 +37663,10 @@ msgstr "Níveis de espera IO (apenas UNIX)"
 msgid "Levels on Web ACL requests"
 msgstr "Níveis sobre pedidos de LCA na Web"
 
+#, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "Níveis de compensação de tempo"
+
 msgid "Levels on availability in percent"
 msgstr "Níveis de disponibilidade em percentagem"
 
@@ -43549,6 +43554,10 @@ msgstr "Netapp descoberta da porta"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoberta da unidade de fornecimento de energia Netapp"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Máscara de rede"
@@ -73596,10 +73605,10 @@ msgstr ""
 "problemas de um serviço. Por padrão, todas as notificações são ativadas."
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
 msgstr ""
-"Esta configuração permite-lhe desactivar ou activar verificações activas "
-"para um serviço."
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -89787,6 +89796,12 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
 
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr ""
+#~ "Esta configuração permite-lhe desactivar ou activar verificações activas "
+#~ "para um serviço."
+
 #~ msgid "RAM installed"
 #~ msgstr "RAM instalado"
 
@@ -90590,9 +90605,6 @@ msgstr "Use SSL para a conexão."
 #, fuzzy
 #~ msgid "Netapp instance state"
 #~ msgstr "Estado de Netapp Instance"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
 
 #~ msgid "Never logged in"
 #~ msgstr "Nunca fez login"

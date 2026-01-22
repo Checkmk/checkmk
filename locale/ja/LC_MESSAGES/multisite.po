@@ -21615,7 +21615,8 @@ msgstr "アクティブチェックを有効/無効にする"
 msgid "Enable/Disable passive checks"
 msgstr "パッシブチェックを有効/無効にする"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "サービスのアクティブチェックを有効/無効にする"
 
 msgid "Enable/disable checks"
@@ -35374,6 +35375,10 @@ msgstr "IO待ち時間のレベル(UNIXのみ)"
 msgid "Levels on Web ACL requests"
 msgstr "WebACL要求のレベル"
 
+#, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "時間オフセットのレベル"
+
 msgid "Levels on availability in percent"
 msgstr "可用性のレベル(パーセント)"
 
@@ -40956,6 +40961,10 @@ msgstr "Netappポートの検出"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp電源ユニットの発見"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "Netappシステムタイム"
 
 msgid "Netmask"
 msgstr "ネットマスク"
@@ -69395,9 +69404,10 @@ msgstr ""
 "デフォルトでは、すべての通知が有効になっています。"
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
 msgstr ""
-"この設定により、サービスのアクティブチェックを無効または有効にできます。"
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -84330,6 +84340,11 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
 
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr ""
+#~ "この設定により、サービスのアクティブチェックを無効または有効にできます。"
+
 #~ msgid "RAM installed"
 #~ msgstr "インストールされたRAM"
 
@@ -85098,9 +85113,6 @@ msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用�
 
 #~ msgid "Netapp instance state"
 #~ msgstr "Netapp インスタンス状態"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netappシステムタイム"
 
 #~ msgid "Never logged in"
 #~ msgstr "ログインしたことはありません"

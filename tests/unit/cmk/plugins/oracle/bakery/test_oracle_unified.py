@@ -17,7 +17,6 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiConfig,
     GuiConnectionConf,
     GuiDiscoveryConf,
-    GuiInstanceAdditionalOptionsConf,
     GuiInstanceAuthUserPasswordData,
     GuiInstanceConf,
     GuiMainConf,
@@ -192,13 +191,14 @@ oracle_config_full: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            sid="SID1",
+            service_name="Service_Name_1",
+            instance_name=None,
             auth=None,
             connection=None,
-            options=None,
         ),
         GuiInstanceConf(
-            sid="SID2",
+            service_name="Service_Name_2",
+            instance_name="Instance_Name_2",
             auth=(
                 STANDARD_AUTH,
                 GuiInstanceAuthUserPasswordData(
@@ -214,9 +214,12 @@ oracle_config_full: GuiConfig = GuiConfig(
                 tns_admin="/etc/oracle/tns2",
                 oracle_id=None,
             ),
-            options=GuiInstanceAdditionalOptionsConf(
-                ignore_db_name=False,
-            ),
+        ),
+        GuiInstanceConf(
+            service_name=None,
+            instance_name=None,
+            auth=None,
+            connection=None,
         ),
     ],
 )
@@ -244,7 +247,7 @@ expected_yaml_lines_full = [
     "      - prod*",
     "      - test*",
     "    instances:",
-    "    - sid: SID1",
+    "    - service_name: Service_Name_1",
     "    - authentication:",
     "        password: inst2pw",
     "        type: standard",
@@ -254,9 +257,8 @@ expected_yaml_lines_full = [
     "        port: 1522",
     "        timeout: 20",
     "        tns_admin: /etc/oracle/tns2",
-    "      options:",
-    "        ignore_db_name: 0",
-    "      sid: SID2",
+    "      instance_name: Instance_Name_2",
+    "      service_name: Service_Name_2",
     "    options:",
     "      ignore_db_name: 1",
     "      max_connections: 10",
@@ -364,10 +366,10 @@ oracle_config_instance_sid: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            sid="SIDONLY",
+            service_name="SIDONLY",
+            instance_name=None,
             auth=None,
             connection=None,
-            options=None,
         ),
     ],
 )
@@ -384,7 +386,7 @@ expected_yaml_lines_instance_sid = [
     "    connection:",
     "      hostname: localhost",
     "    instances:",
-    "    - sid: SIDONLY",
+    "    - service_name: SIDONLY",
 ]
 
 # 5. Main config with auth, connection, discovery and two instances (one only sid, one full)
@@ -416,13 +418,14 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            sid="SID_A",
+            service_name=None,
+            instance_name="SID_A",
             auth=None,
             connection=None,
-            options=None,
         ),
         GuiInstanceConf(
-            sid="SID_B",
+            service_name=None,
+            instance_name="SID_B",
             auth=(
                 STANDARD_AUTH,
                 GuiInstanceAuthUserPasswordData(
@@ -436,9 +439,6 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
                 port=1522,
                 timeout=10,
                 tns_admin="/etc/oracle/tnsb",
-            ),
-            options=GuiInstanceAdditionalOptionsConf(
-                ignore_db_name=False,
             ),
         ),
     ],
@@ -460,7 +460,7 @@ expected_yaml_lines_discovery_instances = [
     "    discovery:",
     "      enabled: true",
     "    instances:",
-    "    - sid: SID_A",
+    "    - instance_name: SID_A",
     "    - authentication:",
     "        password: bpw",
     "        role: sysdba",
@@ -471,9 +471,7 @@ expected_yaml_lines_discovery_instances = [
     "        port: 1522",
     "        timeout: 10",
     "        tns_admin: /etc/oracle/tnsb",
-    "      options:",
-    "        ignore_db_name: 0",
-    "      sid: SID_B",
+    "      instance_name: SID_B",
 ]
 
 # 6. Main config with auth, connection and additional option use_host_client set to 'always'

@@ -514,12 +514,19 @@ def _instances() -> List[_NamedOption]:
         element_template=Dictionary(
             title=Title("Database instance"),
             elements={
-                "sid": DictElement(
+                "service_name": DictElement(
                     parameter_form=String(
-                        title=Title("SID"),
-                        help_text=Help("Oracle System Identifier of the database instance."),
+                        title=Title("Service name"),
+                        help_text=Help("Oracle Service Name"),
                     ),
-                    required=True,
+                    required=False,
+                ),
+                "instance_name": DictElement(
+                    parameter_form=String(
+                        title=Title("Oracle instance name"),
+                        help_text=Help("Oracle Instance Name, may be the same as SID."),
+                    ),
+                    required=False,
                 ),
                 **_endpoint(is_main_entry=False),
             },

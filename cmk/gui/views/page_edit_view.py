@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -41,6 +40,7 @@ from cmk.gui.type_defs import (
     ColumnSpec,
     ColumnTypes,
     DynamicIconName,
+    InventoryJoinMacrosSpec,
     PainterName,
     PainterParameters,
     SingleInfos,
@@ -106,7 +106,9 @@ def page_edit_view(ctx: PageContext) -> None:
     )
 
 
-def view_editor_options():
+def view_editor_options() -> list[
+    tuple[Literal["mobile", "mustsearch", "force_checkboxes", "user_sortable", "play_sounds"], str]
+]:
     return [
         ("mobile", _("Show this view in the Mobile GUI")),
         ("mustsearch", _("Show data only on search")),
@@ -915,31 +917,27 @@ def _transform_view_to_valuespec_value(view: ViewSpec) -> dict[str, Any]:
     return value
 
 
-def _transform_valuespec_value_to_view(ident, attrs):
-    # Transform some valuespec specific options to legacy view format.
-    # We do not want to change the view data structure at the moment.
-
+def _update_view_with_valuespec_values(
+    view: ViewSpec | ViewDashletConfig, ident: str, attrs: dict[str, Any]
+) -> None:
+    """Transform valuespec values into view structure"""
     if ident == "view":
         options = attrs.pop("options", [])
         if options:
             for option, _title in view_editor_options():
-                attrs[option] = option in options
-
-        return attrs
+                view[option] = option in options
 
     if ident == "sorting":
-        return {"sorters": [SorterSpec(*s) for s in attrs["sorters"]]}
+        view["sorters"] = [SorterSpec(*s) for s in attrs["sorters"]]
 
     if ident == "grouping":
-        return {"group_painters": attrs["grouping"]}
+        view["group_painters"] = attrs["grouping"]
 
     if ident == "columns":
-        return {"painters": attrs["columns"]}
+        view["painters"] = attrs["columns"]
 
     if ident == "macros":
-        return {"inventory_join_macros": {"macros": attrs["macros"]}}
-
-    return {ident: attrs}
+        view["inventory_join_macros"] = InventoryJoinMacrosSpec({"macros": attrs["macros"]})
 
 
 # Extract properties of view from HTML variables and construct
@@ -954,7 +952,7 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, vi
     def update_view(ident: str, vs: Dictionary) -> None:
         attrs = vs.from_html_vars(ident)
         vs.validate_value(attrs, ident)
-        view.update(_transform_valuespec_value_to_view(ident, attrs))
+        _update_view_with_valuespec_values(view, ident, attrs)
 
     user_permissions = UserPermissions.from_config(active_config, permission_registry)
     update_view("view", view_editor_general_properties(ds_name))

@@ -625,6 +625,16 @@ exports_files([
     ],
 )
 
+http_file(
+    name = "wiremock_standalone",
+    downloaded_file_path = "wiremock-standalone-3.13.1.jar",
+    sha256 = "bdf4c705e7fd61c778e59a19f75396eac4520efeabfac97643a53979bd4d5716",
+    urls = [
+        "https://repo1.maven.org/maven2/org/wiremock/wiremock-standalone/3.13.1/wiremock-standalone-3.13.1.jar",
+        UPSTREAM_MIRROR_URL + "/wiremock-standalone-3.13.1.jar",
+    ],
+)
+
 http_archive(
     name = "nagvis",
     build_file = "//omd/packages/nagvis:BUILD.nagvis.bazel",

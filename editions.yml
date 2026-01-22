@@ -19,7 +19,6 @@ daily_reduced: &daily_reduced
     - "debian-13"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
-    - "sles-15sp6"
     - "sles-15sp7"
 
 daily_saas: &daily_saas

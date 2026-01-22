@@ -52,6 +52,7 @@ from cmk.gui.form_specs.unstable import (
 from cmk.gui.form_specs.unstable import SingleChoiceExtended as SingleChoiceExtendedAPI
 from cmk.gui.form_specs.unstable.catalog import Catalog, Locked, Topic, TopicElement
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
+from cmk.gui.form_specs.unstable.validators import HostAddressList
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
@@ -2298,6 +2299,7 @@ def _create_explicit_rule_conditions_dict(
                             string_spec=create_config_host_name(),
                             custom_validate=[
                                 not_empty(error_msg=Message("Please add at least one host.")),
+                                HostAddressList(),
                             ],
                         ),
                         required=True,

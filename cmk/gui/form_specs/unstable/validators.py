@@ -125,3 +125,15 @@ class HostAddress:
             pass
 
         self._validate_hostname(value)
+
+
+class HostAddressList:
+    """Validator that ensures all values in a list are valid hostnames or IP addresses."""
+
+    def __init__(self) -> None:
+        self._validator = HostAddress()
+
+    def __call__(self, value: typing.Sequence[str]) -> None:
+        for hostname in value:
+            if hostname:
+                self._validator(hostname)

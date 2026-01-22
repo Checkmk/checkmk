@@ -1,0 +1,29 @@
+diff --git a/mypy/private/mypy.bzl b/mypy/private/mypy.bzl
+index 7fea3be..66d32cc 100644
+--- a/mypy/private/mypy.bzl
++++ b/mypy/private/mypy.bzl
+@@ -25,8 +25,8 @@ def _extract_import_dir(import_):
+         # "_main/path/to/package" -> "path/to/package"
+         return import_.split("/", 1)[-1]
+     else:
+-        # "_main" -> ""
+-        return ""
++        # "_main" -> "_"
++        return "_"
+ 
+ def _imports(target):
+     if RulesPythonPyInfo in target:
+@@ -156,11 +156,12 @@ def _mypy_impl(target, ctx):
+         # types need to appear first in the mypy path since the module directories
+         # are the same and mypy resolves the first ones, first.
+         sorted(types) +
++        sorted(pyi_dirs) +
+         sorted(external_deps) +
+         sorted(imports_dirs) +
+         sorted(generated_dirs) +
+         sorted(generated_imports_dirs) +
+-        sorted(pyi_dirs),
++        []
+     )
+ 
+     output_file = ctx.actions.declare_file(ctx.rule.attr.name + ".mypy_stdout")

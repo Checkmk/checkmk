@@ -235,8 +235,6 @@
     "https://bcr.bazel.build/modules/rules_multitool/0.4.0/MODULE.bazel": "15517987d5c00c9e7faab41fbe22ee67a350b6eabcc1e08baded5c6d9025897f",
     "https://bcr.bazel.build/modules/rules_multitool/1.9.0/MODULE.bazel": "8a042b0dbf35e4aaa94c28ad69efa75c9e673e9ea4bd5c0fb70bab75ef9c636b",
     "https://bcr.bazel.build/modules/rules_multitool/1.9.0/source.json": "d9a01604a8b5c4a0e9430824dd34ca5b1b3f5b25277b755e8f3ae91f2c9362a3",
-    "https://bcr.bazel.build/modules/rules_mypy/0.29.0/MODULE.bazel": "7c12bf9e6de8f8438e26f406e87793455037895997f4695d48cfc58c792fc70b",
-    "https://bcr.bazel.build/modules/rules_mypy/0.29.0/source.json": "610fd6f7f998793e3935acf4c48ca50ece7f84577c5206c820c907f2de83ed67",
     "https://bcr.bazel.build/modules/rules_nodejs/5.8.2/MODULE.bazel": "6bc03c8f37f69401b888023bf511cb6ee4781433b0cb56236b2e55a21e3a026a",
     "https://bcr.bazel.build/modules/rules_nodejs/6.2.0/MODULE.bazel": "ec27907f55eb34705adb4e8257952162a2d4c3ed0f0b3b4c3c1aad1fac7be35e",
     "https://bcr.bazel.build/modules/rules_nodejs/6.3.0/MODULE.bazel": "45345e4aba35dd6e4701c1eebf5a4e67af4ed708def9ebcdc6027585b34ee52d",
@@ -1418,7 +1416,7 @@
     },
     "@@rules_mypy+//mypy:types.bzl%types": {
       "general": {
-        "bzlTransitiveDigest": "bTsjWhC2MntN++D5GogAmgdWEGUqG5ZSXm2SoK8d/5U=",
+        "bzlTransitiveDigest": "NRCQLKlh6DMNV8O7wtrrgFwoxCrepDJ64vJWgl4xKIo=",
         "usagesDigest": "qIzTimBF2wlSJ2knPuWhD3aP/+s3csT5Cid0OB4gt+0=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -1428,7 +1426,8 @@
             "repoRuleId": "@@rules_mypy+//mypy/private:types.bzl%generate",
             "attributes": {
               "pip_requirements": "@@rules_python++pip+cmk_requirements//:requirements.bzl",
-              "requirements_txt": "@@//:requirements.txt"
+              "requirements_txt": "@@//:requirements.txt",
+              "exclude_requirements": []
             }
           }
         },

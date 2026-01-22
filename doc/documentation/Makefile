@@ -13,12 +13,22 @@ BUILDDIR      = _build
 
 .PHONY: help
 help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@echo "Targets:"
+	@echo "  html            to make standalone HTML files (includes spell check)"
+	@echo "  html-nospell    to make standalone HTML files without spell checking"
+	@echo "  spell           to run spell checking only"
 
 .PHONY: spell
 spell:
 	@PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(SPHINXBUILD) -b spelling "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
 .PHONY: htmlhelp html
-htmlhelp html: Makefile spell
+htmlhelp html:
+ifndef NOSPELL
+	$(MAKE) spell
+endif
 	@PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: html-nospell
+html-nospell:
+	$(MAKE) NOSPELL=1 html

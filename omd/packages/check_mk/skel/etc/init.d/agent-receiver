@@ -75,8 +75,7 @@ case "$1" in
         fi
 
         if gunicorn -D -p "$PIDFILE" \
-            --error-logfile "$OMD_ROOT/var/log/agent-receiver/error.log" \
-            --access-logfile "$OMD_ROOT/var/log/agent-receiver/access.log" \
+            -c "$OMD_ROOT/etc/agent-receiver/gunicorn.conf.py" \
             --ciphers "ECDHE+AESGCM:CHACHA20:ECDHE+AES256:!aNULL:!eNULL:!MD5:!RC4:!3DES:!SHA1:!CBC" \
             --keyfile "$KEY_AND_CERT_FILE" \
             --certfile "$KEY_AND_CERT_FILE" \

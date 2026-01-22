@@ -1,6 +1,6 @@
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/product_telemetry/OWNERS_DEFINITION
+file:/component_owners/product_usage_analytics/OWNERS_DEFINITION
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from abc import abstractmethod
 from collections.abc import Sequence
@@ -41,7 +40,7 @@ class BIRuleProperties(ABCWithSchema):
     def schema(cls) -> type["BIRulePropertiesSchema"]:
         return BIRulePropertiesSchema
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "title": self.title,
             "comment": self.comment,
@@ -67,7 +66,7 @@ class BIRuleComputationOptions(ABCWithSchema):
     def schema(cls) -> type[BIRuleComputationOptionsSchema]:
         return BIRuleComputationOptionsSchema
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "disabled": self.disabled,
         }

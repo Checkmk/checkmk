@@ -24,7 +24,7 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
     incorrect_form_error_message = "Cannot save the form because it contains errors."
     one_collector_per_site_error_detail = (
         "A site is allowed to be used in exactly one "
-        "OpenTelemetry collector configuration: <br>- '%s' is used in '%s'"
+        "OpenTelemetry collector configuration: - '%s' is used in '%s'"
     )
 
     def __init__(

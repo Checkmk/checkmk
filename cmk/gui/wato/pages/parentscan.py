@@ -45,6 +45,7 @@ from cmk.gui.watolib.parent_scan import (
     start_parent_scan,
     WhereChoices,
 )
+from cmk.utils.paths import profile_dir
 
 from ._bulk_actions import get_hosts_from_checkboxes
 
@@ -255,23 +256,33 @@ class ModeParentScan(WatoMode):
 
         forms.header(_("Settings for Parent Scan"))
 
-        self._settings = GUIParentScanSettings(
-            **user.load_file(
-                "parentscan",
-                {
-                    "where": "subfolder",
-                    "alias": _("Created by parent scan"),
-                    "recurse": True,
-                    "select": "noexplicit",
-                    "timeout": 8,
-                    "probes": 2,
-                    "ping_probes": 5,
-                    "max_ttl": 10,
-                    "force_explicit": False,
-                    "gateway_folder_path": None,
-                },
+        try:
+            parent_scan_settings = GUIParentScanSettings(
+                **user.load_file(
+                    "parentscan",
+                    {
+                        "where": "subfolder",
+                        "alias": _("Created by parent scan"),
+                        "recurse": True,
+                        "select": "noexplicit",
+                        "timeout": 8,
+                        "probes": 2,
+                        "ping_probes": 5,
+                        "max_ttl": 10,
+                        "force_explicit": False,
+                        "gateway_folder_path": None,
+                    },
+                )
             )
-        )
+        except Exception:
+            user_file = f"{profile_dir}/{user.id}/parentscan.mk"
+            raise MKUserError(
+                None,
+                _("Error reading parent scan settings. Please delete the file ''%s' and try again.")
+                % user_file,
+            )
+
+        self._settings = parent_scan_settings
 
         # Selection
         forms.section(_("Selection"))

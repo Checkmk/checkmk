@@ -159,7 +159,6 @@ boolean download_hot_cache(Map args) {
         } else {
             sh("""
                 mkdir -p ${args.download_dest}
-                ls -lisa ${env.PERSISTENT_K8S_VOLUME_PATH}
                 cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} ${args.download_dest}
             """);
         }
@@ -222,7 +221,6 @@ void upload_hot_cache(Map args) {
                     if [ ! -s "${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}" ]; then
                         cp ${args.download_dest}/${args.file_pattern}{${hashfile_extension},} ${env.PERSISTENT_K8S_VOLUME_PATH}/
                     fi
-                    ls -lisa ${env.PERSISTENT_K8S_VOLUME_PATH}
                 """);
             }
         }

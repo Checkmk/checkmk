@@ -168,7 +168,11 @@ const handleRemoveFilter = (filterId: string) => {
     </CmkButton>
   </div>
 
-  <CmkCheckbox v-model="overrideMode" :label="_t('Override default filters')" />
+  <CmkCheckbox
+    v-model="overrideMode"
+    :label="_t('Override default filters')"
+    :help="_t('Temporarily ignore default filters and apply only runtime filters.')"
+  />
 
   <div>
     <CmkAlertBox v-if="misconfiguredFilters.length > 0" variant="error">

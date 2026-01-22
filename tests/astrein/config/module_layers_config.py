@@ -179,7 +179,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils",
         "cmk.ccc",
     ),
-    "clickhouse_omd": ("cmk.metric_backend",),
     "custom_query_metric_backend": (
         "cmk.metric_backend",
         "cmk.utils.macros",
@@ -217,6 +216,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.gui.mkeventd",
         "cmk.utils.paths",
     ),
+    "metric_backend_omd": ("cmk.metric_backend",),
     "otel": (
         "cmk.gui.form_specs.unstable",
         "cmk.otel_collector",

@@ -22,8 +22,7 @@ use crate::config::{
 };
 use crate::ora_sql::types::Target;
 use crate::types::{Credentials, InstanceName, SqlQuery};
-use anyhow::Context;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use oracle::sql_type::{FromSql, ToSql};
 use oracle::{Connection, Connector, Privilege};
 use std::marker::PhantomData;
@@ -55,25 +54,34 @@ impl OraDbEngine for StdEngine {
             log::warn!("Connection already established, closing the previous connection.");
             return Ok(());
         }
-        // Here we would normally establish a connection to the database.
-        // For now, we just simulate a successful connection.
+
+        let connection_string = target.make_connection_string(instance_name);
+        log::info!("Connection string: {}", connection_string);
+        log::info!("Auth type: {:?}", target.auth.auth_type());
+
+        let mut connector = match target.auth.auth_type() {
+            AuthType::Standard => {
+                // Standard authentication with username and password
+                let username = target.auth.username();
+                let password = target.auth.password().unwrap_or("");
+                log::info!("Using standard authentication with user: {}", username);
+                Connector::new(username, password, &connection_string)
+            }
+            AuthType::Os | AuthType::Wallet => {
+                // OS/Wallet authentication - use external auth with empty credentials
+                log::info!("Using Wallet/OS authentication (external auth)");
+                let mut conn = Connector::new("", "", &connection_string);
+                conn.external_auth(true);
+                conn
+            }
+        };
+
         if let Some(role) = target.auth.role() {
-            log::warn!("Role {role}");
-            let mut connector = Connector::new(
-                target.auth.username(),
-                target.auth.password().unwrap_or(""),
-                target.make_connection_string(instance_name),
-            );
+            log::info!("Using role: {}", role);
             connector.privilege(_to_privilege(role));
-            self.connection = Some(connector.connect()?);
-        } else {
-            log::warn!("Connection no role specified, using default privileges.");
-            self.connection = Some(Connection::connect(
-                target.auth.username(),
-                target.auth.password().unwrap_or(""),
-                target.make_connection_string(instance_name),
-            )?);
         }
+
+        self.connection = Some(connector.connect()?);
 
         Ok(())
     }

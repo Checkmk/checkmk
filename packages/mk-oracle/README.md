@@ -67,3 +67,107 @@ Choose one of the following options:
    For example: `C:\oracle\instantclient_21_3`
 2. In Agent Installation(recommended)
    you unzip \*.dll files to `PROGRAMDATA%/checkmk/agent/plugins/packages/mk-oracle` folder.
+
+## Oracle Wallet Authentication
+
+Oracle Wallet provides a secure way to authenticate to Oracle databases without storing passwords in plain text configuration files.
+The plugin supports Oracle Wallet authentication with the following behavior:
+
+### Default Configuration
+
+- **TNS_ADMIN**: By default, the `TNS_ADMIN` environment variable is set to `MK_CONFDIR` (typically `/etc/check_mk` on Linux).
+- **Wallet Location**: The default wallet location is `MK_CONFDIR/oracle_wallet` (e.g., `/etc/check_mk/oracle_wallet`).
+
+### Enabling Wallet Authentication
+
+To enable Oracle Wallet authentication, set the authentication type to `wallet` in your YAML configuration file:
+
+```yaml
+oracle:
+  main:
+    connection:
+      hostname: 127.0.0.1
+      port: 1521
+      service_name: FREE
+    authentication:
+      type: wallet # auth type is set to wallet
+```
+
+### Workflow 1: Using Default Configuration (No explicit tns_admin)
+
+When the authentication type is set to `wallet` and no `tns_admin` is explicitly configured:
+
+1. The plugin sets `TNS_ADMIN` to `MK_CONFDIR`.
+2. A `sqlnet.ora` file is created in `MK_CONFDIR` (if it doesn't already exist) with the wallet location pointing to `MK_CONFDIR/oracle_wallet`.
+3. You need to place your Oracle Wallet files in `MK_CONFDIR/oracle_wallet`.
+
+**Note:** You can also pre-create `sqlnet.ora`, `tnsnames.ora`, and the `oracle_wallet` directory with wallet files in `MK_CONFDIR` before running the plugin.
+
+#### Creating the Oracle Wallet
+
+Assuming `MK_CONFDIR` is `/etc/check_mk` and this is your config file:
+
+```yaml
+oracle:
+  main:
+    connection:
+      hostname: 127.0.0.1
+      port: 1521
+      service_name: FREE
+    authentication:
+      type: wallet
+```
+
+Use the following commands to create and configure the wallet:
+
+1. Create the wallet directory and initialize it:
+
+```bash
+mkstore -wrl /etc/check_mk/oracle_wallet -create
+```
+
+2. Add credentials to the wallet (replace with your actual connection details):
+
+```bash
+mkstore -wrl /etc/check_mk/oracle_wallet -createCredential 127.0.0.1:1521/FREE/FREE checkmk myPassword
+```
+
+#### Example sqlnet.ora File
+
+```
+LOG_DIRECTORY_CLIENT = /var/log/check_mk/oracle_client
+DIAG_ADR_ENABLED = OFF
+
+SQLNET.WALLET_OVERRIDE = TRUE
+WALLET_LOCATION =
+ (SOURCE=
+   (METHOD = FILE)
+   (METHOD_DATA = (DIRECTORY=/etc/check_mk/oracle_wallet))
+ )
+```
+
+### Workflow 2: Using Custom tns_admin Location
+
+When the authentication type is set to `wallet` and `tns_admin` is explicitly set in the configuration:
+
+```yaml
+oracle:
+  main:
+    connection:
+      hostname: 127.0.0.1
+      port: 1521
+      tns_admin: /custom/path/to/tns_admin
+    authentication:
+      type: wallet
+```
+
+In this case:
+
+1. The plugin sets `TNS_ADMIN` to the value specified in `tns_admin`.
+2. The plugin does **not** create any configuration files automatically.
+3. You are responsible for managing all configuration files in your custom `TNS_ADMIN` directory, including:
+   - `sqlnet.ora` (with wallet location configuration)
+   - `tnsnames.ora` (if using TNS aliases)
+   - Oracle Wallet files in the location specified in your `sqlnet.ora`
+
+This workflow is useful when you have an existing Oracle configuration setup that you want to reuse.

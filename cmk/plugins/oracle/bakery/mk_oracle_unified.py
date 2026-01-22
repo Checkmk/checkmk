@@ -143,7 +143,8 @@ class GuiInstanceAdditionalOptionsConf(BaseModel):
 
 
 class GuiInstanceConf(BaseModel):
-    sid: str
+    service_name: str | None
+    instance_name: str | None
     auth: (
         tuple[
             OracleAuthType,
@@ -152,7 +153,6 @@ class GuiInstanceConf(BaseModel):
         | None
     ) = None
     connection: GuiConnectionConf | None = None
-    options: GuiInstanceAdditionalOptionsConf | None = None
 
 
 class GuiConfig(BaseModel):
@@ -208,10 +208,10 @@ class OracleInstanceAdditionalOptions(TypedDict):
 
 
 class OracleInstance(TypedDict):
-    sid: str
+    service_name: NotRequired[str]
+    instance_name: NotRequired[str]
     authentication: NotRequired[OracleInstanceAuth]
     connection: NotRequired[OracleConnection]
-    options: NotRequired[OracleInstanceAdditionalOptions]
 
 
 class OracleMain(TypedDict):
@@ -404,11 +404,18 @@ def _get_oracle_instance_authentication(
 def _get_oracle_instances(instances: list[GuiInstanceConf]) -> list[OracleInstance]:
     result: list[OracleInstance] = []
     for instance in instances:
-        inst_dict: OracleInstance = {
-            "sid": instance.sid,
-        }
-        if instance.options:
-            inst_dict["options"] = _get_oracle_instance_additional_options(instance.options)
+        if (
+            not instance.service_name
+            and not instance.instance_name
+            and instance.auth is None
+            and instance.connection is None
+        ):
+            continue
+        inst_dict: OracleInstance = {}
+        if instance.service_name:
+            inst_dict["service_name"] = instance.service_name
+        if instance.instance_name:
+            inst_dict["instance_name"] = instance.instance_name
         if instance.auth:
             inst_dict["authentication"] = _get_oracle_instance_authentication(instance.auth)
         if instance.connection:

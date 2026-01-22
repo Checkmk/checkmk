@@ -8,7 +8,9 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from typing import cast, Literal
 
-import cmk.gui.forms as forms
+from cmk.utils.paths import profile_dir
+
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -237,23 +239,33 @@ class ModeParentScan(WatoMode):
 
         forms.header(_("Settings for Parent Scan"))
 
-        self._settings = GUIParentScanSettings(
-            **user.load_file(
-                "parentscan",
-                {
-                    "where": "subfolder",
-                    "alias": _("Created by parent scan"),
-                    "recurse": True,
-                    "select": "noexplicit",
-                    "timeout": 8,
-                    "probes": 2,
-                    "ping_probes": 5,
-                    "max_ttl": 10,
-                    "force_explicit": False,
-                    "gateway_folder_path": None,
-                },
+        try:
+            parent_scan_settings = GUIParentScanSettings(
+                **user.load_file(
+                    "parentscan",
+                    {
+                        "where": "subfolder",
+                        "alias": _("Created by parent scan"),
+                        "recurse": True,
+                        "select": "noexplicit",
+                        "timeout": 8,
+                        "probes": 2,
+                        "ping_probes": 5,
+                        "max_ttl": 10,
+                        "force_explicit": False,
+                        "gateway_folder_path": None,
+                    },
+                )
             )
-        )
+        except Exception:
+            user_file = f"{profile_dir}/{user.id}/parentscan.mk"
+            raise MKUserError(
+                None,
+                _("Error reading parent scan settings. Please delete the file ''%s' and try again.")
+                % user_file,
+            )
+
+        self._settings = parent_scan_settings
 
         # Selection
         forms.section(_("Selection"))

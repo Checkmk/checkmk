@@ -50,15 +50,13 @@ test_parse_args_all_required_args() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --user "testuser" \
-        --password "testpass"
+        --user "testuser"
 
     assertEquals "test-relay" "$ARGS_RELAY_NAME"
     assertEquals "1.0.0" "$ARGS_INITIAL_TAG_VERSION"
     assertEquals "server.example.com" "$ARGS_TARGET_SERVER"
     assertEquals "mysite" "$ARGS_TARGET_SITE_NAME"
     assertEquals "testuser" "$ARGS_USER"
-    assertEquals "testpass" "$ARGS_PASSWORD"
 }
 
 # Test: Arguments in different order
@@ -67,7 +65,6 @@ test_parse_args_different_order() {
         --relay-name "test-relay" \
         --target-server "server.example.com" \
         --initial-tag-version "1.0.0" \
-        --password "testpass" \
         --user "testuser"
 
     assertEquals "test-relay" "$ARGS_RELAY_NAME"
@@ -75,7 +72,6 @@ test_parse_args_different_order() {
     assertEquals "server.example.com" "$ARGS_TARGET_SERVER"
     assertEquals "mysite" "$ARGS_TARGET_SITE_NAME"
     assertEquals "testuser" "$ARGS_USER"
-    assertEquals "testpass" "$ARGS_PASSWORD"
 }
 
 # Test: Missing --relay-name
@@ -83,8 +79,7 @@ test_parse_args_missing_relay_name() {
     (parse_args --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --user "testuser" \
-        --password "testpass" 2>/dev/null)
+        --user "testuser" 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -94,8 +89,7 @@ test_parse_args_missing_initial_tag_version() {
     (parse_args --relay-name "test-relay" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --user "testuser" \
-        --password "testpass" 2>/dev/null)
+        --user "testuser" 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -105,8 +99,7 @@ test_parse_args_missing_target_server() {
     (parse_args --relay-name "test-relay" \
         --initial-tag-version "1.0.0" \
         --target-site-name "mysite" \
-        --user "testuser" \
-        --password "testpass" 2>/dev/null)
+        --user "testuser" 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -116,8 +109,7 @@ test_parse_args_missing_target_site_name() {
     (parse_args --relay-name "test-relay" \
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
-        --user "testuser" \
-        --password "testpass" 2>/dev/null)
+        --user "testuser" 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -129,7 +121,6 @@ test_parse_args_unknown_option() {
         --target-server "server.example.com" \
         --target-site-name "mysite" \
         --user "testuser" \
-        --password "testpass" \
         --unknown-option "value" 2>/dev/null)
 
     assertEquals 1 $?
@@ -153,13 +144,11 @@ test_parse_args_values_with_spaces() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "my site" \
-        --user "test user" \
-        --password "test pass"
+        --user "test user"
 
     assertEquals "test relay with spaces" "$ARGS_RELAY_NAME"
     assertEquals "my site" "$ARGS_TARGET_SITE_NAME"
     assertEquals "test user" "$ARGS_USER"
-    assertEquals "test pass" "$ARGS_PASSWORD"
 }
 
 # Test: Values with special characters
@@ -168,15 +157,13 @@ test_parse_args_special_characters() {
         --initial-tag-version "2.3.0-p1" \
         --target-server "https://server.example.com:8080" \
         --target-site-name "site_123" \
-        --user "admin@example.com" \
-        --password "P@ssw0rd!#$"
+        --user "admin@example.com"
 
     assertEquals "test-relay_v2" "$ARGS_RELAY_NAME"
     assertEquals "2.3.0-p1" "$ARGS_INITIAL_TAG_VERSION"
     assertEquals "https://server.example.com:8080" "$ARGS_TARGET_SERVER"
     assertEquals "site_123" "$ARGS_TARGET_SITE_NAME"
     assertEquals "admin@example.com" "$ARGS_USER"
-    assertEquals "P@ssw0rd!#$" "$ARGS_PASSWORD"
 }
 
 # Test: Empty string values should fail
@@ -185,8 +172,7 @@ test_parse_args_empty_relay_name() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --user "testuser" \
-        --password "testpass" 2>/dev/null)
+        --user "testuser" 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -203,18 +189,7 @@ test_parse_args_missing_user() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --password "testpass" 2>/dev/null)
-
-    assertEquals 1 $?
-}
-
-# Test: Missing --password
-test_parse_args_missing_password() {
-    (parse_args --relay-name "test-relay" \
-        --initial-tag-version "1.0.0" \
-        --target-server "server.example.com" \
-        --target-site-name "mysite" \
-        --user "testuser" 2>/dev/null)
+        2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -226,34 +201,48 @@ test_parse_args_empty_user() {
         --target-server "server.example.com" \
         --target-site-name "mysite" \
         --user "" \
-        --password "testpass" 2>/dev/null)
+        2>/dev/null)
 
     assertEquals 1 $?
 }
 
-# Test: Empty password should fail
-test_parse_args_empty_password() {
-    (parse_args --relay-name "test-relay" \
-        --initial-tag-version "1.0.0" \
-        --target-server "server.example.com" \
-        --target-site-name "mysite" \
-        --user "testuser" \
-        --password "" 2>/dev/null)
-
-    assertEquals 1 $?
+# Test: Password from stdin
+test_request_password_from_stdin_valid() {
+    # Simulate stdin input (not a TTY) using input redirection
+    request_password < <(printf '%s' "my_secure_password")
+    assertEquals "my_secure_password" "$ARGS_PASSWORD"
 }
 
-# Test: User and password with special characters
-test_parse_args_user_password_special_chars() {
-    parse_args --relay-name "test-relay" \
-        --initial-tag-version "1.0.0" \
-        --target-server "server.example.com" \
-        --target-site-name "mysite" \
-        --user "user@domain.com" \
-        --password "P@ss!w0rd#123"
+# Test: Password from stdin with special characters
+test_request_password_from_stdin_special_chars() {
+    # Test password with special characters
+    request_password < <(printf '%s' 'P@ssw0rd!#$%&*()_+-={}[]|:;<>,.?/')
+    assertEquals 'P@ssw0rd!#$%&*()_+-={}[]|:;<>,.?/' "$ARGS_PASSWORD"
+}
 
-    assertEquals "user@domain.com" "$ARGS_USER"
-    assertEquals "P@ss!w0rd#123" "$ARGS_PASSWORD"
+# Test: Empty password from stdin
+test_request_password_from_stdin_empty() {
+    # Empty stdin should be accepted - the service will validate and reject
+    request_password < <(printf '')
+    assertEquals "" "$ARGS_PASSWORD"
+}
+
+# Test: Password prompt with TTY
+test_request_password_with_tty_prompt() {
+    # Create a wrapper script that sources install_relay.sh and calls request_password
+    cat >"${SHUNIT_TMPDIR}/test_wrapper.sh" <<'WRAPPER_EOF'
+#!/bin/bash
+MK_SOURCE_ONLY="true" source "${UNIT_SH_REPO_PATH}/omd/non-free/relay/install_relay.sh"
+ARGS_USER="testuser"
+request_password
+printf '%s' "$ARGS_PASSWORD"
+WRAPPER_EOF
+    chmod +x "${SHUNIT_TMPDIR}/test_wrapper.sh"
+
+    # Use script to simulate TTY and provide password via stdin
+    result=$(echo 'mypassword' | script -q -c "UNIT_SH_REPO_PATH='${UNIT_SH_REPO_PATH}' bash ${SHUNIT_TMPDIR}/test_wrapper.sh" /dev/null 2>&1 | tr -d '\r' | tail -n 1)
+
+    assertEquals "mypassword" "$result"
 }
 
 # shellcheck disable=SC1090

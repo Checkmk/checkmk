@@ -51,12 +51,12 @@ test_main_loginctl_fails() {
     (
         set -euo pipefail
 
-        main --relay-name "test-relay" \
+        printf '%s' "testpass" | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
             --user "testuser" \
-            --password "testpass" 2>/dev/null
+            2>/dev/null
     )
     local exit_code=$?
     set -e

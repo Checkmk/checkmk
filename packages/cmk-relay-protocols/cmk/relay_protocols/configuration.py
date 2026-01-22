@@ -82,6 +82,8 @@ class EngineConfig(UserEngineConfig):
     host_scheduler_sleep: float = 0.5
     poll_history: HistoryConfig = HistoryConfig()
     third_party_log_level: LogLevel = LogLevel.CRITICAL
+    # Certificate rotation check frequency in seconds (24 hours)
+    cert_rotation_schedule: float = 24 * 60 * 60
 
     @classmethod
     def load(cls, path: Path) -> Self:

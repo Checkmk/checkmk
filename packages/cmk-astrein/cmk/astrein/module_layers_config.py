@@ -1093,6 +1093,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.testlib.relay"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
         "cmk.check_helper_protocol",
         "cmk.relay",
         "cmk.relay_protocols",

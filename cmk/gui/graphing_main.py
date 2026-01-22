@@ -13,7 +13,6 @@
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
-import json
 from typing import override
 
 import cmk.ccc.debug
@@ -31,20 +30,13 @@ from cmk.gui.graphing import (
     check_metrics,
     CheckMetricEntry,
     get_temperature_unit,
-    GraphRenderConfig,
     graphs_from_api,
-    host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
     metric_backend_registry,
     metrics_from_api,
-    MKGraphDashletTooSmallError,
-    MKGraphRecipeCalculationError,
-    MKGraphRecipeNotFoundError,
     parse_metric_from_api,
-    parse_raw_graph_specification,
     perfometers_from_api,
 )
-from cmk.gui.htmllib.html import html
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
@@ -198,38 +190,3 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             ].get_time_series_fetcher(ctx.config),
         )
         return None  # for mypy
-
-
-class PageGraphDashlet(cmk.gui.pages.Page):
-    @override
-    def page(self, ctx: PageContext) -> None:
-        try:
-            html.write_html(
-                host_service_graph_dashlet_cmk(
-                    ctx.request,
-                    parse_raw_graph_specification(
-                        json.loads(ctx.request.get_str_input_mandatory("spec"))
-                    ),
-                    GraphRenderConfig.model_validate_json(
-                        ctx.request.get_str_input_mandatory("config")
-                    ),
-                    metrics_from_api,
-                    graphs_from_api,
-                    UserPermissions.from_config(ctx.config, permission_registry),
-                    debug=ctx.config.debug,
-                    graph_timeranges=ctx.config.graph_timeranges,
-                    temperature_unit=get_temperature_unit(
-                        user, ctx.config.default_temperature_unit
-                    ),
-                    backend_time_series_fetcher=metric_backend_registry[
-                        str(edition(paths.omd_root))
-                    ].get_time_series_fetcher(ctx.config),
-                    graph_display_id=ctx.request.get_str_input_mandatory("id"),
-                )
-            )
-        except (
-            MKGraphRecipeCalculationError,
-            MKGraphRecipeNotFoundError,
-            MKGraphDashletTooSmallError,
-        ) as e:
-            html.write_html(html.render_message(str(e)))

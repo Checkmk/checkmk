@@ -95,7 +95,6 @@ def test_registered_pages() -> None:
         "edit_views",
         "export_views",
         "fetch_agent_output",
-        "graph_dashlet",
         "crash",
         "host_inv_api",
         "host_service_graph_popup",

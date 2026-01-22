@@ -40,7 +40,6 @@ const props = defineProps<
 
 const installCommand = computed(() => {
   const username = props.isCloudEdition ? 'api_user' : props.userId
-  const passwordPlaceholder = props.isCloudEdition ? '[automation-secret]' : '[your password]'
 
   return [
     'bash install_relay.sh \\',
@@ -48,8 +47,7 @@ const installCommand = computed(() => {
     `  --initial-tag-version ${props.siteVersion} \\`,
     `  --target-server ${props.domain} \\`,
     `  --target-site-name ${props.siteName} \\`,
-    `  --user ${username} \\`,
-    `  --password ${passwordPlaceholder}`
+    `  --user ${username}`
   ].join('\n')
 })
 </script>
@@ -81,11 +79,11 @@ const installCommand = computed(() => {
           {{ _t('this page') }}
         </a>
         {{
-          _t(' to get an automation secret and replace [automation-secret] in the command below.')
+          _t(' to get an automation secret. You will be prompted for it when running the script.')
         }}
       </CmkAlertBox>
       <CmkAlertBox v-else variant="info">
-        {{ _t('Replace [your password] in the command below with your user password.') }}
+        {{ _t('You will be prompted for your user password when running the script.') }}
       </CmkAlertBox>
       <CmkCode :code_txt="installCommand"></CmkCode>
     </template>

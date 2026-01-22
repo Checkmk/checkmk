@@ -54,12 +54,11 @@ test_systemctl_daemon_reload_failure() {
     set +e
     output=$(
         set -euo pipefail
-        main --relay-name "test-relay" \
+        printf '%s' "testpass" | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --user "testuser" \
-            --password "testpass" 2>&1
+            --user "testuser" 2>&1
     )
     local exit_code=$?
     set -e
@@ -99,12 +98,11 @@ test_systemctl_enable_path_failure() {
     set +e
     output=$(
         set -euo pipefail
-        main --relay-name "test-relay" \
+        printf '%s' "testpass" | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --user "testuser" \
-            --password "testpass" 2>&1
+            --user "testuser" 2>&1
     )
     local exit_code=$?
     set -e
@@ -148,12 +146,11 @@ test_systemctl_enable_update_service_failure() {
     set +e
     output=$(
         set -euo pipefail
-        main --relay-name "test-relay" \
+        printf '%s' "testpass" | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --user "testuser" \
-            --password "testpass" 2>&1
+            --user "testuser" 2>&1
     )
     local exit_code=$?
     set -e
@@ -201,12 +198,11 @@ test_systemctl_start_relay_service_failure() {
     set +e
     output=$(
         set -euo pipefail
-        main --relay-name "test-relay" \
+        printf '%s' "testpass" | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --user "testuser" \
-            --password "testpass" 2>&1
+            --user "testuser" 2>&1
     )
     local exit_code=$?
     set -e

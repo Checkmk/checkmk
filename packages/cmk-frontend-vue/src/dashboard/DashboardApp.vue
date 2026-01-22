@@ -334,18 +334,30 @@ const createDashboard = async (
   scopeIds: string[]
 ) => {
   openDashboardCreationDialog.value = false
-  // avoid showing the new dashboard, while the dashboard list is loading
-  const key = await dashboardsManager.createDashboard(
-    dashboardId,
-    settings,
-    layout,
-    scopeIds,
-    'setDashboardAsActive'
-  )
+  isDashboardLoading.value = true
+  loadingError.value = null
+
+  let key: DashboardKey
+  try {
+    // avoid showing the new dashboard, while the dashboard list is loading
+    key = await dashboardsManager.createDashboard(
+      dashboardId,
+      settings,
+      layout,
+      scopeIds,
+      'setDashboardAsActive'
+    )
+  } catch (e) {
+    loadingError.value = e instanceof Error ? e : new Error(String(e))
+    isDashboardLoading.value = false
+    return
+  }
+
   isDashboardEditingMode.value = false
   openDashboardFilterSettings.value = false
   const updatedDashboardUrl = urlHandler.getDashboardUrl(key, {})
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
+  isDashboardLoading.value = false
 }
 
 const cloneDashboard = async (
@@ -359,6 +371,9 @@ const cloneDashboard = async (
   }
   openDashboardCloneDialog.value = false
   isCloning.value = true
+  loadingError.value = null
+
+  let newKey: DashboardKey
   try {
     let newOwner
     if (layout === DashboardLayout.RELATIVE_GRID) {
@@ -379,17 +394,21 @@ const cloneDashboard = async (
       newOwner = response.extensions.owner
     }
 
-    const newKey: DashboardKey = {
+    newKey = {
       name: dashboardId,
       owner: newOwner
     }
-    await setAsActiveDashboard(newKey, layout)
-    await nextTick()
-
-    isCloned.value = true
-  } finally {
+  } catch (e) {
+    loadingError.value = e instanceof Error ? e : new Error(String(e))
     isCloning.value = false
+    return
   }
+
+  await setAsActiveDashboard(newKey, layout)
+  await nextTick()
+
+  isCloned.value = true
+  isCloning.value = false
 }
 
 const dashboardHasFilters = computed(
@@ -475,7 +494,9 @@ function deepClone<T>(obj: T): T {
       <DashboardMenuHeader
         v-model:is-edit-mode="isDashboardEditingMode"
         :selected-dashboard="selectedDashboard"
-        :is-dashboard-loading="isDashboardLoading"
+        :is-dashboard-loading="
+          isDashboardLoading || isCloning || openDashboardCreationDialog || openDashboardCloneDialog
+        "
         :can-edit-dashboard="
           dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
         "

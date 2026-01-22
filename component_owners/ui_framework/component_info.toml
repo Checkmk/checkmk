@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "UI Framework"
+has_support_component = false
+members_required = 2
+description = """
+- Handles the application server including page handling and other cross-cutting UI concerns independent of a feature's core domain.
+"""

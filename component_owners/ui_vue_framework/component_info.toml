@@ -1,7 +1,0 @@
-type = "Component"
-display_name = "UI - Vue Framework"
-has_support_component = true
-members_required = 2
-description = """
-- The UI - Vue Framework, codebase and architecture
-"""

@@ -1,6 +1,6 @@
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/vue_framework/OWNERS_DEFINITION
+file:/component_owners/ui_framework/OWNERS_DEFINITION
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

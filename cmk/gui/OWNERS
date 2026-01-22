@@ -8,6 +8,8 @@ per-file login.py=file:/component_owners/user_management_and_authentication/OWNE
 per-file login.py=set noparent
 per-file search_menu.py=file:/component_owners/global_search/OWNERS_DEFINITION
 per-file search_menu.py=set noparent
+per-file pages.py=file:/component_owners/ui_framework/OWNERS_DEFINITION
+per-file pages.py=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

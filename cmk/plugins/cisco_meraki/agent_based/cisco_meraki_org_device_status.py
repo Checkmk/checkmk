@@ -28,6 +28,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.cisco_meraki.lib.type_defs import PossiblyMissing
 from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 type Section = DeviceStatus
 
@@ -84,7 +85,7 @@ _STATUS_MAP = {
 
 class Parameters(TypedDict, total=False):
     status_map: Mapping[str, int]
-    last_reported_upper_levels: tuple[int, int]
+    last_reported_upper_levels: SimpleLevelsConfigModel[int]
 
 
 def check_device_status(params: Parameters, section: Section) -> CheckResult:
@@ -94,9 +95,7 @@ def check_device_status(params: Parameters, section: Section) -> CheckResult:
         state = State(raw_state)
     yield Result(state=state, summary=f"Status: {section.status}")
 
-    if levels_upper := params.get("last_reported_upper_levels"):
-        warn, crit = levels_upper
-        levels_upper = (warn * 3600, crit * 3600)  # change from hours to seconds
+    _, levels_upper = params.get("last_reported_upper_levels", ("no_levels", None))
 
     yield from check_last_reported_ts(
         last_reported_ts=section.last_reported.timestamp(),

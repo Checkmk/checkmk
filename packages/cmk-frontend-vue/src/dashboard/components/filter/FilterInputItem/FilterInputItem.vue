@@ -43,11 +43,18 @@ const components = computed((): ComponentConfig[] => {
   return filterDefinition.extensions.components || []
 })
 
-const handleComponentChange = (_componentId: string, values: ConfiguredValues): void => {
-  const updatedFilterValues: ConfiguredValues = {
-    ...localConfiguredFilterValues.value,
-    ...values
-  }
+const handleComponentChange = (
+  _componentId: string,
+  values: ConfiguredValues,
+  mode: 'merge' | 'overwrite' = 'merge'
+): void => {
+  const updatedFilterValues: ConfiguredValues =
+    mode === 'overwrite'
+      ? values
+      : {
+          ...localConfiguredFilterValues.value,
+          ...values
+        }
 
   localConfiguredFilterValues.value = updatedFilterValues
   emit('update-filter-values', filterDefinition.id!, updatedFilterValues)

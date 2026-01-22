@@ -39,14 +39,18 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<ComponentEmits>()
 
-const handleUpdate = (componentId: string, values: Record<string, string>): void => {
-  emit('update-component-values', componentId, values)
+const handleUpdate = (
+  componentId: string,
+  values: Record<string, string>,
+  mode: 'merge' | 'overwrite' = 'merge'
+): void => {
+  emit('update-component-values', componentId, values, mode)
 }
 
 const onLabelComponentUpdate = (query: QueryItem[]): void => {
   if (props.component.component_type === 'label_group') {
     const converted = convertToFilterStructure(query, props.component.id)
-    handleUpdate(props.component.id, converted)
+    handleUpdate(props.component.id, converted, 'overwrite')
     return
   }
   throw new Error('Component is not of type label_group')

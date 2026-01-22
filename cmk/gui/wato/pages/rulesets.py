@@ -219,11 +219,6 @@ from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 from ._rule_conditions import DictHostTagCondition
 
 _DEPRECATION_WARNING = "<b>This feature will be deprecated in a future version of Checkmk.</b>"
-_OTEL_WARNING = (
-    "The OpenTelemetry collector is an experimental beta feature, and not supported yet. "
-    "Use and test at your heart's desire, just don’t rely on it in production - scope & features may change."
-)
-_OTEL_RULESPECS = [RuleGroup.SpecialAgents("otel"), RuleGroup.CheckgroupParameters("otel_metrics")]
 tracer = trace.get_tracer()
 
 
@@ -1226,8 +1221,6 @@ class ModeEditRuleset(WatoMode):
 
         if self._rulespec.deprecation_planned:
             forms.warning_message(_DEPRECATION_WARNING)
-        if self._rulespec.name in _OTEL_RULESPECS:
-            forms.warning_message(_OTEL_WARNING)
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())

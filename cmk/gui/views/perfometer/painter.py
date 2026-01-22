@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 
@@ -30,10 +29,10 @@ class PainterPerfometer(Painter):
     def ident(self) -> str:
         return "perfometer"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Service Perf-O-Meter")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Perf-O-Meter")
 
     @property
@@ -48,7 +47,7 @@ class PainterPerfometer(Painter):
         ]
 
     @property
-    def printable(self):
+    def printable(self) -> bool | str:
         return "perfometer"
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:

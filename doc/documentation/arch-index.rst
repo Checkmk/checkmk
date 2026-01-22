@@ -32,6 +32,7 @@ Components
    arch-comp-apache.rst
    arch-comp-checkengine.rst
    arch-comp-core.rst
+   arch-comp-smartping.rst
    arch-comp-liveproxyd.rst
    arch-comp-mknotifyd.rst
    arch-comp-dcd.rst

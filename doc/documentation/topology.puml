@@ -44,7 +44,7 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
             component checker
             component Fetcher
         }
-        component "Smart ping" as smart_ping {
+        component "[[../arch-comp-smartping.html Smart ping]]" as smart_ping {
             component ICMPReceiver
             component ICMPSender
         }

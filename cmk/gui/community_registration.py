@@ -23,7 +23,7 @@ from cmk.gui.dashboard import (
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
 from cmk.gui.graphing import community_registration as graphing_community_registration
-from cmk.gui.graphing_main import PageGraphDashlet, PageHostServiceGraphPopup
+from cmk.gui.graphing_main import PageHostServiceGraphPopup
 from cmk.gui.help_menu import (
     default_about_checkmk_entries,
     default_developer_entries,
@@ -119,7 +119,6 @@ from cmk.gui.watolib.users import default_sites, user_features_registry, UserFea
 
 
 def register_pages() -> None:
-    page_registry.register(PageEndpoint("graph_dashlet", PageGraphDashlet()))
     page_registry.register(PageEndpoint("host_service_graph_popup", PageHostServiceGraphPopup()))
 
 

@@ -10,6 +10,7 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 
+import usei18n from '@/lib/i18n'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
@@ -51,11 +52,13 @@ export interface FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result> {
 }
 
 const DISMISSAL_KEY = 'immediate_slideout_change'
+const { _t } = usei18n()
 
 const props = defineProps<FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result>>()
 
 const schema = ref<FormSpec>()
 const data = ref<Payload>()
+const saving = ref<boolean>(false)
 
 const backendValidation = ref<Array<ValidationMessage>>([])
 
@@ -65,7 +68,9 @@ async function save() {
   }
   backendValidation.value = []
 
+  saving.value = true
   const result: SetDataResult<Result> = await props.api.setData(props.objectId, toRaw(data.value))
+  saving.value = false
 
   if (result.type === 'success') {
     emit('submitted', result.entity)
@@ -128,6 +133,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         <CmkAlertBox v-if="backendValidation.length !== 0" variant="error">
           {{ i18n.validation_error }}
         </CmkAlertBox>
+        <div v-if="saving" class="form-edit-async__saving">
+          <CmkIcon name="load-graph" size="large" /> {{ _t('Saving') }}
+        </div>
       </div>
       <div v-if="schema !== undefined && data !== undefined">
         <FormEditDispatcher
@@ -156,5 +164,12 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 .form-edit-async__buttons {
   margin-bottom: 1em;
+}
+
+.form-edit-async__saving {
+  display: flex;
+  align-items: center;
+  margin-top: 1em;
+  gap: 0.5em;
 }
 </style>

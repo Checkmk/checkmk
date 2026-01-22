@@ -30,8 +30,16 @@ void main() {
 
     def test_stages = packages.collectEntries { p ->
         [("${p.name}"): {
+            def relative_job_name = "${branch_base_folder}/builders/build-cmk-package";
+            if (env.USE_K8S_GENERIC_PACKAGES == "1") {
+                relative_job_name = "${relative_job_name}-k8s";
+            }
             def stepName = "${p.name}";
             def build_instance = null;
+            // to be fixed with CMK-29585
+            if (p.path in ["non-free/packages/cmk-relay-engine", "packages/cmk-agent-receiver"]) {
+                relative_job_name = relative_job_name.split("-k8s")[0];
+            }
 
             smart_stage(
                 name: stepName,
@@ -40,7 +48,7 @@ void main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-package",
+                    relative_job_name: relative_job_name,
                     force_build: params.FORCE_BUILD,
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,

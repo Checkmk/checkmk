@@ -24,7 +24,6 @@ void main() {
     validate_parameters();
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     currentBuild.description = "Running ${params.PACKAGE_PATH}<br>${currentBuild.description}";
 
     def distro = params.DISTRO;
@@ -51,24 +50,13 @@ void main() {
     }
 
     dir(checkout_dir) {
-        def lock_label = "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}";
-        if (kubernetes_inherit_from != "UNSET") {
-            lock_label = "bzl_lock_k8s";
-        }
-
-        lock(label: lock_label, quantity: 1, resource : null) {
+        // to be fixed with CMK-29585
+        if (params.PACKAGE_PATH in ["non-free/packages/cmk-relay-engine", "packages/cmk-agent-receiver"]) {
             inside_container(inside_container_args) {
-                withCredentials(secret_list(params.SECRET_VARS).collect {
-                    string(credentialsId: it, variable: it)
-                }) {
-                    helper.execute_test([
-                        name       : params.PACKAGE_PATH,
-                        cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",
-                        output_file: output_file,
-                    ]);
-                }
-                sh("mv ${params.PACKAGE_PATH}/${output_file} ${checkout_dir}");
+                this_call_site(safe_branch_name, output_file);
             }
+        } else {
+            this_call_site(safe_branch_name, output_file);
         }
 
         // Can be removed once ci-artifacts doesn't fail anymore on empty files
@@ -79,6 +67,28 @@ void main() {
             artifacts: artifacts,
             fingerprint: true,
         );
+    }
+}
+
+void this_call_site(String safe_branch_name, String output_file) {
+    def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+
+    def lock_label = "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}";
+    if (kubernetes_inherit_from != "UNSET") {
+        lock_label = "bzl_lock_k8s";
+    }
+    lock(label: lock_label, quantity: 1, resource : null) {
+        withCredentials(secret_list(params.SECRET_VARS).collect {
+            string(credentialsId: it, variable: it)
+        }) {
+            helper.execute_test([
+                name       : params.PACKAGE_PATH,
+                cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",
+                output_file: output_file,
+                container_name: "testing-ubuntu-2204-checkmk-${safe_branch_name}",
+            ]);
+        }
+        sh("mv ${params.PACKAGE_PATH}/${output_file} ${checkout_dir}");
     }
 }
 

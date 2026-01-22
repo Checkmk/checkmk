@@ -275,15 +275,15 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 filename="edit_dashboards.py",
                 is_snapin=is_snapin,
             ),
-            mark_step_completed=_make_url(
+            mark_step_completed=makeuri(
+                request,
                 addvars=[],
                 filename="ajax_mark_step_as_complete.py",
-                is_snapin=is_snapin,
             ),
-            get_stage_information=_make_url(
+            get_stage_information=makeuri(
+                request,
                 addvars=[],
                 filename="ajax_get_welcome_page_stage_information.py",
-                is_snapin=is_snapin,
             ),
         ),
         is_start_url=user.start_url == "welcome.py",

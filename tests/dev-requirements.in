@@ -15,7 +15,6 @@ fakeredis[lua]  # used for testing code which uses Redis (lua is needed for faki
 furo  # sphinx theme
 grequests  # redfish server mocker for integration tests
 hypothesis    # used by unit tests
-hypothesis-jsonschema  # used by unit tests
 jira # used by jira_alerter
 jsonschema
 libcst # concrete syntax trees for plugin migration helpers

@@ -1773,7 +1773,6 @@ hypothesis-jsonschema==0.23.1 \
     --hash=sha256:f4ac032024342a4149a10253984f5a5736b82b3fe2afb0888f3834a31153f215
     # via
     #   -c requirements.txt
-    #   -r tests/dev-requirements.in
     #   schemathesis
 icalendar==6.3.2 \
     --hash=sha256:d400e9c9bb8c025e5a3c77c236941bb690494be52528a0b43cc7e8b7c9505064 \

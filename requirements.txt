@@ -1602,9 +1602,7 @@ hypothesis-graphql==0.11.1 \
 hypothesis-jsonschema==0.23.1 \
     --hash=sha256:a4d74d9516dd2784fbbae82e009f62486c9104ac6f4e3397091d98a1d5ee94a2 \
     --hash=sha256:f4ac032024342a4149a10253984f5a5736b82b3fe2afb0888f3834a31153f215
-    # via
-    #   -r tests/dev-requirements.in
-    #   schemathesis
+    # via schemathesis
 icalendar==6.3.2 \
     --hash=sha256:d400e9c9bb8c025e5a3c77c236941bb690494be52528a0b43cc7e8b7c9505064 \
     --hash=sha256:e0c10ecbfcebe958d33af7d491f6e6b7580d11d475f2eeb29532d0424f9110a1

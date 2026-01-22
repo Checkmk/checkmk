@@ -19,11 +19,7 @@ set -e
 
 case "$1" in
     install)
-    	# create base dirs and symlinks manually, so we can install
-	# different omd versions in parallel
-    	mkdir -p /opt/omd/apache
-    	mkdir -p /opt/omd/versions
-    	mkdir -p /opt/omd/sites
+    	# create symlinks manually, so we can install different omd versions in parallel
 	ln -sfn /opt/omd /omd
     ;;
     upgrade)

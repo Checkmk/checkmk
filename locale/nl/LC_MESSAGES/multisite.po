@@ -1256,10 +1256,6 @@ msgstr "3.3 Volt Uitvoer Bovengrens"
 msgid "30 minutes"
 msgstr "30 Minuten"
 
-#, fuzzy
-msgid "32-bit packaged binary"
-msgstr "64bit ingepakt binair bestand"
-
 msgid "389 Directory Server"
 msgstr "389 Directory Server"
 
@@ -1321,10 +1317,6 @@ msgstr "5xx foutenpercentage"
 
 msgid "6 months"
 msgstr "6 maanden"
-
-#, fuzzy
-msgid "64-bit packaged binary"
-msgstr "64bit ingepakt binair bestand"
 
 #, fuzzy, no-python-format
 msgid "68% - One standard deviation"
@@ -24464,7 +24456,8 @@ msgstr "Actieve controles uitschakelen"
 msgid "Enable/Disable passive checks"
 msgstr "Controles in- en uitschakelen"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "Inschakelen/uitschakelen van actieve controles voor diensten"
 
 msgid "Enable/disable checks"
@@ -39769,6 +39762,10 @@ msgid "Levels on Web ACL requests"
 msgstr "Niveaus op Web ACL verzoeken"
 
 #, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "Niveaus op tijdsverschil"
+
+#, fuzzy
 msgid "Levels on age of oldest message"
 msgstr "Leeftijd van oudste bericht"
 
@@ -43019,7 +43016,7 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "Maximumaantal niet-operationele toegangspunten"
 
-#, python-format
+#, no-python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
 "This option is used to calculate the hard memory limit from the total "
@@ -43137,6 +43134,7 @@ msgstr "Maximale logleeftijd"
 msgid "Maximum long output size"
 msgstr "Maximale spoelgrootte"
 
+#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -43146,7 +43144,7 @@ msgid ""
 "limit (the spike limit being equal to 250MiB)"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -46151,6 +46149,10 @@ msgstr "Netapp poort ontdekking"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp voedingseenheid ontdekking"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "Netapp systeemtijd"
 
 msgid "Netmask"
 msgstr "Netmask"
@@ -50174,10 +50176,11 @@ msgstr ""
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
-"automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small and editable. Please note "
-"that the Checkmk team can offer no support for issues about the target "
-"system's python environment when choosing \"Script\"."
+"automatically regardless of this rule. The binary format yields a broader "
+"compatibility, while the Python script is small and editable.<br> Concrete "
+"requirements are:<br> <b>packaged binary:</b> x86-64 Linux system with glibc "
+"2.17 or newer. <b>Python script:</b> Python3 with modules _cryptography_, "
+"_requests_ and _pysocks_ (for SOCKS proxy support)."
 msgstr ""
 "Kies optioneel het formaat van het agent-updater excecuteerbare bestand. "
 "Alleen relevant voor Linux. Op andere besturingssystemen wordt het "
@@ -55474,6 +55477,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Python script"
+msgstr "Uitvoerbaar Python script"
+
+#, fuzzy
 msgid "Python version for execution of Python agent plug-ins"
 msgstr "Python versie voor uitvoering van python agent plugins"
 
@@ -56942,7 +56949,7 @@ msgstr "Relatieve niveaus"
 msgid "Relative levels of active sessions."
 msgstr "Relatieve niveaus van actieve sessies."
 
-#, fuzzy
+#, fuzzy, no-python-format
 msgid "Relative limit in %"
 msgstr "Relatieve vochtigheid"
 
@@ -60048,9 +60055,6 @@ msgstr "Scan interval"
 
 msgid "Scratch Pool"
 msgstr ""
-
-msgid "Script (Limited support, see inline help)"
-msgstr "Script (beperkte ondersteuning, zie inline help)"
 
 msgid "Script Pattern"
 msgstr "Script Patroon"
@@ -68759,6 +68763,18 @@ msgstr ""
 "De MSSQL instance naam, de tablespace naam en het backup type, elk "
 "gescheiden door een spatie."
 
+#, fuzzy
+msgid "The Network-ID will be used as host name prefix"
+msgstr "De naam zal worden gebruikt in de beschrijving van de dienst"
+
+msgid ""
+"The Network-ID will be used as prefix for the hostname (separated by a -). "
+"Use this option together with a \"Hostname translation for piggybacked "
+"hosts\" to add a network prefix to the hosts from the Cisco Meraki cloud to "
+"avoid conflicting hostnames. You can also use this option along with the "
+"\"Dynamic host management\" to sort the host in location specific folders."
+msgstr ""
+
 msgid ""
 "The Organisation-ID will be used as prefix for the hostname (separated by a "
 "-). Use this option together with a \"Hostname translation for piggybacked "
@@ -69955,7 +69971,7 @@ msgstr ""
 msgid "The description of the interface as provided by the device"
 msgstr "De beschrijving van de interface zoals verstrekt door de inrichting"
 
-#, python-format
+#, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
 "load average measured over a period of one minute. The load value is "
@@ -77739,10 +77755,10 @@ msgstr ""
 "uitschakelen. Standaard zijn alle meldingen ingeschakeld."
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
 msgstr ""
-"Met deze instelling kunt u actieve controles voor een dienst in- of "
-"uitschakelen."
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -84568,6 +84584,9 @@ msgstr "LDAPS (SSL) gebruiken"
 #, fuzzy
 msgid "Use Livestatus proxy daemon"
 msgstr "Gebruik Livestatus Proxy Daemon"
+
+msgid "Use Network-ID as host prefix"
+msgstr ""
 
 msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr ""
@@ -93714,6 +93733,10 @@ msgstr ""
 msgid "over threshold"
 msgstr "over de drempel"
 
+#, fuzzy
+msgid "packaged binary"
+msgstr "32bit ingepakt binair bestand"
+
 msgid "packets/s"
 msgstr "pakketten/s"
 
@@ -94731,6 +94754,10 @@ msgstr "%d Filter instellingen"
 #, fuzzy
 msgid "Override default filters"
 msgstr "Gerelateerde dashboards"
+
+#, fuzzy
+msgid "Please configure the following filters: "
+msgstr "Gebruik de volgende niveaus"
 
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
@@ -97251,9 +97278,8 @@ msgid ""
 "smooth experience."
 msgstr ""
 
-#, fuzzy
-msgid "First steps with Checkmk"
-msgstr "MIB's geleverd met Checkmk"
+msgid "Topics to explore"
+msgstr ""
 
 #, fuzzy
 msgid "Resources"
@@ -97287,8 +97313,8 @@ msgid "What's next"
 msgstr "De volgende "
 
 #, fuzzy
-msgid "Continue setup"
-msgstr "Zoek verder"
+msgid "Continue exploration"
+msgstr "Containerisatie"
 
 #, fuzzy
 msgid "Next steps with Checkmk"
@@ -97308,8 +97334,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Run a service discovery"
-msgstr "Service discovery uitvoeren"
+msgid "Open and run service discovery"
+msgstr "Save & run service discovery"
 
 #, fuzzy
 msgid "On-premises hosts"
@@ -97340,11 +97366,11 @@ msgid "Activate changes to apply them to live monitoring."
 msgstr "Activeer wijzigingen voor gebeurtenissenconsole"
 
 #, fuzzy
-msgid "Mark as complete"
+msgid "Mark as done"
 msgstr "volledig"
 
 #, fuzzy
-msgid "Adjust services"
+msgid "Adjust service thresholds"
 msgstr "Alle diensten"
 
 #, fuzzy
@@ -97408,8 +97434,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Assign responsibilities"
-msgstr "Service Filters"
+msgid "Assign responsibilities with contact groups"
+msgstr "Toewijzing van diensten aan contactgroepen"
 
 msgid ""
 "The recommended way to manage responsibilities in Checkmk is by using "
@@ -97526,18 +97552,19 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Your progress"
-msgstr "In uitvoering"
+msgid "Topics explored"
+msgstr "Proef vervallen"
 
 #, fuzzy
-msgid "Steps complete"
-msgstr "volledig"
+msgid "Your progress"
+msgstr "In uitvoering"
 
 #, fuzzy
 msgid "Welcome to Checkmk!"
 msgstr "Welkom bij Checkmk Mobile."
 
-msgid "Get started with Checkmk in 5 easy steps."
+msgid ""
+"Explore essential concepts of Checkmk and begin your monitoring journey."
 msgstr ""
 
 msgid "Show welcome page on start"
@@ -97546,6 +97573,43 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "32-bit packaged binary"
+#~ msgstr "64bit ingepakt binair bestand"
+
+#, fuzzy
+#~ msgid "64-bit packaged binary"
+#~ msgstr "64bit ingepakt binair bestand"
+
+#~ msgid "Script (Limited support, see inline help)"
+#~ msgstr "Script (beperkte ondersteuning, zie inline help)"
+
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr ""
+#~ "Met deze instelling kunt u actieve controles voor een dienst in- of "
+#~ "uitschakelen."
+
+#, fuzzy
+#~ msgid "First steps with Checkmk"
+#~ msgstr "MIB's geleverd met Checkmk"
+
+#, fuzzy
+#~ msgid "Continue setup"
+#~ msgstr "Zoek verder"
+
+#, fuzzy
+#~ msgid "Run a service discovery"
+#~ msgstr "Service discovery uitvoeren"
+
+#, fuzzy
+#~ msgid "Assign responsibilities"
+#~ msgstr "Service Filters"
+
+#, fuzzy
+#~ msgid "Steps complete"
+#~ msgstr "volledig"
 
 #, fuzzy
 #~ msgid ""
@@ -97593,10 +97657,6 @@ msgstr ""
 #~ msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
-#~ msgid "Python script"
-#~ msgstr "Uitvoerbaar Python script"
-
-#, fuzzy
 #~ msgid "Read OpenTelemetry configurations (experimental)"
 #~ msgstr "InfluxDB verbindingen toevoegen, bewerken en verwijderen."
 
@@ -97605,10 +97665,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Selecteer een tijdsperiode waarover de waarschuwingen of meldingen worden "
 #~ "opgeteld"
-
-#, fuzzy
-#~ msgid "packaged binary"
-#~ msgstr "32bit ingepakt binair bestand"
 
 #, fuzzy
 #~ msgid ""
@@ -101931,9 +101987,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Netapp instance state"
 #~ msgstr "Netapp Instance State"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systeemtijd"
 
 #, fuzzy, python-format
 #~ msgid "No such tree below %r"

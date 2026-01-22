@@ -1271,10 +1271,6 @@ msgstr "Niveluri superioare de ieșire de 3,3 volți"
 msgid "30 minutes"
 msgstr "30 de minute"
 
-#, fuzzy
-msgid "32-bit packaged binary"
-msgstr "64bit binar împachetat"
-
 msgid "389 Directory Server"
 msgstr "389 Directory Server"
 
@@ -1336,10 +1332,6 @@ msgstr "Rata de eroare 5xx"
 
 msgid "6 months"
 msgstr "6 luni"
-
-#, fuzzy
-msgid "64-bit packaged binary"
-msgstr "64bit binar împachetat"
 
 #, no-python-format
 msgid "68% - One standard deviation"
@@ -24558,7 +24550,8 @@ msgstr "Activarea/dezactivarea verificărilor active"
 msgid "Enable/Disable passive checks"
 msgstr "Activarea/Dezactivarea verificărilor pasive"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "Activarea/dezactivarea verificărilor active pentru servicii"
 
 msgid "Enable/disable checks"
@@ -39899,6 +39892,10 @@ msgid "Levels on Web ACL requests"
 msgstr "Niveluri privind solicitările Web ACL"
 
 #, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "Niveluri pe decalaj de timp"
+
+#, fuzzy
 msgid "Levels on age of oldest message"
 msgstr "Vârsta celui mai vechi mesaj"
 
@@ -43140,7 +43137,7 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "Numărul maxim de puncte de acces nefuncționale"
 
-#, python-format
+#, no-python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
 "This option is used to calculate the hard memory limit from the total "
@@ -43257,6 +43254,7 @@ msgstr "Vârsta maximă a buștenilor"
 msgid "Maximum long output size"
 msgstr "Dimensiunea maximă de ieșire lungă"
 
+#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -43266,7 +43264,7 @@ msgid ""
 "limit (the spike limit being equal to 250MiB)"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -46292,6 +46290,10 @@ msgstr "Descoperirea portului Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoperirea unității de alimentare Netapp"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Masca de rețea"
@@ -50313,10 +50315,11 @@ msgstr ""
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
-"automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small and editable. Please note "
-"that the Checkmk team can offer no support for issues about the target "
-"system's python environment when choosing \"Script\"."
+"automatically regardless of this rule. The binary format yields a broader "
+"compatibility, while the Python script is small and editable.<br> Concrete "
+"requirements are:<br> <b>packaged binary:</b> x86-64 Linux system with glibc "
+"2.17 or newer. <b>Python script:</b> Python3 with modules _cryptography_, "
+"_requests_ and _pysocks_ (for SOCKS proxy support)."
 msgstr ""
 "Alegeți opțional formatul fișierului executabil al agentului de actualizare. "
 "Relevant numai pentru Linux. Pe alte sisteme de operare, formatul executabil "
@@ -55616,6 +55619,10 @@ msgstr ""
 "<tt>set_environment.py:testing</tt>"
 
 #, fuzzy
+msgid "Python script"
+msgstr "Script Python executabil"
+
+#, fuzzy
 msgid "Python version for execution of Python agent plug-ins"
 msgstr "Versiunea Python pentru execuția plugin-urilor agentului python"
 
@@ -57079,7 +57086,7 @@ msgstr "Niveluri relative"
 msgid "Relative levels of active sessions."
 msgstr "Nivelurile relative ale sesiunilor active."
 
-#, fuzzy
+#, fuzzy, no-python-format
 msgid "Relative limit in %"
 msgstr "Umiditate relativă"
 
@@ -60191,9 +60198,6 @@ msgstr "Interval de scanare"
 
 msgid "Scratch Pool"
 msgstr ""
-
-msgid "Script (Limited support, see inline help)"
-msgstr "Script (suport limitat, consultați ajutorul în linie)"
 
 msgid "Script Pattern"
 msgstr "Modelul Script"
@@ -68987,6 +68991,18 @@ msgstr ""
 "Numele instanței MSSQL, numele tablespace-ului și tipul de copie de rezervă, "
 "fiecare fiind separat de un spațiu."
 
+#, fuzzy
+msgid "The Network-ID will be used as host name prefix"
+msgstr "Numele va fi folosit în descrierea serviciului"
+
+msgid ""
+"The Network-ID will be used as prefix for the hostname (separated by a -). "
+"Use this option together with a \"Hostname translation for piggybacked "
+"hosts\" to add a network prefix to the hosts from the Cisco Meraki cloud to "
+"avoid conflicting hostnames. You can also use this option along with the "
+"\"Dynamic host management\" to sort the host in location specific folders."
+msgstr ""
+
 msgid ""
 "The Organisation-ID will be used as prefix for the hostname (separated by a "
 "-). Use this option together with a \"Hostname translation for piggybacked "
@@ -70186,7 +70202,7 @@ msgstr ""
 msgid "The description of the interface as provided by the device"
 msgstr "Descrierea interfeței, așa cum este furnizată de dispozitiv"
 
-#, python-format
+#, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
 "load average measured over a period of one minute. The load value is "
@@ -78073,10 +78089,10 @@ msgstr ""
 "problemele unui serviciu. În mod implicit, toate notificările sunt activate."
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
 msgstr ""
-"Această setare vă permite să dezactivați sau să activați verificările active "
-"pentru un serviciu."
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -84827,6 +84843,9 @@ msgstr "Utilizați LDAPS (SSL)"
 #, fuzzy
 msgid "Use Livestatus proxy daemon"
 msgstr "Utilizați Livestatus Proxy Daemon"
+
+msgid "Use Network-ID as host prefix"
+msgstr ""
 
 msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr ""
@@ -93996,6 +94015,10 @@ msgstr ""
 msgid "over threshold"
 msgstr "peste treshold"
 
+#, fuzzy
+msgid "packaged binary"
+msgstr "32bit binar împachetat"
+
 msgid "packets/s"
 msgstr "pachete/s"
 
@@ -95022,6 +95045,10 @@ msgstr "%d setări de Filtrare"
 #, fuzzy
 msgid "Override default filters"
 msgstr "Tablouri de bord conexe"
+
+#, fuzzy
+msgid "Please configure the following filters: "
+msgstr "Utilizați următoarele niveluri"
 
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
@@ -97558,9 +97585,8 @@ msgid ""
 "smooth experience."
 msgstr ""
 
-#, fuzzy
-msgid "First steps with Checkmk"
-msgstr "MIB-uri livrate cu Checkmk"
+msgid "Topics to explore"
+msgstr ""
 
 #, fuzzy
 msgid "Resources"
@@ -97594,8 +97620,8 @@ msgid "What's next"
 msgstr "Următorul "
 
 #, fuzzy
-msgid "Continue setup"
-msgstr "Continuați căutarea"
+msgid "Continue exploration"
+msgstr "Containerizare"
 
 #, fuzzy
 msgid "Next steps with Checkmk"
@@ -97615,8 +97641,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Run a service discovery"
-msgstr "Rulați descoperirea serviciilor"
+msgid "Open and run service discovery"
+msgstr "Salvați & rulați descoperirea serviciilor"
 
 #, fuzzy
 msgid "On-premises hosts"
@@ -97647,11 +97673,11 @@ msgid "Activate changes to apply them to live monitoring."
 msgstr "Activați modificările pentru consola de evenimente"
 
 #, fuzzy
-msgid "Mark as complete"
+msgid "Mark as done"
 msgstr "complet"
 
 #, fuzzy
-msgid "Adjust services"
+msgid "Adjust service thresholds"
 msgstr "Toate serviciile"
 
 #, fuzzy
@@ -97714,10 +97740,9 @@ msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
 
-# georgem ##############
 #, fuzzy
-msgid "Assign responsibilities"
-msgstr "Filtre de service"
+msgid "Assign responsibilities with contact groups"
+msgstr "Atribuirea serviciilor la grupurile de contact"
 
 msgid ""
 "The recommended way to manage responsibilities in Checkmk is by using "
@@ -97836,18 +97861,19 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Your progress"
-msgstr "În curs de desfășurare"
+msgid "Topics explored"
+msgstr "Procesul a expirat"
 
 #, fuzzy
-msgid "Steps complete"
-msgstr "complet"
+msgid "Your progress"
+msgstr "În curs de desfășurare"
 
 #, fuzzy
 msgid "Welcome to Checkmk!"
 msgstr "Bine ați venit la Checkmk Mobile."
 
-msgid "Get started with Checkmk in 5 easy steps."
+msgid ""
+"Explore essential concepts of Checkmk and begin your monitoring journey."
 msgstr ""
 
 msgid "Show welcome page on start"
@@ -97856,6 +97882,44 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "32-bit packaged binary"
+#~ msgstr "64bit binar împachetat"
+
+#, fuzzy
+#~ msgid "64-bit packaged binary"
+#~ msgstr "64bit binar împachetat"
+
+#~ msgid "Script (Limited support, see inline help)"
+#~ msgstr "Script (suport limitat, consultați ajutorul în linie)"
+
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr ""
+#~ "Această setare vă permite să dezactivați sau să activați verificările "
+#~ "active pentru un serviciu."
+
+#, fuzzy
+#~ msgid "First steps with Checkmk"
+#~ msgstr "MIB-uri livrate cu Checkmk"
+
+#, fuzzy
+#~ msgid "Continue setup"
+#~ msgstr "Continuați căutarea"
+
+#, fuzzy
+#~ msgid "Run a service discovery"
+#~ msgstr "Rulați descoperirea serviciilor"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Assign responsibilities"
+#~ msgstr "Filtre de service"
+
+#, fuzzy
+#~ msgid "Steps complete"
+#~ msgstr "complet"
 
 #, fuzzy
 #~ msgid ""
@@ -97903,10 +97967,6 @@ msgstr ""
 #~ msgstr "Configurația stilului selectat"
 
 #, fuzzy
-#~ msgid "Python script"
-#~ msgstr "Script Python executabil"
-
-#, fuzzy
 #~ msgid "Read OpenTelemetry configurations (experimental)"
 #~ msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
 
@@ -97915,10 +97975,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Selectați o perioadă de timp în care se însumează alertele sau "
 #~ "notificările"
-
-#, fuzzy
-#~ msgid "packaged binary"
-#~ msgstr "32bit binar împachetat"
 
 #, fuzzy
 #~ msgid ""
@@ -102339,9 +102395,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Netapp instance state"
 #~ msgstr "Starea instanței Netapp"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
 
 #, python-format
 #~ msgid "No such tree below %r"

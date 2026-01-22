@@ -1230,10 +1230,6 @@ msgstr "3.3ボルト出力の上位レベル"
 msgid "30 minutes"
 msgstr "30分"
 
-#, fuzzy
-msgid "32-bit packaged binary"
-msgstr "64ビットパッケージバイナリ"
-
 msgid "389 Directory Server"
 msgstr "389ディレクトリサーバー"
 
@@ -1290,10 +1286,6 @@ msgstr "5xxエラー率"
 
 msgid "6 months"
 msgstr "6ヶ月"
-
-#, fuzzy
-msgid "64-bit packaged binary"
-msgstr "64ビットパッケージバイナリ"
 
 #, no-python-format
 msgid "68% - One standard deviation"
@@ -23177,7 +23169,8 @@ msgstr "アクティブチェックを有効/無効にする"
 msgid "Enable/Disable passive checks"
 msgstr "パッシブチェックを有効/無効にする"
 
-msgid "Enable/disable active checks for services"
+#, fuzzy
+msgid "Enable/disable active checks for services (Nagios core)"
 msgstr "サービスのアクティブチェックを有効/無効にする"
 
 msgid "Enable/disable checks"
@@ -37526,6 +37519,10 @@ msgstr "IO待ち時間のレベル(UNIXのみ)"
 msgid "Levels on Web ACL requests"
 msgstr "WebACL要求のレベル"
 
+#, fuzzy
+msgid "Levels on absolute time offset"
+msgstr "時間オフセットのレベル"
+
 msgid "Levels on age of oldest message"
 msgstr "最も古いメッセージの経過時間"
 
@@ -40630,7 +40627,7 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr "動作していないアクセスポイントの最大数"
 
-#, python-format
+#, no-python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
 "This option is used to calculate the hard memory limit from the total "
@@ -40740,6 +40737,7 @@ msgstr "最大ログ経過時間"
 msgid "Maximum long output size"
 msgstr "最長出力サイズ"
 
+#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -40749,7 +40747,7 @@ msgid ""
 "limit (the spike limit being equal to 250MiB)"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -43600,6 +43598,10 @@ msgstr "Netappポートの検出"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp電源ユニットの発見"
+
+#, fuzzy
+msgid "Netapp system time offset"
+msgstr "Netappシステムタイム"
 
 msgid "Netmask"
 msgstr "ネットマスク"
@@ -47386,10 +47388,11 @@ msgstr ""
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
-"automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small and editable. Please note "
-"that the Checkmk team can offer no support for issues about the target "
-"system's python environment when choosing \"Script\"."
+"automatically regardless of this rule. The binary format yields a broader "
+"compatibility, while the Python script is small and editable.<br> Concrete "
+"requirements are:<br> <b>packaged binary:</b> x86-64 Linux system with glibc "
+"2.17 or newer. <b>Python script:</b> Python3 with modules _cryptography_, "
+"_requests_ and _pysocks_ (for SOCKS proxy support)."
 msgstr ""
 "オプションで、エージェントアップデータの実行可能ファイルの形式を選択します。"
 "Linuxにのみ関連します。他のOSでは、このルールに関係なく、実行可能形式が自動的"
@@ -52208,6 +52211,10 @@ msgstr ""
 "ミコロンを区切り文字として指定することができる。例：<br><tt>path/vars.yaml</"
 "tt><br><tt>set_environment.py:testing</tt>"
 
+#, fuzzy
+msgid "Python script"
+msgstr "実行可能なPythonスクリプト"
+
 msgid "Python version for execution of Python agent plug-ins"
 msgstr "Pythonエージェントプラグインを実行するためのPythonバージョン"
 
@@ -53579,7 +53586,7 @@ msgstr "相対レベル"
 msgid "Relative levels of active sessions."
 msgstr "アクティブなセッションの相対レベル。"
 
-#, fuzzy
+#, fuzzy, no-python-format
 msgid "Relative limit in %"
 msgstr "相対湿度"
 
@@ -56539,9 +56546,6 @@ msgstr "スクレイピング間隔"
 
 msgid "Scratch Pool"
 msgstr ""
-
-msgid "Script (Limited support, see inline help)"
-msgstr "スクリプト(限定的なサポート、インラインヘルプを参照)"
 
 msgid "Script Pattern"
 msgstr "スクリプトパターン"
@@ -64795,6 +64799,18 @@ msgstr ""
 "MSSQLインスタンス名、テーブルスペース名、およびバックアップタイプ。それぞれス"
 "ペースで区切られます。"
 
+#, fuzzy
+msgid "The Network-ID will be used as host name prefix"
+msgstr "この名前はサービス名で使用されます"
+
+msgid ""
+"The Network-ID will be used as prefix for the hostname (separated by a -). "
+"Use this option together with a \"Hostname translation for piggybacked "
+"hosts\" to add a network prefix to the hosts from the Cisco Meraki cloud to "
+"avoid conflicting hostnames. You can also use this option along with the "
+"\"Dynamic host management\" to sort the host in location specific folders."
+msgstr ""
+
 msgid ""
 "The Organisation-ID will be used as prefix for the hostname (separated by a "
 "-). Use this option together with a \"Hostname translation for piggybacked "
@@ -65969,7 +65985,7 @@ msgstr "説明はオプションであり、説明や文書に使用できます
 msgid "The description of the interface as provided by the device"
 msgstr "デバイスによって提供されるインターフェースの説明"
 
-#, python-format
+#, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
 "load average measured over a period of one minute. The load value is "
@@ -73525,9 +73541,10 @@ msgstr ""
 "デフォルトでは、すべての通知が有効になっています。"
 
 msgid ""
-"This setting allows you to disable or enable active checks for a service."
+"This setting allows you to disable or enable active checks for a service. "
+"The rule only works when the Nagios core is used. If the Checkmk Micro Core "
+"is used, this rule has no effect at all."
 msgstr ""
-"この設定により、サービスのアクティブチェックを無効または有効にできます。"
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -79605,6 +79622,9 @@ msgstr "LDAPS(SSL)を使用する"
 
 msgid "Use Livestatus proxy daemon"
 msgstr "Livestatusプロキシデーモンを使用する"
+
+msgid "Use Network-ID as host prefix"
+msgstr ""
 
 #, fuzzy
 msgid "Use ODBC backend if the plug-in is deployed on Windows"
@@ -88209,6 +88229,10 @@ msgstr ""
 msgid "over threshold"
 msgstr "しきい値超過"
 
+#, fuzzy
+msgid "packaged binary"
+msgstr "32ビット パッケージ バイナリ"
+
 msgid "packets/s"
 msgstr "パケット/秒"
 
@@ -89195,6 +89219,10 @@ msgstr "%d フィルター設定"
 #, fuzzy
 msgid "Override default filters"
 msgstr "関連ダッシュボード"
+
+#, fuzzy
+msgid "Please configure the following filters: "
+msgstr "次のデフォルトを使用"
 
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
@@ -91659,9 +91687,8 @@ msgid ""
 "smooth experience."
 msgstr ""
 
-#, fuzzy
-msgid "First steps with Checkmk"
-msgstr "Checkmkに同梱されているMIB"
+msgid "Topics to explore"
+msgstr ""
 
 #, fuzzy
 msgid "Resources"
@@ -91694,8 +91721,8 @@ msgid "What's next"
 msgstr "次"
 
 #, fuzzy
-msgid "Continue setup"
-msgstr "検索を続ける"
+msgid "Continue exploration"
+msgstr "コンテナ化"
 
 #, fuzzy
 msgid "Next steps with Checkmk"
@@ -91715,8 +91742,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Run a service discovery"
-msgstr "サービスディスカバリ実行"
+msgid "Open and run service discovery"
+msgstr "サービスディスカバリの実行と保存"
 
 #, fuzzy
 msgid "On-premises hosts"
@@ -91746,11 +91773,11 @@ msgid "Activate changes to apply them to live monitoring."
 msgstr "変更を有効化して、ライブ監視に適用します。"
 
 #, fuzzy
-msgid "Mark as complete"
+msgid "Mark as done"
 msgstr "PGs 未完了"
 
 #, fuzzy
-msgid "Adjust services"
+msgid "Adjust service thresholds"
 msgstr "すべてのサービス"
 
 #, fuzzy
@@ -91813,8 +91840,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Assign responsibilities"
-msgstr "サービスフィルター"
+msgid "Assign responsibilities with contact groups"
+msgstr "連絡先グループへのサービスの割り当て"
 
 msgid ""
 "The recommended way to manage responsibilities in Checkmk is by using "
@@ -91931,17 +91958,18 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Your progress"
-msgstr "進行中"
+msgid "Topics explored"
+msgstr "試用期間満了"
 
 #, fuzzy
-msgid "Steps complete"
-msgstr "コンプリート"
+msgid "Your progress"
+msgstr "進行中"
 
 msgid "Welcome to Checkmk!"
 msgstr "Checkmk へようこそ!"
 
-msgid "Get started with Checkmk in 5 easy steps."
+msgid ""
+"Explore essential concepts of Checkmk and begin your monitoring journey."
 msgstr ""
 
 msgid "Show welcome page on start"
@@ -91950,6 +91978,42 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "32-bit packaged binary"
+#~ msgstr "64ビットパッケージバイナリ"
+
+#, fuzzy
+#~ msgid "64-bit packaged binary"
+#~ msgstr "64ビットパッケージバイナリ"
+
+#~ msgid "Script (Limited support, see inline help)"
+#~ msgstr "スクリプト(限定的なサポート、インラインヘルプを参照)"
+
+#~ msgid ""
+#~ "This setting allows you to disable or enable active checks for a service."
+#~ msgstr ""
+#~ "この設定により、サービスのアクティブチェックを無効または有効にできます。"
+
+#, fuzzy
+#~ msgid "First steps with Checkmk"
+#~ msgstr "Checkmkに同梱されているMIB"
+
+#, fuzzy
+#~ msgid "Continue setup"
+#~ msgstr "検索を続ける"
+
+#, fuzzy
+#~ msgid "Run a service discovery"
+#~ msgstr "サービスディスカバリ実行"
+
+#, fuzzy
+#~ msgid "Assign responsibilities"
+#~ msgstr "サービスフィルター"
+
+#, fuzzy
+#~ msgid "Steps complete"
+#~ msgstr "コンプリート"
 
 #~ msgid ""
 #~ "Access to the module <i>Snapshots</i>. Please note: a user with write "
@@ -91994,20 +92058,12 @@ msgstr ""
 #~ msgstr "OpenTelemetryコレクター（実験的）"
 
 #, fuzzy
-#~ msgid "Python script"
-#~ msgstr "実行可能なPythonスクリプト"
-
-#, fuzzy
 #~ msgid "Read OpenTelemetry configurations (experimental)"
 #~ msgstr "OpenTelemetry の設定を管理する（実験的機能）"
 
 #~ msgid ""
 #~ "Select a time period over which the alerts or notifications are added up"
 #~ msgstr "アラートまたは通知を集計する期間を選択する"
-
-#, fuzzy
-#~ msgid "packaged binary"
-#~ msgstr "32ビット パッケージ バイナリ"
 
 #~ msgid ""
 #~ "Register the Relay to authorize it for communication with your Checkmk "
@@ -96457,9 +96513,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Netapp instance state"
 #~ msgstr "Netappインスタンスの状態"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netappシステムタイム"
 
 #, python-format
 #~ msgid "No such tree below %r"

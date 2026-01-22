@@ -9,7 +9,9 @@ import uuid
 import pytest
 
 from cmk.agent_receiver.lib.config import Config
+from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import (
+    RelayConfigTask,
     ResultType,
     TaskResponse,
     TaskStatus,
@@ -206,6 +208,41 @@ def test_the_other_tasks_are_not_changed(
         t1 = find_task_with_id(tid, orig_tasks)
         t2 = find_task_with_id(tid, current_tasks)
         assert t1 == t2
+
+
+def test_finishing_config_task(
+    relay_id: str,
+    agent_receiver: AgentReceiverClient,
+    site_context: Config,
+) -> None:
+    """
+    Verify that RelayConfigTask can be set to FINISHED status.
+
+    Test steps:
+    1. Create config for relay
+    2. Request pending tasks using an outdated serial to get a RelayConfigTask
+    3. Update serial in client and acknowledge the task with result_type "OK"
+    4. Assert that there are no pending tasks and the task is now in FINISHED status
+    """
+    create_config_folder(root=site_context.omd_root, relays=[relay_id])
+
+    agent_receiver.set_serial(Serial.default())
+    relay_tasks = get_relay_tasks(agent_receiver, relay_id, status="PENDING").tasks
+    assert len(relay_tasks) == 1
+    assert isinstance(relay_tasks[0].spec, RelayConfigTask)
+
+    agent_receiver.set_serial(Serial(relay_tasks[0].spec.serial))
+    response = agent_receiver.update_task(
+        relay_id=relay_id,
+        task_id=relay_tasks[0].id,
+        result_type="OK",
+        result_payload="It's done",
+    )
+    assert response.status_code < 400, response.text
+    assert 0 == len(get_relay_tasks(agent_receiver, relay_id, status="PENDING").tasks)
+    finished_tasks = get_relay_tasks(agent_receiver, relay_id, status="FINISHED").tasks
+    assert 1 == len(finished_tasks)
+    assert relay_tasks[0].id == finished_tasks[0].id
 
 
 @pytest.fixture

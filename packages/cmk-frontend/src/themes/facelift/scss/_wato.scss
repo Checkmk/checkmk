@@ -206,8 +206,24 @@ div#service_container {
     }
   }
 
-  div.message_container > h2 {
-    margin: 0 25px 0px;
+  div.message_container {
+    h2 {
+      margin: 0 25px 0;
+    }
+
+    table {
+      width: 100%;
+      table-layout: fixed;
+
+      td:first-child {
+        width: 35px;
+        text-align: left;
+      }
+
+      td:nth-child(2) {
+        width: auto;
+      }
+    }
   }
 }
 

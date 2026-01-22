@@ -23,7 +23,8 @@ use crate::setup::{detect_runtime, Env};
 use crate::types::{InstanceName, SqlBindParam, SqlQuery, UseHostClient};
 use std::collections::HashSet;
 
-use crate::config::connection::add_tns_admin_to_env;
+use crate::config::authentication::AuthType;
+use crate::config::connection::{add_tns_admin_to_env, setup_wallet_environment};
 use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomService;
 use crate::platform::get_local_instances;
@@ -109,6 +110,16 @@ pub async fn generate_data(
 ) -> Result<Vec<String>> {
     // we need to set TNS_ADMIN for Oracle client for the case alias is used
     add_tns_admin_to_env(ora_sql.conn());
+
+    // Set up wallet environment (creates sqlnet.ora with wallet location)
+    // Only if tns_admin is NOT explicitly set in config
+    let tns_admin_explicitly_set = ora_sql.conn().tns_admin().is_some();
+    if ora_sql.auth().auth_type() == &AuthType::Wallet && !tns_admin_explicitly_set {
+        if let Err(e) = setup_wallet_environment(None) {
+            log::error!("Failed to setup wallet environment: {}", e);
+            return Err(e).context("Failed to setup wallet environment");
+        }
+    }
 
     // TODO: detect instances
     // TODO: apply to config detected instances

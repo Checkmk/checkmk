@@ -518,7 +518,6 @@ pkg_tar(
         "bill-of-materials.csv",
         "bill-of-materials.json",
         ":build_bom_texts_pdf",
-        ":generate_bom_csv",
     ],
     package_dir = "share/doc/",
     package_file_name = "license_info_archive.tar",

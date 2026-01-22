@@ -1568,6 +1568,9 @@ class Site:
             if re.search("Licensed phase: too many services.", crash_detail):
                 logger.warning("Ignored crash report due to license violation!")
                 continue
+            if re.search("version `OPENSSL_3.4.0' not found", crash_detail):
+                logger.warning("Ignored crash report due to known OpenSSL issue. See CMK-28862")
+                continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
                 See {crash_file} for more details."""

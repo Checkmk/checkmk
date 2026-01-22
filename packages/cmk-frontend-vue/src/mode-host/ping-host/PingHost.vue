@@ -87,16 +87,7 @@ onMounted(() => {
       case props.formElement:
         switch (props.ipAddressFamilySelectElement.value) {
           case 'ip-v4-only':
-            callPingHostOnElement(props.hostnameInputElement, PingCmd.Ping, false)
-            isNoIP.value = false
-            break
           case 'ip-v6-only':
-            if (props.ipv6InputElement.value) {
-              isNoIP.value = false
-            } else {
-              isNoIP.value = true
-            }
-            break
           case 'ip-v4v6':
             isNoIP.value = false
             break
@@ -144,13 +135,26 @@ onMounted(() => {
     }
     callPingHostOnElement(props.ipv6InputElement, PingCmd.Ping6, true)
   })
-  props.ipAddressFamilyInputElement.addEventListener('change', () => {
-    if (
-      props.ipAddressFamilyInputElement.checked &&
-      props.ipAddressFamilySelectElement.value === 'ip-v4-only'
-    ) {
-      callPingHostOnElement(props.hostnameInputElement, PingCmd.Ping, false)
-      return
+  props.ipv4InputButtonElement.addEventListener('change', () => {
+    if (props.ipv4InputButtonElement.checked) {
+      if (showPingHost.value) {
+        statusElements.value = {}
+      }
+      if (props.ipv4InputElement.value) {
+        callPingHostOnElement(props.ipv4InputElement, PingCmd.Ping, true)
+        return
+      }
+    }
+  })
+  props.ipv6InputButtonElement.addEventListener('change', () => {
+    if (props.ipv6InputButtonElement.checked) {
+      if (showPingHost.value) {
+        statusElements.value = {}
+      }
+      if (props.ipv6InputElement.value) {
+        callPingHostOnElement(props.ipv6InputElement, PingCmd.Ping6, true)
+        return
+      }
     }
   })
 })

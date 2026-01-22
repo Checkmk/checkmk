@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 #   .--Rule----------------------------------------------------------------.
 #   |                         ____        _                                |
@@ -90,7 +89,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
     def schema(cls) -> type["BIRuleSchema"]:
         return BIRuleSchema
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "nodes": [node.serialize() for node in self.nodes],

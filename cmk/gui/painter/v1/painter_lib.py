@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Sequence
@@ -93,7 +92,7 @@ class Painter(Generic[T]):
 
 
 class ExperimentalPainterRegistry(cmk.ccc.plugin_registry.Registry[Painter]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: Painter[object]) -> str:
         return instance.ident
 
 

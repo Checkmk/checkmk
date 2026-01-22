@@ -358,10 +358,18 @@ class ViewWidgetIFramePage(Page):
             2. Render a view that's embedded in the dashboard config, identified by its internal ID
         """
         parameters = _ViewWidgetIFrameRequestParameters.from_request(ctx.request)
-        view_spec = parameters.load_view_spec()
         ViewWidgetIFramePageHelper.setup_display_and_painter_options(
             ctx.request, parameters.unique_widget_name(), parameters.is_reload()
         )
+        try:
+            view_spec = parameters.load_view_spec()
+        except MKUserError as e:
+            # a linked view used by a widget can be (intentionally) deleted,
+            # so we need to handle this gracefully so that the rest of the dashboard still works
+            html.body_start()
+            html.write_html(html.render_error(str(e)))
+            return
+
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)

@@ -2,7 +2,7 @@
 
 per-file arch-comp-gui-metrics.rst=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
 per-file arch-comp-gui-metrics.rst=set noparent
-per-file arch-comp-kube*=file:/component_owners/kubernetes_check_plugins/OWNERS_DEFINITION
+per-file arch-comp-kube*=file:/component_owners/plugins_kube/OWNERS_DEFINITION
 per-file arch-comp-kube*=set noparent
 per-file arch-comp-mknotifyd-uc0-no-mknotifyd.puml=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file arch-comp-mknotifyd-uc0-no-mknotifyd.puml=set noparent

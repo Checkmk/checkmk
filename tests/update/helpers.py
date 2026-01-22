@@ -202,7 +202,8 @@ def check_errors_in_log_files(site: Site) -> None:
     #  * TODO: Remove negative lookahead '(?!.*(sigterm))' from pattern after CMK-24766 is done
     # * using OPENSSL version > 3.4.0 in test-containers leads to an error in web.log when starting
     #   a cmk site with version <= 2.3.0p40 or <= 2.4.0p16. Related: werk #18935
-    content_pattern = "^(?!.*(sigterm))(?!.*(bake-agents)).*error.*$"
+    #   Related lookaheads: 'bake-agents' and 'MKUserError'
+    content_pattern = "^(?!.*(sigterm))(?!.*(bake-agents))(?!.*(MKUserError)).*error.*$"
 
     error_match_dict = parse_files(
         path_name=site.logs_dir,

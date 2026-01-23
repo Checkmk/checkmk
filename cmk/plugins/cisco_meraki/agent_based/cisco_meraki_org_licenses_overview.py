@@ -78,6 +78,7 @@ def discover_licenses_overview(section: Section) -> DiscoveryResult:
 
 class CheckParams(TypedDict):
     remaining_expiration_time: SimpleLevelsConfigModel[int]
+    state_license_not_ok: int
 
 
 def check_licenses_overview(item: str, params: CheckParams, section: Section) -> CheckResult:
@@ -88,7 +89,7 @@ def check_licenses_overview(item: str, params: CheckParams, section: Section) ->
     yield Result(state=State.OK, notice=f"Organization name: {overview.organisation_name}")
 
     yield Result(
-        state=State.OK if overview.status == "OK" else State.WARN,
+        state=State.OK if overview.status == "OK" else State(params["state_license_not_ok"]),
         summary=f"Status: {overview.status}",
     )
 
@@ -136,5 +137,6 @@ check_plugin_cisco_meraki_org_licenses_overview = CheckPlugin(
     check_ruleset_name="cisco_meraki_org_licenses_overview",
     check_default_parameters=CheckParams(
         remaining_expiration_time=("no_levels", None),
+        state_license_not_ok=State.WARN.value,
     ),
 )

@@ -65,6 +65,8 @@ def test_check_licenses_overview() -> None:
 
     value = list(check_licenses_overview("Name1/123", CheckParams(), section))
     expected = [
+        Result(state=State.OK, notice="Organization ID: 123"),
+        Result(state=State.OK, notice="Organization name: Name1"),
         Result(state=State.OK, summary="Status: OK"),
         Result(state=State.OK, summary="Expiration date: Feb 01, 2000"),
         Result(state=State.OK, summary="Remaining time: 31 days 0 hours"),

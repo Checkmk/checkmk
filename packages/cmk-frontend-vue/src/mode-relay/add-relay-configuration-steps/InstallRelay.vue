@@ -20,7 +20,8 @@ const { _t } = usei18n()
 const props = defineProps<CmkWizardStepProps & { domain: string; siteName: string }>()
 
 const installScriptUrl = computed(
-  () => `https://${props.domain}/${props.siteName}/check_mk/relays/install_relay.sh`
+  () =>
+    `${window.location.protocol}//${props.domain}/${props.siteName}/check_mk/relays/install_relay.sh`
 )
 
 const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)

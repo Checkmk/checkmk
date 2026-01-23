@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
@@ -20,8 +21,6 @@ import FieldDescription from '@/dashboard/components/Wizard/components/TableForm
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types'
 
 import type { UseAlertOverview } from './composables/useAlertOverview'
@@ -30,8 +29,6 @@ const { _t } = usei18n()
 defineProps<BaseWidgetProp>()
 const handler = defineModel<UseAlertOverview>('handler', { required: true })
 
-const displayDataSettings = ref<boolean>(true)
-const displayVisualizationSettings = ref<boolean>(true)
 const widgetProps = computed(() => handler.value.widgetProps)
 </script>
 
@@ -47,13 +44,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CollapsibleTitle
-    :title="_t('Data settings')"
-    :open="displayDataSettings"
-    class="collapsible"
-    @toggle-open="displayDataSettings = !displayDataSettings"
-  />
-  <CollapsibleContent :open="displayDataSettings">
+  <CmkCatalogPanel :title="_t('Data settings')">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
@@ -71,17 +62,11 @@ const widgetProps = computed(() => handler.value.widgetProps)
         </FieldComponent>
       </TableFormRow>
     </TableForm>
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 
   <ContentSpacer />
 
-  <CollapsibleTitle
-    :title="_t('Widget settings')"
-    :open="displayVisualizationSettings"
-    class="collapsible"
-    @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
-  />
-  <CollapsibleContent :open="displayVisualizationSettings">
+  <CmkCatalogPanel :title="_t('Widget settings')">
     <WidgetVisualization
       v-model:show-title="handler.showTitle.value"
       v-model:show-title-background="handler.showTitleBackground.value"
@@ -91,7 +76,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
     />
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 
   <ContentSpacer />
 </template>

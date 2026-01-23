@@ -4,15 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import FilterItem from '@/dashboard/components/Wizard/components/filter/WidgetObjectFilterConfiguration/FilterItem.vue'
 import type { ConfiguredValues } from '@/dashboard/components/filter/types.ts'
 import { FilterOrigin } from '@/dashboard/types/filter'
@@ -44,9 +43,6 @@ const displayLabels = computed(() => {
   }
 })
 
-const isOpen = ref(true)
-const isAppliedOpen = ref(true)
-
 const isOverridden = (filterId: string): boolean => {
   if (props.forceOverride) {
     return true
@@ -69,12 +65,7 @@ const countDashboardFilters = computed(() => {
     </CmkHeading>
 
     <div class="db-runtime-filter-collection__filter-container">
-      <CollapsibleTitle
-        :title="displayLabels.contextFilterTitle"
-        :open="isAppliedOpen"
-        @toggle-open="isAppliedOpen = !isAppliedOpen"
-      />
-      <CollapsibleContent :open="isAppliedOpen">
+      <CmkCatalogPanel :title="displayLabels.contextFilterTitle">
         <div class="db-runtime-filter-collection__items">
           <template v-if="countDashboardFilters > 0">
             <div v-for="filterId in dashboardFilters" :key="filterId" class="filter-item__wrapper">
@@ -90,16 +81,11 @@ const countDashboardFilters = computed(() => {
             {{ displayLabels.emptyContextTitle }}
           </CmkParagraph>
         </div>
-      </CollapsibleContent>
+      </CmkCatalogPanel>
     </div>
 
     <div class="db-runtime-filter-collection__filter-container">
-      <CollapsibleTitle
-        :title="_t('Runtime filters')"
-        :open="isOpen"
-        @toggle-open="isOpen = !isOpen"
-      />
-      <CollapsibleContent :open="isOpen">
+      <CmkCatalogPanel :title="_t('Runtime filters')">
         <div class="db-runtime-filter-collection__items">
           <div
             v-for="(filterId, index) in filters"
@@ -118,7 +104,7 @@ const countDashboardFilters = computed(() => {
             </div>
           </div>
         </div>
-      </CollapsibleContent>
+      </CmkCatalogPanel>
     </div>
   </div>
 </template>

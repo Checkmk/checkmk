@@ -4,12 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
+
+import CatalogPanelHeader from '@/dashboard/components/Wizard/components/collapsible/CatalogPanelHeader.vue'
 import type { FilterConfigState } from '@/dashboard/components/Wizard/components/filter/utils.ts'
 import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'
 import type { ConfiguredValues } from '@/dashboard/components/filter/types.ts'
@@ -37,8 +36,6 @@ const emit = defineEmits<{
   (e: 'remove-filter', filterId: string): void
 }>()
 
-const displayFilters = ref(true)
-
 const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null) => {
   if (values === null) {
     throw new Error('Configured values cannot be null')
@@ -48,13 +45,10 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
 </script>
 
 <template>
-  <CollapsibleTitle
-    :title="filterLabels.title"
-    :help_text="filterLabels.tooltip"
-    :open="displayFilters"
-    @toggle-open="displayFilters = !displayFilters"
-  />
-  <CollapsibleContent :open="displayFilters">
+  <CmkCatalogPanel :title="filterLabels.title">
+    <template #header>
+      <CatalogPanelHeader :title="filterLabels.title" :help-text="filterLabels.tooltip" />
+    </template>
     <MultiFilter
       v-if="objectSelectionMode === ElementSelection.MULTIPLE"
       :object-type="objectType"
@@ -74,5 +68,5 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
         }
       "
     />
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 </template>

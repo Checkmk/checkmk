@@ -10,6 +10,7 @@ import json
 import time
 from collections.abc import Mapping
 from datetime import datetime
+from typing import TypedDict
 
 from pydantic import BaseModel, computed_field, Field
 
@@ -74,11 +75,11 @@ def discover_licenses_overview(section: Section) -> DiscoveryResult:
         yield Service(item=identifier)
 
 
-def check_licenses_overview(
-    item: str,
-    params: Mapping[str, tuple[int, int]],
-    section: Section,
-) -> CheckResult:
+class CheckParams(TypedDict, total=False):
+    remaining_expiration_time: tuple[int, int]
+
+
+def check_licenses_overview(item: str, params: CheckParams, section: Section) -> CheckResult:
     if (overview := section.get(item)) is None:
         return
 
@@ -100,10 +101,7 @@ def check_licenses_overview(
         yield Result(state=State.OK, notice=f"{device_type}: {device_count} licensed devices")
 
 
-def _check_expiration_date(
-    expiration_date: datetime,
-    params: Mapping[str, tuple[int, int]],
-) -> CheckResult:
+def _check_expiration_date(expiration_date: datetime, params: CheckParams) -> CheckResult:
     yield Result(
         state=State.OK,
         summary=f"Expiration date: {expiration_date.strftime('%b %d, %Y')}",

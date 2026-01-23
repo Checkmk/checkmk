@@ -75,6 +75,7 @@ def fetch_package(Map args) {
             dest: args.download_dir,
             no_venv: true,          // run ci-artifacts call without venv
             omit_build_venv: true,  // do not check or build a venv first
+            no_raise: false,        // abort on problems of upstream build
         );
     }
 }

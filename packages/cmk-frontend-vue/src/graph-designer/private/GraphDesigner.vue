@@ -25,6 +25,7 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkSwitch from '@/components/CmkSwitch.vue'
@@ -32,6 +33,7 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FormSingleChoiceEditableEditAsync from '@/form/FormEditAsync.vue'
+import FormHelp from '@/form/private/FormHelp.vue'
 import {
   type Payload,
   configEntityAPI
@@ -41,6 +43,7 @@ import { type ValidationMessages } from '@/form/private/validation'
 import FormMetricBackendCustomQuery, {
   type Query
 } from '@/graph-designer/FormMetricBackendCustomQuery.vue'
+import { METRIC_BACKEND_MACRO_HELP } from '@/graph-designer/constants'
 import FixedMetricRowRenderer from '@/graph-designer/private/FixedMetricRowRenderer.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/private/FormMetricCells.vue'
 import FormTitle from '@/graph-designer/private/FormTitle.vue'
@@ -1005,7 +1008,13 @@ const graphDesignerContentAsJson = computed(() => {
           <CmkColorPicker v-if="graphLine.type !== 'query'" v-model:data="graphLine.color" />
         </td>
         <td class="nobr narrow">{{ graphLine.auto_title }}</td>
-        <td class="nobr narrow"><FormTitle v-model:data="graphLine.custom_title" /></td>
+        <td class="nobr narrow">
+          <div style="display: flex; align-items: center; gap: 4px">
+            <FormTitle v-model:data="graphLine.custom_title" />
+            <CmkHelpText v-if="graphLine.type === 'query'" :help="METRIC_BACKEND_MACRO_HELP" />
+          </div>
+          <FormHelp v-if="graphLine.type === 'query'" :help="METRIC_BACKEND_MACRO_HELP" />
+        </td>
         <td class="buttons"><CmkSwitch v-model:data="graphLine.visible" /></td>
 
         <td class="narrow">

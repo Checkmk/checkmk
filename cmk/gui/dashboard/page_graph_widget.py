@@ -14,6 +14,7 @@ from cmk.gui.dashboard.api import (
     GraphDashletConfig,
     GraphRequestInternal,
 )
+from cmk.gui.dashboard.api.model.widget_content import content_from_internal
 from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet
 from cmk.gui.dashboard.dashlet.dashlets.status_helpers import make_mk_missing_data_error
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
@@ -141,11 +142,21 @@ class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
             ):
                 raise InvalidWidgetError()
 
+            # NOTE: We go through the api model loop here to ensure we get the same result as the
+            #       non-token case. This mostly matters for graph render option defaults.
+            updated_widget_config = content_from_internal(widget_config).to_internal()
+            updated_widget_config.update(
+                {
+                    "context": widget_config.get("context", {}),
+                    "single_infos": widget_config.get("single_infos", []),
+                }
+            )
+
             try:
                 # this also requires the impersonation context
                 render_graph_widget_content(
                     ctx,
-                    cast(GraphDashletConfig, widget_config),
+                    cast(GraphDashletConfig, updated_widget_config),
                     widget_id,
                     # for the token case, we need the dashboard context as well, since the frontend
                     # won't combine them for us

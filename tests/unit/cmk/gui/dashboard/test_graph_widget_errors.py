@@ -119,7 +119,7 @@ class TestGraphWidgetErrorHandling:
             "source": "",
         }
 
-        with patch.object(TemplateGraphDashlet, "graph_specification") as mock_graph_spec:
+        with patch.object(TemplateGraphDashlet, "build_graph_specification") as mock_graph_spec:
             mock_spec_instance = MagicMock()
             mock_spec_instance.recipes.side_effect = exception_class(exception_message)
             mock_graph_spec.return_value = mock_spec_instance

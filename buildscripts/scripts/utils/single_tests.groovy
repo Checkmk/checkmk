@@ -78,6 +78,7 @@ void fetch_package(Map args) {
             no_remove_others: args.no_remove_others,    // do not delete other files in the dest dir
             no_venv: true,          // run ci-artifacts call without venv
             omit_build_venv: true,  // do not check or build a venv first
+            no_raise: false,        // abort on problems of upstream build
         ];
         if (args.dependency_paths) {
             this_parameters["build_params"].remove("CUSTOM_GIT_REF");

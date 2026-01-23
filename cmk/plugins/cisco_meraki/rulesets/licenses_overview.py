@@ -9,6 +9,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     LevelDirection,
+    ServiceState,
     SimpleLevels,
     TimeMagnitude,
     TimeSpan,
@@ -34,6 +35,12 @@ def _parameter_form() -> Dictionary:
                         displayed_magnitudes=[TimeMagnitude.DAY],
                         custom_validate=(validators.NumberInRange(min_value=0),),
                     ),
+                )
+            ),
+            "state_license_not_ok": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("Monitoring state if license state is not OK"),
+                    prefill=DefaultValue(ServiceState.WARN),
                 )
             ),
         },

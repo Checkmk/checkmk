@@ -22,6 +22,7 @@ from cmk.plugins.cisco_meraki.lib.schema import LicensesOverview
 
 _DEFAULT_PARAMS = CheckParams(
     remaining_expiration_time=("no_levels", None),
+    state_license_not_ok=State.WARN.value,
 )
 
 
@@ -116,7 +117,10 @@ def test_check_licenses_overview_remaining_expiration_time_warn() -> None:
     string_table = [[f"[{json.dumps(overview)}]"]]
     section = parse_licenses_overview(string_table)
     item = f"{overview['organisation_name']}/{overview['organisation_id']}"
-    params = CheckParams(remaining_expiration_time=("fixed", (3600 * 24 * 4, 3600 * 24 * 2)))
+    params = CheckParams(
+        remaining_expiration_time=("fixed", (3600 * 24 * 4, 3600 * 24 * 2)),
+        state_license_not_ok=State.WARN.value,
+    )
     results = check_licenses_overview(item, params, section)
 
     value = next(item for item in results if isinstance(item, Result) and item.state == State.WARN)

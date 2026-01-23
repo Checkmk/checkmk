@@ -321,7 +321,6 @@ STAGES:
               -//packages/cmk-frontend-vue/... \
               -//packages/neb/... \
               -//packages/unixcat/... \
-              -//packages/cmk-frontend/... \
               -//non-free/packages/cmc/... \
               -//non-free/packages/cmk-relay-engine/... \
               -//non-free/packages/cmk-update-agent/...
@@ -790,7 +789,7 @@ STAGES:
     - NAME: "Package cmk-frontend"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES,CHANGED_JS_DEPENDENCIES
       DIR: "packages/cmk-frontend"
-      COMMAND: "./run --build --tests --tsc --eslint &> ${RESULTS}/cmk-frontend.txt"
+      COMMAND: "./run --build &> ${RESULTS}/cmk-frontend.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-frontend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"

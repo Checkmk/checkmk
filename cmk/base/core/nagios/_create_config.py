@@ -1028,19 +1028,21 @@ def _add_ping_service(
     ping_service: _PingServiceNames,
     licensing_counter: Counter,
 ) -> None:
-    ipaddress = host_attrs["address"]
     service_labels = _get_service_labels(config_cache.label_manager, host_name, ping_service)
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
     match ping_service:
         case "PING IPv4":
             family = AddressFamily.AF_INET
             node_ips_name = "_NODEIPS_4"
+            ipaddress = host_attrs["_ADDRESS_4"]
         case "PING IPv6":
             family = AddressFamily.AF_INET6
             node_ips_name = "_NODEIPS_6"
+            ipaddress = host_attrs["_ADDRESS_6"]
         case "PING":
             family = host_ip_family
             node_ips_name = "_NODEIPS"
+            ipaddress = host_attrs["address"]
         case _:
             assert_never(f"Unexpected ping service name: {ping_service}")
 

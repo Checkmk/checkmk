@@ -83,6 +83,9 @@ def check_licenses_overview(item: str, params: CheckParams, section: Section) ->
     if (overview := section.get(item)) is None:
         return
 
+    yield Result(state=State.OK, notice=f"Organization ID: {overview.organisation_id}")
+    yield Result(state=State.OK, notice=f"Organization name: {overview.organisation_name}")
+
     yield Result(
         state=State.OK if overview.status == "OK" else State.WARN,
         summary=f"Status: {overview.status}",

@@ -14337,10 +14337,6 @@ msgid "Cisco Meraki Appliance Performance Utilization"
 msgstr "Automatizare Checkmk"
 
 #, fuzzy
-msgid "Cisco Meraki Device status"
-msgstr "Afișați starea serviciului"
-
-#, fuzzy
 msgid "Cisco Meraki appliance VPNs"
 msgstr "Afișați starea serviciului"
 
@@ -14350,6 +14346,10 @@ msgstr "Cisco Meraki"
 
 #, fuzzy
 msgid "Cisco Meraki appliance utilization"
+msgstr "Afișați starea serviciului"
+
+#, fuzzy
+msgid "Cisco Meraki device status"
 msgstr "Afișați starea serviciului"
 
 #, fuzzy
@@ -18959,9 +18959,6 @@ msgstr ""
 "această opțiune, puteți selecta în ce secțiune a meniului trebuie să fie "
 "accesibil acest tablou de bord. Dacă doriți să definiți un nou nume de "
 "subiect, puteți face acest lucru <a href='%s'> aici</a>."
-
-msgid "Dashlet too short to render graph"
-msgstr ""
 
 msgid "Data"
 msgstr "Date"
@@ -26594,10 +26591,6 @@ msgstr "Nu a reușit să coacă agenții: %s."
 
 msgid "Failed to calculate a graph recipe."
 msgstr "Nu s-a reușit să se calculeze o rețetă de grafic."
-
-#, python-format
-msgid "Failed to calculate a graph recipe. (%s)"
-msgstr "Nu s-a reușit să se calculeze o rețetă de grafic. (%s)"
 
 #, python-format
 msgid "Failed to compile your module: %s"
@@ -46936,10 +46929,6 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Nu este disponibil niciun grafic: %s"
 
-#, fuzzy
-msgid "No graph recipe found"
-msgstr "Nu s-au găsit directoare de teme valide."
-
 #, fuzzy, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Nu există niciun grafic cu ID-ul <tt>%s</tt>."
@@ -61750,6 +61739,11 @@ msgstr "Notificări de servicii"
 msgid "Service notifications enabled"
 msgstr "Notificări de serviciu activate"
 
+# georgem ##############
+#, fuzzy
+msgid "Service or host not found."
+msgstr "Servicii ale grupului gazdă"
+
 msgid "Service outage count display options"
 msgstr "Opțiuni de afișare a numărului de întreruperi de serviciu"
 
@@ -64014,6 +64008,13 @@ msgid ""
 msgstr ""
 "Un ușor gradient în culorile zonelor colorate din grafice. 0% dezactivează "
 "gradientul, iar 100% îl face cel mai puternic posibil."
+
+msgid "Slot"
+msgstr ""
+
+#, fuzzy
+msgid "Slot number"
+msgstr "Numărul portului"
 
 msgid "Slow views"
 msgstr "Vizualizări lente"
@@ -72942,10 +72943,6 @@ msgstr ""
 "de reguli). Dacă folosiți de exemplu 10 aici și păstrați setarea implicită "
 "de 60 de secunde, atunci RRD va păstra o valoare pentru fiecare 10 minute de "
 "timp."
-
-#, fuzzy
-msgid "The slot number"
-msgstr "Numărul portului TCP"
 
 msgid ""
 "The source details can be displayed either on the queried host or the source "
@@ -95046,6 +95043,9 @@ msgstr "%d setări de Filtrare"
 msgid "Override default filters"
 msgstr "Tablouri de bord conexe"
 
+msgid "Temporarily ignore default filters and apply only runtime filters."
+msgstr ""
+
 #, fuzzy
 msgid "Please configure the following filters: "
 msgstr "Utilizați următoarele niveluri"
@@ -95773,7 +95773,7 @@ msgstr "Vizualizare"
 msgid "Select the data you want to analyze"
 msgstr "Selectați tipul de element de conținut"
 
-msgid "Dashboard filters apply here and don't have to be selected again"
+msgid "Default filters apply here and don't have to be selected again"
 msgstr ""
 
 #, fuzzy
@@ -97882,6 +97882,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Failed to calculate a graph recipe. (%s)"
+#~ msgstr "Nu s-a reușit să se calculeze o rețetă de grafic. (%s)"
+
+#, fuzzy
+#~ msgid "No graph recipe found"
+#~ msgstr "Nu s-au găsit directoare de teme valide."
+
+#, fuzzy
+#~ msgid "The slot number"
+#~ msgstr "Numărul portului TCP"
 
 #, fuzzy
 #~ msgid "32-bit packaged binary"

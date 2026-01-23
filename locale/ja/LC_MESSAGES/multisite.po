@@ -13501,9 +13501,6 @@ msgstr "Cisco Meraki power supply"
 msgid "Cisco Meraki Appliance Performance Utilization"
 msgstr "Checkmkアプライアンス情報"
 
-msgid "Cisco Meraki Device status"
-msgstr "Cisco Meraki デバイスステータス"
-
 #, fuzzy
 msgid "Cisco Meraki appliance VPNs"
 msgstr "Cisco Meraki デバイスステータス"
@@ -13514,6 +13511,10 @@ msgstr "Cisco Meraki power supply"
 
 #, fuzzy
 msgid "Cisco Meraki appliance utilization"
+msgstr "Cisco Meraki デバイスステータス"
+
+#, fuzzy
+msgid "Cisco Meraki device status"
 msgstr "Cisco Meraki デバイスステータス"
 
 #, fuzzy
@@ -17943,9 +17944,6 @@ msgstr ""
 "すると、メニューのどのセクションからこのダッシュボードにアクセスできるかを選"
 "択できます。新しいトピック名を定義する場合は、<a href='%s'>ここ</a>で行うこと"
 "ができます。"
-
-msgid "Dashlet too short to render graph"
-msgstr "ダッシュレットが短すぎてグラフが表示されない"
 
 msgid "Data"
 msgstr "データ"
@@ -25115,10 +25113,6 @@ msgstr "エージェントのベイクに失敗しました: %s"
 
 msgid "Failed to calculate a graph recipe."
 msgstr "グラフレシピの計算に失敗しました。"
-
-#, python-format
-msgid "Failed to calculate a graph recipe. (%s)"
-msgstr "グラフレシピの計算に失敗しました (%s)"
 
 #, python-format
 msgid "Failed to compile your module: %s"
@@ -44193,9 +44187,6 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "利用可能なグラフがありません: %s"
 
-msgid "No graph recipe found"
-msgstr "グラフレシピが見つかりません"
-
 #, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "ユーザー <tt>%s</tt> に対して ID <tt>%s</tt> のグラフが見つかりません"
@@ -58008,6 +57999,10 @@ msgstr "サービス通知"
 msgid "Service notifications enabled"
 msgstr "サービス通知が有効"
 
+#, fuzzy
+msgid "Service or host not found."
+msgstr "ホストグループのサービス"
+
 msgid "Service outage count display options"
 msgstr "サービス停止カウント表示オプション"
 
@@ -60123,6 +60118,13 @@ msgid ""
 msgstr ""
 "グラフの色付きの領域の色にわずかなグラデーションがあります。0%はグラデーショ"
 "ンをオフにし、100%はそれを可能な限り強くします。"
+
+msgid "Slot"
+msgstr ""
+
+#, fuzzy
+msgid "Slot number"
+msgstr "ポート番号"
 
 msgid "Slow views"
 msgstr "スロービュー"
@@ -68635,9 +68637,6 @@ msgstr ""
 "1ステップのサイズは通常1分です(これと同じルールセットで定義されています)。こ"
 "こでたとえば10を使用し、デフォルト設定の60秒を維持すると、RRDは10分ごとに1つ"
 "の値を維持します。"
-
-msgid "The slot number"
-msgstr "スロット番号"
 
 msgid ""
 "The source details can be displayed either on the queried host or the source "
@@ -89220,6 +89219,9 @@ msgstr "%d フィルター設定"
 msgid "Override default filters"
 msgstr "関連ダッシュボード"
 
+msgid "Temporarily ignore default filters and apply only runtime filters."
+msgstr ""
+
 #, fuzzy
 msgid "Please configure the following filters: "
 msgstr "次のデフォルトを使用"
@@ -89928,7 +89930,7 @@ msgstr "視覚化"
 msgid "Select the data you want to analyze"
 msgstr "分析したいので早くデータを選択してください"
 
-msgid "Dashboard filters apply here and don't have to be selected again"
+msgid "Default filters apply here and don't have to be selected again"
 msgstr ""
 
 #, fuzzy
@@ -91978,6 +91980,19 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Dashlet too short to render graph"
+#~ msgstr "ダッシュレットが短すぎてグラフが表示されない"
+
+#, python-format
+#~ msgid "Failed to calculate a graph recipe. (%s)"
+#~ msgstr "グラフレシピの計算に失敗しました (%s)"
+
+#~ msgid "No graph recipe found"
+#~ msgstr "グラフレシピが見つかりません"
+
+#~ msgid "The slot number"
+#~ msgstr "スロット番号"
 
 #, fuzzy
 #~ msgid "32-bit packaged binary"

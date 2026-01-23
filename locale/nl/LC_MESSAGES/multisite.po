@@ -14286,10 +14286,6 @@ msgid "Cisco Meraki Appliance Performance Utilization"
 msgstr "Checkmk automatisering"
 
 #, fuzzy
-msgid "Cisco Meraki Device status"
-msgstr "Toon dienst status"
-
-#, fuzzy
 msgid "Cisco Meraki appliance VPNs"
 msgstr "Toon dienst status"
 
@@ -14299,6 +14295,10 @@ msgstr "Cisco Meraki"
 
 #, fuzzy
 msgid "Cisco Meraki appliance utilization"
+msgstr "Toon dienst status"
+
+#, fuzzy
+msgid "Cisco Meraki device status"
 msgstr "Toon dienst status"
 
 #, fuzzy
@@ -18916,9 +18916,6 @@ msgstr ""
 "kunt u aangeven in welke sectie van het menu dit dashboard toegankelijk moet "
 "zijn. Als u een nieuwe onderwerpnaam wilt definiëren, kunt u dat <a "
 "href='%s'>hier</a> doen."
-
-msgid "Dashlet too short to render graph"
-msgstr ""
 
 msgid "Data"
 msgstr "Gegevens"
@@ -26492,10 +26489,6 @@ msgstr "Mislukt om de agenten te bakken: %s"
 
 msgid "Failed to calculate a graph recipe."
 msgstr "Mislukt bij het berekenen van een grafiekrecept."
-
-#, python-format
-msgid "Failed to calculate a graph recipe. (%s)"
-msgstr "Mislukt bij het berekenen van een grafiekrecept. (%s)"
 
 #, python-format
 msgid "Failed to compile your module: %s"
@@ -46801,10 +46794,6 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Geen grafiek beschikbaar: %s"
 
-#, fuzzy
-msgid "No graph recipe found"
-msgstr "Geen geldige themamappen gevonden."
-
 #, fuzzy, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Geen grafiek met de ID <tt>%s</tt>"
@@ -61573,6 +61562,10 @@ msgstr "Dienstmededelingen"
 msgid "Service notifications enabled"
 msgstr "Servicemeldingen ingeschakeld"
 
+#, fuzzy
+msgid "Service or host not found."
+msgstr "Diensten van de gastgroep"
+
 msgid "Service outage count display options"
 msgstr "Weergaveopties voor aantal dienstonderbrekingen"
 
@@ -63802,6 +63795,13 @@ msgstr ""
 "Lichte gradiënt in de kleuren van de gekleurde gebieden in de grafieken. 0% "
 "schakelt het kleurverloop uit, 100% maakt het het sterkst mogelijke "
 "kleurverloop."
+
+msgid "Slot"
+msgstr ""
+
+#, fuzzy
+msgid "Slot number"
+msgstr "Poortnummer"
 
 msgid "Slow views"
 msgstr "Langzaam uitzicht"
@@ -72686,10 +72686,6 @@ msgstr ""
 "regelset). Als je hier b.v. 10 gebruikt en de standaard instelling van 60 "
 "seconden aanhoudt, dan zal RRD voor elke 10 minuten tijd een waarde "
 "bijhouden."
-
-#, fuzzy
-msgid "The slot number"
-msgstr "TCP-poortnummer"
 
 msgid ""
 "The source details can be displayed either on the queried host or the source "
@@ -94755,6 +94751,9 @@ msgstr "%d Filter instellingen"
 msgid "Override default filters"
 msgstr "Gerelateerde dashboards"
 
+msgid "Temporarily ignore default filters and apply only runtime filters."
+msgstr ""
+
 #, fuzzy
 msgid "Please configure the following filters: "
 msgstr "Gebruik de volgende niveaus"
@@ -95480,7 +95479,7 @@ msgstr "Visualisatie"
 msgid "Select the data you want to analyze"
 msgstr "Selecteer het type inhoudselement"
 
-msgid "Dashboard filters apply here and don't have to be selected again"
+msgid "Default filters apply here and don't have to be selected again"
 msgstr ""
 
 #, fuzzy
@@ -97573,6 +97572,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Failed to calculate a graph recipe. (%s)"
+#~ msgstr "Mislukt bij het berekenen van een grafiekrecept. (%s)"
+
+#, fuzzy
+#~ msgid "No graph recipe found"
+#~ msgstr "Geen geldige themamappen gevonden."
+
+#, fuzzy
+#~ msgid "The slot number"
+#~ msgstr "TCP-poortnummer"
 
 #, fuzzy
 #~ msgid "32-bit packaged binary"

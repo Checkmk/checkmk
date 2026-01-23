@@ -14234,10 +14234,6 @@ msgid "Cisco Meraki Appliance Performance Utilization"
 msgstr "Automazione Checkmk"
 
 #, fuzzy
-msgid "Cisco Meraki Device status"
-msgstr "Mostra lo stato del servizio"
-
-#, fuzzy
 msgid "Cisco Meraki appliance VPNs"
 msgstr "Mostra lo stato del servizio"
 
@@ -14247,6 +14243,10 @@ msgstr "Cisco Meraki"
 
 #, fuzzy
 msgid "Cisco Meraki appliance utilization"
+msgstr "Mostra lo stato del servizio"
+
+#, fuzzy
+msgid "Cisco Meraki device status"
 msgstr "Mostra lo stato del servizio"
 
 #, fuzzy
@@ -18828,9 +18828,6 @@ msgstr ""
 "opzione, è possibile selezionare in quale sezione del menu questa dashboard "
 "deve essere accessibile. Se si desidera definire il nome di un nuovo "
 "argomento, è possibile farlo <a href='%s'> qui</a>."
-
-msgid "Dashlet too short to render graph"
-msgstr ""
 
 msgid "Data"
 msgstr "Dati"
@@ -26359,10 +26356,6 @@ msgstr "Non è riuscito a cuocere gli agenti: %s"
 
 msgid "Failed to calculate a graph recipe."
 msgstr "Impossibile calcolare una ricetta del grafico."
-
-#, python-format
-msgid "Failed to calculate a graph recipe. (%s)"
-msgstr "Impossibile calcolare una ricetta del grafico. (%s)"
 
 #, python-format
 msgid "Failed to compile your module: %s"
@@ -46518,10 +46511,6 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Nessun grafico disponibile: %s"
 
-#, fuzzy
-msgid "No graph recipe found"
-msgstr "Non sono state trovate directory di temi valide."
-
 #, fuzzy, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Nessun grafico con l'ID <tt>%s</tt>"
@@ -61192,6 +61181,10 @@ msgstr "Notifiche di servizio"
 msgid "Service notifications enabled"
 msgstr "Notifiche di servizio abilitate"
 
+#, fuzzy
+msgid "Service or host not found."
+msgstr "Servizi del gruppo di accoglienza"
+
 msgid "Service outage count display options"
 msgstr ""
 "Opzioni di visualizzazione del conteggio delle interruzioni di servizio"
@@ -63413,6 +63406,13 @@ msgid ""
 msgstr ""
 "Leggero gradiente nei colori delle aree colorate nei grafici. 0% disattiva "
 "il gradiente, 100% lo rende il più forte possibile."
+
+msgid "Slot"
+msgstr ""
+
+#, fuzzy
+msgid "Slot number"
+msgstr "Numero di porta"
 
 msgid "Slow views"
 msgstr "Visualizzazioni lente"
@@ -72233,10 +72233,6 @@ msgstr ""
 "set di regole). Se si usa ad esempio 10 qui e si mantiene l'impostazione "
 "predefinita di 60 secondi, allora RRD manterrà un valore per ogni 10 minuti "
 "di tempo."
-
-#, fuzzy
-msgid "The slot number"
-msgstr "Numero di porta TCP"
 
 msgid ""
 "The source details can be displayed either on the queried host or the source "
@@ -94099,6 +94095,9 @@ msgstr "%d Impostazioni del filtro"
 msgid "Override default filters"
 msgstr "Cruscotti correlati"
 
+msgid "Temporarily ignore default filters and apply only runtime filters."
+msgstr ""
+
 #, fuzzy
 msgid "Please configure the following filters: "
 msgstr "Utilizzare i seguenti livelli"
@@ -94823,7 +94822,7 @@ msgstr "Visualizzazione"
 msgid "Select the data you want to analyze"
 msgstr "Seleziona il tipo di elemento di contenuto"
 
-msgid "Dashboard filters apply here and don't have to be selected again"
+msgid "Default filters apply here and don't have to be selected again"
 msgstr ""
 
 #, fuzzy
@@ -96914,6 +96913,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Failed to calculate a graph recipe. (%s)"
+#~ msgstr "Impossibile calcolare una ricetta del grafico. (%s)"
+
+#, fuzzy
+#~ msgid "No graph recipe found"
+#~ msgstr "Non sono state trovate directory di temi valide."
+
+#, fuzzy
+#~ msgid "The slot number"
+#~ msgstr "Numero di porta TCP"
 
 #, fuzzy
 #~ msgid "32-bit packaged binary"

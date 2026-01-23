@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import Any, Literal
 from urllib.parse import urlparse
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.gui.form_specs.unstable import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -193,8 +195,8 @@ def recompose(
         )
 
     global_proxies = config_domains.ConfigDomainCore().load().get("http_proxies", {}).values()
-    global_proxy_choices: list[SingleChoiceElement] = [
-        SingleChoiceElement(
+    global_proxy_choices: Sequence[SingleChoiceElementExtended[str]] = [
+        SingleChoiceElementExtended(
             name=p["ident"],
             title=Title("%s") % p["title"],
         )
@@ -230,7 +232,7 @@ def recompose(
         CascadingSingleChoiceElement(
             name="global_",
             title=Title("Globally configured proxy"),
-            parameter_form=SingleChoice(
+            parameter_form=SingleChoiceExtended(
                 elements=global_proxy_choices,
                 no_elements_text=Message("There are no elements defined for this selection yet."),
             ),

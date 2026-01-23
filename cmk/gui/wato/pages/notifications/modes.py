@@ -1071,6 +1071,7 @@ class ModeNotifications(ABCNotificationsMode):
                 self._render_notification_rules(
                     user_rules,
                     config,
+                    userid=user_id,
                     show_title=True,
                     show_buttons=False,
                     analyse=analyse,

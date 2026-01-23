@@ -61,7 +61,6 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/kubernetes/cluster-host",
     "cmk/l3v4_topology",
     "cmk/l3v6_topology",
-    "cmk/lldp_neighbor/{neighbor_id}",
     "cmk/meraki",
     "cmk/meraki/device_type",
     "cmk/meraki/has_lldp_neighbors",

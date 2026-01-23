@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+# ruff: noqa: I001
 
 from typing import Mapping
 

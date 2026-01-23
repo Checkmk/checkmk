@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: RUF100
+# ruff: noqa: I001
+
 import pytest
 from agents.plugins import apache_status, mk_jolokia, nginx_status
 

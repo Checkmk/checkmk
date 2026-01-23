@@ -2060,20 +2060,18 @@ def main_disable(
     _args: object,
     options: CommandOptions,
 ) -> None:
-    site_paths = SitePaths.from_site_name(site_name)
-    site_home = site_paths.home
-    if is_disabled(SitePaths.from_site_name(site_name).apache_conf):
+    apache_conf = SitePaths.from_site_name(site_name).apache_conf
+    if is_disabled(apache_conf):
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
-    site = site_environment_as_root(site_name, global_opts.verbose)
     if not is_stopped(site_name):
-        call_init_scripts(site_home, "stop")
+        subprocess.run(["omd", "stop", site_name], check=False)
     unmount_tmpfs_as_root(site_name, kill="kill" in options, capture_output=False)
     sys.stdout.write("Disabling Apache configuration for this site...")
     unregister_from_system_apache(
         version_info,
-        SitePaths.from_site_name(site.name).apache_conf,
+        apache_conf,
         apache_reload=False,
         verbose=global_opts.verbose,
     )

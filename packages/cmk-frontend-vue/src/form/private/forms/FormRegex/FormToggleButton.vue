@@ -10,7 +10,7 @@ import type { ToggleButtonGroupProps } from '@/components/CmkToggleButtonGroup.v
 
 const { _t } = usei18n()
 defineProps<{
-  modelValue?: ToggleButtonGroupProps['value']
+  modelValue?: ToggleButtonGroupProps['modelValue']
 }>()
 
 const emit = defineEmits(['update:modelValue'])

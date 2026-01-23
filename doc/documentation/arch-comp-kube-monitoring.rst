@@ -79,9 +79,9 @@ It collects two things:
     of the cluster. (`DaemonSet <container-ds_>`_)
 
     .. _cAdvisor: https://github.com/google/cadvisor
-    .. _container-ds: https://github.com/Checkmk/checkmk_kube_agent/blob/main/deploy/charts/checkmk/templates/node-collector-container-metrics-ds.yaml
+    .. _container-ds: https://github.com/Checkmk/checkmk_kube_`agent/blob/main/deploy/charts/checkmk/templates/node-collector-container-metrics-ds.yaml
 
-  * Node-specific metrics - uses the normal check_mk_agent on each node of the
+  * Node-specific metrics - uses the normal `check_mk_agent` on each node of the
     cluster. (`DaemonSet <machine-ds_>`_)
 
     .. _machine-ds: https://github.com/Checkmk/checkmk_kube_agent/blob/main/deploy/charts/checkmk/templates/node-collector-machine-sections-ds.yaml
@@ -184,10 +184,10 @@ The wrapper around the Kubernetes library is ``from_kubernetes()`` in
 into the Pydantic models live in ``transform.py``.
 
 The gathered data is sent to Checkmk via the normal agent section
-mechanism. Pydantic is used for serializing and de-serializing the data before
+mechanism. Pydantic is used for serializing and deserializing the data before
 and after transport, respectively. The file ``schemata/section.py`` contains the
 schemata for this serialization. The file ``kube_resources.py`` contains the
-logic for de-serialization. A unit test ensures that the two remain in sync.
+logic for deserialization. A unit test ensures that the two remain in sync.
 
 .. uml:: arch-comp-kube-monitoring-agent-flow.puml
 
@@ -195,7 +195,7 @@ logic for de-serialization. A unit test ensures that the two remain in sync.
 Technical debts
 ===============
 
-* Kubernetes Python client (used exclusively in api_server.py)
+* Kubernetes Python client (used exclusively in `api_server.py`)
 
   * Python library that facilitates calls to the Kubernetes API
   * Limitations:

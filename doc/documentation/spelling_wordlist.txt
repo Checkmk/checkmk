@@ -11,6 +11,8 @@ crontab
 cron
 de
 DCD
+deserializing
+deserialization
 frontend
 Jira
 keepalive
@@ -29,6 +31,7 @@ omd
 OTel
 parsers
 preforking
+Pydantic
 ramdisk
 Reproducibility
 runtime

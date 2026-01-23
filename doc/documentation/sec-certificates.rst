@@ -26,7 +26,7 @@ Apache HTTPS Certificate
 Agent Signing CA
 ^^^^^^^^^^^^^^^^
 
-* Created by omd
+* Created by OMD
 * `etc/ssl/agents/ca.pem`
 * Public key / certificate duplicated in `etc/ssl/agent_cert_store.pem`
 * Must be a CA
@@ -38,7 +38,7 @@ Agent Signing CA
 Relay Signing CA
 ^^^^^^^^^^^^^^^^
 
-* Created by omd
+* Created by OMD
 * `etc/ssl/agents/ca.pem`
 * Public key / certificate duplicated in `etc/ssl/agent_cert_store.pem`
 * Must be a CA
@@ -47,7 +47,7 @@ Relay Signing CA
 Site Local CA
 ^^^^^^^^^^^^^
 
-* Created by omd
+* Created by OMD
 * `etc/ssl/ca.pem`
 * Public key duplicated in
 
@@ -69,7 +69,7 @@ Site Local CA
 Site Certificate
 ^^^^^^^^^^^^^^^^^
 
-* Created by omd
+* Created by OMD
 * `etc/ssl/sites/<site>.pem`
 * Used by `omd/packages/stunnel/skel/etc/stunnel/server.conf`
 
@@ -80,10 +80,10 @@ Agent Certificate
 * Stored in the connection configuration of the agent
 * Validated by the agent-receiver and the fetcher to authenticate an agent
 
-Central Msg Broker CA
-^^^^^^^^^^^^^^^^^^^^^
+Central Message Broker CA
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Created by omd
+* Created by OMD
 * Ultimate with multi-tenancy: `etc/rabbitmq/ssl/multisite/$customer-name/ca_{key,cert}.pem`
 * Other editions: `etc/rabbitmq/ssl/multisite/ca_{key,cert}.pem`
 * Public key duplicated in `etc/rabbitmq/ssl/trusted_cas.pem` (also on remote sites)
@@ -91,10 +91,10 @@ Central Msg Broker CA
 * Signs the local and remote site certs
 * Central site sends CA and certs to remote sites, only stores locally the public key of the remote site
 
-Msg Broker Certificate
-^^^^^^^^^^^^^^^^^^^^^^
+Message Broker Certificate
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Created by omd
+* Created by OMD
 * Ultimate with multi-tenancy: `etc/rabbitmq/ssl/multisite/$customer-name/$site-name_cert.pem` (TODO validate)
 * other editions: `etc/rabbitmq/ssl/multisite/$site-name_cert.pem` (TODO validate)
 * Used by RabbitMQ broker to authenticate the connections

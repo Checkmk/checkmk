@@ -79,24 +79,24 @@ def check_licenses_overview(
     params: Mapping[str, tuple[int, int]],
     section: Section,
 ) -> CheckResult:
-    if (item_data := section.get(item)) is None:
+    if (overview := section.get(item)) is None:
         return
 
     yield Result(
-        state=State.OK if item_data.status == "OK" else State.WARN,
-        summary=f"Status: {item_data.status}",
+        state=State.OK if overview.status == "OK" else State.WARN,
+        summary=f"Status: {overview.status}",
     )
 
-    if item_data.expiration_date is not None:
-        yield from _check_expiration_date(item_data.expiration_date, params)
+    if overview.expiration_date is not None:
+        yield from _check_expiration_date(overview.expiration_date, params)
 
-    if item_data.licensed_device_counts:
+    if overview.licensed_device_counts:
         yield Result(
             state=State.OK,
-            summary=f"Number of licensed devices: {item_data.license_total}",
+            summary=f"Number of licensed devices: {overview.license_total}",
         )
 
-    for device_type, device_count in sorted(item_data.licensed_device_counts.items()):
+    for device_type, device_count in sorted(overview.licensed_device_counts.items()):
         yield Result(state=State.OK, notice=f"{device_type}: {device_count} licensed devices")
 
 

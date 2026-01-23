@@ -36,6 +36,7 @@ RUN apt-get update \
     dietlibc-dev \
     dnsutils \
     flex \
+    gawk \
     gettext \
     git-buildpackage \
     gtk-doc-tools \

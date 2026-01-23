@@ -42,6 +42,7 @@ RUN apt-get update \
     dnsutils \
     dpatch \
     flex \
+    gawk \
     gettext \
     git-buildpackage \
     gtk-doc-tools \

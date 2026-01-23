@@ -65,12 +65,21 @@ class ActiveCheck:
         active_services_data = self._deduplicate_service_descriptions(
             self._drop_empty_service_descriptions(self._make_services(plugin_name, plugin_params))
         )
-        if not self._for_relay or not active_services_data:
-            return active_services_data
 
-        # Currently no active checks are relay compatible.
+        if (
+            active_services_data
+            and self._for_relay
+            and not self._is_supported_for_relay(plugin_name)
+        ):
+            # note: more context is given where this exception is handled.
+            raise NotSupportedError("This active check is not supported on relays.")
+
+        return active_services_data
+
+    def _is_supported_for_relay(self, plugin_name: str) -> bool:
         # This will depend on the plugin family in the future.
-        raise NotSupportedError("Active checks are not supported on relays.")
+        # The case of our inventory active check is special: It will contact the relay when run on the site.
+        return plugin_name == "cmk_inv"
 
     def _make_services(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]

@@ -102,6 +102,9 @@ class ModeDiagHost(WatoMode):
         if self._host.is_cluster():
             raise MKGeneralException(_("This page does not support cluster hosts."))
 
+        if "cmk/relay_monitored" in self._host.labels():
+            raise MKGeneralException(_("This page does not support relay monitored hosts."))
+
     def title(self) -> str:
         return _("Test connection to host") + " " + self._hostname
 
@@ -416,7 +419,10 @@ class ModeDiagHost(WatoMode):
                         default_value=agent_port if agent_port is not None else 6556,
                         title=_('Checkmk Agent Port (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
-                            [("mode", "edit_ruleset"), ("varname", "agent_ports")]
+                            [
+                                ("mode", "edit_ruleset"),
+                                ("varname", "agent_ports"),
+                            ]
                         ),
                         help=_(
                             "This variable allows to specify the TCP port to "
@@ -436,7 +442,10 @@ class ModeDiagHost(WatoMode):
                         size=2,  # SNMP-Timeout
                         title=_('TCP connection timeout (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
-                            [("mode", "edit_ruleset"), ("varname", "tcp_connect_timeouts")]
+                            [
+                                ("mode", "edit_ruleset"),
+                                ("varname", "tcp_connect_timeouts"),
+                            ]
                         ),
                         help=_(
                             "This variable allows to specify a timeout for the "
@@ -450,7 +459,10 @@ class ModeDiagHost(WatoMode):
                     Integer(
                         title=_('SNMP-Timeout (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
-                            [("mode", "edit_ruleset"), ("varname", "snmp_timing")]
+                            [
+                                ("mode", "edit_ruleset"),
+                                ("varname", "snmp_timing"),
+                            ]
                         ),
                         help=_(
                             "After a request is sent to the remote SNMP agent, the service will wait up to "
@@ -467,7 +479,10 @@ class ModeDiagHost(WatoMode):
                     Integer(
                         title=_('SNMP-Retries (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
-                            [("mode", "edit_ruleset"), ("varname", "snmp_timing")]
+                            [
+                                ("mode", "edit_ruleset"),
+                                ("varname", "snmp_timing"),
+                            ]
                         ),
                         default_value=snmp_retries if snmp_retries is not None else 5,
                         minvalue=0,

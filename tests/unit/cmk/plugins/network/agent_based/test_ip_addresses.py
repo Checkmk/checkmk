@@ -174,6 +174,16 @@ __ip_info_34_fortinet_2 = [
                 {"if_index1": IPv4Interface("12.12.12.1/3")},
             ],
         ),
+        (
+            (
+                [["87.65.43.210", "1", "255.255.255.0"]],
+                [["", [], "", ""]],  # this happens if threre's no '34' entry
+                [["", ""]],
+            ),
+            [
+                {"1": IPv4Interface("87.65.43.210/24")},
+            ],
+        ),
     ],
 )
 def test_parse_ip_addresses(

@@ -6,6 +6,7 @@
 from collections.abc import Callable, Mapping
 from typing import override
 
+from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.dashboard.api import (
     FigureDashletConfig,
     FigureRequestInternal,
@@ -106,15 +107,17 @@ class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
 
         widget_config = get_dashboard_widget_by_id(dashboard, widget_id)
         try:
+            widget_type = dashlet_registry[widget_config["type"]]
             data_generator = self.get_data_generator(widget_config["type"])
         except KeyError:
             # likely an edition downgrade where the figure type is not available anymore
             raise InvalidWidgetError(disable_token=True) from None
 
+        widget = widget_type(widget_config, dashboard.get("context"))
         return create_figures_response(
             data_generator(
                 widget_config,
-                widget_config["context"],
+                widget.context,
                 widget_config["single_infos"],
             )
         )

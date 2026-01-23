@@ -161,7 +161,7 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
                 raise MKUserError("host", _("The host could not be found on any active site."))
 
     @abc.abstractmethod
-    def graph_specification(self, context: VisualContext) -> TGraphSpec: ...
+    def build_graph_specification(self, context: VisualContext) -> TGraphSpec: ...
 
     def __init__(
         self,
@@ -177,18 +177,26 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
 
         self._graph_specification: TGraphSpec | None = None
         self._graph_title: str | None = None
-        self._init_exception = None
+        self._init_exception: Exception | None = None
         try:
-            self._graph_specification, self._graph_title = self._init_graph()
+            self._graph_specification = self.build_graph_specification(
+                self.context if self.has_context() else {}
+            )
+            self._graph_title = self._init_graph_title()
         except Exception as exc:
-            # Passes error otherwise exception wont allow to enter dashlet editor
+            # Passes error otherwise exception won't allow to enter dashlet editor
             self._init_exception = exc
 
-    def _init_graph(self) -> tuple[TGraphSpec, str | None]:
-        graph_specification = self.graph_specification(self.context if self.has_context() else {})
+    def graph_specification(self) -> TGraphSpec:
+        if self._graph_specification is None:
+            assert self._init_exception is not None
+            raise self._init_exception
 
+        return self._graph_specification
+
+    def _init_graph_title(self) -> str | None:
         try:
-            graph_recipes = graph_specification.recipes(
+            graph_recipes = self.graph_specification().recipes(
                 metrics_from_api,
                 graphs_from_api,
                 UserPermissions.from_config(active_config, permission_registry),
@@ -211,9 +219,7 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
-        graph_title = graph_recipes[0].title if graph_recipes else None
-
-        return graph_specification, graph_title
+        return graph_recipes[0].title if graph_recipes else None
 
     def default_display_title(self) -> str:
         return self._graph_title if self._graph_title is not None else self.title()
@@ -246,7 +252,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
     def single_infos(cls) -> SingleInfos:
         return ["host", "service"]
 
-    def graph_specification(self, context: VisualContext) -> TemplateGraphSpecification:
+    def build_graph_specification(self, context: VisualContext) -> TemplateGraphSpecification:
         single_context = get_singlecontext_vars(context, self.single_infos())
         host = single_context.get("host")
         if not host:

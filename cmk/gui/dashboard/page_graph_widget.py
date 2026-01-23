@@ -57,9 +57,7 @@ def render_graph_widget_content(
     dashlet_type = cast(type[ABCGraphDashlet], dashlet_registry[dashlet_config["type"]])
 
     graph_dashlet = dashlet_type(dashlet_config, base_context)
-
-    # graph_dashlet.context is the combined context
-    graph_spec = graph_dashlet.graph_specification(graph_dashlet.context)
+    graph_spec = graph_dashlet.graph_specification()
 
     try:
         html.write_html(

@@ -14,11 +14,12 @@ import CmkIcon from '@/components/CmkIcon'
 
 const { _t } = usei18n()
 
-const { title } = defineProps<{
+const { title, open: initialOpen = true } = defineProps<{
   title: TranslatedString
+  open?: boolean
 }>()
 
-const open = ref(true)
+const open = ref(initialOpen)
 
 const label = _t('Toggle %{ title }', { title })
 

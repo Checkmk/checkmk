@@ -11,12 +11,28 @@ defineProps<{ screenshotMode: boolean }>()
 
 <template>
   <div class="demo-cmk-catalog-panel__container">
-    <CmkCatalogPanel :title="'foo'">bar</CmkCatalogPanel>
-    <CmkCatalogPanel :title="'foo'">
+    <h3>Default (open)</h3>
+    <CmkCatalogPanel :title="'Default Panel'">This panel is open by default</CmkCatalogPanel>
+
+    <h3>Explicitly closed</h3>
+    <CmkCatalogPanel :title="'Closed Panel'" :open="false">
+      This panel is closed by default
+    </CmkCatalogPanel>
+
+    <h3>With custom header slot</h3>
+    <CmkCatalogPanel :title="'Custom Header'">
       <template #header>
         <i>Some custom header</i>
       </template>
-      bar
+      Custom content with styled header
+    </CmkCatalogPanel>
+
+    <h3>Closed with custom header</h3>
+    <CmkCatalogPanel :title="'Closed with Custom'" :open="false">
+      <template #header>
+        <b>Bold custom header</b>
+      </template>
+      This panel starts closed with custom header styling
     </CmkCatalogPanel>
   </div>
 </template>

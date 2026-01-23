@@ -12,15 +12,18 @@ export type ToggleButtonOption = {
 
 export interface ToggleButtonGroupProps {
   options: ToggleButtonOption[]
-  value?: string | null
+  modelValue?: string | null
 }
 
-defineProps<ToggleButtonGroupProps>()
-const model = defineModel<string>({ required: true })
+const props = defineProps<ToggleButtonGroupProps>()
 
-const isSelected = (value: string) => value === model.value
+const emit = defineEmits({
+  'update:modelValue': (_value: string) => true
+})
+
+const isSelected = (value: string) => props.modelValue !== null && value === props.modelValue
 function setSelectedOption(value: string) {
-  model.value = value
+  emit('update:modelValue', value)
 }
 </script>
 

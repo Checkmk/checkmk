@@ -74,8 +74,8 @@ immediateWatch(
 )
 
 const selectedOption = computed({
-  get(): string {
-    return data.value[0] as string
+  get(): string | null {
+    return data.value[0] === '' ? null : (data.value[0] as string)
   },
   set(value: string) {
     // Keep old data in case user switches back and they don't loose their modifications

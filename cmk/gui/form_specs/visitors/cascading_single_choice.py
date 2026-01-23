@@ -76,12 +76,6 @@ class CascadingSingleChoiceVisitor(
         selected_vue_value: object = None
         vue_elements = []
 
-        if self.form_spec.elements and selected_name not in {
-            el.name for el in self.form_spec.elements
-        }:
-            selected_name = self.form_spec.elements[0].name
-            selected_value = DEFAULT_VALUE
-
         for element in self.form_spec.elements:
             element_visitor = get_visitor(element.parameter_form, self.visitor_options)
             element_value = selected_value if selected_name == element.name else DEFAULT_VALUE

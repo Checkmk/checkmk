@@ -36,7 +36,6 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/aws/tag/{key}:{value}",
     "cmk/check_mk_server",
     "cmk/cloud:azure",
-    "cmk/cdp_neighbor/{neighbor_id}",
     "cmk/ceph/osd",
     "cmk/ceph/mon",
     "cmk/device_model",

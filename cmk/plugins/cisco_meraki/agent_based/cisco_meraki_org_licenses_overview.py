@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Metric,
     render,
     Result,
     Service,
@@ -101,6 +102,7 @@ def check_licenses_overview(item: str, params: CheckParams, section: Section) ->
             state=State.OK,
             summary=f"Number of licensed devices: {overview.license_total}",
         )
+        yield Metric("license_total", overview.license_total)
 
     for device_type, device_count in sorted(overview.licensed_device_counts.items()):
         yield Result(state=State.OK, notice=f"{device_type}: {device_count} licensed devices")
@@ -119,7 +121,7 @@ def _check_expiration_date(expiration_date: datetime, params: CheckParams) -> Ch
             state=State.CRIT,
             summary=f"Licenses expired: {render.timespan(abs(age))} ago",
         )
-
+        yield Metric("remaining_time", 0)
     else:
         yield from check_levels(
             age,
@@ -127,6 +129,10 @@ def _check_expiration_date(expiration_date: datetime, params: CheckParams) -> Ch
             label="Remaining time",
             render_func=render.timespan,
         )
+        # NOTE: opting to not use the `metric_name` parameter in check levels call above because
+        # then the lower levels will not be displayed in the graph. Once that is supported, we can
+        # drop the line below and add the metric name directly to check levels.
+        yield Metric("remaining_time", age, levels=params["remaining_expiration_time"][1])
 
 
 check_plugin_cisco_meraki_org_licenses_overview = CheckPlugin(

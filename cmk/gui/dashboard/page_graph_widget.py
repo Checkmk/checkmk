@@ -24,6 +24,7 @@ from cmk.gui.dashboard.token_util import (
     impersonate_dashboard_token_issuer,
     InvalidWidgetError,
 )
+from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import (
     get_temperature_unit,
     GraphRenderConfig,
@@ -112,9 +113,13 @@ class GraphWidgetPage(cmk.gui.pages.Page):
             # we expect the frontend to send us the combined context already,
             # so we don't need to the dashboard
             render_graph_widget_content(ctx, dashlet_config, request_data.widget_id)
-        except Exception as e:
+        except MKMissingDataError as e:
+            # Render the specific missing data error message
+            # We render directly since raising would be silently ignored for AJAX requests
+            html.write_html(html.render_message(str(e)))
+        except Exception:
             # Global fallback: prevent technical error leakage to dashboard UI
-            raise make_mk_missing_data_error() from e
+            html.write_html(html.render_message(str(make_mk_missing_data_error())))
 
 
 class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
@@ -160,13 +165,6 @@ class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
                     # won't combine them for us
                     base_context=dashboard.get("context"),
                 )
-            except (
-                MKGraphRecipeCalculationError,
-                MKGraphRecipeNotFoundError,
-                MKGraphDashletTooSmallError,
-            ):
-                # Ensure token-authenticated users see standardized error UI
-                raise make_mk_missing_data_error()
             except KeyError:
                 # likely an edition downgrade where the graph type is not available anymore
                 raise InvalidWidgetError(disable_token=True) from None

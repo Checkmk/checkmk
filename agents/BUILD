@@ -1,3 +1,36 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//bazel/rules:filename_from_flag.bzl", "filename_from_flag")
+
+AGENT_PACKAGES = {
+    "check-mk-agent.noarch.rpm": "check-mk-agent-{VERSION}-1.noarch.rpm",
+    "check-mk-agent_all.deb": "check-mk-agent_{VERSION}-1_all.deb",
+}
+
+[
+    write_file(
+        name = package + "_write",
+        out = package + ".faked",
+        content = ["This artifact was faked during the build process by bazel."],
+        visibility = ["//omd:__subpackages__"],
+    )
+    for package in AGENT_PACKAGES
+]
+
+[
+    filename_from_flag(
+        name = package + "_with_version",
+        src = select({
+            "@//:use_fake_artifacts_enabled": package + ".faked",
+            "//conditions:default": package,
+        }),
+        file_name = template,
+        replacements = {
+            "VERSION": "@cmk//version",
+        },
+    )
+    for package, template in AGENT_PACKAGES.items()
+]
+
 filegroup(
     name = "agents",
     srcs = [
@@ -17,14 +50,10 @@ filegroup(
         "mk-job.aix",
         "mk-job.solaris",
         "waitmax",
-    ] + glob(
-        [
-            "check-mk-agent-*.noarch.rpm",
-            "check-mk-agent_*_all.deb",
-        ],
-        # Files created elsewhere
-        allow_empty = True,
-    ),
+    ] + [
+        package + "_with_version"
+        for package in AGENT_PACKAGES
+    ],
     visibility = ["//omd:__subpackages__"],
 )
 

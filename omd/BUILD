@@ -1,5 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
@@ -545,14 +546,26 @@ run_binary(
     tool = ":build_bom_texts_pdf_py",
 )
 
+BOM_ARTIFACTS = [
+    "bill-of-materials.json",
+    "bill-of-materials.csv",
+    "License_texts.pdf",
+]
+
+[write_file(
+    name = file + "_write",
+    out = file + ".faked",
+    content = ["This artifact was faked during the build process by bazel."],
+    visibility = ["//omd:__subpackages__"],
+) for file in BOM_ARTIFACTS]
+
 pkg_tar(
     name = "license_info",
-    srcs = [
+    srcs = select({
         # ToDo: Build BOM in the same Workspace
-        "bill-of-materials.csv",
-        "bill-of-materials.json",
-        ":build_bom_texts_pdf",
-    ],
+        "@//:use_fake_artifacts_enabled": [file + ".faked" for file in BOM_ARTIFACTS],
+        "//conditions:default": BOM_ARTIFACTS,
+    }),
     package_dir = "share/doc/",
     package_file_name = "license_info_archive.tar",
     stamp = 1,

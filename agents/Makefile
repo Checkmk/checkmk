@@ -10,13 +10,12 @@ SPECIAL_AGENTS_DIR := $(REPO_PATH)/cmk/special_agents
 RPM_VERSION := $(subst -,_,$(VERSION))
 NEW_VERSION_MAJOR := $(shell echo $(NEW_VERSION) | sed 's/\([0-9]*\.[0-9]*\)\.\(.*\)/\1/g')
 NAME := check-mk-agent
-DISTNAME := $(NAME)-$(VERSION)
 BUILDROOT := $(AGENTS_DIR)/.buildroot
 BUILDROOT_STAMP := $(AGENTS_DIR)/.buildroot.stamp
 RPM_TOPDIR := $(AGENTS_DIR)/.rpm.topdir
 RPM_BUILDDIR := $(AGENTS_DIR)/.rpm.builddir
-RPM_PACKAGE := $(AGENTS_DIR)/$(DISTNAME)-1.noarch.rpm
-DEB_PACKAGE := $(AGENTS_DIR)/check-mk-agent_$(VERSION)-1_all.deb
+RPM_PACKAGE := $(AGENTS_DIR)/check-mk-agent.noarch.rpm
+DEB_PACKAGE := $(AGENTS_DIR)/check-mk-agent_all.deb
 DEB_TOPDIR := $(AGENTS_DIR)/debian
 DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 

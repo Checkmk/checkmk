@@ -1,4 +1,4 @@
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
@@ -37,6 +37,18 @@ copy_to_directory(
 string_flag(
     name = "repo_license",
     build_setting_default = REPO_LICENSE,
+    visibility = ["//visibility:public"],
+)
+
+bool_flag(
+    name = "use_faked_artifacts",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "use_fake_artifacts_enabled",
+    flag_values = {":use_faked_artifacts": "True"},
     visibility = ["//visibility:public"],
 )
 

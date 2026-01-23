@@ -676,6 +676,11 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
             Version.from_str("2.4.0p16"),  # the-great-renaming: edition compatibility
         ),
     ),
+    _BaseVersion(3, 0, 0): max(
+        (
+            Version.from_str("2.5.0"),  # at least the last major version, by default.
+        )
+    ),
 }
 
 

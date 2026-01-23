@@ -10,7 +10,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
 /// creates mailslot port simulating agent
-pub async fn make_agent_response_peer() -> AnyhowResult<MailSlotBackend> {
+pub fn make_agent_response_peer() -> AnyhowResult<MailSlotBackend> {
     use cmk_agent_ctl::mailslot_transport;
     let own_mailslot = mailslot_transport::build_own_mailslot_name() + "_agent_peer";
     MailSlotBackend::new(&own_mailslot)

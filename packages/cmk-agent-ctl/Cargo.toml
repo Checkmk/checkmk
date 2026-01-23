@@ -15,7 +15,6 @@ unexpected_cfgs = { level = "allow", check-cfg = ['cfg(build_system_bazel)'] }
 
 [dependencies]
 anyhow = { workspace = true, features = ["backtrace"] }
-async-std.workspace = true
 async-trait.workspace = true
 # binary serialisation, used by mailslot, can't be replaced with serde
 bincode.workspace = true

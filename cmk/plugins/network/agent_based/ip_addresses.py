@@ -96,11 +96,15 @@ def ip_info_34_from(
         case _:
             return None
 
-    if (prefix := ("64" if oid_end.startswith("4.20.254.128.") else ip_prefix)) == "0":
+    try:
+        # "<ADR_TYPE>.<ADR_LENGTH>.<ADDRESS*>"
+        adr_type, oid_adr_length, *oid_adr = list(map(int, oid_end.split(".")))
+    except ValueError:
+        # in case we can't parse the OID using the above pattern we assume this is not for us
         return None
 
-    # "[ADR_TYPE].[ADR_LENGTH].[ADDRESS]"
-    adr_type, oid_adr_length, *oid_adr = list(map(int, oid_end.split(".")))
+    if (prefix := ("64" if oid_end.startswith("4.20.254.128.") else ip_prefix)) == "0":
+        return None
 
     adr_length, raw_address = (
         (len(dec_ip_address), dec_ip_address) if dec_ip_address else (oid_adr_length, oid_adr)

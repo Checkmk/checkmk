@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
@@ -19,12 +20,10 @@ import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/F
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
+import SelectableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/SelectableWidgets.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types'
 
-import SelectableWidgets from '../../../../components/WidgetSelection/SelectableWidgets.vue'
 import {
   VisualizationTimelineType,
   getVisualizationTypes
@@ -35,8 +34,6 @@ const { _t } = usei18n()
 defineProps<BaseWidgetProp>()
 const handler = defineModel<UseAlertTimeline>('handler', { required: true })
 
-const displayDataSettings = ref<boolean>(true)
-const displayVisualizationSettings = ref<boolean>(true)
 const widgetProps = computed(() => handler.value.widgetProps)
 
 const availableVisualizationTypes = getVisualizationTypes()
@@ -65,13 +62,7 @@ const availableVisualizationTypes = getVisualizationTypes()
 
   <ContentSpacer />
 
-  <CollapsibleTitle
-    :title="_t('Data settings')"
-    :open="displayDataSettings"
-    class="collapsible"
-    @toggle-open="displayDataSettings = !displayDataSettings"
-  />
-  <CollapsibleContent :open="displayDataSettings">
+  <CmkCatalogPanel :title="_t('Data settings')">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
@@ -106,17 +97,11 @@ const availableVisualizationTypes = getVisualizationTypes()
         </FieldComponent>
       </TableFormRow>
     </TableForm>
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 
   <ContentSpacer />
 
-  <CollapsibleTitle
-    :title="_t('Widget settings')"
-    :open="displayVisualizationSettings"
-    class="collapsible"
-    @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
-  />
-  <CollapsibleContent :open="displayVisualizationSettings">
+  <CmkCatalogPanel :title="_t('Widget settings')">
     <WidgetVisualization
       v-model:show-title="handler.showTitle.value"
       v-model:show-title-background="handler.showTitleBackground.value"
@@ -126,7 +111,7 @@ const availableVisualizationTypes = getVisualizationTypes()
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
     />
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 
   <ContentSpacer />
 </template>

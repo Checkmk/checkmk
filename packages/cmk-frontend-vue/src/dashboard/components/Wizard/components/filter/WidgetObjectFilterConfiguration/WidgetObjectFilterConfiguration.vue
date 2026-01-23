@@ -4,12 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
+
+import CatalogPanelHeader from '@/dashboard/components/Wizard/components/collapsible/CatalogPanelHeader.vue'
 import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'
 import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
@@ -39,7 +40,6 @@ const props = withDefaults(defineProps<Props>(), {
 const { filterName } = getStrings(props.objectType)
 
 const filterDefinitions = useFilterDefinitions()
-const toggleContextFiltersSection = ref(false)
 
 const emit = defineEmits<FilterEmits>()
 
@@ -104,13 +104,13 @@ const displayLabels = computed(() => {
 
 <template>
   <div v-if="showContextFiltersSection" class="db-widget-object-filter-configuration__group">
-    <CollapsibleTitle
-      :title="displayLabels.contextFilterTitle"
-      :help_text="displayLabels.contextFilterTooltip"
-      :open="toggleContextFiltersSection"
-      @toggle-open="toggleContextFiltersSection = !toggleContextFiltersSection"
-    />
-    <CollapsibleContent :open="toggleContextFiltersSection">
+    <CmkCatalogPanel :title="displayLabels.contextFilterTitle" :open="false">
+      <template #header>
+        <CatalogPanelHeader
+          :title="displayLabels.contextFilterTitle"
+          :help-text="displayLabels.contextFilterTooltip"
+        />
+      </template>
       <!-- object-configured-filters is not being recognized as a props -->
       <!-- @vue-ignore -->
       <DisplayContextFilters
@@ -118,7 +118,7 @@ const displayLabels = computed(() => {
         :context-filters="relevantContextFilters"
         :empty-filters-title="displayLabels.emptyContextTitle"
       />
-    </CollapsibleContent>
+    </CmkCatalogPanel>
   </div>
   <ObjectTypeFilterConfiguration
     :object-type="objectType"

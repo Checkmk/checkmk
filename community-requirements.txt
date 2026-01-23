@@ -397,29 +397,29 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.42.32 \
-    --hash=sha256:0ba535985f139cf38455efd91f3801fe72e5cce6ded2df5aadfd63177d509675 \
-    --hash=sha256:695ac7e62dfde28cc1d3b28a581cce37c53c729d48ea0f4cd0dbf599856850cf
+boto3==1.42.33 \
+    --hash=sha256:5da0d35dd82451d4520af63f8fcc722537597d7c790035e8b3a8fc53f032be3a \
+    --hash=sha256:81db4a1ef08b3a69b2c5a879e7bd26ee43ca3fd5202cd320a2aaa4f5dd11182c
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.42.32 \
-    --hash=sha256:6fe9c8fd16aec68e4693d53b2155ad5c11d0a1984610622bcd3a6eb003787648 \
-    --hash=sha256:722629d882efacc9a7c4744748493c8bec1d0441ce81b1537f4238c293202082
+boto3-stubs[logs]==1.42.33 \
+    --hash=sha256:c6b508b3541d48d63892a3eb2a7b36ec4d24435e8cf8233b6ae3f8f2122f0b61 \
+    --hash=sha256:ea2887aaab8b29db446a8260a19069ad8ad614d7a9ffe34ae87b9a2396c7a57e
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.42.32 \
-    --hash=sha256:4c0a9fe23e060c019e327cd5e4ea1976a1343faba74e5301ebfc9549cc584ccb \
-    --hash=sha256:9c1ce43687cc4c0bba12054b229b3464265c699e2de4723998d86791254a5a37
+botocore==1.42.33 \
+    --hash=sha256:156a1ead55c38709730c543eb8085c36098b7baf272fedc67cc4a543ae4b4cf6 \
+    --hash=sha256:ecf48db73605a592b6c7f8f29e517d9eb6cf0c7e004a1fdbd9c192afc7b42b03
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.42.32 \
-    --hash=sha256:53027f37ffd7d440d9a2d8dd84571717e11d8404f1e8dbbe75119640ad3fc8f9 \
-    --hash=sha256:b11fd20ee281283b84857eac7a1a75e25dc16f0fa611f36c2970a7e9498a7848
+botocore-stubs==1.42.33 \
+    --hash=sha256:a19219e54813474c4ff7d11c822f245f469f9f58bcce4ec65fb329bf23fa54b4 \
+    --hash=sha256:ecf45055d3ae6a891407cd4cfbcd33c5a923e987f567c4c1b96dc2498bf111de
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -1711,9 +1711,9 @@ grpcio-status==1.76.0 \
     # via
     #   -c requirements.txt
     #   google-api-core
-gunicorn==23.0.0 \
-    --hash=sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d \
-    --hash=sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec
+gunicorn==24.0.0 \
+    --hash=sha256:30401647ed4f162a3f7e5b8b3ed77e6e88d9a4ea5599f1ff31f7f54a7610339c \
+    --hash=sha256:7f6c916308740942586f49f14cf3743bdfc4130c29520c42706f42fa5a2dacdb
     # via
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
@@ -1922,9 +1922,9 @@ jira==3.10.5 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r tests/dev-requirements.in
-jmespath==1.0.1 \
-    --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980 \
-    --hash=sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe
+jmespath==1.1.0 \
+    --hash=sha256:472c87d80f36026ae83c6ddd0f1d05d4e510134ed462851fd5f754c8c3cbb88d \
+    --hash=sha256:a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64
     # via
     #   -c requirements.txt
     #   boto3
@@ -4351,9 +4351,9 @@ pysmb==1.2.13 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-pysmi==1.6.2 \
-    --hash=sha256:45a3a3b25b9e0465e6a49e47ba70d5eab0424f6f1131ca406ca3f385f027247e \
-    --hash=sha256:abed01673113886d10f0f336426859238fc13b5383c7e28e13dbcd5af0443ba1
+pysmi==1.6.3 \
+    --hash=sha256:5d2eeb9e98bc149dee8f9256899d13789206769aab1637e33ac5f0dacaaf51fb \
+    --hash=sha256:fc2d796c252379e1b47aeea2e547ff339ca6df504cf6196cb3adad8054f41e7d
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in

@@ -74,8 +74,10 @@ function onPaste(e: ClipboardEvent, index: number) {
   }
   const pasted = clipboardData.getData('Text')
   // When pasting a string, trim separators and then split by the given separators
-  const stripped = pasted.replace(new RegExp('^[;]+|[;]+$', 'g'), '')
-  const entries = stripped.split(new RegExp('[;]+'))
+  const entries = pasted
+    .split(new RegExp('[;]+'))
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== '')
 
   if (entries.length === 0) {
     return

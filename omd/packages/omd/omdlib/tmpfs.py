@@ -109,6 +109,15 @@ def mark_tmpfs_initialized(site_tmp_dir: str) -> None:
         f.write("")
 
 
+def unmount_tmpfs_as_root(site_name: str, kill: bool, capture_output: bool) -> int:
+    args = ["--kill", site_name] if kill else [site_name]
+    return subprocess.run(
+        ["omd", "umount"] + args,
+        capture_output=capture_output,
+        check=False,
+    ).returncode
+
+
 def unmount_tmpfs(
     site_name: str, site_home: str, site_tmp_dir: str, output: bool = True, kill: bool = False
 ) -> bool:

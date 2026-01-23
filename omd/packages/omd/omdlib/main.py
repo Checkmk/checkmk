@@ -95,6 +95,7 @@ from omdlib.tmpfs import (
     save_tmpfs_dump,
     tmpfs_mounted,
     unmount_tmpfs,
+    unmount_tmpfs_as_root,
 )
 from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements, Skeleton
 from omdlib.update import get_conflict_mode_update, get_edition, ManageUpdate, PreFlight
@@ -2009,7 +2010,7 @@ def _main_rm(
     site_home = SitePaths.from_site_name(site_name).home
     site = SiteContext(site_name)
     if tmpfs_mounted(site_name):
-        unmount_tmpfs(site_name, site_home, site.tmp_dir, kill=kill)
+        unmount_tmpfs_as_root(site_name, kill=kill, capture_output=False)
 
     # Remove include-hook for Apache and tell apache
     # Needs to be cleaned up before removing the site directory. Otherwise a
@@ -2068,7 +2069,7 @@ def main_disable(
     site = site_environment_as_root(site_name, global_opts.verbose)
     if not is_stopped(site_name):
         call_init_scripts(site_home, "stop")
-    unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
+    unmount_tmpfs_as_root(site_name, kill="kill" in options, capture_output=False)
     sys.stdout.write("Disabling Apache configuration for this site...")
     unregister_from_system_apache(
         version_info,
@@ -2184,12 +2185,7 @@ def main_mv_or_cp(
         )
 
     if command_type is CommandType.move:
-        unmount_tmpfs(
-            old_site.name,
-            SitePaths.from_site_name(old_site.name).home,
-            old_site.tmp_dir,
-            kill="kill" in options,
-        )
+        unmount_tmpfs_as_root(old_site.name, kill="kill" in options, capture_output=False)
         if not reuse:
             remove_from_fstab(old_site.name, old_site.tmp_dir)
 
@@ -2620,10 +2616,7 @@ def main_umount(
             sys.stdout.write(f"{tty.bold}Unmounting tmpfs of site {site.name}{tty.normal}...")
             sys.stdout.flush()
 
-            args = ["--kill", site.name] if kill else [site.name]
-            returncode = subprocess.run(
-                ["omd", "umount"] + args, capture_output=True, check=False
-            ).returncode
+            returncode = unmount_tmpfs_as_root(site_id, kill=kill, capture_output=True)
             if not show_success(returncode):
                 exit_status = 1
     else:

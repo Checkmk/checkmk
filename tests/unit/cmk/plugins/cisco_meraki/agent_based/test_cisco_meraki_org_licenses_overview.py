@@ -112,7 +112,7 @@ def test_check_licenses_overview_remaining_expiration_time_warn() -> None:
     string_table = [[f"[{json.dumps(overview)}]"]]
     section = parse_licenses_overview(string_table)
     item = f"{overview['organisation_name']}/{overview['organisation_id']}"
-    params = CheckParams(remaining_expiration_time=(3600 * 24 * 4, 3600 * 24 * 2))
+    params = CheckParams(remaining_expiration_time=("fixed", (3600 * 24 * 4, 3600 * 24 * 2)))
     results = check_licenses_overview(item, params, section)
 
     value = next(item for item in results if isinstance(item, Result) and item.state == State.WARN)

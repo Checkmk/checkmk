@@ -77,7 +77,7 @@ def discover_licenses_overview(section: Section) -> DiscoveryResult:
 
 
 class CheckParams(TypedDict, total=False):
-    remaining_expiration_time: tuple[int, int]
+    remaining_expiration_time: SimpleLevelsConfigModel[int]
 
 
 def check_licenses_overview(item: str, params: CheckParams, section: Section) -> CheckResult:
@@ -120,11 +120,7 @@ def _check_expiration_date(expiration_date: datetime, params: CheckParams) -> Ch
         )
 
     else:
-        levels_lower: SimpleLevelsConfigModel[int] = (
-            ("fixed", levels)
-            if (levels := params.get("remaining_expiration_time"))
-            else ("no_levels", None)
-        )
+        levels_lower = params.get("remaining_expiration_time") or ("no_levels", None)
 
         yield from check_levels(
             age,

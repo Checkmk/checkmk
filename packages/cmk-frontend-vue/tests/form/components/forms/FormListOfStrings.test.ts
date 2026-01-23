@@ -115,3 +115,53 @@ test('FormListOfStrings check autoextend', async () => {
   elements = await screen.getAllByRole('textbox')
   expect(elements).toHaveLength(2)
 })
+
+test('FormListOfStrings paste with leading/trailing semicolons splits correctly', async () => {
+  await renderForm({
+    spec: spec,
+    data: [],
+    backendValidation: []
+  })
+
+  const elements = screen.getAllByRole<HTMLInputElement>('textbox')
+  expect(elements).toHaveLength(1)
+
+  const pasteData = ';;value1;value2;;value3;;'
+  await fireEvent.paste(elements[0]!, {
+    clipboardData: {
+      getData: () => pasteData
+    }
+  })
+
+  const updatedElements = screen.getAllByRole<HTMLInputElement>('textbox')
+  expect(updatedElements).toHaveLength(4)
+  expect(updatedElements[0]!.value).toBe('value1')
+  expect(updatedElements[1]!.value).toBe('value2')
+  expect(updatedElements[2]!.value).toBe('value3')
+  expect(updatedElements[3]!.value).toBe('')
+})
+
+test('FormListOfStrings paste with leading/trailing whitespace trims correctly', async () => {
+  await renderForm({
+    spec: spec,
+    data: [],
+    backendValidation: []
+  })
+
+  const elements = screen.getAllByRole<HTMLInputElement>('textbox')
+  expect(elements).toHaveLength(1)
+
+  const pasteData = '\tvalue1 ; value2\n  ;value3\r\n'
+  await fireEvent.paste(elements[0]!, {
+    clipboardData: {
+      getData: () => pasteData
+    }
+  })
+
+  const updatedElements = screen.getAllByRole<HTMLInputElement>('textbox')
+  expect(updatedElements).toHaveLength(4)
+  expect(updatedElements[0]!.value).toBe('value1')
+  expect(updatedElements[1]!.value).toBe('value2')
+  expect(updatedElements[2]!.value).toBe('value3')
+  expect(updatedElements[3]!.value).toBe('')
+})

@@ -1,5 +1,5 @@
 {
-  "checksum": "df9b8a9bd26af0950ce8389d49af625e9ee76437974cfc266e2f8078abbaabc1",
+  "checksum": "1220b0717654e651e9db994e611bcc611e4abdf8cc4164b2c11f37b76859e993",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1226,426 +1226,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "async-channel 1.9.0": {
-      "name": "async-channel",
-      "version": "1.9.0",
-      "package_url": "https://github.com/smol-rs/async-channel",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/async-channel/1.9.0/download",
-          "sha256": "81953c529336010edd6d8e358f886d9581267795c61b19475b71314bffa46d35"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "async_channel",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "async_channel",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "concurrent-queue 2.5.0",
-              "target": "concurrent_queue"
-            },
-            {
-              "id": "event-listener 2.5.3",
-              "target": "event_listener"
-            },
-            {
-              "id": "futures-core 0.3.31",
-              "target": "futures_core"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "1.9.0"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "async-channel 2.3.1": {
-      "name": "async-channel",
-      "version": "2.3.1",
-      "package_url": "https://github.com/smol-rs/async-channel",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/async-channel/2.3.1/download",
-          "sha256": "89b47800b0be77592da0afd425cc03468052844aff33b84e33cc696f64e77b6a"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "async_channel",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "async_channel",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "concurrent-queue 2.5.0",
-              "target": "concurrent_queue"
-            },
-            {
-              "id": "event-listener-strategy 0.5.3",
-              "target": "event_listener_strategy"
-            },
-            {
-              "id": "futures-core 0.3.31",
-              "target": "futures_core"
-            },
-            {
-              "id": "pin-project-lite 0.2.16",
-              "target": "pin_project_lite"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "2.3.1"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "async-executor 1.13.1": {
-      "name": "async-executor",
-      "version": "1.13.1",
-      "package_url": "https://github.com/smol-rs/async-executor",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/async-executor/1.13.1/download",
-          "sha256": "30ca9a001c1e8ba5149f91a74362376cc6bc5b919d92d988668657bd570bdcec"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "async_executor",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "async_executor",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "async-task 4.7.1",
-              "target": "async_task"
-            },
-            {
-              "id": "concurrent-queue 2.5.0",
-              "target": "concurrent_queue"
-            },
-            {
-              "id": "fastrand 2.3.0",
-              "target": "fastrand"
-            },
-            {
-              "id": "futures-lite 2.6.0",
-              "target": "futures_lite"
-            },
-            {
-              "id": "slab 0.4.9",
-              "target": "slab"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "1.13.1"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "async-global-executor 2.4.1": {
-      "name": "async-global-executor",
-      "version": "2.4.1",
-      "package_url": "https://github.com/Keruspe/async-global-executor",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/async-global-executor/2.4.1/download",
-          "sha256": "05b1b633a2115cd122d73b955eadd9916c18c8f510ec9cd1686404c60ad1c29c"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "async_global_executor",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "async_global_executor",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "async-io",
-            "default"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "async-channel 2.3.1",
-              "target": "async_channel"
-            },
-            {
-              "id": "async-executor 1.13.1",
-              "target": "async_executor"
-            },
-            {
-              "id": "async-io 2.4.0",
-              "target": "async_io"
-            },
-            {
-              "id": "async-lock 3.4.0",
-              "target": "async_lock"
-            },
-            {
-              "id": "blocking 1.6.1",
-              "target": "blocking"
-            },
-            {
-              "id": "futures-lite 2.6.0",
-              "target": "futures_lite"
-            },
-            {
-              "id": "once_cell 1.21.0",
-              "target": "once_cell"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "2.4.1"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "async-io 2.4.0": {
-      "name": "async-io",
-      "version": "2.4.0",
-      "package_url": "https://github.com/smol-rs/async-io",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/async-io/2.4.0/download",
-          "sha256": "43a2b323ccce0a1d90b449fd71f2a06ca7faa7c54c2751f06c9bd851fc061059"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "async_io",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "async_io",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "async-lock 3.4.0",
-              "target": "async_lock"
-            },
-            {
-              "id": "cfg-if 1.0.0",
-              "target": "cfg_if"
-            },
-            {
-              "id": "concurrent-queue 2.5.0",
-              "target": "concurrent_queue"
-            },
-            {
-              "id": "futures-io 0.3.31",
-              "target": "futures_io"
-            },
-            {
-              "id": "futures-lite 2.6.0",
-              "target": "futures_lite"
-            },
-            {
-              "id": "parking 2.2.1",
-              "target": "parking"
-            },
-            {
-              "id": "polling 3.7.4",
-              "target": "polling"
-            },
-            {
-              "id": "rustix 0.38.44",
-              "target": "rustix"
-            },
-            {
-              "id": "slab 0.4.9",
-              "target": "slab"
-            },
-            {
-              "id": "tracing 0.1.41",
-              "target": "tracing"
-            }
-          ],
-          "selects": {
-            "cfg(windows)": [
-              {
-                "id": "windows-sys 0.59.0",
-                "target": "windows_sys"
-              }
-            ]
-          }
-        },
-        "edition": "2021",
-        "version": "2.4.0"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "async-lock 3.4.0": {
-      "name": "async-lock",
-      "version": "3.4.0",
-      "package_url": "https://github.com/smol-rs/async-lock",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/async-lock/3.4.0/download",
-          "sha256": "ff6e472cdea888a4bd64f342f09b3f50e1886d32afe8df3d663c01140b811b18"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "async_lock",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "async_lock",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "event-listener 5.4.0",
-              "target": "event_listener"
-            },
-            {
-              "id": "event-listener-strategy 0.5.3",
-              "target": "event_listener_strategy"
-            },
-            {
-              "id": "pin-project-lite 0.2.16",
-              "target": "pin_project_lite"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "3.4.0"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "async-native-tls 0.4.0": {
       "name": "async-native-tls",
       "version": "0.4.0",
@@ -1708,685 +1288,6 @@
         "version": "0.4.0"
       },
       "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "async-std 1.13.0": {
-      "name": "async-std",
-      "version": "1.13.0",
-      "package_url": "https://github.com/async-rs/async-std",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/async-std/1.13.0/download",
-          "sha256": "c634475f29802fde2b8f0b505b1bd00dfe4df7d4a000f0b36f7671197d5c3615"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "async_std",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "async_std",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "alloc",
-            "async-channel",
-            "async-global-executor",
-            "async-io",
-            "async-lock",
-            "crossbeam-utils",
-            "default",
-            "futures-channel",
-            "futures-core",
-            "futures-io",
-            "futures-lite",
-            "gloo-timers",
-            "kv-log-macro",
-            "log",
-            "memchr",
-            "once_cell",
-            "pin-project-lite",
-            "pin-utils",
-            "slab",
-            "std",
-            "wasm-bindgen-futures"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "async-channel 1.9.0",
-              "target": "async_channel"
-            },
-            {
-              "id": "async-lock 3.4.0",
-              "target": "async_lock"
-            },
-            {
-              "id": "crossbeam-utils 0.8.21",
-              "target": "crossbeam_utils"
-            },
-            {
-              "id": "futures-core 0.3.31",
-              "target": "futures_core"
-            },
-            {
-              "id": "futures-io 0.3.31",
-              "target": "futures_io"
-            },
-            {
-              "id": "kv-log-macro 1.0.7",
-              "target": "kv_log_macro"
-            },
-            {
-              "id": "log 0.4.26",
-              "target": "log"
-            },
-            {
-              "id": "memchr 2.7.4",
-              "target": "memchr"
-            },
-            {
-              "id": "once_cell 1.21.0",
-              "target": "once_cell"
-            },
-            {
-              "id": "pin-project-lite 0.2.16",
-              "target": "pin_project_lite"
-            },
-            {
-              "id": "pin-utils 0.1.0",
-              "target": "pin_utils"
-            },
-            {
-              "id": "slab 0.4.9",
-              "target": "slab"
-            }
-          ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "aarch64-apple-ios": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "aarch64-apple-ios-sim": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "aarch64-linux-android": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "aarch64-pc-windows-msvc": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "aarch64-unknown-fuchsia": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "aarch64-unknown-linux-gnu": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "aarch64-unknown-nixos-gnu": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "aarch64-unknown-nto-qnx710": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "arm-unknown-linux-gnueabi": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "armv7-linux-androideabi": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "i686-apple-darwin": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "i686-linux-android": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "i686-pc-windows-msvc": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "i686-unknown-freebsd": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "i686-unknown-linux-gnu": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "powerpc-unknown-linux-gnu": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "riscv32imc-unknown-none-elf": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "riscv64gc-unknown-none-elf": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "s390x-unknown-linux-gnu": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "thumbv7em-none-eabi": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "thumbv8m.main-none-eabi": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "wasm32-unknown-unknown": [
-              {
-                "id": "futures-channel 0.3.31",
-                "target": "futures_channel"
-              },
-              {
-                "id": "gloo-timers 0.3.0",
-                "target": "gloo_timers"
-              },
-              {
-                "id": "wasm-bindgen-futures 0.4.50",
-                "target": "wasm_bindgen_futures"
-              }
-            ],
-            "wasm32-wasi": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-channel 0.3.31",
-                "target": "futures_channel"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              },
-              {
-                "id": "gloo-timers 0.3.0",
-                "target": "gloo_timers"
-              },
-              {
-                "id": "wasm-bindgen-futures 0.4.50",
-                "target": "wasm_bindgen_futures"
-              }
-            ],
-            "wasm32-wasip1": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-channel 0.3.31",
-                "target": "futures_channel"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              },
-              {
-                "id": "gloo-timers 0.3.0",
-                "target": "gloo_timers"
-              },
-              {
-                "id": "wasm-bindgen-futures 0.4.50",
-                "target": "wasm_bindgen_futures"
-              }
-            ],
-            "x86_64-apple-darwin": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "x86_64-apple-ios": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "x86_64-linux-android": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "x86_64-pc-windows-msvc": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "x86_64-unknown-freebsd": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "x86_64-unknown-fuchsia": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "x86_64-unknown-linux-gnu": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "x86_64-unknown-nixos-gnu": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ],
-            "x86_64-unknown-none": [
-              {
-                "id": "async-global-executor 2.4.1",
-                "target": "async_global_executor"
-              },
-              {
-                "id": "async-io 2.4.0",
-                "target": "async_io"
-              },
-              {
-                "id": "futures-lite 2.6.0",
-                "target": "futures_lite"
-              }
-            ]
-          }
-        },
-        "edition": "2018",
-        "version": "1.13.0"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "async-task 4.7.1": {
-      "name": "async-task",
-      "version": "4.7.1",
-      "package_url": "https://github.com/smol-rs/async-task",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/async-task/4.7.1/download",
-          "sha256": "8b75356056920673b02621b35afd0f7dda9306d03c79a30f5c56c44cf256e3de"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "async_task",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "async_task",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "4.7.1"
-      },
-      "license": "Apache-2.0 OR MIT",
       "license_ids": [
         "Apache-2.0",
         "MIT"
@@ -2917,9 +1818,6 @@
             "aarch64-linux-android": [
               "std"
             ],
-            "aarch64-pc-windows-msvc": [
-              "std"
-            ],
             "aarch64-unknown-fuchsia": [
               "std"
             ],
@@ -2947,9 +1845,6 @@
             "i686-linux-android": [
               "std"
             ],
-            "i686-pc-windows-msvc": [
-              "std"
-            ],
             "i686-unknown-freebsd": [
               "std"
             ],
@@ -2959,19 +1854,7 @@
             "powerpc-unknown-linux-gnu": [
               "std"
             ],
-            "riscv32imc-unknown-none-elf": [
-              "std"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "std"
-            ],
             "s390x-unknown-linux-gnu": [
-              "std"
-            ],
-            "thumbv7em-none-eabi": [
-              "std"
-            ],
-            "thumbv8m.main-none-eabi": [
               "std"
             ],
             "wasm32-wasi": [
@@ -2989,9 +1872,6 @@
             "x86_64-linux-android": [
               "std"
             ],
-            "x86_64-pc-windows-msvc": [
-              "std"
-            ],
             "x86_64-unknown-freebsd": [
               "std"
             ],
@@ -3002,9 +1882,6 @@
               "std"
             ],
             "x86_64-unknown-nixos-gnu": [
-              "std"
-            ],
-            "x86_64-unknown-none": [
               "std"
             ]
           }
@@ -3065,70 +1942,6 @@
         "MIT"
       ],
       "license_file": null
-    },
-    "blocking 1.6.1": {
-      "name": "blocking",
-      "version": "1.6.1",
-      "package_url": "https://github.com/smol-rs/blocking",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/blocking/1.6.1/download",
-          "sha256": "703f41c54fc768e63e091340b424302bb1c29ef4aa0c7f10fe849dfb114d29ea"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "blocking",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "blocking",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "async-channel 2.3.1",
-              "target": "async_channel"
-            },
-            {
-              "id": "async-task 4.7.1",
-              "target": "async_task"
-            },
-            {
-              "id": "futures-io 0.3.31",
-              "target": "futures_io"
-            },
-            {
-              "id": "futures-lite 2.6.0",
-              "target": "futures_lite"
-            },
-            {
-              "id": "piper 0.2.4",
-              "target": "piper"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "1.6.1"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
     },
     "bstr 1.11.3": {
       "name": "bstr",
@@ -4075,10 +2888,6 @@
               "target": "anyhow"
             },
             {
-              "id": "async-std 1.13.0",
-              "target": "async_std"
-            },
-            {
               "id": "bincode 1.3.3",
               "target": "bincode"
             },
@@ -4356,13 +3165,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
         "deps": {
           "common": [
             {
@@ -4742,13 +3544,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
         "deps": {
           "common": [
             {
@@ -5859,9 +4654,6 @@
             "aarch64-linux-android": [
               "std"
             ],
-            "aarch64-pc-windows-msvc": [
-              "std"
-            ],
             "aarch64-unknown-fuchsia": [
               "std"
             ],
@@ -5877,28 +4669,13 @@
             "i686-linux-android": [
               "std"
             ],
-            "i686-pc-windows-msvc": [
-              "std"
-            ],
             "i686-unknown-freebsd": [
               "std"
             ],
             "powerpc-unknown-linux-gnu": [
               "std"
             ],
-            "riscv32imc-unknown-none-elf": [
-              "std"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "std"
-            ],
             "s390x-unknown-linux-gnu": [
-              "std"
-            ],
-            "thumbv7em-none-eabi": [
-              "std"
-            ],
-            "thumbv8m.main-none-eabi": [
               "std"
             ],
             "wasm32-wasi": [
@@ -5916,16 +4693,10 @@
             "x86_64-linux-android": [
               "std"
             ],
-            "x86_64-pc-windows-msvc": [
-              "std"
-            ],
             "x86_64-unknown-freebsd": [
               "std"
             ],
             "x86_64-unknown-fuchsia": [
-              "std"
-            ],
-            "x86_64-unknown-none": [
               "std"
             ]
           }
@@ -5953,7 +4724,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -5963,355 +4734,6 @@
         "version": "0.3.10"
       },
       "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "event-listener 2.5.3": {
-      "name": "event-listener",
-      "version": "2.5.3",
-      "package_url": "https://github.com/smol-rs/event-listener",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/event-listener/2.5.3/download",
-          "sha256": "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "event_listener",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "event_listener",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "version": "2.5.3"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "event-listener 5.4.0": {
-      "name": "event-listener",
-      "version": "5.4.0",
-      "package_url": "https://github.com/smol-rs/event-listener",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/event-listener/5.4.0/download",
-          "sha256": "3492acde4c3fc54c845eaab3eed8bd00c7a7d881f78bfc801e43a93dec1331ae"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "event_listener",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "event_listener",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "parking",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "concurrent-queue 2.5.0",
-              "target": "concurrent_queue"
-            },
-            {
-              "id": "pin-project-lite 0.2.16",
-              "target": "pin_project_lite"
-            }
-          ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "aarch64-apple-ios": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "aarch64-apple-ios-sim": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "aarch64-linux-android": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "aarch64-pc-windows-msvc": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "aarch64-unknown-fuchsia": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "aarch64-unknown-linux-gnu": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "aarch64-unknown-nixos-gnu": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "aarch64-unknown-nto-qnx710": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "arm-unknown-linux-gnueabi": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "armv7-linux-androideabi": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "i686-apple-darwin": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "i686-linux-android": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "i686-pc-windows-msvc": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "i686-unknown-freebsd": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "i686-unknown-linux-gnu": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "powerpc-unknown-linux-gnu": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "riscv32imc-unknown-none-elf": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "riscv64gc-unknown-none-elf": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "s390x-unknown-linux-gnu": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "thumbv7em-none-eabi": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "thumbv8m.main-none-eabi": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-apple-darwin": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-apple-ios": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-linux-android": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-pc-windows-msvc": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-unknown-freebsd": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-unknown-fuchsia": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-unknown-linux-gnu": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-unknown-nixos-gnu": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ],
-            "x86_64-unknown-none": [
-              {
-                "id": "parking 2.2.1",
-                "target": "parking"
-              }
-            ]
-          }
-        },
-        "edition": "2021",
-        "version": "5.4.0"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "event-listener-strategy 0.5.3": {
-      "name": "event-listener-strategy",
-      "version": "0.5.3",
-      "package_url": "https://github.com/smol-rs/event-listener-strategy",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/event-listener-strategy/0.5.3/download",
-          "sha256": "3c3e4e0dd3673c1139bf041f3008816d9cf2946bbfac2945c09e523b8d7b05b2"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "event_listener_strategy",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "event_listener_strategy",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "event-listener 5.4.0",
-              "target": "event_listener"
-            },
-            {
-              "id": "pin-project-lite 0.2.16",
-              "target": "pin_project_lite"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.5.3"
-      },
-      "license": "Apache-2.0 OR MIT",
       "license_ids": [
         "Apache-2.0",
         "MIT"
@@ -7053,12 +5475,108 @@
         "crate_features": {
           "common": [
             "alloc",
-            "default",
             "futures-sink",
             "sink",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "default"
+            ],
+            "aarch64-apple-ios": [
+              "default"
+            ],
+            "aarch64-apple-ios-sim": [
+              "default"
+            ],
+            "aarch64-linux-android": [
+              "default"
+            ],
+            "aarch64-pc-windows-msvc": [
+              "default"
+            ],
+            "aarch64-unknown-fuchsia": [
+              "default"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "default"
+            ],
+            "aarch64-unknown-nixos-gnu": [
+              "default"
+            ],
+            "aarch64-unknown-nto-qnx710": [
+              "default"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "default"
+            ],
+            "armv7-linux-androideabi": [
+              "default"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "default"
+            ],
+            "i686-apple-darwin": [
+              "default"
+            ],
+            "i686-linux-android": [
+              "default"
+            ],
+            "i686-pc-windows-msvc": [
+              "default"
+            ],
+            "i686-unknown-freebsd": [
+              "default"
+            ],
+            "i686-unknown-linux-gnu": [
+              "default"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "default"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "default"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "default"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "default"
+            ],
+            "thumbv7em-none-eabi": [
+              "default"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "default"
+            ],
+            "x86_64-apple-darwin": [
+              "default"
+            ],
+            "x86_64-apple-ios": [
+              "default"
+            ],
+            "x86_64-linux-android": [
+              "default"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "default"
+            ],
+            "x86_64-unknown-freebsd": [
+              "default"
+            ],
+            "x86_64-unknown-fuchsia": [
+              "default"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "default"
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              "default"
+            ],
+            "x86_64-unknown-none": [
+              "default"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -7232,82 +5750,6 @@
         "version": "0.3.31"
       },
       "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "futures-lite 2.6.0": {
-      "name": "futures-lite",
-      "version": "2.6.0",
-      "package_url": "https://github.com/smol-rs/futures-lite",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/futures-lite/2.6.0/download",
-          "sha256": "f5edaec856126859abb19ed65f39e90fea3a9574b9707f13539acf4abf7eb532"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "futures_lite",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "futures_lite",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "alloc",
-            "default",
-            "fastrand",
-            "futures-io",
-            "parking",
-            "race",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "fastrand 2.3.0",
-              "target": "fastrand"
-            },
-            {
-              "id": "futures-core 0.3.31",
-              "target": "futures_core"
-            },
-            {
-              "id": "futures-io 0.3.31",
-              "target": "futures_io"
-            },
-            {
-              "id": "parking 2.2.1",
-              "target": "parking"
-            },
-            {
-              "id": "pin-project-lite 0.2.16",
-              "target": "pin_project_lite"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "2.6.0"
-      },
-      "license": "Apache-2.0 OR MIT",
       "license_ids": [
         "Apache-2.0",
         "MIT"
@@ -7962,75 +6404,6 @@
         "MIT"
       ],
       "license_file": "LICENSE-APACHE"
-    },
-    "gloo-timers 0.3.0": {
-      "name": "gloo-timers",
-      "version": "0.3.0",
-      "package_url": "https://github.com/rustwasm/gloo/tree/master/crates/timers",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/gloo-timers/0.3.0/download",
-          "sha256": "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "gloo_timers",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "gloo_timers",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "futures",
-            "futures-channel",
-            "futures-core"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "futures-channel 0.3.31",
-              "target": "futures_channel"
-            },
-            {
-              "id": "futures-core 0.3.31",
-              "target": "futures_core"
-            },
-            {
-              "id": "js-sys 0.3.77",
-              "target": "js_sys"
-            },
-            {
-              "id": "wasm-bindgen 0.2.100",
-              "target": "wasm_bindgen"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.3.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": null
     },
     "h2 0.4.8": {
       "name": "h2",
@@ -10587,54 +8960,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "kv-log-macro 1.0.7": {
-      "name": "kv-log-macro",
-      "version": "1.0.7",
-      "package_url": "https://github.com/yoshuawuyts/kv-log-macro",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/kv-log-macro/1.0.7/download",
-          "sha256": "0de8b303297635ad57c9f5059fd9cee7a47f8e8daa09df0fcd07dd39fb22977f"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "kv_log_macro",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "kv_log_macro",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "log 0.4.26",
-              "target": "log"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "1.0.7"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "lazy_static 1.5.0": {
       "name": "lazy_static",
       "version": "1.5.0",
@@ -10892,14 +9217,9 @@
         "crate_features": {
           "common": [
             "general",
-            "if_ether",
             "ioctl",
-            "net",
-            "netlink",
             "no_std",
-            "prctl",
-            "system",
-            "xdp"
+            "system"
           ],
           "selects": {
             "aarch64-unknown-linux-gnu": [
@@ -11181,19 +9501,7 @@
         ],
         "crate_features": {
           "common": [
-            "kv",
-            "kv_unstable",
-            "std",
-            "value-bag"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "value-bag 1.10.0",
-              "target": "value_bag"
-            }
+            "std"
           ],
           "selects": {}
         },
@@ -14343,45 +12651,6 @@
       ],
       "license_file": "LICENSE"
     },
-    "parking 2.2.1": {
-      "name": "parking",
-      "version": "2.2.1",
-      "package_url": "https://github.com/smol-rs/parking",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/parking/2.2.1/download",
-          "sha256": "f38d5652c16fde515bb1ecef450ab0f6a219d619a7274976324d5e377f7dceba"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "parking",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "parking",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "version": "2.2.1"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "parking_lot 0.12.3": {
       "name": "parking_lot",
       "version": "0.12.3",
@@ -14852,70 +13121,6 @@
         ],
         "edition": "2018",
         "version": "0.1.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "piper 0.2.4": {
-      "name": "piper",
-      "version": "0.2.4",
-      "package_url": "https://github.com/smol-rs/piper",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/piper/0.2.4/download",
-          "sha256": "96c8c490f422ef9a4efd2cb5b42b76c8613d7e7dfc1caf667b8a3350a5acc066"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "piper",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "piper",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "futures-io",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "atomic-waker 1.1.2",
-              "target": "atomic_waker"
-            },
-            {
-              "id": "fastrand 2.3.0",
-              "target": "fastrand"
-            },
-            {
-              "id": "futures-io 0.3.31",
-              "target": "futures_io"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.2.4"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -15716,7 +13921,7 @@
                 "target": "once_cell"
               },
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -18830,377 +17035,10 @@
           "**"
         ],
         "crate_features": {
-          "common": [],
-          "selects": {
-            "aarch64-apple-darwin": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "aarch64-apple-ios": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "aarch64-apple-ios-sim": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "aarch64-linux-android": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "aarch64-pc-windows-msvc": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std"
-            ],
-            "aarch64-unknown-fuchsia": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "aarch64-unknown-linux-gnu": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "aarch64-unknown-nixos-gnu": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "aarch64-unknown-nto-qnx710": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "arm-unknown-linux-gnueabi": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "armv7-linux-androideabi": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "i686-apple-darwin": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "i686-linux-android": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "i686-pc-windows-msvc": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std"
-            ],
-            "i686-unknown-freebsd": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "i686-unknown-linux-gnu": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "riscv32imc-unknown-none-elf": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std",
-              "system"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std",
-              "system"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "thumbv7em-none-eabi": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std",
-              "system"
-            ],
-            "thumbv8m.main-none-eabi": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std",
-              "system"
-            ],
-            "wasm32-unknown-unknown": [
-              "system"
-            ],
-            "wasm32-wasi": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std",
-              "system"
-            ],
-            "wasm32-wasip1": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std",
-              "system"
-            ],
-            "x86_64-apple-darwin": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "x86_64-apple-ios": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "x86_64-linux-android": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "x86_64-pc-windows-msvc": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std"
-            ],
-            "x86_64-unknown-freebsd": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "x86_64-unknown-fuchsia": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "x86_64-unknown-linux-gnu": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "x86_64-unknown-nixos-gnu": [
-              "alloc",
-              "event",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "pipe",
-              "process",
-              "std",
-              "system",
-              "time"
-            ],
-            "x86_64-unknown-none": [
-              "alloc",
-              "fs",
-              "libc-extra-traits",
-              "net",
-              "std",
-              "system"
-            ]
-          }
+          "common": [
+            "system"
+          ],
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -19256,13 +17094,6 @@
               {
                 "id": "libc 0.2.170",
                 "target": "libc"
-              }
-            ],
-            "aarch64-pc-windows-msvc": [
-              {
-                "id": "errno 0.3.10",
-                "target": "errno",
-                "alias": "libc_errno"
               }
             ],
             "aarch64-unknown-fuchsia": [
@@ -19328,7 +17159,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ],
@@ -19352,13 +17183,6 @@
               {
                 "id": "libc 0.2.170",
                 "target": "libc"
-              }
-            ],
-            "i686-pc-windows-msvc": [
-              {
-                "id": "errno 0.3.10",
-                "target": "errno",
-                "alias": "libc_errno"
               }
             ],
             "i686-unknown-freebsd": [
@@ -19502,13 +17326,6 @@
               {
                 "id": "libc 0.2.170",
                 "target": "libc"
-              }
-            ],
-            "x86_64-pc-windows-msvc": [
-              {
-                "id": "errno 0.3.10",
-                "target": "errno",
-                "alias": "libc_errno"
               }
             ],
             "x86_64-unknown-freebsd": [
@@ -19733,7 +17550,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ],
@@ -22132,7 +19949,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ],
@@ -25134,51 +22951,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "value-bag 1.10.0": {
-      "name": "value-bag",
-      "version": "1.10.0",
-      "package_url": "https://github.com/sval-rs/value-bag",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/value-bag/1.10.0/download",
-          "sha256": "3ef4c4aa54d5d05a279399bfa921ec387b7aba77caf7a682ae8d86785b8fdad2"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "value_bag",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "value_bag",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "inline-i128"
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "1.10.0"
-      },
-      "license": "Apache-2.0 OR MIT",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "vcpkg 0.2.15": {
       "name": "vcpkg",
       "version": "0.2.15",
@@ -27002,33 +24774,18 @@
         ],
         "crate_features": {
           "common": [
-            "Wdk",
-            "Wdk_Foundation",
-            "Wdk_Storage",
-            "Wdk_Storage_FileSystem",
             "Win32",
             "Win32_Foundation",
-            "Win32_NetworkManagement",
-            "Win32_NetworkManagement_IpHelper",
-            "Win32_Networking",
-            "Win32_Networking_WinSock",
             "Win32_Security",
             "Win32_Security_Authentication",
             "Win32_Security_Authentication_Identity",
             "Win32_Security_Credentials",
             "Win32_Security_Cryptography",
-            "Win32_Storage",
-            "Win32_Storage_FileSystem",
             "Win32_System",
             "Win32_System_Console",
-            "Win32_System_Diagnostics",
-            "Win32_System_Diagnostics_Debug",
-            "Win32_System_IO",
             "Win32_System_LibraryLoader",
             "Win32_System_Memory",
             "Win32_System_SystemInformation",
-            "Win32_System_Threading",
-            "Win32_System_WindowsProgramming",
             "default"
           ],
           "selects": {}
@@ -30981,7 +28738,6 @@
   },
   "direct_deps": [
     "anyhow 1.0.97",
-    "async-std 1.13.0",
     "async-trait 0.1.87",
     "bincode 1.3.3",
     "clap 4.5.32",

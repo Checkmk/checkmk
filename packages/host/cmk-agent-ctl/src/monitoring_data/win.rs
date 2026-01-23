@@ -8,12 +8,12 @@ use crate::{
 };
 use log::{debug, warn};
 
-use async_std::net::TcpStream as AsyncTcpStream;
-use async_std::prelude::*;
 use std::net::IpAddr;
+use tokio::net::TcpStream;
 
 use std::io::{Error, ErrorKind, Result as IoResult};
 use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 /// Absolute max time to wait the agent
 const MAX_ANSWER_WAIT_TIME: Duration = Duration::from_secs(180);
@@ -74,13 +74,13 @@ fn is_error_acceptable(error: &Error) -> bool {
 async fn async_collect_from_ip(agent_ip: &str, remote_ip: IpAddr) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
     debug!("connect to {}", agent_ip);
-    let mut stream = AsyncTcpStream::connect(agent_ip).await?;
+    let mut stream = TcpStream::connect(agent_ip).await?;
     stream
         .write_all(format!("{}", remote_ip).as_bytes())
         .await?;
     stream.flush().await?;
     let result = stream.read_to_end(&mut data).await;
-    let _ = stream.shutdown(std::net::Shutdown::Both); // can't return here, error could be ignored
+    let _ = stream.shutdown().await; // can't return here, error could be ignored
     match result {
         Ok(_) => Ok(data),
         Err(some_err) => {
@@ -148,11 +148,9 @@ pub async fn async_collect(
     }
 }
 
-fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
-    async_std::task::block_on(async_collect_from_ip(
-        agent_ip,
-        IpAddr::from([127, 0, 0, 1]),
-    ))
+#[tokio::main(flavor = "current_thread")]
+async fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
+    async_collect_from_ip(agent_ip, IpAddr::from([127, 0, 0, 1])).await
 }
 
 #[tokio::main(flavor = "current_thread")]

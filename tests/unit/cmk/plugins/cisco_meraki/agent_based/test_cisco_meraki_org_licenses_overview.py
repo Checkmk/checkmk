@@ -14,6 +14,7 @@ from polyfactory.factories import TypedDictFactory
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_licenses_overview import (
     check_licenses_overview,
+    CheckParams,
     discover_licenses_overview,
     parse_licenses_overview,
 )
@@ -47,7 +48,7 @@ def test_discover_licenses_overview() -> None:
 @pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
 def test_check_licenses_overview_no_payload(string_table: StringTable) -> None:
     section = parse_licenses_overview(string_table)
-    assert not list(check_licenses_overview("Name1/123", {}, section))
+    assert not list(check_licenses_overview("Name1/123", CheckParams(), section))
 
 
 @time_machine.travel(datetime.datetime(2000, 1, 1, tzinfo=ZoneInfo("UTC")))
@@ -62,7 +63,7 @@ def test_check_licenses_overview() -> None:
     string_table = [[f"[{json.dumps(overviews)}]"]]
     section = parse_licenses_overview(string_table)
 
-    value = list(check_licenses_overview("Name1/123", {}, section))
+    value = list(check_licenses_overview("Name1/123", CheckParams(), section))
     expected = [
         Result(state=State.OK, summary="Status: OK"),
         Result(state=State.OK, summary="Expiration date: Feb 01, 2000"),
@@ -81,7 +82,7 @@ def test_check_licenses_overview_bad_status() -> None:
     string_table = [[f"[{json.dumps(overview)}]"]]
     section = parse_licenses_overview(string_table)
     item = f"{overview['organisation_name']}/{overview['organisation_id']}"
-    results = check_licenses_overview(item, {}, section)
+    results = check_licenses_overview(item, CheckParams(), section)
 
     value = next(item for item in results if isinstance(item, Result) and item.state == State.WARN)
     expected = Result(state=State.WARN, summary="Status: FOO")
@@ -95,7 +96,7 @@ def test_check_licenses_overview_already_expired() -> None:
     string_table = [[f"[{json.dumps(overview)}]"]]
     section = parse_licenses_overview(string_table)
     item = f"{overview['organisation_name']}/{overview['organisation_id']}"
-    results = check_licenses_overview(item, {}, section)
+    results = check_licenses_overview(item, CheckParams(), section)
 
     value = next(item for item in results if isinstance(item, Result) and item.state == State.CRIT)
     expected = Result(state=State.CRIT, summary="Licenses expired: 1 day 0 hours ago")
@@ -109,7 +110,7 @@ def test_check_licenses_overview_remaining_expiration_time_warn() -> None:
     string_table = [[f"[{json.dumps(overview)}]"]]
     section = parse_licenses_overview(string_table)
     item = f"{overview['organisation_name']}/{overview['organisation_id']}"
-    params = {"remaining_expiration_time": (3600 * 24 * 4, 3600 * 24 * 2)}
+    params = CheckParams(remaining_expiration_time=(3600 * 24 * 4, 3600 * 24 * 2))
     results = check_licenses_overview(item, params, section)
 
     value = next(item for item in results if isinstance(item, Result) and item.state == State.WARN)

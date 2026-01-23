@@ -10,7 +10,7 @@ from typing import Annotated, cast, get_args, Literal, override, Self
 from pydantic import BaseModel, Json, model_validator, ValidationError
 
 from cmk.ccc.user import UserId
-from cmk.gui.dashboard import DashboardConfig, get_all_dashboards
+from cmk.gui.dashboard import DashboardConfig, dashlet_registry, get_all_dashboards
 from cmk.gui.dashboard.page_show_shared_dashboard import SharedDashboardPageComponents
 from cmk.gui.dashboard.store import get_permitted_dashboards_by_owners, save_all_dashboards
 from cmk.gui.dashboard.token_util import (
@@ -392,17 +392,23 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
         widget_id: str,
         unique_widget_name: str,
     ) -> ViewSpec:
-        widget = get_dashboard_widget_by_id(dashboard, widget_id)
-        if widget["type"] == "linked_view":
-            return self._get_linked_view_spec(
-                token_details, widget_id, cast(LinkedViewDashletConfig, widget), issuer
+        widget_config = get_dashboard_widget_by_id(dashboard, widget_id)
+        widget_type = dashlet_registry[widget_config["type"]]
+        widget = widget_type(widget_config, dashboard.get("context"))
+        if widget_config["type"] == "linked_view":
+            view_spec = self._get_linked_view_spec(
+                token_details, widget_id, cast(LinkedViewDashletConfig, widget_config), issuer
             )
-        if widget["type"] == "embedded_view":
-            return self._get_embedded_view_spec(
-                dashboard, cast(EmbeddedViewDashletConfig, widget), unique_widget_name
+        elif widget_config["type"] == "embedded_view":
+            view_spec = self._get_embedded_view_spec(
+                dashboard, cast(EmbeddedViewDashletConfig, widget_config), unique_widget_name
             )
+        else:
+            raise InvalidWidgetError()
 
-        raise InvalidWidgetError()
+        view_spec = view_spec.copy()
+        view_spec["context"] = widget.context
+        return view_spec
 
     @staticmethod
     def _get_linked_view_spec(

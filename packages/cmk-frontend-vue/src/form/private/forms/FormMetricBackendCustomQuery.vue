@@ -16,6 +16,7 @@ import FormHelp from '@/form/private/FormHelp.vue'
 import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMetricBackendCustomQuery from '@/graph-designer/FormMetricBackendCustomQuery.vue'
+import { METRIC_BACKEND_MACRO_HELP } from '@/graph-designer/constants'
 
 const { _t } = usei18n()
 
@@ -27,10 +28,6 @@ const props = defineProps<{
 const data = defineModel<MetricBackendCustomQuery>('data', { required: true })
 
 const componentId = useId()
-
-const serviceNameTemplateHelp = _t(
-  'Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, <tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, <tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>'
-)
 </script>
 
 <template>
@@ -55,9 +52,9 @@ const serviceNameTemplateHelp = _t(
               field-size="LARGE"
               :placeholder="_t('Service name template')"
             />
-            <CmkHelpText :help="serviceNameTemplateHelp" />
+            <CmkHelpText :help="METRIC_BACKEND_MACRO_HELP" />
           </div>
-          <FormHelp :help="serviceNameTemplateHelp" />
+          <FormHelp :help="METRIC_BACKEND_MACRO_HELP" />
         </td>
       </tr>
     </template>

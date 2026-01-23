@@ -266,7 +266,8 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
         try:
             self._before_method_handler(ctx)
             token_details = self.__check_token_details(token)
-            return inner(token, token_details, ctx)
+            result = inner(token, token_details, ctx)
+            return self._after_method_handler(result, ctx)
 
         except MKMethodNotAllowed:
             raise
@@ -285,6 +286,10 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
     def _before_method_handler(self, ctx: PageContext) -> None:
         """Override this to implement any pre-method logic"""
         pass
+
+    def _after_method_handler(self, result: PageResult, ctx: PageContext) -> PageResult:
+        """Override this to implement any post-method logic"""
+        return result
 
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
         """Override this to implement custom exception handling logic"""
@@ -312,6 +317,11 @@ class DashboardTokenAuthenticatedJsonPage(DashboardTokenAuthenticatedPage):
         response.set_content_type("application/json")
 
     @override
+    def _after_method_handler(self, result: PageResult, ctx: PageContext) -> PageResult:
+        self._set_response_data({"result_code": 0, "result": result, "severity": "success"})
+        return result
+
+    @override
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> None:
         if ctx.config.debug:
             raise exception
@@ -321,22 +331,6 @@ class DashboardTokenAuthenticatedJsonPage(DashboardTokenAuthenticatedPage):
             severity = "success"
 
         self._set_response_data({"result_code": 1, "result": str(exception), "severity": severity})
-
-    @override
-    def get(self, token: AuthToken, ctx: PageContext) -> PageResult:
-        action_response = self._handle_method(token, ctx, self._get)
-        self._set_response_data(
-            {"result_code": 0, "result": action_response, "severity": "success"}
-        )
-        return action_response
-
-    @override
-    def post(self, token: AuthToken, ctx: PageContext) -> PageResult:
-        action_response = self._handle_method(token, ctx, self._post)
-        self._set_response_data(
-            {"result_code": 0, "result": action_response, "severity": "success"}
-        )
-        return action_response
 
 
 class ImpersonatedDashboardTokenIssuer:

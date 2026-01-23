@@ -16,6 +16,7 @@
         "$ref": "#/$defs/mode_host_server_per_site"
       }
     },
+    "default_relay_id_hash": { "type": "string" },
     "agent_connection_modes": {
       "type": "array",
       "items": {
@@ -29,6 +30,7 @@
   "required": [
     "form_keys",
     "sites",
+    "default_relay_id_hash",
     "server_per_site",
     "i18n_ping_host",
     "agent_slideout",

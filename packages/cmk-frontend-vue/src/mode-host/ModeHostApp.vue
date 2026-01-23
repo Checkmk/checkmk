@@ -22,6 +22,7 @@ const props = defineProps<{
   i18n_ping_host: I18NPingHost
   form_keys: ModeHostFormKeys
   sites: Array<ModeHostSite>
+  default_relay_id_hash: string
   server_per_site: Array<ModeHostServerPerSite>
   agent_connection_modes: Array<ModeHostAgentConnectionMode>
   agent_slideout: AgentSlideout
@@ -37,6 +38,8 @@ const ipv4InputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv6InputElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv6InputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const relayInputButtonElement: Ref<HTMLInputElement | null> = ref(null)
+const relaySelectElement: Ref<HTMLSelectElement | null> = ref(null)
+const relayDefaultElement: Ref<HTMLDivElement | null> = ref(null)
 const ipAddressFamilySelectElement: Ref<HTMLSelectElement | null> = ref(null)
 const ipAddressFamilyDefaultElement: Ref<HTMLDivElement | null> = ref(null)
 const ipAddressFamilyInputElement: Ref<HTMLInputElement | null> = ref(null)
@@ -95,6 +98,10 @@ onMounted(() => {
   relayInputButtonElement.value = document.querySelector(
     `input[id="${props.form_keys.cb_change}_${props.form_keys.relay}"]`
   )
+  relaySelectElement.value = document.querySelector(`select[name="${props.form_keys.relay}"]`)
+  relayDefaultElement.value = document.querySelector(
+    `div[id="attr_default_${props.form_keys.relay}"]`
+  )
 })
 
 function getElementBySelector<T>(selector: string): T {
@@ -131,8 +138,11 @@ function getElementBySelector<T>(selector: string): T {
     :ipv6-input-element="ipv6InputElement"
     :ipv6-input-button-element="ipv6InputButtonElement"
     :relay-input-button-element="relayInputButtonElement"
+    :relay-select-element="relaySelectElement"
+    :relay-default-element="relayDefaultElement"
     :site-select-element="siteSelectElement"
     :sites="sites"
+    :default-relay-id-hash="default_relay_id_hash"
   ></PingHost>
   <AgentConnectionTest
     v-if="

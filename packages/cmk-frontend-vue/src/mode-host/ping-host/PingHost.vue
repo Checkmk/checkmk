@@ -23,8 +23,11 @@ const props = defineProps<{
   ipv6InputElement: HTMLInputElement
   ipv6InputButtonElement: HTMLInputElement
   relayInputButtonElement: HTMLInputElement | null
+  relaySelectElement: HTMLSelectElement | null
+  relayDefaultElement: HTMLDivElement | null
   siteSelectElement: HTMLSelectElement
   sites: Array<ModeHostSite>
+  defaultRelayIdHash: string
 }>()
 
 interface PingHostResponseError {
@@ -52,13 +55,14 @@ interface Result {
   element: HTMLInputElement
 }
 
+const prevStatusElements: Ref<Record<string, Result>> = ref({})
 const statusElements: Ref<Record<string, Result>> = ref({})
 const isNoIP = ref(
   (props.ipAddressFamilyInputElement.checked &&
     props.ipAddressFamilySelectElement.value === 'no-ip') ||
     props.ipAddressFamilyDefaultElement.textContent?.includes('No IP')
 )
-const isRelay = ref(props.relayInputButtonElement?.checked)
+const isRelay = ref(checkRelay())
 const controller = ref(new AbortController())
 const ajaxRequestInProgress = ref<{ [key: string]: boolean }>({
   ping: false,
@@ -71,6 +75,17 @@ const typingTimer: Ref<{ [key: string]: ReturnType<typeof setTimeout> | null }> 
 })
 const doneTypingInterval = 1000
 
+function checkRelay(): boolean {
+  if (!props.relayInputButtonElement || !props.relaySelectElement || !props.relayDefaultElement) {
+    return false
+  }
+  return (
+    (props.relayInputButtonElement.checked === true &&
+      props.relaySelectElement.value !== props.defaultRelayIdHash) ||
+    (props.relayInputButtonElement.checked === false &&
+      !props.relayDefaultElement.textContent?.includes('No relay'))
+  )
+}
 const showPingHost = computed(() => {
   return !isNoIP.value && !isRelay.value
 })
@@ -93,9 +108,9 @@ onMounted(() => {
             break
           case 'no-ip':
             isNoIP.value = true
-            statusElements.value = {}
             break
         }
+        isRelay.value = checkRelay()
         break
       case props.ipAddressFamilyInputElement:
         isNoIP.value =
@@ -105,10 +120,17 @@ onMounted(() => {
             props.ipAddressFamilyDefaultElement.textContent?.includes('No IP'))
         break
       case props.relayInputButtonElement:
-        isRelay.value = props.relayInputButtonElement?.checked
+        isRelay.value = checkRelay()
+        break
     }
     if (!showPingHost.value) {
+      prevStatusElements.value = statusElements.value
       statusElements.value = {}
+    } else if (
+      Object.keys(prevStatusElements.value).length > 0 &&
+      Object.keys(statusElements.value).length === 0
+    ) {
+      statusElements.value = prevStatusElements.value
     }
   })
   props.hostnameInputElement.addEventListener('input', () => {

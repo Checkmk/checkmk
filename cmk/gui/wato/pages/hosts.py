@@ -408,6 +408,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                             config.sites
                         )
                     ],
+                    default_relay_id_hash=DropdownChoice.option_id(""),
                     server_per_site=[
                         ModeHostServerPerSite(
                             site_id=site_id,

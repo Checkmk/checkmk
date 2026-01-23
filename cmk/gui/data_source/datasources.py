@@ -447,6 +447,9 @@ class DataSourceLogAlertStatistics(LogDataSource):
     def ignore_limit(self) -> bool:
         return True
 
+    def post_process(self, rows: Rows) -> Rows:
+        return list(filter(lambda row: row["host_name"], rows))
+
 
 class DataSourceServiceDiscovery(ABCDataSource):
     @property

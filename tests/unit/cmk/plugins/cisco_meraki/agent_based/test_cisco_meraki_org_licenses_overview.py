@@ -68,7 +68,7 @@ def test_check_licenses_overview() -> None:
         Result(state=State.OK, notice="Organization ID: 123"),
         Result(state=State.OK, notice="Organization name: Name1"),
         Result(state=State.OK, summary="Status: OK"),
-        Result(state=State.OK, summary="Expiration date: Feb 01, 2000"),
+        Result(state=State.OK, summary="Expiration date: 2000-02-01"),
         Result(state=State.OK, summary="Remaining time: 31 days 0 hours"),
         Result(state=State.OK, summary="Number of licensed devices: 6"),
         Result(state=State.OK, notice="MV: 2 licensed devices"),

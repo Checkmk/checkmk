@@ -107,7 +107,7 @@ def check_licenses_overview(item: str, params: CheckParams, section: Section) ->
 def _check_expiration_date(expiration_date: datetime, params: CheckParams) -> CheckResult:
     yield Result(
         state=State.OK,
-        summary=f"Expiration date: {expiration_date.strftime('%b %d, %Y')}",
+        summary=f"Expiration date: {expiration_date.date().isoformat()}",
     )
 
     age = expiration_date.timestamp() - time.time()

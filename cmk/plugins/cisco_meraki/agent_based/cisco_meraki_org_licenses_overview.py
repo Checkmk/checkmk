@@ -76,7 +76,7 @@ def discover_licenses_overview(section: Section) -> DiscoveryResult:
         yield Service(item=identifier)
 
 
-class CheckParams(TypedDict, total=False):
+class CheckParams(TypedDict):
     remaining_expiration_time: SimpleLevelsConfigModel[int]
 
 
@@ -120,11 +120,9 @@ def _check_expiration_date(expiration_date: datetime, params: CheckParams) -> Ch
         )
 
     else:
-        levels_lower = params.get("remaining_expiration_time") or ("no_levels", None)
-
         yield from check_levels(
             age,
-            levels_lower=levels_lower,
+            levels_lower=params["remaining_expiration_time"],
             label="Remaining time",
             render_func=render.timespan,
         )
@@ -136,5 +134,7 @@ check_plugin_cisco_meraki_org_licenses_overview = CheckPlugin(
     discovery_function=discover_licenses_overview,
     check_function=check_licenses_overview,
     check_ruleset_name="cisco_meraki_org_licenses_overview",
-    check_default_parameters={},
+    check_default_parameters=CheckParams(
+        remaining_expiration_time=("no_levels", None),
+    ),
 )

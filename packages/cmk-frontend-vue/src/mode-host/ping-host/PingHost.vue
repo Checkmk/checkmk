@@ -69,7 +69,7 @@ const typingTimer: Ref<{ [key: string]: ReturnType<typeof setTimeout> | null }> 
   ping: null,
   ping6: null
 })
-const doneTypingInterval = 250
+const doneTypingInterval = 1000
 
 const showPingHost = computed(() => {
   return !isNoIP.value && !isRelay.value

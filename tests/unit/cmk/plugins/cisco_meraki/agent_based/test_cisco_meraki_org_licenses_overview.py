@@ -47,14 +47,14 @@ def test_discover_licenses_overview() -> None:
 @pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
 def test_check_licenses_overview_no_payload(string_table: StringTable) -> None:
     section = parse_licenses_overview(string_table)
-    assert not list(check_licenses_overview("n/i", {}, section))
+    assert not list(check_licenses_overview("Name1/123", {}, section))
 
 
 @time_machine.travel(datetime.datetime(2000, 1, 1, tzinfo=ZoneInfo("UTC")))
 def test_check_licenses_overview() -> None:
     overviews = _LicensesOverviewFactory.build(
-        organisation_name="n",
-        organisation_id="i",
+        organisation_name="Name1",
+        organisation_id="123",
         status="OK",
         expirationDate="Feb 1, 2000 UTC",
         licensedDeviceCounts={"wireless": 1, "MV": 2, "Z1": 3},
@@ -62,7 +62,7 @@ def test_check_licenses_overview() -> None:
     string_table = [[f"[{json.dumps(overviews)}]"]]
     section = parse_licenses_overview(string_table)
 
-    value = list(check_licenses_overview("n/i", {}, section))
+    value = list(check_licenses_overview("Name1/123", {}, section))
     expected = [
         Result(state=State.OK, summary="Status: OK"),
         Result(state=State.OK, summary="Expiration date: Feb 01, 2000"),

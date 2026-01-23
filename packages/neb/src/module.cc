@@ -882,16 +882,24 @@ void livestatus_log_initial_states() {
     // their corresponding service downtimes, so let's play safe...
     for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == HOST_DOWNTIME) {
-            Informational(fl_logger_nagios)
-                << "HOST DOWNTIME ALERT: " << dt->host_name << ";STARTED;"
-                << dt->comment;
+            std::ostringstream os;
+            os << "HOST DOWNTIME ALERT: " << dt->host_name << ";STARTED;"
+               << dt->comment;
+            // Older Nagios headers are not const-correct... :-P
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+            write_to_all_logs(const_cast<char *>(os.str().c_str()),
+                              NSLOG_INFO_MESSAGE);
         }
     }
     for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == SERVICE_DOWNTIME) {
-            Informational(fl_logger_nagios)
-                << "SERVICE DOWNTIME ALERT: " << dt->host_name << ";"
-                << dt->service_description << ";STARTED;" << dt->comment;
+            std::ostringstream os;
+            os << "SERVICE DOWNTIME ALERT: " << dt->host_name << ";"
+               << dt->service_description << ";STARTED;" << dt->comment;
+            // Older Nagios headers are not const-correct... :-P
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+            write_to_all_logs(const_cast<char *>(os.str().c_str()),
+                              NSLOG_INFO_MESSAGE);
         }
     }
     g_timeperiods_cache->logCurrentTimeperiods();

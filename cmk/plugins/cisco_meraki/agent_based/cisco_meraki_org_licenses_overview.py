@@ -14,9 +14,9 @@ from typing import TypedDict
 
 from pydantic import BaseModel, computed_field, Field
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -26,6 +26,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 type Section = Mapping[str, LicensesOverview]
 
@@ -119,9 +120,15 @@ def _check_expiration_date(expiration_date: datetime, params: CheckParams) -> Ch
         )
 
     else:
-        yield from check_levels_v1(
+        levels_lower: SimpleLevelsConfigModel[int] = (
+            ("fixed", levels)
+            if (levels := params.get("remaining_expiration_time"))
+            else ("no_levels", None)
+        )
+
+        yield from check_levels(
             age,
-            levels_lower=params.get("remaining_expiration_time"),
+            levels_lower=levels_lower,
             label="Remaining time",
             render_func=render.timespan,
         )

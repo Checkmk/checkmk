@@ -58,7 +58,14 @@ from cmk.gui.utils.urls import (
     makeactionuri,
     makeuri_contextless,
 )
-from cmk.gui.valuespec import DropdownChoice, FixedValue, Hostname, ListOfStrings, ValueSpec
+from cmk.gui.valuespec import (
+    DropdownChoice,
+    FixedValue,
+    HostAddress,
+    Hostname,
+    ListOfStrings,
+    ValueSpec,
+)
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_registration import remove_tls_registration
@@ -1104,16 +1111,28 @@ class PageAjaxPingHost(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
-
-        try:
-            ip_or_dns_name = request.get_validated_type_input_mandatory(HostName, "ip_or_dns_name")
-        except Exception:
-            return {
-                "status_code": 99,
-                "message": "The given hostname must only contain ASCII characters.",
-            }
-
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
+
+        if cmd == PingHostCmd.PING6:
+            ip_or_dns_name = unquote(request.get_ascii_input_mandatory("ip_or_dns_name"))
+
+            if not HostAddress()._is_valid_ipv6_address(ip_or_dns_name):
+                return {
+                    "status_code": 99,
+                    "message": "Not a valid IPv6 address.",
+                }
+
+        else:
+            try:
+                ip_or_dns_name = request.get_validated_type_input_mandatory(
+                    HostName, "ip_or_dns_name"
+                )
+
+            except MKUserError as e:
+                return {
+                    "status_code": 99,
+                    "message": e,
+                }
 
         result = ping_host(
             automation_config=make_automation_config(ctx.config.sites[site_id]),

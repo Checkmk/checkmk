@@ -12,7 +12,8 @@ from contextlib import asynccontextmanager, contextmanager, redirect_stderr, red
 from dataclasses import dataclass
 from typing import assert_never, Protocol
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
@@ -110,6 +111,17 @@ def make_application(
         docs_url=None,
         redoc_url=None,
     )
+
+    @app.exception_handler(CacheError)
+    async def cache_exception_handler(request: Request, exc: CacheError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "error_code": "CACHE_ERROR",
+                "detail": f"Automation cache error: {exc}",
+            },
+        )
+
     app.state.dependencies = _ApplicationDependencies(
         automation_engine=engine,
         changes_cache=cache,

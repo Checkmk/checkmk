@@ -60777,6 +60777,9 @@ msgstr ""
 "Ligero gradiente en los colores de las áreas coloreadas en los gráficos. El "
 "0% desactiva el gradiente, el 100% lo hace lo más fuerte posible."
 
+msgid "Slot"
+msgstr ""
+
 msgid "Slow views"
 msgstr "Vistas lentas"
 

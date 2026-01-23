@@ -60404,6 +60404,9 @@ msgstr ""
 "Un ușor gradient în culorile zonelor colorate din grafice. 0% dezactivează "
 "gradientul, iar 100% îl face cel mai puternic posibil."
 
+msgid "Slot"
+msgstr ""
+
 msgid "Slow views"
 msgstr "Vizualizări lente"
 

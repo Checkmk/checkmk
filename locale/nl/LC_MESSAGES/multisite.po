@@ -60274,6 +60274,9 @@ msgstr ""
 "schakelt het kleurverloop uit, 100% maakt het het sterkst mogelijke "
 "kleurverloop."
 
+msgid "Slot"
+msgstr ""
+
 msgid "Slow views"
 msgstr "Langzaam uitzicht"
 

@@ -59831,6 +59831,9 @@ msgstr ""
 "Leggero gradiente nei colori delle aree colorate nei grafici. 0% disattiva "
 "il gradiente, 100% lo rende il più forte possibile."
 
+msgid "Slot"
+msgstr ""
+
 msgid "Slow views"
 msgstr "Visualizzazioni lente"
 

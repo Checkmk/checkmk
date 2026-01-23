@@ -30,6 +30,7 @@ from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.parameters import IsTimeperiodActiveCallback, TimespecificParameters
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.fetchers import (
+    Fetcher,
     IPMIFetcher,
     NoSelectedSNMPSections,
     PiggybackFetcher,
@@ -41,7 +42,7 @@ from cmk.fetchers import (
     TLSConfig,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-from cmk.helper_interface import SourceType
+from cmk.helper_interface import AgentRawData, SourceType
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ExecutableFinder
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
@@ -145,7 +146,7 @@ def dump_host(
             Callable[[HostAddress], float],
             bool,
         ],
-        ProgramFetcher | None,
+        Fetcher[AgentRawData] | None,
     ],
 ) -> None:
     print_("\n")

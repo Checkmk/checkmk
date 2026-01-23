@@ -366,7 +366,7 @@ class CMKFetcher:
         secrets_config_relay: AdHocSecrets | StoredSecrets,
         secrets_config_site: StoredSecrets,
         simulation_mode: bool,
-        metric_backend_fetcher_factory: Callable[[HostAddress], ProgramFetcher | None],
+        metric_backend_fetcher_factory: Callable[[HostAddress], Fetcher[AgentRawData] | None],
         max_cachefile_age: MaxAge | None = None,
     ) -> None:
         self.config_cache: Final = config_cache

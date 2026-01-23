@@ -23,8 +23,9 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import FetcherTriggerFactory, ProgramFetcher
+from cmk.fetchers import Fetcher, FetcherTriggerFactory
 from cmk.fetchers.snmp import SNMPPluginStore
+from cmk.helper_interface import AgentRawData
 from cmk.utils import log, paths
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.log import console
@@ -69,7 +70,7 @@ class AutomationContext:
             Callable[[HostAddress], float],
             bool,
         ],
-        ProgramFetcher | None,
+        Fetcher[AgentRawData] | None,
     ]
     get_builtin_host_labels: Callable[[SiteId], Labels]
 

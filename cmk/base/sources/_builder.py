@@ -16,9 +16,9 @@ from typing import assert_never, Final, Literal
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import ProgramFetcher, TLSConfig
+from cmk.fetchers import Fetcher, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-from cmk.helper_interface import FetcherType
+from cmk.helper_interface import AgentRawData, FetcherType
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.agent_registration import HostAgentConnectionMode
@@ -70,7 +70,7 @@ class _Builder:
         special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
         agent_connection_mode: HostAgentConnectionMode,
         check_mk_check_interval: float,
-        metric_backend_fetcher: ProgramFetcher | None,
+        metric_backend_fetcher: Fetcher[AgentRawData] | None,
     ) -> None:
         super().__init__()
 
@@ -336,7 +336,7 @@ def make_sources(
     special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
     agent_connection_mode: HostAgentConnectionMode,
     check_mk_check_interval: float,
-    metric_backend_fetcher: ProgramFetcher | None,
+    metric_backend_fetcher: Fetcher[AgentRawData] | None,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
 

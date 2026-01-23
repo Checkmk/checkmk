@@ -2171,7 +2171,7 @@ def main_mv_or_cp(
     new_site_home = SitePaths.from_site_name(new_site.name).home
     sitename_must_be_valid(new_site.name, Path(new_site_home), reuse)
 
-    old_site = site_environment_as_root(old_site_name, global_opts.verbose)
+    old_site = SiteContext(old_site_name)
     if not is_stopped(old_site.name):
         sys.exit(f"Cannot {action} site '{old_site.name}' while it is running.")
 
@@ -2238,6 +2238,7 @@ def main_mv_or_cp(
     # give new user all files
     chown_tree(new_site_home, new_site.name)
 
+    old_site = site_environment_as_root(old_site_name, global_opts.verbose)
     # Change config files from old to new site (see rename_site())
     patch_skeleton_files(
         conflict_mode, old_site.name, new_site, old_replacements, new_site.replacements()

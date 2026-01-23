@@ -50,7 +50,8 @@ void main() {
                 sh("""
                     bazel build --cmk_edition=ultimate //omd/non-free/relay:image_tar
                     mkdir -p ${artifact_directory}/${cmk_version}
-                    cp \$(bazel cquery //omd/non-free/relay:image_tar --output=files) ${artifact_directory}/${cmk_version}/${tarball_name};
+                    cp \$(bazel cquery --cmk_edition=ultimate //omd/non-free/relay:image_tar --output=files) \
+                        ${artifact_directory}/${cmk_version}/${tarball_name};
                 """)
             }
 
@@ -95,7 +96,7 @@ void main() {
                             echo "${DOCKER_PASSPHRASE}" | docker login --password-stdin -u "${DOCKER_USERNAME}"
                         ''')
                         sh("""
-                            bazel run //omd/non-free/relay:image_push -- --tag ${cmk_version}
+                            bazel run --cmk_edition=ultimate //omd/non-free/relay:image_push -- --tag ${cmk_version}
                         """)
                     }
                 }

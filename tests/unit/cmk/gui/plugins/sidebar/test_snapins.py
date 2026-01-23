@@ -48,7 +48,6 @@ def test_registered_snapins() -> None:
 
 def test_refresh_snapins() -> None:
     expected_refresh_snapins = [
-        "a_welcome",
         "admin_mini",
         "performance",
         "master_control",

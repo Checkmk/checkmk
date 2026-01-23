@@ -42,7 +42,7 @@ class SidebarWelcomeSnapin(SidebarSnapin):
     @override
     @classmethod
     def refresh_regularly(cls) -> bool:
-        return True
+        return False
 
     @override
     @classmethod

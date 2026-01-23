@@ -166,7 +166,7 @@ impl AgentStreamFixture {
 
     #[cfg(windows)]
     fn setup(_test_path: &Path) -> Self {
-        let backend = async_std::task::block_on(agent::win::make_agent_response_peer()).unwrap();
+        let backend = agent::win::make_agent_response_peer().unwrap();
         let agent_channel = Some("ms/".to_string() + backend.used_name());
         Self {
             thread: tokio::spawn(agent::win::run_agent_response_loop(

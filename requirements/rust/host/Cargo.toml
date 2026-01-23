@@ -18,7 +18,6 @@ opt-level = "z" # Optimize for size.
 [workspace.dependencies]
 anyhow = "1.0.94"
 assert_cmd = "*"
-async-std = "1.13"
 async-trait = "0.1"
 bincode = "1.3"
 clap = "4.5.22"

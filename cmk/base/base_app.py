@@ -12,8 +12,9 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import FetcherTriggerFactory, ProgramFetcher
+from cmk.fetchers import Fetcher, FetcherTriggerFactory
 from cmk.fetchers.snmp import SNMPPluginStore
+from cmk.helper_interface import AgentRawData
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
@@ -56,7 +57,7 @@ class CheckmkBaseApp:
                 Callable[[HostAddress], float],
                 bool,
             ],
-            ProgramFetcher | None,
+            Fetcher[AgentRawData] | None,
         ],
         get_builtin_host_labels: Callable[[SiteId], Labels],
     ) -> None:

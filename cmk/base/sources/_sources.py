@@ -593,7 +593,7 @@ class MetricBackendSource(Source[AgentRawData]):
 
     def __init__(
         self,
-        fetcher: ProgramFetcher,
+        fetcher: Fetcher[AgentRawData],
         host_name: HostName,
         ipaddress: HostAddress | None,
         *,
@@ -618,7 +618,7 @@ class MetricBackendSource(Source[AgentRawData]):
             self.source_type,
         )
 
-    def fetcher(self) -> ProgramFetcher:
+    def fetcher(self) -> Fetcher[AgentRawData]:
         return self._fetcher
 
     def file_cache(

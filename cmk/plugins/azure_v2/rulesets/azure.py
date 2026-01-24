@@ -222,7 +222,11 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         "subscription": DictElement(
             parameter_form=CascadingSingleChoice(
                 title=Title("Subscriptions to monitor"),
-                help_text=Help("Select the subscriptions you want to monitor."),
+                help_text=Help(
+                    "Select the subscriptions containing the ARM resources you want to monitor."
+                    "If you do not wish to monitor ARM resources, select 'Do not monitor subscriptions.'"
+                    "If you proceed with a subscription, you will be able to choose specific resources to monitor in the next step."
+                ),
                 elements=[
                     CascadingSingleChoiceElement(
                         name="no_subscriptions",

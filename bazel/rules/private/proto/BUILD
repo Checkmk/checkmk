@@ -6,6 +6,10 @@ py_console_script_binary(
     name = "protoc-gen-mypy",
     pkg = requirement("mypy-protobuf"),
     script = "protoc-gen-mypy",
+    tags = [
+        "manual",
+        "no-mypy",
+    ],
 )
 
 proto_plugin(

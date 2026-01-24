@@ -51,12 +51,20 @@ mypy_cli(
 py_console_script_binary(
     name = "bandit",
     pkg = requirement("bandit"),
+    tags = [
+        "manual",
+        "no-mypy",
+    ],
 )
 
 py_console_script_binary(
     name = "semgrep",
     pkg = tooling_pip("semgrep"),
     script = "pysemgrep",
+    tags = [
+        "manual",
+        "no-mypy",
+    ],
 )
 
 # Custom mypy wrapper that filters problematic MYPYPATH entries

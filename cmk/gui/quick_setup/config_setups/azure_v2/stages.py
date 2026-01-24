@@ -107,18 +107,18 @@ def configure_authentication() -> QuickSetupStage:
                 items=[
                     Text(
                         text=_(
-                            "Register an app in Entra ID. Note down the Directory (tenant) ID, Application (client) ID as well as the used Subscription ID."
+                            "Register an app in Entra ID. Note down the Directory (tenant) ID and Application (client) ID. Additionally, note down one or more Subscription IDs if you plan to monitor Azure Resource Manager (ARM) resources."
                         )
                     ),
                     Text(
                         text=_(
-                            'Assign the built-in role "Reader" to the app in the Access control (IAM). Additionally add the application permissions "Directory.Read.All" and "User.Read.All" to the app if resources available through the Graph API will be monitored. These resources include "Users in Entra ID", "Entra Connect Sync", "App Registrations".'
+                            'If you plan to monitor Azure resources via Azure Resource Manager, assign the built-in Reader role to the app at the subscription (or appropriate resource group) level in Access control (IAM). Additionally, if resources available through the Graph API will be monitored, add the Microsoft Graph application permissions "Directory.Read.All" and "User.Read.All" and grant admin consent. These resources include "Users in Entra ID", "Entra Connect Sync", and "App Registrations".'
                         ),
                     ),
                     Text(text=_("Create a client secret for the app and note it down.")),
                     Text(
                         text=_(
-                            "Return to Checkmk, define a unique configuration name, and use the subscription ID, tenant ID, client ID, and the client secret below. Please note that the subscription ID is not needed if you intend to only monitor resources through the Graph API."
+                            "Return to Checkmk, define a unique configuration name, and enter the tenant ID, client ID, client secret, and subscription ID(s) (if applicable) below."
                         )
                     ),
                 ],

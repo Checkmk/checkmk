@@ -389,6 +389,7 @@ black==26.1.0 \
     --hash=sha256:fb1dafbbaa3b1ee8b4550a84425aac8874e5f390200f5502cf3aee4a2acb2f14
     # via
     #   -c requirements.txt
+    #   -r packages/cmk-shared-typing/requirements.in
     #   datamodel-code-generator
     #   python-lsp-server
 blinker==1.9.0 \
@@ -1032,6 +1033,7 @@ datamodel-code-generator==0.42.0 \
     # via
     #   -c constraints.txt
     #   -c requirements.txt
+    #   -r packages/cmk-shared-typing/requirements.in
     #   -r tests/dev-requirements.in
 decorator==5.2.1 \
     --hash=sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360 \
@@ -2245,6 +2247,7 @@ libcst==1.8.6 \
     --hash=sha256:fea5c7fa26556eedf277d4f72779c5ede45ac3018650721edd77fd37ccd4a2d4
     # via
     #   -c requirements.txt
+    #   -r packages/cmk-shared-typing/requirements.in
     #   -r tests/dev-requirements.in
 librt==0.7.8 \
     --hash=sha256:00105e7d541a8f2ee5be52caacea98a005e0478cfe78c8080fbb7b5d2b340c63 \

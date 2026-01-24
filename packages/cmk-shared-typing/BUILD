@@ -3,6 +3,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load(
@@ -13,7 +14,10 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
 
-exports_files(["package.json"])
+exports_files([
+    "requirements.in",
+    "package.json",
+])
 
 npm_link_all_packages(name = "node_modules")
 
@@ -117,6 +121,11 @@ py_library(
         "utils/postprocess.py",
     ],
     imports = ["."],
+    deps = [
+        requirement("black"),
+        requirement("datamodel_code_generator"),
+        requirement("libcst"),
+    ],
 )
 
 json2python(

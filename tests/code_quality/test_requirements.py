@@ -396,6 +396,10 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 
 CEE_UNUSED_PACKAGES = [
+    # buildtime-dependencies required in cmk-shared-typing
+    "black",
+    "datamodel_code_generator",
+    # ----
     "setuptools-scm",
     "snmpsim",
     "python-multipart",  # needed by fastapi
@@ -410,11 +414,6 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
     ImportName("tests"): {
         Path("buildscripts/scripts/assert_build_artifacts.py"),
         Path("buildscripts/scripts/lib/registry.py"),
-    },
-    ImportName("libcst"): {
-        Path("doc/treasures/migration_helpers/legacy_ssc_to_v1.py"),
-        Path("doc/treasures/migration_helpers/legacy_checks_to_v2.py"),
-        Path("doc/treasures/migration_helpers/legacy_vs_to_fs_v1.py"),
     },
     # TODO: added reminder to drop these file paths post-migration:
     ImportName("cmk_addons"): {

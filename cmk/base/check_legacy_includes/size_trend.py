@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import time
@@ -216,7 +215,7 @@ def size_trend(
     hours_left = -1
     if trend > 0:
 
-        def format_hours(hours):
+        def format_hours(hours: float) -> str:
             if hours > 365 * 24:
                 return "more than a year"
             elif hours > 90 * 24:

@@ -3,21 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.meinberg.liblantime import DETECT_MBG_LANTIME_NG
 
 check_info = {}
 
+type Section = StringTable
 
-def discover_mbg_lantime_ng_power(info):
+
+def discover_mbg_lantime_ng_power(info: Section) -> LegacyDiscoveryResult:
     for line in info:
-        yield line[0], None
+        yield line[0], {}
 
 
-def check_mbg_lantime_ng_power(item, _no_params, info):
+def check_mbg_lantime_ng_power(item: str, _no_params: object, info: Section) -> LegacyCheckResult:
     power_states = {
         "0": (2, "not available"),
         "1": (2, "down"),
@@ -27,8 +32,8 @@ def check_mbg_lantime_ng_power(item, _no_params, info):
         if item == index:
             power_state, power_state_name = power_states[power_status]
             infotext = "Status: %s" % power_state_name
-            return power_state, infotext
-    return None
+            yield power_state, infotext
+            return
 
 
 def parse_mbg_lantime_ng_power(string_table: StringTable) -> StringTable:

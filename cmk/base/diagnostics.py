@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
@@ -289,7 +288,7 @@ def _format_description(description: str) -> str:
     )
 
 
-def _format_error(error):
+def _format_error(error: str) -> str:
     return f"{2 * _GAP}{tty.error} - {error}"
 
 
@@ -1361,7 +1360,7 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
 
 class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, directory: str | Path, rel=False) -> None:
+    def __init__(self, directory: str | Path, rel: bool = False) -> None:
         if isinstance(directory, str):
             self.directory = Path(directory)
         else:

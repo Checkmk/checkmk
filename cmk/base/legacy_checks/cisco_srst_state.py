@@ -7,9 +7,11 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+import time
+from datetime import timedelta
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 check_info = {}
 
@@ -31,7 +33,15 @@ def check_cisco_srst_state(_no_item, _no_params, info):
         yield 0, "SRST inactive"
 
     # Display SRST uptime
-    yield check_uptime_seconds(None, int(uptime_text) * 60)
+    uptime_sec = int(uptime_text) * 60
+    yield check_levels(
+        uptime_sec,
+        "uptime",
+        None,
+        human_readable_func=lambda x: timedelta(seconds=int(x)),
+        infoname="Up since %s, uptime"
+        % time.strftime("%c", time.localtime(time.time() - uptime_sec)),
+    )
 
 
 def parse_cisco_srst_state(string_table: StringTable) -> StringTable | None:

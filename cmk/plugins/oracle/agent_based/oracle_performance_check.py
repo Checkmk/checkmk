@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import time
@@ -228,7 +227,7 @@ def _check_oracle_db_time(
     now: float,
     params: Mapping[str, Any],
 ) -> CheckResult:
-    def get_db_time_rate(perfvar, val):
+    def get_db_time_rate(perfvar: str, val: int) -> float:
         return get_rate(value_store, f"{item}.sys_time_model.{perfvar}", now, val)
 
     # old agents deliver no data for sys_time_model!

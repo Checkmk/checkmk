@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
 from cmk.plugins.fireeye.lib import DETECT
@@ -48,7 +51,7 @@ check_info = {}
 # .1.3.6.1.4.1.25597.11.4.1.3.1.4.8 8281 --> FE-FIREEYE-MIB::feFanSpeed.8
 
 
-def check_fireeye_fans(item, params, info):
+def check_fireeye_fans(item: str, params: object, info: StringTable) -> LegacyCheckResult:
     for index, status, health, speed_str in info:
         if index == item:
             for text, (state, state_readable) in check_fireeye_states(
@@ -63,8 +66,9 @@ def parse_fireeye_fans(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_fireeye_fans(info):
-    return inventory_fireeye_generic(info, True)
+def discover_fireeye_fans(info: StringTable) -> LegacyDiscoveryResult:
+    for item, params in inventory_fireeye_generic(info, True):
+        yield item, params or {}
 
 
 check_info["fireeye_fans"] = LegacyCheckDefinition(

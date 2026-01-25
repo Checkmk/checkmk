@@ -6,7 +6,6 @@
 # mypy: disable-error-code="exhaustive-match"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -59,21 +58,23 @@ from cmk.agent_based.v2 import (
 )
 
 
-def item_name_oracle_diva_csm(name, element_id):
+def item_name_oracle_diva_csm(name: str, element_id: str) -> str:
     return (f"{name} {element_id}").strip()
 
 
-def inventory_oracle_diva_csm_status(name, idx, info):
+def inventory_oracle_diva_csm_status(
+    name: str, idx: int, info: Sequence[StringTable]
+) -> DiscoveryResult:
     for line in info[idx]:
         if len(line) == 2:
             element_id, _reading = line
         else:
             element_id = ""
 
-        yield item_name_oracle_diva_csm(name, element_id), None
+        yield Service(item=item_name_oracle_diva_csm(name, element_id), parameters=None)
 
 
-def status_result_oracle_diva_csm(reading):
+def status_result_oracle_diva_csm(reading: str) -> tuple[int, str]:
     if reading == "1":
         return 0, "online"
     if reading == "2":
@@ -83,7 +84,9 @@ def status_result_oracle_diva_csm(reading):
     return 3, "unexpected state"
 
 
-def check_oracle_diva_csm_status(name, idx, item, params, info):
+def check_oracle_diva_csm_status(
+    name: str, idx: int, item: str, params: Mapping[str, Any], info: Sequence[StringTable]
+) -> CheckResult:
     for line in info[idx]:
         if len(line) == 2:
             element_id, reading = line
@@ -92,7 +95,9 @@ def check_oracle_diva_csm_status(name, idx, item, params, info):
             reading = line[0]
 
         if item_name_oracle_diva_csm(name, element_id) == item:
-            return status_result_oracle_diva_csm(reading)
+            state, summary = status_result_oracle_diva_csm(reading)
+            yield Result(state=State(state), summary=summary)
+            return
     return None
 
 
@@ -101,10 +106,7 @@ def parse_oracle_diva_csm(string_table: Sequence[StringTable]) -> Sequence[Strin
 
 
 def discover_oracle_diva_csm(section: Sequence[StringTable]) -> DiscoveryResult:
-    yield from [
-        Service(item=item, parameters=parameters)
-        for (item, parameters) in inventory_oracle_diva_csm_status("Library", 0, section)
-    ]
+    yield from inventory_oracle_diva_csm_status("Library", 0, section)
 
 
 def check_oracle_diva_csm(
@@ -156,10 +158,7 @@ check_plugin_oracle_diva_csm = CheckPlugin(
 
 
 def discover_oracle_diva_csm_drive(section: Sequence[StringTable]) -> DiscoveryResult:
-    yield from [
-        Service(item=item, parameters=parameters)
-        for (item, parameters) in inventory_oracle_diva_csm_status("Drive", 1, section)
-    ]
+    yield from inventory_oracle_diva_csm_status("Drive", 1, section)
 
 
 def check_oracle_diva_csm_drive(
@@ -179,10 +178,7 @@ check_plugin_oracle_diva_csm_drive = CheckPlugin(
 
 
 def discover_oracle_diva_csm_actor(section: Sequence[StringTable]) -> DiscoveryResult:
-    yield from [
-        Service(item=item, parameters=parameters)
-        for (item, parameters) in inventory_oracle_diva_csm_status("Actor", 2, section)
-    ]
+    yield from inventory_oracle_diva_csm_status("Actor", 2, section)
 
 
 def check_oracle_diva_csm_actor(
@@ -202,10 +198,7 @@ check_plugin_oracle_diva_csm_actor = CheckPlugin(
 
 
 def discover_oracle_diva_csm_archive(section: Sequence[StringTable]) -> DiscoveryResult:
-    yield from [
-        Service(item=item, parameters=parameters)
-        for (item, parameters) in inventory_oracle_diva_csm_status("Manager", 3, section)
-    ]
+    yield from inventory_oracle_diva_csm_status("Manager", 3, section)
 
 
 def check_oracle_diva_csm_archive(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 """Launches automation helper application for processing automation commands."""
 
@@ -14,6 +13,7 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
+from fastapi import FastAPI
 from setproctitle import setproctitle
 
 import cmk.ccc.version as cmk_version
@@ -103,7 +103,7 @@ def _main() -> int:
     return exit_code
 
 
-def _application():
+def _application() -> FastAPI:
     config = config_from_disk_or_default_config(
         omd_root=omd_root,
         run_directory=omd_root / _RELATIVE_RUN_DIRECTORY,

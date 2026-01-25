@@ -7,7 +7,7 @@ import uuid
 from typing import Any, override
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.unstable import LegacyValueSpec
+from cmk.gui.form_specs.unstable import LegacyValueSpec, not_empty
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
@@ -16,6 +16,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from ._base import FormSpecVisitor
 from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData, RawFrontendData
 from ._utils import get_title_and_help
+from .validators import build_vue_validators
 
 
 class MigrationFailed:
@@ -69,6 +70,13 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
     ) -> tuple[shared_type_defs.LegacyValuespec, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
+        # Requires not empty validator
+        # These fake validators are only used to display the "Required" message
+        fake_validators: list[shared_type_defs.Validator] = []
+        if hasattr(self.form_spec.valuespec, "allow_empty"):
+            if not self.form_spec.valuespec.allow_empty():
+                fake_validators = build_vue_validators([not_empty()])
+
         varprefix = None
         if isinstance(parsed_value, DefaultValue):
             value_to_render = self.form_spec.valuespec.default_value()
@@ -100,7 +108,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
                         shared_type_defs.LegacyValuespec(
                             title=title,
                             help=help_text,
-                            validators=[],
+                            validators=fake_validators,
                             varprefix=varprefix,
                         ),
                         {"input_html": input_html, "readonly_html": readonly_html},
@@ -116,7 +124,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
             shared_type_defs.LegacyValuespec(
                 title=title,
                 help=help_text,
-                validators=[],
+                validators=fake_validators,
                 varprefix=varprefix,
             ),
             {"input_html": input_html, "readonly_html": readonly_html},

@@ -5,20 +5,23 @@
 
 # mypy: disable-error-code="index"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="var-annotated"
+
+from __future__ import annotations
 
 import json
 import time
+from collections.abc import Generator, Iterable, Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_value_store
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition, LegacyResult
+from cmk.agent_based.v2 import get_value_store, StringTable
 from cmk.plugins.azure.lib import AZURE_AGENT_SEPARATOR
 
 check_info = {}
 
 
-def _update_remaining_reads(parsed, value):
+def _update_remaining_reads(parsed: dict[str, Any], value: str) -> None:
     """parse remaining API reads
 
     The key 'remaining-reads' can be present multiple times,
@@ -37,8 +40,8 @@ def _update_remaining_reads(parsed, value):
         pass
 
 
-def parse_azure_agent_info(string_table):
-    parsed = {}
+def parse_azure_agent_info(string_table: StringTable) -> dict[str, Any]:
+    parsed: dict[str, Any] = {}
     for row in string_table:
         key = row[0]
         value = AZURE_AGENT_SEPARATOR.join(row[1:])
@@ -66,11 +69,13 @@ def parse_azure_agent_info(string_table):
     return parsed
 
 
-def discovery_azure_agent_info(parsed):
+def discovery_azure_agent_info(
+    parsed: dict[str, Any],
+) -> Iterable[tuple[None, dict[str, Any]]]:
     yield None, {"discovered_resources": parsed.get("monitored-resources", [])}
 
 
-def agent_bailouts(bailouts):
+def agent_bailouts(bailouts: list[tuple[int, str]]) -> Generator[LegacyResult]:
     now = time.time()
     value_store = get_value_store()
     for status, text in bailouts:
@@ -83,7 +88,7 @@ def agent_bailouts(bailouts):
         yield status, text
 
 
-def remaining_api_reads(reads, params):
+def remaining_api_reads(reads: int | str, params: Mapping[str, Any]) -> LegacyResult:
     if not isinstance(reads, int):
         return params["remaining_reads_unknown_state"], "Remaining API reads: %s" % reads
 
@@ -98,7 +103,7 @@ def remaining_api_reads(reads, params):
     )
 
 
-def resource_pinning(present_resources, params):
+def resource_pinning(present_resources: list[str], params: Mapping[str, Any]) -> tuple[str, str]:
     if not params.get("resource_pinning"):
         return "", ""
 
@@ -121,7 +126,9 @@ def resource_pinning(present_resources, params):
     return ", ".join(short_output), "\n".join(long_output)
 
 
-def agent_issues(issues, params):
+def agent_issues(
+    issues: dict[str, list[dict[str, Any]]], params: Mapping[str, Any]
+) -> Generator[LegacyResult]:
     for type_ in ("warning", "exception"):
         count = len(issues.get(type_, ()))
         yield check_levels(
@@ -140,7 +147,9 @@ def agent_issues(issues, params):
         yield 0, "\nIssue in {}: Info: {}".format(i["issued_by"], i["msg"])
 
 
-def check_azure_agent_info(_no_item, params, parsed):
+def check_azure_agent_info(
+    _no_item: None, params: Mapping[str, Any], parsed: dict[str, Any]
+) -> Generator[LegacyResult]:
     yield from agent_bailouts(parsed.get("agent-bailout", []))
 
     reads = parsed.get("remaining-reads")

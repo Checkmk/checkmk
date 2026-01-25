@@ -5,7 +5,6 @@
 """Background tools required to register a check plug-in"""
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import functools
@@ -33,7 +32,7 @@ def _filter_inventory(
     """
 
     @functools.wraps(generator)
-    def filtered_generator(*args, **kwargs):
+    def filtered_generator(*args: object, **kwargs: object) -> InventoryResult:
         for element in generator(*args, **kwargs):
             if not isinstance(element, Attributes | TableRow):
                 raise TypeError("unexpected type in inventory function: %r" % type(element))

@@ -7,9 +7,11 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+import time
+from datetime import timedelta
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 check_info = {}
 
@@ -27,7 +29,17 @@ def check_jolokia_jvm_runtime_uptime(item, params, parsed):
     milli_uptime = data.get("Uptime")
     if milli_uptime is None:
         return
-    yield check_uptime_seconds(params, milli_uptime / 1000.0)
+    uptime_sec = milli_uptime / 1000.0
+
+    params = params.get("max", (None, None)) + params.get("min", (None, None))
+    yield check_levels(
+        uptime_sec,
+        "uptime",
+        params,
+        human_readable_func=lambda x: timedelta(seconds=int(x)),
+        infoname="Up since %s, uptime"
+        % time.strftime("%c", time.localtime(time.time() - uptime_sec)),
+    )
 
 
 def discover_jolokia_jvm_runtime(section):

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Background tools required to register a check plug-in"""
@@ -74,7 +73,7 @@ def _filter_discovery(
     """
 
     @functools.wraps(generator)
-    def filtered_generator(*args, **kwargs):
+    def filtered_generator(*args: Any, **kwargs: Any) -> Generator[Service]:
         for element in generator(*args, **kwargs):
             if not isinstance(element, Service):
                 raise TypeError("unexpected type in discovery: %r" % type(element))
@@ -94,7 +93,7 @@ def _filter_check(
     """
 
     @functools.wraps(generator)
-    def filtered_generator(*args, **kwargs):
+    def filtered_generator(*args: Any, **kwargs: Any) -> Generator[Result | Metric | IgnoreResults]:
         for element in generator(*args, **kwargs):
             if not isinstance(element, Result | Metric | IgnoreResults):
                 raise TypeError("unexpected type in check function: %r" % type(element))

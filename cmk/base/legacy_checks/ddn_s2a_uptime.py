@@ -7,9 +7,11 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+import time
+from datetime import timedelta
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 check_info = {}
 
@@ -31,7 +33,16 @@ def check_ddn_s2a_uptime(_no_item, params, parsed):
     uptime_sec = 60 * (
         uptime_minutes + 60 * (uptime_hours + 24 * (uptime_days + 365 * uptime_years))
     )
-    return check_uptime_seconds(params, uptime_sec)
+
+    params = params.get("max", (None, None)) + params.get("min", (None, None))
+    return check_levels(
+        uptime_sec,
+        "uptime",
+        params,
+        human_readable_func=lambda x: timedelta(seconds=int(x)),
+        infoname="Up since %s, uptime"
+        % time.strftime("%c", time.localtime(time.time() - uptime_sec)),
+    )
 
 
 check_info["ddn_s2a_uptime"] = LegacyCheckDefinition(

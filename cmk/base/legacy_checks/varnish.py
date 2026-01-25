@@ -10,10 +10,10 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
+from datetime import timedelta
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 check_info = {}
 
@@ -394,8 +394,17 @@ def discover_varnish_uptime(parsed):
 def check_varnish_uptime(_no_item, _no_params, parsed):
     if "uptime" in parsed:
         try:
-            return check_uptime_seconds(_no_params, parsed["uptime"]["value"])
-        except OverflowError:
+            uptime_sec = parsed["uptime"]["value"]
+
+            return check_levels(
+                uptime_sec,
+                "uptime",
+                None,
+                human_readable_func=lambda x: timedelta(seconds=int(x)),
+                infoname="Up since %s, uptime"
+                % time.strftime("%c", time.localtime(time.time() - uptime_sec)),
+            )
+        except OverflowError:  # is this in the right place?
             return (
                 3,
                 f"Could not handle uptime value {parsed['uptime']['value']!r}. "

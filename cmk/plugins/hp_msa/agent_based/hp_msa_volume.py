@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     Result,
     Service,
@@ -136,7 +138,7 @@ from .health import check_hp_msa_health, discover_hp_msa_health
 Section = Mapping[str, Mapping[str, str]]
 
 
-def _get_item_data(item, parsed):
+def _get_item_data(item: str, parsed: Section) -> Section:
     # ensure backward compatibility: get data in case either item is
     # "durable-id" (old) or item is "volume-name" (new)
     for k, v in parsed.items():
@@ -145,7 +147,7 @@ def _get_item_data(item, parsed):
     return {}
 
 
-def check_hp_msa_volume_health(item, section):
+def check_hp_msa_volume_health(item: str, section: Section) -> CheckResult:
     yield from check_hp_msa_health(item, _get_item_data(item, section))
 
 
@@ -205,18 +207,26 @@ check_plugin_hp_msa_volume = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def discover_hp_msa_volume_df(section):
+def discover_hp_msa_volume_df(section: Section) -> DiscoveryResult:
     for key in section:
         yield Service(item=key)
 
 
-def check_hp_msa_volume_df(item, params, section):
+def check_hp_msa_volume_df(
+    item: str, params: Mapping[str, object], section: Section
+) -> CheckResult:
     yield from check_hp_msa_volume_df_testable(
         item, params, section, get_value_store(), time.time()
     )
 
 
-def check_hp_msa_volume_df_testable(item, params, section, value_store, this_time):
+def check_hp_msa_volume_df_testable(
+    item: str,
+    params: Mapping[str, object],
+    section: Section,
+    value_store: MutableMapping[str, Any],
+    this_time: float,
+) -> CheckResult:
     parsed = _get_item_data(item, section)
     if item not in parsed:
         return

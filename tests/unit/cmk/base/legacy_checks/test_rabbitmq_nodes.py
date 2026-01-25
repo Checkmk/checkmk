@@ -12,9 +12,7 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
 
-import pytest
 import time_machine
 
 from cmk.base.legacy_checks.rabbitmq_nodes import (
@@ -26,110 +24,67 @@ from cmk.base.legacy_checks.rabbitmq_nodes import (
     discover_key,
     discover_rabbitmq_nodes,
     parse_rabbitmq_nodes,
+    Section,
 )
 
 
-@pytest.fixture(name="parsed_section", scope="module")
-def fixture_parsed_section() -> dict[str, Any]:
-    """Create parsed section data from raw JSON string table."""
-    string_table = [
+def _section() -> Section:
+    return parse_rabbitmq_nodes(
         [
-            '{"fd_total": 1048576, "sockets_total": 943629, "mem_limit": 6608874700, "mem_alarm": false, "disk_free_limit": 50000000, "disk_free_alarm": false, "proc_total": 1048576, "uptime": 24469577, "run_queue": 1, "name": "rabbit@my-rabbit", "type": "disc", "running": true, "mem_used": 113299456, "fd_used": 34, "sockets_used": 0, "proc_used": 431, "gc_num": 282855, "gc_bytes_reclaimed": 17144463144, "io_file_handle_open_attempt_count": 11}'
+            [
+                '{"fd_total": 1048576, "sockets_total": 943629, "mem_limit": 6608874700, "mem_alarm": false, "disk_free_limit": 50000000, "disk_free_alarm": false, "proc_total": 1048576, "uptime": 24469577, "run_queue": 1, "name": "rabbit@my-rabbit", "type": "disc", "running": true, "mem_used": 113299456, "fd_used": 34, "sockets_used": 0, "proc_used": 431, "gc_num": 282855, "gc_bytes_reclaimed": 17144463144, "io_file_handle_open_attempt_count": 11}'
+            ]
         ]
-    ]
-    return parse_rabbitmq_nodes(string_table)
+    )
 
 
-def test_rabbitmq_nodes_parse_function() -> None:
-    """Test parsing of RabbitMQ nodes JSON data."""
-    string_table = [
-        [
-            '{"fd_total": 1048576, "sockets_total": 943629, "mem_limit": 6608874700, "mem_alarm": false, "disk_free_limit": 50000000, "disk_free_alarm": false, "proc_total": 1048576, "uptime": 24469577, "run_queue": 1, "name": "rabbit@my-rabbit", "type": "disc", "running": true, "mem_used": 113299456, "fd_used": 34, "sockets_used": 0, "proc_used": 431, "gc_num": 282855, "gc_bytes_reclaimed": 17144463144, "io_file_handle_open_attempt_count": 11}'
-        ]
-    ]
-
-    result = parse_rabbitmq_nodes(string_table)
-
-    assert "rabbit@my-rabbit" in result
-    node_data = result["rabbit@my-rabbit"]
-
-    # Check main node attributes
-    assert node_data["type"] == "disc"
-    assert node_data["state"] is True
-    assert node_data["disk_free_alarm"] is False
-    assert node_data["mem_alarm"] is False
-
-    # Check fd data
-    fd_data = node_data["fd"]
-    assert fd_data["fd_used"] == 34
-    assert fd_data["fd_total"] == 1048576
-    assert fd_data["fd_open"] == 11
-
-    # Check memory data
-    mem_data = node_data["mem"]
-    assert mem_data["mem_used"] == 113299456
-    assert mem_data["mem_limit"] == 6608874700
-
-    # Check GC data
-    gc_data = node_data["gc"]
-    assert gc_data["gc_num"] == 282855
-    assert gc_data["gc_bytes_reclaimed"] == 17144463144
-    assert gc_data["run_queue"] == 1
-
-    # Check uptime data
-    uptime_data = node_data["uptime"]
-    assert uptime_data["uptime"] == 24469577
-
-
-def test_discover_rabbitmq_nodes(parsed_section: dict[str, Any]) -> None:
+def test_discover_rabbitmq_nodes() -> None:
     """Test discovery of main RabbitMQ nodes service."""
-    result = list(discover_rabbitmq_nodes(parsed_section))
+    result = list(discover_rabbitmq_nodes(_section()))
 
     assert len(result) == 1
     assert result[0] == ("rabbit@my-rabbit", {})
 
 
-def test_discover_key_filedesc(parsed_section: dict[str, Any]) -> None:
+def test_discover_key_filedesc() -> None:
     """Test discovery function for file descriptor service."""
     discover_func = discover_key("fd")
-    result = list(discover_func(parsed_section))
+    result = list(discover_func(_section()))
 
     assert len(result) == 1
     assert result[0] == ("rabbit@my-rabbit", {})
 
 
-def test_discover_key_mem(parsed_section: dict[str, Any]) -> None:
+def test_discover_key_mem() -> None:
     """Test discovery function for memory service."""
     discover_func = discover_key("mem")
-    result = list(discover_func(parsed_section))
-
+    result = list(discover_func(_section()))
     assert len(result) == 1
     assert result[0] == ("rabbit@my-rabbit", {})
 
 
-def test_discover_key_uptime(parsed_section: dict[str, Any]) -> None:
+def test_discover_key_uptime() -> None:
     """Test discovery function for uptime service."""
     discover_func = discover_key("uptime")
-    result = list(discover_func(parsed_section))
+    result = list(discover_func(_section()))
 
     assert len(result) == 1
     assert result[0] == ("rabbit@my-rabbit", {})
 
 
-def test_discover_key_gc(parsed_section: dict[str, Any]) -> None:
+def test_discover_key_gc() -> None:
     """Test discovery function for garbage collection service."""
     discover_func = discover_key("gc")
-    result = list(discover_func(parsed_section))
-
+    result = list(discover_func(_section()))
     assert len(result) == 1
     assert result[0] == ("rabbit@my-rabbit", {})
 
 
-def test_check_rabbitmq_nodes_ok(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_ok() -> None:
     """Test main RabbitMQ nodes check function with normal state."""
     params = {"state": 2, "disk_free_alarm": 2, "mem_alarm": 2}
 
-    result = list(check_rabbitmq_nodes("rabbit@my-rabbit", params, parsed_section))
+    result = list(check_rabbitmq_nodes("rabbit@my-rabbit", params, _section()))
 
     assert result == [(0, "Type: Disc"), (0, "Is running: yes")]
 
@@ -178,18 +133,17 @@ def test_check_rabbitmq_nodes_not_running() -> None:
     assert "Is running: no" in summary
 
 
-def test_check_rabbitmq_nodes_missing_item(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_missing_item() -> None:
     """Test main RabbitMQ nodes check function with missing item."""
     params = {"state": 2, "disk_free_alarm": 2, "mem_alarm": 2}
 
-    result = list(check_rabbitmq_nodes("missing@item", params, parsed_section))
-
+    result = list(check_rabbitmq_nodes("missing@item", params, _section()))
     assert len(result) == 0
 
 
-def test_check_rabbitmq_nodes_filedesc(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_filedesc() -> None:
     """Test RabbitMQ file descriptor check function."""
-    result = list(check_rabbitmq_nodes_filedesc("rabbit@my-rabbit", {}, parsed_section))
+    result = list(check_rabbitmq_nodes_filedesc("rabbit@my-rabbit", {}, _section()))
 
     assert len(result) == 2
 
@@ -238,19 +192,18 @@ def test_check_rabbitmq_nodes_filedesc_with_thresholds() -> None:
     assert state == 1  # Warning
 
 
-def test_check_rabbitmq_nodes_filedesc_missing_item(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_filedesc_missing_item() -> None:
     """Test RabbitMQ file descriptor check function with missing item."""
-    result = list(check_rabbitmq_nodes_filedesc("missing@item", {}, parsed_section))
+    result = list(check_rabbitmq_nodes_filedesc("missing@item", {}, _section()))
 
     assert len(result) == 0
 
 
-def test_check_rabbitmq_nodes_mem(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_mem() -> None:
     """Test RabbitMQ memory check function."""
     params = {"levels": None}
 
-    result = list(check_rabbitmq_nodes_mem("rabbit@my-rabbit", params, parsed_section))
-
+    result = list(check_rabbitmq_nodes_mem("rabbit@my-rabbit", params, _section()))
     assert len(result) == 1
 
     state, summary, metrics = result[0]
@@ -284,50 +237,38 @@ def test_check_rabbitmq_nodes_mem_with_absolute_thresholds() -> None:
     parsed = parse_rabbitmq_nodes(string_table)
     params = {"levels": (4500000000, 5500000000)}  # Absolute values
 
-    result = list(check_rabbitmq_nodes_mem("rabbit@test", params, parsed))
-
-    assert len(result) == 1
+    (result,) = list(check_rabbitmq_nodes_mem("rabbit@test", params, parsed))
 
     # Should trigger warning for high memory usage (5GB > 4.5GB)
-    state, summary, metrics = result[0]
-    assert state == 1  # Warning
+    assert result[0] == 1
 
 
-def test_check_rabbitmq_nodes_mem_missing_item(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_mem_missing_item() -> None:
     """Test RabbitMQ memory check function with missing item."""
     params = {"levels": None}
 
-    result = list(check_rabbitmq_nodes_mem("missing@item", params, parsed_section))
-
-    assert len(result) == 0
+    assert not list(check_rabbitmq_nodes_mem("missing@item", params, _section()))
 
 
 @time_machine.travel("2020-03-18 15:38:00")
-def test_check_rabbitmq_nodes_uptime(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_uptime() -> None:
     """Test RabbitMQ uptime check function."""
-    result = list(check_rabbitmq_nodes_uptime("rabbit@my-rabbit", {}, parsed_section))
-
-    assert len(result) == 1
-
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "Up since" in summary and "uptime: 6:47:49" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "uptime"
-    # uptime in dataset is 24469577 milliseconds = 24469.577 seconds
-    assert abs(metrics[0][1] - 24469.577) < 0.1
+    assert list(check_rabbitmq_nodes_uptime("rabbit@my-rabbit", {}, _section())) == [
+        (0, "Up since Wed Mar 18 08:50:10 2020", []),
+        (0, "Uptime: 6:47:49", [("uptime", 24469.577, None, None)]),
+    ]
 
 
-def test_check_rabbitmq_nodes_uptime_missing_item(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_uptime_missing_item() -> None:
     """Test RabbitMQ uptime check function with missing item."""
-    result = list(check_rabbitmq_nodes_uptime("missing@item", {}, parsed_section))
+    result = list(check_rabbitmq_nodes_uptime("missing@item", {}, _section()))
 
     assert len(result) == 0
 
 
-def test_check_rabbitmq_nodes_gc(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_gc() -> None:
     """Test RabbitMQ garbage collection check function."""
-    result = list(check_rabbitmq_nodes_gc("rabbit@my-rabbit", {}, parsed_section))
+    result = list(check_rabbitmq_nodes_gc("rabbit@my-rabbit", {}, _section()))
 
     assert len(result) == 3
 
@@ -387,9 +328,9 @@ def test_check_rabbitmq_nodes_gc_with_thresholds() -> None:
     assert state == 1  # Warning
 
 
-def test_check_rabbitmq_nodes_gc_missing_item(parsed_section: dict[str, Any]) -> None:
+def test_check_rabbitmq_nodes_gc_missing_item() -> None:
     """Test RabbitMQ garbage collection check function with missing item."""
-    result = list(check_rabbitmq_nodes_gc("missing@item", {}, parsed_section))
+    result = list(check_rabbitmq_nodes_gc("missing@item", {}, _section()))
 
     assert len(result) == 0
 

@@ -9,12 +9,18 @@
 
 
 import json
+import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from datetime import timedelta
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
+from cmk.agent_based.v2 import render, StringTable
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 check_info = {}
 
@@ -46,7 +52,7 @@ def discover_key(key: str) -> Callable[[Section], Iterable[tuple[str, dict]]]:
     return _discover_bound_key
 
 
-def parse_rabbitmq_nodes(string_table):
+def parse_rabbitmq_nodes(string_table: StringTable) -> Section:
     parsed: dict[str, _ItemData] = {}
 
     for nodes in string_table:
@@ -89,7 +95,9 @@ def parse_rabbitmq_nodes(string_table):
                     "run_queue": node.get("run_queue"),
                 }
 
-                uptime = {"uptime": node.get("uptime")}
+                uptime = {
+                    "uptime": None if (raw := node.get("uptime")) is None else float(raw) / 1000.0
+                }
 
                 parsed.setdefault(
                     node_name,
@@ -300,16 +308,24 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
         )
 
 
-def check_rabbitmq_nodes_uptime(item, params, parsed):
-    uptime_data = parsed.get(item, {}).get("uptime")
-    if not uptime_data:
+def check_rabbitmq_nodes_uptime(
+    item: str, params: Mapping[str, Any], section: Section
+) -> LegacyCheckResult:
+    try:
+        if (uptime := section[item]["uptime"]["uptime"]) is None:
+            return
+    except KeyError:
         return
 
-    node_uptime = uptime_data.get("uptime")
-    if node_uptime is not None:
-        uptime_sec = float(node_uptime) / 1000.0
-
-        yield check_uptime_seconds(params, uptime_sec)
+    params = params.get("max", (None, None)) + params.get("min", (None, None))
+    yield 0, f"Up since {time.strftime('%c', time.localtime(time.time() - uptime))}", []
+    yield check_levels(
+        uptime,
+        "uptime",
+        params,
+        human_readable_func=lambda x: timedelta(seconds=int(x)),
+        infoname="Uptime",
+    )
 
 
 check_info["rabbitmq_nodes.uptime"] = LegacyCheckDefinition(

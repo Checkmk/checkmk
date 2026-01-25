@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from typing import Any
 
@@ -13,7 +12,7 @@ from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
 
 
 def parse_oracle_performance(string_table: StringTable) -> SectionPerformance:
-    def _try_parse_int(s):
+    def _try_parse_int(s: str) -> int | None:
         try:
             return int(s)
         except ValueError:

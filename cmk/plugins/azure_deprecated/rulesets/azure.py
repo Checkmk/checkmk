@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -99,7 +98,7 @@ def get_azure_services_elements() -> Sequence[MultipleChoiceElement]:
     ]
 
 
-def _special_agents_azure_explicit_config():
+def _special_agents_azure_explicit_config() -> DictElement:
     return DictElement(
         parameter_form=List(
             element_template=Dictionary(
@@ -141,7 +140,7 @@ def _migrate_tag_based_config(values: object) -> dict:
     raise TypeError(values)
 
 
-def _special_agents_azure_tag_based_config():
+def _special_agents_azure_tag_based_config() -> DictElement:
     return DictElement(
         parameter_form=List(
             custom_validate=(validators.LengthInRange(min_value=1),),

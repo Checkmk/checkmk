@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="unreachable"
 
 # <<<oracle_sessions>>>
@@ -28,10 +27,15 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 
+# Type alias for the section data structure
+# Maps instance name -> session metrics (cursess, maxsess, curmax)
+type SectionOracleSessions = Mapping[str, Mapping[str, int]]
 
-def parse_oracle_sessions(string_table):
+
+def parse_oracle_sessions(string_table: StringTable) -> SectionOracleSessions:
     header = ["cursess", "maxsess", "curmax"]
     parsed = {}
     for line in string_table:
@@ -43,12 +47,14 @@ def parse_oracle_sessions(string_table):
     return parsed
 
 
-def discover_oracle_sessions(section: Any) -> DiscoveryResult:
+def discover_oracle_sessions(section: SectionOracleSessions) -> DiscoveryResult:
     for sid in section:
         yield Service(item=sid)
 
 
-def check_oracle_sessions(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+def check_oracle_sessions(
+    item: str, params: Mapping[str, Any], section: SectionOracleSessions
+) -> CheckResult:
     if isinstance(params, tuple):
         params = {"sessions_abs": params}
 

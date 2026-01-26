@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
@@ -13,11 +14,13 @@ from cmk.plugins.stulz.lib import DETECT_STULZ
 check_info = {}
 
 
-def discover_stulz_powerstate(info):
+def discover_stulz_powerstate(info: StringTable) -> list[tuple[str, None]]:
     return [(x[0], None) for x in info]
 
 
-def check_stulz_powerstate(item, _no_params, info):
+def check_stulz_powerstate(
+    item: str, _no_params: Mapping[str, Any], info: StringTable
+) -> tuple[int, str] | tuple[int, str, list[tuple[str, float]]]:
     for line in info:
         if line[0] == item:
             if line[1] != "1":

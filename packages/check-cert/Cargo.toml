@@ -12,6 +12,7 @@ vendored = ["openssl/vendored"]
 [dependencies]
 anyhow = { workspace = true, features = ["backtrace"] }
 clap = { workspace = true, features = ["derive"] }
+log = { workspace = true, features = ["std"] }
 openssl.workspace = true
 openssl-probe.workspace = true
 time.workspace = true

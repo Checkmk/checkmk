@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::{anyhow, Context, Result};
+use log::{debug, info};
 use openssl::base64::encode_block;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use std::io::{BufRead, BufReader, Read, Write};
@@ -65,11 +66,19 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
             to_addr(strip_url_protocol(&proxy.url), proxy.port)
         })?;
     let mut stream = match config.timeout {
-        None => TcpStream::connect(addr)?,
-        Some(dur) => TcpStream::connect_timeout(&addr, dur)?,
+        None => {
+            debug!("Connecting to {}:{}", server, port);
+            TcpStream::connect(addr)?
+        }
+        Some(dur) => {
+            debug!("Connecting to {}:{} with timeout {:?}", server, port, dur);
+            TcpStream::connect_timeout(&addr, dur)?
+        }
     };
+    debug!("TCP connection established");
     stream.set_read_timeout(config.timeout)?;
     if config.proxy.is_some() {
+        info!("Setting up proxy connection...");
         build_proxy_stream(&mut stream, config.proxy.unwrap().auth, server, port)?;
     };
     stream.set_read_timeout(config.timeout)?;

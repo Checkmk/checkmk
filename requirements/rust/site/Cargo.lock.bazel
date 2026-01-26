@@ -1,5 +1,5 @@
 {
-  "checksum": "5f187bc6310b902c2192cea5c662cbf82802b4c30462533947f14fa471298070",
+  "checksum": "06c2578e08fc152460851acd4599f759e0b14710b302e901391c83762ad1ab10",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1611,6 +1611,10 @@
             {
               "id": "clap 4.5.29",
               "target": "clap"
+            },
+            {
+              "id": "log 0.4.25",
+              "target": "log"
             },
             {
               "id": "openssl 0.10.75",

@@ -12,6 +12,8 @@ use check_cert::fetcher::{self, Config as FetcherConfig, ProxyAuth, ProxyConfig}
 use check_cert::pwstore::password_from_store;
 use check_cert::truststore;
 use clap::{Parser, ValueEnum};
+use log::{debug, info};
+use std::io::{self, Write};
 use std::mem;
 use std::time::Duration as StdDuration;
 use std::time::Instant;
@@ -195,10 +197,35 @@ struct Args {
     pub proxy_pw: ProxyPassword,
 }
 
-fn verbose(verbosity: u8, level: u8, header: &str, text: &str) {
-    if verbosity >= level {
-        eprintln!("{}{}", header, text)
+struct SimpleLogger {
+    level: log::LevelFilter,
+}
+
+impl log::Log for SimpleLogger {
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        metadata.level() <= self.level
     }
+
+    fn log(&self, record: &log::Record) {
+        if self.enabled(record.metadata()) {
+            eprintln!("{}: {}", record.level(), record.args());
+        }
+    }
+
+    fn flush(&self) {
+        let _ = io::stderr().flush();
+    }
+}
+
+fn init_logging(verbosity: u8) {
+    let level = match verbosity {
+        2.. => log::LevelFilter::Debug,
+        1 => log::LevelFilter::Info,
+        _ => log::LevelFilter::Warn,
+    };
+    log::set_boxed_logger(Box::new(SimpleLogger { level }))
+        .map(|()| log::set_max_level(level))
+        .unwrap_or_else(|_| eprintln!("Failed to initialize logging"));
 }
 
 fn to_pem(der: &[u8]) -> Vec<u8> {
@@ -216,10 +243,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args = Args::parse();
 
-    let info = |text: &str| verbose(args.verbose, 1, "INFO: ", text);
-    let debug = |text: &str| verbose(args.verbose, 2, "DEBUG: ", text);
+    init_logging(args.verbose);
 
-    info("start check-cert");
+    info!("start check-cert");
 
     let response_time = args
         .response_time
@@ -228,16 +254,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .not_after
         .map(|na| parse_levels(LevelsStrategy::Lower, na, Duration::seconds));
 
-    info("load trust store...");
+    info!("load trust store...");
     let Ok(trust_store) = (match args.ca_store {
         Some(ca_store) => truststore::load_store(&ca_store),
         None => truststore::system(),
     }) else {
         check::abort("Failed to load trust store")
     };
-    info(&format!("loaded {} certificates", trust_store.len()));
+    info!("loaded {} certificates", trust_store.len());
 
-    info("contact host...");
+    info!("contact host...");
     let start = Instant::now();
     let connection_type = args.connection_type;
 
@@ -283,21 +309,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => check::abort(format!("{:?}", err)),
     };
     let elapsed = start.elapsed();
-    info(&format!(
-        "received chain of {} certificates from host",
-        chain.len()
-    ));
+    info!("received chain of {} certificates from host", chain.len());
 
     if chain.is_empty() {
         check::abort("Empty or invalid certificate chain on host")
     }
 
-    info("check certificate...");
-    debug(&format!(
+    info!("check certificate...");
+    debug!(
         "\n{}",
         std::str::from_utf8(&to_pem(&chain[0])).expect("valid utf8")
-    ));
-    info(" 1/3 - check fetching process");
+    );
+    info!(" 1/3 - check fetching process");
     let mut check = info::collect(
         InfoConfig::builder()
             .server(&args.hostname)
@@ -310,7 +333,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .response_time(response_time)
             .build(),
     ));
-    info(" 2/3 - verify certificate with trust store");
+    info!(" 2/3 - verify certificate with trust store");
     check.join(&mut verification::check(
         &chain,
         VerifChecks::builder()
@@ -318,7 +341,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .allow_self_signed(args.allow_self_signed)
             .build(),
     ));
-    info(" 3/3 - check certificate");
+    info!(" 3/3 - check certificate");
     check.join(&mut certificate::check(
         &chain[0],
         CertChecks::builder()
@@ -339,7 +362,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .max_validity(args.max_validity.map(|x| Duration::days(x.into())))
             .build(),
     ));
-    info("check certificate... done");
+    info!("check certificate... done");
 
     println!("{}", check);
     std::process::exit(check::exit_code(&check))

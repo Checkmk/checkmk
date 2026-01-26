@@ -1,8 +1,8 @@
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/check_and_agent_plugins/OWNERS_DEFINITION
+file:/component_owners/plugins/OWNERS_DEFINITION
 
-per-file mysql*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mysql*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mysql*=set noparent
 
 # Please

@@ -121,7 +121,7 @@ const availableVisualizationTypes = getVisualizationTypes()
   display: flex;
   flex-direction: column;
   position: relative;
-  height: 240px;
+  height: calc(var(--dimension-8) * 10);
   margin: 0;
   padding: var(--dimension-3);
   box-sizing: border-box;

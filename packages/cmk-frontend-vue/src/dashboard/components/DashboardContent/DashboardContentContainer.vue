@@ -72,7 +72,7 @@ const displayTitle = computed<string | undefined>(() => {
 }
 
 .db-content-container__title {
-  height: 22px;
+  height: var(--dimension-8);
   display: flex;
   justify-content: center;
   align-items: center;

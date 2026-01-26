@@ -30,7 +30,7 @@ defineProps<ContentProps>()
   display: flex;
   flex-direction: column;
   position: relative;
-  height: 240px;
+  height: calc(var(--dimension-8) * 10);
   margin: 0;
   padding: var(--dimension-3);
   box-sizing: border-box;
@@ -38,6 +38,6 @@ defineProps<ContentProps>()
 
 .db-preview-content__click-shield {
   pointer-events: none;
-  height: 240px; /* "parent node" is used for figure height calculation */
+  height: calc(var(--dimension-8) * 10); /* "parent node" is used for figure height calculation */
 }
 </style>

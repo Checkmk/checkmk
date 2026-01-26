@@ -34,8 +34,8 @@ defineEmits<{
 <style scoped>
 .db-responsive-grid-widget-button__button {
   /* match size of the header height */
-  width: 22px;
-  height: 22px;
+  width: var(--dimension-8);
+  height: var(--dimension-8);
   display: flex;
   align-items: center;
   justify-content: center;

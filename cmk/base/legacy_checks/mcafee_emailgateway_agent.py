@@ -3,25 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.mcafee.libgateway import DETECT_EMAIL_GATEWAY
 
-check_info = {}
+check_info: dict[str, Any] = {}
 
 
 def parse_mcafee_emailgateway_agent(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_mcafee_gateway_generic(info):
+def discover_mcafee_gateway_generic(
+    info: StringTable | None,
+) -> list[tuple[None, dict[str, Any]]]:
     return [(None, {})]
 
 
-def check_mcafee_emailgateway_agent(item, params, info):
+def check_mcafee_emailgateway_agent(
+    item: None, params: Mapping[str, Any], info: StringTable | None
+) -> tuple[int, str]:
+    assert info is not None
     return 0, "Version: %s, Hostname: %s, Last file update: %s" % tuple(info[0])
 
 

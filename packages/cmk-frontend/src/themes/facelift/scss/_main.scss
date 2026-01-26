@@ -945,6 +945,31 @@ div#hover_menu {
       letter-spacing: 0;
     }
   }
+
+  div.metric_attributes {
+    border-radius: 4px;
+    display: block;
+    float: left;
+    padding: 8px 8px 8px 8px;
+    color: $font-color;
+    background-color: $graph-hover-popup-bg-color;
+    border: $graph-hover-popup-border;
+    box-shadow: $graph-hover-popup-box-shadow;
+    text-align: left;
+
+    table {
+      border-collapse: collapse;
+    }
+
+    th {
+      border-bottom: $graph-legend-th-border-bottom;
+    }
+
+    th,
+    td {
+      padding: 5px;
+    }
+  }
 }
 
 /* Color picker styling */

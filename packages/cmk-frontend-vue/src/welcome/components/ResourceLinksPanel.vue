@@ -26,13 +26,6 @@ defineProps<{
   <CmkSpace />
   <CmkLinkCardContainer>
     <CmkLinkCard
-      :title="_t('Ask Checkmk AI')"
-      :subtitle="_t('Your assistant for Checkmk - ask anything from setup to troubleshooting.')"
-      :url="cards.checkmk_ai"
-      variant="borderless"
-      :open-in-new-tab="true"
-    />
-    <CmkLinkCard
       :title="_t('Read the Beginner’s Guide')"
       :subtitle="_t('A step-by-step introduction to help you get started quickly and confidently.')"
       :url="cards.checkmk_docs"
@@ -40,9 +33,47 @@ defineProps<{
       :open-in-new-tab="true"
     />
     <CmkLinkCard
+      :title="_t('Discover best practices')"
+      :subtitle="
+        _t(
+          'Explore proven best practices, helpful tips, and practical tricks to get the most out of your monitoring setup.'
+        )
+      "
+      :url="cards.checkmk_best_practices"
+      variant="borderless"
+      :open-in-new-tab="true"
+    />
+    <CmkLinkCard
+      :title="_t('Learn Checkmk via expert training')"
+      :subtitle="
+        _t(
+          'Build a solid foundation and deepen your knowledge in our official, instructor-led Checkmk trainings.'
+        )
+      "
+      :url="cards.checkmk_trainings"
+      variant="borderless"
+      :open-in-new-tab="true"
+    />
+    <CmkLinkCard
+      :title="_t('Attend a free webinar')"
+      :subtitle="
+        _t('Watch our on-demand or live webinars to master the configuration and use of Checkmk.')
+      "
+      :url="cards.checkmk_webinars"
+      variant="borderless"
+      :open-in-new-tab="true"
+    />
+    <CmkLinkCard
       :title="_t('Join the community')"
       :subtitle="_t('Connect with other users and ask questions in our active forum.')"
       :url="cards.checkmk_forum"
+      variant="borderless"
+      :open-in-new-tab="true"
+    />
+    <CmkLinkCard
+      :title="_t('Ask Checkmk AI')"
+      :subtitle="_t('Your assistant for Checkmk - ask anything from setup to troubleshooting.')"
+      :url="cards.checkmk_ai"
       variant="borderless"
       :open-in-new-tab="true"
     />

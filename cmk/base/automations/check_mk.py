@@ -11,6 +11,7 @@ import abc
 import ast
 import glob
 import io
+import ipaddress
 import itertools
 import logging
 import operator
@@ -3096,6 +3097,25 @@ def automation_ping_host(
 
 
 def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]:
+    is_ipaddress = True
+    if base_cmd in (PingHostCmd.PING, PingHostCmd.PING6):
+        try:
+            ipaddress.ip_address(ip_or_dns_name)
+        except ipaddress.AddressValueError:
+            is_ipaddress = False
+
+    if not is_ipaddress and shutil.which("nslookup") is not None:
+        nslookup_command = ["nslookup", "-type=A"]
+        completed_process = subprocess.run(
+            [*nslookup_command, ip_or_dns_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            check=False,
+        )
+        if completed_process.returncode != 0:
+            return 2, completed_process.stdout
+
     ping_command = ["ping", "-6"] if base_cmd.value == PingHostCmd.PING6 else ["ping", "-4"]
     completed_process = subprocess.run(
         [*ping_command, "-A", "-i", "0.2", "-c", "2", "-W", "5", ip_or_dns_name],
@@ -3104,7 +3124,9 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
         encoding="utf-8",
         check=False,
     )
-    return completed_process.returncode, completed_process.stdout
+    if completed_process.returncode != 0:
+        return 1, completed_process.stdout
+    return 0, completed_process.stdout
 
 
 def automation_diag_cmk_agent(

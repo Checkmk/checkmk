@@ -324,6 +324,21 @@ function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean):
               : props.i18n.success_host_dns_resolvable,
             status: 'success'
           }
+        case 1:
+          return {
+            tooltip: isIpAddress
+              ? props.i18n.error_ip_not_pingable
+              : _t(`Cannot reach host. Host is resolvable via DNS but not pingable.
+              Enter a reachable host name or IP address or set 'No IP' in the 'Network address' section.`),
+            status: 'warning'
+          }
+        case 2:
+          return {
+            tooltip: isIpAddress
+              ? props.i18n.error_ip_not_pingable
+              : props.i18n.error_host_not_dns_resolvable,
+            status: 'warning'
+          }
         case 99:
           return {
             tooltip: response.result.message,
@@ -331,10 +346,8 @@ function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean):
           }
         default:
           return {
-            tooltip: isIpAddress
-              ? props.i18n.error_ip_not_pingable
-              : props.i18n.error_host_not_dns_resolvable,
-            status: 'warning'
+            tooltip: _t('Unknown status code received from server.'),
+            status: 'error'
           }
       }
     case 1:

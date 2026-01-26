@@ -446,8 +446,6 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
     },
     ImportName("tinkerforge"): {Path("cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py")},
     ImportName("rados"): {Path("cmk/plugins/ceph/agents/mk_ceph.py")},
-    # Package is called sarif-tools
-    ImportName("sarif"): {Path("scripts/sarif_preparse.py")},
     ImportName("netsnmp"): {  # We ship it with omd/packages
         Path("non-free/packages/cmk-core-helpers/cmk/inline_snmp/inline.py")
     },
@@ -499,7 +497,6 @@ def test_dependencies_are_used() -> None:
     )
 
 
-@pytest.mark.skip("CMK-28820")
 def test_dependencies_are_declared() -> None:
     """Test for unknown imports which could not be mapped to the requirements files
 

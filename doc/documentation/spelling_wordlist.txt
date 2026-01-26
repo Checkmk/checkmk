@@ -1,5 +1,6 @@
 ansible
 apache
+api
 backend
 Backend
 backends
@@ -8,6 +9,7 @@ cmk
 Crontab
 crontab
 cron
+de
 DCD
 frontend
 Jira
@@ -16,10 +18,13 @@ Liveproxyd
 Livestatus
 Makefile
 Makefiles
+Msg
 microcore
 mTLS
+mk
 Nagios
 PNP4Nagios
+Pydantic
 omd
 OTel
 parsers
@@ -63,6 +68,7 @@ werk
 werks
 nowiki
 precompiled
+py
 changelog
 robotmk
 md

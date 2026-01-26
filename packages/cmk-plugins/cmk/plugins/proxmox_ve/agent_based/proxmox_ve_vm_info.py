@@ -50,11 +50,8 @@ def host_label_function(section: SectionVMInfo) -> HostLabelGenerator:
     Labels:
         cmk/pve/entity:<entity_type>:
             Shows that the object type is VM. It can be VM (qemu) or LXC (lxc).
-        cmk/pve/node:<node_name>:
-            The node of the Proxmox VE VM.
     """
     yield HostLabel("cmk/pve/entity", "vm" if section.type == "qemu" else "LXC")
-    yield HostLabel("cmk/pve/node", section.node)
     if section.cluster:
         yield HostLabel("cmk/pve/cluster", section.cluster)
 

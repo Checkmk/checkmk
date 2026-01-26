@@ -156,6 +156,8 @@ def test_paths() -> None:
             ("software", "applications", "checkmk-agent"),
             ("software", "applications", "checkmk-agent", "local_checks"),
             ("software", "applications", "checkmk-agent", "plugins"),
+            ("software", "applications", "cisco_meraki"),
+            ("software", "applications", "cisco_meraki", "licenses"),
             ("software", "applications", "citrix"),
             ("software", "applications", "citrix", "controller"),
             ("software", "applications", "citrix", "vm"),
@@ -1068,6 +1070,19 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "container_num",
         "repository",
         "tag",
+    ],
+    ("software", "applications", "cisco_meraki", "licenses"): [
+        "org_id",
+        "org_name",
+        "summary",
+        "gateway_mg_count",
+        "wireless_mr_count",
+        "switch_ms_count",
+        "sensor_mt_count",
+        "video_mv_count",
+        "security_mx_count",
+        "systems_manager_sm_count",
+        "other_count",
     ],
 }
 

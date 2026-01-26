@@ -375,6 +375,8 @@ def test_registered_painters() -> None:
         "inv_software_applications_checkmk-agent_agentcontroller",
         "inv_software_applications_checkmk-agent_local_checks",
         "inv_software_applications_checkmk-agent_plugins",
+        "inv_software_applications_cisco_meraki",
+        "inv_software_applications_cisco_meraki_licenses",
         "inv_software_applications_citrix",
         "inv_software_applications_citrix_controller",
         "inv_software_applications_citrix_controller_controller_version",

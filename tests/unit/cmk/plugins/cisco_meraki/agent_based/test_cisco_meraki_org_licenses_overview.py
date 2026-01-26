@@ -12,11 +12,12 @@ import time_machine
 from polyfactory.factories import TypedDictFactory
 
 from cmk.agent_based.v1 import Metric
-from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable, TableRow
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_licenses_overview import (
     check_licenses_overview,
     CheckParams,
     discover_licenses_overview,
+    inventorize_licenses_overview,
     parse_licenses_overview,
 )
 from cmk.plugins.cisco_meraki.lib.schema import LicensesOverview
@@ -130,6 +131,77 @@ def test_check_licenses_overview_remaining_expiration_time_warn() -> None:
     expected = Result(
         state=State.WARN,
         summary=("Remaining time: 3 days 0 hours (warn/crit below 4 days 0 hours/2 days 0 hours)"),
+    )
+
+    assert value == expected
+
+
+def test_inventorize_licenses_overview() -> None:
+    overview = [
+        _LicensesOverviewFactory.build(
+            organisation_name="Name1",
+            organisation_id="123",
+            licensedDeviceCounts={
+                "MG41": 1,  # gateway
+                "MX68W": 1,  # security / sd-wan
+                "MX95": 1,  # security / sd-wan
+                "MS120-24P": 1,  # switch
+                "MS120-8FP": 1,  # switch
+                "MV10": 1,  # video/camera
+                "MT50X": 1,  # sensor
+                "MR81": 1,  # access point / wireless
+                "wireless": 1,  # access point / wireless
+                "SM123": 1,  # system manager
+                "UNKNOWN123": 1,  # unknown
+                "RANDOM456": 1,  # unknown
+            },
+        ),
+    ]
+    string_table = [[f"{json.dumps(overview)}"]]
+    section = parse_licenses_overview(string_table)
+
+    value = next(row for row in inventorize_licenses_overview(section) if isinstance(row, TableRow))
+    expected = TableRow(
+        path=["software", "applications", "cisco_meraki", "licenses"],
+        key_columns={"org_id": "123"},
+        inventory_columns={
+            "org_name": "Name1",
+            "summary": 12,
+            "gateway_mg_count": 1,
+            "switch_ms_count": 2,
+            "video_mv_count": 1,
+            "security_mx_count": 2,
+            "sensor_mt_count": 1,
+            "wireless_mr_count": 2,
+            "systems_manager_sm_count": 1,
+            "other_count": 2,
+        },
+        status_columns={},
+    )
+
+    assert value == expected
+
+
+def test_inventorize_licenses_overview_no_devices() -> None:
+    overview = [
+        _LicensesOverviewFactory.build(
+            organisation_name="Name1",
+            organisation_id="123",
+            licensedDeviceCounts={},
+        ),
+    ]
+    string_table = [[f"{json.dumps(overview)}"]]
+    section = parse_licenses_overview(string_table)
+
+    value = next(row for row in inventorize_licenses_overview(section) if isinstance(row, TableRow))
+    expected = TableRow(
+        path=["software", "applications", "cisco_meraki", "licenses"],
+        key_columns={"org_id": "123"},
+        inventory_columns={
+            "org_name": "Name1",
+            "summary": 0,
+        },
+        status_columns={},
     )
 
     assert value == expected

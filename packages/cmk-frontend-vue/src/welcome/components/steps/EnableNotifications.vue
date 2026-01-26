@@ -12,6 +12,7 @@ import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkLinkCard from '@/components/CmkLinkCard'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -54,7 +55,26 @@ const currentStep: Ref<number> = usePersistentRef<number>(
             your environment.`
         )
       }}
+      <br />
+      {{ _t('Learn more about notifications in the') }}
+      <a href="https://docs.checkmk.com/latest/en/intro_notifications.html">
+        {{ _t('documentation.') }}
+      </a>
     </StepParagraph>
+
+    <CmkAlertBox :heading="_t('Before enabling notifications')">
+      {{
+        _t(
+          `Notifications are powerful, but turning them on too early can quickly lead to alert fatigue.
+          Take some time to understand your monitoring first. Then start with a small pilot by enabling
+          email notifications for a limited number of users. This helps you fine-tune rules and thresholds
+          before involving everyone. A gradual rollout ensures notifications stay meaningful and don’t get
+          lost in the noise.`
+        )
+      }}
+      <br /><br />
+      {{ _t('Tip: To use email notifications, make sure an email server is configured.') }}
+    </CmkAlertBox>
 
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">

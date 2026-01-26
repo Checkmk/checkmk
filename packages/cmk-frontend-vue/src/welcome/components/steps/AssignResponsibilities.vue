@@ -12,6 +12,7 @@ import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkLinkCard from '@/components/CmkLinkCard'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -56,6 +57,18 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         )
       }}
     </StepParagraph>
+
+    <CmkAlertBox :heading="_t('Before adding more users and assigning responsibilities')">
+      {{
+        _t(
+          `Make sure your monitoring setup is stable and already useful. Only once hosts, services,
+          and structures are in place does it make sense to add more users and assign responsibilities —
+          otherwise you risk unnecessary complexity and confusion. Learn more about working with multiple
+          users in the`
+        )
+      }}
+      <a href="https://docs.checkmk.com/latest/en/intro_users.html">{{ _t('documentation.') }}</a>
+    </CmkAlertBox>
 
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">

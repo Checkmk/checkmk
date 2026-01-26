@@ -475,10 +475,17 @@ def _readable_attribute_type(attribute_type: Literal["resource", "scope", "data_
             assert_never(other)
 
 
+@dataclass(frozen=True, kw_only=True)
+class _Attribute:
+    key: str
+    value: str
+    type: str
+
+
 def _render_attributes(
     table_uuid_str: str,
     graph_legend_styles: Sequence[str],
-    attributes_by_type: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]],
+    attributes: Sequence[_Attribute],
 ) -> HTML:
     with output_funnel.plugged():
         html.open_table(
@@ -503,15 +510,12 @@ def _render_attributes(
         html.th(_("Attribute type"), style="text-align: left; width: 10%;")
         html.close_tr()
 
-        for attribute_type, attributes in sorted(
-            attributes_by_type.items(), key=lambda t: _sort_attributes_by_type(t[0])
-        ):
-            for key, value in sorted(attributes.items()):
-                html.open_tr()
-                html.td(key)
-                html.td(value)
-                html.td(_readable_attribute_type(attribute_type))
-                html.close_tr()
+        for attribute in attributes:
+            html.open_tr()
+            html.td(attribute.key)
+            html.td(attribute.value)
+            html.td(attribute.type)
+            html.close_tr()
 
         html.close_table()
 
@@ -563,8 +567,14 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
         html.open_tr()
 
         table_uuid_str = str(uuid4())
-        attributes_by_type = curve["attributes"]
-        if any(attributes_by_type.values()):
+        attributes = [
+            _Attribute(key=key, value=value, type=_readable_attribute_type(ty))
+            for ty, attrs in sorted(
+                curve["attributes"].items(), key=lambda t: _sort_attributes_by_type(t[0])
+            )
+            for key, value in attrs.items()
+        ]
+        if attributes:
             html.open_td(
                 style=[font_size_style],
                 class_=["with_attributes"],
@@ -591,10 +601,8 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
 
         html.open_tr()
         html.open_td(style=font_size_style, colspan=len(scalars) + 1)
-        if attributes_by_type:
-            html.write_html(
-                _render_attributes(table_uuid_str, graph_legend_styles, attributes_by_type)
-            )
+        if attributes:
+            html.write_html(_render_attributes(table_uuid_str, graph_legend_styles, attributes))
         html.close_td()
         html.close_tr()
 

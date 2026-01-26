@@ -85,19 +85,15 @@ const _updateMetricType = (value: string) => {
         <ContentSpacer :dimension="2" />
         <div class="db-metric-selector__container">
           <div class="db-metric-selector__host-filter">
-            <div class="db-metric-selector__label-field-row">
-              <div
-                class="db-metric-selector__label-field-cell"
-                @click="() => (handler.host.value = null)"
-              >
+            <div class="db-metric-selector__cell">
+              <div class="db-metric-selector__label" @click="() => (handler.host.value = null)">
                 <CmkLabel style="cursor: pointer">{{ _t('Host name') }}:</CmkLabel>
               </div>
 
-              <div class="db-metric-selector__label-field-cell">
+              <div class="db-metric-selector__autocompleter">
                 <AutocompleteHost
                   v-model:host-name="handler.host.value"
                   width="fill"
-                  class="db-metric-selector__autocompleter"
                   :placeholder="_t('Select')"
                 />
               </div>
@@ -105,20 +101,16 @@ const _updateMetricType = (value: string) => {
           </div>
 
           <div class="db-metric-selector__service-filter">
-            <div class="db-metric-selector__label-field-row">
-              <div
-                class="db-metric-selector__label-field-cell"
-                @click="() => (handler.service.value = null)"
-              >
+            <div class="db-metric-selector__cell">
+              <div class="db-metric-selector__label" @click="() => (handler.service.value = null)">
                 <CmkLabel style="cursor: pointer">{{ _t('Service') }}:</CmkLabel>
               </div>
 
-              <div class="db-metric-selector__label-field-cell">
+              <div class="db-metric-selector__autocompleter">
                 <AutocompleteService
                   v-model:service-description="handler.service.value"
                   :host-name="handler.host.value"
                   width="fill"
-                  class="db-metric-selector__autocompleter"
                   :placeholder="_t('Select')"
                 />
               </div>
@@ -131,8 +123,7 @@ const _updateMetricType = (value: string) => {
               v-model:service-metrics="handler.metric.value"
               :host-name="handler.host.value"
               :service-description="handler.service.value"
-              class="db-metric-selector__autocompleter"
-              width="max"
+              width="fill"
             />
           </div>
           <div v-if="handler.metricValidationError.value">
@@ -155,8 +146,7 @@ const _updateMetricType = (value: string) => {
             v-model:combined-metrics="handler.metric.value"
             :host-selection-mode="hostSelectionMode"
             :service-selection-mode="serviceSelectionMode"
-            width="max"
-            class="db-metric-selector__autocompleter"
+            width="fill"
           />
           <div v-if="handler.metricValidationError.value">
             <CmkInlineValidation :validation="[_t('Must select an option')]" />
@@ -175,8 +165,8 @@ const _updateMetricType = (value: string) => {
 
 .db-metric-selector__container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 0 var(--dimension-4);
 }
 
@@ -195,26 +185,19 @@ const _updateMetricType = (value: string) => {
   padding-bottom: var(--dimension-4);
 }
 
-.db-metric-selector__autocompleter {
-  width: 100%;
-}
-
-.db-metric-selector__label-field-row {
+.db-metric-selector__cell {
   display: flex;
   flex-flow: row nowrap;
   justify-content: space-between;
   align-items: center;
 }
 
-.db-metric-selector__label-field-cell {
-  flex: 0 0 auto;
+.db-metric-selector__label {
+  white-space: nowrap;
 }
 
-.db-metric-selector__label-field-cell:nth-child(1) {
-  flex: 0 0 auto;
-}
-
-.db-metric-selector__label-field-cell:nth-child(2) {
-  flex: 1 1 auto;
+.db-metric-selector__autocompleter {
+  flex: 1;
+  min-width: 0;
 }
 </style>

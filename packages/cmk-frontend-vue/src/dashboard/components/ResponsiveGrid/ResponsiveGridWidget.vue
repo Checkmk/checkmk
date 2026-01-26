@@ -36,9 +36,21 @@ defineEmits<{
   >
     <div v-if="isEditing" class="db-responsive-grid-widget__edit-controls">
       <div class="db-responsive-grid-widget__edit-controls-buttons">
-        <ResponsiveGridWidgetButton icon-name="db-widget-delete" @click="$emit('click:delete')" />
-        <ResponsiveGridWidgetButton icon-name="db-widget-clone" @click="$emit('click:clone')" />
-        <ResponsiveGridWidgetButton icon-name="db-widget-edit" @click="$emit('click:edit')" />
+        <ResponsiveGridWidgetButton
+          icon-name="db-widget-delete"
+          :title="_t('Delete widget')"
+          @click="$emit('click:delete')"
+        />
+        <ResponsiveGridWidgetButton
+          icon-name="db-widget-clone"
+          :title="_t('Clone widget')"
+          @click="$emit('click:clone')"
+        />
+        <ResponsiveGridWidgetButton
+          icon-name="db-widget-edit"
+          :title="_t('Edit widget')"
+          @click="$emit('click:edit')"
+        />
       </div>
     </div>
     <MissingFiltersMsg :effective-filter-context="spec.effective_filter_context">

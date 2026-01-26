@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterator, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
@@ -29,8 +30,10 @@ def discover_cisco_nexus_cpu(section: StringTable) -> DiscoveryResult:
         yield Service()
 
 
-def check_cisco_nexus_cpu(_no_item, params, info):
-    return check_cpu_util(float(info[0][0]), params)
+def check_cisco_nexus_cpu(
+    _no_item: None, params: Mapping[str, Any], info: StringTable
+) -> Iterator[tuple[int, str, list[Any]]]:
+    yield from check_cpu_util(float(info[0][0]), params)
 
 
 # Migration NOTE: Create a separate section, but a common check plug-in for

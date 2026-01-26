@@ -5,6 +5,7 @@
 use crate::starttls::stream_io::read;
 use crate::starttls::stream_io::write;
 use anyhow::{anyhow, Result};
+use log::{debug, info};
 use std::io::{Read, Write};
 use std::sync::LazyLock;
 
@@ -25,6 +26,8 @@ static CANNED_STARTTLS_LINE_SPACE: LazyLock<SmtpLine> = LazyLock::new(|| SmtpLin
 
 /// Performs the SMTP STARTTLS handshake on the given stream according to RFC 3207.
 pub fn perform<T: Read + Write>(stream: &mut T, server: &str) -> Result<()> {
+    info!("Starting SMTP STARTTLS handshake for server: {}", server);
+
     read_greeting(stream)?;
 
     let ehlo_response = send_ehlo(stream, server)?;
@@ -38,32 +41,45 @@ pub fn perform<T: Read + Write>(stream: &mut T, server: &str) -> Result<()> {
             ehlo_response
         ));
     }
+    debug!("Server advertises STARTTLS support");
 
     send_starttls(stream)?;
+    info!("SMTP STARTTLS handshake completed successfully");
 
     Ok(())
 }
 
 fn read_greeting<T: Read + Write>(stream: &mut T) -> Result<()> {
+    debug!("Reading SMTP greeting from server");
+
     let greeting = SmtpResponse::parse(&read(stream)?)?;
     if !greeting.is_ready() {
         return Err(anyhow!("Unexpected SMTP greeting code: {}", greeting.code));
     }
+    debug!("SMTP greeting indicates server is ready (code 220)");
     Ok(())
 }
 
 /// Send EHLO to the SMTP server and parse the response. Returns the parsed SmtpResponse.
 pub fn send_ehlo<T: Read + Write>(stream: &mut T, server: &str) -> Result<SmtpResponse> {
+    debug!("Sending EHLO command to server: {}", server);
     write(stream, &format!("EHLO {}\r\n", server))?;
+
+    debug!("Reading EHLO response from server");
     let ehlo_response = SmtpResponse::parse(&read(stream)?)?;
     if !ehlo_response.is_ok() {
         return Err(anyhow!("Unexpected EHLO response code: {}", ehlo_response));
     }
+    debug!("EHLO response indicates success (code 250)");
+
     Ok(ehlo_response)
 }
 
 fn send_starttls<T: Read + Write>(stream: &mut T) -> Result<()> {
+    debug!("Sending STARTTLS command");
     write(stream, "STARTTLS\r\n")?;
+
+    debug!("Reading STARTTLS response from server");
     let starttls_response = SmtpResponse::parse(&read(stream)?)?;
     if !starttls_response.is_ready() {
         return Err(anyhow!(
@@ -71,6 +87,8 @@ fn send_starttls<T: Read + Write>(stream: &mut T) -> Result<()> {
             starttls_response.code
         ));
     }
+    debug!("STARTTLS response indicates server is ready for TLS (code 220)");
+
     Ok(())
 }
 
@@ -83,11 +101,13 @@ impl SmtpResponse {
     /// Parses a full SMTP response into its constituent lines,
     /// ensuring consistent reply codes and proper formatting according to RFC 5321
     fn parse(response: &str) -> Result<Self> {
+        debug!("Parsing SMTP response: {:?}", response);
         let lines = response
             .split_inclusive("\r\n")
             .map(SmtpLine::parse)
             .collect::<Result<Vec<_>>>()?;
 
+        debug!("Parsed {} SMTP response lines", lines.len());
         if lines.is_empty() {
             return Err(anyhow!("Empty SMTP response"));
         }
@@ -193,6 +213,10 @@ impl SmtpLine {
             }
         };
         let text = TextString::parse(textstring)?;
+        debug!(
+            "Successfully parsed line - Code: {}, Separator: {:?}, Text: {}",
+            code, separator, text
+        );
 
         Ok(SmtpLine {
             code,

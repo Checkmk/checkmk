@@ -111,8 +111,7 @@
     --code-background-color: var(--color-daylight-grey-50);
     --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
     --wizard-progress-bar-background-badge-color: var(--color-midnight-grey-100);
-    --headline-color: var(--ux-theme-4);
-    --db-content-bg-color: var(--ux-theme-1);
+    --db-content-bg-color: var(--ux-theme-3);
     --even-tr-bg-color: var(--ux-theme-3);
     --odd-tr-bg-color: var(--ux-theme-4);
     --inline-help-text-bg: rgb(223 239 251);
@@ -231,8 +230,7 @@
     --code-background-color: var(--ux-theme-0);
     --wizard-progress-bar-background-color: var(--white);
     --wizard-progress-bar-background-badge-color: var(--color-white-100);
-    --headline-color: var(--ux-theme-3);
-    --db-content-bg-color: var(--ux-theme-2);
+    --db-content-bg-color: var(--ux-theme-3);
     --even-tr-bg-color: var(--ux-theme-3);
     --odd-tr-bg-color: var(--ux-theme-2);
     --inline-help-text-bg: rgb(17 24 29);

@@ -46,7 +46,7 @@ def podman_container_restarts() -> Dictionary:
 
 rule_spec_podman_container_restarts = CheckParameters(
     name="podman_container_restarts",
-    title=Title("Podman Container Restarts"),
+    title=Title("Podman container restarts"),
     topic=Topic.APPLICATIONS,
     parameter_form=podman_container_restarts,
     condition=HostCondition(),

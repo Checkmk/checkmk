@@ -47,7 +47,7 @@ def podman_container_health() -> Dictionary:
 
 rule_spec_podman_container_health = CheckParameters(
     name="podman_container_health",
-    title=Title("Podman Container Health"),
+    title=Title("Podman container health"),
     topic=Topic.APPLICATIONS,
     parameter_form=podman_container_health,
     condition=HostCondition(),

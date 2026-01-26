@@ -4,16 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, toValue } from 'vue'
+import { computed, toValue } from 'vue'
 
 import usei18n from '@/lib/i18n'
+
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import { useWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization.ts'
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { EventStatsContent } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceRef } from '@/dashboard/composables/useDebounce.ts'
@@ -43,7 +43,6 @@ const emit = defineEmits<{
   ]
 }>()
 
-const displayVisualizationSettings = ref<boolean>(true)
 const filterUsesInfos = ['host', 'event']
 
 const {
@@ -108,12 +107,7 @@ const gotoNextStage = () => {
 
   <ContentSpacer />
 
-  <CollapsibleTitle
-    :title="_t('Widget settings')"
-    :open="displayVisualizationSettings"
-    @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
-  />
-  <CollapsibleContent :open="displayVisualizationSettings">
+  <CmkCatalogPanel :title="_t('Widget settings')">
     <WidgetVisualization
       v-model:show-title="showTitle"
       v-model:show-title-background="showTitleBackground"
@@ -123,7 +117,7 @@ const gotoNextStage = () => {
       v-model:title-url-enabled="titleUrlEnabled"
       v-model:title-url-validation-errors="titleUrlValidationErrors"
     />
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 
   <ContentSpacer />
 </template>

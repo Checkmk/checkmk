@@ -31,6 +31,9 @@ class CmkPageUrl:
     id: str
     value: str
     login: bool = True
+    first_request_timeout: float = 30
+    request_timeout: float = 1.0
+    max_average_duration: float = 0.5
 
 
 class PerformanceTest:
@@ -278,6 +281,10 @@ class PerformanceTest:
         millisecond timestamp (_ts) as query parameter to avoid cache hits. Each request includes
         cache-busting headers and uses a timeout.
 
+        Args:
+            context: Playwright browser context.
+            page_url: Object which describes the target URL and the timeouts for each test.
+
         Behavior:
         - Logs a warning if a response is non-OK (non-2xx status).
         - Logs a warning if an exception occurs during the request.
@@ -295,9 +302,6 @@ class PerformanceTest:
             - Add success/failure summary and assertions for automated regression detection.
             - Introduce configurable request count and concurrency for broader coverage.
         """
-        max_first_request_timeout = 30  # 30 seconds until first request times out
-        max_request_timeout = 0.5  # 0.5 seconds until consecutive requests time out
-        max_average_request_duration = 0.3  # 0.3 seconds for the maximum average request time
 
         first_request_duration = 0.0
         page = self.page(self.central_site, context, page_url.login)
@@ -313,7 +317,9 @@ class PerformanceTest:
             new_query = urlencode(query_params, doseq=True)
             unique_url = urlunparse(parsed_url._replace(query=new_query))
             try:
-                timeout_ms = 1000 * (max_first_request_timeout if i == 0 else max_request_timeout)
+                timeout_ms = 1000 * (
+                    page_url.first_request_timeout if i == 0 else page_url.request_timeout
+                )
                 resp = page.goto(unique_url, timeout=timeout_ms)
                 if i == 0:
                     first_request_duration = time() - start_time
@@ -334,7 +340,7 @@ class PerformanceTest:
         end_time = time()
         duration = end_time - start_time
         average_request_duration = (duration - first_request_duration) / (counter - 1)
-        assert average_request_duration < max_average_request_duration
+        assert average_request_duration < page_url.max_average_duration
 
     def setup_bulk_change_activation(self) -> None:
         """Setup: Bulk change activation

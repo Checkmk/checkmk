@@ -76,7 +76,7 @@ def test_performance_piggyback(
 @pytest.mark.parametrize(
     "page_url",
     [
-        CmkPageUrl("login", "login.py", login=False),
+        CmkPageUrl("login", "login.py", login=False, max_average_duration=0.3),
         CmkPageUrl("edit_host", "wato.py?folder={folder}&host={host}&mode=edit_host"),
         CmkPageUrl("service_discovery", "wato.py?folder={folder}&host={host}&mode=inventory"),
         CmkPageUrl("host_parameters", "wato.py?folder={folder}&host={host}&mode=object_parameters"),

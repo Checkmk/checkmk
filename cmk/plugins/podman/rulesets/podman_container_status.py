@@ -44,7 +44,7 @@ def podman_container_status() -> Dictionary:
 
 rule_spec_podman_container_status = CheckParameters(
     name="podman_container_status",
-    title=Title("Podman Container Status"),
+    title=Title("Podman container status"),
     topic=Topic.APPLICATIONS,
     parameter_form=podman_container_status,
     condition=HostCondition(),

@@ -90,7 +90,7 @@ def podman_disk_usage() -> Dictionary:
 
 rule_spec_podman_disk_usage = CheckParameters(
     name="podman_disk_usage",
-    title=Title("Podman Disk Usage"),
+    title=Title("Podman disk usage"),
     topic=Topic.APPLICATIONS,
     parameter_form=podman_disk_usage,
     condition=HostAndItemCondition(item_title=Title("Item name")),

@@ -72,7 +72,7 @@ def podman_containers() -> Dictionary:
 
 rule_spec_podman_containers = CheckParameters(
     name="podman_containers",
-    title=Title("Podman Containers"),
+    title=Title("Podman containers"),
     topic=Topic.APPLICATIONS,
     parameter_form=podman_containers,
     condition=HostCondition(),

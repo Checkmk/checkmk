@@ -797,11 +797,40 @@ int broker_downtime(int callback_type, void *data) {
     return 0;
 }
 
+void livestatus_log_alerts() {
+    for (const ::host *hst = host_list; hst != nullptr; hst = hst->next) {
+        if (hst->scheduled_downtime_depth > 0) {
+            std::ostringstream os;
+            os << "HOST DOWNTIME ALERT: " << hst->name
+               << ";STARTED; Host has entered a period of scheduled downtime";
+            write_to_all_logs_(os);
+        }
+    }
+    for (const ::service *svc = service_list; svc != nullptr; svc = svc->next) {
+        if (svc->scheduled_downtime_depth > 0) {
+            std::ostringstream os;
+            os << "SERVICE DOWNTIME ALERT: " << svc->host_name << ";"
+               << svc->description
+               << ";STARTED; Service has entered a period of scheduled downtime";
+            write_to_all_logs_(os);
+        }
+    }
+}
+
+void log_initial_states() {
+    livestatus_log_alerts();
+    g_timeperiods_cache->logCurrentTimeperiods();
+    write_to_all_logs_("logging initial states");
+}
+
 int broker_log(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_log_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
         case NEBTYPE_LOG_DATA:
+            if (std::string_view{info->data}.starts_with("LOG ROTATION: "sv)) {
+                log_initial_states();
+            }
             // Note that we are called *after* the entry has been written to the
             // Nagios log file.
             counterIncrement(Counter::log_messages);
@@ -874,27 +903,6 @@ int broker_adaptive_program(int callback_type, void *data) {
     return 0;
 }
 
-void livestatus_log_initial_states() {
-    for (const ::host *hst = host_list; hst != nullptr; hst = hst->next) {
-        if (hst->scheduled_downtime_depth > 0) {
-            std::ostringstream os;
-            os << "HOST DOWNTIME ALERT: " << hst->name
-               << ";STARTED; Host has entered a period of scheduled downtime";
-            write_to_all_logs_(os);
-        }
-    }
-    for (const ::service *svc = service_list; svc != nullptr; svc = svc->next) {
-        if (svc->scheduled_downtime_depth > 0) {
-            std::ostringstream os;
-            os << "SERVICE DOWNTIME ALERT: " << svc->host_name << ";"
-               << svc->description
-               << ";STARTED; Service has entered a period of scheduled downtime";
-            write_to_all_logs_(os);
-        }
-    }
-    g_timeperiods_cache->logCurrentTimeperiods();
-}
-
 int broker_timed_event(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_timed_event_data *>(data);
     log_callback(callback_type, info->type);
@@ -904,18 +912,11 @@ int broker_timed_event(int callback_type, void *data) {
         case NEBTYPE_TIMEDEVENT_EXECUTE:
         case NEBTYPE_TIMEDEVENT_DELAY:
         case NEBTYPE_TIMEDEVENT_SKIP:
-        case NEBTYPE_TIMEDEVENT_SLEEP:
-            // TODO(sp) Do we really want to do this for all event types above?
-            if (info->event_type == EVENT_LOG_ROTATION) {
-                if (fl_thread_running == 1) {
-                    livestatus_log_initial_states();
-                } else if (log_initial_states == 1) {
-                    // initial info during startup
-                    write_to_all_logs_("logging initial states");
-                }
-            }
+        case NEBTYPE_TIMEDEVENT_SLEEP: {
+            [[maybe_unused]] static auto once{(log_initial_states(), true)};
             g_timeperiods_cache->update(from_timeval(info->timestamp));
             break;
+        }
         default:
             // We should never see other event types here.
             break;

@@ -26,5 +26,5 @@ jobs:
           stale-pr-message: "Thank you for your contribution. This pull request has been marked as stale as it has not passed the automated tests and there was no activity for the last 14 days.\nPlease take a look at the ‘Checks’ section for details on the test results and make the necessary changes.\n\nThis pull request will be closed due to inactivity after 60 days, if no action is taken."
           # Autoclose stale PRs after 60 days.
           days-before-pr-close: 60
-          close-pr-message: "This pull request has been stale for 60 days and no action has been taken by the author. Unfortunately we have to close this contribution due to inactivity."
+          close-pr-message: "This pull request has been stale for 60 days and no action has been taken by the author. Unfortunately we have to close this contribution due to inactivity.\n\nIf you're convinced this thread shouldn't have ended just yet, reach out at community@checkmk.com."
           repo-token: ${{ secrets.GITHUB_TOKEN }}

@@ -50,6 +50,8 @@ interface Props {
   relaySelectElement: HTMLSelectElement | null
   relayDefaultElement: HTMLDivElement | null
   defaultRelayIdHash: string
+  cmkAgentConnectionModeDefaultElement: HTMLDivElement | null
+  cmkAgentConnectionModeInputButtonElement: HTMLInputElement | null
   sites: Array<ModeHostSite>
   serverPerSite: Array<ModeHostServerPerSite>
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
@@ -78,6 +80,11 @@ function checkRelay(): boolean {
 
 const switchVisibility = () => {
   showTest.value = true
+  if (isPushMode.value) {
+    showTest.value = false
+    return
+  }
+
   if (
     props.ipAddressFamilyInputElement.checked &&
     (props.ipAddressFamilySelectElement.value === 'no-ip' ||
@@ -114,6 +121,14 @@ function checkPushMode() {
   const agentConnectionModeHash = props.cmkAgentConnectionModeSelectElement?.value
   const agentConnectionMode =
     props.agentConnectionModes.find((mode) => mode.id_hash === agentConnectionModeHash)?.mode ?? ''
+  if (props.cmkAgentConnectionModeInputButtonElement?.checked) {
+    isPushMode.value = agentConnectionMode === 'push-agent'
+    return
+  }
+  if (props.cmkAgentConnectionModeDefaultElement) {
+    isPushMode.value = props.cmkAgentConnectionModeDefaultElement.textContent?.includes('Push')
+    return
+  }
   isPushMode.value = agentConnectionMode === 'push-agent'
 }
 
@@ -135,8 +150,8 @@ const targetElement = ref<HTMLElement>(
 const setupErrorActive = ref(props.setupError)
 
 onMounted(() => {
-  switchVisibility()
   checkPushMode()
+  switchVisibility()
   ipV4Selected.value = props.ipv4InputButtonElement.checked
   ipV6Selected.value = props.ipv6InputButtonElement.checked
   selectedSiteIdHash.value = props.siteSelectElement.value
@@ -156,12 +171,17 @@ onMounted(() => {
     switch (e.target) {
       case props.formElement:
       case props.changeTagAgent: {
-        switchVisibility()
         checkPushMode()
+        switchVisibility()
 
         targetElement.value = props.changeTagAgent.checked
           ? (props.tagAgent.parentNode as HTMLElement)
           : props.tagAgentDefault
+        break
+      }
+      case props.cmkAgentConnectionModeInputButtonElement: {
+        checkPushMode()
+        switchVisibility()
         break
       }
       case props.siteSelectElement: {

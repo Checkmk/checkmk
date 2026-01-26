@@ -11,13 +11,13 @@ from livestatus import LivestatusResponse, Query
 from cmk.bi.compiler import BICompiler
 from cmk.bi.computer import BIComputer
 from cmk.bi.data_fetcher import BIStatusFetcher
+from cmk.bi.filesystem import get_default_site_filesystem
 from cmk.bi.lib import SitesCallback
 from cmk.bi.storage import AggregationNotFound, AggregationStore
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.bi.filesystem import bi_fs
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 
@@ -36,7 +36,7 @@ class BIManager:
 
     @classmethod
     def bi_configuration_file(cls) -> Path:
-        return bi_fs.etc.config
+        return get_default_site_filesystem().etc.config
 
 
 def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
@@ -72,6 +72,6 @@ def load_compiled_branch(aggr_id: str, branch_title: str) -> BICompiledRule:
 @request_memoize(maxsize=10000)
 def _load_compiled_aggregation(aggr_id: str) -> BICompiledAggregation | None:
     try:
-        return AggregationStore(bi_fs.cache).get(aggr_id)
+        return AggregationStore(get_default_site_filesystem().cache).get(aggr_id)
     except AggregationNotFound:
         return None

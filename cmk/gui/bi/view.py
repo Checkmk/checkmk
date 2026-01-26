@@ -16,13 +16,13 @@ from livestatus import OnlySites
 
 from cmk.bi import storage
 from cmk.bi.computer import BIAggregationFilter
+from cmk.bi.filesystem import get_default_site_filesystem
 from cmk.bi.lib import FrozenMarker
 from cmk.bi.trees import BICompiledRule
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
-from cmk.gui.bi.filesystem import bi_fs
 from cmk.gui.bi.foldable_tree_renderer import (
     ABCFoldableTreeRenderer,
     BIAggrTreeState,
@@ -933,7 +933,9 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     bi_ref_aggregation, bi_ref_branch = found_aggr
 
     # Load other aggregation from disk
-    other_aggr = storage.AggregationStore(bi_fs.cache).get(other_aggregation)
+    other_aggr = storage.AggregationStore(get_default_site_filesystem().cache).get(
+        other_aggregation
+    )
 
     aggregations_are_equal = True
     for bi_other_branch in other_aggr.branches:
@@ -1181,7 +1183,9 @@ def command_freeze_aggregation_action(
 
     if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
         if frozen_info := compiled_aggregation.frozen_info:
-            frozen_path = storage.FrozenAggregationStore(bi_fs.var).get_branch_path(
+            frozen_path = storage.FrozenAggregationStore(
+                get_default_site_filesystem().var
+            ).get_branch_path(
                 aggregation_id=frozen_info.based_on_aggregation_id,
                 branch_title=compiled_aggregation.id,
             )

@@ -38,7 +38,7 @@ def register(page_registry: PageRegistry) -> None:
 
 def _get_finished_stages() -> Generator[FinishedEnum]:
     # Creation of first host
-    if any(Host.all()):
+    if "add_host" in user.welcome_completed_steps or any(Host.all()):
         yield FinishedEnum.add_host
 
     if "activate_changes" in user.welcome_completed_steps:
@@ -142,6 +142,11 @@ def _make_url(addvars: HTTPVariables, filename: str, is_snapin: bool) -> str:
 def get_welcome_data(is_snapin: bool) -> WelcomePage:
     return WelcomePage(
         cards=WelcomeCards(
+            add_folder=_make_url(
+                addvars=[("mode", "newfolder")],
+                filename="wato.py",
+                is_snapin=is_snapin,
+            ),
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
             checkmk_docs=doc_reference_url(DocReference.INTRO_GUI),

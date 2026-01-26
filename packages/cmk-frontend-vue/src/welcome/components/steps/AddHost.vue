@@ -23,6 +23,7 @@ import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 
 import FirstHostSlideout from '../first-host/FirstHostSlideout.vue'
+import type { StepId } from './stepComponents'
 
 const { _t } = usei18n()
 
@@ -30,6 +31,7 @@ const cseSlideoutOpen = ref<boolean>(false)
 
 const props = defineProps<{
   step: number
+  stepId: StepId
   cards: WelcomeCards
   accomplished: boolean
 }>()
@@ -45,6 +47,8 @@ const currentStep: Ref<number> = usePersistentRef<number>(
 if (props.cards.add_host === 'cse-first-host-slideout') {
   useCseSlideout.value = true
 }
+
+const emit = defineEmits(['step-completed'])
 </script>
 
 <template>
@@ -69,7 +73,38 @@ This allows monitoring to start with minimal configuration effort.`
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
         <template #header>
-          <CmkHeading type="h3">{{ _t('Open and run service discovery') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('Set up basic folder structure') }}</CmkHeading>
+        </template>
+        <template #content>
+          <StepParagraph>
+            {{
+              _t(`In Checkmk, folders are the foundation for organizing hosts and applying settings consistently.
+            Creating a folder (or folder structure) before adding your first host helps you keep things tidy from
+            the start and makes it easier to manage similar hosts later on through inheritance. Learn more about
+            folders and inheritance in the`)
+            }}
+            <a href="https://docs.checkmk.com/latest/en/hosts_structure.html?lquery=folder#folder">
+              {{ _t('documentation.') }}
+            </a>
+          </StepParagraph>
+
+          <StepCardsRow>
+            <CmkLinkCard
+              icon-name="newfolder"
+              :url="cards.add_folder"
+              :title="_t('Add folder')"
+              :open-in-new-tab="false"
+            />
+          </StepCardsRow>
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+        </template>
+      </CmkWizardStep>
+
+      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 0">
+        <template #header>
+          <CmkHeading type="h3">{{ _t('Add your first host') }}</CmkHeading>
         </template>
         <template #content>
           <StepHeading>
@@ -148,7 +183,9 @@ This allows monitoring to start with minimal configuration effort.`
             v-if="!accomplished && step"
             type="finish"
             :override-label="_t('Mark as done')"
+            @click="emit('step-completed', stepId)"
           />
+          <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
     </CmkWizard>

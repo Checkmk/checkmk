@@ -20,6 +20,7 @@
     "welcome_cards": {
       "type": "object",
       "properties": {
+        "add_folder": { "type": "string" },
         "checkmk_ai": { "type": "string" },
         "checkmk_docs": { "type": "string" },
         "checkmk_forum": { "type": "string" },
@@ -52,6 +53,7 @@
         "get_stage_information": { "type": "string" }
       },
       "required": [
+        "add_folder",
         "checkmk_ai",
         "checkmk_docs",
         "checkmk_forum",

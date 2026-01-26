@@ -60,13 +60,10 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
     />
     <RestrictedToSingleFilter
       v-else
-      :configured-filter-values="objectConfiguredFilters[objectType] || null"
+      :configured-filter-values="objectConfiguredFilters[objectType] || {}"
       :object-type="objectType"
-      @update:configured-filter-values="
-        (values) => {
-          onUpdateFilterValues(objectType, values)
-        }
-      "
+      @update-filter-values="onUpdateFilterValues"
+      @remove-filter="(filterId) => emit('remove-filter', filterId)"
     />
   </CmkCatalogPanel>
 </template>

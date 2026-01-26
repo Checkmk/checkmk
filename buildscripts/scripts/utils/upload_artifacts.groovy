@@ -315,7 +315,7 @@ void withHotCache(Map args, Closure body) {
     // use a combination of "JOB_BASE_NAME" and "arg.name"
     // as a single job might execute multiple targts (e.g. test-github-actions)
     // groovylint-disable-next-line LineLength
-    def file_pattern = "${args.cache_prefix}-cache-${hashFiles(args.files_to_consider)}-${args.target_name.replaceAll(' ', '-')}-${JOB_BASE_NAME}.tar.lz4";
+    def file_pattern = "${args.cache_prefix}-cache-${hashFiles(args.files_to_consider)}-${args.target_name.replaceAll(' ', '-').replaceAll('/', '-')}-${JOB_BASE_NAME}.tar.lz4";
 
     def upload_new_bazel_folder_artifact = download_hot_cache([
         file_pattern: "${file_pattern}",

@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "UI - Dashboards"
+has_support_component = true
+members_required = 3
+description = """
+- This includes Dashboard related topics like widgets
+"""

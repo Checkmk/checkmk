@@ -3,5 +3,5 @@ display_name = "UI - Monitoring"
 has_support_component = true
 members_required = 4
 description = """
-- This includes Status GUI (Views, Dashboards, ...)
+- This includes Status GUI (Views, ...)
 """

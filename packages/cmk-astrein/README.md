@@ -34,13 +34,13 @@ Astrein integrates with `bazel_rules_lint` as a Bazel aspect. Targets without th
 
 ```bash
 # Lint specific target (human-readable output)
-bazel lint //cmk:lib_cmk_repo
+bazel lint //cmk/...
 
 # Only run astrein linter
-bazel build --aspects //bazel/tools:aspects.bzl%astrein //cmk:lib_cmk_repo
+bazel build --aspects //bazel/tools:aspects.bzl%astrein //cmk/...
 
 # Machine-readable output (SARIF format)
-bazel lint --machine //cmk:lib_cmk_repo
+bazel lint --machine //cmk/...
 ```
 
 ## Suppressing Violations

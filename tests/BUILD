@@ -82,7 +82,7 @@ py_library(
         requirement("pyyaml"),
         requirement("requests"),
     ] + select({
-        "//:gpl+nonfree_repo": ["//cmk:lib_cmk_repo"],
+        "//:gpl+nonfree_repo": ["//cmk:cmk_cloud"],
         "//:gpl_repo": [],
     }),
 )

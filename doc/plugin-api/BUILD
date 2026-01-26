@@ -13,7 +13,11 @@ py_binary(
         requirement("sphinx_autodoc_typehints"),
         requirement("sphinx_rtd_theme"),
         requirement("pydantic"),
-        "//cmk:lib_cmk_repo",
+        "//cmk:cmk_cloud",
+        "//cmk:cmk_community",
+        "//cmk:cmk_pro",
+        "//cmk:cmk_ultimate",
+        "//cmk:cmk_ultimatemt",
     ],
 )
 

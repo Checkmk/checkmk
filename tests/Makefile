@@ -331,17 +331,13 @@ test-werks:
 
 test-code-quality: test-license-headers test-requirements test-file-content test-werks
 
-test-mypy: test-mypy-cmk test-mypy-not-cmk
+test-mypy: test-mypy-cmk
 
 test-mypy-cmk:
-	bazel build --config=mypy //cmk:lib_cmk_repo
+	bazel build --config=mypy ...
 
 test-mypy-not-cmk:
-	cd .. && $(UVENV) mypy \
-	    $(MYPY_ADDOPTS) \
-	    $(ADDITIONAL_MYPY_ARGS) \
-	    --config-file="$(REPO_PATH)/pyproject.toml" \
-	    -- $$($(FIND_PYTHON_FILES) | grep -v "$(realpath ..)\/cmk\/")
+	;
 
 test-mypy-gpl:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-gpl.ini)"

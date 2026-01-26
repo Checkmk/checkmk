@@ -437,24 +437,6 @@ py_library(
     }),
 )
 
-py_library(
-    # The repo edition is only used for testing and generating the plugin-api doc with sphinx.
-    name = "lib_cmk_repo",
-    srcs = glob(["**/*.py"]),
-    data = ["gui/wsgi/applications/index.wsgi"],
-    imports = [".."],
-    tags = ["lint-with-astrein"],
-    visibility = ["//:__subpackages__"],
-    deps = ["//agents/plugins:mk_jolokia"] + select({
-        "@//:gpl+nonfree_repo": [
-            "//non-free/packages/cmc-protocols:py_config_proto",
-            "//non-free/packages/cmc-protocols:py_cycletime_proto",
-            "//non-free/packages/cmc-protocols:py_state_proto",
-        ],
-        "@//:gpl_repo": [],
-    }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
-)
-
 py_wheel(
     name = "cmk_whl",
     distribution = "checkmk",
@@ -519,7 +501,12 @@ py_pytest_main(
 py_doc_test(
     name = "doctest",
     srcs = [
-        "//cmk:lib_cmk_repo",
+        ":cmk",
+        ":cmk_cloud",
+        ":cmk_community",
+        ":cmk_pro",
+        ":cmk_ultimate",
+        ":cmk_ultimatemt",
     ],
     env = {
         "PYTHONWARNINGS": "ignore",
@@ -531,12 +518,13 @@ py_binary(
     name = "generate_api_spec",
     srcs = ["gui/openapi/spec/spec_generator/generate_api_spec.py"],
     main = "gui/openapi/spec/spec_generator/generate_api_spec.py",
-    visibility = [
-        "//omd:__subpackages__",
-        "//packages/cmk-shared-typing:__subpackages__",
-    ],
+    visibility = ["//:__subpackages__"],
     deps = [
-        "lib_cmk_repo",
+        ":cmk_cloud",
+        ":cmk_community",
+        ":cmk_pro",
+        ":cmk_ultimate",
+        ":cmk_ultimatemt",
         requirement("pyyaml"),
     ],
 )

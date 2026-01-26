@@ -144,41 +144,11 @@ This allows monitoring to start with minimal configuration effort.`
           </template>
         </template>
         <template #actions>
-          <CmkWizardButton type="next" :override-label="_t('Continue')" />
-        </template>
-      </CmkWizardStep>
-
-      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
-        <template #header>
-          <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
-        </template>
-        <template #content>
-          <StepParagraph>
-            {{
-              _t(
-                `Changes are saved in a temporary environment first,
-                letting you review and adjust them safely.`
-              )
-            }}
-            <br />
-            {{ _t('Activate changes to apply them to live monitoring.') }}
-          </StepParagraph>
-          <StepCardsRow>
-            <CmkLinkCard
-              icon-name="main-changes"
-              :title="_t('Activate changes')"
-              :url="cards.activate_changes"
-              :open-in-new-tab="false"
-            />
-          </StepCardsRow>
-        </template>
-        <template #actions>
           <CmkWizardButton
             v-if="!accomplished && step"
             type="finish"
             :override-label="_t('Mark as done')"
           />
-          <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>
     </CmkWizard>

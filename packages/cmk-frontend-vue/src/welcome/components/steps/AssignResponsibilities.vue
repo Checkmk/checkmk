@@ -137,36 +137,6 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           </StepCardsRow>
         </template>
         <template #actions>
-          <CmkWizardButton type="next" :override-label="_t('Continue')" />
-          <CmkWizardButton type="previous" />
-        </template>
-      </CmkWizardStep>
-
-      <CmkWizardStep :index="3" :is-completed="() => currentStep >= 3">
-        <template #header>
-          <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
-        </template>
-        <template #content>
-          <StepParagraph>
-            {{
-              _t(
-                `Changes are saved in a temporary environment first,
-                letting you review and adjust them safely.`
-              )
-            }}
-            <br />
-            {{ _t('Activate changes to apply them to live monitoring.') }}
-          </StepParagraph>
-          <StepCardsRow>
-            <CmkLinkCard
-              icon-name="main-changes"
-              :title="_t('Activate changes')"
-              :url="cards.activate_changes"
-              :open-in-new-tab="false"
-            />
-          </StepCardsRow>
-        </template>
-        <template #actions>
           <CmkWizardButton
             v-if="!accomplished && stepId"
             type="finish"

@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import usei18n from '@/lib/i18n'
 
 export const storageHandler = {
   get: (storage: Storage, key: string, defaultValue: unknown = null): unknown => {
@@ -26,38 +27,65 @@ export const wait = async (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms))
 
 export async function copyToClipboard(text: string): Promise<void> {
-  try {
-    // Check if clipboard API is available
-    if (navigator.clipboard && navigator.clipboard.writeText) {
+  // Check if clipboard API is available
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
       await navigator.clipboard.writeText(text)
-    } else {
-      fallbackCopyToClipboard(text)
+      return
+    } catch {
+      // continue to fallback method
     }
-  } catch (err) {
-    console.error('Failed to copy to clipboard:', err)
-    throw err
   }
+  fallbackCopyToClipboard(text)
 }
 
 function fallbackCopyToClipboard(text: string) {
-  const textArea = document.createElement('textarea')
-  textArea.value = text
+  const { _t } = usei18n()
 
-  // Avoid scrolling to bottom
-  textArea.style.top = '0'
-  textArea.style.left = '0'
-  textArea.style.position = 'fixed'
+  // Use a contenteditable div which has better focus support
+  const container = document.createElement('div')
+  container.contentEditable = 'true'
+  container.style.position = 'absolute'
+  container.style.left = '-9999px'
+  container.style.top = '-9999px'
+  container.style.whiteSpace = 'pre'
+  container.textContent = text
 
-  document.body.appendChild(textArea)
-  textArea.focus()
-  textArea.select()
+  document.body.appendChild(container)
+  container.focus()
 
-  try {
-    const result = document.execCommand('copy')
-    if (!result) {
-      throw new Error('Fallback copy to clipboard command was unsuccessful')
+  // Select all text in the container using Range API
+  const range = document.createRange()
+  range.selectNodeContents(container)
+  const selection = window.getSelection()
+
+  if (selection) {
+    selection.removeAllRanges()
+    selection.addRange(range)
+    const selectedText = selection.toString()
+    try {
+      const result = document.execCommand('copy')
+      selection.removeAllRanges()
+      document.body.removeChild(container)
+      if (!result) {
+        console.error('[fallbackCopyToClipboard] execCommand returned false:')
+        throw new Error(_t('Copy failed: this might be due to browser security restrictions.'))
+      }
+      // Additional check: if nothing was selected, the copy _likely_ failed
+      if (!selectedText || selectedText.length === 0) {
+        throw new Error(_t('Copy failed: no text was selected.'))
+      }
+    } catch (error) {
+      selection.removeAllRanges()
+      if (document.body.contains(container)) {
+        document.body.removeChild(container)
+      }
+      console.error('[fallbackCopyToClipboard] Catch block error:', error)
+      throw error instanceof Error ? error : new Error(_t('Failed to copy to clipboard'))
     }
-  } finally {
-    document.body.removeChild(textArea)
+  } else {
+    document.body.removeChild(container)
+    console.error('[fallbackCopyToClipboard] No selection object available.')
+    throw new Error(_t('Copy failed.'))
   }
 }

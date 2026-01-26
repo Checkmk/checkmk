@@ -50,7 +50,9 @@ async fn check_http_output(
     expected_summary_start: &str,
 ) -> AnyhowResult<()> {
     let (port, listener) = tcp_listener("0.0.0.0");
-    let (client_cfg, request_cfg, request_information, check_params) = make_standard_configs(port);
+    let url = Url::parse(&format!("http://{}:{}", LOCALHOST_DNS, port)).unwrap();
+    let (client_cfg, request_cfg, request_information, check_params) =
+        make_standard_configs(url.clone());
 
     let check_http_thread = tokio::spawn(collect_checks(
         client_cfg,
@@ -65,20 +67,21 @@ async fn check_http_output(
 
     assert!(check_http_payload.starts_with(expected_http_payload_start));
     assert!(output.worst_state == expected_state);
-    assert!(output.to_string().starts_with(expected_summary_start));
+    assert!(output
+        .to_string()
+        .starts_with(&format!("{}, {}", url, expected_summary_start)));
 
     Ok(())
 }
 
 fn make_standard_configs(
-    port: u16,
+    url: Url,
 ) -> (
     ClientConfig,
     RequestConfig,
     RequestInformation,
     CheckParameters,
 ) {
-    let url = Url::parse(&format!("http://{}:{}", LOCALHOST_DNS, port)).unwrap();
     (
         ClientConfig {
             version: None,

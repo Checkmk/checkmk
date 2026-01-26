@@ -137,8 +137,10 @@ pub fn collect_response_checks(
 }
 
 fn check_urls(url: Url, final_url: Url, server: Option<String>) -> Vec<Option<CheckResult>> {
-    let url_text = format!("URL to test: {}", url);
-    let mut results = vec![CheckResult::details(State::Ok, &url_text)];
+    let mut results = vec![
+        CheckResult::summary(State::Ok, url.as_str()),
+        CheckResult::details(State::Ok, &format!("URL to test: {}", url)),
+    ];
     // If we end up with a different final_url, we obviously got redirected.
     // Since we didn't run into an error, the redirect must be OK.
 
@@ -635,10 +637,10 @@ mod test_check_urls {
                 Url::parse("https://foo.bar/").unwrap(),
                 None,
             ),
-            vec![CheckResult::details(
-                State::Ok,
-                "URL to test: https://foo.bar/"
-            ),]
+            vec![
+                CheckResult::summary(State::Ok, "https://foo.bar/"),
+                CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
+            ]
         )
     }
 
@@ -651,6 +653,7 @@ mod test_check_urls {
                 None,
             ),
             vec![
+                CheckResult::summary(State::Ok, "https://foo.bar/"),
                 CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
                 CheckResult::details(State::Ok, "Followed redirect to: https://foo.bar/baz"),
             ]

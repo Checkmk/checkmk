@@ -256,7 +256,7 @@ test-format-bazel:
 test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
-test-performance:
+test-performance: prepare-playwright
 	$(UVENV) "$(realpath performance)/perftest.sh"
 
 test-performance-docker:

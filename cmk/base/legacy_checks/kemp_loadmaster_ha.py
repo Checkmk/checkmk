@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # .1.3.6.1.4.1.12196.13.0.9.0 1
 # .1.3.6.1.4.1.12196.13.0.10.0 7.1-20b.20140926-1505
 
+
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, StringTable
@@ -15,13 +16,15 @@ from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, StringT
 check_info = {}
 
 
-def discover_kemp_loadmaster_ha(info):
+def discover_kemp_loadmaster_ha(info: StringTable) -> list[tuple[None, None]]:
     if info and info[0][0] != "0":
         return [(None, None)]
     return []
 
 
-def check_kemp_loadmaster_ha(_no_item, _no_params, info):
+def check_kemp_loadmaster_ha(
+    _no_item: None, _no_params: Mapping[str, Any], info: StringTable
+) -> tuple[int, str]:
     map_states = {
         "0": "none",
         "1": "master",

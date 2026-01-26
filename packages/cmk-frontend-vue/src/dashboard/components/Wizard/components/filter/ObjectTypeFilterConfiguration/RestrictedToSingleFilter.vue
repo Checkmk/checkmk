@@ -25,13 +25,15 @@ const { _t } = usei18n()
 
 const props = defineProps<{
   objectType: ObjectType
+  configuredFilterValues: ConfiguredValues
+}>()
+
+const emit = defineEmits<{
+  (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
+  (e: 'remove-filter', filterId: string): void
 }>()
 
 const { filterName } = getStrings(props.objectType)
-
-const configuredFilterValues = defineModel<ConfiguredValues | null>('configuredFilterValues', {
-  default: null
-})
 
 const { byId, ensureLoaded } = useVisualInfoCollection()
 
@@ -43,13 +45,13 @@ const components = computed((): ComponentConfig[] => {
   return visualInfo.extensions!.single_filter
 })
 
-const showFilter = ref<boolean>(configuredFilterValues.value !== null)
+const showFilter = ref<boolean>(Object.keys(props.configuredFilterValues).length > 0)
 
 const handleComponentChange = (_componentId: string, values: ConfiguredValues): void => {
-  configuredFilterValues.value = {
-    ...(configuredFilterValues.value ?? {}),
+  emit('update-filter-values', props.objectType, {
+    ...props.configuredFilterValues,
     ...values
-  }
+  })
 }
 
 const handleShowInputs = (): void => {
@@ -57,11 +59,7 @@ const handleShowInputs = (): void => {
 }
 
 const handleClear = (): void => {
-  if (configuredFilterValues.value === null) {
-    return
-  }
-
-  delete configuredFilterValues.value[props.objectType]
+  emit('remove-filter', props.objectType)
   showFilter.value = false
 }
 

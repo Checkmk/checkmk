@@ -135,20 +135,16 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 	fi
 	PYTHON_VERSION="$(patsubst test-agent-plugin-unit-py%-docker,%,$@)" ; \
 	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
-	IMAGE_HASH="$$(docker build --build-arg DOCKER_REGISTRY="${DOCKER_REGISTRY_NO_HTTPS}" --build-arg PYTHON_VERSION_MAJ_MIN="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
-	echo "Docker image: $$IMAGE_HASH" && \
 	if [ ! -d "$$TEST_PATH/datasets" ]; then mkdir "$$TEST_PATH/datasets"; fi && \
 	docker run \
-	    --rm \
-	    $(DOCKER_ADDOPTS) \
-	    -e "PYTEST_ADDOPTS" \
-	    -e "CI" \
-	    -u $$(id -u):$$(id -g) \
-	    -v "$$TEST_PATH:/tests" \
-	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
-	    -v "$(realpath ../agents):/agents" \
-	    $$IMAGE_HASH \
-	    python$$PYTHON_VERSION -m pytest "/tests"
+		--cpus=2 --memory=2g \
+		--rm \
+		--workdir /checkmk \
+		-v ../:/checkmk \
+		-e "PYTEST_ADDOPTS" \
+		-e "PYTHON_VERSION_MAJ_MIN=$$PYTHON_VERSION" \
+		${DOCKER_REGISTRY_NO_HTTPS}/python:$$PYTHON_VERSION \
+		tests/agent-plugin-unit/bootstrap.sh --all
 
 .PHONY: test-ruff
 test-ruff:

@@ -12,7 +12,7 @@ void main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
 
     def job_names = [
-        "test-agent-plugin-unit",
+        "trigger-test-agent-plugin-unit",
         "test-bazel-lint",
         "test-format",
         "test-github-actions",

@@ -30,7 +30,8 @@ const iFrameUrl = computed(() => {
     dashboard_owner: props.dashboardKey.owner,
     widget_id: props.widget_id,
     view_name: content.view_name,
-    context: JSON.stringify(props.effective_filter_context.filters)
+    context: JSON.stringify(props.effective_filter_context.filters),
+    is_preview: JSON.stringify(props.isPreview ?? false)
   }).toString()
   return `widget_iframe_view.py?${urlParams}`
 })

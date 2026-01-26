@@ -151,6 +151,7 @@ class ViewWidgetIFramePageHelper:
         *,
         is_reload: bool,
         is_debug: bool,
+        is_preview: bool = False,
     ) -> None:
         view_spec = cls._prepare_view_spec(view_spec)
         view = View(
@@ -162,7 +163,7 @@ class ViewWidgetIFramePageHelper:
         view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
-        with cls._wrapper_context(is_reload):
+        with cls._wrapper_context(is_reload, is_preview):
             process_view(
                 GUIViewRenderer(
                     view,
@@ -206,21 +207,27 @@ class ViewWidgetIFramePageHelper:
         return view_spec
 
     @classmethod
-    def _wrapper_context(cls, is_reload: bool) -> contextlib.AbstractContextManager[None]:
+    def _wrapper_context(
+        cls, is_reload: bool, is_preview: bool
+    ) -> contextlib.AbstractContextManager[None]:
         if not is_reload:
-            return cls._content_wrapper()
+            return cls._content_wrapper(is_preview)
 
         return contextlib.nullcontext()
 
     @staticmethod
     @contextlib.contextmanager
-    def _content_wrapper() -> Generator[None]:
+    def _content_wrapper(is_preview: bool) -> Generator[None]:
         html.add_body_css_class("view")
         html.add_body_css_class("dashlet")
         html.open_div(id_="dashlet_content_wrapper")
+        if is_preview:
+            html.open_div(class_="click_shield")
         try:
             yield None
         finally:
+            if is_preview:
+                html.close_div()
             html.close_div()
             html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
@@ -255,6 +262,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     raw_context: Annotated[VisualContext, Json]
     limit: Literal["soft", "hard", "none"]
     raw_debug: str | None
+    is_preview: bool
 
     @override
     @classmethod
@@ -273,6 +281,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                         "display_options", request.get_str_input("_display_options")
                     ),
                     raw_debug=request.get_str_input("debug"),
+                    is_preview=request.get_str_input("is_preview", "false"),
                 )
             )
         except ValidationError as e:
@@ -359,7 +368,9 @@ class ViewWidgetIFramePage(Page):
         """
         parameters = _ViewWidgetIFrameRequestParameters.from_request(ctx.request)
         ViewWidgetIFramePageHelper.setup_display_and_painter_options(
-            ctx.request, parameters.unique_widget_name(), parameters.is_reload()
+            ctx.request,
+            parameters.unique_widget_name(),
+            parameters.is_reload(),
         )
         try:
             view_spec = parameters.load_view_spec()
@@ -388,6 +399,7 @@ class ViewWidgetIFramePage(Page):
             user_permissions,
             is_reload=parameters.is_reload(),
             is_debug=parameters.is_debug(),
+            is_preview=parameters.is_preview,
         )
 
 

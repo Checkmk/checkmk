@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+
 import type { WidgetGeneralSettings } from '@/dashboard/types/widget'
 
 interface DashboardContentContainerProps {
@@ -13,13 +15,15 @@ interface DashboardContentContainerProps {
   general_settings: WidgetGeneralSettings
   contentOverflow?: string
   contentCenter?: boolean
+  isScrollablePreview?: boolean
 }
 
 const {
   effectiveTitle,
   general_settings: generalSettings,
   contentOverflow = 'auto',
-  contentCenter = false
+  contentCenter = false,
+  isScrollablePreview = false
 } = defineProps<DashboardContentContainerProps>()
 
 const hasBackground = computed<boolean>(() => {
@@ -48,7 +52,11 @@ const displayTitle = computed<string | undefined>(() => {
       }"
       role="heading"
     >
-      <a v-if="generalSettings.title?.url" :href="generalSettings.title.url">{{ displayTitle }}</a>
+      <a
+        v-if="generalSettings.title?.url && !isScrollablePreview"
+        :href="generalSettings.title.url"
+        >{{ displayTitle }}</a
+      >
       <span v-else>{{ displayTitle }}</span>
     </div>
     <div
@@ -58,7 +66,16 @@ const displayTitle = computed<string | undefined>(() => {
         'db-content-container__content-center': contentCenter
       }"
     >
-      <slot />
+      <CmkScrollContainer
+        v-if="isScrollablePreview"
+        height="calc(calc(var(--dimension-8) * 10) - var(--dimension-8))"
+        class="db-content-container__preview-scroll-container"
+      >
+        <div class="db-content-container__preview-click-shield">
+          <slot />
+        </div>
+      </CmkScrollContainer>
+      <slot v-else />
     </div>
   </div>
 </template>
@@ -104,5 +121,15 @@ const displayTitle = computed<string | undefined>(() => {
     justify-content: center;
     align-items: center;
   }
+}
+
+/* This max-width is only needed for the preview of 'url' widgets, i.e. plain
+   DashboardContentIFrame, which in preview mode always overflow this container */
+.db-content-container__preview-scroll-container {
+  max-width: 720px;
+}
+
+.db-content-container__preview-click-shield {
+  pointer-events: none;
 }
 </style>

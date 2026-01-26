@@ -205,6 +205,10 @@ body.main.dashlet {
           top: 3px;
         }
       }
+
+      div.click_shield {
+        pointer-events: none;
+      }
     }
   }
 }

@@ -116,8 +116,12 @@ const valueRange: Ref<[number, number] | undefined> = computed(() => {
 </script>
 
 <template>
-  <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
-    <div v-if="fetchingErrorMessage" class="db-content-ntop__error error">
+  <DashboardContentContainer
+    :effective-title="effectiveTitle"
+    :general_settings="general_settings"
+    :is-scrollable-preview="isPreview ?? false"
+  >
+    <div v-if="fetchingErrorMessage" class="db-content-top-list__error error">
       {{ fetchingErrorMessage }}
     </div>
     <div v-else-if="data === undefined" class="db-content-top-list__loading">

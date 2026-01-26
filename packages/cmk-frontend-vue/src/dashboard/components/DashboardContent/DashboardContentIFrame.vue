@@ -21,8 +21,14 @@ const { contentCenter } = defineProps<DashboardContentIFrameProps>()
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
     :content-center="contentCenter"
+    :is-scrollable-preview="isPreview ?? false"
   >
-    <div class="db-content-i-frame__div">
+    <div
+      class="db-content-i-frame__div"
+      :class="{
+        'db-content-i-frame__preview': isPreview
+      }"
+    >
       <iframe class="db-content-i-frame__iframe" allowtransparency="true" :src="content.url" />
     </div>
   </DashboardContentContainer>
@@ -39,5 +45,12 @@ const { contentCenter } = defineProps<DashboardContentIFrameProps>()
   height: 100%;
   width: 100%;
   border: none;
+}
+
+/* Overflowing of this preview iframe is handled in DashboardContentContainer's scroll container */
+.db-content-i-frame__preview,
+.db-content-i-frame__preview .db-content-i-frame__iframe {
+  width: 100vw;
+  height: 100vh;
 }
 </style>

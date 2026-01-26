@@ -18,6 +18,7 @@ export interface ContentProps<T = WidgetContent> {
   effectiveTitle: string | undefined
   effective_filter_context: EffectiveWidgetFilterContext
   dashboardKey: DashboardKey
+  isPreview?: boolean
 }
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 

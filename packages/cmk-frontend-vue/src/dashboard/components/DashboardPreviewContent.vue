@@ -4,12 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import MissingFiltersMsg from '@/dashboard/components/DashboardFilterSettings/MissingFiltersMsg.vue'
 
 import DashboardContent from './DashboardContent/DashboardContent.vue'
+import { isContentWithScrollablePreview } from './DashboardContent/contentWithScrollablePreview.ts'
 import type { ContentProps } from './DashboardContent/types.ts'
 
-defineProps<ContentProps>()
+const props = defineProps<ContentProps>()
+const effectiveContentProps = computed(() => {
+  return isContentWithScrollablePreview(props.content.type) ? { ...props, isPreview: true } : props
+})
 </script>
 
 <template>
@@ -18,8 +24,12 @@ defineProps<ContentProps>()
       render-context="configurationPreview"
       :effective-filter-context="effective_filter_context"
     >
-      <div class="db-preview-content__click-shield">
-        <DashboardContent v-bind="$props" />
+      <div
+        :class="{
+          'db-preview-content__click-shield': !isContentWithScrollablePreview(content.type)
+        }"
+      >
+        <DashboardContent v-bind="effectiveContentProps" />
       </div>
     </MissingFiltersMsg>
   </div>

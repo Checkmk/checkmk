@@ -4,19 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterator, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.plugins.ups_socomec.lib import DETECT_SOCOMEC
 
 check_info = {}
 
+Section = dict[str, dict[str, tuple[int, None]]]
 
-def parse_ups_socomec_outphase(string_table):
-    parsed = {}
+
+def parse_ups_socomec_outphase(string_table: StringTable) -> Section:
+    parsed: Section = {}
     for index, rawvolt, rawcurr, rawload in string_table:
         parsed["Phase " + index] = {
             "voltage": (int(rawvolt) // 10, None),  # The actual precision does not appear to
@@ -26,14 +29,16 @@ def parse_ups_socomec_outphase(string_table):
     return parsed
 
 
-def check_ups_socomec_outphase(item, params, parsed):
+def check_ups_socomec_outphase(
+    item: str, params: Mapping[str, Any], parsed: Section
+) -> Iterator[tuple[int, str] | tuple[int, str, list[Any]]]:
     if not item.startswith("Phase"):
         # fix item names discovered before 1.2.7
         item = "Phase %s" % item
-    return check_elphase(item, params, parsed)
+    yield from check_elphase(item, params, parsed)
 
 
-def discover_ups_socomec_outphase(section):
+def discover_ups_socomec_outphase(section: Section) -> Iterator[tuple[str, dict[str, object]]]:
     yield from ((item, {}) for item in section)
 
 

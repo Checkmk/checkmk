@@ -115,43 +115,62 @@ REQUIRED_EXTERNAL_DEPS = [
 ]
 
 COMMUNITY_PY = glob(
-    [
+    include = [
         "**/community/**/*.py",
     ],
     allow_empty = True,
-    exclude = DO_NOT_DEPLOY,
+    exclude = DO_NOT_DEPLOY + ["**/nonfree/**"],
 )
 
 ULTIMATE_PY = glob(
-    [
+    include = [
         "**/ultimate/**/*.py",
+        "**/nonfree/**/*.py",
     ],
     allow_empty = True,
-    exclude = DO_NOT_DEPLOY,
+    exclude = DO_NOT_DEPLOY + [
+        # ultimate includes pro, but not cloud or ultimatemt
+        "**/nonfree/**/cloud/**",
+        "**/nonfree/**/ultimatemt/**",
+    ],
 )
 
 PRO_PY = glob(
     [
         "**/pro/**/*.py",
+        "**/nonfree/**/*.py",
     ],
     allow_empty = True,
-    exclude = DO_NOT_DEPLOY,
+    exclude = DO_NOT_DEPLOY + [
+        # pro doesn't include any other enterprise edition
+        "**/nonfree/**/cloud/**",
+        "**/nonfree/**/ultimate/**",
+        "**/nonfree/**/ultimatemt/**",
+    ],
 )
 
 ULTIMATEMT_PY = glob(
     [
         "**/ultimatemt/**/*.py",
+        "**/nonfree/**/*.py",
     ],
     allow_empty = True,
-    exclude = DO_NOT_DEPLOY,
+    exclude = DO_NOT_DEPLOY + [
+        # ultimate includes pro and ultimate but not cloud
+        "**/nonfree/**/cloud/**",
+    ],
 )
 
 CLOUD_PY = glob(
     [
         "**/cloud/**/*.py",
+        "**/nonfree/**/*.py",
     ],
     allow_empty = True,
-    exclude = DO_NOT_DEPLOY,
+    exclude = DO_NOT_DEPLOY + [
+        # cloud includes pro and ultimate but not ultimatemt
+        "**/nonfree/**/ultimatemt/**",
+    ],
 )
 
 filegroup(
@@ -261,7 +280,18 @@ py_library(
     srcs = glob(
         # Keep in sync with `REPO_PATCH_RULES` from `versioning.groovy`.
         include = ["**/*.py"],
-        exclude = ["plugins/**/agents/*"] + COMMUNITY_PY + ULTIMATE_PY + PRO_PY + ULTIMATEMT_PY + CLOUD_PY + DO_NOT_DEPLOY + ["base/legacy_checks/*"],
+        exclude = (
+            ["plugins/**/agents/*"] +
+            COMMUNITY_PY +
+            ULTIMATE_PY +
+            PRO_PY +
+            ULTIMATEMT_PY +
+            CLOUD_PY +
+            DO_NOT_DEPLOY + [
+                "base/legacy_checks/*",
+                "**/nonfree/**",
+            ]
+        ),
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
@@ -300,7 +330,7 @@ py_library(
         "@//:gpl_repo": [],
     }) + [
         "lib_cmk",
-    ] + edition_python_deps[edition],
+    ] + edition_python_deps[edition] + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 ) for edition, srcs in [
     ("ultimate", ULTIMATE_PY),
     ("pro", PRO_PY),
@@ -398,6 +428,7 @@ py_doc_test(
     env = {
         "PYTHONWARNINGS": "ignore",
     },
+    tags = ["no-mypy"],
 )
 
 py_binary(
@@ -410,6 +441,7 @@ py_binary(
     ],
     deps = [
         "lib_cmk_repo",
+        requirement("pyyaml"),
     ],
 )
 

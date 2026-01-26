@@ -9,7 +9,6 @@ from typing import override
 from livestatus import SiteConfiguration
 
 from cmk.gui.config import active_config
-from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -24,19 +23,20 @@ class UpdateSiteConfigurations(UpdateAction):
         site_mgmt = site_management_registry["site_management"]
         all_sites = site_mgmt.load_sites()
 
-        if is_distributed_setup_remote_site(all_sites):
-            # remote sites don't have remote sites...
-            return
-
         for site_id, site_cfg in all_sites.items():
             if self._set_is_trusted(site_cfg):
                 logger.info("Trusting site %s", site_id)
                 changed = True
 
         if changed:
+            # Note: In a remote site this method would also reach the method
+            # update_distributed_wato files - which is dangerous, because of the risk
+            # of duplicate hosts. However, there is also a guard within this method
+            # that prevents the creation of the distributed_wato files in remote sites.
+            # Just rewrite the sites.mk and nothing else.
             site_mgmt.save_sites(
                 all_sites,
-                activate=True,
+                activate=False,
                 pprint_value=active_config.wato_pprint_config,
             )
 

@@ -4,13 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Sequence
+import logging
+import typing
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-
-__all__ = ["MetricBackendFetcherConfig"]
-
 from enum import Enum
-from typing import Self
+from pathlib import Path
+from typing import Final, Self
+
+from cmk.helper_interface import AgentRawData
+
+from ._abstract import Fetcher
 
 
 class AttributeType(Enum):
@@ -56,3 +60,38 @@ class MetricBackendFetcherConfig:
             ],
             check_interval=check_interval,
         )
+
+
+class MetricBackendFetcher(Fetcher[AgentRawData]):
+    def __init__(
+        self,
+        *,
+        argv: Sequence[str],
+        make_output: Callable[[Path, Sequence[str]], str],
+        omd_root: Path,
+    ) -> None:
+        super().__init__()
+        self.argv: Final = argv
+        self.make_output = make_output
+        self.omd_root = omd_root
+        self._logger: Final = logging.getLogger("cmk.helper.metric_backend_fetcher")
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(" + ", ".join((f"argv={self.argv!r}",)) + ")"
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, MetricBackendFetcher):
+            return False
+        return self.argv == other.argv
+
+    def open(self) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
+
+    @typing.override
+    def _fetch_from_io(self, mode: object) -> AgentRawData:
+        self._logger.debug("Get data from metric backend")
+
+        return AgentRawData(self.make_output(self.omd_root, self.argv).encode("utf-8"))

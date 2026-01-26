@@ -242,8 +242,8 @@ test-integration-redfish:
 	$(realpath integration_redfish) --session-timeout 1800
 
 test-integration-otel:
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath integration)/nonfree/ultimate/otel --session-timeout 1800
+	EDITION=ultimate $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(realpath integration)/nonfree/ultimate/otel/ --session-timeout 1800
 
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \

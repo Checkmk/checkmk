@@ -185,7 +185,6 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_mobileiron"),
     SpecialAgent("agent_mqtt"),
     SpecialAgent("agent_netapp_ontap"),
-    SpecialAgent("agent_otel"),
     SpecialAgent("agent_prism"),
     SpecialAgent("agent_prometheus"),
     SpecialAgent("agent_proxmox_ve"),
@@ -215,7 +214,6 @@ _SKIPPED_SPECIAL_AGENTS = {
 
 _ULTIMATE_AGENTS = {
     "agent_custom_query_metric_backend",
-    "agent_otel",
 }
 
 

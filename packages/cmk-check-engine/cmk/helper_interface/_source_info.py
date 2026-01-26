@@ -25,6 +25,7 @@ class FetcherType(enum.Enum):
     SPECIAL_AGENT = enum.auto()
     SNMP = enum.auto()
     TCP = enum.auto()
+    METRICS = enum.auto()
 
 
 @dataclasses.dataclass(frozen=True)

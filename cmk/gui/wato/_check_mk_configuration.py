@@ -5560,6 +5560,10 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                             "piggyback",
                             _individual_spec(_("Piggyback")),
                         ),
+                        (
+                            "otel_metrics",
+                            _individual_spec(_("Metric Backend")),
+                        ),
                     ],
                 ),
             ),

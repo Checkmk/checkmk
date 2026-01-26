@@ -588,7 +588,7 @@ class MissingSourceSource(Source):
 
 
 class MetricBackendSource(Source[AgentRawData]):
-    fetcher_type: Final = FetcherType.SPECIAL_AGENT
+    fetcher_type: Final = FetcherType.METRICS
     source_type: Final = SourceType.HOST
 
     def __init__(
@@ -613,7 +613,7 @@ class MetricBackendSource(Source[AgentRawData]):
         return SourceInfo(
             self.host_name,
             self.ipaddress,
-            "special_otel",  # TODO: metric backend
+            "otel_metrics",  # TODO: metric backend
             self.fetcher_type,
             self.source_type,
         )

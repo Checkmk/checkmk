@@ -46,7 +46,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
     :disabled="false"
     :accomplished="accomplished"
     :title="_t('Adjust service thresholds')"
-    :info="_t('5-7 min')"
+    :info="_t('3 Steps | Takes 5-7 min')"
   >
     <StepParagraph>
       {{

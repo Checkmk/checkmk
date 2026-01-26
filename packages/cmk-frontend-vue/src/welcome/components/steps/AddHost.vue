@@ -53,7 +53,7 @@ if (props.cards.add_host === 'cse-first-host-slideout') {
     :disabled="false"
     :accomplished="accomplished"
     :title="_t('Add your first host')"
-    :info="_t('2-5 min')"
+    :info="_t('2 Steps | Takes 7-10 min')"
   >
     <StepParagraph>
       {{

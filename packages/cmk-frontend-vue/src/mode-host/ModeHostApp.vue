@@ -47,6 +47,8 @@ const tagAgentInputSelectElement: Ref<HTMLSelectElement | null> = ref(null)
 const tagAgentInputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const tagAgentDefaultElement: Ref<HTMLDivElement | null> = ref(null)
 const cmkConnectionModeSelectElement: Ref<HTMLSelectElement | null> = ref(null)
+const cmkConnectionModeDefaultElement: Ref<HTMLDivElement | null> = ref(null)
+const cmkConnectionModeInputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 
 onMounted(() => {
   formElement.value = getElementBySelector(`form[id="form_${props.form_keys.form}"]`)
@@ -94,6 +96,12 @@ onMounted(() => {
   )
   cmkConnectionModeSelectElement.value = document.querySelector(
     `select[name="${props.form_keys.cmk_agent_connection}"]`
+  )
+  cmkConnectionModeDefaultElement.value = document.querySelector(
+    `div[id="attr_default_${props.form_keys.cmk_agent_connection}"]`
+  )
+  cmkConnectionModeInputButtonElement.value = document.querySelector(
+    `input[id="${props.form_keys.cb_change}_${props.form_keys.cmk_agent_connection}"]`
   )
   relayInputButtonElement.value = document.querySelector(
     `input[id="${props.form_keys.cb_change}_${props.form_keys.relay}"]`
@@ -178,6 +186,8 @@ function getElementBySelector<T>(selector: string): T {
     :relay-default-element="relayDefaultElement"
     :default-relay-id-hash="default_relay_id_hash"
     :cmk-agent-connection-mode-select-element="cmkConnectionModeSelectElement"
+    :cmk-agent-connection-mode-default-element="cmkConnectionModeDefaultElement"
+    :cmk-agent-connection-mode-input-button-element="cmkConnectionModeInputButtonElement"
     :sites="sites"
     :server-per-site="server_per_site"
     :agent-connection-modes="agent_connection_modes"

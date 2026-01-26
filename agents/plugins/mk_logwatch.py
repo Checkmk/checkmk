@@ -20,7 +20,7 @@ You should find an example configuration file at
 
 from __future__ import with_statement
 
-__version__ = "2.4.0p20"
+__version__ = "2.4.0p21"
 
 import sys
 

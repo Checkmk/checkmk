@@ -22,7 +22,7 @@ from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdap
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
 
-__version__ = "2.4.0p20"
+__version__ = "2.4.0p21"
 
 USER_AGENT = f"checkmk-special-purefa-{__version__}"
 

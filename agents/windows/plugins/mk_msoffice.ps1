@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-$CMK_VERSION = "2.4.0p20"
+$CMK_VERSION = "2.4.0p21"
 $MK_CONFDIR = $env:MK_CONFDIR
 $ClientId = ""
 $TenantId = ""

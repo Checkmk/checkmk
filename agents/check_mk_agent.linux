@@ -519,7 +519,7 @@ sudo_or_su() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0p20"
+    echo "Version: 2.4.0p21"
     echo "AgentOS: linux"
     echo "Hostname: $(uname -n)"
 

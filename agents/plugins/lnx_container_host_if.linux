@@ -14,7 +14,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0p20"
+CMK_VERSION="2.4.0p21"
 CONFIG_FILE="${MK_CONFDIR}/lnx_container_host_if.cfg"
 
 __read_network_interface_files() {

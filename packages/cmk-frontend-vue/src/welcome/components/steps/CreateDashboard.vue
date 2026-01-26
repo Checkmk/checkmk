@@ -44,7 +44,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
     :disabled="false"
     :accomplished="accomplished"
     :title="_t('Create a dashboard')"
-    :info="_t('5-7 min')"
+    :info="_t('2 Steps | Takes 7-10 min')"
   >
     <StepParagraph>
       {{

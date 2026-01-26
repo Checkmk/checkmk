@@ -44,7 +44,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
     :disabled="false"
     :accomplished="accomplished"
     :title="_t('Enable notifications')"
-    :info="_t('5-7 min')"
+    :info="_t('2 Steps | Takes 5-7 min')"
   >
     <StepParagraph>
       {{

@@ -8,7 +8,8 @@ import json
 import time
 import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from enum import auto, Enum
 from typing import Any, assert_never, Literal, override
 from uuid import uuid4
 
@@ -86,6 +87,12 @@ from ._utils import (
 )
 
 RenderOutput = HTML | str
+
+
+class ExpandableLegendAppearance(Enum):
+    POP_UP = auto()
+    FOLDABLE = auto()
+
 
 #   .--HTML-Graphs---------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |
@@ -194,9 +201,16 @@ def _render_graph_html(
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
+    expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> HTML:
     with output_funnel.plugged():
-        _show_graph_html_content(request, graph_artwork, graph_data_range, graph_render_config)
+        _show_graph_html_content(
+            request,
+            graph_artwork,
+            graph_data_range,
+            graph_render_config,
+            expandable_legend_appearance,
+        )
         html_code = HTML.without_escaping(output_funnel.drain())
 
     return HTMLWriter.render_javascript(
@@ -312,6 +326,7 @@ def _show_graph_html_content(
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
+    expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> None:
     """Render the HTML code of a graph without its container
 
@@ -383,7 +398,7 @@ def _show_graph_html_content(
 
     # Note: due to "omit_zero_metrics" the graph might not have any curves
     if graph_render_config.show_legend and graph_artwork.curves:
-        _show_graph_legend(graph_artwork, graph_render_config)
+        _show_graph_legend(graph_artwork, graph_render_config, expandable_legend_appearance)
 
     if additional_html := graph_artwork.definition.additional_html:
         html.open_div(align="center")
@@ -523,7 +538,11 @@ def _render_attributes(
         return HTML.without_escaping(output_funnel.drain())
 
 
-def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig) -> None:
+def _show_graph_legend(
+    graph_artwork: GraphArtwork,
+    graph_render_config: GraphRenderConfig,
+    expandable_legend_appearance: ExpandableLegendAppearance,
+) -> None:
     font_size_style = "font-size: %dpt;" % graph_render_config.font_size
     scalars = _get_scalars(graph_artwork, graph_render_config)
 
@@ -576,11 +595,20 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
             for name, value in attrs.items()
         ]
         if attributes:
-            html.open_td(
-                style=[font_size_style],
-                class_=["with_attributes"],
-                onclick=f"const el = document.getElementById('{table_uuid_str}'); el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';",
-            )
+            match expandable_legend_appearance:
+                case ExpandableLegendAppearance.POP_UP:
+                    html.open_td(
+                        style=[font_size_style],
+                        class_=["with_attributes"],
+                        onmouseover=f"cmk.graphs.showAttributes(event, '{curve['title']}', {json.dumps([_('Name'), _('Value'), _('Type')])}, {json.dumps([asdict(attr) for attr in attributes])})",
+                        onmouseleave="cmk.graphs.hideAttributes()",
+                    )
+                case ExpandableLegendAppearance.FOLDABLE:
+                    html.open_td(
+                        style=[font_size_style],
+                        class_=["with_attributes"],
+                        onclick=f"const el = document.getElementById('{table_uuid_str}'); el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';",
+                    )
         else:
             html.open_td(style=[font_size_style])
 
@@ -602,7 +630,7 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
 
         html.open_tr()
         html.open_td(style=font_size_style, colspan=len(scalars) + 1)
-        if attributes:
+        if attributes and expandable_legend_appearance is ExpandableLegendAppearance.FOLDABLE:
             html.write_html(_render_attributes(table_uuid_str, graph_legend_styles, attributes))
         html.close_td()
         html.close_tr()
@@ -790,7 +818,11 @@ def render_ajax_graph(
 
     with output_funnel.plugged():
         _show_graph_html_content(
-            request, graph_artwork_or_errors.artwork, graph_data_range, graph_render_config
+            request,
+            graph_artwork_or_errors.artwork,
+            graph_data_range,
+            graph_render_config,
+            ExpandableLegendAppearance.POP_UP,
         )
         html_code = HTML.without_escaping(output_funnel.drain())
 
@@ -919,6 +951,7 @@ def render_graphs_from_specification_html(
                 temperature_unit=temperature_unit,
                 backend_time_series_fetcher=backend_time_series_fetcher,
                 graph_display_id=graph_display_id,
+                expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
             )
     return output
 
@@ -996,6 +1029,7 @@ class AjaxRenderGraphContent(AjaxPage):
             temperature_unit=temperature_unit,
             backend_time_series_fetcher=backend_time_series_fetcher,
             graph_display_id=graph_display_id,
+            expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
         )
 
 
@@ -1012,6 +1046,7 @@ def _render_graph_content_html(
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str = "",
+    expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> HTML:
     if graph_artwork_or_errors.errors:
         if url := graph_recipe.specification.url():
@@ -1037,6 +1072,7 @@ def _render_graph_content_html(
             graph_artwork_or_errors.artwork,
             graph_data_range,
             graph_render_config,
+            expandable_legend_appearance,
         )
         if graph_render_config.show_time_range_previews:
             return HTMLWriter.render_div(
@@ -1050,6 +1086,7 @@ def _render_graph_content_html(
                     temperature_unit=temperature_unit,
                     backend_time_series_fetcher=backend_time_series_fetcher,
                     graph_display_id=graph_display_id,
+                    expandable_legend_appearance=expandable_legend_appearance,
                 ),
                 class_="graph_with_timeranges",
             )
@@ -1083,6 +1120,7 @@ def _render_time_range_selection(
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str,
+    expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> HTML:
     now = int(time.time())
     graph_render_config = copy.deepcopy(graph_render_config)
@@ -1121,7 +1159,13 @@ def _render_time_range_selection(
         ).artwork
         rows.append(
             HTMLWriter.render_td(
-                _render_graph_html(request, graph_artwork, graph_data_range, graph_render_config),
+                _render_graph_html(
+                    request,
+                    graph_artwork,
+                    graph_data_range,
+                    graph_render_config,
+                    expandable_legend_appearance,
+                ),
                 title=_("Change graph time range to: %s") % timerange_attrs["title"],
             )
         )
@@ -1389,4 +1433,5 @@ def host_service_graph_dashlet_cmk(
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
         graph_display_id=graph_display_id,
+        expandable_legend_appearance=ExpandableLegendAppearance.POP_UP,
     )

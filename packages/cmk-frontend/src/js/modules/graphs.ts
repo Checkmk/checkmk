@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { call_ajax } from './ajax'
-import { add, hide, update_content } from './hover'
+import { add, hide, show, update_content } from './hover'
 import { pause } from './reload_pause'
 import {
   add_class,
@@ -2003,4 +2003,54 @@ function set_graph_timerange(graph_id: string, start_time: number, end_time: num
 function handle_graph_timerange_update(graph_container: HTMLElement, ajax_response: string) {
   handle_graph_update(graph_container, ajax_response)
   update_next_graph_timerange()
+}
+
+interface Attribute {
+  name: string
+  value: string
+  type: string
+}
+
+export function showAttributes(
+  event: MouseEvent,
+  title: string,
+  headers: string[],
+  attributes: Attribute[]
+) {
+  const wrapper = document.createElement('div')
+
+  const wrapperInner = document.createElement('div')
+  wrapperInner.className = 'metric_attributes'
+
+  const wrapperTitle = document.createElement('div')
+  wrapperTitle.innerHTML = title
+
+  const wrapperTable = document.createElement('div')
+  const table = document.createElement('table')
+  const headerRow = document.createElement('tr')
+  headers.forEach((header) => {
+    const th = document.createElement('th')
+    th.textContent = header
+    headerRow.appendChild(th)
+  })
+  table.appendChild(headerRow)
+  attributes.forEach((attribute) => {
+    const row = table.insertRow()
+    const name = row.insertCell(0)
+    name.appendChild(document.createTextNode(attribute.name))
+    const value = row.insertCell(1)
+    value.appendChild(document.createTextNode(attribute.value))
+    const type = row.insertCell(2)
+    type.appendChild(document.createTextNode(attribute.type))
+  })
+  wrapperTable.append(table)
+
+  wrapperInner.append(wrapperTitle, wrapperTable)
+  wrapper.append(wrapperInner)
+
+  show(event, wrapper.innerHTML)
+}
+
+export function hideAttributes() {
+  hide()
 }

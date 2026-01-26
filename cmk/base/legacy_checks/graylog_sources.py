@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 
@@ -95,7 +94,7 @@ def check_graylog_sources(
     yield from _handle_graylog_sources_messages(item_data, params)
 
 
-def discover_graylog_sources(section):
+def discover_graylog_sources(section: SourceInfoSection) -> Iterable[tuple[str, dict[str, Any]]]:
     yield from ((item, {}) for item in section)
 
 

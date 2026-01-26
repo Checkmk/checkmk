@@ -54,6 +54,7 @@ import {
 } from '@/components/user-input/CmkTimeSpan/timeSpan'
 
 import type { CheckboxListChoiceElement } from '@/form/private/forms/FormCheckboxListChoice.vue'
+import type { FileUploadData } from '@/form/private/forms/FormFileUpload.vue'
 import FormLabelsLabel from '@/form/private/forms/FormLabelsLabel.vue'
 import {
   type ValidationMessages,
@@ -155,7 +156,7 @@ function renderForm(
     case 'time_specific':
       return renderTimeSpecific(formSpec as TimeSpecific, value, backendValidation)
     case 'file_upload':
-      return renderFileUpload(formSpec as FileUpload, value as [string, string, string])
+      return renderFileUpload(formSpec as FileUpload, value as FileUploadData)
     case 'metric_backend_custom_query':
       return renderMetricBackendCustomQuery(value as MetricBackendCustomQuery)
     case 'dcd_metric_backend_filter':
@@ -170,8 +171,8 @@ function renderSimplePassword(): VNode {
   return h('div', ['******'])
 }
 
-function renderFileUpload(_formSpec: FileUpload, value: [string, string, string]): VNode {
-  return h('div', [value[0]])
+function renderFileUpload(_formSpec: FileUpload, value: FileUploadData): VNode {
+  return h('div', [value.file_name])
 }
 
 function renderOAuth2ConnectionSetup(formSpec: Oauth2ConnectionSetup, value: unknown): VNode {

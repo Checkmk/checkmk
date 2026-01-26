@@ -9,6 +9,7 @@ import { type Reactive, reactive, toRef } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton.vue'
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -17,7 +18,6 @@ import PopupDialog, { type PopupDialogProps } from '@/dashboard/components/Popup
 import type { DashboardFeatures, DashboardKey } from '@/dashboard/types/dashboard'
 import { urlHandler } from '@/dashboard/utils'
 
-import CollapsibleBox from '../../components/CollapsibleBox.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import PublicAccessSettings from './PublicAccessSettings.vue'
 import { type DashboardTokenModel } from './api'
@@ -139,7 +139,7 @@ const handleUpdate = async () => {
 </script>
 
 <template>
-  <CollapsibleBox :title="_t('Public access')" :open="true">
+  <CmkCatalogPanel :title="_t('Public access')">
     <CmkHeading type="h2">{{ _t('Anyone with this link can view the dashboard') }}</CmkHeading>
     <CmkLabel>{{ _t('Navigation and menus are hidden.') }}</CmkLabel>
 
@@ -203,7 +203,7 @@ const handleUpdate = async () => {
         @update-settings="handleUpdate"
       />
     </template>
-  </CollapsibleBox>
+  </CmkCatalogPanel>
 </template>
 
 <style scoped>

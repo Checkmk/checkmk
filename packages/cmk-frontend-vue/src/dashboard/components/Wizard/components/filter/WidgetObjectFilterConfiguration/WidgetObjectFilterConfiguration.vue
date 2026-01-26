@@ -10,7 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
-import CatalogPanelHeader from '@/dashboard/components/Wizard/components/collapsible/CatalogPanelHeader.vue'
+import CatalogPanelHeader from '@/dashboard/components/Wizard/components/CatalogPanelHeader.vue'
 import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'
 import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'

@@ -8,7 +8,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
-import CatalogPanelHeader from '@/dashboard/components/Wizard/components/collapsible/CatalogPanelHeader.vue'
+import CatalogPanelHeader from '@/dashboard/components/Wizard/components/CatalogPanelHeader.vue'
 import type { FilterConfigState } from '@/dashboard/components/Wizard/components/filter/utils.ts'
 import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'
 import type { ConfiguredValues } from '@/dashboard/components/filter/types.ts'

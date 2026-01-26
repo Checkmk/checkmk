@@ -1,0 +1,13 @@
+# Created by Check_MK Agent Bakery.
+# This file is managed via WATO, do not edit manually or you
+# lose your changes next time when you update the agent.
+
+LOG_DIRECTORY_CLIENT = /var/log/check_mk/oracle_client
+DIAG_ADR_ENABLED = OFF
+
+SQLNET.WALLET_OVERRIDE = TRUE
+WALLET_LOCATION =
+ (SOURCE=
+   (METHOD = FILE)
+   (METHOD_DATA = (DIRECTORY=/etc/check_mk/oracle_wallet))
+ )

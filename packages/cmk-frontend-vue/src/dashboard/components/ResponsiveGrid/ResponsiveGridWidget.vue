@@ -65,6 +65,7 @@ defineEmits<{
   width: 100%;
   position: relative;
   overflow: hidden;
+  border-radius: var(--border-radius);
 }
 
 .db-responsive-grid-widget__frame--edit {
@@ -73,7 +74,6 @@ defineEmits<{
 
   /* show border, reduce margin to keep size the same */
   margin: -1px;
-  border-radius: var(--border-radius);
   border: 1px solid var(--color-corporate-green-80);
 
   /* NOTE: the hover effect is defined in ResponsiveGrid.vue */

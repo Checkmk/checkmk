@@ -10,16 +10,12 @@ from omdlib.config_hooks import create_config_environment, load_config
 from omdlib.contexts import SiteContext
 from omdlib.site_paths import SitePaths
 from omdlib.type_defs import Config
-from omdlib.users_and_groups import switch_to_site_user
+from omdlib.users_and_groups import KEEP, switch_to_site_user
 
 
 def _clear_environment() -> None:
-    # first remove *all* current environment variables, except:
-    # TERM
-    # CMK_CONTAINERIZED: To better detect when running inside container (e.g. used for omd update)
-    keep = ["TERM", "CMK_CONTAINERIZED"]
     for key in os.environ:
-        if key not in keep:
+        if key not in KEEP:
             del os.environ[key]
 
 

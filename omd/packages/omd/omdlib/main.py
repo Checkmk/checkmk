@@ -106,6 +106,8 @@ from omdlib.users_and_groups import (
     group_exists,
     group_id,
     groupdel,
+    popen_as_site_user,
+    run_as_site_user,
     user_id,
     user_logged_in,
     user_verify,
@@ -219,10 +221,11 @@ def with_update_logging_stderr(logfile: Path) -> Iterator[None]:
 
 
 def is_stopped(site_name: str) -> bool:
-    return (
-        subprocess.run(["omd", "status", site_name], capture_output=True, check=False).returncode
-        == 1
-    )
+    return run_as_site_user(site_name, ["omd", "status"], capture_output=True).returncode == 1
+
+
+def stop_site(site_name: str, capture_output: bool) -> subprocess.CompletedProcess[str]:
+    return run_as_site_user(site_name, ["omd", "stop"], capture_output=capture_output)
 
 
 def start_site(version_info: VersionInfo, site: SiteContext, config: Config) -> None:
@@ -1995,8 +1998,7 @@ def _main_rm(
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
     # for this dedicated action and switch to the user in that subprocess
-    with subprocess.Popen(["omd", "stop", site_name]):
-        pass
+    stop_site(site_name, capture_output=False)
 
     reuse = "reuse" in options
     kill = "kill" in options
@@ -2066,7 +2068,7 @@ def main_disable(
         sys.exit(0)
 
     if not is_stopped(site_name):
-        subprocess.run(["omd", "stop", site_name], check=False)
+        stop_site(site_name, capture_output=False)
     unmount_tmpfs_as_root(site_name, kill="kill" in options, capture_output=False)
     sys.stdout.write("Disabling Apache configuration for this site...")
     unregister_from_system_apache(
@@ -2713,12 +2715,12 @@ def main_init_action(
         stdout: int | IO[str] = sys.stdout if not parallel else subprocess.PIPE
         stderr: int | IO[str] = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = ["--bare"] if bare else []
-        p = subprocess.Popen(
-            [sys.argv[0], command] + bare_arg + [site.name] + args,
+        p = popen_as_site_user(
+            site.name,
+            ["omd", command] + bare_arg + args,
             stdin=subprocess.DEVNULL,
             stdout=stdout,
             stderr=stderr,
-            encoding="utf-8",
         )
 
         if parallel:

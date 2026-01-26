@@ -8,7 +8,7 @@ import os
 import pwd
 import shlex
 import subprocess
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING
 
 import psutil
 
@@ -32,6 +32,10 @@ from cmk.ccc.exceptions import MKTerminate
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with Linux users and groups            |
 #   '----------------------------------------------------------------------'
+
+# TERM: Tells command line tools (ls, grep, vim, etc.) how to use colors, move cursors, etc...
+# CMK_CONTAINERIZED: Detect when running inside container (e.g. used for omd update)
+KEEP = ["TERM", "CMK_CONTAINERIZED"]
 
 
 def find_processes_of_user(username: str) -> list[str]:
@@ -265,6 +269,50 @@ def switch_to_site_user(site_name: str) -> None:
     os.setgroups(_groups_of(site_name))
     os.setuid(uid)
     os.umask(0o077)
+
+
+def run_as_site_user(
+    user: str, command: list[str], capture_output: bool
+) -> subprocess.CompletedProcess[str]:
+    passwd = pwd.getpwnam(user)
+    return subprocess.run(
+        command,
+        capture_output=capture_output,
+        check=False,
+        close_fds=True,
+        cwd=passwd.pw_dir,
+        encoding="utf-8",
+        env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
+        extra_groups=os.getgrouplist(user, passwd.pw_gid),
+        umask=0o077,
+        user=user,
+    )
+
+
+def popen_as_site_user(
+    user: str,
+    command: list[str],
+    stdin: int | IO[str],
+    stdout: int | IO[str],
+    stderr: int | IO[str],
+) -> subprocess.Popen[str]:
+    # This function should really have a context manager. We don't touch this functionality here for
+    # stability of the 2.4., but please don't add new call sites.
+    passwd = pwd.getpwnam(user)
+    return subprocess.Popen(
+        command,
+        close_fds=True,
+        cwd=passwd.pw_dir,
+        encoding="utf-8",
+        env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
+        extra_groups=os.getgrouplist(user, passwd.pw_gid),
+        group=passwd.pw_gid,
+        stdin=stdin,
+        stdout=stdout,
+        stderr=stderr,
+        umask=0o077,
+        user=user,
+    )
 
 
 def _groups_of(username: str) -> list[int]:

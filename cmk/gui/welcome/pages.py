@@ -41,6 +41,9 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
     if any(Host.all()):
         yield FinishedEnum.add_host
 
+    if "activate_changes" in user.welcome_completed_steps:
+        yield FinishedEnum.activate_changes
+
     if "adjust_services" in user.welcome_completed_steps:
         yield FinishedEnum.adjust_services
 

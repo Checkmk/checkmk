@@ -91,6 +91,7 @@
             "type": "string",
             "enum": [
               "add_host",
+              "activate_changes",
               "adjust_services",
               "assign_responsibilities",
               "enable_notifications",

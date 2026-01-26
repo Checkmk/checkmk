@@ -22,13 +22,6 @@ const {
   contentCenter = false
 } = defineProps<DashboardContentContainerProps>()
 
-const titleRenderClass = computed<string>(() => {
-  if (generalSettings.title?.render_mode === 'with_background') {
-    return 'db-content-container__title--with-background'
-  }
-  return ''
-})
-
 const hasBackground = computed<boolean>(() => {
   return !!generalSettings.render_background
 })
@@ -37,7 +30,7 @@ const displayTitle = computed<string | undefined>(() => {
   if (effectiveTitle) {
     return effectiveTitle
   }
-  if (generalSettings.title?.text && generalSettings.title.render_mode !== 'hidden') {
+  if (generalSettings.title.text && generalSettings.title.render_mode !== 'hidden') {
     return generalSettings.title.text
   }
   return undefined
@@ -47,9 +40,12 @@ const displayTitle = computed<string | undefined>(() => {
 <template>
   <div class="db-content-container">
     <div
-      v-if="displayTitle && generalSettings.title?.render_mode !== 'hidden'"
+      v-if="displayTitle && generalSettings.title.render_mode !== 'hidden'"
       class="db-content-container__title"
-      :class="titleRenderClass"
+      :class="{
+        'db-content-container__title--with-background':
+          generalSettings.title.render_mode === 'with_background'
+      }"
       role="heading"
     >
       <a v-if="generalSettings.title?.url" :href="generalSettings.title.url">{{ displayTitle }}</a>
@@ -90,7 +86,7 @@ const displayTitle = computed<string | undefined>(() => {
   }
 
   &.db-content-container__title--with-background {
-    background-color: var(--headline-color);
+    background-color: var(--ux-theme-5);
   }
 }
 

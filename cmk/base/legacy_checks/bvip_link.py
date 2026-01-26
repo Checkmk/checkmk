@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterator, Mapping, Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -13,13 +13,15 @@ from cmk.plugins.bvip.lib import DETECT_BVIP
 check_info = {}
 
 
-def discover_bvip_link(info):
+def discover_bvip_link(info: StringTable) -> list[tuple[None, dict[str, object]]]:
     if info:
         return [(None, {})]
     return []
 
 
-def check_bvip_link(_no_item, params, info):
+def check_bvip_link(
+    _no_item: None, params: Mapping[str, Sequence[int]], info: StringTable
+) -> Iterator[tuple[int, str]]:
     count = 0
     states = {
         0: "No Link",

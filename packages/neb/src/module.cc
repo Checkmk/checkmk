@@ -878,24 +878,23 @@ int broker_adaptive_program(int callback_type, void *data) {
 }
 
 void livestatus_log_initial_states() {
-    // It's a bit unclear if we need to log downtimes of hosts *before*
-    // their corresponding service downtimes, so let's play safe...
-    for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
-        if (dt->is_in_effect != 0 && dt->type == HOST_DOWNTIME) {
+    for (const ::host *hst = host_list; hst != nullptr; hst = hst->next) {
+        if (hst->scheduled_downtime_depth > 0) {
             std::ostringstream os;
-            os << "HOST DOWNTIME ALERT: " << dt->host_name << ";STARTED;"
-               << dt->comment;
+            os << "HOST DOWNTIME ALERT: " << hst->name
+               << ";STARTED; Host has entered a period of scheduled downtime";
             // Older Nagios headers are not const-correct... :-P
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
             write_to_all_logs(const_cast<char *>(os.str().c_str()),
                               NSLOG_INFO_MESSAGE);
         }
     }
-    for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
-        if (dt->is_in_effect != 0 && dt->type == SERVICE_DOWNTIME) {
+    for (const ::service *svc = service_list; svc != nullptr; svc = svc->next) {
+        if (svc->scheduled_downtime_depth > 0) {
             std::ostringstream os;
-            os << "SERVICE DOWNTIME ALERT: " << dt->host_name << ";"
-               << dt->service_description << ";STARTED;" << dt->comment;
+            os << "SERVICE DOWNTIME ALERT: " << svc->host_name << ";"
+               << svc->description
+               << ";STARTED; Service has entered a period of scheduled downtime";
             // Older Nagios headers are not const-correct... :-P
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
             write_to_all_logs(const_cast<char *>(os.str().c_str()),

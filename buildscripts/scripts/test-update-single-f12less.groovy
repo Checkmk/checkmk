@@ -35,6 +35,16 @@ def build_make_target(edition, cross_edition_target="") {
     }
 }
 
+def short_edition_to_long_name(abbreviation) {
+    return [
+        'cce': 'cloud',
+        'cee': 'enterprise',
+        'cme': 'managed',
+        'cre': 'raw',
+        'cse': 'saas',
+    ][abbreviation];
+}
+
 def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
@@ -76,7 +86,8 @@ def main() {
     dir("${checkout_dir}") {
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(
-                edition: edition,
+                // use the cross edition target or fall back to the value of edition
+                edition: short_edition_to_long_name(cross_edition_target) ?: edition,
                 distro: distro,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
@@ -100,7 +111,8 @@ def main() {
                     dir("${checkout_dir}/tests") {
                         single_tests.run_make_target(
                             result_path: "${checkout_dir}/test-results/${distro}",
-                            edition: edition,
+                            // use the cross edition target or fall back to the value of edition
+                            edition: short_edition_to_long_name(cross_edition_target) ?: edition,
                             docker_tag: setup_values.docker_tag,
                             version: "daily",
                             distro: distro,

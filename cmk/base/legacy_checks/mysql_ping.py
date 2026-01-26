@@ -10,7 +10,7 @@ from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
-from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
+from cmk.plugins.mysql.agent_based.lib import mysql_parse_per_item
 
 check_info = {}
 

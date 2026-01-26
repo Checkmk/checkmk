@@ -68,6 +68,7 @@ types-lxml  # used for type checking
 types-mypy-extensions  # used for type checking
 types-oauthlib  # used for type checking
 types-paramiko  # used for type checking
+types-pexpect  # used for type checking
 types-protobuf  # used for type checking
 types-psutil  # used for type checking
 types-pyasn1  # used for type checking

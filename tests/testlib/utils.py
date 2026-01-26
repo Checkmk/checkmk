@@ -21,7 +21,7 @@ from pprint import pformat
 from stat import filemode
 from typing import Any, assert_never, overload
 
-import pexpect  # type: ignore[import-untyped]
+import pexpect
 import psutil
 import yaml
 from bs4 import BeautifulSoup
@@ -190,7 +190,7 @@ def spawn_expect_process(
             if p.isalive():
                 rc = p.expect(pexpect.EOF, timeout=timeout)
             else:
-                rc = p.status
+                rc = p.status  # type: ignore[assignment]
         except Exception as e:
             logger.exception(e)
             logger.debug(p)

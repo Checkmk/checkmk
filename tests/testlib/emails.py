@@ -19,7 +19,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import Final, IO, Self
 
-from faker import Faker
+from faker import Faker  # type: ignore[import-not-found,unused-ignore]
 
 from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site

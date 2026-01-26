@@ -5948,6 +5948,12 @@ types-paramiko==4.0.0.20250822 \
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
     #   types-docker
+types-pexpect==4.9.0.20260127 \
+    --hash=sha256:69216c0ebf0fe45ad2900823133959b027e9471e24fc3f2e4c7b00605555da5f \
+    --hash=sha256:f8d43efc24251a8e533c71ea9be03d19bb5d08af096d561611697af9720cba7f
+    # via
+    #   -c requirements.txt
+    #   -r tests/dev-requirements.in
 types-protobuf==6.32.1.20251210 \
     --hash=sha256:2641f78f3696822a048cfb8d0ff42ccd85c25f12f871fbebe86da63793692140 \
     --hash=sha256:c698bb3f020274b1a2798ae09dc773728ce3f75209a35187bd11916ebfde6763

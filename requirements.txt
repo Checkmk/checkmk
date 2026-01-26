@@ -5454,6 +5454,10 @@ types-paramiko==4.0.0.20250822 \
     # via
     #   -r tests/dev-requirements.in
     #   types-docker
+types-pexpect==4.9.0.20260127 \
+    --hash=sha256:69216c0ebf0fe45ad2900823133959b027e9471e24fc3f2e4c7b00605555da5f \
+    --hash=sha256:f8d43efc24251a8e533c71ea9be03d19bb5d08af096d561611697af9720cba7f
+    # via -r tests/dev-requirements.in
 types-pika-ts==1.3.0.20250914 \
     --hash=sha256:3e1bac6f1b3b17a9b51f88b529c718bf40f964905029aa10fc17a49f9eada1e6 \
     --hash=sha256:c4b9dfc25350a6135de5714518e4b831b37c3fb3625e4ebb4c61181a916b6f02

@@ -29,7 +29,7 @@ import docker.models
 import docker.models.containers
 import docker.models.images
 import docker.types
-import dockerpty  # type: ignore[import-untyped]
+import dockerpty  # type: ignore[import-untyped,unused-ignore]
 import requests
 
 from tests.testlib.common.repo import git_commit_id, git_essential_directories, repo_path
@@ -124,13 +124,13 @@ def execute_tests_in_container(
             logger.info("+-------------------------------------------------")
 
             if command:
-                dockerpty.exec_command(
+                dockerpty.exec_command(  # type: ignore[no-untyped-call,unused-ignore]
                     client.api,
                     container.id,
                     ["sudo", "-u", _TESTUSER, "/git/scripts/run-uvenv"] + command,
                 )
 
-            dockerpty.exec_command(
+            dockerpty.exec_command(  # type: ignore[no-untyped-call,unused-ignore]
                 client.api,
                 container.id,
                 [

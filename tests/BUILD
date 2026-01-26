@@ -20,14 +20,23 @@ py_library(
     deps = [
         "//cmk:lib_cmk",
         requirement("beautifulsoup4"),
+        requirement("clickhouse-connect"),
         requirement("cryptography"),
         requirement("docker"),
         requirement("dockerpty"),
+        requirement("fastapi"),
         requirement("pexpect"),
         requirement("playwright"),
+        requirement("psutil"),
+        requirement("pyjwt"),
+        requirement("pyyaml"),
         requirement("pytest"),
+        requirement("pytest-check"),
         requirement("requests"),
-    ],
+    ] + select({
+        "//:gpl+nonfree_repo": ["//cmk:cmk_cloud"],
+        "//:gpl_repo": [],
+    }),
 )
 
 py_library(
@@ -65,8 +74,12 @@ py_library(
         requirement("pexpect"),
         requirement("playwright"),
         requirement("pytest"),
+        requirement("pyyaml"),
         requirement("requests"),
-    ],
+    ] + select({
+        "//:gpl+nonfree_repo": ["//cmk:lib_cmk_repo"],
+        "//:gpl_repo": [],
+    }),
 )
 
 py_library(

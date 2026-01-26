@@ -28,9 +28,9 @@ def edition_mock() -> Iterator[MagicMock]:
 @pytest.fixture
 def logger_mock() -> Iterator[MagicMock]:
     with patch(
-        "cmk.utils.licensing.active_metric_series_retriever_registry.logger.error",
-    ) as logger_mock:
-        yield logger_mock
+        "cmk.utils.licensing.active_metric_series_retriever_registry._get_logger",
+    ) as get_logger_mock:
+        yield get_logger_mock.return_value.error
 
 
 @pytest.mark.parametrize("retriever_return", [123, None])

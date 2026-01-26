@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import functools
 from collections.abc import Callable
 
 from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 from cmk.utils.licensing.helper import init_logging
 
-logger = init_logging()
+# Don't call init_logging() at import time as it creates log directories.
+_get_logger = functools.wraps(init_logging)(functools.cache(init_logging))
 
 
 class ActiveMetricSeriesRetrieverRegistry:
@@ -28,9 +30,9 @@ def get_num_active_metric_series() -> int | None:
         try:
             return active_metric_series_retriever_registry.metric_series_retriever_function()
         except Exception as e:
-            logger.error(
+            _get_logger().error(
                 "Error when retrieving the active metric series count (%s): %s", type(e).__name__, e
             )
     elif edition(paths.omd_root) in [Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD]:
-        logger.error("There is no registered active metric series function, while it should")
+        _get_logger().error("There is no registered active metric series function, while it should")
     return None

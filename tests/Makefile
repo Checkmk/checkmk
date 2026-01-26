@@ -191,7 +191,7 @@ test-lint-bazel:
 test-lint-groovy:
 	bazel run //bazel/tools:groovy-lint -- --failon=error --noserver $(GROOVYLINT_OUTPUT_ARGS) $(REPO_PATH)/buildscripts/
 
-test-performance:
+test-performance: prepare-playwright
 	$(UVENV) "$(realpath performance)/perftest.sh"
 
 test-performance-docker:

@@ -475,6 +475,49 @@ def _readable_attribute_type(attribute_type: Literal["resource", "scope", "data_
             assert_never(other)
 
 
+def _render_attributes(
+    table_uuid_str: str,
+    graph_legend_styles: Sequence[str],
+    attributes_by_type: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]],
+) -> HTML:
+    with output_funnel.plugged():
+        html.open_table(
+            class_="legend",
+            style=(
+                list(graph_legend_styles)
+                + [
+                    "display: none",
+                    "margin-top: 0px",
+                    "margin-bottom: 10px",
+                    "margin-right: 0px",
+                    "margin-left: 18px",
+                    "border-spacing: 5px",
+                ]
+            ),
+            id=table_uuid_str,
+        )
+
+        html.open_tr()
+        html.th(_("Attribute name"), style="text-align: left; width: 20%;")
+        html.th(_("Attribute value"), style="text-align: left")
+        html.th(_("Attribute type"), style="text-align: left; width: 10%;")
+        html.close_tr()
+
+        for attribute_type, attributes in sorted(
+            attributes_by_type.items(), key=lambda t: _sort_attributes_by_type(t[0])
+        ):
+            for key, value in sorted(attributes.items()):
+                html.open_tr()
+                html.td(key)
+                html.td(value)
+                html.td(_readable_attribute_type(attribute_type))
+                html.close_tr()
+
+        html.close_table()
+
+        return HTML.without_escaping(output_funnel.drain())
+
+
 def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig) -> None:
     font_size_style = "font-size: %dpt;" % graph_render_config.font_size
     scalars = _get_scalars(graph_artwork, graph_render_config)
@@ -549,38 +592,9 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
         html.open_tr()
         html.open_td(style=font_size_style, colspan=len(scalars) + 1)
         if attributes_by_type:
-            html.open_table(
-                class_="legend",
-                style=graph_legend_styles
-                + [
-                    "display: none",
-                    "margin-top: 0px",
-                    "margin-bottom: 10px",
-                    "margin-right: 0px",
-                    "margin-left: 18px",
-                    "border-spacing: 5px",
-                ],
-                id=table_uuid_str,
+            html.write_html(
+                _render_attributes(table_uuid_str, graph_legend_styles, attributes_by_type)
             )
-
-            html.open_tr()
-            html.th(_("Attribute name"), style="text-align: left; width: 20%;")
-            html.th(_("Attribute value"), style="text-align: left")
-            html.th(_("Attribute type"), style="text-align: left; width: 10%;")
-            html.close_tr()
-
-            for attribute_type, attributes in sorted(
-                attributes_by_type.items(), key=lambda t: _sort_attributes_by_type(t[0])
-            ):
-                for key, value in sorted(attributes.items()):
-                    html.open_tr()
-                    html.td(key)
-                    html.td(value)
-                    html.td(_readable_attribute_type(attribute_type))
-                    html.close_tr()
-
-            html.close_table()
-
         html.close_td()
         html.close_tr()
 

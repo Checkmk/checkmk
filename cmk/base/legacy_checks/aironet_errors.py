@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 import time
+from collections.abc import Iterator, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
@@ -22,11 +22,13 @@ from cmk.agent_based.v2 import (
 check_info = {}
 
 
-def discover_aironet_errors(info):
+def discover_aironet_errors(info: StringTable) -> Iterator[tuple[str, dict[str, object]]]:
     yield from ((line[0], {}) for line in info)
 
 
-def check_aironet_errors(item, params, info):
+def check_aironet_errors(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> Iterator[tuple[int, str, list[Any]]]:
     for line in info:
         if line[0] == item:
             value = int(line[1])

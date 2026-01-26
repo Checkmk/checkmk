@@ -8,6 +8,7 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard/types/dashboard'
@@ -22,8 +23,6 @@ import VisibilityProperties from '../../components/DashboardSettings/VisibilityP
 import { useDashboardGeneralSettings } from '../../components/DashboardSettings/composables/useDashboardGeneralSettings'
 import { DashboardType } from '../../components/DashboardSettings/types'
 import StepsHeader from '../../components/StepsHeader.vue'
-import CollapsibleContent from '../../components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '../../components/collapsible/CollapsibleTitle.vue'
 import DashboardTypeSelector from './components/DashboardTypeSelector.vue'
 
 const { _t } = usei18n()
@@ -111,10 +110,6 @@ const createAndSetFilters = async () => {
 const cancel = () => {
   emit('cancel-creation')
 }
-
-const displayDashboardScope = ref<boolean>(true)
-const displayGeneralProperties = ref<boolean>(true)
-const displayVisibility = ref<boolean>(true)
 </script>
 
 <template>
@@ -163,27 +158,15 @@ const displayVisibility = ref<boolean>(true)
       <ContentSpacer />
 
       <div v-if="dashboardType === DashboardType.CUSTOM">
-        <CollapsibleTitle
-          :title="_t('Dashboard scope')"
-          :open="displayDashboardScope"
-          class="collapsible"
-          @toggle-open="displayDashboardScope = !displayDashboardScope"
-        />
-        <CollapsibleContent :open="displayDashboardScope">
+        <CmkCatalogPanel :title="_t('Dashboard scope')">
           <DashboardScope
             v-model:selected-ids="dashboardScopeIds"
             :selection-errors="scopeErrors"
           />
-        </CollapsibleContent>
+        </CmkCatalogPanel>
       </div>
 
-      <CollapsibleTitle
-        :title="_t('General properties')"
-        :open="displayGeneralProperties"
-        class="collapsible"
-        @toggle-open="displayGeneralProperties = !displayGeneralProperties"
-      />
-      <CollapsibleContent :open="displayGeneralProperties">
+      <CmkCatalogPanel :title="_t('General properties')">
         <GeneralProperties
           v-model:name="name"
           v-model:create-unique-id="createUniqueId"
@@ -201,24 +184,18 @@ const displayVisibility = ref<boolean>(true)
           v-model:dashboard-layout="dashboardLayout"
           :available-layouts="availableLayouts"
         />
-      </CollapsibleContent>
+      </CmkCatalogPanel>
 
       <ContentSpacer />
 
-      <CollapsibleTitle
-        :title="_t('Visibility')"
-        :open="displayVisibility"
-        class="collapsible"
-        @toggle-open="displayVisibility = !displayVisibility"
-      />
-      <CollapsibleContent :open="displayVisibility">
+      <CmkCatalogPanel :title="_t('Visibility')">
         <VisibilityProperties
           v-model:monitor-menu-topic="monitorMenuTopic"
           v-model:show-in-monitor-menu="showInMonitorMenu"
           v-model:sort-index="sortIndex"
           :sort-index-error="sortIndexError"
         />
-      </CollapsibleContent>
+      </CmkCatalogPanel>
     </div>
   </div>
 </template>

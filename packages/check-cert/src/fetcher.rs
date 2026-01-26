@@ -84,7 +84,7 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
     stream.set_read_timeout(config.timeout)?;
 
     match config.connection_type {
-        ConnectionType::Tls => (),
+        ConnectionType::Tls => debug!("Using TLS connection"),
         ConnectionType::SmtpStarttls => starttls::smtp::perform(&mut stream, server)?,
         ConnectionType::PostgresStarttls => starttls::postgres::perform(&mut stream)?,
     };
@@ -99,6 +99,7 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
 
     // Send EHLO again for SMTP STARTTLS to comply with RFC 3207
     if let ConnectionType::SmtpStarttls = config.connection_type {
+        debug!("Sending EHLO after TLS connection...");
         starttls::smtp::send_ehlo(&mut stream, server)?;
     }
 

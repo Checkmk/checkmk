@@ -4,20 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import os
-import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.common.repo import qa_test_data_path
+from tests.testlib.common.repo import qa_test_data_path, repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
-
-DATA_SOURCE_DIR = qa_test_data_path() / "otel" / "supabase"
-INDEX_FILE_PATH = Path(tempfile.gettempdir()) / "next_supabase_index"
 
 
 @pytest.fixture()
@@ -25,16 +21,29 @@ def inject_supabase_data(otel_site: Site) -> Iterator[None]:
     """Inject supabase OpenTelemetry data into the site, create a rule to process it and
     create a corresponding host. Delete all the created objects at the end of the test.
     """
-    target_path = otel_site.path(Path("var/check_mk"))
+    python_script_name = "generate_windows_and_linux_dumps.py"
+    python_script_path = repo_path() / "tests/scripts" / python_script_name
+    supabase_dump_file = qa_test_data_path() / "otel" / "supabase"
+    test_site_dump_path = otel_site.path(Path("var/check_mk/dumps"))
+
+    logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
+    if not otel_site.is_dir(test_site_dump_path):
+        otel_site.makedirs(test_site_dump_path)
+
     logger.info("Copying supabase data into the site directory")
-    run(["bash", "-c", f'cp -r {DATA_SOURCE_DIR} "{str(target_path)}"'], sudo=True)
-    supabase_data_path = target_path / "supabase"
-    run(
-        ["chown", "-R", f"{otel_site.id}:{otel_site.id}", str(supabase_data_path)],
-        sudo=True,
-    )
+    assert (
+        run(["cp", str(supabase_dump_file), str(test_site_dump_path)], sudo=True).returncode == 0
+    ), f"Error copying '{supabase_dump_file}' file"
+    assert (
+        run(
+            ["cp", "-f", str(python_script_path), str(test_site_dump_path)],
+            sudo=True,
+        ).returncode
+        == 0
+    ), f"Error copying '{python_script_path}' file"
+
     ruleset_name = "datasource_programs"
-    rule_value = f'python3 "{supabase_data_path.as_posix()}/simulate_agent.py"'
+    rule_value = f"python3 {test_site_dump_path}/{python_script_name} {test_site_dump_path}/<HOST>"
     logger.info(f"Creating rule '{ruleset_name}' with value: '{rule_value}'")
     rule_id = otel_site.openapi.rules.create(
         value=rule_value,
@@ -56,11 +65,10 @@ def inject_supabase_data(otel_site: Site) -> Iterator[None]:
     yield
     if os.getenv("CLEANUP", "1") == "1":
         logger.info("Cleaning up created objects")
-        otel_site.delete_dir(supabase_data_path)
         otel_site.openapi.rules.delete(rule_id)
         otel_site.openapi.hosts.delete(host_name)
         otel_site.openapi.changes.activate_and_wait_for_completion()
-        run(["rm", str(INDEX_FILE_PATH)], sudo=True, check=False)
+        otel_site.delete_dir(test_site_dump_path)
 
 
 EXPECTED_SERVICES_DATA = {
@@ -68,7 +76,7 @@ EXPECTED_SERVICES_DATA = {
         "summary": "Number of active connections",
         "performance_data": {
             "sb_dest_cluster_true__server_localhost_5432__service_type_postgresql__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu__username_supabase_admin": 5,
-            "sb_dest_cluster_true__server_localhost_5432__service_type_postgresql__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu__username_postgres": 10,
+            "sb_dest_cluster_true__server_localhost_5432__service_type_postgresql__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu__username_postgres": 11,
             "sb_dest_cluster_true__server_localhost_5432__service_type_postgresql__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu__username_other": 6,
             "sb_dest_cluster_true__server_localhost_5432__service_type_postgresql__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu__username_authenticator": 1,
         },
@@ -88,8 +96,8 @@ EXPECTED_SERVICES_DATA = {
     "go_memstats_alloc_bytes": {
         "summary": "Number of bytes allocated and still in use.",
         "performance_data": {
-            "sb_dest_cluster_true__service_type_gotrue__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu": 2795280.0,
-            "sb_dest_cluster_true__service_type_postgresql__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu": 2437980.0,
+            "sb_dest_cluster_true__service_type_gotrue__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu": 1950080.0,
+            "sb_dest_cluster_true__service_type_postgresql__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu": 2423650.0,
         },
     },
     "node_disk_filesystem_info": {
@@ -131,12 +139,12 @@ EXPECTED_SERVICES_DATA = {
     "node_vmstat_pgpgin": {
         "summary": "/proc/vmstat information field pgpgin.",
         "performance_data": {
-            "sb_dest_cluster_true__service_type_db__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu": 16194600.0
+            "sb_dest_cluster_true__service_type_db__supabase_identifier_agvliauvhitpqjvajhxu__supabase_project_ref_agvliauvhitpqjvajhxu": 16194500.0
         },
     },
     "scrape_duration_seconds": {
-        "summary": "0.06 s",
-        "performance_data": {"scrape_duration_seconds__s": 0.056784},
+        "summary": "0.25 s",
+        "performance_data": {"scrape_duration_seconds__s": 0.253789},
     },
     "scrape_samples_scraped": {
         "summary": "489.00",
@@ -156,7 +164,6 @@ SERVICES_IN_UNKNOWN_STATE = [
 ]
 
 
-@pytest.mark.skip(reason="Flaky test: ongoing investigation")
 @pytest.mark.skip_if_not_edition("cloud", "managed")
 def test_otel_supabase(otel_site: Site, inject_supabase_data: None) -> None:
     """Test OpenTelemetry monitoring of a Supabase instance.

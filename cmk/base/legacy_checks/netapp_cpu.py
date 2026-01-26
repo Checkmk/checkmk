@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterator, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
@@ -14,16 +15,18 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 check_info = {}
 
 
-def check_netapp_cpu(item, params, info):
+def check_netapp_cpu(
+    item: None, params: Mapping[str, Any], info: StringTable
+) -> Iterator[tuple[int, str, list[Any]]]:
     util = float(info[0][0])
-    return check_cpu_util(util, params)
+    yield from check_cpu_util(util, params)
 
 
 def parse_netapp_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_netapp_cpu(info):
+def discover_netapp_cpu(info: StringTable) -> list[tuple[None, dict[str, object]]]:
     return [(None, {})]
 
 

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -69,6 +69,11 @@ watch(
 )
 
 const displaySuffixInput = computed(() => addFilterSuffix.value !== undefined)
+
+const uniqueIdCheckboxLabel = computed((): string => {
+  const suffix = createUniqueId.value ? `: ${uniqueId.value}` : ''
+  return `${_t('Automatically create unique ID')}${suffix}`
+})
 </script>
 
 <template>
@@ -110,10 +115,7 @@ const displaySuffixInput = computed(() => addFilterSuffix.value !== undefined)
         </FieldDescription>
         <FieldComponent>
           <div class="db-general-properties__item">
-            <CmkCheckbox
-              v-model="createUniqueId"
-              :label="_t('Automatically create unique ID')"
-            /><span v-if="createUniqueId">: {{ uniqueId }}</span>
+            <CmkCheckbox v-model="createUniqueId" :label="untranslated(uniqueIdCheckboxLabel)" />
           </div>
           <div v-if="!createUniqueId" class="db-general-properties__item">
             <CmkIndent>

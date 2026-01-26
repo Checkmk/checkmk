@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterator, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith, StringTable
@@ -12,12 +13,14 @@ from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith, StringTable
 check_info = {}
 
 
-def discover_raritan_pdu_outletcount(info):
+def discover_raritan_pdu_outletcount(info: StringTable) -> Iterator[tuple[None, dict[str, object]]]:
     if info and info[0]:
         yield None, {}
 
 
-def check_raritan_pdu_outletcount(item, params, info):
+def check_raritan_pdu_outletcount(
+    item: None, params: Mapping[str, Any], info: StringTable
+) -> Iterator[tuple[int, str, list[Any]]]:
     levels = params.get("levels_upper", (None, None)) + params.get("levels_lower", (None, None))
     try:
         yield check_levels(

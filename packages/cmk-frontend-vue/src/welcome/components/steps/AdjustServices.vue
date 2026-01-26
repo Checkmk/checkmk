@@ -12,6 +12,7 @@ import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLinkCard from '@/components/CmkLinkCard'
@@ -59,6 +60,18 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         )
       }}
     </StepParagraph>
+
+    <CmkAlertBox :heading="_t('Before adjusting thresholds')">
+      {{
+        _t(
+          `Make sure you understand what the monitoring data is telling you.
+          If a service reports a problem, first verify and fix real issues.
+          Thresholds should help detect real problems - not hide them.
+          Poorly tuned thresholds can lead to false alarms, masking of problems,
+          and reduces trust in the monitoring system.`
+        )
+      }}
+    </CmkAlertBox>
 
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">

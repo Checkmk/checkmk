@@ -286,10 +286,7 @@ private:
     void publish(const LogRecord &record) override {
         std::ostringstream os;
         getFormatter()->format(os, record);
-        // Older Nagios headers are not const-correct... :-P
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-        write_to_all_logs(const_cast<char *>(os.str().c_str()),
-                          NSLOG_INFO_MESSAGE);
+        write_to_all_logs_(os);
     }
 };
 
@@ -833,7 +830,7 @@ int broker_external_command(int callback_type, void *data) {
             counterIncrement(Counter::commands);
             if (info->command_type == CMD_CUSTOM_COMMAND) {
                 if (info->command_string == "_LOG"s) {
-                    write_to_all_logs(info->command_args, -1);
+                    write_to_all_logs_(info->command_args);
                     counterIncrement(Counter::log_messages);
                     fl_core->triggers().notify_all(Triggers::Kind::log);
                 } else if (info->command_string == "_ROTATE_LOGFILE"s) {
@@ -889,10 +886,7 @@ void livestatus_log_initial_states() {
             std::ostringstream os;
             os << "HOST DOWNTIME ALERT: " << hst->name
                << ";STARTED; Host has entered a period of scheduled downtime";
-            // Older Nagios headers are not const-correct... :-P
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-            write_to_all_logs(const_cast<char *>(os.str().c_str()),
-                              NSLOG_INFO_MESSAGE);
+            write_to_all_logs_(os);
         }
     }
     for (const ::service *svc = service_list; svc != nullptr; svc = svc->next) {
@@ -901,10 +895,7 @@ void livestatus_log_initial_states() {
             os << "SERVICE DOWNTIME ALERT: " << svc->host_name << ";"
                << svc->description
                << ";STARTED; Service has entered a period of scheduled downtime";
-            // Older Nagios headers are not const-correct... :-P
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-            write_to_all_logs(const_cast<char *>(os.str().c_str()),
-                              NSLOG_INFO_MESSAGE);
+            write_to_all_logs_(os);
         }
     }
     g_timeperiods_cache->logCurrentTimeperiods();
@@ -926,11 +917,7 @@ int broker_timed_event(int callback_type, void *data) {
                     livestatus_log_initial_states();
                 } else if (log_initial_states == 1) {
                     // initial info during startup
-                    write_to_all_logs(
-                        // Older Nagios headers are not const-correct... :-P
-                        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-                        const_cast<char *>("logging initial states"),
-                        NSLOG_INFO_MESSAGE);
+                    write_to_all_logs_("logging initial states");
                 }
             }
             g_timeperiods_cache->update(from_timeval(info->timestamp));

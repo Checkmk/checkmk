@@ -87,11 +87,19 @@ void main() {
         }
     }
 
-    dir("${result_dir}") {
-        stage("Archive / process test reports") {
+    stage("Archive / process test reports") {
+        dir("${result_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts("**");
             }
+            xunit([Custom(
+                customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
+                deleteOutputFiles: true,
+                failIfNotNew: true,
+                pattern: "**/junit.xml",
+                skipNoTestFiles: false,
+                stopProcessingIfError: true
+            )]);
         }
     }
 }

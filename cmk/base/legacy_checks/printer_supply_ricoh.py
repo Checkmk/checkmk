@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 # .1.3.6.1.4.1.367.3.2.1.2.24.1.1.2.1 Black Toner
 # .1.3.6.1.4.1.367.3.2.1.2.24.1.1.2.2 Cyan Toner
@@ -20,14 +19,19 @@
 # .1.3.6.1.4.1.367.3.2.1.2.24.1.1.5.1 30
 
 
+from collections.abc import Mapping
+from typing import Any
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, SNMPTree
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 check_info = {}
 
+Section = dict[str, int]
 
-def parse_printer_supply_ricoh(string_table):
-    parsed = {}
+
+def parse_printer_supply_ricoh(string_table: StringTable) -> Section:
+    parsed: Section = {}
     for what, pages_text in string_table:
         name_reversed = what.split(" ")
 
@@ -39,12 +43,14 @@ def parse_printer_supply_ricoh(string_table):
     return parsed
 
 
-def discover_printer_supply_ricoh(parsed):
+def discover_printer_supply_ricoh(parsed: Section) -> list[tuple[str, dict[str, object]]]:
     return [(key, {}) for key in parsed]
 
 
-def check_printer_supply_ricoh(item, params, parsed):
-    def handle_regular(supply_level):
+def check_printer_supply_ricoh(
+    item: str, params: Mapping[str, Any] | tuple[float, ...], parsed: Section
+) -> tuple[int, str, list[Any]] | None:
+    def handle_regular(supply_level: int) -> tuple[int, str, int]:
         infotext = "%.0f%%" % supply_level
 
         if supply_level <= crit:
@@ -58,7 +64,7 @@ def check_printer_supply_ricoh(item, params, parsed):
             infotext += f" (warn/crit at {warn:.0f}%/{crit:.0f}%)"
         return state, infotext, supply_level
 
-    def handle_negative(code):
+    def handle_negative(code: int) -> tuple[int, str, int]:
         # the following codes are based on the MP C2800
         if code == -100:
             # does not apply level. Since we don't get a proper reading
@@ -103,6 +109,7 @@ def check_printer_supply_ricoh(item, params, parsed):
             perfdata = [("supply_toner_" + perf_type, supply_level, warn, crit, 0, 100)]
 
             return state, infotext, perfdata
+    return None
 
 
 check_info["printer_supply_ricoh"] = LegacyCheckDefinition(

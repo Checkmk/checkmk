@@ -64,9 +64,7 @@ export async function useDashboardGeneralSettings(
 
     if (!isValidSnakeCase(trimmed)) {
       uniqueIdErrors.value.push(
-        _t(
-          'Unique ID must only contain lowercase letters, numbers, and underscores, and must start with a letter.'
-        )
+        _t('Use only lowercase letters (a-z), numbers (0-9), and underscores (_).')
       )
       return
     }

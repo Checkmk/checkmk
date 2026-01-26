@@ -14,7 +14,7 @@ export const toSnakeCase = (string: string): string => {
 }
 
 export const isValidSnakeCase = (string: string): boolean => {
-  const snakeCaseRegex = /^[a-z][a-z0-9]*(_[a-z0-9]+)*_?$/
+  const snakeCaseRegex = /^[a-z0-9_]+$/
   return snakeCaseRegex.test(string)
 }
 

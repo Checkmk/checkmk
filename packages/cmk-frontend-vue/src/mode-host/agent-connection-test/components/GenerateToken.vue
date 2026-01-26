@@ -15,10 +15,18 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+export interface IAgentTokenGenerationResponsExtensions {
+  comment: string
+  issued_at: Date
+  expires_at: Date | null
+  host_name: string
+}
+
 export interface IAgentTokenGenerationResponse {
   id: string
   title: string
   domainType: string
+  extensions: IAgentTokenGenerationResponsExtensions
 }
 
 const { _t } = usei18n()
@@ -32,6 +40,7 @@ const ott = defineModel<string | null | Error>({ required: true })
 const ottGenerating = ref(false)
 const ottGenerated = ref(false)
 const ottError = ref<Error | null>(null)
+const ottExpiry = ref<Date | null>(null)
 const noOTT = ref(false)
 const api = new Api('api/internal/', [['Content-Type', 'application/json']])
 
@@ -46,6 +55,8 @@ async function generateOTT() {
     )) as IAgentTokenGenerationResponse
 
     ott.value = res.id
+
+    ottExpiry.value = res.extensions.expires_at
   } catch (e) {
     ott.value = ottError.value = e as Error
   } finally {
@@ -86,7 +97,10 @@ function registerWithUser() {
       _t(`Error on generating token: ${ottError.message}`)
     }}</CmkAlertBox>
     <template v-else>
-      <CmkAlertBox variant="success">{{ _t('Successfully generated token') }}</CmkAlertBox>
+      <CmkAlertBox variant="success">
+        {{ _t('Successfully generated token') }}
+        {{ _t(`(Expires: ${ottExpiry?.toLocaleString() || 'never'})`) }}</CmkAlertBox
+      >
       <CmkAlertBox>
         {{ _t('If an error occurs during OTT authentication, try to authenticate with a user.') }}
         <br />

@@ -11,13 +11,14 @@ rules:
       paths:
           # TODO: Make this an exclude list
           include:
-              - "bin"
-              - "cmk"
-              - "packages"
-              - "notifications"
-              - "active_checks"
+              - "**/bin"
+              - "**/cmk"
+              - "**/packages"
+              - "**/notifications"
+              - "**/active_checks"
               # TODO: Update all agent plugins to use sys.stdout.write instead of print
-              - "agents/plugins"
+              - "**/agents/plugins"
           exclude:
-              - "doc/treasures"
-              - "packages/cmk-livestatus-client/example*.py"
+              - "**/doc/treasures"
+              - "**/packages/cmk-livestatus-client/example*.py"
+              - "**/non-free/packages/cmk-relay-engine/**/testlib/**/*.py"

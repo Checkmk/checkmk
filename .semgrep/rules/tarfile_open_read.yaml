@@ -19,8 +19,8 @@ rules:
             technology: [ python, tarfile ]
         paths:
             exclude:
-                - "mkp_tool"
-                - "packages/**/tests"
+                - "**/mkp_tool"
+                - "**/packages/**/tests"
                 - "**/tests"
                 - "**/testlib"
-                - "tests"
+                - "**/tests"

@@ -9,4 +9,4 @@ rules:
       severity: ERROR
       paths:
           exclude:
-              - cmk/utils/images.py
+              - "**/cmk/utils/images.py"

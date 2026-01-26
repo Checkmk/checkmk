@@ -37,9 +37,8 @@ def main(
 
     for werk_path in werks_to_check:
         if werk_path.name in NON_WERK_FILES_IN_WERK_FOLDER:
-            print(  # nosemgrep: disallow-print
-                "WARNING: NOT CHECKING", werk_path, "as it's not a werk."
-            )
+            # nosemgrep: disallow-print
+            print("WARNING: NOT CHECKING", werk_path, "as it's not a werk.")
             continue
         werk_content = werk_path.read_text(encoding="utf-8")
         try:

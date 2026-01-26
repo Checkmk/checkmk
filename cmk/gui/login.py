@@ -173,9 +173,8 @@ class LoginPage(Page):
                 )
 
             try:
-                username = UserId(  # nosemgrep: use-request-getvalidatedinputtype
-                    username_var.rstrip()
-                )
+                # nosemgrep: use-request-getvalidatedinputtype
+                username = UserId(username_var.rstrip())
                 password = Password(password_var)
             except ValueError:
                 # If type validation fails the credentials cannot be valid. Show the generic error.

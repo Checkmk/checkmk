@@ -6,7 +6,7 @@ rules:
     message: RSA key size should be set to 1024-bit in unit test.
     paths:
         include:
-          - "tests/unit"
+          - "**/tests/unit"
     pattern-either:
       - patterns:
           - pattern-inside: |

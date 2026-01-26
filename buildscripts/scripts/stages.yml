@@ -810,6 +810,22 @@ STAGES:
       RESULT_CHECK_TYPE: "SARIF"
       RESULT_CHECK_FILE_PATTERN: "results/results.sarif"
 
+    - NAME: "semgrep repository"
+      DIR: ""
+      COMMAND: |
+          bazel run --run_under="cd $PWD &&" //bazel/tools:semgrep -- \
+              scan \
+              --config=.semgrep/rules \
+              --oss-only \
+              --disable-version-check \
+              --junit-xml-output=results/semgrep.xml
+      TEXT_ON_SKIP: "inconditional"
+      BAZEL_LOCKS_AMOUNT: 1
+      # Note that --sarif-output=VAL is unusable
+      # https://github.com/semgrep/semgrep/issues/6658
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/semgrep.xml"
+
     - NAME: "Enforced package build"
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_MAKEFILE
       DIR: ""

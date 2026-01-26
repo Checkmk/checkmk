@@ -8,7 +8,7 @@ Plugin APIs
 
 This is the plugin API reference from Checkmk.
 This can help you to get exact information about the API.
-If you want to know how to use the API, please have a look at the articles about extending Checkmk in our `user guide <https://docs.checkmk.com/master>`_.
+If you want to know how to use the API, please have a look at the articles about extending Checkmk in the `Checkmk User Guide <https://docs.checkmk.com/2.5.0/en/devel_intro.html?origin=checkmk>`_.
 
 .. _plugin-location-and-loading:
 

@@ -9,6 +9,7 @@
 #include <chrono>
 #include <map>
 #include <mutex>
+#include <sstream>
 #include <string>
 
 #include "neb/nagios.h"
@@ -33,5 +34,8 @@ private:
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern TimeperiodsCache *g_timeperiods_cache;
+
+void write_to_all_logs_(const char *buffer);
+void write_to_all_logs_(const std::ostringstream &os);
 
 #endif  // TimeperiodsCache_h

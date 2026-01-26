@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, toValue } from 'vue'
+import { computed, toValue } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
@@ -17,8 +18,6 @@ import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { UseWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
@@ -77,8 +76,6 @@ function saveWidget() {
     emit('addWidget', toValue(visualizationProps.value.widgetGeneralSettings))
   }
 }
-
-const displayVisualizationSettings = ref<boolean>(true)
 </script>
 
 <template>
@@ -107,13 +104,7 @@ const displayVisualizationSettings = ref<boolean>(true)
 
   <ContentSpacer />
 
-  <CollapsibleTitle
-    :title="_t('Widget settings')"
-    :open="displayVisualizationSettings"
-    class="collapsible"
-    @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
-  />
-  <CollapsibleContent :open="displayVisualizationSettings">
+  <CmkCatalogPanel :title="_t('Widget settings')">
     <WidgetVisualization
       v-model:show-title="visualizationProps.showTitle.value"
       v-model:show-title-background="visualizationProps.showTitleBackground.value"
@@ -123,5 +114,5 @@ const displayVisualizationSettings = ref<boolean>(true)
       v-model:title-url-enabled="visualizationProps.titleUrlEnabled.value"
       v-model:title-url-validation-errors="visualizationProps.titleUrlValidationErrors.value"
     />
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 </template>

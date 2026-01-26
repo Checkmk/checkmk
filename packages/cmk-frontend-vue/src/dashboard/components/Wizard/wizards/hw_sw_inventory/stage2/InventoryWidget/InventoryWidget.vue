@@ -4,12 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import usei18n from '@/lib/i18n'
 
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
 import WidgetVisualization from '../../../../components/WidgetVisualization/WidgetVisualization.vue'
 import { type UseInventory } from './useInventory'
@@ -23,18 +20,10 @@ defineExpose({ validate })
 function validate(): boolean {
   return handler.value.validate()
 }
-
-const displayVisualizationSettings = ref<boolean>(true)
 </script>
 
 <template>
-  <CollapsibleTitle
-    :title="_t('Widget settings')"
-    :open="displayVisualizationSettings"
-    class="collapsible"
-    @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
-  />
-  <CollapsibleContent :open="displayVisualizationSettings">
+  <CmkCatalogPanel :title="_t('Widget settings')">
     <WidgetVisualization
       v-model:show-title="handler.showTitle.value"
       v-model:show-title-background="handler.showTitleBackground.value"
@@ -52,12 +41,5 @@ const displayVisualizationSettings = ref<boolean>(true)
       ]"
       :target-options="handler.linkTargetSuggestions.value"
     />
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 </template>
-
-<style scoped>
-.db-inventory-widget__field-component-item {
-  display: block;
-  padding-bottom: var(--spacing-half);
-}
-</style>

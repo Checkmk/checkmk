@@ -4,17 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 
 const { _t } = usei18n()
 
@@ -23,18 +21,11 @@ interface Props {
 }
 
 defineProps<Props>()
-
-const displayDataSettings = ref<boolean>(true)
 </script>
 
 <template>
   <div>
-    <CollapsibleTitle
-      :title="_t('Data settings')"
-      :open="displayDataSettings"
-      @toggle-open="displayDataSettings = !displayDataSettings"
-    />
-    <CollapsibleContent :open="displayDataSettings">
+    <CmkCatalogPanel :title="_t('Data settings')">
       <TableForm>
         <TableFormRow>
           <FieldDescription>{{ label }}</FieldDescription>
@@ -43,6 +34,6 @@ const displayDataSettings = ref<boolean>(true)
           </FieldComponent>
         </TableFormRow>
       </TableForm>
-    </CollapsibleContent>
+    </CmkCatalogPanel>
   </div>
 </template>

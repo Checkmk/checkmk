@@ -4,16 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import type { Suggestion } from '@/components/CmkSuggestions'
 
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard/components/filter/types'
 import type { ContextFilters } from '@/dashboard/types/filter'
 import type { ObjectType } from '@/dashboard/types/shared'
@@ -54,7 +51,6 @@ const gotoNextStage = () => {
 const hostFilterType = defineModel<ElementSelection>('hostFilterType', { required: true })
 const inventoryPath = defineModel<string | null>('inventoryPath', { required: true })
 const hostObjectType = 'host'
-const displayHwSwPropertySelection = ref(true)
 </script>
 
 <template>
@@ -75,13 +71,7 @@ const displayHwSwPropertySelection = ref(true)
     />
   </SectionBlock>
 
-  <CollapsibleTitle
-    :title="_t('Metric selection')"
-    :open="displayHwSwPropertySelection"
-    class="collapsible"
-    @toggle-open="displayHwSwPropertySelection = !displayHwSwPropertySelection"
-  />
-  <CollapsibleContent :open="displayHwSwPropertySelection">
+  <CmkCatalogPanel :title="_t('Metric selection')">
     <TableForm>
       <TableFormRow>
         <FieldDescription>
@@ -105,7 +95,7 @@ const displayHwSwPropertySelection = ref(true)
         </FieldComponent>
       </TableFormRow>
     </TableForm>
-  </CollapsibleContent>
+  </CmkCatalogPanel>
 </template>
 
 <style scoped>

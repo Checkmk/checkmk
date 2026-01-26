@@ -19,7 +19,7 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-type FileUploadData = {
+export type FileUploadData = {
   input_uuid: string
   file_name: string | null
   file_type: string | null

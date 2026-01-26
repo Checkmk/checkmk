@@ -9,6 +9,7 @@ import type { OneColorIcons } from '@/components/CmkIcon/types'
 
 defineProps<{
   iconName: OneColorIcons
+  title: string
 }>()
 
 defineEmits<{
@@ -22,6 +23,7 @@ defineEmits<{
       <CmkMultitoneIcon
         class="db-responsive-grid-widget-button__icon"
         :name="iconName"
+        :title="title"
         :primary-color="{ custom: 'var(--db-rgw-button-color)' }"
         size="xlarge"
       />

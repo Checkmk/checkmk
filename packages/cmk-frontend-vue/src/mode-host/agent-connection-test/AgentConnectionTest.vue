@@ -46,6 +46,10 @@ interface Props {
   ipAddressFamilySelectElement: HTMLSelectElement
   ipAddressFamilyInputElement: HTMLInputElement
   cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
+  relayInputButtonElement: HTMLInputElement | null
+  relaySelectElement: HTMLSelectElement | null
+  relayDefaultElement: HTMLDivElement | null
+  defaultRelayIdHash: string
   sites: Array<ModeHostSite>
   serverPerSite: Array<ModeHostServerPerSite>
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
@@ -59,6 +63,19 @@ const slideInOpen = ref(false)
 
 const showTest = ref(true)
 const isPushMode = ref(false)
+
+function checkRelay(): boolean {
+  if (!props.relayInputButtonElement || !props.relaySelectElement || !props.relayDefaultElement) {
+    return false
+  }
+  return (
+    (props.relayInputButtonElement.checked === true &&
+      props.relaySelectElement.value !== props.defaultRelayIdHash) ||
+    (props.relayInputButtonElement.checked === false &&
+      !props.relayDefaultElement.textContent?.includes('No relay'))
+  )
+}
+
 const switchVisibility = () => {
   showTest.value = true
   if (
@@ -66,6 +83,10 @@ const switchVisibility = () => {
     (props.ipAddressFamilySelectElement.value === 'no-ip' ||
       props.ipAddressFamilySelectElement.value === 'ip-v4v6')
   ) {
+    showTest.value = false
+    return
+  }
+  if (checkRelay()) {
     showTest.value = false
     return
   }

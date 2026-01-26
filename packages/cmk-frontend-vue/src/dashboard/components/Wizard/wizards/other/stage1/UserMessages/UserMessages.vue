@@ -4,15 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import usei18n from '@/lib/i18n'
+
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
-import CollapsibleContent from '@/dashboard/components/Wizard/components/collapsible/CollapsibleContent.vue'
-import CollapsibleTitle from '@/dashboard/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
 import type { GetValidWidgetProps } from '@/dashboard/components/Wizard/wizards/other/types'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
@@ -27,8 +25,6 @@ interface Props extends BaseWidgetProp {
 }
 const props = defineProps<Props>()
 const handler = useUserMessages(props.dashboardConstants, props.editWidgetSpec)
-
-const displayVisualizationSettings = ref<boolean>(true)
 
 function getValidWidgetProps(): WidgetProps | null {
   if (handler.validate()) {
@@ -52,12 +48,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
 
     <ContentSpacer />
 
-    <CollapsibleTitle
-      :title="_t('Widget settings')"
-      :open="displayVisualizationSettings"
-      @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
-    />
-    <CollapsibleContent :open="displayVisualizationSettings">
+    <CmkCatalogPanel :title="_t('Widget settings')">
       <WidgetVisualization
         v-model:show-title="handler.showTitle.value"
         v-model:show-title-background="handler.showTitleBackground.value"
@@ -67,7 +58,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
         v-model:title-url-enabled="handler.titleUrlEnabled.value"
         v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       />
-    </CollapsibleContent>
+    </CmkCatalogPanel>
 
     <ContentSpacer />
   </div>

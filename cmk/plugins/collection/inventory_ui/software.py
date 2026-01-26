@@ -456,6 +456,34 @@ node_software_applications_checkmk_agent_plugins = Node(
     ),
 )
 
+node_software_applications_cisco_meraki = Node(
+    name="software_applications_cisco_meraki",
+    path=["software", "applications", "cisco_meraki"],
+    title=Title("Cisco Meraki"),
+)
+
+node_software_applications_cisco_meraki_licenses = Node(
+    name="software_applications_cisco_meraki_licenses",
+    path=["software", "applications", "cisco_meraki", "licenses"],
+    title=Title("Licenses"),
+    table=Table(
+        columns={
+            "org_id": TextField(Title("Organisation ID")),
+            "org_name": TextField(Title("Organisation name")),
+            "summary": NumberField(Title("Summary")),
+            "gateway_mg_count": NumberField(Title("Gateway (MG)")),
+            "wireless_mr_count": NumberField(Title("Access points/Wireless (MR)")),
+            "switch_ms_count": NumberField(Title("Switches (MS)")),
+            "sensor_mt_count": NumberField(Title("Sensor (MT)")),
+            "video_mv_count": NumberField(Title("Video (MV)")),
+            "security_mx_count": NumberField(Title("Security/SD-WAN (MX)")),
+            "systems_manager_sm_count": NumberField(Title("Systems manager (SM)")),
+            "other_count": NumberField(Title("Other")),
+        }
+    ),
+)
+
+
 node_software_applications_citrix = Node(
     name="software_applications_citrix",
     path=["software", "applications", "citrix"],

@@ -6,11 +6,16 @@
 # Pydantic requires the property to be under computed_field to work.
 # mypy: disable-error-code="prop-decorator"
 
+# Unpacking literal keys into dictionary with str keys is a known mypy bug:
+# https://github.com/python/mypy/issues/19893
+# mypy: disable-error-code="dict-item"
+
 import json
 import time
+from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from pydantic import BaseModel, computed_field, Field
 
@@ -20,16 +25,33 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    InventoryPlugin,
+    InventoryResult,
     Metric,
     render,
     Result,
     Service,
     State,
     StringTable,
+    TableRow,
 )
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 type Section = Mapping[str, LicensesOverview]
+
+type LicenseCountsByDeviceType = defaultdict[
+    Literal[
+        "gateway_mg_count",
+        "security_mx_count",
+        "switch_ms_count",
+        "video_mv_count",
+        "sensor_mt_count",
+        "wireless_mr_count",
+        "systems_manager_sm_count",
+        "other_count",
+    ],
+    int,
+]
 
 
 class LicensesOverview(BaseModel, frozen=True):
@@ -55,6 +77,30 @@ class LicensesOverview(BaseModel, frozen=True):
     @property
     def license_total(self) -> int:
         return sum(self.licensed_device_counts.values())
+
+    def get_device_counts_by_type(self) -> LicenseCountsByDeviceType:
+        counts_by_type: LicenseCountsByDeviceType = defaultdict(int)
+
+        for serial, count in self.licensed_device_counts.items():
+            serial_ = serial.lower()
+            if serial_.startswith("mg"):
+                counts_by_type["gateway_mg_count"] += count
+            elif serial_.startswith("mx"):
+                counts_by_type["security_mx_count"] += count
+            elif serial_.startswith("ms"):
+                counts_by_type["switch_ms_count"] += count
+            elif serial_.startswith("mv"):
+                counts_by_type["video_mv_count"] += count
+            elif serial_.startswith("mt"):
+                counts_by_type["sensor_mt_count"] += count
+            elif serial_.startswith("mr") or serial.startswith("wireless"):
+                counts_by_type["wireless_mr_count"] += count
+            elif serial_.startswith("sm"):
+                counts_by_type["systems_manager_sm_count"] += count
+            else:
+                counts_by_type["other_count"] += count
+
+        return counts_by_type
 
 
 def parse_licenses_overview(string_table: StringTable) -> Section:
@@ -145,4 +191,27 @@ check_plugin_cisco_meraki_org_licenses_overview = CheckPlugin(
         remaining_expiration_time=("no_levels", None),
         state_license_not_ok=State.WARN.value,
     ),
+)
+
+
+def inventorize_licenses_overview(section: Section) -> InventoryResult:
+    path = ["software", "applications", "cisco_meraki", "licenses"]
+    for overview in section.values():
+        yield TableRow(
+            path=path,
+            key_columns={
+                "org_id": overview.organisation_id,
+            },
+            inventory_columns={
+                "org_name": overview.organisation_name,
+                "summary": overview.license_total,
+                **overview.get_device_counts_by_type(),
+            },
+        )
+
+
+inventory_plugin_cisco_meraki_org_licenses_overview = InventoryPlugin(
+    name="cisco_meraki_org_licenses_overview",
+    inventory_function=inventorize_licenses_overview,
+    sections=["cisco_meraki_org_licenses_overview"],
 )

@@ -407,7 +407,7 @@ export function message(message_text: string, message_type: MessageType, del_var
     buttonsStyling: false,
     showConfirmButton: false,
     showCloseButton: true,
-    iconHtml: `<img src="themes/lala/images/${filename}">`,
+    iconHtml: `<img src="themes/facelift/images/${filename}">`,
     didOpen: () => {
       // Remove focus on CloseButton
       const closeButton = document.querySelector('.swal2-close') as HTMLButtonElement

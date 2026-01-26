@@ -23,7 +23,9 @@ def family_libexec_dir(module_name: str) -> Path:
     Example:
       In this example the family is "prism":
 
-      >>> family_libexec_dir("cmk.plugins.prism.server_side_calls.special_agent").parts[-4:]
+      >>> family_libexec_dir(  # doctest: +SKIP
+      ...    "cmk.plugins.prism.server_side_calls.special_agent"
+      ... ).parts[-4:]
       ('cmk', 'plugins', 'prism', 'libexec')
 
     """

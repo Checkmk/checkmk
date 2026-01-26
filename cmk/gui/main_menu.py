@@ -47,8 +47,6 @@ class MainMenuRegistry(Registry[MainMenu]):
     Examples:
 
         >>> from cmk.gui.i18n import _l
-        >>> from cmk.gui.type_defs import MainMenu
-        >>> from cmk.gui.main_menu import main_menu_registry
         >>> main_menu_registry.register(MainMenu(
         ...     name="monitoring",
         ...     title=_l("Monitor"),

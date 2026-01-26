@@ -9,7 +9,7 @@ import { useDashboardGeneralSettings } from '@/dashboard/components/Wizard/compo
 import type { DashboardGeneralSettings } from '@/dashboard/types/dashboard'
 
 vi.mock('@/dashboard/components/Wizard/components/DashboardSettings/utils', () => ({
-  isValidSnakeCase: (str: string) => /^[a-z][a-z0-9]*(_[a-z0-9]+)*_?$/.test(str),
+  isValidSnakeCase: (str: string) => /^[a-z0-9_]+$/.test(str),
   isIdInUse: async (owner: string, id: string) =>
     id === 'existing_dashboard' && owner === 'existing_user'
 }))
@@ -95,13 +95,7 @@ describe('useDashboardGeneralSettings Composable', () => {
       await settings.validateGeneralSettings()
       expect(settings.uniqueIdErrors.value.length).toBeGreaterThan(0)
     })
-    it('should reject unique ID that starts with number', async () => {
-      const settings = await useDashboardGeneralSettings('nobody')
-      settings.uniqueId.value = '123_dashboard'
-      await settings.validateGeneralSettings()
-      expect(settings.uniqueIdErrors.value.length).toBeGreaterThan(0)
-    })
-    it('should reject unique ID that is already in use', async () => {
+    it('should reject unique ID that is already in use by the user', async () => {
       const settings = await useDashboardGeneralSettings('existing_user')
       settings.uniqueId.value = 'existing_dashboard'
       await settings.validateGeneralSettings()
@@ -120,6 +114,18 @@ describe('useDashboardGeneralSettings Composable', () => {
       const isValid = await settings.validateGeneralSettings()
       expect(settings.uniqueIdErrors.value.length).toBe(0)
       expect(isValid).toBe(true)
+    })
+    it('should accept unique ID that starts with number', async () => {
+      const settings = await useDashboardGeneralSettings('nobody')
+      settings.uniqueId.value = '123_dashboard'
+      await settings.validateGeneralSettings()
+      expect(settings.uniqueIdErrors.value.length).toBe(0)
+    })
+    it('should accept unique ID that starts with underscore', async () => {
+      const settings = await useDashboardGeneralSettings('nobody')
+      settings.uniqueId.value = '_dashboard'
+      await settings.validateGeneralSettings()
+      expect(settings.uniqueIdErrors.value.length).toBe(0)
     })
   })
   describe('Sort Index Validation', () => {

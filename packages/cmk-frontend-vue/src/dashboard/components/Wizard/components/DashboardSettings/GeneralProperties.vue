@@ -74,6 +74,16 @@ const uniqueIdCheckboxLabel = computed((): string => {
   const suffix = createUniqueId.value ? `: ${uniqueId.value}` : ''
   return `${_t('Automatically create unique ID')}${suffix}`
 })
+
+watch(
+  () => props.uniqueIdValidationErrors,
+  (errors) => {
+    if (errors.length > 0) {
+      createUniqueId.value = false
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <template>

@@ -9,6 +9,8 @@ import axios from 'axios'
 import { type I18NPingHost, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
 import { type Ref, computed, onMounted, ref } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
 import CmkAlertBox, { type Variants } from '@/components/CmkAlertBox.vue'
 
 const props = defineProps<{
@@ -49,12 +51,23 @@ enum PingCmd {
   Ping = 'ping',
   Ping6 = 'ping6'
 }
+interface PingStatusInformation {
+  queriesMade: number
+  timer: ReturnType<typeof setTimeout> | null
+  timerStarted: number | null
+}
+
+interface PingStatus {
+  [PingCmd.Ping]: PingStatusInformation
+  [PingCmd.Ping6]: PingStatusInformation
+}
 
 interface Result {
   status: DNSStatus
   element: HTMLInputElement
 }
 
+const { _t } = usei18n()
 const prevStatusElements: Ref<Record<string, Result>> = ref({})
 const statusElements: Ref<Record<string, Result>> = ref({})
 const isNoIP = ref(
@@ -68,12 +81,25 @@ const ajaxRequestInProgress = ref<{ [key: string]: boolean }>({
   ping: false,
   ping6: false
 })
-
+const pingStatus: Ref<PingStatus> = ref({
+  ping: {
+    queriesMade: 0,
+    timer: null,
+    timerStarted: null
+  },
+  ping6: {
+    queriesMade: 0,
+    timer: null,
+    timerStarted: null
+  }
+})
 const typingTimer: Ref<{ [key: string]: ReturnType<typeof setTimeout> | null }> = ref({
   ping: null,
   ping6: null
 })
 const doneTypingInterval = 1000
+const maxQueries = 5
+const waitTimeBetweenQueries = 60 * 1000
 
 function checkRelay(): boolean {
   if (!props.relayInputButtonElement || !props.relaySelectElement || !props.relayDefaultElement) {
@@ -229,6 +255,26 @@ async function callAJAX(
   while (controller.value.signal.aborted) {
     // Wait for the previous request to finish
     await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+
+  if (!pingStatus.value[cmd].timer) {
+    pingStatus.value[cmd].timerStarted = Date.now()
+    pingStatus.value[cmd].timer = setTimeout(() => {
+      pingStatus.value[cmd].queriesMade = 0
+      pingStatus.value[cmd].timer = null
+    }, waitTimeBetweenQueries)
+  }
+  pingStatus.value[cmd].queriesMade += 1
+  if (pingStatus.value[cmd].queriesMade > maxQueries && pingStatus.value[cmd].timerStarted) {
+    return {
+      tooltip: _t(
+        `Maximum number of ping attempts reached.
+        Please try again after
+        ${((waitTimeBetweenQueries - (Date.now() - pingStatus.value[cmd].timerStarted)) / 1000).toFixed(0)}
+        seconds.`
+      ),
+      status: 'warning'
+    }
   }
   const siteId = props.sites.find((site) => site.id_hash === props.siteSelectElement.value)?.site_id
   const currentInput = input ? encodeURIComponent(input) : undefined

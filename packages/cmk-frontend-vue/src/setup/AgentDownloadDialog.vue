@@ -42,6 +42,15 @@ const openDocs = () => {
 }
 
 const tooltipOpen = ref(true)
+// The rescan button always contains the current js call with all needed
+// params. Solution is not the best but without VUE on the setup page we have
+// limited options to solve this.
+const triggerRescan = () => {
+  const rescanElement = [...document.querySelectorAll('a')].find(
+    (a) => a.textContent.trim() === 'Rescan'
+  ) as HTMLAnchorElement | null | undefined
+  rescanElement?.click()
+}
 </script>
 
 <template>
@@ -104,7 +113,7 @@ const tooltipOpen = ref(true)
       :setup-error="false"
       :agent-installed="isNotRegistered"
       :is-push-mode="false"
-      @close="((slideInOpen = false), (tooltipOpen = false))"
+      @close="((slideInOpen = false), (tooltipOpen = false), triggerRescan())"
     />
   </CmkSlideInDialog>
 </template>

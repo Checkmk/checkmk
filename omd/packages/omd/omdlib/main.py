@@ -2922,11 +2922,8 @@ def _restore_backup_from_tar(
     source_descr: str,
     new_site_name: str | None,
     versions_path: Path = Path("/omd/versions/"),
-) -> SiteContext:
-    try:
-        sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
-    except Exception as e:
-        sys.exit("%s" % e)
+) -> None:
+    sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
 
     if not version_exists(version, versions_path):
         sys.exit(
@@ -2965,8 +2962,6 @@ def _restore_backup_from_tar(
         postprocess_restore_as_site_user(
             version_info, sitename, site, options, orig_apache_port, global_opts.verbose
         )
-
-    return site
 
 
 def main_restore(

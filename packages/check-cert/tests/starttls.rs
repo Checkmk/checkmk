@@ -5,4 +5,5 @@
 mod starttls {
     mod postgres;
     mod smtp;
+    mod stream_io;
 }

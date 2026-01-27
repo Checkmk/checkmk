@@ -240,3 +240,8 @@ def browser_context_args() -> dict[str, dict[str, str]]:
             "Connection": "close",
         }
     }
+
+
+def pytest_itemcollected(item: pytest.Item) -> None:
+    """Remove Playwright's default browser_name from test IDs"""
+    item._nodeid = item._nodeid.replace("[chromium-", "[")

@@ -32,10 +32,13 @@ const missingSingleInfosString = computed(() => {
 
 <template>
   <div v-if="enterMissingRuntimeFiltersAction !== null" class="db-missing-filters-msg">
-    <div>
+    <div v-if="renderContext === 'configurationPreview'">
+      <span>{{ _t('Enter runtime filter') }}</span>
+      <span>{{ _t('to load preview') }}</span>
+    </div>
+    <div v-else>
       <a @click="enterMissingRuntimeFiltersAction()">{{ _t('Enter runtime filter') }}</a>
-      <span v-if="renderContext === 'configurationPreview'">{{ _t('to load preview') }}</span>
-      <span v-else>{{ _t('to load data') }}</span>
+      <span>{{ _t('to load data') }}</span>
     </div>
   </div>
   <CmkAlertBox v-else-if="missingSingleInfosString!!" variant="warning">

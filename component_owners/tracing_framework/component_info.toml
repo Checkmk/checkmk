@@ -1,0 +1,10 @@
+type = "Component"
+display_name = "Tracing Framework (Jaeger, otel-python)"
+has_support_component = false
+members_required = 2
+description = """
+- Manages the built-in Jaeger instance to provide basic distributed tracing visualizations.
+- Integrates OpenTelemetry libraries into Checkmk to enable tracing of flows across services.
+- Provides mechanisms for context propagation across service boundaries for end-to-end traceability.
+- Gives developers guidance on instrumenting code to generate and collect trace data effectively.
+"""

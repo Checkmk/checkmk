@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -252,8 +254,8 @@ def test_diagnostics_deserialize(
             [
                 diagnostics.CheckmkFileSensitivity.unknown,
                 diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.high_sensitive,
-                diagnostics.CheckmkFileSensitivity.high_sensitive,
+                diagnostics.CheckmkFileSensitivity.sensitive,
+                diagnostics.CheckmkFileSensitivity.sensitive,
                 diagnostics.CheckmkFileSensitivity.sensitive,
                 diagnostics.CheckmkFileSensitivity.insensitive,
             ],
@@ -263,8 +265,8 @@ def test_diagnostics_deserialize(
             [
                 diagnostics.CheckmkFileSensitivity.unknown,
                 diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.high_sensitive,
-                diagnostics.CheckmkFileSensitivity.high_sensitive,
+                diagnostics.CheckmkFileSensitivity.sensitive,
+                diagnostics.CheckmkFileSensitivity.sensitive,
                 diagnostics.CheckmkFileSensitivity.sensitive,
                 diagnostics.CheckmkFileSensitivity.insensitive,
             ],
@@ -302,9 +304,6 @@ def test_diagnostics_get_checkmk_file_info_by_name(
         )
 
 
-# This list of files comes from an empty Checkmk site setup
-# and may be incomplete.
-# 'sensitivity_value == diagnostics.CheckmkFileSensitivity.unknown' means not found
 @pytest.mark.parametrize(
     "rel_filepath, sensitivity",
     [
@@ -318,38 +317,38 @@ def test_diagnostics_get_checkmk_file_info_by_name(
             "conf.d/wato/alert_handlers.mk",
             diagnostics.CheckmkFileSensitivity.high_sensitive,
         ),
-        ("conf.d/wato/contacts.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("conf.d/wato/contacts.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("conf.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("conf.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("conf.d/wato/hosts.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("conf.d/wato/hosts.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         (
             "conf.d/wato/notifications.mk",
-            diagnostics.CheckmkFileSensitivity.high_sensitive,
+            diagnostics.CheckmkFileSensitivity.sensitive,
         ),
-        ("conf.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("conf.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("conf.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("dcd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("liveproxyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("main.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("mkeventd.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("mkeventd.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         (
             "mkeventd.d/wato/global.mk",
-            diagnostics.CheckmkFileSensitivity.high_sensitive,
+            diagnostics.CheckmkFileSensitivity.sensitive,
         ),
         ("mkeventd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("mknotifyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("multisite.d/liveproxyd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("multisite.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("multisite.d/sites.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("multisite.d/sites.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         (
             "multisite.d/wato/global.mk",
-            diagnostics.CheckmkFileSensitivity.high_sensitive,
+            diagnostics.CheckmkFileSensitivity.sensitive,
         ),
         ("multisite.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("multisite.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         (
             "multisite.d/wato/users.mk",
-            diagnostics.CheckmkFileSensitivity.high_sensitive,
+            diagnostics.CheckmkFileSensitivity.sensitive,
         ),
         ("multisite.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("rrdcached.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
@@ -377,3 +376,96 @@ def test_diagnostics_file_info_of_comp_notifications(
     assert (
         diagnostics.get_checkmk_file_info(rel_filepath, None).sensitivity.value == sensitivity.value
     )
+
+
+@pytest.mark.parametrize(
+    "count, rel_filepath, content",
+    [
+        (
+            1,
+            "mkeventd.d/wato/global.mk",
+            "snmp_credentials = [{'credentials': TESTPW, 'description': ''}]",
+        ),
+        (
+            1,
+            "conf.d/wato/tests/hosts.mk",
+            "management_ipmi_credentials.update({'myhost': {'username': 'admin', 'password': TESTPW}})",
+        ),
+        (
+            1,
+            "conf.d/wato/rules.mk",
+            "{'id': '123', 'value': {'auth': {'username': 'admin', 'password': ('cmk_postprocessed', 'explicit_password', ('uuid58b8e40a-dfd0-447e-b06f-f2ba3f469bd9', TESTPW))}}, 'condition': {}, 'options': {}},",
+        ),
+        (
+            1,
+            "conf.d/wato/rules.mk",
+            "{'id': '123', 'value': {'credentials': ('admin', ('password', TESTPW))}, 'condition': {}, 'options': {}},",
+        ),
+        (
+            1,
+            "conf.d/wato/rules.mk",
+            "{'id': '123', 'value': {'login': {'auth': ('explicit', ('admin', TESTPW))}}, 'condition': {}, 'options': {}},",
+        ),
+        (
+            2,
+            "conf.d/wato/rules.mk",
+            "{'id': '123', 'value': ('authPriv', 'md5', 'username', TESTPW, 'AES', TESTPW), 'condition': {}, 'options': {}},",
+        ),
+        (
+            1,
+            "conf.d/wato/rules.mk",
+            "{'id': '123', 'value': ('authNoPriv', 'md5', 'username', TESTPW), 'condition': {}, 'options': {}},",
+        ),
+        (
+            3,
+            "conf.d/wato/hosts.mk",
+            """management_snmp_credentials.update({'host1': ('authPriv', 'md5', 'username', TESTPW, 'DES', TESTPW), 'host2': TESTPW})
+
+            """,
+        ),
+        (1, "mkeventd.d/wato/global.mk", "{'credentials': TESTPW, 'description': ''},"),
+        (
+            1,
+            "mkeventd.d/wato/global.mk",
+            "{'credentials': ('authNoPriv', 'md5', 'username', TESTPW),",
+        ),
+        (
+            1,
+            "conf.d/wato/rules.mk",
+            """snmp_communities = [
+{'id': 'e29b75bf-30eb-4e67-baf9-a8a976e11c04', 'value': TESTPW, 'condition': {}, 'options': {'disabled': False}},
+] + snmp_communities""",
+        ),
+        (
+            1,
+            "conf.d/wato/rules.mk",
+            """{'certificate': '-----BEGIN CERTIFICATE-----\\n'
+'TESTPW\\n'
+'-----END CERTIFICATE-----\\n'}""",
+        ),
+        (
+            1,
+            "conf.d/wato/rules.mk",
+            """{'private_key': '-----BEGIN ENCRYPTED PRIVATE KEY-----\\n'
+'TESTPW\\n'
+'-----END ENCRYPTED PRIVATE KEY-----\\n'}""",
+        ),
+    ],
+)
+def test_diagnostics_redact_passwords(count: int, rel_filepath: str, content: str) -> None:
+    passwords = [
+        "'MySeCr3t_Pa5sWoRd!'",
+        '"My\'SeCr3t_Pa5sWoRd!"',
+        "'My\"SeCr3t_Pa5sWoRd!'",
+        "'My'SeCr3t_Pa5sW\"oRd!'",
+    ]
+    for password in passwords:
+        redacted_content = "".join(
+            diagnostics.redact_passwords_in_content(
+                content.replace("TESTPW", password), Path(rel_filepath)
+            )
+        )
+        # Password no longer in content
+        assert password not in redacted_content
+        # Only ONE substring should be redacted
+        assert redacted_content.count(diagnostics.REDACT_STRING) == count

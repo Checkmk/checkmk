@@ -129,6 +129,7 @@ void main() {
                     DISTRO: distro,
                     DISABLE_CACHE: disable_cache,
                     FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                    CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
                 ],
                 build_params_no_check: [
                     CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

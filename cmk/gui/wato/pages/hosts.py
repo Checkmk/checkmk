@@ -354,7 +354,9 @@ class ABCHostMode(WatoMode, abc.ABC):
             host_name = request.get_ascii_input(self.VAR_HOST)
         except MKUserError:
             host_name = None
-        locked_hosts = folder_from_request(request.var("folder"), host_name).locked_hosts()
+        folder = folder_from_request(request.var("folder"), host_name)
+        all_agents_url = folder.url([("mode", "agents")])
+        locked_hosts = folder.locked_hosts()
         if locked_hosts:
             if locked_hosts is True:
                 lock_message = _("Host attributes locked (you cannot edit this host)")
@@ -427,7 +429,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         for mode in HostAgentConnectionMode
                     ],
                     agent_slideout=AgentSlideout(
-                        all_agents_url=folder_preserving_link([("mode", "agents")]),
+                        all_agents_url=all_agents_url,
                         host_name=self._host.name(),
                         agent_install_cmds=AgentInstallCmds(
                             **asdict(
@@ -944,7 +946,7 @@ class CreateHostMode(ABCHostMode):
                 request.get_ascii_input_mandatory(self.VAR_HOST)
             )
             hostname = HostName(hostname)
-        except MKUserError:
+        except (MKUserError, ValueError):
             hostname = HostName("")
 
         Hostname().validate_value(request.get_ascii_input_mandatory(self.VAR_HOST), self.VAR_HOST)
@@ -1028,7 +1030,7 @@ class ModeCreateHost(CreateHostMode):
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
             host_name = HostName(host_name)
-        except MKUserError:
+        except (MKUserError, ValueError):
             host_name = HostName("")
         if prefill := request.get_ascii_input("prefill"):
             match prefill:

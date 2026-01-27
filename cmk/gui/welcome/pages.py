@@ -144,7 +144,7 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
             checkmk_docs=doc_reference_url(DocReference.INTRO_GUI),
-            checkmk_best_practices="https://docs.checkmk.com/latest/en/intro_bestpractise.html?lquery=best%20practi",
+            checkmk_best_practices=doc_reference_url(DocReference.INTRO_BESTPRACTICE),
             checkmk_trainings="https://checkmk.com/trainings/schedule",
             checkmk_webinars="https://checkmk.com/webinars",
             create_contactgroups=_make_url(

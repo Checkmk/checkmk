@@ -27,4 +27,10 @@ defineProps<{
 .db-catalog-panel-header__help {
   margin-left: var(--spacing);
 }
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+:deep(ul) {
+  margin-block: 0;
+  padding-inline-start: var(--dimension-8);
+}
 </style>

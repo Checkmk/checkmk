@@ -75,17 +75,20 @@ const relevantContextFilters = computed<ContextFilters>(() => {
 })
 
 const displayLabels = computed(() => {
+  const tooltip = _t(
+    `<b>Inherited default or runtime filters.</b><br />
+    They apply unless:
+    <ul>
+      <li>Runtime filters are enabled to override default filters.</li>
+      <li>Widget filters override default/runtime filters for this widget.</li>
+    </ul>`
+  )
   if (props.objectSelectionMode === ElementSelection.SPECIFIC) {
     return {
       contextFilterTitle: _t('Applied %{n} filter', {
         n: filterName
       }),
-      contextFilterTooltip: _t(
-        'Relevant %{n} targeted filter set on dashboard level via dashboard or runtime filters.',
-        {
-          n: props.objectType
-        }
-      ),
+      contextFilterTooltip: tooltip,
       emptyContextTitle: _t('No %{n} filter applied', {
         n: filterName
       })
@@ -93,10 +96,7 @@ const displayLabels = computed(() => {
   }
   return {
     contextFilterTitle: _t('Applied %{n} filters', { n: props.objectType }),
-    contextFilterTooltip: _t(
-      'Relevant %{n} filters set on dashboard level via dashboard or runtime filters.',
-      { n: props.objectType }
-    ),
+    contextFilterTooltip: tooltip,
     emptyContextTitle: _t('No %{n} filters applied', { n: props.objectType })
   }
 })
@@ -127,7 +127,10 @@ const displayLabels = computed(() => {
     :in-focus="inFocus"
     :filter-labels="{
       title: _t('Widget filters'),
-      tooltip: _t('Widget configured filters override default and runtime filters')
+      tooltip: _t(
+        `Filters override default/runtime values for this widget only.<br />
+         Required runtime filters must still be set on the dashboard level.`
+      )
     }"
     @set-focus="emit('set-focus', $event)"
     @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"

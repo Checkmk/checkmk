@@ -82,7 +82,10 @@ const configuredFiltersByObjectType = computed(() =>
         :in-focus="isInFilterSelectionMenuFocus(eventObjectType)"
         :filter-labels="{
           title: _t('Widget filters'),
-          tooltip: _t('Widget configured filters override default and runtime filters')
+          tooltip: _t(
+            `Filters override default/runtime values for this widget only.<br />
+             Required runtime filters must still be set on the dashboard level.`
+          )
         }"
         @set-focus="emit('set-focus', $event)"
         @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"

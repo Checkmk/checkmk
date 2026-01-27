@@ -2913,7 +2913,7 @@ def _process_backup_tar(
         )
 
 
-def _restore_backup_from_tar(
+def _restore_backup_from_tar_root(
     *,
     tar: SafeIndexedTarFile | SafeStreamedTarFile,
     options: CommandOptions,
@@ -2929,39 +2929,49 @@ def _restore_backup_from_tar(
         sys.exit(
             "You need to have version %s installed to be able to restore this backup." % version
         )
+    # Ensure the restore is done with the sites version
+    if version != omdlib.__version__:
+        exec_other_omd(version)
 
-    if is_root():
-        # Ensure the restore is done with the sites version
-        if version != omdlib.__version__:
-            exec_other_omd(version)
+    # Restore site with its original name, or specify a new one
+    site = SiteContext(new_site_name or sitename)
 
-        # Restore site with its original name, or specify a new one
-        new_sitename = new_site_name or sitename
-    else:
-        new_sitename = site_name_from_uid()
+    sys.stdout.write(f"Restoring site {site.name} from {source_descr}...\n")
+    sys.stdout.flush()
 
-    site = SiteContext(new_sitename)
+    prepare_restore_as_root(version_info, site, options, global_opts.verbose)
+    _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
+    postprocess_restore_as_root(version_info, sitename, site, options, global_opts.verbose)
 
-    if is_root():
-        sys.stdout.write(f"Restoring site {site.name} from {source_descr}...\n")
-        sys.stdout.flush()
 
-        prepare_restore_as_root(version_info, site, options, global_opts.verbose)
-        _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
-        postprocess_restore_as_root(version_info, sitename, site, options, global_opts.verbose)
+def _restore_backup_from_tar_site(
+    *,
+    tar: SafeIndexedTarFile | SafeStreamedTarFile,
+    options: CommandOptions,
+    global_opts: GlobalOptions,
+    version_info: VersionInfo,
+    source_descr: str,
+    versions_path: Path = Path("/omd/versions/"),
+) -> None:
+    sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
 
-    else:
-        sys.stdout.write("Restoring site from %s...\n" % source_descr)
-        sys.stdout.flush()
-
-        config = load_config(site, global_opts.verbose)
-        orig_apache_port = config["APACHE_TCP_PORT"]
-        prepare_restore_as_site_user(site, options, global_opts.verbose)
-        _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
-
-        postprocess_restore_as_site_user(
-            version_info, sitename, site, options, orig_apache_port, global_opts.verbose
+    if not version_exists(version, versions_path):
+        sys.exit(
+            "You need to have version %s installed to be able to restore this backup." % version
         )
+
+    site = SiteContext(site_name_from_uid())
+
+    sys.stdout.write("Restoring site from %s...\n" % source_descr)
+    sys.stdout.flush()
+
+    config = load_config(site, global_opts.verbose)
+    orig_apache_port = config["APACHE_TCP_PORT"]
+    prepare_restore_as_site_user(site, options, global_opts.verbose)
+    _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
+    postprocess_restore_as_site_user(
+        version_info, sitename, site, options, orig_apache_port, global_opts.verbose
+    )
 
 
 def main_restore(
@@ -2992,14 +3002,23 @@ def main_restore(
 
     try:
         with tar_reader as tar:
-            _restore_backup_from_tar(
-                tar=tar,
-                options=options,
-                global_opts=global_opts,
-                version_info=version_info,
-                source_descr=source_descr,
-                new_site_name=new_site_name,
-            )
+            if is_root():
+                _restore_backup_from_tar_root(
+                    tar=tar,
+                    options=options,
+                    global_opts=global_opts,
+                    version_info=version_info,
+                    source_descr=source_descr,
+                    new_site_name=new_site_name,
+                )
+            else:
+                _restore_backup_from_tar_site(
+                    tar=tar,
+                    options=options,
+                    global_opts=global_opts,
+                    version_info=version_info,
+                    source_descr=source_descr,
+                )
     except tarfile.ReadError as e:
         sys.exit("Failed to open the backup: %s" % e)
 

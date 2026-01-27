@@ -42,12 +42,7 @@ div {
 span {
   position: relative;
   display: inline-block;
-
-  &.title {
-    &::first-letter {
-      text-transform: capitalize;
-    }
-  }
+  padding: 0;
 }
 
 .title {

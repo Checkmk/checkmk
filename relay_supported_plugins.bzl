@@ -2,7 +2,6 @@
 # to update the Python dependencies of the relay
 RELAY_SUPPORTED_PLUGIN_FAMILIES = [
     "cisco_prime",
-    "elasticsearch",
     "ipmi",
     "kube",
     "lib",

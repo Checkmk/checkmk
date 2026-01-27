@@ -23732,6 +23732,12 @@ msgid "Error rates"
 msgstr "Tasas de error"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "Error al mostrar la vista: %s"
 
@@ -38152,10 +38158,6 @@ msgstr "Estado de la licencia: Libre"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Licencia suspendida: 'Activar cambios' está bloqueado"
 
-#, fuzzy
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr "Licencia suspendida: 'Activar cambios' está bloqueado"
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr "Licencia suspendida: Contacta con el equipo de ventas de Checkmk"
 
@@ -50950,13 +50952,6 @@ msgstr ""
 "del servicio <a href=\"%s\">Escape HTML en la salida del servicio</a> o <a "
 "href=\"%s\">Escape HTML en la salida del host</a> en lugar de <a "
 "href=\"%s\">desactivar el escape globalmente</a>"
-
-#, fuzzy, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr ""
-"Póngase en contacto con el equipo de ventas de Checkmk en %s y renueve su "
-"licencia. Si adquirió su licencia a través de %s, póngase en contacto con "
-"ellos."
 
 #, python-format
 msgid ""
@@ -90619,6 +90614,17 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid "License suspended: 'Activate changes' is blocked."
+#~ msgstr "Licencia suspendida: 'Activar cambios' está bloqueado"
+
+#, fuzzy, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr ""
+#~ "Póngase en contacto con el equipo de ventas de Checkmk en %s y renueve su "
+#~ "licencia. Si adquirió su licencia a través de %s, póngase en contacto con "
+#~ "ellos."
 
 #~ msgid ""
 #~ "This setting allows you to disable or enable active checks for a service."

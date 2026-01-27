@@ -23556,6 +23556,12 @@ msgid "Error rates"
 msgstr "Foutenpercentages"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "Fout bij het bekijken: %s"
 
@@ -37881,10 +37887,6 @@ msgstr "Licentie staat: Vrij"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Licentie opgeschort: \"Wijzigingen activeren\" is geblokkeerd"
 
-#, fuzzy
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr "Licentie opgeschort: \"Wijzigingen activeren\" is geblokkeerd"
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
 
@@ -50576,12 +50578,6 @@ msgstr ""
 "Overweeg dan om de regelsets <a href=\"%s\">Scherm HTML in service-uitvoer</"
 "a> of <a href=\"%s\">Scherm HTML in hostuitvoer</a> te configureren in "
 "plaats van <a href=\"%s\">Schermen globaal</a> uit te schakelen"
-
-#, fuzzy, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr ""
-"Neem contact op met het Checkmk verkoopteam op %s en vernieuw uw licentie. "
-"Als u uw licentie hebt gekocht via een %s, neem dan contact met hen op."
 
 #, python-format
 msgid ""
@@ -89910,6 +89906,17 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "License suspended: 'Activate changes' is blocked."
+#~ msgstr "Licentie opgeschort: \"Wijzigingen activeren\" is geblokkeerd"
+
+#, fuzzy, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr ""
+#~ "Neem contact op met het Checkmk verkoopteam op %s en vernieuw uw "
+#~ "licentie. Als u uw licentie hebt gekocht via een %s, neem dan contact met "
+#~ "hen op."
 
 #~ msgid ""
 #~ "This setting allows you to disable or enable active checks for a service."

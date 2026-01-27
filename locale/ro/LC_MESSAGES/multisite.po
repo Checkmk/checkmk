@@ -23599,6 +23599,12 @@ msgid "Error rates"
 msgstr "Ratele de eroare"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "Eroare de afișare a vizualizării: %s."
 
@@ -37945,10 +37951,6 @@ msgstr "Statul de licență: Liber"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Licență suspendată: 'Activarea modificărilor' este blocată"
 
-#, fuzzy
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr "Licență suspendată: 'Activarea modificărilor' este blocată"
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr "Licență suspendată: Contactați acum echipa de vânzări Checkmk"
 
@@ -50625,13 +50627,6 @@ msgstr ""
 "gazdă sau serviciu <a href=\"%s\">Escape HTML în ieșirea serviciului</a> sau "
 "<a href=\"%s\">Escape HTML în ieșirea gazdei</a> în loc de <a "
 "href=\"%s\">dezactivarea scăpării la nivel global</a>."
-
-#, fuzzy, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr ""
-"Vă rugăm să contactați echipa de vânzări Checkmk la %s și să vă reînnoiți "
-"licența. Dacă v-ați achiziționat licența prin intermediul unui %s, vă rugăm "
-"să îl contactați."
 
 #, python-format
 msgid ""
@@ -90106,6 +90101,17 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "License suspended: 'Activate changes' is blocked."
+#~ msgstr "Licență suspendată: 'Activarea modificărilor' este blocată"
+
+#, fuzzy, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr ""
+#~ "Vă rugăm să contactați echipa de vânzări Checkmk la %s și să vă reînnoiți "
+#~ "licența. Dacă v-ați achiziționat licența prin intermediul unui %s, vă "
+#~ "rugăm să îl contactați."
 
 #~ msgid ""
 #~ "This setting allows you to disable or enable active checks for a service."

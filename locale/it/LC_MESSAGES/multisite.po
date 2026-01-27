@@ -23397,6 +23397,12 @@ msgid "Error rates"
 msgstr "Tassi di errore"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "Errore che mostra la vista: %s"
 
@@ -37617,9 +37623,6 @@ msgstr "Stato della licenza: Libero"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr ""
 
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr ""
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr ""
 
@@ -50194,13 +50197,6 @@ msgstr ""
 "servizio <a href=\"%s\">Escape HTML nell'output del servizio</a> o <a "
 "href=\"%s\">Escape HTML nell'output dell'host</a> invece di <a "
 "href=\"%s\">disabilitare l'escape a livello globale</a>"
-
-#, fuzzy, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr ""
-"Si prega di contattare il team commerciale di Checkmk al numero %s per "
-"rinnovare la licenza. Se la licenza è stata acquistata tramite %s, si prega "
-"di contattarli."
 
 #, python-format
 msgid ""
@@ -89195,6 +89191,13 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "⚠ <b>non disponibile</b> poiché lo MKP di Robotmk Core è stato installato"
+
+#, fuzzy, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr ""
+#~ "Si prega di contattare il team commerciale di Checkmk al numero %s per "
+#~ "rinnovare la licenza. Se la licenza è stata acquistata tramite %s, si "
+#~ "prega di contattarli."
 
 #~ msgid ""
 #~ "This setting allows you to disable or enable active checks for a service."

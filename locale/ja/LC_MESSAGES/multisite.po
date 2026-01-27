@@ -22182,6 +22182,12 @@ msgid "Error rates"
 msgstr "エラーレート"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "ビューの表示中にエラーが発生しました: %s"
 
@@ -35559,9 +35565,6 @@ msgstr "ライセンス状態: Free"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています"
 
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています。"
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連絡してください"
 
@@ -47405,10 +47408,6 @@ msgstr ""
 "output</a>または<a href=\"%s\">Escape HTML in host output</a>を、<a "
 "href=\"%s\">disabling escaping globally</a>の代わりに、に構成することを検討し"
 "てください"
-
-#, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr "%sのCheckmk営業チームまでご連絡の上、ライセンスを更新してください。"
 
 #, python-format
 msgid ""
@@ -84342,6 +84341,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "License suspended: 'Activate changes' is blocked."
+#~ msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています。"
+
+#, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr "%sのCheckmk営業チームまでご連絡の上、ライセンスを更新してください。"
 
 #~ msgid ""
 #~ "This setting allows you to disable or enable active checks for a service."

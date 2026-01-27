@@ -23760,6 +23760,12 @@ msgid "Error rates"
 msgstr "Taux d'erreur"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "Erreur d'affichage : %s"
 
@@ -38205,9 +38211,6 @@ msgstr "État de la licence : Libre"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr ""
 
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr ""
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr ""
 
@@ -50993,13 +50996,6 @@ msgstr ""
 "Veuillez envisager de configurer les jeux de règles d'hôte ou de service <a "
 "href=\"%s\">Escape HTML in service output</a> ou <a href=\"%s\">Escape HTML "
 "in host output</a> au lieu de <a href=\"%s\">disabling escaping globally</a>"
-
-#, fuzzy, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr ""
-"Veuillez contacter l'équipe de vente de Checkmk à %s et renouveler votre "
-"licence. Si vous avez acheté votre licence par l'intermédiaire d'un %s, "
-"veuillez le contacter."
 
 #, python-format
 msgid ""
@@ -90782,6 +90778,13 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr ""
+#~ "Veuillez contacter l'équipe de vente de Checkmk à %s et renouveler votre "
+#~ "licence. Si vous avez acheté votre licence par l'intermédiaire d'un %s, "
+#~ "veuillez le contacter."
 
 #~ msgid ""
 #~ "This setting allows you to disable or enable active checks for a service."

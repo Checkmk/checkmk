@@ -22833,6 +22833,12 @@ msgid "Error rates"
 msgstr "Fehlerraten"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "Fehler in Ansicht: %s"
 
@@ -36538,9 +36544,6 @@ msgstr "Lizenzstatus: Free"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert"
 
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert."
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam"
 
@@ -48622,12 +48625,6 @@ msgstr ""
 "href=\"%s\">Escape HTML in der Service-Ausgabe</a> oder <a href=\"%s\">HTML "
 "in der Host-Ausgabe ausblenden</a> zu konfigurieren, anstatt <a "
 "href=\"%s\">Maskierung global zu deaktivieren</a>"
-
-#, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr ""
-"Bitte kontaktieren Sie das Checkmk-Vertriebsteam unter %s und erneuern Sie "
-"Ihre Lizenz."
 
 #, python-format
 msgid ""
@@ -86971,6 +86968,15 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "License suspended: 'Activate changes' is blocked."
+#~ msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert."
+
+#, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr ""
+#~ "Bitte kontaktieren Sie das Checkmk-Vertriebsteam unter %s und erneuern "
+#~ "Sie Ihre Lizenz."
 
 #~ msgid ""
 #~ "This setting allows you to disable or enable active checks for a service."

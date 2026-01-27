@@ -1502,6 +1502,7 @@ allows = [
   "@ccc",
   "@crypto",
   "cmk.piggyback.backend",
+  "cmk.piggyback.hub",
   "cmk.utils.agent_registration",
   "cmk.utils.keypair_store",
   "cmk.utils.rulesets",

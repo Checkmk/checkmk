@@ -32,22 +32,20 @@ const props = defineProps<{
   }
   authority_mapping: Record<string, string>
   new: boolean
+  connector_type: 'microsoft_entra_id'
 }>()
 
 const api = new Oauth2ConnectionApi()
 
-async function submit(oAuth2Type: string, data: OAuth2FormData): Promise<TranslatedString | null> {
-  if (oAuth2Type === 'ms_graph_api') {
-    const res = props.new
-      ? await api.saveOAuth2Connection(data)
-      : await api.updateOAuth2Connection(data.ident, data)
-    if (res.type === 'success') {
-      window.location.href = props.config.urls.back
-      return null
-    }
-    return _t(`Failed to save OAuth2 connection`)
+async function submit(data: OAuth2FormData): Promise<TranslatedString | null> {
+  const res = props.new
+    ? await api.saveOAuth2Connection(data, props.connector_type)
+    : await api.updateOAuth2Connection(data.ident, data, props.connector_type)
+  if (res.type === 'success') {
+    window.location.href = props.config.urls.back
+    return null
   }
-  return _t(`Unknown OAuth2 type: ${oAuth2Type}`)
+  return _t(`Failed to save OAuth2 connection`)
 }
 
 provide(submitKey, submit)
@@ -59,6 +57,7 @@ provide(submitKey, submit)
     :form-spec="form_spec"
     :authority-mapping="authority_mapping"
     :api="api"
+    :connector-type="connector_type"
     @submitted="submit"
   />
 </template>

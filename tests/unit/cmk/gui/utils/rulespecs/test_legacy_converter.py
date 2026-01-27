@@ -1054,6 +1054,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             OAuth2Connection(
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help text"),
+                connector_type="microsoft_entra_id",
             ),
             legacy_valuespecs.Transform(
                 valuespec=legacy_valuespecs.DropdownChoice(

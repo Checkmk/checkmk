@@ -22,7 +22,8 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 def test_oauth2_connection_setup_to_disk() -> None:
     visitor = get_visitor(
-        OAuth2ConnectionSetup(), VisitorOptions(migrate_values=True, mask_values=False)
+        OAuth2ConnectionSetup(connector_type="microsoft_entra_id"),
+        VisitorOptions(migrate_values=True, mask_values=False),
     )
     assert visitor.to_disk(
         RawFrontendData(
@@ -51,7 +52,8 @@ def test_oauth2_connection_setup_to_vue(
     user_id = with_user[0]
     with UserContext(user_id, UserPermissions({}, {}, {}, [])):
         visitor = get_visitor(
-            OAuth2ConnectionSetup(), VisitorOptions(migrate_values=True, mask_values=False)
+            OAuth2ConnectionSetup(connector_type="microsoft_entra_id"),
+            VisitorOptions(migrate_values=True, mask_values=False),
         )
         assert isinstance(
             visitor.to_vue(

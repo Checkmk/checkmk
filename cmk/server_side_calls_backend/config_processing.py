@@ -68,6 +68,9 @@ class GlobalProxiesWithLookup:
     password_lookup: Callable[[str], str | None]
 
 
+OAuth2ConnectorType = Literal["microsoft_entra_id"]
+
+
 @dataclass(frozen=True)
 class OAuth2Connection:
     title: str
@@ -77,6 +80,7 @@ class OAuth2Connection:
     client_id: str
     tenant_id: str
     authority: str
+    connector_type: OAuth2ConnectorType
 
 
 def extract_all_adhoc_secrets(
@@ -281,6 +285,7 @@ def _replace_oauth2_connection(
                 client_id="",
                 tenant_id="",
                 authority="",
+                connector_type="",
             ),
             {},
             {},
@@ -296,6 +301,7 @@ def _replace_oauth2_connection(
             client_id=oauth2_connection.client_id,
             tenant_id=oauth2_connection.tenant_id,
             authority=oauth2_connection.authority,
+            connector_type=oauth2_connection.connector_type,
         ),
         {
             **_replaced_client_secret.found_secrets,

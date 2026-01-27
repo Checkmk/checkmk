@@ -14,7 +14,7 @@ from cmk.gui.watolib.passwords import load_passwords, save_password
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
-from cmk.utils.oauth2_connection import OAuth2Connection
+from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType
 from cmk.utils.password_store import Password
 
 
@@ -173,6 +173,7 @@ def update_reference(
     client_id: str,
     tenant_id: str,
     authority: str,
+    connector_type: OAuth2ConnectorType,
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
@@ -185,6 +186,7 @@ def update_reference(
         refresh_token=("cmk_postprocessed", "stored_password", (f"{ident}_refresh_token", "")),
         tenant_id=tenant_id,
         authority=authority,
+        connector_type=connector_type,
     )
     update_oauth2_connection(
         ident=ident,
@@ -203,6 +205,7 @@ def save_new_reference_to_config_file(
     client_id: str,
     tenant_id: str,
     authority: str,
+    connector_type: OAuth2ConnectorType,
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
@@ -215,6 +218,7 @@ def save_new_reference_to_config_file(
         refresh_token=("cmk_postprocessed", "stored_password", (f"{ident}_refresh_token", "")),
         tenant_id=tenant_id,
         authority=authority,
+        connector_type=connector_type,
     )
     save_oauth2_connection(
         ident=ident,

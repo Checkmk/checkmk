@@ -933,11 +933,12 @@
                 "$ref": "#/$defs/authority"
               }
             },
+            "connector_type": { "enum": ["microsoft_entra_id"] },
             "ident": {
               "type": "string"
             }
           },
-          "required": ["type", "config", "form_spec", "authority_mapping"]
+          "required": ["type", "config", "form_spec", "authority_mapping", "connector_type"]
         }
       ]
     },

@@ -30,3 +30,4 @@ class OAuth2Connection:
     client_id: str
     tenant_id: str
     authority: str
+    connector_type: str

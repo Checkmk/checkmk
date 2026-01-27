@@ -6,8 +6,9 @@
 from dataclasses import dataclass
 
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.utils.oauth2_connection import OAuth2ConnectorType
 
 
 @dataclass(frozen=True, kw_only=True)
 class OAuth2ConnectionSetup(FormSpec[dict[str, str]]):
-    pass
+    connector_type: OAuth2ConnectorType

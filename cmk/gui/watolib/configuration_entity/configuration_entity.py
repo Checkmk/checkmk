@@ -9,7 +9,7 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, NamedTuple, NewType
+from typing import assert_never, cast, NamedTuple, NewType
 
 from cmk.gui.form_specs import (
     DEFAULT_VALUE,
@@ -55,6 +55,7 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
+from cmk.utils.oauth2_connection import OAuth2ConnectorType
 
 EntityId = NewType("EntityId", str)
 
@@ -108,8 +109,13 @@ def save_configuration_entity(
             )
         case ConfigEntityType.oauth2_connection:
             user.need_permission("general.oauth2_connections")
+            connector_type = cast(OAuth2ConnectorType, entity_type_specifier)
             ident, oauth2_connection = save_oauth2_connection_and_passwords_from_slidein_schema(
-                RawFrontendData(data), user=user, pprint_value=pprint_value, use_git=use_git
+                RawFrontendData(data),
+                connector_type,
+                user=user,
+                pprint_value=pprint_value,
+                use_git=use_git,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(ident), description=oauth2_connection["title"]
@@ -163,8 +169,13 @@ def update_configuration_entity(
             )
         case ConfigEntityType.oauth2_connection:
             user.need_permission("general.oauth2_connections")
+            connector_type = cast(OAuth2ConnectorType, entity_type_specifier)
             ident, oauth2_connection = update_oauth2_connection_and_passwords_from_slidein_schema(
-                RawFrontendData(data), user=user, pprint_value=pprint_value, use_git=use_git
+                RawFrontendData(data),
+                connector_type,
+                user=user,
+                pprint_value=pprint_value,
+                use_git=use_git,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(ident), description=oauth2_connection["title"]
@@ -183,7 +194,8 @@ def _get_configuration_fs(
         case ConfigEntityType.notification_parameter:
             return notification_parameter_registry.form_spec(entity_type_specifier)
         case ConfigEntityType.oauth2_connection:
-            return OAuth2ConnectionSetup()
+            connector_type = cast(OAuth2ConnectorType, entity_type_specifier)
+            return OAuth2ConnectionSetup(connector_type=connector_type)
         case ConfigEntityType.folder:
             return get_folder_slidein_schema(tree)
         case ConfigEntityType.passwordstore_password:

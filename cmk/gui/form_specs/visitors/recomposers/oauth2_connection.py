@@ -49,7 +49,7 @@ def recompose(
             title=form_spec.title or Title("OAuth2 connection"),
             help_text=form_spec.help_text,
             entity_type=ConfigEntityType.oauth2_connection,
-            entity_type_specifier="all",
+            entity_type_specifier=form_spec.connector_type,
             allow_editing_existing_elements=True,
         ),
         from_disk=_oauth2_connection_disk_to_ui,

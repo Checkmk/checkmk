@@ -5,6 +5,8 @@
 
 from typing import Literal, TypedDict
 
+OAuth2ConnectorType = Literal["microsoft_entra_id"]
+
 
 class OAuth2Connection(TypedDict):
     title: str
@@ -14,3 +16,4 @@ class OAuth2Connection(TypedDict):
     client_id: str
     tenant_id: str
     authority: str
+    connector_type: OAuth2ConnectorType

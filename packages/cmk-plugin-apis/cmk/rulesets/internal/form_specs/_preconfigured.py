@@ -57,3 +57,5 @@ class OAuth2Connection(
     ]
 ):
     """Specifies a form for configuring an OAuth2 connection"""
+
+    connector_type: Literal["microsoft_entra_id"]

@@ -27,6 +27,7 @@ OAUTH2_CONNECTION_CONTENT = {
         client_id=MY_CLIENT_ID,
         tenant_id=MY_TENANT_ID,
         authority="global",
+        connector_type="microsoft_entra_id",
     ),
 }
 
@@ -54,7 +55,7 @@ def test_list_oauth2_connections_without_permissions(clients: ClientRegistry) ->
     # WHEN
     resp = clients.ConfigurationEntity.list_configuration_entities(
         entity_type=ConfigEntityType.oauth2_connection,
-        entity_type_specifier="all",
+        entity_type_specifier="microsoft_entra_id",
         expect_ok=False,
     )
 
@@ -74,7 +75,7 @@ def test_list_oauth2_connections_as_admin(
     # WHEN
     resp = clients.ConfigurationEntity.list_configuration_entities(
         entity_type=ConfigEntityType.oauth2_connection,
-        entity_type_specifier="all",
+        entity_type_specifier="microsoft_entra_id",
     )
     # THEN
     titles = {entry["title"] for entry in resp.json["value"]}

@@ -29,12 +29,17 @@ from cmk.gui.oauth2_connections.watolib.store import (
     OAuth2ConnectionsConfigFile,
 )
 from cmk.gui.page_menu import (
+    make_simple_link,
     PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
 )
 from cmk.gui.table import Table
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
@@ -51,7 +56,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.shared_typing.mode_oauth2_connection import (
     AuthorityUrls,
-    MsGraphApiUrls,
+    MicrosoftEntraIdUrls,
     Oauth2ConnectionConfig,
     Oauth2Urls,
 )
@@ -184,7 +189,7 @@ def get_oauth2_connection_config() -> Oauth2ConnectionConfig:
         urls=Oauth2Urls(
             redirect=makeuri(request, [("mode", "redirect_oauth2_connection")]),
             back=makeuri(request, [("mode", "oauth2_connections")]),
-            ms_graph_api=MsGraphApiUrls(
+            microsoft_entra_id=MicrosoftEntraIdUrls(
                 global_=AuthorityUrls(
                     base_url="https://login.microsoftonline.com/###tenant_id###/oauth2/v2.0"
                 ),
@@ -244,9 +249,50 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     def page(self, config: Config) -> None:
         super().page(config)
 
+    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name=self._mode_type.type_name(),
+                    title=self._mode_type.name_singular(),
+                    topics=[
+                        PageMenuTopic(
+                            title=self._mode_type.name_singular(),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add Microsoft Entra ID connection"),
+                                    icon_name=StaticIcon(IconNames.new),
+                                    item=make_simple_link(
+                                        makeuri_contextless(
+                                            request,
+                                            [
+                                                (
+                                                    "mode",
+                                                    self._mode_type.edit_mode_name(),
+                                                ),
+                                                (
+                                                    "connector_type",
+                                                    "microsoft_entra_id",
+                                                ),
+                                            ],
+                                        )
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
+
     def _show_entry_cells(self, table: Table, ident: str, entry: OAuth2Connection) -> None:
-        table.cell(_("ID"), ident)
         table.cell(_("Title"), entry["title"])
+        table.cell(_("Connector type"), entry["connector_type"])
+        table.cell(_("ID"), ident)
 
     @override
     def action(self, config: Config) -> ActionResult:
@@ -351,6 +397,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                         )
                     ),
                     "authority_mapping": get_authority_mapping(),
+                    "connector_type": self._entry["connector_type"],
                 },
             )
             return
@@ -369,6 +416,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                         )
                     ),
                     "authority_mapping": get_authority_mapping(),
+                    "connector_type": request.get_ascii_input_mandatory("connector_type"),
                 },
             )
             return
@@ -398,6 +446,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                     )
                 ),
                 "authority_mapping": get_authority_mapping(),
+                "connector_type": self._entry["connector_type"],
             },
         )
 

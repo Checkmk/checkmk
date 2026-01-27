@@ -7,6 +7,7 @@ py_binary(
     name = "sphinx_build",
     srcs = ["@rules_sphinx//sphinx/tools:sphinx_build_wrapper.py"],
     main = "sphinx_build_wrapper.py",
+    tags = ["no-mypy"],
     deps = [
         requirement("sphinx"),
         requirement("sphinx_autodoc_typehints"),

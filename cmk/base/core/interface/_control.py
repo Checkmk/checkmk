@@ -244,7 +244,7 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
                 os.rename(backup_path, objects_file)
             raise
 
-        if not core_client.config_is_valid(log1=_print, log2=console.verbose):
+        if not core_client.config_is_valid(log_stdout=_print, log_verbose=console.verbose):
             broken_config_path = cmk.utils.paths.tmp_dir / "check_mk_objects.cfg.broken"
             shutil.move(objects_file, broken_config_path)
 

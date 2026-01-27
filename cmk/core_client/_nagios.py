@@ -7,7 +7,7 @@ import os
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, override
 
 from cmk.ccc import tty
 from cmk.ccc.config_path import cleanup_old_configs
@@ -32,12 +32,15 @@ class NagiosClient(CoreClient):
         self.binary: Final = binary_file
         self.cleanup_base: Final = cleanup_base
 
+    @override
     def cleanup_old_configs(self) -> None:
         cleanup_old_configs(self.cleanup_base)
 
+    @override
     def objects_file(self) -> Path:
         return self._objects_file
 
+    @override
     def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
         return subprocess.run(
             # We can't _easily_ use omd here, because it will eat our CORE_NOVERIFY environment variable.
@@ -50,9 +53,11 @@ class NagiosClient(CoreClient):
             env={**os.environ, "CORE_NOVERIFY": "yes"},
         )
 
+    @override
     def _omd_name(self) -> Literal["nagios"]:
         return "nagios"
 
+    @override
     def config_is_valid(
         self, log_stdout: Callable[[str], None], log_verbose: Callable[[str], None]
     ) -> bool:

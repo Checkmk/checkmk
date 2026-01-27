@@ -201,6 +201,54 @@ def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site
         _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
 
 
+@pytest.mark.skip_if_not_edition("managed")
+def test_config_sync_source_remote_remote_diff_customer(
+    piggyback_env_three_site_setup: tuple[Site, Site, Site],
+) -> None:
+    """
+    Test with 2 remote sites, source on remote_site, target on remote_site_2:
+    - Changing customer on both remote sites blocks direct data distribution
+    - remote_site_2 still receives data from remote_site (both on same customer)
+    - All sites receive config file updates throughout
+    """
+    central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
+    _HOSTNAME_PIGGYBACKED = "piggybacked_host_two_remotes_both_customer"
+    timestamps_dict: dict[str, int] = {}
+    with (
+        create_local_check(
+            central_site,
+            [_HOSTNAME_SOURCE_REMOTE],
+            [_HOSTNAME_PIGGYBACKED],
+        ),
+        _setup_piggyback_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED),
+    ):
+        remote_site.schedule_check(_HOSTNAME_SOURCE_REMOTE, "Check_MK")
+        central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            _HOSTNAME_PIGGYBACKED
+        )
+
+        # Initially both sites on "provider" customer - data flows from remote_site to remote_site_2
+        # save starting timestamps
+        _check_update_config_timestamps([central_site, remote_site, remote_site_2], timestamps_dict)
+
+        # Change customer on one remote sites; data must stop flowing, config updates must continue
+        with _change_remote_site_customer(central_site, remote_site, "customer1"):
+            # all sites get config updates
+            _check_update_config_timestamps(
+                [central_site, remote_site, remote_site_2], timestamps_dict
+            )
+
+            # now change customer on the other remote site as well
+            with _change_remote_site_customer(central_site, remote_site_2, "customer1"):
+                # all sites get config updates
+                _check_update_config_timestamps(
+                    [central_site, remote_site, remote_site_2], timestamps_dict
+                )
+
+        # all sites get config updates
+        _check_update_config_timestamps([central_site, remote_site, remote_site_2], timestamps_dict)
+
+
 def test_piggyback_services_remote_remote(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:

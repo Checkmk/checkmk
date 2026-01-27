@@ -18,7 +18,7 @@ from cmk.inventory_ui.v1_unstable import (
     View,
 )
 
-UNIT_BITS_PER_SECOND = Unit(IECNotation("bits/s"))
+UNIT_BITS_PER_SECOND = Unit(SINotation("bits/s"))
 UNIT_BYTES = Unit(IECNotation("B"))
 UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
 UNIT_HZ = Unit(SINotation("Hz"))

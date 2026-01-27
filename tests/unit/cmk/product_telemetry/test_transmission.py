@@ -109,7 +109,7 @@ def test_transmission_with_proxy(
         ("", False),
         ("https://checkmk.com", True),
         ("https://checkmk.com/path", True),
-        ("https://telemetry.checkmk.com/upload", True),
+        ("https://analytics.checkmk.com/upload", True),
         ("ftp://checkmk.com", False),
         ("http://checkmk.com", False),
         ("https://", False),

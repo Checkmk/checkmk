@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import type { Suggestion } from '@/components/CmkSuggestions'
@@ -32,7 +31,6 @@ interface Stage1Props {
   widgetActiveFilters: string[]
   isInFilterSelectionMenuFocus: (objectType: ObjectType) => boolean
   inventoryPaths: Suggestion[]
-  validationError?: string | undefined
 }
 
 const props = defineProps<Stage1Props>()
@@ -89,9 +87,6 @@ const hostObjectType = 'host'
               }"
             />
           </div>
-          <CmkAlertBox v-if="props.validationError" variant="error">
-            {{ props.validationError }}
-          </CmkAlertBox>
         </FieldComponent>
       </TableFormRow>
     </TableForm>

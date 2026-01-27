@@ -5,7 +5,6 @@
 
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -13,48 +12,9 @@ from omdlib.console import ok
 from omdlib.contexts import SiteContext
 from omdlib.init_scripts import call_init_scripts
 from omdlib.options import CommandOptions
-from omdlib.site_name import sitename_must_be_valid
 from omdlib.site_paths import SitePaths
-from omdlib.tmpfs import fstab_verify, unmount_tmpfs
+from omdlib.tmpfs import unmount_tmpfs
 from omdlib.user_processes import kill_site_user_processes
-from omdlib.users_and_groups import user_verify, useradd
-from omdlib.version_info import VersionInfo
-
-
-def prepare_restore_as_root(
-    version_info: VersionInfo, site: SiteContext, options: CommandOptions, verbose: bool
-) -> None:
-    site_home = SitePaths.from_site_name(site.name).home
-    reuse = "reuse" in options
-    if reuse:
-        if not user_verify(version_info, site, allow_populated=True):
-            sys.exit("Error verifying site user.")
-        fstab_verify(site.name, site.tmp_dir)
-        sitename_must_be_valid(site.name, Path(site_home), reuse)
-        # shutil.rmtree will default to an unsafe way of deleting a user-controlled directory, if
-        # `avoids_symlink_attacks` is false.
-        #
-        # This assertion should always pass on distros we support: The value of
-        # `avoids_symlink_attacks` depends on macro variables set during the python build process.
-        # The interpreter we ship with Checkmk always sets these such that the operation is safe.
-        #
-        # We call the assertion here to avoid unmounting tmpfs.
-        assert shutil.rmtree.avoids_symlink_attacks, "Can't run shutil.rmtree"
-        if not site.is_stopped(verbose) and "kill" not in options:
-            sys.exit("Cannot restore '%s' while it is running." % (site.name))
-        else:
-            with subprocess.Popen(["omd", "stop", site.name]):
-                pass
-        unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
-        sys.stdout.write("Deleting existing site data...\n")
-        _clear_site_home(Path(site_home))
-        ok()
-    else:
-        sitename_must_be_valid(site.name, Path(site_home), reuse)
-        uid = options.get("uid")
-        gid = options.get("gid")
-        useradd(version_info, site, uid, gid)  # None for uid/gid means: let Linux decide
-        os.mkdir(site_home)
 
 
 def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, verbose: bool) -> None:
@@ -71,7 +31,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, ver
     unmount_tmpfs(site.name, site_home, site.tmp_dir)
 
     sys.stdout.write("Deleting existing site data...")
-    _clear_site_home(Path(site_home))
+    clear_site_home(Path(site_home))
     ok()
 
 
@@ -105,7 +65,7 @@ def _clickhouse_dir(site_home: Path) -> Path:
     return site_home / "var" / "clickhouse-server"
 
 
-def _clear_site_home(site_home: Path) -> None:
+def clear_site_home(site_home: Path) -> None:
     restore_working_dir = _restore_working_dir(site_home)
     clickhouse_dir = _clickhouse_dir(site_home)
     restore_clickhouse_dir = restore_working_dir / "clickhouse-server"

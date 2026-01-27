@@ -70,7 +70,7 @@ from omdlib.options import (
     parse_args_or_exec_other_omd,
 )
 from omdlib.package_manager import PackageManager
-from omdlib.restore import prepare_restore_as_root, prepare_restore_as_site_user
+from omdlib.restore import clear_site_home, prepare_restore_as_site_user
 from omdlib.scripts import _call_script, call_scripts
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
@@ -2939,7 +2939,37 @@ def _restore_backup_from_tar_root(
     sys.stdout.write(f"Restoring site {site.name} from {source_descr}...\n")
     sys.stdout.flush()
 
-    prepare_restore_as_root(version_info, site, options, global_opts.verbose)
+    site_home = SitePaths.from_site_name(site.name).home
+    reuse = "reuse" in options
+    if reuse:
+        if not user_verify(version_info, site, allow_populated=True):
+            sys.exit("Error verifying site user.")
+        fstab_verify(site.name, site.tmp_dir)
+        sitename_must_be_valid(site.name, Path(site_home), reuse)
+        # shutil.rmtree will default to an unsafe way of deleting a user-controlled directory, if
+        # `avoids_symlink_attacks` is false.
+        #
+        # This assertion should always pass on distros we support: The value of
+        # `avoids_symlink_attacks` depends on macro variables set during the python build process.
+        # The interpreter we ship with Checkmk always sets these such that the operation is safe.
+        #
+        # We call the assertion here to avoid unmounting tmpfs.
+        assert shutil.rmtree.avoids_symlink_attacks, "Can't run shutil.rmtree"
+        if not site.is_stopped(global_opts.verbose) and "kill" not in options:
+            sys.exit("Cannot restore '%s' while it is running." % (site.name))
+        else:
+            with subprocess.Popen(["omd", "stop", site.name]):
+                pass
+        unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
+        sys.stdout.write("Deleting existing site data...\n")
+        clear_site_home(Path(site_home))
+        ok()
+    else:
+        sitename_must_be_valid(site.name, Path(site_home), reuse)
+        uid = options.get("uid")
+        gid = options.get("gid")
+        useradd(version_info, site, uid, gid)  # None for uid/gid means: let Linux decide
+        os.mkdir(site_home)
     _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
     postprocess_restore_as_root(version_info, sitename, site, options, global_opts.verbose)
 

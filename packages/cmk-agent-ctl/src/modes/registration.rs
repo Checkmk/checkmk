@@ -76,7 +76,7 @@ impl TrustEstablishing for InteractiveTrust {
 
     fn prompt_password(&self, user: &str) -> AnyhowResult<String> {
         eprintln!();
-        eprint!("Please enter password for '{user}'\n> ");
+        eprint!("Password for Checkmk user '{user}':\n> ");
         rpassword::read_password().context("Failed to obtain API password")
     }
 }

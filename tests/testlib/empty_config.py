@@ -8,6 +8,7 @@ from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 EMPTY_CONFIG = LoadedConfigFragment(
+    experimental={},
     discovery_rules={},
     checkgroup_parameters={},
     static_checks={},

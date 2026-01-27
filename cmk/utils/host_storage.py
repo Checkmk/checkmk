@@ -296,13 +296,11 @@ def get_standard_hosts_storage() -> ABCHostsStorage[str]:
 
 
 @lru_cache
-def get_host_storage_loaders(storage_format_option: object) -> list[ABCHostsStorageLoader]:
+def get_host_storage_loaders(storage_format: StorageFormat) -> list[ABCHostsStorageLoader]:
     host_storage_loaders: list[ABCHostsStorageLoader] = [
         StandardStorageLoader(get_standard_hosts_storage())
     ]
-    if storage := _make_experimental_base_hosts_storage_loader(
-        get_storage_format(storage_format_option)
-    ):
+    if storage := _make_experimental_base_hosts_storage_loader(storage_format):
         host_storage_loaders.insert(0, storage)
     return host_storage_loaders
 

@@ -44,6 +44,7 @@ const emit = defineEmits<{
   'open-filter-settings': []
   'update:runtime-filters-mode': [mode: RuntimeFilterMode]
   'reset-runtime-filters': []
+  close: []
 }>()
 
 const editButtonTooltip = computed(() => {
@@ -57,7 +58,6 @@ const editButtonTooltip = computed(() => {
 })
 
 const misconfiguredFilters = ref<string[]>([])
-const showAppliedConfirmation = ref(false)
 
 const overrideMode = ref(props.runtimeFiltersMode === RuntimeFilterMode.OVERRIDE)
 
@@ -112,20 +112,18 @@ const applyRuntimeFilters = () => {
 
   if (notFullyConfigured.length > 0) {
     misconfiguredFilters.value = notFullyConfigured
-    showAppliedConfirmation.value = false
     return
   }
 
   misconfiguredFilters.value = []
-  showAppliedConfirmation.value = true
   emit('apply-runtime-filters')
+  emit('close')
 }
 
 watch(
   () => JSON.stringify(props.runtimeFilters.getFilters()),
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
-      showAppliedConfirmation.value = false
       misconfiguredFilters.value = []
     }
   }
@@ -179,11 +177,6 @@ const handleRemoveFilter = (filterId: string) => {
       <CmkLabel>
         {{ _t('Please configure the following filters: ') }}
         {{ misconfiguredFilters.join(', ') }}
-      </CmkLabel>
-    </CmkAlertBox>
-    <CmkAlertBox v-else-if="showAppliedConfirmation" variant="success">
-      <CmkLabel>
-        {{ _t('Success! Your runtime filters have been applied') }}
       </CmkLabel>
     </CmkAlertBox>
   </div>

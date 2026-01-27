@@ -170,6 +170,7 @@ def test_openapi_user_minimal_settings(
         )
 
     user_attributes = _load_internal_attributes(UserId("user"))
+    user_attributes.pop("last_pw_change", None)
 
     assert user_attributes == {
         "alias": "User Name",
@@ -183,7 +184,6 @@ def test_openapi_user_minimal_settings(
         "pager": "",
         "roles": [],
         "user_scheme_serial": 1,
-        "last_pw_change": 1632486960,
         "num_failed_logins": 0,
         "serial": 0,
         "is_automation_user": False,

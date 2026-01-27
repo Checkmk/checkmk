@@ -47,6 +47,14 @@ from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
 
+from ._fs import (
+    rrd_cmc_host_dir,
+    rrd_cmc_host_path,
+    rrd_pnp_custom_path,
+    rrd_pnp_host_dir,
+    rrd_pnp_host_path,
+    rrd_pnp_xml_path,
+)
 from .config import RRDConfig, RRDObjectConfig
 from .interface import RRDInterface
 
@@ -61,11 +69,6 @@ RRDInfo = dict[str, _RRDInfoValue]
 _RRDServiceName = str
 
 _default_rrd_format: _RRDFormat = "pnp_multiple"
-
-
-def _rrd_pnp_host_dir(hostname: HostName) -> Path:
-    # We need /opt here because of bug in rrdcached
-    return paths.rrd_multiple_dir / pnp_cleanup(hostname)
 
 
 @dataclass(frozen=True)
@@ -144,11 +147,6 @@ def _get_rrd_conf(
     return rrd_format, rra_config, _Seconds(step), _RRDHeartbeat(rrd_heartbeat)
 
 
-def _rrd_cmc_host_dir(hostname: HostName) -> Path:
-    # We need /opt here because of bug in rrdcached
-    return paths.rrd_single_dir / pnp_cleanup(hostname)
-
-
 def _read_existing_metrics(info_file_path: Path) -> list[MetricName]:
     metrics = _parse_cmc_rrd_info(info_file_path)["metrics"]
     if not isinstance(metrics, list):
@@ -188,16 +186,13 @@ def _create_rrd(
 
     match spec.format:
         case "pnp_multiple":
-            host_dir = _rrd_pnp_host_dir(spec.host)
-            base_file_name = host_dir / (
-                pnp_cleanup(spec.service) + "_" + pnp_cleanup(spec.metric_names[0])
-            )
+            storage = rrd_pnp_host_path(spec.host, spec.service, metric=spec.metric_names[0])
         case "cmc_single":
-            host_dir = _rrd_cmc_host_dir(spec.host)
-            base_file_name = host_dir / pnp_cleanup(spec.service)
+            storage = rrd_cmc_host_path(spec.host, spec.service)
         case _:
             assert_never(spec.format)
 
+    base_file_name = storage.get_path()
     rrd_file_name = base_file_name.with_suffix(".rrd")
 
     migration_arguments = []  # List[str]
@@ -212,8 +207,8 @@ def _create_rrd(
         for nr, varname in enumerate(existing_metrics, 1):
             migration_mapping[varname] = nr
 
-    if not os.path.exists(host_dir):
-        os.makedirs(host_dir)
+    if not os.path.exists(base_file_name.parent):
+        os.makedirs(base_file_name.parent)
 
     if config.cmc_log_rrdcreation():
         log(f"Creating {rrd_file_name}")
@@ -249,7 +244,7 @@ def _create_rrd(
 # So we do it like PNP and use 1, 2, 3... as DS names and keep the
 # actual real names in a separate file with the extension ".info"
 def _create_cmc_rrd_info_file(spec: RRDSpec) -> None:
-    base_file_name = _rrd_cmc_host_dir(spec.host) / pnp_cleanup(spec.service)
+    base_file_name = rrd_cmc_host_path(spec.host, spec.service).get_path()
     with open(base_file_name.with_suffix(".info"), "w") as fid:
         fid.write(
             f"HOST {spec.host}\nSERVICE {spec.service}\nMETRICS {';'.join(spec.metric_names)}\n"
@@ -347,7 +342,7 @@ class RRDConverter:
         *,
         split: bool,
     ) -> None:
-        host_dir = _rrd_pnp_host_dir(self._hostname)
+        host_dir = rrd_pnp_host_dir(self._hostname)
         for servicedesc, existing_rrd_formats in existing_rrds.items():
             if "pnp_multiple" in existing_rrd_formats:
                 console.verbose(f"  {servicedesc} ({tty.bold}{tty.cyan}PNP{tty.normal})...")
@@ -363,11 +358,10 @@ class RRDConverter:
                 )
 
     def _convert_cmc_rrds(self, config: RRDConfig, existing_rrds: _RRDServices) -> None:
-        host_dir = _rrd_cmc_host_dir(self._hostname)
         for servicedesc, existing_rrd_formats in existing_rrds.items():
             if "cmc_single" in existing_rrd_formats:
                 console.verbose_no_lf(f"  {servicedesc} ({tty.bold}{tty.bold}CMC{tty.normal})...")
-                base_path = host_dir / pnp_cleanup(servicedesc)
+                base_path = rrd_cmc_host_path(self._hostname, servicedesc).get_path()
                 existing_metrics = _read_existing_metrics(base_path.with_suffix(".info"))
                 target_rrdconf = _get_rrd_conf(config, servicedesc)[1:]
                 rrd_file_path = base_path.with_suffix(".rrd")
@@ -384,7 +378,7 @@ class RRDConverter:
                 )
 
     def _find_pnp_rrds(self) -> Iterator[_RRDServiceName]:
-        host_dir = _rrd_pnp_host_dir(self._hostname)
+        host_dir = rrd_pnp_host_dir(self._hostname)
         if not os.path.exists(host_dir):
             return
 
@@ -398,7 +392,7 @@ class RRDConverter:
                 yield servicedesc
 
     def _find_cmc_rrds(self) -> Iterator[_RRDServiceName]:
-        host_dir = _rrd_cmc_host_dir(self._hostname)
+        host_dir = rrd_cmc_host_dir(self._hostname)
         if not os.path.exists(host_dir):
             return
         for info_file in sorted(os.listdir(host_dir)):
@@ -417,8 +411,7 @@ class RRDConverter:
         # specifies.
         rra_config, step, heartbeat = _get_rrd_conf(config, servicedesc)[1:]
 
-        host_dir = _rrd_cmc_host_dir(self._hostname)
-        base_file_name = host_dir / pnp_cleanup(servicedesc)
+        base_file_name = rrd_cmc_host_path(self._hostname, servicedesc).get_path()
         rrd_file_name = base_file_name.with_suffix(".rrd")
 
         args = [str(rrd_file_name), "--step", str(step)]
@@ -427,14 +420,12 @@ class RRDConverter:
         for nr, ds in enumerate(xml_info["ds"], 1):
             varname = ds["name"]
             metric_names.append(varname)
-            pnp_rrd_filename = (
-                _rrd_pnp_host_dir(self._hostname)
-                / (pnp_cleanup(servicedesc) + "_" + pnp_cleanup(varname))
-            ).with_suffix(".rrd")
+            source_file = rrd_pnp_host_path(self._hostname, servicedesc, metric=varname).get_path()
+            pnp_rrd_filename = source_file.with_suffix(".rrd")
 
             if not os.path.exists(pnp_rrd_filename):
                 _write_line(
-                    f"WARNING: XML {self._xml_path_for(servicedesc)} refers to not existing RRD {pnp_rrd_filename}. "
+                    f"WARNING: XML {rrd_pnp_xml_path(self._hostname, servicedesc)} refers to not existing RRD {pnp_rrd_filename}. "
                     "Nothing to convert. Cleanup the XML file manually in case this is OK."
                 )
                 continue
@@ -445,8 +436,8 @@ class RRDConverter:
                 f"DS:{nr}=1[{nr}]:GAUGE:{heartbeat}:U:U",
             ]
 
-        if not os.path.exists(host_dir):
-            os.makedirs(host_dir)
+        if not os.path.exists(base_file_name.parent):
+            os.makedirs(base_file_name.parent)
 
         args += rra_config
 
@@ -467,12 +458,9 @@ class RRDConverter:
         console.verbose(f"..{tty.bold}{tty.green}converted.{tty.normal}")
         console.debug(f"    (rrdtool create {' '.join(args)})")
 
-    def _read_pnp_xml_for(self, servicedesc: _RRDServiceName = "_HOST_") -> RRDXMLInfo:
-        return _parse_pnp_xml_file(self._xml_path_for(servicedesc))
-
-    def _xml_path_for(self, servicedesc: _RRDServiceName = "_HOST_") -> Path:
-        host_dir = _rrd_pnp_host_dir(self._hostname)
-        return (host_dir / pnp_cleanup(servicedesc)).with_suffix(".xml")
+    def _read_pnp_xml_for(self, servicedesc: _RRDServiceName) -> RRDXMLInfo:
+        xml_file = rrd_pnp_xml_path(self._hostname, servicedesc).get_path()
+        return _parse_pnp_xml_file(xml_file)
 
     def _delete_rrds(self, servicedesc: _RRDServiceName, rrd_format: _RRDFormat) -> None:
         def try_delete(path: Path) -> None:
@@ -483,12 +471,11 @@ class RRDConverter:
                 pass
 
         if rrd_format == "cmc_single":
-            host_dir = _rrd_cmc_host_dir(self._hostname)
-            base_file_name = host_dir / pnp_cleanup(servicedesc)
+            base_file_name = rrd_cmc_host_path(self._hostname, servicedesc).get_path()
             try_delete(base_file_name.with_suffix(".rrd"))
             try_delete(base_file_name.with_suffix(".info"))
         else:
-            host_dir = _rrd_pnp_host_dir(self._hostname)
+            host_dir = rrd_pnp_host_dir(self._hostname)
             base_file_name = host_dir / pnp_cleanup(servicedesc)
             try_delete(base_file_name.with_suffix(".xml"))
             for filename in sorted(os.listdir(host_dir)):
@@ -511,13 +498,14 @@ class RRDConverter:
             old_rrd_path = ds["rrdfile"]
             if old_rrd_path.startswith("/opt/omd/"):
                 old_rrd_path = old_rrd_path[4:]  # drop the /opt, otherwise conflict with new path
-            new_rrd_path = (host_dir / (file_prefix + "_" + pnp_cleanup(ds["name"]))).with_suffix(
-                ".rrd"
-            )
+            base_file_name = rrd_pnp_custom_path(
+                host_dir, file_prefix, metric=ds["name"]
+            ).get_path()
+            new_rrd_path = base_file_name.with_suffix(".rrd")
 
             if not os.path.exists(old_rrd_path):
                 _write_line(
-                    f"WARNING: XML {self._xml_path_for(servicedesc)} refers to not existing RRD {old_rrd_path}. "
+                    f"WARNING: XML {rrd_pnp_xml_path(self._hostname, servicedesc)} refers to not existing RRD {old_rrd_path}. "
                     "Nothing to convert. Cleanup the XML file manually in case this is OK."
                 )
                 continue

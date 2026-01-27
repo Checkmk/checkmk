@@ -61,6 +61,7 @@ pkg_files(
         ":cmk-create-rrd",
         ":cmk-general-version-infos",
         ":cmk-generate-api-spec",
+        ":cmk-metric-backend-monitoring.py",
         ":cmk-migrate-extension-rulesets",
         ":cmk-migrate-http",
         ":cmk-monitor-apache",

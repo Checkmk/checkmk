@@ -65,7 +65,6 @@ types-docker # used for type checking
 types-docutils  # used for type checking
 types-jsonschema  # used for type checking
 types-lxml  # used for type checking
-types-mypy-extensions  # used for type checking
 types-oauthlib  # used for type checking
 types-paramiko  # used for type checking
 types-pexpect  # used for type checking

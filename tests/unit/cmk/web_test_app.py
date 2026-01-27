@@ -14,13 +14,12 @@ import json
 import typing
 import urllib.parse
 from base64 import b64encode
-from collections.abc import Callable, Generator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import AbstractContextManager as ContextManager
 from contextlib import contextmanager, nullcontext
-from typing import Any, cast, Literal
+from typing import Any, cast, Literal, Protocol
 
 from flask.testing import FlaskClient
-from mypy_extensions import KwArg
 from werkzeug.test import TestResponse
 
 from cmk.ccc.user import UserId
@@ -46,7 +45,9 @@ HTTPMethod = Literal[
     "options",
 ]  # fmt: off
 
-SetConfig = Callable[[KwArg(Any)], ContextManager[None]]
+
+class SetConfig(Protocol):
+    def __call__(self, **kwargs: Any) -> ContextManager[None]: ...
 
 
 class WebTestAppForCMK(FlaskClient):

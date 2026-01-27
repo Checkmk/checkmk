@@ -5929,12 +5929,6 @@ types-lxml==2025.11.25 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-types-mypy-extensions==1.1.0.20250425 \
-    --hash=sha256:586e41f7d422a778cc0946355d3ecbd3224fb64d9fdd1a091e3bd0dfb25347a6 \
-    --hash=sha256:bcfdf47666a02eb31f4d7212fe9e3b3df7d98016aba1b07b8e1291441241fbaf
-    # via
-    #   -c requirements.txt
-    #   -r tests/dev-requirements.in
 types-oauthlib==3.3.0.20250822 \
     --hash=sha256:2cd41587dd80c199e4230e3f086777e9ae525e89579c64afe5e0039ab09be9de \
     --hash=sha256:b7f4c9b9eed0e020f454e0af800b10e93dd2efd196da65744b76910cce7e70d6

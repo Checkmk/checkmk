@@ -15,25 +15,27 @@ mkdir -p "${BENCHMARK_DIR}"
 pytest "${SCRIPT_DIR}" \
     --benchmark-json="${BENCHMARK_DIR}/benchmark.json" \
     --benchmark-verbose --html="${BENCHMARK_DIR}/report.htm" \
-    --self-contained-html --ignore-running-procs "${@}" || exit 1
+    --self-contained-html --ignore-running-procs "${@}"
+RC=$?
 if [ -n "${CI}" ]; then
     # update database; generate report and check weekly baseline
     "${SCRIPT_DIR}/perftest_plot.py" --update \
         --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
-        --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" || exit 2
+        --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" || exit 200
     if [[ "$(date '+%Y-%m-%d')" > "2025-12-01" ]]; then
         # check monthly baseline
         "${SCRIPT_DIR}/perftest_plot.py" \
             --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
             --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" \
-            --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 2
+            --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200
     fi
     if [[ "$(date '+%Y-%m-%d')" > "2026-11-01" ]]; then
         # check yearly baseline
         "${SCRIPT_DIR}/perftest_plot.py" \
             --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
             --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" \
-            --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 2
+            --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 200
     fi
 fi
 echo "ROOT_DIR=${ROOT_DIR}"
+exit "$RC"

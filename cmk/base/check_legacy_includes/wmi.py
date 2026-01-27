@@ -12,7 +12,7 @@ from collections.abc import Callable, Iterable, Mapping
 from math import ceil
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
-from cmk.agent_based.v2 import get_rate, get_value_store, render
+from cmk.agent_based.v2 import get_rate, get_value_store
 from cmk.plugins.windows.agent_based.libwmi import (
     get_wmi_time,
     required_tables_missing,
@@ -281,55 +281,3 @@ def wmi_calculate_raw_average_time(
     if base_per_sec == 0:
         return 0
     return measure_per_sec / base_per_sec  # fixed: true-division
-
-
-def wmi_yield_raw_average(
-    table: WMITable,
-    row: str | int,
-    column: str,
-    infoname: str | None,
-    perfvar: str | None,
-    levels: tuple | dict[str, tuple] | None = None,
-    perfscale: float = 1.0,
-) -> LegacyCheckResult:
-    try:
-        average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
-    except KeyError:
-        return
-
-    yield check_levels(
-        average,
-        perfvar,
-        get_levels_quadruple(levels),
-        infoname=infoname,
-        human_readable_func=render.time_offset,
-    )
-
-
-def wmi_yield_raw_average_timer(
-    table: WMITable,
-    row: str | int,
-    column: str,
-    infoname: str | None,
-    perfvar: str | None,
-    levels: tuple | dict[str, tuple] | None = None,
-) -> LegacyCheckResult:
-    assert table.frequency
-    try:
-        average = (
-            wmi_calculate_raw_average_time(
-                table,
-                row,
-                column,
-            )
-            / table.frequency
-        )  # fixed: true-division
-    except KeyError:
-        return
-
-    yield check_levels(
-        average,
-        perfvar,
-        get_levels_quadruple(levels),
-        infoname=infoname,
-    )

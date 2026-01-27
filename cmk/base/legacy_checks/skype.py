@@ -5,23 +5,79 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-
-
 # mypy: disable-error-code="arg-type"
+# mypy: disable-error-code="type-arg"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
+from cmk.agent_based.v2 import render, StringTable
 from cmk.base.check_legacy_includes.wmi import (
+    get_levels_quadruple,
     inventory_wmi_table_instances,
     inventory_wmi_table_total,
-    wmi_yield_raw_average,
-    wmi_yield_raw_average_timer,
+    wmi_calculate_raw_average,
+    wmi_calculate_raw_average_time,
     wmi_yield_raw_counter,
     wmi_yield_raw_persec,
 )
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection, WMITable
 
 check_info = {}
+
+
+def _wmi_yield_raw_average(
+    table: WMITable,
+    row: str | int,
+    column: str,
+    infoname: str | None,
+    perfvar: str | None,
+    levels: tuple | dict[str, tuple] | None = None,
+    perfscale: float = 1.0,
+) -> LegacyCheckResult:
+    try:
+        average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
+    except KeyError:
+        return
+
+    yield check_levels(
+        average,
+        perfvar,
+        get_levels_quadruple(levels),
+        infoname=infoname,
+        human_readable_func=render.time_offset,
+    )
+
+
+def _wmi_yield_raw_average_timer(
+    table: WMITable,
+    row: str | int,
+    column: str,
+    infoname: str | None,
+    perfvar: str | None,
+    levels: tuple | dict[str, tuple] | None = None,
+) -> LegacyCheckResult:
+    assert table.frequency
+    try:
+        average = (
+            wmi_calculate_raw_average_time(
+                table,
+                row,
+                column,
+            )
+            / table.frequency
+        )
+    except KeyError:
+        return
+
+    yield check_levels(
+        average,
+        perfvar,
+        get_levels_quadruple(levels),
+        infoname=infoname,
+    )
 
 
 def parse_skype(string_table: StringTable) -> WMISection:
@@ -219,7 +275,7 @@ def check_skype_conferencing(_no_item, params, parsed):
         levels=params["incomplete_calls"],
     )
 
-    yield from wmi_yield_raw_average(
+    yield from _wmi_yield_raw_average(
         parsed.get("LS:USrv - Conference Mcu Allocator"),
         None,
         "USrv - Create Conference Latency (msec)",
@@ -228,7 +284,7 @@ def check_skype_conferencing(_no_item, params, parsed):
         levels=params["create_conference_latency"],
     )
 
-    yield from wmi_yield_raw_average(
+    yield from _wmi_yield_raw_average(
         parsed.get("LS:USrv - Conference Mcu Allocator"),
         None,
         "USrv - Allocation Latency (msec)",
@@ -290,7 +346,7 @@ def check_skype_sip_stack(_no_item, params, parsed):
     # LS:SIP - Peers\SIP - Flow-controlled Connections
     # LS:SIP - Peers\SIP - Average Outgoing Queue Delay
     # LS:SIP - Peers(*)\SIP-Sends Timed-Out/sec
-    yield from wmi_yield_raw_average_timer(
+    yield from _wmi_yield_raw_average_timer(
         parsed.get("LS:SIP - Protocol"),
         None,
         "SIP - Average Incoming Message Processing Time",
@@ -317,7 +373,7 @@ def check_skype_sip_stack(_no_item, params, parsed):
         levels=params["incoming_requests_dropped"],
     )
 
-    yield from wmi_yield_raw_average(
+    yield from _wmi_yield_raw_average(
         parsed.get("LS:USrv - DBStore"),
         None,
         "USrv - Queue Latency (msec)",
@@ -327,7 +383,7 @@ def check_skype_sip_stack(_no_item, params, parsed):
         levels=params["queue_latency"],
     )
 
-    yield from wmi_yield_raw_average(
+    yield from _wmi_yield_raw_average(
         parsed.get("LS:USrv - DBStore"),
         None,
         "USrv - Sproc Latency (msec)",
@@ -364,7 +420,7 @@ def check_skype_sip_stack(_no_item, params, parsed):
         levels=params["timedout_incoming_messages"],
     )
 
-    yield from wmi_yield_raw_average_timer(
+    yield from _wmi_yield_raw_average_timer(
         parsed.get("LS:SIP - Load Management"),
         None,
         "SIP - Average Holding Time For Incoming Messages",
@@ -382,7 +438,7 @@ def check_skype_sip_stack(_no_item, params, parsed):
         levels=params["flow_controlled_connections"],
     )
 
-    yield from wmi_yield_raw_average_timer(
+    yield from _wmi_yield_raw_average_timer(
         parsed.get("LS:SIP - Peers"),
         None,
         "SIP - Average Outgoing Queue Delay",

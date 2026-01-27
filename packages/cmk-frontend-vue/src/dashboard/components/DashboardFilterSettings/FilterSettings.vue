@@ -254,6 +254,7 @@ const serviceMandatoryFilters = computed(() => {
           @apply-runtime-filters="applyRuntimeFilters"
           @open-filter-settings="openSettingsWindow"
           @reset-runtime-filters="handleResetRuntimeFilters"
+          @close="closeWindow"
         />
       </div>
 

@@ -155,6 +155,8 @@ from cmk.utils.experimental_config import load_experimental_config
 from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
+    get_storage_format,
+    StorageFormat,
 )
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.labels import LabelManager, Labels, LabelSources
@@ -569,10 +571,15 @@ def load(
 ) -> LoadingResult:
     _initialize_config()
 
-    _changed_var_names = _load_config(with_conf_d)
+    # Load assorted experimental parameters if any
+    experimental_config = load_experimental_config(cmk.utils.paths.default_config_dir)
+
+    storage_format = get_storage_format(experimental_config.get("config_storage_format"))
+
+    _changed_var_names = _load_config(storage_format, with_conf_d=with_conf_d)
 
     loading_result = _perform_post_config_loading_actions(
-        discovery_rulesets, get_builtin_host_labels
+        discovery_rulesets, get_builtin_host_labels, experimental_config
     )
 
     if validate_hosts:
@@ -615,7 +622,11 @@ def load_packed_config(
     """
     _initialize_config()
     globals().update(PackedConfigStore.from_serial(config_path).read())
-    return _perform_post_config_loading_actions(discovery_rulesets, get_builtin_host_labels)
+    return _perform_post_config_loading_actions(
+        discovery_rulesets,
+        get_builtin_host_labels,
+        load_experimental_config(cmk.utils.paths.default_config_dir),
+    )
 
 
 def _initialize_config() -> None:
@@ -625,6 +636,7 @@ def _initialize_config() -> None:
 def _perform_post_config_loading_actions(
     discovery_rulesets: Iterable[RuleSetName],
     get_builtin_host_labels: Callable[[SiteId], Labels],
+    experimental: Mapping[str, object],
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
@@ -636,6 +648,7 @@ def _perform_post_config_loading_actions(
     _drop_invalid_ssc_rules(global_dict)
 
     loaded_config = LoadedConfigFragment(
+        experimental=experimental,
         folder_attributes=folder_attributes,
         discovery_rules=discovery_settings,
         checkgroup_parameters=checkgroup_parameters,
@@ -779,7 +792,11 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
     exec(compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict)  # nosec B102 # BNS:aee528
 
 
-def _load_config(with_conf_d: bool) -> set[str]:
+def _load_config(
+    storage_format: StorageFormat,
+    *,
+    with_conf_d: bool,
+) -> set[str]:
     helper_vars = {
         "FOLDER_PATH": None,
     }
@@ -795,12 +812,7 @@ def _load_config(with_conf_d: bool) -> set[str]:
 
     global_dict |= helper_vars
 
-    # Load assorted experimental parameters if any
-    experimental_config = load_experimental_config(cmk.utils.paths.default_config_dir)
-
-    host_storage_loaders = get_host_storage_loaders(
-        experimental_config.get("config_storage_format")
-    )
+    host_storage_loaders = get_host_storage_loaders(storage_format)
     for path in get_config_file_paths(with_conf_d):
         try:
             # Make the config path available as a global variable to be used

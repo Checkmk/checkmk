@@ -1384,7 +1384,9 @@ class Folder(FolderProtocol):
         variables = get_hosts_file_variables()
         apply_hosts_file_to_object(
             Path(self.hosts_file_path_without_extension()),
-            get_host_storage_loaders(active_config.config_storage_format),
+            get_host_storage_loaders(
+                get_storage_format(active_config.config_storage_format),
+            ),
             variables,
         )
         return variables

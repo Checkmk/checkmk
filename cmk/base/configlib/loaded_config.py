@@ -36,6 +36,7 @@ class LoadedConfigFragment:
     (compare cmk/base/default_config/base ...)
     """
 
+    experimental: Mapping[str, object]
     # TODO: get `HostAddress` VS. `str` right! Which is it at what point?!
     # NOTE: all of the below is wishful typing, no parsing is done yet.
     # for now we just copy what we find in default_config

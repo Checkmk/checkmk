@@ -111,7 +111,7 @@ void provide_agent_binaries(Map args) {
                 """.stripIndent(),
         ],
         "build-mk-oracle-rhel8": [
-            relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package",
+            relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package-k8s",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
             condition: ! test_binaries_only,
             additional_build_params: [

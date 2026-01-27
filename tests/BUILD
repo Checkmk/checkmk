@@ -68,12 +68,17 @@ py_library(
     deps = [
         "//cmk:lib_cmk",
         requirement("beautifulsoup4"),
+        requirement("clickhouse-connect"),
         requirement("cryptography"),
         requirement("docker"),
         requirement("dockerpty"),
+        requirement("fastapi"),
         requirement("pexpect"),
         requirement("playwright"),
+        requirement("psutil"),
+        requirement("pyjwt"),
         requirement("pytest"),
+        requirement("pytest-check"),
         requirement("pyyaml"),
         requirement("requests"),
     ] + select({

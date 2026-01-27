@@ -47,8 +47,9 @@ void TimeperiodsCache::logCurrentTimeperiods() {
         if (it == _cache.end()) {  // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
             _cache.emplace(tp, is_in);
+        } else {
+            logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
         }
-        logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
     }
 }
 

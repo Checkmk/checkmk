@@ -70,7 +70,7 @@ def _transmit_single_telemetry_file(
 
 
 def _get_api_url() -> str:
-    domain = os.environ.get("CMK_TELEMETRY_URL", "https://telemetry.checkmk.com/upload")
+    domain = os.environ.get("CMK_TELEMETRY_URL", "https://analytics.checkmk.com/upload")
     parsed = urlparse(domain)
     if parsed.scheme != "https" or not parsed.netloc:
         raise InvalidTelemetryEndpointError

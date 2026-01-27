@@ -5,19 +5,18 @@
 
 import ast
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
 
-import cmk.gui.hooks as hooks
-import cmk.gui.sites as sites
-import cmk.gui.userdb as userdb
+from cmk.gui import hooks, sites, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
@@ -27,16 +26,11 @@ from cmk.gui.site_config import (
     get_site_config,
     is_wato_slave_site,
 )
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.request_context import copy_request_context
-from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import (
-    do_remote_automation,
-    get_url,
-    MKAutomationException,
-)
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.utils import mk_eval, mk_repr
 
 # In case the sync is done on the master of a distributed setup the auth serial
 # is increased on the master, but not on the slaves. The user can not access the
@@ -149,7 +143,7 @@ def _sychronize_profile_worker(
         )
 
     try:
-        result = push_user_profiles_to_site_transitional_wrapper(site, profiles_to_synchronize)
+        result = push_user_profiles_to_site(site, profiles_to_synchronize)
         if result is not True:
             return SynchronizationResult(site_id, error_text=result, failed=True)
         return SynchronizationResult(site_id, succeeded=True)
@@ -172,72 +166,24 @@ def _handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
 hooks.register_builtin("ldap-sync-finished", _handle_ldap_sync_finished)
 
 
-def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
-    try:
-        return push_user_profiles_to_site(site, user_profiles)
-    except MKAutomationException as e:
-        if "Invalid automation command: push-profiles" in "%s" % e:
-            failed_info = []
-            for user_id, user in user_profiles.items():
-                result = _legacy_push_user_profile_to_site(site, user_id, user)
-                if result is not True:
-                    failed_info.append(result)
-
-            if failed_info:
-                return "\n".join(failed_info)
-            return True
-        raise
-
-
-def _legacy_push_user_profile_to_site(site, user_id, profile):
-    url = (
-        site["multisiteurl"]
-        + "automation.py?"
-        + urlencode_vars(
-            [
-                ("command", "push-profile"),
-                ("secret", site["secret"]),
-                ("siteid", site["id"]),
-                ("debug", active_config.debug and "1" or ""),
-            ]
-        )
-    )
-
-    response = get_url(
-        url,
-        site.get("insecure", False),
-        data={
-            "user_id": user_id,
-            "profile": mk_repr(profile).decode("ascii"),
-        },
-        timeout=60,
-    )
-
-    if not response:
-        raise MKAutomationException(_("Empty output from remote site."))
-
-    try:
-        response = mk_eval(response)
-    except Exception:
-        # The remote site will send non-Python data in case of an error.
-        raise MKAutomationException("{}: <pre>{}</pre>".format(_("Got invalid data"), response))
-    return response
-
-
-def push_user_profiles_to_site(site, user_profiles):
-    def _serialize(user_profiles):
+def push_user_profiles_to_site(
+    site: SiteConfiguration,
+    user_profiles: Mapping[UserId, UserSpec],
+) -> Literal[True]:
+    def _serialize(user_profiles: Mapping[UserId, UserSpec]) -> dict[UserId, object]:
         """Do not synchronize user session information"""
         return {
             user_id: {k: v for k, v in profile.items() if k != "session_info"}
             for user_id, profile in user_profiles.items()
         }
 
-    return do_remote_automation(
+    do_remote_automation(
         site,
         "push-profiles",
         [("profiles", repr(_serialize(user_profiles)))],
         timeout=60,
     )
+    return True
 
 
 class PushUserProfilesRequest(NamedTuple):

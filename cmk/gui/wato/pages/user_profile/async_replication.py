@@ -29,7 +29,7 @@ from cmk.gui.watolib.activate_changes import (
     update_activation_time,
 )
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
+from cmk.gui.watolib.user_profile import push_user_profiles_to_site
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -148,7 +148,7 @@ class ModeAjaxProfileReplication(AjaxPage):
             raise MKUserError(None, _("The requested user does not exist"))
 
         start = time.time()
-        result = push_user_profiles_to_site_transitional_wrapper(site, {user_id: users[user_id]})
+        result = push_user_profiles_to_site(site, {user_id: users[user_id]})
 
         duration = time.time() - start
         update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, duration)

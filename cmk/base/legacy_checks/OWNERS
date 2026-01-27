@@ -4,6 +4,8 @@ file:/component_owners/plugins/OWNERS_DEFINITION
 
 per-file informix*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file informix*=set noparent
+per-file jolokia*=file:/component_owners/plugins_jolokia/OWNERS_DEFINITION
+per-file jolokia*=set noparent
 per-file mongodb*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mongodb*=set noparent
 per-file mysql*=file:/component_owners/plugins_databases/OWNERS_DEFINITION

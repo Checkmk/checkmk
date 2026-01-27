@@ -295,10 +295,7 @@ py_library(
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
-    visibility = [
-        # for conftest
-        "//tests:__subpackages__",
-    ],
+    visibility = ["//:__subpackages__"],
     deps = [
         "@rrdtool_native//:rrdtool_python_lib",
         # `cmk.special_agent.agent_jolokia` imports `mk_jolokia`
@@ -310,11 +307,7 @@ py_library(
     name = "lib_cmk_community",
     srcs = COMMUNITY_PY,
     imports = [".."],
-    visibility = [
-        "//tests:__subpackages__",
-        # for api spec
-        "//omd:__subpackages__",
-    ],
+    visibility = ["//:__subpackages__"],
     deps = [
         "lib_cmk",
     ],
@@ -324,7 +317,7 @@ py_library(
     name = "lib_cmk_" + edition,
     srcs = srcs,
     imports = [".."],
-    visibility = ["//tests:__subpackages__"],
+    visibility = ["//:__subpackages__"],
     deps = select({
         "@//:gpl+nonfree_repo": CMC_PROTO_DEPS,
         "@//:gpl_repo": [],
@@ -345,10 +338,7 @@ py_library(
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
     tags = ["lint-with-astrein"],
-    visibility = [
-        "//doc/plugin-api:__pkg__",
-        "//tests/unit:__pkg__",
-    ],
+    visibility = ["//:__subpackages__"],
     deps = [
         "//agents/plugins:mk_jolokia",
     ] + select({

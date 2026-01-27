@@ -24,17 +24,13 @@ from omdlib.version_info import VersionInfo
 def prepare_restore_as_root(
     version_info: VersionInfo, site: SiteContext, options: CommandOptions, verbose: bool
 ) -> None:
-    reuse = False
-    if "reuse" in options:
-        reuse = True
+    site_home = SitePaths.from_site_name(site.name).home
+    reuse = "reuse" in options
+    if reuse:
         if not user_verify(version_info, site, allow_populated=True):
             sys.exit("Error verifying site user.")
         fstab_verify(site.name, site.tmp_dir)
-
-    site_home = SitePaths.from_site_name(site.name).home
-    sitename_must_be_valid(site.name, Path(site_home), reuse)
-
-    if reuse:
+        sitename_must_be_valid(site.name, Path(site_home), reuse)
         # shutil.rmtree will default to an unsafe way of deleting a user-controlled directory, if
         # `avoids_symlink_attacks` is false.
         #
@@ -50,16 +46,15 @@ def prepare_restore_as_root(
             with subprocess.Popen(["omd", "stop", site.name]):
                 pass
         unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
-
-    if not reuse:
+        sys.stdout.write("Deleting existing site data...\n")
+        _clear_site_home(Path(site_home))
+        ok()
+    else:
+        sitename_must_be_valid(site.name, Path(site_home), reuse)
         uid = options.get("uid")
         gid = options.get("gid")
         useradd(version_info, site, uid, gid)  # None for uid/gid means: let Linux decide
         os.mkdir(site_home)
-    else:
-        sys.stdout.write("Deleting existing site data...\n")
-        _clear_site_home(Path(site_home))
-        ok()
 
 
 def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, verbose: bool) -> None:

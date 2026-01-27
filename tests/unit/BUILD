@@ -36,7 +36,7 @@ write_file(
     name = "cannot_fail",
     out = "test_cannot_fail.py",
     content = [
-        "def test_cannot_fail():",
+        "def test_cannot_fail() -> None:",
         "    assert True",
     ],
 )

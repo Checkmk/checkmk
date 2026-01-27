@@ -62,6 +62,7 @@ py_library(
         requirement("pyasn1"),
         requirement("pymongo"),
         requirement("pysnmp"),
+        requirement("pysmi"),
         requirement("python-dateutil"),
         requirement("setproctitle"),
     ],

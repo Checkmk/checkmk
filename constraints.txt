@@ -4,7 +4,6 @@ schemathesis<4 # breaking changes here that require updates to the code CMK-2439
 pytest<8.4 # breaking changes with pytest-playwright CMK-24472
 marshmallow<4 # breaking changes CMK-25251
 time-machine<3.0.0 # breaks agent-receiver tests CMK-27768
-pysnmp<7.0.0 # CMK-27817
 datamodel-code-generator==0.39.0  # CMK-28525
 vcrpy==7.0.0  # CMK-28526
 mypy-protobuf==3.7.0  # CMK-28939
@@ -72,7 +71,7 @@ pyprof2calltree~=1.4.5
 pysaml2~=7.5.0
 pysmb~=1.2.13
 pysmi~=1.6.2
-pysnmp~=6.2.6
+pysnmp~=7.1.22
 python-active-directory~=2.0.1
 python-dateutil~=2.9.0.post0
 python-ldap~=3.4.5
@@ -90,7 +89,7 @@ setproctitle~=1.3.7
 setuptools-scm~=9.2.2
 setuptools~=78.1.1
 simplejson~=3.20.2
-snmpsim~=1.1.7
+snmpsim~=1.2.1
 tenacity~=9.1.2
 urllib3~=2.6.2
 uvicorn~=0.38.0

@@ -22,7 +22,14 @@ from subprocess import CalledProcessError
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress
-from cmk.snmplib import OID, SNMPBackendEnum, SNMPHostConfig, SNMPRowInfoForStoredWalk, SNMPVersion
+from cmk.snmplib import (
+    OID,
+    SNMPBackendEnum,
+    SNMPHostConfig,
+    SNMPRowInfoForStoredWalk,
+    SNMPVersion,
+    SNMPContextConfig,
+)
 from tests.testlib.site import Site
 
 from .snmp_helpers import default_config, get_single_oid
@@ -55,6 +62,9 @@ def test_get_single_oid_snmpv3(site: Site, backend_type: SNMPBackendEnum) -> Non
             "authOnlyUser",
         ),
         snmp_version=SNMPVersion.V3,
+        snmpv3_contexts=[
+            SNMPContextConfig(section=None, contexts=["1.3.6.1.6.1.1.0"], timeout_policy="stop")
+        ],
     )
 
     result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
@@ -83,6 +93,9 @@ def test_get_single_oid_snmpv3_higher_encryption(
         #  but with different ports. Those different processes are then used in test_snmp_modes.py and
         #  backend_snmp.py...
         port=port,
+        snmpv3_contexts=[
+            SNMPContextConfig(section=None, contexts=["1.3.6.1.6.1.1.0"], timeout_policy="stop")
+        ],
     )
 
     result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)

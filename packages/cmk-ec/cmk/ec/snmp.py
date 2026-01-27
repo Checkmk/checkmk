@@ -47,7 +47,10 @@ VarBinds = Iterable[VarBind]
 class SNMPTrapParser:
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
-        pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)  # type: ignore[assignment]
+        SUPPORTED_PDU_TYPES = (
+            pysnmp.proto.api.v1.TrapPDU.tagSet,
+            pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet,
+        )  # type: ignore[assignment]
 
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
@@ -55,7 +58,7 @@ class SNMPTrapParser:
             return
 
         # Hand over our logger to PySNMP
-        pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=logger.debug))
+        pysnmp.debug.set_logger(pysnmp.debug.Debug("all", printer=logger.debug))
 
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
@@ -71,7 +74,7 @@ class SNMPTrapParser:
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
 
-        self.snmp_engine.observer.registerObserver(
+        self.snmp_engine.observer.register_observer(
             self._handle_unauthenticated_snmptrap,
             "rfc2576.prepareDataElements:sm-failure",
             "rfc3412.prepareDataElements:sm-failure",
@@ -80,35 +83,35 @@ class SNMPTrapParser:
     @staticmethod
     def _auth_proto_for(proto_name: AuthenticationProtocol) -> tuple[int, ...]:
         if proto_name == "md5":
-            return pysnmp.entity.config.usmHMACMD5AuthProtocol
+            return pysnmp.entity.config.USM_AUTH_HMAC96_MD5
         if proto_name == "sha":
-            return pysnmp.entity.config.usmHMACSHAAuthProtocol
+            return pysnmp.entity.config.USM_AUTH_HMAC96_SHA
         if proto_name == "SHA-224":
-            return pysnmp.entity.config.usmHMAC128SHA224AuthProtocol
+            return pysnmp.entity.config.USM_AUTH_HMAC128_SHA224
         if proto_name == "SHA-256":
-            return pysnmp.entity.config.usmHMAC192SHA256AuthProtocol
+            return pysnmp.entity.config.USM_AUTH_HMAC192_SHA256
         if proto_name == "SHA-384":
-            return pysnmp.entity.config.usmHMAC256SHA384AuthProtocol
+            return pysnmp.entity.config.USM_AUTH_HMAC256_SHA384
         if proto_name == "SHA-512":
-            return pysnmp.entity.config.usmHMAC384SHA512AuthProtocol
+            return pysnmp.entity.config.USM_AUTH_HMAC384_SHA512
         raise Exception(f"Invalid SNMP auth protocol: {proto_name}")
 
     @staticmethod
     def _priv_proto_for(proto_name: PrivacyProtocol) -> tuple[int, ...]:
         if proto_name == "DES":
-            return pysnmp.entity.config.usmDESPrivProtocol
+            return pysnmp.entity.config.USM_PRIV_CBC56_DES
         if proto_name == "3DES-EDE":
-            return pysnmp.entity.config.usm3DESEDEPrivProtocol
+            return pysnmp.entity.config.USM_PRIV_CBC168_3DES
         if proto_name == "AES":
-            return pysnmp.entity.config.usmAesCfb128Protocol
+            return pysnmp.entity.config.USM_PRIV_CFB128_AES
         if proto_name == "AES-192":
-            return pysnmp.entity.config.usmAesCfb192Protocol
+            return pysnmp.entity.config.USM_PRIV_CFB192_AES
         if proto_name == "AES-256":
-            return pysnmp.entity.config.usmAesCfb256Protocol
+            return pysnmp.entity.config.USM_PRIV_CFB256_AES
         if proto_name == "AES-192-Blumenthal":
-            return pysnmp.entity.config.usmAesBlumenthalCfb192Protocol
+            return pysnmp.entity.config.USM_PRIV_CFB192_AES_BLUMENTHAL
         if proto_name == "AES-256-Blumenthal":
-            return pysnmp.entity.config.usmAesBlumenthalCfb256Protocol
+            return pysnmp.entity.config.USM_PRIV_CFB256_AES_BLUMENTHAL
         raise Exception(f"Invalid SNMP priv protocol: {proto_name}")
 
     def _initialize_snmp_credentials(self, config: Config) -> None:
@@ -121,21 +124,21 @@ class SNMPTrapParser:
             if not isinstance(credentials, tuple):
                 community_index = f"snmpv2-{user_num}"
                 self._logger.info("adding SNMPv1 system: communityIndex=%s", community_index)
-                pysnmp.entity.config.addV1System(self.snmp_engine, community_index, credentials)
+                pysnmp.entity.config.add_v1_system(self.snmp_engine, community_index, credentials)
                 continue
 
             # SNMPv3
             if credentials[0] == "noAuthNoPriv":
                 user_id = credentials[1]
-                auth_proto: tuple[int, ...] = pysnmp.entity.config.usmNoAuthProtocol
+                auth_proto: tuple[int, ...] = pysnmp.entity.config.USM_AUTH_NONE
                 auth_key = None
-                priv_proto: tuple[int, ...] = pysnmp.entity.config.usmNoPrivProtocol
+                priv_proto: tuple[int, ...] = pysnmp.entity.config.USM_PRIV_NONE
                 priv_key = None
             elif credentials[0] == "authNoPriv":
                 user_id = credentials[2]
                 auth_proto = self._auth_proto_for(credentials[1])
                 auth_key = credentials[3]
-                priv_proto = pysnmp.entity.config.usmNoPrivProtocol
+                priv_proto = pysnmp.entity.config.USM_PRIV_NONE
                 priv_key = None
             elif credentials[0] == "authPriv":
                 user_id = credentials[2]
@@ -154,7 +157,7 @@ class SNMPTrapParser:
                     ".".join(str(i) for i in priv_proto),
                     engine_id,
                 )
-                pysnmp.entity.config.addV3User(
+                pysnmp.entity.config.add_v3_user(
                     self.snmp_engine,
                     user_id,
                     auth_proto,
@@ -172,8 +175,8 @@ class SNMPTrapParser:
             VERBOSE, "Trap received from %s:%d. Checking for acceptance now.", sender_address
         )
         self._varbinds_and_ipaddress = None
-        self.snmp_engine.setUserContext(sender_address=sender_address)
-        self.snmp_engine.msgAndPduDsp.receiveMessage(
+        self.snmp_engine.set_user_context(sender_address=sender_address)
+        self.snmp_engine.message_dispatcher.receive_message(
             snmpEngine=self.snmp_engine,
             transportDomain=(),
             transportAddress=sender_address,
@@ -191,7 +194,7 @@ class SNMPTrapParser:
         cb_ctx: None,
     ) -> None:
         # sender_address contains a (host: str, port: int) tuple
-        ipaddress: str = self.snmp_engine.getUserContext("sender_address")[0]  # type: ignore[index]
+        ipaddress: str = self.snmp_engine.get_user_context("sender_address")[0]  # type: ignore[index]
         self._log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
         trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         # NOTE: There can be only one trap per PDU, so we don't run into the risk of overwriting previous info.
@@ -283,13 +286,13 @@ class SNMPTrapTranslator:
                 paths.compiled_mibs_dir,
                 paths.checkmk_compiled_mibs_dir,
             ]:
-                builder.addMibSources(pysnmp.smi.builder.DirMibSource(source.value))
+                builder.add_mib_sources(pysnmp.smi.builder.DirMibSource(source.value))
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = load_texts
 
             # This loads all or specified pysnmp MIBs into memory
-            builder.loadModules()
+            builder.load_modules()
 
             loaded_mib_module_names = list(builder.mibSymbols.keys())
             logger.info("Loaded %d SNMP MIB modules", len(loaded_mib_module_names))
@@ -346,12 +349,13 @@ class SNMPTrapTranslator:
     def _translate_binding_via_mibs(
         self, oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
     ) -> tuple[str, str]:
+        assert self._mib_resolver is not None
         # Disable mib_var[0] type detection
         mib_var = pysnmp.smi.rfc1902.ObjectType(
             pysnmp.smi.rfc1902.ObjectIdentity(oid),
             value,
-        ).resolveWithMib(self._mib_resolver)
-        node = mib_var[0].getMibNode()
+        ).resolve_with_mib(self._mib_resolver)
+        node = mib_var[0].get_mib_node()
         translated_oid = mib_var[0].prettyPrint().replace('"', "")
         translated_value = mib_var[1].prettyPrint()
         if units := getattr(node, "getUnits", str)():
@@ -376,13 +380,13 @@ def compile_mib(
             PySnmpCodeGen(),
             PyFileWriter(destination_dir),
         )
-        .addSources(
+        .add_sources(
             # Provides the just uploaded MIB module
             CallbackReader(lambda name, _context: content if name == mibname else "", None),
             # Directories containing ASN1 MIB files which may be used for dependency resolution
             *[FileReader(path) for path in source_dirs],
         )
-        .addSearchers(
+        .add_searchers(
             # check for additional already compiled MIBs
             *[PyFileSearcher(path) for path in search_dirs],
             # check compiled MIBs shipped with PySNMP

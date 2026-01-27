@@ -31,11 +31,9 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.type_defs import UserSpec, VisualTypeName
 from cmk.gui.utils.request_context import copy_request_context
-from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation, get_url, MKAutomationException
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.utils import mk_eval, mk_repr
 
 # In case the sync is done on the master of a distributed setup the auth serial
 # is increased on the master, but not on the slaves. The user can not access the
@@ -155,7 +153,7 @@ def _sychronize_profile_worker(
         )
 
     try:
-        result = push_user_profiles_to_site_transitional_wrapper(site, profiles_to_synchronize)
+        result = push_user_profiles_to_site(site, profiles_to_synchronize)
         if result is not True:
             return SynchronizationResult(site_id, error_text=result, failed=True)
         return SynchronizationResult(site_id, succeeded=True)
@@ -173,62 +171,6 @@ def handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
 
     if changes and active_config.wato_enabled and not is_wato_slave_site():
         add_change("edit-users", "<br>".join(changes), add_user=False)
-
-
-def push_user_profiles_to_site_transitional_wrapper(
-    site: SiteConfiguration,
-    user_profiles: Mapping[UserId, UserSpec],
-    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None = None,
-) -> Literal[True] | str:
-    try:
-        return push_user_profiles_to_site(site, user_profiles, visuals)
-    except MKAutomationException as e:
-        if "Invalid automation command: push-profiles" in "%s" % e:
-            failed_info = []
-            for user_id, user in user_profiles.items():
-                result = _legacy_push_user_profile_to_site(site, user_id, user)
-                if result is not True:
-                    failed_info.append(result)
-
-            if failed_info:
-                return "\n".join(failed_info)
-            return True
-        raise
-
-
-def _legacy_push_user_profile_to_site(site, user_id, profile):
-    url = (
-        site["multisiteurl"]
-        + "automation.py?"
-        + urlencode_vars(
-            [
-                ("command", "push-profile"),
-                ("secret", site["secret"]),
-                ("siteid", site["id"]),
-                ("debug", active_config.debug and "1" or ""),
-            ]
-        )
-    )
-
-    response = get_url(
-        url,
-        site.get("insecure", False),
-        data={
-            "user_id": user_id,
-            "profile": mk_repr(profile).decode("ascii"),
-        },
-        timeout=60,
-    )
-
-    if not response:
-        raise MKAutomationException(_("Empty output from remote site."))
-
-    try:
-        response = mk_eval(response)
-    except Exception:
-        # The remote site will send non-Python data in case of an error.
-        raise MKAutomationException("{}: <pre>{}</pre>".format(_("Got invalid data"), response))
-    return response
 
 
 def push_user_profiles_to_site(

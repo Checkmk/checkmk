@@ -26,7 +26,7 @@ from cmk.gui.user_async_replication import add_profile_replication_change
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC, update_activation_time
-from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
+from cmk.gui.watolib.user_profile import push_user_profiles_to_site
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -78,7 +78,7 @@ class ModeAjaxProfileReplication(AjaxPage):
             raise MKUserError(None, _("The requested user does not exist"))
 
         start = time.time()
-        result = push_user_profiles_to_site_transitional_wrapper(
+        result = push_user_profiles_to_site(
             site, {user_id: users[user_id]}, {user_id: visuals_of_user}
         )
 

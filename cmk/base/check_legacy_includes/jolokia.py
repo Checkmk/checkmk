@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="unreachable"
 
 import json
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
@@ -161,9 +158,6 @@ def get_inventory_jolokia_metrics_apps(
         # higher than the rest.
         if what == "bea_app_sess":
             for inst, vals in parsed.items():
-                if vals is None:
-                    continue  # no data from agent
-
                 for app, appstate in vals.get("apps", {}).items():
                     if "servlets" in appstate:
                         for nk in needed_keys:
@@ -173,9 +167,6 @@ def get_inventory_jolokia_metrics_apps(
                                     continue
         # This does the same for tomcat
         for inst, vals in parsed.items():
-            if vals is None:
-                continue  # no data from agent
-
             for app, appstate in vals.get("apps", {}).items():
                 for nk in needed_keys:
                     if nk in appstate:

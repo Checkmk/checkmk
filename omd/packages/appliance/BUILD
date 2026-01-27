@@ -66,21 +66,14 @@ pkg_files(
     tags = ["manual"],
 )
 
-[
-    pkg_tar(
-        name = "appliance_install_" + edition,
-        srcs = [
-            ":cma_conf",
-            ":cma_info_file_in_pkg",
-            ":post_install",
-            ":webconf_snapin",
-        ],
-        extension = "tar.gz",
-        visibility = ["//visibility:public"],
-    )
-    for edition in [
-        "pro",
-        "ultimate",
-        "ultimatemt",
-    ]
-]
+pkg_tar(
+    name = "appliance_install",
+    srcs = [
+        ":cma_conf",
+        ":cma_info_file_in_pkg",
+        ":post_install",
+        ":webconf_snapin",
+    ],
+    extension = "tar.gz",
+    visibility = ["//visibility:public"],
+)

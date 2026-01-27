@@ -211,7 +211,7 @@ void main() {
                                 --cmk_edition=${edition} \
                                 ${license_flag} \
                                 --execution_log_json_file="${checkout_dir}/deps_install.json" \
-                        //omd:${package_type}_${edition}
+                        //omd:${package_type}
                         """);
                         sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
                     }

@@ -174,13 +174,56 @@ CLOUD_PY = glob(
 )
 
 filegroup(
-    name = "checkman",
+    name = "checkman_free",
     srcs = glob(
         [
             "**/checkman/**",
         ],
-        exclude = ["**/OWNERS"],
+        exclude = [
+            "**/OWNERS",
+            "**/checkman/nonfree/**",
+        ],
     ),
+)
+
+filegroup(
+    name = "checkman_edition_specific",
+    srcs = select({
+        "@cmk//edition:community": [],
+        "@cmk//edition:cloud": glob(
+            [
+                "**/checkman/nonfree/cloud/**",
+                "**/checkman/nonfree/ultimate/**",
+                "**/checkman/nonfree/pro/**",
+            ],
+            allow_empty = True,
+            exclude = ["**/OWNERS"],
+        ),
+        "@cmk//edition:pro": glob(
+            [
+                "**/checkman/nonfree/pro/**",
+            ],
+            allow_empty = True,
+            exclude = ["**/OWNERS"],
+        ),
+        "@cmk//edition:ultimate": glob(
+            [
+                "**/checkman/nonfree/ultimate/**",
+                "**/checkman/nonfree/pro/**",
+            ],
+            allow_empty = True,
+            exclude = ["**/OWNERS"],
+        ),
+        "@cmk//edition:ultimatemt": glob(
+            [
+                "**/checkman/nonfree/ultimatemt/**",
+                "**/checkman/nonfree/ultimate/**",
+                "**/checkman/nonfree/pro/**",
+            ],
+            allow_empty = True,
+            exclude = ["**/OWNERS"],
+        ),
+    }),
 )
 
 filegroup(
@@ -304,32 +347,24 @@ py_library(
 )
 
 py_library(
-    name = "lib_cmk_community",
-    srcs = COMMUNITY_PY,
+    name = "cmk",
+    srcs = select({
+        "@cmk//edition:community": COMMUNITY_PY,
+        "@cmk//edition:cloud": CLOUD_PY,
+        "@cmk//edition:ultimate": ULTIMATE_PY,
+        "@cmk//edition:pro": PRO_PY,
+        "@cmk//edition:ultimatemt": ULTIMATEMT_PY,
+    }),
     imports = [".."],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        "lib_cmk",
-    ],
+    visibility = ["//tests:__subpackages__"],
+    deps = ["lib_cmk"] + select({
+        "@cmk//edition:community": [],
+        "@cmk//edition:cloud": CMC_PROTO_DEPS,
+        "@cmk//edition:ultimate": CMC_PROTO_DEPS,
+        "@cmk//edition:pro": CMC_PROTO_DEPS,
+        "@cmk//edition:ultimatemt": CMC_PROTO_DEPS,
+    }) + edition_python_deps + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
-
-[py_library(
-    name = "lib_cmk_" + edition,
-    srcs = srcs,
-    imports = [".."],
-    visibility = ["//:__subpackages__"],
-    deps = select({
-        "@//:gpl+nonfree_repo": CMC_PROTO_DEPS,
-        "@//:gpl_repo": [],
-    }) + [
-        "lib_cmk",
-    ] + edition_python_deps[edition] + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
-) for edition, srcs in [
-    ("ultimate", ULTIMATE_PY),
-    ("pro", PRO_PY),
-    ("ultimatemt", ULTIMATEMT_PY),
-    ("cloud", CLOUD_PY),
-]]
 
 py_library(
     # The repo edition is only used for testing and generating the plugin-api doc with sphinx.
@@ -348,58 +383,37 @@ py_library(
 )
 
 py_wheel(
-    name = "cmk_community",
+    name = "cmk_whl",
     distribution = "checkmk",
     requires = REQUIRED_EXTERNAL_DEPS,
     # TODO(ml): cmk_version vs. PEP 440?
-    version = "1+community",
-    visibility = ["//visibility:public"],
-    deps = [
-        "lib_cmk",
-        "lib_cmk_community",
-        ":agents",
-        ":checkman",
-        ":miscellaneous",
-    ],
-)
-
-[py_wheel(
-    name = "cmk_" + edition,
-    distribution = "checkmk",
-    requires = REQUIRED_EXTERNAL_DEPS,
-    # TODO(ml): cmk_version vs. PEP 440?
-    version = "1+" + edition,
+    version = "1+" + select({
+        "@cmk//edition:community": "community",
+        "@cmk//edition:ultimate": "ultimate",
+        "@cmk//edition:pro": "pro",
+        "@cmk//edition:ultimatemt": "ultimatemt",
+        "@cmk//edition:cloud": "cloud",
+    }),
     visibility = ["//visibility:public"],
     deps = select({
         "@//:gpl+nonfree_repo": CMC_PROTO_DEPS,
         "@//:gpl_repo": [],
     }) + [
+        "cmk",
         "lib_cmk",
         ":agents",
-        ":checkman",
-        ":libexec",
+        ":checkman_edition_specific",
+        ":checkman_free",
         ":miscellaneous",
-        "lib_cmk_" + edition,
     ],
-) for edition in [
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[package_wheel(
-    name = "cmk_tar_" + edition,
+package_wheel(
+    name = "cmk_tar",
     prefix = "lib/python3",
     visibility = ["//visibility:public"],
-    whl = "cmk_" + edition,
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+    whl = "cmk_whl",
+)
 
 py_pytest_main(
     name = "__test__",

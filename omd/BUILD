@@ -306,8 +306,8 @@ pkg_files(
     }),
 )
 
-[pkg_tar(
-    name = "deps_packages_" + edition,
+pkg_tar(
+    name = "deps_packages",
     srcs = [
         ":agents",
         ":agents_cfg_examples",
@@ -325,169 +325,132 @@ pkg_files(
         ":share_doc_check-mk",
         ":share_doc_check-mk_agents",
         ":share_doc_check-mk_documentation",
-        ":skel_permissions_pkg_" + edition,
+        ":skel_permissions_pkg",
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",
     ],
     tags = ["manual"],
     deps = [
-               "//bin:pkg_tar",
-               "//active_checks:pkg_tar",
-               "//doc/plugin-api:pkg_tar",
-               "//cmk:legacy_checks",
-               "//locale",
-               "//notifications",
-               #added here instead of above because of disappearing file
-               "//omd/packages/Python:python_tar",
-               "//omd/packages/apache-omd",
-               "//omd/packages/changelog",
-               "//omd/packages/check-cert",
-               "//omd/packages/check_mk",
-               "//omd/packages/cpp-libs",
-               "//omd/packages/erlang",
-               "//omd/packages/heirloom-mailx",
-               "//omd/packages/heirloom-pkgtools",
-               "//omd/packages/lcab",
-               "//omd/packages/maintenance",
-               "//omd/packages/mk-livestatus",
-               "//omd/packages/mk-oracle",
-               "//omd/packages/mod_fcgid",
-               "//omd/packages/mod_wsgi",
-               "//omd/packages/monitoring-plugins",
-               "//omd/packages/msitools",
-               "//omd/packages/nagios",
-               "//omd/packages/net-snmp:net-snmp_tar",
-               "//omd/packages/nrpe",
-               "//omd/packages/omd",
-               "//omd/packages/openssl:openssl_tar",
-               "//omd/packages/patch",
-               "//omd/packages/perl-modules",
-               "//omd/packages/pnp4nagios",
-               "//omd/packages/python3-modules:python3-modules.tar",
-               "//omd/packages/rabbitmq",
-               "//omd/packages/redis",
-               "//omd/packages/rrdtool:rrdtool_perl_bindings",
-               "//omd/packages/rrdtool:rrdtool_python_tar",
-               "//omd/packages/rrdtool:rrdtool_tar",
-               "//omd/packages/robotmk",
-               "//omd/packages/snap7",
-               "//omd/packages/stunnel",
-               "//omd/packages/xmlsec1",
-               "//packages/cmk-agent-receiver:pkg_tar",
-               "//packages/cmk-ccc:pkg_tar",
-               "//packages/cmk-check-engine:pkg_tar",
-               "//packages/cmk-crypto:pkg_tar",
-               "//packages/cmk-ec:pkg_tar",
-               "//packages/cmk-events:pkg_tar",
-               "//packages/cmk-frontend",
-               "//packages/cmk-frontend-vue",
-               "//packages/cmk-livestatus-client:cmk_livestatus_client_pkg_tar",
-               "//packages/cmk-livestatus-client:cmk_livestatus_pkg_tar",
-               "//packages/cmk-messaging:pkg_tar",
-               "//packages/cmk-mkp-tool:pkg_tar",
-               "//packages/cmk-plugins:pkg_tar",
-               "//packages/cmk-plugin-apis:pkg_tar",
-               "//packages/cmk-relay-protocols:pkg_tar",
-               "//packages/cmk-trace:pkg_tar",
-               "//packages/cmk-werks:pkg_tar",
-               "//packages/livestatus:livestatus_pkg",
-               "//packages/neb:neb_pkg",
-               "//packages/cmk-shared-typing:pkg_tar",
-               "//packages/unixcat:unixcat_tar",
-               ":agents_scripts_super_server",
-               ":agents_windows",
-               ":license_info",
-           ] + select({
-               "@cmk//distro:almalinux": ["//omd/packages/xinetd"],
-               "@cmk//distro:sles": [
-                   "//omd/packages/libgsf",
-                   "//omd/packages/xinetd",
-               ],
-               "//conditions:default": [],
-           }) +
-           edition_deps[edition],
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+        "//bin:pkg_tar",
+        "//active_checks:pkg_tar",
+        "//doc/plugin-api:pkg_tar",
+        "//cmk:legacy_checks",
+        "//locale",
+        "//notifications",
+        #added here instead of above because of disappearing file
+        "//omd/packages/Python:python_tar",
+        "//omd/packages/apache-omd",
+        "//omd/packages/changelog",
+        "//omd/packages/check-cert",
+        "//omd/packages/check_mk",
+        "//omd/packages/cpp-libs",
+        "//omd/packages/erlang",
+        "//omd/packages/heirloom-mailx",
+        "//omd/packages/heirloom-pkgtools",
+        "//omd/packages/lcab",
+        "//omd/packages/maintenance",
+        "//omd/packages/mk-livestatus",
+        "//omd/packages/mk-oracle",
+        "//omd/packages/mod_fcgid",
+        "//omd/packages/mod_wsgi",
+        "//omd/packages/monitoring-plugins",
+        "//omd/packages/msitools",
+        "//omd/packages/nagios",
+        "//omd/packages/net-snmp:net-snmp_tar",
+        "//omd/packages/nrpe",
+        "//omd/packages/omd",
+        "//omd/packages/openssl:openssl_tar",
+        "//omd/packages/patch",
+        "//omd/packages/perl-modules",
+        "//omd/packages/pnp4nagios",
+        "//omd/packages/python3-modules:python3-modules.tar",
+        "//omd/packages/rabbitmq",
+        "//omd/packages/redis",
+        "//omd/packages/rrdtool:rrdtool_perl_bindings",
+        "//omd/packages/rrdtool:rrdtool_python_tar",
+        "//omd/packages/rrdtool:rrdtool_tar",
+        "//omd/packages/robotmk",
+        "//omd/packages/snap7",
+        "//omd/packages/stunnel",
+        "//omd/packages/xmlsec1",
+        "//packages/cmk-agent-receiver:pkg_tar",
+        "//packages/cmk-ccc:pkg_tar",
+        "//packages/cmk-check-engine:pkg_tar",
+        "//packages/cmk-crypto:pkg_tar",
+        "//packages/cmk-ec:pkg_tar",
+        "//packages/cmk-events:pkg_tar",
+        "//packages/cmk-frontend",
+        "//packages/cmk-frontend-vue",
+        "//packages/cmk-livestatus-client:cmk_livestatus_client_pkg_tar",
+        "//packages/cmk-livestatus-client:cmk_livestatus_pkg_tar",
+        "//packages/cmk-messaging:pkg_tar",
+        "//packages/cmk-mkp-tool:pkg_tar",
+        "//packages/cmk-plugins:pkg_tar",
+        "//packages/cmk-plugin-apis:pkg_tar",
+        "//packages/cmk-relay-protocols:pkg_tar",
+        "//packages/cmk-trace:pkg_tar",
+        "//packages/cmk-werks:pkg_tar",
+        "//packages/livestatus:livestatus_pkg",
+        "//packages/neb:neb_pkg",
+        "//packages/cmk-shared-typing:pkg_tar",
+        "//packages/unixcat:unixcat_tar",
+        ":agents_scripts_super_server",
+        ":agents_windows",
+        ":license_info",
+    ] + select({
+        "@cmk//distro:almalinux": ["//omd/packages/xinetd"],
+        "@cmk//distro:sles": [
+            "//omd/packages/libgsf",
+            "//omd/packages/xinetd",
+        ],
+        "//conditions:default": [],
+    }) + edition_deps,
+)
 
-[pkg_tar(
-    name = "deps_install_" + edition,
+pkg_tar(
+    name = "deps_install",
     package_dir_file = ":omd_root_dir",
     tags = ["manual"],
     deps = [
-        ":deps_packages_" + edition,
+        ":deps_packages",
     ],
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[pkg_tar(
-    name = "complete_install_" + edition,
+pkg_tar(
+    name = "complete_install",
     tags = ["manual"],
     deps = [
-        ":deps_install_" + edition,
+        ":deps_install",
         ":omd_global_dirs_tar",
     ],
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[pkg_tar(
-    name = "complete_install_compressed_" + edition,
+pkg_tar(
+    name = "complete_install_compressed",
     compressor = "@zstd//:zstd_cli",
     compressor_args = "-19",
     extension = "tar.zst",
     tags = ["manual"],
     deps = [
-        ":complete_install_" + edition,
+        ":complete_install",
     ],
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[genrule(
-    name = "skel_permissions_" + edition,
-    srcs = edition_skel_permissions[edition],
-    outs = ["skel.permissions_" + edition],
+genrule(
+    name = "skel_permissions",
+    srcs = edition_skel_permissions,
+    outs = ["skel.permissions"],
     cmd = "cat $(SRCS) > $@",
     tags = ["manual"],
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[pkg_files(
-    name = "skel_permissions_pkg_" + edition,
-    srcs = [":skel_permissions_" + edition],
+pkg_files(
+    name = "skel_permissions_pkg",
+    srcs = [":skel_permissions"],
     prefix = "share/omd",
-    renames = {"skel_permissions_" + edition: "skel.permissions"},
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+    renames = {"skel_permissions": "skel.permissions"},
+)
 
 py_binary(
     name = "generate_bom_csv_py",
@@ -572,11 +535,17 @@ pkg_tar(
     tags = ["manual"],
 )
 
-[pkg_name_info(
-    name = "cmk_pkg_variables_" + edition,
+pkg_name_info(
+    name = "cmk_pkg_variables",
     architecture = "amd64",
     cmk_version = "@cmk//version",
-    package = "check-mk-" + edition,
+    package = select({
+        "@cmk//edition:cloud": "check-mk-cloud",
+        "@cmk//edition:community": "check-mk-community",
+        "@cmk//edition:pro": "check-mk-pro",
+        "@cmk//edition:ultimate": "check-mk-ultimate",
+        "@cmk//edition:ultimatemt": "check-mk-ultimatemt",
+    }),
     tags = ["manual"],
     version = select({
         "@cmk//distro:almalinux-10": "el10-38",
@@ -590,39 +559,27 @@ pkg_tar(
         "@cmk//distro:ubuntu-22.04": "0.jammy",
         "@cmk//distro:ubuntu-24.04": "0.noble",
     }),
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[md5sums_from_archive(
-    name = "md5sums_" + edition,
+md5sums_from_archive(
+    name = "md5sums",
     src = "//omd/packages/heirloom-mailx",
-    out = "md5_" + edition,
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+    out = "md5",
+)
 
-[pkg_deb(
-    name = "deb_" + edition,
+pkg_deb(
+    name = "deb",
     architecture = "amd64",
     config = "//omd/debian:config",
-    data = "complete_install_compressed_" + edition,
+    data = "complete_install_compressed",
     depends_file = "//omd/distros:dependencies",
     description = "Checkmk - Best-in-class infrastructure & application monitoring",
     homepage = "https://checkmk.com",
     maintainer = "Checkmk team <feedback@checkmk.com>",
-    md5sums = ":md5sums_" + edition,
+    md5sums = ":md5sums",
     package = "{package}-{cmk_version}",
     package_file_name = "{package}-{cmk_version}_{version}_{architecture}.deb",
-    package_variables = ":cmk_pkg_variables_" + edition,
+    package_variables = ":cmk_pkg_variables",
     postinst = "//omd/debian:postinst",
     postrm = "//omd/debian:postrm",
     preinst = "//omd/debian:preinst",
@@ -633,13 +590,7 @@ pkg_tar(
     templates = "//omd/debian:templates",
     triggers = "//omd/debian:triggers",
     version_file = "//omd/distros:distro_version_file",
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
 write_omd_spec(
     name = "omd_spec",
@@ -675,8 +626,8 @@ write_omd_spec(
     version = "@cmk//version",
 )
 
-[pkg_rpm_from_tar(
-    name = "rpm_" + edition,
+pkg_rpm_from_tar(
+    name = "rpm",
     distro_code = select({
         "@cmk//distro:almalinux-10": "el10",
         "@cmk//distro:almalinux-8": "el8",
@@ -687,9 +638,9 @@ write_omd_spec(
         "//conditions:default": "",
     }),
     edition = "@cmk//edition",
-    input_tarball = "complete_install_" + edition,
+    input_tarball = "complete_install",
     omd_spec = ":omd_spec",
-    rpm = "cmk_rpm_" + edition,
+    rpm = "cmk_rpm",
     tags = ["manual"],
     target_compatible_with = select({
         "@cmk//distro:almalinux": [],
@@ -697,53 +648,39 @@ write_omd_spec(
         "//conditions:default": ["@platforms//:incompatible"],
     }),
     version = "@cmk//version",
-) for edition in [
-    "community",
-    "ultimate",
-    "pro",
-    "ultimatemt",
-    "cloud",
-]]
+)
 
-[
-    pkg_tar(
-        name = "appliance_" + edition,
-        extension = "tar.gz",
-        package_dir_file = "//omd:omd_root_dir_appliance",
-        visibility = ["//visibility:public"],
-        deps = [
-            "//omd:deps_packages_" + edition,
-            "//omd/packages/appliance:appliance_install_" + edition,
-        ],
-    )
-    for edition in [
-        "pro",
-        "ultimate",
-        "ultimatemt",
-    ]
-]
+pkg_tar(
+    name = "appliance",
+    extension = "tar.gz",
+    package_dir_file = "//omd:omd_root_dir_appliance",
+    target_compatible_with = select({
+        "@cmk//edition:pro": [],
+        "@cmk//edition:ultimate": [],
+        "@cmk//edition:ultimatemt": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//omd:deps_packages",
+        "//omd/packages/appliance:appliance_install",
+    ],
+)
 
-[
-    pkg_cma_from_tar(
-        name = "cma_" + edition,
-        cma = "cma_file_" + edition,
-        distro_code = select({
-            # CMA 4 is based on Debian 12
-            "@cmk//distro:debian-12": "4",
-            "//conditions:default": "",
-        }),
-        edition = "@cmk//edition",
-        input_tarball = ":appliance_" + edition,
-        tags = ["manual"],
-        target_compatible_with = select({
-            "@cmk//distro:debian-12": [],
-            "//conditions:default": ["@platforms//:incompatible"],
-        }),
-        version = "@cmk//version",
-    )
-    for edition in [
-        "pro",
-        "ultimate",
-        "ultimatemt",
-    ]
-]
+pkg_cma_from_tar(
+    name = "cma",
+    cma = "cma_file",
+    distro_code = select({
+        # CMA 4 is based on Debian 12
+        "@cmk//distro:debian-12": "4",
+        "//conditions:default": "",
+    }),
+    edition = "@cmk//edition",
+    input_tarball = ":appliance",
+    tags = ["manual"],
+    target_compatible_with = select({
+        "@cmk//distro:debian-12": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    version = "@cmk//version",
+)

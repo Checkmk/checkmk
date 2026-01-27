@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import metrics, Title
 
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
@@ -12,10 +12,4 @@ metric_provisioned_storage_usage = metrics.Metric(
     title=Title("Provisioned storage usage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BLUE,
-)
-
-graph_provisioned_storage_usage = graphs.Graph(
-    name="provisioned_storage_usage",
-    title=Title("Provisioned storage usage"),
-    compound_lines=["provisioned_storage_usage"],
 )

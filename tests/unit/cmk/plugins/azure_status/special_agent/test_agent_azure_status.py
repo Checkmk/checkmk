@@ -8,7 +8,7 @@
 from unittest import mock
 
 import pytest
-from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
+from feedparser.util import FeedParserDict  # type: ignore[import-untyped,unused-ignore]
 
 from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
 from cmk.plugins.azure_status.special_agent.agent_azure_status import (

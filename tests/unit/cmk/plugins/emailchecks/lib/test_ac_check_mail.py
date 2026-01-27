@@ -15,7 +15,7 @@ from typing import NamedTuple
 from unittest import mock
 
 import pytest
-from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
+from exchangelib import Message as EWSMessage  # type: ignore[import-untyped,unused-ignore]
 
 from cmk.plugins.emailchecks.lib import check_mail
 from cmk.plugins.emailchecks.lib.connections import MailMessages
@@ -31,7 +31,10 @@ def create_test_email(subject: str) -> POPIMAPMessage:
 
 
 def create_test_email_ews(subject: str) -> EWSMessage:
-    return EWSMessage(subject=subject, text_body="The email content\r\nis very important!\r\n")
+    return EWSMessage(  # type: ignore[no-untyped-call,unused-ignore]
+        subject=subject,
+        text_body="The email content\r\nis very important!\r\n",
+    )
 
 
 class FakeArgs(NamedTuple):

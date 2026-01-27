@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 import pytest
-import vcr  # type: ignore[import-untyped]
+import vcr  # type: ignore[import-untyped,unused-ignore]
 
 from cmk.plugins.graylog.special_agent.agent_graylog import main
 
@@ -71,7 +71,7 @@ Error: Could not parse sources response from API: 'Expecting value: line 1 colum
 
 
 def test_agent_graylog_main(capsys: pytest.CaptureFixture[str]) -> None:
-    with vcr.use_cassette(
+    with vcr.use_cassette(  # type: ignore[no-untyped-call,unused-ignore]
         DIR_PATH / "graylog_vcrtrace.yaml", record_mode="once", filter_query_parameters=["since"]
     ):
         assert main(GRAYLOG_DEFAULT_ARGS) == 0
@@ -82,7 +82,9 @@ def test_agent_graylog_main(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_agent_graylog_non_default_params(capsys: pytest.CaptureFixture[str]) -> None:
     filepath = "%s/graylog_vcrtrace_non_default.yaml" % os.path.dirname(__file__)
-    with vcr.use_cassette(filepath, record_mode="once", filter_query_parameters=["since"]):
+    with vcr.use_cassette(  # type: ignore[no-untyped-call,unused-ignore]
+        filepath, record_mode="once", filter_query_parameters=["since"]
+    ):
         assert (
             main(GRAYLOG_DEFAULT_ARGS + ["--sections", "cluster_health,cluster_inputstates"]) == 0
         )
@@ -122,7 +124,10 @@ def test_agent_graylog_non_default_params(capsys: pytest.CaptureFixture[str]) ->
 def test_agent_graylog_section_sources(
     args: list[str], expected_output: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    with vcr.use_cassette(DIR_PATH / "graylog_vcrtrace_sources.yaml", record_mode="new_episodes"):
+    with vcr.use_cassette(  # type: ignore[no-untyped-call,unused-ignore]
+        DIR_PATH / "graylog_vcrtrace_sources.yaml",
+        record_mode="new_episodes",
+    ):
         assert main(args) == 0
         out, err = capsys.readouterr()
     assert out == expected_output
@@ -130,7 +135,10 @@ def test_agent_graylog_section_sources(
 
 
 def test_agent_graylog_main_500(capsys: pytest.CaptureFixture[str]) -> None:
-    with vcr.use_cassette(DIR_PATH / "graylog_vcrtrace_500.yaml", record_mode="once"):
+    with vcr.use_cassette(  # type: ignore[no-untyped-call,unused-ignore]
+        DIR_PATH / "graylog_vcrtrace_500.yaml",
+        record_mode="once",
+    ):
         assert main(GRAYLOG_DEFAULT_ARGS) == 2
         out, err = capsys.readouterr()
     assert out == ""

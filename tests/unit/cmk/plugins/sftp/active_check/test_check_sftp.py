@@ -248,9 +248,9 @@ def test_optional_checks_fail(tmp_path: str) -> None:
             ]
         ),
     )
-    check.connection.put.side_effect = Exception("fail")  # type: ignore[attr-defined]
-    check.connection.get.side_effect = Exception("fail")  # type: ignore[attr-defined]
-    check.connection.stat.side_effect = Exception("fail")  # type: ignore[attr-defined]
+    check.connection.put.side_effect = Exception("fail")  # type: ignore[attr-defined,unused-ignore]
+    check.connection.get.side_effect = Exception("fail")  # type: ignore[attr-defined,unused-ignore]
+    check.connection.stat.side_effect = Exception("fail")  # type: ignore[attr-defined,unused-ignore]
 
     status, messages = check.run_optional_checks()
 
@@ -273,7 +273,7 @@ def test_optional_checks_fail_verbose(tmp_path: str) -> None:
             ]
         ),
     )
-    check.connection.put.side_effect = Exception("fail")  # type: ignore[attr-defined]
+    check.connection.put.side_effect = Exception("fail")  # type: ignore[attr-defined,unused-ignore]
 
     with pytest.raises(Exception, match="fail"):
         check.run_optional_checks()

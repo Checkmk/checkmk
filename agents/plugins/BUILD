@@ -18,6 +18,14 @@ filegroup(
 
 py_binary(
     # Shares code with `agent_jolokia` in the site.
+    name = "apache_status",
+    srcs = ["apache_status.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    # Shares code with `agent_jolokia` in the site.
     name = "mk_jolokia",
     srcs = ["mk_jolokia.py"],
     imports = ["."],
@@ -26,4 +34,12 @@ py_binary(
         requirement("requests"),
         requirement("simplejson"),
     ],
+)
+
+py_binary(
+    # Shares code with `agent_jolokia` in the site.
+    name = "nginx_status",
+    srcs = ["nginx_status.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
 )

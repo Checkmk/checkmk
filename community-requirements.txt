@@ -5916,6 +5916,12 @@ types-html5lib==1.1.11.20251117 \
     # via
     #   -c requirements.txt
     #   types-lxml
+types-icalendar==6.3.2.20251222 \
+    --hash=sha256:88fcae3692d8a52218bba7d3c0e68cfce2c6dde3769bceff187b30d75a1ec4c5 \
+    --hash=sha256:cef52b1e2dc4e6fae7a4538ca6ea8f98932006ebaae638864a43ba16f906ff0d
+    # via
+    #   -c requirements.txt
+    #   -r tests/dev-requirements.in
 types-jsonschema==4.26.0.20260109 \
     --hash=sha256:340fe91e6ea517900d6ababb6262a86c176473b5bf8455b96e85a89e3cfb5daa \
     --hash=sha256:e0276640d228732fb75d883905d607359b24a4ff745ba7f9a5f50e6fda891926
@@ -5985,6 +5991,13 @@ types-python-dateutil==2.9.0.20260124 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
+    #   types-icalendar
+types-pytz==2025.2.0.20251108 \
+    --hash=sha256:0f1c9792cab4eb0e46c52f8845c8f77cf1e313cb3d68bf826aa867fe4717d91c \
+    --hash=sha256:fca87917836ae843f07129567b74c1929f1870610681b4c92cb86a3df5817bdb
+    # via
+    #   -c requirements.txt
+    #   types-icalendar
 types-pyyaml==6.0.12.20250915 \
     --hash=sha256:0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3 \
     --hash=sha256:e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6

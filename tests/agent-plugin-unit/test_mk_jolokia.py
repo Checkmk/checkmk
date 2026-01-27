@@ -10,8 +10,8 @@
 
 from typing import Mapping
 
+import mk_jolokia  # type: ignore[import-not-found]
 import pytest
-from agents.plugins import mk_jolokia
 
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])

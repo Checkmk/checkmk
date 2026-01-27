@@ -7,8 +7,10 @@
 # ruff: noqa: I001
 
 import pytest
-from agents.plugins import apache_status, mk_jolokia, nginx_status
 
+import apache_status  # type: ignore[import-not-found,unused-ignore]
+import mk_jolokia  # type: ignore[import-not-found,unused-ignore]
+import nginx_status  # type: ignore[import-not-found,unused-ignore]
 from cmk.ccc import version
 
 

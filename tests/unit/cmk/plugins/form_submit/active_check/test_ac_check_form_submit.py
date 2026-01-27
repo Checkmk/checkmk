@@ -7,7 +7,7 @@ import os
 from collections.abc import Mapping, Sequence
 
 import pytest
-import vcr  # type: ignore[import-untyped]
+import vcr  # type: ignore[import-untyped,unused-ignore]
 
 from cmk.plugins.form_submit.active_check import check_form_submit
 
@@ -58,7 +58,10 @@ def test_check_form_submit_main(
     expected_info: str,
 ) -> None:
     filepath = "%s/_check_form_submit_response" % os.path.dirname(__file__)
-    with vcr.use_cassette(filepath, record_mode="none"):
+    with vcr.use_cassette(  # type: ignore[no-untyped-call,unused-ignore]
+        filepath,
+        record_mode="none",
+    ):
         exitcode, info = check_form_submit.main(args)
         assert exitcode == expected_exitcode
         assert info == expected_info

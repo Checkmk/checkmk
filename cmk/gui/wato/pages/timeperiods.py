@@ -453,7 +453,7 @@ class ModeTimeperiodImportICal(WatoMode):
         vs_ical.validate_value(ical, "ical")
 
         filename, _ty, content = ical["file"]
-        cal_obj: Calendar = Calendar.from_ical(content)
+        cal_obj: Calendar = Calendar.from_ical(content)  # type: ignore[assignment]
 
         exception_map: dict[str, list[TimeperiodUsage]] = {}
         now = datetime.now()

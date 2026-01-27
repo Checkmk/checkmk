@@ -7,9 +7,9 @@ import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
-import recurring_ical_events  # type: ignore[import-untyped]
+import recurring_ical_events  # type: ignore[import-untyped,unused-ignore]
 import time_machine
-from icalendar import Calendar  # type: ignore[import-untyped]
+from icalendar import Calendar
 
 from cmk.gui.wato.pages.timeperiods import ICalEvent, TimeperiodUsage
 from cmk.utils.timeperiod import (
@@ -132,7 +132,7 @@ def test_fetch_recurring_events() -> None:
 
     with time_machine.travel(datetime.datetime(2024, 4, 15, tzinfo=ZoneInfo("CET"))):
         ical_string = create_ical_file(ical_data)
-        cal_obj: Calendar = Calendar.from_ical(ical_string)
+        cal_obj: Calendar = Calendar.from_ical(ical_string)  # type: ignore[assignment]
 
     recurring_events = recurring_ical_events.of(cal_obj).between("20240415", "20250101")
 
@@ -157,7 +157,7 @@ def test_convert_full_day_exceptions() -> None:
 
     with time_machine.travel(datetime.datetime(2024, 4, 15, tzinfo=ZoneInfo("CET"))):
         ical_string = create_ical_file(data)
-        cal_obj: Calendar = Calendar.from_ical(ical_string)
+        cal_obj: Calendar = Calendar.from_ical(ical_string)  # type: ignore[assignment]
 
     recurring_events = recurring_ical_events.of(cal_obj).between("20240415", "20250101")
 
@@ -194,7 +194,7 @@ def test_convert_partial_start_day_exceptions() -> None:
 
     with time_machine.travel(datetime.datetime(2024, 4, 15, tzinfo=ZoneInfo("UTC"))):
         ical_string = create_ical_file(data)
-        cal_obj: Calendar = Calendar.from_ical(ical_string)
+        cal_obj: Calendar = Calendar.from_ical(ical_string)  # type: ignore[assignment]
 
         recurring_events = recurring_ical_events.of(cal_obj).between("20240415", "20250101")
 
@@ -229,7 +229,7 @@ def test_convert_partial_end_day_exceptions() -> None:
 
     with time_machine.travel(datetime.datetime(2024, 4, 15, tzinfo=ZoneInfo("UTC"))):
         ical_string = create_ical_file(data)
-        cal_obj: Calendar = Calendar.from_ical(ical_string)
+        cal_obj: Calendar = Calendar.from_ical(ical_string)  # type: ignore[assignment]
 
         recurring_events = recurring_ical_events.of(cal_obj).between("20240415", "20250101")
 
@@ -258,7 +258,7 @@ def test_convert_partial_days_exceptions() -> None:
 
     with time_machine.travel(datetime.datetime(2024, 4, 15, tzinfo=ZoneInfo("UTC"))):
         ical_string = create_ical_file(data)
-        cal_obj: Calendar = Calendar.from_ical(ical_string)
+        cal_obj: Calendar = Calendar.from_ical(ical_string)  # type: ignore[assignment]
 
         recurring_events = recurring_ical_events.of(cal_obj).between("20240415", "20250101")
 
@@ -283,7 +283,7 @@ def test_convert_multiple_partial_days_exceptions() -> None:
 
     with time_machine.travel(datetime.datetime(2024, 4, 15, tzinfo=ZoneInfo("UTC"))):
         ical_string = create_ical_file(data)
-        cal_obj: Calendar = Calendar.from_ical(ical_string)
+        cal_obj: Calendar = Calendar.from_ical(ical_string)  # type: ignore[assignment]
 
         recurring_events = recurring_ical_events.of(cal_obj).between("20240415", "20250101")
 
@@ -316,7 +316,7 @@ def test_convert_multiple_ranges_per_days_exceptions() -> None:
 
     with time_machine.travel(datetime.datetime(2024, 4, 15, tzinfo=ZoneInfo("UTC"))):
         ical_string = create_ical_file(data)
-        cal_obj: Calendar = Calendar.from_ical(ical_string)
+        cal_obj: Calendar = Calendar.from_ical(ical_string)  # type: ignore[assignment]
 
         recurring_events = recurring_ical_events.of(cal_obj).between("20240415", "20250101")
 

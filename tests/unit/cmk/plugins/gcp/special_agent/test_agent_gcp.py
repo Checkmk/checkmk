@@ -59,7 +59,10 @@ class FakeMonitoringClient:
         def _make_interval(
             end_time: datetime.datetime, start_time: datetime.datetime
         ) -> monitoring_v3.TimeInterval:
-            interval = monitoring_v3.TimeInterval(end_time=end_time, start_time=start_time)
+            interval = monitoring_v3.TimeInterval(  # type: ignore[no-untyped-call,unused-ignore]
+                end_time=end_time,
+                start_time=start_time,
+            )
             return interval
 
         INTERVAL1 = _make_interval(TS1, TS0)
@@ -70,11 +73,19 @@ class FakeMonitoringClient:
 
         # Currently cannot create from a list of dict for repeated fields due to
         # https://github.com/googleapis/proto-plus-python/issues/135
-        POINT1 = monitoring_v3.Point({"interval": INTERVAL2, "value": {"double_value": VALUE1}})
-        POINT2 = monitoring_v3.Point({"interval": INTERVAL1, "value": {"double_value": VALUE1}})
-        POINT3 = monitoring_v3.Point({"interval": INTERVAL2, "value": {"double_value": VALUE2}})
-        POINT4 = monitoring_v3.Point({"interval": INTERVAL1, "value": {"double_value": VALUE2}})
-        SERIES1 = monitoring_v3.TimeSeries(
+        POINT1 = monitoring_v3.Point(  # type: ignore[no-untyped-call,unused-ignore]
+            {"interval": INTERVAL2, "value": {"double_value": VALUE1}}
+        )
+        POINT2 = monitoring_v3.Point(  # type: ignore[no-untyped-call,unused-ignore]
+            {"interval": INTERVAL1, "value": {"double_value": VALUE1}},
+        )
+        POINT3 = monitoring_v3.Point(  # type: ignore[no-untyped-call,unused-ignore]
+            {"interval": INTERVAL2, "value": {"double_value": VALUE2}},
+        )
+        POINT4 = monitoring_v3.Point(  # type: ignore[no-untyped-call,unused-ignore]
+            {"interval": INTERVAL1, "value": {"double_value": VALUE2}},
+        )
+        SERIES1 = monitoring_v3.TimeSeries(  # type: ignore[no-untyped-call,unused-ignore]
             {
                 "metric": {"type": METRIC_TYPE, "labels": METRIC_LABELS},
                 "resource": {"type": RESOURCE_TYPE, "labels": RESOURCE_LABELS},
@@ -83,7 +94,7 @@ class FakeMonitoringClient:
                 "points": [POINT1, POINT2],
             }
         )
-        SERIES2 = monitoring_v3.TimeSeries(
+        SERIES2 = monitoring_v3.TimeSeries(  # type: ignore[no-untyped-call,unused-ignore]
             {
                 "metric": {"type": METRIC_TYPE, "labels": METRIC_LABELS2},
                 "resource": {"type": RESOURCE_TYPE, "labels": RESOURCE_LABELS2},
@@ -441,7 +452,7 @@ def test_gce_metric_filtering(gce_sections: Sequence[agent_gcp.PiggyBackSection]
 
 @pytest.fixture(name="interval")
 def _interval() -> monitoring_v3.TimeInterval:
-    return monitoring_v3.TimeInterval(
+    return monitoring_v3.TimeInterval(  # type: ignore[no-untyped-call,unused-ignore]
         {
             "end_time": {"seconds": 100000, "nanos": 0},
             "start_time": {"seconds": (100000 - 1200), "nanos": 0},
@@ -464,7 +475,7 @@ def test_metric_requests(interval: monitoring_v3.TimeInterval) -> None:
         "filter": 'metric.type = "compute.googleapis.com/instance/uptime"',
         "interval": interval,
         "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
-        "aggregation": monitoring_v3.Aggregation(
+        "aggregation": monitoring_v3.Aggregation(  # type: ignore[no-untyped-call,unused-ignore]
             {
                 "alignment_period": {"seconds": 60},
                 "group_by_fields": ["resource.thisone"],
@@ -492,7 +503,7 @@ def test_metric_requests_additional_groupby_fields(interval: monitoring_v3.TimeI
         "filter": 'metric.type = "compute.googleapis.com/instance/uptime"',
         "interval": interval,
         "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
-        "aggregation": monitoring_v3.Aggregation(
+        "aggregation": monitoring_v3.Aggregation(  # type: ignore[no-untyped-call,unused-ignore]
             {
                 "alignment_period": {"seconds": 60},
                 "group_by_fields": [

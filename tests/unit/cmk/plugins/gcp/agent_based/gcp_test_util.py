@@ -108,20 +108,23 @@ def generate_stringtable(
 
     start_time = datetime.datetime(2016, 4, 6, 22, 5, 0, 42)
     end_time = datetime.datetime(2016, 4, 6, 22, 5, 1, 42)
-    interval = monitoring_v3.TimeInterval(end_time=end_time, start_time=start_time)
+    interval = monitoring_v3.TimeInterval(  # type: ignore[no-untyped-call,unused-ignore]
+        end_time=end_time,
+        start_time=start_time,
+    )
 
     metric_labels, resource_labels = generate_labels(item, service_desc)
 
     results = []
     for metric in service_desc.metrics:
         metric_type = metric.name
-        point = monitoring_v3.Point(
+        point = monitoring_v3.Point(  # type: ignore[no-untyped-call,unused-ignore]
             {
                 "interval": interval,
                 "value": {"double_value": overriding_values.get(metric_type, value)},
             }
         )
-        ts = monitoring_v3.TimeSeries(
+        ts = monitoring_v3.TimeSeries(  # type: ignore[no-untyped-call,unused-ignore]
             {
                 "metric": {"type": metric_type, "labels": metric_labels},
                 "resource": {"type": "does_not_matter_i_think", "labels": resource_labels},

@@ -14,8 +14,8 @@ from unittest import mock
 
 import pytest
 import time_machine
-from smb.base import NotConnectedError, SharedFile  # type: ignore[import-untyped]
-from smb.smb_structs import OperationFailure  # type: ignore[import-untyped]
+from smb.base import NotConnectedError, SharedFile  # type: ignore[import-untyped,unused-ignore]
+from smb.smb_structs import OperationFailure  # type: ignore[import-untyped,unused-ignore]
 
 from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.smb.special_agent.agent_smb_share import (
@@ -692,8 +692,10 @@ def test_get_all_shared_files(
         "cmk.plugins.smb.special_agent.agent_smb_share.iter_shared_files", return_value=file_data
     ):
         conn = MockSMBConnection(shares=["SharedFolder1", "SharedFolder2"])
-        files_per_pattern = list(get_all_shared_files(conn, HOST_NAME, patterns, False))
-        assert files_per_pattern == expected_file_data
+        files_per_pattern = list(
+            get_all_shared_files(conn, HOST_NAME, patterns, False)  # type: ignore[arg-type,unused-ignore]
+        )
+        assert files_per_pattern == expected_file_data  # type: ignore[comparison-overlap,unused-ignore]
 
 
 @pytest.mark.parametrize(
@@ -715,7 +717,7 @@ def test_get_all_shared_files_errors(
 ) -> None:
     conn = MockSMBConnection()
     with pytest.raises(SMBShareAgentError, match=expected_error_message):
-        dict(get_all_shared_files(conn, HOST_NAME, patterns, False))
+        dict(get_all_shared_files(conn, HOST_NAME, patterns, False))  # type: ignore[arg-type,unused-ignore]
 
 
 @pytest.mark.parametrize(

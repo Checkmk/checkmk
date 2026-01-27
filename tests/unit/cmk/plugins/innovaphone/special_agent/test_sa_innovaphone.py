@@ -8,7 +8,7 @@ import os
 from collections.abc import Sequence
 
 import pytest
-import vcr  # type: ignore[import-untyped]
+import vcr  # type: ignore[import-untyped,unused-ignore]
 
 from cmk.plugins.innovaphone.special_agent import agent_innovaphone
 
@@ -32,6 +32,9 @@ def test_agent_innovaphone_main(
     args: Sequence[str], expected_stdout: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
     filepath = "%s/innovaphone_vcrtrace.yaml" % os.path.dirname(__file__)
-    with vcr.use_cassette(filepath, record_mode="none"):
+    with vcr.use_cassette(  # type: ignore[no-untyped-call,unused-ignore]
+        filepath,
+        record_mode="none",
+    ):
         agent_innovaphone.main(args)
         assert expected_stdout == capsys.readouterr().out

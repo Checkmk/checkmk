@@ -63,6 +63,7 @@ time-machine # used by various unit tests. Substitute for freezegun
 twine # used to upload packages to internal PyPi mirror
 types-docker # used for type checking
 types-docutils  # used for type checking
+types-icalendar
 types-jsonschema  # used for type checking
 types-lxml  # used for type checking
 types-oauthlib  # used for type checking

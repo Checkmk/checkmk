@@ -16,7 +16,7 @@ from time import time
 from unittest import mock
 from unittest.mock import ANY, MagicMock
 
-import ldap  # type: ignore[import-untyped]
+import ldap  # type: ignore[import-untyped,unused-ignore]
 import pytest
 from pytest_mock import MockerFixture
 
@@ -124,7 +124,9 @@ def test_connect(mock_ldap: MagicMock) -> None:
     mock_ldap.assert_called_with("ldap://internet")  # most recent
 
     # assumes "ldap_golden_unknown_password" is not in the password store, hence the 'None'.
-    connector._ldap_obj.simple_bind_s.assert_called_with(cfg["bind"][0], None)
+    connector._ldap_obj.simple_bind_s.assert_called_with(  # type: ignore[attr-defined,unused-ignore]
+        cfg["bind"][0], None
+    )
     assert connector._ldap_obj.protocol_version == cfg["version"]
     assert connector._ldap_obj.network_timeout == cfg["connect_timeout"]
 
@@ -136,7 +138,12 @@ def _mock_result3(
     mocker.patch.object(
         connector._ldap_obj,
         "result3",
-        return_value=(0, ldap_result, 0, [ldap.controls.SimplePagedResultsControl()]),
+        return_value=(
+            0,
+            ldap_result,
+            0,
+            [ldap.controls.SimplePagedResultsControl()],  # type: ignore[no-untyped-call,unused-ignore]
+        ),
     )
 
 
@@ -151,7 +158,9 @@ def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> 
         connector._ldap_obj,
         "simple_bind_s",
         side_effect=[
-            ldap.INVALID_CREDENTIALS({"desc": "Invalid credentials"}),
+            ldap.INVALID_CREDENTIALS(  # type: ignore[attr-defined,unused-ignore]
+                {"desc": "Invalid credentials"}
+            ),
             None,  # don't fail on the second call, which comes from _default_bind()
         ],
     )
@@ -185,9 +194,9 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     result = connector.get_users(get_user_attributes([]), add_filter=add_filter)
 
     assert expected_result == result
-    connector._ldap_obj.search_ext.assert_called_once_with(
+    connector._ldap_obj.search_ext.assert_called_once_with(  # type: ignore[attr-defined,unused-ignore]
         cfg["user_dn"],
-        ldap.SCOPE_SUBTREE,
+        ldap.SCOPE_SUBTREE,  # type: ignore[attr-defined,unused-ignore]
         expected_filter,
         AnyOrderMatcher(["uid", "mail", "cn"]),
         serverctrls=ANY,
@@ -266,7 +275,9 @@ def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -
             default_user_profile={},
         )
 
-        connector._ldap_obj.simple_bind_s.assert_any_call("carol", "hunter2")
+        connector._ldap_obj.simple_bind_s.assert_any_call(  # type: ignore[attr-defined,unused-ignore]
+            "carol", "hunter2"
+        )
         assert result == UserId("carol_id")
 
 

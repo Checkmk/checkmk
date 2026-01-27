@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
 
 import pytest
-from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
+from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped,unused-ignore]
 from pytest import MonkeyPatch
 
 import cmk.ccc.resulttype as result
@@ -255,7 +255,7 @@ class TestIPMISensor:
         reading = SensorReading(  #
             ["lower non-critical threshold"], 1, "Hugo", None, "", [42], "hugo-type", None, 0
         )
-        assert IPMISensor.from_reading(0, reading) == IPMISensor(
+        assert IPMISensor.from_reading(0, reading) == IPMISensor(  # type: ignore[arg-type,unused-ignore]
             id=b"0",
             name=b"Hugo",
             type=b"hugo-type",
@@ -268,7 +268,7 @@ class TestIPMISensor:
         reading = SensorReading(  #
             ["Present"], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1
         )
-        assert IPMISensor.from_reading(0, reading) == IPMISensor(
+        assert IPMISensor.from_reading(0, reading) == IPMISensor(  # type: ignore[arg-type,unused-ignore]
             id=b"0",
             name=b"Dingeling",
             type=b"FancyDevice",
@@ -280,7 +280,7 @@ class TestIPMISensor:
 
 class IPMIFetcherStub(IPMIFetcher):
     def open(self) -> None:
-        raise IpmiException()
+        raise IpmiException()  # type: ignore[no-untyped-call,unused-ignore]
 
 
 class TestIPMIFetcher:

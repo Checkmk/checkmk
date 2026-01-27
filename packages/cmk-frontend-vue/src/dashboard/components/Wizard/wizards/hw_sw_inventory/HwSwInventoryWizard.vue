@@ -105,10 +105,9 @@ if (
   inventoryPath.value = (props.editWidgetSpec.content as InventoryContent).path
 }
 
-const validationError = ref<string | undefined>()
 watch(inventoryPath, () => {
   if (inventoryPath.value) {
-    validationError.value = undefined
+    wizardStages[0]!.errors = []
   }
 })
 
@@ -133,7 +132,7 @@ const contextConfiguredFilters = computed((): ConfiguredFilters => {
 
 const recapAndNext = () => {
   if (!inventoryPath.value) {
-    validationError.value = _t('Please select a HW/SW inventory property.')
+    wizardStages[0]!.errors = [_t('Please select a HW/SW inventory property.')]
     return
   }
 
@@ -204,7 +203,6 @@ const handleAddWidget = (
         :widget-configured-filters="widgetFilterManager.getConfiguredFilters()"
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :is-in-filter-selection-menu-focus="widgetFilterManager.objectTypeIsInFocus"
-        :validation-error="validationError"
         @go-next="recapAndNext"
         @set-focus="(objectType) => widgetFilterManager.openSelectionMenu(objectType)"
         @update-filter-values="

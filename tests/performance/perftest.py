@@ -324,22 +324,34 @@ class PerformanceTest:
                 if i == 0:
                     first_request_duration = time() - start_time
                     logger.info(
-                        "UI response first request duration %s (%s)",
-                        first_request_duration,
-                        unique_url,
+                        'UI response "%s" - first request duration: %ss',
+                        page_url.id,
+                        round(first_request_duration, 3),
                     )
                 if resp and not resp.ok:
                     logger.warning(
-                        "UI response request %s failed with status %s (%s)",
+                        'UI response "%s" - request %s failed with status %s (%s)',
+                        page_url.id,
                         i,
                         resp.status,
                         unique_url,
                     )
             except Exception as exc:
-                logger.warning("UI response request %s raised %s (%s)", i, exc, unique_url)
+                logger.warning(
+                    'UI response "%s" - request %s raised %s (%s)',
+                    page_url.id,
+                    i,
+                    exc,
+                    unique_url,
+                )
         end_time = time()
         duration = end_time - start_time
         average_request_duration = (duration - first_request_duration) / (counter - 1)
+        logger.info(
+            'UI response "%s" - average request duration: %ss',
+            page_url.id,
+            round(average_request_duration, 3),
+        )
         assert average_request_duration < page_url.max_average_duration
 
     def setup_bulk_change_activation(self) -> None:

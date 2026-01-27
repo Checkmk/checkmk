@@ -15,7 +15,8 @@ mkdir -p "${BENCHMARK_DIR}"
 pytest "${SCRIPT_DIR}" \
     --benchmark-json="${BENCHMARK_DIR}/benchmark.json" \
     --benchmark-verbose --html="${BENCHMARK_DIR}/report.htm" \
-    --self-contained-html --ignore-running-procs "${@}"
+    --self-contained-html --ignore-running-procs \
+    --log-level=INFO --log-cli-level=INFO "${@}"
 RC=$?
 if [ -n "${CI}" ]; then
     # update database; generate report and check weekly baseline

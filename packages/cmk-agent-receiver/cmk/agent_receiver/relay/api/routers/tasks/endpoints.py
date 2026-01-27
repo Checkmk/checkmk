@@ -159,6 +159,8 @@ async def update_task(
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
+    response: fastapi.Response,
+    version_handler: Annotated[GetVersionHandler, fastapi.Depends(get_version_handler)],
     relay_serial: Annotated[int | None, fastapi.Header(alias=tasks_protocol.HEADERS.SERIAL)] = None,
     status: Annotated[
         tasks_protocol.TaskStatus | None, fastapi.Query(description="Filter tasks by status")
@@ -194,6 +196,9 @@ async def get_tasks_endpoint(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
+    version = version_handler.process()
+    response.headers[tasks_protocol.HEADERS.VERSION] = version
+
     return TaskListResponseSerializer.serialize(tasks)
 
 
@@ -202,8 +207,6 @@ async def get_task_endpoint(
     relay_id: str,
     task_id: str,
     handler: Annotated[GetRelayTaskHandler, fastapi.Depends(get_relay_task_handler)],
-    version_handler: Annotated[GetVersionHandler, fastapi.Depends(get_version_handler)],
-    response: fastapi.Response,
 ) -> tasks_protocol.TaskResponse:
     """
     Get a specific task for a relay
@@ -223,9 +226,6 @@ async def get_task_endpoint(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
-
-    version = version_handler.process()
-    response.headers[tasks_protocol.HEADERS.VERSION] = version
 
     return TaskResponseSerializer.serialize(task)
 

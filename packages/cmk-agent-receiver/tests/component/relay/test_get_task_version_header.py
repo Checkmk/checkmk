@@ -10,16 +10,14 @@ from cmk.relay_protocols.tasks import HEADERS
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
-from cmk.testlib.agent_receiver.tasks import add_tasks
 
 
-def test_get_task_returns_version_header(
+def test_get_tasks_returns_version_header(
     site: SiteMock,
     site_context: Config,
     agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
-    """Verify that the get task endpoint includes the version header in the response.
+    """Verify that the get tasks endpoint includes the version header in the response.
 
     Test steps:
     1. Register relay and create a task
@@ -31,18 +29,9 @@ def test_get_task_returns_version_header(
     site.set_scenario([relay_id])
     _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
 
-    # create a task
-    task_ids = add_tasks(
-        count=1, agent_receiver=agent_receiver, relay_id=relay_id, site_cn=site_name
-    )
-    task_id = task_ids[0]
+    response = agent_receiver.get_relay_tasks(relay_id)
 
-    # get the specific task
-    response = agent_receiver.client.get(
-        f"/{agent_receiver.site_name}/relays/{relay_id}/tasks/{task_id}"
-    )
-
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.text
     assert HEADERS.VERSION in response.headers
     # Note: site_context is using "some.detailed.version.ultimate" as version in the test setup
     assert response.headers[HEADERS.VERSION] == "some.detailed.version"

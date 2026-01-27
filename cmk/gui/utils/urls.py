@@ -426,6 +426,7 @@ class DocReference(Enum):
     GRAPHING_RRDS = "graphing#rrds"
     HOST_TAGS = "host_tags"
     INFLUXDB_CONNECTIONS = "metrics_exporter"
+    INTRO_BESTPRACTICE = "intro_bestpractise"
     INTRO_CREATING_FOLDERS = "intro_setup_monitor#folders"
     INTRO_FOLDERS = "intro_setup_monitor#folders"
     INTRO_GUI = "intro_gui"

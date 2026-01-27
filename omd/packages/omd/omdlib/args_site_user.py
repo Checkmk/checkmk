@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, RootModel
 
 import omdlib
+from omdlib.type_defs import Skeleton
 
 
 class _Shared(BaseModel, frozen=True):
@@ -19,7 +20,9 @@ class _Shared(BaseModel, frozen=True):
 class Restore(_Shared):
     command: Literal["restore"] = "restore"
     old_site: str
+    descriptor: int
     reuse: bool
+    skeleton: Skeleton
 
 
 type Finalize = Annotated[Restore, Field(discriminator="command")]
@@ -33,6 +36,8 @@ def args_to_command_line(args: Finalize, version: str = omdlib.__version__) -> l
     match args:
         case Restore():
             cmd_line.extend(["--old-site", args.old_site])
+            cmd_line.extend(["--skeleton", args.skeleton.value])
+            cmd_line.extend(["--descriptor", str(args.descriptor)])
             if args.reuse:
                 cmd_line.append("--reuse")
     return cmd_line
@@ -65,10 +70,21 @@ def parse_arguments(sysv: Sequence[str] | None = None) -> Finalize:
         help="The previous name of the site",
     )
     parser_restore.add_argument(
+        "--descriptor",
+        required=True,
+        help="An open file descriptor from the backup content can be streamed",
+    )
+    parser_restore.add_argument(
         "--reuse",
         default=False,
         action="store_true",
         help="Whether to reuse previous site",
+    )
+    parser_restore.add_argument(
+        "--skeleton",
+        choices=[c.value for c in Skeleton],
+        required=True,
+        help="The conflict option for renaming",
     )
 
     args = parser.parse_args(sysv)

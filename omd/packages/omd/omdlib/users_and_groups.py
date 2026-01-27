@@ -8,7 +8,8 @@ import os
 import pwd
 import shlex
 import subprocess
-from typing import IO, TYPE_CHECKING
+from collections.abc import Sequence
+from typing import IO, Literal, overload, TYPE_CHECKING
 
 import psutil
 
@@ -272,7 +273,10 @@ def switch_to_site_user(site_name: str) -> None:
 
 
 def run_as_site_user(
-    user: str, command: list[str], capture_output: bool
+    user: str,
+    command: list[str],
+    capture_output: bool,
+    stdin: int | IO[bytes] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     passwd = pwd.getpwnam(user)
     return subprocess.run(
@@ -284,18 +288,46 @@ def run_as_site_user(
         encoding="utf-8",
         env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
         extra_groups=os.getgrouplist(user, passwd.pw_gid),
+        group=passwd.pw_gid,
+        stdin=stdin,
         umask=0o077,
         user=user,
     )
 
 
+@overload
 def popen_as_site_user(
     user: str,
     command: list[str],
-    stdin: int | IO[str],
-    stdout: int | IO[str],
-    stderr: int | IO[str],
-) -> subprocess.Popen[str]:
+    encoding: Literal["utf-8"],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[str]: ...
+
+
+@overload
+def popen_as_site_user(
+    user: str,
+    command: list[str],
+    encoding: Literal[None],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[bytes]: ...
+
+
+def popen_as_site_user(
+    user: str,
+    command: list[str],
+    encoding: Literal["utf-8", None],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[str] | subprocess.Popen[bytes]:
     # This function should really have a context manager. We don't touch this functionality here for
     # stability of the 2.4., but please don't add new call sites.
     passwd = pwd.getpwnam(user)
@@ -303,10 +335,11 @@ def popen_as_site_user(
         command,
         close_fds=True,
         cwd=passwd.pw_dir,
-        encoding="utf-8",
+        encoding=encoding,
         env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
         extra_groups=os.getgrouplist(user, passwd.pw_gid),
         group=passwd.pw_gid,
+        pass_fds=pass_fds,
         stdin=stdin,
         stdout=stdout,
         stderr=stderr,

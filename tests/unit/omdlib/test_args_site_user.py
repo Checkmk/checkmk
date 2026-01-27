@@ -6,6 +6,7 @@
 import pytest
 
 from omdlib.args_site_user import args_to_command_line, Finalize, parse_arguments, Restore
+from omdlib.type_defs import Skeleton
 
 
 @pytest.mark.parametrize(
@@ -14,26 +15,42 @@ from omdlib.args_site_user import args_to_command_line, Finalize, parse_argument
         Restore(
             site="a",
             old_site="b",
+            descriptor=1,
             verbose=False,
             reuse=False,
+            skeleton=Skeleton.INSTALL,
         ),
         Restore(
             site="a",
             old_site="b",
+            descriptor=2,
             verbose=True,
             reuse=True,
+            skeleton=Skeleton.KEEPOLD,
         ),
         Restore(
             site="a",
             old_site="b",
+            descriptor=6,
             verbose=True,
             reuse=False,
+            skeleton=Skeleton.ABORT,
         ),
         Restore(
             site="a",
             old_site="b",
+            descriptor=9,
             verbose=False,
             reuse=True,
+            skeleton=Skeleton.ASK,
+        ),
+        Restore(
+            site="a",
+            old_site="b",
+            descriptor=11,
+            verbose=False,
+            reuse=True,
+            skeleton=Skeleton.ASK,
         ),
     ],
 )

@@ -213,6 +213,7 @@ py_library(
     srcs = [
         "omdlib/args_site_user.py",
         "omdlib/backup.py",
+        "omdlib/buffer.py",
         "omdlib/config_hooks.py",
         "omdlib/console.py",
         "omdlib/contexts.py",

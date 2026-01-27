@@ -22,7 +22,7 @@ from cmk.gui.oauth2_connections.wato._modes import (
     get_oauth2_connection_form_spec,
 )
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
-from cmk.shared_typing.vue_formspec_components import Oauth2ConnectionConfig
+from cmk.shared_typing.vue_formspec_components import ConnectorType, Oauth2ConnectionConfig
 
 _ParsedValueModel = Mapping[str, IncomingData]
 _FallbackDataModel = _ParsedValueModel
@@ -69,6 +69,7 @@ class OAuth2ConnectionSetupVisitor(
                     )
                     for ident, name in get_authority_mapping().items()
                 ],
+                connector_type=ConnectorType(self.form_spec.connector_type),
             ),
             vue_value,
         )

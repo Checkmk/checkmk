@@ -58,22 +58,24 @@ export class Oauth2ConnectionApi extends Api {
   }
 
   public async saveOAuth2Connection(
-    requestObject: OAuth2FormData
+    requestObject: OAuth2FormData,
+    entityTypeSpecifier: 'microsoft_entra_id'
   ): Promise<SetDataResult<EntityDescription>> {
     return await configEntityAPI.createEntity(
       'oauth2_connection',
-      'all',
+      entityTypeSpecifier,
       requestObject as unknown as Payload
     )
   }
 
   public async updateOAuth2Connection(
     ident: string,
-    requestObject: OAuth2FormData
+    requestObject: OAuth2FormData,
+    entityTypeSpecifier: 'microsoft_entra_id'
   ): Promise<SetDataResult<EntityDescription>> {
     return await configEntityAPI.updateEntity(
       'oauth2_connection',
-      'all',
+      entityTypeSpecifier,
       ident,
       requestObject as unknown as Payload
     )

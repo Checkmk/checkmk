@@ -24,13 +24,18 @@ from cmk.gui.oauth2_connections.watolib.store import (
     save_tokens_to_passwordstore,
     update_reference,
 )
-from cmk.utils.oauth2_connection import OAuth2Connection
+from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType
 
 
 def update_oauth2_connection_and_passwords_from_slidein_schema(
-    data: RawFrontendData, *, user: LoggedInUser, pprint_value: bool, use_git: bool
+    data: RawFrontendData,
+    connector_type: OAuth2ConnectorType,
+    *,
+    user: LoggedInUser,
+    pprint_value: bool,
+    use_git: bool,
 ) -> tuple[str, OAuth2Connection]:
-    form_spec = OAuth2ConnectionSetup()
+    form_spec = OAuth2ConnectionSetup(connector_type=connector_type)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     validation_errors = visitor.validate(data)
@@ -56,6 +61,7 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
         client_id=disk_data["client_id"],
         tenant_id=disk_data["tenant_id"],
         authority=disk_data["authority"],
+        connector_type=connector_type,
         user_id=user.id,
         pprint_value=pprint_value,
         use_git=use_git,
@@ -63,9 +69,14 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
 
 
 def save_oauth2_connection_and_passwords_from_slidein_schema(
-    data: RawFrontendData, *, user: LoggedInUser, pprint_value: bool, use_git: bool
+    data: RawFrontendData,
+    connector_type: OAuth2ConnectorType,
+    *,
+    user: LoggedInUser,
+    pprint_value: bool,
+    use_git: bool,
 ) -> tuple[str, OAuth2Connection]:
-    form_spec = OAuth2ConnectionSetup()
+    form_spec = OAuth2ConnectionSetup(connector_type=connector_type)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     validation_errors = visitor.validate(data)
@@ -97,6 +108,7 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
         client_id=disk_data["client_id"],
         tenant_id=disk_data["tenant_id"],
         authority=disk_data["authority"],
+        connector_type=connector_type,
         user_id=user.id,
         pprint_value=pprint_value,
         use_git=use_git,
@@ -115,7 +127,7 @@ def get_oauth2_connection(
         raise KeyError(f"OAuth2 connection with ident '{oauth2_connection_id}' does not exist")
 
     item = load_oauth2_connections()[oauth2_connection_id]
-    form_spec = OAuth2ConnectionSetup()
+    form_spec = OAuth2ConnectionSetup(connector_type=item["connector_type"])
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     _, values = visitor.to_vue(RawDiskData(item))
     assert isinstance(values, Mapping)

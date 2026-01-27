@@ -12,15 +12,15 @@
       "properties": {
         "redirect": { "type": "string" },
         "back": { "type": "string" },
-        "ms_graph_api": {
-          "$ref": "#/$urls/ms_graph_api_urls"
+        "microsoft_entra_id": {
+          "$ref": "#/$urls/microsoft_entra_id_urls"
         }
       },
-      "required": ["ms_graph_api", "redirect", "back"]
+      "required": ["microsoft_entra_id", "redirect", "back"]
     }
   },
   "$urls": {
-    "ms_graph_api_urls": {
+    "microsoft_entra_id_urls": {
       "type": "object",
       "properties": {
         "global_": {

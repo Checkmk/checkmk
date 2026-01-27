@@ -33,7 +33,7 @@ const props = defineProps<
   CmkWizardStepProps & {
     urls: Oauth2Urls
     authorityMapping: Record<string, string>
-    oAuth2Type: 'ms_graph_api'
+    connectorType: 'microsoft_entra_id'
     ident: string
     api: Oauth2ConnectionApi
   }
@@ -61,8 +61,8 @@ async function authorize(): Promise<string | null> {
     const authorityKey = dataRef.value.authority as keyof typeof props.authorityMapping
     const mappingValue = props.authorityMapping[authorityKey] ?? 'global_'
     const baseUrl =
-      props.urls[props.oAuth2Type][
-        mappingValue as keyof (typeof props.urls)[typeof props.oAuth2Type]
+      props.urls[props.connectorType][
+        mappingValue as keyof (typeof props.urls)[typeof props.connectorType]
       ].base_url
     if (baseUrl) {
       const url = new URL(
@@ -126,7 +126,7 @@ function verifyAuthorization(
 async function requestAccessToken(): Promise<boolean> {
   loadingTitle.value = _t('Requesting access token')
   try {
-    if (props.oAuth2Type === 'ms_graph_api' && resultCode.value) {
+    if (props.connectorType === 'microsoft_entra_id' && resultCode.value) {
       const res = await props.api.requestAccessToken({
         type: 'ms_graph_api',
         id: props.ident,
@@ -159,7 +159,7 @@ function resetProcess() {
 async function saveConnection() {
   if (submitted !== undefined) {
     saving.value = true
-    const error = await submitted(props.oAuth2Type, dataRef.value)
+    const error = await submitted(dataRef.value)
     if (error) {
       errorTitle.value = error
     }

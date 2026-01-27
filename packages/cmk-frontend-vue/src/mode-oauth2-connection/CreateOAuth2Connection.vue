@@ -31,6 +31,7 @@ const props = defineProps<{
   }
   authorityMapping: Record<string, string>
   api: Oauth2ConnectionApi
+  connectorType: 'microsoft_entra_id'
 }>()
 
 const dataRef = ref()
@@ -40,8 +41,6 @@ immediateWatch(
     dataRef.value = newValue
   }
 )
-
-const oAuth2Type = 'ms_graph_api'
 
 const currentStep = ref<number>(1)
 </script>
@@ -58,7 +57,7 @@ const currentStep = ref<number>(1)
       />
       <AuthorizeApplication
         v-model="dataRef"
-        :o-auth2-type="oAuth2Type"
+        :connector-type="connectorType"
         :urls="config.urls"
         :authority-mapping="authorityMapping"
         :ident="formSpec.data.ident"

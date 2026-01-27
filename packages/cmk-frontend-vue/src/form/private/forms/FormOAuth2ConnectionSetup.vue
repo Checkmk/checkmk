@@ -46,5 +46,6 @@ const api = new Oauth2ConnectionApi()
     :form-spec="modeCreateOAuth2ConnectionFormSpec"
     :authority-mapping="authorityMapping"
     :api="api"
+    :connector-type="spec.connector_type"
   />
 </template>

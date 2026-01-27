@@ -2856,7 +2856,7 @@ def main_su(
 def _process_backup_tar(
     tar: tarfile.TarFile,
     verbose: bool,
-    options: CommandOptions,
+    conflict_mode: Skeleton,
     old_site_name: str,
     new_site: SiteContext,
 ) -> None:
@@ -2900,7 +2900,7 @@ def _process_backup_tar(
             "###EDITION###": site_replacements["###EDITION###"],
         }
         patch_skeleton_files(
-            _get_conflict_mode(options),
+            conflict_mode,
             old_site.name,
             new_site,
             old_replacements,
@@ -2966,7 +2966,7 @@ def _restore_backup_from_tar_root(
         useradd(version_info, site, uid, gid)  # None for uid/gid means: let Linux decide
         os.mkdir(site_home)
         add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
-    _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
+    _process_backup_tar(tar, global_opts.verbose, _get_conflict_mode(options), sitename, site)
 
     returncode = run_as_site_user(
         site.name,
@@ -3016,7 +3016,7 @@ def _restore_backup_from_tar_site(
     config = load_config(site, global_opts.verbose)
     orig_apache_port = config["APACHE_TCP_PORT"]
     prepare_restore_as_site_user(site, options, global_opts.verbose)
-    _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
+    _process_backup_tar(tar, global_opts.verbose, _get_conflict_mode(options), sitename, site)
     postprocess_restore_as_site_user(
         version_info, sitename, site, options, orig_apache_port, global_opts.verbose
     )

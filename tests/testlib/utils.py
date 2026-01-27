@@ -23,7 +23,7 @@ from typing import Any, assert_never, overload
 
 import pexpect
 import psutil
-import yaml
+import yaml  # type: ignore[import-untyped,unused-ignore]
 from bs4 import BeautifulSoup
 
 from cmk import trace

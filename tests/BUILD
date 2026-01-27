@@ -109,8 +109,13 @@ py_library(
     ),
     imports = [".."],
     deps = [
+        ":testlib",
         "//cmk:lib_cmk",
         requirement("pexpect"),
         requirement("pytest"),
-    ],
+        requirement("pyyaml"),
+    ] + select({
+        "//:gpl+nonfree_repo": ["//cmk:cmk_pro"],
+        "//:gpl_repo": [],
+    }),
 )

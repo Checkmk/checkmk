@@ -1637,6 +1637,18 @@ msgstr ""
 "far sì che la chiamata al singolo programma venga eseguita correttamente in "
 "tutti i contesti di esecuzione (interfaccia utente e console)."
 
+#, fuzzy
+msgid ""
+"<br><b>Note</b>: Some files may contain highly sensitive data like "
+"passwords. These files are marked with 'H'. Other files may include IP "
+"addresses, host names, usernames, mail addresses or phone numbers and are "
+"marked with 'M'."
+msgstr ""
+"<br>Nota: Alcuni file possono contenere dati altamente sensibili come "
+"password. Questi file sono contrassegnati con 'H'. Altri file possono "
+"includere indirizzi IP, nomi di host, nomi utente, indirizzi e-mail o numeri "
+"di telefono, e sono contrassegnati con 'M'."
+
 msgid "<br><br>"
 msgstr "<br><br>"
 
@@ -1668,17 +1680,6 @@ msgid ""
 msgstr ""
 "<br>Se ci sono problemi di permessi, assicurati che l'utente del sito abbia "
 "i permessi di scrittura."
-
-#, fuzzy
-msgid ""
-"<br>Note: Some files may contain highly sensitive data like passwords. These "
-"files are marked with 'H'. Other files may include IP addresses, host names, "
-"usernames, mail addresses or phone numbers and are marked with 'M'."
-msgstr ""
-"<br>Nota: Alcuni file possono contenere dati altamente sensibili come "
-"password. Questi file sono contrassegnati con 'H'. Altri file possono "
-"includere indirizzi IP, nomi di host, nomi utente, indirizzi e-mail o numeri "
-"di telefono, e sono contrassegnati con 'M'."
 
 #, fuzzy
 msgid ""
@@ -7199,7 +7200,8 @@ msgstr "Messa a punto del processo Apache"
 
 msgid ""
 "Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
-"and $OMD_ROOT/etc/apache"
+"and $OMD_ROOT/etc/apache.<br><b>Note</b>: This might include information "
+"with medium sensitivity (M)."
 msgstr ""
 
 msgid "Apache Server"
@@ -7217,6 +7219,16 @@ msgid ""
 "Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus "
 "TCP mode, event daemon config, graphical user interface (GUI) authorization, "
 "NSCA mode, TMP file system mode"
+msgstr ""
+"Modalità Apache e indirizzo e porta TCP, Core, demone Liveproxy e modalità "
+"TCP livestatus, configurazione demone evento, autorizzazione Multiste, "
+"modalità NSCA, modalità filesystem TMP"
+
+#, fuzzy
+msgid ""
+"Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus "
+"TCP mode, event daemon config, graphical user interface (GUI) authorization, "
+"NSCA mode, TMP file system mode. "
 msgstr ""
 "Modalità Apache e indirizzo e porta TCP, Core, demone Liveproxy e modalità "
 "TCP livestatus, configurazione demone evento, autorizzazione Multiste, "
@@ -14250,7 +14262,7 @@ msgid "Cisco Meraki device status"
 msgstr "Mostra lo stato del servizio"
 
 #, fuzzy
-msgid "Cisco Meraki organization licenses overview"
+msgid "Cisco Meraki licenses overview"
 msgstr "Panoramica delle licenze dell'organizzazione Cisco Meraki"
 
 #, fuzzy
@@ -24947,6 +24959,12 @@ msgid "Error rates"
 msgstr "Tassi di errore"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "Errore che mostra la vista: %s"
 
@@ -26394,10 +26412,6 @@ msgstr "Fallita la creazione dell'archivio di sincronizzazione [%d]: %s"
 msgid "Failed to decode certificate data"
 msgstr "Impossibile decodificare i dati del certificato"
 
-#, fuzzy
-msgid "Failed to decode filter context"
-msgstr "Impossibile decodificare i dati del certificato"
-
 #, python-format
 msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
@@ -27042,6 +27056,21 @@ msgid "Files"
 msgstr "File"
 
 msgid "Files are unpackaged and remain in your system."
+msgstr ""
+
+#, python-format
+msgid ""
+"Files collected by the Support Diagnostics tool are automatically "
+"categorized to help you identify sensitive data. We recommend reviewing all "
+"files prior to sharing, particularly those in the Unclassified category."
+"<ul><li>H (High): Critical security data (e.g., passwords, API keys, "
+"secrets).</li><li>M (Medium): PII and infrastructure details (e.g., IP "
+"addresses, hostnames, usernames, emails).</li><li>L (Low): Operational data; "
+"no sensitive information is expected.</li><li>U (Unclassified): Files from "
+"custom components. These might be 3rd-party extensions or modifications made "
+"by you.</li></ul><b>Note</b>: These Classifications may differ from your "
+"organization's specific data security classifications.<br><br>The following "
+"files are created by built-in components:<ul><li>%s</li></ul>"
 msgstr ""
 
 #, fuzzy, python-format
@@ -39766,9 +39795,6 @@ msgstr "Stato della licenza: Libero"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr ""
 
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr ""
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr ""
 
@@ -41253,9 +41279,6 @@ msgstr "Livelli inferiori per numero di richieste"
 
 msgid "Lower levels for remaining API reads"
 msgstr "Livelli più bassi per le restanti letture API"
-
-msgid "Lower levels for remaining expiration time of licenses"
-msgstr "Livelli più bassi per il tempo di scadenza residuo delle licenze"
 
 msgid "Lower levels for requests utilization"
 msgstr "Livelli superiori di utilizzo del disco"
@@ -44610,6 +44633,10 @@ msgstr "Stato di monitoraggio se il servizio è attivo"
 
 msgid "Monitoring state if failover link not up"
 msgstr "Monitoraggio dello stato se il link di failover non è attivo"
+
+#, fuzzy
+msgid "Monitoring state if license state is not OK"
+msgstr "Monitorare lo stato se lo stato di MTree è '%s'"
 
 msgid "Monitoring state if no smoke is detected"
 msgstr "Stato di monitoraggio se non viene rilevato fumo"
@@ -50025,6 +50052,10 @@ msgid "Oracle Instance Name of the database instance. May be the same as SID."
 msgstr "L'identificatore del sensore."
 
 #, fuzzy
+msgid "Oracle Instance Name, may be the same as SID."
+msgstr "L'identificatore del sensore."
+
+#, fuzzy
 msgid "Oracle Instant Client options"
 msgstr "Cache hit ratio"
 
@@ -50069,11 +50100,11 @@ msgid "Oracle SID of the remote database"
 msgstr "ORACLE SID del database remoto"
 
 #, fuzzy
-msgid "Oracle Service Name of the database instance."
-msgstr "L'identificatore del sensore."
+msgid "Oracle Service Name"
+msgstr "Nome del servizio"
 
 #, fuzzy
-msgid "Oracle System Identifier of the database instance."
+msgid "Oracle Service Name of the database instance."
 msgstr "L'identificatore del sensore."
 
 #, fuzzy
@@ -50507,6 +50538,10 @@ msgstr "ORACLE %s aspetta la classe (FG)"
 
 #, fuzzy
 msgid "Oracle instance"
+msgstr "Istanze Oracle"
+
+#, fuzzy
+msgid "Oracle instance name"
 msgstr "Istanze Oracle"
 
 msgid "Oracle instances"
@@ -51677,7 +51712,8 @@ msgstr "Richieste IPv6"
 msgid "Pack ID"
 msgstr "ID pacchetto"
 
-msgid "Pack all files: High, Medium, Low sensitivity"
+#, fuzzy
+msgid "Pack all files: High, Medium, Low, Unclassified sensitivity"
 msgstr "Impacchetta tutti i file: Alta, Media, Bassa sensibilità"
 
 msgid "Pack only Low sensitivity files"
@@ -53288,13 +53324,6 @@ msgstr ""
 "servizio <a href=\"%s\">Escape HTML nell'output del servizio</a> o <a "
 "href=\"%s\">Escape HTML nell'output dell'host</a> invece di <a "
 "href=\"%s\">disabilitare l'escape a livello globale</a>"
-
-#, fuzzy, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr ""
-"Si prega di contattare il team commerciale di Checkmk al numero %s per "
-"rinnovare la licenza. Se la licenza è stata acquistata tramite %s, si prega "
-"di contattarli."
 
 #, python-format
 msgid ""
@@ -69575,10 +69604,6 @@ msgstr ""
 "da autenticare, non è configurato. Si prega di risolvere questo problema nel "
 "<a href=\"wato.py?mode=ldap_config\">Impostazioni utenteLDAP</a>."
 
-#, python-format
-msgid "The domain \"%s\" does not support activation."
-msgstr "Il dominio \"%s\" non supporta l'attivazione."
-
 msgid "The duration in minutes of the ad hoc downtime."
 msgstr "La durata in minuti del tempo di inattività ad hoc."
 
@@ -70394,8 +70419,8 @@ msgid "The latest crash dumps of each type"
 msgstr ""
 
 msgid ""
-"The latest crash reports<br>Note: Some crash reports may contain sensitive "
-"data like host names or usernames."
+"The latest crash reports<br><b>Note</b>: Some crash reports may contain "
+"sensitive data like host names or usernames."
 msgstr ""
 
 msgid ""
@@ -71281,10 +71306,6 @@ msgid ""
 msgstr ""
 "L'opzione di usare un comando personalizzato può essere configurata solo con "
 "il permesso \"Can add or modify executables\"."
-
-#, fuzzy
-msgid "The organization ID"
-msgstr "L'ID dell'organizzazione"
 
 msgid "The original aspect of the image will be ignored."
 msgstr "L'aspetto originale dell'immagine sarà ignorato."
@@ -75058,6 +75079,10 @@ msgid "This page does not provide an inline help."
 msgstr "Questa pagina non fornisce un aiuto in linea."
 
 msgid "This page does not support cluster hosts."
+msgstr "Questa pagina non supporta gli host cluster."
+
+#, fuzzy
+msgid "This page does not support relay monitored hosts."
 msgstr "Questa pagina non supporta gli host cluster."
 
 #, python-format
@@ -94484,6 +94509,10 @@ msgid "Choose which objects this dashboard applies to"
 msgstr ""
 
 #, fuzzy
+msgid "Automatically create unique ID"
+msgstr "Creare automaticamente agenti di monitoraggio"
+
+#, fuzzy
 msgid "Enter name"
 msgstr "Inserisci il nome utente"
 
@@ -94493,10 +94522,6 @@ msgstr "Aggiungere il filtro"
 
 msgid "Include dashboard filter contents to the dashboard title."
 msgstr ""
-
-#, fuzzy
-msgid "Automatically create unique ID"
-msgstr "Creare automaticamente agenti di monitoraggio"
 
 #, fuzzy
 msgid "Add unique ID"
@@ -95414,6 +95439,10 @@ msgid "Add widget to dashboard"
 msgstr "Aggiungi al cruscotto"
 
 #, fuzzy
+msgid "Saving"
+msgstr "Risparmio di spazio"
+
+#, fuzzy
 msgid "Select operator"
 msgstr "Connessioni rifiutate"
 
@@ -95432,12 +95461,6 @@ msgstr "Rimosso: %s"
 #, fuzzy
 msgid "and not"
 msgstr "non è"
-
-msgid ""
-"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
-"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
-"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
-msgstr ""
 
 #, fuzzy
 msgid "Service name template"
@@ -95461,6 +95484,12 @@ msgstr "mostra di più"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "Questa regola corrisponde a"
+
+msgid ""
+"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
+"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
 
 #, fuzzy
 msgid "Aggregation lookback"
@@ -95604,6 +95633,20 @@ msgstr ""
 #, fuzzy
 msgid "Alt"
 msgstr "Allerta"
+
+msgid "Copy failed: this might be due to browser security restrictions."
+msgstr ""
+
+msgid "Copy failed: no text was selected."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to copy to clipboard"
+msgstr "Copia del segreto negli appunti"
+
+#, fuzzy
+msgid "Copy failed."
+msgstr "Accesso disabilitato"
 
 #, fuzzy
 msgid "Loading content..."
@@ -95933,6 +95976,9 @@ msgstr ""
 msgid "Successfully generated token"
 msgstr "Copiato con successo negli appunti."
 
+msgid "(Expires: ${ottExpiry?.toLocaleString() || 'never'})"
+msgstr ""
+
 msgid ""
 "If an error occurs during OTT authentication, try to authenticate with a "
 "user."
@@ -95953,6 +95999,14 @@ msgstr ""
 "Questa autorizzazione consente la registrazione di qualsiasi host esistente."
 
 msgid "Run this command to register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Maximum number of ping attempts reached.\n"
+"        Please try again after\n"
+"        ${((waitTimeBetweenQueries - (Date.now() - "
+"pingStatus.value[cmd].timerStarted)) / 1000).toFixed(0)}\n"
+"        seconds."
 msgstr ""
 
 #, fuzzy
@@ -96123,13 +96177,12 @@ msgstr ""
 msgid "this page"
 msgstr "Prima pagina"
 
-#, fuzzy
 msgid ""
-" to get an automation secret and replace [automation-secret] in the command "
-"below."
-msgstr "Segreto di automazione valido per l'utente di automazione"
+" to get an automation secret. You will be prompted for it when running the "
+"script."
+msgstr ""
 
-msgid "Replace [your password] in the command below with your user password."
+msgid "You will be prompted for your user password when running the script."
 msgstr ""
 
 #, fuzzy
@@ -96913,6 +96966,38 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Failed to decode filter context"
+#~ msgstr "Impossibile decodificare i dati del certificato"
+
+#~ msgid "Lower levels for remaining expiration time of licenses"
+#~ msgstr "Livelli più bassi per il tempo di scadenza residuo delle licenze"
+
+#, fuzzy
+#~ msgid "Oracle System Identifier of the database instance."
+#~ msgstr "L'identificatore del sensore."
+
+#, fuzzy, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr ""
+#~ "Si prega di contattare il team commerciale di Checkmk al numero %s per "
+#~ "rinnovare la licenza. Se la licenza è stata acquistata tramite %s, si "
+#~ "prega di contattarli."
+
+#, python-format
+#~ msgid "The domain \"%s\" does not support activation."
+#~ msgstr "Il dominio \"%s\" non supporta l'attivazione."
+
+#, fuzzy
+#~ msgid "The organization ID"
+#~ msgstr "L'ID dell'organizzazione"
+
+#, fuzzy
+#~ msgid ""
+#~ " to get an automation secret and replace [automation-secret] in the "
+#~ "command below."
+#~ msgstr "Segreto di automazione valido per l'utente di automazione"
 
 #, python-format
 #~ msgid "Failed to calculate a graph recipe. (%s)"

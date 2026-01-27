@@ -1582,6 +1582,18 @@ msgstr ""
 "ル) で正しく実行するために、スクリプトで (OMD_SITE などの環境変数を使用して) "
 "絶対パス名を指定する必要があります。"
 
+#, fuzzy
+msgid ""
+"<br><b>Note</b>: Some files may contain highly sensitive data like "
+"passwords. These files are marked with 'H'. Other files may include IP "
+"addresses, host names, usernames, mail addresses or phone numbers and are "
+"marked with 'M'."
+msgstr ""
+"<br>注意:一部のファイルには、パスワードなどの機密性の高いデータが含まれている"
+"場合があります。これらのファイルは[H]でマークされています。他のファイルには、"
+"IPアドレス、ホスト名、ユーザー名、メールアドレス、または電話番号が含まれる場"
+"合'M'でマークされています。"
+
 msgid "<br><br>"
 msgstr "<br><br>"
 
@@ -1612,17 +1624,6 @@ msgid ""
 msgstr ""
 "<br>権限に問題がある場合は、サイトユーザーに書き込み権限があることを確認して"
 "ください。"
-
-#, fuzzy
-msgid ""
-"<br>Note: Some files may contain highly sensitive data like passwords. These "
-"files are marked with 'H'. Other files may include IP addresses, host names, "
-"usernames, mail addresses or phone numbers and are marked with 'M'."
-msgstr ""
-"<br>注意:一部のファイルには、パスワードなどの機密性の高いデータが含まれている"
-"場合があります。これらのファイルは[H]でマークされています。他のファイルには、"
-"IPアドレス、ホスト名、ユーザー名、メールアドレス、または電話番号が含まれる場"
-"合'M'でマークされています。"
 
 #, fuzzy
 msgid ""
@@ -6807,7 +6808,8 @@ msgstr "Apacheプロセスのチューニング"
 
 msgid ""
 "Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
-"and $OMD_ROOT/etc/apache"
+"and $OMD_ROOT/etc/apache.<br><b>Note</b>: This might include information "
+"with medium sensitivity (M)."
 msgstr ""
 
 msgid "Apache Server"
@@ -6824,6 +6826,16 @@ msgid ""
 "Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus "
 "TCP mode, event daemon config, graphical user interface (GUI) authorization, "
 "NSCA mode, TMP file system mode"
+msgstr ""
+"ApacheモードとTCPアドレスとポート、Core、Liveproxyデーモンとlivestatus TCP"
+"モード、イベントデーモン構成、グラフィカル・ユーザー・インターフェース（GUI）"
+"認証、NSCAモード、TMPファイルシステムモード"
+
+#, fuzzy
+msgid ""
+"Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus "
+"TCP mode, event daemon config, graphical user interface (GUI) authorization, "
+"NSCA mode, TMP file system mode. "
 msgstr ""
 "ApacheモードとTCPアドレスとポート、Core、Liveproxyデーモンとlivestatus TCP"
 "モード、イベントデーモン構成、グラフィカル・ユーザー・インターフェース（GUI）"
@@ -13518,7 +13530,7 @@ msgid "Cisco Meraki device status"
 msgstr "Cisco Meraki デバイスステータス"
 
 #, fuzzy
-msgid "Cisco Meraki organization licenses overview"
+msgid "Cisco Meraki licenses overview"
 msgstr "Cisco Meraki Organisation Licensesの概要"
 
 msgid "Cisco Meraki power supply"
@@ -23765,6 +23777,12 @@ msgid "Error rates"
 msgstr "エラーレート"
 
 #, python-format
+msgid ""
+"Error reading parent scan settings. Please delete the file ''%s' and try "
+"again."
+msgstr ""
+
+#, python-format
 msgid "Error showing view: %s"
 msgstr "ビューの表示中にエラーが発生しました: %s"
 
@@ -25149,10 +25167,6 @@ msgstr "同期アーカイブの作成に失敗しました [%d]: %s"
 msgid "Failed to decode certificate data"
 msgstr "証明書データのデコードに失敗しました"
 
-#, fuzzy
-msgid "Failed to decode filter context"
-msgstr "証明書データのデコードに失敗しました"
-
 #, python-format
 msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
@@ -25773,6 +25787,21 @@ msgid "Files"
 msgstr "ファイル"
 
 msgid "Files are unpackaged and remain in your system."
+msgstr ""
+
+#, python-format
+msgid ""
+"Files collected by the Support Diagnostics tool are automatically "
+"categorized to help you identify sensitive data. We recommend reviewing all "
+"files prior to sharing, particularly those in the Unclassified category."
+"<ul><li>H (High): Critical security data (e.g., passwords, API keys, "
+"secrets).</li><li>M (Medium): PII and infrastructure details (e.g., IP "
+"addresses, hostnames, usernames, emails).</li><li>L (Low): Operational data; "
+"no sensitive information is expected.</li><li>U (Unclassified): Files from "
+"custom components. These might be 3rd-party extensions or modifications made "
+"by you.</li></ul><b>Note</b>: These Classifications may differ from your "
+"organization's specific data security classifications.<br><br>The following "
+"files are created by built-in components:<ul><li>%s</li></ul>"
 msgstr ""
 
 #, fuzzy, python-format
@@ -37732,9 +37761,6 @@ msgstr "ライセンス状態: Free"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています"
 
-msgid "License suspended: 'Activate changes' is blocked."
-msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています。"
-
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連絡してください"
 
@@ -39170,9 +39196,6 @@ msgstr "リクエスト数の下位レベル"
 
 msgid "Lower levels for remaining API reads"
 msgstr "残りのAPI読み取りの下位レベル"
-
-msgid "Lower levels for remaining expiration time of licenses"
-msgstr "ライセンスの残有効期間の下位レベル"
 
 msgid "Lower levels for requests utilization"
 msgstr "リクエスト使用率の下位レベル"
@@ -42406,6 +42429,10 @@ msgstr "デバイス状態 \"警告中 \"の監視状態"
 
 msgid "Monitoring state if failover link not up"
 msgstr "フェイルオーバーリンクがアップしていない場合の状態監視"
+
+#, fuzzy
+msgid "Monitoring state if license state is not OK"
+msgstr "MTreeの状態が '%s'の場合の状態の監視"
 
 msgid "Monitoring state if no smoke is detected"
 msgstr "煙が検出されない場合の監視状態"
@@ -47531,6 +47558,10 @@ msgid "Oracle Instance Name of the database instance. May be the same as SID."
 msgstr "センサーの識別子。"
 
 #, fuzzy
+msgid "Oracle Instance Name, may be the same as SID."
+msgstr "センサーの識別子。"
+
+#, fuzzy
 msgid "Oracle Instant Client options"
 msgstr "Oracleヒット率"
 
@@ -47569,11 +47600,11 @@ msgid "Oracle SID of the remote database"
 msgstr "リモートデータベースのOracle SID"
 
 #, fuzzy
-msgid "Oracle Service Name of the database instance."
-msgstr "センサーの識別子。"
+msgid "Oracle Service Name"
+msgstr "サービス名"
 
 #, fuzzy
-msgid "Oracle System Identifier of the database instance."
+msgid "Oracle Service Name of the database instance."
 msgstr "センサーの識別子。"
 
 msgid "Oracle Wait Class (FG lines are downside)"
@@ -47906,6 +47937,10 @@ msgid "Oracle idle wait class (FG)"
 msgstr "Oracle アイドル 待機クラス(FG)"
 
 msgid "Oracle instance"
+msgstr "Oracleインスタンス"
+
+#, fuzzy
+msgid "Oracle instance name"
 msgstr "Oracleインスタンス"
 
 msgid "Oracle instances"
@@ -48959,7 +48994,8 @@ msgstr "PUT リクエスト"
 msgid "Pack ID"
 msgstr "パックID"
 
-msgid "Pack all files: High, Medium, Low sensitivity"
+#, fuzzy
+msgid "Pack all files: High, Medium, Low, Unclassified sensitivity"
 msgstr "すべてのファイルをパックする: 高、中、低感度"
 
 msgid "Pack only Low sensitivity files"
@@ -50471,10 +50507,6 @@ msgstr ""
 "output</a>または<a href=\"%s\">Escape HTML in host output</a>を、<a "
 "href=\"%s\">disabling escaping globally</a>の代わりに、に構成することを検討し"
 "てください"
-
-#, python-format
-msgid "Please contact the Checkmk sales team at %s and renew your license."
-msgstr "%sのCheckmk営業チームまでご連絡の上、ライセンスを更新してください。"
 
 #, python-format
 msgid ""
@@ -66029,10 +66061,6 @@ msgstr ""
 "定されていません。<a href=\"wato.py?mode=ldap_config\">LDAPユーザー設定(LDAP "
 "User Settings)</a> で修正してください。"
 
-#, python-format
-msgid "The domain \"%s\" does not support activation."
-msgstr "ドメイン \"%s\" はアクティベーションをサポートしていません。"
-
 msgid "The duration in minutes of the ad hoc downtime."
 msgstr "アドホックダウンタイムの時間（分）。"
 
@@ -66830,8 +66858,8 @@ msgstr "各タイプの最新のクラッシュダンプ"
 
 #, fuzzy
 msgid ""
-"The latest crash reports<br>Note: Some crash reports may contain sensitive "
-"data like host names or usernames."
+"The latest crash reports<br><b>Note</b>: Some crash reports may contain "
+"sensitive data like host names or usernames."
 msgstr ""
 "最新のクラッシュレポート<br>注意：クラッシュレポートの中には、ホスト名やユー"
 "ザー名などの機密データが含まれている場合があります。"
@@ -67697,10 +67725,6 @@ msgid ""
 msgstr ""
 "カスタムコマンドを使用するオプションは、\"実行可能ファイルを追加または変更で"
 "きます\"という権限でのみ構成できます。"
-
-#, fuzzy
-msgid "The organization ID"
-msgstr "組織のID"
 
 msgid "The original aspect of the image will be ignored."
 msgstr "画像の元の側面は無視されます。"
@@ -71401,6 +71425,10 @@ msgid "This page does not provide an inline help."
 msgstr "このページはインラインヘルプを提供していません。"
 
 msgid "This page does not support cluster hosts."
+msgstr "このページはクラスターホストをサポートしていません。"
+
+#, fuzzy
+msgid "This page does not support relay monitored hosts."
 msgstr "このページはクラスターホストをサポートしていません。"
 
 #, python-format
@@ -89596,6 +89624,10 @@ msgid "Choose which objects this dashboard applies to"
 msgstr ""
 
 #, fuzzy
+msgid "Automatically create unique ID"
+msgstr "監視エージェントを自動的に作成する"
+
+#, fuzzy
 msgid "Enter name"
 msgstr "ユーザーネームを入力してください"
 
@@ -89605,10 +89637,6 @@ msgstr "フィルタを追加"
 
 msgid "Include dashboard filter contents to the dashboard title."
 msgstr ""
-
-#, fuzzy
-msgid "Automatically create unique ID"
-msgstr "監視エージェントを自動的に作成する"
 
 #, fuzzy
 msgid "Add unique ID"
@@ -90516,6 +90544,10 @@ msgid "Add widget to dashboard"
 msgstr "ダッシュボードに追加"
 
 #, fuzzy
+msgid "Saving"
+msgstr "スペースの節約"
+
+#, fuzzy
 msgid "Select operator"
 msgstr "オプション選択"
 
@@ -90534,12 +90566,6 @@ msgstr "削除：%r"
 #, fuzzy
 msgid "and not"
 msgstr "ではありません"
-
-msgid ""
-"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
-"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
-"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
-msgstr ""
 
 #, fuzzy
 msgid "Service name template"
@@ -90563,6 +90589,12 @@ msgstr "もっと表示"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "ルール一致"
+
+msgid ""
+"Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
+"<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
+"<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
 
 #, fuzzy
 msgid "Aggregation lookback"
@@ -90691,6 +90723,20 @@ msgstr ""
 #, fuzzy
 msgid "Alt"
 msgstr "アラート"
+
+msgid "Copy failed: this might be due to browser security restrictions."
+msgstr ""
+
+msgid "Copy failed: no text was selected."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to copy to clipboard"
+msgstr "秘密をクリップボードにコピーする"
+
+#, fuzzy
+msgid "Copy failed."
+msgstr "ログインが無効です"
 
 #, fuzzy
 msgid "Loading content..."
@@ -91013,6 +91059,9 @@ msgstr ""
 msgid "Successfully generated token"
 msgstr "クリップボードへのコピーに成功しました。"
 
+msgid "(Expires: ${ottExpiry?.toLocaleString() || 'never'})"
+msgstr ""
+
 msgid ""
 "If an error occurs during OTT authentication, try to authenticate with a "
 "user."
@@ -91032,6 +91081,14 @@ msgid "This requires the generation of a registration token."
 msgstr "この権限は、任意の既存ホストの登録を許可する。"
 
 msgid "Run this command to register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Maximum number of ping attempts reached.\n"
+"        Please try again after\n"
+"        ${((waitTimeBetweenQueries - (Date.now() - "
+"pingStatus.value[cmd].timerStarted)) / 1000).toFixed(0)}\n"
+"        seconds."
 msgstr ""
 
 #, fuzzy
@@ -91200,13 +91257,12 @@ msgstr ""
 msgid "this page"
 msgstr "1ページ目"
 
-#, fuzzy
 msgid ""
-" to get an automation secret and replace [automation-secret] in the command "
-"below."
-msgstr "自動化ユーザーの有効な自動化シークレット"
+" to get an automation secret. You will be prompted for it when running the "
+"script."
+msgstr ""
 
-msgid "Replace [your password] in the command below with your user password."
+msgid "You will be prompted for your user password when running the script."
 msgstr ""
 
 #, fuzzy
@@ -91980,6 +92036,38 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Failed to decode filter context"
+#~ msgstr "証明書データのデコードに失敗しました"
+
+#~ msgid "License suspended: 'Activate changes' is blocked."
+#~ msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています。"
+
+#~ msgid "Lower levels for remaining expiration time of licenses"
+#~ msgstr "ライセンスの残有効期間の下位レベル"
+
+#, fuzzy
+#~ msgid "Oracle System Identifier of the database instance."
+#~ msgstr "センサーの識別子。"
+
+#, python-format
+#~ msgid "Please contact the Checkmk sales team at %s and renew your license."
+#~ msgstr "%sのCheckmk営業チームまでご連絡の上、ライセンスを更新してください。"
+
+#, python-format
+#~ msgid "The domain \"%s\" does not support activation."
+#~ msgstr "ドメイン \"%s\" はアクティベーションをサポートしていません。"
+
+#, fuzzy
+#~ msgid "The organization ID"
+#~ msgstr "組織のID"
+
+#, fuzzy
+#~ msgid ""
+#~ " to get an automation secret and replace [automation-secret] in the "
+#~ "command below."
+#~ msgstr "自動化ユーザーの有効な自動化シークレット"
 
 #~ msgid "Dashlet too short to render graph"
 #~ msgstr "ダッシュレットが短すぎてグラフが表示されない"

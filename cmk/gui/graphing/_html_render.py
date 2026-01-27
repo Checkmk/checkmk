@@ -478,7 +478,7 @@ def _readable_attribute_type(attribute_type: Literal["resource", "scope", "data_
 
 @dataclass(frozen=True, kw_only=True)
 class _Attribute:
-    key: str
+    name: str
     value: str
     type: str
 
@@ -513,7 +513,7 @@ def _render_attributes(
 
         for attribute in attributes:
             html.open_tr()
-            html.td(attribute.key)
+            html.td(attribute.name)
             html.td(attribute.value)
             html.td(attribute.type)
             html.close_tr()
@@ -569,11 +569,11 @@ def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRe
 
         table_uuid_str = str(uuid4())
         attributes = [
-            _Attribute(key=key, value=value, type=_readable_attribute_type(ty))
+            _Attribute(name=name, value=value, type=_readable_attribute_type(ty))
             for ty, attrs in sorted(
                 curve["attributes"].items(), key=lambda t: _sort_attributes_by_type(t[0])
             )
-            for key, value in attrs.items()
+            for name, value in attrs.items()
         ]
         if attributes:
             html.open_td(

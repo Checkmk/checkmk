@@ -145,7 +145,7 @@ def test_discover_dotnet_clrmemory(parsed: WMISection) -> None:
     assert len(result) == 1
     item, params = result[0]
     assert item == "_Global_"
-    assert params == {"upper": (10.0, 15.0)}
+    assert params == {}
 
 
 def test_check_dotnet_clrmemory_global(parsed: WMISection) -> None:
@@ -153,15 +153,15 @@ def test_check_dotnet_clrmemory_global(parsed: WMISection) -> None:
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed))
 
     assert len(result) == 1
-    state, summary, metrics = result[0]
+    state, summary, metrics = result[0]  # type: ignore[misc]
 
     # Verify state and summary
     assert state == 0
-    assert "Time in GC: 2.54%" in summary
+    assert "Time spent in Garbage Collection: 2.54%" in summary
 
     # Verify metrics
     assert len(metrics) == 1
-    metric_name, value, warn, crit, min_val, max_val = metrics[0]
+    metric_name, value, warn, crit, min_val, max_val = metrics[0]  # type: ignore[misc]
     assert metric_name == "percent"
     assert abs(value - 2.5363462051694157) < 0.0001  # Check calculated percentage
     assert warn == 10.0
@@ -175,15 +175,15 @@ def test_check_dotnet_clrmemory_monitoring_host(parsed: WMISection) -> None:
     result = list(check_dotnet_clrmemory("MonitoringHost", {"upper": (10.0, 15.0)}, parsed))
 
     assert len(result) == 1
-    state, summary, metrics = result[0]
+    state, summary, metrics = result[0]  # type: ignore[misc]
 
     # Verify state and summary
     assert state == 0
-    assert "Time in GC: 0%" in summary
+    assert "Time spent in Garbage Collection: 0%" in summary
 
     # Verify metrics
     assert len(metrics) == 1
-    metric_name, value, warn, crit, min_val, max_val = metrics[0]
+    metric_name, value, warn, crit, min_val, max_val = metrics[0]  # type: ignore[misc]
     assert metric_name == "percent"
     assert value == 0.0  # Zero GC time
     assert warn == 10.0
@@ -204,28 +204,18 @@ def test_check_dotnet_clrmemory_high_gc_time(parsed: WMISection) -> None:
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (1.0, 3.0)}, parsed))
 
     assert len(result) == 1
-    state, summary, metrics = result[0]
+    state, summary, metrics = result[0]  # type: ignore[misc]
 
     # Should be WARNING since 2.54% is between 1.0% warn and 3.0% crit
     assert state == 1
-    assert "Time in GC: 2.54%" in summary
+    assert "Time spent in Garbage Collection: 2.54%" in summary
     assert "(warn/crit at 1.00%/3.00%)" in summary
 
 
 def test_check_dotnet_clrmemory_no_parameters(parsed: WMISection) -> None:
     """Test check function with no upper level parameters"""
-    result = list(check_dotnet_clrmemory("_Global_", {}, parsed))
+    # Check should fail with KeyError when no parameters provided
+    import pytest
 
-    assert len(result) == 1
-    state, summary, metrics = result[0]
-
-    # Should still work without thresholds
-    assert state == 0
-    assert "Time in GC: 2.54%" in summary
-
-    # Metrics should not have warn/crit levels
-    assert len(metrics) == 1
-    metric_name, value, warn, crit, min_val, max_val = metrics[0]
-    assert metric_name == "percent"
-    assert warn is None
-    assert crit is None
+    with pytest.raises(KeyError):
+        list(check_dotnet_clrmemory("_Global_", {}, parsed))

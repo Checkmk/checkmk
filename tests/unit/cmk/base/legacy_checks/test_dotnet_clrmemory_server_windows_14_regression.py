@@ -147,7 +147,7 @@ def test_discover_dotnet_clrmemory(parsed: WMISection) -> None:
     assert len(result) == 1
     item, params = result[0]
     assert item == "_Global_"
-    assert params == {"upper": (10.0, 15.0)}
+    assert params == {}
 
 
 def test_check_dotnet_clrmemory_global(parsed: WMISection) -> None:
@@ -155,15 +155,15 @@ def test_check_dotnet_clrmemory_global(parsed: WMISection) -> None:
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed))
 
     assert len(result) == 1
-    state, summary, metrics = result[0]
+    state, summary, metrics = result[0]  # type: ignore[misc]
 
     # Verify state and summary
     assert state == 0
-    assert "Time in GC: 8.78%" in summary
+    assert "Time spent in Garbage Collection: 8.78%" in summary
 
     # Verify metrics
     assert len(metrics) == 1
-    metric_name, value, warn, crit, min_val, max_val = metrics[0]
+    metric_name, value, warn, crit, min_val, max_val = metrics[0]  # type: ignore[misc]
     assert metric_name == "percent"
     assert abs(value - 8.778833599942464) < 0.0001  # Check calculated percentage
     assert warn == 10.0
@@ -177,15 +177,15 @@ def test_check_dotnet_clrmemory_sqlservr(parsed: dict[str, Any]) -> None:
     result = list(check_dotnet_clrmemory("sqlservr#3", {"upper": (10.0, 15.0)}, parsed))
 
     assert len(result) == 1
-    state, summary, metrics = result[0]
+    state, summary, metrics = result[0]  # type: ignore[misc]
 
     # Verify state and summary
     assert state == 0
-    assert "Time in GC: 0%" in summary
+    assert "Time spent in Garbage Collection: 0%" in summary
 
     # Verify metrics
     assert len(metrics) == 1
-    metric_name, value, warn, crit, min_val, max_val = metrics[0]
+    metric_name, value, warn, crit, min_val, max_val = metrics[0]  # type: ignore[misc]
     assert metric_name == "percent"
     assert value == 0.0  # Zero GC time for SQL Server process
     assert warn == 10.0
@@ -198,11 +198,11 @@ def test_check_dotnet_clrmemory_high_gc_warning(parsed: dict[str, Any]) -> None:
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (5.0, 12.0)}, parsed))
 
     assert len(result) == 1
-    state, summary, metrics = result[0]
+    state, summary, metrics = result[0]  # type: ignore[misc]
 
     # Should be WARNING since 8.78% is between 5.0% warn and 12.0% crit
     assert state == 1
-    assert "Time in GC: 8.78%" in summary
+    assert "Time spent in Garbage Collection: 8.78%" in summary
     assert "(warn/crit at 5.00%/12.00%)" in summary
 
 
@@ -212,11 +212,11 @@ def test_check_dotnet_clrmemory_high_gc_critical(parsed: dict[str, Any]) -> None
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (2.0, 7.0)}, parsed))
 
     assert len(result) == 1
-    state, summary, metrics = result[0]
+    state, summary, metrics = result[0]  # type: ignore[misc]
 
     # Should be CRITICAL since 8.78% > 7.0% critical threshold
     assert state == 2
-    assert "Time in GC: 8.78%" in summary
+    assert "Time spent in Garbage Collection: 8.78%" in summary
     assert "(warn/crit at 2.00%/7.00%)" in summary
 
 

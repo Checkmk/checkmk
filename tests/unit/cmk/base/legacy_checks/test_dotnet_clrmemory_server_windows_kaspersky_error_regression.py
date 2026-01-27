@@ -290,7 +290,7 @@ def test_discover_dotnet_clrmemory(parsed_wmi: WMISection) -> None:
     assert len(discoveries) == 1
     item, params = discoveries[0]
     assert item == "_Global_"
-    assert params == {"upper": (10.0, 15.0)}
+    assert params == {}
 
 
 def test_check_dotnet_clrmemory_global_instance(parsed_wmi: WMISection) -> None:
@@ -298,11 +298,11 @@ def test_check_dotnet_clrmemory_global_instance(parsed_wmi: WMISection) -> None:
     results = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed_wmi))
 
     assert len(results) == 1
-    state, summary, perfdata = results[0]
+    state, summary, perfdata = results[0]  # type: ignore[misc]
     assert state == 0  # OK
-    assert "Time in GC: 0.07%" in summary
+    assert "Time spent in Garbage Collection: 0.07%" in summary
     assert len(perfdata) == 1
-    metric_name, value, warn, crit, min_val, max_val = perfdata[0]
+    metric_name, value, warn, crit, min_val, max_val = perfdata[0]  # type: ignore[misc]
     assert metric_name == "percent"
     assert abs(value - 0.06994060242314372) < 0.0001  # Approx 0.07%
     assert warn == 10.0
@@ -325,9 +325,9 @@ def test_check_dotnet_clrmemory_warning_threshold(parsed_wmi: WMISection) -> Non
     results = list(check_dotnet_clrmemory("_Global_", params, parsed_wmi))
 
     assert len(results) == 1
-    state, summary, perfdata = results[0]
+    state, summary, perfdata = results[0]  # type: ignore[misc]
     assert state == 1  # WARNING
-    assert "Time in GC: 0.07%" in summary
+    assert "Time spent in Garbage Collection: 0.07%" in summary
 
 
 def test_check_dotnet_clrmemory_critical_threshold(parsed_wmi: WMISection) -> None:
@@ -337,9 +337,9 @@ def test_check_dotnet_clrmemory_critical_threshold(parsed_wmi: WMISection) -> No
     results = list(check_dotnet_clrmemory("_Global_", params, parsed_wmi))
 
     assert len(results) == 1
-    state, summary, perfdata = results[0]
+    state, summary, perfdata = results[0]  # type: ignore[misc]
     assert state == 2  # CRITICAL
-    assert "Time in GC: 0.07%" in summary
+    assert "Time spent in Garbage Collection: 0.07%" in summary
 
 
 def test_dotnet_clrmemory_server_windows_kaspersky_error_regression(
@@ -350,11 +350,11 @@ def test_dotnet_clrmemory_server_windows_kaspersky_error_regression(
     results = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed_wmi))
 
     assert len(results) == 1
-    state, summary, perfdata = results[0]
+    state, summary, perfdata = results[0]  # type: ignore[misc]
     assert state == 0
-    assert summary == "Time in GC: 0.07%"
+    assert summary == "Time spent in Garbage Collection: 0.07%"
     assert len(perfdata) == 1
-    metric_name, value, warn, crit, min_val, max_val = perfdata[0]
+    metric_name, value, warn, crit, min_val, max_val = perfdata[0]  # type: ignore[misc]
     assert metric_name == "percent"
     assert abs(value - 0.06994060242314372) < 0.0001
     assert warn == 10.0

@@ -333,26 +333,3 @@ def wmi_yield_raw_average_timer(
         get_levels_quadruple(levels),
         infoname=infoname,
     )
-
-
-def wmi_yield_raw_fraction(
-    table: WMITable,
-    row: str | int,
-    column: str,
-    infoname: str | None,
-    perfvar: str | None,
-    levels: tuple | dict[str, tuple] | None = None,
-) -> LegacyCheckResult:
-    try:
-        average = wmi_calculate_raw_average(table, row, column, 100)
-    except KeyError:
-        return
-
-    yield check_levels(
-        average,
-        perfvar,
-        get_levels_quadruple(levels),
-        infoname=infoname,
-        human_readable_func=render.percent,
-        boundaries=(0, 100),
-    )

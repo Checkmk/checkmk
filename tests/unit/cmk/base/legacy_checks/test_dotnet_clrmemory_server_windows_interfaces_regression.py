@@ -22,7 +22,7 @@ from cmk.base.legacy_checks.dotnet_clrmemory import (
     check_dotnet_clrmemory,
     discover_dotnet_clrmemory,
 )
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection, WMITable
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
 
 
 @pytest.fixture(name="test_data")
@@ -217,51 +217,51 @@ def test_dotnet_clrmemory_discovery(parsed_wmi: WMISection) -> None:
     """Test discovery of .NET CLR Memory instances."""
     discovery_result = list(discover_dotnet_clrmemory(parsed_wmi))
     assert len(discovery_result) == 1
-    assert discovery_result[0] == ("_Global_", {"upper": (10.0, 15.0)})
+    assert discovery_result[0] == ("_Global_", {})
 
 
-def test_dotnet_clrmemory_check_global_instance(parsed_wmi: WMITable) -> None:
+def test_dotnet_clrmemory_check_global_instance(parsed_wmi: WMISection) -> None:
     """Test check of _Global_ instance showing 4.08% GC time."""
     check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed_wmi))
 
     assert len(check_result) == 1
-    status, message, perfdata = check_result[0]
+    status, message, perfdata = check_result[0]  # type: ignore[misc]
 
     assert status == 0  # OK state
-    assert "Time in GC: 4.08%" in message
+    assert "Time spent in Garbage Collection: 4.08%" in message
     assert len(perfdata) == 1
     assert perfdata[0][0] == "percent"
     # Check that the percentage is approximately 4.08%
     assert abs(perfdata[0][1] - 4.082020000573718) < 0.001
-    assert perfdata[0][2] == 10.0  # warning threshold
-    assert perfdata[0][3] == 15.0  # critical threshold
+    assert perfdata[0][2] == 10.0  # type: ignore[misc]
+    assert perfdata[0][3] == 15.0  # type: ignore[misc]
 
 
-def test_dotnet_clrmemory_threshold_warning(parsed_wmi: WMITable) -> None:
+def test_dotnet_clrmemory_threshold_warning(parsed_wmi: WMISection) -> None:
     """Test warning threshold behavior."""
     # Set lower thresholds to trigger warning
     check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (3.0, 5.0)}, parsed_wmi))
 
     assert len(check_result) == 1
-    status, message, perfdata = check_result[0]
+    status, message, perfdata = check_result[0]  # type: ignore[misc]
 
     assert status == 1  # Warning state
-    assert "Time in GC: 4.08%" in message
+    assert "Time spent in Garbage Collection: 4.08%" in message
 
 
-def test_dotnet_clrmemory_threshold_critical(parsed_wmi: WMITable) -> None:
+def test_dotnet_clrmemory_threshold_critical(parsed_wmi: WMISection) -> None:
     """Test critical threshold behavior."""
     # Set very low thresholds to trigger critical
     check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (2.0, 3.0)}, parsed_wmi))
 
     assert len(check_result) == 1
-    status, message, perfdata = check_result[0]
+    status, message, perfdata = check_result[0]  # type: ignore[misc]
 
     assert status == 2  # Critical state
-    assert "Time in GC: 4.08%" in message
+    assert "Time spent in Garbage Collection: 4.08%" in message
 
 
-def test_dotnet_clrmemory_nonexistent_item(parsed_wmi: WMITable) -> None:
+def test_dotnet_clrmemory_nonexistent_item(parsed_wmi: WMISection) -> None:
     """Test check of non-existent instance."""
     check_result = list(check_dotnet_clrmemory("NonExistent", {"upper": (10.0, 15.0)}, parsed_wmi))
     assert len(check_result) == 0  # No results for non-existent instance

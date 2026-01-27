@@ -5,34 +5,45 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
+from cmk.agent_based.v2 import render
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
+    wmi_calculate_raw_average,
     wmi_filter_global_only,
-    wmi_yield_raw_fraction,
 )
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
 
 check_info = {}
 
-dotnet_clrmemory_defaultlevels = {
-    "upper": (10.0, 15.0)  # 10.0 percent specified by customer,
-    # various sources (including MS) give
-    # around 5-10% as healthy values
-}
 
+def check_dotnet_clrmemory(
+    item: str, params: Mapping[str, Any], parsed: WMISection
+) -> LegacyCheckResult:
+    try:
+        average = wmi_calculate_raw_average(parsed[""], item, "PercentTimeinGC", 100)
+    except KeyError:
+        return
 
-def check_dotnet_clrmemory(item, params, parsed):
-    yield from wmi_yield_raw_fraction(
-        parsed[""], item, "PercentTimeinGC", infoname="Time in GC", perfvar="percent", levels=params
+    yield check_levels(
+        average,
+        "percent",
+        params["upper"],
+        infoname="Time spent in Garbage Collection",
+        human_readable_func=render.percent,
+        boundaries=(0, 100),
     )
 
 
 def discover_dotnet_clrmemory(parsed):
-    return inventory_wmi_table_instances(
-        parsed, filt=wmi_filter_global_only, levels=dotnet_clrmemory_defaultlevels
-    )
+    return inventory_wmi_table_instances(parsed, filt=wmi_filter_global_only, levels={})
 
 
 check_info["dotnet_clrmemory"] = LegacyCheckDefinition(
@@ -42,4 +53,9 @@ check_info["dotnet_clrmemory"] = LegacyCheckDefinition(
     discovery_function=discover_dotnet_clrmemory,
     check_function=check_dotnet_clrmemory,
     check_ruleset_name="clr_memory",
+    check_default_parameters={
+        "upper": (10.0, 15.0)  # 10.0 percent specified by customer,
+        # various sources (including MS) give
+        # around 5-10% as healthy values
+    },
 )

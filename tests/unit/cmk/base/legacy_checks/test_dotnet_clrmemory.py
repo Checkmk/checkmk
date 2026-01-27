@@ -725,7 +725,7 @@ from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
                     "131097013721920000",
                 ],
             ],
-            [("_Global_", {"upper": (10.0, 15.0)})],
+            [("_Global_", {})],
         ),
     ],
 )
@@ -1446,7 +1446,13 @@ def test_discover_dotnet_clrmemory(
                     "131097013721920000",
                 ],
             ],
-            [(0, "Time in GC: 2.54%", [("percent", 2.5363462051694157, 10.0, 15.0, 0, 100)])],
+            [
+                (
+                    0,
+                    "Time spent in Garbage Collection: 2.54%",
+                    [("percent", 2.5363462051694157, 10.0, 15.0, 0, 100)],
+                )
+            ],
         ),
     ],
 )

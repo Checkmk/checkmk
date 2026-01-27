@@ -25,7 +25,7 @@ withDefaults(defineProps<Props>(), {
     <CmkLabel variant="title">{{ title }}</CmkLabel>
     <div
       v-for="(filterId, index) in filters"
-      :key="index"
+      :key="filterId"
       class="db-filter-collection__item-container"
     >
       <slot

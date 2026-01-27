@@ -68,55 +68,13 @@ const _updateMetricType = (value: string) => {
       v-if="metricType === MetricSelection.SINGLE_METRIC"
       class="db-metric-selector__base-container"
     >
-      <CmkLabel>{{ _t('Service metric') }}</CmkLabel
+      <span class="db-metric-selector__title">{{ _t('Service metric') }}</span
       ><CmkLabelRequired space="before" />
 
-      <ContentSpacer :dimension="4" />
+      <ContentSpacer :dimension="5" />
 
-      <CmkIndent>
-        <CmkLabel>{{ _t('Filter service metric by') }}</CmkLabel>
-        <CmkHelpText
-          :help="
-            _t(
-              'Use these fields to narrow down the list of available service metrics.<br />Click the Host name or Service label to clear the filter.'
-            )
-          "
-        />
-        <ContentSpacer :dimension="2" />
+      <CmkIndent class="db-metric-selector__indent">
         <div class="db-metric-selector__container">
-          <div class="db-metric-selector__host-filter">
-            <div class="db-metric-selector__cell">
-              <div class="db-metric-selector__label" @click="() => (handler.host.value = null)">
-                <CmkLabel style="cursor: pointer">{{ _t('Host name') }}:</CmkLabel>
-              </div>
-
-              <div class="db-metric-selector__autocompleter">
-                <AutocompleteHost
-                  v-model:host-name="handler.host.value"
-                  width="fill"
-                  :placeholder="_t('Select')"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="db-metric-selector__service-filter">
-            <div class="db-metric-selector__cell">
-              <div class="db-metric-selector__label" @click="() => (handler.service.value = null)">
-                <CmkLabel style="cursor: pointer">{{ _t('Service') }}:</CmkLabel>
-              </div>
-
-              <div class="db-metric-selector__autocompleter">
-                <AutocompleteService
-                  v-model:service-description="handler.service.value"
-                  :host-name="handler.host.value"
-                  width="fill"
-                  :placeholder="_t('Select')"
-                />
-              </div>
-            </div>
-          </div>
-
           <div class="db-metric-selector__metric-selector">
             <AutocompleteMonitoredMetrics
               v-if="metricType === MetricSelection.SINGLE_METRIC"
@@ -130,16 +88,70 @@ const _updateMetricType = (value: string) => {
             <CmkInlineValidation :validation="[_t('Must select an option')]" />
           </div>
         </div>
+        <ContentSpacer :dimension="5" />
+
+        <CmkIndent class="db-metric-selector__indent">
+          <CmkLabel class="db-metric-selector__narrow-legend">{{
+            _t('Narrow dropdown options by host or service (no selection)')
+          }}</CmkLabel>
+          <CmkHelpText
+            :help="
+              _t(
+                'Use these fields to narrow down the list of available service metrics.<br />Click the Host name or Service label to clear the filter.'
+              )
+            "
+          />
+
+          <ContentSpacer :dimension="4" />
+
+          <div class="db-metric-selector__container">
+            <div class="db-metric-selector__host-filter">
+              <div class="db-metric-selector__cell">
+                <div class="db-metric-selector__label" @click="() => (handler.host.value = null)">
+                  <CmkLabel style="cursor: pointer">{{ _t('Host name') }}:</CmkLabel>
+                </div>
+
+                <div class="db-metric-selector__autocompleter">
+                  <AutocompleteHost
+                    v-model:host-name="handler.host.value"
+                    width="fill"
+                    :placeholder="_t('Select')"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="db-metric-selector__service-filter">
+              <div class="db-metric-selector__cell">
+                <div
+                  class="db-metric-selector__label"
+                  @click="() => (handler.service.value = null)"
+                >
+                  <CmkLabel style="cursor: pointer">{{ _t('Service') }}:</CmkLabel>
+                </div>
+
+                <div class="db-metric-selector__autocompleter">
+                  <AutocompleteService
+                    v-model:service-description="handler.service.value"
+                    :host-name="handler.host.value"
+                    width="fill"
+                    :placeholder="_t('Select')"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </CmkIndent>
       </CmkIndent>
     </div>
 
     <div v-else class="db-metric-selector__base-container">
-      <CmkLabel>{{ _t('Service graph') }}</CmkLabel
+      <span class="db-metric-selector__title">{{ _t('Service graph') }}</span
       ><CmkLabelRequired space="before" />
 
       <ContentSpacer :dimension="4" />
 
-      <CmkIndent>
+      <CmkIndent class="db-metric-selector__indent">
         <div class="db-metric-selector__container"></div>
         <div class="db-metric-selector__metric-selector">
           <GraphAutocompleter
@@ -160,29 +172,26 @@ const _updateMetricType = (value: string) => {
 <style scoped>
 .db-metric-selector__base-container {
   background-color: var(--ux-theme-3);
-  padding: 10px;
+  padding: var(--dimension-7);
 }
 
 .db-metric-selector__container {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 0 var(--dimension-4);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0 var(--dimension-6);
 }
 
 .db-metric-selector__host-filter {
   grid-area: 1 / 1 / 2 / 2;
-  padding-bottom: var(--dimension-4);
 }
 
 .db-metric-selector__service-filter {
   grid-area: 1 / 2 / 2 / 3;
-  padding-bottom: var(--dimension-4);
 }
 
 .db-metric-selector__metric-selector {
-  grid-area: 2 / 1 / 3 / 3;
-  padding-bottom: var(--dimension-4);
+  grid-area: 1 / 1 / 3 / 3;
 }
 
 .db-metric-selector__cell {
@@ -190,6 +199,7 @@ const _updateMetricType = (value: string) => {
   flex-flow: row nowrap;
   justify-content: space-between;
   align-items: center;
+  gap: var(--dimension-3);
 }
 
 .db-metric-selector__label {
@@ -199,5 +209,20 @@ const _updateMetricType = (value: string) => {
 .db-metric-selector__autocompleter {
   flex: 1;
   min-width: 0;
+}
+
+.db-metric-selector__title {
+  color: var(--font-color);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.db-metric-selector__narrow-legend {
+  color: var(--font-color);
+  font-size: 12px;
+}
+
+.db-metric-selector__indent {
+  padding-left: var(--dimension-4);
 }
 </style>

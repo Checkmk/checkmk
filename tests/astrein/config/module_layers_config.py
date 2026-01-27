@@ -1346,6 +1346,10 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
         *PACKAGE_MESSAGING,
         "cmk.utils.paths",
     ),
+    ModulePath("bin/cmk-metric-backend-monitoring.py"): _allow(
+        *PACKAGE_METRIC_BACKEND,
+        "cmk.utils.licensing",
+    ),
     ModulePath("bin/cmk-piggyback-hub"): _allow(
         *PACKAGE_CCC,
         "cmk.piggyback",

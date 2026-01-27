@@ -3,9 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+
+import time
+from typing import NamedTuple
+
+from livestatus import MKLivestatusNotFoundError
+
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
+from cmk.gui import sites
+from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
 from cmk.gui.i18n import _
-from cmk.gui.notifications import acknowledged_time, number_of_failed_notifications
+from cmk.gui.logged_in import user
 from cmk.gui.sites import live, prepend_site
 
 OPTIMIZE_NOTIFICATIONS_ENTRIES: dict[str, list[str]] = {
@@ -43,6 +53,20 @@ SUPPORT_NOTIFICATIONS_ENTRIES: dict[str, list[str]] = {
     ],
 }
 
+g_columns: list[str] = [
+    "time",
+    "contact_name",
+    "command_name",
+    "host_name",
+    "service_description",
+    "comment",
+]
+
+
+class FailedNotificationTimes(NamedTuple):
+    acknowledged_unitl: float
+    modified: float
+
 
 def get_disabled_notifications_infos() -> tuple[int, list[str]]:
     query_str = "GET status\nColumns: enable_notifications\n"
@@ -56,11 +80,52 @@ def get_disabled_notifications_infos() -> tuple[int, list[str]]:
     return len(notification_status), sites_with_disabled_notifications
 
 
-def get_failed_notification_count() -> int:
-    return number_of_failed_notifications(after=acknowledged_time())
+def acknowledged_time() -> float:
+    """Returns the timestamp to start looking for failed notifications for the current user"""
+    times: FailedNotificationTimes | None = g.get("failed_notification_times")
+
+    # Initialize the request cache "g.failed_notification_times" from the user profile in case it is
+    # needed. Either on first call to this function or when the file on disk was modified.
+    if times is None or user.file_modified("acknowledged_notifications") > times.modified:
+        now = time.time()
+        user_time = user.acknowledged_notifications
+
+        if user_time == 0:
+            # When this timestamp is first initialized, save the current timestamp as the
+            # acknowledge date. This should considerably reduce the number of log files that have to
+            # be searched when retrieving the list
+            acknowledge_failed_notifications(now, now)
+        else:
+            g.failed_notification_times = FailedNotificationTimes(
+                user.acknowledged_notifications, now
+            )
+
+    return g.failed_notification_times.acknowledged_unitl
 
 
-def get_total_sent_notifications(from_timestamp: int) -> int:
+def number_of_failed_notifications(from_timestamp: float) -> int:
+    if not may_see_failed_notifications():
+        return 0
+
+    query_txt = failed_notification_query(
+        before=None, after=from_timestamp, extra_headers=None, stat_only=True
+    )
+
+    try:
+        result: int = sites.live().query_summed_stats(query_txt)[0]
+    except MKLivestatusNotFoundError:
+        result = 0  # Normalize the result when no site answered
+
+    if result == 0 and not sites.live().dead_sites():
+        # In case there are no errors and all sites are reachable:
+        # advance the users acknowledgement time
+        now = time.time()
+        acknowledge_failed_notifications(now, now)
+
+    return result
+
+
+def number_of_total_sent_notifications(from_timestamp: float) -> int:
     query = (
         "GET log\n"
         "Stats: class = 3\n"
@@ -70,7 +135,7 @@ def get_total_sent_notifications(from_timestamp: int) -> int:
         "Filter: log_command_name != check-mk-notify\n"
     )
     try:
-        send_per_site_list = live().query(query)
+        send_per_site_list = sites.live().query(query)
     except MKTimeout:
         raise
     except Exception as exc:
@@ -80,3 +145,55 @@ def get_total_sent_notifications(from_timestamp: int) -> int:
         return 0
 
     return sum(sum(site) for site in send_per_site_list)
+
+
+def failed_notification_query(
+    before: float | None,
+    after: float,
+    extra_headers: str | None = None,
+    *,
+    stat_only: bool,
+) -> str:
+    query = ["GET log"]
+    if stat_only:
+        query.append("Stats: log_state != 0")
+    else:
+        query.append("Columns: %s" % " ".join(g_columns))
+        query.append("Filter: log_state != 0")
+
+    query.extend(
+        [
+            "Filter: class = 3",
+            "Filter: log_type = SERVICE NOTIFICATION RESULT",
+            "Filter: log_type = HOST NOTIFICATION RESULT",
+            "Or: 2",
+            "Filter: time >= %d" % after,
+        ]
+    )
+
+    if before is not None:
+        query.append("Filter: time <= %d" % before)
+    if user.may("general.see_failed_notifications"):
+        horizon = active_config.failed_notification_horizon
+    else:
+        horizon = 86400
+    query.append("Filter: time > %d" % (int(time.time()) - horizon))
+
+    query_txt = "\n".join(query)
+
+    if extra_headers is not None:
+        query_txt += extra_headers
+
+    return query_txt
+
+
+def may_see_failed_notifications() -> bool:
+    return user.may("general.see_failed_notifications") or user.may(
+        "general.see_failed_notifications_24h"
+    )
+
+
+def acknowledge_failed_notifications(timestamp: float, now: float) -> None:
+    """Set the acknowledgement time for the current user"""
+    g.failed_notification_times = FailedNotificationTimes(timestamp, now)
+    user.acknowledged_notifications = int(timestamp)

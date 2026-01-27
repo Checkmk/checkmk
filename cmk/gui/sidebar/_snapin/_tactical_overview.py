@@ -13,7 +13,7 @@ from typing import Literal, NamedTuple
 import livestatus
 
 from cmk.ccc.site import SiteId
-from cmk.gui import notifications, sites, visuals
+from cmk.gui import sites, visuals
 from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -21,6 +21,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import IconNames, StaticIcon, VisualContext
+from cmk.gui.utils.notifications import acknowledged_time, number_of_failed_notifications
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput, ValueSpec
 
@@ -489,9 +490,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if self.parameters().show_failed_notifications is None:
             return
 
-        failed_notifications = notifications.number_of_failed_notifications(
-            after=notifications.acknowledged_time()
-        )
+        failed_notifications = number_of_failed_notifications(from_timestamp=acknowledged_time())
         if not failed_notifications:
             return
 

@@ -96,9 +96,10 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.notifications import (
+    acknowledged_time,
     get_disabled_notifications_infos,
-    get_failed_notification_count,
-    get_total_sent_notifications,
+    number_of_failed_notifications,
+    number_of_total_sent_notifications,
     OPTIMIZE_NOTIFICATIONS_ENTRIES,
     SUPPORT_NOTIFICATIONS_ENTRIES,
 )
@@ -1123,7 +1124,6 @@ def _fallback_mail_contacts_configured() -> bool:
 
 def _get_vue_data() -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
-    total_send_notifications = _get_total_sent_notifications_last_seven_days()
     return Notifications(
         overview_title_i18n=_("Notification overview"),
         fallback_warning=(
@@ -1161,8 +1161,10 @@ def _get_vue_data() -> Notifications:
             else None
         ),
         notification_stats=NotificationStats(
-            num_sent_notifications=total_send_notifications,
-            num_failed_notifications=get_failed_notification_count(),
+            num_sent_notifications=_number_of_total_sent_notifications_last_seven_days(),
+            num_failed_notifications=number_of_failed_notifications(
+                from_timestamp=acknowledged_time()
+            ),
             sent_notification_link=makeuri_contextless(
                 request,
                 [
@@ -1224,11 +1226,11 @@ def _get_vue_data() -> Notifications:
     )
 
 
-def _get_total_sent_notifications_last_seven_days() -> int:
+def _number_of_total_sent_notifications_last_seven_days() -> int:
     current_time = datetime.now()
     seven_days_ago = current_time - timedelta(days=7)
     from_timestamp = int(seven_days_ago.timestamp())
-    return get_total_sent_notifications(from_timestamp=from_timestamp)
+    return number_of_total_sent_notifications(from_timestamp=from_timestamp)
 
 
 def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:

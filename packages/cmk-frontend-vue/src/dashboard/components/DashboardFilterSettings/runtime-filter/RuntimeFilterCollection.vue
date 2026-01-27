@@ -89,7 +89,7 @@ const countDashboardFilters = computed(() => {
         <div class="db-runtime-filter-collection__items">
           <div
             v-for="(filterId, index) in filters"
-            :key="index"
+            :key="filterId"
             class="db-runtime-filter-collection__item-container"
           >
             <slot

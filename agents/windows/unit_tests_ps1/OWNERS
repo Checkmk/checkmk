@@ -1,6 +1,6 @@
 
 
-per-file mk_mysql*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mk_mysql*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mk_mysql*=set noparent
 
 # Please

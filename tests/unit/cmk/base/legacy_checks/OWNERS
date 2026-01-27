@@ -1,16 +1,16 @@
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/check_and_agent_plugins/OWNERS_DEFINITION
+file:/component_owners/plugins/OWNERS_DEFINITION
 
-per-file test_mongodb*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_mongodb*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file test_mongodb*=set noparent
-per-file test_mssql*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_mssql*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file test_mssql*=set noparent
-per-file test_mysql*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_mysql*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file test_mysql*=set noparent
-per-file test_postgres*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_postgres*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file test_postgres*=set noparent
-per-file test_sap_hana*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_sap_hana*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file test_sap_hana*=set noparent
 
 # Please

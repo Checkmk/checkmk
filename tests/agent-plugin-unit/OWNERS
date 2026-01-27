@@ -1,8 +1,8 @@
 
 
-per-file test_mk_mongodb*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_mk_mongodb*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file test_mk_mongodb*=set noparent
-per-file test_mk_postgres*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_mk_postgres*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file test_mk_postgres*=set noparent
 
 # Please

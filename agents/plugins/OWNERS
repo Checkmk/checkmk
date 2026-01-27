@@ -2,19 +2,19 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/agent_bakery_updater/OWNERS_DEFINITION
 
-per-file mk_informix*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mk_informix*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mk_informix*=set noparent
-per-file mk_mongodb*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mk_mongodb*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mk_mongodb*=set noparent
-per-file mk_mysql*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mk_mysql*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mk_mysql*=set noparent
-per-file mk_oracle*=file:/component_owners/mk_oracle/OWNERS_DEFINITION
+per-file mk_oracle*=file:/component_owners/plugins_oracle/OWNERS_DEFINITION
 per-file mk_oracle*=set noparent
-per-file mk_postgres*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mk_postgres*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mk_postgres*=set noparent
-per-file mk_redis*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mk_redis*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mk_redis*=set noparent
-per-file mk_sap_hana*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mk_sap_hana*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file mk_sap_hana*=set noparent
 
 # Please

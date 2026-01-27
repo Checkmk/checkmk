@@ -1,6 +1,6 @@
 
 
-per-file mk_oracle*=file:/component_owners/mk_oracle/OWNERS_DEFINITION
+per-file mk_oracle*=file:/component_owners/plugins_oracle/OWNERS_DEFINITION
 per-file mk_oracle*=set noparent
 
 # Please

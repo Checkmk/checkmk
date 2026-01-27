@@ -3098,7 +3098,6 @@ def postprocess_restore_as_site_user(
             else CommandType.restore_as_new_site
         ),
         verbose,
-        (),
     )
 
 

@@ -6,7 +6,6 @@ import enum
 import os
 import subprocess
 import sys
-from collections.abc import Sequence
 from enum import auto, Enum
 from pathlib import Path
 from uuid import uuid4
@@ -115,7 +114,6 @@ def finalize_site_as_user(
     config: Config,
     command_type: CommandType,
     verbose: bool,
-    ignored_hooks: Sequence[str],
 ) -> FinalizeOutcome:
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -136,7 +134,9 @@ def finalize_site_as_user(
 
     # Run all hooks in order to setup things according to the
     # configuration settings
-    config_set_all(site, config, verbose, ignored_hooks)
+    # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
+    # see CMK-3067
+    config_set_all(site, config, verbose, ["TMPFS"])
     initialize_site_ca(site)
     initialize_agent_ca(site)
     initialize_relay_ca(site)
@@ -197,11 +197,7 @@ def finalize_site(
             # Needed by the post-rename-site script
             os.environ["OLD_OMD_SITE"] = old_site_name
 
-            # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
-            # see CMK-3067
-            outcome = finalize_site_as_user(
-                version_info, site, site.conf, command_type, verbose, ignored_hooks=["TMPFS"]
-            )
+            outcome = finalize_site_as_user(version_info, site, site.conf, command_type, verbose)
             sys.exit(outcome.value)
         except Exception as e:
             sys.stderr.write(f"Failed to finalize site: {e}\n")

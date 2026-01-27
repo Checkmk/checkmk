@@ -35,6 +35,7 @@ from typing import (
 import omdlib
 import omdlib.backup
 import omdlib.utils
+from omdlib.args_site_user import args_to_command_line, Restore
 from omdlib.config_hooks import (
     config_set_all,
     config_set_value,
@@ -2970,8 +2971,31 @@ def _restore_backup_from_tar_root(
         gid = options.get("gid")
         useradd(version_info, site, uid, gid)  # None for uid/gid means: let Linux decide
         os.mkdir(site_home)
+        add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
     _process_backup_tar(tar, global_opts.verbose, options, sitename, site)
-    postprocess_restore_as_root(version_info, sitename, site, options, global_opts.verbose)
+
+    returncode = run_as_site_user(
+        site.name,
+        args_to_command_line(
+            Restore(site=site.name, old_site=sitename, verbose=global_opts.verbose, reuse=reuse)
+        ),
+        capture_output=False,
+    ).returncode
+    if returncode < 0 or returncode == 1:
+        sys.exit("Error in non-priviledged sub-process.")
+    outcome = FinalizeOutcome(returncode)
+    config = read_site_config(site_home)
+    register_with_system_apache(
+        version_info,
+        SitePaths.from_site_name(site.name).apache_conf,
+        site.name,
+        site_home,
+        config["APACHE_TCP_ADDR"],
+        config["APACHE_TCP_PORT"],
+        "apache-reload" in options,
+        verbose=global_opts.verbose,
+    )
+    sys.exit(outcome.value)
 
 
 def _restore_backup_from_tar_site(
@@ -3051,26 +3075,6 @@ def main_restore(
                 )
     except tarfile.ReadError as e:
         sys.exit("Failed to open the backup: %s" % e)
-
-
-def postprocess_restore_as_root(
-    version_info: VersionInfo,
-    old_site_name: str,
-    site: SiteContext,
-    options: CommandOptions,
-    verbose: bool,
-) -> None:
-    # Entry for tmps in /etc/fstab
-    if "reuse" in options:
-        command_type = CommandType.restore_existing_site
-    else:
-        command_type = CommandType.restore_as_new_site
-        add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
-
-    outcome = finalize_site(
-        version_info, old_site_name, site, {}, command_type, "apache-reload" in options, verbose
-    )
-    sys.exit(outcome.value)
 
 
 def postprocess_restore_as_site_user(
@@ -3325,3 +3329,17 @@ def main() -> None:
     _run_command(
         command, version_info, site, global_opts, args, command_options, orig_working_directory
     )
+
+
+def main_finalize_restore(args: Restore) -> int:
+    site = site_environment_as_root(args.site, args.verbose)
+    os.environ["OLD_OMD_SITE"] = args.old_site
+    return finalize_site_as_user(
+        version_info=VersionInfo(),
+        site=site,
+        config=site.conf,
+        command_type=(
+            CommandType.restore_existing_site if args.reuse else CommandType.restore_as_new_site
+        ),
+        verbose=args.verbose,
+    ).value

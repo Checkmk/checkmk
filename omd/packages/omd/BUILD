@@ -147,10 +147,38 @@ file_from_flag(
     },
 )
 
+# Make it possible to replace OMD_VERSION by labels
+replace_string_in_file(
+    name = "omd_site_user_py_in",
+    src = "omd_site_user.py",
+    out = "lib/omd/omd_site_user_in",
+    replace_dict = {
+        "###OMD_VERSION###": "{CMK_VERSION}.{CMK_EDITION}",
+    },
+)
+
+file_from_flag(
+    name = "omd_site_user_py_omd_version",
+    src = ":omd_site_user_py_in",
+    out = "lib/omd/omd_site_user",
+    replace_labels = {
+        "CMK_EDITION": "@cmk//edition",
+        "CMK_VERSION": "@cmk//version",
+    },
+)
+
+py_binary(
+    name = "omd_site_user_py",
+    srcs = ["omd_site_user.py"],
+    main = "omd_site_user.py",
+    deps = [":omdlib"],
+)
+
 pkg_files(
     name = "lib_755",
     srcs = [
         "next_free_port",
+        ":omd_site_user_py_omd_version",
         ":restart_site_apache_omd_version",
     ],
     attributes = pkg_attributes(mode = "0755"),
@@ -183,6 +211,7 @@ file_from_flag(
 py_library(
     name = "omdlib",
     srcs = [
+        "omdlib/args_site_user.py",
         "omdlib/backup.py",
         "omdlib/config_hooks.py",
         "omdlib/console.py",
@@ -194,6 +223,7 @@ py_library(
         "omdlib/init_scripts.py",
         "omdlib/instance_id.py",
         "omdlib/main.py",
+        "omdlib/main_site_user.py",
         "omdlib/options.py",
         "omdlib/package_manager.py",
         "omdlib/restore.py",

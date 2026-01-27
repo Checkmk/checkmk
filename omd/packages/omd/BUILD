@@ -1,3 +1,5 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
@@ -166,48 +168,63 @@ pkg_files(
 
 file_from_flag(
     name = "omdlib_init",
-    src = "omdlib/__init__.py",
-    out = "__init__.py",
+    src = "omdlib/__template_init__.py",
+    out = "omdlib/__init__.py",
     replace_labels = {
         "CMK_VERSION": "@cmk//version",
         "CMK_EDITION": "@cmk//edition",
     },
 )
 
-pkg_files(
+py_library(
     name = "omdlib",
     srcs = [
-        ":omdlib/backup.py",
-        ":omdlib/config_hooks.py",
-        ":omdlib/console.py",
-        ":omdlib/contexts.py",
-        ":omdlib/crash_reporting.py",
-        ":omdlib/dialog.py",
-        ":omdlib/finalize.py",
-        ":omdlib/global_options.py",
-        ":omdlib/init_scripts.py",
-        ":omdlib/instance_id.py",
-        ":omdlib/main.py",
-        ":omdlib/options.py",
-        ":omdlib/package_manager.py",
-        ":omdlib/restore.py",
-        ":omdlib/scripts.py",
-        ":omdlib/site_name.py",
-        ":omdlib/site_paths.py",
-        ":omdlib/sites.py",
-        ":omdlib/skel_permissions.py",
-        ":omdlib/system_apache.py",
-        ":omdlib/tmpfs.py",
-        ":omdlib/type_defs.py",
-        ":omdlib/update.py",
-        ":omdlib/update_check.py",
-        ":omdlib/user_processes.py",
-        ":omdlib/users_and_groups.py",
-        ":omdlib/utils.py",
-        ":omdlib/version.py",
-        ":omdlib/version_info.py",
-        ":omdlib_init",
+        "omdlib/backup.py",
+        "omdlib/config_hooks.py",
+        "omdlib/console.py",
+        "omdlib/contexts.py",
+        "omdlib/crash_reporting.py",
+        "omdlib/dialog.py",
+        "omdlib/finalize.py",
+        "omdlib/global_options.py",
+        "omdlib/init_scripts.py",
+        "omdlib/instance_id.py",
+        "omdlib/main.py",
+        "omdlib/options.py",
+        "omdlib/package_manager.py",
+        "omdlib/restore.py",
+        "omdlib/scripts.py",
+        "omdlib/site_name.py",
+        "omdlib/site_paths.py",
+        "omdlib/sites.py",
+        "omdlib/skel_permissions.py",
+        "omdlib/system_apache.py",
+        "omdlib/tmpfs.py",
+        "omdlib/type_defs.py",
+        "omdlib/update.py",
+        "omdlib/update_check.py",
+        "omdlib/user_processes.py",
+        "omdlib/users_and_groups.py",
+        "omdlib/utils.py",
+        "omdlib/version.py",
+        "omdlib/version_info.py",
+        "omdlib_init",
     ],
+    imports = ["."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//cmk:lib_cmk",
+        "//packages/cmk-ccc:archive",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:resulttype",
+        "//packages/cmk-ccc:version",
+        requirement("psutil"),
+    ],
+)
+
+pkg_files(
+    name = "omdlib_pkg",
+    srcs = [":omdlib"],
     prefix = "lib/python3/omdlib",
 )
 
@@ -277,7 +294,7 @@ pkg_tar(
         ":omd_init_pkg",
         ":omd_main_pkg",
         ":omd_service",
-        ":omdlib",
+        ":omdlib_pkg",
         ":skel",
         ":xinetd_link",
     ] + select({

@@ -8,7 +8,6 @@ load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
-load("//:bazel_variables.bzl", "RUFF_VERSION")
 load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
 load("//bazel/rules:proto.bzl", "proto_library_as")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
@@ -87,7 +86,7 @@ write_file(
     name = "bazel-requirements-constraints",
     out = "bazel-requirements-constraints.txt",
     content = [
-        "ruff==%s" % RUFF_VERSION,
+        "ruff==0.14.11",  # keep in sync with the multitool hub % RUFF_VERSION,
         "protobuf==%s" % PROTOBUF_PYTHON_VERSION,
     ],
 )

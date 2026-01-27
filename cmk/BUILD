@@ -3,7 +3,6 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("do_not_deploy.bzl", "DO_NOT_DEPLOY")
@@ -20,6 +19,36 @@ exports_files([
     "gui/openapi/spec/spec_generator/generate_api_spec.py",
     "product_telemetry/cmk_telemetry_cli.py",
 ] + LEGACY_CHECKS_DICT.keys())
+
+# TODO: Re-work this with edition_deps + check for duplicate in cmk/BUILD
+edition_python_deps = select({
+    "@cmk//edition:cloud": [
+        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
+    ],
+    "@cmk//edition:community": [],
+    "@cmk//edition:pro": [
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
+    ],
+    "@cmk//edition:ultimate": [
+        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
+    ],
+    "@cmk//edition:ultimatemt": [
+        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
+    ],
+})
 
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order

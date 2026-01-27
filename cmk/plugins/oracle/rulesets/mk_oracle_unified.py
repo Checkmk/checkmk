@@ -202,6 +202,24 @@ def _auth_options(is_default_options: bool = True) -> CascadingSingleChoice:
                     },
                 ),
             ),
+            CascadingSingleChoiceElement(
+                name="wallet",
+                title=Title("Oracle Wallet"),
+                parameter_form=FixedValue(
+                    value=None,
+                    help_text=Help(
+                        "Use Oracle Wallet for secure authentication to the Oracle database "
+                        "without storing passwords in plain text. "
+                        "If 'Path to tnsnames.ora or sqlnet.ora file' (TNS_ADMIN) is not set, "
+                        "the wallet must be located in /etc/check_mk/oracle_wallet. "
+                        "In this case, the plugin will automatically create a sqlnet.ora file "
+                        "if it does not exist. "
+                        "If TNS_ADMIN is set to a custom path, you must ensure that sqlnet.ora "
+                        "(with the correct wallet location) and the Oracle Wallet files "
+                        "are properly configured in that directory."
+                    ),
+                ),
+            ),
         ],
     )
 

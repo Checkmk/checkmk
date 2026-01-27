@@ -6,6 +6,7 @@
 # mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterable, Mapping, Sequence
+from enum import StrEnum
 from pathlib import Path
 from typing import Literal, NamedTuple, NotRequired, TypedDict
 
@@ -69,6 +70,11 @@ WIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
 GuiSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
 
 
+class OracleAuthType(StrEnum):
+    STANDARD = "standard"
+    WALLET = "wallet"
+
+
 class GuiAuthUserPasswordData(BaseModel):
     username: str
     password: Secret
@@ -116,7 +122,10 @@ class GuiAdditionalOptionsConf(BaseModel):
 
 
 class GuiMainConf(BaseModel):
-    auth: tuple[Literal["standard"], GuiAuthUserPasswordData]
+    auth: tuple[
+        OracleAuthType,
+        GuiAuthUserPasswordData | None,
+    ]
     connection: GuiConnectionConf
     options: GuiAdditionalOptionsConf | None = None
     cache_age: int | None = None
@@ -135,7 +144,13 @@ class GuiInstanceAdditionalOptionsConf(BaseModel):
 
 class GuiInstanceConf(BaseModel):
     sid: str
-    auth: tuple[Literal["standard"], GuiInstanceAuthUserPasswordData] | None = None
+    auth: (
+        tuple[
+            OracleAuthType,
+            GuiInstanceAuthUserPasswordData | None,
+        ]
+        | None
+    ) = None
     connection: GuiConnectionConf | None = None
     options: GuiInstanceAdditionalOptionsConf | None = None
 
@@ -164,8 +179,8 @@ class OracleSection(TypedDict):
 
 
 class OracleAuth(TypedDict):
-    username: str
-    password: str
+    username: NotRequired[str]
+    password: NotRequired[str]
     role: NotRequired[str]
     type: NotRequired[str]
 
@@ -263,14 +278,24 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
     return oracle_main
 
 
-def _get_oracle_authentication(auth_config: tuple[str, GuiAuthUserPasswordData]) -> OracleAuth:
+def _get_oracle_authentication(
+    auth_config: tuple[OracleAuthType, GuiAuthUserPasswordData | None],
+) -> OracleAuth:
     auth_type = auth_config[0]
-    auth_data = auth_config[1]
-    auth = OracleAuth(username=auth_data.username, password=auth_data.password.revealed)
-    if role := auth_data.role:
-        auth["role"] = role
-    auth["type"] = auth_type
-    return auth
+    match auth_config:
+        case (OracleAuthType.WALLET, _):
+            return OracleAuth(type=OracleAuthType.WALLET.value)
+        case (OracleAuthType.STANDARD, GuiAuthUserPasswordData() as auth_data):
+            auth = OracleAuth(
+                username=auth_data.username,
+                password=auth_data.password.revealed,
+                type=OracleAuthType.STANDARD.value,
+            )
+            if role := auth_data.role:
+                auth["role"] = role
+            return auth
+        case _:
+            raise ValueError(f"Unsupported authentication type: {auth_type}")
 
 
 def _get_oracle_connection(conn: GuiConnectionConf) -> OracleConnection:
@@ -355,19 +380,25 @@ def _get_oracle_sections(
 
 
 def _get_oracle_instance_authentication(
-    auth_config: tuple[str, GuiInstanceAuthUserPasswordData],
+    auth_config: tuple[OracleAuthType, GuiInstanceAuthUserPasswordData | None],
 ) -> OracleInstanceAuth:
-    auth_data = auth_config[1]
     auth = OracleInstanceAuth()
-    if username := auth_data.username:
-        auth["username"] = username
-    if password := auth_data.password:
-        auth["password"] = password.revealed
-    if role := auth_data.role:
-        auth["role"] = role
-    if auth_type := auth_config[0]:
-        auth["type"] = auth_type
-    return auth
+    match auth_config:
+        case (OracleAuthType.WALLET, _):
+            auth["type"] = OracleAuthType.WALLET.value
+            return auth
+        case (OracleAuthType.STANDARD, GuiInstanceAuthUserPasswordData() as auth_data):
+            if username := auth_data.username:
+                auth["username"] = username
+            if password := auth_data.password:
+                auth["password"] = password.revealed
+            if role := auth_data.role:
+                auth["role"] = role
+            if auth_type := auth_config[0]:
+                auth["type"] = auth_type.value
+            return auth
+        case _:
+            raise ValueError(f"Unsupported authentication type: {auth_config[0]}")
 
 
 def _get_oracle_instances(instances: list[GuiInstanceConf]) -> list[OracleInstance]:

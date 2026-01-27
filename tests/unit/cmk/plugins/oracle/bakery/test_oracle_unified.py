@@ -23,11 +23,11 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiMainConf,
     GuiOracleClientLibOptions,
     GuiOracleIdentificationConf,
+    OracleAuthType,
 )
 
 PLUGIN_NAME = "mk_oracle_unified"
 
-STANDARD_AUTH: Literal["standard"] = "standard"
 DEPLOY: Literal["deploy"] = "deploy"
 CMK_POSTPROCESSED: Literal["cmk_postprocessed"] = "cmk_postprocessed"
 EXPLICIT_PASSWORD: Literal["explicit_password"] = "explicit_password"
@@ -102,7 +102,7 @@ oracle_config_min: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
         auth=(
-            STANDARD_AUTH,
+            OracleAuthType.STANDARD,
             GuiAuthUserPasswordData(
                 username="cmk",
                 password=Secret("pw", "", ""),
@@ -142,7 +142,7 @@ oracle_config_full: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
         auth=(
-            STANDARD_AUTH,
+            OracleAuthType.STANDARD,
             GuiAuthUserPasswordData(
                 username="admin",
                 password=Secret("adminpw", "", ""),
@@ -200,7 +200,7 @@ oracle_config_full: GuiConfig = GuiConfig(
         GuiInstanceConf(
             sid="SID2",
             auth=(
-                STANDARD_AUTH,
+                OracleAuthType.STANDARD,
                 GuiInstanceAuthUserPasswordData(
                     username="inst2",
                     password=Secret("inst2pw", "", ""),
@@ -273,7 +273,7 @@ oracle_config_section: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
         auth=(
-            STANDARD_AUTH,
+            OracleAuthType.STANDARD,
             GuiAuthUserPasswordData(
                 username="secuser",
                 password=Secret("secpw", "", ""),
@@ -344,7 +344,7 @@ oracle_config_instance_sid: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
         auth=(
-            STANDARD_AUTH,
+            OracleAuthType.STANDARD,
             GuiAuthUserPasswordData(
                 username="onlysid",
                 password=Secret("sidpw", "", ""),
@@ -392,7 +392,7 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
         auth=(
-            STANDARD_AUTH,
+            OracleAuthType.STANDARD,
             GuiAuthUserPasswordData(
                 username="mainuser",
                 password=Secret("mainpw", "", ""),
@@ -424,7 +424,7 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
         GuiInstanceConf(
             sid="SID_B",
             auth=(
-                STANDARD_AUTH,
+                OracleAuthType.STANDARD,
                 GuiInstanceAuthUserPasswordData(
                     username="buser",
                     password=Secret("bpw", "", ""),
@@ -481,7 +481,7 @@ oracle_config_use_host_client_always: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
         auth=(
-            STANDARD_AUTH,
+            OracleAuthType.STANDARD,
             GuiAuthUserPasswordData(
                 username="user",
                 password=Secret("pw", "", ""),
@@ -528,7 +528,7 @@ oracle_config_use_host_client_path: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
         auth=(
-            STANDARD_AUTH,
+            OracleAuthType.STANDARD,
             GuiAuthUserPasswordData(
                 username="user",
                 password=Secret("pw", "", ""),
@@ -576,7 +576,7 @@ oracle_config_deploy_oracle_binaries: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
         auth=(
-            STANDARD_AUTH,
+            OracleAuthType.STANDARD,
             GuiAuthUserPasswordData(
                 username="user",
                 password=Secret("pw", "", ""),
@@ -616,6 +616,45 @@ expected_yaml_lines_deploy_oracle_binaries = [
     "      port: 1521",
 ]
 
+# 9. Main config with wallet auth, connection
+oracle_config_wallet_auth: GuiConfig = GuiConfig(
+    deploy=(DEPLOY, None),
+    main=GuiMainConf(
+        auth=(
+            OracleAuthType.WALLET,
+            None,
+        ),
+        connection=GuiConnectionConf(
+            host="localhost",
+            port=1521,
+            timeout=None,
+            tns_admin=None,
+            oracle_local_registry=None,
+        ),
+        options=GuiAdditionalOptionsConf(
+            oracle_client_library=GuiOracleClientLibOptions(
+                deploy_lib=True,
+            )
+        ),
+        cache_age=None,
+        discovery=None,
+        sections=None,
+    ),
+    instances=None,
+)
+
+expected_yaml_lines_wallet_auth = [
+    "---",
+    "oracle:",
+    "  main:",
+    "    authentication:",
+    "      type: wallet",
+    "    cache_age: 600",
+    "    connection:",
+    "      hostname: localhost",
+    "      port: 1521",
+]
+
 
 def _process(config: GuiConfig) -> Sequence[Plugin | PluginConfig | SystemBinary | SystemConfig]:
     return list(
@@ -635,6 +674,8 @@ def _process(config: GuiConfig) -> Sequence[Plugin | PluginConfig | SystemBinary
         (oracle_config_discovery_instances, expected_yaml_lines_discovery_instances),
         (oracle_config_use_host_client_always, expected_yaml_lines_use_host_client_always),
         (oracle_config_use_host_client_path, expected_yaml_lines_use_host_client_path),
+        (oracle_config_deploy_oracle_binaries, expected_yaml_lines_deploy_oracle_binaries),
+        (oracle_config_wallet_auth, expected_yaml_lines_wallet_auth),
     ],
 )
 def test_oracle_min(config: GuiConfig, expected: Sequence[str]) -> None:

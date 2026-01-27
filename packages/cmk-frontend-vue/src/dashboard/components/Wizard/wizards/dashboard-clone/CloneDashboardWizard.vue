@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -28,7 +28,6 @@ import ContentSpacer from '../../components/ContentSpacer.vue'
 import DashboardLayoutSelector from '../../components/DashboardSettings/DashboardLayoutSelector.vue'
 import GeneralProperties from '../../components/DashboardSettings/GeneralProperties.vue'
 import VisibilityProperties from '../../components/DashboardSettings/VisibilityProperties.vue'
-import { DashboardType } from '../../components/DashboardSettings/types'
 import StepsHeader from '../../components/StepsHeader.vue'
 
 const { _t } = usei18n()
@@ -54,12 +53,11 @@ const emit = defineEmits<{
   'cancel-clone': []
 }>()
 
-let dashboardType = DashboardType.UNRESTRICTED
-if (props.referenceDashboardRestrictedToSingle.length > 1) {
-  dashboardType = DashboardType.CUSTOM
-} else if (props.referenceDashboardRestrictedToSingle.includes('host')) {
-  dashboardType = DashboardType.SPECIFIC_HOST
-}
+const dashboardScope = computed(() =>
+  props.referenceDashboardRestrictedToSingle.length === 0
+    ? _t('Unrestricted')
+    : props.referenceDashboardRestrictedToSingle.join(', ')
+)
 
 let cloneAvailableLayouts: DashboardLayout[]
 if (props.referenceDashboardLayoutType === DashboardLayout.RELATIVE_GRID) {
@@ -68,12 +66,6 @@ if (props.referenceDashboardLayoutType === DashboardLayout.RELATIVE_GRID) {
   // TODO: this must get changed once we support changing from legacy to responsive
   cloneAvailableLayouts = [props.referenceDashboardLayoutType]
 }
-
-const dashboardTypeName = {
-  [DashboardType.UNRESTRICTED]: _t('Unrestricted'),
-  [DashboardType.SPECIFIC_HOST]: _t('Specific host'),
-  [DashboardType.CUSTOM]: _t('Custom')
-}[dashboardType]
 
 const clonedDashboardName =
   props.referenceDashboardType === DashboardOwnerType.BUILT_IN
@@ -167,7 +159,7 @@ const cancel = () => {
               </FieldDescription>
               <FieldComponent>
                 <div class="db-clone-dashboard-wizard__general-properties-item">
-                  {{ dashboardTypeName }}
+                  {{ dashboardScope }}
                 </div>
               </FieldComponent>
             </TableFormRow>

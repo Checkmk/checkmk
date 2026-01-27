@@ -5,7 +5,7 @@
 
 import logging
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 
 import pytest
@@ -22,6 +22,7 @@ from tests.composition.utils import await_broker_ready
 from tests.testlib.site import Site
 
 from cmk.piggyback.backend._paths import source_status_dir
+from cmk.piggyback.hub import RELATIVE_CONFIG_PATH
 
 _HOSTNAME_SOURCE_CENTRAL = "source_central_host"
 _HOSTNAME_SOURCE_REMOTE = "source_remote_host"
@@ -137,6 +138,67 @@ def test_piggyback_services_source_remote(piggyback_env_two_site_setup: tuple[Si
         assert piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
+
+
+def _piggybackhub_conf_timestamp(site: Site) -> int | None:
+    if not site.file_exists(site.root / RELATIVE_CONFIG_PATH):
+        return None
+    return site.file_timestamp(site.root / RELATIVE_CONFIG_PATH)
+
+
+@contextmanager
+def _change_remote_site_customer(
+    central_site: Site, remote_site: Site, new_customer: str
+) -> Iterator[None]:
+    try:
+        site_connection = central_site.openapi.sites.show(remote_site.id)
+        site_connection["basic_settings"]["customer"] = new_customer
+        central_site.openapi.sites.update(remote_site.id, site_connection)
+        central_site.openapi.changes.activate_and_wait_for_completion()
+        yield
+    finally:
+        site_connection = central_site.openapi.sites.show(remote_site.id)
+        site_connection["basic_settings"]["customer"] = "provider"
+        central_site.openapi.sites.update(remote_site.id, site_connection)
+        central_site.openapi.changes.activate_and_wait_for_completion()
+
+
+def _check_update_config_timestamps(sites: Sequence[Site], timestamps_dict: dict[str, int]) -> None:
+    for site in sites:
+        file_timestamp = _piggybackhub_conf_timestamp(site)
+        assert file_timestamp is not None, f"piggyback_hub.conf should exist for site {site.id}"
+
+        if site.id in timestamps_dict:
+            assert (
+                file_timestamp > timestamps_dict[site.id]
+            ), f"piggyback_hub.conf should be updated for site {site.id}"
+
+        timestamps_dict[site.id] = file_timestamp
+
+
+@pytest.mark.skip_if_not_edition("managed")
+def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
+    """
+    - Changing the customer of the remote site do not block piggyback hub config file distribution.
+    - Restoring the customer to the original value keeps piggyback hub config file distribution.
+    """
+
+    _HOSTNAME_PIGGYBACKED = "piggybacked_host"
+    timestamps_dict: dict[str, int] = {}
+    with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
+        _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        central_site.openapi.changes.activate_and_wait_for_completion()
+
+        # same "provider" customer
+        # save starting timestamps
+        _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+
+        with _change_remote_site_customer(central_site, remote_site, "customer1"):
+            # service are NOT updated anymore (tested elsewhere), but config file is
+            _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+
+        # After restoring customer, data distribution resumes, so config file is updated again
+        _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
 
 
 def test_piggyback_services_remote_remote(

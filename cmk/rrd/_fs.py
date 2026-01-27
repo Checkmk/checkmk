@@ -15,8 +15,11 @@ from cmk.utils.misc import pnp_cleanup
 class Storage:
     _path: Path
 
-    def get_path(self) -> Path:
+    def get_path(self) -> Path | None:
         return self._path
+
+    def get_expected_path(self, suffix: str) -> Path:
+        return self._path.with_suffix(suffix)
 
 
 def rrd_pnp_host_dir(hostname: HostName) -> Path:

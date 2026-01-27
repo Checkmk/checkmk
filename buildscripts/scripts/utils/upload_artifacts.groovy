@@ -303,7 +303,7 @@ void withHotCache(Map args, Closure body) {
 
     // TODO: Remove me as soon as this is stable
     // Skip restoring "All unit tests" as it might take up to 30min due to massive 27GB and high disk utilization
-    if (env.USE_STASHED_BAZEL_FOLDER == "0" || "${args.target_name}" == "All unit tests") {
+    if (env.USE_STASHED_BAZEL_FOLDER == "0" || args.target_name in ["All unit tests", "C++ unit tests"]) {
         body();
         return;
     }

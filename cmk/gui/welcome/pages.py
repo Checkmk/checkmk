@@ -7,7 +7,6 @@ from dataclasses import asdict
 from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.dashboard.store import get_all_dashboards
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -21,7 +20,6 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
-from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
 from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomeCards, WelcomePage
@@ -37,8 +35,7 @@ def register(page_registry: PageRegistry) -> None:
 
 
 def _get_finished_stages() -> Generator[FinishedEnum]:
-    # Creation of first host
-    if "add_host" in user.welcome_completed_steps or any(Host.all()):
+    if "add_host" in user.welcome_completed_steps:
         yield FinishedEnum.add_host
 
     if "activate_changes" in user.welcome_completed_steps:
@@ -53,11 +50,8 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
     if "enable_notifications" in user.welcome_completed_steps:
         yield FinishedEnum.enable_notifications
 
-    # Creation of a custom dashboard
-    for user_id, _dashboard_name in get_all_dashboards().keys():
-        if user_id == user.id:
-            yield FinishedEnum.create_dashboard
-            break
+    if "create_dashboard" in user.welcome_completed_steps:
+        yield FinishedEnum.create_dashboard
 
 
 def _make_url_or_callback_from_registry(

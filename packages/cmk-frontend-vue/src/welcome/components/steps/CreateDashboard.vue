@@ -36,6 +36,8 @@ const currentStep: Ref<number> = usePersistentRef<number>(
   (v) => v as number,
   'local'
 )
+
+const emit = defineEmits(['step-completed'])
 </script>
 
 <template>
@@ -107,6 +109,12 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           </StepCardsRow>
         </template>
         <template #actions>
+          <CmkWizardButton
+            v-if="!accomplished && step"
+            type="finish"
+            :override-label="_t('Mark as done')"
+            @click="emit('step-completed', stepId)"
+          />
           <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>

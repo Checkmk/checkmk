@@ -2,11 +2,11 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::starttls::stream_io::read;
+use crate::starttls::stream_io::read_line;
 use crate::starttls::stream_io::write;
 use anyhow::{anyhow, Result};
 use log::{debug, info};
-use std::io::{Read, Write};
+use std::io::{BufReader, Read, Write};
 use std::sync::LazyLock;
 
 const SMTP_REPLY_CODE_LEN: usize = 3;
@@ -52,7 +52,7 @@ pub fn perform<T: Read + Write>(stream: &mut T, server: &str) -> Result<()> {
 fn read_greeting<T: Read + Write>(stream: &mut T) -> Result<()> {
     debug!("Reading SMTP greeting from server");
 
-    let greeting = SmtpResponse::parse(&read(stream)?)?;
+    let greeting = read_response(stream)?;
     if !greeting.is_ready() {
         return Err(anyhow!("Unexpected SMTP greeting code: {}", greeting.code));
     }
@@ -66,7 +66,7 @@ pub fn send_ehlo<T: Read + Write>(stream: &mut T, server: &str) -> Result<SmtpRe
     write(stream, &format!("EHLO {}\r\n", server))?;
 
     debug!("Reading EHLO response from server");
-    let ehlo_response = SmtpResponse::parse(&read(stream)?)?;
+    let ehlo_response = read_response(stream)?;
     if !ehlo_response.is_ok() {
         return Err(anyhow!("Unexpected EHLO response code: {}", ehlo_response));
     }
@@ -80,7 +80,7 @@ fn send_starttls<T: Read + Write>(stream: &mut T) -> Result<()> {
     write(stream, "STARTTLS\r\n")?;
 
     debug!("Reading STARTTLS response from server");
-    let starttls_response = SmtpResponse::parse(&read(stream)?)?;
+    let starttls_response = read_response(stream)?;
     if !starttls_response.is_ready() {
         return Err(anyhow!(
             "Unexpected STARTTLS response code: {}",
@@ -92,22 +92,35 @@ fn send_starttls<T: Read + Write>(stream: &mut T) -> Result<()> {
     Ok(())
 }
 
+/// Reads a complete SMTP response from the stream line by line.
+/// Continues reading until a line with a space separator is encountered (indicating the last line).
+fn read_response<T: Read>(stream: &mut T) -> Result<SmtpResponse> {
+    let mut reader = BufReader::new(stream);
+    let mut lines = Vec::new();
+
+    loop {
+        let line_str = read_line(&mut reader)?;
+        debug!("Read line: {:?}", line_str);
+
+        let line = SmtpLine::parse(&line_str)?;
+        let is_last_line = line.separator == Separator::Space;
+        lines.push(line);
+
+        if is_last_line {
+            break;
+        }
+    }
+
+    SmtpResponse::parse(lines)
+}
+
 pub struct SmtpResponse {
     code: ReplyCode,
     lines: Vec<SmtpLine>,
 }
 
 impl SmtpResponse {
-    /// Parses a full SMTP response into its constituent lines,
-    /// ensuring consistent reply codes and proper formatting according to RFC 5321
-    fn parse(response: &str) -> Result<Self> {
-        debug!("Parsing SMTP response: {:?}", response);
-        let lines = response
-            .split_inclusive("\r\n")
-            .map(SmtpLine::parse)
-            .collect::<Result<Vec<_>>>()?;
-
-        debug!("Parsed {} SMTP response lines", lines.len());
+    fn parse(lines: Vec<SmtpLine>) -> Result<Self> {
         if lines.is_empty() {
             return Err(anyhow!("Empty SMTP response"));
         }
@@ -123,16 +136,18 @@ impl SmtpResponse {
         if lines.last().map(|l| &l.separator) != Some(&Separator::Space) {
             return Err(anyhow!("No valid last line found in SMTP response"));
         }
-        if lines[..lines.len() - 1]
-            .iter()
-            .any(|line| line.separator == Separator::Space)
+        if lines.len() > 1
+            && lines[..lines.len() - 1]
+                .iter()
+                .any(|line| line.separator == Separator::Space)
         {
             return Err(anyhow!(
                 "Only the last line in SMTP response may have Separator::Space"
             ));
         }
+
         Ok(SmtpResponse {
-            code: lines[0].code,
+            code: response_code,
             lines,
         })
     }
@@ -213,10 +228,6 @@ impl SmtpLine {
             }
         };
         let text = TextString::parse(textstring)?;
-        debug!(
-            "Successfully parsed line - Code: {}, Separator: {:?}, Text: {}",
-            code, separator, text
-        );
 
         Ok(SmtpLine {
             code,
@@ -396,8 +407,9 @@ mod tests {
 
     #[test]
     fn test_smtp_response_parse_multiline() {
-        let response = "250-STARTTLS\r\n250 OK\r\n";
-        let parsed = SmtpResponse::parse(response).unwrap();
+        let response = b"250-STARTTLS\r\n250 OK\r\n";
+        let mut cursor = std::io::Cursor::new(response);
+        let parsed = read_response(&mut cursor).unwrap();
         assert_eq!(parsed.code, ReplyCode::Ok);
         assert_eq!(parsed.lines.len(), 2);
         assert_eq!(parsed.lines[0].separator, Separator::Hyphen);
@@ -408,8 +420,9 @@ mod tests {
 
     #[test]
     fn test_smtp_response_parse_invalid_last_line() {
-        let response = "250-STARTTLS\r\n250-OK\r\n";
-        let result = SmtpResponse::parse(response);
+        let response = b"250-STARTTLS\r\n250-OK\r\n";
+        let mut cursor = std::io::Cursor::new(response);
+        let result = read_response(&mut cursor);
         assert!(result.is_err());
     }
 

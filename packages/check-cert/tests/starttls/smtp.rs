@@ -29,6 +29,25 @@ fn test_perform_starttls_success() {
 }
 
 #[test]
+fn test_perform_starttls_success_with_response_split_in_two_reads() {
+    let responses = vec![
+        b"220 sample.server.com\r\n".to_vec(),
+        // EHLO response split into two reads:
+        b"250-sample.server.com at your service, [2001:a61:118e:9b01:fa56:153f:7bdd:5f2a]\r\n"
+            .to_vec(),
+        b"250-SIZE 35882577\r\n250-8BITMIME\r\n250-STARTTLS\r\n250 SMTPUTF8\r\n".to_vec(),
+        b"220 2.0.0 Ready to start TLS\r\n".to_vec(),
+    ];
+    let domain = "example.com";
+    let result = perform(&mut MockStream::new(responses), domain);
+    assert!(
+        result.is_ok(),
+        "STARTTLS handshake failed: {:?}",
+        result.err()
+    );
+}
+
+#[test]
 fn test_perform_starttls_invalid_greeting() {
     let responses = vec![b"500 Invalid greeting\r\n".to_vec()];
     let domain = "example.com";

@@ -61,6 +61,15 @@ rust_test(
     deps = [":check-cert-lib"],
 )
 
+rust_test(
+    name = "starttls_stream_io_test",
+    srcs = [
+        "tests/starttls/stream_io.rs",
+    ],
+    crate_root = "tests/starttls/stream_io.rs",
+    deps = [":check-cert-lib"],
+)
+
 rust_test_suite(
     name = "check-cert-lib-test-external",
     srcs = [

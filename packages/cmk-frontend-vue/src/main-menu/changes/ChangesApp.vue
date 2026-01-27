@@ -270,17 +270,18 @@ async function pollNumberPendingChanges() {
   const response: NumberOfPendingChangesResponse = (await ajaxCall.get(
     'ajax_sidebar_get_number_of_pending_changes.py'
   )) as NumberOfPendingChangesResponse
-
   const l = document.getElementById('changes_label')
 
   if (l) {
     if (response.number_of_pending_changes === 0) {
       l.style.display = 'none'
-      return
+    } else {
+      l.innerText =
+        response.number_of_pending_changes > 9
+          ? '9+'
+          : response.number_of_pending_changes.toString()
+      l.style.display = 'inline'
     }
-    l.innerText =
-      response.number_of_pending_changes > 9 ? '9+' : response.number_of_pending_changes.toString()
-    l.style.display = 'inline'
   }
 
   setTimeout(() => {

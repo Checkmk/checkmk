@@ -30,6 +30,8 @@ from typing import Literal, NewType, overload, Protocol, TypedDict
 
 from reportlab.lib.units import mm  # type: ignore[import-untyped]
 from reportlab.lib.utils import ImageReader  # type: ignore[import-untyped]
+from reportlab.pdfbase import pdfmetrics  # type: ignore[import-untyped]
+from reportlab.pdfbase.ttfonts import TTFont  # type: ignore[import-untyped]
 
 # Import software from reportlab (thanks to them!)
 from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
@@ -189,6 +191,8 @@ class Document:
         # Increase all future added headings by this level offset
         self._heading_level_offset = 0
         self._linepos = self._top  # current vertical cursor position
+
+        self._register_fonts()
 
         # Create initial graphics state, i.e. all style settings,
         # that can change while the document is being rendered. We keep a stack
@@ -992,6 +996,14 @@ class Document:
         Replace problematic characters in text for PDF rendering.
         """
         return text.replace("\N{THIN SPACE}", " ")
+
+    @staticmethod
+    def _register_fonts() -> None:
+        # Vera comes included in reportlab, so we can use it directly
+        pdfmetrics.registerFont(TTFont("Vera", "Vera.ttf"))
+        pdfmetrics.registerFont(TTFont("Vera-Bold", "VeraBd.ttf"))
+        pdfmetrics.registerFont(TTFont("Vera-Italic", "VeraIt.ttf"))
+        pdfmetrics.registerFont(TTFont("Vera-BoldItalic", "VeraBI.ttf"))
 
 
 class CellRenderer(Protocol):

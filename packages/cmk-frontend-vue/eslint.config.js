@@ -84,6 +84,7 @@ export default [
       'vue/prop-name-casing': 'off',
       'vue/require-default-prop': 'off',
       'vue/no-import-compiler-macros': 'error',
+      'vue/no-undef-components': 'error',
       'vue/no-bare-strings-in-template': [
         'error',
         {

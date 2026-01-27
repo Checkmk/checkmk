@@ -17,7 +17,7 @@ from cmk.agent_based.legacy.v0_unstable import (
     LegacyDiscoveryResult,
 )
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
-from cmk.base.check_legacy_includes.jolokia import (
+from cmk.plugins.jolokia.agent_based.lib import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )

@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     IgnoreResultsError,
     StringTable,
 )
-from cmk.base.check_legacy_includes.jolokia import (
+from cmk.plugins.jolokia.agent_based.lib import (
     get_inventory_jolokia_metrics_apps,
     jolokia_metrics_parse,
 )

@@ -8,7 +8,7 @@ from collections.abc import MutableSequence
 
 import pytest
 
-from cmk.base.check_legacy_includes.jolokia import jolokia_basic_split
+from cmk.plugins.jolokia.agent_based.lib import jolokia_basic_split
 
 pytestmark = pytest.mark.checks
 

@@ -13,7 +13,7 @@ from typing import Literal
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
-from cmk.base.check_legacy_includes.jolokia import jolokia_basic_split
+from cmk.plugins.jolokia.agent_based.lib import jolokia_basic_split
 
 check_info = {}
 

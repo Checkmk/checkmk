@@ -36,7 +36,7 @@ class CsrField:
 
     @classmethod
     def validate(cls, v: object) -> Self:
-        if not isinstance(v, (CertificateSigningRequest, str)):
+        if not isinstance(v, CertificateSigningRequest | str):
             raise TypeError("CertificateSigningRequest or string required")
         return cls(validate_csr(v))
 

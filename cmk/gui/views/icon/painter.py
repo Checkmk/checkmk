@@ -301,7 +301,7 @@ def _process_icon(
     url: None | tuple[str, str] | str = None
     icon_name: StaticIcon | DynamicIcon = StaticIcon(IconNames.trans)
     # DynamicIcon is an alias to str
-    if isinstance(result, (str, StaticIcon)):
+    if isinstance(result, str | StaticIcon):
         icon_name = result
     elif isinstance(result, HTML):
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there

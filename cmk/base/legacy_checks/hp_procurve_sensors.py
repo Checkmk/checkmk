@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
@@ -63,7 +62,7 @@ hp_procurve_status_map = {
 hp_procurve_status2nagios_map = {"unknown": 3, "bad": 2, "warning": 1, "good": 0, "notPresent": 1}
 
 
-def get_hp_procurve_sensor_type(type_input):
+def get_hp_procurve_sensor_type(type_input: str) -> str:
     type_ = ""
     if type_input.endswith("11.2.3.7.8.3.1"):
         type_ = "PSU"
@@ -76,15 +75,15 @@ def get_hp_procurve_sensor_type(type_input):
     return type_
 
 
-def discover_hp_procurve_sensors(info):
-    inventory = []
+def discover_hp_procurve_sensors(info: StringTable) -> list[tuple[str, None]]:
+    inventory: list[tuple[str, None]] = []
     for line in info:
         if len(line) == 4 and hp_procurve_status_map[line[2]] != "notPresent":
             inventory.append((line[0], None))
     return inventory
 
 
-def check_hp_procurve_sensors(item, _not_used, info):
+def check_hp_procurve_sensors(item: str, _not_used: None, info: StringTable) -> tuple[int, str]:
     for line in info:
         if line[0] == item:
             procurve_status = hp_procurve_status_map[line[2]]

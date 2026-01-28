@@ -50,6 +50,9 @@ def no_op_parser(
     """A no-op parser that does nothing and passes the parameters through.
 
     Use this if you insist on not using a parser at all.
+
+    Args:
+        parameters: The parameters to parse.
     """
     return parameters
 

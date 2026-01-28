@@ -12,6 +12,28 @@ from ._localize import Help, Title
 from .form_specs import Dictionary, FormSpec, String
 from .form_specs.validators import LengthInRange
 
+# This is needed b/c sphinc will otherwise include `iskeyword` (but not the other imports)
+__all__ = [
+    "Topic",
+    "CustomTopic",
+    "EvalType",
+    "HostCondition",
+    "HostAndServiceCondition",
+    "HostAndItemCondition",
+    "Host",
+    "Service",
+    "CheckParameters",
+    "EnforcedService",
+    "DiscoveryParameters",
+    "ActiveCheck",
+    "AgentConfig",
+    "SpecialAgent",
+    "AgentAccess",
+    "NotificationParameters",
+    "SNMP",
+    "InventoryParameters",
+]
+
 
 class Topic(Enum):
     APPLICATIONS = "applications"

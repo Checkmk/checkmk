@@ -4,7 +4,7 @@
 load("@rules_python//python:defs.bzl", "py_test")
 
 DOCTEST_TPL = r"""
-import doctest
+import sys, doctest
 
 def load_tests(loader, tests, ignore):
 {}
@@ -12,7 +12,7 @@ def load_tests(loader, tests, ignore):
 
 
 if __name__ == "__main__":
-    import unittest, sys
+    import unittest
 
     # Handle result here because no doctest is not an error.
     result = unittest.main(exit=False).result
@@ -23,7 +23,13 @@ if __name__ == "__main__":
 """
 
 # TODO: Make `ELLIPSIS` optional?
-ADD_TESTS_TPL = r"    tests.addTests(doctest.DocTestSuite('{}', optionflags=doctest.ELLIPSIS))"
+ADD_TESTS_TPL = r"""
+    try:
+        tests.addTests(doctest.DocTestSuite('{test}', optionflags=doctest.ELLIPSIS))
+    except SystemExit:
+        print('ERROR: "{test}" failed to load:  Early exit.')
+        sys.exit(1)
+"""
 
 def _file_to_module(file):
     if file.basename == "__init__.py":
@@ -36,7 +42,7 @@ def _impl(ctx):
     modules = []
     for src in ctx.attr.srcs:
         modules.extend([
-            ADD_TESTS_TPL.format(_file_to_module(file))
+            ADD_TESTS_TPL.format(test = _file_to_module(file))
             for file in src.files.to_list()
         ])
     runner = ctx.actions.declare_file(ctx.attr.name)

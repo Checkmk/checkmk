@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -14,7 +12,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def discover_dell_poweredge_amperage_power(info):
+def discover_dell_poweredge_amperage_power(info: StringTable) -> list[tuple[str, None]]:
     inventory = []
     for line in info:
         if line[6] != "" and line[5] in ("24", "26"):
@@ -22,7 +20,7 @@ def discover_dell_poweredge_amperage_power(info):
     return inventory
 
 
-def discover_dell_poweredge_amperage_current(info):
+def discover_dell_poweredge_amperage_current(info: StringTable) -> list[tuple[str, None]]:
     inventory = []
     for line in info:
         if line[6] != "" and line[5] in ("23", "25"):

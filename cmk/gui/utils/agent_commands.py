@@ -2,12 +2,17 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import Any, overload
+from urllib.parse import urlparse
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.gui.config import Config
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.shared_typing.agent_slideout import AgentInstallCmds, AgentRegistrationCmds
+from cmk.shared_typing.mode_host import ModeHostServerPerSite
+from cmk.shared_typing.setup import AgentDownloadServerPerSite
 
 WINDOWS_AGENT_INSTALL_CMD = """curl.exe -fOG {{SERVER}}/{{SITE}}/check_mk/agents/windows/check_mk_agent.msi && ^
 msiexec /i check_mk_agent.msi"""
@@ -86,3 +91,35 @@ def register(registry: AgentCommandsRegistry) -> None:
             legacy_agent_url=lambda: doc_reference_url(DocReference.AGENT_LINUX_LEGACY),
         )
     )
+
+
+@overload
+def get_server_per_site(
+    active_config: Config,
+    cls: type[ModeHostServerPerSite],
+) -> Sequence[ModeHostServerPerSite]: ...
+
+
+@overload
+def get_server_per_site(
+    active_config: Config,
+    cls: type[AgentDownloadServerPerSite],
+) -> Sequence[AgentDownloadServerPerSite]: ...
+
+
+def get_server_per_site(
+    active_config: Config,
+    cls: type[ModeHostServerPerSite] | type[AgentDownloadServerPerSite],
+) -> Sequence[Any]:
+    return [
+        cls(
+            site_id=site_id,
+            server=(
+                f"{parsed.scheme}://{parsed.netloc}"
+                if config_key.get("multisiteurl")
+                and (parsed := urlparse(config_key["multisiteurl"]))
+                else ""
+            ),
+        )
+        for site_id, config_key in active_config.sites.items()
+    ]

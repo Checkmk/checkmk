@@ -3,22 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.base.check_legacy_includes.aws import (
+    AWSLimitsByRegion,
+    check_aws_limits,
+    parse_aws_limits_generic,
+)
 
 check_info = {}
 
 
-def check_aws_elb_limits(item, params, parsed):
+def check_aws_elb_limits(
+    item: str, params: Mapping[str, tuple[float | None, float, float]], parsed: AWSLimitsByRegion
+) -> LegacyCheckResult:
     if not (region_data := parsed.get(item)):
         return
     yield from check_aws_limits("elb", params, region_data)
 
 
-def discover_aws_elb_limits(section):
+def discover_aws_elb_limits(section: AWSLimitsByRegion) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 

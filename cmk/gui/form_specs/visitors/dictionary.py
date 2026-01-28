@@ -6,7 +6,10 @@ import ast
 from collections.abc import Mapping, Sequence
 from typing import override
 
-from cmk.gui.form_specs.unstable.dictionary_extended import DictGroupExtended, DictionaryExtended
+from cmk.gui.form_specs.unstable.dictionary_extended import (
+    DictGroupExtended,
+    DictionaryExtended,
+)
 from cmk.gui.i18n import _
 from cmk.rulesets.v1.form_specs._composed import NoGroup
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -188,7 +191,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
             for validation in element_visitor.validate(parsed_value[key_name]):
                 element_validations.append(
                     shared_type_defs.ValidationMessage(
-                        location=[key_name] + validation.location,
+                        location=[key_name] + list(validation.location),
                         message=validation.message,
                         replacement_value=validation.replacement_value,
                     )

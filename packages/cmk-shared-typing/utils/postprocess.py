@@ -22,21 +22,6 @@ STRIP_OPTIONAL = [
 ]
 
 
-# Soothe mypy as we cannot influence order of attributes
-class DataclassArgAppender(cst.CSTTransformer):
-    @override
-    def leave_Decorator(
-        self, original_node: cst.Decorator, updated_node: cst.Decorator
-    ) -> cst.Decorator:
-        if m.matches(updated_node.decorator, m.Name("dataclass")):
-            new_decorator = cst.Call(
-                func=cst.Name("dataclass"),
-                args=[cst.Arg(value=cst.Name("True"), keyword=cst.Name("kw_only"))],
-            )
-            return updated_node.with_changes(decorator=new_decorator)
-        return updated_node
-
-
 class EnumString(cst.CSTTransformer):
     @override
     def leave_ClassDef(
@@ -85,6 +70,6 @@ class OptionalRemover(cst.CSTTransformer):
 
 def postprocess(code: str) -> str:
     tree = cst.parse_module(code)
-    for transformer in (DataclassArgAppender(), OptionalRemover(), EnumString()):
+    for transformer in (OptionalRemover(), EnumString()):
         tree = tree.visit(transformer)
     return format_str(tree.code, mode=FileMode())

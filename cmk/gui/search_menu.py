@@ -18,11 +18,16 @@ from cmk.gui.main_menu_types import (
     UnifiedSearch,
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.shared_typing.unified_search import Edition, Provider, Providers, UnifiedSearchProps
+from cmk.shared_typing.unified_search import (
+    Edition,
+    Provider,
+    Providers,
+    UnifiedSearchProps,
+)
 from cmk.utils import paths
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class UnifiedSearchMainMenuData(UnifiedSearchProps, MainMenuData): ...
 
 

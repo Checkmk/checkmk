@@ -55,7 +55,7 @@ class MainMenuTopic(NamedTuple):
     hide: bool = False
 
 
-@dataclass()
+@dataclass(frozen=True, kw_only=True)
 class MainMenuData: ...
 
 

@@ -12,7 +12,13 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, IncomingData, InvalidValue, RawDiskData
+from ._type_defs import (
+    DEFAULT_VALUE,
+    DefaultValue,
+    IncomingData,
+    InvalidValue,
+    RawDiskData,
+)
 from ._utils import (
     compute_validators,
     get_title_and_help,
@@ -76,7 +82,7 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fa
             for validation in element_visitor.validate(RawDiskData(entry)):
                 element_validations.append(
                     shared_type_defs.ValidationMessage(
-                        location=[str(idx)] + validation.location,
+                        location=[str(idx)] + list(validation.location),
                         message=validation.message,
                         replacement_value=validation.replacement_value,
                     )

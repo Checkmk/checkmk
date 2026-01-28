@@ -97,15 +97,15 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
         topic_group: TopicGroup,
         element_lookup: dict[str, tuple[shared_type_defs.FormSpec, object]],
     ) -> shared_type_defs.TopicGroup:
-        vue_topic_group = shared_type_defs.TopicGroup(
-            title=localize(topic_group.title),
-            elements=[],
-        )
+        elements = []
         for element_name, element in topic_group.elements.items():
             spec, value = element_lookup[element_name]
             element_spec = self._compute_topic_element_spec(element, element_name, spec, value)
-            vue_topic_group.elements.append(element_spec)
-        return vue_topic_group
+            elements.append(element_spec)
+        return shared_type_defs.TopicGroup(
+            title=localize(topic_group.title),
+            elements=elements,
+        )
 
     def _compute_topic_element_spec(
         self,
@@ -129,13 +129,8 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value
 
+        catalog_elements = []
         vue_value: dict[str, dict[str, object]] = {}
-        vue_catalog = shared_type_defs.Catalog(
-            title=title,
-            help=help_text,
-            elements=[],
-            validators=[],
-        )
         for topic_name, topic in self.form_spec.elements.items():
             vue_value[topic_name] = {}
             actual_elements = self._resolve_topic_to_elements(topic)
@@ -155,16 +150,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
                     vue_value[topic_name][element_name] = value
 
             # Compute vue spec, either a list of TopicElements or a list of TopicGroup
-            vue_topic = shared_type_defs.Topic(
-                name=topic_name,
-                title=localize(topic.title),
-                elements=[],
-                locked=(
-                    None
-                    if topic.locked is None
-                    else shared_type_defs.Locked(message=topic.locked.message)
-                ),
-            )
+            elements: list[shared_type_defs.TopicGroup] | list[shared_type_defs.TopicElement] = []
 
             # tmp_group_element / tmp_element is required since mypy can differentiate
             # between list[TopicElement] and list[TopicGroup]
@@ -173,7 +159,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
                 for topic_group in topic.elements:
                     vue_topic_group = self._compute_topic_group_spec(topic_group, element_lookup)
                     tmp_group_elements.append(vue_topic_group)
-                vue_topic.elements = tmp_group_elements
+                elements = tmp_group_elements
             else:
                 tmp_elements: list[shared_type_defs.TopicElement] = []
                 for element_name, element in topic.elements.items():
@@ -182,11 +168,30 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
                         element, element_name, spec, value
                     )
                     tmp_elements.append(element_spec)
-                vue_topic.elements = tmp_elements
+                elements = tmp_elements
 
-            vue_catalog.elements.append(vue_topic)
+            catalog_elements.append(
+                shared_type_defs.Topic(
+                    name=topic_name,
+                    title=localize(topic.title),
+                    elements=elements,
+                    locked=(
+                        None
+                        if topic.locked is None
+                        else shared_type_defs.Locked(message=topic.locked.message)
+                    ),
+                )
+            )
 
-        return vue_catalog, vue_value
+        return (
+            shared_type_defs.Catalog(
+                title=title,
+                help=help_text,
+                elements=catalog_elements,
+                validators=[],
+            ),
+            vue_value,
+        )
 
     @override
     def _validate(
@@ -210,7 +215,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
                 for validation in element_visitor.validate(topic_values[element_name]):
                     element_validations.append(
                         shared_type_defs.ValidationMessage(
-                            location=[topic_name, element_name] + validation.location,
+                            location=[topic_name, element_name] + list(validation.location),
                             message=validation.message,
                             replacement_value=validation.replacement_value,
                         )

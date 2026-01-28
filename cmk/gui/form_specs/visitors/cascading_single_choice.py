@@ -122,7 +122,7 @@ class CascadingSingleChoiceVisitor(
             for validation in element_visitor.validate(selected_value):
                 element_validations.append(
                     shared_type_defs.ValidationMessage(
-                        location=[element.name] + validation.location,
+                        location=[element.name] + list(validation.location),
                         message=validation.message,
                         replacement_value=validation.replacement_value,
                     )

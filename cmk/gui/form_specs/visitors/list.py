@@ -98,7 +98,7 @@ class ListVisitor(
             for validation in element_visitor.validate(entry):
                 element_validations.append(
                     shared_type_defs.ValidationMessage(
-                        location=[str(idx)] + validation.location,
+                        location=[str(idx)] + list(validation.location),
                         message=validation.message,
                         replacement_value=validation.replacement_value,
                     )

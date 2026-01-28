@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import assert_never, cast, Literal, override
+from typing import cast, Literal, override
 
 from cmk.gui.form_specs.unstable.condition_choices import (
     Condition,
@@ -54,9 +54,12 @@ def _condition_to_value(name: str, condition: Condition) -> shared_type_defs.Con
             return shared_type_defs.ConditionChoicesValue(
                 group_name=name, value=shared_type_defs.Eq(oper_eq=condition)
             )
-        case _other:
-            assert not isinstance(_other, dict)  # Remove this as well
-            assert_never(condition)
+        case other:
+            assert not isinstance(other, dict)  # Remove this as well
+            # I would like to use:
+            # assert_never(condition)
+            # but https://github.com/python/mypy/issues/19081#issuecomment-2920053885
+            raise TypeError(other)
 
 
 def _value_to_condition(condition_value: object) -> tuple[ConditionGroupID, Condition]:

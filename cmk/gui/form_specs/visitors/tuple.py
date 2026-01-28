@@ -103,7 +103,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FallbackModel]):
             for validation in element_visitor.validate(value):
                 validation_errors.append(
                     shared_type_defs.ValidationMessage(
-                        location=[str(idx)] + validation.location,
+                        location=[str(idx)] + list(validation.location),
                         message=validation.message,
                         replacement_value=validation.replacement_value,
                     )

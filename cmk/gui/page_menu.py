@@ -35,7 +35,10 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
+from cmk.gui.utils.loading_transition import (
+    loading_transition_onclick,
+    LoadingTransition,
+)
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.selection_id import SelectionId
@@ -207,7 +210,7 @@ def confirmed_form_submit_options(
     }
 
 
-@dataclass()
+@dataclass(frozen=True, kw_only=True)
 class PageMenuData: ...
 
 

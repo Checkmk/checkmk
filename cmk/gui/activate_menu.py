@@ -21,7 +21,7 @@ from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import makeuri
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ChangesMenuItem(MainMenuData):
     activate_changes_url: str
     user_has_activate_foreign: bool

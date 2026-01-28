@@ -11,7 +11,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, Response
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
+from cmk.gui.site_config import (
+    has_distributed_setup_remote_sites,
+    is_distributed_setup_remote_site,
+)
 from cmk.gui.utils.product_telemetry_popup_cookie import (
     product_telemetry_popup_timestamp_cookie,
     set_user_product_telemetry_popup_cookie,
@@ -21,7 +24,7 @@ from cmk.product_telemetry.config import load_telemetry_config
 from cmk.shared_typing.product_telemetry import ProductTelemetryConfig
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProductTelemetryConfigTyped(ProductTelemetryConfig): ...
 
 

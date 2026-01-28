@@ -3,24 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Iterable
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.plugins.apc.lib_ats import DETECT
 
 check_info = {}
 
 
-def discover_apc_symmetra_ext_temp(info):
+def discover_apc_symmetra_ext_temp(info: StringTable) -> Iterable[tuple[str, dict[str, Any]]]:
     for index, status, _temp, _temp_unit in info:
         if status == "2":
             yield index, {}
 
 
-def check_apc_symmetra_ext_temp(item, params, info):
+def check_apc_symmetra_ext_temp(
+    item: str, params: TempParamType, info: StringTable
+) -> LegacyResult:
     for index, _status, temp, temp_unit in info:
         if item == index:
             unit = "f" if temp_unit == "2" else "c"

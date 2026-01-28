@@ -12,43 +12,50 @@ import os
 import os.path
 import socket
 import sys
+from typing import Any
 
 __version__ = "2.6.0b1"
 
 
-try:
-    import rados  # type: ignore[import-not-found]
-except ImportError:
+def _bail_out_missing_dependency() -> int:
     pip = "pip3" if sys.version_info.major == 3 else "pip"
     error = (
         "Error: mk_ceph requires the library 'rados'."
         " Please install it on the monitored system (%s install rados)." % pip
     )
     sys.stdout.write("<<<cephstatus:sep(0)>>>\n%s\n" % json.dumps({"deployment_error": error}))
-    sys.exit(0)
+    # exit successfully s.t. the agent won't discard stdout
+    return 0
 
 
 def _output_json_section(name, data):
     sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(data)}\n")
 
 
-class RadosCMD(rados.Rados):  # type: ignore[misc]
+class RadosCMD:
+    def __init__(self, client: Any) -> None:
+        self.client = client
+
     def command_mon(self, cmd, params=None):
         data = {"prefix": cmd, "format": "json"}
         if params:
             data.update(params)
-        return self.mon_command(json.dumps(data), b"", timeout=5)
+        return self.client.mon_command(json.dumps(data), b"", timeout=5)
 
     def command_mgr(self, cmd):
-        return self.mgr_command(json.dumps({"prefix": cmd, "format": "json"}), b"", timeout=5)
+        return self.client.mgr_command(
+            json.dumps({"prefix": cmd, "format": "json"}), b"", timeout=5
+        )
 
     def command_osd(self, osdid, cmd):
-        return self.osd_command(
+        return self.client.osd_command(
             osdid, json.dumps({"prefix": cmd, "format": "json"}), b"", timeout=5
         )
 
     def command_pg(self, pgid, cmd):
-        return self.pg_command(pgid, json.dumps({"prefix": cmd, "format": "json"}), b"", timeout=5)
+        return self.client.pg_command(
+            pgid, json.dumps({"prefix": cmd, "format": "json"}), b"", timeout=5
+        )
 
 
 def _load_plugin_config(mk_confdir: str) -> tuple[str, str]:
@@ -123,10 +130,19 @@ def _make_osd_section(raw_df, raw_perf, localosds):
 
 
 def main() -> int:
+    try:
+        # We must not exit (not even successfully) upon import in case
+        # we're importing this module for testing purposes.
+        # I guess the right thing to do would be to add 'rados' as a dev
+        # dependency and write *actual* tests.
+        from rados import Rados  # type: ignore[import-not-found]
+    except ImportError:
+        return _bail_out_missing_dependency()
+
     ceph_config, ceph_client = _load_plugin_config(os.environ["MK_CONFDIR"])
 
-    cluster = RadosCMD(conffile=ceph_config, name=ceph_client)
-    cluster.connect()
+    cluster = RadosCMD(Rados(conffile=ceph_config, name=ceph_client))
+    cluster.client.connect()
 
     hostname = socket.gethostname().split(".", 1)[0]
     fqdn = socket.getfqdn()

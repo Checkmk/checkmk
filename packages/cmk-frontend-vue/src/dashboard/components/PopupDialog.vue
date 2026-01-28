@@ -154,7 +154,7 @@ const slots = useSlots()
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: var(--z-index-modal);
+  z-index: var(--z-index-modal-popup);
   background: var(--popup-dialog-bg-color);
   padding: var(--dimension-8);
 
@@ -195,6 +195,7 @@ const slots = useSlots()
   inset: 0;
   animation: db-popup-dialog__overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
   background: var(--color-popup-backdrop);
+  z-index: var(--z-index-modal-popup-overlay);
 }
 
 @keyframes db-popup-dialog__overlay-show {

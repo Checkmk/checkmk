@@ -11,6 +11,8 @@
   --z-index-title-menu: 1000;
   --z-index-navigation: 2000;
   --z-index-modal: 3000;
+  --z-index-modal-popup-overlay: 3400;
+  --z-index-modal-popup: 3500;
   --z-index-dropdown-offset: +100;
   --z-index-popup-offset: +200;
   --z-index-tooltip-offset: +300;

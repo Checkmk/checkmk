@@ -58,7 +58,7 @@ logconfig_dict = {
     },
     "loggers": {
         "gunicorn.error": {
-            "level": "INFO",
+            "level": "ERROR",
             "handlers": ["error_file"],
             "propagate": False,
             "qualname": "gunicorn.error",

@@ -4,23 +4,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, OIDCached, OIDEnd, SNMPTree, startswith
+from collections.abc import Mapping
+from typing import Any, TypedDict
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
+from cmk.agent_based.v2 import (
+    any_of,
+    DiscoveryResult,
+    OIDCached,
+    OIDEnd,
+    Service,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.temperature import check_temperature
 
+
+class DeviceData(TypedDict):
+    temp: int
+    cpu: int
+    mem_total: int
+    mem_used: float
+    admin: str
+    oper: str
+
+
 check_info = {}
 
 
-def parse_hp_hh3c_ext(string_table):
+def parse_hp_hh3c_ext(string_table: list[StringTable]) -> Mapping[str, DeviceData]:
     entity_info = dict(string_table[1])
-    parsed = {}
+    parsed: dict[str, DeviceData] = {}
     for index, admin_state, oper_state, cpu, mem_usage, temperature, mem_size in string_table[0]:
         name = entity_info.get(index, (None, None))
 
@@ -53,19 +72,21 @@ def parse_hp_hh3c_ext(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def discover_hp_hh3c_ext(parsed):
+def discover_hp_hh3c_ext(parsed: Mapping[str, DeviceData]) -> DiscoveryResult:
     for k, v in parsed.items():
         # The invalid value is 65535.
         # We assume: If mem_total <= 0, this module is not installed or
         # does not provide reasonable data or is not a real sensor.
         if v["temp"] != 65535 and v["mem_total"] > 0:
-            yield k, {}
+            yield Service(item=k)
 
 
-def check_hp_hh3c_ext(item, params, parsed):
+def check_hp_hh3c_ext(
+    item: str, params: Any, parsed: Mapping[str, DeviceData]
+) -> LegacyCheckResult:
     if item not in parsed:
-        return None
-    return check_temperature(parsed[item]["temp"], params, "hp_hh3c_ext.%s" % item)
+        return
+    yield check_temperature(float(parsed[item]["temp"]), params, "hp_hh3c_ext.%s" % item)
 
 
 check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
@@ -102,16 +123,18 @@ check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hp_hh3c_ext_states(parsed):
+def discover_hp_hh3c_ext_states(parsed: Mapping[str, DeviceData]) -> DiscoveryResult:
     for k, v in parsed.items():
         if v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
             # reasonable data.
-            yield k, {}
+            yield Service(item=k)
 
 
-def check_hp_hh3c_ext_states(item, params, parsed):
+def check_hp_hh3c_ext_states(
+    item: str, params: Any, parsed: Mapping[str, DeviceData]
+) -> LegacyCheckResult:
     if item not in parsed:
         return
 
@@ -129,18 +152,26 @@ def check_hp_hh3c_ext_states(item, params, parsed):
     }
 
     attrs = parsed[item]
-    for state_type, title, mapping in [
-        ("admin", "Administrative", map_admin_states),
-        ("oper", "Operational", map_oper_states),
-    ]:
-        dev_state = attrs[state_type]
-        state, params_key, state_readable = mapping.get(
-            dev_state, (3, "unknown", "unknown[%s]" % dev_state)
-        )
-        params_state_type = params.get(state_type, {})
-        if params_key in params_state_type:
-            state = params_state_type[params_key]
-        yield state, f"{title}: {state_readable}"
+
+    # Check admin state
+    dev_state = attrs["admin"]
+    state, params_key, state_readable = map_admin_states.get(
+        dev_state, (3, "unknown", "unknown[%s]" % dev_state)
+    )
+    params_admin = params.get("admin", {})
+    if params_key in params_admin:
+        state = params_admin[params_key]
+    yield state, f"Administrative: {state_readable}"
+
+    # Check operational state
+    dev_state = attrs["oper"]
+    state, params_key, state_readable = map_oper_states.get(
+        dev_state, (3, "unknown", "unknown[%s]" % dev_state)
+    )
+    params_oper = params.get("oper", {})
+    if params_key in params_oper:
+        state = params_oper[params_key]
+    yield state, f"Operational: {state_readable}"
 
 
 check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(
@@ -163,19 +194,21 @@ check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hp_hh3c_ext_cpu(parsed):
+def discover_hp_hh3c_ext_cpu(parsed: Mapping[str, DeviceData]) -> DiscoveryResult:
     for k, v in parsed.items():
         if v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
             # reasonable data.
-            yield k, {}
+            yield Service(item=k)
 
 
-def check_hp_hh3c_ext_cpu(item, params, parsed):
+def check_hp_hh3c_ext_cpu(
+    item: str, params: Any, parsed: Mapping[str, DeviceData]
+) -> LegacyCheckResult:
     if item not in parsed:
-        return None
-    return check_cpu_util(parsed[item]["cpu"], params)
+        return
+    yield from check_cpu_util(parsed[item]["cpu"], params)
 
 
 check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
@@ -198,16 +231,18 @@ check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hp_hh3c_ext_mem(parsed):
+def discover_hp_hh3c_ext_mem(parsed: Mapping[str, DeviceData]) -> DiscoveryResult:
     for name, attrs in parsed.items():
         if attrs["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
             # reasonable data.
-            yield name, {}
+            yield Service(item=name)
 
 
-def check_hp_hh3c_ext_mem(item, params, parsed):
+def check_hp_hh3c_ext_mem(
+    item: str, params: Any, parsed: Mapping[str, DeviceData]
+) -> LegacyCheckResult:
     if not (data := parsed.get(item)):
         return
     levels = params.get("levels")

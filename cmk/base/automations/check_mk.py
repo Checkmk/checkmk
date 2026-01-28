@@ -3101,7 +3101,7 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
     if base_cmd in (PingHostCmd.PING, PingHostCmd.PING6):
         try:
             ipaddress.ip_address(ip_or_dns_name)
-        except ipaddress.AddressValueError:
+        except ValueError:
             is_ipaddress = False
 
     if not is_ipaddress and shutil.which("nslookup") is not None:

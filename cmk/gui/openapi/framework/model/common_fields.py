@@ -419,8 +419,9 @@ def query_expression_validator(table: type[Table]) -> PlainValidator:
 
         type MyQueryAlias = Annotated[QueryExpression, query_expression_validator(MyTable)]
 
-    Accepts a JSON string from a query parameter, parses it, validates the column
-    names against the given table, and returns a QueryExpression.
+    Accepts either a JSON string (e.g. from a query parameter) or an already-deserialized
+    dict (e.g. from a JSON request body), validates the column names against the given table,
+    and returns a QueryExpression.
 
     Note: The table class must be exported from `cmk.livestatus_client.tables` for column
     validation to work.
@@ -433,14 +434,19 @@ def query_expression_validator(table: type[Table]) -> PlainValidator:
         '{"op": "and", "expr": [{"op": "=", "left": "event_host", "right": "myhost"}, {"op": "~", "left": "event_text", "right": "error"}]}'
     """
 
-    def _parse(value: str) -> QueryExpression:
-        try:
-            data = json.loads(value)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON query expression: {e}") from e
+    def _parse(value: object) -> QueryExpression:
+        if not isinstance(value, str | dict):
+            raise TypeError(f"Expected str or dict, got {value!r}")
+        if isinstance(value, str):
+            try:
+                data: Mapping[str, object] = json.loads(value)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON query expression: {e}") from e
+        else:
+            data = value
         try:
             return tree_to_expr(data, table)
         except (ValueError, KeyError) as e:
             raise ValueError(str(e)) from e
 
-    return TypedPlainValidator(str, _parse)
+    return PlainValidator(func=_parse, json_schema_input_type=str | dict[str, object])

@@ -25,8 +25,8 @@ def add_event_console_events_to_live_status_table(live: MockLiveStatusConnection
             "event_comment": "",
             "event_contact": "",
             "event_ipaddress": "",
-            "event_facility": "",
-            "event_priority": "",
+            "event_facility": 0,
+            "event_priority": 0,
             "event_last": time(),
             "event_first": time() - 7 * 24 * 60 * 60,
             "event_count": 1,
@@ -170,7 +170,7 @@ def test_get_ec_event_by_str_id(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp.assert_status_code(404)
-    assert resp.json["fields"]["event_id"] == ["'non_int_str' does not match pattern '^[0-9]+$'."]
+    assert resp.json["fields"]["path.event_id"]["type"] == "int_parsing"
 
 
 def test_get_ec_event_that_doesnt_exist_by_id(
@@ -535,7 +535,7 @@ def test_update_and_acknowledge_no_filters(clients: ClientRegistry) -> None:
         change_comment="testcomment",
         expect_ok=False,
     )
-    assert resp.json["detail"] == "These fields have problems: filters"
+    assert resp.json["detail"] == "These fields have problems: body.params.filters"
 
 
 def test_update_and_acknowledge_all_filter_no_site_id(
@@ -589,11 +589,11 @@ def test_update_and_acknowledge_by_id_but_no_site_id(clients: ClientRegistry) ->
         change_contact="testcomment",
         expect_ok=False,
     )
-    assert resp.json["fields"] == {"site_id": ["Missing data for required field."]}
+    assert resp.json["fields"]["body.site_id"]["type"] == "missing"
 
 
 def test_change_existing_event_state_by_id_no_site_id(clients: ClientRegistry) -> None:
     resp = clients.EventConsole.change_event_state(
         event_id="1", new_state="warning", expect_ok=False
     )
-    assert resp.json["fields"] == {"site_id": ["Missing data for required field."]}
+    assert resp.json["fields"]["body.site_id"]["type"] == "missing"

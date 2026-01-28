@@ -265,8 +265,9 @@ def test_path_validation_exception(base: str, aut_user_auth_wsgi_app: WebTestApp
         status=404,
     )
     assert resp.json["title"] == "Not Found"
-    assert resp.json["detail"] == "These fields have problems: event_id"
-    assert resp.json["fields"] == {"event_id": ["'abc' does not match pattern '^[0-9]+$'."]}
+    assert resp.json["detail"] == "These fields have problems: path.event_id, query.site_id"
+    assert resp.json["fields"]["path.event_id"]["type"] == "int_parsing"
+    assert resp.json["fields"]["query.site_id"]["type"] == "missing"
 
 
 # ========= HEADER Validation Tests =========

@@ -6,29 +6,48 @@
 # mypy: disable-error-code="type-arg"
 
 
-from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
-from typing import get_args, Literal
+from collections.abc import Mapping
+from typing import Final, Literal
 
 from livestatus import MultiSiteConnection, OnlySites
 
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc.site import SiteId
 from cmk.gui.logged_in import user
 from cmk.livestatus_client import ECChangeState, ECDelete, ECUpdate, LivestatusClient
 from cmk.livestatus_client.expressions import Or, QueryExpression
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
-from cmk.utils.statename import core_state_names
 
+ServiceStateType = Literal[
+    "ok",
+    "warning",
+    "critical",
+    "unknown",
+]
+STATE_INT_TO_NAME_MAP: Final[Mapping[Literal[0, 1, 2, 3], ServiceStateType]] = {
+    0: "ok",
+    1: "warning",
+    2: "critical",
+    3: "unknown",
+}
 
-class EventNotFoundError(ValueError):
-    pass
+STATE_NAME_TO_INT_MAP: Final[Mapping[ServiceStateType, Literal[0, 1, 2, 3]]] = {
+    name: num for num, name in STATE_INT_TO_NAME_MAP.items()
+}
 
+HistoricalPhaseType = Literal[
+    "open",
+    "ack",
+    "closed",
+    "delayed",
+    "counting",
+]
 
-state_names = [v.lower() for v in core_state_names().values() if v != "NODATA"]
+PhaseType = Literal[
+    "open",
+    "ack",
+]
 
-states_ints_reversed = {v.lower(): k for k, v in core_state_names().items() if v != "NODATA"}
 
 ServiceLevelType = Literal[
     "no_service_level",
@@ -36,67 +55,130 @@ ServiceLevelType = Literal[
     "gold",
     "platinum",
 ]
+SERVICE_LEVEL_INT_TO_NAME_MAP: Final[Mapping[Literal[0, 10, 20, 30], ServiceLevelType]] = {
+    0: "no_service_level",
+    10: "silver",
+    20: "gold",
+    30: "platinum",
+}
+
+SyslogFacilityType = Literal[
+    "kern",
+    "user",
+    "mail",
+    "daemon",
+    "auth",
+    "syslog",
+    "lpr",
+    "news",
+    "uucp",
+    "cron",
+    "authpriv",
+    "ftp",
+    "ntp",
+    "logaudit",
+    "logalert",
+    "clock",
+    "local0",
+    "local1",
+    "local2",
+    "local3",
+    "local4",
+    "local5",
+    "logfile",
+    "local6",
+    "local7",
+    "snmptrap",
+]
+SYSLOG_FACILITY_INT_TO_NAME_MAP: Final[
+    Mapping[
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            30,
+            31,
+        ],
+        SyslogFacilityType,
+    ]
+] = {
+    0: "kern",
+    1: "user",
+    2: "mail",
+    3: "daemon",
+    4: "auth",
+    5: "syslog",
+    6: "lpr",
+    7: "news",
+    8: "uucp",
+    9: "cron",
+    10: "authpriv",
+    11: "ftp",
+    12: "ntp",
+    13: "logaudit",
+    14: "logalert",
+    15: "clock",
+    16: "local0",
+    17: "local1",
+    18: "local2",
+    19: "local3",
+    20: "local4",
+    21: "local5",
+    22: "local6",
+    23: "local7",
+    30: "logfile",
+    31: "snmptrap",
+}
 
 
-@dataclass
-class ECEvent:
-    site: str
-    event_id: int
-    event_state: int
-    event_sl: int
-    event_host: str
-    event_rule_id: str
-    event_application: str
-    event_comment: str
-    event_contact: str
-    event_ipaddress: str
-    event_facility: int
-    event_priority: int
-    event_phase: str
-    event_last: int
-    event_first: int
-    event_count: int
-    event_text: str
+SyslogPriorityType = Literal[
+    "emerg",
+    "alert",
+    "crit",
+    "err",
+    "warning",
+    "notice",
+    "info",
+    "debug",
+]
 
-    def __iter__(self) -> Iterator:
-        """return a dict representation of the ECEvent object to
-        send back via the response schema.
+SYSLOG_PRIORITY_INT_TO_NAME_MAP: Final[
+    Mapping[Literal[0, 1, 2, 3, 4, 5, 6, 7], SyslogPriorityType]
+] = {
+    0: "emerg",
+    1: "alert",
+    2: "crit",
+    3: "err",
+    4: "warning",
+    5: "notice",
+    6: "info",
+    7: "debug",
+}
 
-        >>> dict(ECEvent("mysite", 1, 1, 10, "myhost", "rule_id_1", "app1", "", "", "123.12.13.1", 6, 7, "open", 1668007771, 1667403030, 6, "test_text"))
-        {'site_id': 'mysite', 'state': 'warning', 'service_level': 'silver', 'host': 'myhost', 'rule_id': 'rule_id_1', 'application': 'app1', 'comment': '', 'contact': '', 'ipaddress': '123.12.13.1', 'facility': 'lpr', 'priority': 'debug', 'phase': 'open', 'last': 1668007771, 'first': 1667403030, 'count': 6, 'text': 'test_text'}
 
-        """
-
-        for k, v in self.__dict__.items():
-            k = k.removeprefix("event_")
-            if k == "state":
-                yield k, (state_names[v]).lower()
-                continue
-
-            if k == "sl":
-                yield (
-                    "service_level",
-                    dict(zip([0, 10, 20, 30], list(get_args(ServiceLevelType))))[v],
-                )
-                continue
-
-            if k == "priority":
-                yield k, ec.SyslogPriority.NAMES.get(v, "unknown")
-                continue
-
-            if k == "facility":
-                yield k, ec.SyslogFacility.NAMES.get(v, "unknown")
-
-                continue
-
-            if k == "id":
-                continue
-
-            if k == "site":
-                yield "site_id", v
-                continue
-
-            yield k, v
+class EventNotFoundError(ValueError):
+    pass
 
 
 def query_event_console() -> Query:
@@ -125,10 +207,10 @@ def query_event_console() -> Query:
 def filter_event_table(
     event_id: int | None = None,
     event_ids: list[int] | None = None,
-    state: str | None = None,
+    state: ServiceStateType | None = None,
     application: str | None = None,
     host: str | None = None,
-    phase: str | None = None,
+    phase: PhaseType | None = None,
     query: QueryExpression | None = None,
 ) -> Query:
     q = query_event_console().filter(query) if query else query_event_console()
@@ -140,7 +222,7 @@ def filter_event_table(
         q = q.filter(Or(*[Eventconsoleevents.event_id == ev_id for ev_id in event_ids]))
 
     if state is not None:
-        q = q.filter(Eventconsoleevents.event_state == states_ints_reversed[state])
+        q = q.filter(Eventconsoleevents.event_state == STATE_NAME_TO_INT_MAP[state])
 
     if application is not None:
         q = q.filter(Eventconsoleevents.event_application == application)
@@ -152,24 +234,6 @@ def filter_event_table(
         q = q.filter(Eventconsoleevents.event_host == host)
 
     return q
-
-
-def get_all_events(
-    connection: MultiSiteConnection, q: Query, site_id: SiteId | None
-) -> dict[int, ECEvent]:
-    _site_id: OnlySites = [site_id] if site_id is not None else None
-    return {ev["event_id"]: ECEvent(**ev) for ev in q.fetchall(connection, True, _site_id)}
-
-
-def get_single_event_by_id(
-    connection: MultiSiteConnection, event_id: int, site_id: SiteId
-) -> ECEvent:
-    try:
-        ev = ECEvent(**filter_event_table(event_id=event_id).fetchone(connection, True, site_id))
-    except ValueError:
-        raise EventNotFoundError
-
-    return ev
 
 
 def map_sites_to_ids_from_query(
@@ -212,7 +276,7 @@ def update_and_acknowledge(
 
 def change_state(
     connection: MultiSiteConnection,
-    state: str,
+    state: ServiceStateType,
     query: Query,
     site_id: SiteId | None,
 ) -> Mapping[str, list[str]]:
@@ -220,7 +284,7 @@ def change_state(
     for site, event_ids in sites_with_ids.items():
         ids = tuple(map(int, event_ids))
         LivestatusClient(connection).command(
-            ECChangeState(event_ids=ids, user=user.ident, state=states_ints_reversed[state]),
+            ECChangeState(event_ids=ids, user=user.ident, state=STATE_NAME_TO_INT_MAP[state]),
             SiteId(site),
         )
     return sites_with_ids

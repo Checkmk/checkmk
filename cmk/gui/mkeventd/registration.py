@@ -40,8 +40,8 @@ from ._find_usage import (
     find_usages_of_contact_group_in_ec_rules,
     UsagesOfContactGroupInMkeventdNotifyContactGroupFinder,
 )
-from ._openapi import register as openapi_register
-from ._openapi.historical_events._registration import register as historical_events_register
+from ._openapi.current_events import register as current_events_register
+from ._openapi.historical_events import register as historical_events_register
 from ._sidebar_snapin import SidebarSnapinEventConsole
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
 from .icon import MkeventdIcon
@@ -123,8 +123,11 @@ def register(
         )
     )
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_ec_rules)
-    openapi_register(endpoint_registry)
     historical_events_register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    current_events_register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

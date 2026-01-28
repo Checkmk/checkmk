@@ -4,18 +4,43 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type VariantProps, cva } from 'class-variance-authority'
 import { TabsTrigger } from 'radix-vue'
+
+const propsCva = cva('', {
+  variants: {
+    variant: {
+      default: 'cmk-tab__variant-default',
+      info: 'cmk-tab__variant-info',
+      success: 'cmk-tab__variant-success',
+      warning: 'cmk-tab__variant-warning',
+      error: 'cmk-tab__variant-error'
+    }
+  },
+  defaultVariants: {
+    variant: 'default'
+  }
+})
+
+export type Variants = VariantProps<typeof propsCva>['variant']
 
 export interface CmkTabProps {
   id: string
   disabled?: boolean | undefined
+  variant?: Variants
 }
 
 defineProps<CmkTabProps>()
 </script>
 
 <template>
-  <TabsTrigger :value="id" :disabled="!!disabled" as="li" class="cmk-tab__li">
+  <TabsTrigger
+    :value="id"
+    :disabled="!!disabled"
+    as="li"
+    class="cmk-tab__li"
+    :class="propsCva({ variant })"
+  >
     <slot />
   </TabsTrigger>
 </template>
@@ -60,5 +85,29 @@ defineProps<CmkTabProps>()
     cursor: default;
     background: var(--ux-theme-0);
   }
+}
+
+.cmk-tab__variant-info {
+  border-top: 1px solid var(--color-dark-blue-50);
+  border-left: 1px solid var(--color-dark-blue-50);
+  border-right: 1px solid var(--color-dark-blue-50) !important;
+}
+
+.cmk-tab__variant-success {
+  border-top: 1px solid var(--color-corporate-green-50);
+  border-left: 1px solid var(--color-corporate-green-50);
+  border-right: 1px solid var(--color-corporate-green-50) !important;
+}
+
+.cmk-tab__variant-warning {
+  border-top: 1px solid var(--color-yellow-50);
+  border-left: 1px solid var(--color-yellow-50);
+  border-right: 1px solid var(--color-yellow-50) !important;
+}
+
+.cmk-tab__variant-error {
+  border-top: 1px solid var(--color-dark-red-50);
+  border-left: 1px solid var(--color-dark-red-50);
+  border-right: 1px solid var(--color-dark-red-50) !important;
 }
 </style>

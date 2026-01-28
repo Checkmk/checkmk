@@ -63,7 +63,7 @@ const availableVisualizationTypes = getVisualizationTypes()
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Data settings')">
+  <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
@@ -112,7 +112,7 @@ const availableVisualizationTypes = getVisualizationTypes()
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')">
+  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
     <WidgetVisualization
       v-model:show-title="handler.showTitle.value"
       v-model:show-title-background="handler.showTitleBackground.value"

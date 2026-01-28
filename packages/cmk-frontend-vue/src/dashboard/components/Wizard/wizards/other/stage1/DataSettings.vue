@@ -25,7 +25,7 @@ defineProps<Props>()
 
 <template>
   <div>
-    <CmkCatalogPanel :title="_t('Data settings')">
+    <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
       <TableForm>
         <TableFormRow>
           <FieldDescription>{{ label }}</FieldDescription>

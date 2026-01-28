@@ -52,7 +52,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Data settings')">
+  <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
@@ -104,7 +104,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')">
+  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Title') }}</FieldDescription>

@@ -65,7 +65,7 @@ const countDashboardFilters = computed(() => {
     </CmkHeading>
 
     <div class="db-runtime-filter-collection__filter-container">
-      <CmkCatalogPanel :title="displayLabels.contextFilterTitle">
+      <CmkCatalogPanel :title="displayLabels.contextFilterTitle" variant="padded">
         <div class="db-runtime-filter-collection__items">
           <template v-if="countDashboardFilters > 0">
             <div v-for="filterId in dashboardFilters" :key="filterId" class="filter-item__wrapper">
@@ -85,7 +85,7 @@ const countDashboardFilters = computed(() => {
     </div>
 
     <div class="db-runtime-filter-collection__filter-container">
-      <CmkCatalogPanel :title="_t('Runtime filters')">
+      <CmkCatalogPanel :title="_t('Runtime filters')" variant="padded">
         <div class="db-runtime-filter-collection__items">
           <div
             v-for="(filterId, index) in filters"

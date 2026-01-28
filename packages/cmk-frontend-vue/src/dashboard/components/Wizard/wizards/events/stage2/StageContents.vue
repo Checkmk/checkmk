@@ -107,7 +107,7 @@ const gotoNextStage = () => {
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')">
+  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
     <WidgetVisualization
       v-model:show-title="showTitle"
       v-model:show-title-background="showTitleBackground"

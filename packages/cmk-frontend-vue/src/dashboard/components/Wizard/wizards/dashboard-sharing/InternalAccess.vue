@@ -22,7 +22,7 @@ defineProps<InternalAccessProps>()
 </script>
 
 <template>
-  <CmkCatalogPanel :title="_t('Internal access')">
+  <CmkCatalogPanel :title="_t('Internal access')" variant="padded">
     <CmkHeading type="h2">{{
       _t('Users with access permissions can view this dashboard')
     }}</CmkHeading>

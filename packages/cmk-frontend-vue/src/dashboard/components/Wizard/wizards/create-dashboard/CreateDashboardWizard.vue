@@ -158,7 +158,7 @@ const cancel = () => {
       <ContentSpacer />
 
       <div v-if="dashboardType === DashboardType.CUSTOM">
-        <CmkCatalogPanel :title="_t('Dashboard scope')">
+        <CmkCatalogPanel :title="_t('Dashboard scope')" variant="padded">
           <DashboardScope
             v-model:selected-ids="dashboardScopeIds"
             :selection-errors="scopeErrors"
@@ -166,7 +166,7 @@ const cancel = () => {
         </CmkCatalogPanel>
       </div>
 
-      <CmkCatalogPanel :title="_t('General properties')">
+      <CmkCatalogPanel :title="_t('General properties')" variant="padded">
         <GeneralProperties
           v-model:name="name"
           v-model:create-unique-id="createUniqueId"
@@ -188,7 +188,7 @@ const cancel = () => {
 
       <ContentSpacer />
 
-      <CmkCatalogPanel :title="_t('Visibility')">
+      <CmkCatalogPanel :title="_t('Visibility')" variant="padded">
         <VisibilityProperties
           v-model:monitor-menu-topic="monitorMenuTopic"
           v-model:show-in-monitor-menu="showInMonitorMenu"

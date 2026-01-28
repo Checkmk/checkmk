@@ -564,7 +564,7 @@ def create_nagios_host_spec(
     for key, value in _to_nagios_core_attributes(
         config_cache.extra_host_attributes(hostname)
     ).items():
-        if key == "cmk_agent_connection":
+        if key in ("cmk_agent_connection", "metrics_association"):
             continue
         if hostname in config_cache.hosts_config.clusters and key == "parents":
             continue

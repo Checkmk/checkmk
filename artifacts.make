@@ -12,8 +12,8 @@ CHECK_MK_ANNOUNCE_TXT := $(CHECK_MK_ANNOUNCE_FOLDER)/announce-$(CHECK_MK_ANNOUNC
 # These artifacts are created independent of the distro the Checkmk package is
 # built on either by an "upstream job" or while creating the source package
 SOURCE_BUILT_LINUX_AGENTS := \
-	$(REPO_PATH)/agents/check-mk-agent-$(VERSION)-1.noarch.rpm \
-	$(REPO_PATH)/agents/check-mk-agent_$(VERSION)-1_all.deb \
+	$(REPO_PATH)/agents/check-mk-agent.noarch.rpm \
+	$(REPO_PATH)/agents/check-mk-agent_all.deb \
 	$(REPO_PATH)/agents/linux/mk-sql \
 	$(REPO_PATH)/agents/linux/cmk-agent-ctl \
 	$(REPO_PATH)/agents/linux/cmk-agent-ctl.gz \

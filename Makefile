@@ -61,6 +61,12 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	    rm -rf check-mk-$(EDITION)-$(VERSION) ; \
 	fi ; \
 	mkdir check-mk-$(EDITION)-$(VERSION) ; \
+	# TODO: as soon as the source tar gz build is in bazel, filename_from_flag will handle this renaming
+	# Safety net: ensure we use the correct version - should not be an issue tho because we start from a clean workspace
+	rpm -qi agents/check-mk-agent.noarch.rpm | grep $$(echo $(VERSION) | tr '-' '_') || exit 1; \
+	dpkg-deb -I agents/check-mk-agent_all.deb | grep $(VERSION) || exit 1; \
+	mv agents/check-mk-agent.noarch.rpm agents/check-mk-agent-$(VERSION)-1.noarch.rpm ; \
+	mv agents/check-mk-agent_all.deb agents/check-mk-agent_$(VERSION)-1_all.deb ; \
 	tar -c \
 	    $(TAROPTS) \
 	    --exclude check-mk-$(EDITION)-$(VERSION) \

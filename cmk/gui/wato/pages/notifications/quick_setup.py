@@ -1824,7 +1824,8 @@ def sending_conditions() -> QuickSetupStage:
                                                     error_msg=Message(
                                                         "Enter a plugin output to define what to filter for."
                                                     )
-                                                )
+                                                ),
+                                                IsValidRegularExpression(),
                                             ],
                                         )
                                     ),
@@ -1844,7 +1845,8 @@ def sending_conditions() -> QuickSetupStage:
                                                     error_msg=Message(
                                                         "Please enter a comment to filter for."
                                                     )
-                                                )
+                                                ),
+                                                IsValidRegularExpression(),
                                             ],
                                         )
                                     ),

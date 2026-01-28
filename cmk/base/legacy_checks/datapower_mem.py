@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.plugins.datapower.lib import DETECT
@@ -15,12 +16,12 @@ from cmk.plugins.datapower.lib import DETECT
 check_info = {}
 
 
-def discover_datapower_mem(info):
+def discover_datapower_mem(info: StringTable) -> Iterable[tuple[None, Mapping[str, Any]]]:
     if info:
         yield None, {}
 
 
-def check_datapower_mem(item, params, info):
+def check_datapower_mem(item: None, params: Mapping[str, Any], info: StringTable) -> LegacyResult:
     mem_total_bytes = int(info[0][0]) * 1024
     mem_used_bytes = int(info[0][1]) * 1024
 

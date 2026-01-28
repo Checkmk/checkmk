@@ -23,6 +23,7 @@ class Restore(_Shared):
     descriptor: int
     reuse: bool
     skeleton: Skeleton
+    kill: bool
 
 
 type Finalize = Annotated[Restore, Field(discriminator="command")]
@@ -40,6 +41,8 @@ def args_to_command_line(args: Finalize, version: str = omdlib.__version__) -> l
             cmd_line.extend(["--descriptor", str(args.descriptor)])
             if args.reuse:
                 cmd_line.append("--reuse")
+            if args.kill:
+                cmd_line.append("--kill")
     return cmd_line
 
 
@@ -79,6 +82,12 @@ def parse_arguments(sysv: Sequence[str] | None = None) -> Finalize:
         default=False,
         action="store_true",
         help="Whether to reuse previous site",
+    )
+    parser_restore.add_argument(
+        "--kill",
+        default=False,
+        action="store_true",
+        help="Whether to kill site processes",
     )
     parser_restore.add_argument(
         "--skeleton",

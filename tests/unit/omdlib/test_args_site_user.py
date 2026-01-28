@@ -19,6 +19,7 @@ from omdlib.type_defs import Skeleton
             verbose=False,
             reuse=False,
             skeleton=Skeleton.INSTALL,
+            kill=False,
         ),
         Restore(
             site="a",
@@ -27,6 +28,7 @@ from omdlib.type_defs import Skeleton
             verbose=True,
             reuse=True,
             skeleton=Skeleton.KEEPOLD,
+            kill=True,
         ),
         Restore(
             site="a",
@@ -35,6 +37,7 @@ from omdlib.type_defs import Skeleton
             verbose=True,
             reuse=False,
             skeleton=Skeleton.ABORT,
+            kill=False,
         ),
         Restore(
             site="a",
@@ -42,6 +45,7 @@ from omdlib.type_defs import Skeleton
             descriptor=9,
             verbose=False,
             reuse=True,
+            kill=True,
             skeleton=Skeleton.ASK,
         ),
         Restore(
@@ -50,6 +54,7 @@ from omdlib.type_defs import Skeleton
             descriptor=11,
             verbose=False,
             reuse=True,
+            kill=True,
             skeleton=Skeleton.ASK,
         ),
     ],

@@ -11,14 +11,13 @@ from pathlib import Path
 from omdlib.console import ok
 from omdlib.contexts import SiteContext
 from omdlib.init_scripts import call_init_scripts
-from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
 from omdlib.tmpfs import unmount_tmpfs
 from omdlib.user_processes import kill_site_user_processes
 
 
-def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, verbose: bool) -> None:
-    if not site.is_stopped(verbose) and "kill" not in options:
+def prepare_restore_as_site_user(site: SiteContext, kill: bool, verbose: bool) -> None:
+    if not site.is_stopped(verbose) and not kill:
         sys.exit("Cannot restore site while it is running.")
     site_home = SitePaths.from_site_name(site.name).home
     _verify_directory_write_access(site_home)

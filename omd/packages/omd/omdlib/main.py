@@ -72,7 +72,7 @@ from omdlib.options import (
     parse_args_or_exec_other_omd,
 )
 from omdlib.package_manager import PackageManager
-from omdlib.restore import clear_site_home, prepare_restore_as_site_user
+from omdlib.restore import prepare_restore_as_site_user
 from omdlib.scripts import _call_script, call_scripts
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
@@ -2955,24 +2955,6 @@ def _restore_backup_from_tar_root(
             sys.exit("Error verifying site user.")
         fstab_verify(site.name, site.tmp_dir)
         sitename_must_be_valid(site.name, Path(site_home), reuse)
-        # shutil.rmtree will default to an unsafe way of deleting a user-controlled directory, if
-        # `avoids_symlink_attacks` is false.
-        #
-        # This assertion should always pass on distros we support: The value of
-        # `avoids_symlink_attacks` depends on macro variables set during the python build process.
-        # The interpreter we ship with Checkmk always sets these such that the operation is safe.
-        #
-        # We call the assertion here to avoid unmounting tmpfs.
-        assert shutil.rmtree.avoids_symlink_attacks, "Can't run shutil.rmtree"
-        if not site.is_stopped(global_opts.verbose) and "kill" not in options:
-            sys.exit("Cannot restore '%s' while it is running." % (site.name))
-        else:
-            with subprocess.Popen(["omd", "stop", site.name]):
-                pass
-        unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
-        sys.stdout.write("Deleting existing site data...\n")
-        clear_site_home(Path(site_home))
-        ok()
     else:
         sitename_must_be_valid(site.name, Path(site_home), reuse)
         uid = options.get("uid")
@@ -2989,6 +2971,7 @@ def _restore_backup_from_tar_root(
             descriptor=read,
             reuse=reuse,
             skeleton=_get_conflict_mode(options),
+            kill="kill" in options,
         )
         with (
             popen_as_site_user(
@@ -3046,7 +3029,7 @@ def _restore_backup_from_tar_site(
 
         config = load_config(site, global_opts.verbose)
         orig_apache_port = config["APACHE_TCP_PORT"]
-        prepare_restore_as_site_user(site, options, global_opts.verbose)
+        prepare_restore_as_site_user(site, "kill" in options, global_opts.verbose)
         _process_backup_tar(
             tar, global_opts.verbose, _get_conflict_mode(options), old_site_name, site
         )
@@ -3356,6 +3339,9 @@ def main() -> None:
 
 
 def main_finalize_restore(args: Restore) -> int:
+    site = site_environment_as_root(args.site, args.verbose)
+    if args.reuse:
+        prepare_restore_as_site_user(site, args.kill, args.verbose)
     with (
         open(args.descriptor, mode="rb") as fileobj,
         tarfile.open(fileobj=fileobj, mode="r|*") as tar,  # astrein: disable=tarfile-open-read

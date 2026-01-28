@@ -2,4 +2,4 @@ bcrypt==4.2.1
 cryptography==43.0.3
 python-dateutil==2.9.0.post0
 types-python-dateutil==2.9.0.20241206
-time-machine==2.16.0
+time-machine==3.2.0

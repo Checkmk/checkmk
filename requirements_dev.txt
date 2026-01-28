@@ -67,7 +67,7 @@ sphinxcontrib-plantuml==0.30 # used for the API and architecture
 sphinxcontrib-spelling==8.0.0
 svglib==1.5.1  # license csv pdf generating
 telnetlib3==2.0.4 # used by Windows Agent tests
-time-machine==2.16.0 # used by various unit tests. Substitute for freezegun
+time-machine==3.2.0 # used by various unit tests. Substitute for freezegun
 twine==6.0.1 # used to upload packages to internal PyPi mirror
 types-beautifulsoup4==4.12.0.20241020 # used for type checking
 types-docutils==0.21.0.20241128 # used for type checking

@@ -58,6 +58,7 @@ py_test(
         ":cmk-crypto",
         requirement("cryptography"),
         requirement("pytest"),
+        requirement("python-dateutil"),
         requirement("time-machine"),
     ],
 )

@@ -4052,6 +4052,10 @@ msgstr "MIBs hinzufügen"
 msgid "Add Message Pattern filter rule"
 msgstr "Filterregel für Meldungs-Pattern hinzufügen"
 
+#, fuzzy
+msgid "Add Microsoft Entra ID connection"
+msgstr "Instanz-Verbindung hinzufügen"
+
 msgid "Add NGINX instance"
 msgstr "NGNIX-Instanz hinzufügen"
 
@@ -11936,6 +11940,16 @@ msgstr "Kann Konfigurationsdatei %s: %s: nicht lesen"
 msgid "Cannot read file \"%s\": %s"
 msgstr "Kann Datei \"%s\" nichyt lesen: %s"
 
+#, fuzzy
+msgid "Cannot render complete graph"
+msgstr "Kann Graph nicht erstellen"
+
+#, python-format
+msgid ""
+"Cannot render complete graph. See graph '<a href='%s'>%s</a>' for further "
+"details."
+msgstr ""
+
 msgid "Cannot render drop-down: Missing required information"
 msgstr ""
 "Drop-down kann nicht dargestellt werden: Fehlende erforderliche Informationen"
@@ -13668,7 +13682,15 @@ msgid "Cisco Meraki device status"
 msgstr "Cisco Meraki Gerätestatus"
 
 #, fuzzy
+msgid "Cisco Meraki licensed devices"
+msgstr "Übersicht der Lizenzen für Cisco Meraki Organisation"
+
+#, fuzzy
 msgid "Cisco Meraki licenses overview"
+msgstr "Übersicht der Lizenzen für Cisco Meraki Organisation"
+
+#, fuzzy
+msgid "Cisco Meraki licenses remaining time"
 msgstr "Übersicht der Lizenzen für Cisco Meraki Organisation"
 
 msgid "Cisco Meraki power supply"
@@ -23991,6 +24013,12 @@ msgstr ""
 #, python-format
 msgid "Error showing view: %s"
 msgstr "Fehler in Ansicht: %s"
+
+#, python-format
+msgid ""
+"Error while querying the following metrics: %s.<br>Last error message: %s."
+"<br>See web.log for further details."
+msgstr ""
 
 #, python-format
 msgid "Error while rendering element type '%s'"
@@ -38198,6 +38226,10 @@ msgstr "Lizenziert"
 msgid "Licensed active metric series"
 msgstr "Lizenzierte Services"
 
+#, fuzzy
+msgid "Licensed devices"
+msgstr "Lizenzierte Services"
+
 msgid "Licensed phase: too many services."
 msgstr "Lizenzierte Phase: zu viele Services."
 
@@ -41926,6 +41958,10 @@ msgstr "Filterkriterien des Metrik-Backend"
 
 #, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
+msgstr "Metrik-Backend ist deaktiviert."
+
+#, fuzzy
+msgid "Metric backend is not reachable, autocompletion is not available."
 msgstr "Metrik-Backend ist deaktiviert."
 
 msgid "Metric configuration"
@@ -48105,6 +48141,10 @@ msgstr "Oracle Service Name der Datenbankinstanz."
 msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Oracle Warteklasse (FG Zeilen sind von Nachteil)"
 
+#, fuzzy
+msgid "Oracle Wallet"
+msgstr "Oracle block gets"
+
 msgid "Oracle administrative wait class"
 msgstr "Oracle administrative Warteklasse"
 
@@ -51731,25 +51771,38 @@ msgstr "Pod-Ressourcen: StatefulSet"
 msgid "Podman"
 msgstr "Podman"
 
-msgid "Podman Container Health"
-msgstr "Gesundheit des Podman-Containers"
-
-msgid "Podman Container Restarts"
-msgstr "Neustarts von Podman-Container"
-
-msgid "Podman Container Status"
-msgstr "Status von Podman-Container"
-
 msgid "Podman Containers"
 msgstr "Podman-Container"
 
-msgid "Podman Disk Usage"
+msgid "Podman Pods"
+msgstr "Podman Pods"
+
+#, fuzzy
+msgid "Podman container health"
+msgstr "Gesundheit des Podman-Containers"
+
+#, fuzzy
+msgid "Podman container restarts"
+msgstr "Neustarts von Podman-Container"
+
+#, fuzzy
+msgid "Podman container status"
+msgstr "Status von Podman-Container"
+
+#, fuzzy
+msgid "Podman containers"
+msgstr "Podman-Container"
+
+#, fuzzy
+msgid "Podman disk usage"
 msgstr "Podman-Festplattennutzung"
 
-msgid "Podman Monitoring"
-msgstr "Podman-Monitoring"
+#, fuzzy
+msgid "Podman node and containers"
+msgstr "Docker-Knoten und -Container"
 
-msgid "Podman Pods"
+#, fuzzy
+msgid "Podman pods"
 msgstr "Podman Pods"
 
 msgid "Podman socket path"
@@ -54308,6 +54361,10 @@ msgstr "Verbleibende Tage bis zum Ablauf der Windows-Lizenz"
 
 msgid "Remaining reads"
 msgstr "Verbleibende Leseoperationen"
+
+#, fuzzy
+msgid "Remaining time"
+msgstr "Verbleibende Integrität"
 
 msgid ""
 "Remaining time (seconds) until the license expires. The defaults equateto 14 "
@@ -60631,9 +60688,6 @@ msgstr "Der Filter für die Dateigröße muss das Format [OPERATOR][INT] haben."
 msgid "Size growth per minute"
 msgstr "Größenwachstum pro Minute"
 
-msgid "Size of ClickHouse"
-msgstr "Größe von ClickHouse"
-
 msgid "Size of OTel Collector"
 msgstr "Größe des OTel Collectors"
 
@@ -60678,6 +60732,10 @@ msgstr "Größe der Log-Dateien"
 
 msgid "Size of mails in queues"
 msgstr "Größe der Mails in den Mailqueues"
+
+#, fuzzy
+msgid "Size of metric backend"
+msgstr "Metrik-Backend anfragen"
 
 msgid "Size of processes"
 msgstr "Größe von Prozessen"
@@ -68880,6 +68938,10 @@ msgstr ""
 msgid "The password cannot be changed (it is locked by the user connector)."
 msgstr ""
 "Passwortänderung nicht möglich (es ist durch den user connector gesperrt)."
+
+#, fuzzy, python-format
+msgid "The password contains forbidden character: %s"
+msgstr "Das Muster enthält ungültige Zeichen: %s"
 
 #, python-format
 msgid ""
@@ -81135,6 +81197,16 @@ msgstr "Organisations-ID als Host-Präfix verwenden"
 msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr "Odbc-Backend verwenden, wenn das Plugin unter Windows eingesetzt wird"
 
+msgid ""
+"Use Oracle Wallet for secure authentication to the Oracle database without "
+"storing passwords in plain text. If 'Path to tnsnames.ora or sqlnet.ora "
+"file' (TNS_ADMIN) is not set, the wallet must be located in /etc/check_mk/"
+"oracle_wallet. In this case, the plugin will automatically create a "
+"sqlnet.ora file if it does not exist. If TNS_ADMIN is set to a custom path, "
+"you must ensure that sqlnet.ora (with the correct wallet location) and the "
+"Oracle Wallet files are properly configured in that directory."
+msgstr ""
+
 msgid "Use Organisation-ID as host prefix"
 msgstr "Organisations-ID als Host-Präfix verwenden"
 
@@ -91372,12 +91444,9 @@ msgstr "Name ist erforderlich."
 msgid "Unique ID is required."
 msgstr "Eindeutige ID ist erforderlich."
 
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"Die eindeutige ID darf nur Kleinbuchstaben, Zahlen und Unterstriche "
-"enthalten und muss mit einem Buchstaben beginnen."
+#, fuzzy
+msgid "Use only lowercase letters (a-z), numbers (0-9), and underscores (_)."
+msgstr "Hier nur Kleinbuchstaben, Ziffern und Unterstriche verwenden."
 
 msgid "This Unique ID is already in use. Please choose another one."
 msgstr ""
@@ -91486,15 +91555,18 @@ msgstr "Standard-Profil"
 msgid "Runtime filter"
 msgstr "Laufzeit-Filter"
 
+msgid ""
+"<b>Inherited default or runtime filters.</b><br />\n"
+"    They apply unless:\n"
+"    <ul>\n"
+"      <li>Runtime filters are enabled to override default filters.</li>\n"
+"      <li>Widget filters override default/runtime filters for this widget.</"
+"li>\n"
+"    </ul>"
+msgstr ""
+
 msgid "Applied %{n} filter"
 msgstr "%{n} Filter angewendet"
-
-msgid ""
-"Relevant %{n} targeted filter set on dashboard level via dashboard or "
-"runtime filters."
-msgstr ""
-"Relevanter %{n} Zielfilter, der auf Dashboard-Ebene über Dashboard- oder "
-"Laufzeitfilter festgelegt wird."
 
 msgid "No %{n} filter applied"
 msgstr "Kein %{n} Filter angewendet"
@@ -91502,23 +91574,16 @@ msgstr "Kein %{n} Filter angewendet"
 msgid "Applied %{n} filters"
 msgstr "%{n} Filter angewendet"
 
-msgid ""
-"Relevant %{n} filters set on dashboard level via dashboard or runtime "
-"filters."
-msgstr ""
-"Relevante %{n} Filter, die auf Dashboard-Ebene über Dashboard- oder "
-"Laufzeitfilter festgelegt werden."
-
 msgid "No %{n} filters applied"
 msgstr "Keine %{n} Filter angewendet"
 
 msgid "Widget filters"
 msgstr "Widget-Filter"
 
-#, fuzzy
-msgid "Widget configured filters override default and runtime filters"
+msgid ""
+"Filters override default/runtime values for this widget only.<br />\n"
+"         Required runtime filters must still be set on the dashboard level."
 msgstr ""
-"Vom Widget konfigurierte Filter überschreiben Dashboard- und Laufzeitfilter"
 
 msgid "See all"
 msgstr "Alle ansehen"
@@ -91869,6 +91934,13 @@ msgstr "Nur anzeigen, wenn \"Mehr anzeigen\" aktiviert ist"
 msgid "Show in dropdown menus"
 msgstr "In Drop-down-Menüs anzeigen"
 
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Die eindeutige ID darf nur Kleinbuchstaben, Zahlen und Unterstriche "
+"enthalten und muss mit einem Buchstaben beginnen."
+
 msgid "Dashboard settings of %{name}"
 msgstr "Dashboard-Einstellungen von %{name}"
 
@@ -91964,6 +92036,12 @@ msgstr "Änderungen speichern"
 
 msgid "Event selection"
 msgstr "Ereignis-Auswahl"
+
+msgid ""
+"Filters override default/runtime values for this widget only.<br />\n"
+"             Required runtime filters must still be set on the dashboard "
+"level."
+msgstr ""
 
 msgid "Available visualization type"
 msgstr "Verfügbarer Visualisierungstyp"
@@ -92303,11 +92381,23 @@ msgstr ""
 "Die Regelbedingungen der von Quick Setup verwalteten Regeln können nicht "
 "geändert werden."
 
+#, fuzzy
+msgid "Graph lines"
+msgstr "Graph-Tunings"
+
 msgid "Mirrored"
 msgstr "Gespiegelt"
 
 msgid "Formula"
 msgstr "Formel"
+
+#, fuzzy
+msgid "Graph line"
+msgstr "Graph-Styling"
+
+#, fuzzy
+msgid "Select graph line to edit"
+msgstr "Wählen Sie eine Graph-Linie zur Bearbeitung aus"
 
 msgid "Dissolve operation"
 msgstr "Operation auflösen"
@@ -92317,6 +92407,18 @@ msgstr "Diesen Eintrag klonen"
 
 msgid "Add rule: Metric backend (Custom query)"
 msgstr "Regel hinzufügen: Metrik-Backend (benutzerdefinierte Anfrage)"
+
+#, fuzzy
+msgid "Color picker"
+msgstr "Färben"
+
+#, fuzzy
+msgid "Help: Metric backend (Custom query)"
+msgstr "Metrik-Backend (benutzerdefinierte Anfrage)"
+
+#, fuzzy
+msgid "Inline Help: Metric backend (Custom query)"
+msgstr "Regel bearbeiten: Metrik-Backend (benutzerdefinierte Anfrage)"
 
 msgid "Select at least two graph lines to edit"
 msgstr "Wählen Sie mindestens zwei Graph-Linien zur Bearbeitung aus"
@@ -92765,12 +92867,22 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Failed to save OAuth2 connection"
-msgstr "OAuth2-Verbindungen verwalten"
+msgid ""
+"Cannot reach host. Host is resolvable via DNS but not pingable.\n"
+"              Enter a reachable host name or IP address or set 'No IP' in "
+"the 'Network address' section."
+msgstr ""
+"DNS kann nicht aufgelöst werden. Geben Sie einen DNS-auflösbaren Host-Namen "
+"oder eine IP-Adresse ein oder stellen Sie im Abschnitt 'Netzwerkadresse' "
+"'Keine IP' ein."
 
 #, fuzzy
-msgid "Unknown OAuth2 type: ${oAuth2Type}"
-msgstr "Unbekannter Objekttyp: %{objectType}"
+msgid "Unknown status code received from server."
+msgstr "Vom Zeitlieferanten wurden veraltete Daten empfangen"
+
+#, fuzzy
+msgid "Failed to save OAuth2 connection"
+msgstr "OAuth2-Verbindungen verwalten"
 
 msgid "Application successfully authorized!"
 msgstr "Applikation wurde erfolgreich autorisiert!"
@@ -93398,12 +93510,6 @@ msgstr ""
 msgid "Resources"
 msgstr "Ressourcen"
 
-msgid ""
-"Your assistant for Checkmk - ask anything from setup to troubleshooting."
-msgstr ""
-"Ihr Assistent für Checkmk – fragen Sie alles, vom Setup bis zur "
-"Fehlerbehebung."
-
 msgid "Read the Beginner’s Guide"
 msgstr "Lese Sie den Leitfaden für Einsteiger"
 
@@ -93413,6 +93519,31 @@ msgstr ""
 "Eine Schritt-für-Schritt-Einführung, damit Sie schnell und sicher loslegen "
 "können."
 
+#, fuzzy
+msgid "Discover best practices"
+msgstr "Erkennungszustand"
+
+msgid ""
+"Explore proven best practices, helpful tips, and practical tricks to get the "
+"most out of your monitoring setup."
+msgstr ""
+
+msgid "Learn Checkmk via expert training"
+msgstr ""
+
+msgid ""
+"Build a solid foundation and deepen your knowledge in our official, "
+"instructor-led Checkmk trainings."
+msgstr ""
+
+msgid "Attend a free webinar"
+msgstr ""
+
+msgid ""
+"Watch our on-demand or live webinars to master the configuration and use of "
+"Checkmk."
+msgstr ""
+
 msgid "Join the community"
 msgstr "Der Community beitreten"
 
@@ -93420,6 +93551,12 @@ msgid "Connect with other users and ask questions in our active forum."
 msgstr ""
 "Treten Sie mit anderen Nutzern in Kontakt und stellen Sie Fragen in unserem "
 "aktiven Forum."
+
+msgid ""
+"Your assistant for Checkmk - ask anything from setup to troubleshooting."
+msgstr ""
+"Ihr Assistent für Checkmk – fragen Sie alles, vom Setup bis zur "
+"Fehlerbehebung."
 
 msgid "All steps completed"
 msgstr "Alle Schritte abgeschlossen"
@@ -93434,8 +93571,43 @@ msgstr "Containerisierung"
 msgid "Next steps with Checkmk"
 msgstr "Nächste Schritte in Checkmk"
 
-msgid "2-5 min"
-msgstr "2-5 Minuten"
+#, fuzzy
+msgid "Activate Changes"
+msgstr "Änderungen aktivieren"
+
+msgid "1 Step | Takes 1-3 min"
+msgstr ""
+
+msgid ""
+"In Checkmk, configuration changes are first saved as pending and do not "
+"affect the running monitoring right away.\n"
+"          This lets you prepare and review multiple changes — such as adding "
+"hosts, adjusting services, or fine-tuning\n"
+"          thresholds — before applying them all at once. Only when you "
+"activate the pending changes are they transferred\n"
+"          to the live monitoring system as a single bundle."
+msgstr ""
+
+#, fuzzy
+msgid "Spotting pending changes"
+msgstr "Keine ausstehende Änderungen"
+
+msgid ""
+"If there are pending changes, you’ll see a yellow badge on the “Changes” "
+"menu item in the main navigation,\n"
+"      reminding you that your setup is not yet active."
+msgstr ""
+
+#, fuzzy
+msgid "Open all pending changes"
+msgstr "Keine ausstehende Änderungen"
+
+#, fuzzy
+msgid "Mark as done"
+msgstr "Als komplett markieren"
+
+msgid "2 Steps | Takes 7-10 min"
+msgstr ""
 
 msgid ""
 "In Checkmk, a host is any standalone physical or virtual system that is "
@@ -93454,8 +93626,22 @@ msgstr ""
 "Überwachung beginnen können."
 
 #, fuzzy
-msgid "Open and run service discovery"
-msgstr "Speichern & Service-Erkennung durchführen"
+msgid "Set up basic folder structure"
+msgstr "Leitfaden für Einsteiger: Host-Ordner Strukturen"
+
+msgid ""
+"In Checkmk, folders are the foundation for organizing hosts and applying "
+"settings consistently.\n"
+"            Creating a folder (or folder structure) before adding your first "
+"host helps you keep things tidy from\n"
+"            the start and makes it easier to manage similar hosts later on "
+"through inheritance. Learn more about\n"
+"            folders and inheritance in the"
+msgstr ""
+
+#, fuzzy
+msgid "documentation."
+msgstr "Dokumentation"
 
 msgid "On-premises hosts"
 msgstr "On-Premises Hosts"
@@ -93472,27 +93658,12 @@ msgstr "Microsoft Azure"
 msgid "OpenTelemetry (Beta)"
 msgstr "OpenTelemetry (Beta)"
 
-msgid ""
-"Changes are saved in a temporary environment first,\n"
-"                letting you review and adjust them safely."
-msgstr ""
-"Änderungen werden zunächst in einer temporären Umgebung gespeichert, \n"
-"                sodass Sie diese sicher überprüfen und anpassen können."
-
-msgid "Activate changes to apply them to live monitoring."
-msgstr ""
-"Aktivieren Sie die Änderungen, um sie auf das Live-Monitoring anzuwenden."
-
-#, fuzzy
-msgid "Mark as done"
-msgstr "Als komplett markieren"
-
 #, fuzzy
 msgid "Adjust service thresholds"
 msgstr "Services anpassen"
 
-msgid "5-7 min"
-msgstr "5-7 Minuten"
+msgid "3 Steps | Takes 5-7 min"
+msgstr ""
 
 msgid ""
 "Each service in Checkmk comes with default parameter values.\n"
@@ -93512,6 +93683,23 @@ msgstr ""
 "            Um den richtigen Regelsatz für einen Service zu finden,\n"
 "\n"
 "            beginnen Sie mit der Seite für die Service-Erkennung eines Hosts."
+
+#, fuzzy
+msgid "Before adjusting thresholds"
+msgstr "Services anpassen"
+
+msgid ""
+"Make sure you understand what the monitoring data is telling you.\n"
+"          If a service reports a problem, first verify and fix real issues.\n"
+"          Thresholds should help detect real problems - not hide them.\n"
+"          Poorly tuned thresholds can lead to false alarms, masking of "
+"problems,\n"
+"          and reduces trust in the monitoring system."
+msgstr ""
+
+#, fuzzy
+msgid "Open and run service discovery"
+msgstr "Speichern & Service-Erkennung durchführen"
 
 msgid "To adjust parameters for a host, start by running a service discovery."
 msgstr ""
@@ -93580,6 +93768,19 @@ msgstr ""
 "werden und sind somit ein flexibles \n"
 "            und skalierbares Werkzeug, um festzulegen, wer für was "
 "verantwortlich ist."
+
+msgid "Before adding more users and assigning responsibilities"
+msgstr ""
+
+msgid ""
+"Make sure your monitoring setup is stable and already useful. Only once "
+"hosts, services,\n"
+"          and structures are in place does it make sense to add more users "
+"and assign responsibilities —\n"
+"          otherwise you risk unnecessary complexity and confusion. Learn "
+"more about working with multiple\n"
+"          users in the"
+msgstr ""
 
 msgid "Create a contact group"
 msgstr "Eine Kontaktgruppe erstellen"
@@ -93674,6 +93875,9 @@ msgstr "Benutzerdefiniertes Dashboard hinzufügen"
 msgid "Enable notifications"
 msgstr "Benachrichtigungen aktivieren"
 
+msgid "2 Steps | Takes 5-7 min"
+msgstr ""
+
 msgid ""
 "Notifications help you to stay on top of problems without having to "
 "constantly check the interface.\n"
@@ -93686,6 +93890,30 @@ msgstr ""
 "            In Checkmk sind sie regelbasiert, sodass Sie ein "
 "Benachrichtigungssystem erstellen können, das sich mit Ihrer \n"
 "            Umgebung weiterentwickelt."
+
+#, fuzzy
+msgid "Learn more about notifications in the"
+msgstr "Details für Host-Benachrichtigungen"
+
+#, fuzzy
+msgid "Before enabling notifications"
+msgstr "Benachrichtigungen aktivieren"
+
+msgid ""
+"Notifications are powerful, but turning them on too early can quickly lead "
+"to alert fatigue.\n"
+"          Take some time to understand your monitoring first. Then start "
+"with a small pilot by enabling\n"
+"          email notifications for a limited number of users. This helps you "
+"fine-tune rules and thresholds\n"
+"          before involving everyone. A gradual rollout ensures notifications "
+"stay meaningful and don’t get\n"
+"          lost in the noise."
+msgstr ""
+
+msgid ""
+"Tip: To use email notifications, make sure an email server is configured."
+msgstr ""
 
 msgid "Create a notification rule"
 msgstr "Eine Benachrichtigungsregel erstellen"
@@ -93729,6 +93957,53 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Podman Monitoring"
+#~ msgstr "Podman-Monitoring"
+
+#~ msgid "Size of ClickHouse"
+#~ msgstr "Größe von ClickHouse"
+
+#~ msgid ""
+#~ "Relevant %{n} targeted filter set on dashboard level via dashboard or "
+#~ "runtime filters."
+#~ msgstr ""
+#~ "Relevanter %{n} Zielfilter, der auf Dashboard-Ebene über Dashboard- oder "
+#~ "Laufzeitfilter festgelegt wird."
+
+#~ msgid ""
+#~ "Relevant %{n} filters set on dashboard level via dashboard or runtime "
+#~ "filters."
+#~ msgstr ""
+#~ "Relevante %{n} Filter, die auf Dashboard-Ebene über Dashboard- oder "
+#~ "Laufzeitfilter festgelegt werden."
+
+#, fuzzy
+#~ msgid "Widget configured filters override default and runtime filters"
+#~ msgstr ""
+#~ "Vom Widget konfigurierte Filter überschreiben Dashboard- und "
+#~ "Laufzeitfilter"
+
+#, fuzzy
+#~ msgid "Unknown OAuth2 type: ${oAuth2Type}"
+#~ msgstr "Unbekannter Objekttyp: %{objectType}"
+
+#~ msgid "2-5 min"
+#~ msgstr "2-5 Minuten"
+
+#~ msgid ""
+#~ "Changes are saved in a temporary environment first,\n"
+#~ "                letting you review and adjust them safely."
+#~ msgstr ""
+#~ "Änderungen werden zunächst in einer temporären Umgebung gespeichert, \n"
+#~ "                sodass Sie diese sicher überprüfen und anpassen können."
+
+#~ msgid "Activate changes to apply them to live monitoring."
+#~ msgstr ""
+#~ "Aktivieren Sie die Änderungen, um sie auf das Live-Monitoring anzuwenden."
+
+#~ msgid "5-7 min"
+#~ msgstr "5-7 Minuten"
 
 #~ msgid "Failed to decode filter context"
 #~ msgstr "Dekodierung des Filterkontexts fehlgeschlagen"
@@ -93941,9 +94216,6 @@ msgstr ""
 
 #~ msgid "Clear failed notifications"
 #~ msgstr "Fehlgeschlagene Benachrichtigungen löschen"
-
-#~ msgid "Colorize"
-#~ msgstr "Färben"
 
 #~ msgid "Display axis labels for the selected/automatic data range"
 #~ msgstr ""

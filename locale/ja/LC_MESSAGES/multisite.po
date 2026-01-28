@@ -3960,6 +3960,10 @@ msgstr "MIBを追加する"
 msgid "Add Message Pattern filter rule"
 msgstr "フィルタを追加"
 
+#, fuzzy
+msgid "Add Microsoft Entra ID connection"
+msgstr "サイト接続を追加する"
+
 msgid "Add NGINX instance"
 msgstr "NGINXインスタンスを追加します"
 
@@ -11802,6 +11806,16 @@ msgstr "設定ファイル %s を読み取れません: %s:"
 msgid "Cannot read file \"%s\": %s"
 msgstr "ファイル \"%s\"を読み取れません: %s"
 
+#, fuzzy
+msgid "Cannot render complete graph"
+msgstr "グラフを作成できません"
+
+#, python-format
+msgid ""
+"Cannot render complete graph. See graph '<a href='%s'>%s</a>' for further "
+"details."
+msgstr ""
+
 msgid "Cannot render drop-down: Missing required information"
 msgstr "ドロップダウンをレンダリングできません：必要な情報がありません"
 
@@ -13530,7 +13544,15 @@ msgid "Cisco Meraki device status"
 msgstr "Cisco Meraki デバイスステータス"
 
 #, fuzzy
+msgid "Cisco Meraki licensed devices"
+msgstr "Cisco Meraki Organisation Licensesの概要"
+
+#, fuzzy
 msgid "Cisco Meraki licenses overview"
+msgstr "Cisco Meraki Organisation Licensesの概要"
+
+#, fuzzy
+msgid "Cisco Meraki licenses remaining time"
 msgstr "Cisco Meraki Organisation Licensesの概要"
 
 msgid "Cisco Meraki power supply"
@@ -23785,6 +23807,12 @@ msgstr ""
 #, python-format
 msgid "Error showing view: %s"
 msgstr "ビューの表示中にエラーが発生しました: %s"
+
+#, python-format
+msgid ""
+"Error while querying the following metrics: %s.<br>Last error message: %s."
+"<br>See web.log for further details."
+msgstr ""
 
 #, python-format
 msgid "Error while rendering element type '%s'"
@@ -37797,6 +37825,10 @@ msgstr "ライセンス"
 msgid "Licensed active metric series"
 msgstr "ライセンス対象サービス"
 
+#, fuzzy
+msgid "Licensed devices"
+msgstr "ライセンス対象サービス"
+
 msgid "Licensed phase: too many services."
 msgstr "ライセンス段階：サービスが多すぎます。"
 
@@ -41476,6 +41508,10 @@ msgstr "Oracleインスタンス"
 
 #, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
+msgstr "Oracleインスタンス"
+
+#, fuzzy
+msgid "Metric backend is not reachable, autocompletion is not available."
 msgstr "Oracleインスタンス"
 
 #, fuzzy
@@ -47610,6 +47646,10 @@ msgstr "センサーの識別子。"
 msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Oracle待機クラス(FGラインはダウンサイド)"
 
+#, fuzzy
+msgid "Oracle Wallet"
+msgstr "Oracle ブロック取得"
+
 msgid "Oracle administrative wait class"
 msgstr "Oracle管理待機クラス"
 
@@ -51153,29 +51193,39 @@ msgstr "Podリソース: ステータスフルセット"
 msgid "Podman"
 msgstr "Podman コンテナ"
 
-#, fuzzy
-msgid "Podman Container Health"
-msgstr "Podman コンテナ"
-
-#, fuzzy
-msgid "Podman Container Restarts"
-msgstr "Podman コンテナ"
-
-#, fuzzy
-msgid "Podman Container Status"
-msgstr "Podman コンテナ"
-
 msgid "Podman Containers"
 msgstr "Podman コンテナ"
 
-msgid "Podman Disk Usage"
-msgstr "Podman Disk 使用量"
-
-msgid "Podman Monitoring"
-msgstr "Podman監視"
-
 #, fuzzy
 msgid "Podman Pods"
+msgstr "Podman コンテナ"
+
+#, fuzzy
+msgid "Podman container health"
+msgstr "Podman コンテナ"
+
+#, fuzzy
+msgid "Podman container restarts"
+msgstr "Podman コンテナ"
+
+#, fuzzy
+msgid "Podman container status"
+msgstr "Podman コンテナ"
+
+#, fuzzy
+msgid "Podman containers"
+msgstr "Podman コンテナ"
+
+#, fuzzy
+msgid "Podman disk usage"
+msgstr "Podman Disk 使用量"
+
+#, fuzzy
+msgid "Podman node and containers"
+msgstr "Dockerノードとコンテナー"
+
+#, fuzzy
+msgid "Podman pods"
 msgstr "Podman コンテナ"
 
 msgid "Podman socket path"
@@ -53746,6 +53796,10 @@ msgstr "Windowsライセンスの有効期限が切れるまでの残り日数"
 
 msgid "Remaining reads"
 msgstr "読み残し"
+
+#, fuzzy
+msgid "Remaining time"
+msgstr "残りのライフ"
 
 msgid ""
 "Remaining time (seconds) until the license expires. The defaults equateto 14 "
@@ -59968,10 +60022,6 @@ msgid "Size growth per minute"
 msgstr "1分あたりのサイズの増加"
 
 #, fuzzy
-msgid "Size of ClickHouse"
-msgstr "ライセンスのサイズ"
-
-#, fuzzy
 msgid "Size of OTel Collector"
 msgstr "コアのサイズ"
 
@@ -60017,6 +60067,10 @@ msgstr "ログファイルのサイズ"
 
 msgid "Size of mails in queues"
 msgstr "キュー内のメールのサイズ"
+
+#, fuzzy
+msgid "Size of metric backend"
+msgstr "OpenTelemetryメトリック名"
 
 msgid "Size of processes"
 msgstr "プロセスのサイズ"
@@ -67805,6 +67859,10 @@ msgstr ""
 msgid "The password cannot be changed (it is locked by the user connector)."
 msgstr ""
 "パスワードは変更できません(ユーザーコネクタによってロックされています)。"
+
+#, fuzzy, python-format
+msgid "The password contains forbidden character: %s"
+msgstr "パターンに無効な文字が含まれています: %s"
 
 #, python-format
 msgid ""
@@ -79658,6 +79716,16 @@ msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr ""
 "Windowsにプラグインをデプロイする場合、ODBCバックエンドを使用してください"
 
+msgid ""
+"Use Oracle Wallet for secure authentication to the Oracle database without "
+"storing passwords in plain text. If 'Path to tnsnames.ora or sqlnet.ora "
+"file' (TNS_ADMIN) is not set, the wallet must be located in /etc/check_mk/"
+"oracle_wallet. In this case, the plugin will automatically create a "
+"sqlnet.ora file if it does not exist. If TNS_ADMIN is set to a custom path, "
+"you must ensure that sqlnet.ora (with the correct wallet location) and the "
+"Oracle Wallet files are properly configured in that directory."
+msgstr ""
+
 msgid "Use Organisation-ID as host prefix"
 msgstr ""
 
@@ -89592,12 +89660,8 @@ msgid "Unique ID is required."
 msgstr "ユニークIDですが必須。"
 
 #, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファベッ"
-"ト、または数字で始まる必要があります。"
+msgid "Use only lowercase letters (a-z), numbers (0-9), and underscores (_)."
+msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
 
 #, fuzzy
 msgid "This Unique ID is already in use. Please choose another one."
@@ -89721,14 +89785,19 @@ msgstr "デフォルトのプロファイル"
 msgid "Runtime filter"
 msgstr "フィルタを取り外します"
 
+msgid ""
+"<b>Inherited default or runtime filters.</b><br />\n"
+"    They apply unless:\n"
+"    <ul>\n"
+"      <li>Runtime filters are enabled to override default filters.</li>\n"
+"      <li>Widget filters override default/runtime filters for this widget.</"
+"li>\n"
+"    </ul>"
+msgstr ""
+
 #, fuzzy
 msgid "Applied %{n} filter"
 msgstr "適用されたフィルター:"
-
-msgid ""
-"Relevant %{n} targeted filter set on dashboard level via dashboard or "
-"runtime filters."
-msgstr ""
 
 #, fuzzy
 msgid "No %{n} filter applied"
@@ -89738,11 +89807,6 @@ msgstr "%{n} 対象フィルターは適用されていません"
 msgid "Applied %{n} filters"
 msgstr "適用されたフィルター:"
 
-msgid ""
-"Relevant %{n} filters set on dashboard level via dashboard or runtime "
-"filters."
-msgstr ""
-
 msgid "No %{n} filters applied"
 msgstr "%{n} 対象フィルターは適用されていません"
 
@@ -89750,7 +89814,9 @@ msgstr "%{n} 対象フィルターは適用されていません"
 msgid "Widget filters"
 msgstr "フィルタを追加"
 
-msgid "Widget configured filters override default and runtime filters"
+msgid ""
+"Filters override default/runtime values for this widget only.<br />\n"
+"         Required runtime filters must still be set on the dashboard level."
 msgstr ""
 
 #, fuzzy
@@ -90144,6 +90210,14 @@ msgid "Show in dropdown menus"
 msgstr "ドロップダウンメニューでこの %sを非表示にする"
 
 #, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファベッ"
+"ト、または数字で始まる必要があります。"
+
+#, fuzzy
 msgid "Dashboard settings of %{name}"
 msgstr "ダッシュボードのプロパティ"
 
@@ -90251,6 +90325,12 @@ msgstr "ステータス変更"
 #, fuzzy
 msgid "Event selection"
 msgstr "ファイル選択"
+
+msgid ""
+"Filters override default/runtime values for this widget only.<br />\n"
+"             Required runtime filters must still be set on the dashboard "
+"level."
+msgstr ""
 
 #, fuzzy
 msgid "Available visualization type"
@@ -90639,11 +90719,23 @@ msgstr ""
 msgid "Cannot change rule value for rules managed by custom graph editor."
 msgstr "クイックセットアップで管理されているルールの条件を変更できません。"
 
+#, fuzzy
+msgid "Graph lines"
+msgstr "グラフの調整"
+
 msgid "Mirrored"
 msgstr "ミラーリングされた"
 
 msgid "Formula"
 msgstr "式"
+
+#, fuzzy
+msgid "Graph line"
+msgstr "グラフの調整"
+
+#, fuzzy
+msgid "Select graph line to edit"
+msgstr "編集するグラフの線を選択してください"
 
 msgid "Dissolve operation"
 msgstr "溶解操作"
@@ -90653,6 +90745,18 @@ msgstr "このエントリのクローンを作成する"
 
 #, fuzzy
 msgid "Add rule: Metric backend (Custom query)"
+msgstr "Oracleインスタンス"
+
+#, fuzzy
+msgid "Color picker"
+msgstr "色付け"
+
+#, fuzzy
+msgid "Help: Metric backend (Custom query)"
+msgstr "Oracleインスタンス"
+
+#, fuzzy
+msgid "Inline Help: Metric backend (Custom query)"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
@@ -91092,12 +91196,20 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Failed to save OAuth2 connection"
-msgstr "接続を追加"
+msgid ""
+"Cannot reach host. Host is resolvable via DNS but not pingable.\n"
+"              Enter a reachable host name or IP address or set 'No IP' in "
+"the 'Network address' section."
+msgstr ""
+"DNSを解決できません。DNS解決可能なホスト名、IPアドレスを入力するか、'ネット"
+"ワークアドレス'セクションで'No IP'を設定してください。"
+
+msgid "Unknown status code received from server."
+msgstr ""
 
 #, fuzzy
-msgid "Unknown OAuth2 type: ${oAuth2Type}"
-msgstr "不明なオブジェクトタイプ： %{objectType}"
+msgid "Failed to save OAuth2 connection"
+msgstr "接続を追加"
 
 #, fuzzy
 msgid "Application successfully authorized!"
@@ -91752,10 +91864,6 @@ msgstr ""
 msgid "Resources"
 msgstr "ソース"
 
-msgid ""
-"Your assistant for Checkmk - ask anything from setup to troubleshooting."
-msgstr ""
-
 #, fuzzy
 msgid "Read the Beginner’s Guide"
 msgstr "ビギナーズガイド"
@@ -91765,10 +91873,39 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Discover best practices"
+msgstr "ディスカバリ状態"
+
+msgid ""
+"Explore proven best practices, helpful tips, and practical tricks to get the "
+"most out of your monitoring setup."
+msgstr ""
+
+msgid "Learn Checkmk via expert training"
+msgstr ""
+
+msgid ""
+"Build a solid foundation and deepen your knowledge in our official, "
+"instructor-led Checkmk trainings."
+msgstr ""
+
+msgid "Attend a free webinar"
+msgstr ""
+
+msgid ""
+"Watch our on-demand or live webinars to master the configuration and use of "
+"Checkmk."
+msgstr ""
+
+#, fuzzy
 msgid "Join the community"
 msgstr "プレーンテキストによる通信"
 
 msgid "Connect with other users and ask questions in our active forum."
+msgstr ""
+
+msgid ""
+"Your assistant for Checkmk - ask anything from setup to troubleshooting."
 msgstr ""
 
 #, fuzzy
@@ -91787,8 +91924,42 @@ msgid "Next steps with Checkmk"
 msgstr "Checkmkに同梱されているMIB"
 
 #, fuzzy
-msgid "2-5 min"
-msgstr "5分"
+msgid "Activate Changes"
+msgstr "変更をアクティブにする"
+
+msgid "1 Step | Takes 1-3 min"
+msgstr ""
+
+msgid ""
+"In Checkmk, configuration changes are first saved as pending and do not "
+"affect the running monitoring right away.\n"
+"          This lets you prepare and review multiple changes — such as adding "
+"hosts, adjusting services, or fine-tuning\n"
+"          thresholds — before applying them all at once. Only when you "
+"activate the pending changes are they transferred\n"
+"          to the live monitoring system as a single bundle."
+msgstr ""
+
+#, fuzzy
+msgid "Spotting pending changes"
+msgstr "保留中の変更はありません"
+
+msgid ""
+"If there are pending changes, you’ll see a yellow badge on the “Changes” "
+"menu item in the main navigation,\n"
+"      reminding you that your setup is not yet active."
+msgstr ""
+
+#, fuzzy
+msgid "Open all pending changes"
+msgstr "保留中の変更はありません"
+
+#, fuzzy
+msgid "Mark as done"
+msgstr "PGs 未完了"
+
+msgid "2 Steps | Takes 7-10 min"
+msgstr ""
 
 msgid ""
 "In Checkmk, a host is any standalone physical or virtual system that is "
@@ -91800,8 +91971,22 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Open and run service discovery"
-msgstr "サービスディスカバリの実行と保存"
+msgid "Set up basic folder structure"
+msgstr "初心者向けガイド: ホストフォルダの構造"
+
+msgid ""
+"In Checkmk, folders are the foundation for organizing hosts and applying "
+"settings consistently.\n"
+"            Creating a folder (or folder structure) before adding your first "
+"host helps you keep things tidy from\n"
+"            the start and makes it easier to manage similar hosts later on "
+"through inheritance. Learn more about\n"
+"            folders and inheritance in the"
+msgstr ""
+
+#, fuzzy
+msgid "documentation."
+msgstr "ドキュメント"
 
 #, fuzzy
 msgid "On-premises hosts"
@@ -91822,25 +92007,12 @@ msgstr "Microsoft Azure"
 msgid "OpenTelemetry (Beta)"
 msgstr "OpenTelemetry（実験的）"
 
-msgid ""
-"Changes are saved in a temporary environment first,\n"
-"                letting you review and adjust them safely."
-msgstr ""
-
-msgid "Activate changes to apply them to live monitoring."
-msgstr "変更を有効化して、ライブ監視に適用します。"
-
-#, fuzzy
-msgid "Mark as done"
-msgstr "PGs 未完了"
-
 #, fuzzy
 msgid "Adjust service thresholds"
 msgstr "すべてのサービス"
 
-#, fuzzy
-msgid "5-7 min"
-msgstr "5分"
+msgid "3 Steps | Takes 5-7 min"
+msgstr ""
 
 msgid ""
 "Each service in Checkmk comes with default parameter values.\n"
@@ -91850,6 +92022,23 @@ msgid ""
 "            To find the right ruleset for a service,\n"
 "            start with the Service discovery page of a host."
 msgstr ""
+
+#, fuzzy
+msgid "Before adjusting thresholds"
+msgstr "すべてのサービス"
+
+msgid ""
+"Make sure you understand what the monitoring data is telling you.\n"
+"          If a service reports a problem, first verify and fix real issues.\n"
+"          Thresholds should help detect real problems - not hide them.\n"
+"          Poorly tuned thresholds can lead to false alarms, masking of "
+"problems,\n"
+"          and reduces trust in the monitoring system."
+msgstr ""
+
+#, fuzzy
+msgid "Open and run service discovery"
+msgstr "サービスディスカバリの実行と保存"
 
 msgid "To adjust parameters for a host, start by running a service discovery."
 msgstr ""
@@ -91907,6 +92096,19 @@ msgid ""
 "            Contact groups can be assigned to users, hosts, and services, "
 "making them a flexible\n"
 "            and scalable tool for defining who is responsible for what."
+msgstr ""
+
+msgid "Before adding more users and assigning responsibilities"
+msgstr ""
+
+msgid ""
+"Make sure your monitoring setup is stable and already useful. Only once "
+"hosts, services,\n"
+"          and structures are in place does it make sense to add more users "
+"and assign responsibilities —\n"
+"          otherwise you risk unnecessary complexity and confusion. Learn "
+"more about working with multiple\n"
+"          users in the"
 msgstr ""
 
 #, fuzzy
@@ -91989,12 +92191,39 @@ msgstr "ダッシュボードに追加"
 msgid "Enable notifications"
 msgstr "通知を有効にする"
 
+msgid "2 Steps | Takes 5-7 min"
+msgstr ""
+
 msgid ""
 "Notifications help you to stay on top of problems without having to "
 "constantly check the interface.\n"
 "            In Checkmk, they are rule-based, enabling you to create a "
 "notification system that evolves alongside\n"
 "            your environment."
+msgstr ""
+
+#, fuzzy
+msgid "Learn more about notifications in the"
+msgstr "ホスト通知詳細"
+
+#, fuzzy
+msgid "Before enabling notifications"
+msgstr "通知を有効にする"
+
+msgid ""
+"Notifications are powerful, but turning them on too early can quickly lead "
+"to alert fatigue.\n"
+"          Take some time to understand your monitoring first. Then start "
+"with a small pilot by enabling\n"
+"          email notifications for a limited number of users. This helps you "
+"fine-tune rules and thresholds\n"
+"          before involving everyone. A gradual rollout ensures notifications "
+"stay meaningful and don’t get\n"
+"          lost in the noise."
+msgstr ""
+
+msgid ""
+"Tip: To use email notifications, make sure an email server is configured."
 msgstr ""
 
 #, fuzzy
@@ -92036,6 +92265,28 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Podman Monitoring"
+#~ msgstr "Podman監視"
+
+#, fuzzy
+#~ msgid "Size of ClickHouse"
+#~ msgstr "ライセンスのサイズ"
+
+#, fuzzy
+#~ msgid "Unknown OAuth2 type: ${oAuth2Type}"
+#~ msgstr "不明なオブジェクトタイプ： %{objectType}"
+
+#, fuzzy
+#~ msgid "2-5 min"
+#~ msgstr "5分"
+
+#~ msgid "Activate changes to apply them to live monitoring."
+#~ msgstr "変更を有効化して、ライブ監視に適用します。"
+
+#, fuzzy
+#~ msgid "5-7 min"
+#~ msgstr "5分"
 
 #, fuzzy
 #~ msgid "Failed to decode filter context"
@@ -92244,9 +92495,6 @@ msgstr ""
 
 #~ msgid "Clear failed notifications"
 #~ msgstr "失敗した通知をクリアする"
-
-#~ msgid "Colorize"
-#~ msgstr "色付け"
 
 #~ msgid "Display axis labels for the selected/automatic data range"
 #~ msgstr "選択された/自動データ範囲の軸ラベルを表示する"

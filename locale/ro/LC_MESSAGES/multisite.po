@@ -4156,6 +4156,10 @@ msgstr "Adăugați MIB-uri"
 msgid "Add Message Pattern filter rule"
 msgstr "Adaugă filtre"
 
+#, fuzzy
+msgid "Add Microsoft Entra ID connection"
+msgstr "Adăugați o conexiune de site"
+
 msgid "Add NGINX instance"
 msgstr "Adăugați instanța NGINX"
 
@@ -12554,6 +12558,16 @@ msgid "Cannot read file \"%s\": %s"
 msgstr "Nu se poate citi fișierul \"%s\": %s."
 
 #, fuzzy
+msgid "Cannot render complete graph"
+msgstr "Nu se poate crea un grafic"
+
+#, python-format
+msgid ""
+"Cannot render complete graph. See graph '<a href='%s'>%s</a>' for further "
+"details."
+msgstr ""
+
+#, fuzzy
 msgid "Cannot render drop-down: Missing required information"
 msgstr "Nu se poate reda lista derulantă: Lipsesc informațiile necesare"
 
@@ -14365,7 +14379,15 @@ msgid "Cisco Meraki device status"
 msgstr "Afișați starea serviciului"
 
 #, fuzzy
+msgid "Cisco Meraki licensed devices"
+msgstr "Prezentare generală a licențelor Cisco Meraki Organisation"
+
+#, fuzzy
 msgid "Cisco Meraki licenses overview"
+msgstr "Prezentare generală a licențelor Cisco Meraki Organisation"
+
+#, fuzzy
+msgid "Cisco Meraki licenses remaining time"
 msgstr "Prezentare generală a licențelor Cisco Meraki Organisation"
 
 #, fuzzy
@@ -25196,6 +25218,12 @@ msgstr ""
 #, python-format
 msgid "Error showing view: %s"
 msgstr "Eroare de afișare a vizualizării: %s."
+
+#, python-format
+msgid ""
+"Error while querying the following metrics: %s.<br>Last error message: %s."
+"<br>See web.log for further details."
+msgstr ""
 
 #, python-format
 msgid "Error while rendering element type '%s'"
@@ -40186,6 +40214,10 @@ msgid "Licensed active metric series"
 msgstr "Servicii licențiate"
 
 #, fuzzy
+msgid "Licensed devices"
+msgstr "Servicii licențiate"
+
+#, fuzzy
 msgid "Licensed phase: too many services."
 msgstr "Vezi toate gazdele și serviciile"
 
@@ -44025,6 +44057,10 @@ msgstr "Instanțe Oracle"
 
 #, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "Metric backend is not reachable, autocompletion is not available."
 msgstr "Instanțe Oracle"
 
 #, fuzzy
@@ -50561,6 +50597,10 @@ msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "ORACLE Clasa de așteptare (liniile FG sunt în jos)"
 
 #, fuzzy
+msgid "Oracle Wallet"
+msgstr "Blocaje Oracle"
+
+#, fuzzy
 msgid "Oracle administrative wait class"
 msgstr "ORACLE %s wait class"
 
@@ -54502,31 +54542,39 @@ msgid "Podman"
 msgstr "# Containere"
 
 #, fuzzy
-msgid "Podman Container Health"
-msgstr "# Containere"
-
-#, fuzzy
-msgid "Podman Container Restarts"
-msgstr "# Containere"
-
-#, fuzzy
-msgid "Podman Container Status"
-msgstr "# Containere"
-
-#, fuzzy
 msgid "Podman Containers"
 msgstr "# Containere"
 
 #, fuzzy
-msgid "Podman Disk Usage"
+msgid "Podman Pods"
+msgstr "# Containere"
+
+#, fuzzy
+msgid "Podman container health"
+msgstr "# Containere"
+
+#, fuzzy
+msgid "Podman container restarts"
+msgstr "# Containere"
+
+#, fuzzy
+msgid "Podman container status"
+msgstr "# Containere"
+
+#, fuzzy
+msgid "Podman containers"
+msgstr "# Containere"
+
+#, fuzzy
+msgid "Podman disk usage"
 msgstr "Utilizarea discului"
 
 #, fuzzy
-msgid "Podman Monitoring"
-msgstr "Monitorizare"
+msgid "Podman node and containers"
+msgstr "Nodul Docker și containere"
 
 #, fuzzy
-msgid "Podman Pods"
+msgid "Podman pods"
 msgstr "# Containere"
 
 msgid "Podman socket path"
@@ -57250,6 +57298,10 @@ msgstr "Zilele rămase până la expirarea licenței Windows"
 #, fuzzy
 msgid "Remaining reads"
 msgstr "Lecturi rămase"
+
+#, fuzzy
+msgid "Remaining time"
+msgstr "Viața rămasă"
 
 msgid ""
 "Remaining time (seconds) until the license expires. The defaults equateto 14 "
@@ -63832,10 +63884,6 @@ msgid "Size growth per minute"
 msgstr "Creșterea dimensiunii pe minut"
 
 #, fuzzy
-msgid "Size of ClickHouse"
-msgstr "Dimensiunea licenței"
-
-#, fuzzy
 msgid "Size of OTel Collector"
 msgstr "Dimensiunea fișierelor jurnal"
 
@@ -63887,6 +63935,10 @@ msgstr "Dimensiunea fișierelor jurnal"
 
 msgid "Size of mails in queues"
 msgstr "Dimensiunea mesajelor poștale din cozile de așteptare"
+
+#, fuzzy
+msgid "Size of metric backend"
+msgstr "Configurația stilului selectat"
 
 msgid "Size of processes"
 msgstr "Dimensiunea proceselor"
@@ -72101,6 +72153,10 @@ msgstr ""
 msgid "The password cannot be changed (it is locked by the user connector)."
 msgstr ""
 "Parola nu poate fi schimbată (este blocată de conectorul de utilizator)."
+
+#, fuzzy, python-format
+msgid "The password contains forbidden character: %s"
+msgstr "Numele gazdei conține caractere ilegale: %s."
 
 #, python-format
 msgid ""
@@ -84871,6 +84927,16 @@ msgstr ""
 msgid "Use ODBC backend if the plug-in is deployed on Windows"
 msgstr ""
 
+msgid ""
+"Use Oracle Wallet for secure authentication to the Oracle database without "
+"storing passwords in plain text. If 'Path to tnsnames.ora or sqlnet.ora "
+"file' (TNS_ADMIN) is not set, the wallet must be located in /etc/check_mk/"
+"oracle_wallet. In this case, the plugin will automatically create a "
+"sqlnet.ora file if it does not exist. If TNS_ADMIN is set to a custom path, "
+"you must ensure that sqlnet.ora (with the correct wallet location) and the "
+"Oracle Wallet files are properly configured in that directory."
+msgstr ""
+
 msgid "Use Organisation-ID as host prefix"
 msgstr ""
 
@@ -95426,12 +95492,8 @@ msgid "Unique ID is required."
 msgstr "este necesară"
 
 #, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"Denumirile metrice trebuie să fie formate numai din litere, cifre și "
-"caractere de subliniere și trebuie să înceapă cu o literă."
+msgid "Use only lowercase letters (a-z), numbers (0-9), and underscores (_)."
+msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
 
 #, fuzzy
 msgid "This Unique ID is already in use. Please choose another one."
@@ -95558,14 +95620,19 @@ msgstr "Profil implicit"
 msgid "Runtime filter"
 msgstr "Eliminați filtrul"
 
+msgid ""
+"<b>Inherited default or runtime filters.</b><br />\n"
+"    They apply unless:\n"
+"    <ul>\n"
+"      <li>Runtime filters are enabled to override default filters.</li>\n"
+"      <li>Widget filters override default/runtime filters for this widget.</"
+"li>\n"
+"    </ul>"
+msgstr ""
+
 #, fuzzy
 msgid "Applied %{n} filter"
 msgstr "Filtre aplicate:"
-
-msgid ""
-"Relevant %{n} targeted filter set on dashboard level via dashboard or "
-"runtime filters."
-msgstr ""
 
 #, fuzzy
 msgid "No %{n} filter applied"
@@ -95575,11 +95642,6 @@ msgstr "Gazda Ntopng"
 msgid "Applied %{n} filters"
 msgstr "Filtre aplicate:"
 
-msgid ""
-"Relevant %{n} filters set on dashboard level via dashboard or runtime "
-"filters."
-msgstr ""
-
 #, fuzzy
 msgid "No %{n} filters applied"
 msgstr "Gazda Ntopng"
@@ -95588,7 +95650,9 @@ msgstr "Gazda Ntopng"
 msgid "Widget filters"
 msgstr "Adaugă filtre"
 
-msgid "Widget configured filters override default and runtime filters"
+msgid ""
+"Filters override default/runtime values for this widget only.<br />\n"
+"         Required runtime filters must still be set on the dashboard level."
 msgstr ""
 
 #, fuzzy
@@ -95986,6 +96050,14 @@ msgid "Show in dropdown menus"
 msgstr "Ascundeți acest %s în meniurile derulante"
 
 #, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Denumirile metrice trebuie să fie formate numai din litere, cifre și "
+"caractere de subliniere și trebuie să înceapă cu o literă."
+
+#, fuzzy
 msgid "Dashboard settings of %{name}"
 msgstr "Proprietățile tabloului de bord"
 
@@ -96094,6 +96166,12 @@ msgstr "Schimbare de stare"
 #, fuzzy
 msgid "Event selection"
 msgstr "Selecția fișierelor"
+
+msgid ""
+"Filters override default/runtime values for this widget only.<br />\n"
+"             Required runtime filters must still be set on the dashboard "
+"level."
+msgstr ""
 
 #, fuzzy
 msgid "Available visualization type"
@@ -96497,11 +96575,23 @@ msgid "Cannot change rule value for rules managed by custom graph editor."
 msgstr ""
 
 #, fuzzy
+msgid "Graph lines"
+msgstr "Acorduri grafice"
+
+#, fuzzy
 msgid "Mirrored"
 msgstr "Zona oglinzată"
 
 msgid "Formula"
 msgstr "Formula"
+
+#, fuzzy
+msgid "Graph line"
+msgstr "Acordarea graficului"
+
+#, fuzzy
+msgid "Select graph line to edit"
+msgstr "Vă rugăm să selectați cel puțin un element"
 
 msgid "Dissolve operation"
 msgstr "Operațiunea de dizolvare"
@@ -96512,6 +96602,18 @@ msgstr "Clonați această metrică"
 
 #, fuzzy
 msgid "Add rule: Metric backend (Custom query)"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "Color picker"
+msgstr "Colorează"
+
+#, fuzzy
+msgid "Help: Metric backend (Custom query)"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
+msgid "Inline Help: Metric backend (Custom query)"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
@@ -96966,13 +97068,18 @@ msgid ""
 "        seconds."
 msgstr ""
 
+msgid ""
+"Cannot reach host. Host is resolvable via DNS but not pingable.\n"
+"              Enter a reachable host name or IP address or set 'No IP' in "
+"the 'Network address' section."
+msgstr ""
+
+msgid "Unknown status code received from server."
+msgstr ""
+
 #, fuzzy
 msgid "Failed to save OAuth2 connection"
 msgstr "Adăugați o conexiune"
-
-#, fuzzy
-msgid "Unknown OAuth2 type: ${oAuth2Type}"
-msgstr "Tip țintă necunoscut: %s. Tipuri disponibile: %s."
 
 #, fuzzy
 msgid "Application successfully authorized!"
@@ -97644,10 +97751,6 @@ msgstr ""
 msgid "Resources"
 msgstr "Surse"
 
-msgid ""
-"Your assistant for Checkmk - ask anything from setup to troubleshooting."
-msgstr ""
-
 #, fuzzy
 msgid "Read the Beginner’s Guide"
 msgstr "Ghidul începătorului's"
@@ -97657,10 +97760,39 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Discover best practices"
+msgstr "Starea de descoperire"
+
+msgid ""
+"Explore proven best practices, helpful tips, and practical tricks to get the "
+"most out of your monitoring setup."
+msgstr ""
+
+msgid "Learn Checkmk via expert training"
+msgstr ""
+
+msgid ""
+"Build a solid foundation and deepen your knowledge in our official, "
+"instructor-led Checkmk trainings."
+msgstr ""
+
+msgid "Attend a free webinar"
+msgstr ""
+
+msgid ""
+"Watch our on-demand or live webinars to master the configuration and use of "
+"Checkmk."
+msgstr ""
+
+#, fuzzy
 msgid "Join the community"
 msgstr "Comunicarea în text simplu"
 
 msgid "Connect with other users and ask questions in our active forum."
+msgstr ""
+
+msgid ""
+"Your assistant for Checkmk - ask anything from setup to troubleshooting."
 msgstr ""
 
 #, fuzzy
@@ -97680,8 +97812,42 @@ msgid "Next steps with Checkmk"
 msgstr "MIB-uri livrate cu Checkmk"
 
 #, fuzzy
-msgid "2-5 min"
-msgstr "5 minute"
+msgid "Activate Changes"
+msgstr "A activat modificările"
+
+msgid "1 Step | Takes 1-3 min"
+msgstr ""
+
+msgid ""
+"In Checkmk, configuration changes are first saved as pending and do not "
+"affect the running monitoring right away.\n"
+"          This lets you prepare and review multiple changes — such as adding "
+"hosts, adjusting services, or fine-tuning\n"
+"          thresholds — before applying them all at once. Only when you "
+"activate the pending changes are they transferred\n"
+"          to the live monitoring system as a single bundle."
+msgstr ""
+
+#, fuzzy
+msgid "Spotting pending changes"
+msgstr "Nu există modificări în curs de desfășurare"
+
+msgid ""
+"If there are pending changes, you’ll see a yellow badge on the “Changes” "
+"menu item in the main navigation,\n"
+"      reminding you that your setup is not yet active."
+msgstr ""
+
+#, fuzzy
+msgid "Open all pending changes"
+msgstr "Nu există modificări în curs de desfășurare"
+
+#, fuzzy
+msgid "Mark as done"
+msgstr "complet"
+
+msgid "2 Steps | Takes 7-10 min"
+msgstr ""
 
 msgid ""
 "In Checkmk, a host is any standalone physical or virtual system that is "
@@ -97693,8 +97859,22 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Open and run service discovery"
-msgstr "Salvați & rulați descoperirea serviciilor"
+msgid "Set up basic folder structure"
+msgstr "Ghidul începătorului's: Structuri de foldere gazdă"
+
+msgid ""
+"In Checkmk, folders are the foundation for organizing hosts and applying "
+"settings consistently.\n"
+"            Creating a folder (or folder structure) before adding your first "
+"host helps you keep things tidy from\n"
+"            the start and makes it easier to manage similar hosts later on "
+"through inheritance. Learn more about\n"
+"            folders and inheritance in the"
+msgstr ""
+
+#, fuzzy
+msgid "documentation."
+msgstr "URL de documentare"
 
 #, fuzzy
 msgid "On-premises hosts"
@@ -97715,26 +97895,12 @@ msgstr "Microsoft Azure"
 msgid "OpenTelemetry (Beta)"
 msgstr "Configurația stilului selectat"
 
-msgid ""
-"Changes are saved in a temporary environment first,\n"
-"                letting you review and adjust them safely."
-msgstr ""
-
-#, fuzzy
-msgid "Activate changes to apply them to live monitoring."
-msgstr "Activați modificările pentru consola de evenimente"
-
-#, fuzzy
-msgid "Mark as done"
-msgstr "complet"
-
 #, fuzzy
 msgid "Adjust service thresholds"
 msgstr "Toate serviciile"
 
-#, fuzzy
-msgid "5-7 min"
-msgstr "5 minute"
+msgid "3 Steps | Takes 5-7 min"
+msgstr ""
 
 msgid ""
 "Each service in Checkmk comes with default parameter values.\n"
@@ -97744,6 +97910,23 @@ msgid ""
 "            To find the right ruleset for a service,\n"
 "            start with the Service discovery page of a host."
 msgstr ""
+
+#, fuzzy
+msgid "Before adjusting thresholds"
+msgstr "Toate serviciile"
+
+msgid ""
+"Make sure you understand what the monitoring data is telling you.\n"
+"          If a service reports a problem, first verify and fix real issues.\n"
+"          Thresholds should help detect real problems - not hide them.\n"
+"          Poorly tuned thresholds can lead to false alarms, masking of "
+"problems,\n"
+"          and reduces trust in the monitoring system."
+msgstr ""
+
+#, fuzzy
+msgid "Open and run service discovery"
+msgstr "Salvați & rulați descoperirea serviciilor"
 
 msgid "To adjust parameters for a host, start by running a service discovery."
 msgstr ""
@@ -97802,6 +97985,19 @@ msgid ""
 "            Contact groups can be assigned to users, hosts, and services, "
 "making them a flexible\n"
 "            and scalable tool for defining who is responsible for what."
+msgstr ""
+
+msgid "Before adding more users and assigning responsibilities"
+msgstr ""
+
+msgid ""
+"Make sure your monitoring setup is stable and already useful. Only once "
+"hosts, services,\n"
+"          and structures are in place does it make sense to add more users "
+"and assign responsibilities —\n"
+"          otherwise you risk unnecessary complexity and confusion. Learn "
+"more about working with multiple\n"
+"          users in the"
 msgstr ""
 
 #, fuzzy
@@ -97886,12 +98082,39 @@ msgstr "Adăugați la tabloul de bord"
 msgid "Enable notifications"
 msgstr "Activați notificările?"
 
+msgid "2 Steps | Takes 5-7 min"
+msgstr ""
+
 msgid ""
 "Notifications help you to stay on top of problems without having to "
 "constantly check the interface.\n"
 "            In Checkmk, they are rule-based, enabling you to create a "
 "notification system that evolves alongside\n"
 "            your environment."
+msgstr ""
+
+#, fuzzy
+msgid "Learn more about notifications in the"
+msgstr "Detalii pentru notificările gazdei"
+
+#, fuzzy
+msgid "Before enabling notifications"
+msgstr "Activați notificările?"
+
+msgid ""
+"Notifications are powerful, but turning them on too early can quickly lead "
+"to alert fatigue.\n"
+"          Take some time to understand your monitoring first. Then start "
+"with a small pilot by enabling\n"
+"          email notifications for a limited number of users. This helps you "
+"fine-tune rules and thresholds\n"
+"          before involving everyone. A gradual rollout ensures notifications "
+"stay meaningful and don’t get\n"
+"          lost in the noise."
+msgstr ""
+
+msgid ""
+"Tip: To use email notifications, make sure an email server is configured."
 msgstr ""
 
 #, fuzzy
@@ -97934,6 +98157,30 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Podman Monitoring"
+#~ msgstr "Monitorizare"
+
+#, fuzzy
+#~ msgid "Size of ClickHouse"
+#~ msgstr "Dimensiunea licenței"
+
+#, fuzzy
+#~ msgid "Unknown OAuth2 type: ${oAuth2Type}"
+#~ msgstr "Tip țintă necunoscut: %s. Tipuri disponibile: %s."
+
+#, fuzzy
+#~ msgid "2-5 min"
+#~ msgstr "5 minute"
+
+#, fuzzy
+#~ msgid "Activate changes to apply them to live monitoring."
+#~ msgstr "Activați modificările pentru consola de evenimente"
+
+#, fuzzy
+#~ msgid "5-7 min"
+#~ msgstr "5 minute"
 
 #, fuzzy
 #~ msgid "Failed to decode filter context"
@@ -98155,9 +98402,6 @@ msgstr ""
 
 #~ msgid "Clear failed notifications"
 #~ msgstr "Ștergeți notificările eșuate"
-
-#~ msgid "Colorize"
-#~ msgstr "Colorează"
 
 #~ msgid "Display axis labels for the selected/automatic data range"
 #~ msgstr ""

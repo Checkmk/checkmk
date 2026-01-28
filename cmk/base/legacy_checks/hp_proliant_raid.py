@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 import typing
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
@@ -22,7 +20,7 @@ class HpProRaid(typing.NamedTuple):
     rebuild_percent: int
 
 
-def parse_hp_proliant_raid(string_table):
+def parse_hp_proliant_raid(string_table: Sequence[Sequence[str]]) -> dict[str, HpProRaid]:
     parsed: dict[str, HpProRaid] = {}
     for number, name, status, size_str, rebuild in string_table:
         itemname = sanitize_item(f"{name} {number}".strip())
@@ -39,12 +37,16 @@ def parse_hp_proliant_raid(string_table):
     return parsed
 
 
-def discover_hp_proliant_raid(parsed):
+def discover_hp_proliant_raid(
+    parsed: Mapping[str, HpProRaid],
+) -> Iterable[tuple[str, None]]:
     for raid in parsed:
         yield raid, None
 
 
-def check_hp_proliant_raid(item, _no_params, parsed):
+def check_hp_proliant_raid(
+    item: str, _no_params: None, parsed: Mapping[str, HpProRaid]
+) -> Iterable[tuple[int, str]]:
     map_states = {
         "1": (3, "other"),
         "2": (0, "OK"),

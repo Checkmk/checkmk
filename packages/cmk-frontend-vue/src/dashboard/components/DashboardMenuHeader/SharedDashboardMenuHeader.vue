@@ -10,9 +10,8 @@ import usei18n, { untranslated } from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
 import CmkIcon from '@/components/CmkIcon'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
-
-import MenuButton from './MenuButton.vue'
 
 interface Props {
   dashboardTitle: string
@@ -96,12 +95,15 @@ onUnmounted(() => {
         class="db-shared-dashboard-menu-header__icon-dropdown-menu"
       >
         <button
-          class="db-shared-dashboard-menu-header__icon-dropdown-menu--trigger"
+          class="db-shared-dashboard-menu-header__icon-dropdown-menu-trigger"
+          :class="{
+            'db-shared-dashboard-menu-header__icon-dropdown-menu-trigger--open': menuShown
+          }"
           :aria-label="_t('Settings Menu')"
           :aria-expanded="menuShown"
           @click="toggleMenu"
         >
-          <CmkIcon name="menu" size="medium" />
+          <CmkMultitoneIcon name="menu" size="medium" primary-color="font" />
         </button>
 
         <div
@@ -110,7 +112,7 @@ onUnmounted(() => {
         >
           <div class="db-shared-dashboard-menu-header__icon-dropdown-menu--content">
             <div class="db-shared-dashboard-menu-header__dropdown-menu-items">
-              <MenuButton
+              <a
                 class="db-shared-dashboard-menu-header__menu-item"
                 @click="
                   () => {
@@ -123,7 +125,7 @@ onUnmounted(() => {
                   {{ _t('Show date and time') }}
                 </div>
                 <CmkIcon :name="showDateTime ? 'toggle-on' : 'toggle-off'" />
-              </MenuButton>
+              </a>
             </div>
           </div>
         </div>
@@ -218,11 +220,15 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.db-shared-dashboard-menu-header__icon-dropdown-menu--trigger {
-  background: none;
-  border: none;
-  padding: 0;
+.db-shared-dashboard-menu-header__icon-dropdown-menu-trigger {
+  box-sizing: border-box;
+  height: var(--dimension-7);
+  width: var(--dimension-7);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-half) var(--border-radius-half) 0 0;
+  padding: 0 0 1px;
   margin: 0;
+  background: none;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -230,26 +236,29 @@ onUnmounted(() => {
   transition: opacity 0.2s ease;
 }
 
-.db-shared-dashboard-menu-header__icon-dropdown-menu--trigger:hover {
+.db-shared-dashboard-menu-header__icon-dropdown-menu-trigger:hover {
   opacity: 0.8;
 }
 
-.db-shared-dashboard-menu-header__icon-dropdown-menu--trigger:focus {
+.db-shared-dashboard-menu-header__icon-dropdown-menu-trigger:focus {
   outline: none;
+}
+
+.db-shared-dashboard-menu-header__icon-dropdown-menu-trigger--open {
+  border-color: var(--button-form-border-color);
 }
 
 .db-shared-dashboard-menu-header__icon-dropdown-menu--container {
   position: absolute;
   right: 0;
+  margin-top: -1px;
   z-index: 100;
   color: var(--font-color);
-  background-color: var(--ux-theme-3);
-  border: 1px solid var(--ux-theme-6);
+  background-color: var(--ux-theme-2);
   box-sizing: border-box;
-  border-bottom-left-radius: var(--dimension-4);
-  border-bottom-right-radius: var(--dimension-4);
+  border: 1px solid var(--button-form-border-color);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
   min-width: 200px;
-  margin-top: var(--dimension-4);
   width: max-content;
 }
 

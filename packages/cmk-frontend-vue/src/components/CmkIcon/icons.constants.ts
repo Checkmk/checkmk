@@ -37,6 +37,7 @@ export const oneColorIcons = [
   'db-widget-edit',
   'error',
   'help',
+  'menu',
   'monitoring',
   'search',
   'services',

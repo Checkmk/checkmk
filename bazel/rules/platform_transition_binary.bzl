@@ -7,12 +7,18 @@ Adapted from
 """
 
 def _transition_platform_impl(_, attr):
-    return {"//command_line_option:platforms": str(attr.platform)}
+    settings = {"//command_line_option:platforms": str(attr.platform)}
+    if attr.compilation_mode:
+        settings["//command_line_option:compilation_mode"] = attr.compilation_mode
+    return settings
 
 _transition_platform = transition(
     implementation = _transition_platform_impl,
     inputs = [],
-    outputs = ["//command_line_option:platforms"],
+    outputs = [
+        "//command_line_option:platforms",
+        "//command_line_option:compilation_mode",
+    ],
 )
 
 def _platform_transition_binary_impl(ctx):
@@ -57,6 +63,10 @@ platform_transition_binary = rule(
         "platform": attr.label(
             doc = "The platform to transition to.",
             mandatory = True,
+        ),
+        "compilation_mode": attr.string(
+            doc = "Optional compilation mode (e.g., 'opt', 'dbg', 'fastbuild'). If not set, uses the default from command line.",
+            default = "",
         ),
         "_allowlist_function_transition": attr.label(
             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",

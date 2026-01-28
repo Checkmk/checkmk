@@ -134,6 +134,7 @@ rust_binary(
 platform_transition_binary(
     name = "cmk-agent-ctl-musl",
     binary = ":cmk-agent-ctl",
+    compilation_mode = "opt",
     platform = "//bazel/platforms:x86_64-linux-musl",
     visibility = ["//visibility:public"],
 )
@@ -141,6 +142,7 @@ platform_transition_binary(
 platform_transition_binary(
     name = "cmk-agent-ctl-musl-aarch64",
     binary = ":cmk-agent-ctl",
+    compilation_mode = "opt",
     platform = "//bazel/platforms:aarch64-linux-musl",
     visibility = ["//visibility:public"],
 )

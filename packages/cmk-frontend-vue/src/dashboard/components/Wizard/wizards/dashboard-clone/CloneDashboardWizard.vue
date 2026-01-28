@@ -212,7 +212,7 @@ const cancel = () => {
 .db-clone-dashboard-wizard__container {
   width: 100vh;
   flex: 2;
-  padding: var(--spacing-double);
+  padding: var(--dimension-10);
 }
 
 .db-clone-dashboard-wizard__general-properties-item {

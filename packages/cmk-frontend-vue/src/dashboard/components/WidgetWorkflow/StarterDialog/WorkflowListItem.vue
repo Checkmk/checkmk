@@ -39,6 +39,7 @@ const emit = defineEmits(['select'])
   gap: var(--dimension-7);
   width: 100%;
   padding: var(--dimension-4) var(--dimension-5);
+  margin: 0;
   text-align: left;
   background-color: var(--ux-theme-1);
   border: var(--dimension-1) solid var(--ux-theme-6);

@@ -2804,7 +2804,8 @@ mk_ora_db_connect() {
             assysdbaconnect=" as "${DBSYSCONNECT}
         fi
 
-        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
+        ID=${ID_BY:-SID}
+        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(${ID}=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
 
         # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet
         if [ "${ORADBUSER:0:1}" = '/' ]; then

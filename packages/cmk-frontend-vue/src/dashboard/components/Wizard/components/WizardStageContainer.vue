@@ -29,7 +29,7 @@ const props = withDefaults(
 .db-wizard-stage-container__steps-container {
   flex: 2;
   height: 100vh;
-  padding: var(--spacing-double);
+  padding: var(--dimension-10);
   background-color: var(--ux-theme-1);
 }
 

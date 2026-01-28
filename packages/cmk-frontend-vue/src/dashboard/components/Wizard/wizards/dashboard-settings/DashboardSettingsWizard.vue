@@ -216,7 +216,7 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
 .db-settings-wizard__container {
   width: 100vh;
   flex: 2;
-  padding: var(--spacing-double);
+  padding: var(--dimension-10);
 }
 
 .db-settings-wizard__box {

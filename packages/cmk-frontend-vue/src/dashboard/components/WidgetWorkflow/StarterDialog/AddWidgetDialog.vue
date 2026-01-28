@@ -6,8 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+import CmkSlideIn from '@/components/CmkSlideIn.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import CloseButton from '@/dashboard/components/Wizard/components/CloseButton.vue'
+import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
+import WizardStageContainer from '@/dashboard/components/Wizard/components/WizardStageContainer.vue'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
 
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
@@ -23,7 +27,7 @@ export interface AddWidgetDialogProperties {
 
 const props = defineProps<AddWidgetDialogProperties>()
 
-const emit = defineEmits(['close', 'select'])
+defineEmits(['close', 'select'])
 
 const isDisabled = (id: string): boolean => {
   return (
@@ -34,28 +38,29 @@ const isDisabled = (id: string): boolean => {
 </script>
 
 <template>
-  <CmkSlideInDialog
-    :open="props.open"
-    :header="{
-      title: _t('Add widget'),
-      closeButton: true
-    }"
-    :size="'small'"
-    @close="emit('close')"
-  >
-    <div class="db-add-widget-dialog__container">
-      <WorkflowListItem
-        v-for="(item, id) in props.workflowItems"
-        :key="id"
-        :title="item.title"
-        :icon="item.icon"
-        :subtitle="item.subtitle"
-        :icon_emblem="item.icon_emblem"
-        :disabled="isDisabled(id)"
-        @select="emit('select', id)"
-      />
-    </div>
-  </CmkSlideInDialog>
+  <CmkSlideIn :open="props.open" :size="'small'" @close="$emit('close')">
+    <WizardStageContainer>
+      <CmkHeading type="h1">
+        {{ _t('Add widget') }}
+      </CmkHeading>
+      <CloseButton @close="() => $emit('close')" />
+
+      <ContentSpacer :dimension="8" />
+
+      <div class="db-add-widget-dialog__container">
+        <WorkflowListItem
+          v-for="(item, id) in props.workflowItems"
+          :key="id"
+          :title="item.title"
+          :icon="item.icon"
+          :subtitle="item.subtitle"
+          :icon_emblem="item.icon_emblem"
+          :disabled="isDisabled(id)"
+          @select="$emit('select', id)"
+        />
+      </div>
+    </WizardStageContainer>
+  </CmkSlideIn>
 </template>
 
 <style scoped>
@@ -63,6 +68,5 @@ const isDisabled = (id: string): boolean => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
-  padding: var(--spacing-double);
 }
 </style>

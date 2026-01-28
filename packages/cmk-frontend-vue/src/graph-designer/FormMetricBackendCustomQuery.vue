@@ -15,6 +15,7 @@ import { computed, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
@@ -22,11 +23,18 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 import CmkTimeSpan from '@/components/user-input/CmkTimeSpan/CmkTimeSpan.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
+import FormHelp from '@/form/private/FormHelp.vue'
 import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
 
 const { _t } = usei18n()
+
+const AGGREGATION_LOOKBACK_HELP_TEXT = _t(
+  'The time window used to aggregate data for each point on the chart.<ul>' +
+    '<li>Sum metrics: Calculates the rate per second over this range.</li>' +
+    '<li>Histogram metrics: Uses all samples in this range to calculate percentiles (e.g. p99).</li></ul>'
+)
 
 export interface Query {
   metricName: string | null
@@ -166,6 +174,8 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
             :backend-validation="[]"
             @update:data="validationByLocation.aggregation_lookback = []"
           />
+          <CmkHelpText :help="AGGREGATION_LOOKBACK_HELP_TEXT" />
+          <FormHelp :help="AGGREGATION_LOOKBACK_HELP_TEXT" />
         </td>
       </tr>
       <tr>
@@ -189,5 +199,10 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
 table {
   border-collapse: separate;
   border-spacing: 5px;
+}
+
+/* Make sure the titles stay aligned with the top of the row for multiline rows */
+table td {
+  vertical-align: baseline;
 }
 </style>

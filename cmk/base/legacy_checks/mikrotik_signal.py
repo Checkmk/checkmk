@@ -3,10 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyDiscoveryResult,
+    LegacyResult,
+)
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 check_info = {}
@@ -25,22 +30,24 @@ def saveint(i: str) -> int:
         return 0
 
 
-def discover_mikrotik_signal(info):
+def discover_mikrotik_signal(info: StringTable) -> LegacyDiscoveryResult:
     yield from ((network, {}) for network, _strength, _mode in info)
 
 
-def check_mikrotik_signal(item, params, info):
+def check_mikrotik_signal(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> LegacyResult | None:
     warn, crit = params["levels_lower"]
-    for network, strength, mode in info:
+    for network, strength_str, mode in info:
         if network == item:
-            strength = saveint(strength)
+            strength = saveint(strength_str)
             quality = 0
             if strength <= -50 or strength >= -100:
                 quality = 2 * (strength + 100)
             quality = min(quality, 100)
 
             infotext = "Signal quality %d%% (%ddBm). Mode is: %s" % (quality, strength, mode)
-            perf = [("quality", quality, warn, crit)]
+            perf = [("quality", float(quality), warn, crit)]
             if quality <= crit:
                 return 2, infotext, perf
             if quality <= warn:

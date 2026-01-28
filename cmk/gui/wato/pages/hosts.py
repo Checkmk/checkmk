@@ -1128,11 +1128,10 @@ class PageAjaxPingHost(AjaxPage):
                 ip_or_dns_name = request.get_validated_type_input_mandatory(
                     HostName, "ip_or_dns_name"
                 )
-
             except MKUserError as e:
                 return {
                     "status_code": 99,
-                    "message": e,
+                    "message": str(e),
                 }
 
         result = ping_host(

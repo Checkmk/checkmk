@@ -16,8 +16,8 @@ void main() {
     def editions_to_test = all_editions;
 
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15) {
-        // build only "pro" edition on high noon or a little bit later
-        editions_to_test = ["pro"];
+        // build only "ultimate" edition on high noon or a little bit later
+        editions_to_test = ["ultimatemt"];
     }
 
     def job_parameters = [

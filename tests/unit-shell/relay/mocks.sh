@@ -173,3 +173,70 @@ get_euid() {
     echo 1000
 }
 export -f get_euid
+
+# Mock: getent - Get entries from Name Service Switch libraries
+# Used by is_loopback to resolve hostnames
+# Note: Not recorded to avoid non-deterministic ordering in tests
+# shellcheck disable=SC2317
+getent() {
+    if [[ "$1" == "ahosts" ]]; then
+        local hostname="$2"
+        case "$hostname" in
+            localhost)
+                builtin echo "127.0.0.1       STREAM localhost"
+                builtin echo "127.0.0.1       DGRAM"
+                builtin echo "127.0.0.1       RAW"
+                builtin echo "::1             STREAM"
+                builtin echo "::1             DGRAM"
+                builtin echo "::1             RAW"
+                ;;
+            127.*)
+                builtin echo "$hostname       STREAM"
+                builtin echo "$hostname       DGRAM"
+                builtin echo "$hostname       RAW"
+                ;;
+            ::1)
+                builtin echo "::1             STREAM"
+                builtin echo "::1             DGRAM"
+                builtin echo "::1             RAW"
+                ;;
+            *)
+                # Non-loopback address
+                builtin echo "192.168.1.1     STREAM $hostname"
+                builtin echo "192.168.1.1     DGRAM"
+                builtin echo "192.168.1.1     RAW"
+                ;;
+        esac
+    fi
+    return 0
+}
+export -f getent
+
+# Mock: ip - Show/manipulate network interfaces
+# Used by is_loopback to get loopback interface IPs
+# Note: Not recorded to avoid non-deterministic ordering in tests
+# shellcheck disable=SC2317
+ip() {
+    if [[ "$*" == "-o addr show dev lo" ]]; then
+        builtin echo "1: lo    inet 127.0.0.1/8 scope host lo"
+        builtin echo "1: lo    inet6 ::1/128 scope host"
+    fi
+    return 0
+}
+export -f ip
+
+# Mock: awk - Text processing
+# Note: Not recorded to avoid non-deterministic ordering in tests
+# shellcheck disable=SC2317
+awk() {
+    /usr/bin/awk "$@"
+}
+export -f awk
+
+# Mock: sort - Sort lines
+# Note: Not recorded to avoid non-deterministic ordering in tests
+# shellcheck disable=SC2317
+sort() {
+    /usr/bin/sort "$@"
+}
+export -f sort

@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY
@@ -19,11 +16,11 @@ check_info = {}
 # .1.3.6.1.4.1.9.9.719.1.9.35.1.43 cucsComputeRackUnitOperability
 
 
-def discover_cisco_ucs_system(info):
+def discover_cisco_ucs_system(info: StringTable) -> list[tuple[None, None]]:
     return [(None, None)]
 
 
-def check_cisco_ucs_system(_no_item, _no_params, info):
+def check_cisco_ucs_system(_no_item: None, _no_params: None, info: StringTable) -> tuple[int, str]:
     model, serial, status = info[0]
     state, state_readable = MAP_OPERABILITY.get(status, (3, "Unknown, status code %s" % status))
     return state, f"Status: {state_readable}, Model: {model}, SN: {serial}"

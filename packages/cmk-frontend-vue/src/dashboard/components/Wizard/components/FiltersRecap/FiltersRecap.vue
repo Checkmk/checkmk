@@ -26,6 +26,9 @@ interface FiltersRecapProps {
 
   metricType?: MetricSelection | null
   metric?: string | null
+
+  customValue?: string | null
+  customValueTitle?: string | null
 }
 
 const props = withDefaults(defineProps<FiltersRecapProps>(), {
@@ -33,7 +36,9 @@ const props = withDefaults(defineProps<FiltersRecapProps>(), {
     return {} as ConfiguredFilters
   },
   metricType: null,
-  metric: null
+  metric: null,
+  customValue: null,
+  customValueTitle: null
 })
 
 const filterDefinitions = useFilterDefinitions()
@@ -123,10 +128,19 @@ const serviceFiltersCount = computed((): number => {
   </div>
 
   <div v-if="!!metricType">
-    <CmkHeading type="h2">{{ _t('Metric') }}</CmkHeading>
+    <CmkHeading type="h3">{{ _t('Metric') }}</CmkHeading>
     <div class="filter-recap__content">
       <ul class="db-filters-recap__list">
         <li>{{ props.metric }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <div v-if="!!customValue">
+    <CmkHeading type="h3">{{ customValueTitle }}</CmkHeading>
+    <div class="filter-recap__content">
+      <ul class="db-filters-recap__list">
+        <li>{{ props.customValue }}</li>
       </ul>
     </div>
   </div>

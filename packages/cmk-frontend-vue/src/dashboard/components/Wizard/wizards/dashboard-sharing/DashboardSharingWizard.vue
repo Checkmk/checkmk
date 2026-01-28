@@ -8,14 +8,13 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { DashboardFeatures, DashboardKey } from '@/dashboard/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
-import ActionButton from '../../components/ActionButton.vue'
 import CloseButton from '../../components/CloseButton.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
@@ -45,53 +44,35 @@ const clonedToken = computed(() => (props.publicToken ? structuredClone(props.pu
 
 <template>
   <CmkSlideIn :open="true" size="small">
-    <Suspense>
-      <WizardStageContainer>
-        <CmkHeading type="h1">
-          {{ _t('Configure sharing') }}
-        </CmkHeading>
-        <CloseButton @close="() => $emit('close')" />
+    <WizardStageContainer>
+      <CmkHeading type="h1">
+        {{ _t('Configure sharing') }}
+      </CmkHeading>
+      <CloseButton @close="() => $emit('close')" />
 
-        <ContentSpacer />
+      <ContentSpacer />
 
-        <ActionBar align-items="left">
-          <ActionButton :label="_t('Close')" :action="() => $emit('close')" variant="secondary" />
-        </ActionBar>
+      <ActionBar align-items="left">
+        <CmkButton variant="optional" @click="$emit('close')">
+          {{ _t('Close') }}
+        </CmkButton>
+      </ActionBar>
 
-        <ContentSpacer />
+      <InternalAccess class="db-sharing-wizard__internal-access" :dashboard-url="dashboardUrl" />
 
-        <InternalAccess :dashboard-url="dashboardUrl" />
-
-        <ContentSpacer />
-
-        <PublicAccess
-          :dashboard-key="dashboardKey"
-          :public-token="clonedToken"
-          :available-features="availableFeatures"
-          @refresh-dashboard-settings="$emit('refreshDashboardSettings')"
-        />
-      </WizardStageContainer>
-    </Suspense>
-    <template #fallback>
-      <CmkIcon name="load-graph" size="xxlarge" />
-    </template>
+      <PublicAccess
+        :dashboard-key="dashboardKey"
+        :public-token="clonedToken"
+        :available-features="availableFeatures"
+        @refresh-dashboard-settings="$emit('refreshDashboardSettings')"
+      />
+    </WizardStageContainer>
   </CmkSlideIn>
 </template>
 
 <style scoped>
-.db-sharing-wizard__root {
-  height: 95vh;
-  overflow-y: auto;
-  display: flex;
-}
-
-.db-sharing-wizard__container {
-  width: 100vh;
-  flex: 2;
-  padding: var(--spacing-double);
-}
-
-.db-sharing-wizard__box {
-  background-color: var(--ux-theme-2);
+.db-sharing-wizard__internal-access {
+  margin-top: var(--dimension-11);
+  margin-bottom: var(--dimension-8);
 }
 </style>

@@ -8,6 +8,7 @@ import { type Reactive, reactive, toRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkCode from '@/components/CmkCode.vue'
@@ -140,10 +141,17 @@ const handleUpdate = async () => {
 
 <template>
   <CmkCatalogPanel :title="_t('Public access')" variant="padded">
-    <CmkHeading type="h2">{{ _t('Anyone with this link can view the dashboard') }}</CmkHeading>
-    <CmkLabel>{{ _t('Navigation and menus are hidden.') }}</CmkLabel>
+    <CmkHeading type="h3">{{ _t('Anyone with this link can view the dashboard') }}</CmkHeading>
+    <CmkAlertBox variant="info">
+      <ul class="db-public-access__info">
+        <li>{{ _t('Navigation and menus are hidden.') }}</li>
+        <li>
+          {{ _t('Runtime filtering isn’t available. Set default filter values before sharing.') }}
+        </li>
+      </ul>
+    </CmkAlertBox>
 
-    <ContentSpacer />
+    <ContentSpacer :dimension="5" />
 
     <PopupDialog
       :open="dialogData.open"
@@ -161,13 +169,13 @@ const handleUpdate = async () => {
       @click="handleCreate"
       >{{ _t('Generate public link') }}</CmkButton
     >
-
     <template v-else>
       <CmkLabel>{{ _t('Public dashboard URL') }}</CmkLabel>
       <div class="db-public-access__row">
-        <div class="db-public-access__cell db-public-access__overflow">
-          <CmkCode :code_txt="urlHandler.getSharedDashboardLink(publicToken.token_id)" />
-        </div>
+        <CmkCode
+          class="db-public-access__cell db-public-access__overflow"
+          :code_txt="urlHandler.getSharedDashboardLink(publicToken.token_id)"
+        />
 
         <div class="db-public-access__cell">
           <CmkButton
@@ -192,7 +200,9 @@ const handleUpdate = async () => {
     </template>
 
     <template v-if="handler.isShared.value">
-      <ContentSpacer variant="line" />
+      <ContentSpacer :height="10" />
+      <hr class="db-public-access__hr" />
+      <ContentSpacer :dimension="7" />
       <PublicAccessSettings
         v-model:has-validity="handler.hasValidity.value"
         v-model:valid-until="handler.validUntil.value"
@@ -207,6 +217,10 @@ const handleUpdate = async () => {
 </template>
 
 <style scoped>
+.db-public-access__info {
+  padding-inline-start: var(--dimension-8);
+}
+
 .db-public-access__row {
   display: flex;
   flex-flow: row nowrap;
@@ -217,15 +231,16 @@ const handleUpdate = async () => {
 }
 
 .db-public-access__cell {
-  flex: 0;
   text-wrap: nowrap;
 }
 
-.db-public-access__cell:first-child {
-  flex: 1;
+.db-public-access__overflow {
+  overflow-x: auto;
 }
 
-.db-public-access__overflow {
-  overflow-x: scroll;
+.db-public-access__hr {
+  width: 100%;
+  border: none;
+  border-bottom: var(--dimension-1) solid var(--ux-theme-5);
 }
 </style>

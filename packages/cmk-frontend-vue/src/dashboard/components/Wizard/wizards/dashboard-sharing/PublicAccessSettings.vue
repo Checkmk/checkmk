@@ -71,7 +71,8 @@ const handleSave = () => {
 </script>
 
 <template>
-  <CmkHeading type="h3">{{ _t('Link settings') }}</CmkHeading>
+  <CmkHeading type="h4">{{ _t('Link settings') }}</CmkHeading>
+  <ContentSpacer :dimension="4" />
   <CmkLabel>{{
     _t('Choose how the dashboard appears, set an expiration date or add a comment')
   }}</CmkLabel>
@@ -90,6 +91,7 @@ const handleSave = () => {
           :model-value="hasValidity"
           :disabled="props.availableFeatures === DashboardFeatures.RESTRICTED"
           :label="_t('Set expiration date')"
+          padding="top"
           @update:model-value="
             (value: boolean) => {
               hasValidity = value
@@ -98,17 +100,14 @@ const handleSave = () => {
           "
         />
         <div v-if="hasValidity" class="db-public-access-settings__validity">
-          <div>
-            <CmkLabel>{{ _t('Public link expiration date') }}</CmkLabel>
-          </div>
-          <div>
-            <CmkInput
-              v-model="expiryDate as string"
-              type="date"
-              :external-errors="validationError || []"
-              @update:model-value="displaySuccessMessage = false"
-            />
-          </div>
+          <CmkLabel>{{ _t('Public link expiration date') }}</CmkLabel>
+          <ContentSpacer :dimension="4" />
+          <CmkInput
+            v-model="expiryDate as string"
+            type="date"
+            :external-errors="validationError || []"
+            @update:model-value="displaySuccessMessage = false"
+          />
         </div>
       </FieldComponent>
     </TableFormRow>
@@ -118,7 +117,7 @@ const handleSave = () => {
         <CmkInput
           v-model="comment as string"
           :placeholder="_t('Internal comment, not visible to viewers')"
-          field-size="MEDIUM"
+          field-size="FILL"
           @update:model-value="displaySuccessMessage = false"
         />
       </FieldComponent>
@@ -134,7 +133,9 @@ const handleSave = () => {
 
 <style scoped>
 .db-public-access-settings__validity {
-  padding-top: var(--dimension-4);
-  padding-bottom: var(--dimension-4);
+  padding-top: var(--dimension-6);
+
+  /* Subtract the row gap from the TableForm */
+  padding-bottom: calc(var(--dimension-6) - var(--spacing-half));
 }
 </style>

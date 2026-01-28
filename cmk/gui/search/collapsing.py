@@ -49,7 +49,7 @@ def _collapse_items(
     collapsed_results: list[UnifiedSearchResultItem] = []
     counts_monitoring = 0
 
-    for title, group in groupby(results, key=lambda item: item.title):
+    for _title, group in groupby(results, key=lambda item: item.title):
         host_monitoring_items: list[UnifiedSearchResultItem] = []
         host_setup_item: UnifiedSearchResultItem | None = None
         other_items: list[UnifiedSearchResultItem] = []

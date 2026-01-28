@@ -2199,7 +2199,7 @@ def notification_script_env(plugin_context: NotificationContext) -> PluginNotifi
         if len(value) > max_length:
             return (
                 value[:max_length]
-                + "...\nAttention: Removed remaining content because it was too long."
+                + "...\\nAttention: Removed remaining content because it was too long."
             )
         return value
 

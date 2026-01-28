@@ -2,6 +2,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
@@ -69,12 +70,27 @@ write_file(
     out = "typescript/index.ts",
 )
 
+run_binary(
+    name = "openapi_spec_internal",
+    outs = ["openapi_spec_internal.yaml"],
+    args = [
+        "generate",
+        "--version",
+        "internal",
+        "--format",
+        "yaml",
+        "--out",
+        "$(execpath openapi_spec_internal.yaml)",
+    ],
+    tool = "//cmk:generate_api_spec",
+)
+
 openapi_typescript.openapi_typescript(
     name = "openapi_internal_ts_file",
-    srcs = ["source/openapi_spec_internal.yaml"],
+    srcs = [":openapi_spec_internal"],
     outs = ["typescript/openapi_internal.d.ts"],
     args = [
-        "$(rootpath source/openapi_spec_internal.yaml)",
+        "$(rootpath :openapi_spec_internal)",
         "-o",
         "$(rootpath typescript/openapi_internal.d.ts)",
     ],

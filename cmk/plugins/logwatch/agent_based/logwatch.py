@@ -619,6 +619,10 @@ def _extract_blocks(
     *,
     limit: float = float("inf"),
 ) -> Iterable[LogwatchBlock]:
+    """Extract logwatch blocks from the given lines.
+    When limit is reached, stop processing further lines, but yield the current block so it can be
+    written to file, triggering the file size limit.
+    """
     current_block = None
     for line in lines:
         line = line.rstrip("\n")
@@ -633,6 +637,7 @@ def _extract_blocks(
             current_block.add_line(line, reclassify)
             limit -= len(line.encode("utf-8"))
             if limit <= 0:
+                yield current_block
                 return
 
     if current_block is not None:

@@ -3,19 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import StringTable
 
 check_info = {}
 
+Section = Mapping[str, Mapping[str, str]]
 
-def parse_informix_locks(string_table):
-    parsed = {}
-    instance = None
+
+def parse_informix_locks(string_table: StringTable) -> Section:
+    parsed: dict[str, dict[str, str]] = {}
+    instance: str | None = None
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance = line[0][3:-3]
@@ -26,11 +35,13 @@ def parse_informix_locks(string_table):
     return parsed
 
 
-def discover_informix_locks(parsed):
+def discover_informix_locks(parsed: Section) -> LegacyDiscoveryResult:
     return [(instance, {}) for instance in parsed]
 
 
-def check_informix_locks(item, params, parsed):
+def check_informix_locks(
+    item: str, params: Mapping[str, Any], parsed: Section
+) -> tuple[int, str, list[Any]] | None:
     if item in parsed:
         data = parsed[item]
         locks = int(data["locks"])

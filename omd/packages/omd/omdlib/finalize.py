@@ -218,7 +218,6 @@ def finalize_site(
         version_info,
         SitePaths.from_site_name(site.name).apache_conf,
         site.name,
-        site_home,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
         apache_reload,

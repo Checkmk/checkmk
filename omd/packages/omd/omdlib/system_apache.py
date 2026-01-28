@@ -26,7 +26,6 @@ def register_with_system_apache(
     version_info: VersionInfo,
     apache_config: Path,
     site_name: str,
-    site_dir: str,
     apache_tcp_addr: str,
     apache_tcp_port: str,
     apache_reload: bool,
@@ -40,7 +39,7 @@ def register_with_system_apache(
     Root permissions are needed to make this work.
     """
     create_apache_hook(
-        apache_config, site_name, site_dir, apache_tcp_addr, apache_tcp_port, apache_hook_version()
+        apache_config, site_name, apache_tcp_addr, apache_tcp_port, apache_hook_version()
     )
     apply_apache_config(version_info, apache_reload, verbose)
 
@@ -171,7 +170,6 @@ def _site_not_started_html(site_name: str) -> str:
 def create_apache_hook(
     apache_config: Path,
     site_name: str,
-    site_dir: str,
     apache_tcp_addr: str,
     apache_tcp_port: str,
     version: int,
@@ -182,17 +180,7 @@ def create_apache_hook(
     fact that they have to call `omd update-apache-config SITE` afterwards.
     """
 
-    # This file was left over in skel to be compatible with Checkmk sites created before #9493 and
-    # haven't switched over to the new mode with `omd update-apache-config SITE` yet.
-    # On first execution of this function, the file can be removed to prevent confusions.
-    apache_own_path = os.path.join(site_dir, "etc/apache/apache-own.conf")
-    try:
-        os.remove(apache_own_path)
-    except FileNotFoundError:
-        pass
-
     not_started_html = _site_not_started_html(site_name)
-
     apache_config.parent.mkdir(parents=True, exist_ok=True)
     with open(apache_config, "w") as f:
         f.write(

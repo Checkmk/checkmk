@@ -2082,17 +2082,15 @@ def main_enable(
     _options: object,
 ) -> None:
     site_paths = SitePaths.from_site_name(site_name)
-    site_home = site_paths.home
     if not is_disabled(site_paths.apache_conf):
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
-    config = read_site_config(site_home)
+    config = read_site_config(site_paths.home)
     register_with_system_apache(
         version_info,
         site_paths.apache_conf,
         site_name,
-        site_home,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
         False,
@@ -2108,14 +2106,12 @@ def main_update_apache_config(
     _options: object,
 ) -> None:
     site_paths = SitePaths.from_site_name(site_name)
-    site_home = site_paths.home
-    config = read_site_config(site_home)
+    config = read_site_config(site_paths.home)
     if _is_apache_enabled(config):
         register_with_system_apache(
             version_info,
             site_paths.apache_conf,
             site_name,
-            site_home,
             config["APACHE_TCP_ADDR"],
             config["APACHE_TCP_PORT"],
             True,
@@ -2996,7 +2992,6 @@ def _restore_backup_from_tar_root(
         version_info,
         SitePaths.from_site_name(site.name).apache_conf,
         site.name,
-        site_home,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
         "apache-reload" in options,

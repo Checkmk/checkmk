@@ -69,7 +69,7 @@ def _collapse_items(
             case {"Hosts": setup_item, "Host name": name}:
                 collapsed_results.append(_collapse_host_items([name], setup_item))
             case {"Host name": name, "Hostalias": alias}:
-                collapsed_results.append(_collapse_host_items([name, alias], None))
+                collapsed_results.append(_collapse_host_items([name, alias]))
                 collapsed_result_count += 1
             case _:
                 collapsed_results.extend(host_items.values())
@@ -88,7 +88,8 @@ def _collapse_items(
 
 
 def _collapse_host_items(
-    monitoring_items: list[UnifiedSearchResultItem], setup_item: UnifiedSearchResultItem | None
+    monitoring_items: list[UnifiedSearchResultItem],
+    setup_item: UnifiedSearchResultItem | None = None,
 ) -> UnifiedSearchResultItem:
     return UnifiedSearchResultItem(
         title=monitoring_items[0].title,

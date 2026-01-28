@@ -37,6 +37,7 @@ div {
   display: flex;
   flex-direction: row;
   align-items: center;
+  position: relative;
 }
 
 span {
@@ -46,7 +47,7 @@ span {
 }
 
 .title {
-  max-width: 60%;
+  max-width: 55%;
   overflow: hidden;
   text-overflow: ellipsis;
 }

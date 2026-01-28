@@ -1,0 +1,7 @@
+<svg version="1.1" viewBox="0 0 12 9" xmlns="http://www.w3.org/2000/svg">
+  <g class="icon-primary-color">
+    <path d="m0 0v1h12v-1z"/>
+    <path d="m0 4v1h12v-1z"/>
+    <path d="m0 8v1h12v-1z"/>
+  </g>
+</svg>

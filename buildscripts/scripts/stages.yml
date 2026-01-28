@@ -523,7 +523,7 @@ STAGES:
     - NAME: "Package livestatus"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_LIVESTATUS_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/livestatus"
-      COMMAND: "./run --build --unit-tests --lint=iwyu"
+      COMMAND: "./run --build --lint=iwyu"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Livestatus files changed"
       RESULT_CHECK_TYPE: "GCC"

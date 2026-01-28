@@ -115,6 +115,7 @@ cc_test(
         "test/*.h",
     ]),
     copts = ["-std=c++20"],
+    tags = ["cpp"],
     deps = [
         ":livestatus_base",
         "@gtest//:gtest_main",

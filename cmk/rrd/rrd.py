@@ -32,21 +32,12 @@ from typing import assert_never, cast, Literal, NewType, Self, TypedDict
 
 import cmk.ccc.debug
 from cmk.ccc import tty
-from cmk.ccc.crash_reporting import (
-    ABCCrashReport,
-    BaseDetails,
-    CrashInfo,
-    CrashReportStore,
-    make_crash_report_base_path,
-    VersionInfo,
-)
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.version import get_general_version_infos
-from cmk.utils import paths
 from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
 
+from ._crash import create_crash_report
 from ._fs import (
     get_cmc_host_dir,
     get_cmc_storage,
@@ -855,17 +846,6 @@ class RRDCreator:
         self._rrd_helper_output_buffer += (response + "\n").encode("utf-8")
 
 
-def create_crash_report() -> None:
-    CrashReportStore().save(
-        CMKBaseCrashReport(
-            crash_report_base_path=make_crash_report_base_path(paths.omd_root),
-            crash_info=CMKBaseCrashReport.make_crash_info(
-                get_general_version_infos(paths.omd_root)
-            ),
-        )
-    )
-
-
 def _float_or_nan(s: str | None) -> str:
     if s is None:
         return "U"
@@ -874,25 +854,6 @@ def _float_or_nan(s: str | None) -> str:
         return s
     except ValueError:
         return "U"
-
-
-class CMKBaseCrashReport(ABCCrashReport[BaseDetails]):
-    @classmethod
-    def type(cls) -> str:
-        return "base"
-
-    @classmethod
-    def make_crash_info(
-        cls,
-        version_info: VersionInfo,
-        _details: BaseDetails | None = None,
-    ) -> CrashInfo:
-        # yurks
-        details = BaseDetails(
-            argv=sys.argv,
-            env=dict(os.environ),
-        )
-        return super().make_crash_info(version_info, details)
 
 
 def _report_create_denied(note: str, host: HostName, service: _RRDServiceName) -> None:

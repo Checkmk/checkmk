@@ -423,8 +423,6 @@ translation_filesystem_storages_df = translations.Translation(
         translations.PassiveCheck("prism_storage_pools"),
         translations.PassiveCheck("ucd_disk"),
         translations.PassiveCheck("hp_msa_volume_df"),
-        translations.PassiveCheck("proxmox_ve_node_directory_storages"),
-        translations.PassiveCheck("proxmox_ve_node_lvm_storages"),
     ],
     translations={
         "fs_free": translations.ScaleBy(1048576),

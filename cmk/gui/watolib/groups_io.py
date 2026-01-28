@@ -57,9 +57,18 @@ def all_groups(group_type: GroupType) -> list[tuple[str, str]]:
     """
     query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % group_type
     groups = cast(list[tuple[str, str]], live().query(query))
+    all_groups = load_group_information()[group_type]
+
+    def _compute_alias(name: str, alias: str) -> str:
+        if (group := all_groups.get(name)) and (alias_from_group := group.get("alias")):
+            assert isinstance(alias_from_group, str)
+            return alias_from_group
+        return alias or name
+
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
     return sorted(
-        [(name, alias or name) for name, alias in dict(groups).items()], key=lambda e: e[1].lower()
+        [(name, _compute_alias(name, alias)) for name, alias in dict(groups).items()],
+        key=lambda e: e[1].lower(),
     )
 
 

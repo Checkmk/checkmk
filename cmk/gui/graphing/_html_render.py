@@ -722,7 +722,7 @@ class AjaxGraph(Page):
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
                     str(edition(paths.omd_root))
-                ].get_time_series_fetcher(ctx.config),
+                ].get_time_series_fetcher(),
             )
             response.set_data(json.dumps(response_data))
         except Exception as e:
@@ -1007,7 +1007,7 @@ class AjaxRenderGraphContent(AjaxPage):
         temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
         backend_time_series_fetcher = metric_backend_registry[
             str(edition(paths.omd_root))
-        ].get_time_series_fetcher(ctx.config)
+        ].get_time_series_fetcher()
         graph_display_id = api_request["graph_display_id"]
         return _render_graph_content_html(
             ctx.request,
@@ -1227,7 +1227,7 @@ class AjaxGraphHover(Page):
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
                     str(edition(paths.omd_root))
-                ].get_time_series_fetcher(ctx.config),
+                ].get_time_series_fetcher(),
             )
             response.set_data(json.dumps(response_data))
         except Exception as e:

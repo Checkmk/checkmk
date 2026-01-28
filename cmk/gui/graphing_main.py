@@ -187,6 +187,6 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
-            ].get_time_series_fetcher(ctx.config),
+            ].get_time_series_fetcher(),
         )
         return None  # for mypy

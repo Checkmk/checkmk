@@ -86,7 +86,7 @@ def get_graph(params: Mapping[str, Any]) -> Response:
             temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
-            ].get_time_series_fetcher(active_config),
+            ].get_time_series_fetcher(),
         )
 
     except MKUserError as e:

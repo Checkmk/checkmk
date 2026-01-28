@@ -84,7 +84,7 @@ def render_graph_widget_content(
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
                     str(edition(paths.omd_root))
-                ].get_time_series_fetcher(ctx.config),
+                ].get_time_series_fetcher(),
                 graph_display_id=widget_id,
                 time_range=dashlet_config["timerange"],
             )

@@ -249,6 +249,31 @@ def test_config_sync_source_remote_remote_diff_customer(
         _check_update_config_timestamps([central_site, remote_site, remote_site_2], timestamps_dict)
 
 
+def test_config_sync_rename_host(central_site: Site, remote_site: Site) -> None:
+    """
+    Scenario: Host renaming triggers piggyback config re-distribution
+    """
+
+    _HOSTNAME_PIGGYBACKED = "piggybacked_host_rename"
+    timestamps_dict: dict[str, int] = {}
+    with (
+        create_local_check(
+            central_site,
+            [_HOSTNAME_SOURCE_CENTRAL],
+            [_HOSTNAME_PIGGYBACKED],
+        ),
+    ):
+        # save starting timestamps
+        _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+
+        with _create_and_rename_host(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
+            # config distribution is triggered on both sites after renaming
+            _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+
+        # config distribution is triggered on both sites after deleting the host
+        _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
+
+
 def test_piggyback_services_remote_remote(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:

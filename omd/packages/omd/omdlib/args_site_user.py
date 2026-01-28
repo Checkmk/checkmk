@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import argparse
+from collections.abc import Sequence
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, RootModel
@@ -24,8 +25,8 @@ class Restore(_Shared):
 type Finalize = Annotated[Restore, Field(discriminator="command")]
 
 
-def args_to_command_line(args: Finalize) -> list[str]:
-    cmd_line = [f"/omd/versions/{omdlib.__version__}/lib/omd/omd_site_user"]
+def args_to_command_line(args: Finalize, version: str = omdlib.__version__) -> list[str]:
+    cmd_line = [f"/omd/versions/{version}/lib/omd/omd_site_user"]
     cmd_line.extend([args.command, "--site", args.site])
     if args.verbose:
         cmd_line.append("--verbose")
@@ -41,7 +42,7 @@ class _ArgsParser(RootModel[Finalize]):
     root: Finalize
 
 
-def parse_arguments() -> Finalize:
+def parse_arguments(sysv: Sequence[str] | None = None) -> Finalize:
     parser = argparse.ArgumentParser(description="Run `omd` code as site user.")
     subparser = parser.add_subparsers(
         dest="command",
@@ -70,5 +71,5 @@ def parse_arguments() -> Finalize:
         help="Whether to reuse previous site",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(sysv)
     return _ArgsParser.model_validate(vars(args)).root

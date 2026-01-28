@@ -542,9 +542,9 @@ http_archive(
 http_archive(
     name = "robotmk",
     build_file = "//omd/packages/robotmk:BUILD.robotmk.bazel",
-    sha256 = "87ed3e3a20d7ad606f4a339424e29e5f4a61254703e992e060ab5b87cce17fea",
+    sha256 = "c33e27823faf705f6f5250c9cbd92e89077eb50bc071eccdb6d14db992fc1726",
     urls = [
-        "https://github.com/elabit/robotmk/releases/download/v4.0.0-alpha-9/all_executables.zip",
+        "https://github.com/elabit/robotmk/releases/download/v4.0.0-alpha-10/all_executables.zip",
     ],
 )
 

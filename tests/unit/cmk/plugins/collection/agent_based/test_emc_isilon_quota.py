@@ -30,6 +30,7 @@ def test_check(section: eiq.Section, monkeypatch: pytest.MonkeyPatch) -> None:
         "get_value_store",
         lambda: {
             "/ifs/data/pacs.delta": (1657628373.6628969, 3666504.428902626),
+            "/ifs/data/pacs.trend": (1657628373.6628969 - 86400, 1657628373.6628969, 0.0),
         },
     )
 

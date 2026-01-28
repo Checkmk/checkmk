@@ -68,7 +68,10 @@ def test_discover_esx_vsphere_datastores() -> None:
     "mocked_store, item, params, string_table, expected_results",
     [
         (
-            {"backup_day_esx_blade_nfs_nfs32.delta": (1672527540.0, 4481222.59375)},
+            {
+                "backup_day_esx_blade_nfs_nfs32.delta": (1672527540.0, 4481222.59375),
+                "backup_day_esx_blade_nfs_nfs32.trend": (1672527540.0 - 86400, 1672527540.0, 10.0),
+            },
             "backup_day_esx_blade_nfs_nfs32",
             {
                 "levels": (80.0, 90.0),
@@ -146,7 +149,10 @@ def test_discover_esx_vsphere_datastores() -> None:
             ],
         ),
         (
-            {"datastore01.delta": (1672527540.0, 2685053.0)},
+            {
+                "datastore01.delta": (1672527540.0, 2685053.0),
+                "datastore01.trend": (1672527540.0 - 86400, 1672527540.0, 7.0),
+            },
             "datastore01",
             {
                 "levels": (80.0, 90.0),
@@ -224,7 +230,10 @@ def test_discover_esx_vsphere_datastores() -> None:
             ],
         ),
         (
-            {"storage_iso.delta": (1672527540.0, 5754336.7265625)},
+            {
+                "storage_iso.delta": (1672527540.0, 5754336.7265625),
+                "storage_iso.trend": (1672527540.0 - 86400, 1672527540.0, 10.0),
+            },
             "storage_iso",
             {
                 "levels": (80.0, 90.0),
@@ -302,7 +311,10 @@ def test_discover_esx_vsphere_datastores() -> None:
             ],
         ),
         (
-            {"system01_20100701.delta": (1672527540.0, 374.0)},
+            {
+                "system01_20100701.delta": (1672527540.0, 374.0),
+                "system01_20100701.trend": (1672527540.0 - 86400, 1672527540.0, 10.0),
+            },
             "system01_20100701",
             {
                 "levels": (80.0, 90.0),
@@ -380,7 +392,10 @@ def test_discover_esx_vsphere_datastores() -> None:
             ],
         ),
         (
-            {"vmware_files.delta": (1672527540.0, 5754336.7265625)},
+            {
+                "vmware_files.delta": (1672527540.0, 5754336.7265625),
+                "vmware_files.trend": (1672527540.0 - 86400, 1672527540.0, 10.0),
+            },
             "vmware_files",
             {
                 "levels": (80.0, 90.0),

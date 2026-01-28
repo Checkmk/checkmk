@@ -12,13 +12,13 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.plugins.hpe_3par.agent_based import hpe_3par_capacity
 from cmk.plugins.hpe_3par.agent_based.hpe_3par_capacity import (
     check_hpe_3par_capacity,
     discover_hpe_3par_capacity,
     parse_hpe_3par_capacity,
 )
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
-from tests.unit.cmk.base.legacy_checks.checktestlib import mock_item_state
 
 STRING_TABLE = [
     [
@@ -197,11 +197,17 @@ def test_check_hpe_3par_capacity(
     item: str,
     parameters: Mapping[str, tuple[float, float]],
     expected_check_result: Sequence[Result | Metric],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    with (
-        time_machine.travel(datetime.datetime.fromisoformat("2022-07-16 07:00:00Z")),
-        mock_item_state((162312321.0, 10.0)),
-    ):
+    monkeypatch.setattr(
+        hpe_3par_capacity,
+        "get_value_store",
+        lambda: {
+            f"{item}.delta": (162312321.0, 10.0),
+            f"{item}.trend": (162312321.0 - 86400, 162312321.0, 0.027),
+        },
+    )
+    with time_machine.travel(datetime.datetime.fromisoformat("2022-07-16 07:00:00Z")):
         assert (
             list(
                 check_hpe_3par_capacity(

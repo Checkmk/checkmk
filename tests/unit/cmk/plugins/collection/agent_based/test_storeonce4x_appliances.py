@@ -57,7 +57,10 @@ def test_check_storage(monkeypatch: pytest.MonkeyPatch, section: Section) -> Non
     monkeypatch.setattr(
         storeonce,
         "get_value_store",
-        lambda: {"myhostname.delta": (1356034260.0, 96122807.59765625)},
+        lambda: {
+            "myhostname.delta": (1356034260.0, 96122807.59765625),
+            "myhostname.trend": (1356034260.0 - 86400, 1356034260.0, 0.0),
+        },
     )
     with time_machine.travel(datetime.datetime(2012, 12, 20, 20, 12, tzinfo=ZoneInfo("UTC"))):
         assert list(

@@ -36,7 +36,10 @@ def test_discover_lvm_vgs() -> None:
 
 
 def test_check_lvm_vgs(monkeypatch: pytest.MonkeyPatch) -> None:
-    value_store = {"vg_root.delta": (0, 12)}
+    value_store = {
+        "vg_root.delta": (0, 12),
+        "vg_root.trend": (0 - 86400, 0, 0.0),
+    }
     monkeypatch.setattr(lvm_vgs, "get_value_store", lambda: value_store)
     monkeypatch.setattr(time, "time", lambda: 60)
 

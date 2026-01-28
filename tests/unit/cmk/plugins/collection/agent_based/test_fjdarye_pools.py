@@ -74,7 +74,10 @@ def test_check_fjdarye_pools() -> None:
                 available=5859529,
             ),
             params=FILESYSTEM_DEFAULT_PARAMS,
-            value_store={"item.delta": (42, 1231231)},
+            value_store={
+                "item.delta": (42, 1231231),
+                "item.trend": (42 - 86400, 42, 1359257.086419753),
+            },
             timestamp=123,
         )
     ) == [

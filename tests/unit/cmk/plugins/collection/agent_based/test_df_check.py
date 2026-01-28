@@ -717,7 +717,8 @@ def test_df_check_with_parse(
             f"{counter}.delta": (
                 0,
                 _extract_value_to_mock_for_zero_growth(expected_result),
-            )
+            ),
+            f"{counter}.trend": (0, 86400, 0.0),
         },
     )
     assert list(df.check_df(item, params, parse_df(info))) == expected_result
@@ -1288,7 +1289,10 @@ def test_df_check_groups_with_parse(
     monkeypatch.setattr(
         df,
         "get_value_store",
-        lambda: {"my-group.delta": (0, _extract_value_to_mock_for_zero_growth(expected_result))},
+        lambda: {
+            "my-group.delta": (0, _extract_value_to_mock_for_zero_growth(expected_result)),
+            "my-group.trend": (0, 86400, 0.0),
+        },
     )
     assert (
         list(

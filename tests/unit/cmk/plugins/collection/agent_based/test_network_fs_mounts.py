@@ -33,9 +33,13 @@ NOW_SIMULATED = 581792400
 def value_store_fixture(monkeypatch):
     value_store_patched = {
         "%s.delta" % "/ABCshare": [2000000, 30000000],
+        "%s.trend" % "/ABCshare": [2000000 - 86400, 2000000, -5000.0],
         "%s.delta" % "/PERFshare": [2000000, 30000000],
+        "%s.trend" % "/PERFshare": [2000000 - 86400, 2000000, -5000.0],
         "%s.delta" % "/var/dbaexport": [2000000, 30000000],
+        "%s.trend" % "/var/dbaexport": [2000000 - 86400, 2000000, -5000.0],
         "%s.delta" % "/mnt/test_client": [2000000, 30000000],
+        "%s.trend" % "/mnt/test_client": [2000000 - 86400, 2000000, -5000.0],
     }
     monkeypatch.setattr(network_fs_mounts, "get_value_store", lambda: value_store_patched)
     yield value_store_patched

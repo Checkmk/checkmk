@@ -39,7 +39,14 @@ def test_check_no_item(section: FSBlocks, empty_value_store: None) -> None:
 
 
 def test_check_grouped(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(dfn, "get_value_store", lambda: {"knut.delta": (0, 9435.0)})
+    monkeypatch.setattr(
+        dfn,
+        "get_value_store",
+        lambda: {
+            "knut.delta": (0, 9435.0),
+            "knut.trend": (0, 86400, 0.0),
+        },
+    )
     assert list(
         dfn.check_df_netscaler(
             "knut", {**FILESYSTEM_DEFAULT_PARAMS, "patterns": (["*"], [])}, section
@@ -69,7 +76,14 @@ def test_check_grouped(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def test_check_single_item(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(dfn, "get_value_store", lambda: {"/flash.delta": (0, 720)})
+    monkeypatch.setattr(
+        dfn,
+        "get_value_store",
+        lambda: {
+            "/flash.delta": (0, 720),
+            "/flash.trend": (0, 86400, 0.0),
+        },
+    )
     assert list(dfn.check_df_netscaler("/flash", FILESYSTEM_DEFAULT_PARAMS, section)) == [
         Metric(
             "fs_used", 720.0, levels=(6380.799999237061, 7178.39999961853), boundaries=(0.0, 7976.0)

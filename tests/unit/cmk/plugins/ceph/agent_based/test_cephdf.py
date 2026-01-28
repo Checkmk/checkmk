@@ -55,6 +55,7 @@ def test_check_found() -> None:
     now = 1719984586
     value_store = {
         "nvme1.delta": (now - 60, 0),
+        "nvme1.trend": (now - 86460, now - 60, 185536.82024146715),
         "nvme1.ri": (now - 60, 0),
         "nvme1.wi": (now - 60, 0),
         "nvme1.rb": (now - 60, 0),

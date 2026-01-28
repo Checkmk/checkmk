@@ -145,6 +145,7 @@ SECTION_WITH_FG_FLEX = asm.Section(
 def value_store_fixture(monkeypatch):
     value_store_patched = {
         "%s.delta" % ITEM: [2000000, 30000000],
+        "%s.trend" % ITEM: [2000000 - 86400, 2000000, -51.16],
     }
     monkeypatch.setattr(asm, "get_value_store", lambda: value_store_patched)
     yield value_store_patched

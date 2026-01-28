@@ -136,7 +136,7 @@ def test_sap_hana_data_volume_discovery() -> None:
 def value_store_fixture(monkeypatch):
     value_store_patched = {
         "H62 10 - DATA 20.delta": [2000000, 30000000],
-        "H62 10 - DATA 20.trend": [LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989],
+        "H62 10 - DATA 20.trend": [LAST_TIME_EPOCH - 86400, LAST_TIME_EPOCH, 4625.8],
     }
     monkeypatch.setattr(sap_hana_data_volume, "get_value_store", lambda: value_store_patched)
     yield value_store_patched
@@ -171,8 +171,8 @@ def value_store_fixture(monkeypatch):
                 Metric("fs_size", 320.0, boundaries=(0.0, None)),
                 Metric("growth", -4470.553049074118),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +370 TiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +121350801.48%"),
-                Metric("trend", 388322564.72347546),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +121340996.47%"),
+                Metric("trend", 388291188.7047862),
                 Result(state=State.OK, summary="Time left until disk full: 52 milliseconds"),
                 Result(state=State.OK, summary="Service: scriptserver"),
                 Result(
@@ -212,8 +212,8 @@ def value_store_fixture(monkeypatch):
                     state=State.CRIT,
                     summary="trend per 1 day 0 hours: +370 TiB (warn/crit at +10.0 MiB/+20.0 MiB)",
                 ),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +121350801.48%"),
-                Metric("trend", 388322564.72347546, levels=(10.0, 20.0)),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +121340996.47%"),
+                Metric("trend", 388291188.7047862, levels=(10.0, 20.0)),
                 Result(state=State.OK, summary="Time left until disk full: 52 milliseconds"),
                 Result(state=State.OK, summary="Service: scriptserver"),
                 Result(

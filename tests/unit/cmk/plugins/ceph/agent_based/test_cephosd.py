@@ -64,7 +64,10 @@ def test_discover_cephosd() -> None:
 
 def test_check_cephosd() -> None:
     now = 1719984586
-    value_store = {"0.delta": (now - 60, 0)}
+    value_store = {
+        "0.delta": (now - 60, 0),
+        "0.trend": (now - 60 - 86400, now - 60, 41494.39609375),
+    }
     assert list(
         check_cephosd_testable("0", df.FILESYSTEM_DEFAULT_PARAMS, _section(), value_store, now)
     ) == [

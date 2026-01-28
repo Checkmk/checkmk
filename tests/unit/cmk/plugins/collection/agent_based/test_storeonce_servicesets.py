@@ -82,7 +82,10 @@ def test_check_1_capacity(monkeypatch: pytest.MonkeyPatch, section_1: Section) -
     monkeypatch.setattr(
         storeonce,
         "get_value_store",
-        lambda: {"1.delta": (1577972460.0 - 60, 21108135.3046875 - 300)},
+        lambda: {
+            "1.delta": (1577972460.0 - 60, 21108135.3046875 - 300),
+            "1.trend": (1577972460.0 - 60 - 86400, 1577972460.0 - 60, 5.0),
+        },
     )
     with time_machine.travel(datetime.datetime(2020, 1, 2, 13, 41, tzinfo=ZoneInfo("UTC"))):
         assert list(
@@ -188,7 +191,10 @@ def test_check_2_capacity(monkeypatch: pytest.MonkeyPatch, section_2: Section) -
     monkeypatch.setattr(
         storeonce,
         "get_value_store",
-        lambda: {"1.delta": (1577972280.0 - 60, 51789957.953125 - 6000)},
+        lambda: {
+            "1.delta": (1577972280.0 - 60, 51789957.953125 - 6000),
+            "1.trend": (1577972280.0 - 60 - 86400, 1577972280.0 - 60, 100.0),
+        },
     )
     with time_machine.travel(datetime.datetime(2020, 1, 2, 13, 38, tzinfo=ZoneInfo("UTC"))):
         assert list(

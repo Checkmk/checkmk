@@ -315,6 +315,16 @@ def test_check_netapp_ontap_volumes_state_online(volume_id: str, expected_result
         "svm_name:volume_name1.delta": (LAST_EVALUATION_SECONDS, 0),
         "bytes_written": (LAST_EVALUATION_SECONDS, 0),
         "bytes_read": (LAST_EVALUATION_SECONDS, 0),
+        "svm_name:volume_name.trend": (
+            LAST_EVALUATION_SECONDS - 86400,
+            LAST_EVALUATION_SECONDS,
+            0.0,
+        ),
+        "svm_name:volume_name1.trend": (
+            LAST_EVALUATION_SECONDS - 86400,
+            LAST_EVALUATION_SECONDS,
+            0.0,
+        ),
     }
 
     result = list(

@@ -94,7 +94,7 @@ def test_inventory_sap_hana_diskusage(
 def value_store_fixture(monkeypatch):
     value_store_patched = {
         "HXE 90 HXE - Log.delta": (2000000, 30000000),
-        "HXE 90 HXE - Log.trend": (LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989),
+        "HXE 90 HXE - Log.trend": (LAST_TIME_EPOCH - 86400, LAST_TIME_EPOCH, 4625.8),
     }
     monkeypatch.setattr(sap_hana_diskusage, "get_value_store", lambda: value_store_patched)
     yield value_store_patched
@@ -130,8 +130,8 @@ def value_store_fixture(monkeypatch):
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +370 TiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +589768.67%"),
-                Metric("trend", 388322565.4877706),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +589721.02%"),
+                Metric("trend", 388291188.7047862),
                 Result(state=State.OK, summary="Time left until disk full: 12 seconds"),
             ],
         ),
@@ -159,8 +159,8 @@ def value_store_fixture(monkeypatch):
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +370 TiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +589768.67%"),
-                Metric("trend", 388322565.4877706),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +589721.02%"),
+                Metric("trend", 388291188.7047862),
                 Result(state=State.OK, summary="Time left until disk full: 12 seconds"),
             ],
         ),
@@ -188,8 +188,8 @@ def value_store_fixture(monkeypatch):
                 Metric("fs_size", 65843.2, boundaries=(0.0, None)),
                 Metric("growth", -4469.024458823538),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +370 TiB"),
-                Result(state=State.OK, summary="trend per 1 day 0 hours: +589768.67%"),
-                Metric("trend", 388322565.4877706),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +589721.02%"),
+                Metric("trend", 388291188.7047862),
                 Result(state=State.OK, summary="Time left until disk full: 12 seconds"),
             ],
         ),

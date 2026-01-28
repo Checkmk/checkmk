@@ -105,7 +105,14 @@ def test_df_check() -> None:
     }
     assert list(
         check_hp_msa_volume_df_testable(
-            item_1st, params, parsed, {"VMFS_01.delta": (0.0, 1212896 - 1024.0)}, 60
+            item_1st,
+            params,
+            parsed,
+            {
+                "VMFS_01.delta": (0.0, 1212896 - 1024.0),
+                "VMFS_01.trend": (0.0 - 86400, 0.0, 17.066666666666666),
+            },
+            60,
         )
     )[4:] == [
         Result(state=State.OK, summary="Used: 57.81% - 1.16 TiB of 2.00 TiB"),

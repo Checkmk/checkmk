@@ -82,7 +82,14 @@ def test_pvc_with_volume(bound_pvc: PersistentVolumeClaim) -> None:
     check_result = list(
         _check_kube_pvc(
             bound_pvc.metadata.name,
-            value_store={f"{bound_pvc.metadata.name}.delta": (current_timestamp - 60, 0)},
+            value_store={
+                f"{bound_pvc.metadata.name}.delta": (current_timestamp - 60, 0),
+                f"{bound_pvc.metadata.name}.trend": (
+                    current_timestamp - 86460,
+                    current_timestamp - 60,
+                    0.0,
+                ),
+            },
             pvc=bound_pvc,
             volume=volume,
             persistent_volume=None,

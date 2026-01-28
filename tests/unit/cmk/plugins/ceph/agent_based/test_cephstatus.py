@@ -59,6 +59,7 @@ def test_check_cephstatus() -> None:
     now = 1719984586
     value_store = {
         "Status.delta": (now - 60, 0),
+        "Status.trend": (now - 60 - 86400, now - 60, 550579.2313151042),
     }
     assert list(
         check_cephstatus_testable(

@@ -279,6 +279,7 @@ def test_df_check_filesystem_single(
             df.df_check_filesystem_single(
                 {
                     "/fake.delta": (100, 954),
+                    "/fake.trend": (100 - 86400, 100, 1864.6521739130437),
                 },
                 "/fake",
                 *data,

@@ -12,6 +12,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.plugins.hpe_3par.agent_based import hpe_3par_cpgs
 from cmk.plugins.hpe_3par.agent_based.hpe_3par_cpgs import (
     check_hpe_3par_cpgs,
     check_hpe_3par_cpgs_usage,
@@ -20,7 +21,6 @@ from cmk.plugins.hpe_3par.agent_based.hpe_3par_cpgs import (
     parse_hpe_3par_cpgs,
 )
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
-from tests.unit.cmk.base.legacy_checks.checktestlib import mock_item_state
 
 STRING_TABLE = [
     [
@@ -241,11 +241,17 @@ def test_check_3par_cpgs_usage(
     section: StringTable,
     item: str,
     expected_check_result: Sequence[Result | Metric],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    with (
-        time_machine.travel(datetime.datetime.fromisoformat("2022-07-11 07:00:00Z")),
-        mock_item_state((162312321.0, 0.0)),
-    ):
+    monkeypatch.setattr(
+        hpe_3par_cpgs,
+        "get_value_store",
+        lambda: {
+            f"{item}.delta": (162312321.0, 0.0),
+            f"{item}.trend": (162312321.0 - 86400, 162312321.0, 0.0),
+        },
+    )
+    with time_machine.travel(datetime.datetime.fromisoformat("2022-07-11 07:00:00Z")):
         assert (
             list(
                 check_hpe_3par_cpgs_usage(

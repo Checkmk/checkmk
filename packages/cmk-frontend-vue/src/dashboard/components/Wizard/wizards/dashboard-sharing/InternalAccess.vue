@@ -23,14 +23,14 @@ defineProps<InternalAccessProps>()
 
 <template>
   <CmkCatalogPanel :title="_t('Internal access')" variant="padded">
-    <CmkHeading type="h2">{{
+    <CmkHeading type="h3">{{
       _t('Users with access permissions can view this dashboard')
     }}</CmkHeading>
 
     <ContentSpacer />
 
     <CmkCode
-      :title="_t('Dashboard url')"
+      :title="_t('Dashboard URL')"
       :code_txt="dashboardUrl"
       class="db-internal-access__url"
     />
@@ -39,6 +39,6 @@ defineProps<InternalAccessProps>()
 
 <style scoped>
 .db-internal-access__url {
-  width: calc(100% - 50px);
+  width: 100%;
 }
 </style>

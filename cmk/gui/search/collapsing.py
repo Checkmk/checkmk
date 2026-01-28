@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from itertools import groupby
-from typing import Final, Protocol
+from typing import Literal, Protocol
 
 from cmk.gui.i18n import _
 from cmk.shared_typing.unified_search import (
@@ -15,9 +15,7 @@ from cmk.shared_typing.unified_search import (
 )
 
 type CollapsedResult = tuple[list[UnifiedSearchResultItem], UnifiedSearchResultCounts]
-
-_EDIT_TITLE: Final = _("Edit")
-_HOST_TOPIC_TITLE: Final = "Hosts"
+type HostTopic = Literal["Hosts", "Host name", "Hostalias"]
 
 
 class Collapser(Protocol):
@@ -46,11 +44,11 @@ def _collapse_items(
     counts: UnifiedSearchResultCounts,
 ) -> CollapsedResult:
     collapsed_results: list[UnifiedSearchResultItem] = []
+    collapsed_result_count = 0
 
-    for title, group in groupby(results, key=lambda item: item.title):
-        host_monitoring_items = []
-        host_setup_item = None
-        other_items = []
+    for _title, group in groupby(results, key=lambda item: item.title):
+        host_items: dict[HostTopic, UnifiedSearchResultItem] = {}
+        other_items: list[UnifiedSearchResultItem] = []
 
         # WARN: this logic only works because of some assumptions we make about the ordering from
         # the sort algorithm. We expect setup host, monitoring host, and optionaly monitoring host
@@ -58,41 +56,50 @@ def _collapse_items(
         # functionality will no longer work.
         for item in group:
             match item.topic:
-                case "Hosts":
-                    host_setup_item = item
-                case "Host name":
-                    host_monitoring_items.append(item)
-                case "Hostalias" if host_monitoring_items:
-                    host_monitoring_items.append(item)
+                case "Hosts" | "Host name" | "Hostalias":
+                    host_items.update({item.topic: item})
                 case _:
                     other_items.append(item)
 
-        if len(host_monitoring_items) > 1 or (host_setup_item and host_monitoring_items):
-            collapsed_results.append(_collapse_host_items(host_monitoring_items, host_setup_item))
-            counts.monitoring -= len(host_monitoring_items) - 1
+        match host_items:
+            case {"Hosts": setup_item, "Host name": name, "Hostalias": alias}:
+                collapsed_results.append(_collapse_host_items([name, alias], setup_item))
+                collapsed_result_count += 1
+            case {"Hosts": setup_item, "Host name": name}:
+                collapsed_results.append(_collapse_host_items([name], setup_item))
+            case {"Host name": name, "Hostalias": alias}:
+                collapsed_results.append(_collapse_host_items([name, alias]))
+                collapsed_result_count += 1
+            case _:
+                collapsed_results.extend(host_items.values())
 
         if other_items:
             collapsed_results.extend(other_items)
 
-    # update counts to reflect the state when results have been collapsed.
-    counts.total = len(collapsed_results)
+    updated_counts = UnifiedSearchResultCounts(
+        total=len(collapsed_results),
+        setup=counts.setup,
+        monitoring=counts.monitoring - collapsed_result_count,
+        customize=counts.customize,
+    )
 
-    return collapsed_results, counts
+    return collapsed_results, updated_counts
 
 
 def _collapse_host_items(
-    monitoring_items: list[UnifiedSearchResultItem], setup_item: UnifiedSearchResultItem | None
+    monitoring_items: list[UnifiedSearchResultItem],
+    setup_item: UnifiedSearchResultItem | None = None,
 ) -> UnifiedSearchResultItem:
     return UnifiedSearchResultItem(
         title=monitoring_items[0].title,
         target=monitoring_items[0].target,
         provider=ProviderName.monitoring,
-        topic=_HOST_TOPIC_TITLE,
+        topic="Hosts",
         context=", ".join(item.topic for item in monitoring_items),
         inline_buttons=[
             UnifiedSearchResultItemInlineButton(
                 target=setup_item.target,
-                title=_EDIT_TITLE,
+                title=_("Edit"),
             )
         ]
         if setup_item

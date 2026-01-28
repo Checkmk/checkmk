@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
@@ -21,8 +21,8 @@ check_info = {}
 # Just an assumption
 
 
-def parse_netextreme_psu_in(string_table):
-    parsed = {}
+def parse_netextreme_psu_in(string_table: Sequence[Sequence[str]]) -> dict[str, dict[str, float]]:
+    parsed: dict[str, dict[str, float]] = {}
     for psu_index, psu_usage_str, psu_factor_str in string_table:
         power = float(psu_usage_str) * pow(10, int(psu_factor_str))
         if power > 0:
@@ -32,7 +32,9 @@ def parse_netextreme_psu_in(string_table):
     return parsed
 
 
-def discover_netextreme_psu_in(section):
+def discover_netextreme_psu_in(
+    section: dict[str, dict[str, float]],
+) -> Iterable[tuple[str, dict[str, Any]]]:
     yield from ((item, {}) for item in section)
 
 

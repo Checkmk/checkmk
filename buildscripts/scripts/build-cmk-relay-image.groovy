@@ -45,6 +45,9 @@ void main() {
         privileged: true,
     ) {
         dir("${checkout_dir}") {
+            stage("setversion") {
+                versioning.set_version(cmk_version);
+            }
             stage(name: 'Build Image') {
                 // Only build the relay with ultimate edition sources
                 sh("""

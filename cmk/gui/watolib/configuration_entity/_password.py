@@ -26,6 +26,7 @@ from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
+    DefaultValue,
     FixedValue,
     MultipleChoice,
     MultipleChoiceElement,
@@ -106,6 +107,9 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                     "owned_by": TopicElement(
                         parameter_form=CascadingSingleChoice(
                             title=Title("Editable by"),
+                            prefill=DefaultValue("admins")
+                            if admin_element
+                            else DefaultValue("contact_group"),
                             elements=admin_element
                             + [
                                 CascadingSingleChoiceElement(

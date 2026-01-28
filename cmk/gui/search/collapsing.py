@@ -50,9 +50,9 @@ def _collapse_items(
     counts_monitoring = 0
 
     for title, group in groupby(results, key=lambda item: item.title):
-        host_monitoring_items = []
-        host_setup_item = None
-        other_items = []
+        host_monitoring_items: list[UnifiedSearchResultItem] = []
+        host_setup_item: UnifiedSearchResultItem | None = None
+        other_items: list[UnifiedSearchResultItem] = []
 
         # WARN: this logic only works because of some assumptions we make about the ordering from
         # the sort algorithm. We expect setup host, monitoring host, and optionaly monitoring host

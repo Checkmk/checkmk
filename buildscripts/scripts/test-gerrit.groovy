@@ -141,7 +141,12 @@ void main() {
                     // use another switch statement to apply k8s specific settings
                     // to be removed with CMK-25972
                     switch ("${item.NAME}") {
-                        case "Agent Plugin Unit Tests":     // docker in docker
+                        case "Agent Plugin Unit Tests":
+                            relative_job_name = "${branch_base_folder}/cv/trigger-test-agent-plugin-unit";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                            ];
+                            break;
                         case "Package cmk-agent-receiver":  // Tries to start docker containers
                         case "Package cmk-relay-engine":    // Tries to start docker containers
                         case "Package cmc":                 // Requires the C++ toolchain in /opt, clang tooling, and IWYU

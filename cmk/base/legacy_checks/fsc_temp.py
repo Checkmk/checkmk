@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
@@ -18,7 +16,7 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 
 check_info = {}
 
@@ -34,7 +32,7 @@ def discover_fsc_temp(string_table: StringTable) -> DiscoveryResult:
     yield from (Service(item=line[0]) for line in string_table if int(line[1]) < 500)
 
 
-def check_fsc_temp(item, params, info):
+def check_fsc_temp(item: str, params: TempParamType, info: StringTable) -> LegacyResult | None:
     for name, rawtemp, warn, crit in info:
         if name == item:
             temp = int(rawtemp)

@@ -319,6 +319,7 @@ STAGES:
             --test_tag_filters=cpp \
             --keep_going \
             --//:use_faked_artifacts=True \
+            --run_under="$(which valgrind) --quiet --num-callers=30 --error-exitcode=42" \
             -- //... \
             -//agents/... -//omd/...
         make_rc=$?

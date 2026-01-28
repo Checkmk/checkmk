@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # Check has been developed using a Emerson Network Power Rack PDU Card
 # Agent App Firmware Version  4.840.0
@@ -15,6 +14,8 @@
 # [['1', 'TEST-123-HOST', '1', '535055G103T2010JUN240295', '1']]
 
 
+from collections.abc import Iterable
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lgp.lib import DETECT_LGP
@@ -22,7 +23,7 @@ from cmk.plugins.lgp.lib import DETECT_LGP
 check_info = {}
 
 
-def discover_lgp_pdu_info(info):
+def discover_lgp_pdu_info(info: list[list[str]]) -> Iterable[tuple[str, None]]:
     if info:
         inv = []
         for pdu in info:
@@ -32,7 +33,7 @@ def discover_lgp_pdu_info(info):
     return []
 
 
-def check_lgp_pdu_info(item, params, info):
+def check_lgp_pdu_info(item: str, params: object, info: list[list[str]]) -> tuple[int, str]:
     for pdu in info:
         if pdu[2] == item:
             return (0, "Entry-ID: %s, Label: %s (%s), S/N: %s, Num. RCs: %s" % tuple(pdu))

@@ -51,7 +51,8 @@ void main() {
 
     dir(checkout_dir) {
         // to be fixed with CMK-29585
-        if (params.PACKAGE_PATH in ["non-free/packages/cmk-relay-engine", "packages/cmk-agent-receiver"]) {
+        if ((params.PACKAGE_PATH in ["non-free/packages/cmk-relay-engine", "packages/cmk-agent-receiver"]) ||
+            (params.PACKAGE_PATH == "packages/mk-oracle" && distro == "almalinux-8")) {
             inside_container(inside_container_args) {
                 this_call_site(safe_branch_name, output_file);
             }

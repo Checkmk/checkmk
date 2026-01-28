@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 from itertools import groupby
-from typing import Protocol
+from typing import Literal, Protocol
 
 from cmk.gui.i18n import _
 from cmk.shared_typing.unified_search import (
@@ -16,6 +16,7 @@ from cmk.shared_typing.unified_search import (
 )
 
 type CollapsedResult = tuple[Sequence[UnifiedSearchResultItem], UnifiedSearchResultCounts]
+type HostTopic = Literal["Hosts", "Host name", "Hostalias"]
 
 
 class Collapser(Protocol):
@@ -47,8 +48,7 @@ def _collapse_items(
     collapsed_result_count = 0
 
     for _title, group in groupby(results, key=lambda item: item.title):
-        host_monitoring_items: list[UnifiedSearchResultItem] = []
-        host_setup_item: UnifiedSearchResultItem | None = None
+        host_items: dict[HostTopic, UnifiedSearchResultItem] = {}
         other_items: list[UnifiedSearchResultItem] = []
 
         # WARN: this logic only works because of some assumptions we make about the ordering from
@@ -57,18 +57,22 @@ def _collapse_items(
         # functionality will no longer work.
         for item in group:
             match item.topic:
-                case "Hosts":
-                    host_setup_item = item
-                case "Host name":
-                    host_monitoring_items.append(item)
-                case "Hostalias" if host_monitoring_items:
-                    host_monitoring_items.append(item)
+                case "Hosts" | "Host name" | "Hostalias":
+                    host_items.update({item.topic: item})
                 case _:
                     other_items.append(item)
 
-        if len(host_monitoring_items) > 1 or (host_setup_item and host_monitoring_items):
-            collapsed_results.append(_collapse_host_items(host_monitoring_items, host_setup_item))
-            collapsed_result_count += len(host_monitoring_items) - 1
+        match host_items:
+            case {"Hosts": setup_item, "Host name": name, "Hostalias": alias}:
+                collapsed_results.append(_collapse_host_items([name, alias], setup_item))
+                collapsed_result_count += 1
+            case {"Hosts": setup_item, "Host name": name}:
+                collapsed_results.append(_collapse_host_items([name], setup_item))
+            case {"Host name": name, "Hostalias": alias}:
+                collapsed_results.append(_collapse_host_items([name, alias], None))
+                collapsed_result_count += 1
+            case _:
+                collapsed_results.extend(host_items.values())
 
         if other_items:
             collapsed_results.extend(other_items)

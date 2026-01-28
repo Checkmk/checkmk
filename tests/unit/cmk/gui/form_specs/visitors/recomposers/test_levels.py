@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
-
+import copy
 from typing import Any, Literal, TypeVar
 
 import pytest
@@ -248,6 +248,8 @@ def test_levels_recompose(
 ) -> None:
     """Gets a spec and its value, serializes it for the frontend
     and then parses it back to disk data."""
+    original_value = copy.copy(value)
+
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     validation = visitor.validate(value)
     _, frontend_data = visitor.to_vue(value)
@@ -256,6 +258,10 @@ def test_levels_recompose(
     assert len(validation) == 0
     assert frontend_data == expected_frontend_data
     assert disk_data == expected_disk_data
+
+    if not value == DEFAULT_VALUE and original_value == DEFAULT_VALUE:
+        # make sure we don't change the original value in the validate process
+        assert value == original_value
 
 
 @pytest.mark.parametrize(

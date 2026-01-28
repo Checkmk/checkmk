@@ -79,11 +79,11 @@ def _transform_from_disk(
             return "no_levels", None
         case "fixed", tuple(fixed_levels):
             return "fixed", fixed_levels
-        case "predictive", dict(predictive_levels):  # format released in 2.3.0b3
+        case "predictive", {**predictive_levels}:  # format released in 2.3.0b3
             predictive_levels.pop("__reference_metric__", None)
             predictive_levels.pop("__direction__", None)
             return "predictive", predictive_levels
-        case "cmk_postprocessed", "predictive_levels", dict(predictive_levels):
+        case "cmk_postprocessed", "predictive_levels", {**predictive_levels}:
             predictive_levels.pop("__reference_metric__", None)
             predictive_levels.pop("__direction__", None)
             return "predictive", predictive_levels
@@ -102,7 +102,7 @@ def _wrapped_transform_to_disk(
                 return "no_levels", None
             case "fixed", tuple(fixed_levels):
                 return "fixed", fixed_levels
-            case "predictive", dict(predictive_levels):
+            case "predictive", {**predictive_levels}:
                 # The new prediction needs some more info that is hardcoded in the FormSpec
                 # to do the prediction in the post-processing in cmk.base.checker
                 assert isinstance(form_spec, Levels)

@@ -44,8 +44,9 @@ from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, Va
 from cmk.gui.watolib.utils import host_attribute_matches
 
 from cmk.fields import String
-from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
+from cmk.rulesets.v1.form_specs import String as StringFormSpec
 
 _ContactgroupName = str
 
@@ -824,11 +825,16 @@ def config_based_custom_host_attribute_sync_plugins(
             help=attr["help"],
         )
 
+        fs = StringFormSpec(
+            title=Title(attr["title"]),  # pylint: disable=localization-of-non-literal-string
+            help_text=Help(attr["help"]),  # pylint: disable=localization-of-non-literal-string
+        )
+
         a: type[ABCHostAttributeValueSpec]
         if attr["add_custom_macro"]:
-            a = NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs)
+            a = NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs, fs)
         else:
-            a = ValueSpecAttribute(attr["name"], vs)
+            a = ValueSpecAttribute(attr["name"], vs, fs)
 
         final_class = type(
             "%sCustomHostAttr" % a.__name__,
@@ -1267,34 +1273,44 @@ def FixedTextAttribute(
 
 
 # TODO: Kept for pre 1.6 plug-in compatibility
-def ValueSpecAttribute(name: str, vs: ValueSpec) -> type[ABCHostAttributeValueSpec]:
+def ValueSpecAttribute(
+    name: str, vs: ValueSpec, fs: FormSpec | None = None
+) -> type[ABCHostAttributeValueSpec]:
+    attrs = {
+        "_name": name,
+        "name": lambda self: self._name,
+        "_valuespec": vs,
+        "valuespec": lambda self: self._valuespec,
+    }
+    if fs is not None:
+        attrs["_form_spec"] = fs
+        attrs["form_spec"] = lambda self: self._form_spec
     return type(
         "HostAttributeValueSpec%s" % name.title(),
         (ABCHostAttributeValueSpec,),
-        {
-            "_name": name,
-            "name": lambda self: self._name,
-            "_valuespec": vs,
-            "valuespec": lambda self: self._valuespec,
-        },
+        attrs,
     )
 
 
 # TODO: Kept for pre 1.6 plug-in compatibility
 def NagiosValueSpecAttribute(
-    name: str, nag_name: str, vs: ValueSpec
+    name: str, nag_name: str, vs: ValueSpec, fs: FormSpec | None = None
 ) -> type[ABCHostAttributeNagiosValueSpec]:
+    attrs = {
+        "_name": name,
+        "name": lambda self: self._name,
+        "_valuespec": vs,
+        "valuespec": lambda self: self._valuespec,
+        "_nagios_name": nag_name,
+        "nagios_name": lambda self: self._nagios_name,
+    }
+    if fs is not None:
+        attrs["_form_spec"] = fs
+        attrs["form_spec"] = lambda self: self._form_spec
     return type(
         "NagiosValueSpecAttribute%s" % name.title(),
         (ABCHostAttributeNagiosValueSpec,),
-        {
-            "_name": name,
-            "name": lambda self: self._name,
-            "_valuespec": vs,
-            "valuespec": lambda self: self._valuespec,
-            "_nagios_name": nag_name,
-            "nagios_name": lambda self: self._nagios_name,
-        },
+        attrs,
     )
 
 

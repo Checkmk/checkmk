@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 from polyfactory.factories import DataclassFactory
 
 from cmk.gui.search.collapsing import get_collapser
@@ -129,3 +130,34 @@ def test_host_collapsing_setup_item_missing() -> None:
 
     # check that counts were updated accordingly
     assert counts == UnifiedSearchResultCounts(total=1, setup=0, monitoring=1, customize=0)
+
+
+@pytest.mark.xfail(strict=True, reason="CMK-29648")
+def test_host_collapsing_ignored_with_only_setup_item() -> None:
+    initial_results = [
+        UnifiedSearchResultItemFactory.build(title="testhost", topic="Hosts"),
+    ]
+    initial_count = UnifiedSearchResultCounts(total=1, setup=1, monitoring=0, customize=0)
+    collapse = get_collapser(provider=None, disabled=False)
+
+    results, counts = collapse(initial_results, initial_count)
+
+    # check that no transformation occurs when no monitoring items are available
+    assert results == initial_results
+    assert counts == initial_count
+
+
+@pytest.mark.xfail(strict=True, reason="CMK-29648")
+def test_host_collapsing_ignored_with_setup_item_and_alias() -> None:
+    initial_results = [
+        UnifiedSearchResultItemFactory.build(title="testhost", topic="Hosts"),
+        UnifiedSearchResultItemFactory.build(title="testhost", topic="Hostalias"),
+    ]
+    initial_count = UnifiedSearchResultCounts(total=2, setup=1, monitoring=1, customize=0)
+    collapse = get_collapser(provider=None, disabled=False)
+
+    results, counts = collapse(initial_results, initial_count)
+
+    # check that no transformation occurs when no monitoring items are available
+    assert results == initial_results
+    assert counts == initial_count

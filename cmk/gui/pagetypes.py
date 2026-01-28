@@ -41,7 +41,7 @@ import cmk.utils.paths
 from cmk.utils.user import UserId
 
 import cmk.gui.pages
-from cmk.gui import sites, userdb, weblib
+from cmk.gui import userdb, weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
@@ -113,6 +113,7 @@ from cmk.gui.valuespec import (
     TextInput,
     ValueSpec,
 )
+from cmk.gui.watolib.groups_io import all_groups
 
 SubPagesSpec = list[tuple[str, str, str]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]
@@ -1609,7 +1610,7 @@ def _page_menu_entries_sub_pages(
 
 def ContactGroupChoice(with_foreign_groups: bool) -> DualListChoice:
     def _load_groups() -> list[tuple[str, str]]:
-        contact_group_choices = sites.all_groups("contact")
+        contact_group_choices = all_groups("contact")
         return [
             (group_id, alias)
             for (group_id, alias) in contact_group_choices

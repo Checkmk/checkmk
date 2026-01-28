@@ -35,6 +35,7 @@ from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import LabelGroups
+from cmk.gui.watolib.groups_io import all_groups
 
 from ._livestatus import get_only_sites_from_context
 from .filter import (
@@ -418,7 +419,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
             query_filter=query_filters.MultipleQuery(
                 ident="hostgroups", column="host_groups", op=">=", negateable=True
             ),
-            options=sites.all_groups,  # type: ignore[arg-type]
+            options=all_groups,  # type: ignore[arg-type]
         )
     )
 
@@ -431,7 +432,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
             query_filter=query_filters.MultipleQuery(
                 ident="servicegroups", column="service_groups", op=">=", negateable=True
             ),
-            options=sites.all_groups,  # type: ignore[arg-type]
+            options=all_groups,  # type: ignore[arg-type]
         )
     )
     filter_registry.register(

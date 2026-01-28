@@ -23,6 +23,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, AutocompleterRegistry, Labels
 from cmk.gui.visuals import get_only_sites_from_context, livestatus_query_bare_string
 from cmk.gui.watolib.check_mk_automations import get_check_information_cached
+from cmk.gui.watolib.groups_io import all_groups
 
 
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:
@@ -109,7 +110,7 @@ def hostgroup_autocompleter(value: str, params: dict) -> Choices:
             % ("group_type", str(valid_group_types)),
         )
     choices: Choices = sorted(
-        (v for v in sites.all_groups(group_type) if _matches_id_or_title(value, v)),
+        (v for v in all_groups(group_type) if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
     # This part should not exists as the optional(not enforce) would better be not having the filter at all

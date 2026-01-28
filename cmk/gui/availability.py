@@ -32,7 +32,6 @@ from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui import sites
 from cmk.gui.bi import BIManager
 from cmk.gui.data_source import query_livestatus
 from cmk.gui.exceptions import MKUserError
@@ -67,6 +66,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.view_utils import CSSClass
+from cmk.gui.watolib.groups_io import all_groups
 
 from cmk.bi.lib import (
     BIHostSpec,
@@ -1480,7 +1480,7 @@ def compute_availability_groups(
 
     # 2. Compute names for the groups and sort according to these names
     if grouping != "host":
-        group_titles = dict(sites.all_groups(grouping[:-7]))
+        group_titles = dict(all_groups(grouping[:-7]))
 
     titled_groups: list[tuple[str, AVGroupKey]] = []
     for group_id in all_group_ids:

@@ -5,10 +5,10 @@
 
 import abc
 
-from cmk.gui import sites
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import urlencode
+from cmk.gui.watolib.groups_io import all_groups
 
 from ._base import SidebarSnapin
 from ._helpers import bulletlink
@@ -22,7 +22,7 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
     def show(self):
         group_type = self._group_type_ident()
         html.open_ul()
-        for name, alias in sites.all_groups(group_type.replace("group", "")):
+        for name, alias in all_groups(group_type.replace("group", "")):
             url = f"view.py?view_name={group_type}&{group_type}={urlencode(name)}"
             bulletlink(alias or name, url)
         html.close_ul()

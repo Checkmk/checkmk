@@ -2,14 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, cast, Literal, NotRequired, TypedDict
 
 from cmk.utils import paths
 
-from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs
+from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.hooks import request_memoize
+from cmk.gui.sites import live
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
 
 NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], Sequence[str]]
@@ -46,6 +48,21 @@ class GroupConfigs(TypedDict):
     multisite_contactgroups: dict[GroupName, ContactGroupConfig]
 
 
+def all_groups(group_type: GroupType) -> list[tuple[str, str]]:
+    """Returns a list of host/service/contact groups (pairs of name/alias)
+
+    Groups are collected via livestatus from all sites. In case no alias is defined
+    the name is used as second element. The list is sorted by lower case alias in the first place.
+    """
+    query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % group_type
+    groups = cast(list[tuple[str, str]], live().query(query))
+    # The dict() removes duplicate group names. Aliases don't need be deduplicated.
+    return sorted(
+        [(name, alias or name) for name, alias in dict(groups).items()],
+        key=lambda e: e[1].lower(),
+    )
+
+
 def load_host_group_information() -> GroupSpecs:
     return load_group_information()["host"]
 
@@ -62,7 +79,6 @@ def load_contact_group_information() -> GroupSpecs:
 def load_group_information() -> AllGroupSpecs:
     aliases = GroupAliasConfigFile().load_for_reading()
     configs = GroupsConfigFile().load_for_reading()
-
     # Merge information from Checkmk and Multisite worlds together
     return {
         "host": _combine_configs(aliases["define_hostgroups"], configs["multisite_hostgroups"]),

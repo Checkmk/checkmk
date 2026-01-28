@@ -37,6 +37,7 @@ def register(user_attribute_registry: UserAttributeRegistry) -> None:
     user_attribute_registry.register(UIThemeUserAttribute)
     user_attribute_registry.register(UISidebarPosition)
     user_attribute_registry.register(UIIconTitle)
+    user_attribute_registry.register(ChangesSlideoutDisabled)
     user_attribute_registry.register(UIIconPlacement)
     user_attribute_registry.register(UIBasicAdvancedToggle)
     user_attribute_registry.register(ContextualHelpIcon)
@@ -396,6 +397,22 @@ class ContextualHelpIcon(UserAttribute):
 
     def domain(self) -> str:
         return "multisite"
+
+
+class ChangesSlideoutDisabled(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "navbar_changes_action"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Default behavior for 'Changes'"),
+            help=_("Show the slideout for activating changes or show the full page view instead."),
+            choices=[(None, _("Quick activation")), ("full_page", _("Full activation page"))],
+        )
 
 
 def show_mode_choices() -> list[tuple[str | None, str]]:

@@ -337,6 +337,7 @@ class UserSpec(TypedDict, total=False):
     temperature_unit: NotRequired[Literal["celsius", "fahrenheit"] | None]
     contextual_help_icon: NotRequired[Literal["hide_icon"] | None]
     ldap_pw_last_changed: NotRequired[str]  # On attribute sync, this is added, then removed.
+    navbar_changes_action: NotRequired[Literal["full_page"] | None]
 
 
 AnnotatedUserId = Annotated[

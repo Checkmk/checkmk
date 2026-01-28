@@ -155,7 +155,6 @@ void main() {
                         case "Package unixcat":             // Requires the C++ toolchain in /opt, clang tooling, and IWYU
                         case "Package cmk-update-agent":    // Failing tests in k8s, detailed analysis outstanding
                         case "Package mk-oracle":           // Runs integration tests in CV, wants to install libaio
-                        case "Python Werks Test":           // Get's OOM killed, see CMK-26379
                         // exception: The 'enchant' C library was not found and maybe needs to be installed.
                         case "Software Documentation Generation":
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";

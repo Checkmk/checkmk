@@ -3,29 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, contains, exists, render, SNMPTree
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
+from cmk.agent_based.v2 import all_of, contains, exists, render, SNMPTree, StringTable
 
 check_info = {}
 
 
-def parse_fortigate_memory(string_table):
+def parse_fortigate_memory(string_table: StringTable) -> int | None:
     try:
         return int(string_table[0][0])
     except (ValueError, IndexError):
         return None
 
 
-def discover_fortigate_memory(parsed):
+def discover_fortigate_memory(parsed: int | None) -> list[tuple[None, dict[str, Any]]]:
     if parsed is not None:
         return [(None, {})]
     return []
 
 
-def check_fortigate_memory(item, params, current_reading):
+def check_fortigate_memory(
+    item: object, params: Mapping[str, Any], current_reading: int | None
+) -> LegacyCheckResult:
     if current_reading is None:
         return
 

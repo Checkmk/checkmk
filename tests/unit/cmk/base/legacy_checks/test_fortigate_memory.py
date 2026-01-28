@@ -26,7 +26,7 @@ from cmk.base.legacy_checks.fortigate_memory import (
     ],
 )
 def test_discover_fortigate_memory(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[tuple[None, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for fortigate_memory check."""
     parsed = parse_fortigate_memory(string_table)

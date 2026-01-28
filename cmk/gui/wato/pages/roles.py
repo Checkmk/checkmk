@@ -17,8 +17,6 @@ configuration of all roles.
 
 from collections.abc import Collection
 
-from marshmallow import ValidationError
-
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
@@ -333,7 +331,7 @@ class ModeEditRole(WatoMode):
         new_alias: str = request.get_str_input_mandatory("alias")
         try:
             userroles.validate_new_alias(self._role.alias, new_alias)
-        except ValidationError as exc:
+        except ValueError as exc:
             raise MKUserError("alias", str(exc))
 
         self._role.alias = new_alias
@@ -346,7 +344,7 @@ class ModeEditRole(WatoMode):
         new_id = request.get_ascii_input_mandatory("id")
         try:
             userroles.validate_new_roleid(self._role_id, new_id)
-        except ValidationError as exc:
+        except ValueError as exc:
             raise MKUserError("id", str(exc))
 
         self._role.name = new_id

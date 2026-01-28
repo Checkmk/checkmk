@@ -23,21 +23,21 @@ do_query() {
     # Check if mysqld is running and root password setup
     echo "<<<mysql_ping>>>"
     echo "$INSTANCE_HEADER"
-    $MYSQLADMIN --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
+    $MYSQLADMIN --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--protocol=socket --socket="$1"} ping 2>&1 || return
 
     echo "<<<mysql>>>"
     echo "$INSTANCE_HEADER"
-    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--protocol=socket --socket="$1"} -sN \
         -e "show global status ; show global variables ;"
 
     echo "<<<mysql_capacity>>>"
     echo "$INSTANCE_HEADER"
-    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--protocol=socket --socket="$1"} -sN \
         -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
             FROM information_schema.TABLES GROUP BY table_schema"
 
-    MYSQL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s -e "SELECT VERSION();" | grep -o '^[0-9]\+')
-    MYSQL_FULL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s -e "SELECT VERSION();")
+    MYSQL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--protocol=socket --socket="$1"} -s -e "SELECT VERSION();" | grep -o '^[0-9]\+')
+    MYSQL_FULL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--protocol=socket --socket="$1"} -s -e "SELECT VERSION();")
 
     echo "<<<mysql_replica_slave>>>"
     echo "$INSTANCE_HEADER"
@@ -49,7 +49,7 @@ do_query() {
     else
         STATUS_COMMAND="SHOW SLAVE STATUS\G"
     fi
-    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
+    $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--protocol=socket --socket="$1"} -s \
         -e "$STATUS_COMMAND"
 
 }

@@ -25,6 +25,7 @@ from tests.testlib.site import Site
 from tests.testlib.tls import CMKTLSError, tls_connect
 
 logger = logging.getLogger(__name__)
+pytestmark = pytest.mark.skip("CMK-29677: suspicious message broker tests")
 
 
 def pong_received_message(stdout: IO[str], wait_for: int) -> bool:

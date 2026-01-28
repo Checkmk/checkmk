@@ -136,12 +136,16 @@ def expected_items() -> dict[str, list[str]]:
         ],
         "bi": ["bi_packs"],
         "users": users_items,
+        "exporter": ["wato.py?connector_type=microsoft_entra_id&mode=oauth2_connections"],
     }
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_items_dict.update(
             {
-                "exporter": ["influxdb_connections"],
+                "exporter": [
+                    "influxdb_connections",
+                    "wato.py?connector_type=microsoft_entra_id&mode=oauth2_connections",
+                ],
                 "synthetic_monitoring": ["robotmk_managed_robots_overview"],
             }
         )

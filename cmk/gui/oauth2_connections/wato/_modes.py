@@ -225,12 +225,34 @@ class OAuth2ModeType(SimpleModeType[OAuth2Connection]):
         return [ConfigDomainCore()]
 
 
+class MicrosoftEntraIdModeType(SimpleModeType[OAuth2Connection]):
+    def type_name(self) -> str:
+        return "microsoft_entra_id"
+
+    def name_singular(self) -> str:
+        return _("Microsoft Entra ID connection")
+
+    def is_site_specific(self) -> bool:
+        return False
+
+    def can_be_disabled(self) -> bool:
+        return False
+
+    def edit_mode_name(self) -> str:
+        return "edit_oauth2_connection"
+
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
+        return [ConfigDomainCore()]
+
+
 class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     @classmethod
     def name(cls) -> str:
         return "oauth2_connections"
 
     def _table_title(self) -> str:
+        if self._connector_type == "microsoft_entra_id":
+            return _("Microsoft Entra ID connections")
         return _("OAuth2 connections")
 
     @staticmethod
@@ -238,16 +260,30 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         return ["general.oauth2_connections", "passwords"]
 
     def __init__(self) -> None:
+        self._connector_type = request.get_ascii_input("connector_type")
+        mode_type: SimpleModeType[OAuth2Connection]
+        match self._connector_type:
+            case "microsoft_entra_id":
+                mode_type = MicrosoftEntraIdModeType()
+            case _:
+                mode_type = OAuth2ModeType()
+
         super().__init__(
-            mode_type=OAuth2ModeType(),
+            mode_type=mode_type,
             store=OAuth2ConnectionsConfigFile(),
         )
 
     def title(self) -> str:
+        if self._connector_type == "microsoft_entra_id":
+            return _("Microsoft Entra ID connections")
         return _("OAuth2 connections")
 
     def page(self, config: Config) -> None:
-        super().page(config)
+        self._show_table(
+            self._filter_for_connector_type(
+                self._store.filter_editable_entries(self._store.load_for_reading())
+            )
+        )
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
@@ -289,9 +325,21 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             inpage_search=PageMenuSearch(),
         )
 
+    def _filter_for_connector_type(
+        self, entries: dict[str, OAuth2Connection]
+    ) -> dict[str, OAuth2Connection]:
+        if self._connector_type is None:
+            return entries
+        return {
+            ident: entry
+            for ident, entry in entries.items()
+            if entry["connector_type"] == self._connector_type
+        }
+
     def _show_entry_cells(self, table: Table, ident: str, entry: OAuth2Connection) -> None:
         table.cell(_("Title"), entry["title"])
-        table.cell(_("Connector type"), entry["connector_type"])
+        if self._connector_type is None:
+            table.cell(_("Connector type"), entry["connector_type"])
         table.cell(_("ID"), ident)
 
     @override

@@ -9,7 +9,7 @@ repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_lice
 bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.0")
 bazel_dep(name = "aspect_rules_js", version = "2.3.7")
-bazel_dep(name = "aspect_rules_lint", version = "2.0.0-beta.0")
+bazel_dep(name = "aspect_rules_lint", version = "2.0.0")
 bazel_dep(name = "aspect_rules_py", version = "1.5.2")
 bazel_dep(name = "aspect_rules_ts", version = "3.6.0")
 bazel_dep(name = "aspect_rules_webpack", version = "0.17.0")
@@ -125,17 +125,11 @@ single_version_override(
     module_name = "aspect_rules_lint",
     patch_strip = 1,
     patches = [
-        # https://github.com/aspect-build/rules_lint/pull/597
-        "//bazel/patches:rules_lint-clang_tidy.patch",
         "//bazel/patches:rules_lint-groovy.patch",
-        # https://github.com/aspect-build/rules_lint/pull/689
-        "//bazel/patches:rules_lint-no_lint_tag_with_clang_tidy.patch",
         # https://github.com/aspect-build/rules_lint/issues/690
         "//bazel/patches:rules_lint-fix-ruff-sarif-output.patch",
-        # https://github.com/aspect-build/rules_lint/pull/704
-        "//bazel/patches:rules_lint-bandit.patch",
     ],
-    version = "2.0.0-beta.0",
+    version = "2.0.0",
 )
 
 single_version_override(

@@ -11,6 +11,12 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.5.0b1"
 
+case "$(uname -m)" in
+    arm* | aarch64)
+        exit 1
+        ;;
+esac
+
 if [ -z "${MK_LIBDIR}" ] || [ ! -d "${MK_LIBDIR}" ]; then
     echo "MK_LIBDIR is not set or not directory"
     exit 1

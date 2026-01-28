@@ -598,5 +598,8 @@ rule_spec_oracle_bakelet = AgentConfig(
     title=Title("Unified Oracle Plugin (Beta)"),
     topic=Topic.DATABASES,
     parameter_form=_agent_config_mk_oracle,
-    help_text=Help("This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."),
+    help_text=Help(
+        "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system.<br>"
+        "ARM architecture is not supported."
+    ),
 )

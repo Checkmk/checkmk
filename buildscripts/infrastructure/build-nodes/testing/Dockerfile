@@ -45,12 +45,13 @@ ENV \
 
 # above image is ubuntu-22.04:master-latest
 # docker inspect -f "{{ .Size }}" testing-ubuntu-checkmk-master:latest
-# 3849MB (3849192841)
+# 3807MB (3807205202)
 # bash is required to be used in Jenkins with image.inside(), requires +0MB
 # curl is required to download artifacts, requires +0MB
 # cmake is required to install iwyu, requires +34MB
 # git is required to use tests and install iwyu, requires +0MB
 # gpg is required to use installation scripts, requires +0MB
+# libaio1 is required by mk-oracle component testing, requires +1MB
 # lsb-release is required to use installation scripts, requires +0MB
 # lz4 is required to tar home cache folder, requires +1MB
 # make is required for installations, requires +0MB
@@ -64,6 +65,7 @@ RUN apt-get update && \
         curl \
         git \
         gpg \
+        libaio1 \
         lsb-release \
         lz4 \
         make \

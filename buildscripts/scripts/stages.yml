@@ -523,20 +523,20 @@ STAGES:
     - NAME: "Package livestatus"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_LIVESTATUS_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/livestatus"
-      COMMAND: "./run --build --unit-tests --lint=iwyu &> ${RESULTS}/livestatus.txt"
+      COMMAND: "./run --build --unit-tests --lint=iwyu"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Livestatus files changed"
       RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
+      RESULT_CHECK_FILE_PATTERN: "livestatus.txt"
 
     - NAME: "Package cmc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES
       DIR: "non-free/packages/cmc"
-      COMMAND: "./run --build --lint=iwyu &> ${RESULTS}/cmc.txt"
+      COMMAND: "./run --build --lint=iwyu"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmc files changed"
       RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
+      RESULT_CHECK_FILE_PATTERN: "cmc.txt"
 
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
@@ -582,10 +582,10 @@ STAGES:
     - NAME: "Package cmk-update-agent"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_UPDATE_AGENT_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "non-free/packages/cmk-update-agent"
-      COMMAND: "./run --unit-tests &> ${RESULTS}/cmk-update-agent.txt"
+      COMMAND: "./run --unit-tests"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-update-agent files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-update-agent.txt"
+      RESULT_CHECK_FILE_PATTERN: "cmk-update-agent.txt"
 
     - NAME: "Package cmk-frontend-vue"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES
@@ -617,28 +617,28 @@ STAGES:
           - "CI_TEST_SQL_DB_ENDPOINT"
           - "CI_ORA2_DB_TEST_PASSWORD"
       DIR: "packages/mk-oracle"
-      COMMAND: "./run --build --unit-tests --component-tests --lint=clippy &> ${RESULTS}/mk-oracle.txt"
+      COMMAND: "./run --build --unit-tests --component-tests --lint=clippy"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-oracle files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/mk-oracle.txt"
+      RESULT_CHECK_FILE_PATTERN: "mk-oracle.txt"
 
     - NAME: "Package neb"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES
       DIR: "packages/neb"
-      COMMAND: "./run --build --lint=iwyu &> ${RESULTS}/neb.txt"
+      COMMAND: "./run --build --lint=iwyu"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No neb files changed"
       RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/neb.txt"
+      RESULT_CHECK_FILE_PATTERN: "neb.txt"
 
     - NAME: "Package unixcat"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_UNIXCAT_FILES
       DIR: "packages/unixcat"
-      COMMAND: "./run --build --lint=iwyu &> ${RESULTS}/unixcat.txt"
+      COMMAND: "./run --build --lint=iwyu"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No unixcat files changed"
       RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
+      RESULT_CHECK_FILE_PATTERN: "unixcat.txt"
 
     - NAME: "Package cmk-frontend"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES,CHANGED_JS_DEPENDENCIES

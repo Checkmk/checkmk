@@ -34,7 +34,7 @@ void main() {
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
-    def output_file = params.PACKAGE_PATH.split("/")[-1] + ".log";
+    def output_file = params.PACKAGE_PATH.split("/")[-1] + ".txt";
 
     def inside_container_args = [
         init: true,

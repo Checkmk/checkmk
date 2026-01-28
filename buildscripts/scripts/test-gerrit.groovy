@@ -138,8 +138,7 @@ void main() {
                             break;
                     }
 
-                    // use another switch statement to apply k8s specific settings
-                    // to be removed with CMK-25972
+                    // use another switch statement to apply k8s specific settings and/or job paths, CMK-25972
                     switch ("${item.NAME}") {
                         case "Agent Plugin Unit Tests":
                             relative_job_name = "${branch_base_folder}/cv/trigger-test-agent-plugin-unit";
@@ -147,14 +146,23 @@ void main() {
                                 CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
                             ];
                             break;
-                        case "Package cmk-agent-receiver":  // Tries to start docker containers
-                        case "Package cmk-relay-engine":    // Tries to start docker containers
-                        case "Package cmc":                 // Requires the C++ toolchain in /opt, clang tooling, and IWYU
-                        case "Package neb":                 // Requires the C++ toolchain in /opt, clang tooling, and IWYU
-                        case "Package livestatus":          // Requires the C++ toolchain in /opt, clang tooling, and IWYU
-                        case "Package unixcat":             // Requires the C++ toolchain in /opt, clang tooling, and IWYU
-                        case "Package cmk-update-agent":    // Failing tests in k8s, detailed analysis outstanding
-                        case "Package mk-oracle":           // Runs integration tests in CV, wants to install libaio
+                        case "Package cmc":
+                        case "Package neb":
+                        case "Package livestatus":
+                        case "Package unixcat":
+                        case "Package cmk-update-agent":
+                        case "Package mk-oracle":
+                            relative_job_name = "${branch_base_folder}/builders/build-cmk-package-k8s";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                                COMMAND_LINE: item.COMMAND.replace("${checkout_dir}/", ""),
+                                PACKAGE_PATH: item.DIR,
+                                DISTRO: "REFERENCE_IMAGE",
+                                SECRET_VARS: item.SEC_VAR_LIST ? item.SEC_VAR_LIST.join(" ") : "",
+                            ];
+                            break;
+                        case "Package cmk-agent-receiver":  // Tries to start docker containers, CMK-29585
+                        case "Package cmk-relay-engine":    // Tries to start docker containers, CMK-29585
                         // exception: The 'enchant' C library was not found and maybe needs to be installed.
                         case "Software Documentation Generation":
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";

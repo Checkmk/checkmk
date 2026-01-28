@@ -5,6 +5,7 @@
 void main() {
     def python_version = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD;
     def distro = params.DISTRO;
+    def output_file = "agent-plugin-unit-junit-${python_version}.txt";
 
     dir("${checkout_dir}") {
         stage("Test for python${python_version}") {
@@ -32,8 +33,13 @@ void main() {
                     cp -r agents/ /agents/
                     find tests/agent-plugin-unit/ -maxdepth 1 -type f -exec cp {} /tests/ \\;
 
-                    python${python_version} -m pytest "/tests"
+                    python${python_version} -m pytest "/tests" 2>&1 | tee ${output_file}
                 """);
+
+                archiveArtifacts(
+                    artifacts: "${output_file}",
+                    fingerprint: true,
+                );
             }
         }
     }

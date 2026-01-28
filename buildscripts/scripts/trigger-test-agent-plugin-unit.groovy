@@ -53,8 +53,8 @@ void main() {
                         CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                     ],
+                    dest: checkout_dir,
                     no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
                 );
             }
         }]
@@ -62,6 +62,20 @@ void main() {
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
+
+    stage("Concat artifacts") {
+        dir("${checkout_dir}") {
+            sh("""
+                mkdir results
+                cat agent-plugin-unit-junit-*.txt > results/agent-plugin-unit-junit.txt
+            """);
+
+            archiveArtifacts(
+                artifacts: "results/agent-plugin-unit-junit.txt",
+                fingerprint: true,
+            );
+        }
     }
 }
 

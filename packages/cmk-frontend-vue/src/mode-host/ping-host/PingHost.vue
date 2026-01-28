@@ -314,6 +314,12 @@ interface DNSStatus {
 }
 
 function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean): DNSStatus {
+  if (response!.result_code === undefined) {
+    return {
+      tooltip: _t('Unexpected response from server please check your crash reports and logs.'),
+      status: 'error'
+    }
+  }
   switch (response.result_code) {
     case 0:
       switch (response.result.status_code) {

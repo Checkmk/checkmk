@@ -4,10 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
+
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.plugins.dell.lib import DETECT_OPENMANAGE
@@ -15,12 +20,14 @@ from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 check_info = {}
 
 
-def discover_dell_om_fans(info):
+def discover_dell_om_fans(info: StringTable) -> LegacyDiscoveryResult:
     for line in info:
         yield (line[0], {})
 
 
-def _construct_levels(warn_upper, crit_upper, warn_lower, crit_lower):
+def _construct_levels(
+    warn_upper: str, crit_upper: str, warn_lower: str, crit_lower: str
+) -> tuple[tuple[int, int] | tuple[None, None], tuple[int, int] | tuple[None, None]]:
     # We've seen several possibilities:
     # - 1, 2, 3, 4
     # - "", "", 3, 4
@@ -42,7 +49,9 @@ def _construct_levels(warn_upper, crit_upper, warn_lower, crit_lower):
     return lower, upper
 
 
-def check_dell_om_fans(item, params, info):
+def check_dell_om_fans(
+    item: str, params: Mapping[str, object], info: StringTable
+) -> LegacyCheckResult:
     translate_status = {
         "1": (3, "OTHER"),
         "2": (3, "UNKNOWN"),

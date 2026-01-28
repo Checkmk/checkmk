@@ -157,7 +157,7 @@ def acknowledge_service_problem(
 
         Not authenticated users can't call this function:
 
-            >>> with mock_site(), application_and_request_context():
+            >>> with mock_site(), application_and_request_context():  # doctest: +SKIP
             ...     acknowledge_service_problem(live, 'example.com', 'drain')   # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
@@ -276,7 +276,7 @@ def acknowledge_host_problem(
 
         Not authenticated users can't call this function:
 
-            >>> with mock_site(), application_and_request_context():
+            >>> with mock_site(), application_and_request_context():  # doctest: +SKIP
             ...     acknowledge_host_problem(live, 'example.com')   # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...

@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 from itertools import groupby
-from typing import Final, Protocol
+from typing import Protocol
 
 from cmk.gui.i18n import _
 from cmk.shared_typing.unified_search import (
@@ -16,9 +16,6 @@ from cmk.shared_typing.unified_search import (
 )
 
 type CollapsedResult = tuple[Sequence[UnifiedSearchResultItem], UnifiedSearchResultCounts]
-
-_EDIT_TITLE: Final = _("Edit")
-_HOST_TOPIC_TITLE: Final = "Hosts"
 
 
 class Collapser(Protocol):
@@ -95,12 +92,12 @@ def _collapse_host_items(
         title=monitoring_items[0].title,
         target=monitoring_items[0].target,
         provider=ProviderName.monitoring,
-        topic=_HOST_TOPIC_TITLE,
+        topic="Hosts",
         context=", ".join(item.topic for item in monitoring_items),
         inline_buttons=[
             UnifiedSearchResultItemInlineButton(
                 target=setup_item.target,
-                title=_EDIT_TITLE,
+                title=_("Edit"),
             )
         ]
         if setup_item

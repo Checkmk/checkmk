@@ -14,6 +14,7 @@ CMK_VERSION="2.6.0b1"
 # sample output of pgrep command
 # 1051 /usr/bin/redis-server 127.0.0.1:6380
 # 1324 /usr/bin/redis-server 127.0.0.1:6379
+# 1612 /usr/bin/valkey-server 127.0.0.1:6379
 
 # example cfg file /etc/check_mk/mk_redis.cfg
 #
@@ -55,13 +56,26 @@ redis_args() {
         REDIS_ARGS=("-h" "${!HOST}" "-p" "${!PORT}")
     fi
 
-    if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
-        REDIS_CLI_COMMAND="REDISCLI_AUTH='${!PASSWORD}' redis-cli"
-    else
+    REDIS_ARGS+=("info")
+
+    # detect usable redis-cli
+    if [[ "${!HOST}" == /omd/sites/* ]]; then
+        # use site redis-cli for redis instances in site
+        IFS="/" read -ra ADDR <<<"${!HOST}"
+        REDIS_CLI_COMMAND="/omd/sites/${ADDR[3]}/bin/redis-cli"
+    elif type redis-cli &>/dev/null; then
         REDIS_CLI_COMMAND="redis-cli"
+    elif type valkey-cli &>/dev/null; then
+        REDIS_CLI_COMMAND="valkey-cli"
+    else
+        REDIS_CLI_COMMAND="echo 'error: no cli found'"
+        REDIS_ARGS=()
+        return
     fi
 
-    REDIS_ARGS+=("info")
+    if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
+        REDIS_CLI_COMMAND="REDISCLI_AUTH='${!PASSWORD}' ${REDIS_CLI_COMMAND}"
+    fi
 }
 
 main() {
@@ -76,7 +90,7 @@ main() {
     if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
         IS_DETECTED=true
         # find instances and remove entries like "*:6879", possible with docker container
-        DETECTED=$(pgrep -xa "redis-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ || /unixsocket:.*/ { print $3 }')
+        DETECTED=$(pgrep -xa "(redis|valkey)-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ || /unixsocket:.*/ { print $3 }')
 
         # add found redis instances
         for REDIS_INSTANCE in $DETECTED; do
@@ -112,13 +126,7 @@ main() {
         # print server section
         echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
-        if [[ "${!HOST}" == /omd/sites/* ]]; then
-            # use site redis-cli for redis instances in site
-            IFS="/" read -ra ADDR <<<"${!HOST}"
-            output=$(waitmax 3 bash -c "/omd/sites/${ADDR[3]}/bin/redis-cli ${REDIS_ARGS[*]}" 2>&1 || true)
-        else
-            output=$(waitmax 3 bash -c "${REDIS_CLI_COMMAND} ${REDIS_ARGS[*]}" 2>&1 || true)
-        fi
+        output=$(waitmax 3 bash -c "${REDIS_CLI_COMMAND} ${REDIS_ARGS[*]}" 2>&1 || true)
 
         if [[ "$output" == *"Could not connect to Redis at ${!HOST}: Permission denied"* ]]; then
             # mark error explicitly for easier parsing

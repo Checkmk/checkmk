@@ -237,35 +237,6 @@ const valueRange: Ref<[number, number] | undefined> = computed(() => {
 
 .db-content-top-list__perfometer {
   width: 150px;
-
-  > div {
-    position: relative;
-    height: 22px;
-    filter: saturate(50%);
-
-    > div {
-      height: 100%;
-    }
-  }
-}
-
-.db-content-top-list__perfometer-bar {
-  padding-left: var(--dimension-1);
-}
-
-.db-content-top-list__perfometer-value {
-  position: absolute;
-  top: var(--dimension-1);
-  z-index: 40;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  font-weight: var(--font-weight-bold);
-  line-height: 22px;
-  color: var(--font-perfometer-color);
-  text-align: center;
-  white-space: nowrap;
 }
 
 .db-content-top-list__no-entries {

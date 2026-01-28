@@ -37,6 +37,7 @@ from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
 
+from ._const import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from ._crash import create_crash_report
 from ._fs import (
     get_cmc_host_dir,
@@ -95,24 +96,6 @@ class RRDSpec:
         return cls(format_, host, service, metrics)
 
 
-rra_default_config = [
-    "RRA:AVERAGE:0.50:1:2880",
-    "RRA:AVERAGE:0.50:5:2880",
-    "RRA:AVERAGE:0.50:30:4320",
-    "RRA:AVERAGE:0.50:360:5840",
-    "RRA:MAX:0.50:1:2880",
-    "RRA:MAX:0.50:5:2880",
-    "RRA:MAX:0.50:30:4320",
-    "RRA:MAX:0.50:360:5840",
-    "RRA:MIN:0.50:1:2880",
-    "RRA:MIN:0.50:5:2880",
-    "RRA:MIN:0.50:30:4320",
-    "RRA:MIN:0.50:360:5840",
-]
-
-rrd_heartbeat = 8460
-
-
 def _get_rrd_conf(
     config: RRDConfig, servicedesc: _RRDServiceName = "_HOST_"
 ) -> _RRDFileConfigWithFormat:
@@ -132,11 +115,11 @@ def _get_rrd_conf(
         step = rrdconf["step"]
         rrd_format = rrdconf.get("format", _default_rrd_format)
     else:
-        rra_config = sorted(rra_default_config)
+        rra_config = sorted(RRD_DEFAULT_CONFIG)
         step = 60
         rrd_format = _default_rrd_format
 
-    return rrd_format, rra_config, _Seconds(step), _RRDHeartbeat(rrd_heartbeat)
+    return rrd_format, rra_config, _Seconds(step), _RRDHeartbeat(RRD_HEARTBEAT)
 
 
 def _read_existing_metrics(info_file_path: Path) -> list[MetricName]:
@@ -174,7 +157,6 @@ def _create_rrd(
     type is CMC SINGLE. This mode is for extending existing RRDs by new metrics."""
     # We get the configured rrd_format here as well. But we rather trust what CMC
     # specifies.
-    _unused_configured_rrd_format, rra_config, step, heartbeat = _get_rrd_conf(config, spec.service)
 
     match spec.format:
         case "pnp_multiple":
@@ -190,6 +172,7 @@ def _create_rrd(
         return storage
     rrd_file_name = base_file_name
 
+    _unused_configured_rrd_format, rra_config, step, heartbeat = _get_rrd_conf(config, spec.service)
     migration_arguments = []  # List[str]
     migration_mapping = {}
     if os.path.exists(rrd_file_name):
@@ -707,13 +690,9 @@ def _fixup_pnp_xml_file(xml_path: Path) -> None:
     root = ET.parse(xml_path).getroot()
     for metric in root.iter("DATASOURCE"):
         metric_name = _text_attr(metric, "NAME")
-        if metric_name is None:
-            raise TypeError()
         ds_name = pnp_cleanup(metric_name)
 
         orig_rrd_file = _text_attr(metric, "RRDFILE")
-        if orig_rrd_file is None:
-            raise TypeError()
         rrdfile = orig_rrd_file.replace(".rrd", "_" + ds_name + ".rrd")
 
         _set_text_attr(metric, "RRDFILE", rrdfile)

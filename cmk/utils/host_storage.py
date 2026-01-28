@@ -463,6 +463,8 @@ def get_storage_format(format_option: object) -> StorageFormat:
     match format_option:
         case None:
             return StorageFormat.PICKLE
+        case StorageFormat() as already_parsed:
+            return already_parsed
         case str() as format_str:
             return StorageFormat.from_str(format_str)
     raise TypeError(format_option)

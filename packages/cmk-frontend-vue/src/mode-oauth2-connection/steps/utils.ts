@@ -12,6 +12,7 @@ export function buildRedirectUri(redirectUrl: string): string {
   ).replace('index.py', 'wato.py')
 
   const url = new URL(baseUri)
+  url.searchParams.delete('connector_type')
   url.searchParams.delete('clone')
   url.searchParams.delete('ident')
   url.searchParams.delete('entity_type_specifier')

@@ -6,6 +6,8 @@ new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.
 
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
+snap7_repository = use_repo_rule("//omd/packages/snap7:snap7_repository.bzl", "snap7_repository")
+
 bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.0")
 bazel_dep(name = "aspect_rules_js", version = "2.3.7")
@@ -406,17 +408,22 @@ http_archive(
     ],
 )
 
-http_archive(
-    name = "snap7",
-    build_file = "//omd/packages/snap7:BUILD.snap7.bazel",
-    sha256 = "fe137737b432d95553ebe5d5f956f0574c6a80c0aeab7a5262fb36b535df3cf4",
-    strip_prefix = "snap7-1.4.2",
+http_file(
+    name = "snap7_archive",
+    sha256 = "1f4270cde8684957770a10a1d311c226e670d9589c69841a9012e818f7b9f80e",
     urls = [
-        # since version 1.4.2 only 7z will be released. To get a tar.gz
-        # use the snap7 repackage target
-        # "https://sourceforge.net/projects/snap7/files/" + version_str + "snap7-full-" + version_str + ".7z",
-        UPSTREAM_MIRROR_URL + "snap7-1.4.2.tar.gz",
+        # Since version 1.4.2 only 7z will be released, http_archive does not
+        # support 7z (until we update to bazel 9), so we use a repository rule
+        # to download 7zip and use it to unpack the archive.
+        "https://sourceforge.net/projects/snap7/files/1.4.2/snap7-full-1.4.2.7z",
+        UPSTREAM_MIRROR_URL + "snap7-full-1.4.2.7z",
     ],
+)
+
+snap7_repository(
+    name = "snap7",
+    archive = "@snap7_archive//file:downloaded",
+    build_file = "//omd/packages/snap7:BUILD.snap7.bazel",
 )
 
 http_archive(

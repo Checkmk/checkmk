@@ -44,7 +44,7 @@ def _collapse_items(
     counts: UnifiedSearchResultCounts,
 ) -> CollapsedResult:
     collapsed_results: list[UnifiedSearchResultItem] = []
-    counts_monitoring = 0
+    collapsed_result_count = 0
 
     for _title, group in groupby(results, key=lambda item: item.title):
         host_monitoring_items: list[UnifiedSearchResultItem] = []
@@ -68,7 +68,7 @@ def _collapse_items(
 
         if len(host_monitoring_items) > 1 or (host_setup_item and host_monitoring_items):
             collapsed_results.append(_collapse_host_items(host_monitoring_items, host_setup_item))
-            counts_monitoring += len(host_monitoring_items) - 1
+            collapsed_result_count += len(host_monitoring_items) - 1
 
         if other_items:
             collapsed_results.extend(other_items)
@@ -79,7 +79,7 @@ def _collapse_items(
             # update counts to reflect the state when results have been collapsed.
             total=len(collapsed_results),
             setup=counts.setup,
-            monitoring=counts.monitoring - counts_monitoring,
+            monitoring=counts.monitoring - collapsed_result_count,
             customize=counts.customize,
         ),
     )

@@ -54,16 +54,17 @@ def check_postgres_bloat(item, params, parsed):
     index_abs_total = 0
 
     show_levels = False
-    last_table = ""
+    last_tablename = ""
     for line in database:
         tbloat = float(line["tbloat"])
         twasted = int(line["wastedbytes"])
         ibloat = float(line["ibloat"])
         iwasted = int(line["wastedibytes"])
 
-        table_abs_total += twasted if line["tablename"] != last_table else 0
+        if line["schemaname"] + "." + line["tablename"] != last_tablename:
+            table_abs_total += twasted
         index_abs_total += iwasted
-        last_table = line["tablename"]
+        last_tablename = line["schemaname"] + "." + line["tablename"]
 
         # Calculate highest loss
         if not table_perc_max or tbloat > float(table_perc_max["tbloat"]):
@@ -79,10 +80,10 @@ def check_postgres_bloat(item, params, parsed):
             if "%s_bloat_perc" % what in params:
                 warn, crit = params["%s_bloat_perc" % what]
                 if bloat >= crit:
-                    yield 2, "{} {} bloat: {}% (too high)".format(line["tablename"], what, bloat)
+                    yield 2, "{}.{} {} bloat: {}% (too high)".format(line["schemaname"], line["tablename"], what, bloat)
                     show_levels = True
                 elif bloat >= warn:
-                    yield 1, "{} {} bloat: {}% (too high)".format(line["tablename"], what, bloat)
+                    yield 1, "{}.{} {} bloat: {}% (too high)".format(line["schemaname"], line["tablename"], what, bloat)
                     show_levels = True
 
             if "%s_bloat_abs" % what in params:
@@ -90,7 +91,8 @@ def check_postgres_bloat(item, params, parsed):
                 if wasted >= crit:
                     yield (
                         2,
-                        "{} wasted {} bytes: {} (too high)".format(
+                        "{}.{} wasted {} bytes: {} (too high)".format(
+                            line["schemaname"],
                             line["tablename"],
                             what,
                             render.bytes(wasted),
@@ -100,7 +102,8 @@ def check_postgres_bloat(item, params, parsed):
                 elif wasted >= warn:
                     yield (
                         1,
-                        "{} wasted {} bytes: {} (too high)".format(
+                        "{}.{} wasted {} bytes: {} (too high)".format(
+                            line["schemaname"],
                             line["tablename"],
                             what,
                             render.bytes(wasted),
@@ -132,16 +135,18 @@ def check_postgres_bloat(item, params, parsed):
         ]:
             yield (
                 0,
-                "Maximum {} bloat at {}: {}".format(
+                "Maximum {} bloat at {}.{}: {}".format(
                     what,
+                    perc_max["schemaname"],
                     perc_max["tablename"],
                     render.percent(float(perc_max["%sbloat" % what[0]])),
                 ),
             )
             yield (
                 0,
-                "Maximum wasted {}space at {}: {}".format(
+                "Maximum wasted {}space at {}.{}: {}".format(
                     what,
+                    abs_max["schemaname"],
                     abs_max["tablename"],
                     render.bytes(int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])),
                 ),

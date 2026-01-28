@@ -17,12 +17,19 @@ from ._abstract import Fetcher, Mode
 from ._secrets import FetcherSecrets
 from .filecache import FileCache
 
-__all__ = [
-    "PlainFetcherTrigger",
-    "FetcherTrigger",
-]
-
 _TRawData = TypeVar("_TRawData", bound=Sized)
+
+
+class FetcherTriggerError(Exception):
+    def __init__(self, wrapped: Exception) -> None:
+        super().__init__()
+        self.wrapped = wrapped
+
+    def __str__(self) -> str:
+        return f"Locally failed to trigger fetcher: {self.wrapped}"
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.wrapped!r})"
 
 
 class FetcherTrigger(abc.ABC):
@@ -53,7 +60,7 @@ class FetcherTrigger(abc.ABC):
             raise
 
         except Exception as exc:
-            return result.Error(exc)
+            return result.Error(FetcherTriggerError(exc))
 
     @abc.abstractmethod
     def _trigger(

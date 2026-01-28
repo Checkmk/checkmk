@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
@@ -147,4 +148,10 @@ cc_test(
         ":test_utilities",
         "@gtest//:gtest_main",
     ],
+)
+
+build_test(
+    name = "build_test",
+    tags = ["cpp"],
+    targets = [":neb_shared"],
 )

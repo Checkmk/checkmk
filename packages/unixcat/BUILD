@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary", "cc_test")
@@ -44,4 +45,10 @@ cc_test(
     srcs = ["test/test.cc"],
     tags = ["cpp"],
     deps = [":unixcat"],
+)
+
+build_test(
+    name = "build_test",
+    tags = ["cpp"],
+    targets = [":unixcat"],
 )

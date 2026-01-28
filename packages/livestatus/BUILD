@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
@@ -121,4 +122,10 @@ cc_test(
         "@gtest//:gtest_main",
         "@re2",
     ],
+)
+
+build_test(
+    name = "build_test",
+    tags = ["cpp"],
+    targets = [":livestatus_shared"],
 )

@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 #   .--binary--------------------------------------------------------------.
 #   |                   _     _                                            |
@@ -17,8 +18,6 @@
 #   +----------------------------------------------------------------------+
 #   |                             main check                               |
 #   '----------------------------------------------------------------------'
-
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree
 from cmk.base.check_legacy_includes.raritan import (
@@ -33,7 +32,9 @@ from cmk.base.check_legacy_includes.raritan import (
 check_info = {}
 
 
-def discover_raritan_emx_sensors(parsed):
+def discover_raritan_emx_sensors(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> Iterable[tuple[str, None]]:
     return inventory_raritan_sensors(parsed, "binary" or "")
 
 
@@ -64,7 +65,9 @@ check_info["raritan_emx_sensors"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_emx_sensors_temp(parsed):
+def discover_raritan_emx_sensors_temp(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> Iterable[tuple[str, Mapping[str, Any]]]:
     return inventory_raritan_sensors_temp(parsed, "temp")
 
 
@@ -88,7 +91,9 @@ check_info["raritan_emx_sensors.temp"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_emx_sensors_airflow(parsed):
+def discover_raritan_emx_sensors_airflow(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> Iterable[tuple[str, None]]:
     return inventory_raritan_sensors(parsed, "airflow")
 
 
@@ -111,7 +116,9 @@ check_info["raritan_emx_sensors.airflow"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_emx_sensors_humidity(parsed):
+def discover_raritan_emx_sensors_humidity(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> Iterable[tuple[str, None]]:
     return inventory_raritan_sensors(parsed, "humidity")
 
 
@@ -134,7 +141,9 @@ check_info["raritan_emx_sensors.humidity"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_emx_sensors_pressure(parsed):
+def discover_raritan_emx_sensors_pressure(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> Iterable[tuple[str, None]]:
     return inventory_raritan_sensors(parsed, "pressure")
 
 

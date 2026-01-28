@@ -10,7 +10,6 @@ from typing import Protocol
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.resulttype import Result
 from cmk.ccc.version import Edition
-from cmk.gui.config import Config
 
 from ._graph_metric_expressions import QueryData, QueryDataError, QueryDataKey
 
@@ -30,7 +29,7 @@ class FetchTimeSeries(Protocol):
 class MetricBackend:
     edition: Edition
 
-    def get_time_series_fetcher(self, config: Config) -> FetchTimeSeries | None:
+    def get_time_series_fetcher(self) -> FetchTimeSeries | None:
         return None
 
 

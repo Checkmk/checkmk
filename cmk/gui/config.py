@@ -43,20 +43,6 @@ else:
         pass
 
 
-if cmk_version.edition(paths.omd_root) in {
-    cmk_version.Edition.ULTIMATE,
-    cmk_version.Edition.ULTIMATEMT,
-    cmk_version.Edition.CLOUD,
-}:
-    from cmk.gui.nonfree.ultimate.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
-        CCEConfig,
-    )
-else:
-    # Stub needed for non-cloud editions
-    class CCEConfig:  # type: ignore[no-redef]
-        pass
-
-
 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
     from cmk.gui.nonfree.ultimatemt.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
         CMEConfig,
@@ -93,7 +79,7 @@ builtin_role_ids: Final[list[RoleName]] = [
 
 
 @dataclass
-class Config(CREConfig, CEEConfig, CCEConfig, CMEConfig):  # type: ignore[misc, unused-ignore]
+class Config(CREConfig, CEEConfig, CMEConfig):  # type: ignore[misc, unused-ignore]
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.

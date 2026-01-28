@@ -371,7 +371,7 @@ class PainterServiceGraphs(Painter):
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
-            ].get_time_series_fetcher(self.config),
+            ].get_time_series_fetcher(),
             show_time_range_previews=True,
         )
 
@@ -425,7 +425,7 @@ class PainterHostGraphs(Painter):
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
-            ].get_time_series_fetcher(self.config),
+            ].get_time_series_fetcher(),
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
@@ -505,7 +505,7 @@ class PainterSvcPnpgraph(Painter):
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
-            ].get_time_series_fetcher(self.config),
+            ].get_time_series_fetcher(),
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
@@ -561,7 +561,7 @@ class PainterHostPnpgraph(Painter):
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
-            ].get_time_series_fetcher(self.config),
+            ].get_time_series_fetcher(),
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:

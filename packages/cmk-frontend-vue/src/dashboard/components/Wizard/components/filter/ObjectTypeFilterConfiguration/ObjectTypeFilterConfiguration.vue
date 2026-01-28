@@ -45,7 +45,7 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
 </script>
 
 <template>
-  <CmkCatalogPanel :title="filterLabels.title">
+  <CmkCatalogPanel :title="filterLabels.title" variant="padded">
     <template #header>
       <CatalogPanelHeader :title="filterLabels.title" :help-text="filterLabels.tooltip" />
     </template>

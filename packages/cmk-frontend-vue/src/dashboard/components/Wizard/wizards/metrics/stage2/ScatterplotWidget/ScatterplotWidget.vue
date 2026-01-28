@@ -50,7 +50,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Data settings')">
+  <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
@@ -63,7 +63,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')">
+  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
     <WidgetVisualization
       v-model:show-title="handler.showTitle.value"
       v-model:show-title-background="handler.showTitleBackground.value"
@@ -77,7 +77,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Additional scatterplot options')" :open="false">
+  <CmkCatalogPanel :title="_t('Additional scatterplot options')" variant="padded" :open="false">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Scatterplot styling') }}</FieldDescription>

@@ -139,7 +139,7 @@ const handleUpdate = async () => {
 </script>
 
 <template>
-  <CmkCatalogPanel :title="_t('Public access')">
+  <CmkCatalogPanel :title="_t('Public access')" variant="padded">
     <CmkHeading type="h2">{{ _t('Anyone with this link can view the dashboard') }}</CmkHeading>
     <CmkLabel>{{ _t('Navigation and menus are hidden.') }}</CmkLabel>
 

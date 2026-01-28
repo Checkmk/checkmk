@@ -104,7 +104,7 @@ function saveWidget() {
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')">
+  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
     <WidgetVisualization
       v-model:show-title="visualizationProps.showTitle.value"
       v-model:show-title-background="visualizationProps.showTitleBackground.value"

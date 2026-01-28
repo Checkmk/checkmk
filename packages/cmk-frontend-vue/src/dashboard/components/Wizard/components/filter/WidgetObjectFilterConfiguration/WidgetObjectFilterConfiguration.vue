@@ -104,7 +104,7 @@ const displayLabels = computed(() => {
 
 <template>
   <div v-if="showContextFiltersSection" class="db-widget-object-filter-configuration__group">
-    <CmkCatalogPanel :title="displayLabels.contextFilterTitle" :open="false">
+    <CmkCatalogPanel :title="displayLabels.contextFilterTitle" :open="false" variant="padded">
       <template #header>
         <CatalogPanelHeader
           :title="displayLabels.contextFilterTitle"

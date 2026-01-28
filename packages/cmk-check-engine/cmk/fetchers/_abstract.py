@@ -61,8 +61,6 @@ class Fetcher(Generic[_TRawData], abc.ABC):
             return result.OK(self._fetch_from_io(mode))
         except MKTimeout:
             raise
-        except FetcherError:
-            raise
         except Exception as exc:
             return result.Error(FetcherError(repr(exc) if any(exc.args) else type(exc).__name__))
 

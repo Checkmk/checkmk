@@ -3,13 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-
 import time
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import (
     any_of,
     get_rate,
@@ -30,14 +26,13 @@ qlogic_fcport_inventory_admstates = ["1", "3"]
 
 # this function is needed to have the same port IDs in Checkmk
 # as within the Management interface of the device
-def qlogic_fcport_generate_port_id(port_id):
+def qlogic_fcport_generate_port_id(port_id: str) -> str:
     major, minor = port_id.split(".", 1)
-    minor = int(minor) - 1
-    port_id = f"{major}.{minor}"
-    return port_id
+    minor_int = int(minor) - 1
+    return f"{major}.{minor_int}"
 
 
-def discover_qlogic_fcport(info):
+def discover_qlogic_fcport(info: StringTable) -> list[tuple[str, None]]:
     inventory = []
 
     for (
@@ -79,7 +74,7 @@ def discover_qlogic_fcport(info):
     return inventory
 
 
-def check_qlogic_fcport(item, _no_params, info):
+def check_qlogic_fcport(item: str, _no_params: None, info: StringTable) -> LegacyResult:
     for (
         port_id,
         oper_mode,
@@ -232,12 +227,12 @@ def check_qlogic_fcport(item, _no_params, info):
                 ("F_BSY frames", "c2_fbsy_frames", c2_fbsy_frames),
                 ("F_RJT frames", "c2_frjt_frames", c2_frjt_frames),
             ]:
-                value = int(value)
+                value_int = int(value)  # type: ignore[call-overload]
                 per_sec = get_rate(
                     get_value_store(),
                     f"qlogic_fcport.{counter}.{port_id}",
                     this_time,
-                    value,
+                    value_int,
                     raise_overflow=True,
                 )
                 perfdata.append((counter, per_sec))

@@ -3,23 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 
 check_info = {}
 
 
-def discover_ipr400_temp(info):
+def discover_ipr400_temp(info: StringTable) -> LegacyDiscoveryResult:
     if len(info) > 0:
-        yield "Ambient", None
+        yield "Ambient", {}
 
 
-def check_ipr400_temp(item, params, info):
-    return check_temperature(int(info[0][0]), params, "ipr400_temp_%s" % item)
+def check_ipr400_temp(item: str, params: TempParamType, info: StringTable) -> LegacyCheckResult:
+    yield check_temperature(int(info[0][0]), params, "ipr400_temp_%s" % item)
 
 
 def parse_ipr400_temp(string_table: StringTable) -> StringTable:

@@ -147,7 +147,7 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$
 		--cpus=2 --memory=2g \
 		--rm \
 		--workdir /checkmk \
-		-v ../:/checkmk \
+		-v $(REPO_PATH)/:/checkmk \
 		-e "PYTEST_ADDOPTS" \
 		-e "PYTHON_VERSION_MAJ_MIN=$$PYTHON_VERSION" \
 		${DOCKER_REGISTRY_NO_HTTPS}/python:$$PYTHON_VERSION \

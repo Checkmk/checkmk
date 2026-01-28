@@ -16,9 +16,13 @@ import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
-import { getWelcomeStageInformation, markStepAsComplete } from '@/welcome/components/steps/utils.ts'
 
 import { type StepId, totalSteps } from '../steps/stepComponents'
+import { getWelcomeStageInformation, markStepAsComplete } from '../steps/utils'
+
+interface CmkWindow extends Window {
+  main: Window
+}
 
 const { _t } = usei18n()
 
@@ -46,6 +50,11 @@ async function stepCompleted(stepId: StepId): Promise<void> {
           stageInformation.value
       }
     })
+
+    const mainIframe = (top!.frames as CmkWindow).main
+    if (mainIframe && mainIframe.location.href.indexOf('welcome.py') >= 0) {
+      mainIframe.location.reload()
+    }
   }
 }
 

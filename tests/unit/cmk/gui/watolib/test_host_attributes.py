@@ -8,7 +8,9 @@ import pytest
 
 import cmk.gui.watolib.host_attributes as attrs
 from cmk.gui.config import active_config, Config
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.host_attributes import all_host_attributes
+from cmk.rulesets.v1 import Help, Title
 from tests.testlib.common.repo import (
     is_pro_repo,
     is_ultimate_repo,
@@ -640,3 +642,23 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         assert names == topics.get(topic_id, []), (
             "Expected attributes not specified for topic %r" % topic_id
         )
+
+
+def test_custom_host_attribute_has_form_spec() -> None:
+    custom_host_attribute = CustomHostAttrSpec(
+        type="TextAscii",
+        name="custom_attr",
+        title="Custom Attribute",
+        help="Custom attribute for testing",
+        topic="Custom topic",
+        add_custom_macro=False,
+        show_in_table=None,
+    )
+
+    all_attributes = all_host_attributes([custom_host_attribute], [])
+
+    attr = all_attributes["custom_attr"]
+    assert isinstance(attr, attrs.ABCHostAttributeValueSpec)
+    fs = attr.form_spec()
+    assert fs.title == Title("Custom Attribute")
+    assert fs.help_text == Help("Custom attribute for testing")

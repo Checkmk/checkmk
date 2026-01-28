@@ -17,7 +17,6 @@ from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, Ser
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.gui.background_job import BackgroundProcessInterface
-from cmk.gui.http import request
 from cmk.gui.watolib import automation_background_job
 from cmk.gui.watolib.automation_background_job import CheckmkAutomationBackgroundJob
 from cmk.gui.watolib.automations import CheckmkAutomationRequest
@@ -84,33 +83,30 @@ class TestCheckmkAutomationBackgroundJob:
         "check_mk_local_automation_serialized",
         "save_text_to_file",
     )
-    def test_execute_automation_current_version(
-        self, monkeypatch: pytest.MonkeyPatch, request_context: None
-    ) -> None:
-        with monkeypatch.context() as m:
-            m.setattr(request, "headers", {"x-checkmk-version": "2.2.0i1"})
-            api_request = CheckmkAutomationRequest(
-                command="test",
-                args=None,
-                indata=None,
-                stdin_data=None,
-                timeout=None,
-            )
-            job = CheckmkAutomationBackgroundJob("job_id")
-            os.makedirs(job.get_work_dir())
-            job._execute_automation(
-                BackgroundProcessInterface(
-                    job.get_work_dir(),
-                    "job_id",
-                    logging.getLogger(),
-                    threading.Event(),
-                    lambda x: nullcontext(),
-                    open(os.devnull, "w"),
-                ),
-                api_request,
-                lambda: {},
-            )
-            assert RESULT == "(2, None)"
+    def test_execute_automation_current_version(self, request_context: None) -> None:
+        api_request = CheckmkAutomationRequest(
+            command="test",
+            args=None,
+            indata=None,
+            stdin_data=None,
+            timeout=None,
+        )
+        job = CheckmkAutomationBackgroundJob("job_id")
+        os.makedirs(job.get_work_dir())
+        job._execute_automation(
+            BackgroundProcessInterface(
+                job.get_work_dir(),
+                "job_id",
+                logging.getLogger(),
+                threading.Event(),
+                lambda x: nullcontext(),
+                open(os.devnull, "w"),
+            ),
+            api_request,
+            cmk_version.Version.from_str("2.5.0b1"),
+            lambda: {},
+        )
+        assert RESULT == "(2, None)"
 
     @pytest.mark.parametrize("set_version", [True, False])
     @pytest.mark.usefixtures(
@@ -119,30 +115,28 @@ class TestCheckmkAutomationBackgroundJob:
         "save_text_to_file",
     )
     def test_execute_automation_previous_version(
-        self, set_version: bool, monkeypatch: pytest.MonkeyPatch, request_context: None
+        self, set_version: bool, request_context: None
     ) -> None:
-        with monkeypatch.context() as m:
-            if set_version:
-                m.setattr(request, "headers", {"x-checkmk-version": "2.1.0p10"})
-            api_request = CheckmkAutomationRequest(
-                command="test",
-                args=None,
-                indata=None,
-                stdin_data=None,
-                timeout=None,
-            )
-            job = CheckmkAutomationBackgroundJob("job_id")
-            os.makedirs(job.get_work_dir())
-            job._execute_automation(
-                BackgroundProcessInterface(
-                    job.get_work_dir(),
-                    "job_id",
-                    logging.getLogger(),
-                    threading.Event(),
-                    lambda x: nullcontext(),
-                    open(os.devnull, "w"),
-                ),
-                api_request,
-                lambda: {},
-            )
-            assert RESULT == "i was very different previously"
+        api_request = CheckmkAutomationRequest(
+            command="test",
+            args=None,
+            indata=None,
+            stdin_data=None,
+            timeout=None,
+        )
+        job = CheckmkAutomationBackgroundJob("job_id")
+        os.makedirs(job.get_work_dir())
+        job._execute_automation(
+            BackgroundProcessInterface(
+                job.get_work_dir(),
+                "job_id",
+                logging.getLogger(),
+                threading.Event(),
+                lambda x: nullcontext(),
+                open(os.devnull, "w"),
+            ),
+            api_request,
+            cmk_version.Version.from_str("2.1.0p10" if set_version else "2.2.0i1"),
+            lambda: {},
+        )
+        assert RESULT == "i was very different previously" if set_version else "(2, None)"

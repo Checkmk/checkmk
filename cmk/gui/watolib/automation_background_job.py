@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from cmk.automations.results import result_type_registry, SerializedResult
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import Version
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobRegistry,
@@ -28,7 +29,10 @@ from cmk.gui.background_job import (
     JobTarget,
 )
 from cmk.gui.config import Config
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request
+
+# FYI: The "global" request object of the Flask framework is no true global. It is THREAD-LOCAL!
+from cmk.gui.http import request as thread_local_request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
@@ -92,6 +96,9 @@ class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutoma
                         job_id=job_id,
                         api_request=request.api_request,
                         user_permission_config=request.user_permission_config,
+                        for_cmk_version=str(
+                            cmk_version_of_remote_automation_source(thread_local_request)
+                        ),
                     ),
                 ),
                 InitialStatusArgs(
@@ -110,6 +117,7 @@ class CheckmkAutomationJobArgs(BaseModel, frozen=True):
     job_id: str
     api_request: CheckmkAutomationRequest
     user_permission_config: UserPermissionSerializableConfig
+    for_cmk_version: str
 
 
 def checkmk_automation_job_entry_point(
@@ -118,7 +126,11 @@ def checkmk_automation_job_entry_point(
 ) -> None:
     job = CheckmkAutomationBackgroundJob(args.job_id)
     job.execute_automation(
-        job_interface, args.api_request, args.user_permission_config, collect_all_hosts
+        job_interface=job_interface,
+        api_request=args.api_request,
+        user_permission_config=args.user_permission_config,
+        for_cmk_version=Version.from_str(args.for_cmk_version),
+        collect_all_hosts=collect_all_hosts,
     )
 
 
@@ -163,13 +175,14 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         automation_cmd: str,
         cmdline_cmd: Iterable[str],
         debug: bool,
+        for_cmk_version: Version,
     ) -> None:
         try:
             store.save_text_to_file(
                 path,
                 result_type_registry[automation_cmd]
                 .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source(request)),
+                .serialize(for_cmk_version=for_cmk_version),
             )
         except SyntaxError as e:
             msg = get_local_automation_failure_message(
@@ -186,17 +199,19 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         api_request: CheckmkAutomationRequest,
         user_permission_config: UserPermissionSerializableConfig,
+        for_cmk_version: Version,
         collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
     ) -> None:
         with job_interface.gui_context(
             UserPermissions.from_serialized_config(user_permission_config, permission_registry)
         ):
-            self._execute_automation(job_interface, api_request, collect_all_hosts)
+            self._execute_automation(job_interface, api_request, for_cmk_version, collect_all_hosts)
 
     def _execute_automation(
         self,
         job_interface: BackgroundProcessInterface,
         api_request: CheckmkAutomationRequest,
+        for_cmk_version: Version,
         collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
     ) -> None:
         self._logger.info("Starting automation: %s", api_request.command)
@@ -217,5 +232,6 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
             automation_cmd=api_request.command,
             cmdline_cmd=cmdline_cmd,
             debug=api_request.debug,
+            for_cmk_version=for_cmk_version,
         )
         job_interface.send_result_message(_("Finished."))

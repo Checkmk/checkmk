@@ -4,12 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping, MutableMapping
+from typing import Any
+
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import SNMPTree
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.check_legacy_includes.quanta import parse_quanta
+from cmk.base.check_legacy_includes.quanta import Item, parse_quanta
 from cmk.plugins.quanta.lib import DETECT_QUANTA
 
 check_info = {}
@@ -39,13 +45,15 @@ check_info = {}
 # .1.3.6.1.4.1.7244.1.2.1.3.3.1.9.2 500
 
 
-def check_quanta_fan(item, params, parsed):
+def check_quanta_fan(
+    item: str, params: Mapping[str, Any], parsed: MutableMapping[str, Item]
+) -> LegacyCheckResult:
     if not (entry := parsed.get(item)):
         return
 
     yield entry.status[0], "Status: %s" % entry.status[1]
 
-    if entry.value in (-99, None):
+    if entry.value is None or entry.value == -99:
         return
 
     levels = {
@@ -56,7 +64,7 @@ def check_quanta_fan(item, params, parsed):
     yield check_fan(entry.value, levels)
 
 
-def discover_quanta_fan(section):
+def discover_quanta_fan(section: MutableMapping[str, Item]) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 

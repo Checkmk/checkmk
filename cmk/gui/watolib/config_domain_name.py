@@ -159,21 +159,18 @@ class ABCConfigDomain(abc.ABC):
         filename = self.config_file(site_specific)
         if custom_site_path:
             filename = Path(custom_site_path) / os.path.relpath(filename, cmk.utils.paths.omd_root)
-        self._serialize_and_write_settings(settings, filename)
+
+        output = wato_fileheader()
+        for varname, value in settings.items():
+            output += f"{varname} = {pprint.pformat(value)}\n"
+
+        filename.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        store.save_text_to_file(filename, output)
 
     def save_site_globals(
         self, settings: GlobalSettings, custom_site_path: str | None = None
     ) -> None:
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)
-
-    @staticmethod
-    def _serialize_and_write_settings(settings: GlobalSettings, path: Path) -> None:
-        output = wato_fileheader()
-        for varname, value in settings.items():
-            output += f"{varname} = {pprint.pformat(value)}\n"
-
-        path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_text_to_file(path, output)
 
     @abc.abstractmethod
     def default_globals(self) -> GlobalSettings:

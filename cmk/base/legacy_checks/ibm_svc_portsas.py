@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-
 # mypy: disable-error-code="var-annotated"
+
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
@@ -37,7 +36,9 @@ check_info = {}
 # id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
 
 
-def parse_ibm_svc_portsas(string_table):
+def parse_ibm_svc_portsas(
+    string_table: Sequence[Sequence[str]],
+) -> Mapping[str, Mapping[str, str]]:
     dflt_header = [
         "id",
         "port_id",
@@ -70,7 +71,9 @@ def parse_ibm_svc_portsas(string_table):
     return parsed
 
 
-def discover_ibm_svc_portsas(parsed):
+def discover_ibm_svc_portsas(
+    parsed: Mapping[str, Mapping[str, str]],
+) -> Iterable[tuple[str, dict[str, object]]]:
     for item_name, data in parsed.items():
         status = data["status"]
         if status == "offline_unconfigured":
@@ -78,7 +81,9 @@ def discover_ibm_svc_portsas(parsed):
         yield item_name, {"current_state": status}
 
 
-def check_ibm_svc_portsas(item, params, parsed):
+def check_ibm_svc_portsas(
+    item: str, params: Mapping[str, Any], parsed: Mapping[str, Mapping[str, str]]
+) -> Iterable[tuple[int, str]]:
     if not (data := parsed.get(item)):
         return
     sasport_status = data["status"]

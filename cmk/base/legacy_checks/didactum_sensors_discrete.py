@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import DiscoveryResult, SNMPTree
 from cmk.base.check_legacy_includes.didactum import (
     discover_didactum_sensors,
     parse_didactum_sensors,
@@ -34,12 +34,16 @@ check_info = {}
 # .1.3.6.1.4.1.46501.5.1.1.7.101004 0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretValue.101004
 
 
-def discover_didactum_sensors_discrete_dry(parsed):
+def discover_didactum_sensors_discrete_dry(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> DiscoveryResult:
     yield from discover_didactum_sensors(parsed, "dry")
     yield from discover_didactum_sensors(parsed, "smoke")
 
 
-def check_didactum_sensors_discrete_dry(item, params, parsed):
+def check_didactum_sensors_discrete_dry(
+    item: str, params: Mapping[str, Any], parsed: Mapping[str, Mapping[str, Any]]
+) -> tuple[int, str]:
     if item in parsed.get("dry", {}):
         data = parsed["dry"][item]
     elif item in parsed.get("smoke", {}):

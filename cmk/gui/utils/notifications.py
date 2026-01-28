@@ -155,7 +155,7 @@ def effective_notification_horizon(with_acknowledgement: bool) -> float:
         acknowledged_time() if with_acknowledgement else 0,
         time.time()
         - (
-            active_config.failed_notification_horizon
+            active_config.notification_horizon
             if user.may("general.see_failed_notifications")
             else 86400
         ),

@@ -218,7 +218,7 @@ class CREConfig:
         ]
     )
 
-    failed_notification_horizon: int = 7 * 60 * 60 * 24
+    notification_horizon: int = 7 * 60 * 60 * 24
 
     #    _     _           _ _
     #   | |   (_)_ __ ___ (_) |_ ___

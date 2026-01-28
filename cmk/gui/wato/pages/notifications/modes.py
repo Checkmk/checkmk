@@ -880,7 +880,7 @@ class ModeNotifications(ABCNotificationsMode):
                 folder_preserving_link(
                     [
                         ("mode", "edit_configvar"),
-                        ("varname", "failed_notification_horizon"),
+                        ("varname", "notification_horizon"),
                     ]
                 )
             ),

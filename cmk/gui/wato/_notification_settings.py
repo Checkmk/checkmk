@@ -162,9 +162,9 @@ ConfigVariableNotificationLogging = ConfigVariable(
 ConfigVariableFailedNotificationHorizon = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
-    ident="failed_notification_horizon",
+    ident="notification_horizon",
     valuespec=lambda context: Age(
-        title=_("Failed notification horizon"),
+        title=_("Notification horizon"),
         help=_(
             "The tactical overview snap-in is reporting about notifications that could not be sent "
             'by Checkmk. Users with the permission "See failed notifications (all)" get the number '

@@ -20,36 +20,6 @@ exports_files([
     "product_telemetry/cmk_telemetry_cli.py",
 ] + LEGACY_CHECKS_DICT.keys())
 
-# TODO: Re-work this with edition_deps + check for duplicate in cmk/BUILD
-edition_python_deps = select({
-    "@cmk//edition:cloud": [
-        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
-        "//non-free/packages/cmk-metric-backend",
-        "//non-free/packages/cmk-mknotifyd",
-        "//non-free/packages/cmk-otel-collector",
-        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
-    ],
-    "@cmk//edition:community": [],
-    "@cmk//edition:pro": [
-        "//non-free/packages/cmk-mknotifyd",
-        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
-    ],
-    "@cmk//edition:ultimate": [
-        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
-        "//non-free/packages/cmk-metric-backend",
-        "//non-free/packages/cmk-mknotifyd",
-        "//non-free/packages/cmk-otel-collector",
-        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
-    ],
-    "@cmk//edition:ultimatemt": [
-        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
-        "//non-free/packages/cmk-metric-backend",
-        "//non-free/packages/cmk-mknotifyd",
-        "//non-free/packages/cmk-otel-collector",
-        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
-    ],
-})
-
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order
     "apispec",
@@ -376,23 +346,81 @@ py_library(
 )
 
 py_library(
+    name = "cmk_community",
+    srcs = COMMUNITY_PY,
+    imports = [".."],
+    visibility = ["//:__subpackages__"],
+    deps = [":lib_cmk"] + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
+
+py_library(
+    name = "cmk_cloud",
+    srcs = CLOUD_PY,
+    imports = [".."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":lib_cmk",
+        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
+    ] + CMC_PROTO_DEPS + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
+
+py_library(
+    name = "cmk_ultimate",
+    srcs = ULTIMATE_PY,
+    imports = [".."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":lib_cmk",
+        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
+    ] + CMC_PROTO_DEPS + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
+
+py_library(
+    name = "cmk_pro",
+    srcs = PRO_PY,
+    imports = [".."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":lib_cmk",
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
+    ] + CMC_PROTO_DEPS + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
+
+py_library(
+    name = "cmk_ultimatemt",
+    srcs = ULTIMATEMT_PY,
+    imports = [".."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":lib_cmk",
+        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+        "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
+    ] + CMC_PROTO_DEPS + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
+
+py_library(
     name = "cmk",
-    srcs = select({
-        "@cmk//edition:community": COMMUNITY_PY,
-        "@cmk//edition:cloud": CLOUD_PY,
-        "@cmk//edition:ultimate": ULTIMATE_PY,
-        "@cmk//edition:pro": PRO_PY,
-        "@cmk//edition:ultimatemt": ULTIMATEMT_PY,
-    }),
     imports = [".."],
     visibility = ["//tests:__subpackages__"],
     deps = ["lib_cmk"] + select({
-        "@cmk//edition:community": [],
-        "@cmk//edition:cloud": CMC_PROTO_DEPS,
-        "@cmk//edition:ultimate": CMC_PROTO_DEPS,
-        "@cmk//edition:pro": CMC_PROTO_DEPS,
-        "@cmk//edition:ultimatemt": CMC_PROTO_DEPS,
-    }) + edition_python_deps + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+        "@cmk//edition:community": [":cmk_community"],
+        "@cmk//edition:cloud": [":cmk_cloud"],
+        "@cmk//edition:ultimate": [":cmk_ultimate"],
+        "@cmk//edition:pro": [":cmk_pro"],
+        "@cmk//edition:ultimatemt": [":cmk_ultimatemt"],
+    }),
 )
 
 py_library(

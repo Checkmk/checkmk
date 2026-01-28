@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from omdlib.args_site_user import parse_arguments, Restore
-from omdlib.main import main_finalize_restore
+from typing import assert_never
+
+from omdlib.args_site_user import Copy, Move, parse_arguments, Restore
+from omdlib.main import main_finalize_copy, main_finalize_move, main_finalize_restore
 from omdlib.site_name import site_name_from_uid
 
 
@@ -15,8 +17,12 @@ def main() -> int:
     match args:
         case Restore():
             return main_finalize_restore(args)
-        case _:
-            raise NotImplementedError()
+        case Move():
+            return main_finalize_move(args)
+        case Copy():
+            return main_finalize_copy(args)
+        case _args:
+            assert_never(_args)
 
 
 if __name__ == "__main__":

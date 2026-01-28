@@ -26,7 +26,19 @@ class Restore(_Shared):
     kill: bool
 
 
-type Finalize = Annotated[Restore, Field(discriminator="command")]
+class Move(_Shared):
+    command: Literal["move"] = "move"
+    old_site: str
+    skeleton: Skeleton
+
+
+class Copy(_Shared):
+    command: Literal["copy"] = "copy"
+    old_site: str
+    skeleton: Skeleton
+
+
+type Finalize = Annotated[Restore | Move | Copy, Field(discriminator="command")]
 
 
 def args_to_command_line(args: Finalize, version: str = omdlib.__version__) -> list[str]:
@@ -43,6 +55,9 @@ def args_to_command_line(args: Finalize, version: str = omdlib.__version__) -> l
                 cmd_line.append("--reuse")
             if args.kill:
                 cmd_line.append("--kill")
+        case Move() | Copy():
+            cmd_line.extend(["--old-site", args.old_site])
+            cmd_line.extend(["--skeleton", args.skeleton.value])
     return cmd_line
 
 
@@ -90,6 +105,40 @@ def parse_arguments(sysv: Sequence[str] | None = None) -> Finalize:
         help="Whether to kill site processes",
     )
     parser_restore.add_argument(
+        "--skeleton",
+        choices=[c.value for c in Skeleton],
+        required=True,
+        help="The conflict option for renaming",
+    )
+
+    parser_move = subparser.add_parser(
+        "move",
+        parents=[shared_parser],
+        help="Finalize site move.",
+    )
+    parser_move.add_argument(
+        "--old-site",
+        required=True,
+        help="The previous name of the site",
+    )
+    parser_move.add_argument(
+        "--skeleton",
+        choices=[c.value for c in Skeleton],
+        required=True,
+        help="The conflict option for renaming",
+    )
+
+    parser_copy = subparser.add_parser(
+        "copy",
+        parents=[shared_parser],
+        help="Finalize site copy.",
+    )
+    parser_copy.add_argument(
+        "--old-site",
+        required=True,
+        help="The previous name of the site",
+    )
+    parser_copy.add_argument(
         "--skeleton",
         choices=[c.value for c in Skeleton],
         required=True,

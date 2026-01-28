@@ -35,7 +35,7 @@ from typing import (
 import omdlib
 import omdlib.backup
 import omdlib.utils
-from omdlib.args_site_user import args_to_command_line, Restore
+from omdlib.args_site_user import args_to_command_line, Copy, Move, Restore
 from omdlib.buffer import BufferWithCopy
 from omdlib.config_hooks import (
     config_set_all,
@@ -341,7 +341,6 @@ def walk_skel(
         "local/share/nagios",
         "local/share/nagios/htdocs",
         "local/share/nagios/htdocs/theme",
-        "var/check_mk/persisted",
     ]
 
     with contextlib.chdir(root):
@@ -396,9 +395,13 @@ def patch_skeleton_files(
     conflict_mode: Skeleton,
     old_site_name: str,
     new_site: SiteContext,
-    old_replacements: Replacements,
-    new_replacements: Replacements,
 ) -> None:
+    new_replacements = new_site.replacements()
+    old_replacements = {
+        "###SITE###": old_site_name,
+        "###ROOT###": SitePaths.from_site_name(old_site_name).home,
+        "###EDITION###": new_replacements["###EDITION###"],
+    }
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     with contextlib.chdir(skelroot):  # make relative paths
         for dirpath, _dirnames, filenames in os.walk("."):
@@ -2194,10 +2197,6 @@ def main_mv_or_cp(
     if not reuse:
         useradd(version_info, new_site, uid, gid)  # None for uid/gid means: let Linux decide
 
-    # Needs to be computed before the site is moved to be able to derive the version from the
-    # version symlink
-    old_replacements = old_site.replacements()
-
     old_site_home = SitePaths.from_site_name(old_site.name).home
     if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
@@ -2231,7 +2230,6 @@ def main_mv_or_cp(
     # give new user all files
     chown_tree(new_site_home, new_site.name)
 
-    old_site = site_environment_as_root(old_site_name, global_opts.verbose)
     # In case of mv now delete old user
     if command_type is CommandType.move and not reuse:
         userdel(old_site.name)
@@ -2244,19 +2242,37 @@ def main_mv_or_cp(
     if not reuse:
         add_to_fstab(new_site.name, new_site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
-    # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(
-        conflict_mode, old_site.name, new_site, old_replacements, new_site.replacements()
-    )
+    if command_type is CommandType.move:
+        finalize: Move | Copy = Move(
+            site=new_site.name,
+            verbose=global_opts.verbose,
+            old_site=old_site_name,
+            skeleton=conflict_mode,
+        )
+    else:
+        assert command_type is CommandType.copy
+        finalize = Copy(
+            site=new_site.name,
+            verbose=global_opts.verbose,
+            old_site=old_site_name,
+            skeleton=conflict_mode,
+        )
+    returncode = run_as_site_user(
+        new_site.name, args_to_command_line(finalize), False, None
+    ).returncode
 
-    outcome = finalize_site(
+    if returncode not in (0, 2):  # 2 - ignore warnings.
+        sys.exit("Error in non-privileged sub-process.")
+    outcome = FinalizeOutcome(returncode)
+    config = read_site_config(new_site_home)
+    register_with_system_apache(
         version_info,
-        old_site.name,
-        new_site,
-        {},
-        command_type,
+        SitePaths.from_site_name(new_site.name).apache_conf,
+        new_site.name,
+        config["APACHE_TCP_ADDR"],
+        config["APACHE_TCP_PORT"],
         "apache-reload" in options,
-        global_opts.verbose,
+        verbose=global_opts.verbose,
     )
     sys.exit(outcome.value)
 
@@ -2886,21 +2902,7 @@ def _process_backup_tar(
 
     # Change config files from old to new site (see rename_site())
     if old_site_name != new_site.name:
-        old_site = SiteContext(old_site_name)
-        old_site_home = SitePaths.from_site_name(old_site_name).home
-        site_replacements = new_site.replacements()
-        old_replacements = {
-            "###SITE###": old_site_name,
-            "###ROOT###": old_site_home,
-            "###EDITION###": site_replacements["###EDITION###"],
-        }
-        patch_skeleton_files(
-            conflict_mode,
-            old_site.name,
-            new_site,
-            old_replacements,
-            site_replacements,
-        )
+        patch_skeleton_files(conflict_mode, old_site_name, new_site)
 
 
 @contextlib.contextmanager
@@ -3351,5 +3353,31 @@ def main_finalize_restore(args: Restore) -> int:
         command_type=(
             CommandType.restore_existing_site if args.reuse else CommandType.restore_as_new_site
         ),
+        verbose=args.verbose,
+    ).value
+
+
+def main_finalize_move(args: Move) -> int:
+    site = site_environment_as_root(args.site, args.verbose)
+    patch_skeleton_files(args.skeleton, args.old_site, site)
+    os.environ["OLD_OMD_SITE"] = args.old_site
+    return finalize_site_as_user(
+        version_info=VersionInfo(),
+        site=site,
+        config=site.conf,
+        command_type=CommandType.move,
+        verbose=args.verbose,
+    ).value
+
+
+def main_finalize_copy(args: Copy) -> int:
+    site = site_environment_as_root(args.site, args.verbose)
+    patch_skeleton_files(args.skeleton, args.old_site, site)
+    os.environ["OLD_OMD_SITE"] = args.old_site
+    return finalize_site_as_user(
+        version_info=VersionInfo(),
+        site=site,
+        config=site.conf,
+        command_type=CommandType.copy,
         verbose=args.verbose,
     ).value

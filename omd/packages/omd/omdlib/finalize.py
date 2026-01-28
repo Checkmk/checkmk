@@ -208,7 +208,7 @@ def finalize_site(
             not os.WIFEXITED(status)
             or (outcome := FinalizeOutcome(os.WEXITSTATUS(status))) is FinalizeOutcome.ABORTED
         ):
-            sys.exit("Error in non-priviledged sub-process.")
+            sys.exit("Error in non-privileged sub-process.")
 
     # The config changes above, made with the site user, have to be also available for
     # the root user, so load the site config again. Otherwise e.g. changed

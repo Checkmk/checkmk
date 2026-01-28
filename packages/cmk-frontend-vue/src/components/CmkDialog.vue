@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { onMounted, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
@@ -19,8 +20,10 @@ export interface CmkDialogProps {
   title?: TranslatedString | undefined
   message: TranslatedString
   buttons?: { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
-  dismissal_button?: { title: TranslatedString; key: string }
+  dismissal_button?: { title: TranslatedString; key: DismissalButtonKey }
 }
+
+export type DismissalButtonKey = components['schemas']['UserDismissWarning']['warning']
 
 const props = defineProps<CmkDialogProps>()
 

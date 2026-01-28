@@ -26,7 +26,14 @@
       "type": "object",
       "properties": {
         "title": { "type": "string" },
-        "key": { "type": "string", "description": "Unique key for persisting dismissal state" }
+        "key": {
+          "enum": [
+            "notification_fallback",
+            "immediate_slideout_change",
+            "changes-info",
+            "agent_slideout"
+          ]
+        }
       },
       "required": ["title", "key"]
     },

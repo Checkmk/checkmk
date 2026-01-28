@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
@@ -119,6 +120,9 @@ const save = async () => {
     emit('save', uniqueId.value.trim(), generalSettings)
   }
 }
+
+const hasGeneralErrors = computed(() => nameErrors.value.length + uniqueIdErrors.value.length > 0)
+const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
 </script>
 
 <template>
@@ -145,9 +149,25 @@ const save = async () => {
 
       <CmkTabs v-model="openedTab">
         <template #tabs>
-          <CmkTab id="general">{{ _t('General') }}</CmkTab>
+          <CmkTab id="general" :variant="hasGeneralErrors ? 'error' : undefined">
+            <CmkIcon
+              v-if="hasGeneralErrors"
+              name="inline-error"
+              variant="inline"
+              size="large"
+              class="db-settings-wizard__error-icon"
+            />{{ _t('General') }}
+          </CmkTab>
           <CmkTab id="access">{{ _t('Access') }}</CmkTab>
-          <CmkTab id="visibility">{{ _t('Visibility') }}</CmkTab>
+          <CmkTab id="visibility" :variant="hasVisibilityErrors ? 'error' : undefined">
+            <CmkIcon
+              v-if="hasVisibilityErrors"
+              name="inline-error"
+              variant="inline"
+              size="large"
+              class="db-settings-wizard__error-icon"
+            />{{ _t('Visibility') }}</CmkTab
+          >
         </template>
         <template #tab-contents>
           <CmkTabContent id="general" class="db-settings-wizard__box">
@@ -201,5 +221,9 @@ const save = async () => {
 
 .db-settings-wizard__box {
   background-color: var(--ux-theme-2);
+}
+
+.db-settings-wizard__error-icon {
+  padding-top: var(--dimension-1);
 }
 </style>

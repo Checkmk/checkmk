@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -12,13 +13,15 @@ from cmk.plugins.ibm.lib import DETECT_IBM_IMM
 check_info = {}
 
 
-def discover_ibm_imm_fan(info):
+def discover_ibm_imm_fan(info: StringTable) -> Iterable[tuple[str, dict[str, Any]]]:
     for descr, speed_text in info:
         if speed_text.lower() != "offline":
             yield descr, {}
 
 
-def check_ibm_imm_fan(item, params, info):
+def check_ibm_imm_fan(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> Iterable[tuple[int, str]]:
     for descr, speed_text in info:
         if descr == item:
             if speed_text.lower() in ["offline", "unavailable"]:

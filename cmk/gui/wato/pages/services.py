@@ -22,7 +22,6 @@ from collections import Counter
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict
 from typing import Any, Literal, NamedTuple, override
-from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field
 
@@ -57,7 +56,7 @@ from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_en
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.agent_commands import agent_commands_registry
+from cmk.gui.utils.agent_commands import agent_commands_registry, get_server_per_site
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
@@ -792,16 +791,7 @@ class DiscoveryPageRenderer:
                 AgentDownload(
                     output=output,
                     site=self._host.site_id(),
-                    server_per_site=[
-                        AgentDownloadServerPerSite(
-                            site_id=site_id,
-                            server=server_name
-                            if config_key.get("multisiteurl")
-                            and (server_name := urlparse(config_key["multisiteurl"]).hostname)
-                            else request.host,
-                        )
-                        for site_id, config_key in active_config.sites.items()
-                    ],
+                    server_per_site=get_server_per_site(active_config, AgentDownloadServerPerSite),
                     agent_slideout=AgentSlideout(
                         all_agents_url=folder_preserving_link(
                             [("mode", "agent_of_host"), ("host", self._host.name())]

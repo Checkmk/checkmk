@@ -14,7 +14,7 @@ import abc
 from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import Final, Literal, overload, override
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote
 
 from livestatus import SiteConfigurations
 
@@ -48,6 +48,7 @@ from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.agent_commands import (
     agent_commands_registry,
+    get_server_per_site,
 )
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
@@ -411,16 +412,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         )
                     ],
                     default_relay_id_hash=DropdownChoice.option_id(""),
-                    server_per_site=[
-                        ModeHostServerPerSite(
-                            site_id=site_id,
-                            server=server_name
-                            if config_key.get("multisiteurl")
-                            and (server_name := urlparse(config_key["multisiteurl"]).hostname)
-                            else request.host,
-                        )
-                        for site_id, config_key in config.sites.items()
-                    ],
+                    server_per_site=get_server_per_site(config, ModeHostServerPerSite),
                     agent_connection_modes=[
                         ModeHostAgentConnectionMode(
                             id_hash=DropdownChoice.option_id(mode.value),

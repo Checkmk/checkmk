@@ -46,14 +46,20 @@ const close = () => {
   emit('close')
 }
 
-function replaceMacros(cmd: string | undefined) {
+function replaceMacros(cmd: string | undefined, isRegistration: boolean) {
   if (!cmd) {
     return ''
   }
-  return cmd
-    .replace(/{{HOSTNAME}}/g, props.hostName ?? '')
-    .replace(/{{SITE}}/g, props.siteId ?? '')
-    .replace(/{{SERVER}}/g, props.siteServer ?? '')
+
+  cmd = cmd.replace(/{{HOSTNAME}}/g, props.hostName ?? '').replace(/{{SITE}}/g, props.siteId ?? '')
+  if (isRegistration) {
+    return cmd.replace(/{{SERVER}}/g, props.siteServer || window.location.host)
+  }
+
+  return cmd.replace(
+    /{{SERVER}}/g,
+    props.siteServer || `${window.location.protocol}//${window.location.host}`
+  )
 }
 
 const tabs: AgentSlideOutTabs[] = [
@@ -63,11 +69,11 @@ const tabs: AgentSlideOutTabs[] = [
     installMsg: _t(
       'Run this command on your Windows host to download and install the Checkmk agent. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”)'
     ),
-    installCmd: replaceMacros(props.agentInstallCmds.windows),
+    installCmd: replaceMacros(props.agentInstallCmds.windows, false),
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”).'
     ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.windows)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.windows, true)
   },
   {
     id: 'linux',
@@ -75,9 +81,9 @@ const tabs: AgentSlideOutTabs[] = [
     installMsg: _t(
       'Run this command on your Linux host to download and install the Checkmk agent.'
     ),
-    installDebCmd: replaceMacros(props.agentInstallCmds.linux_deb),
-    installRpmCmd: replaceMacros(props.agentInstallCmds.linux_rpm),
-    installTgzCmd: replaceMacros(props.agentInstallCmds.linux_tgz),
+    installDebCmd: replaceMacros(props.agentInstallCmds.linux_deb, false),
+    installRpmCmd: replaceMacros(props.agentInstallCmds.linux_rpm, false),
+    installTgzCmd: replaceMacros(props.agentInstallCmds.linux_tgz, false),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,
@@ -91,14 +97,14 @@ const tabs: AgentSlideOutTabs[] = [
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your Linux host to register the Checkmk agent controller.'
     ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.linux),
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.linux, true),
     toggleButtonOptions: toggleButtonOptions
   },
   {
     id: 'solaris',
     title: _t('Solaris'),
     installMsg: _t('Run this command on your Solaris host to download the Checkmk agent.'),
-    installCmd: replaceMacros(props.agentInstallCmds.solaris),
+    installCmd: replaceMacros(props.agentInstallCmds.solaris, false),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,
@@ -112,13 +118,13 @@ const tabs: AgentSlideOutTabs[] = [
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your Solaris host to install the Checkmk agent.'
     ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.solaris)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.solaris, true)
   },
   {
     id: 'aix',
     title: _t('AIX'),
     installMsg: _t('Run this command on your AIX host to download and install the Checkmk agent.'),
-    installCmd: replaceMacros(props.agentInstallCmds.aix),
+    installCmd: replaceMacros(props.agentInstallCmds.aix, false),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,
@@ -132,7 +138,7 @@ const tabs: AgentSlideOutTabs[] = [
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your AIX host to register the Checkmk agent controller.'
     ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.aix)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.aix, true)
   }
 ]
 </script>

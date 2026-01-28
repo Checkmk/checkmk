@@ -73,16 +73,14 @@ def _collapse_items(
         if other_items:
             collapsed_results.extend(other_items)
 
-    return (
-        collapsed_results,
-        UnifiedSearchResultCounts(
-            # update counts to reflect the state when results have been collapsed.
-            total=len(collapsed_results),
-            setup=counts.setup,
-            monitoring=counts.monitoring - collapsed_result_count,
-            customize=counts.customize,
-        ),
+    updated_counts = UnifiedSearchResultCounts(
+        total=len(collapsed_results),
+        setup=counts.setup,
+        monitoring=counts.monitoring - collapsed_result_count,
+        customize=counts.customize,
     )
+
+    return collapsed_results, updated_counts
 
 
 def _collapse_host_items(

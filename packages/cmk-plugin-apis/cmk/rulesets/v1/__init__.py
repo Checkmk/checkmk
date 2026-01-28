@@ -68,10 +68,10 @@ def entry_point_prefixes() -> Mapping[
 
 __all__ = [
     "form_specs",
-    "Help",
+    "Title",
     "Label",
+    "Help",
     "Message",
     "entry_point_prefixes",
     "rule_specs",
-    "Title",
 ]

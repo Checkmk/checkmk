@@ -33,6 +33,8 @@ const props = defineProps<{
 const emit = defineEmits(['close'])
 const context = getWizardContext()
 const ott = ref<string | null | Error>(null)
+const ottExpiryDate = new Date()
+ottExpiryDate.setDate(ottExpiryDate.getDate() + 7)
 
 const regAgentCmd = computed(() => {
   if (props.tab.registrationCmd) {
@@ -75,7 +77,7 @@ function reset() {
             :token-generation-body="{
               host: hostName,
               comment: 'Agent registration token for agent slideout',
-              expires_at: null
+              expires_at: ottExpiryDate
             }"
             :description="_t('This requires the generation of a registration token.')"
           />

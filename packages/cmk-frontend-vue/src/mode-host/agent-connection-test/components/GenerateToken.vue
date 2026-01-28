@@ -56,7 +56,10 @@ async function generateOTT() {
 
     ott.value = res.id
 
-    ottExpiry.value = res.extensions.expires_at
+    ottExpiry.value = null
+    if (res.extensions.expires_at) {
+      ottExpiry.value = new Date(res.extensions.expires_at)
+    }
   } catch (e) {
     ott.value = ottError.value = e as Error
   } finally {

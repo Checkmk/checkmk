@@ -561,13 +561,19 @@ section_lnx_if() {
 
     echo '<<<lnx_if:sep(58)>>>'
     sed 1,2d /proc/net/dev
-    if inpath ethtool; then
-        sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
-            echo "[${eth}]"
-            ethtool "${eth}" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
-            echo "Address: $(cat "/sys/class/net/${eth}/address")"
-        done
-    fi
+    sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
+        echo "[${eth}]"
+            if inpath ethtool; then
+                ethtool "${eth}" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
+            else
+                speed=$(cat "/sys/class/net/${eth}/speed" 2>/dev/null)
+                if [ -n "${speed}" ] && [ "${speed}" -ge 0 ]; then
+                    echo "Speed: ${speed}Mb/s"
+                fi
+            fi
+        echo "Address: $(cat "/sys/class/net/${eth}/address")"
+    done
+
 }
 
 # Current state of bonding interfaces

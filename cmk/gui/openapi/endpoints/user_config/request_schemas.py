@@ -255,6 +255,7 @@ DISMISSABLE_WARNINGS: list[DismissableWarning] = [
     "notification_fallback",
     "immediate_slideout_change",
     "changes-info",
+    "agent_slideout",
 ]
 
 

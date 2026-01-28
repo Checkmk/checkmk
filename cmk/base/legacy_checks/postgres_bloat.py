@@ -54,14 +54,16 @@ def check_postgres_bloat(item, params, parsed):
     index_abs_total = 0
 
     show_levels = False
+    last_table = ""
     for line in database:
         tbloat = float(line["tbloat"])
         twasted = int(line["wastedbytes"])
         ibloat = float(line["ibloat"])
         iwasted = int(line["wastedibytes"])
 
-        table_abs_total += twasted
+        table_abs_total += twasted if line["tablename"] != last_table else 0
         index_abs_total += iwasted
+        last_table = line["tablename"]
 
         # Calculate highest loss
         if not table_perc_max or tbloat > float(table_perc_max["tbloat"]):

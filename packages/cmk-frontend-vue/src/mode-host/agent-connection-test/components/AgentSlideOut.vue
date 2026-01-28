@@ -95,7 +95,7 @@ function getInitStep() {
   </CmkButton>
   <CmkDialog
     :message="dialogMsg"
-    :dismissal_button="{ title: _t('Do not show again'), key: 'key' }"
+    :dismissal_button="{ title: _t('Do not show again'), key: 'agent_slideout' }"
   />
   <CmkHeading type="h4" class="select-heading">
     {{ _t('Select the type of system you want to monitor') }}

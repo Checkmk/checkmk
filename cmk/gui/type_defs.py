@@ -114,7 +114,9 @@ AuthType = Literal[
     "web_server",
 ]
 
-DismissableWarning = Literal["notification_fallback", "immediate_slideout_change", "changes-info"]
+DismissableWarning = Literal[
+    "notification_fallback", "immediate_slideout_change", "changes-info", "agent_slideout"
+]
 
 
 SessionState = Literal[

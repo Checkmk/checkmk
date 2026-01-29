@@ -7,13 +7,6 @@
 
 from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
-metric_license_total = metrics.Metric(
-    name="license_total",
-    title=Title("Licensed devices"),
-    unit=metrics.Unit(metrics.DecimalNotation("")),
-    color=metrics.Color.LIGHT_GREEN,
-)
-
 metric_remaining_time = metrics.Metric(
     name="remaining_time",
     title=Title("Remaining time"),
@@ -32,24 +25,8 @@ graph_cisco_meraki_remaining_time = graphs.Graph(
     minimal_range=graphs.MinimalRange(0, 180),
 )
 
-graph_cisco_meraki_licensed_devices = graphs.Graph(
-    name="cisco_meraki_licensed_devices",
-    title=Title("Cisco Meraki licensed devices"),
-    compound_lines=["license_total"],
-    minimal_range=graphs.MinimalRange(0, 10),
-)
-
-perfometer_licensing = perfometers.Stacked(
-    name="cisco_meraki_licensing",
-    # upper and lower are in the wrong order
-    lower=perfometers.Perfometer(
-        name="license_total",
-        focus_range=perfometers.FocusRange(perfometers.Open(0), perfometers.Open(100)),
-        segments=["license_total"],
-    ),
-    upper=perfometers.Perfometer(
-        name="remaining_time",
-        focus_range=perfometers.FocusRange(perfometers.Open(0), perfometers.Open(180)),
-        segments=["remaining_time"],
-    ),
+perfometer_licensing = perfometers.Perfometer(
+    name="meraki_remaining_time",
+    focus_range=perfometers.FocusRange(perfometers.Open(0), perfometers.Open(180)),
+    segments=["remaining_time"],
 )

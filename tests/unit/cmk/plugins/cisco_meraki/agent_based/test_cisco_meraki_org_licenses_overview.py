@@ -79,7 +79,6 @@ def test_check_licenses_overview() -> None:
         Result(state=State.OK, summary="Remaining time: 31 days 0 hours"),
         Metric("remaining_time", 2678400.0),
         Result(state=State.OK, summary="Number of licensed devices: 6"),
-        Metric("license_total", 6.0),
         Result(state=State.OK, notice="MV: 2 licensed devices"),
         Result(state=State.OK, notice="Z1: 3 licensed devices"),
         Result(state=State.OK, notice="wireless: 1 licensed devices"),

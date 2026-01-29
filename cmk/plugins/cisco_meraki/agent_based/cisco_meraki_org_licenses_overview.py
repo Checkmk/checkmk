@@ -148,7 +148,6 @@ def check_licenses_overview(item: str, params: CheckParams, section: Section) ->
             state=State.OK,
             summary=f"Number of licensed devices: {overview.license_total}",
         )
-        yield Metric("license_total", overview.license_total)
 
     for device_type, device_count in sorted(overview.licensed_device_counts.items()):
         yield Result(state=State.OK, notice=f"{device_type}: {device_count} licensed devices")

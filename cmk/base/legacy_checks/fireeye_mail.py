@@ -11,7 +11,6 @@ import time
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, SNMPTree, StringTable
-from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.plugins.fireeye.lib import DETECT
 
 check_info = {}
@@ -71,7 +70,7 @@ def parse_fireeye_mail(string_table: StringTable) -> StringTable:
 
 
 def discover_fireeye_mail(info):
-    return inventory_fireeye_generic(info, False, True)
+    yield from [(None, {})] if info else []
 
 
 check_info["fireeye_mail"] = LegacyCheckDefinition(
@@ -137,7 +136,7 @@ def check_fireeye_attachment(_no_item, params, info):
 
 
 def discover_fireeye_mail_attachment(info):
-    return inventory_fireeye_generic(info, False, True)
+    yield from [(None, {})] if info else []
 
 
 check_info["fireeye_mail.attachment"] = LegacyCheckDefinition(
@@ -178,7 +177,7 @@ def check_fireeye_url(_no_item, params, info):
 
 
 def discover_fireeye_mail_url(info):
-    return inventory_fireeye_generic(info, False, True)
+    yield from [(None, {})] if info else []
 
 
 check_info["fireeye_mail.url"] = LegacyCheckDefinition(
@@ -249,7 +248,7 @@ def check_fireeye_mail_statistics(_no_item, params, info):
 
 
 def discover_fireeye_mail_statistics(info):
-    return inventory_fireeye_generic(info, False, True)
+    yield from [(None, {})] if info else []
 
 
 check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
@@ -292,7 +291,7 @@ def check_fireeye_mail_received(_no_item, params, info):
 
 
 def discover_fireeye_mail_received(info):
-    return inventory_fireeye_generic(info, False, True)
+    yield from [(None, {})] if info else []
 
 
 check_info["fireeye_mail.received"] = LegacyCheckDefinition(

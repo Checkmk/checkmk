@@ -5,22 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterator
-
-
-def inventory_fireeye_generic(
-    info: list[list[str]], has_item: bool, has_params: bool = False
-) -> Iterator[tuple[str | None, dict | None]]:
-    if info:
-        params: dict | None = None
-        if has_params:
-            params = {}
-        for line in info:
-            item = None
-            if has_item:
-                item = line[0]
-            yield item, params
-
 
 def check_fireeye_states(states: list[tuple[str, str]]) -> dict[str, tuple[int, str]]:
     # Now we only known the OK states and health states

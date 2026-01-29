@@ -12,7 +12,7 @@ from cmk.agent_based.legacy.v0_unstable import (
     LegacyDiscoveryResult,
 )
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
+from cmk.base.check_legacy_includes.fireeye import check_fireeye_states
 from cmk.plugins.fireeye.lib import DETECT
 
 check_info = {}
@@ -67,8 +67,8 @@ def parse_fireeye_fans(string_table: StringTable) -> StringTable:
 
 
 def discover_fireeye_fans(info: StringTable) -> LegacyDiscoveryResult:
-    for item, params in inventory_fireeye_generic(info, True):
-        yield item, params or {}
+    for line in info:
+        yield line[0], {}
 
 
 check_info["fireeye_fans"] = LegacyCheckDefinition(

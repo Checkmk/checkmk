@@ -9,7 +9,6 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.plugins.fireeye.lib import DETECT
 
 check_info = {}
@@ -37,7 +36,7 @@ def parse_fireeye_sys_image(string_table: StringTable) -> StringTable:
 
 
 def discover_fireeye_sys_image(info):
-    return inventory_fireeye_generic(info, False)
+    yield from [(None, None)] if info else []
 
 
 check_info["fireeye_sys_image"] = LegacyCheckDefinition(

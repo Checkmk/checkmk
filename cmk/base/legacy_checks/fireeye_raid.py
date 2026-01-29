@@ -11,7 +11,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
-from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
+from cmk.base.check_legacy_includes.fireeye import check_fireeye_states
 from cmk.plugins.fireeye.lib import DETECT
 
 check_info = {}
@@ -58,7 +58,7 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
 
 
 def discover_fireeye_raid(parsed):
-    return inventory_fireeye_generic(parsed.get("raid", []), False)
+    yield from [(None, None)] if parsed.get("raid", []) else []
 
 
 check_info["fireeye_raid"] = LegacyCheckDefinition(
@@ -101,7 +101,8 @@ def check_fireeye_raid_disks(item, _no_params, parsed):
 
 
 def discover_fireeye_raid_disks(parsed):
-    return inventory_fireeye_generic(parsed.get("disks", []), True)
+    for line in parsed.get("disks", []):
+        yield line[0], None
 
 
 check_info["fireeye_raid.disks"] = LegacyCheckDefinition(

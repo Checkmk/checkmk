@@ -3,12 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyDiscoveryResult,
+    LegacyResult,
+)
 from cmk.agent_based.v2 import get_value_store, render, StringTable
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 
 check_info = {}
 
@@ -55,11 +59,13 @@ check_info["siemens_plc"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_temp(info):
+def discover_siemens_plc_temp(info: StringTable) -> LegacyDiscoveryResult:
     return [(l[0] + " " + l[2], {}) for l in info if l[1] == "temp"]
 
 
-def check_siemens_plc_temp(item, params, info):
+def check_siemens_plc_temp(
+    item: str, params: TempParamType, info: StringTable
+) -> LegacyResult | None:
     for line in info:
         if line[1] == "temp" and line[0] + " " + line[2] == item:
             temp = float(line[-1])
@@ -93,11 +99,13 @@ check_info["siemens_plc.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_flag(info):
+def discover_siemens_plc_flag(info: StringTable) -> LegacyDiscoveryResult:
     return [(l[0] + " " + l[2], {}) for l in info if l[1] == "flag"]
 
 
-def check_siemens_plc_flag(item, params, info):
+def check_siemens_plc_flag(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> LegacyResult | None:
     expected_state = params["expected_state"]
     for line in info:
         if line[1] == "flag" and line[0] + " " + line[2] == item:
@@ -134,7 +142,7 @@ check_info["siemens_plc.flag"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_duration(info):
+def discover_siemens_plc_duration(info: StringTable) -> LegacyDiscoveryResult:
     return [
         (l[0] + " " + l[2], {})
         for l in info
@@ -142,7 +150,9 @@ def discover_siemens_plc_duration(info):
     ]
 
 
-def check_siemens_plc_duration(item, params, info):
+def check_siemens_plc_duration(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> LegacyResult | None:
     for line in info:
         if (line[1].startswith("hours") or line[1].startswith("seconds")) and line[0] + " " + line[
             2
@@ -199,16 +209,18 @@ check_info["siemens_plc.duration"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_counter(info):
+def discover_siemens_plc_counter(info: StringTable) -> LegacyDiscoveryResult:
     return [(l[0] + " " + l[2], {}) for l in info if l[1].startswith("counter")]
 
 
-def check_siemens_plc_counter(item, params, info):
+def check_siemens_plc_counter(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> LegacyResult | None:
     for line in info:
         if line[1].startswith("counter") and line[0] + " " + line[2] == item:
             value_store = get_value_store()
             value = int(line[-1])
-            perfdata = [(line[1], value)]
+            perfdata = [(line[1], float(value))]
 
             key = "siemens_plc.counter.%s" % item
             old_value = value_store.get(key)
@@ -249,11 +261,13 @@ check_info["siemens_plc.counter"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_info(info):
+def discover_siemens_plc_info(info: StringTable) -> LegacyDiscoveryResult:
     return [(l[0] + " " + l[2], {}) for l in info if l[1] == "text"]
 
 
-def check_siemens_plc_info(item, _no_params, info):
+def check_siemens_plc_info(
+    item: str, _no_params: Mapping[str, Any], info: StringTable
+) -> LegacyResult | None:
     for line in info:
         if line[1] == "text" and line[0] + " " + line[2] == item:
             return 0, line[-1]
@@ -281,11 +295,13 @@ check_info["siemens_plc.info"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_cpu_state(info):
-    return [(None, None)]
+def discover_siemens_plc_cpu_state(info: StringTable) -> LegacyDiscoveryResult:
+    return [(None, {})]
 
 
-def check_siemens_plc_cpu_state(_no_item, _no_params, info):
+def check_siemens_plc_cpu_state(
+    _no_item: str | None, _no_params: Mapping[str, Any], info: StringTable
+) -> LegacyResult | None:
     try:
         state = info[0][0]
     except IndexError:

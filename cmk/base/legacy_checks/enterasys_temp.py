@@ -3,24 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.plugins.enterasys.lib import DETECT_ENTERASYS
 
 check_info = {}
 
 
-def discover_enterasys_temp(info):
+def discover_enterasys_temp(info: StringTable) -> list[tuple[str, dict[str, object]]]:
     if info and info[0][0] != "0":
         return [("Ambient", {})]
     return []
 
 
-def check_enterasys_temp(item, params, info):
+def check_enterasys_temp(
+    item: str, params: TempParamType, info: StringTable
+) -> (
+    tuple[int, str]
+    | tuple[
+        int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]
+    ]
+):
     # info for MIB: The ambient temperature of the room in which the chassis
     # is located. If this sensor is broken or not supported, then
     # this object will be set to zero. The value of this object

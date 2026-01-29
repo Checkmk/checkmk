@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output from agent:
 # <<<vms_users>>>
 # AEP 2 - - 1
 # SYSTEM 1
 # TCPIP$FTP - - - 1
 
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
@@ -31,13 +33,15 @@ def saveint(i: str) -> int:
         return 0
 
 
-def discover_vms_users(info):
+def discover_vms_users(info: StringTable) -> list[tuple[None, Mapping[str, object]]]:
     if len(info) > 0:
         return [(None, {})]
     return []
 
 
-def check_vms_users(item, params, info):
+def check_vms_users(
+    item: str | None, params: Mapping[str, Any], info: StringTable
+) -> tuple[int, str, list[tuple[str, float]]]:
     infos = []
     num_sessions = 0
     for line in info:
@@ -48,7 +52,7 @@ def check_vms_users(item, params, info):
             num_sessions += interactive
             infos.append("%s: %d" % (line[0], interactive))
 
-    perfdata = [("sessions", num_sessions)]
+    perfdata: list[tuple[str, float]] = [("sessions", float(num_sessions))]
 
     if num_sessions:
         return (0, "Interactive users: " + ", ".join(infos), perfdata)

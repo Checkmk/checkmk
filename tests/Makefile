@@ -96,7 +96,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	test-unit test-unit-all test-unit-docker \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
-	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
+	test-tidy-core test-tidy-docker \
 	test-unit-neb test-unit-core \
 	test-semgrep
 

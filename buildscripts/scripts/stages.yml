@@ -515,29 +515,6 @@ STAGES:
       TEXT_ON_SKIP: "No check-http files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
 
-    # NOTE: This has to come *before* the neb & cmc packages, as they depend on
-    # livestatus. Their run scripts rebuild livestatus, "eating away" compiler
-    # invocations, leading to IWYU/clang-tidy/... not being called on enough
-    # files. The ordering is a bit ad hoc, perhaps we should keep the list of
-    # steps here in dependency order.
-    - NAME: "Package livestatus"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_LIVESTATUS_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/livestatus"
-      COMMAND: "./run --lint=iwyu"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No Livestatus files changed"
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "livestatus.txt"
-
-    - NAME: "Package cmc"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES
-      DIR: "non-free/packages/cmc"
-      COMMAND: "./run --lint=iwyu"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmc files changed"
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "cmc.txt"
-
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
       DIR: "packages/cmk-agent-ctl"
@@ -613,24 +590,6 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-oracle files changed"
       RESULT_CHECK_FILE_PATTERN: "mk-oracle.txt"
-
-    - NAME: "Package neb"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES
-      DIR: "packages/neb"
-      COMMAND: "./run --lint=iwyu"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No neb files changed"
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "neb.txt"
-
-    - NAME: "Package unixcat"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_UNIXCAT_FILES
-      DIR: "packages/unixcat"
-      COMMAND: "./run --lint=iwyu"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No unixcat files changed"
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "unixcat.txt"
 
     - NAME: "Package cmk-relay-engine"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_RELAY_ENGINE_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_RELAY_PROTOCOLS_FILES

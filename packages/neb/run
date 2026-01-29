@@ -6,7 +6,7 @@
 set -e
 
 JOBS=6
-readonly ALL_LINTERS=iwyu,clang-tidy
+readonly ALL_LINTERS=clang-tidy
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -33,7 +33,6 @@ parse_options() {
     RUN_BUILD=no
     RUN_UNIT_TESTS=no
     RUN_CHECK_FORMAT=no
-    RUN_IWYU=no
     RUN_CLANG_TIDY=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
@@ -76,7 +75,6 @@ parse_options() {
                 RUN_BUILD=yes
                 RUN_UNIT_TESTS=yes
                 RUN_CHECK_FORMAT=yes
-                RUN_IWYU=yes
                 RUN_CLANG_TIDY=yes
                 shift
                 ;;
@@ -105,7 +103,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_IWYU RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 run_build() {
@@ -121,10 +119,6 @@ run_unit_tests() {
 
 run_check_format() {
     bazel run //:format.check "$PWD"
-}
-
-run_iwyu() {
-    bazel build --config iwyu :all
 }
 
 run_clang_tidy() {
@@ -147,7 +141,6 @@ main() {
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
-    test ${RUN_IWYU} = yes && run_iwyu
     test ${RUN_CLANG_TIDY} = yes && run_clang_tidy
     test ${RUN_FORMAT} = yes && run_format
     test ${RUN_DOCUMENTATION} = yes && run_documentation

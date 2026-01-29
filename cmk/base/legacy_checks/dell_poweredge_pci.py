@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_pci
@@ -14,7 +11,7 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 check_info = {}
 
 
-def discover_dell_poweredge_pci(info):
+def discover_dell_poweredge_pci(info: StringTable) -> list[tuple[str, None]]:
     inventory = []
     for line in info:
         fqdd = line[4]

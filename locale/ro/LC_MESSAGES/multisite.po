@@ -82588,6 +82588,9 @@ msgstr "ID-ul furnizorului și al dispozitivului"
 msgid "Venue ID"
 msgstr "ID-ul locului de desfășurare"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "Verbose"
 

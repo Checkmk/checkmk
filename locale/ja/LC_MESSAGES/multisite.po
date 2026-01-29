@@ -77174,6 +77174,9 @@ msgstr "ベンダーとデバイスID"
 msgid "Venue ID"
 msgstr "会場ID"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "詳細"
 

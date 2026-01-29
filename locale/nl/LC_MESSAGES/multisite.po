@@ -82404,6 +82404,9 @@ msgstr "Vendor en Device ID"
 msgid "Venue ID"
 msgstr "Plaats ID"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "Verbose"
 

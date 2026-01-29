@@ -83189,6 +83189,9 @@ msgstr "ID du fournisseur et du dispositif"
 msgid "Venue ID"
 msgstr "ID du lieu"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "Verbose"
 

@@ -82338,6 +82338,9 @@ msgstr "Identificação do fornecedor e do dispositivo"
 msgid "Venue ID"
 msgstr "Identificação do local"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "Verbose"
 

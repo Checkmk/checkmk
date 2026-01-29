@@ -81769,6 +81769,9 @@ msgstr "Vendor e ID del dispositivo"
 msgid "Venue ID"
 msgstr "ID sede"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "Verboso"
 

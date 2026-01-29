@@ -51,8 +51,7 @@ void main() {
 
     dir(checkout_dir) {
         // to be fixed with CMK-29585
-        if ((params.PACKAGE_PATH in ["non-free/packages/cmk-relay-engine", "packages/cmk-agent-receiver"]) ||
-            (params.PACKAGE_PATH == "packages/mk-oracle" && distro == "almalinux-8")) {
+        if (params.PACKAGE_PATH in ["non-free/packages/cmk-relay-engine", "packages/cmk-agent-receiver"]) {
             inside_container(inside_container_args) {
                 this_call_site(safe_branch_name, output_file);
             }
@@ -74,6 +73,11 @@ void main() {
 void this_call_site(String safe_branch_name, String output_file) {
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
+    // fancy fancy hack, see buildscripts/scripts/utils/docker_image_aliases_helper.groovy why
+    def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name}";
+    if (params.PACKAGE_PATH == "packages/mk-oracle" && params.DISTRO == "almalinux-8") {
+        container_name = "this-distro-container";
+    }
     def lock_label = "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}";
     if (kubernetes_inherit_from != "UNSET") {
         lock_label = "bzl_lock_k8s";
@@ -86,7 +90,7 @@ void this_call_site(String safe_branch_name, String output_file) {
                 name       : params.PACKAGE_PATH,
                 cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",
                 output_file: output_file,
-                container_name: "testing-ubuntu-2204-checkmk-${safe_branch_name}",
+                container_name: container_name,
             ]);
         }
         sh("mv ${params.PACKAGE_PATH}/${output_file} ${checkout_dir}");

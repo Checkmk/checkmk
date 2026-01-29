@@ -321,7 +321,7 @@ def test_registered_painters() -> None:
         "inv_networking_hostname",
         "inv_networking_kube",
         "inv_networking_lldp_cache",
-        "inv_networking_lldp_cache_neighbours",
+        "inv_networking_lldp_cache_neighbors",
         "inv_networking_routes",
         "inv_networking_sip_interfaces",
         "inv_networking_total_ethernet_ports",

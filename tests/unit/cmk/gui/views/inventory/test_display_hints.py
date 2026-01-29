@@ -114,7 +114,7 @@ def test_paths() -> None:
             ("networking", "interfaces", "name"),
             ("networking", "kube"),
             ("networking", "lldp_cache"),
-            ("networking", "lldp_cache", "neighbours"),
+            ("networking", "lldp_cache", "neighbors"),
             ("networking", "routes"),
             ("networking", "sip_interfaces"),
             ("networking", "tunnels"),
@@ -1009,7 +1009,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "local_cap_supported",
         "local_cap_enabled",
     ],
-    ("networking", "lldp_cache", "neighbours"): [
+    ("networking", "lldp_cache", "neighbors"): [
         "capabilities",
         "capabilities_map_supported",
         "local_port",

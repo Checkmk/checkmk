@@ -571,10 +571,10 @@ node_networking_lldp_cache = Node(
 
 node_networking_lldp_cache_neighbours = Node(
     name="networking_lldp_cache_neighbours",
-    path=["networking", "lldp_cache", "neighbours"],
-    title=Title("LLDP neighbours"),
+    path=["networking", "lldp_cache", "neighbors"],
+    title=Title("LLDP neighbors"),
     table=Table(
-        view=View(name="invlldpcache", title=Title("LLDP neighbours")),
+        view=View(name="invlldpcache", title=Title("LLDP neighbors")),
         columns={
             "capabilities": TextField(Title("Capabilities supported")),
             "capabilities_map_supported": TextField(Title("Capabilities supported")),

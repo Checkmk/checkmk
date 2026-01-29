@@ -15,11 +15,12 @@ from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable, Tabl
 from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_status import (
     check_device_status,
     check_device_status_ps,
+    CheckParamsDeviceStatus,
+    CheckParamsPowerSupply,
     DeviceStatus,
     discover_device_status,
     discover_device_status_ps,
     inventory_power_supplies,
-    Parameters,
     parse_device_status,
 )
 from cmk.plugins.cisco_meraki.lib.schema._devices_statuses import RawDevicesStatus
@@ -60,7 +61,15 @@ def test_check_device_status() -> None:
     device_status = _RawDevicesStatusFactory.build(status="online", lastReportedAt="2000-01-14")
     string_table = _get_string_table_from_device_status(device_status)
     section = _parse_and_assert_not_none(string_table)
-    params = Parameters()
+    params = CheckParamsDeviceStatus(
+        status_map={
+            "online": State.OK.value,
+            "alerting": State.CRIT.value,
+            "offline": State.WARN.value,
+            "dormant": State.WARN.value,
+        },
+        last_reported_upper_levels=("no_levels", None),
+    )
 
     value = list(check_device_status(params, section=section))
     expected = [
@@ -98,8 +107,9 @@ def test_check_device_status_ps() -> None:
     )
     string_table = _get_string_table_from_device_status(device_status)
     section = _parse_and_assert_not_none(string_table)
+    params = CheckParamsPowerSupply(state_not_powering=State.WARN.value)
 
-    value = list(check_device_status_ps("1", {}, section))
+    value = list(check_device_status_ps("1", params, section))
     expected = [
         Result(state=State.OK, summary="Status: powering"),
         Result(state=State.OK, notice="Model: PWR-MS320-1025WAC"),
@@ -114,8 +124,9 @@ def test_check_device_status_ps_not_powering() -> None:
     device_status["components"]["powerSupplies"][0].update({"slot": 1, "status": "off"})
     string_table = _get_string_table_from_device_status(device_status)
     section = _parse_and_assert_not_none(string_table)
+    params = CheckParamsPowerSupply(state_not_powering=State.WARN.value)
 
-    value = list(check_device_status_ps("1", {}, section))[0]
+    value = list(check_device_status_ps("1", params, section))[0]
     expected = Result(state=State.WARN, summary="Status: off")
 
     assert value == expected

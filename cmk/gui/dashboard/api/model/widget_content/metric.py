@@ -242,7 +242,7 @@ def _metric_status_display_to_internal(
 
 @api_model
 class _BaseMetricContent(BaseWidgetContent, ABC):
-    # NOTE: currently no way to easily validate metrics, especially without host/service info
+    # NOTE: we skip validation in case the value becomes invalid later
     metric: str = api_field(description="Name of the metric.")
 
 

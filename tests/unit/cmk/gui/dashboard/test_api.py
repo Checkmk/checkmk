@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from typing import get_args, get_type_hints
 
 import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import get_all_dashboards
-from cmk.gui.dashboard.api import ApiCustomGraphValidation
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
 from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
@@ -359,32 +358,6 @@ class TestCombinedGraphContent:
             },
         )
 
-    def test_invalid_graph_template(self, clients: ClientRegistry) -> None:
-        graph_template = "non_existent_graph"
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "combined_graph",
-                            "timerange": {"type": "predefined", "value": "last_25_hours"},
-                            "graph_render_options": {},
-                            "graph_template": graph_template,
-                            "presentation": "lines",
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"][
-            "body.widgets.test_widget.content.combined_graph.graph_template"
-        ]["msg"].startswith(
-            f"Value error, Value '{graph_template}' is not allowed, valid options are:"
-        )
-
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
 class TestSingleTimeseriesContent:
@@ -405,19 +378,7 @@ class TestSingleTimeseriesContent:
         )
 
 
-@pytest.fixture(name="skip_custom_graph_validation")
-def fixture_skip_custom_graph_validation() -> Iterable[None]:
-    # we disable the validation, rather than creating a custom graph (which needs CEE stuff)
-    old = ApiCustomGraphValidation.is_graph_valid
-    try:
-        ApiCustomGraphValidation.is_graph_valid = lambda _graph: True
-        yield
-    finally:
-        ApiCustomGraphValidation.is_graph_valid = old
-
-
 @pytest.mark.usefixtures("skip_in_raw_edition")
-@pytest.mark.usefixtures("skip_custom_graph_validation")
 class TestCustomGraphContent:
     def test_create(self, clients: ClientRegistry) -> None:
         _check_widget_create(
@@ -426,7 +387,7 @@ class TestCustomGraphContent:
                 "type": "custom_graph",
                 "timerange": {"type": "predefined", "value": "last_25_hours"},
                 "graph_render_options": {},
-                "custom_graph": "???",  # the validation is disabled in the fixture
+                "custom_graph": "???",
             },
         )
 
@@ -441,30 +402,6 @@ class TestPerformanceGraphContent:
                 "graph_render_options": {},
                 "source": "active_sessions",
             },
-        )
-
-    def test_invalid_source(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "performance_graph",
-                            "timerange": {"type": "predefined", "value": "last_25_hours"},
-                            "graph_render_options": {},
-                            "source": "non_existent_source",
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"][
-            "body.widgets.test_widget.content.performance_graph.source.function-after[_validate_graph_template(), str]"
-        ]["msg"].startswith(
-            "Value error, Value 'non_existent_source' is not allowed, valid options are:"
         )
 
 

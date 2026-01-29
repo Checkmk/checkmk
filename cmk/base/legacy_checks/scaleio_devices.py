@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 # <<<scaleio_devices>>>
 # DEVICE 123:
@@ -17,12 +16,16 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Iterable, Mapping
+from typing import Any
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
+from cmk.agent_based.v2 import StringTable
 
 check_info = {}
 
 
-def parse_scaleio_devices(string_table):
+def parse_scaleio_devices(string_table: StringTable) -> Mapping[str, list[dict[str, str]]]:
     devices = {}
     device = {}
     for line in string_table:
@@ -42,11 +45,13 @@ def parse_scaleio_devices(string_table):
     return parsed
 
 
-def _make_state_readable(raw_state):
+def _make_state_readable(raw_state: str) -> str:
     return raw_state.replace("_", " ").lower()
 
 
-def check_scaleio_devices(item, params, parsed):
+def check_scaleio_devices(
+    item: str, params: Mapping[str, Any], parsed: Mapping[str, list[dict[str, str]]]
+) -> LegacyCheckResult:
     if not (devices := parsed.get(item)):
         return
     num_devices = len(devices)
@@ -80,7 +85,9 @@ def check_scaleio_devices(item, params, parsed):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-def discover_scaleio_devices(section):
+def discover_scaleio_devices(
+    section: Mapping[str, list[dict[str, str]]],
+) -> Iterable[tuple[str, dict[str, Any]]]:
     yield from ((item, {}) for item in section)
 
 

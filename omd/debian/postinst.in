@@ -95,7 +95,7 @@ case "$1" in
     # in case you modify exclusions!
     echo "pre-compile bytecode (.pyc) for Python files.."
     "${BASE_PATH}/bin/python3" -m compileall \
-        -x "check_mk/agents/plugins" \
+        -x "check_mk/agents/plugins|/skel/" \
         -s "${BASE_PATH}" \
         "${BASE_PATH}" \
     >/dev/null

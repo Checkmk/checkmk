@@ -4,13 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from __future__ import annotations
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, startswith
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyDiscoveryResult,
+    LegacyResult,
+)
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 
 check_info = {}
 
@@ -35,8 +42,8 @@ check_info = {}
 # .1.3.6.1.4.1.232.167.2.4.5.2.1.7.3 0
 
 
-def parse_hp_mcs_sensors(string_table):
-    parsed = {}
+def parse_hp_mcs_sensors(string_table: StringTable) -> Mapping[str, Mapping[str, Any]]:
+    parsed: dict[str, dict[str, Any]] = {}
 
     for line in string_table:
         parsed[line[0]] = {
@@ -51,13 +58,15 @@ def parse_hp_mcs_sensors(string_table):
     return parsed
 
 
-def discover_hp_mcs_sensors(parsed):
+def discover_hp_mcs_sensors(parsed: Mapping[str, Mapping[str, Any]]) -> LegacyDiscoveryResult:
     for entry in parsed.values():
         if int(entry["type"]) in [4, 5, 13, 14, 15, 16, 17, 18, 19, 20]:
             yield (entry["name"], {})
 
 
-def check_hp_mcs_sensors(item, params, parsed):
+def check_hp_mcs_sensors(
+    item: str, params: TempParamType, parsed: Mapping[str, Mapping[str, Any]]
+) -> LegacyResult | None:
     for key, entry in parsed.items():
         if entry["name"] == item:
             return check_temperature(entry["value"], params, "hp_mcs_sensors_%s" % key)
@@ -79,13 +88,17 @@ check_info["hp_mcs_sensors"] = LegacyCheckDefinition(
 )
 
 
-def discover_hp_mcs_sensors_fan(parsed):
+def discover_hp_mcs_sensors_fan(parsed: Mapping[str, Mapping[str, Any]]) -> LegacyDiscoveryResult:
     for entry in parsed.values():
         if entry["type"] in [9, 10, 11, 26, 27, 28]:
             yield (entry["name"], {})
 
 
-def check_hp_mcs_sensors_fan(item, params, parsed):
+def check_hp_mcs_sensors_fan(
+    item: str,
+    params: Mapping[str, Any] | tuple[float, float],
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> LegacyResult | None:
     for entry in parsed.values():
         if entry["name"] == item:
             return check_fan(entry["value"], params)

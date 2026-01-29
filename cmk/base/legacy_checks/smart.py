@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
+from collections.abc import Generator, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import (
+    check_temperature,
+    OptFloat,
+    TempParamType,
+)
 
 check_info = {}
 
@@ -30,14 +34,20 @@ check_info = {}
 # /dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 
 
-def discover_smart_temp(section):
+def discover_smart_temp(
+    section: Mapping[str, Mapping[str, int]],
+) -> Generator[tuple[str, dict[str, Any]]]:
     relevant = {"Temperature_Celsius", "Temperature_Internal", "Temperature"}
     for disk_name, disk in section.items():
         if relevant.intersection(disk):
             yield disk_name, {}
 
 
-def check_smart_temp(item, params, section):
+def check_smart_temp(
+    item: str,
+    params: TempParamType,
+    section: Mapping[str, Mapping[str, int]],
+) -> tuple[int, str, list[tuple[str, float, OptFloat, OptFloat, OptFloat, OptFloat]]] | None:
     if (data := section.get(item)) is None:
         return None
 

@@ -13,6 +13,7 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.base.check_legacy_includes.temperature import TempParamType
 from cmk.base.legacy_checks.smart import (
     check_smart_temp,
     discover_smart_temp,
@@ -153,7 +154,7 @@ def test_smart_temp_discovery_no_temp() -> None:
 
 def test_smart_temp_check_ok() -> None:
     """Test check function for normal temperature."""
-    params = {"levels": (35, 40)}
+    params: TempParamType = {"levels": (35.0, 40.0)}
 
     result = check_smart_temp("/dev/sda", params, parsed())
 
@@ -168,7 +169,7 @@ def test_smart_temp_check_ok() -> None:
 
 def test_smart_temp_check_warning() -> None:
     """Test check function with temperature warning."""
-    params = {"levels": (25, 40)}  # Lower warning threshold
+    params: TempParamType = {"levels": (25.0, 40.0)}  # Lower warning threshold
 
     result = check_smart_temp("/dev/sda", params, parsed())
 
@@ -182,7 +183,7 @@ def test_smart_temp_check_warning() -> None:
 
 def test_smart_temp_check_nvme() -> None:
     """Test check function for NVMe temperature."""
-    params = {"levels": (35, 40)}
+    params: TempParamType = {"levels": (35.0, 40.0)}
 
     result = check_smart_temp("/dev/nvme0n1", params, parsed())
 
@@ -196,7 +197,7 @@ def test_smart_temp_check_nvme() -> None:
 
 def test_smart_temp_check_missing_item() -> None:
     """Test check function with non-existent device."""
-    params = {"levels": (35, 40)}
+    params: TempParamType = {"levels": (35.0, 40.0)}
 
     results = check_smart_temp("/dev/missing", params, parsed())
 
@@ -206,7 +207,7 @@ def test_smart_temp_check_missing_item() -> None:
 
 def test_smart_temp_check_no_temperature() -> None:
     """Test check function for device without temperature sensor."""
-    params = {"levels": (35, 40)}
+    params: TempParamType = {"levels": (35.0, 40.0)}
     section = parsed_no_temp()
 
     results = check_smart_temp("/dev/sdb", params, section)

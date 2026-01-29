@@ -7,10 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import { computed } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
 import CmkIcon from '@/components/CmkIcon'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import CmkHeading from './typography/CmkHeading.vue'
+
+const { _t } = usei18n()
 
 const propsCva = cva('', {
   variants: {
@@ -43,6 +47,17 @@ export interface CmkAlertBoxProps {
 
 const props = defineProps<CmkAlertBoxProps>()
 
+const open = defineModel<boolean>('open', { default: true })
+
+const dismissible = computed(() => {
+  switch (props.variant) {
+    case 'success':
+      return true
+    default:
+      return false
+  }
+})
+
 const alertIconName = computed(() => {
   switch (props.variant) {
     case 'error':
@@ -71,7 +86,7 @@ const alertIconColor = computed(() => {
 </script>
 
 <template>
-  <div class="cmk-alert-box" :class="propsCva({ variant, size })">
+  <div v-if="open" class="cmk-alert-box" :class="propsCva({ variant, size })">
     <div class="cmk-alert-box__icon">
       <CmkIcon v-if="variant === 'loading'" name="load-graph" size="large" />
       <CmkMultitoneIcon v-else :name="alertIconName" :primary-color="alertIconColor" size="large" />
@@ -84,6 +99,15 @@ const alertIconColor = computed(() => {
         <slot />
       </div>
     </div>
+    <button
+      v-if="dismissible"
+      class="cmk-alert-box__close"
+      type="button"
+      :aria-label="_t('Close')"
+      @click="open = false"
+    >
+      <CmkIcon name="close" size="medium" />
+    </button>
   </div>
 </template>
 
@@ -114,6 +138,17 @@ const alertIconColor = computed(() => {
   align-items: flex-start;
   gap: var(--dimension-3);
   max-width: 100%;
+  flex: 1;
+}
+
+.cmk-alert-box__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cmk-alert-box--error {

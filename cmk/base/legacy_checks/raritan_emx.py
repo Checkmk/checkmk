@@ -4,22 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, equals, SNMPTree
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
+from cmk.agent_based.v2 import any_of, equals, SNMPTree, StringTable
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors_binary,
     raritan_map_state,
     raritan_map_unit,
 )
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 
 check_info = {}
 
 
-def parse_raritan_emx(string_table):
+def parse_raritan_emx(string_table: StringTable) -> Mapping[str, Mapping[str, Any]]:
     raritan_type_map = {
         "0": ("temp", "Air"),
         "1": ("temp", "Water"),
@@ -54,7 +55,9 @@ def parse_raritan_emx(string_table):
     return parsed
 
 
-def inventory_raritan_emx(parsed, rack_type):
+def inventory_raritan_emx(
+    parsed: Mapping[str, Mapping[str, Any]], rack_type: str
+) -> Iterable[tuple[str, None]]:
     for rack_name, values in parsed.items():
         if values["rack_type"] == rack_type:
             yield rack_name, None
@@ -72,13 +75,17 @@ def inventory_raritan_emx(parsed, rack_type):
 #   '----------------------------------------------------------------------'
 
 
-def discover_raritan_emx_temp(parsed):
+def discover_raritan_emx_temp(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> Iterable[tuple[str, Mapping[str, Any]]]:
     for rack_name, values in parsed.items():
         if values["rack_type"] == "temp":
             yield rack_name, {}
 
 
-def check_raritan_emx_temp(item, params, parsed):
+def check_raritan_emx_temp(
+    item: str, params: TempParamType, parsed: Mapping[str, Mapping[str, Any]]
+) -> LegacyResult | None:
     if "Temperature" in item:
         # old style (pre 1.2.8) item name, convert
         item = "Rack " + item.replace(" Temperature", "")
@@ -129,7 +136,9 @@ check_info["raritan_emx"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_raritan_emx_fan(item, _no_params, parsed):
+def check_raritan_emx_fan(
+    item: str, _no_params: Any, parsed: Mapping[str, Mapping[str, Any]]
+) -> LegacyResult | None:
     if item in parsed:
         fan_speed = parsed[item]["rack_value"]
         fan_unit = parsed[item]["rack_unit"]
@@ -138,7 +147,9 @@ def check_raritan_emx_fan(item, _no_params, parsed):
     return None
 
 
-def discover_raritan_emx_fan(parsed):
+def discover_raritan_emx_fan(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> Iterable[tuple[str, None]]:
     return inventory_raritan_emx(parsed, "fanspeed")
 
 
@@ -151,7 +162,9 @@ check_info["raritan_emx.fan"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_emx_binary(parsed):
+def discover_raritan_emx_binary(
+    parsed: Mapping[str, Mapping[str, Any]],
+) -> Iterable[tuple[str, None]]:
     return inventory_raritan_emx(parsed, "binary")
 
 

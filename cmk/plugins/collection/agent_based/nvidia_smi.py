@@ -154,6 +154,12 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
     power_readings_element = "gpu_power_readings"
     if xml.find(f"gpu/{power_readings_element}") is None:
         power_readings_element = "power_readings"
+    gpu_power_draw_element = "average_power_draw"
+    if xml.find(f"gpu/{power_readings_element}/{gpu_power_draw_element}") is None:
+        gpu_power_draw_element = "power_draw"
+    gpu_power_limit_element = "current_power_limit"
+    if xml.find(f"gpu/{power_readings_element}/{gpu_power_limit_element}") is None:
+        gpu_power_limit_element = "power_limit"
     has_power_management = xml.find(f"gpu/{power_readings_element}/power_management") is not None
     return Section(
         timestamp=(
@@ -184,10 +190,10 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
                         else PowerManagement.SUPPORTED
                     ),
                     power_draw=get_float_from_element(
-                        gpu.find(f"{power_readings_element}/power_draw"), "W"
+                        gpu.find(f"{power_readings_element}/{gpu_power_draw_element}"), "W"
                     ),
                     power_limit=get_float_from_element(
-                        gpu.find(f"{power_readings_element}/power_limit"), "W"
+                        gpu.find(f"{power_readings_element}/{gpu_power_limit_element}"), "W"
                     ),
                     default_power_limit=get_float_from_element(
                         gpu.find(f"{power_readings_element}/default_power_limit"), "W"

@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
@@ -289,4 +290,9 @@ py_test(
     data = glob(["**"]),
     pytest_main = True,
     deps = [requirement("pytest")],
+)
+
+build_test(
+    name = "build_test",
+    targets = [":dist"],
 )

@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
@@ -64,6 +65,11 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":check-http-lib"],
+)
+
+build_test(
+    name = "build_test",
+    targets = ["check-http"],
 )
 
 genrule(

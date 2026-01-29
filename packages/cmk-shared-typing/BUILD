@@ -219,7 +219,10 @@ py_wheel(
 
 build_test(
     name = "build_test",
-    targets = ["wheel"],
+    targets = [
+        ":wheel",
+        ":cmk_shared_typing_ts",
+    ],
 )
 
 package_wheel(

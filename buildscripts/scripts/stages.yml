@@ -502,7 +502,7 @@ STAGES:
     - NAME: "Package check-cert"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_CERT_FILES
       DIR: "packages/check-cert"
-      COMMAND: "./run --build --lint=clippy &> ${RESULTS}/check-cert.txt"
+      COMMAND: "./run --lint=clippy &> ${RESULTS}/check-cert.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No check-cert files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
@@ -510,7 +510,7 @@ STAGES:
     - NAME: "Package check-http"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_HTTP_FILES
       DIR: "packages/check-http"
-      COMMAND: "./run --build --lint=clippy &> ${RESULTS}/check-http.txt"
+      COMMAND: "./run --lint=clippy &> ${RESULTS}/check-http.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No check-http files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
@@ -541,7 +541,7 @@ STAGES:
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
       DIR: "packages/cmk-agent-ctl"
-      COMMAND: "./run --build --lint=clippy &> ${RESULTS}/cmk-agent-ctl.txt"
+      COMMAND: "./run --lint=clippy &> ${RESULTS}/cmk-agent-ctl.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-agent-ctl files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-ctl.txt"
@@ -590,23 +590,15 @@ STAGES:
     - NAME: "Package cmk-frontend-vue"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES
       DIR: "packages/cmk-frontend-vue"
-      COMMAND: "./run --build -B --build-dev --tests --tsc --lint &> ${RESULTS}/cmk-frontend-vue.txt"
+      COMMAND: "./run -B --build-dev --tests --tsc --lint &> ${RESULTS}/cmk-frontend-vue.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
 
-    - NAME: "Package cmk-shared-typing"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_SHARED_TYPING_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-shared-typing"
-      COMMAND: "./run --build &> ${RESULTS}/cmk-shared-typing.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-shared-typing files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-shared-typing.txt"
-
     - NAME: "Package mk-sql"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES
       DIR: "packages/mk-sql"
-      COMMAND: "./run --build --lint=clippy &> ${RESULTS}/mk-sql.txt"
+      COMMAND: "./run --lint=clippy &> ${RESULTS}/mk-sql.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-sql files changed"
       RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
@@ -617,7 +609,7 @@ STAGES:
           - "CI_TEST_SQL_DB_ENDPOINT"
           - "CI_ORA2_DB_TEST_PASSWORD"
       DIR: "packages/mk-oracle"
-      COMMAND: "./run --build --unit-tests --component-tests --lint=clippy"
+      COMMAND: "./run --unit-tests --component-tests --lint=clippy"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-oracle files changed"
       RESULT_CHECK_FILE_PATTERN: "mk-oracle.txt"
@@ -639,14 +631,6 @@ STAGES:
       TEXT_ON_SKIP: "No unixcat files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "unixcat.txt"
-
-    - NAME: "Package cmk-frontend"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES,CHANGED_JS_DEPENDENCIES
-      DIR: "packages/cmk-frontend"
-      COMMAND: "./run --build &> ${RESULTS}/cmk-frontend.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-frontend files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"
 
     - NAME: "Package cmk-relay-engine"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_RELAY_ENGINE_FILES,CHANGED_PYTHON_REQUIREMENTS,CHANGED_CMK_RELAY_PROTOCOLS_FILES

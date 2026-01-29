@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("@site_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
@@ -107,6 +108,11 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":check-cert-lib"],
+)
+
+build_test(
+    name = "build_test",
+    targets = ["check-cert"],
 )
 
 rust_doc(

@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
@@ -94,6 +95,11 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":mk-oracle-lib"],
+)
+
+build_test(
+    name = "build_test",
+    targets = [":mk-oracle"],
 )
 
 rust_test(

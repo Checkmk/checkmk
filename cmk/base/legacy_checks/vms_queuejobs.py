@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output from agent:
 # <<<vms_queuejobs>>>
 # 2036F23D SRV_WATCHPROD LEF 0 05:10:00.39 945007498 7721395
 # 20201AF1 DRS_WATCHDOG_22 LEF 0 00:01:39.97 284611 2030
 
+
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
@@ -17,11 +18,13 @@ from cmk.agent_based.v2 import StringTable
 check_info = {}
 
 
-def discover_vms_queuejobs(info):
+def discover_vms_queuejobs(info: StringTable) -> list[tuple[None, dict[str, object]]]:
     return [(None, {})]
 
 
-def check_vms_queuejobs(_no_item, params, info):
+def check_vms_queuejobs(
+    _no_item: None, params: Mapping[str, Any], info: StringTable
+) -> tuple[int, str]:
     names = []
     max_cpu_secs = 0.0
     max_cpu_job = None

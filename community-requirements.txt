@@ -400,31 +400,31 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.42.36 \
-    --hash=sha256:a4eb51105c8c5d7b2bc2a9e2316e69baf69a55611275b9f189c0cf59f1aae171 \
-    --hash=sha256:e0ff6f2747bfdec63405b35ea185a7aea35239c3f4fe99e4d29368a6de9c4a84
+boto3==1.42.37 \
+    --hash=sha256:d8b6c52c86f3bf04f71a5a53e7fb4d1527592afebffa5170cf3ef7d70966e610 \
+    --hash=sha256:e1e38fd178ffc66cfbe9cb6838b8c460000c3eb741e5f40f57eb730780ef0ed4
     # via
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.42.36 \
-    --hash=sha256:02904609e0d0aefc7f9c330b4312a5a2bff3789b03a1ba30e7cb8acb11c616a5 \
-    --hash=sha256:0c367fbe305d9c76983989eea81e4ee2f43b992f553fdb8a0de67908877c9b00
+boto3-stubs[logs]==1.42.37 \
+    --hash=sha256:07b9ac27196b233b802f8fadff2fa9c01d656927943c618dc862ff00fd592b24 \
+    --hash=sha256:1620519a55bbb26cebed95b6d8f26ba96b8ea91dadd05eafc3b8f17a587e2108
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.42.36 \
-    --hash=sha256:2cfae4c482e5e87bd835ab4289b711490c161ba57e852c06b65a03e7c25e08eb \
-    --hash=sha256:2ebd89cc75927944e2cee51b7adce749f38e0cb269a758a6464a27f8bcca65fb
+botocore==1.42.37 \
+    --hash=sha256:3ec58eb98b0857f67a2ae6aa3ded51597e7335f7640be654e0e86da4f173b5b2 \
+    --hash=sha256:f13bb8b560a10714d96fb7b0c7f17828dfa6e6606a1ead8c01c6ebb8765acbd8
     # via
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.42.36 \
-    --hash=sha256:15bed118ffc4d413a75822c7182af9a9e9989ccdf5d9528bc7b98bb03edf2971 \
-    --hash=sha256:b3e7505f411b26b303ed24835ac29a7aa7ec2aedcead92e4665d1b4566c396bd
+botocore-stubs==1.42.37 \
+    --hash=sha256:5a9b2a4062f7cc19e0648508f67d3f1a1fd8d3e0d6f5a0d3244cc9656e54cc67 \
+    --hash=sha256:7357d1876ae198757dbe0a73f887449ffdda18eb075d7d3cc2e22d3580dcb17c
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -1775,9 +1775,9 @@ httpx==0.28.1 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   schemathesis
-hypothesis==6.151.2 \
-    --hash=sha256:909d2b5f0dc80640561bb2c3859f3c56a52ed8d1cc589e5e6450362ced8c31a0 \
-    --hash=sha256:fc91f88a77074b31c7ab871eebab3d2e0210fd3095f1d1ecbd9440c1c6bc06d9
+hypothesis==6.151.4 \
+    --hash=sha256:658a62da1c3ccb36746ac2f7dc4bb1a6e76bd314e0dc54c4e1aaba2503d5545c \
+    --hash=sha256:a1cf7e0fdaa296d697a68ff3c0b3912c0050f07aa37e7d2ff33a966749d1d9b4
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -3412,38 +3412,38 @@ opsgenie-sdk==2.1.5 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-oracledb==3.4.1 \
-    --hash=sha256:1c25289448fe2965f6be2828f6ed4a19cdc11942a028dfd7251d1fafa0ae1ff9 \
-    --hash=sha256:1c3f92c023ef1983e0e7f9a1b4a31df8568974c28c06ab0a574b1126e45083a8 \
-    --hash=sha256:20b268be64994d0f636df9ff7613dcce420133f373d0d7fc84a31dd2f07322c0 \
-    --hash=sha256:251211d64b90cc42d00ec2d2893873bc02ff4bc22125e9fc5a7f148a6208fd88 \
-    --hash=sha256:337a67d6c91015dfe7a2a1915f65c74adad26fcd428daaead296d91c92f09ad1 \
-    --hash=sha256:34b9bc25eae217defa3f4b8289b4915cd1101aaeeec33c7bace74f927996d452 \
-    --hash=sha256:354177708352e124c0f97ceccbe34be05e7f3ce7040a7dd3c2ebd857145ffe74 \
-    --hash=sha256:3c695e357195c5f20b9627ffa40c275c4d883b1777ef3fd1783c8bdda6d50940 \
-    --hash=sha256:3ec1f9dd7310da7cbf219c2a05bb52df08da950c95ad2ace8a289854947bdc6b \
-    --hash=sha256:4cd24bde341ff1fcce20997972f556894198428803b8a434e7f0cab40cb5ca0c \
-    --hash=sha256:4d64fda2fa5d3e82c58b2c5126ab5511bccb84f8b47eedfe9f17e9c100fe7683 \
-    --hash=sha256:4ee604bb0f3acb5680782818f973445b8cd168e72a73b5ca2cd9807140afadee \
-    --hash=sha256:5e01e8696009cec4ebcb9fe678b23b8223595dc186c065899660cac4c1fc189b \
-    --hash=sha256:635587e5f28be83ec0bf72e4bfb2f3a4544c0f8e303f2327f376d57116894541 \
-    --hash=sha256:693ef5f8c420545511096b3bc9a3861617222717321bc78c776afbbb6c16c5b9 \
-    --hash=sha256:6adb483d7120cdd056173b71c901f71dbe2265c5bd402f768b0b1ab27af519b1 \
-    --hash=sha256:84055d6fd093a4d7b8ed653f433531e4c4cc161f7261d78efd7f6a65a1f19444 \
-    --hash=sha256:84f15c483f9ec80dcded925df6ff473c69a293cd694d09b69abb911500659df4 \
-    --hash=sha256:94e8e6d63b45fedd4e243147cb25dea1a0f6599d83852f3979fe725a8533e85a \
-    --hash=sha256:9ae8243c976988f7cb93bc2a6973c1f201bd513bd66f7cd059b5df386724e5a9 \
-    --hash=sha256:9d5ffe4dd26e8012de433ec69f93be5737d81b04324072ec36dad37eb778fd9d \
-    --hash=sha256:abedb0bf464bcf14d83e245eae000e03cad8ac68c945eb09cc46002d800fbf00 \
-    --hash=sha256:ad817807b293e371c951af8ee67a56a5af88a5680a54fe79dfc7b9393ca128aa \
-    --hash=sha256:b8a166377ac9fb4235d2e7438e1e48128d63afce833c6fa7ac8354780e21b929 \
-    --hash=sha256:be6575759ba56ab3758f82bfbb74f75288ce69190e19c087793050cb012c0aa1 \
-    --hash=sha256:c9e20b6cd3245e84c30188874c524bb3c67c79b7a04fcb864e6ac39f55eae826 \
-    --hash=sha256:cd80aa4c4dec7347c6d2909fbaf7e35a5253341ff2cb6f3782ab7ca712bf0405 \
-    --hash=sha256:d493946318d99a0f0e3f01d7c64c08ddae66f0aac735fa23c1eb94949d9db0f5 \
-    --hash=sha256:dfe18061f064d0455fad10d9301f6f92df9e32d18d75fb32802caf1ced4b304c \
-    --hash=sha256:ea529a5e6036fae3e2bc195fa76b6f48cd9c431e68c74ef78ee6a5e39c855c39 \
-    --hash=sha256:f5920df5ac9446579e8409607bba31dc2d23a2286a5b0ea17cb0d78d419392a6
+oracledb==3.4.2 \
+    --hash=sha256:00c79448017f367bb7ab6900efe0706658a53768abea2b4519a4c9b2d5743890 \
+    --hash=sha256:0e16fe3d057e0c41a23ad2ae95bfa002401690773376d476be608f79ac74bf05 \
+    --hash=sha256:0f04a2d62073407672f114d02529921de0677c6883ed7c64d8d1a3c04caa3238 \
+    --hash=sha256:1617a1db020346883455af005efbefd51be2c4d797e43b1b38455a19f8526b48 \
+    --hash=sha256:19fa80ef84f85ad74077aa626067bbe697e527bd39604b4209f9d86cb2876b89 \
+    --hash=sha256:1e4930d7f6584832dcc15b8ca415a7957b0c45f5aa7c4f88702e070e5c53bf93 \
+    --hash=sha256:23aa07c1eaca17ae74c6fdc86b218f58484d56452958aead1aa460c0596a76c1 \
+    --hash=sha256:31b7ee83c23d0439778303de8a675717f805f7e8edb5556d48c4d8343bcf14f5 \
+    --hash=sha256:3df8eee1410d25360599968b1625b000f10c5ae0e47274031a7842a9dc418890 \
+    --hash=sha256:404ec1451d0448653ee074213b87d6c5bd65eaa74b50083ddf2c9c3e11c71c71 \
+    --hash=sha256:46e0f2278ff1fe83fbc33a3b93c72d429323ec7eed47bc9484e217776cd437e5 \
+    --hash=sha256:55397e7eb43bb7017c03a981c736c25724182f5210951181dfe3fab0e5d457fb \
+    --hash=sha256:574c8280d49cbbe21dbe03fc28356d9b9a5b9e300ebcde6c6d106e51453a7e65 \
+    --hash=sha256:59ad6438f56a25e8e1a4a3dd1b42235a5d09ab9ba417ff2ad14eae6596f3d06f \
+    --hash=sha256:5d7befb014174c5ae11c3a08f5ed6668a25ab2335d8e7104dca70d54d54a5b3a \
+    --hash=sha256:5ed78d7e7079a778062744ccf42141ce4806818c3f4dd6463e4a7edd561c9f86 \
+    --hash=sha256:643c25d301a289a371e37fcedb59e5fa5e54fb321708e5c12821c4b55bdd8a4d \
+    --hash=sha256:6d85622664cc88d5a82bbd7beccb62cd53bd272c550a5e15e7d5f8ae6b86f1f1 \
+    --hash=sha256:9f434a739405557bd57cb39b62238142bb27855a524a70dc6d397a2a8c576c9d \
+    --hash=sha256:a7396664e592881225ba66385ee83ce339d864f39003d6e4ca31a894a7e7c552 \
+    --hash=sha256:ac25a0448fc830fb7029ad50cd136cdbfcd06975d53967e269772cc5cb8c203a \
+    --hash=sha256:b1095d95d0c8b37e4d0e17cf1928919cb59222b6344362a1cf6a2f3ca205a28a \
+    --hash=sha256:b26a10f9c790bd141ffc8af68520803ed4a44a9258bf7d1eea9bfdd36bd6df7f \
+    --hash=sha256:b8e4b8a852251cef09038b75f30fce1227010835f4e19cfbd436027acba2697c \
+    --hash=sha256:b974caec2c330c22bbe765705a5ac7d98ec3022811dec2042d561a3c65cb991b \
+    --hash=sha256:d7ce75c498bff758548ec6e4424ab4271aa257e5887cc436a54bc947fd46199a \
+    --hash=sha256:d8d75e4f879b908be66cce05ba6c05791a5dbb4a15e39abc01aa25c8a2492bd9 \
+    --hash=sha256:e068ef844a327877bfefbef1bc6fb7284c727bb87af80095f08d95bcaf7b8bb2 \
+    --hash=sha256:f8ea989965a4f636a309444bd696ab877bba373d5d67bf744785f9bd8c560865 \
+    --hash=sha256:f93cae08e8ed20f2d5b777a8602a71f9418389c661d2c937e84d94863e7e7011 \
+    --hash=sha256:ff3c89cecea62af8ca02aa33cab0f2edc0214c747eac7d3364ed6b2640cb55e4
     # via
     #   -c constraints.txt
     #   -c requirements.txt

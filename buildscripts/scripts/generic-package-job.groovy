@@ -57,7 +57,7 @@ void main() {
             }
         } else {
             this_call_site(safe_branch_name, output_file);
-            }
+        }
 
         // Can be removed once ci-artifacts doesn't fail anymore on empty files
         def is_empty = sh(script:"[[ -s ${output_file} ]]", returnStatus:true);

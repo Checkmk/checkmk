@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyDiscoveryResult
+from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.plugins.netextreme.lib import DETECT_NETEXTREME
 
@@ -29,8 +28,8 @@ check_info = {}
 # Just assumed
 
 
-def parse_netextreme_psu_out(string_table):
-    parsed = {}
+def parse_netextreme_psu_out(string_table: StringTable) -> Mapping[str, Mapping[str, float]]:
+    parsed: dict[str, dict[str, float]] = {}
     for psu_index, psu_voltage_str, psu_current_str, psu_factor_str in string_table:
         psu_name = "Output %s" % psu_index
         psu_voltage = float(psu_voltage_str) * pow(10, int(psu_factor_str))
@@ -54,7 +53,9 @@ def parse_netextreme_psu_out(string_table):
     return parsed
 
 
-def discover_netextreme_psu_out(section):
+def discover_netextreme_psu_out(
+    section: Mapping[str, Mapping[str, float]],
+) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 

@@ -6,7 +6,7 @@
 # mypy: disable-error-code="redundant-expr"
 
 from abc import ABC
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Annotated, Literal, override, Self
 
 from annotated_types import Ge, Interval, Unit
@@ -23,13 +23,11 @@ from cmk.gui.dashboard.type_defs import (
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
 )
-from cmk.gui.graphing import graphs_from_api
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import (
     timerange_from_internal,
     TimerangeModel,
 )
-from cmk.gui.openapi.framework.model.converter import RegistryConverter
 from cmk.gui.type_defs import GraphPresentation, GraphRenderOptionsVS, SizePT
 
 from ..type_defs import ColorHex
@@ -235,23 +233,11 @@ class ProblemGraphContent(_BaseGraphContent):
         return ProblemsGraphDashletConfig(**self._to_internal())
 
 
-def _validate_graph_template(value: str) -> str:
-    try:
-        return RegistryConverter(graphs_from_api).validate(value)
-    except ValueError as exc:
-        original_exception = exc
-
-    if value.startswith("METRIC_"):
-        # NOTE: currently no way to easily validate metrics, especially without host/service info
-        return value
-
-    raise original_exception
-
-
 @api_model
 class CombinedGraphContent(_BaseGraphContent):
     type: Literal["combined_graph"] = api_field(description="Displays a combined graph")
-    graph_template: Annotated[str, AfterValidator(_validate_graph_template)] = api_field(
+    # NOTE: we skip validation in case the value becomes invalid later
+    graph_template: str = api_field(
         description="The graph template to use for the combined graph.",
     )
     presentation: GraphPresentation = api_field(description="The format of the combined graph.")
@@ -287,7 +273,7 @@ class SingleTimeseriesContent(_BaseGraphContent):
     type: Literal["single_timeseries"] = api_field(
         description="Displays a timeseries for a single metric of a specific host and service.",
     )
-    # NOTE: currently no way to easily validate metrics, especially without host/service info
+    # NOTE: we skip validation in case the value becomes invalid later
     metric: str = api_field(description="Name of the metric.")
     color: Literal["default_theme", "default_metric"] | ColorHex = api_field(
         description="Color of the timeseries line.",
@@ -319,25 +305,13 @@ class SingleTimeseriesContent(_BaseGraphContent):
         )
 
 
-class ApiCustomGraphValidation:
-    is_graph_valid: Callable[[str], bool] = lambda graph: False
-
-    @staticmethod
-    def validate(value: str) -> str:
-        if ApiCustomGraphValidation.is_graph_valid(value):
-            return value
-
-        raise ValueError(f"Invalid custom graph: {value}")
-
-
 @api_model
 class CustomGraphContent(_BaseGraphContent):
     type: Literal["custom_graph"] = api_field(
         description="Displays a custom graph designed with the graph designer.",
     )
-    custom_graph: Annotated[str, AfterValidator(ApiCustomGraphValidation.validate)] = api_field(
-        description="Name of the custom graph."
-    )
+    # NOTE: we skip validation in case the value becomes invalid later
+    custom_graph: str = api_field(description="Name of the custom graph.")
 
     @classmethod
     @override
@@ -376,10 +350,10 @@ class PerformanceGraphContent(_BaseGraphContent):
     type: Literal["performance_graph"] = api_field(
         description="Displays a performance graph of a host or service."
     )
-    source: (
-        Annotated[str, AfterValidator(_validate_graph_template)]
-        | Annotated[int, Ge(1), AfterValidator(_only_str_on_input)]
-    ) = api_field(description="Graph id or number of the performance graph.")
+    # NOTE: we skip validation in case the value becomes invalid later
+    source: str | Annotated[int, Ge(1), AfterValidator(_only_str_on_input)] = api_field(
+        description="Graph id or number of the performance graph."
+    )
 
     @classmethod
     @override

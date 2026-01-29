@@ -24,10 +24,8 @@ from ._utils import (
     PERMISSIONS_DASHBOARD_EDIT,
     save_dashboard_to_file,
 )
-from .model.widget_content.graph import ApiCustomGraphValidation
 
 __all__ = [
-    "ApiCustomGraphValidation",
     "DASHBOARD_FAMILY",
     "DashboardConstants",
     "DashboardOwnerWithBuiltin",

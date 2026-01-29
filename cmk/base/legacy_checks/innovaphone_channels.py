@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
 from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 from cmk.base.check_legacy_includes.innovaphone import check_innovaphone
 
@@ -18,7 +20,9 @@ def discover_innovaphone_channels(string_table: StringTable) -> DiscoveryResult:
     yield from (Service(item=x[0]) for x in string_table if x[1] == "Up" and x[2] == "Up")
 
 
-def check_innovaphone_channels(item, params, info):
+def check_innovaphone_channels(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> LegacyCheckResult:
     for line in info:
         if line[0] == item:
             link, physical = line[1:3]

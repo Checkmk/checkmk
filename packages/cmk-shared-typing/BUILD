@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
@@ -214,6 +215,11 @@ py_wheel(
         ":cmk_shared_typing_extra_files",
         ":cmk_shared_typing_py",
     ],
+)
+
+build_test(
+    name = "build_test",
+    targets = ["wheel"],
 )
 
 package_wheel(

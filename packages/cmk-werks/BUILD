@@ -1,5 +1,6 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_python//python:packaging.bzl", "py_wheel")
@@ -120,6 +121,11 @@ py_wheel(
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [],
+)
+
+build_test(
+    name = "build_test",
+    targets = ["wheel_entrypoint_only"],
 )
 
 package_wheel(

@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
@@ -490,6 +491,11 @@ py_wheel(
         ":cmk",
         ":miscellaneous",
     ],
+)
+
+build_test(
+    name = "build_test",
+    targets = ["cmk_whl"],
 )
 
 package_wheel(

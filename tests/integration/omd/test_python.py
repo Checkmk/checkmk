@@ -259,6 +259,8 @@ def test_all_bytecode_files_exist(site: Site) -> None:
     for py_path in Path(site.root).rglob("*.py"):
         if "check_mk/agents/plugins" in py_path.as_posix():
             continue
+        if "/skel/" in py_path.as_posix():
+            continue
         pyc_path = Path(cache_from_source(py_path))
         expected_pyc_path = (
             py_path.parent / f"__pycache__/{py_path.stem}.cpython-{PYVER.major}{PYVER.minor}.pyc"

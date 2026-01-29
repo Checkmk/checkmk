@@ -7,7 +7,8 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-
+# ruff: noqa: RUF100
+# ruff: noqa: I001
 
 import sys
 from unittest.mock import Mock

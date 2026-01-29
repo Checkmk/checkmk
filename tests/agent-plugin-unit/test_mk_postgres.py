@@ -6,7 +6,8 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-
+# ruff: noqa: RUF100
+# ruff: noqa: I001
 
 import copy
 import sys

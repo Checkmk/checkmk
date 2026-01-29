@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-
+# ruff: noqa: RUF100
+# ruff: noqa: I001
 
 import pytest
 from agents.plugins import mtr

@@ -7,6 +7,8 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="unreachable"
+# ruff: noqa: RUF100
+# ruff: noqa: I001
 
 # fmt: off
 

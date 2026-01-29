@@ -5,8 +5,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from tests.testlib.site import Site
 
 
@@ -82,7 +80,7 @@ def test_rotate_remote_site_ca(central_site: Site, remote_site: Site) -> None:
      - verify that the CA certificate fingerprint has changed
     """
 
-    old_ca_fingerprint = _read_fingerprint(remote_site, Path(f"etc/ssl/ca.pem"))
+    old_ca_fingerprint = _read_fingerprint(remote_site, Path("etc/ssl/ca.pem"))
     old_site_cert_fingerprint = _read_fingerprint(
         remote_site, Path(f"etc/ssl/sites/{remote_site.id}.pem")
     )
@@ -100,7 +98,7 @@ def test_rotate_remote_site_ca(central_site: Site, remote_site: Site) -> None:
         # new CA certificate is staged in temp_certificate on remote site
         "Expected new CA file in temp_certificate directory on remote site"
     )
-    assert _read_fingerprint(remote_site, Path(f"etc/ssl/ca.pem")) == old_ca_fingerprint, (
+    assert _read_fingerprint(remote_site, Path("etc/ssl/ca.pem")) == old_ca_fingerprint, (
         "Remote site CA certificate fingerprint changed before activation"
     )
     assert central_site.openapi.changes.get_pending(), "Expected pending changes after CA rotation"
@@ -114,7 +112,7 @@ def test_rotate_remote_site_ca(central_site: Site, remote_site: Site) -> None:
         ["cmk-cert", "rotate", "site-ca", "--remote-site", remote_site.id, "--finalize"]
     )
 
-    assert old_ca_fingerprint != _read_fingerprint(remote_site, Path(f"etc/ssl/ca.pem")), (
+    assert old_ca_fingerprint != _read_fingerprint(remote_site, Path("etc/ssl/ca.pem")), (
         "Remote site CA certificate fingerprint did not change"
     )
     assert old_site_cert_fingerprint != _read_fingerprint(

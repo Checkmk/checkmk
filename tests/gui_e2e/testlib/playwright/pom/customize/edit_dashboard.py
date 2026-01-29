@@ -17,9 +17,6 @@ from tests.gui_e2e.testlib.playwright.pom.sidebar.create_dashboard_sidebar impor
     CreateDashboardSidebar,
     DashboardType,
 )
-from tests.gui_e2e.testlib.playwright.pom.sidebar.filter_configuration_sidebar import (
-    FilterConfigurationSidebar,
-)
 
 
 @dataclass

@@ -128,6 +128,7 @@ def configure_authentication() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host"),
+                permissions=["wato.passwords"],
             )
         ],
     )
@@ -150,6 +151,7 @@ def configure_host() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure services to monitor"),
+                permissions=["wato.hosts"],
             )
         ],
         prev_button_label=PREV_BUTTON_LABEL,
@@ -333,6 +335,7 @@ quick_setup_gcp = QuickSetup(
             label=_("Save & go to Activate changes"),
             icon=QuickSetupActionButtonIcon(name="save-to-services"),
             action=action,
+            permissions=["wato.passwords", "wato.rulesets", "wato.hosts"],
         ),
     ],
 )

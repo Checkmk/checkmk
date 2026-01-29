@@ -2,6 +2,8 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/plugins/OWNERS_DEFINITION
 
+per-file azure*=file:/component_owners/plugins_azure/OWNERS_DEFINITION
+per-file azure*=set noparent
 per-file informix*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file informix*=set noparent
 per-file jolokia*=file:/component_owners/plugins_jolokia/OWNERS_DEFINITION

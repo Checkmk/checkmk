@@ -1,3 +1,6 @@
+
+per-file azure*=file:/component_owners/plugins_azure/OWNERS_DEFINITION
+per-file azure*=set noparent
 per-file jolokia*=file:/component_owners/plugins_jolokia/OWNERS_DEFINITION
 per-file jolokia*=set noparent
 per-file kube*=file:/component_owners/plugins_kube/OWNERS_DEFINITION

@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# HACK: We really need to inject this via a toolchain.
-user=$(id --user --name)
-if test -x /opt/bin/include-what-you-use && { [ "$user" = root ] || [ "$user" = jenkins ]; }; then
-    exec /opt/bin/include-what-you-use "$@" --gcc-toolchain=/opt/gcc-14.2.0
-else
-    exec include-what-you-use "$@"
-fi

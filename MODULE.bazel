@@ -53,7 +53,6 @@ git_override(
     remote = "https://github.com/agoessling/rules_sphinx/",
 )
 
-bazel_dep(name = "bazel_iwyu", dev_dependency = True)
 bazel_dep(name = "bazel_env.bzl", version = "0.5.0", dev_dependency = True)
 bazel_dep(
     name = "llvm_linux_x86_64",
@@ -78,16 +77,6 @@ bazel_dep(
     name = "hedron_compile_commands",
     dev_dependency = True,
 )
-
-git_override(
-    module_name = "bazel_iwyu",
-    # Live on head because of https://github.com/storypku/bazel_iwyu/issues/5
-    # even if using master doesn't solve the issue.
-    commit = "1fe9048c30469ac506498c3c740ce47475ad3361",
-    patches = ["//bazel/patches:bazel_iwyu-make_IWYU_executable_configurable.patch"],
-    remote = "https://github.com/storypku/bazel_iwyu.git",
-)
-
 git_override(
     module_name = "hedron_compile_commands",
     # No tags, no releases.  Let's go with today's head.

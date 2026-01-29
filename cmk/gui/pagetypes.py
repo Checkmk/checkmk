@@ -38,7 +38,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
-from cmk.gui import sites, userdb
+from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
@@ -100,7 +100,12 @@ from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
@@ -119,6 +124,7 @@ from cmk.gui.valuespec import (
     TextInput,
     ValueSpec,
 )
+from cmk.gui.watolib.groups_io import all_groups
 
 SubPagesSpec = list[tuple[str, str, StaticIcon]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]
@@ -1665,7 +1671,7 @@ def _page_menu_entries_sub_pages(
 
 def ContactGroupChoice(with_foreign_groups: bool) -> DualListChoice:
     def _load_groups() -> list[tuple[str, str]]:
-        contact_group_choices = sites.all_groups("contact")
+        contact_group_choices = all_groups("contact")
         return [
             (group_id, alias)
             for (group_id, alias) in contact_group_choices

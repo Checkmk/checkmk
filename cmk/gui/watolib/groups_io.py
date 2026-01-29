@@ -7,10 +7,11 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, cast, Literal, NotRequired, TypedDict
 
-from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs
+from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.hooks import request_memoize
+from cmk.gui.sites import live
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
 from cmk.utils import paths
 
@@ -46,6 +47,20 @@ class GroupConfigs(TypedDict):
     multisite_hostgroups: dict[GroupName, GroupConfig]
     multisite_servicegroups: dict[GroupName, GroupConfig]
     multisite_contactgroups: dict[GroupName, ContactGroupConfig]
+
+
+def all_groups(group_type: GroupType) -> list[tuple[str, str]]:
+    """Returns a list of host/service/contact groups (pairs of name/alias)
+
+    Groups are collected via livestatus from all sites. In case no alias is defined
+    the name is used as second element. The list is sorted by lower case alias in the first place.
+    """
+    query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % group_type
+    groups = cast(list[tuple[str, str]], live().query(query))
+    # The dict() removes duplicate group names. Aliases don't need be deduplicated.
+    return sorted(
+        [(name, alias or name) for name, alias in dict(groups).items()], key=lambda e: e[1].lower()
+    )
 
 
 def load_host_group_information() -> GroupSpecs:

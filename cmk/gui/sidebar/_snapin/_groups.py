@@ -5,12 +5,12 @@
 
 import abc
 
-from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.groups import GroupType
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import urlencode
+from cmk.gui.watolib.groups_io import all_groups
 
 from ._base import SidebarSnapin
 from ._helpers import bulletlink
@@ -33,7 +33,7 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
                 raise ValueError(f"Unknown group type: {group_type}")
 
         html.open_ul()
-        for name, alias in sites.all_groups(grouped_type):
+        for name, alias in all_groups(grouped_type):
             url = f"view.py?view_name={group_type}&{group_type}={urlencode(name)}"
             bulletlink(alias or name, url)
         html.close_ul()

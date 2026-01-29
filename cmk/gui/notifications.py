@@ -36,7 +36,7 @@ from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.notifications import (
     acknowledge_failed_notifications,
-    acknowledged_time,
+    effective_notification_horizon,
     failed_notification_query,
     g_columns,
     may_see_failed_notifications,
@@ -86,7 +86,9 @@ class ClearFailedNotificationPage(Page):
                 user_profile_async_replication_page(back_url="clear_failed_notifications.py")
                 return
 
-        failed_notifications = _load_failed_notifications(before=acktime, after=acknowledged_time())
+        failed_notifications = _load_failed_notifications(
+            before=acktime, after=effective_notification_horizon(with_acknowledgement=True)
+        )
         self._show_page(ctx.request, acktime, failed_notifications)
         if ctx.request.var("_confirm"):
             html.reload_whole_page()

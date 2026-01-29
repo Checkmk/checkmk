@@ -21,7 +21,10 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import IconNames, StaticIcon, VisualContext
-from cmk.gui.utils.notifications import acknowledged_time, number_of_failed_notifications
+from cmk.gui.utils.notifications import (
+    effective_notification_horizon,
+    number_of_failed_notifications,
+)
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput, ValueSpec
 
@@ -490,7 +493,9 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if self.parameters().show_failed_notifications is None:
             return
 
-        failed_notifications = number_of_failed_notifications(from_timestamp=acknowledged_time())
+        failed_notifications = number_of_failed_notifications(
+            from_timestamp=effective_notification_horizon(with_acknowledgement=True)
+        )
         if not failed_notifications:
             return
 

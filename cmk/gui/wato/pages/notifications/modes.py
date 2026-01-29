@@ -20,7 +20,7 @@ import time
 from collections.abc import Collection, Generator, Iterator, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import asdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, cast, Literal, NamedTuple, NotRequired, overload, TypedDict
 
 from livestatus import LivestatusResponse, SiteConfiguration, SiteConfigurations
@@ -96,7 +96,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.notifications import (
-    acknowledged_time,
+    effective_notification_horizon,
     get_disabled_notifications_infos,
     number_of_failed_notifications,
     number_of_total_sent_notifications,
@@ -1161,9 +1161,19 @@ def _get_vue_data() -> Notifications:
             else None
         ),
         notification_stats=NotificationStats(
-            num_sent_notifications=_number_of_total_sent_notifications_last_seven_days(),
+            num_sent_notifications=number_of_total_sent_notifications(
+                from_timestamp=(
+                    _total_sent_notification_horizon := effective_notification_horizon(
+                        with_acknowledgement=False
+                    )
+                )
+            ),
             num_failed_notifications=number_of_failed_notifications(
-                from_timestamp=acknowledged_time()
+                from_timestamp=(
+                    _failed_notification_horizon := effective_notification_horizon(
+                        with_acknowledgement=True
+                    )
+                )
             ),
             sent_notification_link=makeuri_contextless(
                 request,
@@ -1172,7 +1182,8 @@ def _get_vue_data() -> Notifications:
                     ("_show_filter_form", "0"),
                     ("filled_in", "filter"),
                     ("_active", "logtime;log_notification_phase;log_class;log_type"),
-                    ("logtime_from", "7"),
+                    ("logtime_from", str(int(_total_sent_notification_horizon))),
+                    ("logtime_from_range", "unix"),
                     ("is_log_notification_phase", "0"),
                     ("logclass3", "on"),
                     ("log_type", ".*NOTIFICATION RESULT$"),
@@ -1187,7 +1198,8 @@ def _get_vue_data() -> Notifications:
             i18n=NotificationStatsI18n(
                 sent_notifications=_("Total sent notifications"),
                 failed_notifications=_("Failed notifications"),
-                sent_notifications_link_title=_("Last 7 days"),
+                sent_notifications_link_title=_("View last %s")
+                % _since_str(_total_sent_notification_horizon),
                 failed_notifications_link_title=_("View failed notifications"),
             ),
         ),
@@ -1226,11 +1238,20 @@ def _get_vue_data() -> Notifications:
     )
 
 
-def _number_of_total_sent_notifications_last_seven_days() -> int:
-    current_time = datetime.now()
-    seven_days_ago = current_time - timedelta(days=7)
-    from_timestamp = int(seven_days_ago.timestamp())
-    return number_of_total_sent_notifications(from_timestamp=from_timestamp)
+def _since_str(since: float) -> str:
+    """
+    >>> print(_since_str(time.time() - 90000))
+    1 day
+    >>> print(_since_str(time.time() - 8000))
+    2 hours
+    """
+    if (dur := int(time.time() - since)) >= 86400:
+        return (_("%d day") if (days := dur // 86400) == 1 else _("%d days")) % days
+    if dur >= 3600:
+        return (_("%d hour") if (hours := dur // 3600) == 1 else _("%d hours")) % hours
+    if dur >= 60:
+        return (_("%d minute") if (minutes := dur // 60) == 1 else _("%d minutes")) % minutes
+    return _("%d seconds") % dur
 
 
 def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:

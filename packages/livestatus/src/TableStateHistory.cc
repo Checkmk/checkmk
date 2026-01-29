@@ -259,6 +259,13 @@ void set_unknown_to_unmonitored(
     }
 }
 
+void reset_downtime_depths(const TableStateHistory::state_info_t &state_info) {
+    for (const auto &[_, hss] : state_info) {
+        hss->_downtime_depth = 0;
+        hss->_host_downtime_depth = 0;
+    }
+}
+
 void handle_log_initial_states(
     const TableStateHistory::state_info_t &state_info,
     std::chrono::system_clock::time_point entry_time) {
@@ -365,10 +372,20 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         }
 
         switch (entry->kind()) {
+            case LogEntryKind::log_version:
+                if (in_nagios_initial_states) {
+                    set_unknown_to_unmonitored(state_info);
+                }
+                // This kind log line comes very early after starting the core
+                // or rotating the logfile. As a safeguard, we reset all
+                // downtime depths to zero. If there are already active
+                // downtimes, we will see downtime alert lines soon.
+                reset_downtime_depths(state_info);
+                in_nagios_initial_states = false;
+                break;
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
             case LogEntryKind::core_stopping:
-            case LogEntryKind::log_version:
             case LogEntryKind::host_acknowledge_alert:
             case LogEntryKind::service_acknowledge_alert:
                 if (in_nagios_initial_states) {
@@ -734,19 +751,16 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             break;
         }
         case LogEntryKind::host_downtime_alert: {
-            const bool downtime_active =
-                entry->state_type().starts_with("STARTED");
-
-            // TODO(sp) We need to do the actual counting here!
-            if ((hss._host_downtime_depth > 0) != downtime_active) {
+            const bool started = entry->state_type().starts_with("STARTED");
+            if ((hss._host_downtime_depth > 0) != started) {
                 if (!only_update) {
                     abort_query_ = processor.process(hss);
                 }
                 hss._debug_info =
                     hss._is_host ? "HOST DOWNTIME" : "SVC HOST DOWNTIME";
-                hss._host_downtime_depth = downtime_active ? 1 : 0;
+                hss._host_downtime_depth += started ? 1 : -1;
                 if (hss._is_host) {
-                    hss._downtime_depth = downtime_active ? 1 : 0;
+                    hss._downtime_depth += started ? 1 : -1;
                 }
             } else {
                 state_changed = ModificationStatus::unchanged;
@@ -754,14 +768,13 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             break;
         }
         case LogEntryKind::service_downtime_alert: {
-            const bool downtime_active =
-                entry->state_type().starts_with("STARTED");
-            if ((hss._downtime_depth > 0) != downtime_active) {
+            const bool started = entry->state_type().starts_with("STARTED");
+            if ((hss._downtime_depth > 0) != started) {
                 if (!only_update) {
                     abort_query_ = processor.process(hss);
                 }
                 hss._debug_info = "DOWNTIME SERVICE";
-                hss._downtime_depth = downtime_active ? 1 : 0;
+                hss._downtime_depth += started ? 1 : -1;
             }
             break;
         }

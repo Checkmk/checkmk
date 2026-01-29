@@ -23,7 +23,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.hosts import (
     SetupHost,
 )
 from tests.testlib.site import Site
-from tests.testlib.utils import is_cleanup_enabled
+from tests.testlib.utils import is_cleanup_enabled, run
 
 logger = logging.getLogger(__name__)
 
@@ -272,7 +272,25 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
             SetupHost(dashboard_page.page).delete_hosts(host_name)
 
 
-def test_ping_host(dashboard_page: MainDashboard) -> None:
+@pytest.fixture(name="bypass_nslookup")
+def _bypass_nslookup(test_site: Site) -> Iterator[None]:
+    """Fixture to bypass `nslookup` command in the checkmk site.
+
+    For any reason, `nslookup` does not work properly in CI, so this fixture creates a dummy
+    `nslookup` command that always return 0 (OK), so then checkmk will execute `ping` to validate
+    the hostname.
+    """
+    dummy_nslookup = test_site.path("local/bin/nslookup")
+
+    run(["tee", str(dummy_nslookup)], input_="#!/bin/bash\n\nexit 0\n", sudo=True)
+    run(["chmod", "a+x", str(dummy_nslookup)], sudo=True)
+
+    yield
+
+    run(["rm", str(dummy_nslookup)], sudo=True)
+
+
+def test_ping_host(bypass_nslookup: None, dashboard_page: MainDashboard) -> None:
     """Validate pinging of a host."""
     add_host = AddHost(dashboard_page.page)
 

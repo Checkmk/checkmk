@@ -74,6 +74,7 @@ class ApiInterfaceAttributes(TypedDict, total=False):
     mega_menu_icons: Literal["topic", "entry"]  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     show_mode: Literal["default", "default_show_less", "default_show_more", "enforce_show_more"]
     contextual_help_icon: Literal["show_icon", "hide_icon"]
+    navbar_changes_action: Literal["full_page", "slideout"]
 
 
 class InternalInterfaceAttributes(TypedDict, total=False):
@@ -83,6 +84,7 @@ class InternalInterfaceAttributes(TypedDict, total=False):
     icons_per_item: Literal["entry"] | None
     show_mode: Literal["default_show_less", "default_show_more", "enforce_show_more"] | None
     contextual_help_icon: Literal["hide_icon"] | None
+    navbar_changes_action: Literal["full_page", "slideout"] | None
 
 
 PERMISSIONS = permissions.Perm("wato.users")
@@ -363,6 +365,8 @@ def _internal_to_api_format(
         iia["icons_per_item"] = internal_attrs["icons_per_item"]
     if "show_mode" in internal_attrs:
         iia["show_mode"] = internal_attrs["show_mode"]
+    if "navbar_changes_action" in internal_attrs:
+        iia["navbar_changes_action"] = internal_attrs["navbar_changes_action"]
     if interface_options := _interface_options_to_api_format(iia):
         api_attrs["interface_options"] = interface_options
 
@@ -643,20 +647,20 @@ def _update_idle_options(
 def _interface_options_to_internal_format(
     api_interface_options: ApiInterfaceAttributes,
 ) -> InternalInterfaceAttributes:
-    internal_inteface_options = InternalInterfaceAttributes()
+    internal_interface_options = InternalInterfaceAttributes()
     if theme := api_interface_options.get("interface_theme"):
-        internal_inteface_options["ui_theme"] = {
+        internal_interface_options["ui_theme"] = {
             "default": None,
             "dark": "modern-dark",
             "light": "facelift",
         }[theme]
     if sidebar_position := api_interface_options.get("sidebar_position"):
-        internal_inteface_options["ui_sidebar_position"] = {
+        internal_interface_options["ui_sidebar_position"] = {
             "right": None,
             "left": "left",
         }[sidebar_position]
     if show_icon_titles := api_interface_options.get("navigation_bar_icons"):
-        internal_inteface_options["nav_hide_icons_title"] = {
+        internal_interface_options["nav_hide_icons_title"] = {
             "show": None,
             "hide": "hide",
         }[show_icon_titles]
@@ -666,12 +670,12 @@ def _interface_options_to_internal_format(
     if icons_per_item is None:
         icons_per_item = api_interface_options.get("mega_menu_icons", None)
     if icons_per_item is not None:
-        internal_inteface_options["icons_per_item"] = {"topic": None, "entry": "entry"}[
+        internal_interface_options["icons_per_item"] = {"topic": None, "entry": "entry"}[
             icons_per_item
         ]
 
     if show_mode := api_interface_options.get("show_mode"):
-        internal_inteface_options["show_mode"] = {
+        internal_interface_options["show_mode"] = {
             "default": None,
             "default_show_less": "default_show_less",
             "default_show_more": "default_show_more",
@@ -679,11 +683,19 @@ def _interface_options_to_internal_format(
         }[show_mode]
 
     if help_icon := api_interface_options.get("contextual_help_icon"):
-        internal_inteface_options["contextual_help_icon"] = (
+        internal_interface_options["contextual_help_icon"] = (
             None if help_icon == "show_icon" else "hide_icon"
         )
 
-    return internal_inteface_options
+    match api_interface_options.get("navbar_changes_action"):
+        case "full_page":
+            internal_interface_options["navbar_changes_action"] = "full_page"
+        case "slideout" | None:
+            internal_interface_options["navbar_changes_action"] = None
+        case _:
+            ...
+
+    return internal_interface_options
 
 
 def _interface_options_to_api_format(
@@ -731,6 +743,14 @@ def _interface_options_to_api_format(
         if internal_interface_options.get("contextual_help_icon") is None
         else "hide_icon"
     )
+
+    match internal_interface_options.get("navbar_changes_action"):
+        case "full_page":
+            attributes["navbar_changes_action"] = "full_page"
+        case None:
+            attributes["navbar_changes_action"] = "slideout"
+        case _:
+            ...
 
     return attributes
 

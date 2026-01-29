@@ -235,6 +235,13 @@ class UserInterfaceAttributes(BaseSchema):
         example="show_icon",
         load_default="show_icon",
     )
+    navbar_changes_action = fields.String(
+        required=False,
+        description="The view mode for activating changes. Either the slideout or the full page view.",
+        enum=["slideout", "full_page"],
+        load_default="slideout",
+        example="slideout",
+    )
 
     # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     @pre_load
@@ -424,6 +431,7 @@ class CreateUser(CustomUserAttributes):
             "mega_menu_icons": "topic",  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
             "show_mode": "default",
             "contextual_help_icon": "show_icon",
+            "navbar_changes_action": "slideout",
         },
         example={"interface_theme": "dark"},
         description="",
@@ -480,6 +488,12 @@ class UserInterfaceUpdateAttributes(BaseSchema):
         description="Whether or not to show the contextual icon in the UI for this user.",
         example="show_icon",
         load_default="show_icon",
+    )
+    navbar_changes_action = fields.String(
+        required=False,
+        description="The view mode for activating changes. Either the slideout or the full page view.",
+        enum=["slideout", "full_page"],
+        example="slideout",
     )
 
     # TODO: DEPRECATED(18295) remove "mega_menu_icons"

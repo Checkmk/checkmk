@@ -125,6 +125,7 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
             "show_mode": "default",
             "sidebar_position": "right",
             "contextual_help_icon": "show_icon",
+            "navbar_changes_action": "slideout",
         },
         "start_url": "default_start_url",
     }
@@ -690,6 +691,7 @@ def test_global_full_configuration(clients: ClientRegistry) -> None:
             "show_mode": "default",
             "sidebar_position": "right",
             "contextual_help_icon": "show_icon",
+            "navbar_changes_action": "slideout",
         },
         "temperature_unit": "fahrenheit",
         "start_url": "default_start_url",
@@ -785,6 +787,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
             "show_mode": "default",
             "sidebar_position": "right",
             "contextual_help_icon": "show_icon",
+            "navbar_changes_action": "slideout",
         },
         "start_url": "default_start_url",
     }
@@ -1432,3 +1435,30 @@ def test_openapi_create_user_edit_start_url(clients: ClientRegistry) -> None:
         ).json["extensions"]["start_url"]
         == "some_custom_url"
     )
+
+
+@managedtest
+@pytest.mark.parametrize(
+    "field_value, expected_status_code",
+    [
+        ("slideout", 200),
+        ("full_page", 200),
+        ("invalid", 400),
+    ],
+)
+def test_user_navbar_changes_action_param(
+    clients: ClientRegistry,
+    field_value: str,
+    expected_status_code: int,
+) -> None:
+    resp = clients.User.create(
+        username=_random_string(10),
+        fullname="KPECYCq79E",
+        customer="provider",
+        interface_options={"navbar_changes_action": field_value},
+        expect_ok=True if expected_status_code == 200 else False,
+    )
+    resp.assert_status_code(expected_status_code)
+
+    if expected_status_code == 200:
+        assert resp.json["extensions"]["interface_options"]["navbar_changes_action"] == field_value

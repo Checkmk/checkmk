@@ -101,6 +101,11 @@ class ConcreteUserInterfaceAttributes(BaseSchema):
         example="show_icon",
         load_default="show_icon",
     )
+    navbar_changes_action = fields.String(
+        description="The view mode for activating changes. Either the slideout or the full page view.",
+        enum=["slideout", "full_page"],
+        example="slideout",
+    )
 
 
 class UserIdleOption(BaseSchema):

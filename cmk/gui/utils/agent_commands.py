@@ -3,16 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, overload
 from urllib.parse import urlparse
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.shared_typing.agent_slideout import AgentInstallCmds, AgentRegistrationCmds
-from cmk.shared_typing.mode_host import ModeHostServerPerSite
+from cmk.shared_typing.mode_host import (
+    AgentInstallCmds as ModeHostAgentInstallCmds,
+)
+from cmk.shared_typing.mode_host import (
+    AgentRegistrationCmds as ModeHostAgentRegistrationCmds,
+)
+from cmk.shared_typing.mode_host import (
+    AgentSlideout as ModeHostAgentSlideout,
+)
+from cmk.shared_typing.mode_host import (
+    ModeHostServerPerSite,
+)
 from cmk.shared_typing.setup import AgentDownloadServerPerSite
+from cmk.shared_typing.setup import AgentInstallCmds as SetupAgentInstallCmds
+from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrationCmds
+from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 
 WINDOWS_AGENT_INSTALL_CMD = """curl.exe -fOG {{SERVER}}/{{SITE}}/check_mk/agents/windows/check_mk_agent.msi && ^
 msiexec /i check_mk_agent.msi"""
@@ -123,3 +138,54 @@ def get_server_per_site(
         )
         for site_id, config_key in active_config.sites.items()
     ]
+
+
+@overload
+def get_agent_slideout(
+    hostname: HostName,
+    save_host: bool,
+    host_exists: bool,
+    all_agents_url: str,
+    agent_slideout_cls: type[SetupAgentSlideout],
+    agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
+    agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
+    version: str,
+) -> SetupAgentSlideout: ...
+
+
+@overload
+def get_agent_slideout(
+    hostname: HostName,
+    save_host: bool,
+    host_exists: bool,
+    all_agents_url: str,
+    agent_slideout_cls: type[ModeHostAgentSlideout],
+    agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
+    agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
+    version: str,
+) -> ModeHostAgentSlideout: ...
+
+
+def get_agent_slideout(
+    hostname: HostName,
+    save_host: bool,
+    host_exists: bool,
+    all_agents_url: str,
+    agent_slideout_cls: type[SetupAgentSlideout | ModeHostAgentSlideout],
+    agent_install_cls: type,
+    agent_registration_cls: type,
+    version: str,
+) -> Any:
+    return agent_slideout_cls(
+        all_agents_url=all_agents_url,
+        host_name=hostname,
+        agent_install_cmds=agent_install_cls(
+            **asdict(agent_commands_registry["agent_commands"].install_cmds(version))
+        ),
+        agent_registration_cmds=agent_registration_cls(
+            **asdict(agent_commands_registry["agent_commands"].registration_cmds())
+        ),
+        legacy_agent_url=agent_commands_registry["agent_commands"].legacy_agent_url(),
+        save_host=save_host,
+        host_exists=host_exists,
+    )

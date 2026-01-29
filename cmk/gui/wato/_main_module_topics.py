@@ -81,7 +81,7 @@ MainModuleTopicMaintenance = MainModuleTopic(
 
 MainModuleTopicExporter = MainModuleTopic(
     name="exporter",
-    title=_l("Exporter"),
+    title=_l("Connectors"),
     icon_name=DynamicIconName("topic_exporter"),
     sort_index=150,
 )

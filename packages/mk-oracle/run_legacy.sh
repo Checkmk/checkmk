@@ -22,7 +22,7 @@ export DB_USER="system"
 export DB_PASSWORD="${CI_ORA2_DB_TEST_PASSWORD}"
 export DB_HOST="ora-rocktest.dev.checkmk.net"
 export DB_SERVICE_NAME="FREE.cmkoratest"
-export DB_SECTION="instance"
+export DB_SECTION="${DB_SECTION:-instance}"
 envsubst <"${MK_CONFDIR}/mk_oracle.cfg.conf" >"${MK_CONFDIR}/mk_oracle.cfg"
 
 # sqlplus

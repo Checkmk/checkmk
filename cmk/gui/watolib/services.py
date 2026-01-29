@@ -122,12 +122,7 @@ class DiscoveryState:
 
 
 class DiscoveryAction(enum.StrEnum):
-    """This is exported to javascript, so it has to be json serializable
-
-    >>> import json
-    >>> [json.dumps(a) for a in DiscoveryAction]
-    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"', '"update_service_labels"', '"update_discovery_parameters"', '"single_update_service_properties"']
-    """
+    """This is exported to javascript, so it has to be json serializable"""
 
     NONE = ""  # corresponds to Full Scan in WATO
     STOP = "stop"

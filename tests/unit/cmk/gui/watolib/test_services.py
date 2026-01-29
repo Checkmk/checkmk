@@ -6,6 +6,7 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
+import json
 from collections.abc import Generator, Mapping, Sequence
 from unittest.mock import call, MagicMock, patch
 
@@ -152,6 +153,23 @@ def fixture_sample_host(
         debug=False,
         use_git=False,
     )
+
+
+def test_discovery_action_json_serializable() -> None:
+    assert [json.dumps(a) for a in DiscoveryAction] == [
+        '""',
+        '"stop"',
+        '"fix_all"',
+        '"refresh"',
+        '"tabula_rasa"',
+        '"single_update"',
+        '"bulk_update"',
+        '"update_host_labels"',
+        '"update_services"',
+        '"update_service_labels"',
+        '"update_discovery_parameters"',
+        '"single_update_service_properties"',
+    ]
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

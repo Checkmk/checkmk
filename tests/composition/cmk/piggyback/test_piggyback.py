@@ -140,6 +140,36 @@ def test_piggyback_services_source_remote(piggyback_env_two_site_setup: tuple[Si
         )
 
 
+@pytest.mark.skip_if_not_edition("managed")
+def test_piggyback_services_source_remote_diff_customer(
+    piggyback_env_two_site_setup: tuple[Site, Site],
+) -> None:
+    """
+    - Service for host _HOSTNAME_PIGGYBACKED, generated on site central_site, is monitored on remote_site
+    - change customer of remote_site to a different one: service is no more monitored on remote_site
+    """
+    central_site, remote_site = piggyback_env_two_site_setup
+    _HOSTNAME_PIGGYBACKED = "piggybacked_host_source_remote"
+    with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
+        _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        assert piggybacked_data_gets_updated(
+            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
+        )
+
+        with _change_remote_site_customer(central_site, remote_site, "customer1"):
+            _schedule_check_and_discover(
+                central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
+            )
+            assert not piggybacked_data_gets_updated(
+                central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
+            )
+
+        _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
+        assert piggybacked_data_gets_updated(
+            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
+        )
+
+
 def _piggybackhub_conf_timestamp(site: Site) -> int | None:
     if not site.file_exists(site.root / RELATIVE_CONFIG_PATH):
         return None

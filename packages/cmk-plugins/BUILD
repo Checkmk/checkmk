@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
@@ -612,7 +613,7 @@ filegroup(
 
 [py_wheel(
     name = "wheel-for-f12-%s" % family,
-    distribution = "cmk-plugins-%s-tar" % family,
+    distribution = "cmk-plugins-%s-f12" % family,
     entry_points = {
         "cmk.special_agent_supported_on_relay": [
             "%s = %s" % (family, family),
@@ -645,6 +646,14 @@ filegroup(
         ":checkman-%s" % family,
     ],
 ) for family in FAMILIES]
+
+build_test(
+    name = "build_test",
+    targets = ["wheel-for-f12-{}".format(family) for family in FAMILIES] + [
+        "wheel-for-pkg_tar-{}".format(family)
+        for family in FAMILIES
+    ],
+)
 
 [package_wheel(
     name = "pkg_tar-%s" % family,

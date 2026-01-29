@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-
 
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
 from cmk.base.check_legacy_includes.mem import check_memory_element
 
 check_info = {}
@@ -19,7 +19,7 @@ check_info = {}
 Section = Mapping[str, float]
 
 
-def parse_cadvisor_memory(string_table):
+def parse_cadvisor_memory(string_table: list[list[str]]) -> Section:
     memory_info = json.loads(string_table[0][0])
     parsed = {}
     for memory_name, memory_entries in memory_info.items():
@@ -32,8 +32,11 @@ def parse_cadvisor_memory(string_table):
     return parsed
 
 
-def _output_single_memory_stat(memory_value, output_text, metric_name=None):
+def _output_single_memory_stat(
+    memory_value: float, output_text: str, metric_name: str | None = None
+) -> tuple[int, str, list[tuple[str, float, int | float | None, int | float | None]]]:
     infotext = output_text % (memory_value / 1024)
+    perfdata: list[tuple[str, float, int | float | None, int | float | None]]
     if metric_name:
         perfdata = [(metric_name, memory_value, None, None)]
     else:
@@ -46,7 +49,7 @@ def discover_cadvisor_memory(section: Section) -> Iterable[tuple[None, dict]]:
         yield None, {}
 
 
-def check_cadvisor_memory(_item, _params, parsed):
+def check_cadvisor_memory(_item: object, _params: object, parsed: Section) -> LegacyCheckResult:
     # Checking for Container
     if "memory_usage_container" in parsed:
         memory_used = parsed["memory_usage_container"]

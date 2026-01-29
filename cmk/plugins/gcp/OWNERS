@@ -1,13 +1,6 @@
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/plugins/OWNERS_DEFINITION
-
-per-file aws*=file:/component_owners/plugins_aws/OWNERS_DEFINITION
-per-file aws*=set noparent
-per-file azure*=file:/component_owners/plugins_azure/OWNERS_DEFINITION
-per-file azure*=set noparent
-per-file gcp*=file:/component_owners/plugins_gcp/OWNERS_DEFINITION
-per-file gcp*=set noparent
+file:/component_owners/plugins_gcp/OWNERS_DEFINITION
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

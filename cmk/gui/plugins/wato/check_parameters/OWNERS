@@ -1,6 +1,10 @@
 
+per-file aws*=file:/component_owners/plugins_aws/OWNERS_DEFINITION
+per-file aws*=set noparent
 per-file azure*=file:/component_owners/plugins_azure/OWNERS_DEFINITION
 per-file azure*=set noparent
+per-file gcp*=file:/component_owners/plugins_gcp/OWNERS_DEFINITION
+per-file gcp*=set noparent
 per-file jolokia*=file:/component_owners/plugins_jolokia/OWNERS_DEFINITION
 per-file jolokia*=set noparent
 per-file kube*=file:/component_owners/plugins_kube/OWNERS_DEFINITION

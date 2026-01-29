@@ -47,7 +47,7 @@ from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setu
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.agent_commands import (
-    agent_commands_registry,
+    get_agent_slideout,
     get_server_per_site,
 )
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -371,6 +371,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         host_name_attribute_key: Final[str] = "host"
         form_name: Final[str] = "edit_host"
         version = ".".join(omd_version(omd_root).split(".")[:-1])
+        hostname = self._host.name()
         html.vue_component(
             component_name="cmk-mode-host",
             data=asdict(
@@ -420,24 +421,17 @@ class ABCHostMode(WatoMode, abc.ABC):
                         )
                         for mode in HostAgentConnectionMode
                     ],
-                    agent_slideout=AgentSlideout(
-                        all_agents_url=all_agents_url,
-                        host_name=self._host.name(),
-                        agent_install_cmds=AgentInstallCmds(
-                            **asdict(
-                                agent_commands_registry["agent_commands"].install_cmds(version)
-                            )
-                        ),
-                        agent_registration_cmds=AgentRegistrationCmds(
-                            **asdict(agent_commands_registry["agent_commands"].registration_cmds())
-                        ),
-                        legacy_agent_url=agent_commands_registry[
-                            "agent_commands"
-                        ].legacy_agent_url(),
+                    agent_slideout=get_agent_slideout(
+                        hostname=hostname,
                         save_host=self._mode in ["new", "prefill", "clone"],
                         host_exists=Host.host_exists(self._host.name()),
+                        all_agents_url=all_agents_url,
+                        agent_slideout_cls=AgentSlideout,
+                        agent_install_cls=AgentInstallCmds,
+                        agent_registration_cls=AgentRegistrationCmds,
+                        version=version,
                     ),
-                    host_name=self._host.name(),
+                    host_name=hostname,
                 )
             ),
         )

@@ -56,7 +56,7 @@ from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_en
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.agent_commands import agent_commands_registry, get_server_per_site
+from cmk.gui.utils.agent_commands import get_agent_slideout, get_server_per_site
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
@@ -785,6 +785,7 @@ class DiscoveryPageRenderer:
 
     def _render_agent_download_tooltip(self, output: str) -> None:
         version = ".".join(omd_version(omd_root).split(".")[:-1])
+        hostname = self._host.name()
         html.vue_component(
             component_name="cmk-agent-download",
             data=asdict(
@@ -792,25 +793,19 @@ class DiscoveryPageRenderer:
                     output=output,
                     site=self._host.site_id(),
                     server_per_site=get_server_per_site(active_config, AgentDownloadServerPerSite),
-                    agent_slideout=AgentSlideout(
-                        all_agents_url=folder_preserving_link(
-                            [("mode", "agent_of_host"), ("host", self._host.name())]
-                        ),
-                        host_name=self._host.name(),
-                        agent_install_cmds=AgentInstallCmds(
-                            **asdict(
-                                agent_commands_registry["agent_commands"].install_cmds(version)
-                            )
-                        ),
-                        agent_registration_cmds=AgentRegistrationCmds(
-                            **asdict(agent_commands_registry["agent_commands"].registration_cmds())
-                        ),
-                        legacy_agent_url=agent_commands_registry[
-                            "agent_commands"
-                        ].legacy_agent_url(),
+                    agent_slideout=get_agent_slideout(
+                        hostname=hostname,
                         save_host=False,
+                        host_exists=True,
+                        all_agents_url=folder_preserving_link(
+                            [("mode", "agent_of_host"), ("host", hostname)]
+                        ),
+                        agent_slideout_cls=AgentSlideout,
+                        agent_install_cls=AgentInstallCmds,
+                        agent_registration_cls=AgentRegistrationCmds,
+                        version=version,
                     ),
-                ),
+                )
             ),
         )
 

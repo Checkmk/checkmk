@@ -25,7 +25,7 @@ from cmk.base.legacy_checks.hp_fan import check_hp_fan, discover_hp_fan, parse_h
     ],
 )
 def test_discover_hp_fan(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[tuple[str, None]]
 ) -> None:
     """Test discovery function for hp_fan check."""
     parsed = parse_hp_fan(string_table)

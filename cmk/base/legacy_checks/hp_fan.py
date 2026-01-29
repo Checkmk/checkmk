@@ -3,27 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterator, Mapping
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, contains, OIDEnd, SNMPTree
+from cmk.agent_based.v2 import all_of, any_of, contains, OIDEnd, SNMPTree, StringTable
 
 check_info = {}
 
 
-def parse_hp_fan(string_table):
+def parse_hp_fan(string_table: StringTable) -> Mapping[str, str]:
     return {
         f"{tray_index}/{fan_index}": fan_state for fan_index, tray_index, fan_state in string_table
     }
 
 
-def discover_hp_fan(parsed):
+def discover_hp_fan(parsed: Mapping[str, str]) -> Iterator[tuple[str, None]]:
     for fan in parsed:
         yield fan, None
 
 
-def check_hp_fan(item, _no_params, parsed):
+def check_hp_fan(item: str, _no_params: object, parsed: Mapping[str, str]) -> tuple[int, str]:
     statemap = {
         "0": (3, "unknown"),
         "1": (2, "removed"),

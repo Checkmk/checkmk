@@ -4,11 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, SNMPTree
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 from cmk.base.check_legacy_includes.elphase import check_elphase
 
 check_info = {}
@@ -39,7 +44,7 @@ check_info = {}
 # .1.3.6.1.4.1.13742.4.1.2.2.1.31.4 0 --> PDU-MIB::outletWattHours.4
 
 
-def parse_raritan_px_outlets(string_table):
+def parse_raritan_px_outlets(string_table: StringTable) -> dict[str, Any]:
     map_state = {
         "-1": (2, "error"),
         "0": (2, "off"),
@@ -70,11 +75,13 @@ def parse_raritan_px_outlets(string_table):
     return parsed
 
 
-def discover_raritan_px_outlets(parsed):
+def discover_raritan_px_outlets(parsed: dict[str, Any]) -> LegacyDiscoveryResult:
     return [(index, {}) for index, values in parsed.items() if values["device_state"][1] == "on"]
 
 
-def check_raritan_px_outlets(item, params, parsed):
+def check_raritan_px_outlets(
+    item: str, params: Mapping[str, Any], parsed: dict[str, Any]
+) -> LegacyCheckResult:
     if item in parsed:
         if parsed[item]["label"]:
             yield 0, "[%s]" % parsed[item]["label"]

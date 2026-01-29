@@ -5,13 +5,13 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="redundant-expr"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
 from typing import Any
 
 from cmk.base.legacy_checks.raritan_px_outlets import (
@@ -21,7 +21,7 @@ from cmk.base.legacy_checks.raritan_px_outlets import (
 )
 
 
-def parsed() -> Mapping[str, Any]:
+def parsed() -> dict[str, Any]:
     """Parse raritan_px_outlets test data using actual parse function."""
     string_table = [
         [

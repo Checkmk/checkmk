@@ -57,6 +57,7 @@ defineProps<{
       :open-in-new-tab="true"
     />
     <CmkLinkCard
+      v-if="cards.license_site"
       :title="_t('License your site')"
       :subtitle="
         _t(

@@ -267,7 +267,10 @@ def sending() -> CascadingSingleChoice:
                     elements={
                         "auth": DictElement(
                             required=True,
-                            parameter_form=OAuth2Connection(connector_type="microsoft_entra_id"),
+                            parameter_form=OAuth2Connection(
+                                title=Title("Microsoft Entra ID connection"),
+                                connector_type="microsoft_entra_id",
+                            ),
                         )
                     },
                 ),
@@ -304,7 +307,8 @@ def fetching(
                             "auth": DictElement(
                                 required=True,
                                 parameter_form=OAuth2Connection(
-                                    connector_type="microsoft_entra_id"
+                                    title=Title("Microsoft Entra ID connection"),
+                                    connector_type="microsoft_entra_id",
                                 ),
                             )
                         },

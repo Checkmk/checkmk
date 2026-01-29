@@ -3,22 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyDiscoveryResult,
+    LegacyResult,
+)
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.huawei.lib import DETECT_HUAWEI_OSN
 
 check_info = {}
 
 
-def discover_huawei_osn_fan(info):
+def discover_huawei_osn_fan(info: StringTable) -> LegacyDiscoveryResult:
     for line in info:
-        yield (line[0], None)
+        yield (line[0], {})
 
 
-def check_huawei_osn_fan(item, params, info):
+def check_huawei_osn_fan(item: str, params: object, info: StringTable) -> LegacyResult | None:
     translate_speed = {
         "0": (1, "stop"),
         "1": (0, "low"),

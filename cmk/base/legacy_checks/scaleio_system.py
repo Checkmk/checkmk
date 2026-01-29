@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterable
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
@@ -28,12 +29,14 @@ def parse_scaleio_system(string_table: StringTable) -> ScaleioSection:
     return parse_scaleio(string_table, "SYSTEM")
 
 
-def discover_scaleio_system(parsed):
+def discover_scaleio_system(parsed: ScaleioSection) -> Iterable[tuple[str, dict[str, object]]]:
     for entry in parsed:
         yield entry, {}
 
 
-def check_scaleio_system(item, params, parsed):
+def check_scaleio_system(
+    item: str, params: dict[str, Any], parsed: ScaleioSection
+) -> Iterable[Any]:
     if not (data := parsed.get(item)):
         return
 

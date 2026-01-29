@@ -69,7 +69,6 @@
         "setup_backup",
         "scale_monitoring",
         "fine_tune_monitoring",
-        "license_site",
         "add_host",
         "network_devices",
         "aws_quick_setup",

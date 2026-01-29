@@ -169,10 +169,9 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
             ),
             scale_monitoring=doc_reference_url(DocReference.DISTRIBUTED_MONITORING),
             fine_tune_monitoring=doc_reference_url(DocReference.FINETUNING_MONITORING),
-            license_site=_make_url(
-                addvars=[("mode", "licensing")],
-                filename="wato.py",
+            license_site=_make_url_or_callback_from_registry(
                 is_snapin=is_snapin,
+                identifier="license_your_site",
             ),
             add_host=_make_url_or_callback_from_registry(
                 is_snapin=is_snapin,

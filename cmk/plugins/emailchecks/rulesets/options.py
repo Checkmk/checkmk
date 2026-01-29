@@ -261,9 +261,9 @@ def sending() -> CascadingSingleChoice:
             ),
             CascadingSingleChoiceElement(
                 name="GRAPHAPI",
-                title=Title("GraphApi"),
+                title=Title("Microsoft Exchange Online"),
                 parameter_form=Dictionary(
-                    title=Title("GraphApi"),
+                    title=Title("Microsoft Exchange Online"),
                     elements={
                         "auth": DictElement(
                             required=True,
@@ -297,9 +297,9 @@ def fetching(
                 ),
                 CascadingSingleChoiceElement(
                     name="GRAPHAPI",
-                    title=Title("GraphApi"),
+                    title=Title("Microsoft Exchange Online"),
                     parameter_form=Dictionary(
-                        title=Title("GraphApi"),
+                        title=Title("Microsoft Exchange Online"),
                         elements={
                             "auth": DictElement(
                                 required=True,

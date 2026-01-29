@@ -21,7 +21,7 @@ mod cli;
 mod pwstore;
 mod version;
 
-const DEFAULT_USER_AGENT: &str = "checkmk-active-httpv2/2.4.0";
+const DEFAULT_USER_AGENT: &str = "checkmk-active-httpv2/2.5.0";
 
 #[tokio::main]
 async fn main() {

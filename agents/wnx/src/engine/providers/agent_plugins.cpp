@@ -87,6 +87,8 @@ std::string FindVersionInfo(const fs::path &file, FileType file_type) {
                         return fmt::format("{}:CMK_VERSION = \"{}\"", file,
                                            output[1]);
                     }
+                } else if (plugin_name == "robotmk_agent_plugin") {
+                    return fmt::format("{}:CMK_VERSION = unversioned", file);
                 } else {
                     return fmt::format("{}:CMK_VERSION = n/a", file);
                 }

@@ -3,13 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree
+from collections.abc import Mapping
+from typing import Any, TypedDict
+
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree, StringTable
+
+
+class ProtectorData(TypedDict, total=False):
+    state: str
+    current: float
+
 
 check_info = {}
 
@@ -42,7 +53,9 @@ check_info = {}
 # of the OID should really be swapped!
 
 
-def parse_raritan_pdu_ocprot(string_table):
+def parse_raritan_pdu_ocprot(
+    string_table: list[StringTable],
+) -> dict[str, ProtectorData]:
     flattened_info = [
         [end_oid, state, value, scale]
         for (end_oid, state, value), (scale,) in zip(string_table[0], string_table[1])
@@ -58,11 +71,15 @@ def parse_raritan_pdu_ocprot(string_table):
     return parsed
 
 
-def discover_raritan_pdu_ocprot(section):
+def discover_raritan_pdu_ocprot(
+    section: dict[str, ProtectorData],
+) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 
-def check_raritan_pdu_ocprot(item, params, parsed):
+def check_raritan_pdu_ocprot(
+    item: str, params: Mapping[str, Any], parsed: dict[str, ProtectorData]
+) -> LegacyCheckResult:
     if not (data := parsed.get(item)):
         return
     states = {

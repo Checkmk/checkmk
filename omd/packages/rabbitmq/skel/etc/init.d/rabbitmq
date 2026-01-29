@@ -111,7 +111,7 @@ config_mgmt_listener() {
     cat <<HERE >"${RABBITMQ_CONFIG_MANAGEMENT_IP_FILE}"
 # Management API for self monitoring
 # Ip set by rabbitmq init script etc/init.d/rabbitmq. Better do not edit manually.
-management.tcp.ip = ${listener_ip}
+management.ssl.ip = ${listener_ip}
 HERE
 
 }

@@ -12,7 +12,7 @@ CONF_FILE="$OMD_ROOT/etc/rabbitmq/conf.d/02-management-port.conf"
 write_config() {
     cat <<HERE >"${CONF_FILE}"
 # Port set by \`omd config\` hook \`RABBITMQ_MANAGEMENT_PORT\`. Better do not edit manually.
-management.tcp.port = ${1}
+management.ssl.port = ${1}
 HERE
 }
 

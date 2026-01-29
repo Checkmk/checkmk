@@ -3,16 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import contains, SNMPTree
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 check_info = {}
 
 
-def parse_tcw241_digital(string_table):
+def parse_tcw241_digital(string_table: StringTable) -> Mapping[str, Mapping[str, str]]:
     """
     parse string_table data and create list of namedtuples for 4 digital sensors.
 
@@ -36,7 +41,7 @@ def parse_tcw241_digital(string_table):
     except IndexError:
         return {}
 
-    info_dict = {}
+    info_dict: dict[str, dict[str, str]] = {}
     for index, (description, state) in enumerate(zip(descriptions, states)):
         # if state is '1', the sensor is 'open'
         sensor_state = "open" if state == "1" else "closed"
@@ -45,7 +50,9 @@ def parse_tcw241_digital(string_table):
     return info_dict
 
 
-def check_tcw241_digital(item, params, parsed):
+def check_tcw241_digital(
+    item: str, params: Mapping[str, Any], parsed: Mapping[str, Mapping[str, str]]
+) -> LegacyCheckResult:
     """
     Check sensor if it is open or closed
 
@@ -65,7 +72,9 @@ def check_tcw241_digital(item, params, parsed):
     )
 
 
-def discover_teracom_tcw241_digital(section):
+def discover_teracom_tcw241_digital(
+    section: Mapping[str, Mapping[str, str]],
+) -> LegacyDiscoveryResult:
     yield from ((item, {}) for item in section)
 
 

@@ -17399,6 +17399,10 @@ msgid "Create Conference Latency"
 msgstr "Criar a Latência da Conferência"
 
 #, fuzzy
+msgid "Create Microsoft Entra ID connections."
+msgstr "Adicionar ligação ao local"
+
+#, fuzzy
 msgid "Create OAuth2 connections."
 msgstr "Adicionar conexão"
 
@@ -18281,10 +18285,6 @@ msgstr "MBeans personalizados"
 msgid "Custom MIBs"
 msgstr "MIBs personalizados"
 
-#, fuzzy
-msgid "Custom Query"
-msgstr "Cliente"
-
 msgid "Custom SQL"
 msgstr "SQL personalizado"
 
@@ -18408,6 +18408,10 @@ msgstr "Estado da sonda personalizada"
 #, fuzzy
 msgid "Custom profile"
 msgstr "Título personalizado"
+
+#, fuzzy
+msgid "Custom query result"
+msgstr "Cliente"
 
 msgid "Custom recipient of \"Reply to\""
 msgstr ""
@@ -29539,6 +29543,9 @@ msgstr "Parâmetros HTTP"
 msgid "HTTP Proxy"
 msgstr "proxy HTTP"
 
+msgid "HTTP SSL/TLS default port (queries)"
+msgstr ""
+
 msgid "HTTP accelerator statistics"
 msgstr "Estatísticas do acelerador HTTP"
 
@@ -29624,10 +29631,6 @@ msgstr ""
 "SSL válida do seu servidor web Apache no seu servidor de monitoramento. Ao "
 "usar HTTP, os dados confidenciais que estão contidos nos agentes de "
 "cozimento podem ser espiados (como senhas de plugins)."
-
-#, fuzzy
-msgid "HTTPS port"
-msgstr "porta TCP"
 
 msgid "HW Information"
 msgstr "Informações HW"
@@ -39436,10 +39439,6 @@ msgstr "Níveis para os parâmetros da bateria"
 msgid "Levels for checkpoint time"
 msgstr "Níveis para o tempo do ponto de controlo"
 
-#, fuzzy
-msgid "Levels for custom query monitoring"
-msgstr "Níveis para monitoramento de SLA"
-
 msgid "Levels for data size"
 msgstr "Níveis de tamanho dos dados"
 
@@ -43940,6 +43939,10 @@ msgid "Metric backend (Custom query)"
 msgstr "instâncias Oracle"
 
 #, fuzzy
+msgid "Metric backend (custom query)"
+msgstr "instâncias Oracle"
+
+#, fuzzy
 msgid "Metric backend filter criteria"
 msgstr "instâncias Oracle"
 
@@ -43976,10 +43979,6 @@ msgstr "Etiqueta métrica"
 #, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Nome do anfitrião (correspondência exacta)"
-
-#, fuzzy
-msgid "Metric name and time series ID"
-msgstr "Gráfico de métricas de um único serviço"
 
 #, python-format
 msgid ""
@@ -44051,6 +44050,14 @@ msgstr "MiB"
 #, fuzzy
 msgid "Microsoft Azure (deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft Entra ID connection"
+msgstr "Adicionar ligação ao local"
+
+#, fuzzy
+msgid "Microsoft Entra ID connections"
+msgstr "Adicionar ligação ao local"
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V Server VM estado"
@@ -46033,6 +46040,9 @@ msgstr ""
 
 msgid "Native cluster mode"
 msgstr "Modo de cluster nativo"
+
+msgid "Native protocol SSL/TLS port (ingress)"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -62490,11 +62500,6 @@ msgstr ""
 "contador."
 
 msgid ""
-"Sets the maximum amount of memory the backend is allowed to use as a "
-"percentage of the system's total memory."
-msgstr ""
-
-msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
 "is not a feature of Robot Framework, but of Robotmk. That means that even "
 "when a Robot suite has ended with a PASS result, the states of Robotmk test "
@@ -62513,6 +62518,11 @@ msgstr ""
 
 msgid "Setting"
 msgstr "Configuração"
+
+msgid ""
+"Setting a resource attribute requires to enable the metric backend in the "
+"Global Settings."
+msgstr ""
 
 msgid ""
 "Setting levels on non-unicast packet rates is optional. This may help to "
@@ -67479,10 +67489,6 @@ msgid "TLS certificate verification"
 msgstr "verificação do certificado SSL"
 
 #, fuzzy
-msgid "TLS port"
-msgstr "porta TCP"
-
-#, fuzzy
 msgid "TLS processed bytes"
 msgstr "Bytes Processados TLS"
 
@@ -71113,6 +71119,13 @@ msgstr ""
 msgid "The maximum allowed value is %s."
 msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 
+msgid ""
+"The maximum amount of memory that the metric backend is allowed to use, "
+"expressed as a fraction of the total available memory. Allows limiting the "
+"memory usage on low-memory systems. On hosts with low RAM and swap, you may "
+"want to set it to values larger than 100%."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The maximum average round trip time in ms before this service goes into "
@@ -72053,6 +72066,11 @@ msgstr ""
 msgid "The port description"
 msgstr "A Descrição do Porto"
 
+msgid ""
+"The port on which the metric backend listens to incoming data. This setting "
+"also defines where the site's OpenTelemetry Collector sends its data."
+msgstr ""
+
 msgid "The port on which the ntopng instance is reachable."
 msgstr "A porta em que a instância superior é alcançável."
 
@@ -72061,6 +72079,10 @@ msgstr "O porto que é usado para a chamada da api."
 
 msgid "The port the DBMS listens to"
 msgstr "A porta que o SGBD ouve"
+
+#, fuzzy
+msgid "The port to query data from the metric backend."
+msgstr "Adicionar configuração do estado"
 
 msgid ""
 "The power state can be displayed additionally either on the ESX host or the "
@@ -74686,8 +74708,11 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "This file cannot be uploaded: %s"
-msgstr "Este ficheiro não pode ser carregado: %s"
+msgid ""
+"This file cannot be uploaded: \"%s\". Please make sure to perform all the "
+"steps and <a href=\"https://support.checkmk.com\" target=\"_blank\">contact "
+"us</a> if the issue persists."
+msgstr ""
 
 msgid "This filter cannot be displayed"
 msgstr "Este filtro não pode ser exibido"
@@ -86867,6 +86892,9 @@ msgstr "Identificação do fornecedor e do dispositivo"
 msgid "Venue ID"
 msgstr "Identificação do local"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "Verbose"
 
@@ -95830,6 +95858,14 @@ msgid "Please select a HW/SW inventory property."
 msgstr "Inventário HW/SW"
 
 #, fuzzy
+msgid "The selected HW/SW inventory property is invalid."
+msgstr "Inventário HW/SW"
+
+#, fuzzy
+msgid "Inventory property"
+msgstr "Inventário HW/SW"
+
+#, fuzzy
 msgid "Loading widget visualization settings..."
 msgstr "Configurações padrão de visualização do BI"
 
@@ -95870,17 +95906,16 @@ msgid "Service metric"
 msgstr "Métricas de Serviço"
 
 #, fuzzy
-msgid "Filter service metric by"
-msgstr "Métricas de Serviço"
+msgid "Must select an option"
+msgstr "Ligações rejeitadas"
+
+msgid "Narrow dropdown options by host or service (no selection)"
+msgstr ""
 
 msgid ""
 "Use these fields to narrow down the list of available service metrics.<br /"
 ">Click the Host name or Service label to clear the filter."
 msgstr ""
-
-#, fuzzy
-msgid "Must select an option"
-msgstr "Ligações rejeitadas"
 
 #, fuzzy
 msgid "Service graph"
@@ -96132,6 +96167,9 @@ msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+msgid "The time window used to aggregate data for each point on the chart.<ul>"
 msgstr ""
 
 #, fuzzy
@@ -96673,6 +96711,10 @@ msgid ""
 "        ${((waitTimeBetweenQueries - (Date.now() - "
 "pingStatus.value[cmd].timerStarted)) / 1000).toFixed(0)}\n"
 "        seconds."
+msgstr ""
+
+msgid ""
+"Unexpected response from server please check your crash reports and logs."
 msgstr ""
 
 msgid ""
@@ -97755,6 +97797,30 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "HTTPS port"
+#~ msgstr "porta TCP"
+
+#, fuzzy
+#~ msgid "Levels for custom query monitoring"
+#~ msgstr "Níveis para monitoramento de SLA"
+
+#, fuzzy
+#~ msgid "Metric name and time series ID"
+#~ msgstr "Gráfico de métricas de um único serviço"
+
+#, fuzzy
+#~ msgid "TLS port"
+#~ msgstr "porta TCP"
+
+#, python-format
+#~ msgid "This file cannot be uploaded: %s"
+#~ msgstr "Este ficheiro não pode ser carregado: %s"
+
+#, fuzzy
+#~ msgid "Filter service metric by"
+#~ msgstr "Métricas de Serviço"
 
 #, fuzzy
 #~ msgid "Podman Monitoring"

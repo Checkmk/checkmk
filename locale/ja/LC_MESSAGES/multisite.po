@@ -16478,6 +16478,10 @@ msgid "Create Conference Latency"
 msgstr "会議の遅延を作成する"
 
 #, fuzzy
+msgid "Create Microsoft Entra ID connections."
+msgstr "サイト接続を追加する"
+
+#, fuzzy
 msgid "Create OAuth2 connections."
 msgstr "接続を追加"
 
@@ -17322,10 +17326,6 @@ msgstr "カスタムMBean"
 msgid "Custom MIBs"
 msgstr "カスタムMIB"
 
-#, fuzzy
-msgid "Custom Query"
-msgstr "お客様"
-
 msgid "Custom SQL"
 msgstr "カスタムSQL"
 
@@ -17441,6 +17441,10 @@ msgstr "カスタムプローブの状態"
 
 msgid "Custom profile"
 msgstr "カスタムプロフィール"
+
+#, fuzzy
+msgid "Custom query result"
+msgstr "お客様"
 
 msgid "Custom recipient of \"Reply to\""
 msgstr "\"返信先\"の受信者をカスタム"
@@ -28025,6 +28029,9 @@ msgstr "HTTPパラメータ"
 msgid "HTTP Proxy"
 msgstr "HTTPプロキシ"
 
+msgid "HTTP SSL/TLS default port (queries)"
+msgstr ""
+
 msgid "HTTP accelerator statistics"
 msgstr "HTTPアクセラレータ統計"
 
@@ -28097,10 +28104,6 @@ msgstr ""
 "ここでは、HTTPSの設定を推奨します。ただし、監視サーバ上の Apache ウェブサーバ"
 "に有効な SSL 設定が必要です。HTTP を使用する場合、ベイクドエージェントに含ま"
 "れる機密データ（プラグインのパスワードなど）が盗み見される可能性があります。"
-
-#, fuzzy
-msgid "HTTPS port"
-msgstr "TCPポート"
 
 msgid "HW Information"
 msgstr "HW情報"
@@ -37226,10 +37229,6 @@ msgstr "バッテリーパラメータのレベル"
 msgid "Levels for checkpoint time"
 msgstr "チェックポイント時間のレベル"
 
-#, fuzzy
-msgid "Levels for custom query monitoring"
-msgstr "SLAモニタリングのレベル"
-
 msgid "Levels for data size"
 msgstr "データサイズのレベル"
 
@@ -41503,6 +41502,10 @@ msgid "Metric backend (Custom query)"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
+msgid "Metric backend (custom query)"
+msgstr "Oracleインスタンス"
+
+#, fuzzy
 msgid "Metric backend filter criteria"
 msgstr "Oracleインスタンス"
 
@@ -41537,10 +41540,6 @@ msgstr "メトリック名"
 
 msgid "Metric name (exact match)"
 msgstr "メトリック名(完全一致)"
-
-#, fuzzy
-msgid "Metric name and time series ID"
-msgstr "単一サービスのメトリクスグラフ"
 
 #, python-format
 msgid ""
@@ -41609,6 +41608,14 @@ msgstr "MiB"
 #, fuzzy
 msgid "Microsoft Azure (deprecated)"
 msgstr "Microsoft SQL サーバー(非推奨)"
+
+#, fuzzy
+msgid "Microsoft Entra ID connection"
+msgstr "サイト接続を追加する"
+
+#, fuzzy
+msgid "Microsoft Entra ID connections"
+msgstr "サイト接続を追加する"
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V ServerのVMの状態"
@@ -43486,6 +43493,9 @@ msgstr ""
 
 msgid "Native cluster mode"
 msgstr "ネイティブ クラスターモード"
+
+msgid "Native protocol SSL/TLS port (ingress)"
+msgstr ""
 
 msgid ""
 "Native: Use the cluster check function implemented by the check plug-in. If "
@@ -58868,11 +58878,6 @@ msgid "Sets levels on total operation errors since last counter reset."
 msgstr "最後のカウンタリセット以降の合計動作エラーのレベルを設定します。"
 
 msgid ""
-"Sets the maximum amount of memory the backend is allowed to use as a "
-"percentage of the system's total memory."
-msgstr ""
-
-msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
 "is not a feature of Robot Framework, but of Robotmk. That means that even "
 "when a Robot suite has ended with a PASS result, the states of Robotmk test "
@@ -58899,6 +58904,11 @@ msgstr ""
 
 msgid "Setting"
 msgstr "設定"
+
+msgid ""
+"Setting a resource attribute requires to enable the metric backend in the "
+"Global Settings."
+msgstr ""
 
 msgid ""
 "Setting levels on non-unicast packet rates is optional. This may help to "
@@ -63611,10 +63621,6 @@ msgstr "TLS 証明書の検証"
 msgid "TLS certificate verification"
 msgstr "TLS 証明書の検証"
 
-#, fuzzy
-msgid "TLS port"
-msgstr "TCPポート"
-
 msgid "TLS processed bytes"
 msgstr "TLS処理されたバイト"
 
@@ -67098,6 +67104,13 @@ msgstr ""
 msgid "The maximum allowed value is %s."
 msgstr "最大許容値は %sです。"
 
+msgid ""
+"The maximum amount of memory that the metric backend is allowed to use, "
+"expressed as a fraction of the total available memory. Allows limiting the "
+"memory usage on low-memory systems. On hosts with low RAM and swap, you may "
+"want to set it to values larger than 100%."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The maximum average round trip time in ms before this service goes into "
@@ -68025,6 +68038,11 @@ msgstr ""
 msgid "The port description"
 msgstr "ポートの説明"
 
+msgid ""
+"The port on which the metric backend listens to incoming data. This setting "
+"also defines where the site's OpenTelemetry Collector sends its data."
+msgstr ""
+
 msgid "The port on which the ntopng instance is reachable."
 msgstr "ntopngインスタンスが到達可能なポート。"
 
@@ -68033,6 +68051,10 @@ msgstr "API呼び出しに使用されるポート。"
 
 msgid "The port the DBMS listens to"
 msgstr "DBMSがリッスンするポート"
+
+#, fuzzy
+msgid "The port to query data from the metric backend."
+msgstr "OpenTelemetryメトリック名"
 
 msgid ""
 "The power state can be displayed additionally either on the ESX host or the "
@@ -70626,8 +70648,11 @@ msgstr ""
 "このダイアログ内でのみ表示されます。"
 
 #, python-format
-msgid "This file cannot be uploaded: %s"
-msgstr "このファイルはアップロードできません: %s"
+msgid ""
+"This file cannot be uploaded: \"%s\". Please make sure to perform all the "
+"steps and <a href=\"https://support.checkmk.com\" target=\"_blank\">contact "
+"us</a> if the issue persists."
+msgstr ""
 
 msgid "This filter cannot be displayed"
 msgstr "このフィルターは表示できません"
@@ -81735,6 +81760,9 @@ msgstr "ベンダーとデバイスID"
 msgid "Venue ID"
 msgstr "会場ID"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "詳細"
 
@@ -90377,6 +90405,14 @@ msgid "Please select a HW/SW inventory property."
 msgstr "HW/SWインベントリ"
 
 #, fuzzy
+msgid "The selected HW/SW inventory property is invalid."
+msgstr "HW/SWインベントリ"
+
+#, fuzzy
+msgid "Inventory property"
+msgstr "HW/SWインベントリ"
+
+#, fuzzy
 msgid "Loading widget visualization settings..."
 msgstr "デフォルトのBI視覚化設定"
 
@@ -90417,17 +90453,16 @@ msgid "Service metric"
 msgstr "サービスメトリクス"
 
 #, fuzzy
-msgid "Filter service metric by"
-msgstr "サービスメトリクス"
+msgid "Must select an option"
+msgstr "オプション選択"
+
+msgid "Narrow dropdown options by host or service (no selection)"
+msgstr ""
 
 msgid ""
 "Use these fields to narrow down the list of available service metrics.<br /"
 ">Click the Host name or Service label to clear the filter."
 msgstr ""
-
-#, fuzzy
-msgid "Must select an option"
-msgstr "オプション選択"
 
 #, fuzzy
 msgid "Service graph"
@@ -90674,6 +90709,9 @@ msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+msgid "The time window used to aggregate data for each point on the chart.<ul>"
 msgstr ""
 
 #, fuzzy
@@ -91193,6 +91231,10 @@ msgid ""
 "        ${((waitTimeBetweenQueries - (Date.now() - "
 "pingStatus.value[cmd].timerStarted)) / 1000).toFixed(0)}\n"
 "        seconds."
+msgstr ""
+
+msgid ""
+"Unexpected response from server please check your crash reports and logs."
 msgstr ""
 
 #, fuzzy
@@ -92265,6 +92307,30 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "HTTPS port"
+#~ msgstr "TCPポート"
+
+#, fuzzy
+#~ msgid "Levels for custom query monitoring"
+#~ msgstr "SLAモニタリングのレベル"
+
+#, fuzzy
+#~ msgid "Metric name and time series ID"
+#~ msgstr "単一サービスのメトリクスグラフ"
+
+#, fuzzy
+#~ msgid "TLS port"
+#~ msgstr "TCPポート"
+
+#, python-format
+#~ msgid "This file cannot be uploaded: %s"
+#~ msgstr "このファイルはアップロードできません: %s"
+
+#, fuzzy
+#~ msgid "Filter service metric by"
+#~ msgstr "サービスメトリクス"
 
 #~ msgid "Podman Monitoring"
 #~ msgstr "Podman監視"

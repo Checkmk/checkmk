@@ -16631,6 +16631,10 @@ msgstr "Erstelle %s"
 msgid "Create Conference Latency"
 msgstr "Latenz bei Erstellung von Konferenzen"
 
+#, fuzzy
+msgid "Create Microsoft Entra ID connections."
+msgstr "Instanz-Verbindung hinzufügen"
+
 msgid "Create OAuth2 connections."
 msgstr "OAuth2-Verbindungen erstellen."
 
@@ -17474,9 +17478,6 @@ msgstr "Benutzerdefinierte MBeans"
 msgid "Custom MIBs"
 msgstr "Benutzerdefinierte MIBs"
 
-msgid "Custom Query"
-msgstr "Benutzerdefinierte Anfrage"
-
 msgid "Custom SQL"
 msgstr "Benutzerdefiniertes SQL"
 
@@ -17591,6 +17592,10 @@ msgstr "Benutzerdefinierter Sonden-Zustand"
 
 msgid "Custom profile"
 msgstr "Benutzerdefiniertes Profil"
+
+#, fuzzy
+msgid "Custom query result"
+msgstr "Benutzerdefinierte Anfrage"
 
 msgid "Custom recipient of \"Reply to\""
 msgstr "Benutzerdefinierter Empfänger von \"Antworten an\""
@@ -28230,6 +28235,9 @@ msgstr "HTTP-Parameter"
 msgid "HTTP Proxy"
 msgstr "HTTP-Proxy"
 
+msgid "HTTP SSL/TLS default port (queries)"
+msgstr ""
+
 msgid "HTTP accelerator statistics"
 msgstr "HTTP Geschwindigkeitsstatistiken"
 
@@ -28303,9 +28311,6 @@ msgstr ""
 "SSL-Installation des Apache-Webservers auf Ihrem Monitoring-Server. Bei der "
 "Verwendung von HTTP könnten vertrauliche Daten, die in den gebackenen "
 "Agenten enthalten sind, ausgespäht werden (z. B. Passwörter für Plug-ins)."
-
-msgid "HTTPS port"
-msgstr "HTTPS-Port"
 
 msgid "HW Information"
 msgstr "HW-Informationen"
@@ -37619,9 +37624,6 @@ msgstr "Levels für Batterieparameter"
 msgid "Levels for checkpoint time"
 msgstr "Levels für Checkpoint-Zeit"
 
-msgid "Levels for custom query monitoring"
-msgstr "Levels für das Monitoring benutzerdefinierter Anfragen"
-
 msgid "Levels for data size"
 msgstr "Levels für Datengröße"
 
@@ -41953,6 +41955,10 @@ msgstr "Metrik-Backend"
 msgid "Metric backend (Custom query)"
 msgstr "Metrik-Backend (benutzerdefinierte Anfrage)"
 
+#, fuzzy
+msgid "Metric backend (custom query)"
+msgstr "Metrik-Backend (benutzerdefinierte Anfrage)"
+
 msgid "Metric backend filter criteria"
 msgstr "Filterkriterien des Metrik-Backend"
 
@@ -41985,9 +41991,6 @@ msgstr "Metrik-Name"
 
 msgid "Metric name (exact match)"
 msgstr "Metrikname (exakter Match)"
-
-msgid "Metric name and time series ID"
-msgstr "Metrik-Name und ID der Zeitreihe"
 
 #, python-format
 msgid ""
@@ -42052,6 +42055,14 @@ msgstr "MiB"
 
 msgid "Microsoft Azure (deprecated)"
 msgstr "Microsoft Azure (veraltet)"
+
+#, fuzzy
+msgid "Microsoft Entra ID connection"
+msgstr "Instanz-Verbindung hinzufügen"
+
+#, fuzzy
+msgid "Microsoft Entra ID connections"
+msgstr "Instanz-Verbindung hinzufügen"
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V Server VM-Zustand"
@@ -43907,6 +43918,9 @@ msgstr "Natives VLAN"
 
 msgid "Native cluster mode"
 msgstr "Nativer Cluster-Modus"
+
+msgid "Native protocol SSL/TLS port (ingress)"
+msgstr ""
 
 msgid ""
 "Native: Use the cluster check function implemented by the check plug-in. If "
@@ -59522,11 +59536,6 @@ msgstr ""
 "Zurücksetzen des Zählers fest."
 
 msgid ""
-"Sets the maximum amount of memory the backend is allowed to use as a "
-"percentage of the system's total memory."
-msgstr ""
-
-msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
 "is not a feature of Robot Framework, but of Robotmk. That means that even "
 "when a Robot suite has ended with a PASS result, the states of Robotmk test "
@@ -59555,6 +59564,11 @@ msgstr ""
 
 msgid "Setting"
 msgstr "Einstellung"
+
+msgid ""
+"Setting a resource attribute requires to enable the metric backend in the "
+"Global Settings."
+msgstr ""
 
 msgid ""
 "Setting levels on non-unicast packet rates is optional. This may help to "
@@ -64372,9 +64386,6 @@ msgstr "TLS-Zertifikatsüberprüfung"
 msgid "TLS certificate verification"
 msgstr "Verifizierung des TLS-Zertifikats"
 
-msgid "TLS port"
-msgstr "TLS-Port"
-
 msgid "TLS processed bytes"
 msgstr "Verarbeitete Bytes über TLS"
 
@@ -68118,6 +68129,13 @@ msgstr ""
 msgid "The maximum allowed value is %s."
 msgstr "Der maximal erlaubte Wert ist %s."
 
+msgid ""
+"The maximum amount of memory that the metric backend is allowed to use, "
+"expressed as a fraction of the total available memory. Allows limiting the "
+"memory usage on low-memory systems. On hosts with low RAM and swap, you may "
+"want to set it to values larger than 100%."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The maximum average round trip time in ms before this service goes into "
@@ -69111,6 +69129,11 @@ msgstr ""
 msgid "The port description"
 msgstr "Port Beschreibung"
 
+msgid ""
+"The port on which the metric backend listens to incoming data. This setting "
+"also defines where the site's OpenTelemetry Collector sends its data."
+msgstr ""
+
 msgid "The port on which the ntopng instance is reachable."
 msgstr "Der Port unter dem die ntopng Instanz erreichbar ist."
 
@@ -69119,6 +69142,10 @@ msgstr "Der Port, der für den API-Aufruf verwendet wird."
 
 msgid "The port the DBMS listens to"
 msgstr "Der TCP-Port des Datenbankservers"
+
+#, fuzzy
+msgid "The port to query data from the metric backend."
+msgstr "Der Aufruf von Hosts vom Metrik-Backend ist fehlgeschlagen"
 
 msgid ""
 "The power state can be displayed additionally either on the ESX host or the "
@@ -71863,8 +71890,11 @@ msgstr ""
 "Dialog sichtbar."
 
 #, python-format
-msgid "This file cannot be uploaded: %s"
-msgstr "Diese Datei kann nicht hochgeladen werden: %s"
+msgid ""
+"This file cannot be uploaded: \"%s\". Please make sure to perform all the "
+"steps and <a href=\"https://support.checkmk.com\" target=\"_blank\">contact "
+"us</a> if the issue persists."
+msgstr ""
 
 msgid "This filter cannot be displayed"
 msgstr "Der Filter kann nicht dargestellt werden"
@@ -83274,6 +83304,9 @@ msgstr "Händler- und Geräte-ID"
 msgid "Venue ID"
 msgstr "Venue-ID"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "Verboses Logging"
 
@@ -92079,6 +92112,14 @@ msgstr "Groß"
 msgid "Please select a HW/SW inventory property."
 msgstr ""
 
+#, fuzzy
+msgid "The selected HW/SW inventory property is invalid."
+msgstr "Eigentum der HW-/SW-Inventur"
+
+#, fuzzy
+msgid "Inventory property"
+msgstr "Eigentum der HW-/SW-Inventur"
+
 msgid "Loading widget visualization settings..."
 msgstr "Visualisierungseinstellungen für das Widget werden geladen..."
 
@@ -92109,8 +92150,11 @@ msgstr "Graph (kombiniert)"
 msgid "Service metric"
 msgstr "Service-Metrik"
 
-msgid "Filter service metric by"
-msgstr "Service-Metrik filtern nach"
+msgid "Must select an option"
+msgstr "Sie müssen eine Option auswählen"
+
+msgid "Narrow dropdown options by host or service (no selection)"
+msgstr ""
 
 msgid ""
 "Use these fields to narrow down the list of available service metrics.<br /"
@@ -92119,9 +92163,6 @@ msgstr ""
 "Verwenden Sie diese Felder, um die Liste der verfügbaren Service-Metriken "
 "einzugrenzen.<br />Klicken Sie auf den Host-Namen oder die Service-"
 "Bezeichnung, um den Filter zu löschen."
-
-msgid "Must select an option"
-msgstr "Sie müssen eine Option auswählen"
 
 msgid "Service graph"
 msgstr "Service-Graph"
@@ -92336,6 +92377,9 @@ msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+msgid "The time window used to aggregate data for each point on the chart.<ul>"
 msgstr ""
 
 msgid "Aggregation lookback"
@@ -92864,6 +92908,10 @@ msgid ""
 "        ${((waitTimeBetweenQueries - (Date.now() - "
 "pingStatus.value[cmd].timerStarted)) / 1000).toFixed(0)}\n"
 "        seconds."
+msgstr ""
+
+msgid ""
+"Unexpected response from server please check your crash reports and logs."
 msgstr ""
 
 #, fuzzy
@@ -93957,6 +94005,25 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "HTTPS port"
+#~ msgstr "HTTPS-Port"
+
+#~ msgid "Levels for custom query monitoring"
+#~ msgstr "Levels für das Monitoring benutzerdefinierter Anfragen"
+
+#~ msgid "Metric name and time series ID"
+#~ msgstr "Metrik-Name und ID der Zeitreihe"
+
+#~ msgid "TLS port"
+#~ msgstr "TLS-Port"
+
+#, python-format
+#~ msgid "This file cannot be uploaded: %s"
+#~ msgstr "Diese Datei kann nicht hochgeladen werden: %s"
+
+#~ msgid "Filter service metric by"
+#~ msgstr "Service-Metrik filtern nach"
 
 #~ msgid "Podman Monitoring"
 #~ msgstr "Podman-Monitoring"

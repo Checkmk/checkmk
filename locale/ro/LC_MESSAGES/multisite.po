@@ -17429,6 +17429,10 @@ msgid "Create Conference Latency"
 msgstr "Creați o latență de conferință"
 
 #, fuzzy
+msgid "Create Microsoft Entra ID connections."
+msgstr "Adăugați o conexiune de site"
+
+#, fuzzy
 msgid "Create OAuth2 connections."
 msgstr "Adăugați o conexiune"
 
@@ -18319,10 +18323,6 @@ msgstr "MBeani personalizați"
 msgid "Custom MIBs"
 msgstr "MIB-uri personalizate"
 
-#, fuzzy
-msgid "Custom Query"
-msgstr "Client"
-
 msgid "Custom SQL"
 msgstr "SQL personalizat"
 
@@ -18444,6 +18444,10 @@ msgstr "Starea sondei personalizate"
 
 msgid "Custom profile"
 msgstr "Profil personalizat"
+
+#, fuzzy
+msgid "Custom query result"
+msgstr "Client"
 
 msgid "Custom recipient of \"Reply to\""
 msgstr ""
@@ -29620,6 +29624,9 @@ msgstr "Parametrii HTTP"
 msgid "HTTP Proxy"
 msgstr "Proxy HTTP"
 
+msgid "HTTP SSL/TLS default port (queries)"
+msgstr ""
+
 msgid "HTTP accelerator statistics"
 msgstr "Statistici privind acceleratorul HTTP"
 
@@ -29698,10 +29705,6 @@ msgstr ""
 "SSL validă a serverului web Apache de pe serverul de monitorizare. Atunci "
 "când se utilizează HTTP, atunci datele confidențiale care sunt conținute în "
 "agenții coapte ar putea fi spionate (cum ar fi parolele pentru pluginuri)."
-
-#, fuzzy
-msgid "HTTPS port"
-msgstr "Port TCP"
 
 msgid "HW Information"
 msgstr "Informații HW"
@@ -39580,10 +39583,6 @@ msgstr "Niveluri pentru parametrii bateriei"
 msgid "Levels for checkpoint time"
 msgstr "Niveluri pentru timpul de control"
 
-#, fuzzy
-msgid "Levels for custom query monitoring"
-msgstr "Niveluri pentru monitorizarea SLA"
-
 msgid "Levels for data size"
 msgstr "Niveluri pentru dimensiunea datelor"
 
@@ -44052,6 +44051,10 @@ msgid "Metric backend (Custom query)"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
+msgid "Metric backend (custom query)"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
 msgid "Metric backend filter criteria"
 msgstr "Instanțe Oracle"
 
@@ -44088,10 +44091,6 @@ msgstr "Etichetă metrică"
 #, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Numele gazdei (potrivire exactă)"
-
-#, fuzzy
-msgid "Metric name and time series ID"
-msgstr "Graficul de măsurători al unui singur serviciu"
 
 #, python-format
 msgid ""
@@ -44163,6 +44162,14 @@ msgstr "MiB"
 #, fuzzy
 msgid "Microsoft Azure (deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft Entra ID connection"
+msgstr "Adăugați o conexiune de site"
+
+#, fuzzy
+msgid "Microsoft Entra ID connections"
+msgstr "Adăugați o conexiune de site"
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Starea VM Microsoft Hyper-V Server"
@@ -46168,6 +46175,9 @@ msgstr ""
 
 msgid "Native cluster mode"
 msgstr "Modul cluster nativ"
+
+msgid "Native protocol SSL/TLS port (ingress)"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -62684,11 +62694,6 @@ msgstr ""
 "Stabilește nivelurile privind totalul erorilor de funcționare de la ultima "
 "resetare a contorului."
 
-msgid ""
-"Sets the maximum amount of memory the backend is allowed to use as a "
-"percentage of the system's total memory."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
@@ -62718,6 +62723,11 @@ msgstr ""
 
 msgid "Setting"
 msgstr "Setarea"
+
+msgid ""
+"Setting a resource attribute requires to enable the metric backend in the "
+"Global Settings."
+msgstr ""
 
 msgid ""
 "Setting levels on non-unicast packet rates is optional. This may help to "
@@ -67705,10 +67715,6 @@ msgstr "Validarea certificatului SSL"
 msgid "TLS certificate verification"
 msgstr "Verificarea certificatului SSL"
 
-#, fuzzy
-msgid "TLS port"
-msgstr "Port TCP"
-
 msgid "TLS processed bytes"
 msgstr "Byte procesați TLS"
 
@@ -71363,6 +71369,13 @@ msgstr ""
 msgid "The maximum allowed value is %s."
 msgstr "Valoarea maximă admisă este %s."
 
+msgid ""
+"The maximum amount of memory that the metric backend is allowed to use, "
+"expressed as a fraction of the total available memory. Allows limiting the "
+"memory usage on low-memory systems. On hosts with low RAM and swap, you may "
+"want to set it to values larger than 100%."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The maximum average round trip time in ms before this service goes into "
@@ -72325,6 +72338,11 @@ msgstr ""
 msgid "The port description"
 msgstr "Descrierea portului"
 
+msgid ""
+"The port on which the metric backend listens to incoming data. This setting "
+"also defines where the site's OpenTelemetry Collector sends its data."
+msgstr ""
+
 msgid "The port on which the ntopng instance is reachable."
 msgstr "Portul pe care se poate ajunge la instanța ntopng."
 
@@ -72333,6 +72351,10 @@ msgstr "Portul care este utilizat pentru apelul api."
 
 msgid "The port the DBMS listens to"
 msgstr "Portul la care ascultă SGBD"
+
+#, fuzzy
+msgid "The port to query data from the metric backend."
+msgstr "Configurația stilului selectat"
 
 msgid ""
 "The power state can be displayed additionally either on the ESX host or the "
@@ -74997,8 +75019,11 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "This file cannot be uploaded: %s"
-msgstr "Acest fișier nu poate fi încărcat: %s."
+msgid ""
+"This file cannot be uploaded: \"%s\". Please make sure to perform all the "
+"steps and <a href=\"https://support.checkmk.com\" target=\"_blank\">contact "
+"us</a> if the issue persists."
+msgstr ""
 
 msgid "This filter cannot be displayed"
 msgstr "Acest filtru nu poate fi afișat"
@@ -87196,6 +87221,9 @@ msgstr "ID-ul furnizorului și al dispozitivului"
 msgid "Venue ID"
 msgstr "ID-ul locului de desfășurare"
 
+msgid "Vera (embedded)"
+msgstr ""
+
 msgid "Verbose"
 msgstr "Verbose"
 
@@ -96220,6 +96248,14 @@ msgid "Please select a HW/SW inventory property."
 msgstr "Inventarul HW/SW"
 
 #, fuzzy
+msgid "The selected HW/SW inventory property is invalid."
+msgstr "Inventarul HW/SW"
+
+#, fuzzy
+msgid "Inventory property"
+msgstr "Inventarul HW/SW"
+
+#, fuzzy
 msgid "Loading widget visualization settings..."
 msgstr "Setări implicite de vizualizare BI"
 
@@ -96260,19 +96296,17 @@ msgstr "Opțiuni grafice"
 msgid "Service metric"
 msgstr "Metrici de servicii"
 
-# georgem ##############
 #, fuzzy
-msgid "Filter service metric by"
-msgstr "Metrici de servicii"
+msgid "Must select an option"
+msgstr "Conexiuni respinse"
+
+msgid "Narrow dropdown options by host or service (no selection)"
+msgstr ""
 
 msgid ""
 "Use these fields to narrow down the list of available service metrics.<br /"
 ">Click the Host name or Service label to clear the filter."
 msgstr ""
-
-#, fuzzy
-msgid "Must select an option"
-msgstr "Conexiuni respinse"
 
 # georgem ##############
 #, fuzzy
@@ -96524,6 +96558,9 @@ msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
+msgstr ""
+
+msgid "The time window used to aggregate data for each point on the chart.<ul>"
 msgstr ""
 
 #, fuzzy
@@ -97066,6 +97103,10 @@ msgid ""
 "        ${((waitTimeBetweenQueries - (Date.now() - "
 "pingStatus.value[cmd].timerStarted)) / 1000).toFixed(0)}\n"
 "        seconds."
+msgstr ""
+
+msgid ""
+"Unexpected response from server please check your crash reports and logs."
 msgstr ""
 
 msgid ""
@@ -98157,6 +98198,31 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "HTTPS port"
+#~ msgstr "Port TCP"
+
+#, fuzzy
+#~ msgid "Levels for custom query monitoring"
+#~ msgstr "Niveluri pentru monitorizarea SLA"
+
+#, fuzzy
+#~ msgid "Metric name and time series ID"
+#~ msgstr "Graficul de măsurători al unui singur serviciu"
+
+#, fuzzy
+#~ msgid "TLS port"
+#~ msgstr "Port TCP"
+
+#, python-format
+#~ msgid "This file cannot be uploaded: %s"
+#~ msgstr "Acest fișier nu poate fi încărcat: %s."
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Filter service metric by"
+#~ msgstr "Metrici de servicii"
 
 #, fuzzy
 #~ msgid "Podman Monitoring"

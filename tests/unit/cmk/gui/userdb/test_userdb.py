@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
+from dataclasses import asdict
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -42,6 +43,7 @@ from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import (
     load_custom_attr,
     load_user,
+    save_custom_attr,
     save_two_factor_credentials,
     save_users,
 )
@@ -288,6 +290,30 @@ def test_access_denied_with_invalidated_session(single_auth_request: SingleReque
         load_session_infos(user_id)[session_info.session_id].session_state == "credentials_needed"
     )
     assert not is_valid_user_session(user_id, load_session_infos(user_id), session_id)
+
+
+def test_invalid_field_in_session_info_ignored(single_auth_request: SingleRequest) -> None:
+    user_id, session_info = single_auth_request()
+    session_id = session_info.session_id
+
+    assert "two_factor_complete" not in load_session_infos(user_id)
+
+    old_session_info = asdict(load_session_infos(user_id)[session_id])
+    old_session_info["two_factor_complete"] = False
+
+    assert "two_factor_complete" in old_session_info
+
+    # Not using userdb.session.save_session_infos to force "two_factor_complete" into the data
+    save_custom_attr(
+        user_id,
+        "session_info",
+        repr({session_id: old_session_info}),
+    )
+
+    manipulated_session_info = load_custom_attr(user_id=user_id, key="session_info", parser=str)
+    assert manipulated_session_info is not None
+    assert "two_factor_complete" in manipulated_session_info
+    assert "two_factor_complete" not in load_session_infos(user_id)
 
 
 def test_on_access_update_valid_session(

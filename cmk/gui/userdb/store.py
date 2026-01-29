@@ -16,6 +16,7 @@ import itertools
 import os
 import traceback
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import fields
 from datetime import datetime
 from pathlib import Path
 from typing import Any, cast, Literal, TypeVar
@@ -869,7 +870,13 @@ def convert_session_info(value: str) -> dict[str, SessionInfo]:
     if value == "":
         return {}
 
-    return {k: SessionInfo(**v) for k, v in ast.literal_eval(value).items()}
+    # Filter away unwanted elements such as the deprecated 'two_factor_complete'.
+    valid_fields = {field.name for field in fields(SessionInfo)}
+
+    return {
+        k: SessionInfo(**{key: val for key, val in v.items() if key in valid_fields})
+        for k, v in ast.literal_eval(value).items()
+    }
 
 
 def release_users_lock() -> None:

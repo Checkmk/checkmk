@@ -9,18 +9,17 @@ from pathlib import Path
 from cmk.ccc.user import UserId
 from cmk.gui.userdb.session import load_session_infos
 from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.pre_actions.migrate_session_info import MigrateSessionInfoPre
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+from cmk.update_config.plugins.actions.migrate_session_info import MigrateSessionInfo
 from cmk.utils.paths import profile_dir
 
 
 def run_migrate_session_info() -> None:
-    MigrateSessionInfoPre(
+    MigrateSessionInfo(
         name="migrate_session_info",
         title="Migrating all existing user sessions",
-        sort_index=25,  # run before any userdata is loaded (DCD)
+        sort_index=25,
         expiry_version=ExpiryVersion.CMK_260,
-    )(logging.getLogger(), ConflictMode.ABORT)
+    )(logging.getLogger())
 
 
 def test_valid_info_is_migrated(with_user: tuple[UserId, str]) -> None:

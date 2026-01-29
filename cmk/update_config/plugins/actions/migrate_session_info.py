@@ -16,8 +16,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.type_defs import AuthType, SessionInfo
 from cmk.gui.userdb import store
 from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.paths import profile_dir
 
 
@@ -92,7 +91,7 @@ def convert(old: OldSessionInfo) -> SessionInfo:
     )
 
 
-class MigrateSessionInfoPre(PreUpdateAction):
+class MigrateSessionInfo(UpdateAction):
     """
     session_info.mk has lost some fields and gained some fields. While sessions are terminated
     during updates, the session info itself cannot be deleted completely. So we migrate.
@@ -113,7 +112,7 @@ class MigrateSessionInfoPre(PreUpdateAction):
             return False
 
     @override
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger) -> None:
         for profile in profile_dir.iterdir():
             if not profile.is_dir():
                 continue
@@ -143,11 +142,11 @@ class MigrateSessionInfoPre(PreUpdateAction):
             store.save_custom_attr(userid=username, key="session_info", val=repr(new_data))
 
 
-pre_update_action_registry.register(
-    MigrateSessionInfoPre(
+update_action_registry.register(
+    MigrateSessionInfo(
         name="migrate_session_info",
         title="Migrating all existing user sessions",
-        sort_index=25,  # run before any userdata is loaded (DCD)
+        sort_index=25,  # Needs to be run before rulesets.
         expiry_version=ExpiryVersion.CMK_260,
     )
 )

@@ -451,33 +451,43 @@ py_wheel(
     }),
     visibility = ["//visibility:public"],
     deps = select({
-        "@cmk//edition:community": [],
+        "@cmk//edition:community": [
+            ":cmk_community",
+            ":lib_cmk",
+        ],
         "@cmk//edition:ultimate": [
+            ":cmk_ultimate",
+            ":lib_cmk",
             "//non-free/packages/cmc-protocols:py_config_proto",
             "//non-free/packages/cmc-protocols:py_cycletime_proto",
             "//non-free/packages/cmc-protocols:py_state_proto",
         ],
         "@cmk//edition:pro": [
+            ":cmk_pro",
+            ":lib_cmk",
             "//non-free/packages/cmc-protocols:py_config_proto",
             "//non-free/packages/cmc-protocols:py_cycletime_proto",
             "//non-free/packages/cmc-protocols:py_state_proto",
         ],
         "@cmk//edition:ultimatemt": [
+            ":cmk_ultimatemt",
+            ":lib_cmk",
             "//non-free/packages/cmc-protocols:py_config_proto",
             "//non-free/packages/cmc-protocols:py_cycletime_proto",
             "//non-free/packages/cmc-protocols:py_state_proto",
         ],
         "@cmk//edition:cloud": [
+            ":cmk_cloud",
+            ":lib_cmk",
             "//non-free/packages/cmc-protocols:py_config_proto",
             "//non-free/packages/cmc-protocols:py_cycletime_proto",
             "//non-free/packages/cmc-protocols:py_state_proto",
         ],
     }) + [
-        "cmk",
-        "lib_cmk",
         ":agents",
         ":checkman_edition_specific",
         ":checkman_free",
+        ":cmk",
         ":miscellaneous",
     ],
 )

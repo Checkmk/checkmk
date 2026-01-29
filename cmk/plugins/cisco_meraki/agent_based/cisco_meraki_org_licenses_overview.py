@@ -183,7 +183,7 @@ def _check_expiration_date(expiration_date: datetime, params: CheckParams) -> Ch
 
 check_plugin_cisco_meraki_org_licenses_overview = CheckPlugin(
     name="cisco_meraki_org_licenses_overview",
-    service_name="Cisco Meraki Licenses %s",
+    service_name="Licenses %s",
     discovery_function=discover_licenses_overview,
     check_function=check_licenses_overview,
     check_ruleset_name="cisco_meraki_org_licenses_overview",

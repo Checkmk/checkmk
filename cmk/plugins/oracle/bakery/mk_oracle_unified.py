@@ -15,10 +15,13 @@ from pydantic import BaseModel
 
 from cmk.bakery.v2_unstable import (
     BakeryPlugin,
+    DebStep,
     FileGenerator,
     OS,
     Plugin,
     PluginConfig,
+    RpmStep,
+    Scriptlet,
     Secret,
 )
 
@@ -424,9 +427,34 @@ def _get_oracle_instances(instances: list[GuiInstanceConf]) -> list[OracleInstan
     return result
 
 
+def _get_arm_warning_lines() -> list[str]:
+    """Generate shell script lines to check architecture and warn if ARM."""
+    return [
+        "# Check if system is ARM architecture",
+        "ARCH=$(uname -m)",
+        'case "$ARCH" in',
+        "    aarch64|arm64|armv*)",
+        '        echo "WARNING: mk_oracle_unified plugin is not supported on ARM systems ($ARCH)." 1>&2',
+        '        echo "The plugin may not function correctly on this architecture." 1>&2',
+        "        ;;",
+        "esac",
+    ]
+
+
+def get_oracle_plugin_scriplets(confm: GuiConfig) -> Iterable[Scriptlet]:
+    if confm.deploy[0] == "do_not_deploy":
+        return
+
+    arm_warning_lines = _get_arm_warning_lines()
+
+    yield Scriptlet(step=DebStep.POSTINST, lines=arm_warning_lines)
+    yield Scriptlet(step=RpmStep.POST, lines=arm_warning_lines)
+
+
 bakery_plugin_oracle = BakeryPlugin(
     name="mk_oracle_unified",
     parameter_parser=GuiConfig.model_validate,
     default_parameters=None,
     files_function=get_oracle_plugin_files,
+    scriptlets_function=get_oracle_plugin_scriplets,
 )

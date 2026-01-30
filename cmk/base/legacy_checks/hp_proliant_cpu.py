@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    LegacyCheckDefinition,
+    LegacyDiscoveryResult,
+    LegacyResult,
+)
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.hp_proliant.lib import DETECT, sanitize_item
 
@@ -27,19 +29,19 @@ hp_proliant_cpu_status2nagios_map = {
 }
 
 
-def discover_hp_proliant_cpu(info):
+def discover_hp_proliant_cpu(info: StringTable) -> LegacyDiscoveryResult:
     yield from ((sanitize_item(line[0]), {}) for line in info)
 
 
-def check_hp_proliant_cpu(item, params, info):
+def check_hp_proliant_cpu(item: str, params: object, info: StringTable) -> LegacyResult:
     for line in info:
         if sanitize_item(line[0]) == item:
-            index, slot, name, status = line
-            snmp_status = hp_proliant_cpu_status_map[int(status)]
-            status = hp_proliant_cpu_status2nagios_map[snmp_status]
+            index, slot, name, status_str = line
+            snmp_status = hp_proliant_cpu_status_map[int(status_str)]
+            nagios_status = hp_proliant_cpu_status2nagios_map[snmp_status]
 
             return (
-                status,
+                nagios_status,
                 f'CPU{index} "{name}" in slot {slot} is in state "{snmp_status}"',
             )
     return (3, "item not found in snmp data")

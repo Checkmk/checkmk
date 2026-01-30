@@ -5,10 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type {
-  GraphOptionExplicitVerticalRangeBoundaries,
-  GraphOptions
-} from 'cmk-shared-typing/typescript/graph_designer'
+import type { GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
+import type { GraphOptionExplicitVerticalRangeBoundaries } from 'cmk-shared-typing/typescript/graph_designer'
 import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -43,11 +41,17 @@ const explicitVerticalRangeSuggestions: Suggestion[] = [
   { name: 'explicit', title: _t('Explicit range') }
 ]
 
-const validateLower = (value: number) => {
+const validateLower = (value: number | undefined) => {
+  if (typeof value !== 'number' || typeof dataExplicitVerticalRangeUpper.value !== 'number') {
+    return []
+  }
   return value > dataExplicitVerticalRangeUpper.value ? ['Must be less than upper bound'] : []
 }
 
-const validateUpper = (value: number) => {
+const validateUpper = (value: number | undefined) => {
+  if (typeof value !== 'number' || typeof dataExplicitVerticalRangeLower.value !== 'number') {
+    return []
+  }
   return value < dataExplicitVerticalRangeLower.value ? ['Must be more than lower bound'] : []
 }
 

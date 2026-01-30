@@ -33,7 +33,7 @@ const propsCva = cva('cmk-input', {
 })
 
 type InputType = NonNullable<VariantProps<typeof propsCva>['type']>
-type InputDataType<TType extends InputType> = TType extends 'number' ? number : string
+type InputDataType<TType extends InputType> = TType extends 'number' ? number | undefined : string
 
 const {
   type = 'text',

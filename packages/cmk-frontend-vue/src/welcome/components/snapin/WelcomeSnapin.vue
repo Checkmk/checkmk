@@ -15,8 +15,11 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import { useSnapinRefresh } from '@/sidebar/composables/useSnapinRefresh'
+
 import StepsProgressBar from '../StepsProgressBar.vue'
 import { totalSteps } from '../steps/stepComponents'
+import { getWelcomeStageInformation } from '../steps/utils'
 import WelcomeSnapinSlideout from './WelcomeSnapinSlideout.vue'
 
 const { _t } = usei18n()
@@ -30,6 +33,14 @@ const currentStageInformation = ref(props.stage_information)
 const completedSteps = computed(() => currentStageInformation.value.finished.length)
 const completed = computed(() => completedSteps.value === totalSteps)
 const slideoutOpen = ref<boolean>(false)
+
+// Handle sidebar refresh events
+useSnapinRefresh('snapin_a_welcome', async () => {
+  const updatedStageInfo = await getWelcomeStageInformation(props.cards.get_stage_information)
+  if (updatedStageInfo) {
+    currentStageInformation.value = updatedStageInfo
+  }
+})
 
 async function openSlideIn() {
   slideoutOpen.value = true

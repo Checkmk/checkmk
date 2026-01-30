@@ -10,6 +10,7 @@ import { computed, ref } from 'vue'
 
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
+import { refreshSidebarSnapin } from '@/sidebar/lib/snapin-refresh'
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
@@ -35,10 +36,8 @@ async function stepCompleted(stepId: StepId): Promise<void> {
       currentStageInformation.value
   })
 
-  const parentDoc = window.parent?.document
-  if (parentDoc?.getElementById('snapin_a_welcome')) {
-    window.top?.location.reload()
-  }
+  // Notify sidebar to refresh the welcome snapin
+  refreshSidebarSnapin('snapin_a_welcome')
 }
 </script>
 

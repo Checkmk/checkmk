@@ -184,6 +184,11 @@ onMounted(() => {
         switchVisibility()
         break
       }
+      case props.ipAddressFamilyInputElement:
+      case props.relayInputButtonElement: {
+        switchVisibility()
+        break
+      }
       case props.siteSelectElement: {
         selectedSiteIdHash.value = props.siteSelectElement.value
         siteId.value =

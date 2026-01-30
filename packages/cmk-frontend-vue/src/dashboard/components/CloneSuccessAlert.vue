@@ -20,11 +20,13 @@ interface CloneSuccessAlertEmit {
 
 const props = defineProps<CloneSuccessAlertProps>()
 const emits = defineEmits<CloneSuccessAlertEmit>()
+
+const open = defineModel<boolean>('open', { default: true })
 </script>
 
 <template>
-  <div class="db-clone-success-alert">
-    <CmkAlertBox variant="success">
+  <div v-if="open" class="db-clone-success-alert">
+    <CmkAlertBox variant="success" :open="open">
       <template #heading>{{ _t('Dashboard cloned.') }}</template>
       <a v-if="props?.hasFilters" href="#" @click.prevent="emits('editFilters')">{{
         _t('Review applied filters.')

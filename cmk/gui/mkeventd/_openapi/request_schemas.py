@@ -89,7 +89,7 @@ class DeleteFilterBase(BaseSchema):
 class FilterById(DeleteFilterBase):
     site_id = gui_fields.SiteField(
         description="An existing site id",
-        example="heute",
+        example="mysite",
         presence="should_exist",
         required=True,
     )
@@ -121,7 +121,7 @@ class DeleteECEvents(OneOfSchema):
 class ChangeEventState(BaseSchema):
     site_id = gui_fields.SiteField(
         description="An existing site id",
-        example="heute",
+        example="mysite",
         presence="should_exist",
         required=True,
     )
@@ -139,7 +139,7 @@ class ChangeStateFilter(BaseSchema):
     )
     site_id = gui_fields.SiteField(
         description="An existing site id",
-        example="heute",
+        example="mysite",
         presence="should_exist",
     )
     new_state = StateField(
@@ -187,7 +187,7 @@ class UpdateAndAcknowledgeEvent(BaseSchema):
 class UpdateAndAcknowledeEventSiteIDRequired(UpdateAndAcknowledgeEvent):
     site_id = gui_fields.SiteField(
         description="An existing site id",
-        example="heute",
+        example="mysite",
         presence="should_exist",
         required=True,
     )
@@ -202,7 +202,7 @@ class UpdateAndAcknowledgeFilter(UpdateAndAcknowledgeEvent):
     )
     site_id = gui_fields.SiteField(
         description="An existing site id",
-        example="heute",
+        example="mysite",
         presence="should_exist",
     )
 

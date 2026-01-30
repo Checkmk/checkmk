@@ -62,7 +62,7 @@ class DowntimeMode(OneOfSchema):
 class BaseDowntimeSchema(BaseSchema):
     site_id = gui_fields.SiteField(
         description="The site id of the downtime.",
-        example="heute",
+        example="mysite",
         presence="should_exist",
         required=True,
     )

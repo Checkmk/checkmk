@@ -370,7 +370,7 @@ class CreateUser(CustomUserAttributes):
     authorized_sites = fields.List(
         gui_fields.SiteField(allow_all_value=True),
         description="The names of the sites the user is authorized to handle.",
-        example=["heute"],
+        example=["mysite"],
         required=False,
         load_default=["all"],
     )
@@ -555,7 +555,7 @@ class UpdateUser(CustomUserAttributes):
         gui_fields.SiteField(allow_all_value=True),
         description="The names of the sites the user is authorized to handle. Specifying 'all' "
         "will grant the user access to all sites.",
-        example=["heute"],
+        example=["mysite"],
         required=False,
     )
     contactgroups = fields.List(

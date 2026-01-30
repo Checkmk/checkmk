@@ -262,10 +262,10 @@ class BIAggregationStateResponseSchema(Schema):
     missing_sites = fields.List(
         fields.String(),
         description="The missing sites",
-        example=["beta", "heute"],
+        example=["beta", "mysite"],
     )
     missing_aggr = fields.List(
-        fields.String(), description="the missing aggregations", example=["Host heute"]
+        fields.String(), description="the missing aggregations", example=["Host central"]
     )
 
 

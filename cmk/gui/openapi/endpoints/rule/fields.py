@@ -373,8 +373,8 @@ class TagConditionSchema(OneOfSchema):
         [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}, \
 {'key': 'foo', 'operator': 'is', 'value': 'bar'}]
 
-        >>> t.dump({'host_name': {'$nor': ['heute', 'gestern']}}, many=True)
-        [{'key': 'host_name', 'operator': 'none_of', 'value': ['heute', 'gestern']}]
+        >>> t.dump({'host_name': {'$nor': ['myhost', 'gestern']}}, many=True)
+        [{'key': 'host_name', 'operator': 'none_of', 'value': ['myhost', 'gestern']}]
 
         >>> rv = t.dump({'a': 'b', 'c': {'$ne': 'd'}, 'e': {'$nor': ['f']}, 'g': {'$or': ['h']}},
         ...             many=True)

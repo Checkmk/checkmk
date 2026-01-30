@@ -37,7 +37,7 @@ def default_config_example() -> SiteConfigAPISpec:
             },
             "connect_timeout": 2,
             "persistent_connection": False,
-            "url_prefix": "/heute_remote_1/",
+            "url_prefix": "/my_remote_site_1/",
             "status_host": {
                 "status_host_set": "disabled",
             },
@@ -45,7 +45,7 @@ def default_config_example() -> SiteConfigAPISpec:
         },
         configuration_connection={
             "enable_replication": True,
-            "url_of_remote_site": "http://localhost/heute_remote_site_id_1/check_mk/",
+            "url_of_remote_site": "http://localhost/my_remote_site_id_1/check_mk/",
             "disable_remote_configuration": True,
             "ignore_tls_errors": False,
             "direct_login_to_web_gui_allowed": True,

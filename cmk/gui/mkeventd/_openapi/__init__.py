@@ -161,7 +161,7 @@ def _serialize_event(event: ECEvent) -> DomainObject:
         {
             "site_id": gui_fields.SiteField(
                 description="An existing site id",
-                example="heute",
+                example="mysite",
                 presence="should_exist",
                 required=True,
             )
@@ -194,7 +194,7 @@ def show_event(params: Mapping[str, Any]) -> Response:
         {
             "site_id": gui_fields.SiteField(
                 description="An existing site id",
-                example="heute",
+                example="mysite",
                 presence="should_exist",
             )
         },

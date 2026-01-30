@@ -129,7 +129,7 @@ HOST_NAME_SHOW = {
 SITE_ID = {
     "site_id": gui_fields.SiteField(
         description="An existing site id",
-        example="heute",
+        example="mysite",
         presence="should_exist",
         required=True,
     )
@@ -138,7 +138,7 @@ SITE_ID = {
 OPTIONAL_SITE_ID = {
     "site_id": gui_fields.SiteField(
         description="An existing site id",
-        example="heute",
+        example="mysite",
         presence="should_exist",
     )
 }

@@ -236,7 +236,7 @@ class DeleteDowntimeBase(BaseSchema):
 class DeleteDowntimeById(DeleteDowntimeBase):
     site_id = gui_fields.SiteField(
         description="The site from which you want to delete a downtime.",
-        example="heute",
+        example="mysite",
         presence="should_exist",
         required=True,
     )
@@ -382,7 +382,7 @@ class ModifyDowntimeFieldsSchema(BaseSchema):
 class ModifyDowntimeById(ModifyDowntimeFieldsSchema):
     site_id = gui_fields.SiteField(
         description="The site from which you want to modify a downtime.",
-        example="central",
+        example="mysite",
         presence="should_exist",
         required=True,
     )

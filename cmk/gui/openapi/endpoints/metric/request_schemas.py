@@ -22,7 +22,7 @@ from cmk.gui.openapi.endpoints.metric.common import (
 class _BaseGetSchema(BaseRequestSchema):
     site = SiteField(
         description="The name of the site. Even though this is optional, specifying a site will greatly improve performance in large distributed systems.",
-        example="heute",
+        example="mysite",
     )
     host_name = HostField(
         description="The host name to use.",

@@ -325,7 +325,7 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
         {
             "site_id": gui_fields.SiteField(
                 description="An existing site id",
-                example="heute",
+                example="mysite",
                 presence="should_exist",
             )
         },
@@ -405,7 +405,7 @@ def _show_downtimes(param: Mapping[str, Any]) -> Response:
         {
             "site_id": gui_fields.SiteField(
                 description="An existing site id",
-                example="heute",
+                example="mysite",
                 presence="should_exist",
                 required=True,
             )

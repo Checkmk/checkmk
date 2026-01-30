@@ -272,7 +272,7 @@ The following script is an example of how to create a host downtime and check th
 
     # Checkmk server details
     SERVER = "localhost"
-    SITE_NAME = "central"
+    SITE_NAME = "mysite"
     USERNAME = "automation"
     PASSWORD = "test123"
     PROTOCOL = "http"

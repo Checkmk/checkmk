@@ -62,8 +62,8 @@ class ECEvent:
         """return a dict representation of the ECEvent object to
         send back via the response schema.
 
-        >>> dict(ECEvent("heute", 1, 1, 10, "heute", "rule_id_1", "app1", "", "", "123.12.13.1", 6, 7, "open", 1668007771, 1667403030, 6, "test_text"))
-        {'site_id': 'heute', 'state': 'warning', 'service_level': 'silver', 'host': 'heute', 'rule_id': 'rule_id_1', 'application': 'app1', 'comment': '', 'contact': '', 'ipaddress': '123.12.13.1', 'facility': 'lpr', 'priority': 'debug', 'phase': 'open', 'last': 1668007771, 'first': 1667403030, 'count': 6, 'text': 'test_text'}
+        >>> dict(ECEvent("mysite", 1, 1, 10, "myhost", "rule_id_1", "app1", "", "", "123.12.13.1", 6, 7, "open", 1668007771, 1667403030, 6, "test_text"))
+        {'site_id': 'mysite', 'state': 'warning', 'service_level': 'silver', 'host': 'myhost', 'rule_id': 'rule_id_1', 'application': 'app1', 'comment': '', 'contact': '', 'ipaddress': '123.12.13.1', 'facility': 'lpr', 'priority': 'debug', 'phase': 'open', 'last': 1668007771, 'first': 1667403030, 'count': 6, 'text': 'test_text'}
 
         """
 

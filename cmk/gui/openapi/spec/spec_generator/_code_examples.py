@@ -535,7 +535,7 @@ def _jinja_environment(spec: APISpec) -> jinja2.Environment:
     >>> env = _jinja_environment(SPEC)  # doctest: +SKIP
     >>> result = env.get_template('curl').render(  # doctest: +SKIP
     ...     hostname='localhost',
-    ...     site='heute',
+    ...     site='mysite',
     ...     username='automation',
     ...     password='test123',
     ...     path_params=[],

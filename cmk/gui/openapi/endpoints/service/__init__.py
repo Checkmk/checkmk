@@ -46,7 +46,7 @@ class _BaseParameters(BaseSchema):
         gui_fields.SiteField(),
         description="Restrict the query to this particular site.",
         load_default=[],
-        example=["heute"],
+        example=["mysite"],
     )
     columns = gui_fields.column_field(
         Services,

@@ -23,6 +23,7 @@ from cmk.gui.pages import PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
+from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
@@ -73,6 +74,30 @@ def compute_widget_titles(board: DashboardConfig) -> dict[str, str]:
     }
 
 
+def _remove_filter_values(context: VisualContext) -> VisualContext:
+    """Removes all filter values, while keeping the filters themselves.
+
+    We keep the filters, so that the dashboard knows which filters are configured. This is needed
+    to render appropriate error messages when a required filter is missing.
+    The only sensitive part are the actual filter values, which we remove.
+    """
+    return {key: {} for key in context}
+
+
+def remove_sensitive_filter_information(board: DashboardConfig) -> None:
+    """Removes all filter values from the dashboard config.
+
+    This is done to avoid leaking sensitive information in shared dashboards.
+    When rendering, all widgets should be referenced by ID and then load their effective filters
+    from the config, not whatever the frontend provides. So removing this information here is safe.
+    However, other computations may rely on these filters, so this should be done as the last step
+    before converting the dashboard to the API model.
+    """
+    board["context"] = _remove_filter_values(board.get("context", {}))
+    for widget in board.get("dashlets", []):
+        widget["context"] = _remove_filter_values(widget.get("context", {}))
+
+
 def page_shared_dashboard(
     token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
@@ -82,10 +107,12 @@ def page_shared_dashboard(
         board = issuer.load_dashboard()
         SharedDashboardPageComponents.verify_dashboard_referenced_token(board, token_id)
 
+        widget_titles = compute_widget_titles(board)
+        remove_sensitive_filter_information(board)
+
         # this can end up loading views when computing the used infos,
         # so it needs the impersonation context
         internal_spec = convert_internal_relative_dashboard_to_api_model_dict(board)
-        widget_titles = compute_widget_titles(board)
 
     title = visuals.visual_title("dashboard", board, board["context"])
     dashboard_properties = {

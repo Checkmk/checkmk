@@ -33,8 +33,6 @@ const props = defineProps<{
 const emit = defineEmits(['close'])
 const context = getWizardContext()
 const ott = ref<string | null | Error>(null)
-const ottExpiryDate = new Date()
-ottExpiryDate.setDate(ottExpiryDate.getDate() + 7)
 
 const regAgentCmd = computed(() => {
   if (props.tab.registrationCmd) {
@@ -74,10 +72,10 @@ function reset() {
           <GenerateToken
             v-model="ott"
             token-generation-endpoint-uri="domain-types/agent_registration_token/collections/all"
+            :expires-in-days="7"
             :token-generation-body="{
               host: hostName,
-              comment: 'Agent registration token for agent slideout',
-              expires_at: ottExpiryDate
+              comment: 'Agent registration token for agent slideout'
             }"
             :description="_t('This requires the generation of a registration token.')"
           />

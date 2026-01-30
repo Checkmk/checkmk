@@ -93,8 +93,9 @@ function goToHostOverview() {
                   v-model="ott"
                   token-generation-endpoint-uri="domain-types/agent_download_token/collections/all"
                   :description="_t('This requires the generation of a download token.')"
+                  :expires-in-days="7"
                   :token-generation-body="{
-                    expires_at: null
+                    comment: 'Agent download token for cloud host'
                   }"
                 />
                 <template v-if="typeof ott === 'string'">

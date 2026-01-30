@@ -29,11 +29,18 @@ export interface IAgentTokenGenerationResponse {
   extensions: IAgentTokenGenerationResponsExtensions
 }
 
+export interface IAgentTokenGenerationRequestBody {
+  host?: string
+  comment: string
+  expires_at?: Date | undefined
+}
+
 const { _t } = usei18n()
 const props = defineProps<{
   description?: TranslatedString | undefined
   tokenGenerationEndpointUri: string
-  tokenGenerationBody: unknown
+  tokenGenerationBody: IAgentTokenGenerationRequestBody
+  expiresInDays?: number | undefined
 }>()
 
 const ott = defineModel<string | null | Error>({ required: true })
@@ -43,10 +50,17 @@ const ottError = ref<Error | null>(null)
 const ottExpiry = ref<Date | null>(null)
 const noOTT = ref(false)
 const api = new Api('api/internal/', [['Content-Type', 'application/json']])
+const tokenGenerationBody = ref<IAgentTokenGenerationRequestBody>(props.tokenGenerationBody)
 
 async function generateOTT() {
   noOTT.value = false
   ottGenerating.value = true
+
+  if (props.expiresInDays) {
+    const ottExpiryDate = new Date()
+    ottExpiryDate.setDate(ottExpiryDate.getDate() + props.expiresInDays)
+    tokenGenerationBody.value.expires_at = ottExpiryDate
+  }
 
   try {
     const res = (await api.post(

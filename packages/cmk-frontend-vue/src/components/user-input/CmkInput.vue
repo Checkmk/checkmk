@@ -40,14 +40,18 @@ const {
   fieldSize = 'SMALL',
   unit,
   externalErrors,
-  validators
+  validators,
+  inline = false
 } = defineProps<{
   type?: T
   fieldSize?: keyof typeof inputSizes
   unit?: string
   externalErrors?: string[]
   validators?: ((value: InputDataType<T>) => string[])[]
+  inline?: boolean
 }>()
+
+const wrapperStyle = computed(() => (inline ? { display: 'inline-block' } : undefined))
 
 const data = defineModel<InputDataType<T>>()
 const validation = ref<string[]>([])
@@ -75,7 +79,7 @@ immediateWatch(
 </script>
 
 <template>
-  <div class="cmk-input__wrapper">
+  <div class="cmk-input__wrapper" :style="wrapperStyle">
     <CmkInlineValidation :validation="validation"></CmkInlineValidation>
     <div class="cmk-input__input-unit-container">
       <input

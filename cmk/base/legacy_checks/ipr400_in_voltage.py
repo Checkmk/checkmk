@@ -3,21 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 check_info = {}
 
 
-def discover_ipr400_in_voltage(info):
+def discover_ipr400_in_voltage(info: StringTable) -> Iterable[tuple[str, dict[str, Any]]]:
     if len(info) > 0:
         yield "1", {}
 
 
-def check_ipr400_in_voltage(item, params, info):
+def check_ipr400_in_voltage(
+    item: str, params: Mapping[str, Any], info: StringTable
+) -> LegacyResult:
     warn, crit = params["levels_lower"]
     power = int(info[0][0]) / 1000.0  # appears to be in mV
     perfdata = [("in_voltage", power, warn, crit)]

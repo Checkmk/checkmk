@@ -12,8 +12,6 @@ import pytest
 import omdlib
 import omdlib.backup
 
-from cmk.ccc.archive import CheckmkTarArchive
-
 
 def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.3.3i7.cee")
@@ -31,12 +29,9 @@ def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
             site_name, str(site_home), True, tar, options={}, verbose=False
         )
 
-    with tar_path.open("rb") as backup_tar:
-        with CheckmkTarArchive.from_buffer(
-            backup_tar, streaming=False, compression="*"
-        ) as safe_tar:
-            backup_site_name, version = omdlib.backup.get_site_and_version_from_backup(safe_tar)
-            names = [tarinfo.name for tarinfo in safe_tar]
+    with tarfile.open(name=tar_path, mode="r|*") as tar:
+        backup_site_name, version = omdlib.backup.get_site_and_version_from_backup(tar)
+        names = [tarinfo.name for tarinfo in tar]
     assert backup_site_name == site_name
     assert version == "1.3.3i7.cee"
     assert f"{site_name}/test123" in names
@@ -59,13 +54,10 @@ def test_backup_site_to_tarfile_broken_link(
             site_name, str(site_home), True, tar, options={}, verbose=False
         )
 
-    with tar_path.open("rb") as backup_tar:
-        with CheckmkTarArchive.from_buffer(
-            backup_tar, streaming=False, compression="*"
-        ) as safe_tar:
-            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(safe_tar)
+    with tarfile.open(name=tar_path, mode="r|*") as tar:
+        _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
 
-            link = safe_tar.getmember(f"{site_name}/link")
+        link = tar.getmember(f"{site_name}/link")
         assert link.linkname == "agag"
 
 
@@ -100,8 +92,5 @@ def test_backup_site_to_tarfile_vanishing_files(
 
     assert not test_file.exists()  # check that the monkeypatch worked
 
-    with tar_path.open("rb") as backup_tar_r:
-        with CheckmkTarArchive.from_buffer(
-            backup_tar_r, streaming=False, compression="*"
-        ) as safe_tar:
-            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(safe_tar)
+    with tarfile.open(name=tar_path, mode="r|*") as tar:
+        _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)

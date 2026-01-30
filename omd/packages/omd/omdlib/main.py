@@ -136,12 +136,6 @@ from omdlib.version import (
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc import tty
-from cmk.ccc.archive import (
-    ArchiveSettings,
-    CheckmkTarArchive,
-    SafeIndexedTarFile,
-    SafeStreamedTarFile,
-)
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.version import (
@@ -2860,7 +2854,7 @@ def main_su(
 
 
 def _process_backup_tar(
-    tar: SafeIndexedTarFile | SafeStreamedTarFile,
+    tar: tarfile.TarFile,
     verbose: bool,
     options: CommandOptions,
     old_site_name: str,
@@ -2891,7 +2885,7 @@ def _process_backup_tar(
                     )
                 tarinfo.linkname = new_linkname
 
-        tar.extract(tarinfo, path=site_home, tar_filter="fully_trusted")
+        tar.extract(tarinfo, path=site_home)
     # give new user all files
     chown_tree(site_home, new_site.name)
 
@@ -2916,7 +2910,7 @@ def _process_backup_tar(
 
 def _restore_backup_from_tar_root(
     *,
-    tar: SafeIndexedTarFile | SafeStreamedTarFile,
+    tar: tarfile.TarFile,
     options: CommandOptions,
     global_opts: GlobalOptions,
     version_info: VersionInfo,
@@ -3000,7 +2994,7 @@ def _restore_backup_from_tar_root(
 
 def _restore_backup_from_tar_site(
     *,
-    tar: SafeIndexedTarFile | SafeStreamedTarFile,
+    tar: tarfile.TarFile,
     options: CommandOptions,
     global_opts: GlobalOptions,
     version_info: VersionInfo,
@@ -3044,37 +3038,36 @@ def main_restore(
     source_descr = "stdin" if source == "-" else source
     new_site_name = args[0] if len(args) == 2 else None
 
-    archive_settings = ArchiveSettings(compression="*", bypass_size_validation=True)
     if source == "-":
-        tar_reader = CheckmkTarArchive.from_buffer(
-            sys.stdin.buffer, streaming=False, **archive_settings
-        )
+        buffer = sys.stdin.buffer
     elif (source_path := Path(source)).exists():
-        tar_reader = CheckmkTarArchive.from_path(source_path, streaming=False, **archive_settings)
+        buffer = source_path.open("rb")
     else:
         sys.exit("The backup archive does not exist.")
 
-    try:
-        with tar_reader as tar:
-            if is_root():
-                _restore_backup_from_tar_root(
-                    tar=tar,
-                    options=options,
-                    global_opts=global_opts,
-                    version_info=version_info,
-                    source_descr=source_descr,
-                    new_site_name=new_site_name,
-                )
-            else:
-                _restore_backup_from_tar_site(
-                    tar=tar,
-                    options=options,
-                    global_opts=global_opts,
-                    version_info=version_info,
-                    source_descr=source_descr,
-                )
-    except tarfile.ReadError as e:
-        sys.exit("Failed to open the backup: %s" % e)
+    with contextlib.closing(buffer):
+        try:
+            # astrein: disable=tarfile-open-read
+            with tarfile.open(fileobj=buffer, mode="r|*") as tar:
+                if is_root():
+                    _restore_backup_from_tar_root(
+                        tar=tar,
+                        options=options,
+                        global_opts=global_opts,
+                        version_info=version_info,
+                        source_descr=source_descr,
+                        new_site_name=new_site_name,
+                    )
+                else:
+                    _restore_backup_from_tar_site(
+                        tar=tar,
+                        options=options,
+                        global_opts=global_opts,
+                        version_info=version_info,
+                        source_descr=source_descr,
+                    )
+        except tarfile.ReadError as e:
+            sys.exit("Failed to open the backup: %s" % e)
 
 
 def postprocess_restore_as_site_user(

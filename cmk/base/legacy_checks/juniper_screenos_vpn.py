@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterable
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -13,11 +13,11 @@ from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS
 check_info = {}
 
 
-def discover_juniper_screenos_vpn(info):
+def discover_juniper_screenos_vpn(info: StringTable) -> Iterable[tuple[str, None]]:
     return [(line[0], None) for line in info]
 
 
-def check_juniper_screenos_vpn(item, params, info):
+def check_juniper_screenos_vpn(item: str, params: None, info: StringTable) -> tuple[int, str]:
     for vpn_id, vpn_status in info:
         if vpn_id == item:
             if vpn_status == "1":

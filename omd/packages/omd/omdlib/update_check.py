@@ -10,8 +10,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from omdlib.dialog import dialog_menu, dialog_yesno
-from omdlib.utils import exec_other_omd
-from omdlib.version import omd_versions
+from omdlib.version_utils import exec_other_omd, omd_versions
 
 from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
 

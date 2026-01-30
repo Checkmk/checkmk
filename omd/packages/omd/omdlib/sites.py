@@ -9,7 +9,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 from omdlib.site_paths import SitePaths
-from omdlib.version import default_version, version_from_site_dir
+from omdlib.version_utils import default_version, version_from_site_dir
 
 from cmk.ccc import tty
 

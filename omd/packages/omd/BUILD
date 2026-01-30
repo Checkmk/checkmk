@@ -244,6 +244,7 @@ py_library(
         "omdlib/utils.py",
         "omdlib/version.py",
         "omdlib/version_info.py",
+        "omdlib/version_utils.py",
         "omdlib_init",
     ],
     imports = ["."],

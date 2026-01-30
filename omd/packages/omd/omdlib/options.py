@@ -13,8 +13,8 @@ from omdlib.global_options import GlobalOptions, parse_global_opts
 from omdlib.site_name import site_name_from_uid
 from omdlib.site_paths import SitePaths
 from omdlib.update_check import OptionName as UpdateOption
-from omdlib.utils import exec_other_omd, site_exists
-from omdlib.version import version_from_site_dir
+from omdlib.utils import site_exists
+from omdlib.version_utils import exec_other_omd, version_from_site_dir
 
 CommandOptions = dict[str, str | None]
 Arguments = list[str]

@@ -121,20 +121,19 @@ from omdlib.utils import (
     create_skeleton_file,
     create_skeleton_files,
     delete_user_file,
-    exec_other_omd,
     get_editor,
     is_containerized,
     replace_tags,
 )
-from omdlib.version import (
+from omdlib.version import main_version, main_versions
+from omdlib.version_info import VersionInfo
+from omdlib.version_utils import (
     default_version,
-    main_version,
-    main_versions,
+    exec_other_omd,
     omd_versions,
     version_exists,
     version_from_site_dir,
 )
-from omdlib.version_info import VersionInfo
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate

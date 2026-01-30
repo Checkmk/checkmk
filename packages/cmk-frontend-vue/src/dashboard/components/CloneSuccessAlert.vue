@@ -26,7 +26,7 @@ const open = defineModel<boolean>('open', { required: true })
 
 <template>
   <div v-if="open" class="db-clone-success-alert">
-    <CmkAlertBox variant="success" :open="open">
+    <CmkAlertBox variant="success" :open="open" :auto-dismiss="props?.hasFilters ? false : true">
       <template #heading>{{ _t('Dashboard cloned.') }}</template>
       <a v-if="props?.hasFilters" href="#" @click.prevent="emits('editFilters')">{{
         _t('Review applied filters.')

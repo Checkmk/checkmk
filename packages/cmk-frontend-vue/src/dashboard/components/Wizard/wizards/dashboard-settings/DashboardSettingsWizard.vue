@@ -67,14 +67,7 @@ const _uniqueIdValidation = async (): Promise<[boolean, TranslatedString[]]> => 
   if (uniqueId.value.trim() === '') {
     return [false, [_t('Unique ID is required.')]]
   } else if (!isValidSnakeCase(uniqueId.value.trim())) {
-    return [
-      false,
-      [
-        _t(
-          'Unique ID must only contain lowercase letters, numbers, and underscores, and must start with a letter.'
-        )
-      ]
-    ]
+    return [false, [_t('Use only lowercase letters (a-z), numbers (0-9), and underscores (_).')]]
   }
 
   if (await isIdInUse(uniqueId.value.trim(), originalId)) {

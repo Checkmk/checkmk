@@ -71,7 +71,7 @@ const _updateMetricType = (value: string) => {
       <span class="db-metric-selector__title">{{ _t('Service metric') }}</span
       ><CmkLabelRequired space="before" />
 
-      <ContentSpacer :dimension="5" />
+      <ContentSpacer :dimension="4" />
 
       <CmkIndent class="db-metric-selector__indent">
         <div class="db-metric-selector__container">
@@ -171,7 +171,7 @@ const _updateMetricType = (value: string) => {
 
 <style scoped>
 .db-metric-selector__base-container {
-  background-color: var(--ux-theme-3);
+  background-color: var(--ux-theme-2);
   padding: var(--dimension-7);
 }
 
@@ -223,6 +223,7 @@ const _updateMetricType = (value: string) => {
 }
 
 .db-metric-selector__indent {
+  margin-left: 0 !important;
   padding-left: var(--dimension-4);
 }
 </style>

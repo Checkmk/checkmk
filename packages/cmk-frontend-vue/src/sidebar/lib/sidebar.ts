@@ -6,6 +6,7 @@
 import type { SidebarSnapin } from 'cmk-shared-typing/typescript/sidebar'
 import { type Ref, ref } from 'vue'
 
+import { Api } from '@/lib/api-client'
 import type { KeyShortcutService } from '@/lib/keyShortcuts'
 import { ServiceBase } from '@/lib/service/base'
 
@@ -13,6 +14,39 @@ import { SidebarApiClient } from './sidebar-api-client'
 import type { OnUpdateSnapinContent, SidebarSnapinContents } from './type-defs'
 
 const active = ref<boolean>(true)
+const ajaxCall = new Api()
+
+export interface NumberOfPendingChangesResponse {
+  number_of_pending_changes: number
+}
+
+async function pollNumberPendingChanges() {
+  try {
+    const response: NumberOfPendingChangesResponse = (await ajaxCall.get(
+      'ajax_sidebar_get_number_of_pending_changes.py'
+    )) as NumberOfPendingChangesResponse
+    const l = document.getElementById('changes_label')
+
+    if (l) {
+      if (response.number_of_pending_changes === 0) {
+        l.style.display = 'none'
+      } else {
+        l.innerText =
+          response.number_of_pending_changes > 9
+            ? '9+'
+            : response.number_of_pending_changes.toString()
+        l.style.display = 'inline'
+      }
+    }
+  } catch (error) {
+    console.error('Failed to poll pending changes:', error)
+  } finally {
+    setTimeout(() => {
+      void pollNumberPendingChanges()
+    }, 3000)
+  }
+}
+
 export class SidebarService extends ServiceBase {
   public snapinsRef = ref<SidebarSnapin[]>([])
   protected snapinContents: SidebarSnapinContents = {}
@@ -221,6 +255,7 @@ export class SidebarService extends ServiceBase {
 
     void this.updateSnapinContent(this.snapins.map((s) => s.name))
     this.initPeriodically()
+    void pollNumberPendingChanges()
   }
 
   private initPeriodically() {

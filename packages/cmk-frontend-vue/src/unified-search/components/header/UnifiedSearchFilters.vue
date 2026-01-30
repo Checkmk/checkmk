@@ -19,7 +19,7 @@ import type {
 } from '@/unified-search/providers/search-utils.types'
 
 import FilterOptionEntry from './FilterOptionEntry.vue'
-import { availableFilterOptions, availableProviderOptions } from './QueryOptions'
+import { availableFilterOptions } from './QueryOptions'
 
 const { _t } = usei18n()
 const searchUtils = getSearchUtils()
@@ -124,16 +124,6 @@ function getFilterOptions(): FilterOption[] {
     )
   })
 }
-
-const deletePressedRef = ref<number>()
-searchUtils.input.onEmptyBackspace(() => {
-  if (deletePressedRef.value && Date.now() - deletePressedRef.value < 1000) {
-    searchUtils.input.setProviderValue(availableProviderOptions[0])
-    return
-  }
-
-  deletePressedRef.value = Date.now()
-})
 </script>
 
 <template>

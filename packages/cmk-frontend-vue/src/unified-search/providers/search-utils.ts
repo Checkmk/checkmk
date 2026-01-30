@@ -129,14 +129,6 @@ function onSetBlur(cb: typeof setBlur): string {
   return pushCallBack('setBlur', cb)
 }
 
-function emptyBackspace() {
-  dispatchCallback('setEmptyBackspace')
-}
-
-function onEmptyBackspace(cb: typeof emptyBackspace): string {
-  return pushCallBack('setEmptyBackspace', cb)
-}
-
 function hideSuggestions() {
   dispatchCallback('hideSuggestions')
 }
@@ -351,8 +343,6 @@ export interface SearchInputUtils {
   onSetFocus: typeof onSetFocus
   setBlur: typeof setBlur
   onSetBlur: typeof onSetBlur
-  emptyBackspace: typeof emptyBackspace
-  onEmptyBackspace: typeof onEmptyBackspace
   hideSuggestions: typeof hideSuggestions
   onHideSuggestions: typeof onHideSuggestions
   suggestionsActive: typeof suggestionsActive
@@ -428,8 +418,6 @@ export function initSearchUtils(id: string): SearchUtils {
       onSetFocus,
       setBlur,
       onSetBlur,
-      emptyBackspace,
-      onEmptyBackspace,
       hideSuggestions,
       onHideSuggestions,
       suggestionsActive,

@@ -81,14 +81,6 @@ function onInput(e: Event) {
   searchUtils.input.setInputValue((e.target as HTMLInputElement).value)
 }
 
-function checkEmptyBackspace(e: KeyboardEvent) {
-  if (e.key === 'Backspace') {
-    if (searchUtils.query.input.value === '') {
-      searchUtils.input.emptyBackspace()
-    }
-  }
-}
-
 function onInputEnter() {
   if (isMonitoringSearch()) {
     if (searchUtils.query.input.value.length > 0) {
@@ -149,7 +141,6 @@ const getSearchInputPlaceholder = computed(() => {
             :placeholder="getSearchInputPlaceholder"
             autocomplete="one-time-code"
             @input="onInput"
-            @keydown.delete="checkEmptyBackspace"
             @keydown.enter="onInputEnter"
           />
           <UnifiedSearchFilters v-if="isMonitoringSearch()"></UnifiedSearchFilters>

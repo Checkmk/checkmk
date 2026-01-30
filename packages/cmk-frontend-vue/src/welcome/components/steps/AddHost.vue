@@ -133,7 +133,7 @@ This allows monitoring to start with minimal configuration effort.`
           </StepCardsRow>
 
           <StepHeading>
-            {{ _t('Cloud hosts') }}
+            {{ _t('Cloud platforms') }}
           </StepHeading>
           <StepCardsRow>
             <CmkLinkCard

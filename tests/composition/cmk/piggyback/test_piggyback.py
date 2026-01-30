@@ -168,6 +168,49 @@ def test_piggyback_services_source_remote_diff_customer(
         )
 
 
+@pytest.mark.skip_if_not_edition("ultimatemt")
+def test_piggyback_services_remote_remote_diff_customer(
+    piggyback_env_three_site_setup: tuple[Site, Site, Site],
+) -> None:
+    """
+    - change customer of remote_site to a different one: service is no more monitored on remote_site2
+    - Service for host _HOSTNAME_PIGGYBACKED, generated on site remote_site, is monitored on remote_site2
+      when both remote sites are on the same customer
+    """
+
+    central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
+    _HOSTNAME_PIGGYBACKED = "piggybacked_host_remote_remote"
+
+    def _schedule_and_discover() -> None:
+        remote_site.schedule_check(_HOSTNAME_SOURCE_REMOTE, "Check_MK")
+        central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            _HOSTNAME_PIGGYBACKED
+        )
+
+    with (
+        create_local_check(central_site, [_HOSTNAME_SOURCE_REMOTE], [_HOSTNAME_PIGGYBACKED]),
+        _setup_piggyback_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED),
+    ):
+        # both remote sites on "provider" customer, data flows from remote_site to remote_site_2
+        assert piggybacked_data_gets_updated(
+            remote_site, remote_site_2, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
+        )
+
+        with _change_remote_site_customer(central_site, remote_site, "customer1"):
+            _schedule_and_discover()
+            # remote_site is on different customer, data does not flow to remote_site_2
+            assert not piggybacked_data_gets_updated(
+                remote_site, remote_site_2, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
+            )
+
+            with _change_remote_site_customer(central_site, remote_site_2, "customer1"):
+                _schedule_and_discover()
+                # both remote sites on same customer, data flows from remote_site to remote_site_2
+                assert piggybacked_data_gets_updated(
+                    remote_site, remote_site_2, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
+                )
+
+
 def _piggybackhub_conf_timestamp(site: Site) -> int | None:
     if not site.file_exists(site.root / RELATIVE_CONFIG_PATH):
         return None

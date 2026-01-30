@@ -33,6 +33,8 @@ const setupError: Ref<boolean> = ref(!!document.querySelector('.wato .error'))
 const formElement: Ref<HTMLFormElement | null> = ref(null)
 const hostnameInputElement: Ref<HTMLInputElement | null> = ref(null)
 const siteSelectElement: Ref<HTMLSelectElement | null> = ref(null)
+const siteInputElement: Ref<HTMLInputElement | null> = ref(null)
+const siteDefaultElement: Ref<HTMLDivElement | null> = ref(null)
 const ipv4InputElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv4InputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv6InputElement: Ref<HTMLInputElement | null> = ref(null)
@@ -63,6 +65,9 @@ onMounted(() => {
     hostnameInputElement.value.name = props.form_keys.host_name
     hostnameInputElement.value.value = props.host_name
   }
+  siteInputElement.value = getElementBySelector(
+    `input[id="${props.form_keys.cb_change}_${props.form_keys.site}"]`
+  )
   ipv4InputElement.value = getElementBySelector(
     `input.text[name="${props.form_keys.ipv4_address}"]`
   )
@@ -70,6 +75,7 @@ onMounted(() => {
     `input.text[name="${props.form_keys.ipv6_address}"]`
   )
   siteSelectElement.value = getElementBySelector(`select[name="${props.form_keys.site}"]`)
+  siteDefaultElement.value = getElementBySelector(`div[id="attr_default_${props.form_keys.site}"]`)
   ipAddressFamilySelectElement.value = getElementBySelector(
     `select[name="${props.form_keys.ip_address_family}"]`
   )
@@ -157,6 +163,8 @@ function getElementBySelector<T>(selector: string): T {
       formElement &&
       hostnameInputElement &&
       siteSelectElement &&
+      siteInputElement &&
+      siteDefaultElement &&
       ipv4InputElement &&
       ipv4InputButtonElement &&
       ipv6InputButtonElement &&
@@ -178,6 +186,8 @@ function getElementBySelector<T>(selector: string): T {
     :ipv6-input-element="ipv6InputElement"
     :ipv6-input-button-element="ipv6InputButtonElement"
     :site-select-element="siteSelectElement"
+    :site-input-element="siteInputElement"
+    :site-default-element="siteDefaultElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
     :ip-address-family-default-element="ipAddressFamilyDefaultElement"
     :ip-address-family-input-element="ipAddressFamilyInputElement"

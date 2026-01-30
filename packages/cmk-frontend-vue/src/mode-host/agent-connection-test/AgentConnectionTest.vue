@@ -43,6 +43,8 @@ interface Props {
   ipv6InputElement: HTMLInputElement
   ipv6InputButtonElement: HTMLInputElement
   siteSelectElement: HTMLSelectElement
+  siteInputElement: HTMLInputElement
+  siteDefaultElement: HTMLDivElement
   ipAddressFamilySelectElement: HTMLSelectElement
   ipAddressFamilyInputElement: HTMLInputElement
   cmkAgentConnectionModeSelectElement: HTMLSelectElement | null
@@ -177,6 +179,13 @@ onMounted(() => {
         targetElement.value = props.changeTagAgent.checked
           ? (props.tagAgent.parentNode as HTMLElement)
           : props.tagAgentDefault
+
+        selectedSiteIdHash.value = props.siteSelectElement.value
+        siteId.value =
+          props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+        siteServer.value =
+          props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
+
         break
       }
       case props.cmkAgentConnectionModeInputButtonElement: {
@@ -189,10 +198,14 @@ onMounted(() => {
         switchVisibility()
         break
       }
-      case props.siteSelectElement: {
-        selectedSiteIdHash.value = props.siteSelectElement.value
-        siteId.value =
-          props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+      case props.siteInputElement: {
+        if (props.siteInputElement.checked) {
+          selectedSiteIdHash.value = props.siteSelectElement.value
+          siteId.value =
+            props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
+        } else {
+          siteId.value = props.siteDefaultElement.textContent?.split(' - ')[0] ?? ''
+        }
         siteServer.value =
           props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
         break

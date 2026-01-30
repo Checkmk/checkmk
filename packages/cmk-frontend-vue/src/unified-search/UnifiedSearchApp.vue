@@ -90,7 +90,11 @@ search.onSearch((result?: UnifiedSearchResult) => {
       originQuery.value = uspr.originalQuery
       isManipulated.value = uspr.isManipulated || false
       const usprRes = await uspr.result
+
       if (usprRes instanceof UnifiedSearchError) {
+        if (usprRes.message === 'signal is aborted without reason') {
+          return
+        }
         searchError.value = usprRes
         searchResult.value = undefined
       } else {
@@ -118,6 +122,7 @@ search.onSearch((result?: UnifiedSearchResult) => {
       searchResult.value = undefined
     }
   }
+
   async function setHistoryResults(hpr: SearchProviderResult<SearchHistorySearchResult>) {
     if (hpr) {
       const hprRes = (await hpr.result) as SearchHistorySearchResult
@@ -136,7 +141,7 @@ search.onSearch((result?: UnifiedSearchResult) => {
 const searchResult = ref<UnifiedSearchApiResponse>()
 const searchError = ref<UnifiedSearchError>()
 const historyResult = ref<SearchHistorySearchResult>()
-const waitForSearchResults = ref<boolean>(true)
+const waitForSearchResults = ref<boolean>(false)
 const searchUtils = initSearchUtils(searchId)
 const manipulatedMessage = ref<TranslatedString>()
 const originQuery = ref<UnifiedSearchQueryLike>()
@@ -191,10 +196,12 @@ onMounted(() => {
 <template>
   <DefaultPopup class="unified-search-app">
     <UnifiedSearchHeader> </UnifiedSearchHeader>
-    <UnifiedSearchStart v-if="!showTabResults()" :history-result="historyResult">
+    <UnifiedSearchStart
+      v-if="!waitForSearchResults && !showTabResults()"
+      :history-result="historyResult"
+    >
     </UnifiedSearchStart>
-    <UnifiedSearchWaitForResults v-if="waitForSearchResults && showTabResults()">
-    </UnifiedSearchWaitForResults>
+    <UnifiedSearchWaitForResults v-if="waitForSearchResults"> </UnifiedSearchWaitForResults>
     <UnifiedSearchTabResults
       v-if="!waitForSearchResults && showTabResults()"
       :result="searchResult"

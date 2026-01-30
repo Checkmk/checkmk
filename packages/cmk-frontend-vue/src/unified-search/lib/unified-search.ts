@@ -68,7 +68,7 @@ export abstract class SearchProvider {
     }
   }
 
-  abstract search(query: UnifiedSearchQueryLike): Promise<unknown>
+  abstract search(query: UnifiedSearchQueryLike, abortSignal?: AbortSignal): Promise<unknown>
 
   /*
   This function is used for searches to manipulate the search query without having effect on the frontend.
@@ -97,10 +97,13 @@ export abstract class SearchProvider {
     throw new Error('api not set')
   }
 
-  public initSearch<T>(query: UnifiedSearchQueryLike): Promise<T | UnifiedSearchError> {
+  public initSearch<T>(
+    query: UnifiedSearchQueryLike,
+    abortSignal: AbortSignal
+  ): Promise<T | UnifiedSearchError> {
     this.searchActive.value = true
     return new Promise((resolve) => {
-      void this.search(query)
+      void this.search(query, abortSignal)
         .catch((e) =>
           resolve(
             new UnifiedSearchError(
@@ -116,6 +119,7 @@ export abstract class SearchProvider {
 }
 
 export class UnifiedSearch {
+  private abortController: AbortController = new AbortController()
   private lastSearchInput = Date.now()
   private onSearchCallback: ((result?: UnifiedSearchResult) => Promise<void> | void) | null = null
 
@@ -143,6 +147,12 @@ export class UnifiedSearch {
 
   public search(query: UnifiedSearchQueryLike): UnifiedSearchResult {
     const usr = new UnifiedSearchResult(this.id)
+
+    if (this.abortController) {
+      this.abortController.abort()
+      this.abortController = new AbortController()
+    }
+
     for (const provider of this.providers) {
       const { manipulatedQuery, isManipulated } = provider.manipulateSearchQuery(query)
       usr.registerProviderResult({
@@ -151,7 +161,7 @@ export class UnifiedSearch {
         isManipulated,
         originalQuery: isManipulated ? query : undefined,
         result: provider.shouldExecuteSearch(manipulatedQuery)
-          ? provider.initSearch(manipulatedQuery)
+          ? provider.initSearch(manipulatedQuery, this.abortController?.signal)
           : new Promise((resolve) => {
               resolve(null)
             })

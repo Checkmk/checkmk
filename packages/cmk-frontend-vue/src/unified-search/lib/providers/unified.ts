@@ -81,14 +81,15 @@ export class UnifiedSearchProvider extends SearchProvider {
   }
 
   public async search(
-    query: UnifiedSearchQueryLike
+    query: UnifiedSearchQueryLike,
+    abortSignal: AbortSignal
   ): Promise<UnifiedSearchApiResponse | UnifiedSearchError> {
     const { q, provider, sort, collapse } = this.renderQuery(query)
-
     return this.getApi().get(
       'ajax_unified_search.py?q='.concat(q).concat(provider).concat(sort).concat(collapse),
       {
-        exceptOnNonZeroResultCode: true
+        exceptOnNonZeroResultCode: true,
+        signal: abortSignal
       }
     ) as Promise<UnifiedSearchApiResponse | UnifiedSearchError>
   }

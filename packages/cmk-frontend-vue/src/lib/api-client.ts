@@ -11,6 +11,7 @@ export interface ApiOptions {
   headers?: [string, string][]
   credentials?: RequestCredentials
   exceptOnNonZeroResultCode?: boolean
+  signal?: AbortSignal
 }
 
 export class Api {

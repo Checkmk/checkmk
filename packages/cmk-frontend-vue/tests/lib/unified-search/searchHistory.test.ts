@@ -77,12 +77,15 @@ test('Test SearchHistorySearchProvider', async () => {
   searchHistory.add(histE1)
   searchHistory.add(histE2)
 
-  const { entries, queries } = await histSearch.search({
-    input: 'abc',
-    filters: [],
-    sort: 'none',
-    provider: 'all'
-  })
+  const { entries, queries } = await histSearch.search(
+    {
+      input: 'abc',
+      filters: [],
+      sort: 'none',
+      provider: 'all'
+    },
+    new AbortController().signal
+  )
 
   expect(entries).toMatchObject([histE2])
   expect(queries).toMatchObject([histE2.query])

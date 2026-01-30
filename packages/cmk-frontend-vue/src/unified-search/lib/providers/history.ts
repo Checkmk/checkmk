@@ -32,7 +32,8 @@ export class SearchHistorySearchProvider extends SearchProvider {
   }
 
   public async search(
-    query: UnifiedSearchQueryLike
+    query: UnifiedSearchQueryLike,
+    _abortSignal: AbortSignal
   ): Promise<{ entries: HistoryEntry[]; queries: UnifiedSearchQueryLike[] }> {
     return new Promise((resolve) => {
       resolve({

@@ -13,9 +13,8 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ResultItem from '@/unified-search/components/result/ResultItem.vue'
 import ResultList from '@/unified-search/components/result/ResultList.vue'
-import type { SearchHistorySearchResult } from '@/unified-search/lib/providers/history'
+import type { SearchHistoryResult } from '@/unified-search/lib/providers/history'
 import type { HistoryEntry } from '@/unified-search/lib/searchHistory'
-import { UnifiedSearchError } from '@/unified-search/lib/unified-search'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
@@ -82,19 +81,16 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
 const isFocused = (i: number): boolean => currentlySelected.value === i
 
 const props = defineProps<{
-  historyResult?: SearchHistorySearchResult | null | undefined
+  historyResult?: SearchHistoryResult | null | undefined
 }>()
 
 immediateWatch(
   () => ({ newHistoryResult: props.historyResult }),
   async ({ newHistoryResult }) => {
     if (newHistoryResult) {
-      const res = await newHistoryResult.result
-      if (res && !(res instanceof UnifiedSearchError)) {
-        recentlyViewed.value = res.entries.slice(0, maxRecentlyViewed)
-        recentlySearches.value = res.queries.slice(0, maxRecentlySearched)
-        return
-      }
+      recentlyViewed.value = newHistoryResult.entries.slice(0, maxRecentlyViewed)
+      recentlySearches.value = newHistoryResult.queries.slice(0, maxRecentlySearched)
+      return
     }
 
     recentlyViewed.value = searchUtils.history?.getEntries(null, 'date', maxRecentlyViewed) || []

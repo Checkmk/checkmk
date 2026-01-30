@@ -8,10 +8,12 @@ import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-u
 import type { HistoryEntry, SearchHistoryService } from '../searchHistory'
 import { SearchProvider, type SearchProviderResult } from '../unified-search'
 
-export type SearchHistorySearchResult = SearchProviderResult<{
+export interface SearchHistoryResult {
   entries: HistoryEntry[]
   queries: UnifiedSearchQueryLike[]
-}>
+}
+
+export type HistorySearchProviderResult = SearchProviderResult<SearchHistoryResult>
 
 export class SearchHistorySearchProvider extends SearchProvider {
   constructor(
@@ -34,16 +36,13 @@ export class SearchHistorySearchProvider extends SearchProvider {
   public async search(
     query: UnifiedSearchQueryLike,
     _abortSignal: AbortSignal
-  ): Promise<{ entries: HistoryEntry[]; queries: UnifiedSearchQueryLike[] }> {
+  ): Promise<SearchHistoryResult> {
     return new Promise((resolve) => {
       resolve({
         entries: this.searchHistory
           .getEntries()
           .filter((hist) => {
-            return (
-              query.filters.length === 0 ||
-              query.filters.findIndex((f) => f.value === hist.element.provider) >= 0
-            )
+            return query.provider === 'all' || query.provider === hist.element.provider
           })
           .filter((hist) => {
             return (
@@ -55,9 +54,14 @@ export class SearchHistorySearchProvider extends SearchProvider {
             )
           })
           .sort((a, b) => b.date - a.date),
-        queries: this.searchHistory.getQueries().filter((hist) => {
-          return hist.input.indexOf(query.input) >= 0
-        })
+        queries: this.searchHistory
+          .getQueries()
+          .filter((hist) => {
+            return query.provider === 'all' || query.provider === hist.provider
+          })
+          .filter((hist) => {
+            return hist.input.indexOf(query.input) >= 0
+          })
       })
     })
   }

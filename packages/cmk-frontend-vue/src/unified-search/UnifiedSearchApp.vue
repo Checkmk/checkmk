@@ -17,8 +17,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import DefaultPopup from '@/main-menu/changes/components/DefaultPopup.vue'
 import {
-  SearchHistorySearchProvider,
-  type SearchHistorySearchResult
+  type SearchHistoryResult,
+  SearchHistorySearchProvider
 } from '@/unified-search/lib/providers/history'
 import { UnifiedSearchProvider } from '@/unified-search/lib/providers/unified'
 import { SearchHistoryService } from '@/unified-search/lib/searchHistory'
@@ -122,25 +122,22 @@ search.onSearch((result?: UnifiedSearchResult) => {
       searchResult.value = undefined
     }
   }
-
-  async function setHistoryResults(hpr: SearchProviderResult<SearchHistorySearchResult>) {
+  async function setHistoryResults(hpr: SearchProviderResult<SearchHistoryResult>) {
     if (hpr) {
-      const hprRes = (await hpr.result) as SearchHistorySearchResult
+      const hprRes = (await hpr.result) as SearchHistoryResult
       historyResult.value = hprRes
     } else {
       historyResult.value = undefined
     }
   }
 
-  void setHistoryResults(
-    result?.get('search-history') as SearchProviderResult<SearchHistorySearchResult>
-  )
+  void setHistoryResults(result?.get('search-history') as SearchProviderResult<SearchHistoryResult>)
   void setSearchResults(result?.get('unified') as SearchProviderResult<UnifiedSearchApiResponse>)
 })
 
 const searchResult = ref<UnifiedSearchApiResponse>()
 const searchError = ref<UnifiedSearchError>()
-const historyResult = ref<SearchHistorySearchResult>()
+const historyResult = ref<SearchHistoryResult>()
 const waitForSearchResults = ref<boolean>(false)
 const searchUtils = initSearchUtils(searchId)
 const manipulatedMessage = ref<TranslatedString>()

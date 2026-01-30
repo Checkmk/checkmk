@@ -76,7 +76,7 @@ class HostParameters(BaseSchema):
         gui_fields.SiteField(),
         description="Restrict the query to this particular site.",
         load_default=[],
-        example=["heute"],
+        example=["mysite"],
     )
     query = gui_fields.query_field(Hosts, required=False)
     columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name], example=["name"])

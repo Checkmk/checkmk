@@ -13,7 +13,7 @@ class ConnectedSiteAttributes(BaseSchema):
     site_id = fields.String(
         required=True,
         description="The site id.",
-        example="heute_remote_1",
+        example="my_remote_site_1",
     )
 
 
@@ -22,12 +22,12 @@ class BrokerConnectionExtension(BaseSchema):
     connecter = fields.Nested(
         ConnectedSiteAttributes,
         description="The attributes of the site initiating the connection.",
-        example={"site_id": "heute_remote_1"},
+        example={"site_id": "my_remote_site_1"},
     )
     connectee = fields.Nested(
         ConnectedSiteAttributes,
         description="The attributes of the site accepting the connection.",
-        example={"site_id": "heute_remote_2"},
+        example={"site_id": "my_remote_site_2"},
     )
 
 
@@ -42,8 +42,8 @@ class BrokerConnectionResponse(DomainObject):
         example={
             "domainType": "broker_connection",
             "id": "connection_1",
-            "connecter": {"site_id": "heute_remote_1"},
-            "connectee": {"site_id": "heute_remote_2"},
+            "connecter": {"site_id": "my_remote_site_1"},
+            "connectee": {"site_id": "my_remote_site_2"},
         },
     )
 
@@ -60,8 +60,8 @@ class BrokerConnectionResponseCollection(DomainObjectCollection):
             {
                 "domainType": "broker_connection",
                 "id": "connection_1",
-                "connecter": {"site_id": "heute_remote_1"},
-                "connectee": {"site_id": "heute_remote_2"},
+                "connecter": {"site_id": "my_remote_site_1"},
+                "connectee": {"site_id": "my_remote_site_2"},
             }
         ],
     )

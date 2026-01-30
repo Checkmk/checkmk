@@ -14,7 +14,7 @@ from cmk import fields
 
 STATUS_PER_SITE_EXAMPLE = [
     {
-        "site": "heute",
+        "site": "mysite",
         "status_text": "Activating",
         "status_details": "Started at: 15:23:09. Finished at: 15:23:13.",
         "start_time": "2025-01-20T15:23:09.306846+00:00",
@@ -36,7 +36,7 @@ def activation_example(which: Literal["activation_run", "activation_status"]) ->
             {
                 "id": "da5430a5-6d0a-48ae-9efd-0563482a3b36",
                 "action_name": "edit-host",
-                "text": "Modified host heute.",
+                "text": "Modified host myhost.",
                 "user_id": "cmkadmin",
                 "time": "2023-01-20T16:31:51.362057+00:00",
             }
@@ -44,7 +44,7 @@ def activation_example(which: Literal["activation_run", "activation_status"]) ->
         "is_running": False,
         "activate_foreign": True,
         "time_started": "2023-01-20T16:31:54.306846+00:00",
-        "sites": ["heute"],
+        "sites": ["mysite"],
         "comment": "",
     }
     if which == "activation_status":
@@ -69,7 +69,7 @@ class ChangesFields(BaseSchema):
     )
     text = fields.String(
         description="",
-        example="Modified host heute.",
+        example="Modified host myhost.",
     )
     time = Timestamp(
         description="The date and time the change was made.",
@@ -81,7 +81,7 @@ class ActivationSiteStatus(BaseSchema):
     site = gui_fields.SiteField(
         presence="ignore",
         description="The site affected by this activation",
-        example="heute",
+        example="mysite",
     )
     phase = fields.String(
         enum=["initialized", "queued", "started", "sync", "activate", "finishing", "done"],
@@ -198,7 +198,7 @@ class ActivationRunCollection(Linkable):
                     {
                         "domainType": "link",
                         "rel": "self",
-                        "href": "http://localhost/heute/check_mk/api/1.0/objects/activation_run/b0a0bf49-ff5f-454b-a5d5-9731cb0fb5fa",
+                        "href": "http://localhost/mysite/check_mk/api/1.0/objects/activation_run/b0a0bf49-ff5f-454b-a5d5-9731cb0fb5fa",
                         "method": "GET",
                         "type": "application/json",
                     }

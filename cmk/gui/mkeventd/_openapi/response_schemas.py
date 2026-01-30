@@ -20,7 +20,7 @@ from .common_fields import HostNameField, PhaseField, StateField
 class ECEventAttributes(BaseSchema):
     site_id = SiteField(
         description="The site id of the EC event.",
-        example="heute",
+        example="mysite",
         presence="should_exist",
         required=True,
     )

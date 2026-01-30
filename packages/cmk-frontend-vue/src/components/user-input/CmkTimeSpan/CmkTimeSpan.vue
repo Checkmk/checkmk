@@ -11,6 +11,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
@@ -108,13 +109,13 @@ const localValidation = ref<Array<string>>([])
   {{ props.label }}
   <span role="group" :aria-label="props.label || props.title">
     <label v-for="magnitude in selectedMagnitudes" :key="magnitude">
-      <input
+      <CmkInput
         v-model="values[magnitude]"
         :placeholder="getPlaceholder(magnitude)"
-        class="cmk-time-span__number cmk-time-span__no-spinner"
         step="any"
         size="5"
         type="number"
+        :inline="true"
       />
       {{ i18n[magnitude] }}
     </label>
@@ -122,19 +123,6 @@ const localValidation = ref<Array<string>>([])
 </template>
 
 <style scoped>
-.cmk-time-span__no-spinner::-webkit-outer-spin-button,
-.cmk-time-span__no-spinner::-webkit-inner-spin-button {
-  display: none;
-}
-
-.cmk-time-span__number {
-  text-align: right;
-}
-
-input {
-  width: 5.8ex;
-}
-
 label {
   margin-right: 0.5em;
 }

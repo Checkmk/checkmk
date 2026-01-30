@@ -77,7 +77,7 @@ const openWizard = ref(false)
 const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
-const isCloned = ref(false)
+const showCloneSuccessAlert = ref(false)
 
 const dashboardFilterSettingsStartingWindow = ref<'runtime-filters' | 'filter-settings'>(
   'runtime-filters'
@@ -408,9 +408,10 @@ const cloneDashboard = async (
   }
 
   await setAsActiveDashboard(newKey, layout)
+  showCloneSuccessAlert.value = false
   await nextTick()
 
-  isCloned.value = true
+  showCloneSuccessAlert.value = true
   isCloning.value = false
 }
 
@@ -611,7 +612,7 @@ function deepClone<T>(obj: T): T {
     </div>
     <template v-if="dashboardsManager.isInitialized.value">
       <CloneSuccessAlert
-        v-if="isCloned"
+        v-model:open="showCloneSuccessAlert"
         :has-filters="dashboardHasFilters"
         @edit-filters="openDashboardFilterSettings = true"
       />

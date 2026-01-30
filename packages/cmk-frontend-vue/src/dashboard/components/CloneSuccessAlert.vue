@@ -21,7 +21,7 @@ interface CloneSuccessAlertEmit {
 const props = defineProps<CloneSuccessAlertProps>()
 const emits = defineEmits<CloneSuccessAlertEmit>()
 
-const open = defineModel<boolean>('open', { default: true })
+const open = defineModel<boolean>('open', { required: true })
 </script>
 
 <template>

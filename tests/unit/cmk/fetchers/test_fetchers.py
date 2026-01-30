@@ -30,7 +30,6 @@ from cmk.checkengine.plugins import SectionName
 from cmk.fetchers import (
     ActivatedSecrets,
     Fetcher,
-    FetcherTriggerError,
     IPMIFetcher,
     Mode,
     PiggybackFetcher,
@@ -856,11 +855,6 @@ class _MockSock:
         pass
 
 
-class _MyHeartFetcher(TCPFetcher):
-    def __open__(self) -> NoReturn:
-        raise RuntimeError("Boom")
-
-
 class TestTCPFetcher:
     @pytest.fixture
     def fetcher(self, tmp_path: Path) -> TCPFetcher:
@@ -910,7 +904,7 @@ class TestTCPFetcher:
                 file_cache, fetcher, Mode.CHECKING, ActivatedSecrets()
             ) == result.OK(b"cached_section")
 
-    def test_trigger_exception_becomes_trigger_error(self, tmp_path: Path) -> None:
+    def test_open_exception_becomes_fetcher_error(self, tmp_path: Path) -> None:
         file_cache = StubFileCache[AgentRawData](
             base_path=Path("/"),
             relative_path_template="dev/null",
@@ -920,35 +914,6 @@ class TestTCPFetcher:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         with TCPFetcher(
-            family=socket.AF_INET,
-            address=(HostAddress("999.999.999.999"), 6556),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.1,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
-            uuid_file=Path("/dev/null"),
-            pre_shared_secret=None,
-            tls_config=TLSConfig(
-                cas_dir=tmp_path,
-                ca_store=tmp_path,
-                site_crt=tmp_path,
-            ),
-        ) as fetcher:
-            raw_data = PlainFetcherTrigger().get_raw_data(
-                file_cache, fetcher, Mode.CHECKING, ActivatedSecrets()
-            )
-
-        assert isinstance(raw_data.error, FetcherTriggerError)
-
-    def test_open_exception_becomes_fetcher_error(self, tmp_path: Path) -> None:
-        file_cache = StubFileCache[AgentRawData](
-            base_path=Path("/"),
-            relative_path_template="dev/null",
-            max_age=MaxAge.unlimited(),
-            simulation=False,
-            use_only_cache=False,
-            file_cache_mode=FileCacheMode.DISABLED,
-        )
-        with _MyHeartFetcher(
             family=socket.AF_INET,
             address=(HostAddress("999.999.999.999"), 6556),
             host_name=HostName("irrelevant_for_this_test"),

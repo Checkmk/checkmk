@@ -7,7 +7,7 @@ def nagios_workspace():
     http_archive(
         name = "nagios",
         build_file = "@omd_packages//omd/packages/nagios:BUILD.nagios.bazel",
-        strip_prefix = "nagios-" + version_str,
+        strip_prefix = "nagios",
         patches = [
             "//omd/packages/nagios/patches:0001-do-not-copy-brokermodules.dif",
             "//omd/packages/nagios/patches:0002-include-omd-site-config.dif",
@@ -21,7 +21,7 @@ def nagios_workspace():
         patch_tool = "patch",
         urls = [
             "https://assets.nagios.com/downloads/nagioscore/releases/" + filename,
-            UPSTREAM_MIRROR_URL + filename,
+            UPSTREAM_MIRROR_URL + "/CMK-29802/" + filename,
         ],
-        sha256 = "b4323f8c027bf3f409225eeb4f7fb8e55856092ef5f890206fc2983bc75b072e",
+        sha256 = "ca9dd68234fa090b3c35ecc8767b2c9eb743977eaf32612fa9b8341cc00a0f99",
     )

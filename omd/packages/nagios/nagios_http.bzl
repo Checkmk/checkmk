@@ -6,7 +6,7 @@ def nagios(version_str, sha256):
     http_archive(
         name = "nagios",
         build_file = "@omd_packages//omd/packages/nagios:BUILD.nagios.bazel",
-        strip_prefix = "nagios-" + version_str,
+        strip_prefix = "nagios",
         patches = [
             "//omd/packages/nagios/patches:0001-do-not-copy-brokermodules.dif",
             "//omd/packages/nagios/patches:0002-include-omd-site-config.dif",
@@ -20,7 +20,7 @@ def nagios(version_str, sha256):
         patch_tool = "patch",
         urls = [
             "https://assets.nagios.com/downloads/nagioscore/releases/" + filename,
-            UPSTREAM_MIRROR_URL + filename,
+            UPSTREAM_MIRROR_URL + "/CMK-29802/" + filename,
         ],
         sha256 = sha256,
     )

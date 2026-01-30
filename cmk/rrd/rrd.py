@@ -808,7 +808,10 @@ class RRDCreator:
 
         # Do first update right now
         rrd_file = rrd_file_name.path(".rrd")
-        if rrd_file is not None:
+        if rrd_file is None:
+            # report the bproblem to cmc - logging to console is not possible here
+            self._queue_rrd_helper_response(_make_create_warning("rrd", spec.host, spec.service))
+        else:
             now = int(time.time())  # this rounding is just a legacy feature
             metrics = ":".join(
                 [_float_or_nan(first_value) for (_unused_varname, first_value) in spec.metrics]
@@ -836,10 +839,12 @@ def _float_or_nan(s: str | None) -> str:
         return "U"
 
 
+def _make_create_warning(note: str, host: HostName, service: _RRDServiceName) -> str:
+    return f"WARNING: Can't create {note} file for {host} {service} because path is too long or invalid."
+
+
 def _report_create_failed(note: str, host: HostName, service: _RRDServiceName) -> None:
-    console.verbose(
-        f"WARNING: Can't create {note} file for {host} {service} because path is too long or invalid."
-    )
+    console.verbose(_make_create_warning(note, host, service))
 
 
 def _report_read_failed(note: str, host: HostName, service: _RRDServiceName) -> None:

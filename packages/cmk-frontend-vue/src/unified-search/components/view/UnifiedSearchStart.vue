@@ -133,7 +133,7 @@ onBeforeUnmount(() => {
         :key="q.input"
         :idx="idx"
         :title="q.input"
-        :breadcrumb="q.filters.map((f) => f.value)"
+        :breadcrumb="[q.provider]"
         :html="searchUtils.highlightQuery(q.input)"
         :focus="isFocused(idx + recentlyViewed.length)"
         @click.stop="

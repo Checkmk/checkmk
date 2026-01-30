@@ -128,3 +128,14 @@ toolchain(
     toolchain = ":linux_x86_64_toolchain",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
+
+# Unified target that selects the appropriate cpp libs based on gcc_path flag
+# Repositories are defined in //bazel/module/gcc.MODULE.bazel
+filegroup(
+    name = "cpp_libs",
+    srcs = select({
+        ":opt": ["@cpp_libs_opt//:cpp_libs"],
+        "//conditions:default": ["@cpp_libs_usr//:cpp_libs"],
+    }),
+    visibility = ["//visibility:public"],
+)

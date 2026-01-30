@@ -70,3 +70,11 @@ constraint_value(
     constraint_setting = ":hermeticity",
     visibility = ["//visibility:public"],
 )
+
+# Config setting using the same constraint_value (hermetic) as Bootlin GCC toolchain
+# This allows select() statements to detect when hermetic platform is active
+config_setting(
+    name = "is_hermetic",
+    constraint_values = [":hermetic"],
+    visibility = ["//visibility:public"],
+)

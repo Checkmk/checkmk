@@ -18,6 +18,7 @@ from cmk.gui.dashboard.api.model.widget_content import content_from_internal
 from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet
 from cmk.gui.dashboard.dashlet.dashlets.status_helpers import make_mk_missing_data_error
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
+from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.token_util import (
     DashboardTokenAuthenticatedPage,
     get_dashboard_widget_by_id,
@@ -113,9 +114,11 @@ class GraphWidgetPage(cmk.gui.pages.Page):
             # we expect the frontend to send us the combined context already,
             # so we don't need to the dashboard
             render_graph_widget_content(ctx, dashlet_config, request_data.widget_id)
+
+        # Render error messages directly, since they would otherwise be lost in AJAX requests
+        except WidgetRenderError as e:
+            html.write_html(html.render_error(str(e)))
         except MKMissingDataError as e:
-            # Render the specific missing data error message
-            # We render directly since raising would be silently ignored for AJAX requests
             html.write_html(html.render_message(str(e)))
         except Exception:
             # Global fallback: prevent technical error leakage to dashboard UI

@@ -20,7 +20,6 @@
 # locks
 # tablespaces
 # rman
-# jobs
 # resumable
 # iostats
 # asm_diskgroup

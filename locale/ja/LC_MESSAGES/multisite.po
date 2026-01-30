@@ -3305,6 +3305,10 @@ msgstr "アクセスポイントの統計"
 msgid "Access points"
 msgstr "アクセスポイント"
 
+#, fuzzy
+msgid "Access points/Wireless (MR)"
+msgstr "アクセスポイント"
+
 msgid "Access the diagnostics mode"
 msgstr "診断モードにアクセス"
 
@@ -3844,6 +3848,10 @@ msgstr "アクティブスポットフリートリクエスト"
 
 msgid "Active time range"
 msgstr "アクティブな時間範囲"
+
+#, fuzzy
+msgid "Active time series (last 24 h)"
+msgstr "アクティブセッション"
 
 msgid "Active unit"
 msgstr "アクティブユニット"
@@ -12894,6 +12902,10 @@ msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
 #, fuzzy
+msgid "Checkmk metric backend"
+msgstr "OpenTelemetryメトリック名"
+
+#, fuzzy
 msgid ""
 "Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
 "here."
@@ -15543,6 +15555,10 @@ msgstr "コネクター：サイト \"%s\"でピギーバックホストを習�
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
+
+#, fuzzy
+msgid "Connectors"
+msgstr "接続"
 
 msgid "Consecutive reachability failures (up to 8)"
 msgstr ""
@@ -24841,9 +24857,6 @@ msgstr "%s をAPI用にエクスポートする"
 msgid "Export this rule for API"
 msgstr "このルールをAPI用にエクスポートする"
 
-msgid "Exporter"
-msgstr "エクスポーター"
-
 msgid "Express servicecode"
 msgstr "エクスプレス サービス コード"
 
@@ -27207,6 +27220,10 @@ msgstr "ガベージコレクション"
 msgid "Gateway"
 msgstr "ゲートウェイ"
 
+#, fuzzy
+msgid "Gateway (MG)"
+msgstr "ゲートウェイ"
+
 msgid "Gateway route"
 msgstr "ゲートウェイルート"
 
@@ -27643,10 +27660,6 @@ msgstr "グラフの可視性"
 #, fuzzy, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "グラフテンプレート %s にタイトルがありません"
-
-#, fuzzy
-msgid "GraphApi"
-msgstr "グラフ"
 
 msgid "Graphic card name"
 msgstr "グラフィックカード名"
@@ -32773,6 +32786,12 @@ msgstr ""
 "ください"
 
 msgid ""
+"If you are running a distributed Checkmk setup with multiple sites on the "
+"same machine, please configure different port numbers per each site via the "
+"site-specific global settings to avoid port binding conflicts."
+msgstr ""
+
+msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
 "please choose port number greater than 1024."
 msgstr ""
@@ -37834,6 +37853,9 @@ msgstr "ライセンス段階：サービスが多すぎます。"
 msgid "Licensed services"
 msgstr "ライセンス対象サービス"
 
+msgid "Licenses"
+msgstr "ライセンス"
+
 #, fuzzy
 msgid "Licenses (Maximum)"
 msgstr "最大クライアント数"
@@ -39268,6 +39290,10 @@ msgstr "ポイントツーサイト帯域幅の下位レベル(バイト/秒)"
 
 msgid "Lower levels on Site-to-site bandwidth in bytes per second"
 msgstr "1秒あたりのバイト数で表したサイト間帯域幅の下位レベル"
+
+#, fuzzy
+msgid "Lower levels on active time series within the last 24 hours"
+msgstr "総エラーレートの下位レベル"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Point-to-site接続の数の下位レベル"
@@ -41616,6 +41642,9 @@ msgstr "サイト接続を追加する"
 #, fuzzy
 msgid "Microsoft Entra ID connections"
 msgstr "サイト接続を追加する"
+
+msgid "Microsoft Exchange Online"
+msgstr ""
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V ServerのVMの状態"
@@ -54439,6 +54468,10 @@ msgstr "作成するレポート"
 msgid "Report to schedule"
 msgstr "スケジュールに報告する"
 
+#, fuzzy
+msgid "Reported to licensing server"
+msgstr "製品ライセンスページ"
+
 msgid "Reporting"
 msgstr "報告"
 
@@ -56944,6 +56977,9 @@ msgstr "セキュリティ名"
 msgid "Security tokens"
 msgstr "セキュリティトークン"
 
+msgid "Security/SD-WAN (MX)"
+msgstr ""
+
 msgid ""
 "See 'Queue status attributes' in IBM manual(https://www.ibm.com/support/"
 "knowledgecenter/en/SSFKSJ_9.2.0/com.ibm.mq.explorer.doc/e_status_queue.html) "
@@ -57585,6 +57621,10 @@ msgid "Sends Timed-Out"
 msgstr "タイムアウトを送信"
 
 msgid "Sensor"
+msgstr "センサー"
+
+#, fuzzy
+msgid "Sensor (MT)"
 msgstr "センサー"
 
 msgid "Sensor ID"
@@ -63258,6 +63298,10 @@ msgstr "テイクオーバーモードに切り替えてください!"
 msgid "Switched to %s mode"
 msgstr "%s モードに切り替えました"
 
+#, fuzzy
+msgid "Switches (MS)"
+msgstr "切り替える"
+
 msgid "Switches, load balancers, storage, UPSes, environmental sensors, etc. "
 msgstr "スイッチ、ロードバランサー、ストレージ、UPS、環境センサーなど "
 
@@ -63514,6 +63558,10 @@ msgid "Systemd timesyncd time synchronization"
 msgstr "Systemd Timesyncd時間同期"
 
 msgid "Systems larger than"
+msgstr "より大きいシステム"
+
+#, fuzzy
+msgid "Systems manager (SM)"
 msgstr "より大きいシステム"
 
 msgid "TCP"
@@ -79494,6 +79542,14 @@ msgstr "ポイントツーサイト帯域幅の上位レベル(バイト/秒)"
 msgid "Upper levels on Site-to-site bandwidth in bytes per second"
 msgstr "1秒あたりのバイト数で表したサイト間帯域幅の上位レベル"
 
+#, fuzzy
+msgid "Upper levels on active time series reported to licensing server"
+msgstr "サービス稼働期間の上位レベル"
+
+#, fuzzy
+msgid "Upper levels on active time series within the last 24 hours"
+msgstr "リクエストの合計レイテンシの上位レベル"
+
 msgid "Upper levels on daily costs"
 msgstr "1日ごとのコストの上位レベル"
 
@@ -81936,6 +81992,9 @@ msgstr ""
 
 msgid "Vibrate only"
 msgstr "バイブレーションのみ"
+
+msgid "Video (MV)"
+msgstr ""
 
 msgid "Video tutorials"
 msgstr "ビデオチュートリアル"
@@ -90269,7 +90328,7 @@ msgid "Users with access permissions can view this dashboard"
 msgstr "この権限を持たないユーザは入れない"
 
 #, fuzzy
-msgid "Dashboard url"
+msgid "Dashboard URL"
 msgstr "ダッシュボード"
 
 msgid "Stop sharing public link?"
@@ -90313,6 +90372,10 @@ msgstr ""
 #, fuzzy
 msgid "Navigation and menus are hidden."
 msgstr "ナビゲーションバーのアイコン"
+
+msgid ""
+"Runtime filtering isn’t available. Set default filter values before sharing."
+msgstr ""
 
 #, fuzzy
 msgid "Generate public link"
@@ -92308,6 +92371,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Exporter"
+#~ msgstr "エクスポーター"
+
+#, fuzzy
+#~ msgid "GraphApi"
+#~ msgstr "グラフ"
+
+#, fuzzy
+#~ msgid "Dashboard url"
+#~ msgstr "ダッシュボード"
+
 #, fuzzy
 #~ msgid "HTTPS port"
 #~ msgstr "TCPポート"
@@ -93840,9 +93914,6 @@ msgstr ""
 
 #~ msgid "Disk Usage"
 #~ msgstr "Disk 使用量"
-
-#~ msgid "Licenses"
-#~ msgstr "ライセンス"
 
 #~ msgid "Successfully discarded all pending changes."
 #~ msgstr "保留中のすべての変更を正常に破棄しました。"

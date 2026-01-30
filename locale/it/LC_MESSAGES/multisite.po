@@ -3481,6 +3481,10 @@ msgstr "Statistiche del punto di accesso"
 msgid "Access points"
 msgstr "Punto di accesso"
 
+#, fuzzy
+msgid "Access points/Wireless (MR)"
+msgstr "Punto di accesso"
+
 msgid "Access the diagnostics mode"
 msgstr "Accedere alla modalità di diagnostica"
 
@@ -4064,6 +4068,10 @@ msgstr "Richieste di flotta spot attiva"
 
 msgid "Active time range"
 msgstr "Intervallo di tempo attivo"
+
+#, fuzzy
+msgid "Active time series (last 24 h)"
+msgstr "Sessioni attive"
 
 msgid "Active unit"
 msgstr "Unità attiva"
@@ -13587,6 +13595,10 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Uso dell'helper Checkmk"
 
+#, fuzzy
+msgid "Checkmk metric backend"
+msgstr "Configurazione dello stile selezionato"
+
 msgid ""
 "Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
 "here."
@@ -16353,6 +16365,10 @@ msgstr "Fase 1.1: Recupero dal sito \"%s\""
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
+
+#, fuzzy
+msgid "Connectors"
+msgstr "Connessioni"
 
 msgid "Consecutive reachability failures (up to 8)"
 msgstr ""
@@ -26057,9 +26073,6 @@ msgstr "Esportazione di questa regola per API"
 msgid "Export this rule for API"
 msgstr "Esportazione di questa regola per API"
 
-msgid "Exporter"
-msgstr "Esportatore"
-
 #, fuzzy
 msgid "Express servicecode"
 msgstr "Codice di servizio espresso"
@@ -28526,6 +28539,10 @@ msgstr "Raccolte di rifiuti"
 msgid "Gateway"
 msgstr "Porta d'ingresso"
 
+#, fuzzy
+msgid "Gateway (MG)"
+msgstr "Porta d'ingresso"
+
 msgid "Gateway route"
 msgstr "Percorso del gateway"
 
@@ -28980,10 +28997,6 @@ msgstr "Visibilità del grafico"
 #, fuzzy, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "Il modello di grafico %s manca di un titolo"
-
-#, fuzzy
-msgid "GraphApi"
-msgstr "Grafico"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -34581,6 +34594,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"If you are running a distributed Checkmk setup with multiple sites on the "
+"same machine, please configure different port numbers per each site via the "
+"site-specific global settings to avoid port binding conflicts."
+msgstr ""
+
+msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
 "please choose port number greater than 1024."
 msgstr ""
@@ -39867,6 +39886,9 @@ msgstr "Vedi tutti gli host e i servizi"
 msgid "Licensed services"
 msgstr "Servizi autorizzati"
 
+msgid "Licenses"
+msgstr "Licenze"
+
 #, fuzzy
 msgid "Licenses (Maximum)"
 msgstr "Clienti massimi"
@@ -41356,6 +41378,10 @@ msgstr ""
 msgid "Lower levels on Site-to-site bandwidth in bytes per second"
 msgstr ""
 "Livelli inferiori sulla larghezza di banda da sito a sito in byte al secondo"
+
+#, fuzzy
+msgid "Lower levels on active time series within the last 24 hours"
+msgstr "Livelli più bassi per il tasso di errore totale"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Livelli più bassi sul numero di connessioni Point-to-site"
@@ -43788,6 +43814,9 @@ msgstr "Aggiungi la connessione al sito"
 #, fuzzy
 msgid "Microsoft Entra ID connections"
 msgstr "Aggiungi la connessione al sito"
+
+msgid "Microsoft Exchange Online"
+msgstr ""
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Stato della VM del server Microsoft Hyper-V"
@@ -57468,6 +57497,9 @@ msgstr "Rapporto da creare"
 msgid "Report to schedule"
 msgstr "Rapporto al programma"
 
+msgid "Reported to licensing server"
+msgstr ""
+
 msgid "Reporting"
 msgstr "Segnalare"
 
@@ -60106,6 +60138,9 @@ msgstr "Nome di sicurezza"
 msgid "Security tokens"
 msgstr "Gettoni di sicurezza"
 
+msgid "Security/SD-WAN (MX)"
+msgstr ""
+
 msgid ""
 "See 'Queue status attributes' in IBM manual(https://www.ibm.com/support/"
 "knowledgecenter/en/SSFKSJ_9.2.0/com.ibm.mq.explorer.doc/e_status_queue.html) "
@@ -60735,6 +60770,10 @@ msgid "Sends Timed-Out"
 msgstr "Invio di Timed-Out"
 
 msgid "Sensor"
+msgstr "Sensore"
+
+#, fuzzy
+msgid "Sensor (MT)"
 msgstr "Sensore"
 
 msgid "Sensor ID"
@@ -66683,6 +66722,10 @@ msgstr "Passa alla modalità Takeover!"
 msgid "Switched to %s mode"
 msgstr "Passato alla modalità %s"
 
+#, fuzzy
+msgid "Switches (MS)"
+msgstr "Switchover"
+
 msgid "Switches, load balancers, storage, UPSes, environmental sensors, etc. "
 msgstr ""
 "Switch, bilanciatori di carico, storage, UPS, sensori ambientali, ecc. "
@@ -66954,6 +66997,10 @@ msgid "Systemd timesyncd time synchronization"
 msgstr "Systemd Timesyncd sincronizzazione dell'ora"
 
 msgid "Systems larger than"
+msgstr "Sistemi più grandi di"
+
+#, fuzzy
+msgid "Systems manager (SM)"
 msgstr "Sistemi più grandi di"
 
 msgid "TCP"
@@ -83854,6 +83901,14 @@ msgid "Upper levels on Site-to-site bandwidth in bytes per second"
 msgstr ""
 "Livelli superiori sulla larghezza di banda da sito a sito in byte al secondo"
 
+#, fuzzy
+msgid "Upper levels on active time series reported to licensing server"
+msgstr "Livelli superiori per la dimensione della licenza"
+
+#, fuzzy
+msgid "Upper levels on active time series within the last 24 hours"
+msgstr "Livelli superiori sulla latenza totale della richiesta"
+
 msgid "Upper levels on daily costs"
 msgstr "Livelli superiori sui costi giornalieri"
 
@@ -86547,6 +86602,9 @@ msgstr ""
 
 msgid "Vibrate only"
 msgstr "Solo vibrazione"
+
+msgid "Video (MV)"
+msgstr ""
 
 msgid "Video tutorials"
 msgstr "Tutorial video"
@@ -95158,7 +95216,7 @@ msgid "Users with access permissions can view this dashboard"
 msgstr "Gli utenti che non hanno questa autorizzazione non sono ammessi"
 
 #, fuzzy
-msgid "Dashboard url"
+msgid "Dashboard URL"
 msgstr "Dashboard"
 
 msgid "Stop sharing public link?"
@@ -95202,6 +95260,10 @@ msgstr ""
 #, fuzzy
 msgid "Navigation and menus are hidden."
 msgstr "Icone della barra di navigazione"
+
+msgid ""
+"Runtime filtering isn’t available. Set default filter values before sharing."
+msgstr ""
 
 #, fuzzy
 msgid "Generate public link"
@@ -97232,6 +97294,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Exporter"
+#~ msgstr "Esportatore"
+
+#, fuzzy
+#~ msgid "GraphApi"
+#~ msgstr "Grafico"
+
+#, fuzzy
+#~ msgid "Dashboard url"
+#~ msgstr "Dashboard"
+
 #, fuzzy
 #~ msgid "HTTPS port"
 #~ msgstr "Porta TCP"
@@ -98715,9 +98788,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Disk Usage"
 #~ msgstr "Utilizzo del disco"
-
-#~ msgid "Licenses"
-#~ msgstr "Licenze"
 
 #~ msgid "Successfully discarded all pending changes."
 #~ msgstr "Ha scartato con successo tutte le modifiche in sospeso."

@@ -3426,6 +3426,10 @@ msgstr "Toegangspunt statistieken"
 msgid "Access points"
 msgstr "Toegangspunten"
 
+#, fuzzy
+msgid "Access points/Wireless (MR)"
+msgstr "Toegangspunten"
+
 msgid "Access the diagnostics mode"
 msgstr "Toegang tot de diagnosemodus"
 
@@ -4015,6 +4019,10 @@ msgstr "Actieve Spot Fleet Verzoeken"
 
 msgid "Active time range"
 msgstr "Actief tijdsverloop"
+
+#, fuzzy
+msgid "Active time series (last 24 h)"
+msgstr "Actieve Sessies"
 
 msgid "Active unit"
 msgstr "Actieve eenheid"
@@ -13640,6 +13648,10 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmk helper gebruik"
 
+#, fuzzy
+msgid "Checkmk metric backend"
+msgstr "Configuratie toestand toevoegen"
+
 msgid ""
 "Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
 "here."
@@ -16415,6 +16427,10 @@ msgstr "Fase 1.1: Afhalen van site \"%s\""
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
+
+#, fuzzy
+msgid "Connectors"
+msgstr "Verbindingen"
 
 msgid "Consecutive reachability failures (up to 8)"
 msgstr ""
@@ -26187,9 +26203,6 @@ msgstr "Exporteer deze regel voor API"
 msgid "Export this rule for API"
 msgstr "Exporteer deze regel voor API"
 
-msgid "Exporter"
-msgstr "Exporteur"
-
 #, fuzzy
 msgid "Express servicecode"
 msgstr "Uitdrukkelijke Servicecode"
@@ -28669,6 +28682,10 @@ msgstr "Vuilnisophaaldiensten"
 msgid "Gateway"
 msgstr "Gateway"
 
+#, fuzzy
+msgid "Gateway (MG)"
+msgstr "Gateway"
+
 msgid "Gateway route"
 msgstr "Gateway route"
 
@@ -29122,10 +29139,6 @@ msgstr "Grafiek zichtbaarheid"
 #, fuzzy, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "Grafieksjabloon %s mist een titel"
-
-#, fuzzy
-msgid "GraphApi"
-msgstr "Grafiek"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -34763,6 +34776,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"If you are running a distributed Checkmk setup with multiple sites on the "
+"same machine, please configure different port numbers per each site via the "
+"site-specific global settings to avoid port binding conflicts."
+msgstr ""
+
+msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
 "please choose port number greater than 1024."
 msgstr ""
@@ -40097,6 +40116,9 @@ msgstr "Bekijk alle hosts en diensten"
 msgid "Licensed services"
 msgstr "Vergunde diensten: %s"
 
+msgid "Licenses"
+msgstr "Licenties"
+
 #, fuzzy
 msgid "Licenses (Maximum)"
 msgstr "Cliënten maximum"
@@ -41591,6 +41613,10 @@ msgstr "Lagere niveaus op Point-to-site bandbreedte in bytes per seconde"
 
 msgid "Lower levels on Site-to-site bandwidth in bytes per second"
 msgstr "Lagere niveaus op Site-to-site bandbreedte in bytes per seconde"
+
+#, fuzzy
+msgid "Lower levels on active time series within the last 24 hours"
+msgstr "Lagere niveaus voor het totale foutenpercentage"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Lagere niveaus voor het aantal Point-to-site verbindingen"
@@ -44049,6 +44075,9 @@ msgstr "Locatieverbinding toevoegen"
 #, fuzzy
 msgid "Microsoft Entra ID connections"
 msgstr "Locatieverbinding toevoegen"
+
+msgid "Microsoft Exchange Online"
+msgstr ""
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V Server VM staat"
@@ -57831,6 +57860,9 @@ msgstr "Verslag te maken"
 msgid "Report to schedule"
 msgstr "Rapport aan schema"
 
+msgid "Reported to licensing server"
+msgstr ""
+
 msgid "Reporting"
 msgstr "Melding"
 
@@ -60469,6 +60501,9 @@ msgstr "Veiligheidsnaam"
 msgid "Security tokens"
 msgstr "Veiligheidsnaam"
 
+msgid "Security/SD-WAN (MX)"
+msgstr ""
+
 msgid ""
 "See 'Queue status attributes' in IBM manual(https://www.ibm.com/support/"
 "knowledgecenter/en/SSFKSJ_9.2.0/com.ibm.mq.explorer.doc/e_status_queue.html) "
@@ -61107,6 +61142,10 @@ msgid "Sends Timed-Out"
 msgstr "Verstuurt Timed-Out"
 
 msgid "Sensor"
+msgstr "Sensor"
+
+#, fuzzy
+msgid "Sensor (MT)"
 msgstr "Sensor"
 
 msgid "Sensor ID"
@@ -67086,6 +67125,10 @@ msgstr "Schakel over naar overnamemodus!"
 msgid "Switched to %s mode"
 msgstr "Overgeschakeld naar %s mode"
 
+#, fuzzy
+msgid "Switches (MS)"
+msgstr "Overschakeling"
+
 msgid "Switches, load balancers, storage, UPSes, environmental sensors, etc. "
 msgstr "Schakelaars, load balancers, opslag, UPSen, omgevingssensoren, enz. "
 
@@ -67363,6 +67406,10 @@ msgid "Systemd timesyncd time synchronization"
 msgstr "Systemd Timesyncd tijdsynchronisatie"
 
 msgid "Systems larger than"
+msgstr "Systemen groter dan"
+
+#, fuzzy
+msgid "Systems manager (SM)"
 msgstr "Systemen groter dan"
 
 msgid "TCP"
@@ -84427,6 +84474,14 @@ msgstr "Bovengrens voor Point-to-site bandbreedte in bytes per seconde"
 msgid "Upper levels on Site-to-site bandwidth in bytes per second"
 msgstr "Bovenste niveaus op Site-to-site bandbreedte in bytes per seconde"
 
+#, fuzzy
+msgid "Upper levels on active time series reported to licensing server"
+msgstr "Bovenste niveaus voor de licentiegrootte"
+
+#, fuzzy
+msgid "Upper levels on active time series within the last 24 hours"
+msgstr "Bovenste niveaus op totale verzoeklatentie"
+
 msgid "Upper levels on daily costs"
 msgstr "Hogere niveaus op dagelijkse kosten"
 
@@ -87127,6 +87182,9 @@ msgstr ""
 
 msgid "Vibrate only"
 msgstr "Alleen trillen"
+
+msgid "Video (MV)"
+msgstr ""
 
 msgid "Video tutorials"
 msgstr "Video uitleg"
@@ -95817,7 +95875,7 @@ msgid "Users with access permissions can view this dashboard"
 msgstr "Gebruikers zonder deze toestemming worden helemaal niet binnengelaten"
 
 #, fuzzy
-msgid "Dashboard url"
+msgid "Dashboard URL"
 msgstr "Dashboard"
 
 msgid "Stop sharing public link?"
@@ -95861,6 +95919,10 @@ msgstr ""
 #, fuzzy
 msgid "Navigation and menus are hidden."
 msgstr "Pictogrammen navigatiebalk"
+
+msgid ""
+"Runtime filtering isn’t available. Set default filter values before sharing."
+msgstr ""
 
 #, fuzzy
 msgid "Generate public link"
@@ -97891,6 +97953,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Exporter"
+#~ msgstr "Exporteur"
+
+#, fuzzy
+#~ msgid "GraphApi"
+#~ msgstr "Grafiek"
+
+#, fuzzy
+#~ msgid "Dashboard url"
+#~ msgstr "Dashboard"
+
 #, fuzzy
 #~ msgid "HTTPS port"
 #~ msgstr "TCP-poort"
@@ -99354,9 +99427,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Disk Usage"
 #~ msgstr "Schijfgebruik"
-
-#~ msgid "Licenses"
-#~ msgstr "Licenties"
 
 #~ msgid "Successfully discarded all pending changes."
 #~ msgstr "Met succes alle hangende wijzigingen verwijderd."

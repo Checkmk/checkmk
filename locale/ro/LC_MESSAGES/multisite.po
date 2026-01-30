@@ -3454,6 +3454,10 @@ msgstr "Statistici privind punctele de acces"
 msgid "Access points"
 msgstr "Puncte de acces"
 
+#, fuzzy
+msgid "Access points/Wireless (MR)"
+msgstr "Puncte de acces"
+
 msgid "Access the diagnostics mode"
 msgstr "Accesați modul de diagnosticare"
 
@@ -4038,6 +4042,10 @@ msgstr "Solicitări active de flotă la fața locului"
 
 msgid "Active time range"
 msgstr "Interval de timp activ"
+
+#, fuzzy
+msgid "Active time series (last 24 h)"
+msgstr "Sesiuni active"
 
 msgid "Active unit"
 msgstr "Unitate activă"
@@ -13685,6 +13693,10 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Utilizarea ajutorului Checkmk"
 
+#, fuzzy
+msgid "Checkmk metric backend"
+msgstr "Configurația stilului selectat"
+
 msgid ""
 "Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
 "here."
@@ -16461,6 +16473,10 @@ msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
+
+#, fuzzy
+msgid "Connectors"
+msgstr "Conexiuni"
 
 msgid "Consecutive reachability failures (up to 8)"
 msgstr ""
@@ -26290,9 +26306,6 @@ msgstr "Exportați această regulă pentru API"
 msgid "Export this rule for API"
 msgstr "Exportați această regulă pentru API"
 
-msgid "Exporter"
-msgstr "Exportator"
-
 #, fuzzy
 msgid "Express servicecode"
 msgstr "Express Servicecode"
@@ -28769,6 +28782,10 @@ msgstr "Colectarea gunoiului"
 msgid "Gateway"
 msgstr "Gateway"
 
+#, fuzzy
+msgid "Gateway (MG)"
+msgstr "Gateway"
+
 msgid "Gateway route"
 msgstr "Traseu de trecere"
 
@@ -29227,10 +29244,6 @@ msgstr "Vizibilitatea graficului"
 #, fuzzy, python-format
 msgid "Graph with ID %s is missing a title"
 msgstr "Șablonul grafic %s nu are un titlu"
-
-#, fuzzy
-msgid "GraphApi"
-msgstr "Grafic"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -34868,6 +34881,12 @@ msgstr ""
 "încercați '%s' în Configurare > Notificări."
 
 msgid ""
+"If you are running a distributed Checkmk setup with multiple sites on the "
+"same machine, please configure different port numbers per each site via the "
+"site-specific global settings to avoid port binding conflicts."
+msgstr ""
+
+msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
 "please choose port number greater than 1024."
 msgstr ""
@@ -40223,6 +40242,9 @@ msgstr "Vezi toate gazdele și serviciile"
 msgid "Licensed services"
 msgstr "Servicii licențiate"
 
+msgid "Licenses"
+msgstr "Licențe"
+
 #, fuzzy
 msgid "Licenses (Maximum)"
 msgstr "Clienți maxim"
@@ -41716,6 +41738,10 @@ msgid "Lower levels on Site-to-site bandwidth in bytes per second"
 msgstr ""
 "Niveluri inferioare privind lățimea de bandă de la site la site în bytes pe "
 "secundă"
+
+#, fuzzy
+msgid "Lower levels on active time series within the last 24 hours"
+msgstr "Niveluri inferioare pentru rata totală de eroare"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Niveluri mai mici ale numărului de conexiuni punct-la-sediu"
@@ -44170,6 +44196,9 @@ msgstr "Adăugați o conexiune de site"
 #, fuzzy
 msgid "Microsoft Entra ID connections"
 msgstr "Adăugați o conexiune de site"
+
+msgid "Microsoft Exchange Online"
+msgstr ""
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Starea VM Microsoft Hyper-V Server"
@@ -57961,6 +57990,10 @@ msgstr "Raport pentru a crea"
 msgid "Report to schedule"
 msgstr "Raport la program"
 
+#, fuzzy
+msgid "Reported to licensing server"
+msgstr "pagina de licențiere a produsului's"
+
 msgid "Reporting"
 msgstr "Raportarea"
 
@@ -60612,6 +60645,9 @@ msgstr "Denumire de securitate"
 msgid "Security tokens"
 msgstr "Jetoane de securitate"
 
+msgid "Security/SD-WAN (MX)"
+msgstr ""
+
 msgid ""
 "See 'Queue status attributes' in IBM manual(https://www.ibm.com/support/"
 "knowledgecenter/en/SSFKSJ_9.2.0/com.ibm.mq.explorer.doc/e_status_queue.html) "
@@ -61273,6 +61309,10 @@ msgid "Sends Timed-Out"
 msgstr "Trimiteri temporizate"
 
 msgid "Sensor"
+msgstr "Senzor"
+
+#, fuzzy
+msgid "Sensor (MT)"
 msgstr "Senzor"
 
 msgid "Sensor ID"
@@ -67332,6 +67372,10 @@ msgstr "Treci la modul Takeover!"
 msgid "Switched to %s mode"
 msgstr "A trecut la modul %s."
 
+#, fuzzy
+msgid "Switches (MS)"
+msgstr "Comutarea"
+
 msgid "Switches, load balancers, storage, UPSes, environmental sensors, etc. "
 msgstr ""
 "Comutatoare, echilibrări de sarcină, stocare, UPS-uri, senzori de mediu etc. "
@@ -67605,6 +67649,10 @@ msgid "Systemd timesyncd time synchronization"
 msgstr "Systemd Timesyncd sincronizarea timpului"
 
 msgid "Systems larger than"
+msgstr "Sisteme mai mari de"
+
+#, fuzzy
+msgid "Systems manager (SM)"
 msgstr "Sisteme mai mari de"
 
 msgid "TCP"
@@ -84686,6 +84734,14 @@ msgstr ""
 "Nivelurile superioare ale lățimii de bandă de la site la site în bytes pe "
 "secundă"
 
+#, fuzzy
+msgid "Upper levels on active time series reported to licensing server"
+msgstr "Niveluri superioare pentru dimensiunea licenței"
+
+#, fuzzy
+msgid "Upper levels on active time series within the last 24 hours"
+msgstr "Niveluri superioare ale latenței totale a cererilor"
+
 msgid "Upper levels on daily costs"
 msgstr "Niveluri superioare la costurile zilnice"
 
@@ -87401,6 +87457,9 @@ msgstr ""
 
 msgid "Vibrate only"
 msgstr "Numai vibrații"
+
+msgid "Video (MV)"
+msgstr ""
 
 msgid "Video tutorials"
 msgstr "Tutoriale video"
@@ -96110,7 +96169,7 @@ msgstr ""
 "Utilizatorii care nu au această permisiune nu sunt lăsați să intre deloc."
 
 #, fuzzy
-msgid "Dashboard url"
+msgid "Dashboard URL"
 msgstr "Tabloul de bord"
 
 msgid "Stop sharing public link?"
@@ -96154,6 +96213,10 @@ msgstr ""
 #, fuzzy
 msgid "Navigation and menus are hidden."
 msgstr "Pictogramele barei de navigare"
+
+msgid ""
+"Runtime filtering isn’t available. Set default filter values before sharing."
+msgstr ""
 
 #, fuzzy
 msgid "Generate public link"
@@ -98199,6 +98262,17 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Exporter"
+#~ msgstr "Exportator"
+
+#, fuzzy
+#~ msgid "GraphApi"
+#~ msgstr "Grafic"
+
+#, fuzzy
+#~ msgid "Dashboard url"
+#~ msgstr "Tabloul de bord"
+
 #, fuzzy
 #~ msgid "HTTPS port"
 #~ msgstr "Port TCP"
@@ -99692,9 +99766,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Disk Usage"
 #~ msgstr "Utilizarea discului"
-
-#~ msgid "Licenses"
-#~ msgstr "Licențe"
 
 #~ msgid "Successfully discarded all pending changes."
 #~ msgstr "A eliminat cu succes toate modificările în așteptare."

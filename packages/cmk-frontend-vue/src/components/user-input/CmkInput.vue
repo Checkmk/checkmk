@@ -57,6 +57,14 @@ const data = defineModel<InputDataType<T>>()
 const validation = ref<string[]>([])
 const width = computed(() => inputSizes[fieldSize].width)
 
+const inputRef = ref<HTMLInputElement | null>(null)
+
+defineExpose({
+  focus: () => {
+    inputRef.value?.focus()
+  }
+})
+
 watch(data, (newData) => {
   if (newData !== undefined && validators && validators.length > 0) {
     validation.value =
@@ -83,6 +91,7 @@ immediateWatch(
     <CmkInlineValidation :validation="validation"></CmkInlineValidation>
     <div class="cmk-input__input-unit-container">
       <input
+        ref="inputRef"
         v-model="data"
         v-bind="$attrs"
         :class="[propsCva({ type }), { 'cmk-input--error': validation.length > 0 }]"

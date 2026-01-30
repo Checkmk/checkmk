@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { watch } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -22,6 +24,16 @@ const props = defineProps<CloneSuccessAlertProps>()
 const emits = defineEmits<CloneSuccessAlertEmit>()
 
 const open = defineModel<boolean>('open', { required: true })
+
+// Close the alert automatically when hasFilters changes to false
+watch(
+  () => props.hasFilters,
+  (newVal) => {
+    if (!newVal) {
+      open.value = false
+    }
+  }
+)
 </script>
 
 <template>

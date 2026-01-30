@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import { computed } from 'vue'
+import { computed, onUnmounted, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -43,11 +43,37 @@ export interface CmkAlertBoxProps {
   variant?: Variants
   size?: Sizes
   heading?: string | undefined
+  autoDismiss?: boolean | undefined
 }
 
 const props = defineProps<CmkAlertBoxProps>()
 
 const open = defineModel<boolean>('open', { default: true })
+
+let timeoutId: number | null = null
+
+watch(
+  open,
+  (newOpen) => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId)
+      timeoutId = null
+    }
+    if (newOpen && props.autoDismiss) {
+      timeoutId = window.setTimeout(() => {
+        open.value = false
+      }, 6000)
+    }
+  },
+  { immediate: true }
+)
+
+onUnmounted(() => {
+  if (timeoutId !== null) {
+    clearTimeout(timeoutId)
+    timeoutId = null
+  }
+})
 
 const dismissible = computed(() => {
   switch (props.variant) {

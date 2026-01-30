@@ -13,6 +13,7 @@ import useId from '@/lib/useId'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
@@ -23,11 +24,22 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<[string, string]>('data', { required: true })
+
 const [validation, value] = useValidation<[string, string]>(
   data,
   props.spec.validators,
   () => props.backendValidation
 )
+
+const value0Number = computed({
+  get() {
+    const n = Number(value.value[0])
+    return isNaN(n) ? undefined : n
+  },
+  set(val: number | undefined) {
+    value.value[0] = val === undefined || val === null ? '' : String(val)
+  }
+})
 
 const componentId = useId()
 
@@ -50,14 +62,14 @@ const magnitudeOptions = computed(() => {
     <div class="form-data-size__validation-wrapper">
       <FormValidation :validation="validation" />
       <div class="form-single-choice__input-column--inner">
-        <input
+        <CmkInput
           :id="componentId"
-          v-model="value[0]"
+          v-model="value0Number"
           :placeholder="spec.input_hint || ''"
-          class="form-data-size__number form-data-size__no-spinner"
           :class="{ 'form-data-size__error': validation.length > 0 }"
           step="any"
           type="number"
+          :inline="true"
         />
         <CmkSpace size="small" />
         <CmkDropdown
@@ -72,22 +84,6 @@ const magnitudeOptions = computed(() => {
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.no-spinner::-webkit-outer-spin-button,
-.no-spinner::-webkit-inner-spin-button {
-  appearance: none;
-  margin: 0;
-}
-
-.form-data-size__number {
-  width: 5.8ex;
-  text-align: right;
-}
-
-.form-data-size__no-spinner[type='number'] {
-  appearance: textfield;
-}
-
 .form-data-size__error {
   border: 1px solid var(--inline-error-border-color);
 }

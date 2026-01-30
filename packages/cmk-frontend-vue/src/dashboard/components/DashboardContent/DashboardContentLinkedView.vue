@@ -19,7 +19,6 @@ const iFrameUrl = computed(() => {
   if (cmkToken !== undefined) {
     const urlParams = new URLSearchParams({
       widget_id: props.widget_id,
-      context: JSON.stringify(props.effective_filter_context.filters),
       'cmk-token': cmkToken
     }).toString()
     return `widget_iframe_view_token_auth.py?${urlParams}`

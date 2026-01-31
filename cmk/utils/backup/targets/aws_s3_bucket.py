@@ -14,10 +14,11 @@ from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, Remote
 from cmk.utils.password_store import extract, PasswordId
 
 
-class S3Params(TypedDict):
+class S3Params(TypedDict, total=False):
     access_key: str
     secret: PasswordId
     bucket: str
+    endpoint_url: str  # Optional: für S3-kompatible Anbieter wie Backblaze
 
 
 class S3Bucket:
@@ -27,16 +28,17 @@ class S3Bucket:
 
         if not (secret_extracted := extract(params["secret"])):
             raise MKGeneralException("Failed to retrieve secret")
-        self.client: Final = boto3.client(
-            "s3",
+
+        endpoint_url = params.get("endpoint_url")
+        client_args = dict(
             aws_access_key_id=params["access_key"],
             aws_secret_access_key=secret_extracted,
         )
-        self.bucket: Final = boto3.resource(
-            "s3",
-            aws_access_key_id=params["access_key"],
-            aws_secret_access_key=secret_extracted,
-        ).Bucket(params["bucket"])
+        if endpoint_url:
+            client_args["endpoint_url"] = endpoint_url
+
+        self.client: Final = boto3.client("s3", **client_args)
+        self.bucket: Final = boto3.resource("s3", **client_args).Bucket(params["bucket"])
 
     def ready(self) -> None:
         try:

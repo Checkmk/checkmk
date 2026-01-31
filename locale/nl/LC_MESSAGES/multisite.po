@@ -14340,10 +14340,6 @@ msgid "Cisco Meraki device status"
 msgstr "Toon dienst status"
 
 #, fuzzy
-msgid "Cisco Meraki licensed devices"
-msgstr "Overzicht Cisco Meraki Organisatielicenties"
-
-#, fuzzy
 msgid "Cisco Meraki licenses overview"
 msgstr "Overzicht Cisco Meraki Organisatielicenties"
 
@@ -35240,6 +35236,16 @@ msgstr ""
 "weglaten terwijl de \"Ping alle adressen\" optie zowel het hoofdadres als de "
 "bijkomende adressen zal opnemen."
 
+msgid ""
+"If you plan to monitor Azure resources via Azure Resource Manager, assign "
+"the built-in Reader role to the app at the subscription (or appropriate "
+"resource group) level in Access control (IAM). Additionally, if resources "
+"available through the Graph API will be monitored, add the Microsoft Graph "
+"application permissions \"Directory.Read.All\" and \"User.Read.All\" and "
+"grant admin consent. These resources include \"Users in Entra ID\", \"Entra "
+"Connect Sync\", and \"App Registrations\"."
+msgstr ""
+
 #, python-format
 msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
@@ -40105,10 +40111,6 @@ msgid "Licensed active metric series"
 msgstr "Vergunde diensten: %s"
 
 #, fuzzy
-msgid "Licensed devices"
-msgstr "Vergunde diensten: %s"
-
-#, fuzzy
 msgid "Licensed phase: too many services."
 msgstr "Bekijk alle hosts en diensten"
 
@@ -44365,9 +44367,6 @@ msgstr ""
 #, python-format
 msgid "Missing needed %s parameter."
 msgstr "Ontbrekende benodigde %s parameter."
-
-msgid "Missing needed custom_graph parameter."
-msgstr "Ontbrekende benodigde custom_graph parameter."
 
 msgid "Missing needed host parameter."
 msgstr "Ontbrekende benodigde host parameter."
@@ -56820,6 +56819,12 @@ msgstr ""
 "vertrouwelijke informatie zoals wachtwoorden kunnen bevatten."
 
 msgid ""
+"Register an app in Entra ID. Note down the Directory (tenant) ID and "
+"Application (client) ID. Additionally, note down one or more Subscription "
+"IDs if you plan to monitor Azure Resource Manager (ARM) resources."
+msgstr ""
+
+msgid ""
 "Register an app in Entra ID. Note down the Directory (tenant) ID, "
 "Application (client) ID as well as the used Subscription ID."
 msgstr ""
@@ -58637,6 +58642,11 @@ msgstr "Retourcode klasse 5xx (serverfout)"
 
 msgid "Return process times within performance data"
 msgstr "Terugkeren procestijden binnen prestatiegegevens"
+
+msgid ""
+"Return to Checkmk, define a unique configuration name, and enter the tenant "
+"ID, client ID, client secret, and subscription ID(s) (if applicable) below."
+msgstr ""
 
 msgid ""
 "Return to Checkmk, define a unique configuration name, and use the access "
@@ -60896,9 +60906,12 @@ msgstr ""
 "de selectie worden bijv. de attribuutnamen die in LDAP-query's worden "
 "gebruikt, gewijzigd."
 
-#, fuzzy
-msgid "Select the subscriptions you want to monitor."
-msgstr "Selecteer het type inhoudselement"
+msgid ""
+"Select the subscriptions containing the ARM resources you want to monitor.If "
+"you do not wish to monitor ARM resources, select 'Do not monitor "
+"subscriptions.'If you proceed with a subscription, you will be able to "
+"choose specific resources to monitor in the next step."
+msgstr ""
 
 msgid ""
 "Select the type of authentication to use when connecting to the Oracle "
@@ -94935,9 +94948,6 @@ msgstr ""
 msgid "Please configure the following filters: "
 msgstr "Gebruik de volgende niveaus"
 
-msgid "Success! Your runtime filters have been applied"
-msgstr ""
-
 #, fuzzy
 msgid "pre-selected"
 msgstr "Geselecteerd"
@@ -95840,14 +95850,6 @@ msgstr "Laat de %s alleen zien als show more actief is"
 #, fuzzy
 msgid "Show in dropdown menus"
 msgstr "Verberg deze %s in vervolgkeuzemenu's"
-
-#, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
-"moeten met een letter beginnen."
 
 #, fuzzy
 msgid "Dashboard settings of %{name}"
@@ -97685,6 +97687,10 @@ msgstr "Hardware/Software-Inventarisatie (Linux, Windows, Solaris, AIX)"
 msgid "Network devices and SNMP"
 msgstr "Netwerk scan"
 
+#, fuzzy
+msgid "Cloud platforms"
+msgstr "Google Cloud Platform"
+
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
 
@@ -97952,6 +97958,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Cisco Meraki licensed devices"
+#~ msgstr "Overzicht Cisco Meraki Organisatielicenties"
+
+#, fuzzy
+#~ msgid "Licensed devices"
+#~ msgstr "Vergunde diensten: %s"
+
+#~ msgid "Missing needed custom_graph parameter."
+#~ msgstr "Ontbrekende benodigde custom_graph parameter."
+
+#, fuzzy
+#~ msgid "Select the subscriptions you want to monitor."
+#~ msgstr "Selecteer het type inhoudselement"
+
+#, fuzzy
+#~ msgid ""
+#~ "Unique ID must only contain lowercase letters, numbers, and underscores, "
+#~ "and must start with a letter."
+#~ msgstr ""
+#~ "Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
+#~ "moeten met een letter beginnen."
 
 #~ msgid "Exporter"
 #~ msgstr "Exporteur"

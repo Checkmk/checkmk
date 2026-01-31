@@ -14391,10 +14391,6 @@ msgid "Cisco Meraki device status"
 msgstr "Afișați starea serviciului"
 
 #, fuzzy
-msgid "Cisco Meraki licensed devices"
-msgstr "Prezentare generală a licențelor Cisco Meraki Organisation"
-
-#, fuzzy
 msgid "Cisco Meraki licenses overview"
 msgstr "Prezentare generală a licențelor Cisco Meraki Organisation"
 
@@ -35354,6 +35350,16 @@ msgstr ""
 "omite adresa principală configurată a gazdei, în timp ce opțiunea \"Ping all "
 "addresses\" va include atât adresa principală, cât și cea suplimentară."
 
+msgid ""
+"If you plan to monitor Azure resources via Azure Resource Manager, assign "
+"the built-in Reader role to the app at the subscription (or appropriate "
+"resource group) level in Access control (IAM). Additionally, if resources "
+"available through the Graph API will be monitored, add the Microsoft Graph "
+"application permissions \"Directory.Read.All\" and \"User.Read.All\" and "
+"grant admin consent. These resources include \"Users in Entra ID\", \"Entra "
+"Connect Sync\", and \"App Registrations\"."
+msgstr ""
+
 #, python-format
 msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
@@ -40232,10 +40238,6 @@ msgid "Licensed active metric series"
 msgstr "Servicii licențiate"
 
 #, fuzzy
-msgid "Licensed devices"
-msgstr "Servicii licențiate"
-
-#, fuzzy
 msgid "Licensed phase: too many services."
 msgstr "Vezi toate gazdele și serviciile"
 
@@ -44481,9 +44483,6 @@ msgstr ""
 #, python-format
 msgid "Missing needed %s parameter."
 msgstr "Lipsește parametrul necesar %s."
-
-msgid "Missing needed custom_graph parameter."
-msgstr "Lipsește parametrul necesar custom_graph."
 
 msgid "Missing needed host parameter."
 msgstr "Lipsește un parametru gazdă necesar."
@@ -56956,6 +56955,12 @@ msgstr ""
 "agenți pot conține informații confidențiale, cum ar fi parolele."
 
 msgid ""
+"Register an app in Entra ID. Note down the Directory (tenant) ID and "
+"Application (client) ID. Additionally, note down one or more Subscription "
+"IDs if you plan to monitor Azure Resource Manager (ARM) resources."
+msgstr ""
+
+msgid ""
 "Register an app in Entra ID. Note down the Directory (tenant) ID, "
 "Application (client) ID as well as the used Subscription ID."
 msgstr ""
@@ -58779,6 +58784,11 @@ msgstr "Cod de returnare clasa 5xx (eroare de server)"
 
 msgid "Return process times within performance data"
 msgstr "Timpii de procesare a returului în cadrul datelor de performanță"
+
+msgid ""
+"Return to Checkmk, define a unique configuration name, and enter the tenant "
+"ID, client ID, client secret, and subscription ID(s) (if applicable) below."
+msgstr ""
 
 msgid ""
 "Return to Checkmk, define a unique configuration name, and use the access "
@@ -61062,9 +61072,12 @@ msgstr ""
 "selecție, de exemplu, numele atributelor utilizate în interogările LDAP vor "
 "fi modificate."
 
-#, fuzzy
-msgid "Select the subscriptions you want to monitor."
-msgstr "Selectați tipul de element de conținut"
+msgid ""
+"Select the subscriptions containing the ARM resources you want to monitor.If "
+"you do not wish to monitor ARM resources, select 'Do not monitor "
+"subscriptions.'If you proceed with a subscription, you will be able to "
+"choose specific resources to monitor in the next step."
+msgstr ""
 
 msgid ""
 "Select the type of authentication to use when connecting to the Oracle "
@@ -95227,9 +95240,6 @@ msgstr ""
 msgid "Please configure the following filters: "
 msgstr "Utilizați următoarele niveluri"
 
-msgid "Success! Your runtime filters have been applied"
-msgstr ""
-
 #, fuzzy
 msgid "pre-selected"
 msgstr "Selectată"
@@ -96135,14 +96145,6 @@ msgstr "Afișează %s numai dacă este activată opțiunea \"Show more\"."
 #, fuzzy
 msgid "Show in dropdown menus"
 msgstr "Ascundeți acest %s în meniurile derulante"
-
-#, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"Denumirile metrice trebuie să fie formate numai din litere, cifre și "
-"caractere de subliniere și trebuie să înceapă cu o literă."
 
 #, fuzzy
 msgid "Dashboard settings of %{name}"
@@ -97992,6 +97994,10 @@ msgstr "Inventar hardware/software (Linux, Windows, Solaris, AIX)"
 msgid "Network devices and SNMP"
 msgstr "Scanarea rețelei"
 
+#, fuzzy
+msgid "Cloud platforms"
+msgstr "Platforma Google Cloud"
+
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
 
@@ -98261,6 +98267,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Cisco Meraki licensed devices"
+#~ msgstr "Prezentare generală a licențelor Cisco Meraki Organisation"
+
+#, fuzzy
+#~ msgid "Licensed devices"
+#~ msgstr "Servicii licențiate"
+
+#~ msgid "Missing needed custom_graph parameter."
+#~ msgstr "Lipsește parametrul necesar custom_graph."
+
+#, fuzzy
+#~ msgid "Select the subscriptions you want to monitor."
+#~ msgstr "Selectați tipul de element de conținut"
+
+#, fuzzy
+#~ msgid ""
+#~ "Unique ID must only contain lowercase letters, numbers, and underscores, "
+#~ "and must start with a letter."
+#~ msgstr ""
+#~ "Denumirile metrice trebuie să fie formate numai din litere, cifre și "
+#~ "caractere de subliniere și trebuie să înceapă cu o literă."
 
 #~ msgid "Exporter"
 #~ msgstr "Exportator"

@@ -13556,10 +13556,6 @@ msgid "Cisco Meraki device status"
 msgstr "Cisco Meraki デバイスステータス"
 
 #, fuzzy
-msgid "Cisco Meraki licensed devices"
-msgstr "Cisco Meraki Organisation Licensesの概要"
-
-#, fuzzy
 msgid "Cisco Meraki licenses overview"
 msgstr "Cisco Meraki Organisation Licensesの概要"
 
@@ -33229,6 +33225,22 @@ msgstr ""
 "インアドレスが省略されますが、\"すべてのアドレスにpingを実行する\"オプション"
 "には、メインアドレスと追加のアドレスの両方が含まれます。"
 
+#, fuzzy
+msgid ""
+"If you plan to monitor Azure resources via Azure Resource Manager, assign "
+"the built-in Reader role to the app at the subscription (or appropriate "
+"resource group) level in Access control (IAM). Additionally, if resources "
+"available through the Graph API will be monitored, add the Microsoft Graph "
+"application permissions \"Directory.Read.All\" and \"User.Read.All\" and "
+"grant admin consent. These resources include \"Users in Entra ID\", \"Entra "
+"Connect Sync\", and \"App Registrations\"."
+msgstr ""
+"アクセスコントロール(IAM)でアプリにビルトインロール \"Reader \"を割り当てま"
+"す。さらに、Graph API を通じて利用可能なリソースを監視する場合は、アプリにア"
+"プリケーション権限\"Directory.Read.All\"と\"User.Read.All\"を追加します。これ"
+"らのリソースには、\"Users in Entra ID\"、\"Entra Connect Sync\"、\"App "
+"Registrations\"が含まれます。"
+
 #, python-format
 msgid "If you purchased your license through a %s, please contact them."
 msgstr "ライセンスを%sで購入した場合は、そちらに連絡してください。"
@@ -37843,10 +37855,6 @@ msgstr "ライセンス"
 msgid "Licensed active metric series"
 msgstr "ライセンス対象サービス"
 
-#, fuzzy
-msgid "Licensed devices"
-msgstr "ライセンス対象サービス"
-
 msgid "Licensed phase: too many services."
 msgstr "ライセンス段階：サービスが多すぎます。"
 
@@ -41917,9 +41925,6 @@ msgstr "PDUまたはルールからレベルが欠落"
 #, python-format
 msgid "Missing needed %s parameter."
 msgstr "必要な %s パラメータがありません。"
-
-msgid "Missing needed custom_graph parameter."
-msgstr "必要なcustom_graphパラメーターがありません。"
 
 msgid "Missing needed host parameter."
 msgstr "必要なホストパラメータがありません。"
@@ -53478,6 +53483,15 @@ msgstr ""
 "トには、パスワードのような機密情報が含まれている可能性があることに注意してく"
 "ださい。"
 
+#, fuzzy
+msgid ""
+"Register an app in Entra ID. Note down the Directory (tenant) ID and "
+"Application (client) ID. Additionally, note down one or more Subscription "
+"IDs if you plan to monitor Azure Resource Manager (ARM) resources."
+msgstr ""
+"Entra ID にアプリを登録します。ディレクトリ（テナント）ID、アプリケーション"
+"（クライアント）ID、および使用したサブスクリプション ID をメモしてください。"
+
 msgid ""
 "Register an app in Entra ID. Note down the Directory (tenant) ID, "
 "Application (client) ID as well as the used Subscription ID."
@@ -55226,6 +55240,14 @@ msgstr "リターンコードクラス 5xx（サーバーエラー）"
 
 msgid "Return process times within performance data"
 msgstr "パフォーマンスデータ内のプロセス時間を返す"
+
+#, fuzzy
+msgid ""
+"Return to Checkmk, define a unique configuration name, and enter the tenant "
+"ID, client ID, client secret, and subscription ID(s) (if applicable) below."
+msgstr ""
+"Checkmkに戻り、一意の構成名を設定し、以下のアクセスキーIDとシークレットアクセ"
+"スキーを使用してください。"
 
 #, fuzzy
 msgid ""
@@ -57389,8 +57411,12 @@ msgstr ""
 "LDAPディレクトリのベースとなるソフトウェアを選択します。選択内容に応じて、"
 "LDAPクエリで使用される属性名などが変更されます。"
 
-msgid "Select the subscriptions you want to monitor."
-msgstr "監視したいサブスクリプションを選択してください。"
+msgid ""
+"Select the subscriptions containing the ARM resources you want to monitor.If "
+"you do not wish to monitor ARM resources, select 'Do not monitor "
+"subscriptions.'If you proceed with a subscription, you will be able to "
+"choose specific resources to monitor in the next step."
+msgstr ""
 
 msgid ""
 "Select the type of authentication to use when connecting to the Oracle "
@@ -89409,9 +89435,6 @@ msgstr ""
 msgid "Please configure the following filters: "
 msgstr "次のデフォルトを使用"
 
-msgid "Success! Your runtime filters have been applied"
-msgstr ""
-
 #, fuzzy
 msgid "pre-selected"
 msgstr "選択済み"
@@ -90295,14 +90318,6 @@ msgstr "show moreがアクティブな場合にのみ %s を表示します"
 #, fuzzy
 msgid "Show in dropdown menus"
 msgstr "ドロップダウンメニューでこの %sを非表示にする"
-
-#, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファベッ"
-"ト、または数字で始まる必要があります。"
 
 #, fuzzy
 msgid "Dashboard settings of %{name}"
@@ -92105,6 +92120,10 @@ msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Window
 msgid "Network devices and SNMP"
 msgstr "ネットワークスキャン"
 
+#, fuzzy
+msgid "Cloud platforms"
+msgstr "Google Cloud Platform"
+
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
 
@@ -92370,6 +92389,28 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Cisco Meraki licensed devices"
+#~ msgstr "Cisco Meraki Organisation Licensesの概要"
+
+#, fuzzy
+#~ msgid "Licensed devices"
+#~ msgstr "ライセンス対象サービス"
+
+#~ msgid "Missing needed custom_graph parameter."
+#~ msgstr "必要なcustom_graphパラメーターがありません。"
+
+#~ msgid "Select the subscriptions you want to monitor."
+#~ msgstr "監視したいサブスクリプションを選択してください。"
+
+#, fuzzy
+#~ msgid ""
+#~ "Unique ID must only contain lowercase letters, numbers, and underscores, "
+#~ "and must start with a letter."
+#~ msgstr ""
+#~ "メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファ"
+#~ "ベット、または数字で始まる必要があります。"
 
 #~ msgid "Exporter"
 #~ msgstr "エクスポーター"

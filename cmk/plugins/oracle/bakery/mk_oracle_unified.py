@@ -8,7 +8,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Literal, NamedTuple, NotRequired, TypedDict
+from typing import Literal, NamedTuple
 
 import yaml
 from pydantic import BaseModel
@@ -164,70 +164,70 @@ class GuiConfig(BaseModel):
     instances: list[GuiInstanceConf] | None = None
 
 
-class OracleAdditionalOptions(TypedDict):
-    max_connections: NotRequired[int]
-    max_queries: NotRequired[int]
-    ignore_db_name: NotRequired[int]
-    use_host_client: NotRequired[str]
+class OracleAdditionalOptions(BaseModel):
+    max_connections: int | None = None
+    max_queries: int | None = None
+    ignore_db_name: int | None = None
+    use_host_client: str | None = None
 
 
-class OracleDiscovery(TypedDict):
+class OracleDiscovery(BaseModel):
     enabled: bool
-    include: NotRequired[list[str]]
-    exclude: NotRequired[list[str]]
+    include: list[str] | None = None
+    exclude: list[str] | None = None
 
 
-class OracleSection(TypedDict):
-    is_async: NotRequired[bool]
+class OracleSection(BaseModel):
+    is_async: bool | None = None
 
 
-class OracleAuth(TypedDict):
-    username: NotRequired[str]
-    password: NotRequired[str]
-    role: NotRequired[str]
-    type: NotRequired[str]
+class OracleAuth(BaseModel):
+    username: str | None = None
+    password: str | None = None
+    role: str | None = None
+    type: str | None = None
 
 
-class OracleConnection(TypedDict):
+class OracleConnection(BaseModel):
     hostname: str
-    port: NotRequired[int]
-    timeout: NotRequired[int]
-    tns_admin: NotRequired[str]
-    oracle_local_registry: NotRequired[str]
-    service_name: NotRequired[str]
-    instance: NotRequired[str]
+    port: int | None = None
+    timeout: int | None = None
+    tns_admin: str | None = None
+    oracle_local_registry: str | None = None
+    service_name: str | None = None
+    instance: str | None = None
 
 
-class OracleInstanceAuth(TypedDict):
-    username: NotRequired[str]
-    password: NotRequired[str]
-    role: NotRequired[str]
-    type: NotRequired[str]
+class OracleInstanceAuth(BaseModel):
+    username: str | None = None
+    password: str | None = None
+    role: str | None = None
+    type: str | None = None
 
 
-class OracleInstanceAdditionalOptions(TypedDict):
-    ignore_db_name: NotRequired[int]
-    use_host_client: NotRequired[str]
+class OracleInstanceAdditionalOptions(BaseModel):
+    ignore_db_name: int | None = None
+    use_host_client: str | None = None
 
 
-class OracleInstance(TypedDict):
-    service_name: NotRequired[str]
-    instance_name: NotRequired[str]
-    authentication: NotRequired[OracleInstanceAuth]
-    connection: NotRequired[OracleConnection]
+class OracleInstance(BaseModel):
+    service_name: str | None = None
+    instance_name: str | None = None
+    authentication: OracleInstanceAuth | None = None
+    connection: OracleConnection | None = None
 
 
-class OracleMain(TypedDict):
+class OracleMain(BaseModel):
     authentication: OracleAuth
-    connection: OracleConnection
-    options: NotRequired[OracleAdditionalOptions]
-    cache_age: NotRequired[int]
-    discovery: NotRequired[OracleDiscovery]
-    sections: NotRequired[Sequence[Mapping[str, OracleSection]]]
-    instances: NotRequired[list[OracleInstance]]
+    connection: OracleConnection | None
+    options: OracleAdditionalOptions | None = None
+    cache_age: int | None = None
+    discovery: OracleDiscovery | None = None
+    sections: Sequence[Mapping[str, OracleSection]] | None = None
+    instances: list[OracleInstance] | None = None
 
 
-class OracleConfig(TypedDict):
+class OracleConfig(BaseModel):
     main: OracleMain
 
 
@@ -254,7 +254,7 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
 
 
 def _get_oracle_yaml_lines(config: GuiConfig) -> Iterable[str]:
-    result = {"oracle": OracleConfig(main=_get_oracle_dict(config))}
+    result = {"oracle": OracleConfig(main=_get_oracle_dict(config)).model_dump(exclude_none=True)}
     yield "---"
     yield from yaml.dump(result).splitlines()
 
@@ -263,22 +263,15 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
     main_config = config.main
     instances_config = config.instances
 
-    oracle_main = OracleMain(
+    return OracleMain(
         authentication=_get_oracle_authentication(main_config.auth),
         connection=_get_oracle_connection(main_config.connection),
+        options=_get_oracle_additional_options(main_config.options),
+        discovery=_get_oracle_discovery(main_config.discovery),
+        sections=_get_oracle_sections(main_config.sections),
+        instances=_get_oracle_instances(instances_config),
+        cache_age=main_config.get_active_cache_age(),
     )
-    if main_config.options and (
-        additional_options := _get_oracle_additional_options(main_config.options)
-    ):
-        oracle_main["options"] = additional_options
-    if main_config.discovery:
-        oracle_main["discovery"] = _get_oracle_discovery(main_config.discovery)
-    if main_config.sections:
-        oracle_main["sections"] = _get_oracle_sections(main_config.sections)
-    if instances_config:
-        oracle_main["instances"] = _get_oracle_instances(instances_config)
-    oracle_main["cache_age"] = main_config.get_active_cache_age()
-    return oracle_main
 
 
 def _get_oracle_authentication(
@@ -289,122 +282,124 @@ def _get_oracle_authentication(
         case (OracleAuthType.WALLET, _):
             return OracleAuth(type=OracleAuthType.WALLET.value)
         case (OracleAuthType.STANDARD, GuiAuthUserPasswordData() as auth_data):
-            auth = OracleAuth(
+            return OracleAuth(
                 username=auth_data.username,
                 password=auth_data.password.revealed,
                 type=OracleAuthType.STANDARD.value,
+                role=auth_data.role,
             )
-            if role := auth_data.role:
-                auth["role"] = role
-            return auth
         case _:
             raise ValueError(f"Unsupported authentication type: {auth_type}")
 
 
-def _get_oracle_connection(conn: GuiConnectionConf) -> OracleConnection:
-    connection = OracleConnection(hostname=conn.host)
-    if hostname := conn.host:
-        connection["hostname"] = hostname
-    if port := conn.port:
-        connection["port"] = port
-    if timeout := conn.timeout:
-        connection["timeout"] = timeout
-    if tns_admin := conn.tns_admin:
-        connection["tns_admin"] = tns_admin
-    if oracle_local_registry := conn.oracle_local_registry:
-        connection["oracle_local_registry"] = oracle_local_registry
+def _get_oracle_connection(conn: GuiConnectionConf | None) -> OracleConnection | None:
+    if conn is None:
+        return None
+
+    service_name = None
+    instance = None
     if oracle_id := conn.oracle_id:
-        connection["service_name"] = oracle_id.service_name
-        if oracle_id.instance_name:
-            connection["instance"] = oracle_id.instance_name
-    return connection
+        service_name = oracle_id.service_name
+        instance = oracle_id.instance_name
+
+    return OracleConnection(
+        hostname=conn.host,
+        port=conn.port,
+        timeout=conn.timeout,
+        tns_admin=conn.tns_admin,
+        oracle_local_registry=conn.oracle_local_registry,
+        service_name=service_name,
+        instance=instance,
+    )
 
 
-def _get_oracle_additional_options(options: GuiAdditionalOptionsConf) -> OracleAdditionalOptions:
-    result: OracleAdditionalOptions = {}
-    if options.max_connections is not None:
-        result["max_connections"] = options.max_connections
-    if options.max_queries is not None:
-        result["max_queries"] = options.max_queries
-    if options.ignore_db_name is not None:
-        result["ignore_db_name"] = int(options.ignore_db_name)
+def _get_oracle_additional_options(
+    options: GuiAdditionalOptionsConf | None,
+) -> OracleAdditionalOptions | None:
+    if options is None:
+        return None
+    if (
+        (
+            options.oracle_client_library is None
+            or options.oracle_client_library.use_host_client is None
+        )
+        and options.ignore_db_name is None
+        and options.max_connections is None
+        and options.max_queries is None
+    ):
+        return None
+
+    use_host_client: str | None = None
     if options.oracle_client_library is not None:
         match options.oracle_client_library.use_host_client:
             case (("auto" | "never" | "always") as predefined, None):
-                result["use_host_client"] = predefined
+                use_host_client = predefined
             case ("custom", custom_path):
-                result["use_host_client"] = str(custom_path)
+                use_host_client = str(custom_path)
             case None:
                 pass
-    return result
+
+    return OracleAdditionalOptions(
+        max_connections=options.max_connections,
+        max_queries=options.max_queries,
+        ignore_db_name=int(options.ignore_db_name) if options.ignore_db_name is not None else None,
+        use_host_client=use_host_client,
+    )
 
 
-def _get_oracle_instance_additional_options(
-    options: GuiInstanceAdditionalOptionsConf,
-) -> OracleInstanceAdditionalOptions:
-    result: OracleInstanceAdditionalOptions = {}
-    if options.ignore_db_name is not None:
-        result["ignore_db_name"] = int(options.ignore_db_name)
-    if options.oracle_client_library is not None:
-        match options.oracle_client_library.use_host_client:
-            case (("auto" | "never" | "always") as predefined, None):
-                result["use_host_client"] = predefined
-            case ("custom", custom_path):
-                result["use_host_client"] = str(custom_path)
-            case None:
-                pass
-    return result
+def _get_oracle_discovery(discovery: GuiDiscoveryConf | None) -> OracleDiscovery | None:
+    if discovery is None:
+        return None
 
-
-def _get_oracle_discovery(discovery: GuiDiscoveryConf) -> OracleDiscovery:
-    result: OracleDiscovery = {"enabled": discovery.enabled}
-    if discovery.include:
-        result["include"] = discovery.include
-    if discovery.exclude:
-        result["exclude"] = discovery.exclude
-    return result
+    return OracleDiscovery(
+        enabled=discovery.enabled,
+        include=discovery.include or None,
+        exclude=discovery.exclude or None,
+    )
 
 
 def _get_oracle_sections(
-    sections: GuiSectionOptions,
-) -> Sequence[Mapping[str, OracleSection]]:
+    sections: GuiSectionOptions | None,
+) -> Sequence[Mapping[str, OracleSection]] | None:
+    if sections is None:
+        return None
+
     result: list[dict[str, OracleSection]] = []
     for section_name, mode in sections.items():
-        oracle_section: OracleSection = {}
         match mode:
             case "synchronous":
-                oracle_section["is_async"] = False
+                result.append({section_name: OracleSection(is_async=False)})
             case "asynchronous":
-                oracle_section["is_async"] = True
+                result.append({section_name: OracleSection(is_async=True)})
             case "disabled":
                 continue
-        result.append({section_name: oracle_section})
     return result
 
 
 def _get_oracle_instance_authentication(
-    auth_config: tuple[OracleAuthType, GuiInstanceAuthUserPasswordData | None],
-) -> OracleInstanceAuth:
-    auth = OracleInstanceAuth()
+    auth_config: tuple[OracleAuthType, GuiInstanceAuthUserPasswordData | None] | None,
+) -> OracleInstanceAuth | None:
+    if auth_config is None:
+        return None
+
     match auth_config:
         case (OracleAuthType.WALLET, _):
-            auth["type"] = OracleAuthType.WALLET.value
-            return auth
+            return OracleInstanceAuth(type=OracleAuthType.WALLET.value)
         case (OracleAuthType.STANDARD, GuiInstanceAuthUserPasswordData() as auth_data):
-            if username := auth_data.username:
-                auth["username"] = username
-            if password := auth_data.password:
-                auth["password"] = password.revealed
-            if role := auth_data.role:
-                auth["role"] = role
-            if auth_type := auth_config[0]:
-                auth["type"] = auth_type.value
-            return auth
+            return OracleInstanceAuth(
+                username=auth_data.username,
+                password=auth_data.password.revealed if auth_data.password else None,
+                role=auth_data.role,
+                type=auth_config[0].value,
+            )
         case _:
             raise ValueError(f"Unsupported authentication type: {auth_config[0]}")
 
 
-def _get_oracle_instances(instances: list[GuiInstanceConf]) -> list[OracleInstance]:
+def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[OracleInstance] | None:
+    if instances is None:
+        return None
+
     result: list[OracleInstance] = []
     for instance in instances:
         if (
@@ -414,16 +409,13 @@ def _get_oracle_instances(instances: list[GuiInstanceConf]) -> list[OracleInstan
             and instance.connection is None
         ):
             continue
-        inst_dict: OracleInstance = {}
-        if instance.service_name:
-            inst_dict["service_name"] = instance.service_name
-        if instance.instance_name:
-            inst_dict["instance_name"] = instance.instance_name
-        if instance.auth:
-            inst_dict["authentication"] = _get_oracle_instance_authentication(instance.auth)
-        if instance.connection:
-            inst_dict["connection"] = _get_oracle_connection(instance.connection)
-        result.append(inst_dict)
+        oracle_instance = OracleInstance(
+            service_name=instance.service_name,
+            instance_name=instance.instance_name,
+            authentication=_get_oracle_instance_authentication(instance.auth),
+            connection=_get_oracle_connection(instance.connection),
+        )
+        result.append(oracle_instance)
     return result
 
 

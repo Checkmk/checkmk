@@ -2883,9 +2883,9 @@ time-machine==3.2.0 \
     --hash=sha256:e0d90bee170b219e1d15e6a58164aa808f5170090e4f090bd0670303e34181b1 \
     --hash=sha256:f09abeb8f03f044d72712207e0489a62098ad3ad16dac38927fcf80baca4d6a7
     # via -r packages/cmk-crypto/requirements.txt
-tqdm==4.67.1 \
-    --hash=sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2 \
-    --hash=sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2
+tqdm==4.67.2 \
+    --hash=sha256:649aac53964b2cb8dec76a14b405a4c0d13612cb8933aae547dd144eacc99653 \
+    --hash=sha256:9a12abcbbff58b6036b2167d9d3853042b9d436fe7330f06ae047867f2f8e0a7
     # via pysmb
 types-markdown==3.7.0.20241204 \
     --hash=sha256:ecca2b25cd23163fd28ed5ba34d183d731da03e8a5ed3a20b60daded304c5410 \

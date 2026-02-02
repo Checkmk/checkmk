@@ -50,7 +50,6 @@ from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
-    load_tree,
     make_meta,
     MutableTree,
     RawIntervalFromConfig,
@@ -2557,6 +2556,11 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
     inventory_plugins = InventoryPluginMapper()
 
+    tree_or_archive_store = TreeOrArchiveStore(
+        cmk.utils.paths.inventory_output_dir,
+        cmk.utils.paths.inventory_archive_dir,
+    )
+
     for hostname in hostnames:
 
         def section_error_handling(
@@ -2583,7 +2587,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         section.section_begin(hostname)
         section.section_step("Inventorizing")
         try:
-            previous_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
+            previous_tree = tree_or_archive_store.load_previous(host_name=hostname)
             if hostname in hosts_config.clusters:
                 check_results = inventory.inventorize_cluster(
                     config_cache.nodes(hostname),

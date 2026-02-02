@@ -21,10 +21,7 @@ from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
-from cmk.gui.dashboard.type_defs import (
-    ABCGraphDashletConfig,
-    DashletSize,
-)
+from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
     get_graph_plugin_and_single_metric_choices,
@@ -68,7 +65,7 @@ from cmk.gui.visuals import (
 )
 from cmk.utils.servicename import ServiceName
 
-from ..base import Dashlet
+from ..base import Dashlet, RelativeLayoutConstraints, WidgetSize
 from .status_helpers import make_mk_missing_data_error
 
 GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID = "available_graph_templates"
@@ -141,12 +138,12 @@ TGraphSpec = TypeVar("TGraphSpec", bound=GraphSpecification)
 
 class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
     @classmethod
-    def initial_size(cls) -> DashletSize:
-        return (60, 21)
-
-    @classmethod
     def has_context(cls) -> bool:
         return True
+
+    @classmethod
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints(initial_size=WidgetSize(width=60, height=21))
 
     def infos(self) -> SingleInfos:
         return ["host", "service"]

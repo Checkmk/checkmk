@@ -7,6 +7,7 @@
 
 import abc
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass, field
 from typing import Generic, TypeVar
 
 from cmk.gui import visuals
@@ -15,20 +16,37 @@ from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.utils.macros import replace_macros_in_str
 
 from ..title_macros import macro_mapping_from_context
-from ..type_defs import (
-    DashletConfig,
-    DashletPosition,
-    DashletSize,
-)
+from ..type_defs import DashletConfig
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class WidgetPositon:
+    x: int
+    y: int
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class WidgetSize:
+    width: int
+    height: int
+
+    def to_tuple(self) -> tuple[int, int]:
+        return self.width, self.height
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class RelativeLayoutConstraints:
+    initial_position: WidgetPositon = field(default_factory=lambda: WidgetPositon(x=1, y=1))
+    initial_size: WidgetSize = field(default_factory=lambda: WidgetSize(width=12, height=12))
+    minimum_size: WidgetSize = field(default_factory=lambda: WidgetSize(width=12, height=12))
+    is_resizable: bool = True
+
 
 T = TypeVar("T", bound=DashletConfig)
 
 
 class Dashlet(abc.ABC, Generic[T]):
     """Base class for all dashboard dashlet implementations"""
-
-    # Minimum width and height of dashlets in raster units
-    minimum_size: DashletSize = (12, 12)
 
     @classmethod
     @abc.abstractmethod
@@ -71,19 +89,8 @@ class Dashlet(abc.ABC, Generic[T]):
         return True
 
     @classmethod
-    def is_resizable(cls) -> bool:
-        """Whether or not the user may resize this dashlet"""
-        return True
-
-    @classmethod
-    def initial_size(cls) -> DashletSize:
-        """The initial size of dashlets when being added to the dashboard"""
-        return cls.minimum_size
-
-    @classmethod
-    def initial_position(cls) -> DashletPosition:
-        """The initial position of dashlets when being added to the dashboard"""
-        return (1, 1)
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints()
 
     def __init__(
         self,

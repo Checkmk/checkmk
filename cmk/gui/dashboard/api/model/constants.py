@@ -27,9 +27,12 @@ RESPONSIVE_GRID_BREAKPOINTS: dict[ResponsiveGridBreakpoint, _BreakpointConfig] =
 
 
 @api_model
-class RelativeLayoutConstraints:
+class RelativeLayoutConstraintsModel:
     initial_size: WidgetRelativeGridSize = api_field(
         description="Initial size as (width, height) in relative grid units."
+    )
+    minimum_size: WidgetRelativeGridSize = api_field(
+        description="Minimum size as (width, height) in relative grid units."
     )
     initial_position: WidgetRelativeGridPosition = api_field(
         description="Initial position as (x, y) in relative grid units."
@@ -38,8 +41,8 @@ class RelativeLayoutConstraints:
 
 
 @api_model
-class LayoutConstraints:
-    relative: RelativeLayoutConstraints
+class LayoutConstraintsModel:
+    relative: RelativeLayoutConstraintsModel
 
 
 @api_model
@@ -54,7 +57,7 @@ class FilterContextConstants:
 
 @api_model
 class WidgetConstraints:
-    layout: LayoutConstraints = api_field(description="Layout constraints for the widget.")
+    layout: LayoutConstraintsModel = api_field(description="Layout constraints for the widget.")
     filter_context: FilterContextConstants = api_field(
         description="Filter context constraints for the widget type."
     )

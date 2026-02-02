@@ -9,7 +9,6 @@ from typing import override
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import DashletConfig, IFrameDashlet
-from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -19,6 +18,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.roles import UserPermissions
 
+from ..dashboard.dashlet.base import RelativeLayoutConstraints, WidgetSize
 from ._snapin import all_snapins, SidebarSnapin
 
 
@@ -46,8 +46,8 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         return 55
 
     @classmethod
-    def initial_size(cls) -> DashletSize:
-        return (28, 20)
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints(initial_size=WidgetSize(width=28, height=20))
 
     def default_display_title(self) -> str:
         return all_snapins(

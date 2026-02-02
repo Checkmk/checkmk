@@ -137,9 +137,6 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
 def test_dashlet_type_defaults() -> None:
     assert not Dashlet.single_infos()
     assert Dashlet.is_selectable() is True
-    assert Dashlet.is_resizable() is True
-    assert Dashlet.initial_size() == Dashlet.minimum_size
-    assert Dashlet.initial_position() == (1, 1)
 
 
 def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:

@@ -8,10 +8,9 @@
 
 import abc
 
-from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.type_defs import SingleInfos
 
-from .base import Dashlet, T
+from .base import Dashlet, RelativeLayoutConstraints, T, WidgetSize
 
 __all__ = ["ABCFigureDashlet"]
 
@@ -30,10 +29,6 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
     def sort_index(cls) -> int:
         return 95
 
-    @classmethod
-    def initial_size(cls) -> DashletSize:
-        return (56, 40)
-
     def infos(self) -> SingleInfos:
         return ["host", "service"]
 
@@ -44,3 +39,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
     @classmethod
     def has_context(cls) -> bool:
         return True
+
+    @classmethod
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints(initial_size=WidgetSize(width=56, height=40))

@@ -14,7 +14,7 @@ from typing import Generic, NamedTuple, TypeVar
 from livestatus import MKLivestatusNotFoundError
 
 from cmk.gui import sites, visuals
-from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
+from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.figures import FigureResponseData
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -22,6 +22,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 
+from ..base import RelativeLayoutConstraints, WidgetSize
 from ..figure_dashlet import ABCFigureDashlet
 
 
@@ -213,12 +214,10 @@ class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         return 45
 
     @classmethod
-    def is_resizable(cls) -> bool:
-        return False
-
-    @classmethod
-    def initial_size(cls) -> DashletSize:
-        return (30, 18)
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints(
+            initial_size=WidgetSize(width=30, height=18), is_resizable=False
+        )
 
     def infos(self) -> SingleInfos:
         return ["host"]
@@ -242,12 +241,10 @@ class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         return 50
 
     @classmethod
-    def is_resizable(cls) -> bool:
-        return False
-
-    @classmethod
-    def initial_size(cls) -> DashletSize:
-        return (30, 18)
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints(
+            initial_size=WidgetSize(width=30, height=18), is_resizable=False
+        )
 
 
 class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
@@ -268,12 +265,10 @@ class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         return 55
 
     @classmethod
-    def is_resizable(cls) -> bool:
-        return False
-
-    @classmethod
-    def initial_size(cls) -> DashletSize:
-        return (30, 18)
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints(
+            initial_size=WidgetSize(width=30, height=18), is_resizable=False
+        )
 
     def infos(self) -> SingleInfos:
         return ["host", "event"]

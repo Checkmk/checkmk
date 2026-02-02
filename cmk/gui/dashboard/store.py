@@ -207,7 +207,7 @@ def _migrate_dashlets(
         if "size" not in dashlet:
             # dashlets with fixed sizes didn't save the size before
             dashlet_type = dashlet_registry[dashlet["type"]]
-            dashlet["size"] = dashlet_type.initial_size()
+            dashlet["size"] = dashlet_type.relative_layout_constraints().initial_size.to_tuple()
 
         if dashlet["type"] == "view":
             view_widget, embedded_view = _migrate_view_widget(cast(ViewDashletConfig, dashlet))

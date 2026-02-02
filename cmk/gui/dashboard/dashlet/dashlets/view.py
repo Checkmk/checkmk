@@ -11,10 +11,9 @@ from typing import cast, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.dashboard.dashlet.base import IFrameDashlet
+from cmk.gui.dashboard.dashlet.base import IFrameDashlet, RelativeLayoutConstraints, WidgetSize
 from cmk.gui.dashboard.type_defs import (
     ABCViewDashletConfig,
-    DashletSize,
     EmbeddedViewDashletConfig,
     LinkedViewDashletConfig,
     ViewDashletConfig,
@@ -116,12 +115,12 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         return 10
 
     @classmethod
-    def initial_size(cls) -> DashletSize:
-        return (40, 20)
-
-    @classmethod
     def has_context(cls) -> bool:
         return True
+
+    @classmethod
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints(initial_size=WidgetSize(width=40, height=20))
 
     def _get_infos_from_view_spec(self, view_spec: ViewSpec | ViewDashletConfig) -> SingleInfos:
         ds_name = view_spec["datasource"]

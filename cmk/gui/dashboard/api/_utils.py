@@ -39,8 +39,8 @@ from ..store import (
 from .model.constants import (
     DashboardConstantsResponse,
     FilterContextConstants,
-    LayoutConstraints,
-    RelativeLayoutConstraints,
+    LayoutConstraintsModel,
+    RelativeLayoutConstraintsModel,
     RESPONSIVE_GRID_BREAKPOINTS,
     ResponsiveGridBreakpointConfig,
     WidgetConstraints,
@@ -309,16 +309,23 @@ class DashboardConstants:
         widgets_metadata = {}
         for widget_type, widget in dashlet_registry.items():
             if api_type_name := INTERNAL_TO_API_TYPE_NAME.get(widget_type):
+                relative_constraints = widget.relative_layout_constraints()
                 widgets_metadata[api_type_name] = WidgetConstraints(
-                    layout=LayoutConstraints(
-                        relative=RelativeLayoutConstraints(
-                            initial_size=WidgetRelativeGridSize.from_internal(
-                                widget.initial_size()
+                    layout=LayoutConstraintsModel(
+                        relative=RelativeLayoutConstraintsModel(
+                            initial_size=WidgetRelativeGridSize(
+                                width=relative_constraints.initial_size.width,
+                                height=relative_constraints.initial_size.height,
                             ),
-                            initial_position=WidgetRelativeGridPosition.from_internal(
-                                widget.initial_position()
+                            minimum_size=WidgetRelativeGridSize(
+                                width=relative_constraints.minimum_size.width,
+                                height=relative_constraints.minimum_size.height,
                             ),
-                            is_resizable=widget.is_resizable(),
+                            initial_position=WidgetRelativeGridPosition(
+                                x=relative_constraints.initial_position.x,
+                                y=relative_constraints.initial_position.y,
+                            ),
+                            is_resizable=relative_constraints.is_resizable,
                         )
                     ),
                     filter_context=FilterContextConstants(

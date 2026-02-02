@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.dashboard.dashlet.base import IFrameDashlet
-from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
+from cmk.gui.dashboard.dashlet.base import IFrameDashlet, RelativeLayoutConstraints, WidgetSize
+from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.i18n import _
 
 
@@ -32,5 +32,5 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
         return 80
 
     @classmethod
-    def initial_size(cls) -> DashletSize:
-        return (30, 10)
+    def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
+        return RelativeLayoutConstraints(initial_size=WidgetSize(width=30, height=10))

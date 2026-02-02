@@ -2190,7 +2190,7 @@ class ModeTestNotifications(ModeNotifications):
             resp = sites.live().query(
                 "GET hosts\n"
                 "Columns: custom_variable_names custom_variable_values groups "
-                "contact_groups labels host_alias host_address contacts\n"
+                "contact_groups labels host_alias host_address contacts notes_url\n"
                 f"Filter: host_name = {hostname}\n"
             )
 
@@ -2210,6 +2210,7 @@ class ModeTestNotifications(ModeNotifications):
         context["HOSTALIAS"] = resp[0][6]
         context["HOSTADDRESS"] = resp[0][7]
         context["CONTACTS"] = ",".join(resp[0][8])
+        context["HOSTNOTESURL"] = resp[0][9]
         context["LASTHOSTSTATECHANGE"] = str(int(event_date))
 
     def _set_custom_variables(
@@ -2240,7 +2241,7 @@ class ModeTestNotifications(ModeNotifications):
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
             "GET services\n"
-            "Columns: custom_variable_names custom_variable_values groups contact_groups check_command labels contacts display_name\n"
+            "Columns: custom_variable_names custom_variable_values groups contact_groups check_command labels contacts display_name notes_url\n"
             "Filter: host_name = %s\nFilter: service_description = %s"
             % (hostname, context["SERVICEDESC"])
         )
@@ -2257,6 +2258,7 @@ class ModeTestNotifications(ModeNotifications):
         self._set_labels(context, resp[0][5], "SERVICE")
         context["CONTACTS"] = ",".join(resp[0][6])
         context["SERVICEDISPLAYNAME"] = resp[0][7]
+        context["SERVICENOTESURL"] = resp[0][8]
 
         context["LASTSERVICESTATECHANGE"] = str(int(event_date))
         context["SERVICEPROBLEMID"] = "notify_test_" + str(int(event_date * 1000000))

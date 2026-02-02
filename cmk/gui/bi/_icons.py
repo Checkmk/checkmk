@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import shlex
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
@@ -78,21 +77,10 @@ def _render_aggregation_icon(
     user_permissions: UserPermissions,
     icon_config: IconConfig,
 ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
-    # service_check_command looks like:
-    # u"check_mk_active-bi_aggr!... '-b' 'http://localhost/$HOSTNAME$' ... '-a' 'Host foobar' ..."
-    bi_aggr_check = row.get("service_check_command", "").startswith("check_mk_active-bi_aggr!")
+    is_bi_aggr_check = row.get("service_check_command", "").startswith("check_mk-bi_aggregation")
 
-    if what != "service" or not bi_aggr_check:
+    if what != "service" or not is_bi_aggr_check:
         return None
-
-    command = row["service_check_command"]
-    address = row["host_address"]
-    name = row["host_name"]
-
-    args = shlex.split(command)
-
-    raw_aggr_name = args[4] if "stored_passwords" in args[0] else args[3]
-    aggr_name = raw_aggr_name.replace("$HOSTADDRESS$", address).replace("$HOSTNAME$", name)
 
     return (
         StaticIcon(IconNames.aggr),
@@ -101,7 +89,7 @@ def _render_aggregation_icon(
             request,
             [
                 ("view_name", "aggr_single"),
-                ("aggr_name", aggr_name),
+                ("aggr_name", row["service_description"].removeprefix("Aggr ")),
             ],
             filename="view.py",
         ),

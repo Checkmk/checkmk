@@ -126,13 +126,14 @@ def get_oauth2_connection(
     if oauth2_connection_id not in load_oauth2_connections():
         raise KeyError(f"OAuth2 connection with ident '{oauth2_connection_id}' does not exist")
 
-    item = load_oauth2_connections()[oauth2_connection_id]
-    form_spec = OAuth2ConnectionSetup(connector_type=item["connector_type"])
+    connection = load_oauth2_connections()[oauth2_connection_id]
+    form_spec = OAuth2ConnectionSetup(connector_type=connection["connector_type"])
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
-    _, values = visitor.to_vue(RawDiskData(item))
+    _, values = visitor.to_vue(
+        RawDiskData({k: v for k, v in connection.items() if k != "connector_type"})
+    )
     assert isinstance(values, Mapping)
-
     return OAuth2ConnectionData(
-        description=item["title"],
+        description=connection["title"],
         data={**values, **{"ident": oauth2_connection_id}},
     )

@@ -49,7 +49,10 @@ from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
-from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
+from cmk.base.core.active_config_layout import (
+    RELATIVE_PATH_SECRETS,
+    RELATIVE_PATH_TRUSTED_CAS,
+)
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
@@ -122,7 +125,11 @@ from cmk.inventory.structured_data import (
     SDPath,
 )
 from cmk.piggyback import backend as piggyback_backend
-from cmk.server_side_calls_backend import ExecutableFinder, load_active_checks, load_secrets_file
+from cmk.server_side_calls_backend import (
+    ExecutableFinder,
+    load_active_checks,
+    load_secrets_file,
+)
 from cmk.snmplib import (
     get_single_oid,
     OID,
@@ -3129,7 +3136,7 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
         section.section_begin(hostname)
         section.section_step("Inventorizing")
         try:
-            previous_tree = inv_store.load_inventory_tree(host_name=hostname)
+            previous_tree = inv_store.load_previous_inventory_tree(host_name=hostname)
             if hostname in hosts_config.clusters:
                 check_results = inventory.inventorize_cluster(
                     config_cache.nodes(hostname),

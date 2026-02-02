@@ -38,7 +38,12 @@ const isDisabled = (id: string): boolean => {
 </script>
 
 <template>
-  <CmkSlideIn :open="props.open" :size="'small'" @close="$emit('close')">
+  <CmkSlideIn
+    :open="props.open"
+    :size="'small'"
+    :aria-label="_t('Add widget')"
+    @close="$emit('close')"
+  >
     <WizardStageContainer>
       <CmkHeading type="h1">
         {{ _t('Add widget') }}

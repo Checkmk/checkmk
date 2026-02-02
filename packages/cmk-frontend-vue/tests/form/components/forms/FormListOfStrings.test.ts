@@ -3,10 +3,44 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, screen } from '@testing-library/vue'
+import userEvent from '@testing-library/user-event'
+import { fireEvent, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import { Response } from '@/components/CmkSuggestions'
+
 import { renderForm } from '../cmk-form-helper'
+
+vi.mock(import('@/form/private/FormAutocompleter/autocompleter'), async (importOriginal) => {
+  const mod = await importOriginal()
+  return {
+    ...mod,
+    fetchSuggestions: vi.fn(async () => {
+      return new Response([])
+    })
+  }
+})
+
+const stringFormSpecWithAutocompleter: FormSpec.String = {
+  type: 'string',
+  title: 'barTitle',
+  help: 'barHelp',
+  label: null,
+  validators: [],
+  input_hint: 'Search...',
+  autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+  field_size: 'SMALL'
+}
+
+const specWithAutocompleter: FormSpec.ListOfStrings = {
+  type: 'list_of_strings',
+  title: 'fooTitle',
+  help: 'fooHelp',
+  layout: 'vertical',
+  validators: [],
+  string_spec: stringFormSpecWithAutocompleter,
+  string_default_value: ''
+}
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -164,4 +198,62 @@ test('FormListOfStrings paste with leading/trailing whitespace trims correctly',
   expect(updatedElements[1]!.value).toBe('value2')
   expect(updatedElements[2]!.value).toBe('value3')
   expect(updatedElements[3]!.value).toBe('')
+})
+
+test('FormListOfStrings autocompleter paste with semicolons splits correctly', async () => {
+  await renderForm({
+    spec: specWithAutocompleter,
+    data: [],
+    backendValidation: []
+  })
+
+  // Get the first combobox role element which is the autocompleter  (second one is the clear button)
+  const comboboxElements = screen.getAllByRole('combobox')
+  const autocompleter = comboboxElements[0]!
+
+  await userEvent.click(autocompleter)
+  const filterInput = screen.getByRole<HTMLInputElement>('textbox')
+
+  const pasteData = 'value1;value2;;value3'
+  await fireEvent.paste(filterInput, {
+    clipboardData: {
+      getData: () => pasteData
+    }
+  })
+
+  // verify we have 8 elements (4 autocompleters + 1 clear button each)
+  const updatedComboboxElements = screen.getAllByRole('combobox')
+  expect(updatedComboboxElements.length).toBe(8)
+})
+
+test('FormListOfStrings autocompleter paste without semicolons remains in filter to be edited', async () => {
+  await renderForm({
+    spec: specWithAutocompleter,
+    data: [],
+    backendValidation: []
+  })
+
+  const comboboxElements = screen.getAllByRole('combobox')
+  const autocompleter = comboboxElements[0]!
+
+  await userEvent.click(autocompleter)
+  const filterInput = screen.getByRole<HTMLInputElement>('textbox')
+
+  const pasteData = 'value1'
+
+  await fireEvent.paste(filterInput, {
+    clipboardData: {
+      getData: () => pasteData
+    }
+  })
+
+  await fireEvent.update(filterInput, pasteData)
+
+  await waitFor(() => {
+    const updatedInput = screen.getByRole<HTMLInputElement>('textbox')
+    expect(updatedInput.value).toBe(pasteData)
+  })
+
+  const updatedComboboxElements = screen.getAllByRole('combobox')
+  expect(updatedComboboxElements.length).toBe(2)
 })

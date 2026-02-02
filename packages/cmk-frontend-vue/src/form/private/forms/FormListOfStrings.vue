@@ -66,13 +66,18 @@ function checkAutoextend(): void {
 }
 
 function onPaste(e: ClipboardEvent, index: number) {
-  e.preventDefault()
   // Get pasted data via clipboard API
   const clipboardData = e.clipboardData
   if (clipboardData === null) {
     return
   }
   const pasted = clipboardData.getData('Text')
+  const hasSeparator = pasted.includes(';')
+  if (!hasSeparator) {
+    return
+  }
+
+  e.preventDefault()
   // When pasting a string, trim separators and then split by the given separators
   const entries = pasted
     .split(new RegExp('[;]+'))

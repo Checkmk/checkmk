@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { computed, onBeforeMount, ref, watch } from 'vue'
+import { computed, onBeforeMount, ref } from 'vue'
 
 import {
   type UseWidgetVisualizationOptions,
@@ -14,7 +14,6 @@ import type {
   UserMessagesContent,
   WidgetProps
 } from '@/dashboard/components/Wizard/types'
-import { useDebounceFn } from '@/dashboard/composables/useDebounce'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
@@ -58,9 +57,7 @@ export function useUserMessages(
     })
   )
 
-  const widgetProps = ref<WidgetProps>(_buildWidgetProps())
-
-  function _buildWidgetProps(): WidgetProps {
+  const widgetProps = computed<WidgetProps>(() => {
     return {
       general_settings: widgetGeneralSettings.value,
       content,
@@ -72,14 +69,7 @@ export function useUserMessages(
         dashboardConstants
       )
     }
-  }
-  watch(
-    [widgetGeneralSettings, usesInfos],
-    useDebounceFn(() => {
-      widgetProps.value = _buildWidgetProps()
-    }, 300),
-    { deep: true }
-  )
+  })
 
   return {
     title,

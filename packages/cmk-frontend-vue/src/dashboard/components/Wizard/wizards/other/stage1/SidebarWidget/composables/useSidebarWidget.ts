@@ -10,7 +10,6 @@ import {
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type { UseWidgetHandler, WidgetProps } from '@/dashboard/components/Wizard/types'
-import { useDebounceFn } from '@/dashboard/composables/useDebounce'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { SidebarElementContent, WidgetSpec } from '@/dashboard/types/widget'
@@ -55,26 +54,6 @@ export function useSidebarWidget(
     if (!newElements.some((el) => el.id === elementName.value)) {
       elementName.value = newElements[0]!.id
     }
-    if (title.value === '') {
-      const defaultTitle = newElements.find((el) => el.id === elementName.value)?.title
-      if (defaultTitle) {
-        title.value = defaultTitle
-      }
-    }
-  })
-
-  watch([title, elementName], ([newTitle, newElementName], [oldTitle, oldElementName]) => {
-    // if the user has not customized the title (or it's empty), update it when the element changes
-    if (oldTitle !== newTitle) {
-      return
-    }
-    const oldDefaultTitle = sidebarElements.value.find((el) => el.id === oldElementName)?.title
-    if (newTitle === oldDefaultTitle || newTitle === '') {
-      const newDefaultTitle = sidebarElements.value.find((el) => el.id === newElementName)?.title
-      if (newDefaultTitle) {
-        title.value = newDefaultTitle
-      }
-    }
   })
 
   const content = computed<SidebarElementContent>(() => {
@@ -100,9 +79,7 @@ export function useSidebarWidget(
     })
   )
 
-  const widgetProps = ref<WidgetProps>(_buildWidgetProps())
-
-  function _buildWidgetProps(): WidgetProps {
+  const widgetProps = computed<WidgetProps>(() => {
     return {
       general_settings: widgetGeneralSettings.value,
       content: content.value,
@@ -114,14 +91,7 @@ export function useSidebarWidget(
         dashboardConstants
       )
     }
-  }
-  watch(
-    [widgetGeneralSettings, usesInfos, content],
-    useDebounceFn(() => {
-      widgetProps.value = _buildWidgetProps()
-    }, 300),
-    { deep: true }
-  )
+  })
 
   function validate(): boolean {
     const validElementName = sidebarElements.value.some((el) => el.id === elementName.value)

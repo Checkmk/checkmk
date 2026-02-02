@@ -9,9 +9,14 @@ from pathlib import Path
 
 from clickhouse_connect.driver.exceptions import ClickHouseError
 
-from cmk.metric_backend import monitor
-from cmk.metric_backend.client import ClickHouseClient, make_raw_read_only_client
-from cmk.metric_backend.config import ConfigMetricBackendSelfHosted
+from cmk.metric_backend import monitor  # type: ignore[import-untyped, unused-ignore]
+from cmk.metric_backend.client import (  # type: ignore[import-untyped, unused-ignore]
+    ClickHouseClient,
+    make_raw_read_only_client,
+)
+from cmk.metric_backend.config import (
+    ConfigMetricBackendSelfHosted,  # type: ignore[import-untyped, unused-ignore]
+)
 from cmk.utils.licensing.usage import (
     get_license_usage_report_file_path,
     load_raw_license_usage_report,

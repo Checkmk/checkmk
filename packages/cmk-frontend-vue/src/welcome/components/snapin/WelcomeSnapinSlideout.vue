@@ -26,14 +26,13 @@ interface CmkWindow extends Window {
 
 const { _t } = usei18n()
 
+const slideInOpen = defineModel<boolean>('slideInOpen', { required: true })
+const stageInformation = defineModel<StageInformation>('stageInformation', { required: true })
 const props = defineProps<{
   cards: WelcomeCards
-  stage_information: StageInformation
 }>()
 
 const cards = ref<WelcomeCards>(props.cards)
-const stageInformation = ref<StageInformation>(props.stage_information)
-const slideInOpen = defineModel<boolean>({ required: true })
 const nextStepsTitle = _t('Next steps with Checkmk')
 const firstStepsTitle = _t('Topics to explore')
 
@@ -51,6 +50,7 @@ async function stepCompleted(stepId: StepId): Promise<void> {
       }
     })
 
+    // Update progress in welcome page if opened in main iframe
     const mainIframe = (top!.frames as CmkWindow).main
     if (mainIframe && mainIframe.location.href.indexOf('welcome.py') >= 0) {
       mainIframe.location.reload()

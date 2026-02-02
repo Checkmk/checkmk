@@ -38,6 +38,8 @@ tokio = { workspace = true, features = [
 # tokio-rustls = "0.24.1"
 tokio-util = { workspace = true, features = ["compat"] }
 yaml-rust2.workspace = true
+regex = "1.12.2"
+sysinfo = "0.38.0"
 
 [target.'cfg(windows)'.dependencies]
 winreg.workspace = true

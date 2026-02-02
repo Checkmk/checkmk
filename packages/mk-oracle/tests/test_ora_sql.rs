@@ -622,9 +622,23 @@ fn test_locks_last() {
         // or
         // FREE|||||||||||||||||
         // Let's QA team checks correctness
-        assert!(rows[0].starts_with(format!("{}.CDB$ROOT|", get_instance(endpoint)).as_str()));
-        assert!(rows[1].starts_with(format!("{0}.{0}PDB1|", get_instance(endpoint)).as_str()));
-        assert!(rows[2].starts_with(format!("{}|", get_instance(endpoint)).as_str()));
+        let instance = get_instance(endpoint);
+        let instance_name = instance.as_str();
+        assert!(
+            rows[0].starts_with(format!("{}.CDB$ROOT|", instance_name).as_str()),
+            "expected {instance_name} {}",
+            rows[0]
+        );
+        assert!(
+            rows[1].starts_with(format!("{0}.{0}PDB1|", instance_name).as_str()),
+            "expected {instance_name} {}",
+            rows[1]
+        );
+        assert!(
+            rows[2].starts_with(format!("{}|", instance_name).as_str()),
+            "expected {instance_name} {}",
+            rows[2]
+        );
     }
 }
 
@@ -1762,4 +1776,19 @@ SQLNET.WALLET_OVERRIDE = TRUE
     );
 
     assert_eq!(content, expected);
+}
+
+#[test]
+#[cfg(unix)]
+fn test_find_sids() {
+    use mk_oracle::ora_sql::detect::find_sids_by_processes;
+
+    if std::env::var("TEST_WORKSPACE").is_ok() {
+        eprintln!("Skipping test_find_sids if TEST_WORKSPACE is set(Bazel sandboxing)");
+        return;
+    }
+    const TEST_MASK: &str = r"^(/usr/lib/systemd/systemd)(.*)$";
+    let sids = find_sids_by_processes(Some(TEST_MASK)).unwrap();
+    assert!(sids.len() > 2);
+    assert!(sids.contains("-logind"));
 }

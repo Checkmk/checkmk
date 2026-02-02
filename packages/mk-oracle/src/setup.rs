@@ -46,6 +46,9 @@ pub struct Env {
     /// detect instances and stop
     detect_only: bool,
 
+    /// detect sids on local machine and stop
+    detect_sids: bool,
+
     /// detect runtime and stop
     find_runtime: bool,
 
@@ -70,6 +73,7 @@ impl Env {
             state_dir,
             disable_caching: args.no_spool,
             detect_only: args.detect_only,
+            detect_sids: args.detect_sids,
             find_runtime: args.find_runtime,
             execution: args.filter.clone().unwrap_or_default(),
             generate_plugins: args.generate_plugins.clone(),
@@ -94,6 +98,10 @@ impl Env {
 
     pub fn detect_only(&self) -> bool {
         self.detect_only
+    }
+
+    pub fn detect_sids(&self) -> bool {
+        self.detect_sids
     }
 
     pub fn find_runtime(&self) -> bool {

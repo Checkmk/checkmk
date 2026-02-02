@@ -17,6 +17,7 @@
 pub mod backend;
 pub mod custom;
 pub mod defaults;
+pub mod detect;
 pub mod instance;
 pub mod section;
 pub mod sqls;

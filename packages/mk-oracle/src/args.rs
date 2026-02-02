@@ -57,6 +57,10 @@ pub struct Args {
     #[arg(long)]
     pub detect_only: bool,
 
+    /// Detect Oracle SIDs on the local machine
+    #[arg(long)]
+    pub detect_sids: bool,
+
     #[arg(long)]
     pub find_runtime: bool,
 

@@ -60,6 +60,17 @@ Each plugin expects a different prefix in the variable name:
    - graphs the ``graph_`` prefix
    - nodes (inventory UI) the ``node_`` prefix
 
+Type annotations
+================
+
+Type annotations are present throughout the plugin APIs.
+
+Using type checking tools (such as mypy) is encouraged when developing plugins.
+This helps catch potential issues early and ensures your code adheres to the expected interfaces.
+
+**Important:** The behavior for code that violates the type annotations is unspecified and may change without warning.
+While the type annotations document the expected types, runtime behavior when passing incorrect types is not guaranteed to be stable across versions.
+
 "Internal" and "unstable" APIs
 ==============================
 

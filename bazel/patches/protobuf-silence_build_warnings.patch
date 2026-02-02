@@ -1,56 +1,543 @@
-diff --git a/src/google/protobuf/compiler/java/full/enum.cc b/src/google/protobuf/compiler/java/full/enum.cc
-index 30db3b413..c0aad304b 100644
---- a/src/google/protobuf/compiler/java/full/enum.cc
-+++ b/src/google/protobuf/compiler/java/full/enum.cc
-@@ -28,6 +28,8 @@
- 
- // Must be last.
- #include "google/protobuf/port_def.inc"
+From 4e1da01cb26a318dcd6dd9485e418aa12a11da94 Mon Sep 17 00:00:00 2001
+From: Nigel Banks <nigel.banks@checkmk.com>
+Date: Thu, 29 Jan 2026 13:42:53 +0100
+Subject: [PATCH] Ignore deprecated-declarations warning when compiling.
+
+---
+ src/google/protobuf/compiler/cpp/helpers.cc   |  7 ++
+ src/google/protobuf/compiler/cpp/helpers.h    |  7 ++
+ src/google/protobuf/compiler/cpp/message.cc   | 81 ++++++++++++++++++-
+ src/google/protobuf/descriptor.cc             | 21 +++++
+ src/google/protobuf/dynamic_message.cc        | 21 +++++
+ .../protobuf/generated_message_reflection.cc  | 35 ++++++++
+ .../protobuf/generated_message_tctable_gen.cc | 28 +++++++
+ src/google/protobuf/map_field.h               |  7 ++
+ src/google/protobuf/reflection_visit_fields.h |  7 ++
+ src/google/protobuf/text_format.cc            |  7 ++
+ 10 files changed, 220 insertions(+), 1 deletion(-)
+
+diff --git a/src/google/protobuf/compiler/cpp/helpers.cc b/src/google/protobuf/compiler/cpp/helpers.cc
+index f9b4c5806..2659466d1 100644
+--- a/src/google/protobuf/compiler/cpp/helpers.cc
++++ b/src/google/protobuf/compiler/cpp/helpers.cc
+@@ -1799,7 +1799,14 @@ MessageAnalysis MessageSCCAnalyzer::GetSCCAnalysis(const SCC* scc) {
+       if (field->is_required()) {
+         result.contains_required = true;
+       }
++#ifdef __GNUC__
 +#pragma GCC diagnostic push
-+#pragma GCC diagnostic ignored "-Wsign-compare"
- 
- namespace google {
- namespace protobuf {
-@@ -396,4 +398,5 @@ bool EnumNonLiteGenerator::CanUseEnumValues() {
- }  // namespace protobuf
- }  // namespace google
- 
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+       if (field->options().weak()) {
++#ifdef __GNUC__
 +#pragma GCC diagnostic pop
- #include "google/protobuf/port_undef.inc"
-diff --git a/src/google/protobuf/compiler/java/full/message_builder.cc b/src/google/protobuf/compiler/java/full/message_builder.cc
-index 53de5d324..6ed62596c 100644
---- a/src/google/protobuf/compiler/java/full/message_builder.cc
-+++ b/src/google/protobuf/compiler/java/full/message_builder.cc
-@@ -38,6 +38,8 @@
++#endif
+         result.contains_weak = true;
+       }
+       switch (field->type()) {
+diff --git a/src/google/protobuf/compiler/cpp/helpers.h b/src/google/protobuf/compiler/cpp/helpers.h
+index 7cfe12c26..8c71a77a5 100644
+--- a/src/google/protobuf/compiler/cpp/helpers.h
++++ b/src/google/protobuf/compiler/cpp/helpers.h
+@@ -344,7 +344,14 @@ inline bool UseUnknownFieldSet(const FileDescriptor* file,
+ }
  
- // Must be last.
- #include "google/protobuf/port_def.inc"
+ inline bool IsWeak(const FieldDescriptor* field, const Options& options) {
++#ifdef __GNUC__
 +#pragma GCC diagnostic push
-+#pragma GCC diagnostic ignored "-Wsign-compare"
- 
- namespace google {
- namespace protobuf {
-@@ -816,4 +818,5 @@ void MessageBuilderGenerator::GenerateIsInitialized(io::Printer* printer) {
- }  // namespace protobuf
- }  // namespace google
- 
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (field->options().weak()) {
++#ifdef __GNUC__
 +#pragma GCC diagnostic pop
- #include "google/protobuf/port_undef.inc"
-diff --git a/src/google/protobuf/compiler/java/lite/enum.cc b/src/google/protobuf/compiler/java/lite/enum.cc
-index 8e3c57cf9..b792cf0ee 100644
---- a/src/google/protobuf/compiler/java/lite/enum.cc
-+++ b/src/google/protobuf/compiler/java/lite/enum.cc
-@@ -25,6 +25,8 @@
- #include "google/protobuf/descriptor.pb.h"
- #include "google/protobuf/io/printer.h"
- 
++#endif
+     ABSL_CHECK(!options.opensource_runtime);
+     return true;
+   }
+diff --git a/src/google/protobuf/compiler/cpp/message.cc b/src/google/protobuf/compiler/cpp/message.cc
+index 741029575..a90b2d541 100644
+--- a/src/google/protobuf/compiler/cpp/message.cc
++++ b/src/google/protobuf/compiler/cpp/message.cc
+@@ -173,7 +173,14 @@ std::string GenerateConditionMaybeWithProbabilityForGroup(
+ void PrintPresenceCheck(const FieldDescriptor* field,
+                         const std::vector<int>& has_bit_indices, io::Printer* p,
+                         int* cached_has_word_index, const Options& options) {
++#ifdef __GNUC__
 +#pragma GCC diagnostic push
-+#pragma GCC diagnostic ignored "-Wsign-compare"
- namespace google {
- namespace protobuf {
- namespace compiler {
-@@ -255,3 +257,4 @@ void EnumLiteGenerator::Generate(io::Printer* printer) {
- }  // namespace compiler
- }  // namespace protobuf
- }  // namespace google
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (!field->options().weak()) {
++#ifdef __GNUC__
 +#pragma GCC diagnostic pop
++#endif
+     int has_bit_index = has_bit_indices[field->index()];
+     if (*cached_has_word_index != (has_bit_index / 32)) {
+       *cached_has_word_index = (has_bit_index / 32);
+@@ -772,7 +779,14 @@ void MessageGenerator::GenerateFieldAccessorDeclarations(io::Printer* p) {
+                         optimized_order_.end());
+ 
+   for (auto field : FieldRange(descriptor_)) {
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+     if (!field->real_containing_oneof() && !field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+       continue;
+     }
+     ordered_fields.push_back(field);
+@@ -1137,7 +1151,14 @@ void MessageGenerator::GenerateFieldAccessorDeclarations(io::Printer* p) {
+ void MessageGenerator::GenerateSingularFieldHasBits(
+     const FieldDescriptor* field, io::Printer* p) {
+   auto t = p->WithVars(MakeTrackerCalls(field, options_));
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     p->Emit(
+         R"cc(
+           inline bool $classname$::has_$name$() const {
+@@ -1360,7 +1381,14 @@ void MessageGenerator::EmitCheckAndUpdateByteSizeForField(
+                              /*with_enclosing_braces_always=*/true);
+     return;
+   }
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     p->Emit({{"emit_body", [&] { emit_body(); }}},
+             R"cc(
+               if (has_$name$()) {
+@@ -1393,7 +1421,16 @@ void MessageGenerator::EmitCheckAndUpdateByteSizeForField(
+ void MessageGenerator::MaybeEmitUpdateCachedHasbits(
+     const FieldDescriptor* field, io::Printer* p,
+     int& cached_has_word_index) const {
+-  if (!HasHasbit(field, options_) || field->options().weak()) return;
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
++  if (!HasHasbit(field, options_) || field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
++    return;
++  }
+ 
+   int has_bit_index = has_bit_indices_[field->index()];
+ 
+@@ -2181,8 +2218,15 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
+         [&] {
+           for (auto field : FieldRange(descriptor_)) {
+             // set_has_***() generated in all oneofs.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+             if (!field->is_repeated() && !field->options().weak() &&
+                 field->real_containing_oneof()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+               p->Emit({{"field_name", FieldName(field)}}, R"cc(
+                 void set_has_$field_name$();
+               )cc");
+@@ -2714,7 +2758,14 @@ size_t MessageGenerator::GenerateOffsets(io::Printer* p) {
+   for (auto field : FieldRange(descriptor_)) {
+     // TODO: We should not have an entry in the offset table for fields
+     // that do not use them.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+     if (field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+       // Mark the field to prevent unintentional access through reflection.
+       // Don't use the top bit because that is for unused fields.
+       format("::_pbi::kInvalidFieldOffsetTag");
+@@ -4369,8 +4420,15 @@ void MessageGenerator::GenerateClassSpecificMergeImpl(io::Printer* p) {
+             p, "from.", field, ShouldSplit(field, options_), options_,
+             /*emit_body=*/[&]() { generator.GenerateMergingCode(p); },
+             /*with_enclosing_braces_always=*/true);
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+       } else if (field->options().weak() ||
+                  cached_has_word_index != HasWordIndex(field)) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+         // Check hasbit, not using cached bits.
+         auto v = p->WithVars(HasBitVars(field));
+         p->Emit(
+@@ -4719,7 +4777,14 @@ void MessageGenerator::GenerateSerializeOneField(io::Printer* p,
+     field_generators_.get(field).GenerateSerializeWithCachedSizesToArray(p);
+   };
+ 
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     emit_body();
+     p->Emit("\n");
+     return;
+@@ -5026,7 +5091,14 @@ void MessageGenerator::GenerateSerializeWithCachedSizesBody(io::Printer* p) {
+                         sorted_extensions[j]->start_number())) {
+                  const FieldDescriptor* field = ordered_fields[i++];
+                  re.Flush(no_more_extensions);
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+                  if (field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+                    largest_weak_field.ReplaceIfLarger(field);
+                    PrintFieldComment(Formatter{p}, field, options_);
+                  } else {
+@@ -5569,7 +5641,14 @@ void MessageGenerator::EmitCheckAndSerializeField(const FieldDescriptor* field,
+     return;
+   }
+ 
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     p->Emit({{"emit_body", [&] { emit_body(); }}},
+             R"cc(
+               if (has_$name$()) {
+diff --git a/src/google/protobuf/descriptor.cc b/src/google/protobuf/descriptor.cc
+index 64c316fcd..1dc05dff9 100644
+--- a/src/google/protobuf/descriptor.cc
++++ b/src/google/protobuf/descriptor.cc
+@@ -3949,8 +3949,15 @@ void FieldDescriptor::DebugString(
+       absl::StrCat(kLabelToName[static_cast<Label>(label_)], " ");
+ 
+   // Label is omitted for maps, oneof, and plain proto3 fields.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (is_map() || real_containing_oneof() ||
+       (!is_required() && !is_repeated() && !has_optional_keyword())) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     label.clear();
+   }
+   // Label is omitted for optional and required fields under editions.
+@@ -7979,7 +7986,14 @@ void DescriptorBuilder::CrossLinkField(FieldDescriptor* field,
+     // if weak fields exist or not so that we don't need to force building
+     // weak dependencies. However the name lookup rules for symbols are
+     // somewhat complicated, so I defer it too another CL.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+     bool is_weak = !pool_->enforce_weak_ && proto.options().weak();
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     bool is_lazy = pool_->lazily_build_dependencies_ && !is_weak;
+ 
+     Symbol type =
+@@ -10697,8 +10711,15 @@ bool HasPreservingUnknownEnumSemantics(const FieldDescriptor* field) {
+ 
+ HasbitMode GetFieldHasbitModeWithoutProfile(const FieldDescriptor* field) {
+   // Do not generate hasbits for "real-oneof", weak, or extension fields.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (field->real_containing_oneof() || field->options().weak() ||
+       field->is_extension()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     return HasbitMode::kNoHasbit;
+   }
+ 
+diff --git a/src/google/protobuf/dynamic_message.cc b/src/google/protobuf/dynamic_message.cc
+index f7a067758..6b8a70ded 100644
+--- a/src/google/protobuf/dynamic_message.cc
++++ b/src/google/protobuf/dynamic_message.cc
+@@ -571,7 +571,14 @@ void DynamicMessage::SharedCtor(bool lock_factory) {
+               ArenaStringPtr* asp = new (field_ptr) ArenaStringPtr();
+               asp->InitDefault();
+             } else {
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+               new (field_ptr) RepeatedPtrField<std::string>(arena);
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+             }
+             break;
+         }
+@@ -599,7 +606,14 @@ void DynamicMessage::SharedCtor(bool lock_factory) {
+                     : nullptr,
+                 arena);
+           } else {
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+             new (field_ptr) RepeatedPtrField<Message>(arena);
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+           }
+         }
+         break;
+@@ -770,9 +784,16 @@ void DynamicMessage::CrossLinkPrototypes() {
+   // Cross-link default messages.
+   for (int i = 0; i < descriptor->field_count(); i++) {
+     const FieldDescriptor* field = descriptor->field(i);
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+     if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE &&
+         !field->options().weak() && !InRealOneof(field) &&
+         !field->is_repeated()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+       void* field_ptr = MutableRaw(i);
+       // For fields with message types, we need to cross-link with the
+       // prototype for the field's type.
+diff --git a/src/google/protobuf/generated_message_reflection.cc b/src/google/protobuf/generated_message_reflection.cc
+index 4daf47ae0..8b274bd8e 100644
+--- a/src/google/protobuf/generated_message_reflection.cc
++++ b/src/google/protobuf/generated_message_reflection.cc
+@@ -2523,8 +2523,15 @@ const Message* Reflection::GetDefaultMessageInstance(
+   // instances to allow for this. But only do this for real fields.
+   // This is an optimization to avoid going to GetPrototype() below, as that
+   // requires a lock and a map lookup.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (!field->is_extension() && !field->options().weak() &&
+       !IsLazyField(field) && !schema_.InRealOneof(field)) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     auto* res = DefaultRaw<const Message*>(field);
+     if (res != nullptr) {
+       return res;
+@@ -3287,7 +3294,14 @@ bool Reflection::IsFieldPresentGivenHasbits(const Message& message,
+ 
+ bool Reflection::HasFieldWithHasbits(const Message& message,
+                                      const FieldDescriptor* field) const {
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   ABSL_DCHECK(!field->options().weak());
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+   ABSL_DCHECK(!field->is_extension());
+   if (schema_.HasBitIndex(field) != static_cast<uint32_t>(kNoHasbit)) {
+     return IsFieldPresentGivenHasbits(message, field, GetHasBits(message),
+@@ -3320,7 +3334,14 @@ bool Reflection::HasFieldWithHasbits(const Message& message,
+ 
+ void Reflection::SetHasBit(Message* message,
+                            const FieldDescriptor* field) const {
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   ABSL_DCHECK(!field->options().weak());
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+   const uint32_t index = schema_.HasBitIndex(field);
+   if (index == static_cast<uint32_t>(kNoHasbit)) return;
+   MutableHasBits(message)[index / 32] |=
+@@ -3329,7 +3350,14 @@ void Reflection::SetHasBit(Message* message,
+ 
+ void Reflection::ClearHasBit(Message* message,
+                              const FieldDescriptor* field) const {
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   ABSL_DCHECK(!field->options().weak());
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+   const uint32_t index = schema_.HasBitIndex(field);
+   if (index == static_cast<uint32_t>(kNoHasbit)) return;
+   MutableHasBits(message)[index / 32] &=
+@@ -3338,7 +3366,14 @@ void Reflection::ClearHasBit(Message* message,
+ 
+ void Reflection::NaiveSwapHasBit(Message* message1, Message* message2,
+                                  const FieldDescriptor* field) const {
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   ABSL_DCHECK(!field->options().weak());
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+   if (!schema_.HasHasbits() ||
+       schema_.HasBitIndex(field) == static_cast<uint32_t>(kNoHasbit)) {
+     return;
+diff --git a/src/google/protobuf/generated_message_tctable_gen.cc b/src/google/protobuf/generated_message_tctable_gen.cc
+index d69d6ec5a..af8bff9ae 100644
+--- a/src/google/protobuf/generated_message_tctable_gen.cc
++++ b/src/google/protobuf/generated_message_tctable_gen.cc
+@@ -696,7 +696,14 @@ uint16_t MakeTypeCardForField(
+ 
+ bool HasWeakFields(const Descriptor* descriptor) {
+   for (int i = 0; i < descriptor->field_count(); i++) {
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+     if (descriptor->field(i)->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+       return true;
+     }
+   }
+@@ -734,8 +741,15 @@ uint32_t FastParseTableSize(size_t num_fields,
+ 
+ bool IsFieldTypeEligibleForFastParsing(const FieldDescriptor* field) {
+   // Map, oneof, weak, and split fields are not handled on the fast path.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+   if (field->is_map() || field->real_containing_oneof() ||
+       field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+     return false;
+   }
+ 
+@@ -768,11 +782,18 @@ TailCallTableInfo::BuildFieldEntries(
+     auto* field = options.field;
+     // In the following code where we assign kSubTable to aux entries, only
+     // the following typed fields are supported.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+     return (field->type() == FieldDescriptor::TYPE_MESSAGE ||
+             field->type() == FieldDescriptor::TYPE_GROUP) &&
+            !field->is_map() && !field->options().weak() &&
+            !HasLazyRep(field, options) && !options.is_implicitly_weak &&
+            options.use_direct_tcparser_table && is_non_cold(options);
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+   };
+   for (const FieldOptions& options : ordered_fields) {
+     if (is_non_cold_subtable(options)) {
+@@ -810,7 +831,14 @@ TailCallTableInfo::BuildFieldEntries(
+             aux_entries.push_back({kEnumValidator, {map_value}});
+           }
+         }
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+       } else if (field->options().weak()) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+         // Disable the type card for this entry to force the fallback.
+         entry.type_card = 0;
+       } else if (HasLazyRep(field, options)) {
+diff --git a/src/google/protobuf/map_field.h b/src/google/protobuf/map_field.h
+index 40dfa9b00..9af8f3a03 100644
+--- a/src/google/protobuf/map_field.h
++++ b/src/google/protobuf/map_field.h
+@@ -412,8 +412,15 @@ class PROTOBUF_EXPORT MapFieldBase : public MapFieldBaseForParse {
+ 
+   class ReflectionPayload {
+    public:
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+     ReflectionPayload(Arena* arena, const Message* prototype)
+         : repeated_field_(arena), prototype_(prototype) {}
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+ 
+     RepeatedPtrField<Message>& repeated_field() { return repeated_field_; }
+ 
+diff --git a/src/google/protobuf/reflection_visit_fields.h b/src/google/protobuf/reflection_visit_fields.h
+index 7a1d2f1b5..94a357043 100644
+--- a/src/google/protobuf/reflection_visit_fields.h
++++ b/src/google/protobuf/reflection_visit_fields.h
+@@ -106,7 +106,14 @@ void ReflectionVisit::VisitFields(MessageT& message, CallbackFn&& func,
+ 
+   for (int i = 0; i < field_count; i++) {
+     const FieldDescriptor* field = descriptor->field(i);
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+     ABSL_DCHECK(!field->options().weak()) << "weak fields are not supported";
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+ 
+     if (!ShouldVisit(mask, field->cpp_type())) continue;
+ 
+diff --git a/src/google/protobuf/text_format.cc b/src/google/protobuf/text_format.cc
+index 9b734c26d..befe2590d 100644
+--- a/src/google/protobuf/text_format.cc
++++ b/src/google/protobuf/text_format.cc
+@@ -660,8 +660,15 @@ class TextFormat::Parser::ParserImpl {
+       if (consumed_semicolon) {
+         TryConsumeWhitespace();
+       }
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
++#endif
+       if (consumed_semicolon && field->options().weak() &&
+           LookingAtType(io::Tokenizer::TYPE_STRING)) {
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+         // we are getting a bytes string for a weak field.
+         std::string tmp;
+         DO(ConsumeString(&tmp));
+-- 
+2.52.0
+

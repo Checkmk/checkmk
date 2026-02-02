@@ -19,6 +19,12 @@ common --enable_workspace
 common --incompatible_enforce_config_setting_visibility
 common --incompatible_config_setting_private_default_visibility
 
+# Enable prebuilt protoc toolchain resolution.
+# This will become the default in Bazel 9
+# See: https://blog.aspect.build/bazel-9-protobuf
+common --incompatible_enable_proto_toolchain_resolution
+common --@protobuf//bazel/toolchains:prefer_prebuilt_protoc
+
 # with rules_proto_grpc (5.0.1) we run into
 # >>> Error in resolve_tools: Pass an executable or tools argument to ctx.actions.run
 # without

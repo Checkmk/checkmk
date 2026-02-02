@@ -214,8 +214,23 @@ async function checkIfMenuActive(): Promise<void> {
   }, 300)
 }
 
+const userCanActivateSelectedSites = computed((): boolean => {
+  return selectedSites.value.every((siteId) => {
+    const site = sitesAndChanges.value.sites.find((s) => s.siteId === siteId)
+    if (site) {
+      const siteHasForeignChanges = sitesAndChanges.value.pendingChanges.some(
+        (change) => change.whichSites.includes(site.siteId) && change.foreignChange
+      )
+      if (siteHasForeignChanges && !props.user_has_activate_foreign) {
+        return false
+      }
+    }
+    return true
+  })
+})
+
 const activateChangesButtonDisabled = computed((): boolean => {
-  if (!props.user_has_activate_foreign) {
+  if (!userCanActivateSelectedSites.value) {
     return true
   }
   if (activateChangesInProgress.value) {
@@ -309,11 +324,7 @@ onMounted(async () => {
           key: 'changes-info'
         }"
       />
-      <CmkAlertBox
-        v-if="!user_has_activate_foreign && sitesAndChanges.pendingChanges.length > 0"
-        variant="warning"
-        class="cmk-alert-box"
-      >
+      <CmkAlertBox v-if="!userCanActivateSelectedSites" variant="warning" class="cmk-alert-box">
         {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
       </CmkAlertBox>
       <ChangesActivating

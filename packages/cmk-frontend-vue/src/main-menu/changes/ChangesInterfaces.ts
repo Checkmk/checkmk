@@ -61,6 +61,7 @@ export interface PendingChanges {
   changeText: string
   user: string
   time: number
+  foreignChange: boolean
   whichSites: Array<string>
   timestring?: string
 }

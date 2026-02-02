@@ -1117,6 +1117,7 @@ class PendingChangesSummary(TypedDict):
     changeText: str
     user: str
     time: float
+    foreignChange: bool
     whichSites: list[str]
 
 
@@ -1407,6 +1408,7 @@ class ActivateChanges:
                         changeText=unescape(change["text"]),
                         user=change["user_id"],
                         time=change["time"],
+                        foreignChange=is_foreign_change(change),
                         whichSites=["All sites"]
                         if affects_all_sites(list(activation_sites(sites)), change)
                         else change["affected_sites"],

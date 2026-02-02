@@ -483,6 +483,43 @@ node_software_applications_cisco_meraki_licenses = Node(
     ),
 )
 
+node_software_applications_cisco_meraki_networks = Node(
+    name="software_applications_cisco_meraki_networks",
+    path=["software", "applications", "cisco_meraki", "networks"],
+    title=Title("Networks"),
+    table=Table(
+        columns={
+            "org_id": TextField(Title("Organisation ID")),
+            "org_name": TextField(Title("Organisation name")),
+            "network_id": TextField(Title("Network ID")),
+            "network_name": TextField(Title("Network name")),
+            "time_zone": TextField(Title("Time zone")),
+            "product_types": TextField(Title("Product types")),
+            "tags": TextField(Title("Tags")),
+            "notes": TextField(Title("Notes")),
+            "enrollment_string": TextField(Title("Enrollment string")),
+            "is_bound_to_template": TextField(Title("Is bound to template")),
+            "url": TextField(Title("URL")),
+        }
+    ),
+)
+
+node_software_applications_cisco_meraki_organisations = Node(
+    name="software_applications_cisco_meraki_organisations",
+    path=["software", "applications", "cisco_meraki", "organisations"],
+    title=Title("Organisations"),
+    table=Table(
+        columns={
+            "org_id": TextField(Title("Organisation ID")),
+            "org_name": TextField(Title("Organisation name")),
+            "api_status": TextField(Title("API status")),
+            "licensing_model": TextField(Title("Licensing model")),
+            "cloud_region": TextField(Title("Cloud region")),
+            "url": TextField(Title("URL")),
+        }
+    ),
+)
+
 
 node_software_applications_citrix = Node(
     name="software_applications_citrix",

@@ -55,8 +55,8 @@ def inventory_meraki_networks(section: Section) -> InventoryResult:
         inventory_columns = {
             "is_bound_to_template": "yes" if network.is_bound_to_config_template else "no",
             "network_name": network.name,
-            "organization_id": network.organization_id,
-            "organization_name": network.organization_name,
+            "org_id": network.organization_id,
+            "org_name": network.organization_name,
             "product_types": ", ".join(m.title() for m in network.product_types),
             "time_zone": network.time_zone,
             "url": network.url,

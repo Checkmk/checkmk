@@ -39,9 +39,9 @@ def test_inventory_organisations() -> None:
     assert row.inventory_columns == {
         "org_name": "Name1",
         "url": "http://example.com",
-        "api": "enabled",
-        "licensing": "co-term",
-        "cloud": "North America",
+        "api_status": "enabled",
+        "licensing_model": "co-term",
+        "cloud_region": "North America",
     }
 
 
@@ -52,7 +52,7 @@ def test_inventory_organisations_disabled_api() -> None:
 
     row = next(row for row in inventory_meraki_organizations(section) if isinstance(row, TableRow))
 
-    assert row.inventory_columns["api"] == "disabled"
+    assert row.inventory_columns["api_status"] == "disabled"
 
 
 @pytest.mark.parametrize("string_table ", [[], [[]], [[""]]])

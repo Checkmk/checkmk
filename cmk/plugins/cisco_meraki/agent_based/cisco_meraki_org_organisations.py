@@ -78,9 +78,9 @@ def inventory_meraki_organizations(section: Section) -> InventoryResult:
             inventory_columns={
                 "org_name": organization.name,
                 "url": organization.url,
-                "api": organization.api_status,
-                "licensing": organization.licensing.model,
-                "cloud": organization.cloud.region.name,
+                "api_status": organization.api_status,
+                "licensing_model": organization.licensing.model,
+                "cloud_region": organization.cloud.region.name,
             },
         )
 

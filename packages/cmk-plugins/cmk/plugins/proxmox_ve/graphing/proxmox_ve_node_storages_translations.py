@@ -23,5 +23,6 @@ translation_proxmox_ve_node_storages = Translation(
         "trend": RenameToAndScaleBy("fs_trend", MIB / 86400.0),
         "trend_hoursleft": ScaleBy(3600),
         "uncommitted": ScaleBy(MIB),
+        "provisioned_storage_space": ScaleBy(MIB),
     },
 )

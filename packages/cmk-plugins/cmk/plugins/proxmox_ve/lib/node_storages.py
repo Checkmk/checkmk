@@ -162,25 +162,32 @@ def _check_proxmox_ve_node_storage_provision(
     if storage_max_disk is None or storage_max_disk <= 0:
         yield Result(
             state=State.WARN,
-            summary="Cannot calculate committed space as storage max disk is unknown or zero.",
+            summary="Cannot calculate provisioned space as storage max disk is unknown or zero.",
         )
         return
 
-    committed = _transform_storage_size_bytes_to_mb(
+    provisioned = _transform_storage_size_bytes_to_mb(
         sum(link.bytes_size for link in storage if link.bytes_size is not None)
     )
-    uncommitted_mb = (storage_max_disk - committed) if storage_max_disk > committed else 0
     yield from check_levels(
-        value=uncommitted_mb,
-        metric_name="uncommitted",
-        label="Uncommitted",
+        value=provisioned,
+        metric_name="provisioned_storage_space",
+        label="Provisioned",
         render_func=lambda v: render.bytes(v * 1024 * 1024),
     )
 
-    provisioned_percent = round((committed / storage_max_disk) * 100, 2)
+    provisioned_percent = round((provisioned / storage_max_disk) * 100, 2)
     yield from check_levels(
         value=provisioned_percent,
         metric_name="provisioned_storage_usage",
         label="Provisioning",
         render_func=render.percent,
+    )
+
+    uncommitted_mb = (storage_max_disk - provisioned) if storage_max_disk > provisioned else 0
+    yield from check_levels(
+        value=uncommitted_mb,
+        metric_name="uncommitted",
+        label="Uncommitted",
+        render_func=lambda v: render.bytes(v * 1024 * 1024),
     )

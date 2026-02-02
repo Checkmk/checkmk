@@ -6,10 +6,18 @@
 from cmk.graphing.v1 import metrics, Title
 
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
+UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
 metric_provisioned_storage_usage = metrics.Metric(
     name="provisioned_storage_usage",
     title=Title("Provisioned storage usage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BLUE,
+)
+
+metric_provisioned_storage_space = metrics.Metric(
+    name="provisioned_storage_space",
+    title=Title("Provisioned storage space"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.ORANGE,
 )

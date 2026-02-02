@@ -169,16 +169,18 @@ def test_discover_proxmox_ve_node_directory_storage() -> None:
                 Result(state=State.OK, summary="Used: <0.01% - 208 KiB of 18.4 GiB"),
                 Metric("fs_size", 18882.2421875, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Type: zfspool"),
-                Result(state=State.OK, summary="Uncommitted: 0 B"),
-                Metric("uncommitted", 0.0),
+                Result(state=State.OK, summary="Provisioned: 32.0 GiB"),
+                Metric("provisioned_storage_space", 32768.0),
                 Result(state=State.OK, summary="Provisioning: 173.54%"),
                 Metric("provisioned_storage_usage", 173.54),
+                Result(state=State.OK, summary="Uncommitted: 0 B"),
+                Metric("uncommitted", 0.0),
             ],
             id="OK, with storage links",
         ),
     ],
 )
-def test_check_proxmox_ve_node_info(
+def test_check_proxmox_ve_node_directory_storages(
     item: str,
     params: Mapping[str, object],
     section: SectionNodeStorages,

@@ -21,7 +21,7 @@ use crate::config::{
     ora_sql::Endpoint,
 };
 use crate::ora_sql::types::Target;
-use crate::types::{Credentials, InstanceName, SqlQuery};
+use crate::types::{ConnectionStringType, Credentials, InstanceName, SqlQuery};
 use anyhow::{Context, Result};
 use oracle::sql_type::{FromSql, ToSql};
 use oracle::{Connection, Connector, Privilege};
@@ -55,7 +55,8 @@ impl OraDbEngine for StdEngine {
             return Ok(());
         }
 
-        let connection_string = target.make_connection_string(instance_name);
+        let connection_string =
+            target.make_connection_string(instance_name, ConnectionStringType::Tns);
         log::info!("Connection string: {}", connection_string);
         log::info!("Auth type: {:?}", target.auth.auth_type());
 
@@ -252,7 +253,8 @@ impl Spot<Closed> {
             "{} {:?} -> {}",
             "Connecting to",
             self.target,
-            self.target.make_connection_string(use_instance)
+            self.target
+                .make_connection_string(use_instance, ConnectionStringType::Tns)
         );
         self.engine.connect(&self.target, use_instance)?;
         Ok(Spot {

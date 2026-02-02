@@ -39,8 +39,8 @@ use mk_oracle::config::connection::setup_wallet_environment;
 #[cfg(windows)]
 use mk_oracle::types::InstanceAlias;
 use mk_oracle::types::{
-    Credentials, InstanceName, InstanceNumVersion, InstanceVersion, ServiceName, Tenant,
-    UseHostClient,
+    ConnectionStringType, Credentials, InstanceName, InstanceNumVersion, InstanceVersion,
+    ServiceName, Tenant, UseHostClient,
 };
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -273,7 +273,8 @@ fn test_local_connection() {
         eprintln!(
             "Rows: {i:?} {:?} {:?}",
             rows,
-            conn.target().make_connection_string(None)
+            conn.target()
+                .make_connection_string(None, ConnectionStringType::Tns)
         );
         assert!(!rows.is_empty());
         assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &instance_name)));

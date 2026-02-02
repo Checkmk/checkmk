@@ -243,6 +243,14 @@ impl From<&str> for SectionFilter {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConnectionStringType {
+    /// EZConnect format: host:port/service_name:server_type/instance_name
+    EzConnect,
+    /// TNS format: (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=...)(PORT=...))(CONNECT_DATA=...))
+    Tns,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

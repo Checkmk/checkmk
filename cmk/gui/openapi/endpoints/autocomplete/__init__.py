@@ -83,6 +83,9 @@ def show(params: Mapping[str, Any]) -> Response:
             }
         )
 
+    except ValueError as e:
+        return problem(400, "Invalid input", str(e))
+
     except KeyError as e:
         return problem(400, "Missing field", f"Missing field: {e}")
 

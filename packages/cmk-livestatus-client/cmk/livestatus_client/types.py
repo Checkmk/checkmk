@@ -12,6 +12,7 @@ from .expressions import (
     BinaryExpression,
     BoolExpression,
     ListExpression,
+    LqSafe,
     Not,
     NothingExpression,
     Primitives,
@@ -168,35 +169,35 @@ class Column:
         return self
 
     @override
-    def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
+    def __eq__(self, other: Primitives | LqSafe) -> BinaryExpression:  # type: ignore[override]
         return self.expr.__eq__(other)
 
     @override
-    def __ne__(self, other: Primitives) -> Not:  # type: ignore[override]
+    def __ne__(self, other: Primitives | LqSafe) -> Not:  # type: ignore[override]
         return self.expr.__ne__(other)
 
-    def __lt__(self, other: Primitives) -> BinaryExpression:
+    def __lt__(self, other: Primitives | LqSafe) -> BinaryExpression:
         return self.expr.__lt__(other)
 
-    def __le__(self, other: Primitives) -> BinaryExpression:
+    def __le__(self, other: Primitives | LqSafe) -> BinaryExpression:
         return self.expr.__le__(other)
 
-    def __gt__(self, other: Primitives) -> BinaryExpression:
+    def __gt__(self, other: Primitives | LqSafe) -> BinaryExpression:
         return self.expr.__gt__(other)
 
-    def __ge__(self, other: Primitives) -> BinaryExpression:
+    def __ge__(self, other: Primitives | LqSafe) -> BinaryExpression:
         return self.expr.__ge__(other)
 
-    def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def equals(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         return self.expr.equals(other, ignore_case=ignore_case)
 
-    def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def contains(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         return self.expr.contains(other, ignore_case=ignore_case)
 
-    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def disparity(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         return self.expr.disparity(other, ignore_case=ignore_case)
 
-    def op(self, op_str: str, other: UnaryExpression | Primitives) -> BinaryExpression:
+    def op(self, op_str: str, other: UnaryExpression | Primitives | LqSafe) -> BinaryExpression:
         return self.expr.op(op_str, other)
 
     def empty(self) -> BinaryExpression:

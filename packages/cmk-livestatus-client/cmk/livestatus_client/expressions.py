@@ -16,9 +16,91 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 from __future__ import annotations
 
 import abc
-from typing import override
+from dataclasses import dataclass
+from typing import override, Self
 
 Primitives = str | int | bool | float | list[str] | tuple[str, ...]
+
+
+# Why dataclass and frozen: to make it immutable and hashable, so it can be used as a key in a dict or stored in a set.
+@dataclass(frozen=True)
+class LqSafe:
+    """A Livestatus-safe string that prevents query injection
+
+    This type ensures that strings used in Livestatus queries do not contain
+    newline characters that could be used for query injection attacks.
+
+    Examples:
+        >>> LqSafe("valid_string")
+        LqSafe(value='valid_string')
+
+        >>> LqSafe(123)
+        LqSafe(value='123')
+
+        >>> LqSafe("string\\nwith\\nnewlines")
+        Traceback (most recent call last):
+            ...
+        ValueError: invalid LqSafe string (contains newlines): 'string\\nwith\\nnewlines'
+
+        >>> LqSafe("tab\\ttabs are ok")
+        LqSafe(value='tab\\ttabs are ok')
+    """
+
+    value: str
+    INVALID_CHARS = ["\n"]
+
+    def __init__(self, text: Primitives) -> None:
+        """Construct a new LqSafe string
+
+        Args:
+            text: The input value to convert and validate
+
+        Raises:
+            ValueError: If the string representation contains newline characters
+        """
+        if isinstance(text, tuple | list):
+            str_value = " ".join(str(item) for item in text)
+        else:
+            str_value = str(text)
+
+        if any(char in str_value for char in self.INVALID_CHARS):
+            raise ValueError(f"Invalid Livestatus Query string: {str_value!r}")
+
+        object.__setattr__(self, "value", str_value)
+
+    def __str__(self) -> str:
+        """Return the underlying string value"""
+        return self.value
+
+    def __bool__(self) -> bool:
+        """Return False if value is empty string, True otherwise"""
+        return bool(self.value)
+
+    @classmethod
+    def sanitize(cls, text: str) -> Self:
+        """Sanitize a string by removing invalid characters and return LqSafe string
+
+        This method removes invalid characters instead of raising an error.
+        Use this when dealing with untrusted user input that needs sanitization.
+
+        Args:
+            text: The input string to sanitize
+
+        Returns:
+            A sanitized LqSafe string with invalid characters removed
+
+        Examples:
+            >>> LqSafe.sanitize("has\\nnewlines")
+            LqSafe(value='hasnewlines')
+
+            >>> LqSafe.sanitize("clean")
+            LqSafe(value='clean')
+        """
+        # Remove all invalid characters
+        for char in cls.INVALID_CHARS:
+            text = text.replace(char, "")
+        return cls(text)
+
 
 # TODO: column functions
 # TODO: more tests
@@ -82,22 +164,28 @@ class NothingExpression(QueryExpression):
 class UnaryExpression(abc.ABC):
     """Base class of all concrete single parts of BinaryExpression."""
 
-    def __init__(self, value: str) -> None:
-        # The value is used in the __repr__, if we don't set it before raising
-        # the exception we get a new exception when the __repr__ is called,
-        # e.g. by the crash reporting
-        self.value = value
-        if "\n" in value:
-            raise ValueError("Illegal newline character in query")
+    _value: LqSafe
 
-    def op(self, operator: str, other: UnaryExpression | Primitives) -> BinaryExpression:
-        other_expr: UnaryExpression
-        if isinstance(other, list | tuple):
-            other_expr = LiteralExpression(" ".join(other))
-        elif isinstance(other, UnaryExpression):
-            other_expr = other
+    def __init__(self, value: str | LqSafe) -> None:
+        if isinstance(value, LqSafe):
+            self._value = value
         else:
-            other_expr = LiteralExpression(str(other))
+            # Convert string to LqSafe (will raise if contains newlines)
+            self._value = LqSafe(value)
+
+    @property
+    def value(self) -> str:
+        return self._value.value
+
+    def op(self, operator: str, other: UnaryExpression | Primitives | LqSafe) -> BinaryExpression:
+        other_expr: UnaryExpression
+        if isinstance(other, UnaryExpression):
+            other_expr = other
+        elif isinstance(other, LqSafe):
+            other_expr = LiteralExpression(other)
+        else:
+            # other is Primitives, convert to LqSafe
+            other_expr = LiteralExpression(LqSafe(other))
         return BinaryExpression(self, other_expr, operator)
 
     @override
@@ -106,35 +194,35 @@ class UnaryExpression(abc.ABC):
 
     @abc.abstractmethod
     @override
-    def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
+    def __eq__(self, other: Primitives | LqSafe) -> BinaryExpression:  # type: ignore[override]
         raise NotImplementedError()
 
-    def __lt__(self, other: Primitives) -> BinaryExpression:
+    def __lt__(self, other: Primitives | LqSafe) -> BinaryExpression:
         return self.op("<", other)
 
-    def __gt__(self, other: Primitives) -> BinaryExpression:
+    def __gt__(self, other: Primitives | LqSafe) -> BinaryExpression:
         return self.op(">", other)
 
-    def __le__(self, other: Primitives) -> BinaryExpression:
+    def __le__(self, other: Primitives | LqSafe) -> BinaryExpression:
         return self.op("<=", other)
 
-    def __ge__(self, other: Primitives) -> BinaryExpression:
+    def __ge__(self, other: Primitives | LqSafe) -> BinaryExpression:
         return self.op(">=", other)
 
     @override
-    def __ne__(self, other: Primitives) -> Not:  # type: ignore[override]
+    def __ne__(self, other: Primitives | LqSafe) -> Not:  # type: ignore[override]
         return Not(self.__eq__(other))
 
     @abc.abstractmethod
-    def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def equals(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def contains(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def disparity(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -163,18 +251,18 @@ class ScalarExpression(UnaryExpression):
     """
 
     @override
-    def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
+    def __eq__(self, other: Primitives | LqSafe) -> BinaryExpression:  # type: ignore[override]
         return self.op("=", other)
 
     @override
-    def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def equals(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             return self.op("=~", other)
 
         return self.op("=", other)
 
     @override
-    def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def contains(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             return self.op("~~", other)
 
@@ -185,7 +273,7 @@ class ScalarExpression(UnaryExpression):
         raise NotImplementedError("Not implemented for this type.")
 
     @override
-    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def disparity(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
 
@@ -205,11 +293,11 @@ class ListExpression(UnaryExpression):
     """
 
     @override
-    def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
+    def __eq__(self, other: Primitives | LqSafe) -> BinaryExpression:  # type: ignore[override]
         return self.equals(other)
 
     @override
-    def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def equals(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         if not other:
             # Check for empty list
             op = "="
@@ -222,7 +310,7 @@ class ListExpression(UnaryExpression):
         return self.op(op, other)
 
     @override
-    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def disparity(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             op = ">"
         else:
@@ -230,7 +318,7 @@ class ListExpression(UnaryExpression):
         return self.op(op, other)
 
     @override
-    def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def contains(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         return self.op("~~", other)
 
     @override
@@ -242,7 +330,7 @@ class LiteralExpression(ScalarExpression):
     """A literal value to be rendered in a Filter"""
 
     @override
-    def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
+    def disparity(self, other: Primitives | LqSafe, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
     @override

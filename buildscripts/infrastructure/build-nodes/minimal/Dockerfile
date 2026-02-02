@@ -24,7 +24,6 @@ FROM ${IMAGE_BASE}
 # jq is required to parse bazel log files, requires +0.1MB
 # ksh is required for the shell tests, requires +3MB
 # lsb-release is required to use installation scripts, requires +4MB
-# lz4 is required to tar home cache folder, requires +0.2MB
 # make is required by tests, requires +47MB
 # rsync is required to upload artifacts, requires +1MB
 # python3 is required by tests, requires +19MB
@@ -39,7 +38,6 @@ RUN apt-get update && \
         jq \
         ksh \
         lsb-release \
-        lz4 \
         make \
         python3 \
         rsync \
@@ -54,6 +52,7 @@ COPY \
     package_versions.bzl \
     buildscripts/infrastructure/build-nodes/scripts/build_lib.sh \
     buildscripts/infrastructure/build-nodes/scripts/install-bazel.sh \
+    buildscripts/infrastructure/build-nodes/scripts/install-lz4-parallel.sh \
     buildscripts/infrastructure/build-nodes/scripts/install-docker.sh \
     /opt/
 
@@ -69,8 +68,6 @@ RUN /opt/install-bazel.sh
 # docker is required to run test-agent-plugin, requires +480MB
 RUN DISTRO="ubuntu-24.04" /opt/install-docker.sh
 
-RUN rm /opt/*.sh /opt/defines.make /opt/.bazelversion
-
 # Install the compiler.  We need both gcc 13 and 14 for the transition.
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
@@ -79,6 +76,7 @@ RUN apt-get update && \
     apt-get install -y gcc-14 g\+\+-14 && \
     update-alternatives --install "/usr/bin/gcc" gcc "/usr/bin/gcc-14" 100 && \
     update-alternatives --install "/usr/bin/g++" g++ "/usr/bin/g++-14" 100 && \
+    update-alternatives --install "/usr/bin/cc" cc "/usr/bin/gcc-14" 100 && \
     rm -rf /var/cache/apt/*
 
 # required to run tests with bazel, requires +577MB
@@ -91,6 +89,11 @@ RUN apt-get update && \
 RUN apt-get update && \
     apt-get install -y apache2 gawk libglib2.0-dev libkrb5-dev libldap2-dev libpango1.0-dev libpng-dev libpq-dev libsasl2-dev libpcap-dev libxml2-dev python3-enchant && \
     rm -rf /var/cache/apt/*
+
+# lz4 is required to tar home cache folder, requires +0.2MB
+RUN /opt/install-lz4-parallel.sh
+
+RUN rm /opt/*.sh /opt/defines.make /opt/.bazelversion
 
 # bazel can only be used as user, not as root https://github.com/bazelbuild/rules_python/pull/713
 # USER ubuntu

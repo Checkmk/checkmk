@@ -77,7 +77,6 @@ RUN apt-get install -y --fix-missing \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
-    lz4 \
     netcat-openbsd \
     openssh-client \
     patch \
@@ -182,6 +181,10 @@ RUN /opt/install-cmk-dependencies.sh
 
 COPY install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
+
+# lz4 is required to tar home cache folder
+COPY install-lz4-parallel.sh /opt/
+RUN /opt/install-lz4-parallel.sh
 
 # Ubuntu 23.10 introduced a user group named "ubuntu" with the ID 1000
 # Jenkins is using this group ID everywhere, so lets move it

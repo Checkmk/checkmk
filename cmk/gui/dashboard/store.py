@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-any-return"
 
 import time
-from typing import Any
+from typing import Any, cast
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
@@ -30,7 +30,16 @@ from .builtin_dashboards import (
     builtin_dashboard_extender_registry,
     builtin_dashboards,
 )
-from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
+from .dashlet.registry import dashlet_registry
+from .metadata import dashboard_uses_relative_grid
+from .type_defs import (
+    DashboardConfig,
+    DashboardName,
+    DashletConfig,
+    DashletId,
+    EmbeddedViewDashletConfig,
+    ViewDashletConfig,
+)
 
 
 # TODO: Same as in cmk.gui.plugins.views.utils.ViewStore and ReportStore, centralize implementation?
@@ -85,7 +94,7 @@ class DashboardStore:
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
     raw_dashboard["packaged"] = False
     raw_dashboard.setdefault("main_menu_search_terms", [])
-    return {
+    dashboard: DashboardConfig = {
         # Need to assume that we are right for now. We will have to introduce parsing there to do a
         # real conversion in one of the following typing steps
         **raw_dashboard,  # type: ignore[typeddict-item]
@@ -102,6 +111,7 @@ def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> D
             for embedded_id, embedded_view in raw_dashboard.get("embedded_views", {}).items()
         },
     }
+    return _migrate_dashboard_config(dashboard)
 
 
 def _internal_embedded_view_to_runtime_embedded_view(
@@ -168,3 +178,102 @@ def add_dashlet(dashlet_spec: DashletConfig, dashboard: DashboardConfig) -> None
     dashboard["dashlets"].append(dashlet_spec)
     dashboard["mtime"] = int(time.time())
     save_and_replicate_all_dashboards(dashboard["owner"])
+
+
+def _migrate_dashboard_config(dashboard: DashboardConfig) -> DashboardConfig:
+    """Migrate old dashboard configurations to the latest format.
+
+    This is done at runtime, since an update action would not be able to migrate MKPs."""
+    # ensure required fields exist
+    dashboard.setdefault("single_infos", [])
+    dashboard.setdefault("context", {})
+    dashboard.setdefault("mandatory_context_filters", [])
+
+    # responsive dashboard already uses the new dashlet format
+    if dashboard_uses_relative_grid(dashboard):
+        dashlets, embedded_views = _migrate_dashlets(dashboard)
+        dashboard["dashlets"] = dashlets
+        dashboard["embedded_views"] = embedded_views
+
+    return dashboard
+
+
+def _migrate_dashlets(
+    dashboard: DashboardConfig,
+) -> tuple[list[DashletConfig], dict[str, DashboardEmbeddedViewSpec]]:
+    embedded_views = dashboard.get("embedded_views", dict())
+    dashlets: list[DashletConfig] = []
+    for dashlet in dashboard["dashlets"]:
+        if "size" not in dashlet:
+            # dashlets with fixed sizes didn't save the size before
+            dashlet_type = dashlet_registry[dashlet["type"]]
+            dashlet["size"] = dashlet_type.initial_size()
+
+        if dashlet["type"] == "view":
+            view_widget, embedded_view = _migrate_view_widget(cast(ViewDashletConfig, dashlet))
+            embedded_views[view_widget["name"]] = embedded_view
+            dashlet = view_widget
+
+        dashlets.append(dashlet)
+
+    return dashlets, embedded_views
+
+
+def _migrate_view_widget(
+    config: ViewDashletConfig,
+) -> tuple[EmbeddedViewDashletConfig, DashboardEmbeddedViewSpec]:
+    embedded_view_widget: EmbeddedViewDashletConfig = {
+        "name": config["name"],
+        "datasource": config["datasource"],
+        "single_infos": config["single_infos"],
+        # position and size are expected since we are in a relative dashboard context
+        "position": config["position"],
+        "size": config["size"],
+        "type": "embedded_view",
+    }
+    if "background" in config:
+        embedded_view_widget["background"] = config["background"]
+
+    if "context" in config:
+        embedded_view_widget["context"] = config["context"]
+
+    if "title" in config:
+        embedded_view_widget["title"] = config["title"]
+
+    if "show_title" in config:
+        embedded_view_widget["show_title"] = config["show_title"]
+
+    embedded_view: DashboardEmbeddedViewSpec = {
+        "single_infos": config["single_infos"],
+        "datasource": config["datasource"],
+        "layout": config["layout"],
+        "group_painters": config["group_painters"],
+        "painters": config["painters"],
+        "browser_reload": config["browser_reload"],
+        "num_columns": config["num_columns"],
+        "column_headers": config["column_headers"],
+        "sorters": config["sorters"],
+    }
+
+    if "add_headers" in config:
+        embedded_view["add_headers"] = config["add_headers"]
+
+    if "mobile" in config:
+        embedded_view["mobile"] = config["mobile"]
+
+    if "mustsearch" in config:
+        embedded_view["mustsearch"] = config["mustsearch"]
+
+    if "force_checkboxes" in config:
+        embedded_view["force_checkboxes"] = config["force_checkboxes"]
+
+    if "user_sortable" in config:
+        embedded_view["user_sortable"] = config["user_sortable"]
+
+    if "play_sounds" in config:
+        embedded_view["play_sounds"] = config["play_sounds"]
+
+    if "inventory_join_macros" in config:
+        embedded_view["inventory_join_macros"] = config["inventory_join_macros"]
+
+    return embedded_view_widget, embedded_view

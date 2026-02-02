@@ -24,7 +24,6 @@ const props = withDefaults(
   defineProps<{
     metricName?: string | null
     disableValuesOnEmptyKey?: boolean
-    strict?: boolean
     staticResourceAttributeKeys?: string[] | null
     indent?: boolean
     orientation?: 'horizontal' | 'vertical'
@@ -32,7 +31,6 @@ const props = withDefaults(
   {
     metricName: null,
     disableValuesOnEmptyKey: false,
-    strict: false,
     staticResourceAttributeKeys: null,
     indent: false,
     orientation: 'horizontal'
@@ -282,7 +280,6 @@ function getAutoCompleterContext(
     :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
     :indent="props.indent"
     :orientation="props.orientation"
-    :strict="props.strict"
     :get-auto-completer-context="getResourceAutoCompleterContext"
   />
   <FormMetricBackendAttributeSection
@@ -295,7 +292,6 @@ function getAutoCompleterContext(
     :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
     :indent="props.indent"
     :orientation="props.orientation"
-    :strict="props.strict"
     :get-auto-completer-context="getScopeAutoCompleterContext"
   />
   <FormMetricBackendAttributeSection
@@ -308,7 +304,6 @@ function getAutoCompleterContext(
     :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
     :indent="props.indent"
     :orientation="props.orientation"
-    :strict="props.strict"
     :get-auto-completer-context="getDataPointAutoCompleterContext"
   />
 </template>

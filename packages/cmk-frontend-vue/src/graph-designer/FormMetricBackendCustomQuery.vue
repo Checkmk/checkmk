@@ -121,7 +121,6 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
   data: {
     ident: 'monitored_metrics_backend',
     params: {
-      strict: true,
       context: metricName.value
         ? {
             metric_name: metricName.value

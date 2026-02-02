@@ -29,7 +29,6 @@ const props = withDefaults(
     disableValuesOnEmptyKey?: boolean
     indent?: boolean
     orientation?: 'horizontal' | 'vertical'
-    strict?: boolean
     getAutoCompleterContext: (
       key: string | null,
       ignoreExisting: { index: number } | null
@@ -38,8 +37,7 @@ const props = withDefaults(
   {
     disableValuesOnEmptyKey: false,
     indent: false,
-    orientation: 'horizontal',
-    strict: false
+    orientation: 'horizontal'
   }
 )
 
@@ -71,7 +69,6 @@ const attributeAutoCompleter = (
   data: {
     ident: isForKey ? props.keyIdent : props.valueIdent,
     params: {
-      strict: props.strict,
       context: props.getAutoCompleterContext(
         isForKey ? null : key,
         ignoreExistingIndex !== null ? { index: ignoreExistingIndex } : null

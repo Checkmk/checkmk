@@ -38,7 +38,7 @@ export class UnifiedSearchProvider extends SearchProvider {
       return false
     }
     const { q } = this.renderQuery(query)
-    return q.length >= this.minInputlength
+    return q.length >= this.minInputLength
   }
 
   public override manipulateSearchQuery(query: UnifiedSearchQueryLike): {

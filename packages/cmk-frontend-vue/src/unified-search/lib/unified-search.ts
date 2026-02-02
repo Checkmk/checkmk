@@ -61,7 +61,7 @@ export abstract class SearchProvider {
     public id: string,
     public title?: string,
     public sort: number = 0,
-    public minInputlength: number = 2
+    public minInputLength: number = 2
   ) {
     if (!this.title) {
       this.title = this.id
@@ -82,7 +82,7 @@ export abstract class SearchProvider {
   }
 
   public shouldExecuteSearch(query: UnifiedSearchQueryLike): boolean {
-    return query.input.length >= this.minInputlength
+    return query.input.length >= this.minInputLength
   }
 
   public injectApi(api: Api): void {

@@ -20,7 +20,7 @@ export class SearchHistorySearchProvider extends SearchProvider {
     private searchHistory: SearchHistoryService,
     public override title?: string,
     public override sort: number = 0,
-    public override minInputlength: number = 0
+    public override minInputLength: number = 0
   ) {
     super('search-history')
   }

@@ -758,12 +758,12 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                 }
                 hss._debug_info =
                     hss._is_host ? "HOST DOWNTIME" : "SVC HOST DOWNTIME";
-                hss._host_downtime_depth += started ? 1 : -1;
-                if (hss._is_host) {
-                    hss._downtime_depth += started ? 1 : -1;
-                }
             } else {
                 state_changed = ModificationStatus::unchanged;
+            }
+            hss._host_downtime_depth += started ? 1 : -1;
+            if (hss._is_host) {
+                hss._downtime_depth += started ? 1 : -1;
             }
             break;
         }
@@ -774,8 +774,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                     abort_query_ = processor.process(hss);
                 }
                 hss._debug_info = "DOWNTIME SERVICE";
-                hss._downtime_depth += started ? 1 : -1;
             }
+            hss._downtime_depth += started ? 1 : -1;
             break;
         }
         case LogEntryKind::host_flapping_alert:

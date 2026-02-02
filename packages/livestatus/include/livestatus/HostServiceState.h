@@ -53,8 +53,14 @@ public:
     int _state{};                   // -1/0/1/2/3
     int _in_notification_period{};  // TODO(sp): int TimePeriodTransition::to()
     int _in_service_period{};       // TODO(sp): int TimePeriodTransition::to()
+    // NOTE: Although Nagios tracks the downtime depths internally, it only logs
+    // downtime alerts when a host/service actually enters/leaves a downtime,
+    // not for every change in the corresponding downtime depth (which is what
+    // the CMC does). So the semantics of the two fields below are slightly
+    // different depending on the monitoring core in use.
     int _downtime_depth{};
     int _host_downtime_depth{};
+
     bool _is_flapping{};
 
     // Service information

@@ -29,22 +29,12 @@ const {
 const hasBackground = computed<boolean>(() => {
   return !!generalSettings.render_background
 })
-
-const displayTitle = computed<string | undefined>(() => {
-  if (effectiveTitle) {
-    return effectiveTitle
-  }
-  if (generalSettings.title.text && generalSettings.title.render_mode !== 'hidden') {
-    return generalSettings.title.text
-  }
-  return undefined
-})
 </script>
 
 <template>
   <div class="db-content-container">
     <div
-      v-if="displayTitle && generalSettings.title.render_mode !== 'hidden'"
+      v-if="effectiveTitle && generalSettings.title.render_mode !== 'hidden'"
       class="db-content-container__title"
       :class="{
         'db-content-container__title--with-background':
@@ -55,9 +45,9 @@ const displayTitle = computed<string | undefined>(() => {
       <a
         v-if="generalSettings.title?.url && !isScrollablePreview"
         :href="generalSettings.title.url"
-        >{{ displayTitle }}</a
+        >{{ effectiveTitle }}</a
       >
-      <span v-else>{{ displayTitle }}</span>
+      <span v-else>{{ effectiveTitle }}</span>
     </div>
     <div
       class="db-content-container__content"

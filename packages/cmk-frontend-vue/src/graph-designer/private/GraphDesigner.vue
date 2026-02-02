@@ -71,7 +71,6 @@ const props = defineProps<{
   graph_lines: GraphLines
   graph_options: GraphOptions
   graph_renderer: GraphRenderer
-  metric_backend_available: boolean
   create_services_available: boolean
 }>()
 
@@ -134,7 +133,12 @@ const dataOmitZeroMetrics = ref(props.graph_options.omit_zero_metrics)
 
 // Topics
 
-const commonTopics: Topic[] = [
+const topics: Topic[] = [
+  {
+    ident: 'graph_lines_queries',
+    title: _t('Graph lines (OpenTelemetry)'),
+    elements: [{ ident: 'query', title: _t('Query') }]
+  },
   {
     ident: 'graph_lines_standard',
     title: _t('Graph lines (Standard)'),
@@ -153,19 +157,6 @@ const commonTopics: Topic[] = [
     customContent: true
   }
 ]
-let topics: Topic[]
-if (props.metric_backend_available) {
-  topics = [
-    {
-      ident: 'graph_lines_queries',
-      title: _t('Graph lines (OpenTelemetry)'),
-      elements: [{ ident: 'query', title: _t('Query') }]
-    },
-    ...commonTopics
-  ]
-} else {
-  topics = commonTopics
-}
 
 // Graph lines
 

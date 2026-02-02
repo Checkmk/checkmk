@@ -97,13 +97,10 @@ export abstract class SearchProvider {
     throw new Error('api not set')
   }
 
-  public initSearch<T>(
-    query: UnifiedSearchQueryLike,
-    callback: (query: UnifiedSearchQueryLike) => Promise<T | UnifiedSearchError>
-  ): Promise<T | UnifiedSearchError> {
+  public initSearch<T>(query: UnifiedSearchQueryLike): Promise<T | UnifiedSearchError> {
     this.searchActive.value = true
     return new Promise((resolve) => {
-      void callback(query)
+      void this.search(query)
         .catch((e) =>
           resolve(
             new UnifiedSearchError(
@@ -154,7 +151,7 @@ export class UnifiedSearch {
         isManipulated,
         originalQuery: isManipulated ? query : undefined,
         result: provider.shouldExecuteSearch(manipulatedQuery)
-          ? provider.initSearch(manipulatedQuery, provider.search.bind(provider))
+          ? provider.initSearch(manipulatedQuery)
           : new Promise((resolve) => {
               resolve(null)
             })

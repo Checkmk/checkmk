@@ -76,6 +76,13 @@ class FetchedResource(Enum):
         return self.value
 
 
+RESOURCES_NEEDING_NODES_INFO = {
+    FetchedResource.node.value,
+    FetchedResource.fan.value,
+    FetchedResource.temp.value,
+}
+
+
 def write_section(
     section_name: str, generator: Iterable[BaseModel], logger: logging.Logger
 ) -> None:
@@ -922,14 +929,17 @@ def write_sections(
     """Write monitoring sections based on selected resources"""
     fetched_resources = {obj.value for obj in args.fetched_resources}
 
-    # Store volumes for counter sections that depend on them
-    volumes = None
-    nodes = list(fetch_nodes(connection))
-    oldest_version = _pick_oldest_node_version(nodes)
+    nodes = None
+    if RESOURCES_NEEDING_NODES_INFO & fetched_resources:
+        nodes = list(fetch_nodes(connection))
 
     if FetchedResource.node.value in fetched_resources:
+        if not nodes:
+            raise CannotRecover("Node resource needs nodes information.")
         write_section("node", nodes, logger)
 
+    # Store volumes for counter sections that depend on them
+    volumes = None
     if (
         FetchedResource.volumes.value in fetched_resources
         or FetchedResource.volumes_counters.value in fetched_resources
@@ -967,10 +977,16 @@ def write_sections(
         write_section("if_counters", fetch_interfaces_counters(connection, interfaces), logger)
 
     if FetchedResource.fan.value in fetched_resources:
-        write_section("fan", fetch_fans(connection, oldest_version), logger)
+        if not nodes:
+            raise CannotRecover("Fan resource needs nodes information.")
+        write_section("fan", fetch_fans(connection, _pick_oldest_node_version(nodes)), logger)
 
     if FetchedResource.temp.value in fetched_resources:
-        write_section("temp", fetch_temperatures(connection, oldest_version), logger)
+        if not nodes:
+            raise CannotRecover("Temp resource needs nodes information.")
+        write_section(
+            "temp", fetch_temperatures(connection, _pick_oldest_node_version(nodes)), logger
+        )
 
     if FetchedResource.alerts.value in fetched_resources:
         write_section("alerts", fetch_alerts(connection, args), logger)

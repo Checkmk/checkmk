@@ -65,7 +65,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
@@ -793,6 +793,7 @@ class DiscoveryPageRenderer:
                     output=output,
                     site=self._host.site_id(),
                     server_per_site=get_server_per_site(active_config, AgentDownloadServerPerSite),
+                    docs_url=doc_reference_url(DocReference.WATO_AGENT_CMK),
                     agent_slideout=get_agent_slideout(
                         hostname=hostname,
                         save_host=False,

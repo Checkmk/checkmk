@@ -26,6 +26,7 @@ interface Props {
   slideInTitle: TranslatedString
   slideInButtonTitle: TranslatedString
   docsButtonTitle: TranslatedString
+  docsUrl: string
   closeButtonTitle: TranslatedString
   agentSlideout: AgentSlideout
   isNotRegistered: boolean
@@ -33,12 +34,12 @@ interface Props {
   siteServer: string
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const slideInOpen = ref(false)
 
 const openDocs = () => {
-  window.open('https://docs.checkmk.com/latest/en/wato_monitoringagents.html#agents', '_blank')
+  window.open(props.docsUrl, '_blank')
 }
 
 const tooltipOpen = ref(true)

@@ -18,6 +18,7 @@ const props = defineProps<{
   output: string
   site: string
   server_per_site: Array<AgentDownloadServerPerSite>
+  docs_url: string
   agent_slideout: AgentSlideout
 }>()
 
@@ -57,6 +58,7 @@ const siteServer = props.server_per_site.find((item) => item.site_id === props.s
     :slide-in-title="slideInTitle"
     :slide-in-button-title="slideInButtonTitle"
     :docs-button-title="docsButtonTitle"
+    :docs-url="docs_url"
     :close-button-title="_t('Close & run service discovery')"
     :agent-slideout="agent_slideout"
     :is-not-registered="output.includes(notRegisteredSearchTerm)"

@@ -29,9 +29,10 @@
             "$ref": "#/$defs/agent_download_server_per_site"
           }
         },
+        "docs_url": { "type": "string" },
         "agent_slideout": { "$ref": "agent_slideout.json" }
       },
-      "required": ["site", "server_per_site", "agent_slideout"]
+      "required": ["site", "server_per_site", "docs_url", "agent_slideout"]
     }
   }
 }

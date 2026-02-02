@@ -453,6 +453,7 @@ class DocReference(Enum):
     VIEWS = "views"
     VMWARE = "monitoring_vmware"
     WATO_AGENTS = "wato_monitoringagents"
+    WATO_AGENT_CMK = "wato_monitoringagents#agents"
     WATO_HOSTS = "wato_hosts"
     WATO_RULES = "wato_rules"
     WATO_RULES_DEPCRECATED = "wato_rules#obsolete_rule_sets"

@@ -332,6 +332,18 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
             table.cell(_("Connector type"), entry["connector_type"])
         table.cell(_("ID"), ident)
 
+    def _delete_confirm_message(self) -> str:
+        return " ".join(
+            [
+                _(
+                    "<b>Beware:</b> The OAuth2 connection may be used in checks. If you "
+                    "delete the connection, the checks won't be able to "
+                    "authenticate with this connection anymore."
+                ),
+                super()._delete_confirm_message(),
+            ]
+        )
+
     @override
     def action(self, config: Config) -> ActionResult:
         if not transactions.transaction_valid():

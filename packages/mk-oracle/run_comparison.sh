@@ -1,7 +1,7 @@
 #!/bin/bash
 # Compare outputs of the old (mk_oracle) and new (mk-oracle) plugins.
 # Usage:
-# DB_SECTION=<section_name> ./run_comparison.sh
+# DB_SECTION=<section_name> ./run_comparison.sh [--diff] [--keep]
 # default is instance
 #
 # Other sections:
@@ -27,7 +27,9 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMPDIR=$(mktemp -d)
-# trap 'rm -rf "$TMPDIR"' EXIT
+if [[ " $* " != *" --keep "* ]]; then
+    trap 'rm -rf "$TMPDIR"' EXIT
+fi
 
 OLD_OUT="${TMPDIR}/old_output.txt"
 NEW_OUT="${TMPDIR}/new_output.txt"
@@ -41,18 +43,20 @@ echo "=== Running new plugin (mk-oracle) ==="
 NEW_RC=$?
 
 echo ""
-echo "=== Summary ==="
+echo "=== Summary ${DB_SECTION} ==="
 echo "Old plugin (mk_oracle):  exit code=$OLD_RC, lines=$(wc -l <"$OLD_OUT"), bytes=$(wc -c <"$OLD_OUT")"
 echo "New plugin (mk-oracle):  exit code=$NEW_RC, lines=$(wc -l <"$NEW_OUT"), bytes=$(wc -c <"$NEW_OUT")"
 echo ""
 
 if diff -q "$OLD_OUT" "$NEW_OUT" >/dev/null 2>&1; then
     echo "Outputs are identical."
+    rm -rf "$TMPDIR"
 else
     echo "Outputs differ."
     if [[ " $* " == *" --diff "* ]]; then
         echo ""
         echo "=== Diff (old = mk_oracle, new = mk-oracle) ==="
-        diff --suppress-common-lines -u "$OLD_OUT" "$NEW_OUT" | head -500
+        diff --suppress-common-lines -u "$OLD_OUT" "$NEW_OUT" | head -1000
     fi
+    exit 1
 fi

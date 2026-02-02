@@ -47,6 +47,7 @@ div#top_heading {
 
     > div:first-child {
       flex-grow: 1;
+      max-width: 100%;
     }
   }
 
@@ -58,6 +59,9 @@ div#top_heading {
     color: $font-color;
     text-decoration: none;
     white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: block;
 
     &:hover {
       cursor: pointer;

@@ -45,6 +45,7 @@ def top_heading(
     html_title = HTML.with_escaping(title)
     writer.a(
         html_title,
+        title=title,
         class_="title",
         href="#",
         onfocus="if (this.blur) this.blur();",

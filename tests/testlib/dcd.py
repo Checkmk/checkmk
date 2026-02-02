@@ -84,6 +84,7 @@ def execute_dcd_cycle(
     expected_pb_hosts: int = 0,
     max_count: int = 30,
     interval: int = 5,
+    connection_name: str | None = None,
 ) -> None:
     """Execute a DCD cycle and wait for its completion.
 
@@ -100,6 +101,7 @@ def execute_dcd_cycle(
         expected_pb_hosts: The number of piggyback hosts expected to be discovered.
         max_count: The maximum number of attempts to perform when waiting for the hosts.
         interval: The delay per attempt when waiting for the hosts (seconds).
+        connection_name: If provided, only check batches belonging to this connection.
     """
 
     def _wait_for_hosts_in_batch() -> bool:
@@ -111,6 +113,9 @@ def execute_dcd_cycle(
         )
         all_batches_stdout = site.check_output(["cmk-dcd", "--batches"]).strip("\n").split("\n")
         logger.info("DCD batches:\n%s", "\n".join(all_batches_stdout[:]))
+
+        if connection_name is not None:
+            all_batches_stdout = [line for line in all_batches_stdout if connection_name in line]
 
         for idx, batch_stdout in enumerate(all_batches_stdout):
             # check if there is at least one completed batch containing the expected number of PB

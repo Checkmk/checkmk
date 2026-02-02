@@ -1344,6 +1344,7 @@ class DcdAPI(BaseAPI):
         *,
         dcd_id: str,
         title: str,
+        site: str | None = None,
         interval: int = 60,
         host_name_resource_attribute_key: str,
         resource_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
@@ -1360,7 +1361,7 @@ class DcdAPI(BaseAPI):
             json={
                 "dcd_id": dcd_id,
                 "title": title,
-                "site": self.session.site,
+                "site": site if site else self.session.site,
                 "connector": {
                     "connector_type": "metric_backend",
                     "interval": interval,

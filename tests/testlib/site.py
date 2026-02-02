@@ -1322,7 +1322,7 @@ class Site:
             lambda: self.omd("status").returncode == expected_status,
             timeout=timeout,
             interval=interval,
-            condition_name="Site status update",
+            condition_name=f"Site {self.id} status update",
         )
 
     def activate_changes_and_wait_for_site_restart(

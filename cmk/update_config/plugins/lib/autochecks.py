@@ -33,15 +33,39 @@ _ALL_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {
 }
 
 type ParameterTransformer = Callable[
-    [Any],  # should be LegacyCheckParameters, but this makes writing transforms cumbersome ...
+    [
+        str | None,
+        Any,
+    ],  # should be LegacyCheckParameters, but this makes writing transforms cumbersome ...
     Mapping[str, object],
 ]
 # some autocheck parameters need transformation even though there is no ruleset.
 type TDiscoveredParametersTransforms = Mapping[CheckPluginName, ParameterTransformer]
 
+
+# Adapt to changed default process pattern for automation helper from 2.4 to 2.5
+def _transform_automation_helper_ps_patterns(item: str | None, params: Any) -> Mapping[str, object]:
+    if not isinstance(params, dict):
+        raise ValueError(
+            f"Wrong format for discovered ps parameters, expected dictionary, got: {params!r}"
+        )
+
+    new_params = params.copy()
+    if not (item and item.endswith("automation helpers")):
+        return new_params
+
+    if (
+        process := new_params.get("process")
+    ) is not None and process == "~gunicorn:.*automation-helper":
+        new_params["process"] = "~.*cmk-automation-helper.*"
+
+    return new_params
+
+
 _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
     # cpu_loads no longer discovers any parameters, hence we can just drop them on update
-    CheckPluginName("cpu_loads"): lambda x: {},
+    CheckPluginName("cpu_loads"): lambda x, y: {},
+    CheckPluginName("ps"): _transform_automation_helper_ps_patterns,
 }
 
 _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
@@ -69,14 +93,14 @@ def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
     all_rulesets = AllRulesets.load_all_rulesets()
     plugins = load_all_pluginX(paths.checks_dir)
     for hostname in _autocheck_hosts():
-        fixed_autochecks = yield from _get_fixed_autochecks(
+        fixed_autochecks = yield from get_fixed_autochecks(
             hostname, all_rulesets, plugins.check_plugins
         )
         if write:
             AutochecksStore(hostname).write(fixed_autochecks)
 
 
-def _get_fixed_autochecks(
+def get_fixed_autochecks(
     host_name: HostName,
     all_rulesets: AllRulesets,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -123,7 +147,7 @@ def _fix_entry(
         new_plugin_name, lambda x: x
     )
     explicit_parameters_transform: ParameterTransformer = (
-        _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(new_plugin_name, lambda x: x)
+        _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(new_plugin_name, lambda x, y: y)
     )
 
     return AutocheckEntry(
@@ -131,7 +155,7 @@ def _fix_entry(
         item=explicit_item_transform(entry.item),
         parameters=_transformed_params(
             new_plugin_name,
-            explicit_parameters_transform(entry.parameters),
+            explicit_parameters_transform(entry.item, entry.parameters),
             all_rulesets,
             check_plugins,
             hostname,

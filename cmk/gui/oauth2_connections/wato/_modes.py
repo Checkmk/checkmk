@@ -67,6 +67,8 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeRedirectOAuth2Connection)
     mode_registry.register(ModeCreateOAuth2Connection)
     mode_registry.register(ModeOAuth2Connections)
+    mode_registry.register(ModeMicrosoftEntraIdConnections)
+    mode_registry.register(ModeCreateMicrosoftEntraIdConnection)
 
 
 def uuid4_validator(error_msg: Message | None = None) -> validators.MatchRegex:
@@ -250,32 +252,24 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     def name(cls) -> str:
         return "oauth2_connections"
 
-    def _table_title(self) -> str:
-        if self._connector_type == "microsoft_entra_id":
-            return _("Microsoft Entra ID connections")
-        return _("OAuth2 connections")
-
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return ["general.oauth2_connections", "passwords"]
 
-    def __init__(self) -> None:
-        self._connector_type = request.get_ascii_input("connector_type")
-        mode_type: SimpleModeType[OAuth2Connection]
-        match self._connector_type:
-            case "microsoft_entra_id":
-                mode_type = MicrosoftEntraIdModeType()
-            case _:
-                mode_type = OAuth2ModeType()
+    def _table_title(self) -> str:
+        return self.title()
 
+    @classmethod
+    def _connector_type(cls) -> str | None:
+        return None
+
+    def __init__(self, mode_type: SimpleModeType[OAuth2Connection] | None = None) -> None:
         super().__init__(
-            mode_type=mode_type,
+            mode_type=mode_type or OAuth2ModeType(),
             store=OAuth2ConnectionsConfigFile(),
         )
 
     def title(self) -> str:
-        if self._connector_type == "microsoft_entra_id":
-            return _("Microsoft Entra ID connections")
         return _("OAuth2 connections")
 
     def page(self, config: Config) -> None:
@@ -304,11 +298,7 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
                                             [
                                                 (
                                                     "mode",
-                                                    self._mode_type.edit_mode_name(),
-                                                ),
-                                                (
-                                                    "connector_type",
-                                                    "microsoft_entra_id",
+                                                    "edit_microsoft_entra_id_connection",
                                                 ),
                                             ],
                                         )
@@ -328,17 +318,17 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     def _filter_for_connector_type(
         self, entries: dict[str, OAuth2Connection]
     ) -> dict[str, OAuth2Connection]:
-        if self._connector_type is None:
+        if self._connector_type() is None:
             return entries
         return {
             ident: entry
             for ident, entry in entries.items()
-            if entry["connector_type"] == self._connector_type
+            if entry["connector_type"] == self._connector_type()
         }
 
     def _show_entry_cells(self, table: Table, ident: str, entry: OAuth2Connection) -> None:
         table.cell(_("Title"), entry["title"])
-        if self._connector_type is None:
+        if self._connector_type() is None:
             table.cell(_("Connector type"), entry["connector_type"])
         table.cell(_("ID"), ident)
 
@@ -391,17 +381,40 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         )
 
 
+class ModeMicrosoftEntraIdConnections(ModeOAuth2Connections):
+    def __init__(self) -> None:
+        super().__init__(mode_type=MicrosoftEntraIdModeType())
+
+    @classmethod
+    @override
+    def name(cls) -> str:
+        return "microsoft_entra_id_connections"
+
+    @override
+    def title(self) -> str:
+        return _("Microsoft Entra ID connections")
+
+    @classmethod
+    @override
+    def _connector_type(cls) -> str | None:
+        return "microsoft_entra_id"
+
+
 class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
     @classmethod
     @override
     def name(cls) -> str:
         return "edit_oauth2_connection"
 
-    def __init__(self) -> None:
+    def __init__(self, mode_type: SimpleModeType[OAuth2Connection] | None = None) -> None:
         super().__init__(
-            mode_type=OAuth2ModeType(),
+            mode_type=mode_type or OAuth2ModeType(),
             store=OAuth2ConnectionsConfigFile(),
         )
+
+    @classmethod
+    def _connector_type(cls) -> str | None:
+        return None
 
     @staticmethod
     @override
@@ -464,7 +477,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                         )
                     ),
                     "authority_mapping": get_authority_mapping(),
-                    "connector_type": request.get_ascii_input_mandatory("connector_type"),
+                    "connector_type": self._connector_type(),
                 },
             )
             return
@@ -497,6 +510,26 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                 "connector_type": self._entry["connector_type"],
             },
         )
+
+
+class ModeCreateMicrosoftEntraIdConnection(ModeCreateOAuth2Connection):
+    def __init__(self) -> None:
+        super().__init__(mode_type=MicrosoftEntraIdModeType())
+
+    @classmethod
+    @override
+    def name(cls) -> str:
+        return "edit_microsoft_entra_id_connection"
+
+    @classmethod
+    @override
+    def parent_mode(cls) -> type[WatoMode[None]] | None:
+        return ModeMicrosoftEntraIdConnections
+
+    @classmethod
+    @override
+    def _connector_type(cls) -> str | None:
+        return "microsoft_entra_id"
 
 
 class ModeRedirectOAuth2Connection(WatoMode[None]):

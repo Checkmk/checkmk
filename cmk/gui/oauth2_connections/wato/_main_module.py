@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato import MainModuleTopicExporter, MainModuleTopicGeneral
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 
@@ -53,11 +51,7 @@ class MainModuleOAuth2Connection(ABCMainModule):
 class MainModuleMicrosoftEntraId(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
-        return makeuri_contextless(
-            request,
-            [("mode", "oauth2_connections"), ("connector_type", "microsoft_entra_id")],
-            "wato.py",
-        )
+        return "microsoft_entra_id_connections"
 
     @property
     def topic(self) -> MainModuleTopic:

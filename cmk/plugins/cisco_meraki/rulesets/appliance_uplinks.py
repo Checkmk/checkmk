@@ -27,31 +27,36 @@ def _parameter_form() -> Dictionary:
                             parameter_form=ServiceState(
                                 title=Title('Uplink status "active"'),
                                 prefill=DefaultValue(ServiceState.OK),
-                            )
+                            ),
+                            required=True,
                         ),
                         "ready": DictElement(
                             parameter_form=ServiceState(
                                 title=Title('Uplink status "ready"'),
                                 prefill=DefaultValue(ServiceState.OK),
-                            )
+                            ),
+                            required=True,
                         ),
                         "connecting": DictElement(
                             parameter_form=ServiceState(
                                 title=Title('Uplink status "connecting"'),
                                 prefill=DefaultValue(ServiceState.WARN),
-                            )
+                            ),
+                            required=True,
                         ),
                         "not_connected": DictElement(
                             parameter_form=ServiceState(
                                 title=Title('Uplink status "not connected"'),
                                 prefill=DefaultValue(ServiceState.WARN),
-                            )
+                            ),
+                            required=True,
                         ),
                         "failed": DictElement(
                             parameter_form=ServiceState(
                                 title=Title('Uplink status "failed"'),
                                 prefill=DefaultValue(ServiceState.CRIT),
-                            )
+                            ),
+                            required=True,
                         ),
                     },
                 )

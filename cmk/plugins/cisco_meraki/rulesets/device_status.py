@@ -42,25 +42,29 @@ def _parameter_form() -> Dictionary:
                             parameter_form=ServiceState(
                                 title=Title('Monitoring state for device state "online"'),
                                 prefill=DefaultValue(0),
-                            )
+                            ),
+                            required=True,
                         ),
                         "alerting": DictElement(
                             parameter_form=ServiceState(
                                 title=Title('Monitoring state for device state "alerting"'),
                                 prefill=DefaultValue(2),
-                            )
+                            ),
+                            required=True,
                         ),
                         "offline": DictElement(
                             parameter_form=ServiceState(
                                 title=Title('Monitoring state for device state "offline"'),
                                 prefill=DefaultValue(1),
-                            )
+                            ),
+                            required=True,
                         ),
                         "dormant": DictElement(
                             parameter_form=ServiceState(
                                 title=Title('Monitoring state for device state "dormant"'),
                                 prefill=DefaultValue(1),
-                            )
+                            ),
+                            required=True,
                         ),
                     },
                 )

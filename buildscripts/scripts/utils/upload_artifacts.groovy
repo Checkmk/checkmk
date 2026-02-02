@@ -169,7 +169,8 @@ boolean download_hot_cache(Map args) {
 
         sh("""
             cd ${args.download_dest}
-            time lz4 -dc ${args.file_pattern} | tar -xf - 2>/dev/null
+            time mbuffer -q -P 80 -m 10G -i ${args.file_pattern} | lz4 -dc | tar -xf - 2>/dev/null
+
             du -sh ~/.cache
         """);
     }

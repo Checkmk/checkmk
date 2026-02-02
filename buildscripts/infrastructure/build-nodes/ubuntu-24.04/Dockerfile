@@ -24,6 +24,7 @@ RUN apt-get install -y \
     libsasl2-dev \
     libxml2 \
     make \
+    mbuffer \
     nullmailer \
     php-common \
     python3-dev \

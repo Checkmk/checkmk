@@ -25,6 +25,7 @@ FROM ${IMAGE_BASE}
 # ksh is required for the shell tests, requires +3MB
 # lsb-release is required to use installation scripts, requires +4MB
 # make is required by tests, requires +47MB
+# mbuffer is required for faster decompression with lz4, requires +1MB
 # rsync is required to upload artifacts, requires +1MB
 # python3 is required by tests, requires +19MB
 # vim-tiny is required for convenience, requires +20MB
@@ -39,6 +40,7 @@ RUN apt-get update && \
         ksh \
         lsb-release \
         make \
+        mbuffer \
         python3 \
         rsync \
         vim-tiny \

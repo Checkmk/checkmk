@@ -15,9 +15,15 @@ description:
  and availability.
  In order to use this check, you need to configure the Azure special agent.
 
+ Azure calculates availability based on actual traffic rather than a
+ continuous "heartbeat" check. Consequently, when your storage account
+ is idle, the API returns empty values because there were no transactions
+ to measure. When no data is available, the service will go OK and show
+ the message "No data in the Azure API response due to inactivity on the
+ storage account."
+
 item:
  The name of the resource.
 
 discovery:
- One service is created for each storage account if all required metrics
- (total_SuccessServerLatency, total_SuccessE2ELatency, total_Availability) are given.
+ One service is created for each storage account.

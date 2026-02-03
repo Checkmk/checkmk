@@ -6,23 +6,71 @@
 This special agent is deprecated. Please use the new azure_v2.
 """
 
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from cmk.agent_based.v1.type_defs import CheckResult
 from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
     CheckPlugin,
+    DiscoveryResult,
+    IgnoreResultsError,
     render,
+    Result,
+    Service,
+    State,
 )
 from cmk.plugins.azure_deprecated.agent_based.lib import (
-    CheckFunction,
-    create_check_metrics_function,
-    create_discover_by_metrics_function,
+    check_resource_metrics,
+    get_service_labels_from_resource_tags,
     MetricData,
     parse_resources,
+    Resource,
+    Section,
 )
 
 
-def create_check_azure_storage() -> CheckFunction:
-    return create_check_metrics_function(
+def _check_metrics_with_inactivity_fallback(
+    resource: Resource,
+    params: Mapping[str, Any],
+    metrics_data: Sequence[MetricData],
+) -> CheckResult:
+    """Check metrics individually and yield inactivity message only if all fail."""
+    all_failed = True
+    for metric in metrics_data:
+        try:
+            yield from check_resource_metrics(
+                resource,
+                params,
+                [metric],
+                check_levels=check_levels,
+            )
+            all_failed = False
+        except IgnoreResultsError:
+            pass
+
+    if all_failed:
+        yield Result(
+            state=State.OK,
+            summary="No data in the Azure API response due to inactivity on the storage account.",
+        )
+
+
+def discover_azure_storageaccounts(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
+        for item, resource in section.items()
+    )
+
+
+def check_azure_storage(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (resource := section.get(item)):
+        raise IgnoreResultsError("Data not present at the moment")
+
+    yield from _check_metrics_with_inactivity_fallback(
+        resource,
+        params,
         [
             MetricData(
                 "total_UsedCapacity",
@@ -32,7 +80,6 @@ def create_check_azure_storage() -> CheckFunction:
                 upper_levels_param="used_capacity_levels",
             )
         ],
-        check_levels=check_levels,
     )
 
 
@@ -43,8 +90,8 @@ check_plugin_azure_storageaccounts = CheckPlugin(
     name="azure_storageaccounts",
     service_name="Storage %s account",
     sections=["azure_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function("total_UsedCapacity"),
-    check_function=create_check_azure_storage(),
+    discovery_function=discover_azure_storageaccounts,
+    check_function=check_azure_storage,
     check_ruleset_name="azure_storageaccounts_usage",
     check_default_parameters={
         "used_capacity_levels": (
@@ -66,8 +113,15 @@ FLOW_METRICS = {
 }
 
 
-def create_check_azure_storageaccounts_flow() -> CheckFunction:
-    return create_check_metrics_function(
+def check_azure_storageaccounts_flow(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (resource := section.get(item)):
+        raise IgnoreResultsError("Data not present at the moment")
+
+    yield from _check_metrics_with_inactivity_fallback(
+        resource,
+        params,
         [
             MetricData(
                 metric_key,
@@ -78,7 +132,6 @@ def create_check_azure_storageaccounts_flow() -> CheckFunction:
             )
             for metric_key, render_func in FLOW_METRICS.items()
         ],
-        check_levels=check_levels,
     )
 
 
@@ -86,8 +139,8 @@ check_plugin_azure_storageaccounts_flow = CheckPlugin(
     name="azure_storageaccounts_flow",
     service_name="Storage %s flow",
     sections=["azure_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function(*FLOW_METRICS.keys()),
-    check_function=create_check_azure_storageaccounts_flow(),
+    discovery_function=discover_azure_storageaccounts,
+    check_function=check_azure_storageaccounts_flow,
     check_ruleset_name="azure_storageaccounts_flow",
     check_default_parameters={
         "ingress_levels": ("no_levels", None),
@@ -126,8 +179,15 @@ PERFORMANCE_METRICS = {
 }
 
 
-def create_check_azure_storageaccounts_performance() -> CheckFunction:
-    return create_check_metrics_function(
+def check_azure_storageaccounts_performance(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (resource := section.get(item)):
+        raise IgnoreResultsError("Data not present at the moment")
+
+    yield from _check_metrics_with_inactivity_fallback(
+        resource,
+        params,
         [
             MetricData(
                 metric_key,
@@ -145,7 +205,6 @@ def create_check_azure_storageaccounts_performance() -> CheckFunction:
                 lower_levels,
             ) in PERFORMANCE_METRICS.items()
         ],
-        check_levels=check_levels,
     )
 
 
@@ -153,8 +212,8 @@ check_plugin_azure_storageaccounts_performance = CheckPlugin(
     name="azure_storageaccounts_performance",
     service_name="Storage %s performance",
     sections=["azure_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function(*PERFORMANCE_METRICS.keys()),
-    check_function=create_check_azure_storageaccounts_performance(),
+    discovery_function=discover_azure_storageaccounts,
+    check_function=check_azure_storageaccounts_performance,
     check_ruleset_name="azure_storageaccounts_performance",
     check_default_parameters={
         "server_latency_levels": ("fixed", (701, 1001)),

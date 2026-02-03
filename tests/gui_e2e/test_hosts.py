@@ -265,7 +265,7 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
         docs_page = popup_info.value
 
         expect(docs_page).to_have_url(
-            "https://docs.checkmk.com/latest/en/wato_monitoringagents.html#agents"
+            "https://docs.checkmk.com/master/en/wato_monitoringagents.html?origin=checkmk#agents"
         )
     finally:
         if is_cleanup_enabled():

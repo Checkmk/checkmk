@@ -20,19 +20,19 @@ pytest "${SCRIPT_DIR}" \
 RC=$?
 if [ -n "${CI}" ]; then
     # update database; generate report and check weekly baseline
-    "${SCRIPT_DIR}/perftest_plot.py" --update \
+    "${SCRIPT_DIR}/perftest_plot.py" --update --branch-version="${BRANCH}" \
         --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
         --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" || exit 200
     if [[ "$(date '+%Y-%m-%d')" > "2025-12-01" ]]; then
         # check monthly baseline
-        "${SCRIPT_DIR}/perftest_plot.py" \
+        "${SCRIPT_DIR}/perftest_plot.py" --branch-version="${BRANCH}" \
             --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
             --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" \
             --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200
     fi
     if [[ "$(date '+%Y-%m-%d')" > "2026-11-01" ]]; then
         # check yearly baseline
-        "${SCRIPT_DIR}/perftest_plot.py" \
+        "${SCRIPT_DIR}/perftest_plot.py" --branch-version="${BRANCH}" \
             --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
             --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" \
             --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 200

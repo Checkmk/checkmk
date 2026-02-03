@@ -314,6 +314,7 @@ def deployment_from_client(
         status=api.DeploymentStatus(
             conditions=deployment_conditions(deployment.status),
             replicas=deployment_replicas(deployment.status, deployment.spec),
+            number_terminating=deployment.status.terminating_replicas,
         ),
         pods=pod_uids,
     )

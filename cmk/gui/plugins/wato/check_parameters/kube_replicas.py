@@ -35,6 +35,10 @@ def _parameter_valuespec():
                 "misscheduled_duration",
                 age_levels_dropdown(_("Misscheduled duration (DaemonSet only)")),
             ),
+            (
+                "terminating_duration",
+                age_levels_dropdown(_("Terminating duration (Deployment only)")),
+            ),
         ],
     )
 

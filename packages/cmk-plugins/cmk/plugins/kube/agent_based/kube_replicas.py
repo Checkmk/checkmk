@@ -103,6 +103,7 @@ def _check_duration(
         "not_ready_started_timestamp",
         "update_started_timestamp",
         "misscheduled_timestamp",
+        "terminating_timestamp",
     ],
     now: float,
     value_store: MutableMapping[str, Any],
@@ -192,6 +193,28 @@ def _check_kube_replicas(
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
     yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
 
+    if (
+        isinstance(section_kube_replicas, DeploymentReplicas)
+        and section_kube_replicas.terminating is not None
+    ):
+        yield Result(
+            state=State.OK,
+            summary=f"Terminating: {section_kube_replicas.terminating}",
+        )
+        yield Metric(
+            "kube_terminating_replicas",
+            section_kube_replicas.terminating,
+            boundaries=metric_boundary,
+        )
+        yield from _check_duration(
+            section_kube_replicas.terminating == 0,
+            "terminating_timestamp",
+            now,
+            value_store,
+            _levels(params, "terminating_duration"),
+            "Terminating for",
+        )
+
     if isinstance(section_kube_replicas, DaemonSetReplicas):
         yield Result(
             state=State.OK,
@@ -261,5 +284,6 @@ check_plugin_kube_replicas = CheckPlugin(
         "update_duration": ("levels", (300, 600)),
         "not_ready_duration": ("levels", (300, 600)),
         "misscheduled_duration": ("levels", (300, 600)),
+        "terminating_duration": ("levels", (300, 600)),
     },
 )

@@ -81,6 +81,7 @@ def _replicas(deployment: Deployment) -> section.DeploymentReplicas:
         desired=deployment.status.replicas.replicas,
         ready=deployment.status.replicas.ready,
         updated=deployment.status.replicas.updated,
+        terminating=deployment.status.number_terminating,
     )
 
 

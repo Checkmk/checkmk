@@ -557,6 +557,10 @@ class DeploymentReplicas(Section, CommonReplicas):
     # across both ReplicaSets (if present).
     # updated (status.updatedReplicas): the number of claimed Pods, belonging the ReplicaSet with
     # the up-to-date Pod template.
+    # terminating (status.terminatingReplicas): the number of terminating pods targeted by this
+    # deployment. Terminating pods have a non-null .metadata.deletionTimestamp and have not yet
+    # reached the Failed or Succeeded .status.phase.
+    terminating: int | None = None
 
 
 class IdentificationError(BaseModel):

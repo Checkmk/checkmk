@@ -31,6 +31,12 @@ metric_kube_available_replicas = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.BLUE,
 )
+metric_kube_terminating_replicas = metrics.Metric(
+    name="kube_terminating_replicas",
+    title=Title("Terminating replicas"),
+    unit=UNIT_COUNTER,
+    color=metrics.Color.RED,
+)
 
 graph_kube_replica_available_state = graphs.Graph(
     name="kube_replica_available_state",
@@ -49,5 +55,11 @@ graph_kube_replica_update_state = graphs.Graph(
     name="kube_replica_update_state",
     title=Title("Replica update state"),
     compound_lines=["kube_updated_replicas"],
+    simple_lines=["kube_desired_replicas"],
+)
+graph_kube_replica_terminating_state = graphs.Graph(
+    name="kube_replica_terminating_state",
+    title=Title("Replica terminating state"),
+    compound_lines=["kube_terminating_replicas"],
     simple_lines=["kube_desired_replicas"],
 )

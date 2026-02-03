@@ -618,7 +618,7 @@ class Endpoint:
     ) -> None:
         try:
             if header_schema:
-                _params.update(header_schema().load(request.headers))
+                _params.update(header_schema().load(dict(request.headers)))
         except ValidationError as exc:
             raise RestAPIHeaderSchemaValidationException(
                 title=http.client.responses[400],

@@ -190,6 +190,30 @@ class StartURLUserAttribute(UserAttribute):
                     FixedValue(
                         value="welcome.py",
                         title=_("Welcome page"),
+                        help=_(
+                            "Access to the Welcome page is controlled by "
+                            "multiple permissions. Users without the required "
+                            "permissions will be redirected to the main "
+                            "dashboard. Needed permissions are:<br>"
+                            "<br>"
+                            "- Activate configuration<br>"
+                            "- Add & remove hosts<br>"
+                            "- Customize dashboards and use them<br>"
+                            "- Host & service groups<br>"
+                            "- Host management<br>"
+                            "- Make changes, perform actions<br>"
+                            "- Modify built-in dashboards<br>"
+                            "- Notification configuration<br>"
+                            "- Register host & download monitoring agents of your hosts<br>"
+                            "- See packaged dashboards<br>"
+                            "- See user dashboards<br>"
+                            "- Service discovery: Disabled services<br>"
+                            "- Service discovery: Move to monitored services<br>"
+                            "- Service discovery: Move to undecided services<br>"
+                            "- Service discovery: Remove services<br>"
+                            "- Time periods<br>"
+                            "- Use WATO"
+                        ),
                         totext="",
                     ),
                     TextInput(

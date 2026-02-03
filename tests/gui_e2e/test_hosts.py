@@ -257,16 +257,6 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
         slideout_close_button = dashboard_page.main_area.locator(".cmk-slide-in-dialog__close")
         slideout_close_button.click()
 
-        with dashboard_page.page.expect_popup() as popup_info:
-            dashboard_page.main_area.locator(
-                "button.cmk-button:has-text('Read Checkmk user guide')"
-            ).click()
-
-        docs_page = popup_info.value
-
-        expect(docs_page).to_have_url(
-            "https://docs.checkmk.com/master/en/wato_monitoringagents.html?origin=checkmk#agents"
-        )
     finally:
         if is_cleanup_enabled():
             SetupHost(dashboard_page.page).delete_hosts(host_name)

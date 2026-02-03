@@ -6,9 +6,10 @@
 
 
 from collections.abc import MutableSequence, Sequence
+from enum import Enum
 from ipaddress import ip_address
 from re import compile as re_compile
-from typing import NotRequired, Self, TypedDict
+from typing import NotRequired, override, Self, TypedDict
 
 from pydantic import BaseModel
 
@@ -28,6 +29,18 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.network.agent_based.lib import DETECT_FORTINET, get_short_if_name
+
+
+class ChassisIdSubType(Enum):
+    MAC_ADDRESS_4 = "4"
+    MAC_ADDRESS_7 = "7"
+    NETWORK_ADDRESS = "5"
+    UNKNOWN = "unknown"
+
+    @override
+    @classmethod
+    def _missing_(cls, value: object) -> "ChassisIdSubType":
+        return cls.UNKNOWN
 
 
 class InventoryParams(TypedDict):
@@ -59,7 +72,7 @@ class LldpGlobal(BaseModel, frozen=True):
             return None
         else:
             return cls(
-                id=_render_chassis_id(str(chassis_id_type), chassis_id),
+                id=_render_chassis_id(ChassisIdSubType(str(chassis_id_type)), chassis_id),
                 name=str(system_name),
                 description=str(sys_description),
                 cap_supported=_render_capabilities(cap_supported),
@@ -193,14 +206,16 @@ def _render_capabilities(raw_capabilities: str | list[int]) -> str | None:
     return ", ".join(capabilities)
 
 
-def _render_chassis_id(chassis_id_sub_type: str, chassis_id: list[int] | str) -> str | None:
+def _render_chassis_id(
+    chassis_id_sub_type: ChassisIdSubType, chassis_id: list[int] | str
+) -> str | None:
     if isinstance(chassis_id, str):
         return None
 
     match chassis_id_sub_type:
-        case "4" | "7":  # mac address
+        case ChassisIdSubType.MAC_ADDRESS_4 | ChassisIdSubType.MAC_ADDRESS_7:
             return _render_mac_address(chassis_id)
-        case "5":  # network address
+        case ChassisIdSubType.NETWORK_ADDRESS:
             return _render_networkaddress(chassis_id)
         case _:  # all other
             return "".join(chr(m) for m in chassis_id)
@@ -243,7 +258,7 @@ def parse_lldp_cache(string_table: Sequence[StringByteTable]) -> Lldp | None:
         except ValueError:
             continue
 
-        chassis_id = _render_chassis_id(str(chassis_id_sub_type), chassis_id_raw)
+        chassis_id = _render_chassis_id(ChassisIdSubType(str(chassis_id_sub_type)), chassis_id_raw)
 
         # skip neighbors without chassis id/name
         if not chassis_id and not neighbor_name:

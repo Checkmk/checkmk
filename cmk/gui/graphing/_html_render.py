@@ -1412,7 +1412,7 @@ def host_service_graph_dashlet_cmk(
                 len(list(graph_artwork_or_errors.artwork.curves))
                 + len(graph_artwork_or_errors.artwork.horizontal_rules)
             )
-            * 1.3
+            * 1.5
         )
         if height <= 0:
             raise MKGraphDashletTooSmallError(

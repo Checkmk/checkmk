@@ -6,18 +6,28 @@
 
 # mypy: disable-error-code="arg-type"
 
+from collections.abc import Mapping
+from typing import TypeVar
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
-    discover_azure_by_metrics,
     get_data_or_go_stale,
     iter_resource_attributes,
     parse_resources,
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import Service
+from cmk.agent_based.v2 import IgnoreResultsError, Service
 from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
+
+_Data = TypeVar("_Data")
+
+
+def _get_data_or_go_stale(item: str, section: Mapping[str, _Data]) -> _Data:
+    if resource := section.get(item):
+        return resource
+    raise IgnoreResultsError("Data not present at the moment")
 
 
 @get_data_or_go_stale
@@ -71,23 +81,28 @@ check_info["azure_storageaccounts"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_storageaccounts_flow(_item, params, resource):
+def check_azure_storageaccounts_flow(_item, params, section):
+    mchecks = []
+    resource = _get_data_or_go_stale(_item, section)
     for metric_key in ("total_Ingress", "total_Egress", "total_Transactions"):
         cmk_key = metric_key[6:].lower()
         displ = cmk_key.title()
         levels = params.get("%s_levels" % cmk_key, (None, None))
         mcheck = check_azure_metric(resource, metric_key, cmk_key, displ, levels=levels)
         if mcheck:
-            yield mcheck
+            mchecks.append(mcheck)
+
+    if mchecks:
+        yield from mchecks
+        return
+
+    yield 0, "Data not present at the moment."
 
 
 check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
     service_name="Storage %s flow",
     sections=["azure_storageaccounts"],
-    discovery_function=discover_azure_by_metrics(
-        "total_Ingress", "total_Egress", "total_Transactions"
-    ),
+    discovery_function=discover_azure_storageaccounts,
     check_function=check_azure_storageaccounts_flow,
     check_ruleset_name="azure_storageaccounts",
     check_default_parameters={},
@@ -108,8 +123,10 @@ check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
 )
 
 
-@get_data_or_go_stale
-def check_azure_storageaccounts_performance(_item, params, resource):
+def check_azure_storageaccounts_performance(_item, params, section):
+    mchecks = []
+    resource = _get_data_or_go_stale(_item, section)
+
     for key, cmk_key, displ in (
         ("average_SuccessServerLatency", "server_latency", "Success server latency"),
         ("average_SuccessE2ELatency", "e2e_latency", "End-to-end server latency"),
@@ -118,17 +135,19 @@ def check_azure_storageaccounts_performance(_item, params, resource):
         levels = params.get("%s_levels" % cmk_key, (None, None))
         mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels)
         if mcheck:
-            yield mcheck
+            mchecks.append(mcheck)
+
+    if mchecks:
+        yield from mchecks
+        return
+
+    yield 0, "Data not present at the moment."
 
 
 check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
     service_name="Storage %s performance",
     sections=["azure_storageaccounts"],
-    discovery_function=discover_azure_by_metrics(
-        "average_SuccessServerLatency",
-        "average_SuccessE2ELatency",
-        "average_Availability",
-    ),
+    discovery_function=discover_azure_storageaccounts,
     check_function=check_azure_storageaccounts_performance,
     check_ruleset_name="azure_storageaccounts",
     check_default_parameters={},

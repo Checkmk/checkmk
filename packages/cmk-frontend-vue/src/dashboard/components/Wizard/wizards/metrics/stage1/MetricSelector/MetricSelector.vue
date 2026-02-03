@@ -88,7 +88,7 @@ const _updateMetricType = (value: string) => {
             <CmkInlineValidation :validation="[_t('Must select an option')]" />
           </div>
         </div>
-        <ContentSpacer :dimension="5" />
+        <ContentSpacer :dimension="4" />
 
         <CmkIndent class="db-metric-selector__indent">
           <CmkLabel class="db-metric-selector__narrow-legend">{{
@@ -102,7 +102,7 @@ const _updateMetricType = (value: string) => {
             "
           />
 
-          <ContentSpacer :dimension="4" />
+          <ContentSpacer :dimension="5" />
 
           <div class="db-metric-selector__container">
             <div class="db-metric-selector__host-filter">

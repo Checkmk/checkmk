@@ -85,19 +85,19 @@ const displayLabels = computed(() => {
   )
   if (props.objectSelectionMode === ElementSelection.SPECIFIC) {
     return {
-      contextFilterTitle: _t('Applied %{n} filter', {
+      contextFilterTitle: _t('Applied deshboard %{n} filter', {
         n: filterName
       }),
       contextFilterTooltip: tooltip,
-      emptyContextTitle: _t('No %{n} filter applied', {
+      emptyContextTitle: _t('No dashboard %{n} filter applied', {
         n: filterName
       })
     }
   }
   return {
-    contextFilterTitle: _t('Applied %{n} filters', { n: props.objectType }),
+    contextFilterTitle: _t('Applied dashboard %{n} filters', { n: props.objectType }),
     contextFilterTooltip: tooltip,
-    emptyContextTitle: _t('No %{n} filters applied', { n: props.objectType })
+    emptyContextTitle: _t('No dashboard %{n} filters applied', { n: props.objectType })
   }
 })
 </script>

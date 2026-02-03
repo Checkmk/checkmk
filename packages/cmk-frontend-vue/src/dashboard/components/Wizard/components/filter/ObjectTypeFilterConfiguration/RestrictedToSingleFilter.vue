@@ -33,7 +33,7 @@ const emit = defineEmits<{
   (e: 'remove-filter', filterId: string): void
 }>()
 
-const { filterName } = getStrings(props.objectType)
+const { filterName, singular } = getStrings(props.objectType)
 
 const { byId, ensureLoaded } = useVisualInfoCollection()
 
@@ -75,7 +75,7 @@ onMounted(async () => {
   <div>
     <div v-if="!showFilter">
       <CmkParagraph style="padding-bottom: var(--dimension-4)">{{
-        _t('Add optional filter to refine this widget')
+        _t('Add %{objectType} to refine this widget', { objectType: singular })
       }}</CmkParagraph>
       <FormButton icon="plus" @click="handleShowInputs">{{
         _t('Add %{name}', { name: filterName })

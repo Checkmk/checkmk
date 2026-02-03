@@ -139,6 +139,14 @@ class WidgetRelativeGridLayout:
 
 
 @api_model
+class WidgetResponsiveGridSize:
+    columns: Annotated[int, Ge(1)] = api_field(
+        description="Width of the widget in number of columns."
+    )
+    rows: Annotated[int, Ge(1)] = api_field(description="Height of the widget in number of rows.")
+
+
+@api_model
 class WidgetGeneralSettings:
     title: WidgetTitle = api_field(description="Title settings for the widget.")
     render_background: bool = api_field(

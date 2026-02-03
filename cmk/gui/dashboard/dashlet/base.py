@@ -8,7 +8,7 @@
 import abc
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar
+from typing import Generic, Self, TypeVar
 
 from cmk.gui import visuals
 from cmk.gui.i18n import _u
@@ -16,7 +16,7 @@ from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.utils.macros import replace_macros_in_str
 
 from ..title_macros import macro_mapping_from_context
-from ..type_defs import DashletConfig
+from ..type_defs import DashletConfig, ResponsiveGridBreakpoint
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -40,6 +40,65 @@ class RelativeLayoutConstraints:
     initial_size: WidgetSize = field(default_factory=lambda: WidgetSize(width=12, height=12))
     minimum_size: WidgetSize = field(default_factory=lambda: WidgetSize(width=12, height=12))
     is_resizable: bool = True
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class ResponsiveLayoutBreakpointConstraints:
+    initial_size: WidgetSize
+    minimum_size: WidgetSize
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class ResponsiveLayoutConstraints:
+    XS: ResponsiveLayoutBreakpointConstraints = field(
+        default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
+            minimum_size=WidgetSize(width=4, height=8),
+            initial_size=WidgetSize(width=4, height=8),
+        )
+    )
+    S: ResponsiveLayoutBreakpointConstraints = field(
+        default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
+            minimum_size=WidgetSize(width=4, height=8),
+            initial_size=WidgetSize(width=4, height=8),
+        )
+    )
+    M: ResponsiveLayoutBreakpointConstraints = field(
+        default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
+            minimum_size=WidgetSize(width=4, height=8),
+            initial_size=WidgetSize(width=6, height=8),
+        )
+    )
+    L: ResponsiveLayoutBreakpointConstraints = field(
+        default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
+            minimum_size=WidgetSize(width=3, height=8),
+            initial_size=WidgetSize(width=4, height=8),
+        )
+    )
+    XL: ResponsiveLayoutBreakpointConstraints = field(
+        default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
+            minimum_size=WidgetSize(width=3, height=8),
+            initial_size=WidgetSize(width=6, height=8),
+        )
+    )
+
+    @classmethod
+    def large_default(cls) -> Self:
+        """Larger default size for widgets that need more space."""
+        return cls(
+            S=ResponsiveLayoutBreakpointConstraints(
+                minimum_size=WidgetSize(width=4, height=8),
+                initial_size=WidgetSize(width=8, height=8),
+            ),
+        )
+
+    def to_dict(self) -> dict[ResponsiveGridBreakpoint, ResponsiveLayoutBreakpointConstraints]:
+        return {
+            "XS": self.XS,
+            "S": self.S,
+            "M": self.M,
+            "L": self.L,
+            "XL": self.XL,
+        }
 
 
 T = TypeVar("T", bound=DashletConfig)
@@ -91,6 +150,10 @@ class Dashlet(abc.ABC, Generic[T]):
     @classmethod
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints()
+
+    @classmethod
+    def responsive_layout_constraints(cls) -> ResponsiveLayoutConstraints:
+        return ResponsiveLayoutConstraints()
 
     def __init__(
         self,

@@ -69,6 +69,22 @@ def test_show_dashboard_constants(clients: ClientRegistry) -> None:
         )
 
 
+def test_dashboard_constants_responsive_breakpoints_make_sense(clients: ClientRegistry) -> None:
+    """Check that the configured breakpoints and widget constraints make sense."""
+    resp = clients.ConstantClient.get_dashboard()
+    breakpoints = resp.json["extensions"]["responsive_grid_breakpoints"]
+    for widget_type, widget_config in resp.json["extensions"]["widgets"].items():
+        responsive_constraints = widget_config["layout"]["responsive"]
+
+        for breakpoint_id, breakpoint_config in breakpoints.items():
+            max_columns = breakpoint_config["columns"]
+            columns = responsive_constraints[breakpoint_id]["minimum_size"]["columns"]
+            assert columns <= max_columns, (
+                f"Widget type '{widget_type}' has minimum columns {columns} for breakpoint "
+                f"'{breakpoint_id}', which exceeds the maximum columns {max_columns}."
+            )
+
+
 def test_show_dashboard(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:
     # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
     # No queries are actually executed.

@@ -7,7 +7,11 @@ from typing import Annotated, TypedDict
 from annotated_types import Ge
 
 from cmk.gui.dashboard.api.model.type_defs import AnnotatedInfoName
-from cmk.gui.dashboard.api.model.widget import WidgetRelativeGridPosition, WidgetRelativeGridSize
+from cmk.gui.dashboard.api.model.widget import (
+    WidgetRelativeGridPosition,
+    WidgetRelativeGridSize,
+    WidgetResponsiveGridSize,
+)
 from cmk.gui.dashboard.type_defs import ResponsiveGridBreakpoint
 from cmk.gui.openapi.framework.model import api_field, api_model
 
@@ -41,8 +45,24 @@ class RelativeLayoutConstraintsModel:
 
 
 @api_model
+class ResponsiveLayoutBreakpointConstraintsModel:
+    initial_size: WidgetResponsiveGridSize = api_field(
+        description="Initial size when a widget is added to the dashboard."
+    )
+    minimum_size: WidgetResponsiveGridSize = api_field(
+        description="Minimum size on this breakpoint."
+    )
+
+
+type ResponsiveLayoutConstraintsModel = dict[
+    ResponsiveGridBreakpoint, ResponsiveLayoutBreakpointConstraintsModel
+]
+
+
+@api_model
 class LayoutConstraintsModel:
     relative: RelativeLayoutConstraintsModel
+    responsive: ResponsiveLayoutConstraintsModel
 
 
 @api_model

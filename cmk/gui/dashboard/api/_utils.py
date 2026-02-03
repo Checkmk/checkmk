@@ -29,6 +29,7 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_user
 from cmk.utils.automation_config import RemoteAutomationConfig
 
+from ..dashlet.base import ResponsiveLayoutBreakpointConstraints
 from ..store import (
     DashboardStore,
     get_all_dashboards,
@@ -43,11 +44,16 @@ from .model.constants import (
     RelativeLayoutConstraintsModel,
     RESPONSIVE_GRID_BREAKPOINTS,
     ResponsiveGridBreakpointConfig,
+    ResponsiveLayoutBreakpointConstraintsModel,
     WidgetConstraints,
 )
 from .model.dashboard import RelativeGridDashboardResponse
 from .model.response_model import RelativeGridDashboardDomainObject
-from .model.widget import WidgetRelativeGridPosition, WidgetRelativeGridSize
+from .model.widget import (
+    WidgetRelativeGridPosition,
+    WidgetRelativeGridSize,
+    WidgetResponsiveGridSize,
+)
 
 INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "problem_graph": "problem_graph",
@@ -305,11 +311,25 @@ def convert_internal_relative_dashboard_to_api_model_dict(
 
 class DashboardConstants:
     @staticmethod
+    def _responsive_breakpoint_from_internal(
+        internal: ResponsiveLayoutBreakpointConstraints,
+    ) -> ResponsiveLayoutBreakpointConstraintsModel:
+        return ResponsiveLayoutBreakpointConstraintsModel(
+            initial_size=WidgetResponsiveGridSize(
+                columns=internal.initial_size.width, rows=internal.initial_size.height
+            ),
+            minimum_size=WidgetResponsiveGridSize(
+                columns=internal.minimum_size.width, rows=internal.minimum_size.height
+            ),
+        )
+
+    @staticmethod
     def generate_api_response() -> DashboardConstantsResponse:
         widgets_metadata = {}
         for widget_type, widget in dashlet_registry.items():
             if api_type_name := INTERNAL_TO_API_TYPE_NAME.get(widget_type):
                 relative_constraints = widget.relative_layout_constraints()
+                responsive_constraints = widget.responsive_layout_constraints()
                 widgets_metadata[api_type_name] = WidgetConstraints(
                     layout=LayoutConstraintsModel(
                         relative=RelativeLayoutConstraintsModel(
@@ -326,7 +346,24 @@ class DashboardConstants:
                                 y=relative_constraints.initial_position.y,
                             ),
                             is_resizable=relative_constraints.is_resizable,
-                        )
+                        ),
+                        responsive={
+                            "XS": DashboardConstants._responsive_breakpoint_from_internal(
+                                responsive_constraints.XS
+                            ),
+                            "S": DashboardConstants._responsive_breakpoint_from_internal(
+                                responsive_constraints.S
+                            ),
+                            "M": DashboardConstants._responsive_breakpoint_from_internal(
+                                responsive_constraints.M
+                            ),
+                            "L": DashboardConstants._responsive_breakpoint_from_internal(
+                                responsive_constraints.L
+                            ),
+                            "XL": DashboardConstants._responsive_breakpoint_from_internal(
+                                responsive_constraints.XL
+                            ),
+                        },
                     ),
                     filter_context=FilterContextConstants(
                         restricted_to_single=list(widget.single_infos()),

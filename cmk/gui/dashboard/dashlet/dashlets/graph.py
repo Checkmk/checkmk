@@ -65,7 +65,7 @@ from cmk.gui.visuals import (
 )
 from cmk.utils.servicename import ServiceName
 
-from ..base import Dashlet, RelativeLayoutConstraints, WidgetSize
+from ..base import Dashlet, RelativeLayoutConstraints, ResponsiveLayoutConstraints, WidgetSize
 from .status_helpers import make_mk_missing_data_error
 
 GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID = "available_graph_templates"
@@ -144,6 +144,10 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
     @classmethod
     def relative_layout_constraints(cls) -> RelativeLayoutConstraints:
         return RelativeLayoutConstraints(initial_size=WidgetSize(width=60, height=21))
+
+    @classmethod
+    def responsive_layout_constraints(cls) -> ResponsiveLayoutConstraints:
+        return ResponsiveLayoutConstraints.large_default()
 
     def infos(self) -> SingleInfos:
         return ["host", "service"]

@@ -154,7 +154,9 @@ boolean download_hot_cache(Map args) {
         timeout(time: 120, unit: 'SECONDS') {
             sh("""
                 mkdir -p ${args.download_dest}
-                cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} ${args.download_dest}
+                cp \
+                    ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} \
+                    ${args.download_dest}
             """);
         }
     } catch (Exception exc) {
@@ -302,7 +304,11 @@ void withHotCache(Map args, Closure body) {
 
     // TODO: Remove me as soon as this is stable
     // Skip restoring "All unit tests" as it might take up to 30min due to massive 27GB and high disk utilization
-    if (env.USE_STASHED_BAZEL_FOLDER == "0" || args.target_name in ["All unit tests", "C++ unit tests"]) {
+    if (
+        env.USE_STASHED_BAZEL_FOLDER == "0"
+        || env.USE_STASHED_BAZEL_FOLDER_CMK_DISTRO_BUILD == "0"
+        || args.target_name in ["All unit tests", "C++ unit tests"]
+    ) {
         body();
         return;
     }

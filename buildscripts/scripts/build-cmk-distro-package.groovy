@@ -29,6 +29,7 @@ void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+    def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     def omd_env_vars = [
         "DEBFULLNAME='Checkmk Team'",
@@ -205,14 +206,28 @@ void main() {
                         if (edition == "community") {
                             license_flag = '--//:repo_license="gpl"'
                         }
-                        sh("""
-                            bazel build \
-                                --cmk_version=${cmk_version} \
-                                --cmk_edition=${edition} \
-                                ${license_flag} \
-                                --execution_log_json_file="${checkout_dir}/deps_install.json" \
-                        //omd:${package_type}_${edition}
-                        """);
+                        artifacts_helper.withHotCache([
+                            download_dest: "~",
+                            remove_existing_cache: true,
+                            target_name: "build-omd-${package_type}",
+                            cache_prefix: versioning.distro_code(),
+                            // When we mount the shared repository cache, we won't pack the repository cache under ~/.cache
+                            // into the hot cache and therefore we dont need to consider WORKSPACE and MODULE.bazel.lock
+                            files_to_consider: [
+                                '.bazelversion',
+                                'requirements.txt',
+                                'bazel/tools/package.json',
+                            ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
+                        ]) {
+                            sh("""
+                                bazel build \
+                                    --cmk_version=${cmk_version} \
+                                    --cmk_edition=${edition} \
+                                    ${license_flag} \
+                                    --execution_log_json_file="${checkout_dir}/deps_install.json" \
+                                    //omd:${package_type}_${edition}
+                            """);
+                        }
                         sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
                     }
                     package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");

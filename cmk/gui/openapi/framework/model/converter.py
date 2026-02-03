@@ -12,7 +12,7 @@ from pydantic import PlainValidator
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.regex import regex, REGEX_ID
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
 from cmk.gui.config import active_config, builtin_role_ids
@@ -21,6 +21,7 @@ from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
@@ -349,6 +350,14 @@ class SiteIdConverter:
         if site_id in active_config.sites:
             raise ValueError(f"Site {site_id!r} already exists.")
         return site_id
+
+    @staticmethod
+    def should_be_configurable(value: str) -> SiteId:
+        """Validates that the given site ID is configurable, i.e. it is either the local site or a remote site with enabled config replication in a distributed setup."""
+        site_id = SiteIdConverter.should_exist(value)
+        if site_id == omd_site() or site_id in distributed_setup_remote_sites(active_config.sites):
+            return site_id
+        raise ValueError(f"Site {site_id!r} is not configurable.")
 
 
 class PasswordConverter:

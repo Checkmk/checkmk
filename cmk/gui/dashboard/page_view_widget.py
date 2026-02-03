@@ -133,6 +133,8 @@ class EmbeddedViewSpecManager:
             target["mustsearch"] = mustsearch
         if force_checkboxes := source.get("force_checkboxes"):
             target["force_checkboxes"] = force_checkboxes
+        if user_sortable := source.get("user_sortable"):
+            target["user_sortable"] = user_sortable
         if play_sounds := source.get("play_sounds"):
             target["play_sounds"] = play_sounds
         if inventory_join_macros := source.get("inventory_join_macros"):
@@ -153,7 +155,6 @@ class ViewWidgetIFramePageHelper:
         is_debug: bool,
         is_preview: bool = False,
     ) -> None:
-        view_spec = cls._prepare_view_spec(view_spec)
         view = View(
             widget_name,
             view_spec,
@@ -179,11 +180,14 @@ class ViewWidgetIFramePageHelper:
         request: Request, widget_name: str, is_reload: bool
     ) -> None:
         """Setup display options and painter options for the view widget iframe page."""
-        if not is_reload:
-            view_display_options = "HRSIXLW"
+        view_display_options = underscore_display_options = "HRSIXLW"
+        if is_reload:
+            # when reloading, we must force different display options to make the reload work
+            # since they are lowercase, everything else will be activated by default
+            underscore_display_options = "htbfcoderu"
 
-            request.set_var("display_options", view_display_options)
-            request.set_var("_display_options", view_display_options)
+        request.set_var("display_options", view_display_options)
+        request.set_var("_display_options", underscore_display_options)
 
         # Need to be loaded before processing the painter_options below.
         # TODO: Make this dependency explicit
@@ -198,13 +202,6 @@ class ViewWidgetIFramePageHelper:
         this method sets a default value."""
         if request.var("filled_in") is None:
             request.set_var("filled_in", "filter")
-
-    @staticmethod
-    def _prepare_view_spec(view_spec: ViewSpec) -> ViewSpec:
-        """Override some view widget specific options."""
-        view_spec = view_spec.copy()
-        view_spec["user_sortable"] = False
-        return view_spec
 
     @classmethod
     def _wrapper_context(

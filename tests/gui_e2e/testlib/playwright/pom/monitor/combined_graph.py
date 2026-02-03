@@ -7,6 +7,7 @@ import re
 from typing import override
 
 from playwright.sync_api import expect, Locator
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
@@ -57,9 +58,14 @@ class CombinedGraphsServiceSearch(CmkPage):
 
     def check_graph_with_timeranges(self, graph_title: str) -> None:
         graph = self.graph(graph_title)
-        expect(graph).to_be_attached()
-        graph.scroll_into_view_if_needed()
-        expect(graph).to_be_visible()
+        try:
+            expect(graph).to_be_attached()
+            graph.scroll_into_view_if_needed()
+            expect(graph).to_be_visible()
+        except (AssertionError, PWTimeoutError) as exc:
+            exc.add_note(f"Could not find graph: '{graph_title}' on page: '{self.page_title}'!")
+            raise exc
+
         timeranges_list = [
             "The last 4 hours",
             "The last 25 hours",
@@ -69,6 +75,14 @@ class CombinedGraphsServiceSearch(CmkPage):
         ]
         for timerange in timeranges_list:
             timerange_graph = self.timerange_graph(graph_title, timerange)
-            expect(timerange_graph).to_be_attached()
-            timerange_graph.scroll_into_view_if_needed()
-            expect(timerange_graph).to_be_visible()
+            try:
+                expect(timerange_graph).to_be_attached()
+                timerange_graph.scroll_into_view_if_needed()
+                expect(timerange_graph).to_be_visible()
+            except (AssertionError, PWTimeoutError) as exc:
+                exc.add_note(
+                    f"Could not find option: '{timerange}' "
+                    f"accompanying the graph: '{graph_title}'\n"
+                    f"on page: '{self.page_title}'!"
+                )
+                raise exc

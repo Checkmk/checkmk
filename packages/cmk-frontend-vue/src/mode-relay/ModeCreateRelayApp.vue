@@ -11,6 +11,7 @@ import { ref } from 'vue'
 import CmkWizard from '@/components/CmkWizard'
 
 import ExecuteInstallationScript from './add-relay-configuration-steps/ExecuteInstallationScript.vue'
+import InstallPodman from './add-relay-configuration-steps/InstallPodman.vue'
 import InstallRelay from './add-relay-configuration-steps/InstallRelay.vue'
 import NameRelay from './add-relay-configuration-steps/NameRelay.vue'
 import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistration.vue'
@@ -46,6 +47,7 @@ const openRelayOverviewPage = () => {
         :alias-validation-regex="props.alias_validation.regex"
         :alias-validation-regex-help="props.alias_validation.regex_help"
       />
+      <InstallPodman :index="3" :is-completed="() => currentStep > 3" />
       <ExecuteInstallationScript
         :relay-alias="relayAlias"
         :site-name="props.site_name"
@@ -54,14 +56,14 @@ const openRelayOverviewPage = () => {
         :url-to-get-an-automation-secret="props.urls.automation_secret"
         :is-cloud-edition="props.is_cloud_edition"
         :user-id="props.user_id"
-        :index="3"
-        :is-completed="() => currentStep > 3"
+        :index="4"
+        :is-completed="() => currentStep > 4"
       />
       <VerifyRegistration
         v-model="relayId"
         :relay-alias="relayAlias"
-        :index="4"
-        :is-completed="() => currentStep > 4"
+        :index="5"
+        :is-completed="() => currentStep > 5"
         @open-create-host-page="openCreateHostPage"
         @open-relay-overview-page="() => openRelayOverviewPage()"
       />

@@ -127,28 +127,28 @@ const provideri18n: Record<QueryProvider, string> = {
 </script>
 
 <template>
-  <div v-if="availableUnifiedProviders.length > 1" class="unified-search-provider-switch">
+  <div v-if="availableUnifiedProviders.length > 1" class="unified-search-provider-select__switch">
     <button
       ref="unified-search-provider-btn"
-      class="unified-search-provider-switch-button"
+      class="unified-search-provider-select__switch-button"
       @click.stop="toggleProviderOptions"
       @keydown.enter.stop="toggleProviderOptions"
     >
-      <span class="unified-search-provider-switch-selected">{{
+      <span class="unified-search-provider-select__switch-selected">{{
         provideri18n[provider ?? searchUtils.query.provider.value]
       }}</span>
       <DropDownIndicator
-        class="unified-search-provider-switch-indicator"
+        class="unified-search-provider-select__switch-indicator"
         :active="searchUtils.input.providerSelectActive.value"
       ></DropDownIndicator>
     </button>
     <div
       v-if="searchUtils.input.providerSelectActive.value"
       v-click-outside="hideProviderOptions"
-      class="unified-search-provider-options"
+      class="unified-search-provider-select__options"
     >
-      <ul class="unified-search-provider-option-list">
-        <li class="unified-search-provider-option-list-section-title">
+      <ul class="unified-search-provider-select__option-list">
+        <li class="unified-search-provider-select__option-list-section-title">
           {{ _t('Search in') }}
         </li>
         <ProviderOptionEntry
@@ -168,8 +168,7 @@ const provideri18n: Record<QueryProvider, string> = {
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
-.unified-search-provider-switch {
+.unified-search-provider-select__switch {
   background: var(--ux-theme-7);
   height: 100%;
   border-top-left-radius: var(--border-radius);
@@ -179,7 +178,7 @@ const provideri18n: Record<QueryProvider, string> = {
     background: var(--ux-theme-6);
   }
 
-  .unified-search-provider-switch-button {
+  .unified-search-provider-select__switch-button {
     height: 100%;
     padding: 0 var(--dimension-3) 0 var(--dimension-4);
     display: flex;
@@ -195,19 +194,19 @@ const provideri18n: Record<QueryProvider, string> = {
       border: 1px solid var(--success);
     }
 
-    .unified-search-provider-switch-selected {
+    .unified-search-provider-select__switch-selected {
       &::first-letter {
         text-transform: capitalize;
       }
     }
 
-    .unified-search-provider-switch-indicator {
+    .unified-search-provider-select__switch-indicator {
       padding: 0 0 0 var(--dimension-4);
     }
   }
 }
 
-.unified-search-provider-options {
+.unified-search-provider-select__options {
   position: absolute;
   top: 30px;
   left: 0;
@@ -218,14 +217,14 @@ const provideri18n: Record<QueryProvider, string> = {
   border-bottom-right-radius: var(--border-radius-half);
 }
 
-.unified-search-provider-option-list-section-title {
+.unified-search-provider-select__option-list-section-title {
   opacity: 0.5;
   font-weight: var(--font-weight-bold);
   padding: var(--dimension-2) var(--dimension-3) !important;
   list-style-type: none;
 }
 
-.unified-search-provider-option-list {
+.unified-search-provider-select__option-list {
   position: relative;
   border: 1px solid var(--ux-theme-6);
   padding: 0;

@@ -126,17 +126,17 @@ const getSearchInputPlaceholder = computed(() => {
 
 <template>
   <div class="unified-search-header">
-    <div class="unified-search-input-panel">
-      <div class="unified-search-input-wrapper" @click="searchUtils.input.setFocus">
-        <div class="unified-search-input-tag-root">
+    <div class="unified-search-header__input-panel">
+      <div class="unified-search-header__input-wrapper" @click="searchUtils.input.setFocus">
+        <div class="unified-search-header__input-tag-root">
           <UnifiedSearchProviderSelect></UnifiedSearchProviderSelect>
-          <CmkIcon class="unified-search-icon" name="main-search" size="medium"></CmkIcon>
+          <CmkIcon class="unified-search-header__icon" name="main-search" size="medium"></CmkIcon>
           <input
             id="unified-search-input"
             ref="unified-search-input"
             v-model="searchUtils.query.input.value"
             role="search"
-            class="unified-search-input"
+            class="unified-search-header__input"
             :aria-label="getSearchInputPlaceholder"
             :placeholder="getSearchInputPlaceholder"
             autocomplete="one-time-code"
@@ -150,7 +150,7 @@ const getSearchInputPlaceholder = computed(() => {
           v-if="
             searchUtils.query.input.value.length > 0 || searchUtils.query.filters.value.length > 0
           "
-          class="unified-search-reset"
+          class="unified-search-header__reset"
           name="close"
           size="small"
           @click.stop="searchUtils.resetSearch"
@@ -185,9 +185,7 @@ const getSearchInputPlaceholder = computed(() => {
   border-bottom: 1px solid var(--default-nav-border-color);
 }
 
-/* stylelint-disable checkmk/vue-bem-naming-convention */
-
-.unified-search-input-panel {
+.unified-search-header__input-panel {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -195,14 +193,14 @@ const getSearchInputPlaceholder = computed(() => {
   height: 60px;
 }
 
-.unified-search-info-panel {
+.unified-search-header__info-panel {
   display: flex;
   flex-direction: row;
   justify-content: start;
   height: 30px;
 }
 
-.unified-search-input-wrapper {
+.unified-search-header__input-wrapper {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -212,7 +210,7 @@ const getSearchInputPlaceholder = computed(() => {
   margin-right: var(--dimension-4);
 }
 
-.unified-search-input-tag-root {
+.unified-search-header__input-tag-root {
   background-color: var(--default-form-element-bg-color);
   box-shadow: none;
   filter: none;
@@ -231,7 +229,7 @@ const getSearchInputPlaceholder = computed(() => {
   }
 }
 
-.unified-search-input-tag {
+.unified-search-header__input-tag {
   display: inline-flex;
   align-items: center;
   background: var(--color-yellow-80);
@@ -240,7 +238,7 @@ const getSearchInputPlaceholder = computed(() => {
   padding: 0 var(--spacing-half);
   margin-right: var(--spacing-half);
 
-  .unified-search-input-tag-dismiss {
+  .unified-search-header__input-tag-dismiss {
     background: transparent;
     border: 0;
     margin: 0 0 0 var(--spacing-half);
@@ -256,16 +254,16 @@ const getSearchInputPlaceholder = computed(() => {
       background: var(--color-yellow-60);
     }
 
-    .unified-search-input-tag-dismiss-icon {
+    .unified-search-header__input-tag-dismiss-icon {
       margin-top: 2px;
     }
   }
 
-  &.provider {
+  &.unified-search-header__provider {
     color: inherit;
     background: var(--success-dimmed-2);
 
-    .unified-search-input-tag-dismiss {
+    .unified-search-header__input-tag-dismiss {
       &:hover {
         background: var(--success);
       }
@@ -273,7 +271,7 @@ const getSearchInputPlaceholder = computed(() => {
   }
 }
 
-.unified-search-input {
+.unified-search-header__input {
   background: transparent;
   border: 0;
   width: auto;
@@ -288,7 +286,7 @@ const getSearchInputPlaceholder = computed(() => {
   }
 }
 
-.unified-search-filter-suggestions {
+.unified-search-header__filter-suggestions {
   position: absolute;
   top: 30px;
   left: var(--spacing-half);
@@ -298,17 +296,17 @@ const getSearchInputPlaceholder = computed(() => {
   height: auto;
 }
 
-.unified-search-filter-suggestions-list {
+.unified-search-header__filter-suggestions-list {
   position: relative;
   padding: 0 8px 16px;
 }
 
-.unified-search-icon {
+.unified-search-header__icon {
   margin-left: var(--spacing);
   z-index: +1;
 }
 
-.unified-search-reset {
+.unified-search-header__reset {
   opacity: 0.6;
   margin-right: 3px;
   cursor: pointer;
@@ -316,7 +314,7 @@ const getSearchInputPlaceholder = computed(() => {
   right: 8px;
 }
 
-.unified-search-info-item {
+.unified-search-header__info-item {
   color: var(--dropdown-chevron-indicator-color);
   opacity: 0.5;
   position: absolute;
@@ -327,6 +325,7 @@ const getSearchInputPlaceholder = computed(() => {
     font-size: var(--font-size-small);
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .arrow-key {
     width: 11px;
     display: inline-flex;
@@ -339,6 +338,7 @@ const getSearchInputPlaceholder = computed(() => {
       margin: -8px 0 0 -1px;
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.enter::after {
       content: '\21B5';
     }

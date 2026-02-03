@@ -104,11 +104,16 @@ function toggleOperatorOptions() {
 </script>
 
 <template>
-  <div class="unified-search-operator-switch" :class="{ disabled: props.disabled }">
+  <div
+    class="unified-search-operator-select__switch"
+    :class="{ 'unified-search-operator-select__disabled': props.disabled }"
+  >
     <button
       ref="unified-search-operator-btn"
-      class="unified-search-operator-switch-button"
-      :class="{ active: searchUtils.input.searchOperatorSelectActive.value }"
+      class="unified-search-operator-select__switch-button"
+      :class="{
+        'unified-search-operator-select__active': searchUtils.input.searchOperatorSelectActive.value
+      }"
       :disabled="props.disabled"
       :title="props.disabled ? _t('Only available for \'Monitoring\' and \'All\'') : ''"
       @click.stop="toggleOperatorOptions"
@@ -124,16 +129,16 @@ function toggleOperatorOptions() {
     <div
       v-if="searchUtils.input.searchOperatorSelectActive.value"
       v-click-outside="hideOperatorOptions"
-      class="unified-search-operator-options"
+      class="unified-search-operator-select__options"
     >
-      <ul class="unified-search-operator-option-list">
-        <li class="unified-search-operator-option-list-section-title">
+      <ul class="unified-search-operator-select__option-list">
+        <li class="unified-search-operator-select__option-list-section-title">
           {{ _t('Type "/" to use search operator') }}
         </li>
         <SearchOperatorOptionEntry
           v-for="(opt, idx) in filterOptions"
           :key="opt.type.concat(opt.value)"
-          :class="[opt.type, { separator: idx === 5 }]"
+          :class="[opt.type, { 'unified-search-operator-select__separator': idx === 5 }]"
           :focus="isFocused(idx)"
           :idx="idx"
           :option="opt"
@@ -146,20 +151,19 @@ function toggleOperatorOptions() {
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
-.unified-search-operator-switch {
+.unified-search-operator-select__switch {
   border-radius: var(--border-radius);
   border: 1px solid transparent;
   height: 27px;
 
   &:hover,
-  &.active {
+  &.unified-search-operator-select__active {
     background: var(--ux-theme-5);
   }
 
-  .unified-search-operator-switch-button {
+  .unified-search-operator-select__switch-button {
     height: 100%;
-    padding: 0 var(--dimension-3) 0 var(--dimension-4);
+    padding: 0 var(--dimension-3) 0 var(--dimension-3);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -173,36 +177,33 @@ function toggleOperatorOptions() {
       border: 1px solid var(--success);
     }
 
-    .unified-search-operator-switch-selected {
+    .unified-search-operator-select__switch-selected {
       &::first-letter {
         text-transform: capitalize;
       }
     }
 
-    .unified-search-operator-switch-indicator {
+    .unified-search-operator-select__switch-indicator {
       padding: 0 0 0 var(--dimension-4);
     }
 
-    .unified-search-operator-info-icon {
-      background: var(--color-dark-blue-50);
-      border-radius: 99px;
+    .unified-search-operator-select__info-icon {
       padding: var(--dimension-3);
-      margin-right: var(--dimension-4);
     }
   }
 
-  &.disabled {
+  &.unified-search-operator-select__disabled {
     background: transparent;
 
-    .unified-search-operator-switch-indicator,
-    .unified-search-operator-info-icon,
-    .unified-search-operator-info-icon:hover {
+    .unified-search-operator-select__switch-indicator,
+    .unified-search-operator-select__info-icon,
+    .unified-search-operator-select__info-icon:hover {
       opacity: 0.5 !important;
     }
   }
 }
 
-.unified-search-operator-options {
+.unified-search-operator-select__options {
   position: absolute;
   margin-top: var(--dimension-2);
   right: var(--spacing-double);
@@ -213,21 +214,21 @@ function toggleOperatorOptions() {
   border-bottom-right-radius: var(--border-radius-half);
 }
 
-.unified-search-operator-option-list-section-title {
+.unified-search-operator-select__option-list-section-title {
   opacity: 0.5;
   font-weight: var(--font-weight-bold);
   padding: var(--dimension-2) var(--dimension-3) !important;
   list-style-type: none;
 }
 
-.unified-search-operator-option-list {
+.unified-search-operator-select__option-list {
   position: relative;
   border: 1px solid var(--ux-theme-6);
   padding: 0;
   margin: 0;
 }
 
-.separator {
+.unified-search-operator-select__separator {
   border-bottom: 1px solid var(--ux-theme-6);
 }
 </style>

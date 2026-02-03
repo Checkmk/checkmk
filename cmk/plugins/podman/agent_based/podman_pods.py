@@ -49,6 +49,8 @@ class PodsStateCounts(BaseModel, frozen=True):
     stopped: int
     dead: int
     exited: int
+    paused: int
+    degraded: int
 
 
 def parse_podman_pods(string_table: StringTable) -> PodsStateCounts:
@@ -61,6 +63,8 @@ def parse_podman_pods(string_table: StringTable) -> PodsStateCounts:
         stopped=counts["stopped"],
         dead=counts["dead"],
         exited=counts["exited"],
+        paused=counts.get("paused", 0),
+        degraded=counts.get("degraded", 0),
     )
 
 

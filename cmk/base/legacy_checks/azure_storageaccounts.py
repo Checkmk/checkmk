@@ -8,14 +8,13 @@
 
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
-    discover_azure_by_metrics,
     get_data_or_go_stale,
     iter_resource_attributes,
     parse_resources,
 )
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import Service
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 
 check_info = {}
@@ -73,7 +72,19 @@ check_info["azure_storageaccounts"] = LegacyCheckDefinition(
 )
 
 
+def _yield_metrics_or_inactivity(mchecks):
+    if mchecks:
+        yield from mchecks
+        return
+
+    yield Result(
+        state=State.OK,
+        summary="No data in the Azure API response due to inactivity on the storage account.",
+    )
+
+
 def check_azure_storageaccounts_flow(item, params, section):
+    mchecks = []
     resource = get_data_or_go_stale(item, section)
     for metric_key in ("total_Ingress", "total_Egress", "total_Transactions"):
         cmk_key = metric_key[6:].lower()
@@ -81,16 +92,16 @@ def check_azure_storageaccounts_flow(item, params, section):
         levels = params.get("%s_levels" % cmk_key, (None, None))
         mcheck = check_azure_metric(resource, metric_key, cmk_key, displ, levels=levels)
         if mcheck:
-            yield mcheck
+            mchecks.append(mcheck)
+
+    yield from _yield_metrics_or_inactivity(mchecks)
 
 
 check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
     name="azure_storageaccounts_flow",
     service_name="Storage %s flow",
     sections=["azure_storageaccounts"],
-    discovery_function=discover_azure_by_metrics(
-        "total_Ingress", "total_Egress", "total_Transactions"
-    ),
+    discovery_function=discover_azure_storageaccounts,
     check_function=check_azure_storageaccounts_flow,
     check_ruleset_name="azure_storageaccounts",
     check_default_parameters={},
@@ -112,6 +123,7 @@ check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
 
 
 def check_azure_storageaccounts_performance(item, params, section):
+    mchecks = []
     resource = get_data_or_go_stale(item, section)
     for key, cmk_key, displ in (
         ("average_SuccessServerLatency", "server_latency", "Success server latency"),
@@ -121,16 +133,16 @@ def check_azure_storageaccounts_performance(item, params, section):
         levels = params.get("%s_levels" % cmk_key, (None, None))
         mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels)
         if mcheck:
-            yield mcheck
+            mchecks.append(mcheck)
+
+    yield from _yield_metrics_or_inactivity(mchecks)
 
 
 check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
     name="azure_storageaccounts_performance",
     service_name="Storage %s performance",
     sections=["azure_storageaccounts"],
-    discovery_function=discover_azure_by_metrics(
-        "average_SuccessServerLatency", "average_SuccessE2ELatency", "average_Availability"
-    ),
+    discovery_function=discover_azure_storageaccounts,
     check_function=check_azure_storageaccounts_performance,
     check_ruleset_name="azure_storageaccounts",
     check_default_parameters={},

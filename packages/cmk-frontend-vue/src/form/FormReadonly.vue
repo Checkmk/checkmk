@@ -922,10 +922,7 @@ table.form-readonly__table {
   > li {
     display: flex;
     padding-left: 0 !important;
-
-    ul {
-      margin-left: 5px;
-    }
+    margin-left: 0 !important;
   }
 }
 
@@ -958,7 +955,7 @@ table.form-readonly__table {
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-readonly__tuple__layout-horizontal > span {
-  margin: 5px;
+  margin: 0;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

@@ -69,7 +69,7 @@ async fn check_http_output(
     assert!(output.worst_state == expected_state);
     assert!(output
         .to_string()
-        .starts_with(&format!("{}, {}", url, expected_summary_start)));
+        .starts_with(&format!("URL to test: {}, {}", url, expected_summary_start)));
 
     Ok(())
 }

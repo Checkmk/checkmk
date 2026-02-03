@@ -27,7 +27,7 @@ import type {
 import { FigureTooltip } from '@/modules/figures/cmk_figure_tooltip'
 import { FigureBase } from '@/modules/figures/cmk_figures'
 import { getIn } from '@/modules/figures/cmk_figures_utils'
-import type { ElementSize, FigureBaseDashletSpec } from '@/modules/figures/figure_types'
+import type { ElementSize, FigureWidgetContent } from '@/modules/figures/figure_types'
 import { domainIntervals, partitionableDomain } from '@/modules/number_format'
 
 import type { AreaPlot, BarPlot, LinePlot, ScatterPlot, SubPlot } from './sub_plot'
@@ -46,8 +46,8 @@ import { subplot_factory } from './sub_plot'
 export type SubplotSubs = LinePlot | ScatterPlot | AreaPlot | BarPlot
 
 export class TimeseriesFigure<
-  _DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec
-> extends FigureBase<TimeseriesFigureData, _DashletSpec> {
+  _WidgetContent extends FigureWidgetContent = FigureWidgetContent
+> extends FigureBase<TimeseriesFigureData, _WidgetContent> {
   _subplots: SubPlot[]
   _subplots_by_id: Record<string, SubPlot>
   g!: Selection<SVGGElement, unknown, BaseType, unknown>

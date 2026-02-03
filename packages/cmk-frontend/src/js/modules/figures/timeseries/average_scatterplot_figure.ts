@@ -7,10 +7,7 @@ import { bisector, line as d3_line } from 'd3'
 
 import { figure_registry } from '@/modules/figures/cmk_figures'
 import { getIn, plot_render_function } from '@/modules/figures/cmk_figures_utils'
-import type {
-  AverageScatterplotDashletConfig,
-  TransformedData
-} from '@/modules/figures/figure_types'
+import type { TransformedData } from '@/modules/figures/figure_types'
 
 import { TimeseriesFigure } from './cmk_timeseries'
 import type { ScatterPlot } from './sub_plot'
@@ -25,7 +22,7 @@ import type { ScatterPlot } from './sub_plot'
 //       - line_mean
 //       - line_median
 //       - scatter
-export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplotDashletConfig> {
+export class AverageScatterplotFigure extends TimeseriesFigure {
   _selected_scatterpoint: TransformedData | undefined
   _selected_meanpoint: TransformedData | undefined
 

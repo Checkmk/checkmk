@@ -10,9 +10,7 @@ import { arc, histogram, max, range, scaleLinear } from 'd3'
 import { FigureBase } from '@/modules/figures/cmk_figures'
 import {
   add_scheduler_debugging,
-  adjust_domain,
   background_status_component,
-  calculate_domain,
   clamp,
   getIn,
   make_levels,
@@ -24,7 +22,7 @@ import {
 } from '@/modules/figures/cmk_figures_utils'
 import type {
   Domain,
-  GaugeDashletConfig,
+  GaugeContent,
   Levels,
   SingleMetricData,
   SingleMetricDataPlotDefinitions
@@ -35,7 +33,7 @@ import type {
 // var d3 = d3; /* eslint-disable-line no-undef */
 // var crossfilter = crossfilter; /* eslint-disable-line no-undef */
 
-export class GaugeFigure extends FigureBase<SingleMetricData, GaugeDashletConfig> {
+export class GaugeFigure extends FigureBase<SingleMetricData, GaugeContent> {
   _tag_dimension: any[] | Dimension<any, any>
   _radius!: number
 
@@ -158,14 +156,8 @@ export class GaugeFigure extends FigureBase<SingleMetricData, GaugeDashletConfig
       return
     }
 
-    const display_range = this._dashlet_spec.display_range
-
-    let domain = adjust_domain(
-      //@ts-ignore
-      calculate_domain(data),
-      plot.metric.bounds
-    )
-    if (Array.isArray(display_range) && display_range[0] === 'fixed') domain = display_range[1][1]
+    const display_range = this._widget_content.display_range
+    const domain: Domain = [display_range.minimum, display_range.maximum]
 
     domain.sort() // Safeguards against negative number ordering or bad order. Display and clamp need good order
     const formatter = plot_render_function(plot)

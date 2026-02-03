@@ -19,7 +19,7 @@ import DashboardContentContainer from '@/dashboard/components/DashboardContent/D
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import type { FilterHTTPVars } from '@/dashboard/types/widget.ts'
 
-import { type DashletSpec, FigureBase } from './cmk_figures.ts'
+import { FigureBase } from './cmk_figures.ts'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
@@ -134,20 +134,13 @@ const sizeSvg = computed(() =>
 
 const updateInterval = 60
 
-// This is needed by the old cmk_figures.ts code, hence the old naming "dashlet"
-const dashletSpec: Ref<DashletSpec> = computed(() => {
-  return {
-    ...props.content,
-    show_title: props.general_settings.title?.render_mode === 'with_background'
-  }
-})
 const initializeFigure = () => {
   figure = new FigureBase(
     legacyFigureType.value,
     `#db-content-figure-${props.widget_id}`,
     dataEndpointUrl.value,
     new URLSearchParams(httpVars.value).toString(),
-    dashletSpec.value,
+    props.content,
     updateInterval
   )
 }
@@ -160,11 +153,7 @@ onMounted(async () => {
 
 watch(httpVars, (newHttpVars) => {
   if (figure) {
-    figure.update(
-      dataEndpointUrl.value,
-      new URLSearchParams(newHttpVars).toString(),
-      dashletSpec.value
-    )
+    figure.update(dataEndpointUrl.value, new URLSearchParams(newHttpVars).toString(), props.content)
   }
 })
 

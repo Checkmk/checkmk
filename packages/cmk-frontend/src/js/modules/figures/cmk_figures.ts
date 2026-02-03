@@ -16,7 +16,7 @@ import {
   plot_render_function,
   svg_text_overflow_ellipsis
 } from './cmk_figures_utils'
-import type { ElementMargin, ElementSize, FigureBaseDashletSpec, FigureData } from './figure_types'
+import type { ElementMargin, ElementSize, FigureData, FigureWidgetContent } from './figure_types'
 import { Scheduler } from './multi_data_fetcher'
 
 // Base class for all cmk_figure based figures
@@ -29,7 +29,7 @@ import { Scheduler } from './multi_data_fetcher'
 
 export abstract class FigureBase<
   T extends FigureData,
-  DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec
+  WidgetContent extends FigureWidgetContent = FigureWidgetContent
 > {
   _div_selector: string
   _div_selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
@@ -44,7 +44,7 @@ export abstract class FigureBase<
   _post_render_hooks: ((data?: any) => void)[]
   _post_url: string
   _post_body: string
-  _dashlet_spec: DashletSpec
+  _widget_content: WidgetContent
   //TODO: figure out how the type of _data should look like:
   // here in figureBase its like {data, plot_definitions}
   // however, in some places it's overwritten to be only data from the above mentioned type data = this._data.data
@@ -92,7 +92,7 @@ export abstract class FigureBase<
     // Post url and body for fetching the graph data
     this._post_url = ''
     this._post_body = ''
-    this._dashlet_spec = {} as DashletSpec
+    this._widget_content = {} as WidgetContent
 
     // Current data of this figure
     this._data = this.getEmptyData()
@@ -149,8 +149,8 @@ export abstract class FigureBase<
     return 10
   }
 
-  set_dashlet_spec(dashlet_spec: DashletSpec) {
-    this._dashlet_spec = dashlet_spec
+  set_widget_content(widget_content: WidgetContent) {
+    this._widget_content = widget_content
   }
 
   set_post_url_and_body(url: string, body = '') {
@@ -275,7 +275,6 @@ export abstract class FigureBase<
       .attr('y', 0.5)
       .attr('width', this.figure_size.width)
       .attr('height', 22)
-      .classed('highlighted', this._dashlet_spec.show_title == true)
 
     if (title_url) {
       //@ts-ignore

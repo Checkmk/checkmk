@@ -3,9 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
 /* eslint  @typescript-eslint/no-unused-vars: 0, @typescript-eslint/no-empty-interface: 0 */
-
 //TODO: this is kind of code duplication, since the types are defined twice
 // in python and typescript, so maybe in the future it would be better to have
 // a way to automatically generate them from one sie to another
@@ -264,4 +262,40 @@ export interface TransformedData {
   url?: string
   last_value?: number
   tooltip?: string
+}
+
+/* We cannot easily import from cmk-shared-typing here, which is where the Vue dashboard code gets
+ * the API spec content types from. So the following type declarations duplicate only what's needed
+ * in the figures/ code (call sites of _widget_content) and do not reflect the whole of the API
+ * models.
+ * If other properties of FigureBase._widget_content need to be accessed, the respective types need
+ * to be updated here as well.
+ * This general type FigureWidgetContent accepts optional unknown properties not to duplicate all
+ * figure widget content types from the API models. */
+type _UnknownContentProps = Record<string, unknown>
+export interface FigureWidgetContent extends _UnknownContentProps {
+  type: string
+}
+
+type MetricDisplayRangeFixedModel = {
+  type: 'fixed'
+  unit: string
+  minimum: number
+  maximum: number
+}
+type MetricDisplayRangeModel = 'automatic' | MetricDisplayRangeFixedModel
+
+// Specific figure content types
+export interface BarplotContent extends FigureWidgetContent {
+  type: 'barplot'
+  display_range: MetricDisplayRangeModel
+}
+export interface GaugeContent extends FigureWidgetContent {
+  type: 'gauge'
+  display_range: MetricDisplayRangeFixedModel
+}
+export interface SingleMetricContent extends FigureWidgetContent {
+  type: 'single_metric'
+  display_range: MetricDisplayRangeModel
+  show_display_range_limits: boolean
 }

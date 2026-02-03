@@ -10,7 +10,7 @@ import { axisRight, axisTop, max, range, scaleBand, scaleLinear } from 'd3'
 import { FigureBase } from '@/modules/figures/cmk_figures'
 import { getIn, make_levels } from '@/modules/figures/cmk_figures_utils'
 import type {
-  BarplotDashletConfig,
+  BarplotContent,
   Domain,
   SingleMetricData,
   SingleMetricDataPlotDefinitions
@@ -19,7 +19,7 @@ import { domainIntervals, partitionableDomain } from '@/modules/number_format'
 
 //Barplot Figures extends SingleMetricDashlet in python
 // see cmk.gui.cee.plugins.dashboard.single_metric.SingleMetricDashlet
-export class BarplotFigure extends FigureBase<SingleMetricData, BarplotDashletConfig> {
+export class BarplotFigure extends FigureBase<SingleMetricData, BarplotContent> {
   _time_dimension: Dimension<any, any>
   _tag_dimension: Dimension<any, string>
   _plot_definitions: SingleMetricDataPlotDefinitions[]
@@ -142,13 +142,15 @@ export class BarplotFigure extends FigureBase<SingleMetricData, BarplotDashletCo
     const used_tags = this._plot_definitions.map((d) => d.use_tags[0])
     const points = this._tag_dimension.filter((d) => used_tags.includes(String(d))).top(Infinity)
 
-    const display_range = this._dashlet_spec.display_range
+    const display_range = this._widget_content.display_range
 
     const tickcount = Math.max(2, Math.ceil(this.plot_size.width / 85))
 
     // @ts-ignore
     let x_domain: [number, number] = [0, max(points, (d) => d.value)]
-    if (Array.isArray(display_range) && display_range[0] === 'fixed') x_domain = display_range[1][1]
+    if (display_range !== 'automatic') {
+      x_domain = [display_range.minimum, display_range.maximum]
+    }
 
     const [min_val, max_val, step] = partitionableDomain(
       x_domain,

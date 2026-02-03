@@ -6,12 +6,12 @@
 import { zoomIdentity } from 'd3'
 
 import { figure_registry } from '@/modules/figures/cmk_figures'
-import type { ElementSize, SingleGraphDashletConfig } from '@/modules/figures/figure_types'
+import type { ElementSize, SingleMetricContent } from '@/modules/figures/figure_types'
 
 import { TimeseriesFigure } from './cmk_timeseries'
 
 // A single metric figure with optional graph rendering in the background
-export class SingleMetricFigure extends TimeseriesFigure<SingleGraphDashletConfig> {
+export class SingleMetricFigure extends TimeseriesFigure<SingleMetricContent> {
   override ident() {
     return 'single_metric'
   }
@@ -38,10 +38,10 @@ export class SingleMetricFigure extends TimeseriesFigure<SingleGraphDashletConfi
 
   override update_domains() {
     TimeseriesFigure.prototype.update_domains.call(this)
-    const display_range = this._dashlet_spec.display_range
+    const display_range = this._widget_content.display_range
     // display_range could be null, or [str, [int, int]]
-    if (Array.isArray(display_range) && display_range[0] === 'fixed') {
-      this._y_domain = display_range[1][1]
+    if (display_range !== 'automatic') {
+      this._y_domain = [display_range.minimum, display_range.maximum]
       this.orig_scale_y.domain(this._y_domain)
     }
   }
@@ -53,10 +53,10 @@ export class SingleMetricFigure extends TimeseriesFigure<SingleGraphDashletConfi
   override render_grid() {}
 
   override render_axis() {
-    const toggle_range_display = this._dashlet_spec.toggle_range_display
+    const show_display_range_limits = this._widget_content.show_display_range_limits
     if (
       this._subplots.filter((d) => d.definition!.plot_type == 'area').length == 0 ||
-      !toggle_range_display
+      !show_display_range_limits
     ) {
       this.g.selectAll('text.range').remove()
       return

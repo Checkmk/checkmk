@@ -35,6 +35,18 @@ const currentMode = ref<'guided' | 'overview'>('guided')
       </template>
       <template #actions>
         <CmkWizardButton type="previous" />
+        <CmkWizardButton type="next" />
+      </template>
+    </CmkWizardStep>
+    <CmkWizardStep :index="3" :is-completed="() => currentStep >= 3">
+      <template #header>
+        <CmkHeading>Step 3</CmkHeading>
+      </template>
+      <template #content>
+        <CmkParagraph> This is the content of the third step. </CmkParagraph>
+      </template>
+      <template #actions>
+        <CmkWizardButton type="previous" />
       </template>
     </CmkWizardStep>
   </CmkWizard>

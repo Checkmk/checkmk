@@ -16,7 +16,9 @@ const context = getWizardContext()
 const props = defineProps<CmkWizardStepProps>()
 
 function onClickGoTo() {
-  context.navigation.goto(props.index)
+  if (context.mode() === 'guided' && props.isCompleted()) {
+    context.navigation.goto(props.index)
+  }
 }
 </script>
 
@@ -25,9 +27,10 @@ function onClickGoTo() {
     class="cmk-wizard-step__row"
     :class="{
       'cmk-wizard-step--active': context.isSelected(index) && context.mode() !== 'overview',
-      'cmk-wizard-step--complete': isCompleted() && context.mode() !== 'overview'
+      'cmk-wizard-step--complete': isCompleted() && context.mode() !== 'overview',
+      'cmk-wizard-step--overview': context.mode() === 'overview'
     }"
-    @click="(_mouse_event) => onClickGoTo"
+    @click="onClickGoTo"
   >
     <div class="cmk-wizard-step__slots-outer">
       <slot name="header"></slot>
@@ -38,7 +41,7 @@ function onClickGoTo() {
         class="cmk-wizard-step__slots-inner"
       >
         <slot name="content"></slot>
-        <div class="cmk-wizard-step__actions">
+        <div class="cmk-wizard-step__actions" @click.stop>
           <slot name="actions"></slot>
         </div>
       </CmkCollapsible>
@@ -47,6 +50,13 @@ function onClickGoTo() {
 </template>
 
 <style scoped>
+.cmk-wizard-step__slots-outer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+  width: calc(100% - 40px);
+}
+
 .cmk-wizard-step__row {
   position: relative;
   display: flex;
@@ -115,13 +125,16 @@ function onClickGoTo() {
       background-color: var(--success-dimmed);
     }
   }
-}
 
-.cmk-wizard-step__slots-outer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-4);
-  width: calc(100% - 40px);
+  &.cmk-wizard-step--complete:not(.cmk-wizard-step--active, .cmk-wizard-step--overview) {
+    &::before {
+      cursor: pointer;
+    }
+
+    .cmk-wizard-step__slots-outer {
+      cursor: pointer;
+    }
+  }
 }
 
 .cmk-wizard-step__slots-inner {

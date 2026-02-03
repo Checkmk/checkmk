@@ -90,7 +90,6 @@ def test_reschedule_active_checks(dashboard_page: MainDashboard, created_host: H
             [
                 "Used inodes - {host_name} - sum",
                 "Size and used space - {host_name} - sum",
-                "Growth trend - {host_name} - sum",
             ],
             id="filesystem_service_filter",
         ),

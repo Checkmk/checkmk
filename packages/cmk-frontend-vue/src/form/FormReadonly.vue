@@ -463,35 +463,40 @@ function renderDict(
       elements.push([element.parameter_form.title, elementForm])
     })
     const group = groupByKey[groupKey]!
-    const trProps: Record<string, string> = {}
-    if (group.title) {
-      dictElements.push(
-        h('tr', [h('td', { colspan: 2, class: 'dict_group_title' }, [group.title])])
-      )
-      trProps['class'] = 'dict_group'
-    }
-    if (group.layout === 'vertical') {
+    if (groupKey === DICT_ELEMENT_NO_GROUP) {
       elements.forEach((element) => {
-        if (element[0]) {
-          dictElements.push(
-            h('tr', trProps, [
-              h('td', { class: 'dict_title' }, [`${element[0]}:`]),
-              h('td', { class: 'dict_value' }, [element[1]])
-            ])
-          )
-        } else {
-          dictElements.push(h('tr', trProps, [h('td', { class: 'dict_value' }, [element[1]])]))
-        }
+        dictElements.push(
+          h('tr', [
+            h('td', { class: 'dict_title' }, [element[0] ? `${element[0]}:` : '']),
+            h('td', { class: 'dict_value' }, [element[1]])
+          ])
+        )
       })
     } else {
-      const headers: VNode[] = []
-      const values: VNode[] = []
+      const subTableRows: VNode[] = []
       elements.forEach((element) => {
-        headers.push(h('td', { class: 'dict_title' }, [element[0]]))
-        values.push(h('td', { class: 'dict_value' }, [element[1]]))
+        subTableRows.push(
+          h('tr', [
+            h('td', { class: 'dict_title' }, [element[0] ? `${element[0]}:` : '']),
+            h('td', { class: 'dict_value' }, [element[1]])
+          ])
+        )
       })
-      dictElements.push(h('tr', trProps, headers))
-      dictElements.push(h('tr', trProps, values))
+
+      const subTable = h(
+        'table',
+        {
+          class: 'form-readonly__group-table'
+        },
+        subTableRows
+      )
+
+      dictElements.push(
+        h('tr', { class: 'dict_group' }, [
+          h('td', { class: 'dict_group_title' }, [group.title ? `${group.title}:` : '']),
+          h('td', { class: 'dict_value' }, [subTable])
+        ])
+      )
     }
   }
 
@@ -862,19 +867,44 @@ table.form-readonly__table {
       white-space: normal;
       overflow-wrap: break-word;
     }
-
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-    &.dict_group {
-      > td:first-child {
-        padding-left: 8px;
-      }
-    }
   }
 
-  > tr > td {
+  > tr > td,
+  > tr > th {
     vertical-align: top;
+    padding-top: 0;
     padding-bottom: 2px;
     padding-right: 4px;
+  }
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .form-readonly__group-table {
+    margin-top: 0;
+    border-collapse: collapse;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-half);
+
+    td {
+      vertical-align: top;
+      padding-top: 0;
+    }
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+    .dict_title {
+      padding-right: 8px;
+      white-space: nowrap;
+    }
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+    .dict_value {
+      padding-right: 8px;
+    }
+
+    tr {
+      display: flex;
+      flex-direction: row;
+      vertical-align: top;
+    }
   }
 }
 
@@ -886,6 +916,8 @@ table.form-readonly__table {
     width: 130px;
     padding-right: 16px;
     font-weight: var(--font-weight-bold);
+    vertical-align: top;
+    padding-top: 0;
   }
 
   > td > .form-readonly__multiple-choice span {

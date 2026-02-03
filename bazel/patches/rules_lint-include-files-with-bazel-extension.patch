@@ -1,0 +1,62 @@
+From 9807e4c5987b823b6a7da55f00e95bf69c3d5350 Mon Sep 17 00:00:00 2001
+From: Nigel Banks <nigel.banks@checkmk.com>
+Date: Fri, 30 Jan 2026 17:08:46 +0100
+Subject: [PATCH] Include *.bazel files except *.lock.bazel files.
+
+---
+ format/private/format.sh | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/format/private/format.sh b/format/private/format.sh
+index 7d4d7fa..101af0f 100755
+--- a/format/private/format.sh
++++ b/format/private/format.sh
+@@ -142,7 +142,7 @@ function ls-files {
+       'SCSS') patterns=('*.scss') ;;
+       'Scala') patterns=('*.scala' '*.kojo' '*.sbt' '*.sc') ;;
+       'Shell') patterns=('.bash_aliases' '.bash_functions' '.bash_history' '.bash_logout' '.bash_profile' '.bashrc' '.cshrc' '.flaskenv' '.kshrc' '.login' '.profile' '.zlogin' '.zlogout' '.zprofile' '.zshenv' '.zshrc' '9fs' 'PKGBUILD' 'bash_aliases' 'bash_logout' 'bash_profile' 'bashrc' 'cshrc' 'gradlew' 'kshrc' 'login' 'man' 'profile' 'zlogin' 'zlogout' 'zprofile' 'zshenv' 'zshrc' '*.sh' '*.bash' '*.bats' '*.cgi' '*.command' '*.fcgi' '*.ksh' '*.sh.in' '*.tmux' '*.tool' '*.trigger' '*.zsh' '*.zsh-theme') ;;
+-      'Starlark') patterns=('BUCK' 'BUILD' 'BUILD.bazel' 'MODULE.bazel' '*.MODULE.bazel' 'Tiltfile' 'WORKSPACE' 'WORKSPACE.bazel' '*.axl' '*.bzl' '*.star') ;;
++      'Starlark') patterns=('BUCK' 'BUILD' 'BUILD.bazel' '*.bazel' 'MODULE.bazel' '*.MODULE.bazel' 'Tiltfile' 'WORKSPACE' 'WORKSPACE.bazel' '*.axl' '*.bzl' '*.star') ;;
+       'Swift') patterns=('*.swift') ;;
+       'TSX') patterns=('*.tsx') ;;
+       'TypeScript') patterns=('*.ts' '*.cts' '*.mts') ;;
+@@ -166,6 +166,11 @@ function ls-files {
+         ;;
+     esac
+ 
++    exclusions=()
++    case "$language" in
++      'Starlark') exclusions=('*.lock.bazel') ;;
++    esac
++
+     shebang_re=
+     case "$language" in
+       'Shell') shebang_re='^#![ \t]*/(usr/)?bin/(env[ \t]+)?(sh|bash|mksh|bats|zsh)(\s|$)' ;;
+@@ -224,6 +229,24 @@ function ls-files {
+         files=$(find "$@" "${find_args[@]}")
+     fi
+ 
++    # Apply exclusion patterns using bash glob matching
++    if [ ${#exclusions[@]} -gt 0 ] && [ -n "$files" ]; then
++        filtered_files=""
++        while IFS= read -r file; do
++            excluded=false
++            for exclusion in "${exclusions[@]}"; do
++                if [[ "$file" == $exclusion ]]; then
++                    excluded=true
++                    break
++                fi
++            done
++            if [[ -n "$file" && "$excluded" == false ]]; then
++                filtered_files+="${file}"$'\n'
++            fi
++        done <<< "$files"
++        files="${filtered_files%$'\n'}"  # Remove trailing newline
++    fi
++
+     if [[ ${disable_git_attribute_checks:-} == true ]]; then
+       # files should be returned newline separated to avoid a "File name too long" error
+       for file in $files; do
+-- 
+2.52.0
+

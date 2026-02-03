@@ -124,6 +124,7 @@ single_version_override(
         "//bazel/patches:rules_lint-groovy.patch",
         # https://github.com/aspect-build/rules_lint/pull/689
         "//bazel/patches:rules_lint-no_lint_tag_with_clang_tidy.patch",
+        "//bazel/patches:rules_lint-include-files-with-bazel-extension.patch",
         # https://github.com/aspect-build/rules_lint/issues/690
         "//bazel/patches:rules_lint-fix-ruff-sarif-output.patch",
     ],

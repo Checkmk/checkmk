@@ -5,13 +5,24 @@
 import configparser
 import json
 import os
+import socket
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from shutil import which
-from typing import Literal, TypedDict, Union
+from typing import Literal, TypedDict, TypeVar, Union
+
+# override decorator is only available in Python 3.12+
+try:
+    from typing import override
+except ImportError:
+    _F = TypeVar("_F", bound=Callable[..., object])
+
+    def override(func: _F, /) -> _F:
+        return func
+
 
 __version__ = "2.5.0b1"
 
@@ -23,6 +34,8 @@ DEFAULT_CFG_SECTION = {
 }
 
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
+
+DEFAULT_SCHEME = "http+unix://"
 
 
 # The checks below result in agent sections being created. This
@@ -139,27 +152,88 @@ def write_serialized_section(name: str, json_content: str) -> None:
     sys.stdout.flush()
 
 
-try:
-    import requests_unixsocket  # type: ignore[import-untyped]
-
-    write_serialized_section("errors", json.dumps({}))
-except ImportError:
-    write_section(
-        Error(
-            label="Missing Python dependency: requests-unixsocket.",
-            message="Import error: No module named 'requests_unixsocket'. "
-            "Install the OS package (for example: python3-requests-unixsocket on RHEL/Rocky via EPEL) "
-            "or the pip package 'requests-unixsocket'.",
-        )
-    )
-    sys.exit(0)
-
-
 def write_piggyback_section(target_host: str, section: Union[JSONSection, Error]) -> None:
     sys.stdout.write(f"<<<<{target_host}>>>>\n")
     write_section(section)
     sys.stdout.write("<<<<>>>>\n")
     sys.stdout.flush()
+
+
+try:
+    from requests import Session
+    from requests.adapters import HTTPAdapter
+    from urllib3.connection import HTTPConnection
+    from urllib3.connectionpool import HTTPConnectionPool
+except ImportError:
+    write_section(
+        Error(
+            label="Missing Python dependency: requests.",
+            message="Import error: No module named 'requests'. "
+            "Install the OS package (for example: python3-requests on RHEL/Rocky via EPEL) "
+            "or the pip package 'requests'. ",
+        )
+    )
+    sys.exit(0)
+
+
+# This was taken from cmk.utils.unixsocket_http
+# But, since we don't have access to that module here, we reimplement it.
+def make_unixsocket_session(
+    socket_path: Path,
+    target_base_url: str,
+) -> Session:
+    session = Session()
+    session.trust_env = False
+    session.mount(
+        target_base_url,
+        _LocalAdapter(socket_path),
+    )
+    return session
+
+
+class _LocalConnection(HTTPConnection):
+    def __init__(self, socket_path: Path) -> None:
+        super().__init__("localhost")
+        self._socket_path = socket_path
+
+    @override
+    def connect(self) -> None:
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.connect(str(self._socket_path))
+
+
+class _LocalConnectionPool(HTTPConnectionPool):
+    def __init__(self, socket_path: Path) -> None:
+        super().__init__("localhost")
+        self._connection = _LocalConnection(socket_path)
+
+    # TODO: Why does `@override` not work here?
+    def _new_conn(self) -> _LocalConnection:
+        return self._connection
+
+
+class _LocalAdapter(HTTPAdapter):
+    def __init__(self, socket_path: Path) -> None:
+        super().__init__()
+        self._connection_pool = _LocalConnectionPool(socket_path)
+
+    @override
+    def get_connection(
+        self,
+        url: Union[str, bytes],
+        proxies: object = None,
+    ) -> _LocalConnectionPool:
+        return self._connection_pool
+
+    @override
+    def get_connection_with_tls_context(
+        self,
+        request: object,
+        verify: object,
+        proxies: object = None,
+        cert: object = None,
+    ) -> _LocalConnectionPool:
+        return self._connection_pool
 
 
 def build_url_human_readable(socket_path: str, endpoint_uri: str) -> str:
@@ -170,9 +244,7 @@ def build_url_callable(socket_path: str, endpoint_uri: str) -> str:
     return f"http+unix://{socket_path.replace('/', '%2F')}{endpoint_uri}"
 
 
-def query_containers(
-    session: requests_unixsocket.Session, socket_path: str
-) -> Union[JSONSection, Error]:
+def query_containers(session: Session, socket_path: str) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/containers/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint), params={"all": "true"})
@@ -183,9 +255,7 @@ def query_containers(
     return JSONSection("containers", json.dumps(output))
 
 
-def query_disk_usage(
-    session: requests_unixsocket.Session, socket_path: str
-) -> Union[JSONSection, Error]:
+def query_disk_usage(session: Session, socket_path: str) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/system/df"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
@@ -195,9 +265,7 @@ def query_disk_usage(
     return JSONSection("disk_usage", json.dumps(response.json()))
 
 
-def query_engine(
-    session: requests_unixsocket.Session, socket_path: str
-) -> Union[JSONSection, Error]:
+def query_engine(session: Session, socket_path: str) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/info"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
@@ -207,7 +275,7 @@ def query_engine(
     return JSONSection("engine", json.dumps(response.json()))
 
 
-def query_pods(session: requests_unixsocket.Session, socket_path: str) -> Union[JSONSection, Error]:
+def query_pods(session: Session, socket_path: str) -> Union[JSONSection, Error]:
     endpoint = "/v4.0.0/libpod/pods/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint), params={"all": "true"})
@@ -218,7 +286,7 @@ def query_pods(session: requests_unixsocket.Session, socket_path: str) -> Union[
 
 
 def query_container_inspect(
-    session: requests_unixsocket.Session,
+    session: Session,
     socket_path: str,
     container_id: str,
 ) -> Union[JSONSection, Error]:
@@ -234,9 +302,7 @@ def query_container_inspect(
     return section
 
 
-def query_raw_stats(
-    session: requests_unixsocket.Session, socket_path: str
-) -> Union[Mapping[str, object], Error]:
+def query_raw_stats(session: Session, socket_path: str) -> Union[Mapping[str, object], Error]:
     endpoint = "/v4.0.0/libpod/containers/stats"
     try:
         response = session.get(
@@ -265,7 +331,7 @@ def handle_containers_stats(
     containers: Sequence[Mapping[str, object]],
     container_stats: Mapping[str, object],
     socket_path: str,
-    session: requests_unixsocket.Session,
+    session: Session,
 ) -> None:
     for container in containers:
         if not (container_id := str(container.get("Id", ""))):
@@ -289,20 +355,23 @@ def handle_containers_stats(
 def main() -> None:
     socket_paths = get_socket_paths(load_cfg())
 
-    for socket_path in socket_paths:
-        with requests_unixsocket.Session() as session:
-            containers_section = query_containers(session, socket_path)
+    for socket_path_str in socket_paths:
+        with make_unixsocket_session(
+            socket_path=Path(socket_path_str),
+            target_base_url=DEFAULT_SCHEME,
+        ) as session:
+            containers_section = query_containers(session, socket_path_str)
 
             write_sections(
                 [
                     containers_section,
-                    query_disk_usage(session, socket_path),
-                    query_engine(session, socket_path),
-                    query_pods(session, socket_path),
+                    query_disk_usage(session, socket_path_str),
+                    query_engine(session, socket_path_str),
+                    query_pods(session, socket_path_str),
                 ]
             )
 
-            raw_container_stats = query_raw_stats(session, socket_path)
+            raw_container_stats = query_raw_stats(session, socket_path_str)
             container_stats = (
                 extract_container_stats(raw_container_stats)
                 if not isinstance(raw_container_stats, Error)
@@ -313,7 +382,7 @@ def main() -> None:
                 handle_containers_stats(
                     containers=json.loads(containers_section.content),
                     container_stats=container_stats,
-                    socket_path=socket_path,
+                    socket_path=socket_path_str,
                     session=session,
                 )
             else:

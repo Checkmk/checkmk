@@ -150,7 +150,6 @@ void main() {
                         case "Package neb":
                         case "Package livestatus":
                         case "Package unixcat":
-                        case "Package cmk-update-agent":
                         case "Package mk-oracle":
                             relative_job_name = "${branch_base_folder}/builders/build-cmk-package-k8s";
                             build_params = [
@@ -163,6 +162,7 @@ void main() {
                             break;
                         case "Package cmk-agent-receiver":  // Tries to start docker containers, CMK-29585
                         case "Package cmk-relay-engine":    // Tries to start docker containers, CMK-29585
+                        case "Package cmk-update-agent":    // Has issues with pytest
                         // exception: The 'enchant' C library was not found and maybe needs to be installed.
                         case "Software Documentation Generation":
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";

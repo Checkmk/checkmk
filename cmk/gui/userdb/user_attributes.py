@@ -8,6 +8,7 @@
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -413,6 +414,9 @@ class ChangesSlideoutDisabled(UserAttribute):
             help=_("Show the slideout for activating changes or show the full page view instead."),
             choices=[(None, _("Quick activation")), ("full_page", _("Full activation page"))],
         )
+
+    def user_editable(self) -> bool:
+        return user.may("wato.activate")
 
 
 def show_mode_choices() -> list[tuple[str | None, str]]:

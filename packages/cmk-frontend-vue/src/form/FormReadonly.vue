@@ -863,7 +863,7 @@ table.form-readonly__table {
   > tr {
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     > td.dict_title {
-      min-width: 20ch;
+      min-width: 17ch;
       max-width: 70ch;
       white-space: normal;
       overflow-wrap: break-word;

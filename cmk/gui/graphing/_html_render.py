@@ -822,7 +822,7 @@ def render_ajax_graph(
             graph_artwork_or_errors.artwork,
             graph_data_range,
             graph_render_config,
-            ExpandableLegendAppearance.POP_UP,
+            ExpandableLegendAppearance.FOLDABLE,
         )
         html_code = HTML.without_escaping(output_funnel.drain())
 

@@ -15,6 +15,13 @@ from cmk.gui.dashboard.api import (
     GraphRequestInternal,
 )
 from cmk.gui.dashboard.api.model.widget_content import content_from_internal
+from cmk.gui.dashboard.api.model.widget_content.graph import (
+    CombinedGraphContent,
+    CustomGraphContent,
+    PerformanceGraphContent,
+    ProblemGraphContent,
+    SingleTimeseriesContent,
+)
 from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet
 from cmk.gui.dashboard.dashlet.dashlets.status_helpers import make_mk_missing_data_error
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
@@ -140,11 +147,11 @@ class GraphWidgetTokenAuthPage(DashboardTokenAuthenticatedPage):
             dashboard = issuer.load_dashboard()
             widget_config = get_dashboard_widget_by_id(dashboard, widget_id)
             if widget_config["type"] not in (
-                "combined_graph",
-                "custom_graph",
-                "performance_graph",
-                "problem_graph",
-                "single_timeseries",
+                CombinedGraphContent.internal_type(),
+                CustomGraphContent.internal_type(),
+                PerformanceGraphContent.internal_type(),
+                ProblemGraphContent.internal_type(),
+                SingleTimeseriesContent.internal_type(),
             ):
                 raise InvalidWidgetError()
 

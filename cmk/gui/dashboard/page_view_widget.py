@@ -494,7 +494,8 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             unique_widget_name,
             view_spec,
             row_limit=ctx.config.soft_query_limit,
-            context={},
+            # includes dashboard context via _get_view_spec_by_widget_id
+            context=view_spec.get("context", {}),
             user_permissions=user_permissions,
             is_reload=parameters.is_reload(),
             is_debug=False,

@@ -183,11 +183,3 @@ def _check_proxmox_ve_node_storage_provision(
         label="Provisioning",
         render_func=render.percent,
     )
-
-    uncommitted_mb = (storage_max_disk - provisioned) if storage_max_disk > provisioned else 0
-    yield from check_levels(
-        value=uncommitted_mb,
-        metric_name="uncommitted",
-        label="Uncommitted",
-        render_func=lambda v: render.bytes(v * 1024 * 1024),
-    )

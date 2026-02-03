@@ -173,8 +173,6 @@ def test_discover_proxmox_ve_node_directory_storage() -> None:
                 Metric("provisioned_storage_space", 32768.0),
                 Result(state=State.OK, summary="Provisioning: 173.54%"),
                 Metric("provisioned_storage_usage", 173.54),
-                Result(state=State.OK, summary="Uncommitted: 0 B"),
-                Metric("uncommitted", 0.0),
             ],
             id="OK, with storage links",
         ),

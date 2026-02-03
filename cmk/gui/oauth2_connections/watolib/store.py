@@ -147,8 +147,8 @@ def save_tokens_to_passwordstore(
         save_password(
             ident=password_ident,
             details=Password(
-                title=pw_title,
-                comment=title,
+                title=f"{pw_title} ({title})",
+                comment=f"Created by OAuth2 connection {title}",
                 docu_url="",
                 password=password,
                 owned_by=None,

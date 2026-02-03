@@ -155,16 +155,18 @@ const getSearchInputPlaceholder = computed(() => {
           @click.stop="searchUtils.resetSearch"
         ></CmkIcon>
       </div>
-
-      <UnifiedSearchOperatorSelect :disabled="!isMonitoringSearch()"> </UnifiedSearchOperatorSelect>
+    </div>
+    <div class="unified-search-header__filter-panel">
+      <div class="unified-search-header__filter-panel--left"></div>
+      <div class="unified-search-header__filter-panel--right">
+        <UnifiedSearchOperatorSelect :disabled="!isMonitoringSearch()" />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .unified-search-header {
-  height: 75px;
-  min-height: 75px !important;
   z-index: +1;
   width: calc(100% - 2 * var(--spacing-double));
   display: flex;
@@ -178,16 +180,27 @@ const getSearchInputPlaceholder = computed(() => {
 .unified-search-header__input-panel {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: end;
   justify-content: space-between;
-  height: 60px;
+  margin-top: var(--dimension-6);
 }
 
-.unified-search-header__info-panel {
+.unified-search-header__filter-panel {
   display: flex;
   flex-direction: row;
+  align-items: center;
   justify-content: start;
-  height: 30px;
+  height: 40px;
+
+  .unified-search-header__filter-panel--left {
+    justify-content: start;
+    flex-grow: 1;
+  }
+
+  .unified-search-header__filter-panel--right {
+    justify-content: end;
+    flex-grow: 0;
+  }
 }
 
 .unified-search-header__input-wrapper {
@@ -197,7 +210,6 @@ const getSearchInputPlaceholder = computed(() => {
   width: 70%;
   position: relative;
   flex: 5;
-  margin-right: var(--dimension-4);
 }
 
 .unified-search-header__input-tag-root {

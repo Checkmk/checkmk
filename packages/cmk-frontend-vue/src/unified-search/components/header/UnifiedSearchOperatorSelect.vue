@@ -9,12 +9,11 @@ import { ref, useTemplateRef } from 'vue'
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
-import CmkIcon from '@/components/CmkIcon'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
-import DropDownIndicator from './DropDownIndicator.vue'
 import { availableFilterOptions } from './QueryOptions'
 import SearchOperatorOptionEntry from './SearchOperatorOptionEntry.vue'
 
@@ -119,12 +118,11 @@ function toggleOperatorOptions() {
       @click.stop="toggleOperatorOptions"
       @keydown.enter.stop="toggleOperatorOptions"
     >
-      <CmkIcon name="info" size="small" class="unified-search-operator-info-icon"></CmkIcon>
-      <span class="unified-search-operator-switch-selected">{{ _t('Search operators') }}</span>
-      <DropDownIndicator
-        class="unified-search-operator-switch-indicator"
-        :active="searchUtils.input.searchOperatorSelectActive.value"
-      ></DropDownIndicator>
+      <CmkMultitoneIcon
+        name="help"
+        class="unified-search-operator-select__info-icon"
+        primary-color="others"
+      />
     </button>
     <div
       v-if="searchUtils.input.searchOperatorSelectActive.value"
@@ -163,7 +161,7 @@ function toggleOperatorOptions() {
 
   .unified-search-operator-select__switch-button {
     height: 100%;
-    padding: 0 var(--dimension-3) 0 var(--dimension-3);
+    padding: 0;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -198,7 +196,7 @@ function toggleOperatorOptions() {
     .unified-search-operator-select__switch-indicator,
     .unified-search-operator-select__info-icon,
     .unified-search-operator-select__info-icon:hover {
-      opacity: 0.5 !important;
+      display: none;
     }
   }
 }

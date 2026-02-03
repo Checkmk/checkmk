@@ -10,7 +10,6 @@ import usei18n from '@/lib/i18n'
 import { staticAssertNever } from '@/lib/typeUtils'
 
 import CmkIcon from '@/components/CmkIcon'
-import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 
 import { HistoryEntry } from '@/unified-search/lib/searchHistory'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
@@ -155,15 +154,6 @@ const getSearchInputPlaceholder = computed(() => {
           size="small"
           @click.stop="searchUtils.resetSearch"
         ></CmkIcon>
-
-        <div
-          v-if="isMonitoringSearch() && searchUtils.query.input.value.length > 0"
-          class="unified-search-info-item"
-        >
-          <span>{{ _t('Press') }}</span>
-          <CmkKeyboardKey keyboard-key="enter" size="small"></CmkKeyboardKey>
-          <span>{{ _t('to trigger host/service search') }}</span>
-        </div>
       </div>
 
       <UnifiedSearchOperatorSelect :disabled="!isMonitoringSearch()"> </UnifiedSearchOperatorSelect>
@@ -312,36 +302,5 @@ const getSearchInputPlaceholder = computed(() => {
   cursor: pointer;
   position: absolute;
   right: 8px;
-}
-
-.unified-search-header__info-item {
-  color: var(--dropdown-chevron-indicator-color);
-  opacity: 0.5;
-  position: absolute;
-  right: 0;
-  top: 35px;
-
-  span {
-    font-size: var(--font-size-small);
-  }
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .arrow-key {
-    width: 11px;
-    display: inline-flex;
-    height: 12px;
-    margin-bottom: -4px;
-
-    &::after {
-      font-size: 21px;
-      position: absolute;
-      margin: -8px 0 0 -1px;
-    }
-
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-    &.enter::after {
-      content: '\21B5';
-    }
-  }
 }
 </style>

@@ -16,6 +16,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
+import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -256,6 +257,10 @@ function searchResultNotEmpty(): boolean {
     (searchUtils.result.grouping.value && groupedResults.value && groupedResults.value.length > 0)
   )
 }
+
+function isMonitoringSearch(): boolean {
+  return ['all', 'monitoring'].indexOf(searchUtils.query.provider.value) >= 0
+}
 </script>
 
 <template>
@@ -263,6 +268,14 @@ function searchResultNotEmpty(): boolean {
     <div>
       <CmkHeading type="h4" class="result-heading">
         {{ _t('Results') }} ({{ results.length }})
+        <div
+          v-if="isMonitoringSearch() && searchUtils.query.input.value.length > 0"
+          class="unified-search-info-item"
+        >
+          <span>{{ _t('Press') }}</span>
+          <CmkKeyboardKey keyboard-key="enter" size="small"></CmkKeyboardKey>
+          <span>{{ _t('to trigger host/service search') }}</span>
+        </div>
         <CmkCheckbox
           v-model="searchUtils.result.grouping.value"
           :label="_t('Group results by topic')"
@@ -447,6 +460,35 @@ function searchResultNotEmpty(): boolean {
 
   .result-group-heading__icon {
     margin-right: var(--dimension-4);
+  }
+}
+
+.unified-search-info-item {
+  color: var(--dropdown-chevron-indicator-color);
+  opacity: 0.5;
+  right: 0;
+  top: 35px;
+
+  span {
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-default);
+  }
+
+  .arrow-key {
+    width: 11px;
+    display: inline-flex;
+    height: 12px;
+    margin-bottom: -4px;
+
+    &::after {
+      font-size: 21px;
+      position: absolute;
+      margin: -8px 0 0 -1px;
+    }
+
+    &.enter::after {
+      content: '\21B5';
+    }
   }
 }
 </style>

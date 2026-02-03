@@ -190,11 +190,16 @@ void upload_hot_cache(Map args) {
         def check_conditions = cache_directories.collect { "[ -d \"${it}\" ]" }.join(" || ");
         def du_commands = cache_directories.collect { "[ -d \"${it}\" ] && du -sh ${it}" }.join("\n            ");
 
+        // do not even create the file, if it exists already on remote
+        // the file might have been created by a little bit earlier running job
+        // evaluation of calling this function is done at the beginning of a job and might be outdated by the time reaching these lines
         sh("""
-            cd ${args.download_dest}
-            if ${check_conditions}; then
-                ${du_commands}
-                time tar -cf - ${dirs} 2>/dev/null | lz4 > ${args.file_pattern}
+            if [ ! -s "${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}" ]; then
+                cd ${args.download_dest}
+                if ${check_conditions}; then
+                    ${du_commands}
+                    time tar -cf - ${dirs} 2>/dev/null | lz4 > ${args.file_pattern}
+                fi
             fi
         """);
 

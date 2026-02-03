@@ -925,7 +925,7 @@ const graphDesignerContentAsJson = computed(() => {
 <template>
   <div ref="graphContainerRef"></div>
   <table class="data oddeven graph_designer_metrics">
-    <thead>
+    <thead class="gd__thead">
       <tr>
         <th class="header_narrow nowrap">#</th>
         <th class="header_buttons"></th>
@@ -1281,3 +1281,9 @@ const graphDesignerContentAsJson = computed(() => {
   <!-- This input field contains the computed json value which is sent when the form is submitted -->
   <input v-model="graphDesignerContentAsJson" name="graph_designer_content" type="hidden" />
 </template>
+
+<style scoped>
+.gd__thead {
+  z-index: unset;
+}
+</style>

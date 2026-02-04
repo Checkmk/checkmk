@@ -618,7 +618,7 @@ function deepClone<T>(obj: T): T {
         @save="updateDashboardSettings"
       />
     </div>
-    <template v-if="dashboardsManager.isInitialized.value">
+    <template v-if="dashboardsManager.isInitialized.value && !loadingError">
       <CloneSuccessAlert
         v-model:open="showCloneSuccessAlert"
         :has-filters="dashboardHasFilters"

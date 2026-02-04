@@ -218,6 +218,13 @@ http_file(
 )
 
 http_file(
+    name = "relay_tzdata_deb",
+    downloaded_file_path = "relay_tzdata.deb",
+    sha256 = "a72dd540ec4744f57003396f8b74ab473838c134793ce0ed6743ea98fea3e10c",
+    url = "https://archive.ubuntu.com/ubuntu/pool/main/t/tzdata/tzdata_2025c-3ubuntu3_all.deb",
+)
+
+http_file(
     name = "taplo.gz",
     integrity = "sha256-j+GWuJTM+QcvmNThAToYAwbhfSRIMLA5hu5ejqvrYVY=",
     urls = [

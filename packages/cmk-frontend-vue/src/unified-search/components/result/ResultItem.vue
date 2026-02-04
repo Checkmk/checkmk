@@ -9,7 +9,7 @@ import type {
   UnifiedSearchResultItemInlineButton,
   UnifiedSearchResultTarget
 } from 'cmk-shared-typing/typescript/unified_search'
-import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
@@ -32,6 +32,8 @@ export interface ResultItemProps {
   context?: string | undefined
   focus?: boolean | undefined
   breadcrumb?: string[] | undefined
+  zebra?: boolean | undefined
+  indented?: boolean | undefined
 }
 const props = defineProps<ResultItemProps>()
 
@@ -39,6 +41,9 @@ const focusRef = useTemplateRef('item-focus')
 const focusInlineRef = useTemplateRef('item-focus-inline')
 const currentlySelected = ref<number>(-1)
 const searchUtils = getSearchUtils()
+
+const wrapperComponent = computed(() => (props.zebra ? CmkZebra : 'div'))
+const wrapperProps = computed(() => (props.zebra ? { num: props.idx } : {}))
 
 const shortcutCallbackIds = ref<string[]>([])
 shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowLeft(toggleLeft))
@@ -114,14 +119,14 @@ onBeforeUnmount(() => {
 
 <template>
   <li class="result-item">
-    <CmkZebra :num="idx" class="result-item-handler-wrapper">
+    <component :is="wrapperComponent" v-bind="wrapperProps" class="result-item-handler-wrapper">
       <a
         v-if="props.target"
         ref="item-focus"
         :href="props.target.url"
         target="main"
         class="result-item-handler"
-        :class="{ focus: props.focus }"
+        :class="{ focus: props.focus, indented: props.indented }"
         @click="target?.transition && showLoadingTransition(target.transition, props.title)"
       >
         <div v-if="props.icon" class="result-item-inner-start">
@@ -141,7 +146,12 @@ onBeforeUnmount(() => {
           ></ResultItemTitle>
         </div>
       </a>
-      <button v-else ref="item-focus" class="result-item-handler" :class="{ focus: props.focus }">
+      <button
+        v-else
+        ref="item-focus"
+        class="result-item-handler"
+        :class="{ focus: props.focus, indented: props.indented }"
+      >
         <div v-if="props.icon" class="result-item-inner-start">
           <div class="result-item-icon">
             <CmkDynamicIcon :spec="props.icon" />
@@ -159,7 +169,12 @@ onBeforeUnmount(() => {
           ></ResultItemTitle>
         </div>
       </button>
-      <div v-for="(ib, i) in props.inline_buttons" :key="i" class="result-item-handler inline">
+      <div
+        v-for="(ib, i) in props.inline_buttons"
+        :key="i"
+        class="result-item-handler inline"
+        :class="{ indented: props.indented }"
+      >
         <CmkButton
           ref="item-focus-inline"
           class="inline-button"
@@ -173,7 +188,7 @@ onBeforeUnmount(() => {
           </div>
         </CmkButton>
       </div>
-    </CmkZebra>
+    </component>
   </li>
 </template>
 
@@ -199,7 +214,7 @@ onBeforeUnmount(() => {
   }
 
   .result-item-handler {
-    padding: var(--spacing);
+    padding: var(--dimension-3) var(--dimension-4);
     margin: 0;
     background: var(--default-bg-color);
     text-decoration: none;
@@ -212,6 +227,10 @@ onBeforeUnmount(() => {
     flex: 10;
     width: 100%;
     box-sizing: border-box;
+
+    &.indented {
+      padding: var(--dimension-3) var(--dimension-8);
+    }
 
     &:hover {
       background-color: var(--ux-theme-5);

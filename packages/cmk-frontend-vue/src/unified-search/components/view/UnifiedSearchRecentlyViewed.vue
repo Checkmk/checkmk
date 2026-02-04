@@ -76,6 +76,7 @@ immediateWatch(
         :html="searchUtils.highlightQuery(item.element.title)"
         :breadcrumb="searchUtils.breadcrumb(item.element.provider, item.element.topic)"
         :focus="isFocused(idx)"
+        :zebra="true"
         @keydown.enter="
           () => {
             handleItemClick(item.element)

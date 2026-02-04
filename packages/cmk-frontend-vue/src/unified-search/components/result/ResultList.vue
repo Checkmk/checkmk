@@ -8,8 +8,6 @@ import { computed, nextTick, onMounted, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkButton from '@/components/CmkButton.vue'
-
 const { _t } = usei18n()
 const props = defineProps<{
   useShowAll?: boolean | undefined
@@ -61,18 +59,13 @@ onMounted(() => {
   <ul ref="result-list" class="unified-search-result-list">
     <slot />
   </ul>
-  <CmkButton
-    v-if="useShowAll"
-    size="small"
-    class="unified-search-result-list__show-all"
-    @click="toggleList"
-  >
+  <button v-if="useShowAll" class="unified-search-result-list__show-all" @click="toggleList">
     <span
       class="unified-search-result-list__chevron"
-      :class="`unified-search-result-list__chevron--${showAll ? 'top' : 'bottom'}`"
+      :class="`unified-search-result-list__chevron--${showAll ? 'top' : 'right'}`"
     />
     {{ showAllBtnText }}
-  </CmkButton>
+  </button>
 </template>
 
 <style scoped>
@@ -91,8 +84,19 @@ onMounted(() => {
 }
 
 .unified-search-result-list__show-all {
-  margin-top: var(--spacing-half);
   height: 20px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background-color: var(--ux-theme-5);
+  }
 }
 
 .unified-search-result-list__chevron {
@@ -114,10 +118,10 @@ onMounted(() => {
     vertical-align: top;
   }
 
-  &.unified-search-result-list__chevron--bottom {
+  &.unified-search-result-list__chevron--right {
     &::before {
       top: 3px;
-      transform: rotate(135deg);
+      transform: rotate(45deg);
       transition: transform 100ms linear;
     }
   }

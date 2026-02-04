@@ -310,6 +310,7 @@ function isMonitoringSearch(): boolean {
                 :target="item.target"
                 :html="searchUtils.highlightQuery(item.title)"
                 :focus="isFocused(idx, gdx)"
+                :indented="true"
                 @keydown.enter="
                   () => {
                     handleItemClick(item)
@@ -340,6 +341,7 @@ function isMonitoringSearch(): boolean {
           :html="searchUtils.highlightQuery(item.title)"
           :breadcrumb="searchUtils.breadcrumb(item.provider, item.topic)"
           :focus="isFocused(idx)"
+          :zebra="true"
           @keydown.enter="
             () => {
               handleItemClick(item)

@@ -144,6 +144,7 @@ onMounted(() => {
         :breadcrumb="[q.provider]"
         :html="searchUtils.highlightQuery(q.input)"
         :focus="isFocused(idx + recentlyViewed.length)"
+        :zebra="true"
         @click.stop="
           () => {
             searchUtils.input.setInputValue(q.input)

@@ -372,6 +372,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
             title=self._delete_confirm_title(nr),
             suffix=entry["title"],
             message=confirm_delete,
+            post_confirm_waiting_text=_("Deleting %s...") % self._mode_type.name_singular(),
         )
         html.icon_button(
             delete_url,

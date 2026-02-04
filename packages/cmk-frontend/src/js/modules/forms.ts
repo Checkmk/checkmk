@@ -469,7 +469,7 @@ export function confirm_link(
   post_confirm_waiting_text: string | null = null
 ) {
   confirm_dialog(
-    { ...custom_args, html: message, post_confirm_waiting_text: post_confirm_waiting_text },
+    { ...custom_args, html: message },
     () => {
       const form = Object.assign(document.createElement('form'), {
         method: 'POST',
@@ -485,7 +485,10 @@ export function confirm_link(
       document.body.appendChild(form)
 
       form.submit()
-    }
+    },
+    null,
+    null,
+    post_confirm_waiting_text
   )
 }
 

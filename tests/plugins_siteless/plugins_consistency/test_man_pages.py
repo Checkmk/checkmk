@@ -11,12 +11,15 @@ from pathlib import Path
 import pytest
 
 from cmk.agent_based.v2 import CheckPlugin
-from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import discover_all_plugins, discover_families, PluginGroup
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils import man_pages
 from tests.testlib.common.repo import repo_path
+
+_NONFREE_INDICATORS = {"nonfree", "non-free"}
+_NONFREE_LICENSE = "Checkmk Enterprise License"
+_FREE_LICENSE = "GPLv2"
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
@@ -311,24 +314,19 @@ def test_man_page_agents(all_pages: Mapping[str, man_pages.ManPage]) -> None:
     assert not man_page_uses_forbidden_agents
 
 
-def test_man_page_license(all_pages: Mapping[str, man_pages.ManPage]) -> None:
-    license_not_open_source = set()
-    license_not_enterprise = set()
-    non_free_directories = {
-        edition.long for edition in Edition if edition is not Edition.COMMUNITY
-    } | {"nonfree"}
+def _is_free(page: man_pages.ManPage) -> bool:
+    return not _NONFREE_INDICATORS.intersection(page.path.relative_to(repo_path()).parts)
 
-    for page in all_pages.values():
-        if non_free_directories.intersection(page.path.relative_to(repo_path()).parts):
-            if page.license != "Checkmk Enterprise License":
-                license_not_enterprise.add(page.name)
 
-        elif page.license != "GPLv2":
-            license_not_open_source.add(page.name)
+def test_man_page_license_free(all_pages: Mapping[str, man_pages.ManPage]) -> None:
+    assert not {
+        page.name for page in all_pages.values() if _is_free(page) and page.license != _FREE_LICENSE
+    }
 
-    assert not license_not_open_source, (
-        "The following man pages should have 'GPLv2' as license but don't"
-    )
-    assert not license_not_enterprise, (
-        "The following man pages should have 'Checkmk Enterprise License' as license but don't"
-    )
+
+def test_man_page_license_nonfree(all_pages: Mapping[str, man_pages.ManPage]) -> None:
+    assert not {
+        page.name
+        for page in all_pages.values()
+        if not _is_free(page) and page.license != _NONFREE_LICENSE
+    }

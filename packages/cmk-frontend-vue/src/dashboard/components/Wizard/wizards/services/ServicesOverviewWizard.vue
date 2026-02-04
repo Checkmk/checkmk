@@ -65,6 +65,7 @@ const props = defineProps<ServicesOverviewWizardProps>()
 
 const emit = defineEmits<{
   goBack: []
+  close: []
   addWidget: [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -190,7 +191,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
     </WizardStepsContainer>
 
     <WizardStageContainer>
-      <CloseButton @close="() => emit('goBack')" />
+      <CloseButton @close="() => emit('close')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:host-filter-type="hostFilterType"

@@ -56,6 +56,7 @@ const props = withDefaults(defineProps<HwSwInventoryWizardProps>(), {
 
 const emit = defineEmits<{
   goBack: []
+  close: []
   addWidget: [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -205,7 +206,7 @@ const handleAddWidget = (
     </WizardStepsContainer>
 
     <WizardStageContainer>
-      <CloseButton @close="() => emit('goBack')" />
+      <CloseButton @close="() => emit('close')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:host-filter-type="hostFilterType"

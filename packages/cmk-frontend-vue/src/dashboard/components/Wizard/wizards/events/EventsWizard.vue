@@ -51,6 +51,7 @@ const props = defineProps<MetricsWizardProps>()
 
 const emit = defineEmits<{
   goBack: []
+  close: []
   addWidget: [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -132,7 +133,7 @@ const appliedFilters = computed((): ConfiguredFilters => {
     </WizardStepsContainer>
 
     <WizardStageContainer>
-      <CloseButton @close="() => emit('goBack')" />
+      <CloseButton @close="() => emit('close')" />
 
       <Stage1
         v-if="wizardHandler.stage.value === 0"

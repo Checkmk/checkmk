@@ -74,6 +74,7 @@ const stage1Content = computed(() => {
 
 const emit = defineEmits<{
   goBack: []
+  close: []
   addWidget: [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -351,7 +352,7 @@ async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
     </WizardStepsContainer>
 
     <WizardStageContainer :overflow-hidden="wizardHandler.stage.value === 1">
-      <CloseButton @close="() => emit('goBack')" />
+      <CloseButton @close="() => emit('close')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:selected-datasource="selectedDatasource"

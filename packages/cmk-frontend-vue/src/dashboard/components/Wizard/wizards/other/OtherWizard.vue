@@ -29,6 +29,7 @@ defineProps<OtherWizardProps>()
 
 defineEmits<{
   goBack: []
+  close: []
   addWidget: [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -40,7 +41,7 @@ defineEmits<{
 <template>
   <WizardContainer>
     <WizardStageContainer>
-      <CloseButton @close="$emit('goBack')" />
+      <CloseButton @close="$emit('close')" />
       <Stage1
         :dashboard-key="dashboardKey"
         :dashboard-constants="dashboardConstants"

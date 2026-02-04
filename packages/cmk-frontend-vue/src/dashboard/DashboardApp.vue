@@ -210,6 +210,12 @@ const handleWizardSelectorGoBack = () => {
   openWizard.value = false
 }
 
+const handleWizardClose = () => {
+  widgetToEdit.value = null
+  openWizard.value = false
+  openAddWidgetDialog.value = false
+}
+
 const handleAddWidget = (widgetIdent: string) => {
   openAddWidgetDialog.value = false
   selectedWizard.value = widgetIdent
@@ -575,6 +581,7 @@ function deepClone<T>(obj: T): T {
         :edit-widget-id="widgetToEdit"
         :available-features="available_features"
         @back-button="handleWizardSelectorGoBack"
+        @close-wizard="handleWizardClose"
         @add-widget="addWidget"
         @edit-widget="executeEditWidget"
       />

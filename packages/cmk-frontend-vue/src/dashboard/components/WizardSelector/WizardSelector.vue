@@ -41,6 +41,7 @@ const { _t } = usei18n()
 
 const emit = defineEmits<{
   'back-button': []
+  'close-wizard': []
   'add-widget': [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -58,6 +59,10 @@ const props = defineProps<AllWizardsProps>()
 
 const handleGoBack = () => {
   emit('back-button')
+}
+
+const handleClose = () => {
+  emit('close-wizard')
 }
 
 const handleAddEditWidget = (
@@ -90,6 +95,7 @@ const handleAddEditWidget = (
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
@@ -101,6 +107,7 @@ const handleAddEditWidget = (
         :edit-widget-spec="editWidgetSpec"
         :available-features="availableFeatures"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
@@ -111,6 +118,7 @@ const handleAddEditWidget = (
         :dashboard-constants="dashboardConstants"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
@@ -122,6 +130,7 @@ const handleAddEditWidget = (
         :edit-widget-spec="editWidgetSpec"
         :available-features="availableFeatures"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
@@ -133,6 +142,7 @@ const handleAddEditWidget = (
         :edit-widget-spec="editWidgetSpec"
         :available-features="availableFeatures"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
@@ -143,6 +153,7 @@ const handleAddEditWidget = (
         :edit-widget-spec="editWidgetSpec"
         :edit-widget-id="editWidgetId"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
@@ -153,6 +164,7 @@ const handleAddEditWidget = (
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
@@ -163,6 +175,7 @@ const handleAddEditWidget = (
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 
@@ -173,6 +186,7 @@ const handleAddEditWidget = (
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
+        @close="handleClose"
         @add-widget="handleAddEditWidget"
       />
 

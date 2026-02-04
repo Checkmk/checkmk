@@ -40,6 +40,7 @@ const { editWidgetSpec = null, editWidgetId = null } = defineProps<ViewWizardPro
 
 defineEmits<{
   goBack: []
+  close: []
   addWidget: [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -58,6 +59,7 @@ defineEmits<{
       :edit-widget-id="editWidgetId"
       :datasources-by-id="datasourcesById"
       @go-back="$emit('goBack')"
+      @close="$emit('close')"
       @add-widget="
         (content, generalSettings, filterContext) =>
           $emit('addWidget', content, generalSettings, filterContext)

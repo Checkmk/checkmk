@@ -46,6 +46,7 @@ const props = defineProps<CustomGraphsWizardProps>()
 
 const emit = defineEmits<{
   goBack: []
+  close: []
   addWidget: [
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
@@ -90,7 +91,7 @@ const contextConfiguredFilters = computed((): ConfiguredFilters => {
     </WizardStepsContainer>
 
     <WizardStageContainer>
-      <CloseButton @close="() => emit('goBack')" />
+      <CloseButton @close="() => emit('close')" />
       <Suspense>
         <StageContents
           :dashboard-key="dashboardKey"

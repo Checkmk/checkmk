@@ -2,5 +2,5 @@
   "homepage": "https://www.openssl.org/",
   "maintainers": [],
   "repository": ["github:openssl/openssl"],
-  "versions": ["3.0.16.cmk.1"]
+  "versions": ["3.0.19.cmk.1"]
 }

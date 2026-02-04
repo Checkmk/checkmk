@@ -7,15 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkBadge, { type Colors, type Types } from '@/components/CmkBadge.vue'
-import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
-import type { CmkMultitoneIconColor, CustomIconColor } from '@/components/CmkIcon/types'
+import type { OneColorIcons } from '@/components/CmkIcon/types'
 
 import type { UnifiedSearchProvider } from '@/unified-search/lib/providers/unified'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { ProviderOption, QueryProvider } from '@/unified-search/providers/search-utils.types'
 
 import { availableProviderOptions } from '../QueryOptions'
+import FilterButton from './FilterButton.vue'
 
 const { _t } = usei18n()
 const searchUtils = getSearchUtils()
@@ -50,44 +49,23 @@ const provideri18n: Record<QueryProvider, TranslatedString> = {
   customize: _t('Customize'),
   setup: _t('Setup')
 }
-
-function getProviderBadgeColor(provider: QueryProvider): Colors {
-  return searchUtils.query.provider.value === provider ? 'success' : 'default'
-}
-
-function getProviderBadgeType(provider: QueryProvider): Types {
-  return searchUtils.query.provider.value === provider ? 'fill' : 'outline'
-}
-
-function getProviderIconColor(provider: QueryProvider): CmkMultitoneIconColor | CustomIconColor {
-  return searchUtils.query.provider.value === provider ? { custom: 'var(--black)' } : 'font'
-}
 </script>
 
 <template>
   <div class="unified-search-search-provider__wrapper">
-    <button
+    <FilterButton
       v-for="po in availableProviders"
       :key="po.value"
-      class="unified-search-search-provider__button"
+      :active="searchUtils.query.provider.value === po.value"
+      active-color="success"
+      :icon="{
+        name: po.value as OneColorIcons,
+        activeColor: { custom: 'var(--black)' }
+      }"
       @click="selectProvider(po)"
     >
-      <CmkBadge
-        :color="getProviderBadgeColor(po.value)"
-        :type="getProviderBadgeType(po.value)"
-        size="small"
-        class="unified-search-search-provider__chip"
-      >
-        <CmkMultitoneIcon
-          v-if="po.value !== 'all'"
-          :name="po.value"
-          :primary-color="getProviderIconColor(po.value)"
-          size="small"
-          class="unified-search-search-provider__icon"
-        />
-        {{ provideri18n[po.value] }}
-      </CmkBadge>
-    </button>
+      {{ provideri18n[po.value] }}
+    </FilterButton>
   </div>
 </template>
 
@@ -97,33 +75,5 @@ function getProviderIconColor(provider: QueryProvider): CmkMultitoneIconColor | 
   flex-direction: row;
   align-items: center;
   gap: var(--dimension-4);
-
-  .unified-search-search-provider__button {
-    padding: 0;
-    margin: 0;
-    border: 0;
-    border-radius: 99999px;
-    background: transparent;
-
-    &:hover {
-      background-color: var(--ux-theme-4);
-    }
-
-    .unified-search-search-provider__chip {
-      border-width: 1px;
-      padding: var(--dimension-3) var(--dimension-4);
-      margin: 0;
-      font-size: var(--font-size-default);
-
-      /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-      &.cmk-badge--default {
-        border-color: var(--ux-theme-6);
-      }
-
-      .unified-search-search-provider__icon {
-        margin-right: var(--dimension-3);
-      }
-    }
-  }
 }
 </style>

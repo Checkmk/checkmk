@@ -43,7 +43,10 @@ const iFrameProps = computed(() => {
   }
   return {
     ...props,
-    content: iFrameContent
+    content: iFrameContent,
+    // Preview handling is done within the AJAX page. This prevents the iframe component from adding
+    // another scroll layer
+    isPreview: false
   }
 })
 </script>

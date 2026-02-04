@@ -9,6 +9,7 @@
 """some fixtures related to e2e tests and playwright"""
 
 import logging
+import time
 from collections import defaultdict
 from collections.abc import Iterator
 from typing import Any, TypeVar
@@ -17,6 +18,7 @@ import pytest
 from faker import Faker
 from playwright.sync_api import BrowserContext, expect, Page
 
+from cmk.utils.nonfree.pro.licensing.export import RawVerificationResponse
 from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
@@ -28,7 +30,10 @@ from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.gui_e2e.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.emails import EmailManager
-from tests.testlib.licensing.nonfree.pro.license_management import is_test_site_licensed
+from tests.testlib.licensing.nonfree.pro.license_management import (
+    is_test_site_licensed,
+    RawVerificationResponse_v3_1,
+)
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import (
     ADMIN_USER,
@@ -37,7 +42,7 @@ from tests.testlib.site import (
     SiteFactory,
 )
 from tests.testlib.utils import is_cleanup_enabled, run
-from tests.testlib.version import TypeCMKEdition, TypeCMKEditionOld
+from tests.testlib.version import TypeCMKEditionOld, CMKEditionOld
 
 logger = logging.getLogger(__name__)
 
@@ -106,16 +111,79 @@ def _licensing_page(dashboard_page: MainDashboard) -> Iterator[Licensing]:
     yield Licensing(dashboard_page.page)
 
 
+def _assert_license_details(
+    licensing_page: Licensing,
+    expected_response: RawVerificationResponse | RawVerificationResponse_v3_1,
+) -> None:
+    expected_service_limit = (
+        "unlimited"
+        if expected_response["payload"]["service_limit"] == -1
+        else expected_response["payload"]["service_limit"]
+    )
+    # Ignores below needed as we cannot do an isinstance call on a typeddict.
+    # In any case the presence of the field is checked at runtime.
+    if "active_metric_series_limit" in expected_response["payload"]:
+        expected_active_metric_series_limit = (
+            "unlimited"
+            if expected_response["payload"]["active_metric_series_limit"] == -1  # type: ignore[typeddict-item]
+            else expected_response["payload"]["active_metric_series_limit"]  # type: ignore[typeddict-item]
+        )
+    else:
+        expected_active_metric_series_limit = expected_service_limit
+    expected_reseller = expected_response["payload"]["reseller_name"] or "-"
+    expected_renewal = "Yes" if expected_response["payload"]["subscription_auto_renewal"] else "No"
+
+    is_old_version = (
+        licensing_page.main_area.locator(
+            'table th:has-text("Licensed active metric series")'
+        ).count()
+        == 0
+    )
+
+    parsed_edition = CMKEditionOld.edition_from_text(
+        expected_response["payload"]["checkmk_edition"]
+    )
+    expected_edition = (
+        parsed_edition.title if is_old_version else parsed_edition.new_edition_data.title
+    )
+
+    assert licensing_page.get_named_value("License start") == time.strftime(
+        "%Y-%m-%d", time.localtime(expected_response["payload"]["subscription_start_ts"])
+    )
+    assert licensing_page.get_named_value("License end") == time.strftime(
+        "%Y-%m-%d", time.localtime(expected_response["payload"]["subscription_expiration_ts"])
+    )
+    assert licensing_page.get_named_value("Licensed services") == expected_service_limit
+    assert (
+        is_old_version
+        or licensing_page.get_named_value("Licensed active metric series")
+        == expected_active_metric_series_limit
+    )
+    assert licensing_page.get_named_value("Checkmk edition") == expected_edition
+    # skipping options checks to not be too rigid
+    assert licensing_page.get_named_value("Reseller") == expected_reseller
+    # The following check won't work for in_termination or confirmed_renewal
+    # but given we are not using them we can leave it like that at the moment
+    # to not overcomplicate the code
+    assert (
+        licensing_page.get_named_value("Operational state").lower()
+        == expected_response["payload"]["operational_state"].lower()
+    )
+    assert licensing_page.get_named_value("Automatic renewal") == expected_renewal
+
+
 def is_test_site_licensed_gui(
     site: Site,
     licensing_page: Licensing,
+    expected_response: RawVerificationResponse | RawVerificationResponse_v3_1 | None = None,
     strict: bool = False,
-    edition: TypeCMKEdition | TypeCMKEditionOld | None = None,
 ) -> bool:
     """Check if the site is in a licensed state.
     Args:
         site: The site to check
         licensing_page: The licensing page to check for proper licensing results
+        expected_response: The response returned by the mocked license server,
+        this is used to check the licensing page renders all the proper fields.
         strict: If True, perform the check via the UI, which is more accurate.
         edition: Overrides the expected license edition for the comparison (optional).
     """
@@ -136,20 +204,21 @@ def is_test_site_licensed_gui(
                 == 0
             )
             if not_licensed:
+                logger.info("Site is not licensed")
                 return False
             state_match = licensing_page.get_named_value("Operational state").lower() == "active"
         else:
             license_state = licensing_page.get_named_value("License state").lower()
             if "trial" in license_state:
+                logger.info("Site is in trial state")
                 return False
             state_match = license_state == "licensed"
+        if expected_response is None:
+            pytest.fail("expected_response must be provided for strict checks on licensed sites")
         logger.info("License state match: %s", state_match)
-        edition = edition or site.edition
-        edition_match = (
-            licensing_page.get_named_value("Checkmk edition").lower() == edition.title.lower()
-        )
-        logger.info("License edition match: %s", edition_match)
-        licensed = state_match and edition_match
+        _assert_license_details(licensing_page, expected_response)
+        logger.info("License details match")
+        licensed = state_match
     else:
         licensed = is_test_site_licensed(site)
     logger.info("Licensed: %s", licensed)

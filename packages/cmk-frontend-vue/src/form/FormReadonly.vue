@@ -296,24 +296,18 @@ function renderTuple(
     backendValidation,
     value.length
   )
-  return h(
-    'div',
-    { class: `form-readonly__tuple form-readonly__tuple__layout-${formSpec.layout}` },
-    [
-      ...tupleValidations.map((validation: string) => {
-        return h('label', [validation])
-      }),
-      ...formSpec.elements.map((element, index) => {
-        // @ts-expect-error label does not exist on all element
-        const title: string = element.title || element['label']
-        return h('span', [
-          formSpec.show_titles && title ? `${title}: ` : h([]),
-          renderForm(element, value[index], elementValidations[index]),
-          index !== formSpec.elements.length - 1 && formSpec.layout === 'horizontal' ? ', ' : ''
-        ])
-      })
-    ]
-  )
+
+  return h('div', { class: `form-readonly__tuple form-readonly__tuple__layout-horizontal` }, [
+    ...tupleValidations.map((validation: string) => {
+      return h('label', [validation])
+    }),
+    ...formSpec.elements.map((element, index) => {
+      return h('span', [
+        renderForm(element, value[index], elementValidations[index]),
+        index !== formSpec.elements.length - 1 ? ', ' : ''
+      ])
+    })
+  ])
 }
 
 function renderDualListChoice(formSpec: DualListChoice, value: DualListElement[]): VNode {
@@ -956,14 +950,5 @@ table.form-readonly__table {
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-readonly__tuple__layout-horizontal > span {
   margin: 0;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.form-readonly__tuple__layout-vertical {
-  padding: 3px 0;
-
-  > span {
-    display: block;
-  }
 }
 </style>

@@ -36,7 +36,7 @@ SOURCES_COMMON = [
     "vue_formspec_components.json",
     "welcome.json",
     "agent_slideout.json",
-    "product_telemetry.json",
+    "product_usage_analytics.json",
     "two_factor_auth.json",
 ]
 

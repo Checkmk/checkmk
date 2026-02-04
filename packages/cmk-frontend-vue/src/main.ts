@@ -27,7 +27,7 @@ import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRe
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
-import ProductTelemetryApp from './product-telemetry/ProductTelemetryApp.vue'
+import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnalyticsApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
 import SidebarApp from './sidebar/SidebarApp.vue'
@@ -65,4 +65,4 @@ defineCmkComponent('cmk-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-static-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-two-factor-authentication', TwoFactorAuthApp)
 defineCmkComponent('cmk-webauthn-register-button', WebAuthnRegisterButtonApp)
-defineCmkComponent('cmk-product-telemetry', ProductTelemetryApp)
+defineCmkComponent('cmk-product-usage-analytics', ProductUsageAnalyticsApp)

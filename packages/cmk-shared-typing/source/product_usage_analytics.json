@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "product_usage_analytics_config",
+  "properties": {
+    "global_settings_link": { "type": "string" }
+  },
+  "required": ["global_settings_link"]
+}

@@ -97,8 +97,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.FILE,
-            ident="telemetry",
-            site_path="etc/check_mk/telemetry.mk",
+            ident="product_usage_analytics",
+            site_path="etc/check_mk/product_usage_analytics.mk",
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,

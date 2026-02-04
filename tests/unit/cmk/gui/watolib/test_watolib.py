@@ -30,7 +30,7 @@ def test_registered_config_domains() -> None:
         "omd",
         "rrdcached",
         "site-certificate",
-        "telemetry",
+        "product_usage_analytics",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
@@ -231,7 +231,7 @@ def test_registered_configvars() -> None:
         "load_frontend_vue",
         "site_trace_send",
         "site_trace_receive",
-        "product_telemetry",
+        "product_usage_analytics",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
@@ -335,7 +335,7 @@ def test_registered_configvar_groups() -> None:
         "User management",
         "Support",
         "Developer Tools",
-        "Product telemetry",
+        "Product usage analytics",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:

@@ -33,7 +33,7 @@ from cmk.gui.main_menu_types import (
     MainMenuVueApp,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.product_telemetry_popup import render_product_telemetry_popup
+from cmk.gui.product_usage_analytics_popup import render_product_usage_analytics_popup
 from cmk.gui.search_menu import UnifiedSearchMainMenuData
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
@@ -65,7 +65,7 @@ class MainMenuRenderer:
         assert search_item
         self._set_search_config(search_item, popup_triggers)
         self._show_main_menu_content(user_permissions, popup_triggers)
-        render_product_telemetry_popup(
+        render_product_usage_analytics_popup(
             active_config=active_config, user=user, request=request, response=response
         )
         html.close_ul()

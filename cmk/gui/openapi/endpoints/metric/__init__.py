@@ -11,7 +11,7 @@ REST-API.
 from collections.abc import Mapping
 from typing import Any
 
-import cmk.product_telemetry.collectors.grafana as grafana_collector
+import cmk.product_usage.collectors.grafana as grafana_collector
 from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError

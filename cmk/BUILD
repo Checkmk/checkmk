@@ -18,7 +18,7 @@ exports_files([
     "requirements.in",
     "utils/password_store/cli.py",
     "gui/openapi/spec/spec_generator/generate_api_spec.py",
-    "product_telemetry/cmk_telemetry_cli.py",
+    "product_usage/cmk_product_usage_cli.py",
 ] + LEGACY_CHECKS_DICT.keys())
 
 REQUIRED_EXTERNAL_DEPS = [

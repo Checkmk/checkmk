@@ -325,5 +325,6 @@ defineExpose({
 
 .cmk-suggestions--error {
   background-color: var(--error-msg-bg-color);
+  width: fit-content;
 }
 </style>

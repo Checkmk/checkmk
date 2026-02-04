@@ -149,7 +149,7 @@ const pageNavigation = parsePageNavigation()
       <div class="selection-section">
         <DashboardSelector
           :selected-dashboard="props.selectedDashboard"
-          :disabled="props.isDashboardLoading"
+          :disabled="props.isDashboardLoading || props.isEditMode"
           @dashboard-change="handleDashboardChange"
         />
 

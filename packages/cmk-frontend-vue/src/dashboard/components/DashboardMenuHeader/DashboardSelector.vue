@@ -21,6 +21,7 @@ const { _t } = usei18n()
 
 interface Props {
   selectedDashboard: SelectedDashboard | null
+  disabled?: boolean
 }
 
 const props = defineProps<Props>()
@@ -148,14 +149,19 @@ onUnmounted(() => {
         ref="inputRef"
         v-model="inputValue"
         class="dashboard-selector"
+        :class="{ 'dashboard-selector--disabled': props.disabled }"
         type="text"
         :placeholder="props.selectedDashboard?.title || _t('Select dashboard')"
+        :disabled="props.disabled"
         @focus="handleInputFocus"
         @blur="handleInputBlur"
       />
       <ArrowDown
         class="db-selector--arrow"
-        :class="{ 'db-selector--rotated': showDashboardDropdown }"
+        :class="{
+          'db-selector--rotated': showDashboardDropdown,
+          'db-selector--arrow-disabled': props.disabled
+        }"
       />
     </div>
     <div v-if="showDashboardDropdown" class="dropdown-menu">
@@ -213,6 +219,10 @@ onUnmounted(() => {
   &.db-selector--rotated {
     transform: rotate(180deg);
   }
+
+  &.db-selector--arrow-disabled {
+    opacity: 0.5;
+  }
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -241,6 +251,12 @@ onUnmounted(() => {
 .dashboard-selector:focus {
   color: var(--font-color);
   cursor: text;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.dashboard-selector--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

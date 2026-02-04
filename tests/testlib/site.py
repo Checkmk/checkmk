@@ -2219,6 +2219,18 @@ class SiteFactory:
                 ]
             )
 
+        # Ignore `Ensure sites.mk file exists` pre-action warning.
+        # Remove this for 2.6.0
+        pexpect_dialogs.extend(
+            [
+                PExpectDialog(
+                    expect="If you continue without doing so, some existing rules may be flagged as incompatible during the upgrade",
+                    send="c\n",
+                    optional=True,
+                )
+            ]
+        )
+
         pexpect_dialogs.extend(
             [PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True)]
         )

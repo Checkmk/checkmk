@@ -13,7 +13,10 @@ from cmk.agent_receiver.relay.api.routers.relays import dependencies, handlers
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
     FailedToSendMonitoringDataError,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError, RelayNotFoundError
+from cmk.agent_receiver.relay.lib.relays_repository import (
+    CheckmkAPIError,
+    RelayNotFoundError,
+)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols import relays as relay_protocols
 from cmk.relay_protocols.monitoring_data import MonitoringData
@@ -46,6 +49,41 @@ async def register_relay(
     """
     try:
         return handler.process(authorization, request=payload)
+    except CheckmkAPIError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            detail=e.msg,
+        )
+
+
+@router.get(
+    "/{relay_id}/status",
+    status_code=fastapi.status.HTTP_200_OK,
+    dependencies=[mtls_authorization_dependency("relay_id")],
+)
+async def get_relay_status(
+    handler: Annotated[
+        handlers.GetRelayStatusHandler, fastapi.Depends(dependencies.get_relay_status_handler)
+    ],
+    relay_id: str,
+) -> relay_protocols.RelayStatusResponse:
+    """Get relay status.
+
+    This endpoint returns the relay state by comparing local config and CMK API.
+    Only the relay identified by relay_id can access this endpoint (mTLS authorization).
+
+    Returns:
+        200 OK: RelayStatusResponse with relay_id and state (CONFIGURED, PENDING_ACTIVATION, PENDING_DELETION)
+        404 Not Found: If the relay does not exist in CMK configuration nor in local config
+        502 Bad Gateway: If there is an error communicating with the CMK API
+    """
+    try:
+        return handler.process(relay_id=RelayID(relay_id))
+    except RelayNotFoundError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Relay {relay_id} not found",
+        )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,

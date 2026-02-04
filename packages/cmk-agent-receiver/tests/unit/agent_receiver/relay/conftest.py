@@ -14,6 +14,7 @@ from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
+    GetRelayStatusHandler,
     RegisterRelayHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
@@ -40,7 +41,7 @@ from cmk.testlib.agent_receiver.relay import random_relay_id
 
 def create_relay_mock_transport() -> httpx.MockTransport:
     """Create a stateful mock transport for relay operations."""
-    registered_relays = set()
+    registered_relays: set[str] = set()
 
     def handler(request: httpx.Request) -> httpx.Response:
         # Create relay
@@ -52,7 +53,7 @@ def create_relay_mock_transport() -> httpx.MockTransport:
             registered_relays.add(relay_id)
             return httpx.Response(HTTPStatus.OK, json={"id": relay_id})
 
-        # Check/Get relay
+        # Check relay exists
         elif request.method == "GET" and "/objects/relay/" in request.url.path:
             relay_id = request.url.path.split("/")[-1]
             if relay_id in registered_relays:
@@ -124,6 +125,15 @@ def tasks_repository() -> Iterator[TasksRepository]:
 def register_relay_handler(relays_repository: RelaysRepository) -> Iterator[RegisterRelayHandler]:
     """Provides a RegisterRelayHandler with mock dependencies."""
     handler = RegisterRelayHandler(relays_repository=relays_repository)
+    yield handler
+
+
+@pytest.fixture()
+def get_relay_status_handler(
+    relays_repository: RelaysRepository,
+) -> Iterator[GetRelayStatusHandler]:
+    """Provides a GetRelayStatusHandler with mock dependencies."""
+    handler = GetRelayStatusHandler(relays_repository=relays_repository)
     yield handler
 
 

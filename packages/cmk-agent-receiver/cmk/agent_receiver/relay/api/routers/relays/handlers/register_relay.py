@@ -54,3 +54,22 @@ class RefreshCertHandler:
             root_cert=certificates.root_cert,
             client_cert=certificates.client_cert,
         )
+
+
+@dataclasses.dataclass
+class GetRelayStatusHandler:
+    relays_repository: RelaysRepository
+
+    def process(self, relay_id: RelayID) -> relay_protocols.RelayStatusResponse:
+        """Get relay status.
+
+        Returns:
+            RelayStatusResponse with relay_id and state
+
+        Raises:
+            RelayNotFoundError: If the relay does not exist anywhere
+            CheckmkAPIError: If there is an API error
+        """
+        auth = InternalAuth()
+        state = self.relays_repository.get_relay_state(auth, relay_id)
+        return relay_protocols.RelayStatusResponse(relay_id=relay_id, state=state)

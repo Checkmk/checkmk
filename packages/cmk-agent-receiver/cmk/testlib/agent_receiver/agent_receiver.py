@@ -124,6 +124,30 @@ class AgentReceiverClient:
             },
         )
 
+    def get_relay_status(self, relay_id: str) -> httpx.Response:
+        """Get relay status.
+
+        This endpoint returns the relay state by comparing local config and CMK API.
+        The relay must be authenticated via mTLS using its certificate.
+
+        Args:
+            relay_id: The UUID of the relay to get status for
+
+        Returns:
+            httpx.Response containing RelayStatusResponse with:
+                - relay_id: The relay's unique identifier
+                - state: The relay's state (CONFIGURED, PENDING_ACTIVATION, PENDING_DELETION)
+
+        Status codes:
+            - 200: Success
+            - 404: Relay not found in CMK configuration nor local config
+            - 502: CMK API error
+        """
+        return self.client.get(
+            f"/{self.site_name}/relays/{relay_id}/status",
+            headers={INJECTED_UUID_HEADER: relay_id},
+        )
+
     def push_task(
         self, *, relay_id: str, spec: TaskCreateRequestSpec, site_cn: str
     ) -> httpx.Response:

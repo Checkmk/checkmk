@@ -11,6 +11,7 @@ import httpx
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.agent_receiver.relay.lib.site_auth import SiteAuth
+from cmk.relay_protocols.relays import RelayState
 
 
 @final
@@ -92,3 +93,29 @@ class RelaysRepository:
         elif resp.status_code >= HTTPStatus.BAD_REQUEST:
             raise CheckmkAPIError(resp.text)
         return True
+
+    def relay_config_applied(self, relay_id: RelayID) -> bool:
+        """Check if a relay has its configuration applied (exists in local config folder)."""
+        relay_config_path = self.helper_config_dir / "latest/relays" / str(relay_id)
+        return relay_config_path.exists()
+
+    def get_relay_state(self, auth: SiteAuth, relay_id: RelayID) -> RelayState:
+        """Get relay state by comparing local config and CMK API.
+
+        Returns:
+            RelayState indicating the current state of the relay
+
+        Raises:
+            RelayNotFoundError: If the relay does not exist anywhere
+            CheckmkAPIError: If there is an API error
+        """
+        relay_in_config = self.relay_config_applied(relay_id)
+        relay_in_api = self.relay_exists(auth, relay_id)
+
+        if not relay_in_api and not relay_in_config:
+            raise RelayNotFoundError(relay_id)
+        if relay_in_api and not relay_in_config:
+            return RelayState.PENDING_ACTIVATION
+        if not relay_in_api and relay_in_config:
+            return RelayState.PENDING_DELETION
+        return RelayState.CONFIGURED

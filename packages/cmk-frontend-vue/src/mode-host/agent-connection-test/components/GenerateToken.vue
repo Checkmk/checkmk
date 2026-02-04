@@ -81,12 +81,6 @@ async function generateOTT() {
     ottGenerated.value = true
   }
 }
-
-function registerWithUser() {
-  noOTT.value = true
-  ottGenerated.value = false
-  ott.value = new Error('Register agent with user')
-}
 </script>
 
 <template>
@@ -104,10 +98,6 @@ function registerWithUser() {
     </CmkButton>
 
     <CmkAlertBox v-else variant="loading">{{ _t('Generating token') }}</CmkAlertBox>
-
-    <CmkAlertBox v-if="noOTT">{{
-      _t('Regenerate a token to use token authentication.')
-    }}</CmkAlertBox>
   </template>
   <template v-else>
     <CmkAlertBox v-if="ottError" variant="error">{{
@@ -118,14 +108,6 @@ function registerWithUser() {
         {{ _t('Successfully generated token') }}
         {{ _t(`(Expires: ${ottExpiry?.toLocaleString() || 'never'})`) }}</CmkAlertBox
       >
-      <CmkAlertBox>
-        {{ _t('If an error occurs during OTT authentication, try to authenticate with a user.') }}
-        <br />
-        <CmkButton size="small" class="mh-generate-token__auth-with-user" @click="registerWithUser">
-          <CmkIcon name="main-user-active" class="mh-generate-token__auth-with-user-icon" />
-          {{ _t('Authenticate with user') }}</CmkButton
-        ></CmkAlertBox
-      >
     </template>
   </template>
 </template>
@@ -135,14 +117,6 @@ function registerWithUser() {
   margin: var(--dimension-4) 0 var(--dimension-6);
 
   .mh-generate-token__icon {
-    margin-right: var(--dimension-4);
-  }
-}
-
-.mh-generate-token__auth-with-user {
-  margin-top: var(--dimension-4);
-
-  .mh-generate-token__auth-with-user-icon {
     margin-right: var(--dimension-4);
   }
 }

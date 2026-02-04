@@ -299,11 +299,6 @@ onUnmounted(() => {
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dropdown-item.active {
-  color: #fff;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .dropdown-loading,
 .dropdown-empty {
   padding: var(--dimension-6);

@@ -658,7 +658,7 @@ function renderCascadingSingleChoice(
     if (element.name === value[0]) {
       return h(
         'div',
-        h('div', { class: `form-readonly__cascading-single-choice__layout-${formSpec.layout}` }, [
+        h('div', { class: 'form-readonly__cascading-single-choice__layout-horizontal' }, [
           // notification explicitly defines empty string title:
           h('div', { style: 'vertical-align: top;' }, element.title.concat(':')),
           h('div', [renderForm(element.parameter_form, value[1], backendValidation)])

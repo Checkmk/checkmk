@@ -83,7 +83,7 @@ PERL_MODULES_LIST_2 = {
     },
     "Getopt-Long-2.43.tar.gz": {
         "sha256": "4abbba65165d1750e5fcb7f3898f3d7315af566a361576426394710b35c2f829",
-        "url": "https://archive.netbsd.org/pub/pkgsrc-archive/distfiles/2017Q3/Getopt-Long-2.43.tar.gz",
+        "url": "https://ftp.fau.de/macports/distfiles/perl5/Getopt-Long-2.43.tar.gz",
     },
     "HTTP-Date-6.02.tar.gz": {
         "sha256": "e8b9941da0f9f0c9c01068401a5e81341f0e3707d1c754f8e11f42a7e629e333",

@@ -10,6 +10,7 @@ import { type I18NPingHost, type ModeHostSite } from 'cmk-shared-typing/typescri
 import { type Ref, computed, onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkAlertBox, { type Variants } from '@/components/CmkAlertBox.vue'
 
@@ -53,7 +54,6 @@ enum PingCmd {
 }
 interface PingStatusInformation {
   queriesMade: number
-  timer: ReturnType<typeof setTimeout> | null
   timerStarted: number | null
 }
 
@@ -81,23 +81,26 @@ const ajaxRequestInProgress = ref<{ [key: string]: boolean }>({
   ping: false,
   ping6: false
 })
-const pingStatus: Ref<PingStatus> = ref({
-  ping: {
-    queriesMade: 0,
-    timer: null,
-    timerStarted: null
+const pingStatus: Ref<PingStatus> = usePersistentRef<PingStatus>(
+  'ping_status',
+  {
+    ping: {
+      queriesMade: 0,
+      timerStarted: null
+    },
+    ping6: {
+      queriesMade: 0,
+      timerStarted: null
+    }
   },
-  ping6: {
-    queriesMade: 0,
-    timer: null,
-    timerStarted: null
-  }
-})
+  (v) => v as PingStatus,
+  'local'
+)
 const typingTimer: Ref<{ [key: string]: ReturnType<typeof setTimeout> | null }> = ref({
   ping: null,
   ping6: null
 })
-const doneTypingInterval = 1000
+const doneTypingInterval = 2000
 const maxQueries = 5
 const waitTimeBetweenQueries = 60 * 1000
 
@@ -226,15 +229,16 @@ function callPingHostOnElement(
   if (props.hostnameInputElement.value) {
     delete statusElements.value[props.hostnameInputElement.name]
   }
-  statusElements.value[elementName] = {
-    status: {
-      tooltip: props.i18n.loading,
-      status: 'loading'
-    },
-    element: element
-  }
+
   typingTimer.value[cmd] = setTimeout(() => {
-    callAJAX(element.value, cmd, isIpAddress)
+    statusElements.value[elementName] = {
+      status: {
+        tooltip: props.i18n.loading,
+        status: 'loading'
+      },
+      element: element
+    }
+    callAJAX(element, cmd, isIpAddress)
       .then((result) => {
         if (result && statusElements.value[elementName]) {
           statusElements.value[elementName].status = result
@@ -245,7 +249,7 @@ function callPingHostOnElement(
 }
 
 async function callAJAX(
-  input: string | undefined,
+  inputElement: HTMLInputElement,
   cmd: PingCmd = PingCmd.Ping,
   isIpAddress: boolean = false
 ): Promise<DNSStatus | null> {
@@ -257,27 +261,47 @@ async function callAJAX(
     await new Promise((resolve) => setTimeout(resolve, 10))
   }
 
-  if (!pingStatus.value[cmd].timer) {
-    pingStatus.value[cmd].timerStarted = Date.now()
-    pingStatus.value[cmd].timer = setTimeout(() => {
-      pingStatus.value[cmd].queriesMade = 0
-      pingStatus.value[cmd].timer = null
-    }, waitTimeBetweenQueries)
+  const remainingTime =
+    waitTimeBetweenQueries - (Date.now() - (pingStatus.value[cmd].timerStarted || 0))
+  if (remainingTime < 0 && pingStatus.value[cmd].timerStarted) {
+    pingStatus.value = {
+      ...pingStatus.value,
+      [cmd]: { ...pingStatus.value[cmd], queriesMade: 0, timerStarted: null }
+    }
   }
-  pingStatus.value[cmd].queriesMade += 1
-  if (pingStatus.value[cmd].queriesMade > maxQueries && pingStatus.value[cmd].timerStarted) {
+
+  if (!pingStatus.value[cmd].timerStarted) {
+    pingStatus.value = {
+      ...pingStatus.value,
+      [cmd]: { ...pingStatus.value[cmd], timerStarted: Date.now() }
+    }
+  }
+
+  if (
+    pingStatus.value[cmd].queriesMade > maxQueries &&
+    pingStatus.value[cmd].timerStarted &&
+    remainingTime > 0
+  ) {
+    setTimeout(() => {
+      callPingHostOnElement(inputElement, cmd, isIpAddress)
+    }, remainingTime)
+
     return {
       tooltip: _t(
         `Maximum number of ping attempts reached.
-        Please try again after
-        ${((waitTimeBetweenQueries - (Date.now() - pingStatus.value[cmd].timerStarted)) / 1000).toFixed(0)}
-        seconds.`
+        After ${(remainingTime / 1000).toFixed(0)} seconds the next ping attempt will be made automatically.`
       ),
       status: 'warning'
     }
   }
+
+  pingStatus.value = {
+    ...pingStatus.value,
+    [cmd]: { ...pingStatus.value[cmd], queriesMade: pingStatus.value[cmd].queriesMade + 1 }
+  }
+
   const siteId = props.sites.find((site) => site.id_hash === props.siteSelectElement.value)?.site_id
-  const currentInput = input ? encodeURIComponent(input) : undefined
+  const currentInput = inputElement.value ? encodeURIComponent(inputElement.value) : undefined
 
   if (!currentInput) {
     return null

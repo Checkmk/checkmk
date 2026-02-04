@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ProviderName } from 'cmk-shared-typing/typescript/unified_search'
+
 import type { SimpleIcons } from '@/components/CmkIcon'
 
 export interface UnifiedSearchQueryLike {
@@ -24,8 +26,7 @@ export interface FilterOption {
   notAvailableFor?: QueryProvider[]
 }
 
-export type SearchProviderKeys = 'monitoring' | 'customize' | 'setup'
-export type QueryProvider = SearchProviderKeys | 'all'
+export type QueryProvider = ProviderName | 'all'
 
 export interface TopicIconMapping {
   [key: string]: SimpleIcons

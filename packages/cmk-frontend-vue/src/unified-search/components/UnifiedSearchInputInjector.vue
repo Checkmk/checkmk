@@ -11,15 +11,13 @@ import usei18n from '@/lib/i18n'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
 import { getSearchUtils } from '../providers/search-utils'
-import type { SearchProviderKeys } from '../providers/search-utils.types'
 import { availableProviderOptions } from './header/QueryOptions'
-import UnifiedSearchProviderSelect from './header/UnifiedSearchProviderSelect.vue'
 
 const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 
 const props = defineProps<{
-  providers: SearchProviderKeys[]
+  providers: ProviderName[]
 }>()
 
 function goToSearch(e: Event, provider: ProviderName) {
@@ -45,11 +43,11 @@ function goToSearch(e: Event, provider: ProviderName) {
     :to="`#main_menu_${provider}>div>div`"
   >
     <div class="unified-search-input-injector__root">
-      <UnifiedSearchProviderSelect
-        :provider="provider"
-        :open-search-on-change="true"
-      ></UnifiedSearchProviderSelect>
-      <CmkIcon class="unified-search-input-injector__icon" name="search" size="medium"></CmkIcon>
+      <CmkIcon
+        class="unified-search-input-injector__icon"
+        name="main-search"
+        size="medium"
+      ></CmkIcon>
       <input
         :id="`unified-search-input-${provider}`"
         role="search"

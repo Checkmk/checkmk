@@ -17,7 +17,7 @@ import type { FilterOption } from '@/unified-search/providers/search-utils.types
 
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
-import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
+import UnifiedSearchProviderSelect from './filter/SearchProvider.vue'
 
 interface CmkWindow extends Window {
   main: Window
@@ -128,7 +128,6 @@ const getSearchInputPlaceholder = computed(() => {
     <div class="unified-search-header__input-panel">
       <div class="unified-search-header__input-wrapper" @click="searchUtils.input.setFocus">
         <div class="unified-search-header__input-tag-root">
-          <UnifiedSearchProviderSelect></UnifiedSearchProviderSelect>
           <CmkIcon class="unified-search-header__icon" name="main-search" size="medium"></CmkIcon>
           <input
             id="unified-search-input"
@@ -157,7 +156,9 @@ const getSearchInputPlaceholder = computed(() => {
       </div>
     </div>
     <div class="unified-search-header__filter-panel">
-      <div class="unified-search-header__filter-panel--left"></div>
+      <div class="unified-search-header__filter-panel--left">
+        <UnifiedSearchProviderSelect></UnifiedSearchProviderSelect>
+      </div>
       <div class="unified-search-header__filter-panel--right">
         <UnifiedSearchOperatorSelect :disabled="!isMonitoringSearch()" />
       </div>

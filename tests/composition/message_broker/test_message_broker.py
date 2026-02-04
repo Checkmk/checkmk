@@ -2,6 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
 import logging
 import ssl
 from collections.abc import Iterator
@@ -157,6 +158,50 @@ class TestMessageBroker:
 
             central_site.openapi.changes.activate_and_wait_for_completion()
             assert_message_exchange_working(central_site, remote_site)
+
+
+@contextmanager
+def _setup_host(site: Site, hostname: str) -> Iterator[None]:
+    host_attributes = {
+        "site": site.id,
+        "ipaddress": "127.0.0.1",
+        "tag_agent": "cmk-agent",
+    }
+    try:
+        site.openapi.hosts.create(hostname=hostname, attributes=host_attributes, bake_agent=False)
+        yield
+    finally:
+        site.openapi.hosts.delete(hostname)
+        site.openapi.changes.activate_and_wait_for_completion()
+
+
+class TestMessageBrokerChangeActivation:
+    @pytest.mark.skip_if_edition("cloud")
+    def test_message_broker_activation(self, central_site: Site, remote_site: Site) -> None:
+        """Test if a change on a single site still correctly keeps the definitions in RabbitMQ consistent and the broker working"""
+        with rabbitmq_info_on_failure([central_site, remote_site]):
+            await_broker_ready(central_site, remote_site)
+            assert_message_exchange_working(central_site, remote_site)
+            # dummy change to trigger activation for the central site, but not the remote
+            with _setup_host(central_site, "message-broker-dummy-host"):
+                central_site.openapi.changes.activate_and_wait_for_completion(
+                    sites=[central_site.id]
+                )
+
+                rabbitmq_bindings = json.loads(
+                    central_site.check_output(
+                        ["rabbitmqctl", "list_bindings", "--formatter", "json"]
+                    )
+                )
+                remote_site_bindings = [
+                    binding
+                    for binding in rabbitmq_bindings
+                    if binding["destination_name"] == f"cmk.intersite.{remote_site.id}"
+                ]
+                assert remote_site_bindings, (
+                    "No bindings found for remote site after central site change activation"
+                )
+                assert_message_exchange_working(central_site, remote_site)
 
 
 @pytest.fixture(scope="session", name="broker_ca")

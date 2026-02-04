@@ -47,7 +47,7 @@ def distribute_piggyback_hub_configs(
     logger: Logger,
     global_settings: GlobalSettings,
     configured_sites: Mapping[SiteId, SiteConfiguration],
-    dirty_sites: Collection[SiteId],  # only needed in multi-tenancy case.
+    site_to_activate: Collection[SiteId],  # only needed in multi-tenancy case.
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
     for destination_site, locations in compute_new_config(

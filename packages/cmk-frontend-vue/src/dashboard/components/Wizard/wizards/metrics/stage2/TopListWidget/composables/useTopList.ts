@@ -42,7 +42,7 @@ export interface UseTopList extends UseWidgetHandler, UseWidgetVisualizationOpti
   rankingOrder: Ref<'high' | 'low'>
   limitTo: Ref<number>
   showServiceName: Ref<boolean>
-  showBarVisualizaton: Ref<boolean>
+  showBarVisualization: Ref<boolean>
 
   MAX_ENTRIES: number
   limitToValidationErrors: Ref<string[]>
@@ -71,7 +71,7 @@ export const useTopList = async (
 
   const limitTo = ref<number>(currentContent?.limit_to ?? 10)
   const showServiceName = ref<boolean>(currentContent?.columns?.show_service_description ?? true)
-  const showBarVisualizaton = ref<boolean>(currentContent?.columns?.show_bar_visualization ?? true)
+  const showBarVisualization = ref<boolean>(currentContent?.columns?.show_bar_visualization ?? true)
 
   const {
     title,
@@ -106,7 +106,7 @@ export const useTopList = async (
       type: CONTENT_TYPE,
       metric: metric,
       columns: {
-        show_bar_visualization: showBarVisualizaton.value,
+        show_bar_visualization: showBarVisualization.value,
         show_service_description: showServiceName.value
       },
       display_range: dataRangeProps.value,
@@ -135,7 +135,14 @@ export const useTopList = async (
   }
 
   watch(
-    [dataRangeProps, widgetGeneralSettings, limitTo, rankingOrder],
+    [
+      widgetGeneralSettings,
+      showBarVisualization,
+      showServiceName,
+      dataRangeProps,
+      rankingOrder,
+      limitTo
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -153,7 +160,7 @@ export const useTopList = async (
     rankingOrder,
     limitTo,
     showServiceName,
-    showBarVisualizaton,
+    showBarVisualization,
 
     title,
     showTitle,

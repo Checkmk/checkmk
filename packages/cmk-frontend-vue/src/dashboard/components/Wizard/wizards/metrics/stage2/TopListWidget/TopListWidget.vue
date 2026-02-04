@@ -104,7 +104,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
           </div>
           <div class="db-top-list-widget__item">
             <CmkCheckbox
-              v-model="handler.showBarVisualizaton.value"
+              v-model="handler.showBarVisualization.value"
               :label="_t('Show bar visualization')"
             />
           </div>

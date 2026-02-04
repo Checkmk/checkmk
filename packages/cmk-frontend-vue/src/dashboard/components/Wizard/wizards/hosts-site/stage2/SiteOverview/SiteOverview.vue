@@ -10,6 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkDropdown from '@/components/CmkDropdown'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
@@ -65,7 +66,17 @@ const widgetProps = computed(() => handler.value.widgetProps)
       </TableFormRow>
 
       <TableFormRow>
-        <FieldDescription>{{ _t('Hexagon size') }}</FieldDescription>
+        <FieldDescription>
+          {{ _t('Hexagon size') }}
+          <CmkHelpText
+            :help="
+              _t(
+                `When many hexagons are displayed, they scale to fit into the widget.
+                 Differences between &quot;Small&quot; and &quot;Large&quot; may not be visible in the preview.`
+              )
+            "
+          />
+        </FieldDescription>
         <FieldComponent>
           <FieldComponent>
             <div class="db-site-overview__item">

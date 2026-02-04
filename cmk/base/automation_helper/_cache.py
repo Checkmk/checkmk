@@ -25,7 +25,9 @@ class Cache:
         try:
             self._client.set(LAST_DETECTED_CHANGE_TOPIC, time)
         except ConnectionError as err:
-            raise CacheError("Failed to store timestamp of detected change.") from err
+            raise CacheError(
+                "Redis unavailable: Failed to store timestamp of detected change."
+            ) from err
 
     def get_last_detected_change(self) -> float:
         try:
@@ -33,7 +35,9 @@ class Cache:
             assert not isinstance(last, Awaitable)
             return float(last or 0.0)  # type: ignore[unreachable]
         except ConnectionError as err:
-            raise CacheError("Failed to retrieve timestamp of last detected change.") from err
+            raise CacheError(
+                "Redis unavailable: Failed to retrieve timestamp of last detected change."
+            ) from err
 
     def reload_required(self, last_reload: float) -> bool:
         return last_reload < self.get_last_detected_change()

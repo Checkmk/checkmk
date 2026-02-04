@@ -543,6 +543,7 @@ const agentPort: Ref<number> = ref(6556)
         :close-button-title="isPushMode ? _t('Close slideout') : _t('Close & test connection')"
         :agent-installed="isNotRegistered"
         :is-push-mode="isPushMode"
+        :user-settings-url="agentSlideout.user_settings_url"
         @close="onClose"
       />
     </CmkSlideInDialog>

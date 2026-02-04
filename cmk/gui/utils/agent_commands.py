@@ -147,6 +147,7 @@ def get_agent_slideout(
     save_host: bool,
     host_exists: bool,
     all_agents_url: str,
+    user_settings_url: str,
     agent_slideout_cls: type[SetupAgentSlideout],
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
@@ -160,6 +161,7 @@ def get_agent_slideout(
     save_host: bool,
     host_exists: bool,
     all_agents_url: str,
+    user_settings_url: str,
     agent_slideout_cls: type[ModeHostAgentSlideout],
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
@@ -172,6 +174,7 @@ def get_agent_slideout(
     save_host: bool,
     host_exists: bool,
     all_agents_url: str,
+    user_settings_url: str,
     agent_slideout_cls: type[SetupAgentSlideout | ModeHostAgentSlideout],
     agent_install_cls: type,
     agent_registration_cls: type,
@@ -179,6 +182,7 @@ def get_agent_slideout(
 ) -> Any:
     return agent_slideout_cls(
         all_agents_url=all_agents_url,
+        user_settings_url=user_settings_url,
         host_name=hostname,
         agent_install_cmds=agent_install_cls(
             **asdict(agent_commands_registry["agent_commands"].install_cmds(version, hostname))

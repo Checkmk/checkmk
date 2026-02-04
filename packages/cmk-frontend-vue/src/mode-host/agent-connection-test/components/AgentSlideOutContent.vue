@@ -18,6 +18,7 @@ import type { AgentSlideOutTabs, PackageOptions } from '../lib/type_def'
 
 const props = defineProps<{
   allAgentsUrl: string
+  userSettingsUrl: string
   legacyAgentUrl: string | undefined
   hostName: string
   siteId: string
@@ -153,6 +154,7 @@ const tabs: AgentSlideOutTabs[] = [
     "
     :tabs="tabs"
     :all-agents-url="allAgentsUrl"
+    :user-settings-url="userSettingsUrl"
     :close-button-title="closeButtonTitle"
     :save-host="saveHost"
     :host-exists="hostExists"

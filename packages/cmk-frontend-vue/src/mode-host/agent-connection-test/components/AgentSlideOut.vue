@@ -27,6 +27,7 @@ const props = defineProps<{
   dialogMsg: TranslatedString
   tabs: AgentSlideOutTabs[]
   allAgentsUrl: string
+  userSettingsUrl: string
   closeButtonTitle: TranslatedString
   saveHost: boolean
   hostExists?: boolean
@@ -221,6 +222,7 @@ function getInitStep() {
             :is-push-mode="isPushMode"
             :close-button-title="closeButtonTitle"
             :host-name="hostName"
+            :user-settings-url="userSettingsUrl"
             @close="close"
           ></RegisterAgent>
 

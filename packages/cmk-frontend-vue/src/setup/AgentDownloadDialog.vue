@@ -102,6 +102,7 @@ const triggerRescan = () => {
   >
     <AgentSlideOutContent
       :all-agents-url="agentSlideout.all_agents_url"
+      :user-settings-url="agentSlideout.user_settings_url"
       :host-name="agentSlideout.host_name"
       :site-id="siteId"
       :site-server="siteServer"

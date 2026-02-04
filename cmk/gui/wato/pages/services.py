@@ -65,7 +65,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
@@ -800,6 +800,9 @@ class DiscoveryPageRenderer:
                         host_exists=True,
                         all_agents_url=folder_preserving_link(
                             [("mode", "agent_of_host"), ("host", hostname)]
+                        ),
+                        user_settings_url=makeuri_contextless(
+                            request=request, vars_=[("mode", "users")]
                         ),
                         agent_slideout_cls=AgentSlideout,
                         agent_install_cls=AgentInstallCmds,

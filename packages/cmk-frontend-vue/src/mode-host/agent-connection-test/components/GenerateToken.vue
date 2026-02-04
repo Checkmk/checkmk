@@ -15,7 +15,7 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-export interface IAgentTokenGenerationResponsExtensions {
+export interface IAgentTokenGenerationResponseExtensions {
   comment: string
   issued_at: Date
   expires_at: Date | null
@@ -26,7 +26,7 @@ export interface IAgentTokenGenerationResponse {
   id: string
   title: string
   domainType: string
-  extensions: IAgentTokenGenerationResponsExtensions
+  extensions: IAgentTokenGenerationResponseExtensions
 }
 
 export interface IAgentTokenGenerationRequestBody {

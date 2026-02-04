@@ -10,7 +10,6 @@ from collections.abc import Sequence
 from typing import Annotated, Literal, override, Self
 
 from annotated_types import Ge, Interval, Unit
-from pydantic import AfterValidator
 
 from cmk.gui.dashboard.dashlet.dashlets.graph import (
     default_dashlet_graph_render_options,
@@ -341,17 +340,13 @@ class CustomGraphContent(_BaseGraphContent):
         )
 
 
-def _only_str_on_input(_value: str) -> str:
-    raise ValueError("Please use the graph ID instead of its number.")
-
-
 @api_model
 class PerformanceGraphContent(_BaseGraphContent):
     type: Literal["performance_graph"] = api_field(
         description="Displays a performance graph of a host or service."
     )
     # NOTE: we skip validation in case the value becomes invalid later
-    source: str | Annotated[int, Ge(1), AfterValidator(_only_str_on_input)] = api_field(
+    source: str | Annotated[int, Ge(1)] = api_field(
         description="Graph id or number of the performance graph."
     )
 

@@ -1369,10 +1369,6 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
         *PACKAGE_MESSAGING,
         "cmk.utils.paths",
     ),
-    ModulePath("bin/cmk-metric-backend-monitoring.py"): _allow(
-        *PACKAGE_METRIC_BACKEND,
-        "cmk.utils.licensing",
-    ),
     ModulePath("bin/cmk-piggyback-hub"): _allow(
         *PACKAGE_CCC,
         "cmk.piggyback",
@@ -1404,6 +1400,10 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
     ModulePath("buildscripts/scripts/publish_cloud_images.py"): _allow(*PACKAGE_CCC),
     ModulePath("buildscripts/scripts/unpublish-container-image.py"): _allow(*PACKAGE_CCC),
     ModulePath("buildscripts/scripts/lib/registry.py"): _allow(*PACKAGE_CCC),
+    ModulePath("non-free/bin/cmk-metric-backend-monitoring.py"): _allow(
+        *PACKAGE_METRIC_BACKEND,
+        "cmk.utils.licensing",
+    ),
     ModulePath("omd/packages/check_mk/post-create/01_create-sample-config.py"): _allow(),
     ModulePath("omd/non-free/packages/licensing/cmk-license-email-notification.py"): _allow(
         "cmk.utils.nonfree.pro.licensing"

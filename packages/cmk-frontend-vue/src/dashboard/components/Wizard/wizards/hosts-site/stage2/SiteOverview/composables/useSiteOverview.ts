@@ -53,7 +53,7 @@ export const useSiteOverview = async (
   const showStateOf = ref<'via_context' | 'sites' | 'hosts'>(
     currentContent?.dataset ?? 'via_context'
   )
-  const hexagonSize = ref<string>(currentContent?.hexagon_size ?? 'small')
+  const hexagonSize = ref<string>(currentContent?.hexagon_size === 'large' ? 'large' : 'small')
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {

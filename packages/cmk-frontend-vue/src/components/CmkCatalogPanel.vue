@@ -75,7 +75,6 @@ const id = useId()
 .cmk-catalog-panel--padded {
   width: 100%;
   padding: 0;
-  margin: var(--spacing) 0;
   border-radius: var(--border-radius);
   border-collapse: collapse;
 }

@@ -25,6 +25,7 @@ from typing import Annotated, Final, NamedTuple
 import requests
 import urllib3
 from pydantic import BaseModel, field_validator, PlainValidator
+from requests import RequestException
 
 from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
 
@@ -129,11 +130,29 @@ def check_mk_local_automation_serialized(
         try:
             result = executor.execute(command, args, stdin_data, auto_logger, timeout)
         except Exception as e:
-            msg = get_local_automation_failure_message(
-                command=command,
-                cmdline=executor.command_description(command, args, logger, timeout),
-                exc=e,
-            )
+            match e:
+                case RequestException(response=response) if response is not None:
+                    # Case 1: We got an actual HTTP response from the helper
+                    try:
+                        data = response.json()
+                        error_text = data.get("detail", str(data))
+                    except ValueError:
+                        error_text = response.text
+
+                    msg = get_local_automation_failure_message(
+                        command=command,
+                        cmdline=executor.command_description(command, args, logger, timeout),
+                        code=response.status_code,
+                        err=error_text,
+                    )
+
+                case RequestException() | _:
+                    # Case 2: Network error (Timeout, DNS, Connection Refused) - No response object
+                    msg = get_local_automation_failure_message(
+                        command=command,
+                        cmdline=executor.command_description(command, args, logger, timeout),
+                        exc=e,
+                    )
             raise MKAutomationException(msg)
 
         span.set_attribute("cmk.automation.exit_code", result.exit_code)

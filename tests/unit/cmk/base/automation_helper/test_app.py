@@ -9,10 +9,13 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import NoReturn
 
+import fakeredis
 import pytest
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
+from starlette import status
 
 from tests.testlib.common.utils import wait_until
 
@@ -28,7 +31,7 @@ from cmk.base.automation_helper._app import (
     HealthCheckResponse,
     make_application,
 )
-from cmk.base.automation_helper._cache import Cache
+from cmk.base.automation_helper._cache import Cache, CacheError
 from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations import AutomationError
 
@@ -402,3 +405,27 @@ class _LockWithCounter(asyncio.Lock):
     async def __aenter__(self) -> None:
         self.counter += 1
         return await super().__aenter__()
+
+
+class FailingCache(Cache):
+    """A cache that always raises CacheError."""
+
+    def get_last_detected_change(self) -> NoReturn:
+        raise CacheError("Failed to connect to Redis")
+
+
+def test_automation_cache_error_on_stale_config() -> None:
+    """Test that a CacheError during checking for config changes results in a 503 response."""
+
+    with _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        FailingCache(fakeredis.FakeRedis()),
+        lambda: None,
+        lambda: None,
+    ) as client:
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+
+    assert resp.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    data = resp.json()
+    assert data["error_code"] == "CACHE_ERROR"
+    assert "Automation cache error: Failed to connect to Redis" in data["detail"]

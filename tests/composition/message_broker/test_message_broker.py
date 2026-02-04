@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import ssl
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import IO
 
@@ -25,7 +27,6 @@ from tests.testlib.site import Site
 from tests.testlib.tls import CMKTLSError, tls_connect
 
 logger = logging.getLogger(__name__)
-pytestmark = pytest.mark.skip("CMK-29677: suspicious message broker tests")
 
 
 def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
@@ -42,6 +43,16 @@ def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
     return False
 
 
+@contextmanager
+def _trace_broker_messages(site: Site) -> Iterator[None]:
+    try:
+        site.run(["cmk-monitor-broker", "--enable_tracing"])
+        yield
+    finally:
+        site.run(["cmk-monitor-broker", "--disable_tracing"])
+
+
+@pytest.mark.skip("CMK-29677: suspicious message broker tests")
 @pytest.mark.skip_if_edition("cloud")
 class TestCMKBrokerTest:
     """Make sure our cmk-broker-test tool works"""
@@ -84,9 +95,14 @@ def _next_free_port(site: Site, key: str, port: str) -> int:
 class TestMessageBroker:
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
         """Test if the connection between central and remote site works"""
-        with rabbitmq_info_on_failure([central_site, remote_site]):
+        with (
+            rabbitmq_info_on_failure([central_site, remote_site]),
+            _trace_broker_messages(central_site),
+            _trace_broker_messages(remote_site),
+        ):
             assert_message_exchange_working(central_site, remote_site)
 
+    @pytest.mark.skip("CMK-29677: suspicious message broker tests")
     def test_message_broker_remote_remote_via_central(
         self,
         central_site: Site,
@@ -103,6 +119,7 @@ class TestMessageBroker:
 
                 check_broker_ping(remote_site_2, remote_site.id)
 
+    @pytest.mark.skip("CMK-29677: suspicious message broker tests")
     def test_message_broker_remote_remote_p2p(
         self, central_site: Site, remote_site: Site, remote_site_2: Site
     ) -> None:
@@ -117,7 +134,11 @@ class TestMessageBroker:
 
     def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
         """Ensure that sites can still communicate after the message broker port is changed"""
-        with rabbitmq_info_on_failure([central_site, remote_site, remote_site]):
+        with (
+            rabbitmq_info_on_failure([central_site, remote_site]),
+            _trace_broker_messages(central_site),
+            _trace_broker_messages(remote_site),
+        ):
             site_connection = central_site.openapi.sites.show(remote_site.id)
             site_connection_port = int(
                 site_connection["configuration_connection"]["message_broker_port"]

@@ -129,12 +129,17 @@ def assert_message_exchange_working(site1: Site, site2: Site) -> None:
     # established where messages get lost.
     # Checking for the binding, the queues or the shovels as well as check_port_connectivity
     # did not help, but waiting for some time does
+
+    # TODO: we should remove this for loop or change its behavior. When a message (n) is sent and
+    # not received, we just send a new one (n1); while waiting for this second message (n1) to be received,
+    # the first message (n) might be received, and then we would have a RuntimeError -> a failing test,
+    # but the message exchange would actually be working. As a temporary mitigation,
+    # let's keep 5 seconds for timeout.
     retries = 10
-    time_out_ = 2
     for _ in range(retries):
         with contextlib.suppress(Timeout):
             with broker_pong(site1):
-                check_broker_ping(site2, site1.id, time_out_=time_out_)
+                check_broker_ping(site2, site1.id)
             break
     else:
         assert False, f"Message exchange not working after {retries} retries"

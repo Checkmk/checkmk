@@ -33,46 +33,37 @@ import { breakpointFromInternal, breakpointToInternal, typedEntries } from './ut
 type WidgetLayoutBreakpoints = Partial<Record<ResponsiveGridBreakpoint, ResponsiveGridWidgetLayout>>
 
 function getMinimumSize(
-  // @ts-expect-error: TODO: implement different minimum sizes based on widget content type
   widgetContentType: string,
-  breakpoint: ResponsiveGridBreakpoint
+  breakpoint: ResponsiveGridBreakpoint,
+  widgetConstraints: DashboardConstants['widgets']
 ): { columns: number; rows: number } {
-  switch (breakpoint) {
-    case 'XS':
-      return {
-        columns: 4,
-        rows: 8
-      }
-    case 'S':
-      return {
-        columns: 4,
-        rows: 8
-      }
-    case 'M':
-      return {
-        columns: 4,
-        rows: 8
-      }
-    case 'L':
-      return {
-        columns: 3,
-        rows: 8
-      }
-    case 'XL':
-      return {
-        columns: 3,
-        rows: 8
-      }
-  }
+  return (
+    widgetConstraints[widgetContentType]?.layout.responsive[breakpoint]?.minimum_size ?? {
+      columns: breakpoint === 'L' || breakpoint === 'XL' ? 3 : 4,
+      rows: 8
+    }
+  )
+}
+
+function getDefaultSize(
+  widgetContentType: string,
+  breakpoint: ResponsiveGridBreakpoint,
+  widgetConstraints: DashboardConstants['widgets']
+): { columns: number; rows: number } {
+  return (
+    widgetConstraints[widgetContentType]?.layout.responsive[breakpoint]?.initial_size ??
+    getMinimumSize(widgetContentType, breakpoint, widgetConstraints)
+  )
 }
 
 function arrangementElementFromWidget(
   breakpoint: ResponsiveGridBreakpoint,
   widgetId: string,
   widgetContentType: string,
-  sizeAndPos: ResponsiveGridWidgetLayout
+  sizeAndPos: ResponsiveGridWidgetLayout,
+  widgetConstraints: DashboardConstants['widgets']
 ): ResponsiveGridInternalArrangementElement {
-  const minimumSize = getMinimumSize(widgetContentType, breakpoint)
+  const minimumSize = getMinimumSize(widgetContentType, breakpoint, widgetConstraints)
   return {
     i: widgetId,
     x: sizeAndPos.position.x,
@@ -87,12 +78,19 @@ function arrangementElementFromWidget(
 function layoutFromWidget(
   widgetId: string,
   widgetContentType: string,
-  breakpoints: WidgetLayoutBreakpoints
+  breakpoints: WidgetLayoutBreakpoints,
+  widgetConstraints: DashboardConstants['widgets']
 ): ResponsiveGridInternalLayout {
   const layout: ResponsiveGridInternalLayout = {}
   for (const [breakpoint, sizeAndPos] of typedEntries(breakpoints)) {
     layout[breakpointToInternal[breakpoint]] = [
-      arrangementElementFromWidget(breakpoint, widgetId, widgetContentType, sizeAndPos)
+      arrangementElementFromWidget(
+        breakpoint,
+        widgetId,
+        widgetContentType,
+        sizeAndPos,
+        widgetConstraints
+      )
     ]
   }
   return layout
@@ -129,18 +127,25 @@ function findPositionForWidget(
 
 function layoutsFromWidget(
   widgetId: string,
-  widget: ResponsiveGridWidget
+  widget: ResponsiveGridWidget,
+  widgetConstraints: DashboardConstants['widgets']
 ): ResponsiveGridConfiguredInternalLayouts {
   const layoutSpec = widget.layout.layouts
   const layouts: ResponsiveGridConfiguredInternalLayouts = { default: {} }
   for (const [layoutName, breakpoints] of Object.entries(layoutSpec)) {
-    layouts[layoutName] = layoutFromWidget(widgetId, widget.content.type, breakpoints)
+    layouts[layoutName] = layoutFromWidget(
+      widgetId,
+      widget.content.type,
+      breakpoints,
+      widgetConstraints
+    )
   }
   return layouts
 }
 
 function computeConfiguredInternalLayouts(
-  responsiveGridContent: ContentResponsiveGrid
+  responsiveGridContent: ContentResponsiveGrid,
+  widgetConstraints: DashboardConstants['widgets']
 ): ResponsiveGridConfiguredInternalLayouts {
   const newLayouts: ResponsiveGridConfiguredInternalLayouts = {
     default: {}
@@ -152,7 +157,9 @@ function computeConfiguredInternalLayouts(
     }
   }
   for (const [widgetId, widget] of Object.entries(responsiveGridContent.widgets)) {
-    for (const [layoutName, layoutData] of Object.entries(layoutsFromWidget(widgetId, widget))) {
+    for (const [layoutName, layoutData] of Object.entries(
+      layoutsFromWidget(widgetId, widget, widgetConstraints)
+    )) {
       for (const [breakpoint, elements] of typedEntries(layoutData)) {
         newLayouts[layoutName]![breakpoint]!.push(...elements)
       }
@@ -164,16 +171,23 @@ function computeConfiguredInternalLayouts(
 export function createWidgetLayout(
   responsiveGridContent: ContentResponsiveGrid,
   widgetContentType: string,
-  breakpointConfiguration: DashboardConstants['responsive_grid_breakpoints']
+  constants: DashboardConstants
 ): ResponsiveGridWidgetLayouts {
-  const configuredLayouts = computeConfiguredInternalLayouts(responsiveGridContent)
-  const columnsPerBreakpoint = computeColumnsPerBreakpoint(breakpointConfiguration)
+  const configuredLayouts = computeConfiguredInternalLayouts(
+    responsiveGridContent,
+    constants.widgets
+  )
+  const columnsPerBreakpoint = computeColumnsPerBreakpoint(constants.responsive_grid_breakpoints)
   const layoutData: ResponsiveGridWidgetLayouts['layouts'] = {}
   for (const [layoutName, gridLayouts] of Object.entries(configuredLayouts)) {
     layoutData[layoutName] = {}
     for (const [breakpoint, elements] of typedEntries(gridLayouts)) {
       const externalBreakpoint = breakpointFromInternal[breakpoint]
-      const { columns, rows } = getMinimumSize(widgetContentType, externalBreakpoint)
+      const { columns, rows } = getDefaultSize(
+        widgetContentType,
+        externalBreakpoint,
+        constants.widgets
+      )
       const position = findPositionForWidget(
         elements,
         columnsPerBreakpoint[breakpoint],
@@ -197,10 +211,11 @@ export function createWidgetLayout(
 
 export function useResponsiveGridLayout(
   breakpointConfig: InternalBreakpointConfig,
-  responsiveGridContent: ModelRef<ContentResponsiveGrid>
+  responsiveGridContent: ModelRef<ContentResponsiveGrid>,
+  widgetConstraints: DashboardConstants['widgets']
 ) {
   const layouts = computed<ResponsiveGridConfiguredInternalLayouts>(() =>
-    computeConfiguredInternalLayouts(responsiveGridContent.value)
+    computeConfiguredInternalLayouts(responsiveGridContent.value, widgetConstraints)
   )
 
   const availableLayouts = computed<string[]>(() => Object.keys(layouts.value))

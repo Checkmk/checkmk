@@ -69,7 +69,7 @@ Layout changes:
 
 interface Props {
   dashboardKey: DashboardKey
-  responsiveGridBreakpoints: DashboardConstants['responsive_grid_breakpoints']
+  constants: DashboardConstants
   contentProps: ContentPropsRecord
   isEditing: boolean
 }
@@ -88,8 +88,14 @@ defineEmits<{
 }>()
 
 const gridMargin = 10
-const internalBreakpointConfig = useInternalBreakpointConfig(props.responsiveGridBreakpoints)
-const composable = useResponsiveGridLayout(internalBreakpointConfig, content)
+const internalBreakpointConfig = useInternalBreakpointConfig(
+  props.constants.responsive_grid_breakpoints
+)
+const composable = useResponsiveGridLayout(
+  internalBreakpointConfig,
+  content,
+  props.constants.widgets
+)
 
 // unique key for the grid layout component to force reloading `responsive-layouts`
 const gridKey = computed(

@@ -5,6 +5,7 @@
 
 import re
 
+import pytest
 from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
@@ -13,6 +14,7 @@ from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 
 
+@pytest.mark.skip(reason="CMK-29932: Test is flaky.")
 def test_user_color_theme(dashboard_page: MainDashboard, credentials: CmkCredentials) -> None:
     # Open user menu and locate `color theme button`.
     _loc = dashboard_page.main_menu.user_color_theme_button

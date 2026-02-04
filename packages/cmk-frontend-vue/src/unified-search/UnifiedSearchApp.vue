@@ -221,7 +221,7 @@ onMounted(() => {
   top: 58px;
   border-right: 4px solid var(--default-nav-popup-border-color);
   border-top-width: 0;
-  width: 750px;
-  max-width: 750px;
+  width: 500px;
+  max-width: 500px;
 }
 </style>

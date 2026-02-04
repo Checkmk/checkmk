@@ -12,12 +12,10 @@ import logging
 from collections import defaultdict
 from collections.abc import Iterator
 from typing import Any, TypeVar
-from urllib.parse import urljoin
 
 import pytest
-import requests
 from faker import Faker
-from playwright.sync_api import BrowserContext, Page
+from playwright.sync_api import BrowserContext, expect, Page
 
 from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
@@ -27,6 +25,7 @@ from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import DashboardMobile, MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
+from tests.gui_e2e.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.emails import EmailManager
 from tests.testlib.licensing.nonfree.pro.license_management import is_test_site_licensed
@@ -37,7 +36,7 @@ from tests.testlib.site import (
     Site,
     SiteFactory,
 )
-from tests.testlib.utils import html_find_text_nodes, is_cleanup_enabled, run
+from tests.testlib.utils import is_cleanup_enabled, run
 from tests.testlib.version import TypeCMKEdition, TypeCMKEditionOld
 
 logger = logging.getLogger(__name__)
@@ -102,44 +101,55 @@ def fixture_dashboard_page_mobile(
     )
 
 
+@pytest.fixture(name="licensing_page", scope="function")
+def _licensing_page(dashboard_page: MainDashboard) -> Iterator[Licensing]:
+    yield Licensing(dashboard_page.page)
+
+
 def is_test_site_licensed_gui(
-    site: Site, strict: bool = False, edition: TypeCMKEdition | TypeCMKEditionOld | None = None
+    site: Site,
+    licensing_page: Licensing,
+    strict: bool = False,
+    edition: TypeCMKEdition | TypeCMKEditionOld | None = None,
 ) -> bool:
     """Check if the site is in a licensed state.
-
     Args:
+        site: The site to check
+        licensing_page: The licensing page to check for proper licensing results
         strict: If True, perform the check via the UI, which is more accurate.
         edition: Overrides the expected license edition for the comparison (optional).
     """
     if strict:
         site.ensure_running()
-        try:
-            licensing_page_text = requests.get(
-                urljoin(site.internal_url, "wato.py?mode=licensing"),
-                auth=("cmkadmin", site.admin_password),
-                timeout=30,
-            ).text
-        except requests.RequestException as excp:
-            excp.add_note("Could not check the license status!")
-            raise excp
-        verification_ok = "license verification failed" not in licensing_page_text.lower()
-        logger.info("License verification OK: %s", verification_ok)
+        licensing_page.page.reload()
+        # The following asserts "no banners"
+        # As in case of a failed verification a banner always shows up
+        expect(licensing_page.main_area.locator("div.warning")).to_have_count(0)
+        logger.info("License verification OK")
         if (
             isinstance(site.edition, TypeCMKEditionOld)
             and site.edition.edition_data == TypeCMKEditionOld.CEE
-        ):  # enterpise only; not pro!
+        ):  # enterprise only; not pro!
             # there is no "license state" in a CEE, so we check the operational state
-            op_state_nodes = html_find_text_nodes(licensing_page_text, "tr", "Operational state")
-            state_match = "active" in [node.lower() for node in op_state_nodes]
+            not_licensed = (
+                licensing_page.main_area.locator('table th:has-text("Operational state")').count()
+                == 0
+            )
+            if not_licensed:
+                return False
+            state_match = licensing_page.get_named_value("Operational state").lower() == "active"
         else:
-            license_state_nodes = html_find_text_nodes(licensing_page_text, "tr", "License state")
-            state_match = "licensed" in [node.lower() for node in license_state_nodes]
+            license_state = licensing_page.get_named_value("License state").lower()
+            if "trial" in license_state:
+                return False
+            state_match = license_state == "licensed"
         logger.info("License state match: %s", state_match)
         edition = edition or site.edition
-        edition_nodes = html_find_text_nodes(licensing_page_text, "tr", "Checkmk edition")
-        edition_match = edition.title.lower() in [node.lower() for node in edition_nodes]
+        edition_match = (
+            licensing_page.get_named_value("Checkmk edition").lower() == edition.title.lower()
+        )
         logger.info("License edition match: %s", edition_match)
-        licensed = verification_ok and state_match and edition_match
+        licensed = state_match and edition_match
     else:
         licensed = is_test_site_licensed(site)
     logger.info("Licensed: %s", licensed)

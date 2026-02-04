@@ -430,7 +430,7 @@ export function initSearchUtils(id: string): SearchUtils {
       onSetResultGrouping,
       grouping: usePersistentRef<boolean>(
         id.concat('-grouping'),
-        false,
+        true,
         (v) => v as boolean,
         'local'
       )

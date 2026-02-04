@@ -276,7 +276,11 @@ function isMonitoringSearch(): boolean {
           <CmkKeyboardKey keyboard-key="enter" size="small"></CmkKeyboardKey>
           <span>{{ _t('to trigger host/service search') }}</span>
         </div>
+        <!-- Functionality to show ungrouped results is hidden from the user but kept for the future.
+         See CMK-29555.
+         -->
         <CmkCheckbox
+          v-if="false"
           v-model="searchUtils.result.grouping.value"
           :label="_t('Group results by topic')"
           class="result-heading__grouping"

@@ -567,7 +567,7 @@ class Cell:
             assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags_for_tooltip(tooltip_content)
             if tooltip_text:
-                content = HTMLWriter.render_span(content, title=tooltip_text)
+                content = HTMLWriter.render_span(content, title=tooltip_text, class_="tooltip")
 
         return tdclass, content
 

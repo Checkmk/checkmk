@@ -72,6 +72,11 @@ td.hstate span.state_rounded_fill {
   }
 }
 
+td.state span.tooltip,
+td.hstate span.tooltip {
+  border: none !important;
+}
+
 // TODO: Refactor the code so that every element with a class .stateX can apply style
 // and no further class specifications like .bibox_box, .statemini etc. are necessary.
 // This requires that the Python code sets the .stateX class on the correct elements.

@@ -29,51 +29,74 @@ const popupOpen = ref(true)
     @close="popupOpen = false"
   >
     <div class="product-usage-analytics-app__content">
-      <h4>{{ _t('Why do we need product usage analytics in Checkmk?') }}</h4>
-
       <p>
+        <b>{{ _t('We want to understand how you use Checkmk.') }}</b>
         {{
           _t(
-            'Help us shape the future of Checkmk. Your usage data allows us to make better decisions and focus development on the tools you use regularly. Please consider consenting to product usage anaylytics to help us build the features that matter the most to you.'
+            'Product usage analytics allows us to make data-driven decisions and focus development on what parts of Checkmk you regularly use. \
+            The data you share will help us prioritize the features that matter most to you.'
           )
         }}
       </p>
+
       <CmkSpace direction="horizontal" size="small" />
+
       <h4>{{ _t('What data are we collecting?') }}</h4>
-      <p>{{ _t('We strictly limit data collection to aggregated, non-personal metrics.') }}</p>
       <ul>
         <li>
           <b>{{ _t('We collect: ') }}</b
-          >{{ _t('Quantity metrics (e.g., count of hosts, folders, and services).') }}
+          >{{
+            _t(
+              'data about the general usage of features and configuration options (e.g., counts of hosts, folders, plug-ins, MKPs, and services).'
+            )
+          }}
         </li>
         <li>
           <b>{{ _t('We do NOT collect: ') }}</b
           >{{
             _t(
-              'User behavior (e.g., visit frequency) or sensitive identifiers (e.g., host names, file paths, service names, or raw metric values).'
+              'any data about users or their behavior (e.g., PII) or possibly sensitive identifiers about your environment (e.g., hostnames, file paths, service names).'
             )
           }}
         </li>
       </ul>
+
       <CmkSpace direction="horizontal" size="small" />
-      <h4>{{ _t('Do we automatically collect and send data?') }}</h4>
+
       <p>
+        <b>{{ _t('Important: ') }}</b>
         {{
           _t(
-            'No! We firmly believe in only receiving data you are happy to share with us. For this reason, on default product usage analytics is turned off. To make a decision now, please click on the "Enable in global settings" button.'
+            'The names of custom check plug-ins (either developed internally or installed as an MKP from the Checkmk Exchange) will be collected as part of the product usage data. \
+            If you use MKPs, we recommend you inspect the data carefully via the data download option to verify the content before opting in, to ensure no sensitive data is included. \
+            Do not enable product usage analytics if you do not wish to share this information.'
+          )
+        }}
+      </p>
+
+      <CmkSpace direction="horizontal" size="small" />
+
+      <p>
+        <b>{{ _t('Product usage analytics is turned off by default. ') }}</b>
+        {{
+          _t(
+            'We believe in only receiving data you explicitly choose to share. You can enable sharing analytics data any time from global settings. \
+            If you do not wish to be reminded, please manage your preferences in global settings.'
           )
         }}
       </p>
     </div>
 
     <div class="product-usage-analytics-app__buttons">
-      <CmkButton variant="secondary" @click="popupOpen = false">{{ _t('Ask me later') }}</CmkButton>
+      <CmkButton variant="secondary" @click="popupOpen = false">{{
+        _t('Remind me again in 30 days')
+      }}</CmkButton>
       <a
         class="product-usage-analytics-app__link"
         :href="props.global_settings_link"
         target="main"
         @click="popupOpen = false"
-        >{{ _t('Enable in global settings') }}</a
+        >{{ _t('Manage in global settings') }}</a
       >
     </div>
   </CmkPopupDialog>

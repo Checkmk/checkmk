@@ -43,6 +43,18 @@ class ChassisIdSubType(Enum):
         return cls.UNKNOWN
 
 
+class IfType(Enum):
+    MAC_ADDRESS = "3"
+    NETWORK_ADDRESS_5 = "5"
+    NETWORK_ADDRESS_7 = "7"
+    UNKNOWN = "unknown"
+
+    @override
+    @classmethod
+    def _missing_(cls, value: object) -> "IfType":
+        return cls.UNKNOWN
+
+
 class InventoryParams(TypedDict):
     remove_domain: NotRequired[bool]
     domain_name: NotRequired[str]
@@ -98,13 +110,13 @@ class Lldp(BaseModel, frozen=True):
     lldp_neighbors: list[LldpNeighbor]
 
 
-def _get_interface_name(if_type: str, raw_interface: Sequence[int] | str) -> str | None:
+def _get_interface_name(if_type: IfType, raw_interface: Sequence[int] | str) -> str | None:
     if isinstance(raw_interface, str):
         raw_interface = [ord(c) for c in raw_interface]
     match if_type:
-        case "3":  # mac address
+        case IfType.MAC_ADDRESS:
             return _render_mac_address(raw_interface)
-        case "5" | "7":
+        case IfType.NETWORK_ADDRESS_5 | IfType.NETWORK_ADDRESS_7:
             return _render_networkaddress(raw_interface)
         case _:
             return "".join(chr(m) for m in raw_interface)
@@ -302,7 +314,9 @@ def parse_lldp_cache(string_table: Sequence[StringByteTable]) -> Lldp | None:
             LldpNeighbor(
                 capabilities=_render_capabilities(cache_capabilities),
                 capabilities_map_supported=_render_capabilities(capabilities_map_supported),
-                local_port=_get_interface_name(str(interface["if_sub_type"]), interface["if_name"])
+                local_port=_get_interface_name(
+                    IfType(str(interface["if_sub_type"])), interface["if_name"]
+                )
                 if interface
                 else None,
                 local_port_index=local_if_index,
@@ -313,7 +327,7 @@ def parse_lldp_cache(string_table: Sequence[StringByteTable]) -> Lldp | None:
                     if isinstance(neighbor_name, list)
                     else (neighbor_name if neighbor_name else (chassis_id or "unknown"))
                 ),
-                neighbor_port=_get_interface_name(str(port_id_sub_type), port_id) or "",
+                neighbor_port=_get_interface_name(IfType(str(port_id_sub_type)), port_id) or "",
                 port_description=str(port_description),
                 system_description=str(system_description),
             )

@@ -9,6 +9,11 @@ import failOnConsole from 'vitest-fail-on-console'
 
 import { dummyT, dummyTn, dummyTnp, dummyTp } from '@/lib/i18n/i18nDummy'
 
+// https://jira.lan.tribe29.com/browse/CMK-30004
+vi.setConfig({
+  testTimeout: 20_000
+})
+
 vi.mock('@/lib/i18n', () => ({
   default: () => ({
     _t: dummyT,

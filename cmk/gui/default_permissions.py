@@ -283,7 +283,7 @@ PermissionSeeFailedNotifications = Permission(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
         "very visibly inside the UI (both in the tactical overview and the dashboard). This affects only "
         "users with this permission. Users with this permission will see failed notifications between now "
-        'and the configured <a href="wato.py?mode=edit_configvar&varname=notification_horizon">Notification horizon</a>.'
+        'and the configured <a href="wato.py?mode=edit_configvar&varname=failed_notification_horizon">Failed notification horizon</a>.'
     ),
     defaults=["admin"],
 )

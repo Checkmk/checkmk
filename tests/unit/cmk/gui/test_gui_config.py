@@ -39,7 +39,7 @@ def test_default_config_from_plugins() -> None:
         "sidebar_notify_interval",
         "quicksearch_dropdown_limit",
         "quicksearch_search_order",
-        "notification_horizon",
+        "failed_notification_horizon",
         "soft_query_limit",
         "hard_query_limit",
         "sound_url",

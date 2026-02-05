@@ -124,7 +124,7 @@ def test_registered_configvars() -> None:
         "escape_plugin_output",
         "event_limit",
         "eventsocket_queue_len",
-        "notification_horizon",
+        "failed_notification_horizon",
         "hard_query_limit",
         "history_lifetime",
         "history_rotation",

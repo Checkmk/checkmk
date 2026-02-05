@@ -29,9 +29,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = [
-    ("failed_notification_horizon", "notification_horizon", {}),
-]
+_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []
 _REMOVED_OPTIONS: Sequence[str] = [
     "hide_languages",
     "enable_community_translations",

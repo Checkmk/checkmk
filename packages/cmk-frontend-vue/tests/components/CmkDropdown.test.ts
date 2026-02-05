@@ -655,7 +655,7 @@ test('dropdown with callback doesnt call callback unnecessarily', async () => {
   expect(selectedOption).toBe('two')
 
   // Selecting an option does not call the callback again
-  expect(callbackDummy).toHaveBeenCalledTimes(2)
+  expect(callbackDummy).toHaveBeenCalledTimes(3)
 })
 
 test('dropdown with callback and unselectable selects first selectable suggestion', async () => {
@@ -850,4 +850,95 @@ test('dropdown with callback-filtered clears error message after successful sele
   })
 
   expect(selectedOption).toBe('one')
+})
+test('dropdown with callback prefills filter input with title of existing selected option', async () => {
+  const selectedOption = 'host1'
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new Response([
+            { name: 'host1', title: 'Host 1' },
+            { name: 'host2', title: 'Host 2' }
+          ])
+        }
+      },
+      selectedOption,
+      inputHint: 'Select a host',
+      label: 'dropdown-label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+
+  await fireEvent.click(dropdown)
+
+  const input = screen.getByRole('textbox', { name: 'filter' })
+  await waitFor(() => {
+    expect(input).toHaveValue('Host 1')
+  })
+
+  const option = await screen.findByRole('option', { name: 'Host 1' })
+  expect(option).toHaveClass('selected')
+})
+
+test('dropdown with filtered options prefills filter input with title of selected option', async () => {
+  const selectedOption = 'option2'
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'filtered',
+        suggestions: [
+          { name: 'option1', title: 'Option 1' },
+          { name: 'option2', title: 'Option 2' },
+          { name: 'option3', title: 'Option 3' }
+        ]
+      },
+      selectedOption,
+      inputHint: 'Select an option',
+      label: 'dropdown-label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+
+  await fireEvent.click(dropdown)
+
+  const input = screen.getByRole('textbox', { name: 'filter' })
+
+  await waitFor(() => {
+    expect(input).toHaveValue('Option 2')
+  })
+
+  const option = screen.getByRole('option', { name: 'Option 2' })
+  expect(option).toHaveClass('selected')
+})
+
+test('dropdown with callback prefills filter input with title of non-existing selected option', async () => {
+  const selectedOption = 'host123'
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new Response([
+            { name: 'host1', title: 'Host 1' },
+            { name: 'host2', title: 'Host 2' }
+          ])
+        }
+      },
+      selectedOption,
+      inputHint: 'Select a host',
+      label: 'dropdown-label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+
+  const input = screen.getByRole('textbox', { name: 'filter' })
+  await waitFor(() => {
+    expect(input).toHaveValue('host123')
+  })
 })

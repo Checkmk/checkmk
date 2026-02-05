@@ -3,19 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 
 import pytest
 
-from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
+from cmk.agent_based.v2 import InventoryResult, render, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_win_video import (
     inventory_win_video,
     parse_win_video,
 )
 
 from .utils_inventory import sort_inventory_result
-
-_INSTALLED_DATE = 123
 
 
 @pytest.mark.parametrize(
@@ -41,7 +38,7 @@ _INSTALLED_DATE = 123
                     },
                     inventory_columns={
                         "driver_version": "4.3.10.0",
-                        "driver_date": _INSTALLED_DATE,
+                        "driver_date": "2014-03-26",
                         "graphic_memory": None,
                     },
                     status_columns={},
@@ -75,7 +72,7 @@ _INSTALLED_DATE = 123
                     },
                     inventory_columns={
                         "driver_version": "4.3.10.0",
-                        "driver_date": _INSTALLED_DATE,
+                        "driver_date": "2014-03-26",
                         "graphic_memory": None,
                     },
                     status_columns={},
@@ -87,7 +84,7 @@ _INSTALLED_DATE = 123
                     },
                     inventory_columns={
                         "driver_version": "4.3.10.0",
-                        "driver_date": _INSTALLED_DATE,
+                        "driver_date": "2014-03-26",
                         "graphic_memory": None,
                     },
                     status_columns={},
@@ -101,7 +98,7 @@ def test_inventory_win_video(
     string_table: StringTable,
     expected_result: InventoryResult,
 ) -> None:
-    monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
+    monkeypatch.setattr(render, "date", lambda s: "2014-03-26")
     assert sort_inventory_result(
         inventory_win_video(parse_win_video(string_table))
     ) == sort_inventory_result(expected_result)

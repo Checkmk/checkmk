@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
@@ -84,22 +84,30 @@ const props = defineProps<{
   historyResult?: SearchHistoryResult | null | undefined
 }>()
 
+function handleHistoryResult(searchHistory?: SearchHistoryResult | null) {
+  if (searchHistory) {
+    recentlyViewed.value = searchHistory.entries.slice(0, maxRecentlyViewed)
+    recentlySearches.value = searchHistory.queries.slice(0, maxRecentlySearched)
+    return
+  }
+
+  recentlyViewed.value = searchUtils.history?.getEntries(null, 'date', maxRecentlyViewed) || []
+  recentlySearches.value = searchUtils.history?.getQueries(maxRecentlySearched) || []
+}
+
 immediateWatch(
   () => ({ newHistoryResult: props.historyResult }),
   async ({ newHistoryResult }) => {
-    if (newHistoryResult) {
-      recentlyViewed.value = newHistoryResult.entries.slice(0, maxRecentlyViewed)
-      recentlySearches.value = newHistoryResult.queries.slice(0, maxRecentlySearched)
-      return
-    }
-
-    recentlyViewed.value = searchUtils.history?.getEntries(null, 'date', maxRecentlyViewed) || []
-    recentlySearches.value = searchUtils.history?.getQueries(maxRecentlySearched) || []
+    handleHistoryResult(newHistoryResult)
   }
 )
 
 onBeforeUnmount(() => {
   searchUtils.shortCuts.remove(shortcutCallbackIds.value)
+})
+
+onMounted(() => {
+  handleHistoryResult()
 })
 </script>
 

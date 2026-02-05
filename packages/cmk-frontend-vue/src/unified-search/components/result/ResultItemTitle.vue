@@ -13,9 +13,15 @@ export default defineComponent({
     title: { type: String as PropType<HtmlString>, required: true },
     context: { type: String, required: true }
   },
+  computed: {
+    processedTitle(): string {
+      // Insert <wbr/> after pipe characters to enable optional wrapping
+      return this.title.replace(/\|/g, '|<wbr/>')
+    }
+  },
   render() {
     return h('div', [
-      h('span', { innerHTML: this.title, class: 'title' }),
+      h('span', { innerHTML: this.processedTitle, class: 'title' }),
       h('span', { class: 'context' }, this.context)
     ])
   }

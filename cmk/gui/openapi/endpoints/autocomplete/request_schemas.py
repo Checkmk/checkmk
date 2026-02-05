@@ -14,10 +14,12 @@ from cmk.gui.fields.utils import BaseSchema
 
 class BoolOrStringField(fields.Field):
     def _deserialize(self, value, attr, data, **kwargs):
+        if value is None and self.allow_none:
+            return None
         if isinstance(value, bool | str):
             return value
 
-        raise ValidationError("Invalid type. Expected bool or str.")
+        raise ValidationError("Invalid type. Expected bool, str, or None.")
 
 
 class ParamsSchema(BaseSchema):
@@ -30,42 +32,50 @@ class ParamsSchema(BaseSchema):
             "example": True,
         },
         required=False,
+        allow_none=True,
     )
     group_type = fields.String(
         description="The group type",
         example="host",
         required=False,
+        allow_none=True,
     )
     group_id = fields.String(
         description="The group id",
         example="my_group",
         required=False,
+        allow_none=True,
     )
     world = fields.String(
         description="World field",
         example="Earth",
         required=False,
+        allow_none=True,
     )
     presentation = fields.String(
         description="Presentation field",
         example="lines",
         required=False,
+        allow_none=True,
     )
     mode = fields.String(
         description="Mode field",
         example="template",
         required=False,
+        allow_none=True,
     )
     datasource = fields.String(
         description="Datasource field",
         example="services",
         required=False,
+        allow_none=True,
     )
     single_infos = fields.List(
         fields.String,
         description="Single infos field",
         example=["my_info"],
         required=False,
+        allow_none=True,
     )
 
 

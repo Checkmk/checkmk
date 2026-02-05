@@ -7,12 +7,13 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-
+import time
 from collections.abc import Iterable, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import get_value_store, OIDEnd, SNMPTree, StringTable
 from cmk.plugins.casa.lib import DETECT_CASA
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 check_info = {}
 
@@ -43,14 +44,13 @@ def check_casa_cpu_util(item, params, info):
     if (values := data.get(item)) is None:
         return
 
-    value = int(values["cpu_util"])
+    value = float(values["cpu_util"])
 
-    yield check_levels(
-        value,
-        "util",
-        params.get("levels"),
-        human_readable_func=lambda x: f"{x}",
-        boundaries=(0, 100),
+    yield from check_cpu_util(
+        util=value,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
     )
 
 

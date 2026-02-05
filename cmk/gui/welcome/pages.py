@@ -184,12 +184,11 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
             ),
             network_devices=_make_url_or_callback_from_registry(
                 is_snapin=is_snapin,
-                identifier="relays",
-            )
-            or _make_url(
-                addvars=[("mode", "newhost"), ("prefill", "snmp")],
-                filename="wato.py",
+                identifier="network_devices",
+            ),
+            relays=_make_url_or_callback_from_registry(
                 is_snapin=is_snapin,
+                identifier="relays",
             ),
             aws_quick_setup=_make_url(
                 addvars=[

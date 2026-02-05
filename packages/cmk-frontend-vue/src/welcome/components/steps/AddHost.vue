@@ -125,9 +125,16 @@ This allows monitoring to start with minimal configuration effort.`
               "
             />
             <CmkLinkCard
+              v-if="cards.network_devices"
               icon-name="networking"
               :title="_t('Network devices and SNMP')"
               :url="cards.network_devices"
+              :open-in-new-tab="false"
+            />
+            <CmkLinkCard
+              icon-name="relay-menu"
+              :title="_t('Checkmk Relay (objects behind a firewall)')"
+              :url="cards.relays"
               :open-in-new-tab="false"
             />
           </StepCardsRow>

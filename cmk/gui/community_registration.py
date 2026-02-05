@@ -115,6 +115,7 @@ from cmk.gui.watolib.sites import site_management_registry, SiteManagement
 from cmk.gui.watolib.snapshots import make_cre_snapshot_manager
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 from cmk.gui.watolib.users import default_sites, user_features_registry, UserFeatures
+from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardUrl
 
 
 def register_pages() -> None:
@@ -329,6 +330,14 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         autocompleter_registry,
     )
     plugins.register()
+
+    welcome_card_registry.register(
+        WelcomeCardUrl(
+            id="network_devices",
+            vars=[("mode", "newhost"), ("prefill", "snmp")],
+            filename="wato.py",
+        )
+    )
 
 
 def _openapi_registration(*, ignore_duplicates: bool) -> None:

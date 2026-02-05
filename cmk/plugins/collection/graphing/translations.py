@@ -1227,6 +1227,14 @@ translation_netapp_ontap_volumes = translations.Translation(
     },
 )
 
+translation_netscaler_cpu = translations.Translation(
+    name="netscaler_cpu",
+    check_commands=[translations.PassiveCheck("netscaler_cpu")],
+    translations={
+        "load": translations.RenameTo("util"),
+    },
+)
+
 translation_nfsiostat = translations.Translation(
     name="nfsiostat",
     check_commands=[translations.PassiveCheck("nfsiostat")],

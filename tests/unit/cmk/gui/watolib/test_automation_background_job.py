@@ -70,6 +70,16 @@ class TestCheckmkAutomationBackgroundJob:
             "(2, None)",
         )
 
+    @staticmethod
+    def _api_request() -> CheckmkAutomationRequest:
+        return CheckmkAutomationRequest(
+            command="test",
+            args=None,
+            indata=None,
+            stdin_data=None,
+            timeout=None,
+        )
+
     @pytest.fixture(name="check_mk_local_automation_serialized")
     def check_mk_local_automation_serialized_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
@@ -84,13 +94,7 @@ class TestCheckmkAutomationBackgroundJob:
         "save_text_to_file",
     )
     def test_execute_automation_current_version(self, request_context: None) -> None:
-        api_request = CheckmkAutomationRequest(
-            command="test",
-            args=None,
-            indata=None,
-            stdin_data=None,
-            timeout=None,
-        )
+        api_request = self._api_request()
         job = CheckmkAutomationBackgroundJob("job_id")
         os.makedirs(job.get_work_dir())
         job._execute_automation(
@@ -117,13 +121,7 @@ class TestCheckmkAutomationBackgroundJob:
     def test_execute_automation_previous_version(
         self, set_version: bool, request_context: None
     ) -> None:
-        api_request = CheckmkAutomationRequest(
-            command="test",
-            args=None,
-            indata=None,
-            stdin_data=None,
-            timeout=None,
-        )
+        api_request = self._api_request()
         job = CheckmkAutomationBackgroundJob("job_id")
         os.makedirs(job.get_work_dir())
         job._execute_automation(

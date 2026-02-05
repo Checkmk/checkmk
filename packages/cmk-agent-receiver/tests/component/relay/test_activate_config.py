@@ -350,6 +350,64 @@ def test_activation_with_mixed_relay_task_states(
     assert TaskStatus.FINISHED in task_statuses, f"Expected FINISHED status in {task_statuses}"
 
 
+def test_activation_with_relay_pending_activation_handles_gracefully(
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+    site_context: Config,
+    site_name: str,
+) -> None:
+    """Verify that activation gracefully handles relays pending activation without errors.
+
+    This test ensures that when a relay is registered in the agent receiver but doesn't have
+    its configuration applied yet (relay_config_applied returns False), the system:
+    1. Handles it as an expected scenario (no errors raised or logged)
+    2. Does not create config tasks for the pending relay
+    3. Proceeds normally with configured relays
+    4. Returns HTTP 200 indicating successful activation
+
+    Test steps:
+    1. Register three relays in the agent receiver
+    2. Create config folders only for two of them (third is pending activation)
+    3. Perform config activation
+    4. Verify activation succeeds with HTTP 200
+    5. Verify configured relays get tasks
+    6. Verify pending relay is skipped (no tasks created)
+    """
+    # Register three relays in the agent receiver
+    relay_id_configured_1 = str(uuid.uuid4())
+    relay_id_configured_2 = str(uuid.uuid4())
+    relay_id_pending = str(uuid.uuid4())
+    site.set_scenario([relay_id_configured_1, relay_id_configured_2, relay_id_pending])
+
+    # Create config folders only for two relays - third relay is pending activation
+    # This simulates the scenario where a relay is registered but not yet configured
+    serial_folder = create_config_folder(
+        site_context.omd_root, [relay_id_configured_1, relay_id_configured_2]
+    )
+    agent_receiver.set_serial(serial_folder.serial)
+
+    # Perform config activation - this should succeed despite pending relay
+    with agent_receiver.with_client_ip("127.0.0.1"):
+        resp = agent_receiver.activate_config(site_cn=site_name)
+
+    # Verify activation succeeded
+    assert resp.status_code == HTTPStatus.OK, (
+        f"Expected HTTP 200 but got {resp.status_code}: {resp.text}. "
+        f"Activation should succeed even with relays pending activation."
+    )
+
+    # Verify configured relays have tasks created
+    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_configured_1)
+    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_configured_2)
+
+    # Verify pending relay has no tasks (correctly skipped as expected behavior)
+    tasks_pending = get_relay_tasks(agent_receiver, relay_id_pending)
+    assert len(tasks_pending.tasks) == 0, (
+        f"Expected no tasks for pending relay {relay_id_pending} (not yet configured), "
+        f"but found {len(tasks_pending.tasks)} tasks: {tasks_pending.tasks}"
+    )
+
+
 def _assert_single_pending_config_task(
     agent_receiver: AgentReceiverClient,
     serial_folder: ConfigFolder,

@@ -41,8 +41,13 @@ class ConfigTaskCreated:
     relay_id: RelayID
 
 
+@dataclasses.dataclass(frozen=True)
+class ConfigTaskSkipped:
+    relay_id: RelayID
+
+
 type ConfigTaskCreationResult = (
-    ConfigTaskCreationFailed | ConfigTaskAlreadyExists | ConfigTaskCreated
+    ConfigTaskCreationFailed | ConfigTaskAlreadyExists | ConfigTaskCreated | ConfigTaskSkipped
 )
 
 
@@ -64,13 +69,17 @@ class ConfigTaskFactory:
         """
         Creates a relay config task for the specified relay.
         If the relay has already a pending relay for the current serial value, the function
-        does nothing.
+        does nothing and returns ConfigTaskAlreadyExists.
         If the relay does not have a configuration folder created yet, the function
-        does nothing.
+        does nothing and returns ConfigTaskSkipped.
         """
+        if not self.relays_repository.relay_config_applied(relay_id):
+            logger.debug("Skipping config task creation for relay %s", relay_id)
+            return ConfigTaskSkipped(relay_id)
         return self._create([relay_id])[0]
 
     def _create(self, relay_ids: Iterable[RelayID]) -> tuple[ConfigTaskCreationResult, ...]:
+        # Retrieve shared configuration once for all relays
         now = datetime.now(UTC)
         serial = retrieve_config_serial()
         config = get_config()

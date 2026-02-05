@@ -7,10 +7,12 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
+import time
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
+from cmk.agent_based.v2 import get_value_store, SNMPTree, StringTable
 from cmk.plugins.bvip.lib import DETECT_BVIP
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 check_info = {}
 
@@ -31,7 +33,12 @@ def check_bvip_util(item, params, info):
     usage = int(info[0][items[item]])
     if item == "Total":
         usage = 100 - usage
-    return check_cpu_util(usage, params["levels"])
+    yield from check_cpu_util(
+        util=float(usage),
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
 def parse_bvip_util(string_table: StringTable) -> StringTable:

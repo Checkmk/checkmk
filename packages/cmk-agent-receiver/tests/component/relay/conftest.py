@@ -18,7 +18,7 @@ from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
 from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.certs import generate_site_certificate, set_up_ca_certs
-from cmk.testlib.agent_receiver.container import Container, run_container
+from cmk.testlib.agent_receiver.native_wiremock import run_wiremock
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.wiremock import Wiremock
 
@@ -92,20 +92,15 @@ def test_client(site_context: Config) -> Iterator[TestClient]:
 
 
 @pytest.fixture(scope="session")
-def wiremock_container() -> Iterator[Container]:
-    with run_container() as container:
-        yield container
-
-
-@pytest.fixture(scope="session")
-def wiremock(wiremock_container: Container) -> Wiremock:
+def wiremock() -> Iterator[Wiremock]:
     """
     Provide a Wiremock instance for the tests.
     """
-    return Wiremock(
-        port=wiremock_container.port,
-        wiremock_hostname=wiremock_container.address,
-    )
+    with run_wiremock() as process:
+        yield Wiremock(
+            port=process.http_port,
+            wiremock_hostname=process.hostname,
+        )
 
 
 @pytest.fixture

@@ -86,6 +86,9 @@ py_library(
 py_library(
     name = "testlib",
     srcs = glob(["cmk/testlib/agent_receiver/**/*.py"]),
+    data = [
+        "@wiremock_standalone//file",
+    ],
     imports = ["."],
     deps = [
         ":cmk-agent-receiver",
@@ -187,6 +190,14 @@ py_test(
         "--random-order-bucket=global",
         "--durations=5",
     ],
+    data = [
+        "@remotejdk11_linux//:bin/java",
+        "@wiremock_standalone//file",
+    ],
+    env = {
+        "JAVA_BIN": "$(rootpath @remotejdk11_linux//:bin/java)",
+        "WIREMOCK_JAR": "$(rootpath @wiremock_standalone//file)",
+    },
     main = "__component_test__.py",
     tags = ["component"],
     deps = [

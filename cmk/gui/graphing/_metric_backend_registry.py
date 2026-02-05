@@ -29,6 +29,10 @@ class FetchTimeSeries(Protocol):
 class MetricBackend:
     edition: Edition
 
+    @property
+    def feature_available(self) -> bool:
+        return False
+
     def get_time_series_fetcher(self) -> FetchTimeSeries | None:
         return None
 

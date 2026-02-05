@@ -5,10 +5,12 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
+import time
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.agent_based.v2 import DiscoveryResult, get_value_store, Service, SNMPTree, StringTable
 from cmk.plugins.hitachi_hnas.lib import DETECT
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 check_info = {}
 
@@ -19,20 +21,17 @@ def discover_hitachi_hnas_cpu(string_table: StringTable) -> DiscoveryResult:
 
 
 def check_hitachi_hnas_cpu(item, params, info):
-    warn, crit = params["levels"]
-    rc = 0
-
     for id_, util in info:
         if id_ == item:
-            util = float(util)
-            if util > warn:
-                rc = 1
-            if util > crit:
-                rc = 2
-            perfdata = [("cpu_util", str(util) + "%", warn, crit, 0, 100)]
-            return rc, "CPU utilization is %s%%" % util, perfdata
+            yield from check_cpu_util(
+                util=float(util),
+                params=params,
+                value_store=get_value_store(),
+                this_time=time.time(),
+            )
+            return
 
-    return 3, "No CPU utilization found"
+    yield 3, "No CPU utilization found"
 
 
 def parse_hitachi_hnas_cpu(string_table: StringTable) -> StringTable:

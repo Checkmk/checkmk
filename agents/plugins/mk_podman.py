@@ -5,14 +5,17 @@
 import configparser
 import json
 import os
+import pwd
+import shlex
 import socket
+import subprocess
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from shutil import which
-from typing import Literal, TypedDict, TypeVar, Union
+from typing import Any, Literal, TypedDict, TypeVar, Union
 
 # override decorator is only available in Python 3.12+
 try:
@@ -36,6 +39,10 @@ DEFAULT_CFG_SECTION = {
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
 
 DEFAULT_SCHEME = "http+unix://"
+
+CLI_TIMEOUT_SECONDS = 30
+
+PODMAN_API_VERSION = "v4.0.0"
 
 
 # The checks below result in agent sections being created. This
@@ -76,7 +83,6 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
         if method == "manual" and socket_paths_str:
             socket_paths = [p.strip() for p in socket_paths_str.split(",") if p.strip()]
             return PodmanConfig(socket_detection=("manual", socket_paths))
-
         return PodmanConfig(socket_detection=AutomaticSocketDetectionMethod(method))
 
     except Exception as e:
@@ -100,6 +106,49 @@ def find_user_sockets() -> Sequence[str]:
         for entry in os.listdir(run_user_dir)
         if os.path.exists(os.path.join(run_user_dir, entry, "podman", "podman.sock"))
     ]
+
+
+def find_podman_users_from_conmon() -> Sequence[Union[str, None]]:
+    users: set[str] = set()
+
+    try:
+        # Use UID instead of username to avoid truncation issues with ps
+        result = subprocess.run(
+            ["ps", "-e", "-o", "uid=", "-o", "comm="],
+            capture_output=True,
+            text=True,
+            timeout=CLI_TIMEOUT_SECONDS,
+            check=False,
+        )
+        if result.returncode != 0:
+            sys.stderr.write(
+                f"mk_podman.py: 'ps' command failed (rc={result.returncode}): "
+                f"{result.stderr.strip()}. Falling back to root user only.\n"
+            )
+            return [None]
+
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            if len(parts) >= 2 and parts[1] == "conmon":
+                try:
+                    uid = int(parts[0])
+                    if uid != 0:
+                        pw_entry = pwd.getpwuid(uid)
+                        users.add(pw_entry.pw_name)
+                except (ValueError, KeyError):
+                    # Skip if UID is invalid or user not found
+                    continue
+    except Exception as e:
+        sys.stderr.write(
+            f"mk_podman.py: Failed to discover podman users from conmon: {e}. "
+            "Falling back to root user only.\n"
+        )
+        return [None]
+
+    # Always include root/current user first
+    result_list: list[Union[str, None]] = [None]
+    result_list.extend(sorted(users))
+    return result_list
 
 
 def get_socket_paths(config: Union[PodmanConfig, None]) -> Sequence[str]:
@@ -142,7 +191,8 @@ def write_section(section: Union[JSONSection, Error]) -> None:
         write_serialized_section(section.name, section.content)
     elif isinstance(section, Error):
         write_serialized_section(
-            "errors", json.dumps({"endpoint": section.label, "message": section.message})
+            "errors",
+            json.dumps({"endpoint": section.label, "message": section.message}),
         )
 
 
@@ -236,16 +286,196 @@ class _LocalAdapter(HTTPAdapter):
         return self._connection_pool
 
 
+# =============================================================================
+# CLI-based query functions (for socket-less configurations)
+# =============================================================================
+
+
+def run_podman_command(
+    args: Sequence[str], run_as_user: Union[str, None] = None
+) -> Union[str, Error]:
+    try:
+        cmd = ["podman", *args]
+        if run_as_user and os.geteuid() == 0:
+            cmd = ["su", "-", "--", run_as_user, "-c", shlex.join(cmd)]
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=CLI_TIMEOUT_SECONDS,
+            check=False,
+        )
+        if result.returncode != 0:
+            return Error(f"podman {' '.join(args)}", result.stderr.strip())
+        return result.stdout
+    except subprocess.TimeoutExpired:
+        return Error(
+            f"podman {' '.join(args)}", f"Command timed out after {CLI_TIMEOUT_SECONDS} seconds"
+        )
+    except FileNotFoundError:
+        return Error(f"podman {' '.join(args)}", "podman command not found")
+    except Exception as e:
+        return Error(f"podman {' '.join(args)}", str(e))
+
+
+def _run_cli_json_query(
+    args: Sequence[str],
+    section_name: str,
+    default: Any = None,
+    run_as_user: Union[str, None] = None,
+    transform: Union[Callable[[Any], Any], None] = None,
+) -> Union[JSONSection, Error]:
+    result = run_podman_command(args, run_as_user)
+    if isinstance(result, Error):
+        return result
+    try:
+        data = json.loads(result) if result.strip() else default
+        if transform is not None:
+            data = transform(data)
+        return JSONSection(section_name, json.dumps(data))
+    except json.JSONDecodeError as e:
+        return Error(f"podman {' '.join(args)}", f"Failed to parse JSON: {e}")
+
+
+def query_containers_cli(
+    run_as_user: Union[str, None] = None,
+) -> Union[JSONSection, Error]:
+    return _run_cli_json_query(
+        ["ps", "--all", "--format", "json"],
+        "containers",
+        default=[],
+        run_as_user=run_as_user,
+        transform=lambda cs: [c for c in cs if not c.get("IsInfra", False)],
+    )
+
+
+def query_disk_usage_cli(
+    run_as_user: Union[str, None] = None,
+) -> Union[JSONSection, Error]:
+    return _run_cli_json_query(
+        ["system", "df", "--format", "json"], "disk_usage", default={}, run_as_user=run_as_user
+    )
+
+
+def query_engine_cli(
+    run_as_user: Union[str, None] = None,
+) -> Union[JSONSection, Error]:
+    return _run_cli_json_query(
+        ["info", "--format", "json"], "engine", default={}, run_as_user=run_as_user
+    )
+
+
+def query_pods_cli(
+    run_as_user: Union[str, None] = None,
+) -> Union[JSONSection, Error]:
+    return _run_cli_json_query(
+        ["pod", "ps", "--format", "json"], "pods", default=[], run_as_user=run_as_user
+    )
+
+
+def query_container_inspect_cli(
+    container_id: str,
+    run_as_user: Union[str, None] = None,
+) -> Union[JSONSection, Error]:
+    return _run_cli_json_query(
+        ["inspect", container_id],
+        "container_inspect",
+        default=[],
+        run_as_user=run_as_user,
+        transform=lambda d: d[0] if isinstance(d, list) and d else d,
+    )
+
+
+def query_raw_stats_cli(
+    run_as_user: Union[str, None] = None,
+) -> Union[Mapping[str, object], Error]:
+    result = run_podman_command(["stats", "--all", "--no-stream", "--format", "json"], run_as_user)
+    if isinstance(result, Error):
+        return result
+    try:
+        stats_list = json.loads(result) if result.strip() else []
+        # Convert to the same format as the API response
+        return {"Stats": stats_list}
+    except json.JSONDecodeError as e:
+        return Error("podman stats", f"Failed to parse JSON: {e}")
+
+
+def handle_containers_stats_cli(
+    containers: Sequence[Mapping[str, object]],
+    container_stats: Mapping[str, object],
+    run_as_user: Union[str, None] = None,
+) -> None:
+    for container in containers:
+        if not (container_id := str(container.get("Id", ""))):
+            continue
+
+        container_name = get_container_name(container.get("Names"))
+        target_host = f"{container_name}_{container_id[:12]}"
+
+        write_piggyback_section(
+            target_host=target_host,
+            section=query_container_inspect_cli(container_id, run_as_user),
+        )
+
+        if stats := container_stats.get(container_id):
+            write_piggyback_section(
+                target_host=target_host,
+                section=JSONSection("container_stats", json.dumps(stats)),
+            )
+
+
+def run_cli_queries_for_user(run_as_user: Union[str, None] = None) -> None:
+    containers_section = query_containers_cli(run_as_user)
+
+    write_sections(
+        [
+            containers_section,
+            query_disk_usage_cli(run_as_user),
+            query_engine_cli(run_as_user),
+            query_pods_cli(run_as_user),
+        ]
+    )
+
+    raw_container_stats = query_raw_stats_cli(run_as_user)
+    container_stats = (
+        extract_container_stats(raw_container_stats)
+        if not isinstance(raw_container_stats, Error)
+        else {}
+    )
+
+    if not isinstance(containers_section, Error):
+        handle_containers_stats_cli(
+            containers=json.loads(containers_section.content),
+            container_stats=container_stats,
+            run_as_user=run_as_user,
+        )
+    else:
+        write_section(containers_section)
+
+
+def run_cli_queries() -> None:
+    podman_users = find_podman_users_from_conmon()
+
+    for user in podman_users:
+        run_cli_queries_for_user(user)
+
+
+# =============================================================================
+# Socket-based query functions
+# =============================================================================
+
+
 def build_url_human_readable(socket_path: str, endpoint_uri: str) -> str:
     return f"{socket_path}{endpoint_uri}"
 
 
 def build_url_callable(socket_path: str, endpoint_uri: str) -> str:
-    return f"http+unix://{socket_path.replace('/', '%2F')}{endpoint_uri}"
+    return f"{DEFAULT_SCHEME}{socket_path.replace('/', '%2F')}{endpoint_uri}"
 
 
 def query_containers(session: Session, socket_path: str) -> Union[JSONSection, Error]:
-    endpoint = "/v4.0.0/libpod/containers/json"
+    endpoint = f"/{PODMAN_API_VERSION}/libpod/containers/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint), params={"all": "true"})
         response.raise_for_status()
@@ -256,7 +486,7 @@ def query_containers(session: Session, socket_path: str) -> Union[JSONSection, E
 
 
 def query_disk_usage(session: Session, socket_path: str) -> Union[JSONSection, Error]:
-    endpoint = "/v4.0.0/libpod/system/df"
+    endpoint = f"/{PODMAN_API_VERSION}/libpod/system/df"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
         response.raise_for_status()
@@ -266,7 +496,7 @@ def query_disk_usage(session: Session, socket_path: str) -> Union[JSONSection, E
 
 
 def query_engine(session: Session, socket_path: str) -> Union[JSONSection, Error]:
-    endpoint = "/v4.0.0/libpod/info"
+    endpoint = f"/{PODMAN_API_VERSION}/libpod/info"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
         response.raise_for_status()
@@ -276,7 +506,7 @@ def query_engine(session: Session, socket_path: str) -> Union[JSONSection, Error
 
 
 def query_pods(session: Session, socket_path: str) -> Union[JSONSection, Error]:
-    endpoint = "/v4.0.0/libpod/pods/json"
+    endpoint = f"/{PODMAN_API_VERSION}/libpod/pods/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint), params={"all": "true"})
         response.raise_for_status()
@@ -290,7 +520,7 @@ def query_container_inspect(
     socket_path: str,
     container_id: str,
 ) -> Union[JSONSection, Error]:
-    endpoint = f"/v4.0.0/libpod/containers/{container_id}/json"
+    endpoint = f"/{PODMAN_API_VERSION}/libpod/containers/{container_id}/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
         response.raise_for_status()
@@ -303,10 +533,11 @@ def query_container_inspect(
 
 
 def query_raw_stats(session: Session, socket_path: str) -> Union[Mapping[str, object], Error]:
-    endpoint = "/v4.0.0/libpod/containers/stats"
+    endpoint = f"/{PODMAN_API_VERSION}/libpod/containers/stats"
     try:
         response = session.get(
-            build_url_callable(socket_path, endpoint), params={"stream": "false", "all": "true"}
+            build_url_callable(socket_path, endpoint),
+            params={"stream": "false", "all": "true"},
         )
         response.raise_for_status()
         result: Mapping[str, object] = response.json()
@@ -325,6 +556,18 @@ def get_container_name(names: object) -> str:
     if isinstance(names, list) and names:
         return str(names[0]).lstrip("/")
     return "unnamed"
+
+
+def should_use_cli(config: Union[PodmanConfig, None]) -> bool:
+    socket_paths = get_socket_paths(config)
+    for socket_path in socket_paths:
+        if os.path.exists(socket_path):
+            return False
+
+    if which("podman"):
+        return True
+
+    return False
 
 
 def handle_containers_stats(
@@ -353,11 +596,22 @@ def handle_containers_stats(
 
 
 def main() -> None:
-    socket_paths = get_socket_paths(load_cfg())
+    config = load_cfg()
+
+    # Write empty errors section to indicate successful start
+    write_serialized_section("errors", json.dumps({}))
+
+    if should_use_cli(config):
+        run_cli_queries()
+        return
+
+    # Socket-based queries
+    socket_paths = get_socket_paths(config)
 
     for socket_path_str in socket_paths:
+        socket_path = Path(socket_path_str)
         with make_unixsocket_session(
-            socket_path=Path(socket_path_str),
+            socket_path=socket_path,
             target_base_url=DEFAULT_SCHEME,
         ) as session:
             containers_section = query_containers(session, socket_path_str)

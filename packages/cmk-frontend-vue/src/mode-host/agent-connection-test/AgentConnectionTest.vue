@@ -163,9 +163,7 @@ onMounted(() => {
 
   if (sessionStorage.getItem('reopenSlideIn') === 'true') {
     void startAjax().then(() => {
-      if (!props.setupError) {
-        slideInOpen.value = true
-      }
+      slideInOpen.value = true
       sessionStorage.removeItem('reopenSlideIn')
     })
   }

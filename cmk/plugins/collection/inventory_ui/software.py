@@ -1396,7 +1396,7 @@ node_software_packages = Node(
             # sort_key enables from-to filtering
             "package_version": TextField(Title("Package version"), sort_key=_sort_key_version),
             "install_date": NumberField(Title("Install date"), render=_render_date),
-            "size": NumberField(Title("Size"), render=UNIT_COUNT),
+            "size": NumberField(Title("Size"), render=UNIT_BYTES),
             "path": TextField(Title("Path")),
         },
     ),

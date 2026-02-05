@@ -218,7 +218,7 @@ inside_container_minimal = { Map arg1=[:], Closure arg2 ->
         // The branch-specific suffix must not contain dots (e.g. 2.5.0),
         // because this results in an invalid branch name.
         // The pod templates uses - instead.
-        def container_name_suffix = safe_branch_name.replace(".", "-")
+        def container_name_suffix = safe_branch_name.replace(".", "-");
 
         container("minimal-alpine-python-checkmk-${container_name_suffix}") {
             println("'inside_container_minimal' is using k8s container 'minimal-alpine-python-checkmk-${container_name_suffix}'");

@@ -195,7 +195,7 @@ void main() {
             // The branch-specific part must not contain dots (e.g. 2.5.0),
             // because this results in an invalid branch name.
             // The pod templates uses - instead.
-            def container_safe_branch_name = safe_branch_name.replace(".", "-")
+            def container_safe_branch_name = safe_branch_name.replace(".", "-");
             def container_name = "ubuntu-2404-${container_safe_branch_name}-latest";
             println("'execute_test' is using k8s container '${container_name}'");
             container(container_name) {

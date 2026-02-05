@@ -10,7 +10,6 @@ Checkmk special agent for monitoring HP MSA storage systems.
 # mypy: disable-error-code="type-arg"
 
 import argparse
-import atexit
 import hashlib
 import logging
 import sys
@@ -137,7 +136,7 @@ class AuthError(RuntimeError):
 
 
 class HPMSAConnection:
-    def __init__(self, *, hostaddress: str, timeout: int) -> None:
+    def __init__(self, *, hostaddress: str, username: str, password: str, timeout: int) -> None:
         self._host = hostaddress
         self._base_url = f"https://{self._host}/api/"
         self._timeout = timeout
@@ -147,8 +146,15 @@ class HPMSAConnection:
         # the REQUESTS_CA_BUNDLE env variable
         self._verify_ssl = False
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        self._login(username, password)
 
-    def login(self, username: str, password: str) -> None:
+    def __enter__(self) -> "HPMSAConnection":
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self._logout()
+
+    def _login(self, username: str, password: str) -> None:
         try:
             session_key = self._get_session_key(hashlib.sha256, username, password)
         except (requests.exceptions.ConnectionError, AuthError):
@@ -158,7 +164,7 @@ class HPMSAConnection:
 
         self._session.headers.update(sessionKey=session_key)
 
-    def logout(self) -> None:
+    def _logout(self) -> None:
         if not (session_key := self._session.headers.pop("sessionKey", None)):
             LOGGER.warning("No session key found during logout")
             return
@@ -200,21 +206,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
-
-    connection = HPMSAConnection(hostaddress=args.hostaddress, timeout=opt_timeout)
-    connection.login(args.username, args.password)
-    atexit.register(connection.logout)
-
     parser = HTMLObjectParser()
 
-    for element in api_get_objects:
-        response = connection.get(uri="show/%s" % element)
-        try:
-            parser.feed(response.text)
-        except Exception as exc:  # broad exception because we don't know what to catch
-            if args.debug:
-                raise
-            LOGGER.warning("Failed to parse response for %s: %s", element, exc)
+    with HPMSAConnection(
+        hostaddress=args.hostaddress,
+        username=args.username,
+        password=args.password,
+        timeout=opt_timeout,
+    ) as connection:
+        for element in api_get_objects:
+            response = connection.get(uri="show/%s" % element)
+            try:
+                parser.feed(response.text)
+            except Exception as exc:  # broad exception because we don't know what to catch
+                if args.debug:
+                    raise
+                LOGGER.warning("Failed to parse response for %s: %s", element, exc)
 
     # Output sections
     for section, lines in sections.items():

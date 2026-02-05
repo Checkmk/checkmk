@@ -2,8 +2,6 @@
 
 /// file: common.groovy
 
-import groovy.json.JsonSlurperClassic;
-
 // Runs provided command in a shell and returns the JSON parsed stdout output
 load_json = { json_file ->
     def cmd_stdout_result = cmd_output("cat ${json_file}");

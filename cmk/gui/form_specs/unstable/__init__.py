@@ -32,6 +32,7 @@ from .string_autocompleter import (
     Autocompleter,
     AutocompleterData,
     AutocompleterParams,
+    FetchMethod,
     StringAutocompleter,
 )
 from .time_picker import TimePicker
@@ -69,6 +70,7 @@ __all__ = [
     "Autocompleter",
     "AutocompleterData",
     "AutocompleterParams",
+    "FetchMethod",
     "StringAutocompleter",
     "TimePicker",
     "TimeSpecific",

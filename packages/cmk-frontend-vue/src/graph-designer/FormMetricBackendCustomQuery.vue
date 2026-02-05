@@ -117,7 +117,7 @@ const aggregationHistogramPercentile = defineModel<number>('aggregationHistogram
 })
 
 const metricNameAutocompleter = computed<Autocompleter>(() => ({
-  fetch_method: 'ajax_vs_autocomplete',
+  fetch_method: 'rest_autocomplete',
   data: {
     ident: 'monitored_metrics_backend',
     params: {

@@ -65,7 +65,7 @@ const attributeAutoCompleter = (
   isForKey: boolean,
   ignoreExistingIndex: number | null = null
 ): Autocompleter => ({
-  fetch_method: 'ajax_vs_autocomplete',
+  fetch_method: 'rest_autocomplete',
   data: {
     ident: isForKey ? props.keyIdent : props.valueIdent,
     params: {

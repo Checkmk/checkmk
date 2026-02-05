@@ -40,3 +40,22 @@
     }
   }
 }
+
+/* CSE banner positioning for Vue dashboard pages */
+#main_page_content:has(cmk-dashboard) {
+  position: relative;
+
+  .cse-banner {
+    position: absolute;
+    right: 3px;
+    top: 5px;
+    background: $bg-color;
+    color: $font-color !important;
+    padding-left: 2px;
+    padding-right: 10px;
+  }
+
+  &:has(.warning) .cse-banner {
+    margin-top: 63px;
+  }
+}

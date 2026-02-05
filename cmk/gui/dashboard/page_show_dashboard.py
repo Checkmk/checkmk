@@ -19,16 +19,19 @@ import cmk.ccc.version as cmk_version
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import VisualTypeName
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
 from cmk.utils import paths
+from cmk.utils.licensing.registry import get_licensing_user_effect
 
 from .breadcrumb import dashboard_breadcrumb, EvaluatedBreadcrumbItem
 from .metadata import DashboardMetadataObject
@@ -108,6 +111,8 @@ def page_dashboard_app(ctx: PageContext) -> None:
     html.body_start()
     html.begin_page_content(enable_scrollbar=True)
 
+    _may_show_license_messages(ctx.request)
+
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         available_layouts = ["relative_grid"]
         available_features = "restricted"
@@ -156,3 +161,16 @@ def _get_default_dashboard_name() -> str:
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         return "main"  # problems = main in community edition
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
+
+
+def _may_show_license_messages(request: Request) -> None:
+    """Render license warning and banner above the Vue dashboard."""
+    user_effect = get_licensing_user_effect(
+        makeuri_contextless(request, [("mode", "licensing")], filename="wato.py")
+    )
+
+    if (header := user_effect.header) and set(header.roles).intersection(user.role_ids):
+        html.show_warning(HTML.without_escaping(header.message_html))
+
+    if (banner := user_effect.banner) and set(banner.roles).intersection(user.role_ids):
+        html.write_html(HTML.without_escaping(banner.message_html))

@@ -219,7 +219,9 @@ const userCanActivateSelectedSites = computed((): boolean => {
     const site = sitesAndChanges.value.sites.find((s) => s.siteId === siteId)
     if (site) {
       const siteHasForeignChanges = sitesAndChanges.value.pendingChanges.some(
-        (change) => change.whichSites.includes(site.siteId) && change.foreignChange
+        (change) =>
+          (change.whichSites.includes(site.siteId) || change.whichSites.includes('All sites')) &&
+          change.foreignChange
       )
       if (siteHasForeignChanges && !props.user_has_activate_foreign) {
         return false

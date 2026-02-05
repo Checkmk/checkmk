@@ -149,7 +149,7 @@ class ModeDiagnostics(WatoMode):
         return ["diagnostics"]
 
     def _from_vars(self) -> None:
-        self._site = request.var("site")
+        self._site = request.var("select_site_p_site")
         self._checkmk_files_map: dict[str, CheckmkFilesMap] = {}
         for file_map in _FILE_MAPS:
             self._checkmk_files_map[file_map["file_type"]] = file_map["map_generator"](
@@ -187,21 +187,23 @@ class ModeDiagnostics(WatoMode):
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         if not request.has_var("site"):
-            return make_simple_form_page_menu(
+            menu = make_simple_form_page_menu(
                 _("Site"),
                 breadcrumb,
-                form_name="select",
+                form_name="select_site",
                 button_name="_do_select",
                 save_title=_("Select"),
             )
 
-        menu = make_simple_form_page_menu(
-            _("Diagnostics"),
-            breadcrumb,
-            form_name="diagnostics",
-            button_name="_collect_dump",
-            save_title=_("Collect diagnostics"),
-        )
+        else:
+            menu = make_simple_form_page_menu(
+                _("Diagnostics"),
+                breadcrumb,
+                form_name="diagnostics",
+                button_name="_collect_dump",
+                save_title=_("Collect diagnostics"),
+            )
+
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -231,7 +233,7 @@ class ModeDiagnostics(WatoMode):
             return None
 
         if request.has_var("_do_select"):
-            site = request.get_str_input_mandatory("site")
+            site = request.get_str_input_mandatory("select_site_p_site")
             request.set_var("site", site)
             return None
 
@@ -269,27 +271,37 @@ class ModeDiagnostics(WatoMode):
         return redirect(self._job.detail_url())
 
     def page(self, config: Config) -> None:
+        if self._job.is_active():
+            # Job is already running, don't give the user the chance to start another one.
+            raise HTTPRedirect(self._job.detail_url())
+
         if not request.has_var("site"):
-            self._select_site_form()
+            with html.form_context("select_site", method="POST"):
+                self._vs_select_site().render_input("select_site", None)
+                html.hidden_fields()
         else:
-            if self._job.is_active():
-                raise HTTPRedirect(self._job.detail_url())
-
             with html.form_context("diagnostics", method="POST"):
-                vs_diagnostics = self._vs_diagnostics()
-                vs_diagnostics.render_input("diagnostics", {})
-
+                self._vs_diagnostics().render_input("diagnostics", None)
                 html.hidden_fields()
 
-    def _select_site_form(self) -> None:
-        with html.form_context("select", method="POST"):
-            self._vs_select_site().render_input("site", None)
-            html.hidden_fields()
-
-    def _vs_select_site(self) -> SetupSiteChoice:
-        return SetupSiteChoice(
+    def _vs_select_site(self) -> Dictionary:
+        return Dictionary(
             title=_("Select site"),
-            encode_value=False,
+            render="form",
+            help=_(
+                "Select the site to create a dump for. The actual contents of the dump can be"
+                " selected in the next screen."
+            ),
+            elements=[
+                (
+                    "site",
+                    SetupSiteChoice(
+                        title=_("Select site"),
+                        encode_value=False,
+                    ),
+                ),
+            ],
+            optional_keys=False,
         )
 
     def _vs_diagnostics(self) -> Dictionary:

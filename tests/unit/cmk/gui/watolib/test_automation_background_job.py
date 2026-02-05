@@ -9,6 +9,7 @@ import threading
 from collections.abc import Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -17,8 +18,15 @@ from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, Ser
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui.http import request
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib import automation_background_job
-from cmk.gui.watolib.automation_background_job import CheckmkAutomationBackgroundJob
+from cmk.gui.watolib.automation_background_job import (
+    AutomationCheckmkAutomationGetStatus,
+    AutomationCheckmkAutomationStart,
+    AutomationCheckmkAutomationStartRequest,
+    CheckmkAutomationBackgroundJob,
+)
 from cmk.gui.watolib.automations import CheckmkAutomationRequest
 
 RESULT: object = None
@@ -126,3 +134,52 @@ class TestCheckmkAutomationBackgroundJob:
             lambda: {},
         )
         assert RESULT == expected_result
+
+    @pytest.mark.parametrize(
+        ["version", "result"],
+        [
+            pytest.param(None, "i was very different previously", id="Missing version header"),
+            pytest.param(
+                "2.1.0p10",
+                "i was very different previously",
+                id="Old version with old serialization",
+            ),
+            pytest.param("2.2.0i1", "(2, None)", id="First version with new serialization"),
+            pytest.param("2.5.0b1", "(2, None)", id="Latest version with new serialization"),
+        ],
+    )
+    @pytest.mark.usefixtures(
+        "patch_omd_site",
+        "allow_background_jobs",
+        "request_context",
+        "result_type_registry",
+        "check_mk_local_automation_serialized",
+    )
+    def test_automation_commands(
+        self, version: str | None, result: str, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """
+        Test the execution of the whole background job
+
+        Assert that the version gets passed correctly
+        and that the result serialization depends on that version
+        """
+        with monkeypatch.context() as m:
+            if version is not None:
+                m.setattr(request, "headers", {"x-checkmk-version": version})
+
+            automation = AutomationCheckmkAutomationStart()
+            job_id = automation.execute(
+                AutomationCheckmkAutomationStartRequest(
+                    api_request=self._api_request(),
+                    user_permission_config=UserPermissionSerializableConfig(
+                        roles={}, user_roles={}, default_user_profile_roles=[]
+                    ),
+                )
+            )
+            job = CheckmkAutomationBackgroundJob(job_id)
+            job.wait_for_completion(10)
+            job_result = AutomationCheckmkAutomationGetStatus._load_result(
+                Path(job.get_work_dir()) / "result.mk"
+            )
+            assert job_result == result

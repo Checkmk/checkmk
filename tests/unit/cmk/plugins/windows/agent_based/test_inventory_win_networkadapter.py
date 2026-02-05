@@ -60,14 +60,14 @@ from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
                 TableRow(
                     path=["hardware", "nwadapter"],
                     key_columns={
-                        "name": " Intel(R) PRO/1000 MT-Desktopadapter 1",
+                        "name": "Intel(R) PRO/1000 MT-Desktopadapter 1",
                     },
                     inventory_columns={
-                        "type": " Ethernet 802.3",
-                        "macaddress": " 08:00:27:9C:F8:39",
+                        "type": "Ethernet 802.3",
+                        "macaddress": "08:00:27:9C:F8:39",
                         "speed": 1000000000,
-                        "gateway": " 192.168.178.1",
-                        "ipv4_address": ", 192.168.178.26",
+                        "gateway": "192.168.178.1",
+                        "ipv4_address": "192.168.178.26",
                         "ipv6_address": None,
                         "ipv4_subnet": "255.255.255.0",
                         "ipv6_subnet": None,
@@ -77,14 +77,14 @@ from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
                 TableRow(
                     path=["hardware", "nwadapter"],
                     key_columns={
-                        "name": " Intel(R) PRO/1000 MT-Desktopadapter 2",
+                        "name": "Intel(R) PRO/1000 MT-Desktopadapter 2",
                     },
                     inventory_columns={
-                        "type": " Ethernet 802.3",
-                        "macaddress": " 08:00:27:9C:F8:39",
+                        "type": "Ethernet 802.3",
+                        "macaddress": "08:00:27:9C:F8:39",
                         "speed": 1000000000,
-                        "gateway": " 192.168.178.1",
-                        "ipv4_address": ", 192.168.178.26",
+                        "gateway": "192.168.178.1",
+                        "ipv4_address": "192.168.178.26",
                         "ipv6_address": None,
                         "ipv4_subnet": "255.255.255.0",
                         "ipv6_subnet": None,

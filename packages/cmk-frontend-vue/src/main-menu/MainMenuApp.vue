@@ -27,8 +27,12 @@ import { mainMenuKey } from './provider/main-menu'
 
 const { _t } = usei18n()
 const props = defineProps<MainMenuConfig>()
-
-const mainMenu = new MainMenuService(props.main, props.user, new KeyShortcutService(window))
+const iFrames = document.getElementsByTagName('iframe')
+const mainMenu = new MainMenuService(
+  props.main,
+  props.user,
+  new KeyShortcutService(window, iFrames, iFrames)
+)
 provide(mainMenuKey, mainMenu)
 
 const usePopupMessages = ref<UserPopupMessageRef[]>([])

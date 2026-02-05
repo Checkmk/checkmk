@@ -32,9 +32,7 @@ import * as graphs_cee from './modules/graphs_cee'
 import * as help from './modules/help'
 import * as host_diagnose from './modules/host_diagnose'
 import * as hover from './modules/hover'
-import { getKeyShortcutServiceInstance } from './modules/keyShortcuts'
 import * as license_usage_timeseries_graph from './modules/license_usage/license_usage_timeseries_graph'
-import * as main_menu_shortcut_handler from './modules/main_menu_shortcut_handler'
 import * as nodevis from './modules/nodevis/main'
 import * as ntop_alerts from './modules/ntop/ntop_alerts'
 import * as ntop_flows from './modules/ntop/ntop_flows'
@@ -70,9 +68,6 @@ $(() => {
   forms.enable_dynamic_form_elements()
   // TODO: only register when needed?
   element_dragging.register_event_handlers()
-
-  const keyShortcuts = getKeyShortcutServiceInstance()
-  main_menu_shortcut_handler.register_shortcuts(keyShortcuts)
 
   // add a confirmation popup for each for that has a valid confirmation text
   callable_functions.init_callable_ts_functions(document)

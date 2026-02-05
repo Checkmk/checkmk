@@ -46,10 +46,10 @@ export class KeyShortcutService {
 
   constructor(
     private window: Window,
-    private propagateTo: HTMLCollectionOf<HTMLIFrameElement> | null = null
+    private propagateTo: HTMLCollectionOf<HTMLIFrameElement> | null = null,
+    private listenTo: HTMLCollectionOf<HTMLIFrameElement> | null = null
   ) {
-    this.window.addEventListener('keydown', this.handleKeyDown.bind(this))
-    this.window.addEventListener('keyup', this.handleKeyUp.bind(this))
+    this.initListeners()
   }
 
   public on(shortcut: KeyShortcut, callback: KeyShortcutHandlerCallback): string {
@@ -116,6 +116,22 @@ export class KeyShortcutService {
     ;(shortcut as KeyShortcutEnsured).id = randomId()
 
     return shortcut as KeyShortcutEnsured
+  }
+
+  private initListeners() {
+    this.window.addEventListener('keydown', this.handleKeyDown.bind(this))
+    this.window.addEventListener('keyup', this.handleKeyUp.bind(this))
+
+    if (this.listenTo) {
+      for (let i = 0; i < this.listenTo.length; i++) {
+        this.listenTo
+          ?.item(i)
+          ?.contentWindow?.addEventListener('keydown', this.handleKeyDown.bind(this))
+        this.listenTo
+          ?.item(i)
+          ?.contentWindow?.addEventListener('keyup', this.handleKeyUp.bind(this))
+      }
+    }
   }
 
   private propagateEvent(e: KeyboardEvent) {

@@ -38,7 +38,7 @@ def parse_win_networkadapter(  # pylint: disable=too-many-branches
 
         stripped_line = [w.strip() for w in line]
         varname = stripped_line[0]
-        value = ":".join(line[1:])
+        value = ":".join(line[1:]).strip()
 
         # empty? skip!
         if not value:
@@ -75,8 +75,8 @@ def parse_win_networkadapter(  # pylint: disable=too-many-branches
             array["gateway"] = value
 
         # address string array in comma-separated string packing: ['a1','a2',...] -> 'a1,a2...'
-        for addrtype in addrtypes:
-            array[addrtype] = ", ".join(addrtypes[addrtype])
+        for addrtype, values in addrtypes.items():
+            array[addrtype] = ", ".join(values)
 
     # Append last array
     if array:

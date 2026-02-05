@@ -3029,13 +3029,19 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
         ),
         Option(
             long_option=OPT_CHECKMK_CONFIG_FILES,
-            short_help="Pack configuration files ('*.mk' or '*.conf') from etc/checkmk",
+            short_help=(
+                "Pack configuration files. Use filenames relative to etc/checkmk. Wildcards are "
+                "not supported."
+            ),
             argument=True,
             argument_descr="FILE,FILE...",
         ),
         Option(
             long_option=OPT_CHECKMK_LOG_FILES,
-            short_help="Pack log files ('*.log' or '*.state') from var/log",
+            short_help=(
+                "Pack log files from . Use filenames relative to var/log. Wildcards are not "
+                "supported."
+            ),
             argument=True,
             argument_descr="FILE,FILE...",
         ),

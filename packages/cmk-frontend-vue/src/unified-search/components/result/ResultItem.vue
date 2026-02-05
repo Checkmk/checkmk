@@ -287,6 +287,7 @@ onBeforeUnmount(() => {
     justify-content: center;
     align-items: flex-start;
     font-weight: var(--font-weight-default);
+    min-width: 0;
   }
 }
 

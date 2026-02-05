@@ -47,9 +47,9 @@ span {
 }
 
 .title {
-  max-width: 55%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
+  text-align: left;
+  min-width: 0;
 }
 
 .context {

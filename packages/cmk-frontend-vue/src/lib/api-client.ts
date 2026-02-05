@@ -125,6 +125,13 @@ export class Api {
     }
 
     const res = await cmkFetch(url, params)
+
+    if (res.response.redirected) {
+      if (res.response.url.indexOf('login.py') >= 0) {
+        throw new Error('Stale session. Please login.')
+      }
+    }
+
     await res.raiseForStatus()
 
     if (res.status === 204) {

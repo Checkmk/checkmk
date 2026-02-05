@@ -2,8 +2,6 @@
 
 /// file: trigger-fips-chain.groovy
 
-import java.time.LocalDate
-
 void main() {
     /// make sure the listed parameters are set
     check_job_parameters([

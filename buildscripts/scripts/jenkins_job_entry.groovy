@@ -6,7 +6,6 @@
 /// avoid redundant code in the actual job definition files and to be able
 /// to provide a standard environment for all Checkmk jobs
 import java.text.SimpleDateFormat
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 void main(job_definition_file) {
     /// brings raise, load_json, cmd_output

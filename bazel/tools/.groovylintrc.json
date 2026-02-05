@@ -46,6 +46,7 @@
     "unused.UnusedPrivateField": "error",
     "unused.UnusedPrivateMethod": "error",
     "unused.UnusedPrivateMethodParameter": "error",
-    "unused.UnusedVariable": "error"
+    "unused.UnusedVariable": "error",
+    "imports.UnusedImport": "error"
   }
 }

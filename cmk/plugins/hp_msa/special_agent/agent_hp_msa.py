@@ -170,11 +170,11 @@ class HPMSAConnection:
         self._session.headers.update(sessionKey=session_key)
 
     def _logout(self) -> None:
-        if not (session_key := self._session.headers.pop("sessionKey", None)):
-            LOGGER.warning("No session key found during logout")
-            return
-        self.get(uri=f"logout/{str(session_key)}")
-        LOGGER.debug("Successfully logged out from HP MSA device")
+        try:
+            self.get(uri="logout")
+            LOGGER.debug("Successfully logged out from HP MSA device")
+        finally:
+            self._session.close()
 
     def _get_session_key(self, hash_class: Callable, username: str, password: str) -> str:
         login_hash = hash_class()

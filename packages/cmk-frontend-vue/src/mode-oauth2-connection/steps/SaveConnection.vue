@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
+import type { TwoColumnDictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 import { inject } from 'vue'
 
@@ -16,21 +18,34 @@ import { immediateWatch } from '@/lib/watch.ts'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
-import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
+import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import type { ValidationMessages } from '@/form'
+import FormEdit from '@/form/FormEdit.vue'
+
 import { type OAuth2FormData, type Oauth2ConnectionApi } from '../lib/service/oauth2-connection-api'
 import { submitKey } from '../lib/submitKey'
 import { waitForRedirect } from '../lib/waitForRedirect'
-import { buildRedirectUri } from './utils'
+import {
+  buildRedirectUri,
+  filteredDataInFilteredDictionary,
+  filteredDictionaryByGroupName
+} from './utils'
 
 const { _t } = usei18n()
 
 const props = defineProps<
   CmkWizardStepProps & {
+    formSpec: {
+      id: string
+      spec: FormSpec
+      validation?: ValidationMessages
+      data: unknown
+    }
     urls: Oauth2Urls
     authorityMapping: Record<string, string>
     connectorType: 'microsoft_entra_id'
@@ -38,6 +53,10 @@ const props = defineProps<
     api: Oauth2ConnectionApi
   }
 >()
+
+const model = defineModel<{ data: OAuth2FormData; validation: ValidationMessages }>({
+  required: true
+})
 
 const submitted = inject(submitKey)
 
@@ -53,12 +72,11 @@ const authSucceeded = ref(false)
 const refId = randomId()
 const countDownValue = ref<number>(TIMEOUT)
 
-const dataRef = defineModel<OAuth2FormData>({ required: true })
 const resultCode = ref<string | null>(null)
 
 async function authorize(): Promise<string | null> {
   return new Promise((resolve) => {
-    const authorityKey = dataRef.value.authority as keyof typeof props.authorityMapping
+    const authorityKey = model.value.data.authority as keyof typeof props.authorityMapping
     const mappingValue = props.authorityMapping[authorityKey] ?? 'global_'
     const baseUrl =
       props.urls[props.connectorType][
@@ -66,10 +84,10 @@ async function authorize(): Promise<string | null> {
       ].base_url
     if (baseUrl) {
       const url = new URL(
-        `${baseUrl.replace('###tenant_id###', dataRef.value.tenant_id as string)}/authorize`
+        `${baseUrl.replace('###tenant_id###', model.value.data.tenant_id as string)}/authorize`
       )
 
-      url.searchParams.append('client_id', dataRef.value.client_id as string)
+      url.searchParams.append('client_id', model.value.data.client_id as string)
       url.searchParams.append('redirect_uri', buildRedirectUri(props.urls.redirect))
       url.searchParams.append('response_type', 'code')
       url.searchParams.append('response_mode', 'query')
@@ -131,7 +149,7 @@ async function requestAccessToken(): Promise<boolean> {
         type: 'ms_graph_api',
         id: props.ident,
         redirect_uri: buildRedirectUri(props.urls.redirect),
-        data: dataRef.value,
+        data: model.value.data,
         code: resultCode.value
       })
       if (res.status !== 'success') {
@@ -139,8 +157,8 @@ async function requestAccessToken(): Promise<boolean> {
         return false
       }
       if (res.data) {
-        dataRef.value.access_token = res.data.access_token
-        dataRef.value.refresh_token = res.data.refresh_token
+        model.value.data.access_token = res.data.access_token
+        model.value.data.refresh_token = res.data.refresh_token
       }
       return true
     }
@@ -157,9 +175,12 @@ function resetProcess() {
 }
 
 async function saveConnection() {
+  if (!(await validate())) {
+    return
+  }
   if (submitted !== undefined) {
     saving.value = true
-    const error = await submitted(dataRef.value)
+    const error = await submitted(model.value.data)
     if (error) {
       errorTitle.value = error
     }
@@ -199,12 +220,41 @@ immediateWatch(
     }
   }
 )
+
+async function validate(): Promise<boolean> {
+  model.value.validation = []
+  model.value.data = { ...model.value.data, ...filteredData.value }
+  if (!model.value.data.title) {
+    model.value.validation.push({
+      location: ['title'],
+      message: _t('Title is required.'),
+      replacement_value: ''
+    })
+    return false
+  }
+  return true
+}
+
+const groupName = 'General properties'
+const filteredDictionary = ref<TwoColumnDictionary>(
+  filteredDictionaryByGroupName(props.formSpec.spec as TwoColumnDictionary, groupName)
+)
+const filteredData = ref<Partial<OAuth2FormData>>(
+  filteredDataInFilteredDictionary(model.value.data, filteredDictionary.value)
+)
+
+immediateWatch(
+  () => filteredData.value,
+  (newValue) => {
+    model.value.data = { ...model.value.data, ...newValue }
+  }
+)
 </script>
 
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h2"> {{ _t('Authorize application') }}</CmkHeading>
+      <CmkHeading type="h2"> {{ _t('Set connection title') }}</CmkHeading>
     </template>
 
     <template #content>
@@ -221,6 +271,16 @@ immediateWatch(
         <CmkAlertBox variant="success">
           {{ _t('OAuth2 connection parameters requested successfully!') }}
         </CmkAlertBox>
+        {{
+          _t(
+            'Enter the Checkmk display title for this connection. You can then save and use the connection.'
+          )
+        }}
+        <FormEdit
+          v-model:data="filteredData"
+          :backend-validation="model.validation"
+          :spec="filteredDictionary"
+        />
       </template>
       <CmkAlertBox v-else variant="error">
         {{ errorTitle }}

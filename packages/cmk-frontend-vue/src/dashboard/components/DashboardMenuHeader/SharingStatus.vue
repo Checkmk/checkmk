@@ -13,8 +13,10 @@ import StatusMessage, { type StatusType } from '../StatusMessage.vue'
 
 const { _t } = usei18n()
 
+export type SharingState = 'disabled' | 'paused' | 'active'
+
 interface SharingStatusProps {
-  enabled: boolean
+  sharingState: SharingState
   sharedUntil?: Date | null | undefined
 }
 
@@ -32,7 +34,15 @@ type SharingData = {
 }
 
 const sharedData = computed((): SharingData => {
-  if (!props.enabled) {
+  if (props.sharingState === 'paused') {
+    return {
+      status: 'WARNING',
+      text: _t('Sharing'),
+      linkedText: _t('paused')
+    }
+  }
+
+  if (props.sharingState === 'disabled') {
     return {
       status: 'DANGER',
       text: _t('Sharing'),

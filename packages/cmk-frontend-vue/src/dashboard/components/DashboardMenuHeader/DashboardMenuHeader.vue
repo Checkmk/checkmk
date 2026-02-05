@@ -22,7 +22,7 @@ import { copyToClipboard, toPathAndSearch, urlHandler } from '@/dashboard/utils.
 import DashboardSelector from './DashboardSelector.vue'
 import DropdownMenu from './DropdownMenu.vue'
 import MenuButton from './MenuButton.vue'
-import SharingStatus from './SharingStatus.vue'
+import SharingStatus, { type SharingState } from './SharingStatus.vue'
 import type { SelectedDashboard } from './types'
 
 interface Props {
@@ -124,6 +124,13 @@ const isBuiltInDashboard = computed(
 
 const isInteractionDisabled = computed(() => props.isDashboardLoading || !props.selectedDashboard)
 
+const sharingState = computed((): SharingState => {
+  if (!props.publicToken) {
+    return 'disabled'
+  }
+  return props.publicToken.is_disabled ? 'paused' : 'active'
+})
+
 const copyInternalDashboardLink = async (): Promise<void> => {
   const url = window?.parent?.location?.href || window.location.href
   await copyToClipboard(url)
@@ -161,7 +168,7 @@ const pageNavigation = parsePageNavigation()
       <template v-if="!isEditMode">
         <SharingStatus
           v-if="canEditDashboard && !isBuiltInDashboard"
-          :enabled="!!publicToken"
+          :sharing-state="sharingState"
           :shared-until="publicToken?.expires_at ? new Date(publicToken?.expires_at) : null"
           @open-sharing-settings="emit('open-share-workflow')"
         />

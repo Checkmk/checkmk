@@ -5,7 +5,7 @@ pyyaml==6.0.2  # needed by vcrpy
 vcrpy==7.0.0  # used by various unit tests to mock HTTP transactions in some special agents (only)
 cryptography==43.0.3
 paramiko==3.5.0
-pyasn1==0.6.1
+pyasn1==0.6.2
 ply==3.11  # needed by pysmi, python-active-directory
 pysmi==1.6.2  # needed by pysnmp
 pysnmp==6.2.6  # needed by Event Console

@@ -170,6 +170,10 @@ const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: Dashboar
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   isDashboardEditingMode.value = false
   showCloneSuccessAlert.value = false
+
+  // Reset runtime filters when switching dashboards via dropdown
+  dashboardFilters.handleResetRuntimeFilters()
+
   const key: DashboardKey = {
     name: dashboard.name,
     owner: dashboard.owner || '' // built-in conversion: null -> ""

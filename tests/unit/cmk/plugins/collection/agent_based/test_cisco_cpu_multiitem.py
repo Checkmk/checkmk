@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based import cisco_cpu_multiitem
 from cmk.plugins.collection.agent_based.cisco_cpu_multiitem import (
     check_cisco_cpu_multiitem,
     CPUInfo,
@@ -36,22 +37,25 @@ def parsed_section_fixture() -> Section:
     )
 
 
-def test_check_cisco_cpu_multiitem(parsed_section: Section) -> None:
+def test_check_cisco_cpu_multiitem(
+    parsed_section: Section, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cisco_cpu_multiitem, "get_value_store", lambda: {})
     params = Params({"levels": (80, 90)})
 
     assert list(check_cisco_cpu_multiitem("2", params, parsed_section)) == [
-        Result(state=State.OK, summary="Utilization in the last 5 minutes: 5.00%"),
-        Metric("util", 5.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+        Result(state=State.OK, summary="Total CPU: 5.00%"),
+        Metric("util", 5.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
     ]
 
     assert list(check_cisco_cpu_multiitem("another cpu 3", params, parsed_section)) == [
-        Result(state=State.OK, summary="Utilization in the last 5 minutes: 10.00%"),
-        Metric("util", 10.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+        Result(state=State.OK, summary="Total CPU: 10.00%"),
+        Metric("util", 10.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
     ]
 
     assert list(check_cisco_cpu_multiitem("average", params, parsed_section)) == [
-        Result(state=State.OK, summary="Utilization in the last 5 minutes: 7.50%"),
-        Metric("util", 7.5, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+        Result(state=State.OK, summary="Total CPU: 7.50%"),
+        Metric("util", 7.5, levels=(80.0, 90.0), boundaries=(0.0, None)),
     ]
 
     assert not list(check_cisco_cpu_multiitem("not_found", params, parsed_section))

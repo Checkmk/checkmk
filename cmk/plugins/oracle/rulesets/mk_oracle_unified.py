@@ -281,7 +281,14 @@ def _connection_options(*, with_service_name: bool) -> Dictionary:
         ),
         "tns_admin": DictElement(
             parameter_form=String(
-                title=Title("Path to tnsnames.ora or sqlnet.ora file"),
+                title=Title("TNS_ADMIN directory path"),
+                help_text=Help(
+                    "Sets the TNS_ADMIN environment variable for the Oracle plugin. "
+                    "This directory should contain Oracle network configuration files "
+                    "such as tnsnames.ora, sqlnet.ora, or wallet files. "
+                    "The plugin must have read access to all files in this directory. "
+                    "If not specified, the default plugin's config directory will be used."
+                ),
                 custom_validate=(
                     validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
                 ),
@@ -290,7 +297,7 @@ def _connection_options(*, with_service_name: bool) -> Dictionary:
         ),
         "oracle_local_registry": DictElement(
             parameter_form=String(
-                title=Title("Folder of oracle configuration files(oratab,  for example)"),
+                title=Title("Oracle Local Registry path"),
                 custom_validate=(
                     validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
                 ),
@@ -353,7 +360,12 @@ def _sections() -> Dictionary:
 
 def _discovery() -> Dictionary:
     return Dictionary(
-        title=Title("Discovery options"),
+        title=Title("Instance discovery"),
+        help_text=Help(
+            "When enabled, the plugin will automatically discover local Oracle database instances. "
+            "This feature only works when the plugin is installed on the same machine where the "
+            "Oracle database instances are running."
+        ),
         elements={
             "enabled": DictElement(
                 parameter_form=BooleanChoice(
@@ -507,7 +519,7 @@ def _endpoint(
 
 def _main() -> Dictionary:
     return Dictionary(
-        title=Title("Oracle Database default configuration"),
+        title=Title("Default configuration"),
         elements={
             **_endpoint(is_main_entry=True),
             "cache_age": DictElement(

@@ -5,9 +5,11 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
+import time
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
+from cmk.agent_based.v2 import equals, get_value_store, OIDEnd, SNMPTree, StringTable
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 check_info = {}
 
@@ -30,18 +32,13 @@ def check_arris_cmts_cpu(item, params, info):
 
         if citem == item:
             # We get the IDLE percentage, but need the usage
-            cpu_util = 100 - int(cpu_idle_util)
-            warn, crit = params["levels"]
-
-            infotext = "Current utilization is: %d %% " % cpu_util
-            levels = f" (warn/crit at {warn:.1f}/{crit:.1f} %)"
-            perfdata = [("util", cpu_util, warn, crit)]
-            if cpu_util >= crit:
-                yield 2, infotext + levels, perfdata
-            elif cpu_util >= warn:
-                yield 1, infotext + levels, perfdata
-            else:
-                yield 0, infotext, perfdata
+            cpu_util = 100.0 - float(cpu_idle_util)
+            yield from check_cpu_util(
+                util=cpu_util,
+                params=params,
+                value_store=get_value_store(),
+                this_time=time.time(),
+            )
             return
 
 

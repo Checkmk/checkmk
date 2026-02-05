@@ -163,64 +163,72 @@ def _auth_roles_choices() -> SingleChoice:
     )
 
 
-def _auth_options(is_default_options: bool = True) -> CascadingSingleChoice:
-    return CascadingSingleChoice(
-        title=Title("Oracle type of authentication"),
-        help_text=Help(
-            "Select the type of authentication to use when connecting to the Oracle database."
-        ),
-        prefill=DefaultValue("standard"),
-        elements=[
-            CascadingSingleChoiceElement(
-                name="standard",
-                title=Title("User & Password"),
-                parameter_form=Dictionary(
-                    title=Title("Username and Password"),
-                    elements={
-                        "username": DictElement(
-                            parameter_form=String(
-                                title=Title("Username"),
-                                custom_validate=(validators.LengthInRange(min_value=1),)
-                                if is_default_options
-                                else None,
-                            ),
-                            required=is_default_options,
-                        ),
-                        "password": DictElement(
-                            parameter_form=Password(
-                                title=Title("Password"),
-                                custom_validate=(validators.LengthInRange(min_value=1),)
-                                if is_default_options
-                                else None,
-                            ),
-                            required=is_default_options,
-                        ),
-                        "role": DictElement(
-                            parameter_form=_auth_roles_choices(),
-                            required=False,
-                        ),
-                    },
-                ),
-            ),
-            CascadingSingleChoiceElement(
-                name="wallet",
-                title=Title("Oracle Wallet"),
-                parameter_form=FixedValue(
-                    value=None,
+def _auth_options(is_default_options: bool = True) -> Dictionary:
+    return Dictionary(
+        title=Title("Authentication"),
+        elements={
+            "auth_type": DictElement(
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Authentication type"),
                     help_text=Help(
-                        "Use Oracle Wallet for secure authentication to the Oracle database "
-                        "without storing passwords in plain text. "
-                        "If 'Path to tnsnames.ora or sqlnet.ora file' (TNS_ADMIN) is not set, "
-                        "the wallet must be located in /etc/check_mk/oracle_wallet. "
-                        "In this case, the plugin will automatically create a sqlnet.ora file "
-                        "if it does not exist. "
-                        "If TNS_ADMIN is set to a custom path, you must ensure that sqlnet.ora "
-                        "(with the correct wallet location) and the Oracle Wallet files "
-                        "are properly configured in that directory."
+                        "Select the type of authentication to use when connecting to the Oracle database."
                     ),
+                    prefill=DefaultValue("standard"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="standard",
+                            title=Title("User & Password"),
+                            parameter_form=Dictionary(
+                                title=Title("Username and Password"),
+                                elements={
+                                    "username": DictElement(
+                                        parameter_form=String(
+                                            title=Title("Username"),
+                                            custom_validate=(
+                                                validators.LengthInRange(min_value=1),
+                                            ),
+                                        ),
+                                        required=True,
+                                    ),
+                                    "password": DictElement(
+                                        parameter_form=Password(
+                                            title=Title("Password"),
+                                            custom_validate=(
+                                                validators.LengthInRange(min_value=1),
+                                            ),
+                                        ),
+                                        required=True,
+                                    ),
+                                },
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="wallet",
+                            title=Title("Oracle Wallet"),
+                            parameter_form=FixedValue(
+                                value=None,
+                                help_text=Help(
+                                    "Use Oracle Wallet for secure authentication to the Oracle database "
+                                    "without storing passwords in plain text. "
+                                    "If 'Path to tnsnames.ora or sqlnet.ora file' (TNS_ADMIN) is not set, "
+                                    "the wallet must be located in $MK_CONFDIR/oracle_wallet. "
+                                    "In this case, the plugin will automatically create a sqlnet.ora file "
+                                    "if it does not exist. "
+                                    "If TNS_ADMIN is set to a custom path, you must ensure that sqlnet.ora "
+                                    "(with the correct wallet location) and the Oracle Wallet files "
+                                    "are properly configured in that directory."
+                                ),
+                            ),
+                        ),
+                    ],
                 ),
+                required=is_default_options,
             ),
-        ],
+            "role": DictElement(
+                parameter_form=_auth_roles_choices(),
+                required=False,
+            ),
+        },
     )
 
 

@@ -13,11 +13,11 @@ from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig, Secret, SystemBinar
 from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     bakery_plugin_oracle,
     GuiAdditionalOptionsConf,
+    GuiAuthConf,
     GuiAuthUserPasswordData,
     GuiConfig,
     GuiConnectionConf,
     GuiDiscoveryConf,
-    GuiInstanceAuthUserPasswordData,
     GuiInstanceConf,
     GuiMainConf,
     GuiOracleClientLibOptions,
@@ -100,13 +100,15 @@ def _combine(files: Sequence[Plugin], yaml_lines: Sequence[str]) -> Sequence[Plu
 oracle_config_min: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData(
-                username="cmk",
-                password=Secret("pw", "", ""),
-                role=None,
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="cmk",
+                    password=Secret("pw", "", ""),
+                ),
             ),
+            role=None,
         ),
         connection=GuiConnectionConf(
             host="localhost",
@@ -140,13 +142,15 @@ expected_yaml_lines_min = [
 oracle_config_full: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData(
-                username="admin",
-                password=Secret("adminpw", "", ""),
-                role="sysdba",
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="admin",
+                    password=Secret("adminpw", "", ""),
+                ),
             ),
+            role="sysdba",
         ),
         connection=GuiConnectionConf(
             host="dbhost",
@@ -199,13 +203,15 @@ oracle_config_full: GuiConfig = GuiConfig(
         GuiInstanceConf(
             service_name="Service_Name_2",
             instance_name="Instance_Name_2",
-            auth=(
-                OracleAuthType.STANDARD,
-                GuiInstanceAuthUserPasswordData(
-                    username="inst2",
-                    password=Secret("inst2pw", "", ""),
-                    role=None,
+            auth=GuiAuthConf(
+                auth_type=(
+                    OracleAuthType.STANDARD,
+                    GuiAuthUserPasswordData(
+                        username="inst2",
+                        password=Secret("inst2pw", "", ""),
+                    ),
                 ),
+                role=None,
             ),
             connection=GuiConnectionConf(
                 host="dbhost2",
@@ -274,13 +280,15 @@ expected_yaml_lines_full = [
 oracle_config_section: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData(
-                username="secuser",
-                password=Secret("secpw", "", ""),
-                role=None,
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="secuser",
+                    password=Secret("secpw", "", ""),
+                ),
             ),
+            role=None,
         ),
         connection=GuiConnectionConf(
             host="localhost",
@@ -345,13 +353,15 @@ expected_yaml_lines_section = [
 oracle_config_instance_sid: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData(
-                username="onlysid",
-                password=Secret("sidpw", "", ""),
-                role=None,
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="onlysid",
+                    password=Secret("sidpw", "", ""),
+                ),
             ),
+            role=None,
         ),
         connection=GuiConnectionConf(
             host="localhost",
@@ -393,13 +403,15 @@ expected_yaml_lines_instance_sid = [
 oracle_config_discovery_instances: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData(
-                username="mainuser",
-                password=Secret("mainpw", "", ""),
-                role=None,
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="mainuser",
+                    password=Secret("mainpw", "", ""),
+                ),
             ),
+            role=None,
         ),
         connection=GuiConnectionConf(
             host="localhost",
@@ -426,13 +438,15 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
         GuiInstanceConf(
             service_name=None,
             instance_name="SID_B",
-            auth=(
-                OracleAuthType.STANDARD,
-                GuiInstanceAuthUserPasswordData(
-                    username="buser",
-                    password=Secret("bpw", "", ""),
-                    role="sysdba",
+            auth=GuiAuthConf(
+                auth_type=(
+                    OracleAuthType.STANDARD,
+                    GuiAuthUserPasswordData(
+                        username="buser",
+                        password=Secret("bpw", "", ""),
+                    ),
                 ),
+                role="sysdba",
             ),
             connection=GuiConnectionConf(
                 host="hostb",
@@ -478,13 +492,15 @@ expected_yaml_lines_discovery_instances = [
 oracle_config_use_host_client_always: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData(
-                username="user",
-                password=Secret("pw", "", ""),
-                role=None,
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="user",
+                    password=Secret("pw", "", ""),
+                ),
             ),
+            role=None,
         ),
         connection=GuiConnectionConf(
             host="localhost",
@@ -525,13 +541,15 @@ expected_yaml_lines_use_host_client_always = [
 oracle_config_use_host_client_path: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData(
-                username="user",
-                password=Secret("pw", "", ""),
-                role=None,
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="user",
+                    password=Secret("pw", "", ""),
+                ),
             ),
+            role=None,
         ),
         connection=GuiConnectionConf(
             host="localhost",
@@ -573,13 +591,15 @@ expected_yaml_lines_use_host_client_path = [
 oracle_config_deploy_oracle_binaries: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.STANDARD,
-            GuiAuthUserPasswordData(
-                username="user",
-                password=Secret("pw", "", ""),
-                role=None,
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="user",
+                    password=Secret("pw", "", ""),
+                ),
             ),
+            role=None,
         ),
         connection=GuiConnectionConf(
             host="localhost",
@@ -618,9 +638,12 @@ expected_yaml_lines_deploy_oracle_binaries = [
 oracle_config_wallet_auth: GuiConfig = GuiConfig(
     deploy=(DEPLOY, None),
     main=GuiMainConf(
-        auth=(
-            OracleAuthType.WALLET,
-            None,
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.WALLET,
+                None,
+            ),
+            role=None,
         ),
         connection=GuiConnectionConf(
             host="localhost",

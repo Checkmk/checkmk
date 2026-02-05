@@ -79,15 +79,16 @@ class OracleAuthType(StrEnum):
 
 
 class GuiAuthUserPasswordData(BaseModel):
-    username: str
-    password: Secret
-    role: str | None = None
+    username: str | None
+    password: Secret | None
 
 
-class GuiInstanceAuthUserPasswordData(BaseModel):
-    username: str | None = None
-    password: Secret | None = None
+class GuiAuthConf(BaseModel):
+    auth_type: tuple[OracleAuthType, GuiAuthUserPasswordData | None] | None = None
     role: str | None = None
+
+    class Config:
+        use_enum_values = True
 
 
 class GuiOracleIdentificationConf(BaseModel):
@@ -125,10 +126,7 @@ class GuiAdditionalOptionsConf(BaseModel):
 
 
 class GuiMainConf(BaseModel):
-    auth: tuple[
-        OracleAuthType,
-        GuiAuthUserPasswordData | None,
-    ]
+    auth: GuiAuthConf
     connection: GuiConnectionConf
     options: GuiAdditionalOptionsConf | None = None
     cache_age: int | None = None
@@ -148,13 +146,7 @@ class GuiInstanceAdditionalOptionsConf(BaseModel):
 class GuiInstanceConf(BaseModel):
     service_name: str | None
     instance_name: str | None
-    auth: (
-        tuple[
-            OracleAuthType,
-            GuiInstanceAuthUserPasswordData | None,
-        ]
-        | None
-    ) = None
+    auth: GuiAuthConf | None = None
     connection: GuiConnectionConf | None = None
 
 
@@ -185,7 +177,10 @@ class OracleAuth(BaseModel):
     username: str | None = None
     password: str | None = None
     role: str | None = None
-    type: str | None = None
+    type: OracleAuthType | None = None
+
+    class Config:
+        use_enum_values = True
 
 
 class OracleConnection(BaseModel):
@@ -198,13 +193,6 @@ class OracleConnection(BaseModel):
     instance: str | None = None
 
 
-class OracleInstanceAuth(BaseModel):
-    username: str | None = None
-    password: str | None = None
-    role: str | None = None
-    type: str | None = None
-
-
 class OracleInstanceAdditionalOptions(BaseModel):
     ignore_db_name: int | None = None
     use_host_client: str | None = None
@@ -213,7 +201,7 @@ class OracleInstanceAdditionalOptions(BaseModel):
 class OracleInstance(BaseModel):
     service_name: str | None = None
     instance_name: str | None = None
-    authentication: OracleInstanceAuth | None = None
+    authentication: OracleAuth | None = None
     connection: OracleConnection | None = None
 
 
@@ -263,8 +251,11 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
     main_config = config.main
     instances_config = config.instances
 
+    if not (auth := _get_oracle_authentication(main_config.auth)):
+        raise ValueError("Authentication details must be provided in main configuration.")
+
     return OracleMain(
-        authentication=_get_oracle_authentication(main_config.auth),
+        authentication=auth,
         connection=_get_oracle_connection(main_config.connection),
         options=_get_oracle_additional_options(main_config.options),
         discovery=_get_oracle_discovery(main_config.discovery),
@@ -274,22 +265,23 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
     )
 
 
-def _get_oracle_authentication(
-    auth_config: tuple[OracleAuthType, GuiAuthUserPasswordData | None],
-) -> OracleAuth:
-    auth_type = auth_config[0]
-    match auth_config:
-        case (OracleAuthType.WALLET, _):
-            return OracleAuth(type=OracleAuthType.WALLET.value)
-        case (OracleAuthType.STANDARD, GuiAuthUserPasswordData() as auth_data):
+def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | None:
+    if auth_config is None:
+        return None
+    if auth_config.auth_type is None and auth_config.role:
+        return OracleAuth(role=auth_config.role)
+    match auth_config.auth_type:
+        case (OracleAuthType.WALLET.value, _):
+            return OracleAuth(type=OracleAuthType.WALLET, role=auth_config.role)
+        case (OracleAuthType.STANDARD.value, GuiAuthUserPasswordData() as auth_data):
             return OracleAuth(
                 username=auth_data.username,
-                password=auth_data.password.revealed,
-                type=OracleAuthType.STANDARD.value,
-                role=auth_data.role,
+                password=auth_data.password.revealed if auth_data.password else None,
+                type=OracleAuthType.STANDARD,
+                role=auth_config.role,
             )
         case _:
-            raise ValueError(f"Unsupported authentication type: {auth_type}")
+            raise ValueError(f"Unsupported authentication type: {auth_config.auth_type}")
 
 
 def _get_oracle_connection(conn: GuiConnectionConf | None) -> OracleConnection | None:
@@ -376,26 +368,6 @@ def _get_oracle_sections(
     return result
 
 
-def _get_oracle_instance_authentication(
-    auth_config: tuple[OracleAuthType, GuiInstanceAuthUserPasswordData | None] | None,
-) -> OracleInstanceAuth | None:
-    if auth_config is None:
-        return None
-
-    match auth_config:
-        case (OracleAuthType.WALLET, _):
-            return OracleInstanceAuth(type=OracleAuthType.WALLET.value)
-        case (OracleAuthType.STANDARD, GuiInstanceAuthUserPasswordData() as auth_data):
-            return OracleInstanceAuth(
-                username=auth_data.username,
-                password=auth_data.password.revealed if auth_data.password else None,
-                role=auth_data.role,
-                type=auth_config[0].value,
-            )
-        case _:
-            raise ValueError(f"Unsupported authentication type: {auth_config[0]}")
-
-
 def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[OracleInstance] | None:
     if instances is None:
         return None
@@ -412,7 +384,7 @@ def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[Oracl
         oracle_instance = OracleInstance(
             service_name=instance.service_name,
             instance_name=instance.instance_name,
-            authentication=_get_oracle_instance_authentication(instance.auth),
+            authentication=_get_oracle_authentication(instance.auth),
             connection=_get_oracle_connection(instance.connection),
         )
         result.append(oracle_instance)

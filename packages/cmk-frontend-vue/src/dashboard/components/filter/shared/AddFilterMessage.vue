@@ -27,14 +27,14 @@ defineProps<AddFilterMessageProps>()
 
 <style scoped>
 .db-add-filter-message__container {
-  border: var(--ux-theme-8) 1px solid;
   margin: var(--spacing);
-  padding: var(--spacing-double);
+  padding: var(--dimension-7);
+  color: var(--font-color-breadcrumb-inactive);
 }
 
 .db-add-filter-message__inner {
-  border: var(--color-midnight-grey-40) 1px dashed;
+  border: var(--dimension-1) dashed var(--dashed-border-color);
   background-color: var(--ux-theme-2);
-  padding: var(--dimension-3);
+  padding: var(--dimension-4);
 }
 </style>

@@ -9,12 +9,12 @@ import { computed, onMounted, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { capitalizeFirstLetter } from '@/lib/utils'
 
-import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import FormButton from '@/form/private/FormButton.vue'
 
 import FilterInputComponentRenderer from '@/dashboard/components/filter/FilterInputItem/components/FilterInputComponent.vue'
+import RemoveFilterButton from '@/dashboard/components/filter/shared/RemoveFilterButton.vue'
 import type { ComponentConfig, ConfiguredValues } from '@/dashboard/components/filter/types.ts'
 import { useVisualInfoCollection } from '@/dashboard/composables/api/useVisualInfoCollection.ts'
 import type { ObjectType } from '@/dashboard/types/shared.ts'
@@ -90,13 +90,7 @@ onMounted(async () => {
         <CmkParagraph class="db-restricted-to-single-filter__filter-title">{{
           capitalizeFirstLetter(filterName)
         }}</CmkParagraph>
-        <button
-          class="db-restricted-to-single-filter__remove-button"
-          :aria-label="`Remove ${filterName} filter`"
-          @click="handleClear"
-        >
-          <CmkIcon :aria-label="_t('Remove filter')" name="close" size="xxsmall" />
-        </button>
+        <RemoveFilterButton :filter-name="filterName" @remove="handleClear" />
 
         <FilterInputComponentRenderer
           :component="component"
@@ -119,19 +113,5 @@ onMounted(async () => {
 .db-restricted-to-single-filter__filter-title {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-normal);
-}
-
-.db-restricted-to-single-filter__remove-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background: none;
-  border: none;
-  color: var(--font-color);
-  cursor: pointer;
-  font-size: var(--font-size-large);
-  font-weight: bold;
-  width: var(--dimension-5);
-  height: var(--dimension-5);
 }
 </style>

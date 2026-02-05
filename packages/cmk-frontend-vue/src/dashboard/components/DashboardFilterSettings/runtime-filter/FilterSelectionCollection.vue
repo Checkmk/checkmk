@@ -4,11 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
-
-import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 
+import AddFilterMessage from '@/dashboard/components/filter/shared/AddFilterMessage.vue'
+import RemoveFilterButton from '@/dashboard/components/filter/shared/RemoveFilterButton.vue'
 import type { FilterDefinition } from '@/dashboard/components/filter/types.ts'
 
 interface Props {
@@ -17,7 +16,6 @@ interface Props {
   filterDefinitions: Record<string, FilterDefinition>
 }
 
-const { _t } = usei18n()
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
@@ -36,18 +34,12 @@ const emit = defineEmits<{
       <span class="db-filter-selection-collection__item-title">
         {{ props.filterDefinitions[filterId]!.title }}
       </span>
-      <button
-        class="db-filter-selection-collection__item-remove-button"
-        type="button"
-        :aria-label="`Remove ${props.filterDefinitions[filterId]!.title} filter`"
-        @click="() => emit('remove-filter', filterId)"
-      >
-        <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
-      </button>
+      <RemoveFilterButton
+        :filter-name="props.filterDefinitions[filterId]!.title || ''"
+        @remove="() => emit('remove-filter', filterId)"
+      />
     </div>
-    <div class="db-filter-selection-collection__item-placeholder">
-      {{ _t('Add filter from left panel') }}
-    </div>
+    <AddFilterMessage />
   </div>
 </template>
 
@@ -60,7 +52,7 @@ const emit = defineEmits<{
 
 .db-filter-selection-collection__item {
   background-color: var(--ux-theme-3);
-  padding: var(--dimension-5) var(--dimension-7);
+  padding: var(--dimension-5) 0 var(--dimension-5) var(--dimension-7);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -68,26 +60,5 @@ const emit = defineEmits<{
 
 .db-filter-selection-collection__item-title {
   flex: 1;
-}
-
-.db-filter-selection-collection__item-remove-button {
-  background: none;
-  border: none;
-  color: var(--color-white-70);
-  cursor: pointer;
-  font-size: var(--dimension-6);
-  font-weight: bold;
-  margin-left: var(--dimension-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 24px;
-}
-
-.db-filter-selection-collection__item-placeholder {
-  padding: var(--dimension-5) var(--dimension-7);
-  border: 1px dashed var(--ux-theme-7);
-  color: var(--color-white-70);
 }
 </style>

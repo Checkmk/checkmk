@@ -4,8 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { untranslated } from '@/lib/i18n'
+
 import CmkLabel from '@/components/CmkLabel.vue'
 
+import AddFilterMessage from '@/dashboard/components/filter/shared/AddFilterMessage.vue'
 import type { ConfiguredValues } from '@/dashboard/components/filter/types.ts'
 
 interface Props {
@@ -34,9 +37,7 @@ withDefaults(defineProps<Props>(), {
         :index="index"
       />
     </div>
-    <div v-if="additionalItemLabel" class="db-filter-collection__item-placeholder">
-      {{ additionalItemLabel }}
-    </div>
+    <AddFilterMessage v-if="additionalItemLabel" :label="untranslated(additionalItemLabel)" />
   </div>
 </template>
 
@@ -49,11 +50,5 @@ withDefaults(defineProps<Props>(), {
 
 .db-filter-collection__item-container {
   background-color: var(--ux-theme-3);
-}
-
-.db-filter-collection__item-placeholder {
-  padding: var(--dimension-5) var(--dimension-7);
-  border: 1px dashed var(--ux-theme-7);
-  color: var(--color-white-70);
 }
 </style>

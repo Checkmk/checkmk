@@ -6,13 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import FilterItem from '@/dashboard/components/Wizard/components/filter/WidgetObjectFilterConfiguration/FilterItem.vue'
+import AddFilterMessage from '@/dashboard/components/filter/shared/AddFilterMessage.vue'
 import type { ConfiguredValues } from '@/dashboard/components/filter/types.ts'
 import { FilterOrigin } from '@/dashboard/types/filter'
 
@@ -98,11 +99,7 @@ const countDashboardFilters = computed(() => {
               :index="index"
             />
           </div>
-          <div v-if="additionalItemLabel" class="db-runtime-filter-collection__item-placeholder">
-            <div class="db-runtime-filter-collection__item-placeholder-inner">
-              {{ additionalItemLabel }}
-            </div>
-          </div>
+          <AddFilterMessage v-if="additionalItemLabel" :label="untranslated(additionalItemLabel)" />
         </div>
       </CmkCatalogPanel>
     </div>
@@ -122,19 +119,6 @@ const countDashboardFilters = computed(() => {
 
 .db-runtime-filter-collection__item-container {
   background-color: var(--ux-theme-3);
-  border: 1px solid var(--ux-theme-8);
-}
-
-.db-runtime-filter-collection__item-placeholder {
-  padding: var(--dimension-7);
-  border: 1px solid var(--ux-theme-8);
-  color: var(--color-white-50);
-}
-
-.db-runtime-filter-collection__item-placeholder-inner {
-  border: var(--color-midnight-grey-40) var(--dimension-1) dashed;
-  background-color: var(--color-midnight-grey-80);
-  padding: var(--dimension-3);
 }
 
 .db-runtime-filter-collection__empty-message {

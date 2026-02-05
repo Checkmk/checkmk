@@ -4,12 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkIcon from '@/components/CmkIcon'
-
 import FilterInputItem from '@/dashboard/components/filter/FilterInputItem/FilterInputItem.vue'
+import RemoveFilterButton from '@/dashboard/components/filter/shared/RemoveFilterButton.vue'
 import type { ConfiguredValues, FilterDefinition } from '@/dashboard/components/filter/types.ts'
 
 interface Props {
@@ -26,7 +24,6 @@ interface Emits {
   'remove-filter': [filterId: string]
 }
 
-const { _t } = usei18n()
 const props = withDefaults(defineProps<Props>(), {
   allowRemove: true
 })
@@ -47,14 +44,11 @@ const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) =>
     />
     <div v-if="allowRemove || label" class="db-filter-collection-input-item__actions">
       <span v-if="label" class="db-filter-collection-input-item__label">{{ label }}</span>
-      <button
+      <RemoveFilterButton
         v-if="allowRemove"
-        class="db-filter-collection-input-item__remove-button"
-        :aria-label="`Remove ${props.filterDefinitions[filterId]!.title} filter`"
-        @click="emit('remove-filter', props.filterId)"
-      >
-        <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
-      </button>
+        :filter-name="props.filterDefinitions[filterId]!.title || ''"
+        @remove="emit('remove-filter', props.filterId)"
+      />
     </div>
   </div>
 </template>
@@ -80,21 +74,5 @@ const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) =>
   border-radius: var(--border-radius-half);
   background-color: var(--ux-theme-7);
   font-size: var(--font-size-small);
-}
-
-.db-filter-collection-input-item__remove-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--dimension-6);
-  height: var(--dimension-6);
-  margin: 0;
-  padding: 0;
-  background: none;
-  border: none;
-  color: var(--font-color);
-  cursor: pointer;
-  font-size: var(--font-size-large);
-  font-weight: bold;
 }
 </style>

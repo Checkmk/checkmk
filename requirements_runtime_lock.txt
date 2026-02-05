@@ -2381,9 +2381,9 @@ python-ldap==3.4.5 \
     # via
     #   -r _requirements_runtime.txt
     #   python-active-directory
-python-multipart==0.0.19 \
-    --hash=sha256:905502ef39050557b7a6af411f454bc19526529ca46ae6831508438890ce12cc \
-    --hash=sha256:f8d5b0b9c618575bf9df01c684ded1d94a338839bdd8223838afacfb4bb2082d
+python-multipart==0.0.22 \
+    --hash=sha256:2b2cd894c83d21bf49d702499531c7bafd057d730c201782048f7945d82de155 \
+    --hash=sha256:7340bef99a7e0032613f56dc36027b959fd3b30a787ed62d310e951f7c3a3a58
     # via -r packages/cmk-agent-receiver/requirements.txt
 python-snap7==1.3 \
     --hash=sha256:441d162f9dc08ab6790f1bd4e1940ca2fe8c0d9bdd7dda0ba4a4e7738dab82c8 \

@@ -75,7 +75,7 @@ _INSTALLED_DATE = 123
                         "version": "1.2.1",
                         "vendor": "Microsoft",
                         "install_date": _INSTALLED_DATE,
-                        "language": "1033",
+                        "language": "English (United States)",
                         "package_type": "wmi",
                     },
                     status_columns={},

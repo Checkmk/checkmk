@@ -49,6 +49,7 @@ from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
+    DictGroup,
     Dictionary,
     Password,
     String,
@@ -95,6 +96,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                         ),
                     ],
                 ),
+                group=DictGroup(title=Title("Hidden")),
             ),
             "title": DictElement(
                 required=True,
@@ -107,6 +109,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                         ),
                     ],
                 ),
+                group=DictGroup(title=Title("General properties")),
             ),
             "authority": DictElement(
                 required=True,
@@ -125,12 +128,15 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                     ],
                     prefill=DefaultValue("global"),
                 ),
+                group=DictGroup(title=Title("IDs")),
             ),
             "tenant_id": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("Tenant ID"),
-                    help_text=Help("The Tenant ID of your Azure AD instance."),
+                    title=Title("Directory (Tenant) ID"),
+                    help_text=Help(
+                        "The Directory (Tenant) ID of your Microsoft Entra ID instance."
+                    ),
                     custom_validate=[
                         validators.LengthInRange(
                             min_value=1, error_msg=Message("Tenant ID is required")
@@ -138,21 +144,21 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                         uuid4_validator(error_msg=Message("Tenant ID must be a valid UUID.")),
                     ],
                 ),
+                group=DictGroup(title=Title("IDs")),
             ),
             "client_id": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("Client ID"),
-                    help_text=Help(
-                        "The Client ID (Application ID) of your registered application."
-                    ),
+                    title=Title("Application (Client) ID"),
+                    help_text=Help("The Application (Client) ID of your registered application."),
                     custom_validate=[
                         validators.LengthInRange(
                             min_value=1, error_msg=Message("Client ID is required")
                         ),
-                        uuid4_validator(error_msg=Message("Tenant ID must be a valid UUID.")),
+                        uuid4_validator(error_msg=Message("Client ID must be a valid UUID.")),
                     ],
                 ),
+                group=DictGroup(title=Title("IDs")),
             ),
             "client_secret": DictElement(
                 required=True,
@@ -165,6 +171,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                         ),
                     ],
                 ),
+                group=DictGroup(title=Title("Secret")),
             ),
             "access_token": DictElement(
                 render_only=True,
@@ -173,6 +180,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                     title=Title("Access token"),
                     help_text=Help("The access token for this OAuth2 connection."),
                 ),
+                group=DictGroup(title=Title("Hidden")),
             ),
             "refresh_token": DictElement(
                 render_only=True,
@@ -181,6 +189,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                     title=Title("Refresh token"),
                     help_text=Help("The refresh token for this OAuth2 connection."),
                 ),
+                group=DictGroup(title=Title("Hidden")),
             ),
         },
     )

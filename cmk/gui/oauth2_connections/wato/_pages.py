@@ -31,7 +31,9 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         result = ctx.request.get_json()
         form_spec = get_oauth2_connection_form_spec()
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
-        data = parse_and_validate_frontend_data(form_spec, RawFrontendData(value=result["data"]))
+        data = parse_and_validate_frontend_data(
+            form_spec, RawFrontendData(value=result["data"] | {"title": "dummy"})
+        )
         assert isinstance(data, dict)
         if not (client_secret_raw := data.get("client_secret")):
             return {"status": "error", "message": f"Client secret missing in request data: {data}"}

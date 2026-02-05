@@ -11,8 +11,11 @@
 # .1.3.6.1.4.1.5951.4.1.1.41.6.1.2.12.80.97.99.107.101.116.32.67.80.85.32.48  0
 
 
+import time
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import get_value_store, SNMPTree, StringTable
+from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 check_info = {}
@@ -27,20 +30,13 @@ def check_netscaler_cpu(item, params, info):
     warn, crit = params.get("levels")
     for cpu_name, cpu_usage in info:
         if cpu_name == item:
-            cpu_usage = int(cpu_usage)
-
-            infotext = "%d%%" % cpu_usage
-            perfdata = [("load", cpu_usage, warn, crit, 0)]
-
-            state = 0
-            if cpu_usage >= crit:
-                state = 2
-            elif cpu_usage >= warn:
-                state = 1
-            if state > 0:
-                infotext += " (warn/crit at %d/%d)" % (warn, crit)
-
-            return state, infotext, perfdata
+            yield from check_cpu_util(
+                util=float(cpu_usage),
+                params=params,
+                value_store=get_value_store(),
+                this_time=time.time(),
+            )
+            return
     return None
 
 

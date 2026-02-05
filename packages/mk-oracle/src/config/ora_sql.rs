@@ -113,7 +113,7 @@ impl Config {
             let registry_instances =
                 get_additional_registry_instances(&custom_instances, &auth, &conn);
             log::info!(
-                "Found {} SQL server instances in REGISTRY: [ {} ]",
+                "Found {} Oracle instances in REGISTRY: [ {} ]",
                 registry_instances.len(),
                 registry_instances
                     .iter()

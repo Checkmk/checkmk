@@ -128,7 +128,9 @@ class HostAddress:
 
 
 class HostAddressList:
-    """Validator that ensures all values in a list are valid hostnames or IP addresses."""
+    """Validator that ensures all values in a list are valid hostnames, IP addresses, or regex patterns.
+    Regex patterns are indicated by a leading ~ character.
+    """
 
     def __init__(self) -> None:
         self._validator = HostAddress()
@@ -136,4 +138,10 @@ class HostAddressList:
     def __call__(self, value: typing.Sequence[str]) -> None:
         for hostname in value:
             if hostname:
-                self._validator(hostname)
+                if hostname.startswith("~"):
+                    try:
+                        re.compile(hostname[1:])
+                    except re.error as e:
+                        raise ValidationError(Message("Invalid regex pattern: %s") % str(e))
+                else:
+                    self._validator(hostname)

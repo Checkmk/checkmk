@@ -176,18 +176,12 @@ class ViewWidgetIFramePageHelper:
             )
 
     @staticmethod
-    def setup_display_and_painter_options(
-        request: Request, widget_name: str, is_reload: bool
-    ) -> None:
+    def setup_display_and_painter_options(request: Request, widget_name: str) -> None:
         """Setup display options and painter options for the view widget iframe page."""
-        view_display_options = underscore_display_options = "HRSIXLW"
-        if is_reload:
-            # when reloading, we must force different display options to make the reload work
-            # since they are lowercase, everything else will be activated by default
-            underscore_display_options = "htbfcoderu"
-
-        request.set_var("display_options", view_display_options)
-        request.set_var("_display_options", underscore_display_options)
+        # set default display options for view widgets
+        # for reloads, the `_display_options` parameter is also supplied by the caller
+        # which will overwrite these in `display_options.load_from_html` (for some things)
+        request.set_var("display_options", "HRSIXLW")
 
         # Need to be loaded before processing the painter_options below.
         # TODO: Make this dependency explicit
@@ -231,7 +225,7 @@ class ViewWidgetIFramePageHelper:
 
 class _ViewWidgetIFrameAuthTokenRequestParameters(BaseModel):
     widget_id: str
-    display_options: str | None
+    underscore_display_options: str | None
 
     @classmethod
     def from_request(cls, request: Request) -> Self:
@@ -239,16 +233,14 @@ class _ViewWidgetIFrameAuthTokenRequestParameters(BaseModel):
             return cls.model_validate(
                 dict(
                     widget_id=request.get_str_input("widget_id"),
-                    display_options=request.get_str_input(
-                        "display_options", request.get_str_input("_display_options")
-                    ),
+                    underscore_display_options=request.get_str_input("_display_options"),
                 )
             )
         except ValidationError as e:
             raise MKUserError("request", _("Invalid request parameters.")) from e
 
     def is_reload(self) -> bool:
-        return self.display_options is not None
+        return self.underscore_display_options is not None
 
 
 class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParameters):
@@ -274,9 +266,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                     embedded_id=request.get_str_input("embedded_id"),
                     raw_context=request.get_str_input("context", "{}"),
                     limit=request.get_str_input("limit", "soft"),
-                    display_options=request.get_str_input(
-                        "display_options", request.get_str_input("_display_options")
-                    ),
+                    underscore_display_options=request.get_str_input("_display_options"),
                     raw_debug=request.get_str_input("debug"),
                     is_preview=request.get_str_input("is_preview", "false"),
                 )
@@ -365,9 +355,7 @@ class ViewWidgetIFramePage(Page):
         """
         parameters = _ViewWidgetIFrameRequestParameters.from_request(ctx.request)
         ViewWidgetIFramePageHelper.setup_display_and_painter_options(
-            ctx.request,
-            parameters.unique_widget_name(),
-            parameters.is_reload(),
+            ctx.request, parameters.unique_widget_name()
         )
         try:
             view_spec = parameters.load_view_spec()
@@ -483,7 +471,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             )
 
         ViewWidgetIFramePageHelper.setup_display_and_painter_options(
-            ctx.request, unique_widget_name, parameters.is_reload()
+            ctx.request, unique_widget_name
         )
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
 

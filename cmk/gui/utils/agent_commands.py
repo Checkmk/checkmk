@@ -41,6 +41,7 @@ sudo rpm -Uvh check-mk-agent-{version}-1.noarch.rpm"""
 
 def build_agent_install_cmds(
     version: str,
+    hostname: HostName,
 ) -> AgentInstallCmds:
     return AgentInstallCmds(
         windows=WINDOWS_AGENT_INSTALL_CMD,
@@ -85,7 +86,7 @@ def build_agent_registration_cmds() -> AgentRegistrationCmds:
 
 @dataclass(kw_only=True)
 class AgentCommands:
-    install_cmds: Callable[[str], AgentInstallCmds]
+    install_cmds: Callable[[str, HostName], AgentInstallCmds]
     registration_cmds: Callable[[], AgentRegistrationCmds]
     legacy_agent_url: Callable[[], str | None] = lambda: None
 
@@ -180,7 +181,7 @@ def get_agent_slideout(
         all_agents_url=all_agents_url,
         host_name=hostname,
         agent_install_cmds=agent_install_cls(
-            **asdict(agent_commands_registry["agent_commands"].install_cmds(version))
+            **asdict(agent_commands_registry["agent_commands"].install_cmds(version, hostname))
         ),
         agent_registration_cmds=agent_registration_cls(
             **asdict(agent_commands_registry["agent_commands"].registration_cmds())

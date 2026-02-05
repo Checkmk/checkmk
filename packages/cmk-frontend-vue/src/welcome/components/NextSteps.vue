@@ -22,7 +22,7 @@ defineProps<{
 
 <template>
   <CmkHeading type="h4">
-    {{ _t("What's next?") }}
+    {{ _t('Further topics') }}
   </CmkHeading>
   <CmkSpace />
   <CmkLinkCardContainer class="next-link-card-container">

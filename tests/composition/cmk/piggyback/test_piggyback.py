@@ -88,10 +88,10 @@ def _setup_piggyback_host_and_check(
 @contextmanager
 def _trace_broker_messages(site: Site) -> Iterator[None]:
     try:
-        site.execute(["cmk-monitor-broker", "--enable_tracing"])
+        site.run(["cmk-monitor-broker", "--enable_tracing"])
         yield
     finally:
-        site.execute(["cmk-monitor-broker", "--disable_tracing"])
+        site.run(["cmk-monitor-broker", "--disable_tracing"])
 
 
 @pytest.fixture(name="piggyback_env_two_site_setup", scope="module")

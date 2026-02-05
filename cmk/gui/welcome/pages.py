@@ -167,6 +167,12 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 filename="wato.py",
                 is_snapin=is_snapin,
             ),
+            setup_folder_structure=doc_reference_url(DocReference.HOST_STRUCTURE),
+            start_page=_make_url(
+                addvars=[],
+                filename="user_profile.py",
+                is_snapin=is_snapin,
+            ),
             scale_monitoring=doc_reference_url(DocReference.DISTRIBUTED_MONITORING),
             fine_tune_monitoring=doc_reference_url(DocReference.FINETUNING_MONITORING),
             license_site=_make_url_or_callback_from_registry(

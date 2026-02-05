@@ -425,6 +425,7 @@ class DocReference(Enum):
     GCP_MANUAL_VM = "monitoring_gcp#_manually_creating_hosts_for_vm_instances"
     GRAPHING_RRDS = "graphing#rrds"
     HOST_TAGS = "host_tags"
+    HOST_STRUCTURE = "host_structure"
     INFLUXDB_CONNECTIONS = "metrics_exporter"
     INTRO_BESTPRACTICE = "intro_bestpractise"
     INTRO_CREATING_FOLDERS = "intro_setup_monitor#folders"

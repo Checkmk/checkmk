@@ -27,6 +27,19 @@ defineProps<{
   <CmkSpace />
   <CmkLinkCardContainer class="next-link-card-container">
     <CmkLinkCard
+      :title="
+        _t('Structure hosts with folders, labels, tags, parent relationships, and host groups')
+      "
+      :subtitle="
+        _t('Organize your hosts to enable clear, scalable, and easy to manage monitoring.')
+      "
+      icon-name="hostgroups"
+      :url="cards.setup_folder_structure"
+      variant="borderless"
+      :open-in-new-tab="true"
+    />
+
+    <CmkLinkCard
       :title="_t('Set up backup')"
       :subtitle="
         _t('No backup, no mercy! Protect your configuration and data with automated backups.')
@@ -66,6 +79,18 @@ defineProps<{
       "
       icon-name="licensing"
       :url="cards.license_site"
+      variant="borderless"
+      :open-in-new-tab="false"
+    />
+    <CmkLinkCard
+      :title="_t('Choose a different start page')"
+      :subtitle="
+        _t(
+          'Use the \'Start URL to display in main frame\' option in your profile to define which page, dashboard or custom URL is shown when you log in.'
+        )
+      "
+      icon-name="users"
+      :url="cards.start_page"
       variant="borderless"
       :open-in-new-tab="false"
     />

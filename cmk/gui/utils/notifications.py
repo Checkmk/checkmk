@@ -147,21 +147,6 @@ def number_of_total_sent_notifications(from_timestamp: float) -> int:
     return sum(sum(site) for site in send_per_site_list)
 
 
-def effective_notification_horizon(with_acknowledgement: bool) -> float:
-    """Returns the effective notification horizon in seconds for the current user,
-    taking into account the time since last acknowledgement if requested.
-    """
-    return max(
-        acknowledged_time() if with_acknowledgement else 0,
-        time.time()
-        - (
-            active_config.failed_notification_horizon
-            if user.may("general.see_failed_notifications")
-            else 86400
-        ),
-    )
-
-
 def failed_notification_query(
     before: float | None,
     after: float,
@@ -188,6 +173,11 @@ def failed_notification_query(
 
     if before is not None:
         query.append("Filter: time <= %d" % before)
+    if user.may("general.see_failed_notifications"):
+        horizon = active_config.failed_notification_horizon
+    else:
+        horizon = 86400
+    query.append("Filter: time > %d" % (int(time.time()) - horizon))
 
     query_txt = "\n".join(query)
 

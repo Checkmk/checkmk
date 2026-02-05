@@ -19,7 +19,13 @@
 import time
 from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
+from cmk.agent_based.v2 import (
+    AgentSection,
+    InventoryPlugin,
+    InventoryResult,
+    StringTable,
+    TableRow,
+)
 
 Section = Sequence[Mapping]
 
@@ -60,11 +66,11 @@ def parse_win_video(string_table: StringTable) -> Section:
     return videos
 
 
-def _parse_graphic_memory(graphic_memory: str) -> int:
+def _parse_graphic_memory(graphic_memory: str) -> int | None:
     try:
         return int(graphic_memory)
     except ValueError:
-        return 0
+        return None
 
 
 def _get_drive_date(raw_driver_date: str) -> int | None:

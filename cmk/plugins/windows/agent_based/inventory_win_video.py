@@ -23,6 +23,7 @@ from cmk.agent_based.v2 import (
     AgentSection,
     InventoryPlugin,
     InventoryResult,
+    render,
     StringTable,
     TableRow,
 )
@@ -55,8 +56,8 @@ def parse_win_video(string_table: StringTable) -> Section:
             array["name"] = value
         elif varname == "DriverVersion":
             array["driver_version"] = value
-        elif varname == "DriverDate" and (driver_date := _get_drive_date(value)) is not None:
-            array["driver_date"] = driver_date
+        elif varname == "DriverDate":
+            array["driver_date"] = _parse_drive_date(value)
         elif varname == "AdapterRAM":
             array["graphic_memory"] = _parse_graphic_memory(value)
 
@@ -73,11 +74,14 @@ def _parse_graphic_memory(graphic_memory: str) -> int | None:
         return None
 
 
-def _get_drive_date(raw_driver_date: str) -> int | None:
+def _parse_drive_date(raw_driver_date: str) -> str | None:
     try:
-        return int(time.mktime(time.strptime(raw_driver_date.split(".", 1)[0], "%Y%m%d%H%M%S")))
+        timestamp = int(
+            time.mktime(time.strptime(raw_driver_date.split(".", 1)[0], "%Y%m%d%H%M%S"))
+        )
     except ValueError:
         return None
+    return render.date(timestamp)
 
 
 agent_section_win_video = AgentSection(

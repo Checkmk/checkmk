@@ -18,7 +18,7 @@ export interface OAuth2FormData {
   authority: string
   tenant_id: string
   client_id: string
-  client_secret: unknown
+  client_secret: string[]
   access_token?: string
   refresh_token?: string
 }

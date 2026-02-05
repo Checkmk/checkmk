@@ -4,35 +4,29 @@ catalog: os/kernel
 license: GPLv2
 distribution: check_mk
 description:
- This check measures the current usage of physical RAM and
- of the commit charge.
+ This check measures the current usage of physical RAM and virtual memory.
 
- The "commit charge" was previously confusingly named "pagefile".
- Please note that Microsoft themselves use this naming in
- some applications.
- Due to how Windows optimizes memory management, physical memory
- is in practice almost always fully utilized. The Memory usage this
- check displays says how much memory is actually required by processes,
- in contrast to caches that could be freed if the need arises.
+ Due to how Windows optimizes memory management, physical memory is in practice
+ almost always fully utilized. The Memory usage this check displays says how much
+ memory is actually required by processes, in contrast to caches that could be
+ freed if the need arises.
 
- In the same vein Windows may hold data in RAM and pagefile at the same
- time or it may hold data in the pagefile even if there is RAM available,
- when it determines this may improve performance.
- As a result, the real pagefile usage is not only hard to
- determine, it's also utterly useless when we want to determine
- resource usage on the system.
+ In the same way, Windows may hold data in RAM and pagefile at the same time or
+ it may hold data in the pagefile even if there is RAM available, when it determines
+ this may improve performance.
 
- The commit charge instead tells us how much of the memory used in
- total (RAM + page file) is really required, ignoring overlap and caches.
- Commit Charge minus used RAM is approximately the amount
- of the pagefile used for "relevant" data, but further optimizations
- may lead to offsets (to the point where Commit Charge - RAM can be negative).
+ Used virtual memory tells us how much of the total memory (RAM + page file) is really
+ required, ignoring overlap and caches.
 
- The page file metric is determined using the fields 'ullTotalPageFile'
- (current committed memory limit for the system or the current
- process, whichever is smaller) and 'ullAvailPageFile' (maximum
- amount of memory the current process can commit) of the MEMORYSTATUSEX
- structure as returned by the windows API function 'GlobalMemoryStatusEx'.
+ Used virtual memory minus used RAM is approximately the amount of the pagefile used
+ for "relevant" data, but further optimizations may lead to offsets (to the point
+ where used virtual memory - RAM can be negative).
+
+ The used virtual memory metric is determined using the fields 'ullTotalPageFile'
+ (current committed memory limit for the system or the current process, whichever
+ is smaller) and 'ullAvailPageFile' (maximum amount of memory the current process
+ can commit) of the MEMORYSTATUSEX structure as returned by the windows API function
+ 'GlobalMemoryStatusEx'.
 
 discovery:
  One service is created for each host that provides data about the page file.

@@ -38,7 +38,7 @@ perfometer_pagefile_used_percent = Perfometer(
 
 graph_pagefile_percent = Graph(
     name="pagefile_percent",
-    title=Title("Commit charge"),
+    title=Title("Virtual memory"),
     minimal_range=MinimalRange(0, 100),
     simple_lines=(
         "pagefile_used_percent",

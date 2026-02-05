@@ -218,22 +218,22 @@ def _parameters_memory_pagefile_win() -> Dictionary:
             ),
             "pagefile": DictElement(
                 parameter_form=Dictionary(
-                    title=Title("Commit charge levels"),
+                    title=Title("Virtual memory levels"),
                     elements={
                         "perc_used": DictElement(
                             parameter_form=_perc_used_levels(
-                                Title("Commit charge in percent (relative to commit limit)"),
+                                Title("Used virtual memory in percent"),
                                 "pagefile_used_percent",
                             ),
                         ),
                         "abs_used": DictElement(
                             parameter_form=_abs_levels(
-                                Title("Absolute used commit charge"), "pagefile_used"
+                                Title("Absolute used virtual memory"), "pagefile_used"
                             ),
                         ),
                         "abs_free": DictElement(
                             parameter_form=_abs_levels(
-                                Title("Absolute commitable memory"), "pagefile_free"
+                                Title("Absolute free virtual memory"), "pagefile_free"
                             ),
                         ),
                     },

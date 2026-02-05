@@ -2,6 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_hp_msa
+
+Checkmk special agent for monitoring HP MSA storage systems.
+"""
+
+# mypy: disable-error-code="type-arg"
 
 import argparse
 import atexit
@@ -9,6 +15,7 @@ import hashlib
 import logging
 import sys
 import xml.etree.ElementTree as ET
+from collections.abc import Callable, Sequence
 from html.parser import HTMLParser
 from urllib.parse import urljoin
 
@@ -21,15 +28,13 @@ from cmk.utils.password_store import replace_passwords
 LOGGER = logging.getLogger(__name__)
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
 
     # flags
     parser.add_argument("-v", "--verbose", action="count", help="""Increase verbosity""")
     parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="""Debug mode: let Python exceptions come through""",
+        "--debug", action="store_true", help="""Debug mode: let Python exceptions come through"""
     )
 
     parser.add_argument("hostaddress", help="HP MSA host name")
@@ -53,7 +58,7 @@ def parse_arguments(argv):
 
 
 # The dict key is the section, the values the list of lines
-sections: dict = {}
+sections: dict[str, list[str]] = {}
 
 # Which objects to get
 api_get_objects = [
@@ -91,7 +96,7 @@ property_to_section = {
 }
 
 
-def store_property(prop):
+def store_property(prop: list[str]) -> None:
     if prop[0] in property_to_section:
         LOGGER.info("property (stored): %r", (prop,))
         sections.setdefault(property_to_section[prop[0]], []).append(" ".join(prop))
@@ -100,12 +105,12 @@ def store_property(prop):
 
 
 class HTMLObjectParser(HTMLParser):
-    def feed(self, data):
-        self.current_object_key = None
-        self.current_property = None
+    def feed(self, data: str) -> None:
+        self.current_object_key: list[str | None] | None = None
+        self.current_property: list[str | None] | None = None
         HTMLParser.feed(self, data)
 
-    def handle_starttag(self, tag, attrs):
+    def handle_starttag(self, tag: str, attrs: Sequence[tuple[str, str | None]]) -> None:
         if tag == "object":
             keys = dict(attrs)
             self.current_object_key = [keys["basetype"], keys["oid"]]
@@ -114,15 +119,15 @@ class HTMLObjectParser(HTMLParser):
             if self.current_object_key:
                 self.current_property = self.current_object_key + [keys["name"]]
 
-    def handle_endtag(self, tag):
+    def handle_endtag(self, tag: str) -> None:
         if tag in ["property", "object"]:
             if self.current_property:
-                store_property(self.current_property)
+                store_property([k for k in self.current_property if k is not None])
             self.current_property = None
             if tag == "object":
                 self.current_object_key = None
 
-    def handle_data(self, data):
+    def handle_data(self, data: str) -> None:
         if self.current_property:
             self.current_property.append(data.replace("\n", "").replace("\r", ""))
 
@@ -132,33 +137,39 @@ class AuthError(RuntimeError):
 
 
 class HPMSAConnection:
-    def __init__(self, hostaddress, opt_timeout, debug) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, *, hostaddress: str, timeout: int) -> None:
         self._host = hostaddress
-        self._base_url = "https://%s/api/" % self._host
-        self._timeout = opt_timeout
+        self._base_url = f"https://{self._host}/api/"
+        self._timeout = timeout
         self._session = requests.Session()
         self._session.headers = CaseInsensitiveDict({"User-agent": "Checkmk special agent_hp_msa"})
         # we cannot use self._session.verify because it will be overwritten by
         # the REQUESTS_CA_BUNDLE env variable
         self._verify_ssl = False
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        self._debug = debug
 
-    def login(self, username, password):
+    def login(self, username: str, password: str) -> None:
         try:
             session_key = self._get_session_key(hashlib.sha256, username, password)
         except (requests.exceptions.ConnectionError, AuthError):
-            # Try to connect to old API if no connection to new API can be established
-            self._base_url = "https://%s/v3/api/" % self._host
+            LOGGER.warning("Could not connect via /api/, retry with /v3/api.")
+            self._base_url = f"https://{self._host}/v3/api/"
             session_key = self._get_session_key(hashlib.md5, username, password)
 
         self._session.headers.update(sessionKey=session_key)
 
-    def _get_session_key(self, hash_class, username, password):
+    def logout(self) -> None:
+        if not (session_key := self._session.headers.pop("sessionKey", None)):
+            LOGGER.warning("No session key found during logout")
+            return
+        self.get(uri=f"logout/{str(session_key)}")
+        LOGGER.debug("Successfully logged out from HP MSA device")
+
+    def _get_session_key(self, hash_class: Callable, username: str, password: str) -> str:
         login_hash = hash_class()
         login_hash.update(f"{username}_{password}".encode())
-        login_url = "login/%s" % login_hash.hexdigest()
-        response = self.get(login_url)
+        login_uri = f"login/{login_hash.hexdigest()}"
+        response = self.get(uri=login_uri)
         xml_tree = ET.fromstring(response.text)
         response_element = xml_tree.find("./OBJECT/PROPERTY[@name='response']")
         if response_element is None:
@@ -168,55 +179,51 @@ class HPMSAConnection:
             raise Exception("invalid response element")
         if session_key.lower() == "authentication unsuccessful":
             raise AuthError(
-                "Connecting to %s failed. Please verify host address & login details"
-                % self._base_url
+                f"Connecting to {self._base_url} failed. Please verify host address & login details"
             )
         return session_key
 
-    def get(self, url_suffix):
-        url = urljoin(self._base_url, url_suffix)
-        LOGGER.info("GET %r", url)
+    def get(self, *, uri: str) -> requests.Response:
+        url = urljoin(self._base_url, uri)
+        LOGGER.debug("GET %r", url)
         # we must provide the verify keyword to every individual request call!
         response = self._session.get(url, timeout=self._timeout, verify=self._verify_ssl)
         if response.status_code != 200:
             LOGGER.warning(
-                "RESPONSE.status_code, reason: %r",
-                (response.status_code, response.reason),
+                "RESPONSE.status_code, reason: %r", (response.status_code, response.reason)
             )
         LOGGER.debug("RESPONSE.text\n%s", response.text)
         return response
 
-    def logout(self) -> None:
-        try:
-            session_key = self._session.headers.pop("sessionKey")
-        except KeyError:
-            LOGGER.warning("Tried to logout without an active session.")
-        else:
-            self.get(f"logout/{str(session_key)}")
 
-
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
 
-    connection = HPMSAConnection(args.hostaddress, opt_timeout, args.debug)
+    connection = HPMSAConnection(hostaddress=args.hostaddress, timeout=opt_timeout)
     connection.login(args.username, args.password)
     atexit.register(connection.logout)
 
     parser = HTMLObjectParser()
 
     for element in api_get_objects:
-        response = connection.get("show/%s" % element)
+        response = connection.get(uri="show/%s" % element)
         try:
             parser.feed(response.text)
-        except Exception:
+        except Exception as exc:  # broad exception because we don't know what to catch
             if args.debug:
                 raise
+            LOGGER.warning("Failed to parse response for %s: %s", element, exc)
 
     # Output sections
     for section, lines in sections.items():
-        print("<<<hp_msa_%s>>>" % section)
-        print("\n".join(x for x in lines))
+        sys.stdout.write("<<<hp_msa_%s>>>\n" % section)
+        sys.stdout.write("\n".join(lines))
+        sys.stdout.write("\n")
 
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
@@ -34,6 +34,30 @@ const category = defineModel<string | null>('category', { required: true, defaul
 const ready = ref<boolean>(false)
 const displayNames = ref<boolean>(false)
 
+const popup = ref<HTMLElement | null>(null)
+const left = ref<number | null>(null)
+
+const moveInsideScreen = () => {
+  const el = popup.value
+  if (!el) {
+    return
+  }
+
+  const rect = el.getBoundingClientRect()
+
+  if (left.value === null) {
+    left.value = rect.left
+  }
+
+  if (rect.right > window.innerWidth) {
+    left.value = Math.max(0, left.value - (rect.right - window.innerWidth))
+  }
+}
+
+const style = computed(() => ({
+  left: left.value !== null ? `${left.value}px` : undefined
+}))
+
 const options = computed(() => {
   return props.categories.map((category) => {
     return {
@@ -54,12 +78,20 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown)
+
+  await nextTick()
+  moveInsideScreen()
+  window.addEventListener('resize', moveInsideScreen)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', moveInsideScreen)
 })
 
 const vClickOutside = useClickOutside()
@@ -73,7 +105,7 @@ const handleClickOutside = () => {
 </script>
 
 <template>
-  <div v-click-outside="handleClickOutside" class="db-icon-popup__popup">
+  <div ref="popup" v-click-outside="handleClickOutside" class="db-icon-popup__popup" :style="style">
     <div v-if="categories.length > 1" class="db-icon-popup__popup-header">
       <CmkToggleButtonGroup
         :model-value="category!"

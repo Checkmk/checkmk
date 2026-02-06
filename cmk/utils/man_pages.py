@@ -642,7 +642,7 @@ def _format_distribution(distr: str) -> str:
         case "check_mk":
             return "Official part of Checkmk"
         case "check_mk_cloud":
-            return "Official part of Checkmk Cloud Edition"
+            return "Official part of Checkmk Ultimate"
         case _:
             return distr
 

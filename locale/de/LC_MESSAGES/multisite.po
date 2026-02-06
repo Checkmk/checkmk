@@ -55150,6 +55150,11 @@ msgid "Select the site that is establishing the TCP connection."
 msgstr "Wählen Sie die Instanz aus, welche die TCP-Verbindung aufbauen soll."
 
 msgid ""
+"Select the site to create a dump for. The actual contents of the dump can be "
+"selected in the next screen."
+msgstr ""
+
+msgid ""
 "Select the software the LDAP directory is based on. Depending on the "
 "selection e.g. the attribute names used in LDAP queries will be altered."
 msgstr ""

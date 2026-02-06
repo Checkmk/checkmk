@@ -11,6 +11,7 @@ import functools
 import operator
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
 from typing import Annotated, assert_never, final, Literal, TypeVar
@@ -138,11 +139,16 @@ class QueryDataError:
 
 def _derive_num_points(
     rrd_data: RRDData,
+    query_data: QueryData,
     fallback_timerange: FallbackTimeRange,
 ) -> tuple[int, int, int, int]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         return len(sample_data), sample_data.start, sample_data.end, sample_data.step
+    if query_data:
+        with suppress(StopIteration):
+            sample_data = next(iter(chain.from_iterable(query_data.values()))).time_series
+            return len(sample_data), sample_data.start, sample_data.end, sample_data.step
     return (
         (fallback_timerange.end - fallback_timerange.start) // fallback_timerange.step + 1,
         fallback_timerange.start,
@@ -315,6 +321,7 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
     ) -> Sequence[AugmentedTimeSeries]:
         num_points, start, end, step = _derive_num_points(
             rrd_data,
+            query_data,
             fallback_time_range,
         )
         return [
@@ -349,6 +356,7 @@ class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
     ) -> Sequence[AugmentedTimeSeries]:
         num_points, start, end, step = _derive_num_points(
             rrd_data,
+            query_data,
             fallback_time_range,
         )
         return [
@@ -490,6 +498,7 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
 
         num_points, start, end, step = _derive_num_points(
             rrd_data,
+            query_data,
             fallback_time_range,
         )
         return [

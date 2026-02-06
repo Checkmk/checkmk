@@ -70,6 +70,12 @@ clean --async
 # run ...
 common --test_output=all
 
+# Try with our proxy first and fall back to public proxy when fetching go modules.
+common --repo_env=GOPROXY="https://bazel-registry.lan.checkmk.net/proxy.golang.org/|https://proxy.golang.org|direct"
+
+# Configure gazelle to use the ~/go/pkg/mod folder for downloaded artifacts.
+common --repo_env=GO_REPOSITORY_USE_HOST_MODCACHE=1
+
 # Flags for CI builds
 # Definition of "bazel x --config=ci -- ..."
 ## Common

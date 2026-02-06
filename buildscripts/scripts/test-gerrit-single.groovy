@@ -214,6 +214,7 @@ void main() {
                                 // into the hot cache and therefore we dont need to consider WORKSPACE and MODULE.bazel.lock
                                 files_to_consider: [
                                     '.bazelversion',
+                                    'go.sum',
                                     'requirements.txt',
                                     'bazel/tools/package.json',
                                 ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),

@@ -272,7 +272,23 @@ def _bypass_nslookup(test_site: Site) -> Iterator[None]:
     """
     dummy_nslookup = test_site.path("local/bin/nslookup")
 
-    run(["tee", str(dummy_nslookup)], input_="#!/bin/bash\n\nexit 0\n", sudo=True)
+    _input = "\n".join(
+        (
+            "#!/bin/bash",
+            "",
+            "sleep 1",
+            "",
+            "if [ $2 == 'localhost' ]",
+            "then",
+            "  exit 0",
+            "else",
+            "  exit 1",
+            "fi",
+            "",
+        )
+    )
+
+    run(["tee", str(dummy_nslookup)], input_=_input, sudo=True)
     run(["chmod", "a+x", str(dummy_nslookup)], sudo=True)
 
     yield
@@ -280,6 +296,7 @@ def _bypass_nslookup(test_site: Site) -> Iterator[None]:
     run(["rm", str(dummy_nslookup)], sudo=True)
 
 
+@pytest.mark.xfail(reason="Bug CMK-31108")
 def test_ping_host(bypass_nslookup: None, dashboard_page: MainDashboard) -> None:
     """Validate pinging of a host."""
     add_host = AddHost(dashboard_page.page)

@@ -5,10 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref, toRef } from 'vue'
+import { toRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import { immediateWatch } from '@/lib/watch'
 
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
@@ -28,10 +27,7 @@ const props = defineProps<{
 }>()
 
 const selectedSites = defineModel<string[]>({ required: true })
-const activeTab = ref<string | number>('sites-with-changes')
-const { sitesWithChanges, sitesWithErrors, siteHasErrors, loggedOutSites } = useSiteStatus(
-  toRef(props, 'sites')
-)
+const { sitesWithChanges } = useSiteStatus(toRef(props, 'sites'))
 
 function toggleSelectedSite(siteId: string, value: boolean) {
   if (value) {
@@ -40,17 +36,6 @@ function toggleSelectedSite(siteId: string, value: boolean) {
     selectedSites.value.splice(selectedSites.value.indexOf(siteId), 1)
   }
 }
-
-immediateWatch(
-  () => ({ newSites: props.sites }),
-  async ({ newSites }) => {
-    const currentSitesWithErrors = newSites.filter(siteHasErrors)
-
-    if (currentSitesWithErrors.length > 0) {
-      activeTab.value = 'sites-with-errors'
-    }
-  }
-)
 </script>
 
 <template>
@@ -73,16 +58,10 @@ immediateWatch(
       </CmkScrollContainer>
     </div>
 
-    <CmkTabs v-if="props.sites.length > 1" v-model="activeTab">
+    <CmkTabs v-if="props.sites.length > 1" model-value="sites-with-changes">
       <template #tabs>
         <CmkTab v-if="sitesWithChanges.length > 0" id="sites-with-changes">{{
           _t('Sites with changes: %{n}', { n: sitesWithChanges.length })
-        }}</CmkTab>
-        <CmkTab v-if="sitesWithErrors.length > 0" id="sites-with-errors">{{
-          _t('Sites with errors: %{n}', { n: sitesWithErrors.length })
-        }}</CmkTab>
-        <CmkTab v-if="loggedOutSites.length > 0" id="logged-out-sites">{{
-          _t('Sites logged out: %{n}', { n: loggedOutSites.length })
         }}</CmkTab>
       </template>
       <template #tab-contents>
@@ -96,38 +75,6 @@ immediateWatch(
               :activating="activating"
               :checked="selectedSites.includes(site.siteId)"
               :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
-              @update-checked="toggleSelectedSite"
-            ></SiteStatusItem>
-          </CmkScrollContainer>
-        </CmkTabContent>
-
-        <CmkTabContent id="sites-with-errors" spacing="none">
-          <CmkScrollContainer height="auto" max-height="30vh" class="cmk-scroll-container">
-            <SiteStatusItem
-              v-for="(site, idx) in sitesWithErrors"
-              :key="idx"
-              :idx="idx"
-              :site="site"
-              :activating="activating"
-              :checked="selectedSites.includes(site.siteId) && site.onlineStatus === 'online'"
-              :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
-              :hide-checkbox="true"
-              @update-checked="toggleSelectedSite"
-            ></SiteStatusItem>
-          </CmkScrollContainer>
-        </CmkTabContent>
-
-        <CmkTabContent id="logged-out-sites" spacing="none">
-          <CmkScrollContainer height="50%" max-height="30vh" class="cmk-scroll-container">
-            <SiteStatusItem
-              v-for="(site, idx) in loggedOutSites"
-              :key="idx"
-              :idx="idx"
-              :site="site"
-              :activating="activating"
-              :checked="selectedSites.includes(site.siteId) && site.onlineStatus === 'online'"
-              :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
-              :hide-checkbox="true"
               @update-checked="toggleSelectedSite"
             ></SiteStatusItem>
           </CmkScrollContainer>

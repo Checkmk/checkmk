@@ -101,7 +101,7 @@ request = urllib.request.Request(
         "Authorization": f"Bearer {USERNAME} {PASSWORD}",
         {%- if content_type %}
         "Accept": "{{ content_type }}",
-        {% endif %}
+        {%- endif %}
         {{- list_params(header_params) }}
     },
     {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
@@ -149,7 +149,7 @@ curl {%- if includes_redirect %} -L {%- endif %} \\
   --header "Authorization: Bearer $USERNAME $PASSWORD" \\
   {%- if content_type %}
   --header "Accept: {{ content_type }}" \\
-  {% endif %}
+  {%- endif %}
 {%- for header in header_params %}
   --header "{{ header.name }}: {{ header.example }}" \\
 {%- endfor %}
@@ -198,9 +198,9 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
     "Authorization: Bearer $USERNAME $PASSWORD" \\
     {%- if content_type %}
     "Accept: {{ content_type }}" \\
-    {% endif %}
+    {%- endif %}
 {%- for header in header_params %}
-    '{{ header.name }}:{{ header.example }}' \\
+    '{{ header.name }}: {{ header.example }}' \\
 {%- endfor %}
 {%- if query_params %}
  {%- for param in query_params %}

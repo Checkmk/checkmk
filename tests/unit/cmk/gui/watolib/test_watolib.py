@@ -347,7 +347,7 @@ def test_registered_configvar_groups() -> None:
             "Reporting",
             "Monitoring core",
             "Ntopng (chargeable add-on)",
-            "Application Monitoring",
+            "Telemetry",
         ]
 
     registered = sorted(config_variable_group_registry.keys())

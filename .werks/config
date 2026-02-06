@@ -30,7 +30,7 @@ components = [
 ]
 
 edition_components = {
-    "cee": [
+    "pro": [
         ( "cmc",           "The Check_MK Micro Core" ),
         ( "setup",         "Setup, site management" ),
         ( "config",        "Configuration generation" ),

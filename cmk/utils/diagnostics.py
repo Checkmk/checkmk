@@ -94,6 +94,13 @@ _FILES_OPTS = [
     OPT_CHECKMK_LOG_FILES,
 ]
 
+COMPONENT_COMMANDS = {
+    "df": ["df"],
+    "df-i": ["df", "-i"],
+    "ss-tulpen": ["ss", "-tulpen"],
+    "w": ["w"],
+}
+
 COMPONENT_DIRECTORIES = {
     OPT_APACHE_CONFIG: {
         "abs_dirs": [

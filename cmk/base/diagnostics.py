@@ -60,6 +60,7 @@ from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,
     CheckmkFilesMap,
+    COMPONENT_COMMANDS,
     COMPONENT_DIRECTORIES,
     deserialize_cl_parameters,
     DiagnosticsCLParameters,
@@ -351,6 +352,9 @@ class DiagnosticsDump:
 
         if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
             fixed_elements.append(DCDDiagnosticsElement())
+
+        for identifier, command in COMPONENT_COMMANDS.items():
+            fixed_elements.append(CheckmkCommandDiagnosticsElementTextDump(identifier, command))
 
         return fixed_elements
 
@@ -1416,6 +1420,45 @@ class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
                     shutil.copy(str(source_file), str(tmp_file))
 
                 yield tmp_file
+
+
+#   ---command calls--------------------------------------------------------------
+
+
+class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
+    def __init__(self, identifier: str, command: list[str]) -> None:
+        self.identifier = identifier
+        self.command = command
+
+    @override
+    @property
+    def ident(self) -> str:
+        # Unused because we directly pack the .mk or .conf file
+        return "command_%s.out" % self.identifier
+
+    @override
+    @property
+    def title(self) -> str:
+        return _("Command %s") % self.identifier
+
+    @override
+    @property
+    def description(self) -> str:
+        return _("Output of %s") % " ".join(self.command)
+
+    @override
+    def _collect_infos(self) -> str:
+        try:
+            output = subprocess.check_output(
+                self.command,
+                text=True,
+                stderr=subprocess.STDOUT,
+            )
+
+        except subprocess.CalledProcessError:
+            return ""
+
+        return "\n".join(sorted(output.split("\n")))
 
 
 #   ---cee dumps------------------------------------------------------------

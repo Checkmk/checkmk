@@ -9,8 +9,8 @@ import type { NavItemIdEnum, NavItemTopicEntry } from 'cmk-shared-typing/typescr
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkChip from '@/components/CmkChip.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkTag from '@/components/CmkTag.vue'
 
 import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 
@@ -48,7 +48,7 @@ defineProps<{
       v-if="entry.chip && mainMenu.chipEntry(entry.chip.mode)"
       class="mm-nav-item-topic-entry-link__toggle-chip"
     >
-      <CmkChip
+      <CmkTag
         :content="mainMenu.chipEntry(entry.chip.mode) as TranslatedString"
         :color="entry.chip.color || 'default'"
         variant="fill"
@@ -56,7 +56,7 @@ defineProps<{
       />
     </div>
     <div v-if="entry.toggle" class="mm-nav-item-topic-entry-link__toggle-button">
-      <CmkChip
+      <CmkTag
         :content="entry.toggle.value as TranslatedString"
         :color="entry.toggle.color || 'default'"
         variant="fill"

@@ -11,8 +11,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkAccordionItem from '../CmkAccordion/CmkAccordionItem.vue'
 import CmkAccordionItemStateIndicator from '../CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import CmkBadge from '../CmkBadge.vue'
-import CmkChip from '../CmkChip.vue'
 import CmkIcon from '../CmkIcon'
+import CmkTag from '../CmkTag.vue'
 import CmkHeading from '../typography/CmkHeading.vue'
 
 export interface CmkAccordionStepPanelItemProps {
@@ -48,13 +48,13 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
       <CmkHeading type="h3">
         {{ title }}
       </CmkHeading>
-      <CmkChip
+      <CmkTag
         v-if="props.info"
         size="medium"
         variant="fill"
         :content="props.info"
         class="cmk-step-panel-item-info"
-      ></CmkChip>
+      ></CmkTag>
     </template>
     <template #content>
       <slot />

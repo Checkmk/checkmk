@@ -9,7 +9,7 @@ import { useTemplateRef } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkChip from '@/components/CmkChip.vue'
+import CmkTag from '@/components/CmkTag.vue'
 
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
@@ -37,11 +37,11 @@ immediateWatch(
   <li role="option">
     <button ref="filter-focus" :class="{ active }">
       <span>
-        <CmkChip
+        <CmkTag
           :color="option.type === 'provider' ? 'success' : 'default'"
           :content="untranslated(option.value)"
           size="small"
-        ></CmkChip
+        ></CmkTag
       ></span>
       <span>{{ option.title }}</span>
     </button>

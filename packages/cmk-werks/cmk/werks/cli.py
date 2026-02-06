@@ -1063,7 +1063,7 @@ def main_preview(args: argparse.Namespace) -> None:
     )
 
     def meta_data() -> Iterator[str]:
-        for item in werk.model_fields:
+        for item in werk.__class__.model_fields:
             if item in {"title", "description"}:
                 continue
             yield f"<dt>{item}<dt><dd>{getattr(werk, item)}</dd>"

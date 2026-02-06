@@ -137,8 +137,6 @@ function verifyAuthorization(
     loading.value = false
     resolve(null)
   }
-
-  authWindow.close()
 }
 
 async function requestAccessToken(): Promise<boolean> {

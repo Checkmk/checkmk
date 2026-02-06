@@ -66,12 +66,28 @@ class RRDDataKey:
 RRDData = Mapping[RRDDataKey, TimeSeries]
 
 
-def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:
+@dataclass(frozen=True, kw_only=True)
+class FallbackTimeRange:
+    start: int
+    end: int
+    step: int
+
+
+def _derive_num_points_twindow(
+    rrd_data: RRDData,
+    fallback_timerange: FallbackTimeRange,
+) -> tuple[int, tuple[int, int, int]]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         return len(sample_data), sample_data.twindow
-    # no data, default clean graph, use for pure scalars on custom graphs
-    return 1, (0, 60, 60)
+    return (
+        (fallback_timerange.end - fallback_timerange.start) // fallback_timerange.step + 1,
+        (
+            fallback_timerange.start,
+            fallback_timerange.end,
+            fallback_timerange.step,
+        ),
+    )
 
 
 _TOperatorReturn = TypeVar("_TOperatorReturn")
@@ -182,7 +198,11 @@ class MetricOperation(BaseModel, ABC, frozen=True):
     def keys(self) -> Iterator[TranslationKey | RRDDataKey]: ...
 
     @abstractmethod
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]: ...
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        fallback_time_range: FallbackTimeRange,
+    ) -> Sequence[AugmentedTimeSeries]: ...
 
     def fade_odd_color(self) -> bool:
         return True
@@ -226,8 +246,12 @@ class MetricOpConstant(MetricOperation, frozen=True):
     def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
 
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        num_points, twindow = _derive_num_points_twindow(rrd_data)
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        fallback_time_range: FallbackTimeRange,
+    ) -> Sequence[AugmentedTimeSeries]:
+        num_points, twindow = _derive_num_points_twindow(rrd_data, fallback_time_range)
         return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
 
 
@@ -239,8 +263,10 @@ class MetricOpConstantNA(MetricOperation, frozen=True):
     def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
 
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        num_points, twindow = _derive_num_points_twindow(rrd_data)
+    def compute_time_series(
+        self, rrd_data: RRDData, fallback_time_range: FallbackTimeRange
+    ) -> Sequence[AugmentedTimeSeries]:
+        num_points, twindow = _derive_num_points_twindow(rrd_data, fallback_time_range)
         return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
 
 
@@ -286,13 +312,18 @@ class MetricOpOperator(MetricOperation, frozen=True):
     def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from (k for o in self.operands for k in o.keys())
 
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        fallback_time_range: FallbackTimeRange,
+    ) -> Sequence[AugmentedTimeSeries]:
         if result := _time_series_math(
             self.operator_name,
             [
                 operand_evaluated.data
                 for operand_evaluated in chain.from_iterable(
-                    operand.compute_time_series(rrd_data) for operand in self.operands
+                    operand.compute_time_series(rrd_data, fallback_time_range)
+                    for operand in self.operands
                 )
             ],
         ):
@@ -328,7 +359,11 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
             self.scale,
         )
 
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        fallback_time_range: FallbackTimeRange,
+    ) -> Sequence[AugmentedTimeSeries]:
         if (
             key := RRDDataKey(
                 self.site_id,
@@ -341,5 +376,5 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
         ) in rrd_data:
             return [AugmentedTimeSeries(data=rrd_data[key])]
 
-        num_points, twindow = _derive_num_points_twindow(rrd_data)
+        num_points, twindow = _derive_num_points_twindow(rrd_data, fallback_time_range)
         return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]

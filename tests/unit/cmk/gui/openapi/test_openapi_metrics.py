@@ -73,7 +73,7 @@ def test_openapi_get_graph_graph(
             }
         ],
         "step": 60,
-        "time_range": {"end": "1970-01-01T00:01:00+00:00", "start": "1970-01-01T00:00:00+00:00"},
+        "time_range": {"start": "1970-01-01T00:00:00+00:00", "end": "1970-01-01T00:00:30+00:00"},
     }
     assert resp.json == expected
 
@@ -132,7 +132,7 @@ def test_openapi_get_graph_metric(
             }
         ],
         "step": 60,
-        "time_range": {"end": "1970-01-01T00:01:00+00:00", "start": "1970-01-01T00:00:00+00:00"},
+        "time_range": {"start": "1970-01-01T00:00:01+00:00", "end": "1970-01-01T00:00:02+00:00"},
     }
     assert resp.json == expected
 
@@ -182,6 +182,6 @@ def test_openapi_get_graph_metric_without_site(
             }
         ],
         "step": 60,
-        "time_range": {"end": "1970-01-01T00:01:00+00:00", "start": "1970-01-01T00:00:00+00:00"},
+        "time_range": {"start": "1970-01-01T00:00:01+00:00", "end": "1970-01-01T00:00:02+00:00"},
     }
     assert resp.json == expected

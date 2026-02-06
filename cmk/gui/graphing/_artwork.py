@@ -36,7 +36,7 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._legacy import get_unit_info, LegacyUnitSpecification, UnitInfo
-from ._metric_operation import clean_time_series_point, LineType, RRDData
+from ._metric_operation import clean_time_series_point, FallbackTimeRange, LineType, RRDData
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
@@ -330,6 +330,7 @@ def _areastack(
 def _compute_graph_curves(
     graph_metrics: Sequence[GraphMetric],
     rrd_data: RRDData,
+    graph_data_range: GraphDataRange,
 ) -> Iterator[Curve]:
     def _parse_line_type(
         mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
@@ -345,8 +346,14 @@ def _compute_graph_curves(
                 return "ref"
         assert_never((mirror_prefix, ts_line_type))
 
+    fallback_time_range = FallbackTimeRange(
+        start=graph_data_range.time_range[0],
+        end=graph_data_range.time_range[1],
+        step=max(graph_data_range.step, 60) if isinstance(graph_data_range.step, int) else 60,
+    )
+
     for graph_metric in graph_metrics:
-        time_series = graph_metric.operation.compute_time_series(rrd_data)
+        time_series = graph_metric.operation.compute_time_series(rrd_data, fallback_time_range)
         if not time_series:
             continue
 
@@ -380,7 +387,7 @@ def compute_graph_artwork_curves(
     # Fetch all raw RRD data
     rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
 
-    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data))
+    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data, graph_data_range))
 
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]

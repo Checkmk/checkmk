@@ -84,6 +84,8 @@ class EngineConfig(UserEngineConfig):
     third_party_log_level: LogLevel = LogLevel.CRITICAL
     # Certificate rotation check frequency in seconds (24 hours)
     cert_rotation_schedule: float = 24 * 60 * 60
+    # Relay status check frequency in seconds (1 minute)
+    relay_status_schedule: float = 60
 
     @classmethod
     def load(cls, path: Path) -> Self:

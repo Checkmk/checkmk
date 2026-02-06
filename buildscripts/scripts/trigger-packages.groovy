@@ -37,7 +37,7 @@ void main() {
             def stepName = "${p.name}";
             def build_instance = null;
             // to be fixed with CMK-29585
-            if (p.path in ["non-free/packages/cmk-relay-engine", "packages/cmk-agent-receiver"]) {
+            if (p.path in ["non-free/packages/cmk-relay-engine", "packages/cmk-agent-receiver", "non-free/packages/cmk-update-agent",]) {
                 relative_job_name = relative_job_name.split("-k8s")[0];
             }
 

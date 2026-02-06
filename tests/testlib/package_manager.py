@@ -50,6 +50,7 @@ DISTRO_CODES = {
     "sles-15sp5": "sles15sp5",
     "sles-15sp6": "sles15sp6",
     "sles-15sp7": "sles15sp7",
+    "sles-16.0": "sles16.0",
 }
 
 

@@ -598,14 +598,24 @@ def formatted_if_statement_for_responses(
         if target_requests
         else "    pprint.pprint(json.loads(resp.read().decode()))\n"
     )
+
+    if 200 in expected_response_status_codes and 201 in expected_response_status_codes:
+        unknown_success = True
+        expected_response_status_codes.remove(201)
+    else:
+        unknown_success = False
+
     for status_code in sorted(expected_response_status_codes):
         if status_code < 400:
+            status_check = (
+                "in (200, 201)" if status_code == 200 and unknown_success else f"== {status_code}"
+            )
             if len(formatted_str) == 0:
-                formatted_str += f"if resp.{status_code_field} == {status_code}:\n"
+                formatted_str += f"if resp.{status_code_field} {status_check}:\n"
             else:
-                formatted_str += f"elif resp.{status_code_field} == {status_code}:\n"
+                formatted_str += f"elif resp.{status_code_field} {status_check}:\n"
 
-            if status_code == 200:
+            if status_code in (200, 201):
                 if downloadable:
                     formatted_str += "    file_name = resp.headers['content-disposition'].split('filename=')[1].strip('\"')\n"
                     formatted_str += "    with open(file_name, 'wb') as out_file:\n"
@@ -624,6 +634,9 @@ def formatted_if_statement_for_responses(
                 formatted_str += "    print('Done')\n"
             elif status_code >= 300:
                 formatted_str += "    print('Redirected to', resp.headers['location'])\n"
+            else:
+                # unexpected status code, but we need to generate valid code
+                formatted_str += "    pass\n"
 
     if target_requests:
         formatted_str += "else:\n"

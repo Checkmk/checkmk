@@ -15,10 +15,12 @@ import type {
 const props = defineProps<{
   active?: boolean | undefined
   activeColor: Colors
-  icon: {
-    name: CmkMultitoneIconNames
-    activeColor: CmkMultitoneIconColor | CustomIconColor
-  }
+  icon?:
+    | {
+        name: CmkMultitoneIconNames
+        activeColor: CmkMultitoneIconColor | CustomIconColor
+      }
+    | undefined
 }>()
 
 function getBadgeColor(): Colors {
@@ -30,7 +32,7 @@ function getBadgeType(): Types {
 }
 
 function getIconColor(): CmkMultitoneIconColor | CustomIconColor {
-  return props.active ? props.icon.activeColor : 'font'
+  return props.active ? props.icon?.activeColor : 'font'
 }
 </script>
 

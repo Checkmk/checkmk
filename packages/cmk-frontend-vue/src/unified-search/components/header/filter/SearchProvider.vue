@@ -58,10 +58,14 @@ const provideri18n: Record<QueryProvider, TranslatedString> = {
       :key="po.value"
       :active="searchUtils.query.provider.value === po.value"
       active-color="success"
-      :icon="{
-        name: po.value as OneColorIcons,
-        activeColor: { custom: 'var(--black)' }
-      }"
+      :icon="
+        po.value === 'all'
+          ? undefined
+          : {
+              name: po.value as OneColorIcons,
+              activeColor: { custom: 'var(--black)' }
+            }
+      "
       @click="selectProvider(po)"
     >
       {{ provideri18n[po.value] }}

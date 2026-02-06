@@ -62,9 +62,20 @@ class WithDynamicFields:
     def __get_pydantic_core_schema__(
         cls, source_type: CoreSchema, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
+        inner_schema = handler(source_type)
+
+        # Workaround for https://github.com/pydantic/pydantic/issues/12531
+        # When a stdlib dataclass with __get_pydantic_core_schema__ is used multiple times,
+        # pydantic caches the inner schema by ref, not our wrapper. By moving the ref to
+        # the wrapper, pydantic caches the wrapped version instead.
+        ref = inner_schema.get("ref")
+        if ref:
+            inner_schema = {k: v for k, v in inner_schema.items() if k != "ref"}
+
         return core_schema.no_info_before_validator_function(
             cls._populate_dynamic_fields,
-            schema=handler(source_type),
+            schema=inner_schema,
+            ref=ref,
             serialization=core_schema.wrap_serializer_function_ser_schema(
                 cls._serialize_dynamic_fields,
                 info_arg=False,

@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Literal
 
 from pydantic import BaseModel, field_serializer, model_serializer, SerializationInfo
@@ -100,7 +100,9 @@ class Params(BaseModel, frozen=True):
     promql_checks: Sequence[PromlQLCheck]
 
     @field_serializer("connection", when_used="always")
-    def serialize_connection(self, connection: str, info: SerializationInfo) -> str:
+    def serialize_connection(
+        self, connection: str, info: SerializationInfo[Mapping[str, str]]
+    ) -> str:
         match info.context:
             case dict(macros):
                 return replace_macros(connection, macros)

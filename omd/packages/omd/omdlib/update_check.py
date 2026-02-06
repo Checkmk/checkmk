@@ -43,7 +43,7 @@ class OptionName(enum.StrEnum):
     ignore_editions_incompatible = "ignore-editions-incompatible"
 
 
-class ConflictResolution(BaseModel, frozen=True, extra="forbid"):
+class ConflictResolution(BaseModel, frozen=True, extra="forbid", validate_by_name=True):
     confirm_version: ConfirmVersion = Field(
         ConfirmVersion.ASK,
         validation_alias=OptionName.confirm_version,

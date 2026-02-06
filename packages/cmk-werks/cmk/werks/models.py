@@ -53,7 +53,7 @@ class WerkV3Base(BaseModel):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
 
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_by_name=True)
 
     werk_version: Literal["3"] = Field(default="3", alias="__version__")
     id: int
@@ -84,7 +84,7 @@ class WerkV2Base(BaseModel):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
 
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_by_name=True)
 
     werk_version: Literal["2"] = Field(default="2", alias="__version__")
     id: int
@@ -112,7 +112,7 @@ class WerkV2Base(BaseModel):
 
 
 class WerkV3(WerkV3Base):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_by_name=True)
 
     version: str
 
@@ -122,7 +122,7 @@ class WerkV3(WerkV3Base):
 
 
 class WerkV2(WerkV2Base):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", validate_by_name=True)
 
     version: str
 

@@ -120,8 +120,13 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
        * handling `ApiOmitted` as a default value
     """
 
-    def __init__(self, by_alias: bool, ref_template: str) -> None:
-        super().__init__(by_alias, ref_template)
+    def __init__(
+        self,
+        by_alias: bool,
+        ref_template: str,
+        union_format: Literal["any_of", "primitive_type_array"] = "any_of",
+    ) -> None:
+        super().__init__(by_alias, ref_template, union_format)
         # track the current path in the schema, so that we can raise helpful errors
         self._path: list[str] = []
 

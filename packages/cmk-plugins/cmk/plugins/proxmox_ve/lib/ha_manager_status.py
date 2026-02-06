@@ -23,7 +23,7 @@ class QuorumItem(BaseModel, frozen=True):
     type: Literal["quorum"]
 
 
-class ServiceItem(BaseModel, frozen=True):
+class ServiceItem(BaseModel, frozen=True, validate_by_name=True):
     node: str
     comment: str | None = None
     sid: str

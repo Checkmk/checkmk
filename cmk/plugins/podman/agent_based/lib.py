@@ -84,7 +84,7 @@ class SectionPodmanContainerStats(BaseModel, frozen=True):
     write_io: int = Field(alias="BlockOutput")
 
 
-class SectionPodmanEngineStats(BaseModel, frozen=True):
+class SectionPodmanEngineStats(BaseModel, frozen=True, validate_by_name=True):
     rootless: bool = Field(
         validation_alias=AliasPath("host", "security", "rootless"),
         description="Whether the Podman engine runs in rootless mode.",

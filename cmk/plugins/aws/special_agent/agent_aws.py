@@ -5911,7 +5911,7 @@ class StatusEnum(StrEnum):
 
 
 class Tag(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(validate_by_name=True)
 
     Key: str = Field(..., alias="key")
     Value: str = Field(..., alias="value")
@@ -6189,7 +6189,7 @@ class ECS(AWSSectionCloudwatch):
 # The following fields are renamed so we can use the UI nomenclature consistently
 # in the Checkmk
 class ElastiCacheNode(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(validate_by_name=True)
 
     NodeId: str = Field(..., alias="CacheClusterId")
     Engine: str
@@ -6197,7 +6197,7 @@ class ElastiCacheNode(BaseModel):
 
 
 class ElastiCacheCluster(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(validate_by_name=True)
 
     ClusterId: str = Field(..., alias="ReplicationGroupId")
     Status: str

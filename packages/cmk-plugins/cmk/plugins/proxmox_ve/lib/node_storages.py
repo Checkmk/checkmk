@@ -46,16 +46,15 @@ def _transform_storage_size_bytes_to_mb(storage_size: float) -> float:
     return storage_size / (1024 * 1024)
 
 
-class Storage(BaseModel, frozen=True):
+class Storage(BaseModel, frozen=True, validate_by_name=True):
     node: str
     disk: float | None = None
     maxdisk: float | None = None
     storage_type: StorageType = Field(
-        alias="storage_type",
         validation_alias=AliasChoices("plugintype", "storage_type"),
     )
     status: StorageStatus | None = None
-    name: str = Field(alias="name", validation_alias=AliasChoices("storage", "name"))
+    name: str = Field(validation_alias=AliasChoices("storage", "name"))
 
 
 class StorageLink(BaseModel, frozen=True):

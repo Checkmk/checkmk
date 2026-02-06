@@ -66,7 +66,7 @@ class Manifest(BaseModel):
     files: Mapping[PackagePart, Sequence[Path]]
 
     model_config = ConfigDict(
-        populate_by_name=True,
+        validate_by_name=True,
         frozen=True,
         extra="allow",  # we used to have 'num_files' :-(
     )

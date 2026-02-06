@@ -89,7 +89,7 @@ class ShovelValue(BaseModel):
     src_uri: str = Field(alias="src-uri", default="amqp://")
 
     model_config = ConfigDict(
-        populate_by_name=True,
+        validate_by_name=True,
         frozen=True,
     )
 

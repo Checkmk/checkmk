@@ -102,7 +102,7 @@ class SCSITemperature(BaseModel, frozen=True):
     drive_trip: int
 
 
-class SCSIAll(BaseModel, frozen=True):
+class SCSIAll(BaseModel, frozen=True, validate_by_name=True):
     device: SCSIDevice
     model_name: str = Field(..., validation_alias=AliasChoices("model_name", "scsi_model_name"))
     serial_number: str
@@ -110,7 +110,7 @@ class SCSIAll(BaseModel, frozen=True):
     scsi_temperature: SCSITemperature | None = None
 
 
-class SCSIMissingModel(BaseModel, frozen=True):
+class SCSIMissingModel(BaseModel, frozen=True, validate_by_name=True):
     # `smartctl` only yields the model name if the vendor identification of the SCSI inquiry
     # starts with "ATA". We don't know why, but we can't discover the disk without the model name.
     # This appears to only happen if `-d scsi` is passed. This means only

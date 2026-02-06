@@ -827,7 +827,7 @@ def _prepare_testuser(container: docker.models.containers.Container, username: s
     )
     _exec_run(
         container,
-        ["bash", "-c", f'echo "{username} ALL=(ALL) NOPASSWD: ALL">>/etc/sudoers'],
+        ["bash", "-c", f'echo "{username} ALL=(ALL) NOPASSWD: ALL">>/etc/sudoers.d/{username}'],
     )
 
     _exec_run(container, ["mkdir", "-p", f"/home/{username}/.cache"])

@@ -25,6 +25,7 @@ const effectiveContentProps = computed(() => {
       :effective-filter-context="effective_filter_context"
     >
       <div
+        class="db-preview-content__inner-wrapper"
         :class="{
           'db-preview-content__click-shield': !isContentWithScrollablePreview(content.type)
         }"
@@ -37,17 +38,24 @@ const effectiveContentProps = computed(() => {
 
 <style scoped>
 .db-preview-content {
+  --db-preview-content-height: calc(var(--dimension-8) * 10);
+  --db-preview-content-padding: var(--dimension-3);
+
   display: flex;
   flex-direction: column;
   position: relative;
-  height: calc(var(--dimension-8) * 10);
+  height: var(--db-preview-content-height);
   margin: 0;
-  padding: var(--dimension-3);
+  padding: var(--db-preview-content-padding);
   box-sizing: border-box;
+}
+
+.db-preview-content__inner-wrapper {
+  /* "parent node" is used for figure height calculation */
+  height: calc(var(--db-preview-content-height) - calc(2 * var(--db-preview-content-padding)));
 }
 
 .db-preview-content__click-shield {
   pointer-events: none;
-  height: calc(var(--dimension-8) * 10); /* "parent node" is used for figure height calculation */
 }
 </style>

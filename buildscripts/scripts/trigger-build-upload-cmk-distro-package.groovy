@@ -15,7 +15,6 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
-    def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
 
     def distro = params.DISTRO;
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
@@ -89,12 +88,7 @@ def main() {
                     download: false,    // use copyArtifacts to avoid nested directories
                 );
             }
-
-            if ("${build_instance.result}" != "SUCCESS") {
-                notify.notify_maintainer_of_package("${TEAM_CI_MAIL}".split(","), edition, "${build_instance.absoluteUrl}");
-                return false;
-            }
-            return true;
+            return (build_instance.result == "SUCCESS")
         }]
     }
 

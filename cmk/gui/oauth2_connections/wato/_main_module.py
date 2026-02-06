@@ -5,47 +5,12 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
-from cmk.gui.wato import MainModuleTopicExporter, MainModuleTopicGeneral
+from cmk.gui.wato import MainModuleTopicExporter
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 
 
 def register(main_module_registry: MainModuleRegistry) -> None:
-    main_module_registry.register(MainModuleOAuth2Connection)
     main_module_registry.register(MainModuleMicrosoftEntraId)
-
-
-class MainModuleOAuth2Connection(ABCMainModule):
-    @property
-    def mode_or_url(self) -> str:
-        return "oauth2_connections"
-
-    @property
-    def topic(self) -> MainModuleTopic:
-        return MainModuleTopicGeneral
-
-    @property
-    def title(self) -> str:
-        return _("OAuth2 connections")
-
-    @property
-    def icon(self) -> StaticIcon | DynamicIcon:
-        return StaticIcon(IconNames.passwords)  # TODD: add proper icon
-
-    @property
-    def permission(self) -> None | str:
-        return "oauth2_connections"
-
-    @property
-    def description(self) -> str:
-        return _("Create OAuth2 connections.")
-
-    @property
-    def sort_index(self) -> int:
-        return 55
-
-    @property
-    def is_show_more(self) -> bool:
-        return False
 
 
 class MainModuleMicrosoftEntraId(ABCMainModule):

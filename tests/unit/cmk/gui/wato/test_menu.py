@@ -112,7 +112,6 @@ def expected_items() -> dict[str, list[str]]:
             "predefined_conditions",
             "timeperiods",
             "passwords",
-            "oauth2_connections",
             "sites",
             "auditlog",
             "icons",

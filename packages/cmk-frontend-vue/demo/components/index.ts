@@ -15,6 +15,7 @@ import DemoCmkAlertBox from './DemoCmkAlertBox.vue'
 import DemoCmkBadge from './DemoCmkBadge.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkCatalogPanel from './DemoCmkCatalogPanel.vue'
+import DemoCmkChip from './DemoCmkChip.vue'
 import DemoCmkCode from './DemoCmkCode.vue'
 import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
@@ -36,7 +37,7 @@ import DemoCmkSlideIn from './DemoCmkSlideIn.vue'
 import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
-import DemoCmkChip from './DemoCmkTag.vue'
+import DemoCmkTag from './DemoCmkTag.vue'
 import DemoCmkToggleButtonGroup from './DemoCmkToggleButtonGroup.vue'
 import DemoCmkTooltip from './DemoCmkTooltip.vue'
 import DemoCmkZebra from './DemoCmkZebra.vue'
@@ -55,6 +56,7 @@ export const pages = [
   new Folder('user-input', DemoEmpty, userInputPages),
   new Page('CmkAlertBox', DemoCmkAlertBox),
   new Page('CmkBadge', DemoCmkBadge),
+  new Page('CmkTag', DemoCmkTag),
   new Page('CmkButton', DemoCmkButton),
   new Page('CmkCatalogPanel', DemoCmkCatalogPanel),
   new Page('CmkChip', DemoCmkChip),

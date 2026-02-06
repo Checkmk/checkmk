@@ -340,6 +340,7 @@ async fn test_absent_remote_custom_instance_connection() {
 // TODO: Remove this test when TNS_ADMIN is properly supported on non-Windows platforms
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 async fn test_remote_tns_custom_instance_connection() {
     let logger = flexi_logger::Logger::try_with_str("info").unwrap();
     logger.log_to_stderr().start().unwrap();

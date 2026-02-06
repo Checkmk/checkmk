@@ -26,6 +26,7 @@ def run(
             factory=True,
             fd=socket_file_descriptor,
             workers=config.num_workers,
+            timeout_graceful_shutdown=30,
             log_config={
                 "version": 1,
                 "disable_existing_loggers": False,
@@ -75,6 +76,7 @@ def run(
 def _provide_unix_socket(path: Path, permissions: int) -> Generator[int]:
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            path.unlink(missing_ok=True)  # Handle stale socket files
             sock.bind(str(path))
             path.chmod(permissions)
             yield sock.fileno()

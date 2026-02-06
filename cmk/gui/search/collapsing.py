@@ -51,9 +51,12 @@ def _collapse_items(
         other_items: list[UnifiedSearchResultItem] = []
 
         # WARN: this logic only works because of some assumptions we make about the ordering from
-        # the sort algorithm. We expect setup host, monitoring host, and optionaly monitoring host
-        # alias to be grouped together in the unified search result. When that changes, then this
-        # functionality will no longer work.
+        # the sort algorithm. We expect:
+        #   1. setup host (topic "Hosts")
+        #   2. monitoring host (topic "Host name")
+        #   3. optionally: monitoring host alias (topic "Hostalias")
+        # to be grouped together and in this order in the unified search result. When that changes,
+        # then this functionality will no longer work.
         for item in group:
             match item.topic:
                 case "Hosts" | "Host name" | "Hostalias":
@@ -70,6 +73,8 @@ def _collapse_items(
             case {"Host name": name, "Hostalias": alias}:
                 collapsed_results.append(_collapse_host_items([name, alias]))
                 collapsed_result_count += 1
+            case {"Host name": name}:
+                collapsed_results.append(_collapse_host_items([name]))
             case _:
                 collapsed_results.extend(host_items.values())
 

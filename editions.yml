@@ -10,6 +10,7 @@ common: &common
     - "sles-15sp5"
     - "sles-15sp6"
     - "sles-15sp7"
+    - "sles-16.0"
 
 # A reduced set of distros for the daily builds
 # Containing only the latest version of each supported OS

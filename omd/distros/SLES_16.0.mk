@@ -1,4 +1,4 @@
-DISTRO_CODE     = sles16
+DISTRO_CODE     = sles16.0
 OS_PACKAGES     =
 OS_PACKAGES    += libcap-progs # needed for setting special file permissions
 OS_PACKAGES    += cronie # needed for sites cron jobs
@@ -51,7 +51,7 @@ ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 APACHE_CONF_DIR   = /etc/apache2/conf.d
 APACHE_INIT_NAME  = apache2
 APACHE_USER       = wwwrun
-APACHE_CTL        = /usr/sbin/apache2ctl
+APACHE_CTL        = /usr/sbin/apachectl
 APACHE_MODULE_DIR_64 = /usr/lib64/apache2-prefork
 MOUNT_OPTIONS     =
 INIT_CMD          = systemctl %(action)s %(name)s.service

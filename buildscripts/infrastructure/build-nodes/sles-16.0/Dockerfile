@@ -185,9 +185,16 @@ RUN /opt/install-patchelf.sh
 # simply solve this by pre-creating the empty file here.
 RUN touch /etc/fstab
 
+# /run/lock is normally created by systemd-tmpfiles on boot (via fs-run.conf),
+# but systemd doesn't run in containers. On SLES 15, the systemd package's
+# post-install scriptlet ran "systemd-tmpfiles --create" which created it as a
+# side effect. SLES 16 (systemd 257) removed that call, so we create it
+# explicitly. OMD needs it for the mkbackup lock directory.
+RUN mkdir -p /run/lock
+
 COPY ci.bazelrc /etc/
 RUN <<EOF cat >> /etc/ci.bazelrc
-common:ci --@cmk//distro="sles-15sp7"
+common:ci --@cmk//distro="sles-16.0"
 common:ci --action_env=DISTRO=${DISTRO}
 # We encountered false cache hits with remote caching due to environment variables
 # not being propagated to external dependeny builds

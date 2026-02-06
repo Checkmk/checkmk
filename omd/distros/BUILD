@@ -9,6 +9,7 @@ exports_files([
     "SLES_15SP5.mk",
     "SLES_15SP6.mk",
     "SLES_15SP7.mk",
+    "SLES_16.0.mk",
     "UBUNTU_22.04.mk",
     "UBUNTU_24.04.mk",
 ])
@@ -25,6 +26,7 @@ write_os_dependencies(
             "@cmk//distro:sles-15sp5": "SLES_15SP5.mk",
             "@cmk//distro:sles-15sp6": "SLES_15SP6.mk",
             "@cmk//distro:sles-15sp7": "SLES_15SP7.mk",
+            "@cmk//distro:sles-16.0": "SLES_16.0.mk",
             "@cmk//distro:ubuntu-22.04": "UBUNTU_22.04.mk",
             "@cmk//distro:ubuntu-24.04": "UBUNTU_24.04.mk",
         },
@@ -50,6 +52,7 @@ genrule(
             "@cmk//distro:sles-15sp5": ["SLES_15SP5.mk"],
             "@cmk//distro:sles-15sp6": ["SLES_15SP6.mk"],
             "@cmk//distro:sles-15sp7": ["SLES_15SP7.mk"],
+            "@cmk//distro:sles-16.0": ["SLES_16.0.mk"],
             "@cmk//distro:ubuntu-22.04": ["UBUNTU_22.04.mk"],
             "@cmk//distro:ubuntu-24.04": ["UBUNTU_24.04.mk"],
         },

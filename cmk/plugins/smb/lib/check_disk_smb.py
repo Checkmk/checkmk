@@ -396,12 +396,16 @@ def _check_disk_usage_main(
     smb_share_disk_usage: SMBShareDiskUsageProto,
 ) -> tuple[int, str, Metric | None]:
     args = parse_arguments(argv=argv)
+    try:
+        password = resolve_secret_option(args, PASSWORD_OPTION).reveal()
+    except TypeError:
+        password = ""
     return _check_smb_share(
         smb_share=smb_share_disk_usage(
             share=args.share,
             hostname=args.hostname,
             user=args.user,
-            password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
+            password=password,
             workgroup=args.workgroup or None,
             port=args.port or None,
             ip_address=args.address or None,

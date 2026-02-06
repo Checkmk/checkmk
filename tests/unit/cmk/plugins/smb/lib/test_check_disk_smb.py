@@ -162,6 +162,28 @@ def test_main_access_denied(capsys: pytest.CaptureFixture[str]) -> None:
     assert not err
 
 
+def test_main_no_password(capsys: pytest.CaptureFixture[str]) -> None:
+    assert (
+        main(
+            [
+                "share",
+                "--levels",
+                "80",
+                "90",
+                "-u",
+                "cratus",
+                "-H",
+                "hostname",
+            ],
+            _SMBShareDiskUsageError(2, "Access denied"),
+        )
+        == 2
+    )
+    out, err = capsys.readouterr()
+    assert out == "Access denied\n"
+    assert not err
+
+
 def test_main_unknown_error(capsys: pytest.CaptureFixture[str]) -> None:
     assert (
         main(

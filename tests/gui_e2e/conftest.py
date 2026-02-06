@@ -25,6 +25,7 @@ from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.plugin import PageGetter
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import DashboardMobile, MainDashboard
+from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.gui_e2e.testlib.playwright.pom.setup.licensing import Licensing
@@ -47,7 +48,7 @@ from tests.testlib.version import TypeCMKEditionOld, CMKEditionOld
 logger = logging.getLogger(__name__)
 
 
-TDashboard = TypeVar("TDashboard", MainDashboard, DashboardMobile)
+TCmkPage = TypeVar("TCmkPage", bound=CmkPage)
 
 # loading pom fixtures
 setup_fixtures = [notification_user]
@@ -93,7 +94,7 @@ def fixture_dashboard_page(
     cmk_page: Page, test_site: Site, credentials: CmkCredentials
 ) -> MainDashboard:
     """Entrypoint to test browser GUI. Navigates to 'Main Dashboard'."""
-    return _navigate_to_dashboard(cmk_page, test_site.internal_url, credentials, MainDashboard)
+    return navigate_to_page(cmk_page, test_site.internal_url, credentials, MainDashboard)
 
 
 @pytest.fixture(name="dashboard_page_mobile")
@@ -101,14 +102,13 @@ def fixture_dashboard_page_mobile(
     cmk_page: Page, test_site: Site, credentials: CmkCredentials
 ) -> DashboardMobile:
     """Entrypoint to test browser GUI in mobile view. Navigates to 'Main Dashboard'."""
-    return _navigate_to_dashboard(
-        cmk_page, test_site.internal_url_mobile, credentials, DashboardMobile
-    )
+    return navigate_to_page(cmk_page, test_site.internal_url_mobile, credentials, DashboardMobile)
 
 
-@pytest.fixture(name="licensing_page", scope="function")
-def _licensing_page(dashboard_page: MainDashboard) -> Iterator[Licensing]:
-    yield Licensing(dashboard_page.page)
+@pytest.fixture(name="licensing_page")
+def _licensing_page(cmk_page: Page, test_site: Site, credentials: CmkCredentials) -> Licensing:
+    """Entrypoint to test browser GUI. Navigates to 'Licensing page'."""
+    return navigate_to_page(cmk_page, test_site.internal_url, credentials, Licensing)
 
 
 def _assert_license_details(
@@ -226,13 +226,13 @@ def is_test_site_licensed_gui(
     return licensed
 
 
-def _navigate_to_dashboard(
+def navigate_to_page(
     page: Page,
     url: str,
     credentials: CmkCredentials,
-    dashboard_type: type[TDashboard],
-) -> TDashboard:
-    """Navigate to dashboard page.
+    page_type: type[TCmkPage],
+) -> TCmkPage:
+    """Navigate to a page.
 
     Performs a login to Checkmk site, if necessary.
     """
@@ -242,7 +242,7 @@ def _navigate_to_dashboard(
         # Log in to the site if not already logged in.
         LoginPage(page, site_url=url, navigate_to_page=False).login(credentials)
 
-    return dashboard_type(page, navigate_to_page=True)
+    return page_type(page, navigate_to_page=True)
 
 
 @pytest.fixture(name="new_browser_context_and_page")

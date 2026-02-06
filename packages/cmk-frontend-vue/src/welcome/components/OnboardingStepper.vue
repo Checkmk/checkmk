@@ -53,7 +53,7 @@ immediateWatch(
     {{ _t('Topics to explore') }}
   </CmkHeading>
   <CmkSpace />
-  <CmkAccordionStepPanel v-model="openedItems">
+  <CmkAccordionStepPanel v-model="openedItems" data-testid="onboarding-steps">
     <component
       :is="component"
       v-for="{ component, stepNumber, stepId } in stepComponents"

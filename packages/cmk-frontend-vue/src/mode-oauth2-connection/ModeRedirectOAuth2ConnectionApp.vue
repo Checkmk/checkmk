@@ -10,18 +10,22 @@ import { computed } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { _t } = usei18n()
 
-const title = computed(() => {
+const successfullyLoggedIn = computed(() => {
   const params = new URL(window.location.href).searchParams
+  return !!params.get('code')
+})
 
-  if (params.get('code')) {
-    return _t('Application successfully authorized!')
+const title = computed(() => {
+  if (successfullyLoggedIn.value) {
+    return _t('Your login was successful!')
   }
 
-  return _t('Access token successfully requested!')
+  return _t('Your login was not successful. Please try again.')
 })
 </script>
 
@@ -31,10 +35,11 @@ const title = computed(() => {
       <div class="mode-oauth2-connection-mode-redirect-o-auth2connection-app__content">
         <img src="themes/facelift/images/checkmk_logo.svg" width="150" />
 
-        <CmkIcon name="checkmark" size="xxxlarge" />
+        <CmkIcon v-if="successfullyLoggedIn" name="checkmark" size="xxxlarge" />
+        <CmkMultitoneIcon v-else name="error" primary-color="danger" size="xxxlarge" />
         <div>
           <CmkHeading type="h1">{{ title }}</CmkHeading>
-          <CmkHeading type="h3">{{ _t('You can now close this window.') }}</CmkHeading>
+          <CmkHeading type="h3">{{ _t('You can now close this tab.') }}</CmkHeading>
         </div>
       </div>
     </div>

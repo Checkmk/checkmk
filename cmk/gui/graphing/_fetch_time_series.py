@@ -14,6 +14,7 @@ from cmk.utils.macros import replace_macros_in_str
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     AugmentedTimeSeries,
+    FallbackTimeRange,
     LineType,
     QueryDataError,
     QueryDataKey,
@@ -90,9 +91,20 @@ def fetch_augmented_time_series(
             else:
                 yield Error(result.error)
 
+    fallback_time_range = FallbackTimeRange(
+        start=graph_data_range.time_range[0],
+        end=graph_data_range.time_range[1],
+        # We only encounter `str`` here for forecast graphs, where the fallback range should be
+        # irrelevant.
+        step=max(graph_data_range.step, 60) if isinstance(graph_data_range.step, int) else 60,
+    )
+
     for graph_metric in graph_recipe.metrics:
         if augmented_time_series := graph_metric.operation.compute_augmented_time_series(
-            registered_metrics, rrd_data, query_data
+            registered_metrics,
+            rrd_data,
+            query_data,
+            fallback_time_range,
         ):
             for refined_augmented_time_series in _refine_augmented_time_series(
                 augmented_time_series,

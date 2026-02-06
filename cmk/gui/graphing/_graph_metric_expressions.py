@@ -123,18 +123,32 @@ type RRDData = Mapping[RRDDataKey, TimeSeries]
 type QueryData = Mapping[QueryDataKey, Sequence[QueryDataValue]]
 
 
+@dataclass(frozen=True, kw_only=True)
+class FallbackTimeRange:
+    start: int
+    end: int
+    step: int
+
+
 @dataclass(frozen=True)
 class QueryDataError:
     keys: Sequence[QueryDataKey]
     exception: Exception
 
 
-def _derive_num_points(rrd_data: RRDData) -> tuple[int, int, int, int]:
+def _derive_num_points(
+    rrd_data: RRDData,
+    fallback_timerange: FallbackTimeRange,
+) -> tuple[int, int, int, int]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         return len(sample_data), sample_data.start, sample_data.end, sample_data.step
-    # no data, default clean graph, use for pure scalars on custom graphs
-    return 1, 0, 60, 60
+    return (
+        (fallback_timerange.end - fallback_timerange.start) // fallback_timerange.step + 1,
+        fallback_timerange.start,
+        fallback_timerange.end,
+        fallback_timerange.step,
+    )
 
 
 _TOperatorReturn = TypeVar("_TOperatorReturn")
@@ -244,6 +258,7 @@ class GraphMetricExpression(BaseModel, ABC, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         rrd_data: RRDData,
         query_data: QueryData,
+        fallback_time_range: FallbackTimeRange,
     ) -> Sequence[AugmentedTimeSeries]: ...
 
     def fade_odd_color(self) -> bool:
@@ -296,8 +311,12 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         rrd_data: RRDData,
         query_data: QueryData,
+        fallback_time_range: FallbackTimeRange,
     ) -> Sequence[AugmentedTimeSeries]:
-        num_points, start, end, step = _derive_num_points(rrd_data)
+        num_points, start, end, step = _derive_num_points(
+            rrd_data,
+            fallback_time_range,
+        )
         return [
             AugmentedTimeSeries(
                 time_series=TimeSeries(
@@ -326,8 +345,12 @@ class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         rrd_data: RRDData,
         query_data: QueryData,
+        fallback_time_range: FallbackTimeRange,
     ) -> Sequence[AugmentedTimeSeries]:
-        num_points, start, end, step = _derive_num_points(rrd_data)
+        num_points, start, end, step = _derive_num_points(
+            rrd_data,
+            fallback_time_range,
+        )
         return [
             AugmentedTimeSeries(
                 time_series=TimeSeries(
@@ -394,13 +417,19 @@ class GraphMetricOperation(GraphMetricExpression, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         rrd_data: RRDData,
         query_data: QueryData,
+        fallback_time_range: FallbackTimeRange,
     ) -> Sequence[AugmentedTimeSeries]:
         if result := _time_series_math(
             self.operator_name,
             [
                 operand_evaluated.time_series
                 for operand_evaluated in chain.from_iterable(
-                    operand.compute_augmented_time_series(registered_metrics, rrd_data, query_data)
+                    operand.compute_augmented_time_series(
+                        registered_metrics,
+                        rrd_data,
+                        query_data,
+                        fallback_time_range,
+                    )
                     for operand in self.operands
                 )
             ],
@@ -445,6 +474,7 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         rrd_data: RRDData,
         query_data: QueryData,
+        fallback_time_range: FallbackTimeRange,
     ) -> Sequence[AugmentedTimeSeries]:
         if (
             key := RRDDataKey(
@@ -458,7 +488,10 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
         ) in rrd_data:
             return [AugmentedTimeSeries(time_series=rrd_data[key])]
 
-        num_points, start, end, step = _derive_num_points(rrd_data)
+        num_points, start, end, step = _derive_num_points(
+            rrd_data,
+            fallback_time_range,
+        )
         return [
             AugmentedTimeSeries(
                 time_series=TimeSeries(

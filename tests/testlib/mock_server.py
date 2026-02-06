@@ -41,7 +41,7 @@ class MockEndpoint:
 @dataclass(frozen=True)
 class MockResponse:
     status: int
-    body: bytes
+    body: bytes | Callable[[dict[str, str], bytes], bytes]
     request_validator: Callable[[dict[str, str], bytes], bool] | None = None
 
 
@@ -84,8 +84,8 @@ class MockHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
             return
+        request_headers = dict(self.headers.items())
         if response.request_validator is not None:
-            request_headers = dict(self.headers.items())
             try:
                 assert response.request_validator(request_headers, request_body)
             except AssertionError as excp:
@@ -93,11 +93,16 @@ class MockHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(str(excp).encode())
                 return
+        body = (
+            response.body
+            if isinstance(response.body, bytes)
+            else response.body(request_headers, request_body)
+        )
         self.send_response(response.status)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(response.body)))
+        self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(response.body)
+        self.wfile.write(body)
 
 
 class MockServer:

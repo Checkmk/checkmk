@@ -46,6 +46,11 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryDefinition> = {
     name: 'service',
     title: 'Service',
     categorySubGroups: []
+  },
+  log: {
+    name: 'log',
+    title: 'Log',
+    categorySubGroups: []
   }
 }
 

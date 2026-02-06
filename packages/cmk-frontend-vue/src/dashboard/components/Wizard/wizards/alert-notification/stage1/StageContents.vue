@@ -8,9 +8,12 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkIndent from '@/components/CmkIndent.vue'
+
+import ObjectTypeFilterConfiguration from '@/dashboard/components/Wizard/components/filter/ObjectTypeFilterConfiguration/ObjectTypeFilterConfiguration.vue'
 import SingleMultiWidgetObjectFilterConfiguration from '@/dashboard/components/Wizard/components/filter/SingleMultiWidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard/components/Wizard/components/filter/utils.ts'
-import type { ElementSelection } from '@/dashboard/components/Wizard/types'
+import { ElementSelection } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
@@ -47,6 +50,7 @@ const gotoNextStage = (preselectedWidgetType: string | null = null) => {
 
 const hostObjectType = 'host'
 const serviceObjectType = 'service'
+const logObjectType = 'log'
 
 const hostFilterType = defineModel<ElementSelection>('hostFilterType', { required: true })
 const serviceFilterType = defineModel<ElementSelection>('serviceFilterType', { required: true })
@@ -61,7 +65,7 @@ const configuredFiltersByObjectType = computed(() =>
     props.widgetConfiguredFilters,
     props.widgetActiveFilters,
     filterDefinitions,
-    new Set(['host', 'service'])
+    new Set(['host', 'service', 'log'])
   )
 )
 </script>
@@ -95,6 +99,27 @@ const configuredFiltersByObjectType = computed(() =>
       @reset-object-type-filters="emit('reset-object-type-filters', $event)"
       @remove-filter="(filterId) => emit('remove-filter', filterId)"
     />
+  </SectionBlock>
+
+  <SectionBlock :title="_t('Log selection')">
+    <CmkIndent>
+      <ObjectTypeFilterConfiguration
+        :object-type="logObjectType"
+        :object-selection-mode="ElementSelection.MULTIPLE"
+        :object-configured-filters="configuredFiltersByObjectType[logObjectType] || {}"
+        :in-focus="isInFilterSelectionMenuFocus(logObjectType)"
+        :filter-labels="{
+          title: _t('Widget filters'),
+          tooltip: _t(
+            `Filters override default/runtime values for this widget only.<br />
+             Required runtime filters must still be set on the dashboard level.`
+          )
+        }"
+        @set-focus="emit('set-focus', $event)"
+        @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+        @remove-filter="(filterId) => emit('remove-filter', filterId)"
+      />
+    </CmkIndent>
   </SectionBlock>
 
   <SectionBlock :title="_t('Available visualization types')">

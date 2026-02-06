@@ -46,11 +46,7 @@ const filterCategory = computed(() => {
     <FilterSelection
       :key="`${filterSelectionTarget}`"
       :category-filter="filterCategory || []"
-      :category-definition="
-        (filterSelectionTarget === 'service'
-          ? CATEGORY_DEFINITIONS.service
-          : CATEGORY_DEFINITIONS.host)!
-      "
+      :category-definition="CATEGORY_DEFINITIONS[filterSelectionTarget]!"
       :filters="filters"
       class="db-add-filters__selection"
     />

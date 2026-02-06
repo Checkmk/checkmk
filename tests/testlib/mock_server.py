@@ -74,14 +74,18 @@ class MockHandler(BaseHTTPRequestHandler):
             raise TypeError(f"Expected MockHTTPServer, got {type(self.server)}")
         endpoints = self.server.endpoints
         endpoint = MockEndpoint(method=method, path=self.path)
+
+        # Always consume the request body before sending a response to avoid
+        # BrokenPipeError on the client side (e.g. with OpenSSL 3.5+).
+        size = int(self.headers.get("Content-Length", 0))
+        request_body = self.rfile.read(size) if size > 0 else b""
+
         if not (response := endpoints.get(endpoint)):
             self.send_response(404)
             self.end_headers()
             return
         if response.request_validator is not None:
             request_headers = dict(self.headers.items())
-            size = int(self.headers.get("Content-Length", 0))
-            request_body = self.rfile.read(size)
             try:
                 assert response.request_validator(request_headers, request_body)
             except AssertionError as excp:
@@ -91,6 +95,7 @@ class MockHandler(BaseHTTPRequestHandler):
                 return
         self.send_response(response.status)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(response.body)))
         self.end_headers()
         self.wfile.write(response.body)
 

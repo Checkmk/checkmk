@@ -209,15 +209,20 @@ export function useDashboardsManager() {
         responsiveDashboard
       )
     }
-    if (response.success && rename) {
-      // remove the old dashboard entry
-      dashboards.value.delete(key)
+    if (response.success) {
+      if (rename) {
+        // remove the old dashboard entry
+        dashboards.value.delete(key)
 
-      const newKey: DashboardKey = { name: rename, owner: key.owner }
-      const newDashboard = createDashboardModel(response.data.extensions, layoutType)
+        const newKey: DashboardKey = { name: rename, owner: key.owner }
+        const newDashboard = createDashboardModel(response.data.extensions, layoutType)
 
-      const metadata = await dashboardAPI.showDashboardMetadata(newKey.name, newKey.owner)
-      setActiveDashboard(newKey, newDashboard, metadata)
+        const metadata = await dashboardAPI.showDashboardMetadata(newKey.name, newKey.owner)
+        setActiveDashboard(newKey, newDashboard, metadata)
+      } else {
+        // Always update the public_token from the response
+        dashboard.public_token = response.data.extensions.public_token
+      }
     }
     return response
   }

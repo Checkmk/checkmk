@@ -88,39 +88,27 @@ class TestCheckmkAutomationBackgroundJob:
             self._check_mk_local_automation_serialized,
         )
 
+    @pytest.mark.parametrize(
+        ["version", "expected_result"],
+        [
+            pytest.param("2.1.0p10", "i was very different previously", id="old version"),
+            pytest.param("2.2.0i1", "(2, None)", id="first version with new serialization"),
+            pytest.param("2.5.0b1", "(2, None)", id="current version with new serialization"),
+        ],
+    )
     @pytest.mark.usefixtures(
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "save_text_to_file",
     )
-    def test_execute_automation_current_version(self, request_context: None) -> None:
-        api_request = self._api_request()
-        job = CheckmkAutomationBackgroundJob("job_id")
-        os.makedirs(job.get_work_dir())
-        job._execute_automation(
-            BackgroundProcessInterface(
-                job.get_work_dir(),
-                "job_id",
-                logging.getLogger(),
-                threading.Event(),
-                lambda x: nullcontext(),
-                open(os.devnull, "w"),
-            ),
-            api_request,
-            cmk_version.Version.from_str("2.5.0b1"),
-            lambda: {},
-        )
-        assert RESULT == "(2, None)"
-
-    @pytest.mark.parametrize("set_version", [True, False])
-    @pytest.mark.usefixtures(
-        "result_type_registry",
-        "check_mk_local_automation_serialized",
-        "save_text_to_file",
-    )
-    def test_execute_automation_previous_version(
-        self, set_version: bool, request_context: None
+    def test_execute_automation(
+        self, version: str, expected_result: str, request_context: None
     ) -> None:
+        """
+        Test the most inner logic of the job
+
+        The serialized output is expected to depend on the provided version
+        """
         api_request = self._api_request()
         job = CheckmkAutomationBackgroundJob("job_id")
         os.makedirs(job.get_work_dir())
@@ -134,7 +122,7 @@ class TestCheckmkAutomationBackgroundJob:
                 open(os.devnull, "w"),
             ),
             api_request,
-            cmk_version.Version.from_str("2.1.0p10" if set_version else "2.2.0i1"),
+            cmk_version.Version.from_str(version),
             lambda: {},
         )
-        assert RESULT == "i was very different previously" if set_version else "(2, None)"
+        assert RESULT == expected_result

@@ -1244,9 +1244,9 @@ google-cloud-monitoring==2.24.0 \
     --hash=sha256:25c36c7fdedb1e7a5a80f187866c410847aa809c8055dc0dc8161d4404403c25 \
     --hash=sha256:a0d3848f4ef0f774bbb3021c86fd765dbbc6db176d78f71e96cf3398d3be1bb7
     # via -r requirements_all.txt
-google-cloud-org-policy==1.16.0 \
-    --hash=sha256:96d1ed38f795182600a58f8eb2879e1577ce663b6b27df0b8a3050960cff87a5 \
-    --hash=sha256:c72147127d88d9809af8738b2abe34806eac529c3cdc57aa915cc08a1b842a13
+google-cloud-org-policy==1.16.1 \
+    --hash=sha256:2a578a8fa2611b8a62fd700cf360bf567749103da7bcad7e373bd3d659bbce91 \
+    --hash=sha256:403946466ccdef3e8bc6ef4230ead8ac4d5050381c6c0bb264a3bdb978102bf9
     # via
     #   -r requirements_all.txt
     #   google-cloud-asset

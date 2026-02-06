@@ -1835,7 +1835,7 @@
         "usagesDigest": "08kH9jjVabmjH4pZe4CwkHoktWUZb/WfeLdICjLor2c=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "8a466cb0d6651d5758581e40469e535718203b1be04fce455f15bc529302974e",
+          "@@//requirements_all_lock.txt": "913d51d1cfa08582f8b76ef865846f9b4001f1f61b320afec652ae7bfdb50431",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -8251,7 +8251,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "google-cloud-org-policy==1.16.0     --hash=sha256:96d1ed38f795182600a58f8eb2879e1577ce663b6b27df0b8a3050960cff87a5     --hash=sha256:c72147127d88d9809af8738b2abe34806eac529c3cdc57aa915cc08a1b842a13"
+              "requirement": "google-cloud-org-policy==1.16.1     --hash=sha256:2a578a8fa2611b8a62fd700cf360bf567749103da7bcad7e373bd3d659bbce91     --hash=sha256:403946466ccdef3e8bc6ef4230ead8ac4d5050381c6c0bb264a3bdb978102bf9"
             }
           },
           "cmk_requirements_312_marshmallow_oneofschema": {

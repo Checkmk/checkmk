@@ -238,7 +238,7 @@ class OAuth2ModeType(SimpleModeType[OAuth2Connection]):
 
 class MicrosoftEntraIdModeType(SimpleModeType[OAuth2Connection]):
     def type_name(self) -> str:
-        return "microsoft_entra_id"
+        return "microsoft_entra_id_connection"
 
     def name_singular(self) -> str:
         return _("Microsoft Entra ID connection")
@@ -250,7 +250,7 @@ class MicrosoftEntraIdModeType(SimpleModeType[OAuth2Connection]):
         return False
 
     def edit_mode_name(self) -> str:
-        return "edit_oauth2_connection"
+        return "edit_microsoft_entra_id_connection"
 
     def affected_config_domains(self) -> list[ABCConfigDomain]:
         return [ConfigDomainCore()]

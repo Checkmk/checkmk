@@ -31,7 +31,7 @@ export interface IAgentTokenGenerationResponse {
 
 export interface IAgentTokenGenerationRequestBody {
   host?: string
-  comment: string
+  comment?: string
   expires_at?: Date | undefined
 }
 

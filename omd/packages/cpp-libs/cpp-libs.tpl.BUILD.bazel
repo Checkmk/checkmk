@@ -1,0 +1,18 @@
+"""Exposes local gcc usr/opt libs for packaging."""
+filegroup(
+    name = "cpp_libs_files",
+    srcs = [{files}],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "cpp_libs_elf",
+    srcs = [{elf_srcs}],
+    visibility = ["//visibility:public"],
+)
+
+# Symlink mappings module - consumed by packaging rules to create pkg_mklink targets
+exports_files(
+    ["symlink_mappings.bzl"],
+    visibility = ["//visibility:public"],
+)

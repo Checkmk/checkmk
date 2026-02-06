@@ -129,6 +129,8 @@
     "https://bcr.bazel.build/modules/package_metadata/0.0.2/MODULE.bazel": "fb8d25550742674d63d7b250063d4580ca530499f045d70748b1b142081ebb92",
     "https://bcr.bazel.build/modules/package_metadata/0.0.5/MODULE.bazel": "ef4f9439e3270fdd6b9fd4dbc3d2f29d13888e44c529a1b243f7a31dfbc2e8e4",
     "https://bcr.bazel.build/modules/package_metadata/0.0.5/source.json": "2326db2f6592578177751c3e1f74786b79382cd6008834c9d01ec865b9126a85",
+    "https://bcr.bazel.build/modules/patchelf/0.18.0.bcr.1/MODULE.bazel": "35320668481400503dea7c75313473b9ffd6dea4e7ba583b96a896199b0088d5",
+    "https://bcr.bazel.build/modules/patchelf/0.18.0.bcr.1/source.json": "d877d271ef5d531407885322054c99c7f0617a9a85ff99c0a70f4ced7f13e13a",
     "https://bcr.bazel.build/modules/platforms/0.0.10/MODULE.bazel": "8cb8efaf200bdeb2150d93e162c40f388529a25852b332cec879373771e48ed5",
     "https://bcr.bazel.build/modules/platforms/0.0.11/MODULE.bazel": "0daefc49732e227caa8bfa834d65dc52e8cc18a2faf80df25e8caea151a9413f",
     "https://bcr.bazel.build/modules/platforms/0.0.4/MODULE.bazel": "9b328e31ee156f53f3c416a64f8491f7eb731742655a47c9eec4703a71644aee",

@@ -281,6 +281,9 @@ class Percentage(FormSpec[float]):
     ***************
     **Type**: ``float``
 
+    The value represents the percentage directly, not as a fraction, eg. a value
+    of 80% is represented as 80.0
+
     Arguments:
     **********
     """

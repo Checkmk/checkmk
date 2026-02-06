@@ -283,6 +283,7 @@ fn test_local_connection() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_remote_mini_connection() {
     add_runtime_to_path();
     let endpoint = remote_reference_endpoint();
@@ -302,6 +303,7 @@ fn test_remote_mini_connection() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 async fn test_remote_custom_instance_connection() {
     add_runtime_to_path();
     let endpoint = remote_reference_endpoint();
@@ -377,6 +379,7 @@ SELECT
     join v$database d
         on i.con_id = d.con_id";
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_remote_mini_connection_version() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -406,6 +409,7 @@ fn test_remote_mini_connection_version() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_io_stats_query() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -487,6 +491,7 @@ fn connect_and_query(
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_ts_quotas() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -499,6 +504,7 @@ fn test_ts_quotas() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_jobs() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -526,6 +532,7 @@ fn test_jobs() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_jobs_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -550,6 +557,7 @@ fn test_jobs_old() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_resumable() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -573,6 +581,7 @@ fn test_resumable() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_undo_stats() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -602,6 +611,7 @@ fn test_undo_stats() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_locks_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -643,6 +653,7 @@ fn test_locks_last() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_locks_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -672,6 +683,7 @@ fn test_locks_old() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_log_switches() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -696,6 +708,7 @@ fn test_log_switches() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_long_active_sessions_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -727,6 +740,7 @@ fn test_long_active_sessions_last() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_long_active_sessions_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -742,6 +756,7 @@ fn test_long_active_sessions_old() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_processes() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -762,6 +777,7 @@ fn test_processes() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_recovery_status_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -791,6 +807,7 @@ fn test_recovery_status_last() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_recovery_status_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -819,6 +836,7 @@ fn test_recovery_status_old() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_rman() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -829,6 +847,7 @@ fn test_rman() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_rman_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -843,6 +862,7 @@ fn test_rman_old() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_sessions_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -884,6 +904,7 @@ fn test_sessions_last() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_sessions_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -903,6 +924,7 @@ fn test_sessions_old() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_system_parameter() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -930,6 +952,7 @@ fn test_system_parameter() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_table_spaces() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -977,6 +1000,7 @@ fn test_table_spaces() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_table_spaces_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -1022,6 +1046,7 @@ fn test_table_spaces_old() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_data_guard_stats() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -1032,6 +1057,7 @@ fn test_data_guard_stats() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_instance() {
     use crate::system::convert_to_num_version;
     add_runtime_to_path();
@@ -1069,6 +1095,7 @@ fn test_instance() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_instance_full_version() {
     use crate::system::convert_to_num_version;
     add_runtime_to_path();
@@ -1106,6 +1133,7 @@ fn test_instance_full_version() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_instance_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -1192,6 +1220,7 @@ fn test_asm_instance_new() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_performance_new() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -1272,6 +1301,7 @@ fn test_performance_new() {
 }
 
 #[test]
+#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_performance_old() {
     for endpoint in WORKING_ENDPOINTS.iter() {
         println!("endpoint.host = {}", &endpoint.host);

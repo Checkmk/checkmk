@@ -10,7 +10,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.passwords import load_passwords, save_password
+from cmk.gui.watolib.passwords import load_passwords, load_passwords_to_modify, save_password
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
@@ -29,6 +29,32 @@ class OAuth2ConnectionsConfigFile(WatoSimpleConfigFile[OAuth2Connection]):
             config_variable="oauth2_connections",
             spec_class=OAuth2Connection,
         )
+
+    @staticmethod
+    def filter_by_passwords(
+        entries: dict[str, OAuth2Connection], allowed_passwords: dict[str, Password]
+    ) -> dict[str, OAuth2Connection]:
+        return {
+            k: v
+            for k, v in entries.items()
+            if all(
+                [
+                    v["client_secret"][2][0] in allowed_passwords,
+                    v["access_token"][2][0] in allowed_passwords,
+                    v["refresh_token"][2][0] in allowed_passwords,
+                ],
+            )
+        }
+
+    def filter_usable_entries(
+        self, entries: dict[str, OAuth2Connection]
+    ) -> dict[str, OAuth2Connection]:
+        return self.filter_by_passwords(entries, load_passwords())
+
+    def filter_editable_entries(
+        self, entries: dict[str, OAuth2Connection]
+    ) -> dict[str, OAuth2Connection]:
+        return self.filter_by_passwords(entries, load_passwords_to_modify())
 
 
 def save_oauth2_connection(

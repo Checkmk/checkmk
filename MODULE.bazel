@@ -35,12 +35,14 @@ bazel_dep(name = "rules_multitool", version = "1.9.0")
 bazel_dep(name = "rules_mypy", version = "0.29.0")
 bazel_dep(name = "rules_nodejs", version = "6.5.2")
 bazel_dep(name = "rules_oci", version = "2.2.6")
+bazel_dep(name = "rules_distroless", version = "0.6.2")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
 bazel_dep(name = "rules_proto_grpc", version = "5.3.1")
 bazel_dep(name = "rules_python", version = "1.4.1")
 bazel_dep(name = "rules_rust", version = "0.65.0")
 bazel_dep(name = "rules_uv", version = "0.71.0")
+bazel_dep(name = "tar.bzl", version = "0.6.0")
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
 bazel_dep(name = "clickhouse", version = "v25.8.11.66-lts")
 bazel_dep(name = "rules_sphinx", version = "0.2.0")
@@ -218,12 +220,14 @@ http_file(
     url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.131.0/ocb_0.131.0_linux_amd64",
 )
 
-http_file(
-    name = "relay_tzdata_deb",
-    downloaded_file_path = "relay_tzdata.deb",
-    sha256 = "a72dd540ec4744f57003396f8b74ab473838c134793ce0ed6743ea98fea3e10c",
-    url = "https://archive.ubuntu.com/ubuntu/pool/main/t/tzdata/tzdata_2025c-3ubuntu3_all.deb",
+# Configure apt for relay distro packages
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+apt.install(
+    name = "relay_base_image",
+    lock = "//omd/non-free/relay:distro_packages.lock.json",
+    manifest = "//omd/non-free/relay:distro_packages.yaml",
 )
+use_repo(apt, "relay_base_image")
 
 http_file(
     name = "taplo.gz",

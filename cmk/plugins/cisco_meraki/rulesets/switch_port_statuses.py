@@ -5,12 +5,11 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
-    FixedValue,
     MultipleChoice,
     MultipleChoiceElement,
     ServiceState,
@@ -27,17 +26,6 @@ from cmk.rulesets.v1.rule_specs import (
 def _parameter_form() -> Dictionary:
     return Dictionary(
         elements={
-            "show_traffic": DictElement(
-                parameter_form=FixedValue(
-                    value=True,
-                    title=Title("Show bandwidth"),
-                    label=Label("Bandwidth monitoring enabled"),
-                    help_text=Help(
-                        "Depending on your Meraki organization size (number of switches) "
-                        "this may exceed the limits of the allowed API requests per second."
-                    ),
-                )
-            ),
             "state_admin_change": DictElement(
                 parameter_form=ServiceState(
                     title=Title("Monitoring state if admin state changed"),

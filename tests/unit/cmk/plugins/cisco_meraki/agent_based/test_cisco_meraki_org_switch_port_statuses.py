@@ -109,7 +109,6 @@ class TestHostLabels:
 @pytest.fixture
 def params() -> CheckParams:
     return CheckParams(
-        show_traffic=True,
         state_admin_change=1,
         state_disabled=0,
         state_not_connected=0,
@@ -357,7 +356,7 @@ class TestInventoryMerakiInterfaces:
                 "name": "Port 1",
                 "admin_status": 1,
                 "oper_status": 1,
-                "speed": "10 Gbps",
+                "speed": 10_000_000_000,
                 "port_type": 6,
             },
             status_columns={},
@@ -375,7 +374,7 @@ class TestInventoryMerakiInterfaces:
             inventory_columns={
                 "name": "Port 1",
                 "admin_status": 1,
-                "speed": "10 Gbps",
+                "speed": 10_000_000_000,
                 "port_type": 6,
             },
             status_columns={},
@@ -414,7 +413,11 @@ class TestInventoryCDPCache:
         value, *_ = inventory_meraki_cdp_cache(section)
         expected = TableRow(
             path=["networking", "cdp_cache", "neighbors"],
-            key_columns={"local_port": 1, "neighbor_name": "", "neighbor_port": "Port 20"},
+            key_columns={
+                "local_port": "1",
+                "neighbor_name": "",
+                "neighbor_port": "Port 20",
+            },
             inventory_columns={},
             status_columns={},
         )
@@ -439,7 +442,11 @@ class TestInventoryCDPCache:
         value, *_ = inventory_meraki_cdp_cache(section)
         expected = TableRow(
             path=["networking", "cdp_cache", "neighbors"],
-            key_columns={"local_port": 1, "neighbor_name": "", "neighbor_port": "Port 20"},
+            key_columns={
+                "local_port": "1",
+                "neighbor_name": "",
+                "neighbor_port": "Port 20",
+            },
             inventory_columns={
                 "capabilities": "Switch",
                 "native_vlan": 1,
@@ -485,7 +492,7 @@ class TestInventoryLLDPCache:
         expected = TableRow(
             path=["networking", "lldp_cache", "neighbors"],
             key_columns={
-                "local_port": 1,
+                "local_port": "1",
                 "neighbor_name": "MS350-24X - Test",
                 "neighbor_port": "2",
             },
@@ -514,7 +521,7 @@ class TestInventoryLLDPCache:
         expected = TableRow(
             path=["networking", "lldp_cache", "neighbors"],
             key_columns={
-                "local_port": 1,
+                "local_port": "1",
                 "neighbor_name": "MS350-24X - Test",
                 "neighbor_port": "2",
             },

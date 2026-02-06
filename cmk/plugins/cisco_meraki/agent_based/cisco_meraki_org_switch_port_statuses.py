@@ -138,6 +138,23 @@ class SwitchPortStatus(BaseModel, frozen=True):
 
     @computed_field
     @property
+    def speed_as_int(self) -> int | None:
+        raw_value, unit = self.speed.split()  # "10 Gbps" => ("10", "Gbps")
+        value = float(raw_value.replace(",", "."))  # handle comma decimal point
+        match unit.lower()[0]:
+            case "k":  # kilobit per second
+                return int(value + 1e3)
+            case "m":  # megabit per second
+                return int(value * 1e6)
+            case "g":  # gigabit per second
+                return int(value * 1e9)
+            case "t":  # terabit per second
+                return int(value * 1e12)
+            case _:
+                return None
+
+    @computed_field
+    @property
     def name(self) -> str:
         return f"Port {self.port_id}"
 
@@ -212,7 +229,6 @@ def _state_has_changed(is_state: str | None, was_state: str | None) -> bool:
 
 
 class CheckParams(TypedDict):
-    show_traffic: bool
     state_admin_change: int
     state_disabled: int
     state_not_connected: int
@@ -285,7 +301,7 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
             summary=f"changed {prior_speed} -> {port.speed}",
         )
 
-    if params["show_traffic"] and port.traffic_in_kbps:
+    if port.traffic_in_kbps:
         yield from check_levels(
             value=port.traffic_in_kbps.recv,  # Bits
             label="In",
@@ -299,13 +315,12 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
             render_func=render_network_bandwidth_bits,  # Bytes
         )
 
-        if port.duplex.lower() == "full":  # check duplex state
-            yield Result(state=State.OK, notice=f"Duplex: {port.duplex}")
-        else:
-            yield Result(
-                state=State(params["state_not_full_duplex"]), notice=f"Duplex: {port.duplex}"
-            )
-        yield Result(state=State.OK, notice=f"Clients: {port.client_count}")
+    if port.duplex.lower() == "full":  # check duplex state
+        yield Result(state=State.OK, notice=f"Duplex: {port.duplex}")
+    else:
+        yield Result(state=State(params["state_not_full_duplex"]), notice=f"Duplex: {port.duplex}")
+
+    yield Result(state=State.OK, notice=f"Clients: {port.client_count}")
 
     if port.is_uplink:
         yield Result(state=State.OK, summary="Uplink", details="Uplink: yes")
@@ -343,7 +358,6 @@ check_plugin_cisco_meraki_org_switch_ports_statuses = CheckPlugin(
         state_not_full_duplex=1,
         state_op_change=1,
         state_speed_change=1,
-        show_traffic=True,
     ),
     check_ruleset_name="cisco_meraki_switch_ports_statuses",
     discovery_ruleset_name="discovery_cisco_meraki_switch_ports_statuses",
@@ -363,7 +377,7 @@ def inventory_meraki_interfaces(section: Section) -> InventoryResult:
                 "name": port.name,
                 "admin_status": port.admin_status,
                 **({"oper_status": port.oper_status} if port.oper_status else {}),
-                "speed": port.speed,
+                **({"speed": port.speed_as_int} if port.speed_as_int else {}),
                 "port_type": port.port_type,
             },
         )
@@ -384,7 +398,7 @@ def inventory_meraki_cdp_cache(section: Section) -> InventoryResult:
             yield TableRow(
                 path=path,
                 key_columns={
-                    "local_port": port.port_id,
+                    "local_port": str(port.port_id),
                     # TODO: why include this if it's always empty?
                     "neighbor_name": "",
                     "neighbor_port": port.cdp.port_id,
@@ -415,7 +429,7 @@ def inventory_meraki_lldp_cache(section: Section) -> InventoryResult:
             yield TableRow(
                 path=path,
                 key_columns={
-                    "local_port": port.port_id,
+                    "local_port": str(port.port_id),
                     "neighbor_name": port.lldp.system_name,
                     "neighbor_port": port.lldp.port_id,
                 },

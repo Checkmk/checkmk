@@ -5,7 +5,7 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-from cmk.graphing.v1 import graphs, metrics, perfometers, Title
+from cmk.graphing.v1 import graphs, metrics, Title
 
 metric_api_code_2xx = metrics.Metric(
     name="api_code_2xx",
@@ -62,30 +62,4 @@ graph_cisco_meraki_organisations_api_code = graphs.Bidirectional(
             "api_code_5xx",
         ],
     ),
-)
-
-perfometer_api_code = perfometers.Stacked(
-    name="api_code",
-    lower=perfometers.Perfometer(
-        name="api_code_2xx",
-        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(30)),
-        segments=["api_code_2xx"],
-    ),
-    upper=perfometers.Perfometer(
-        name="api_code_4xx",
-        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(30)),
-        segments=["api_code_4xx"],
-    ),
-)
-
-perfometer_api_code_2xx = perfometers.Perfometer(
-    name="api_code_2xx",
-    segments=["api_code_2xx"],
-    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(50)),
-)
-
-perfometer_api_code_4xx = perfometers.Perfometer(
-    name="api_code_4xx",
-    segments=["api_code_4xx"],
-    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(50)),
 )

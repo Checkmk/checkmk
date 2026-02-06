@@ -5,11 +5,14 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
+# Pydantic requires the property to be under computed_field to work.
+# mypy: disable-error-code="prop-decorator"
+
 import json
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -37,12 +40,17 @@ class ResponseCodes(BaseModel, frozen=True):
     organization_name: str
     counts: list[ResponseCodeCount]
 
+    @computed_field
+    @property
+    def identifier(self) -> str:
+        return f"{self.organization_name}/{self.organization_id}"
+
 
 def parse_api_response_codes(string_table: StringTable) -> Section:
     match string_table:
         case [[payload]] if payload:
             response_codes = (ResponseCodes.model_validate(item) for item in json.loads(payload))
-            return {info.organization_id: info for info in response_codes}
+            return {info.identifier: info for info in response_codes}
         case _:
             return {}
 
@@ -55,8 +63,8 @@ agent_section_cisco_meraki_org_api_response_codes = AgentSection(
 
 
 def discover_api_response_codes(section: Section) -> DiscoveryResult:
-    for organization_id in section:
-        yield Service(item=organization_id)
+    for identifier in section:
+        yield Service(item=identifier)
 
 
 def check_response_code_count_levels(value: int | None, *, code: int) -> Iterable[Result | Metric]:
@@ -67,7 +75,7 @@ def check_response_code_count_levels(value: int | None, *, code: int) -> Iterabl
         value=value,
         label=f"Code {code}xx",
         render_func=lambda v: str(v),
-        metric_name=f"api_{code}xx",
+        metric_name=f"api_code_{code}xx",
         notice_only=False,
     )
 
@@ -76,7 +84,8 @@ def check_api_response_codes(item: str, section: Section) -> CheckResult:
     if (info := section.get(item)) is None:
         return
 
-    yield Result(state=State.OK, summary=f"Organization: {info.organization_name}")
+    yield Result(state=State.OK, notice=f"Organization name: {info.organization_name}")
+    yield Result(state=State.OK, notice=f"Organization ID: {info.organization_id}")
 
     counter: dict[int, int] = defaultdict(int)
 
@@ -93,7 +102,7 @@ def check_api_response_codes(item: str, section: Section) -> CheckResult:
 check_plugin_cisco_meraki_org_api_response_codes = CheckPlugin(
     name="cisco_meraki_org_api_response_codes",
     sections=["cisco_meraki_org_api_response_codes"],
-    service_name="Cisco Meraki API %s",
+    service_name="API %s",
     discovery_function=discover_api_response_codes,
     check_function=check_api_response_codes,
 )

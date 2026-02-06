@@ -34,6 +34,9 @@ export interface MsGraphApiAccessTokenRequestObject {
 export interface MsGraphAjaxResponse {
   status: 'success' | 'error'
   message?: string
+  error_data?: {
+    error: string
+  }
   data?: {
     access_token: string
     refresh_token: string

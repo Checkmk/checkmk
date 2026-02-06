@@ -17,7 +17,6 @@ import { randomId } from '@/lib/randomId'
 import { immediateWatch } from '@/lib/watch.ts'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
@@ -68,6 +67,7 @@ const loading = ref(true)
 const saving = ref(false)
 const loadingTitle = ref(_t('Verifying the authorization...'))
 const errorTitle = ref(_t('Authorization failed.'))
+const errorDetails = ref<TranslatedString | null>(null)
 const authSucceeded = ref(false)
 const refId = randomId()
 const countDownValue = ref<number>(TIMEOUT)
@@ -151,6 +151,14 @@ async function requestAccessToken(): Promise<boolean> {
         code: resultCode.value
       })
       if (res.status !== 'success') {
+        if (res.error_data && res.error_data.error === 'invalid_client') {
+          errorTitle.value = _t('Authorization failed')
+          errorDetails.value =
+            _t(`The client secret is invalid. Please ensure that the client secret is stored in Microsoft
+            Azure and that you have added the secret value and not the secret ID to Checkmk.
+            `)
+          return false
+        }
         errorTitle.value = _t(`${res.message}`)
         return false
       }
@@ -161,7 +169,8 @@ async function requestAccessToken(): Promise<boolean> {
       return true
     }
   } catch (e) {
-    errorTitle.value = _t(`Failed to request and save access token: ${e}`)
+    errorTitle.value = _t(`Failed to request and save access token`)
+    errorDetails.value = _t(`${e}`)
   }
   return false
 }
@@ -260,10 +269,9 @@ immediateWatch(
         {{ countDownValue / 1000 }}
         {{ _t('seconds remaining') }}
       </CmkParagraph>
-      <span v-if="loading">
-        <CmkIcon name="load-graph" />
+      <CmkAlertBox v-if="loading" variant="loading">
         {{ loadingTitle }}
-      </span>
+      </CmkAlertBox>
 
       <template v-else-if="authSucceeded">
         <CmkAlertBox variant="success">
@@ -280,14 +288,13 @@ immediateWatch(
           :spec="filteredDictionary"
         />
       </template>
-      <CmkAlertBox v-else variant="error">
-        {{ errorTitle }}
+      <CmkAlertBox v-else variant="error" :heading="errorTitle">
+        <template v-if="errorDetails !== null">{{ errorDetails }}</template>
       </CmkAlertBox>
 
-      <span v-if="saving">
-        <CmkIcon name="load-graph" />
+      <CmkAlertBox v-if="saving" variant="loading">
         {{ _t('Saving OAuth2 connection') }}
-      </span>
+      </CmkAlertBox>
     </template>
 
     <template #actions>

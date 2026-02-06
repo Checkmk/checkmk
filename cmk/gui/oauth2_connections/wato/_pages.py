@@ -81,7 +81,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         try:
             res.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            return {"status": "error", "message": f"HTTP error: {e}, {res.text}"}
+            return {"status": "error", "message": f"{e}", "error_data": res.json()}
 
         try:
             response_json = res.json()

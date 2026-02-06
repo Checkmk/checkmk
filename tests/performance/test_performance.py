@@ -35,6 +35,29 @@ def _perftest(single_site: Site, pytestconfig: pytest.Config) -> Iterator[Perfor
     yield PerformanceTest(single_site, remote_sites=None, pytestconfig=pytestconfig)
 
 
+@pytest.fixture(name="perftest_nagios", scope="function")
+def _perftest_nagios(perftest: PerformanceTest) -> Iterator[PerformanceTest]:
+    site = perftest.central_site
+    nagios_core = "nagios"
+    cmc_core = "cmc"
+
+    logger.info("Switching core to %s", nagios_core)
+    site.stop()
+    site.omd("config", "set", "CORE", nagios_core, check=True)
+    p = site.omd("config", "show", "CORE", check=True)
+    assert p.stdout.strip() == nagios_core
+    site.start()
+
+    yield perftest
+
+    logger.info("Switching core back to %s", cmc_core)
+    site.stop()
+    site.omd("config", "set", "CORE", cmc_core, check=True)
+    p = site.omd("config", "show", "CORE", check=True)
+    assert p.stdout.strip() == cmc_core
+    site.start()
+
+
 def test_performance_hosts_restart(perftest: PerformanceTest, benchmark: BenchmarkFixture) -> None:
     """Bulk host creation"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
@@ -103,4 +126,16 @@ def test_performance_ui_response(
         args=[context, page_url],
         rounds=perftest.rounds,
         iterations=perftest.iterations,
+    )
+
+
+def test_nagios_core_plugin_import(
+    perftest_nagios: PerformanceTest, benchmark: BenchmarkFixture
+) -> None:
+    benchmark.pedantic(  # type: ignore[no-untyped-call]
+        perftest_nagios.scenario_nagios_core_plugin_import,
+        args=[perftest_nagios.rounds * perftest_nagios.iterations],
+        setup=perftest_nagios.setup_nagios_core_plugin_import,
+        rounds=1,  # run a single time
+        iterations=1,  # run a single time
     )

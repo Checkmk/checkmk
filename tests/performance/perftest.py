@@ -25,7 +25,8 @@ from requests.auth import HTTPBasicAuth
 from tests.performance.sysmon import track_resources
 from tests.testlib.agent_hosts import piggyback_host_from_dummy_generator
 from tests.testlib.site import ADMIN_USER as site_admin_user
-from tests.testlib.site import Site
+from tests.testlib.site import PythonHelper, Site
+from tests.testlib.utils import check_output
 
 logger = logging.getLogger(__name__)
 
@@ -461,3 +462,32 @@ class PerformanceTest:
         """
         self.central_site.ensure_running()
         assert self.central_site.openapi.changes.activate_and_wait_for_completion()
+
+    def setup_nagios_core_plugin_import(self) -> None:
+        """Setup: Nagios core plugin import
+
+        Executes "nagios_core_plugin_import.py" to generate "check_localhost.py",
+        which loads all agent based checks.
+        """
+        helper_path = Path(__file__).parent / "nagios_core_plugin_import.py"
+        helper = PythonHelper(self.central_site, helper_path)
+        helper_stem = helper.helper_path.stem
+        self.central_site.write_file(f"var/log/{helper_stem}.log", helper.check_output())
+
+    def scenario_nagios_core_plugin_import(self, iterations: int) -> None:
+        """Scenario: Nagios core plugin import
+
+        Sequentially runs "check_localhost.py" 10 times per iteration in the site context.
+
+        Uses a small sampling interval to get more meaningful data.
+        """
+        check_path = self.central_site.path(
+            "var/check_mk/core/helper_config/latest/host_checks/check_localhost.py"
+        )
+        assert self.central_site.file_exists(check_path), "Check file not found! Aborting."
+
+        cmd = ["python3", check_path.as_posix()]
+        logger.info("$ %s", " ".join(cmd))
+        with track_resources("test_nagios_core_plugin_import", sampling_interval=0.1):
+            for _ in range(iterations * 10):
+                check_output(cmd, sudo=True, substitute_user=self.central_site.id)

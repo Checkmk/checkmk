@@ -52,6 +52,9 @@ clean --async
 # run ...
 test --test_output=all
 
+# Try with our proxy first and fall back to public proxy when fetching go modules.
+common --repo_env=GOPROXY="https://bazel-registry.lan.checkmk.net/proxy.golang.org/|https://proxy.golang.org|direct"
+
 # Flags for CI builds
 # Definition of "bazel x --config=ci -- ..."
 ## Common

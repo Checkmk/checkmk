@@ -3045,9 +3045,6 @@ msgstr "Absolut"
 msgid "Absolute %s space"
 msgstr "Spațiu absolut %s"
 
-msgid "Absolute commitable memory"
-msgstr "Memorie comutabilă absolută"
-
 msgid "Absolute difference"
 msgstr "Diferența absolută"
 
@@ -3065,6 +3062,10 @@ msgstr "Memorie liberă exactă"
 
 msgid "Absolute free space"
 msgstr "Spațiu liber exact"
+
+#, fuzzy
+msgid "Absolute free virtual memory"
+msgstr "Memorie liberă exactă"
 
 msgid "Absolute levels"
 msgstr "Niveluri absolute"
@@ -3153,13 +3154,14 @@ msgstr "O cale absolută către un certificat CA"
 msgid "Absolute time of alert"
 msgstr "Timpul Exact al Alertei"
 
-msgid "Absolute used commit charge"
-msgstr "Absolut folosit comiterea taxei"
-
 msgid "Absolute used leases levels"
 msgstr "Nivelurile absolute ale contractelor de leasing utilizate"
 
 msgid "Absolute used memory"
+msgstr "Memorie absolută utilizată"
+
+#, fuzzy
+msgid "Absolute used virtual memory"
 msgstr "Memorie absolută utilizată"
 
 msgid "Absolute value"
@@ -14162,18 +14164,6 @@ msgstr "Comentarii de serviciu"
 #, fuzzy
 msgid "Commit Latency"
 msgstr "Latență de scriere"
-
-msgid "Commit charge"
-msgstr "Angajarea taxei"
-
-msgid "Commit charge (averaged)"
-msgstr "Taxa de angajament (medie)"
-
-msgid "Commit charge in percent (relative to commit limit)"
-msgstr "Taxa de angajare în procente (în raport cu limita de angajare)"
-
-msgid "Commit charge levels"
-msgstr "Niveluri de taxă de angajament"
 
 msgid "Commit limit"
 msgstr "Limita de angajare"
@@ -75755,9 +75745,6 @@ msgstr "Utilizarea totală a cache-ului"
 msgid "Total comments: %d"
 msgstr "Total comentarii: %d"
 
-msgid "Total commitable memory"
-msgstr "Memorie totală de comisionare"
-
 #, fuzzy
 msgid "Total connections"
 msgstr "conexiune normală"
@@ -81355,6 +81342,10 @@ msgstr "Total memorie virtuală"
 msgid "Used virtual memory (averaged)"
 msgstr "Memorie comutabilă (medie)"
 
+#, fuzzy
+msgid "Used virtual memory in percent"
+msgstr "Total memorie virtuală"
+
 msgid "User"
 msgstr "Utilizator"
 
@@ -82884,8 +82875,24 @@ msgstr "Starea heartbeat a mașinii virtuale (de exemplu, ESX)"
 msgid "Virtual machines may take a few minutes to show up."
 msgstr ""
 
+#, fuzzy
+msgid "Virtual memory"
+msgstr "Utilizarea memoriei virtuale"
+
+#, fuzzy
+msgid "Virtual memory (Absolute)"
+msgstr "Utilizarea memoriei virtuale"
+
+#, fuzzy
+msgid "Virtual memory (averaged)"
+msgstr "Memorie comutabilă (medie)"
+
 msgid "Virtual memory averaging"
 msgstr "Calcularea mediei de memorie virtuală"
+
+#, fuzzy
+msgid "Virtual memory levels"
+msgstr "Utilizarea memoriei virtuale"
 
 #, fuzzy
 msgid "Virtual memory size"
@@ -90109,6 +90116,27 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Absolute commitable memory"
+#~ msgstr "Memorie comutabilă absolută"
+
+#~ msgid "Absolute used commit charge"
+#~ msgstr "Absolut folosit comiterea taxei"
+
+#~ msgid "Commit charge"
+#~ msgstr "Angajarea taxei"
+
+#~ msgid "Commit charge (averaged)"
+#~ msgstr "Taxa de angajament (medie)"
+
+#~ msgid "Commit charge in percent (relative to commit limit)"
+#~ msgstr "Taxa de angajare în procente (în raport cu limita de angajare)"
+
+#~ msgid "Commit charge levels"
+#~ msgstr "Niveluri de taxă de angajament"
+
+#~ msgid "Total commitable memory"
+#~ msgstr "Memorie totală de comisionare"
 
 #, fuzzy
 #~ msgid "License suspended: 'Activate changes' is blocked."

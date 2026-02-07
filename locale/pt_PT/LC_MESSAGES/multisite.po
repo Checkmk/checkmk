@@ -3020,9 +3020,6 @@ msgstr "Absoluto"
 msgid "Absolute %s space"
 msgstr "Espaço absoluto de %s"
 
-msgid "Absolute commitable memory"
-msgstr "Memória de compromisso absoluta"
-
 #, fuzzy
 msgid "Absolute difference"
 msgstr "Absolutamente grátis"
@@ -3041,6 +3038,10 @@ msgstr "Memória livre absoluta"
 
 msgid "Absolute free space"
 msgstr "Espaço livre absoluto"
+
+#, fuzzy
+msgid "Absolute free virtual memory"
+msgstr "Memória livre absoluta"
 
 msgid "Absolute levels"
 msgstr "Níveis Absolutos"
@@ -3130,15 +3131,15 @@ msgstr "Um caminho absoluto para um certificado CA"
 msgid "Absolute time of alert"
 msgstr "Tempo Absoluto de Alerta"
 
-#, fuzzy
-msgid "Absolute used commit charge"
-msgstr "Memória de compromisso absoluta"
-
 msgid "Absolute used leases levels"
 msgstr "Níveis absolutos de locações usadas"
 
 #, fuzzy
 msgid "Absolute used memory"
+msgstr "Memória livre absoluta"
+
+#, fuzzy
+msgid "Absolute used virtual memory"
 msgstr "Memória livre absoluta"
 
 msgid "Absolute value"
@@ -14142,21 +14143,6 @@ msgstr "Comentários de serviço"
 #, fuzzy
 msgid "Commit Latency"
 msgstr "Escrever Latência"
-
-#, fuzzy
-msgid "Commit charge"
-msgstr "Comprometa-se a cobrar"
-
-#, fuzzy
-msgid "Commit charge (averaged)"
-msgstr "Comprometa a Média da Carga"
-
-msgid "Commit charge in percent (relative to commit limit)"
-msgstr "Taxa de compromisso em percentagem (relativa ao limite de compromisso)"
-
-#, fuzzy
-msgid "Commit charge levels"
-msgstr "Comprometa os níveis de carga"
 
 msgid "Commit limit"
 msgstr "Limite de compromisso"
@@ -75456,10 +75442,6 @@ msgid "Total comments: %d"
 msgstr "Total de comentários: %d"
 
 #, fuzzy
-msgid "Total commitable memory"
-msgstr "Memória de compromisso absoluta"
-
-#, fuzzy
 msgid "Total connections"
 msgstr "ligação normal"
 
@@ -81110,6 +81092,10 @@ msgstr "Memória virtual total"
 msgid "Used virtual memory (averaged)"
 msgstr "Cálculo da média da memória virtual"
 
+#, fuzzy
+msgid "Used virtual memory in percent"
+msgstr "Memória virtual total"
+
 msgid "User"
 msgstr "Utilizador"
 
@@ -82637,8 +82623,24 @@ msgstr "Máquina virtual (por exemplo, ESX) estado de batimento cardíaco"
 msgid "Virtual machines may take a few minutes to show up."
 msgstr ""
 
+#, fuzzy
+msgid "Virtual memory"
+msgstr "Utilização de memória virtual"
+
+#, fuzzy
+msgid "Virtual memory (Absolute)"
+msgstr "Utilização de memória virtual"
+
+#, fuzzy
+msgid "Virtual memory (averaged)"
+msgstr "Cálculo da média da memória virtual"
+
 msgid "Virtual memory averaging"
 msgstr "Cálculo da média da memória virtual"
+
+#, fuzzy
+msgid "Virtual memory levels"
+msgstr "Utilização de memória virtual"
 
 #, fuzzy
 msgid "Virtual memory size"
@@ -89802,6 +89804,33 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#~ msgid "Absolute commitable memory"
+#~ msgstr "Memória de compromisso absoluta"
+
+#, fuzzy
+#~ msgid "Absolute used commit charge"
+#~ msgstr "Memória de compromisso absoluta"
+
+#, fuzzy
+#~ msgid "Commit charge"
+#~ msgstr "Comprometa-se a cobrar"
+
+#, fuzzy
+#~ msgid "Commit charge (averaged)"
+#~ msgstr "Comprometa a Média da Carga"
+
+#~ msgid "Commit charge in percent (relative to commit limit)"
+#~ msgstr ""
+#~ "Taxa de compromisso em percentagem (relativa ao limite de compromisso)"
+
+#, fuzzy
+#~ msgid "Commit charge levels"
+#~ msgstr "Comprometa os níveis de carga"
+
+#, fuzzy
+#~ msgid "Total commitable memory"
+#~ msgstr "Memória de compromisso absoluta"
 
 #, fuzzy
 #~ msgid "License suspended: 'Activate changes' is blocked."

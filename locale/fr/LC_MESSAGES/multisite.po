@@ -3068,9 +3068,6 @@ msgstr "Absolument"
 msgid "Absolute %s space"
 msgstr "Espace absolu %s"
 
-msgid "Absolute commitable memory"
-msgstr "Mémoire commutable absolue"
-
 msgid "Absolute difference"
 msgstr "Différence absolue"
 
@@ -3088,6 +3085,10 @@ msgstr "Mémoire libre absolue"
 
 msgid "Absolute free space"
 msgstr "Espace libre absolu"
+
+#, fuzzy
+msgid "Absolute free virtual memory"
+msgstr "Mémoire libre absolue"
 
 msgid "Absolute levels"
 msgstr "Niveaux absolus"
@@ -3176,13 +3177,14 @@ msgstr "Un chemin absolu vers un certificat CA"
 msgid "Absolute time of alert"
 msgstr "Heure absolue de l'alerte"
 
-msgid "Absolute used commit charge"
-msgstr ""
-
 msgid "Absolute used leases levels"
 msgstr "Niveaux absolus des baux utilisés"
 
 msgid "Absolute used memory"
+msgstr "Mémoire utilisée absolue"
+
+#, fuzzy
+msgid "Absolute used virtual memory"
 msgstr "Mémoire utilisée absolue"
 
 msgid "Absolute value"
@@ -14247,22 +14249,6 @@ msgstr "Commentaires sur le service"
 #, fuzzy
 msgid "Commit Latency"
 msgstr "Latence d'écriture"
-
-#, fuzzy
-msgid "Commit charge"
-msgstr "Commit Charge"
-
-#, fuzzy
-msgid "Commit charge (averaged)"
-msgstr "Charge d'engagement Moyenne"
-
-msgid "Commit charge in percent (relative to commit limit)"
-msgstr ""
-"Charge d'engagement en pourcentage (par rapport à la limite d'engagement)"
-
-#, fuzzy
-msgid "Commit charge levels"
-msgstr "Niveaux de charge d'engagement"
 
 msgid "Commit limit"
 msgstr "Limite d'engagement"
@@ -76223,10 +76209,6 @@ msgid "Total comments: %d"
 msgstr ""
 
 #, fuzzy
-msgid "Total commitable memory"
-msgstr "Mémoire commutable absolue"
-
-#, fuzzy
 msgid "Total connections"
 msgstr "connexion normale"
 
@@ -81944,6 +81926,10 @@ msgstr "Mémoire virtuelle totale"
 msgid "Used virtual memory (averaged)"
 msgstr "Moyenne de la mémoire virtuelle"
 
+#, fuzzy
+msgid "Used virtual memory in percent"
+msgstr "Mémoire virtuelle totale"
+
 msgid "User"
 msgstr "Utilisateur"
 
@@ -83493,8 +83479,24 @@ msgstr "État du battement de cœur de la machine virtuelle (par exemple ESX)"
 msgid "Virtual machines may take a few minutes to show up."
 msgstr ""
 
+#, fuzzy
+msgid "Virtual memory"
+msgstr "Utilisation de la mémoire virtuelle"
+
+#, fuzzy
+msgid "Virtual memory (Absolute)"
+msgstr "Utilisation de la mémoire virtuelle"
+
+#, fuzzy
+msgid "Virtual memory (averaged)"
+msgstr "Moyenne de la mémoire virtuelle"
+
 msgid "Virtual memory averaging"
 msgstr "Moyenne de la mémoire virtuelle"
+
+#, fuzzy
+msgid "Virtual memory levels"
+msgstr "Utilisation de la mémoire virtuelle"
 
 #, fuzzy
 msgid "Virtual memory size"
@@ -90786,6 +90788,29 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#~ msgid "Absolute commitable memory"
+#~ msgstr "Mémoire commutable absolue"
+
+#, fuzzy
+#~ msgid "Commit charge"
+#~ msgstr "Commit Charge"
+
+#, fuzzy
+#~ msgid "Commit charge (averaged)"
+#~ msgstr "Charge d'engagement Moyenne"
+
+#~ msgid "Commit charge in percent (relative to commit limit)"
+#~ msgstr ""
+#~ "Charge d'engagement en pourcentage (par rapport à la limite d'engagement)"
+
+#, fuzzy
+#~ msgid "Commit charge levels"
+#~ msgstr "Niveaux de charge d'engagement"
+
+#, fuzzy
+#~ msgid "Total commitable memory"
+#~ msgstr "Mémoire commutable absolue"
 
 #, fuzzy, python-format
 #~ msgid "Please contact the Checkmk sales team at %s and renew your license."

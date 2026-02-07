@@ -2903,9 +2903,6 @@ msgstr "絶対"
 msgid "Absolute %s space"
 msgstr "絶対 %s スペース"
 
-msgid "Absolute commitable memory"
-msgstr "絶対コミット可能メモリ"
-
 msgid "Absolute difference"
 msgstr "絶対差"
 
@@ -2923,6 +2920,10 @@ msgstr "絶対空きメモリ"
 
 msgid "Absolute free space"
 msgstr "絶対空きスペース"
+
+#, fuzzy
+msgid "Absolute free virtual memory"
+msgstr "絶対空きメモリ"
 
 msgid "Absolute levels"
 msgstr "絶対レベル"
@@ -3009,13 +3010,14 @@ msgstr "カタログZIPファイルの絶対パス"
 msgid "Absolute time of alert"
 msgstr "アラートの絶対時間"
 
-msgid "Absolute used commit charge"
-msgstr "絶対コミットチャージ"
-
 msgid "Absolute used leases levels"
 msgstr "絶対使用済みリースレベル"
 
 msgid "Absolute used memory"
+msgstr "絶対使用メモリ"
+
+#, fuzzy
+msgid "Absolute used virtual memory"
 msgstr "絶対使用メモリ"
 
 msgid "Absolute value"
@@ -13305,18 +13307,6 @@ msgstr "サービスのコメント"
 
 msgid "Commit Latency"
 msgstr "コミットレイテンシ"
-
-msgid "Commit charge"
-msgstr "コミットチャージ"
-
-msgid "Commit charge (averaged)"
-msgstr "コミットチャージ(平均)"
-
-msgid "Commit charge in percent (relative to commit limit)"
-msgstr "パーセント単位のコミットチャージ(コミット制限に対して)"
-
-msgid "Commit charge levels"
-msgstr "コミットチャージレベル"
 
 msgid "Commit limit"
 msgstr "コミット制限"
@@ -71153,9 +71143,6 @@ msgstr "キャッシュの合計使用量"
 msgid "Total comments: %d"
 msgstr "トータルコメント :%d"
 
-msgid "Total commitable memory"
-msgstr "合計コミット可能メモリ"
-
 msgid "Total connections"
 msgstr "総接続数"
 
@@ -76116,6 +76103,10 @@ msgstr "使用済み仮想メモリ"
 msgid "Used virtual memory (averaged)"
 msgstr "使用済み仮想メモリ（平均）"
 
+#, fuzzy
+msgid "Used virtual memory in percent"
+msgstr "使用済み仮想メモリ"
+
 msgid "User"
 msgstr "ユーザー"
 
@@ -77462,8 +77453,24 @@ msgstr "仮想マシン(ESXなど)のハートビートステータス"
 msgid "Virtual machines may take a few minutes to show up."
 msgstr "仮想マシンが表示されるまで数分かかる場合があります。"
 
+#, fuzzy
+msgid "Virtual memory"
+msgstr "仮想メモリサイズ"
+
+#, fuzzy
+msgid "Virtual memory (Absolute)"
+msgstr "仮想メモリサイズ"
+
+#, fuzzy
+msgid "Virtual memory (averaged)"
+msgstr "仮想メモリの平均化"
+
 msgid "Virtual memory averaging"
 msgstr "仮想メモリの平均化"
+
+#, fuzzy
+msgid "Virtual memory levels"
+msgstr "仮想メモリサイズ"
 
 msgid "Virtual memory size"
 msgstr "仮想メモリサイズ"
@@ -84349,6 +84356,27 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Absolute commitable memory"
+#~ msgstr "絶対コミット可能メモリ"
+
+#~ msgid "Absolute used commit charge"
+#~ msgstr "絶対コミットチャージ"
+
+#~ msgid "Commit charge"
+#~ msgstr "コミットチャージ"
+
+#~ msgid "Commit charge (averaged)"
+#~ msgstr "コミットチャージ(平均)"
+
+#~ msgid "Commit charge in percent (relative to commit limit)"
+#~ msgstr "パーセント単位のコミットチャージ(コミット制限に対して)"
+
+#~ msgid "Commit charge levels"
+#~ msgstr "コミットチャージレベル"
+
+#~ msgid "Total commitable memory"
+#~ msgstr "合計コミット可能メモリ"
 
 #~ msgid "License suspended: 'Activate changes' is blocked."
 #~ msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています。"

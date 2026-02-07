@@ -3013,9 +3013,6 @@ msgstr "Absolut"
 msgid "Absolute %s space"
 msgstr "Absoluter %s Speicherplatz"
 
-msgid "Absolute commitable memory"
-msgstr "Absoluter commitbarer Speicherplatz"
-
 msgid "Absolute difference"
 msgstr "Absolute Differenz"
 
@@ -3032,6 +3029,10 @@ msgid "Absolute free memory"
 msgstr "Absoluter freier Speicherplatz"
 
 msgid "Absolute free space"
+msgstr "Absoluter freier Speicherplatz"
+
+#, fuzzy
+msgid "Absolute free virtual memory"
 msgstr "Absoluter freier Speicherplatz"
 
 msgid "Absolute levels"
@@ -3118,13 +3119,14 @@ msgstr "Absoluter Pfad zur Katalog-ZIP-Datei"
 msgid "Absolute time of alert"
 msgstr "Absolute Zeit des Alerts"
 
-msgid "Absolute used commit charge"
-msgstr "Absolute, verbrauchte Commit Charge"
-
 msgid "Absolute used leases levels"
 msgstr "Absolute Levels für benutzte Leases"
 
 msgid "Absolute used memory"
+msgstr "Absoluter genutzter Speicherplatz"
+
+#, fuzzy
+msgid "Absolute used virtual memory"
 msgstr "Absoluter genutzter Speicherplatz"
 
 msgid "Absolute value"
@@ -13716,18 +13718,6 @@ msgstr "Kommentare von Service"
 
 msgid "Commit Latency"
 msgstr "Übertragungslatenz"
-
-msgid "Commit charge"
-msgstr "Commit Charge"
-
-msgid "Commit charge (averaged)"
-msgstr "Commit Charge (gemittelt)"
-
-msgid "Commit charge in percent (relative to commit limit)"
-msgstr "Commit Charge in Prozent (bezogen auf Commit-Limit)"
-
-msgid "Commit charge levels"
-msgstr "Commit Charge Levels"
 
 msgid "Commit limit"
 msgstr "Commit-Limit"
@@ -73370,9 +73360,6 @@ msgstr "Gesamte Cache-Auslastung"
 msgid "Total comments: %d"
 msgstr "Kommentare insgesamt: %d"
 
-msgid "Total commitable memory"
-msgstr "Absoluter aktivierbarer Speicherplatz"
-
 msgid "Total connections"
 msgstr "Gesamtzahl Verbindungen"
 
@@ -78409,6 +78396,10 @@ msgstr "Verwendeter virtueller Speicher"
 msgid "Used virtual memory (averaged)"
 msgstr "Verwendeter virtueller Speicher (gemittelt)"
 
+#, fuzzy
+msgid "Used virtual memory in percent"
+msgstr "Verwendeter virtueller Speicher"
+
 msgid "User"
 msgstr "Benutzer"
 
@@ -79780,8 +79771,24 @@ msgid "Virtual machines may take a few minutes to show up."
 msgstr ""
 "Es kann ein paar Minuten dauern, bis virtuelle Maschinen angezeigt werden."
 
+#, fuzzy
+msgid "Virtual memory"
+msgstr "Größe des virtuellen Speichers"
+
+#, fuzzy
+msgid "Virtual memory (Absolute)"
+msgstr "Größe des virtuellen Speichers"
+
+#, fuzzy
+msgid "Virtual memory (averaged)"
+msgstr "Freier virtueller Speicher (gemittelt)"
+
 msgid "Virtual memory averaging"
 msgstr "Mittelung des virtuellen Speichers"
+
+#, fuzzy
+msgid "Virtual memory levels"
+msgstr "Größe des virtuellen Speichers"
 
 msgid "Virtual memory size"
 msgstr "Größe des virtuellen Speichers"
@@ -86975,6 +86982,27 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Absolute commitable memory"
+#~ msgstr "Absoluter commitbarer Speicherplatz"
+
+#~ msgid "Absolute used commit charge"
+#~ msgstr "Absolute, verbrauchte Commit Charge"
+
+#~ msgid "Commit charge"
+#~ msgstr "Commit Charge"
+
+#~ msgid "Commit charge (averaged)"
+#~ msgstr "Commit Charge (gemittelt)"
+
+#~ msgid "Commit charge in percent (relative to commit limit)"
+#~ msgstr "Commit Charge in Prozent (bezogen auf Commit-Limit)"
+
+#~ msgid "Commit charge levels"
+#~ msgstr "Commit Charge Levels"
+
+#~ msgid "Total commitable memory"
+#~ msgstr "Absoluter aktivierbarer Speicherplatz"
 
 #~ msgid "License suspended: 'Activate changes' is blocked."
 #~ msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert."

@@ -3017,9 +3017,6 @@ msgstr "Absoluut"
 msgid "Absolute %s space"
 msgstr "Absolute %s ruimte"
 
-msgid "Absolute commitable memory"
-msgstr "Absoluut beschikbaar geheugen"
-
 #, fuzzy
 msgid "Absolute difference"
 msgstr "Absoluut vrij"
@@ -3038,6 +3035,10 @@ msgstr "Absoluut vrij geheugen"
 
 msgid "Absolute free space"
 msgstr "Absolute vrije ruimte"
+
+#, fuzzy
+msgid "Absolute free virtual memory"
+msgstr "Absoluut vrij geheugen"
 
 msgid "Absolute levels"
 msgstr "Absolute niveaus"
@@ -3127,15 +3128,15 @@ msgstr "Een absoluut pad naar een CA-certificaat"
 msgid "Absolute time of alert"
 msgstr "Absolute tijd van alarm"
 
-#, fuzzy
-msgid "Absolute used commit charge"
-msgstr "Absoluut beschikbaar geheugen"
-
 msgid "Absolute used leases levels"
 msgstr "Absolute gebruikte leasingniveaus"
 
 #, fuzzy
 msgid "Absolute used memory"
+msgstr "Absoluut vrij geheugen"
+
+#, fuzzy
+msgid "Absolute used virtual memory"
 msgstr "Absoluut vrij geheugen"
 
 msgid "Absolute value"
@@ -14141,21 +14142,6 @@ msgstr "Commentaar van de dienst"
 #, fuzzy
 msgid "Commit Latency"
 msgstr "Schrijf latentie"
-
-#, fuzzy
-msgid "Commit charge"
-msgstr "Vastleggen Last"
-
-#, fuzzy
-msgid "Commit charge (averaged)"
-msgstr "Vastleggingskrediet Gemiddelde"
-
-msgid "Commit charge in percent (relative to commit limit)"
-msgstr "Vastleggingskost in procent (in verhouding tot de vastleggingslimiet)"
-
-#, fuzzy
-msgid "Commit charge levels"
-msgstr "Vastleggingsniveaus"
 
 msgid "Commit limit"
 msgstr "Vastleggingslimiet"
@@ -75507,10 +75493,6 @@ msgid "Total comments: %d"
 msgstr "Totaal documenten"
 
 #, fuzzy
-msgid "Total commitable memory"
-msgstr "Absoluut beschikbaar geheugen"
-
-#, fuzzy
 msgid "Total connections"
 msgstr "normale verbinding"
 
@@ -81177,6 +81159,10 @@ msgstr "Totaal virtueel geheugen"
 msgid "Used virtual memory (averaged)"
 msgstr "Gemiddeld virtueel geheugen"
 
+#, fuzzy
+msgid "Used virtual memory in percent"
+msgstr "Totaal virtueel geheugen"
+
 msgid "User"
 msgstr "Gebruiker"
 
@@ -82706,8 +82692,24 @@ msgstr "Virtual machine (bijvoorbeeld ESX) heartbeat status"
 msgid "Virtual machines may take a few minutes to show up."
 msgstr ""
 
+#, fuzzy
+msgid "Virtual memory"
+msgstr "Gebruik virtueel geheugen"
+
+#, fuzzy
+msgid "Virtual memory (Absolute)"
+msgstr "Gebruik virtueel geheugen"
+
+#, fuzzy
+msgid "Virtual memory (averaged)"
+msgstr "Gemiddeld virtueel geheugen"
+
 msgid "Virtual memory averaging"
 msgstr "Gemiddeld virtueel geheugen"
+
+#, fuzzy
+msgid "Virtual memory levels"
+msgstr "Gebruik virtueel geheugen"
 
 #, fuzzy
 msgid "Virtual memory size"
@@ -89914,6 +89916,33 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Absolute commitable memory"
+#~ msgstr "Absoluut beschikbaar geheugen"
+
+#, fuzzy
+#~ msgid "Absolute used commit charge"
+#~ msgstr "Absoluut beschikbaar geheugen"
+
+#, fuzzy
+#~ msgid "Commit charge"
+#~ msgstr "Vastleggen Last"
+
+#, fuzzy
+#~ msgid "Commit charge (averaged)"
+#~ msgstr "Vastleggingskrediet Gemiddelde"
+
+#~ msgid "Commit charge in percent (relative to commit limit)"
+#~ msgstr ""
+#~ "Vastleggingskost in procent (in verhouding tot de vastleggingslimiet)"
+
+#, fuzzy
+#~ msgid "Commit charge levels"
+#~ msgstr "Vastleggingsniveaus"
+
+#, fuzzy
+#~ msgid "Total commitable memory"
+#~ msgstr "Absoluut beschikbaar geheugen"
 
 #, fuzzy
 #~ msgid "License suspended: 'Activate changes' is blocked."

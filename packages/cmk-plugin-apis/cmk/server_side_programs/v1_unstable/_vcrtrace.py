@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Arguments: unused / shadowing builtins. But we're following argparse.Action protocol.
-# ruff: noqa: ARG002,A001,A002
+# ruff: noqa: A001, A002
 
 import argparse
 import atexit

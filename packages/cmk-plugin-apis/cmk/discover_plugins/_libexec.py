@@ -19,16 +19,7 @@ def family_libexec_dir(module_name: str) -> Path:
       module_name: The name of a module that implements a plug-in of any
         of the well-known plug-in groups, i.e. two levels into the plugin
         families namespace.
-
-    Example:
-      In this example the family is "prism":
-
-      >>> family_libexec_dir("cmk.plugins.prism.server_side_calls.special_agent").parts[-4:]
-      ('cmk', 'plugins', 'prism', 'libexec')
-
     """
-    #    ^- arbitrary example, adjust if this file is ever (re)moved.
-
     if (file := import_module(module_name).__file__) is None:
         # should never happen: we know we loaded this from a file.
         raise TypeError(f"module does not have a __file__ attrbute: {module_name}")

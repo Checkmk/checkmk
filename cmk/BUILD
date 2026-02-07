@@ -230,6 +230,7 @@ CMK_PACKAGES = [
     "//packages/cmk-plugins:lib",
     "//packages/cmk-plugin-apis:agent_based",
     "//packages/cmk-plugin-apis:bakery",
+    "//packages/cmk-plugin-apis:discover_plugins",
     "//packages/cmk-plugin-apis:graphing",
     "//packages/cmk-plugin-apis:inventory_ui",
     "//packages/cmk-plugin-apis:rulesets",

@@ -9,7 +9,7 @@ import { defineComponent, ref } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import CmkDropdown from '@/components/CmkDropdown'
-import { ErrorResponse, Response } from '@/components/CmkSuggestions'
+import { ErrorResponse, Response, WarningResponse } from '@/components/CmkSuggestions'
 
 test('dropdown shows options', async () => {
   render(CmkDropdown, {
@@ -851,6 +851,34 @@ test('dropdown with callback-filtered clears error message after successful sele
 
   expect(selectedOption).toBe('one')
 })
+
+test('dropdown with callback-filtered shows warning message when callback returns WarningResponse', async () => {
+  const warningMessage = 'This is a warning from the backend'
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new WarningResponse(warningMessage, [
+            { name: 'option1', title: 'Option 1' },
+            { name: 'option2', title: 'Option 2' }
+          ])
+        }
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'dropdown-label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+
+  await screen.findByText(warningMessage)
+  await screen.findByText('Option 1')
+  await screen.findByText('Option 2')
+})
+
 test('dropdown with callback does not prefill filter input for non-regex selected option', async () => {
   const selectedOption = 'host1'
   render(CmkDropdown, {

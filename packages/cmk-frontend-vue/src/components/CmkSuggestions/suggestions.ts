@@ -18,6 +18,16 @@ export class ErrorResponse {
   }
 }
 
+export class WarningResponse {
+  warning: string
+  choices: Array<Suggestion>
+
+  constructor(warning: string, choices: Array<Suggestion> = []) {
+    this.warning = warning
+    this.choices = choices
+  }
+}
+
 export class Response {
   choices: Array<Suggestion>
 

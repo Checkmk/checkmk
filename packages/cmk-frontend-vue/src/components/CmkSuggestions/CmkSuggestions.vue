@@ -12,7 +12,7 @@ import { immediateWatch } from '@/lib/watch'
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
-import { ErrorResponse, Response, type Suggestion } from './suggestions'
+import { ErrorResponse, Response, type Suggestion, WarningResponse } from './suggestions'
 
 const { _t } = usei18n()
 
@@ -28,7 +28,7 @@ type SuggestionsFiltered = {
 
 type SuggestionsCallbackFiltered = {
   type: 'callback-filtered'
-  querySuggestions: (query: string) => Promise<ErrorResponse | Response>
+  querySuggestions: (query: string) => Promise<ErrorResponse | WarningResponse | Response>
 }
 
 export type Suggestions = SuggestionsFixed | SuggestionsFiltered | SuggestionsCallbackFiltered
@@ -56,6 +56,7 @@ const emit = defineEmits<{
 }>()
 
 const error = ref<string>('')
+const warning = ref<string>('')
 const suggestionRefs = useTemplateRef('suggestionRefs')
 const filterString = ref<string>('')
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
@@ -97,7 +98,7 @@ function findSuggestionAsIndex(
 async function getSuggestions(
   suggestions: Suggestions,
   query: string
-): Promise<Response | ErrorResponse> {
+): Promise<Response | ErrorResponse | WarningResponse> {
   switch (suggestions.type) {
     case 'filtered':
       return new Response(
@@ -123,8 +124,16 @@ immediateWatch(
 
     if (result instanceof ErrorResponse) {
       error.value = result.error
+      warning.value = ''
+    } else if (result instanceof WarningResponse) {
+      warning.value = result.warning
+      error.value = ''
+      filteredSuggestions.value = result.choices
+      activeSuggestion.value = null
+      setSiblingOrFirstActive(0)
     } else {
       error.value = ''
+      warning.value = ''
       filteredSuggestions.value = result.choices
       const foundSuggestion = newSelectedSuggestion
         ? filteredSuggestions.value.find((s) => s.name === newSelectedSuggestion)
@@ -253,6 +262,7 @@ defineExpose({
     </span>
     <CmkScrollContainer :max-height="'200px'">
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
+      <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
       <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
       <li
         v-for="suggestion in filteredSuggestions"
@@ -333,8 +343,16 @@ defineExpose({
   }
 }
 
+.cmk-suggestions--error,
+.cmk-suggestions--warning {
+  width: fit-content;
+}
+
 .cmk-suggestions--error {
   background-color: var(--error-msg-bg-color);
-  width: fit-content;
+}
+
+.cmk-suggestions--warning {
+  background-color: color-mix(in srgb, var(--color-yellow-50) 25%, transparent);
 }
 </style>

@@ -14,6 +14,7 @@ from typing import Any
 
 from cmk import fields
 from cmk.ccc.version import Edition
+from cmk.gui.autocompleters import AutocompleterBackendWarning
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.autocomplete.request_schemas import RequestSchema
@@ -68,6 +69,13 @@ def show(params: Mapping[str, Any]) -> Response:
 
     try:
         choices = function(active_config, value, parameters)
+    except AutocompleterBackendWarning as e:
+        return serve_json(
+            {
+                "choices": [{"id": k, "value": v} for k, v in e.choices if k is not None],
+                "warning": str(e),
+            }
+        )
 
     except KeyError as e:
         return problem(400, "Missing field", f"Missing field: {e}")

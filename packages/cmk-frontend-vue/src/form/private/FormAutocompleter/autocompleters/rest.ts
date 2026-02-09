@@ -13,7 +13,7 @@ import type { CmkError } from '@/lib/error'
 import { untranslated } from '@/lib/i18n'
 import { API_ROOT } from '@/lib/rest-api-client/constants'
 
-import { ErrorResponse, Response } from '@/components/CmkSuggestions'
+import { ErrorResponse, Response, WarningResponse } from '@/components/CmkSuggestions'
 
 const AUTOCOMPLETER_API = `${API_ROOT}/objects/autocomplete/{autocompleter}`
 
@@ -21,12 +21,15 @@ type RestAutocompleterChoice = {
   id: string | null
   value: string
 }
-export type RestAutocompleterResponse = { choices: RestAutocompleterChoice[] }
+export type RestAutocompleterResponse = {
+  choices: RestAutocompleterChoice[]
+  warning?: string
+}
 
 export async function fetchtData(
   value: string,
   data: AutocompleterData
-): Promise<RestAutocompleterChoice[]> {
+): Promise<RestAutocompleterResponse> {
   const payload = {
     value,
     parameters: data.params
@@ -39,22 +42,29 @@ export async function fetchtData(
   await response.raiseForStatus()
   const ajaxResponse = (await response.json()) as RestAutocompleterResponse
 
-  return ajaxResponse.choices as RestAutocompleterChoice[]
+  return ajaxResponse
 }
 
 export async function fetchSuggestions(
   autocompleter: Autocompleter,
   query: string
-): Promise<Response | ErrorResponse> {
+): Promise<Response | ErrorResponse | WarningResponse> {
   if (autocompleter.fetch_method !== 'rest_autocomplete') {
     throw new Error(`Internal: Can not fetch data for autocompleter ${autocompleter.fetch_method}`)
   }
 
   try {
     const result = await fetchtData(query, autocompleter.data)
-    return new Response(
-      result.map((element) => ({ name: element.id, title: untranslated(element.value) }))
-    )
+    const choices = result.choices.map((element) => ({
+      name: element.id,
+      title: untranslated(element.value)
+    }))
+
+    if (result.warning) {
+      return new WarningResponse(result.warning, choices)
+    }
+
+    return new Response(choices)
   } catch (e: unknown) {
     const errorDescription = (e as CmkError)?.message || 'unknown error'
     return new ErrorResponse(errorDescription)

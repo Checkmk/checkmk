@@ -12,7 +12,12 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import type { ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
-import { ErrorResponse, Response, type Suggestion } from '@/components/CmkSuggestions'
+import {
+  ErrorResponse,
+  Response,
+  type Suggestion,
+  WarningResponse
+} from '@/components/CmkSuggestions'
 
 import { fetchSuggestions } from '@/form/private/FormAutocompleter/autocompleter'
 
@@ -31,12 +36,14 @@ const props = defineProps<{
 
 const model = defineModel<string | null>({ default: null })
 
-async function suggestionCallback(query: string): Promise<ErrorResponse | Response> {
+async function suggestionCallback(
+  query: string
+): Promise<ErrorResponse | WarningResponse | Response> {
   if (props.autocompleter === undefined) {
     return new ErrorResponse('internal: props.autocompleter undefined')
   }
   const newValue = await fetchSuggestions(props.autocompleter, query)
-  if (newValue instanceof ErrorResponse) {
+  if (newValue instanceof ErrorResponse || newValue instanceof WarningResponse) {
     return newValue
   }
 

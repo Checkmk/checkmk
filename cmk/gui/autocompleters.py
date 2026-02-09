@@ -27,6 +27,18 @@ from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.groups_io import all_groups
 
 
+class AutocompleterBackendWarning(Exception):
+    """Warning from an autocompleter backend that allows user to continue with input.
+
+    Used when a backend service is unavailable but user input should still be allowed.
+    The exception carries both a warning message and the fallback choices to display.
+    """
+
+    def __init__(self, message: str, choices: Choices) -> None:
+        super().__init__(message)
+        self.choices = choices
+
+
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:
     page_registry.register(PageEndpoint("ajax_vs_autocomplete", PageVsAutocomplete()))
     autocompleter_registry_.register_autocompleter(

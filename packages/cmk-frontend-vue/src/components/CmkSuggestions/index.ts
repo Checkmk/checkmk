@@ -6,5 +6,5 @@
 import CmkSuggestions from './CmkSuggestions.vue'
 
 export default CmkSuggestions
-export { ErrorResponse, Response, type Suggestion } from './suggestions'
+export { ErrorResponse, Response, WarningResponse, type Suggestion } from './suggestions'
 export { type Suggestions } from './CmkSuggestions.vue'

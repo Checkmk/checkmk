@@ -22,3 +22,8 @@ class ResponseSchema(BaseSchema):
         fields.Nested(Choice),
         description="A list of choices.",
     )
+    warning = fields.String(
+        description="An optional warning message to display to the user.",
+        allow_none=True,
+        load_default=None,
+    )

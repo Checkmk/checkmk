@@ -17,8 +17,8 @@ def _consume_down_interfaces(string_table: StringTable) -> tuple[list[str], int]
     for idx, line in enumerate(string_table[1:]):
         if line[0].startswith("["):
             break
-        assert len(line) == 1, "Trying to parse 'if -ld' output but got multiple entries per line"
-        interfaces_in_down_state.append(line[0])
+        for l in line:
+            interfaces_in_down_state.append(l)
     return interfaces_in_down_state, idx + 1
 
 

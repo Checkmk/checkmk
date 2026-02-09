@@ -530,6 +530,7 @@ ErrorStatusCodeInt = Literal[
     428,
     429,
     500,
+    503,
     504,
 ]
 SuccessStatusCodeInt = Literal[
@@ -571,6 +572,7 @@ StatusCode = Literal[
     "428",
     "429",
     "500",
+    "503",
     "504",
 ]
 

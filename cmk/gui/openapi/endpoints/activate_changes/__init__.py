@@ -15,6 +15,7 @@ You can find an introduction to the configuration of Checkmk including activatio
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
+import re
 from collections.abc import Mapping
 from dataclasses import asdict
 from typing import Any
@@ -22,8 +23,9 @@ from urllib.parse import urlparse
 
 from cmk import fields
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
+from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.activate_changes.request_schemas import ActivateChanges
 from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
@@ -32,7 +34,6 @@ from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
     ActivationStatusResponse,
     PendingChangesCollection,
 )
-from cmk.gui.openapi.endpoints.utils import may_fail
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
@@ -94,8 +95,9 @@ PERMISSIONS = permissions.AllPerm(
         409: "Some sites could not be activated.",
         422: "There are no changes to be activated.",
         423: "There is already an activation running.",
+        503: "The ui-job-scheduler is currently unavailable.",
     },
-    additional_status_codes=[303, 401, 403, 409, 422, 423],
+    additional_status_codes=[303, 401, 403, 409, 422, 423, 503],
     etag="input",
     request_schema=ActivateChanges,
     response_schema=ActivationRunResponse,
@@ -124,11 +126,8 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     constructors.require_etag(
         constructors.hash_of_dict(get_pending_changes(list(active_config.sites)))
     )
-    with (
-        may_fail(MKUserError),
-        may_fail(MKAuthException, status=401),
-        may_fail(MKLicensingError, status=403),
-    ):
+
+    try:
         activation_response = activate_changes_start(
             sites=sites,
             all_site_configs=active_config.sites,
@@ -142,6 +141,41 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
             use_git=active_config.wato_use_git,
             debug=active_config.debug,
         )
+
+    except MKHTTPException as exc:
+        raise ProblemException(
+            status=exc.status,
+            title="The operation has failed.",
+            detail=str(exc) if not hasattr(exc, "message") else exc.message,
+        ) from exc
+
+    except MKUserError as exc:
+        raise ProblemException(
+            status=400,
+            title="The operation has failed.",
+            detail=str(exc) if not hasattr(exc, "message") else exc.message,
+        ) from exc
+
+    except MKAuthException as exc:
+        raise ProblemException(
+            status=401,
+            title="The operation has failed.",
+            detail=str(exc) if not hasattr(exc, "message") else exc.message,
+        ) from exc
+
+    except MKLicensingError as exc:
+        raise ProblemException(
+            status=403,
+            title="The operation has failed.",
+            detail=str(exc) if not hasattr(exc, "message") else exc.message,
+        ) from exc
+
+    except StartupError as exc:
+        raise ProblemException(
+            status=503,
+            title="The ui-job-scheduler is currently unavailable.",
+            detail=re.sub(r"<[^>]+>", "", str(exc)),
+        ) from exc
 
     if body["redirect"]:
         wait_for = _completion_link(activation_response.activation_id)

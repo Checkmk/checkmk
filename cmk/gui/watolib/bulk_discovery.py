@@ -256,6 +256,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         tasks: Sequence[DiscoveryTask],
         job_interface: BackgroundProcessInterface,
     ) -> None:
+        if not tasks:
+            job_interface.send_result_message(
+                _("The selected options do not match any hosts, nothing to do.")
+            )
+            return
         job_interface.send_progress_update(_("Waiting to acquire lock"))
         with job_interface.gui_context(), store.locked(self.lock_file):
             job_interface.send_progress_update(_("Acquired lock"))

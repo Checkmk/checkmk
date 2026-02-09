@@ -5,6 +5,7 @@
  */
 import { type ModelRef, computed, readonly, ref } from 'vue'
 
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import type {
   ContentResponsiveGrid,
   DashboardConstants,
@@ -170,9 +171,9 @@ function computeConfiguredInternalLayouts(
 
 export function createWidgetLayout(
   responsiveGridContent: ContentResponsiveGrid,
-  widgetContentType: string,
-  constants: DashboardConstants
+  widgetContentType: string
 ): ResponsiveGridWidgetLayouts {
+  const constants = useInjectDashboardConstants()
   const configuredLayouts = computeConfiguredInternalLayouts(
     responsiveGridContent,
     constants.widgets

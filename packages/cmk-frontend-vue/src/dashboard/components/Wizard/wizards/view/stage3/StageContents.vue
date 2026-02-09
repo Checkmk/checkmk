@@ -18,6 +18,7 @@ import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { UseWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
@@ -31,7 +32,6 @@ const { _t } = usei18n()
 
 interface Stage3Props {
   dashboardKey: DashboardKey
-
   widget_id: string
   content: EmbeddedViewContent | LinkedViewContent
   effective_filter_context: EffectiveWidgetFilterContext
@@ -39,6 +39,7 @@ interface Stage3Props {
 }
 
 const props = defineProps<Stage3Props>()
+const dashboardConstants = useInjectDashboardConstants()
 const emit = defineEmits<{
   goPrev: []
   addWidget: [generalSettings: WidgetGeneralSettings]
@@ -46,6 +47,10 @@ const emit = defineEmits<{
 
 const visualizationProps = defineModel<UseWidgetVisualizationProps>('visualization', {
   required: true
+})
+
+const titleMacros = computed((): string[] | null => {
+  return dashboardConstants.widgets[props.content.type]?.title_macros ?? null
 })
 
 const effectiveTitle = usePreviewWidgetTitle(
@@ -113,6 +118,7 @@ function saveWidget() {
       v-model:title-url="visualizationProps.titleUrl.value"
       v-model:title-url-enabled="visualizationProps.titleUrlEnabled.value"
       v-model:title-url-validation-errors="visualizationProps.titleUrlValidationErrors.value"
+      :title-macros="titleMacros"
     />
   </CmkCatalogPanel>
 </template>

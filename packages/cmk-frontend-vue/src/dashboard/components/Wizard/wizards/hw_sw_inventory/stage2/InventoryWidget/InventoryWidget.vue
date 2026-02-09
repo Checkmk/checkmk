@@ -40,6 +40,7 @@ function validate(): boolean {
         { name: 'views', title: _t('Views') }
       ]"
       :target-options="handler.linkTargetSuggestions.value"
+      :title-macros="handler.titleMacros.value"
     />
   </CmkCatalogPanel>
 </template>

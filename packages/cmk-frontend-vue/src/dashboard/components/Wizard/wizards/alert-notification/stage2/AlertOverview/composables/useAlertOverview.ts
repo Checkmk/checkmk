@@ -18,8 +18,8 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -38,9 +38,9 @@ const CONTENT_TYPE = 'alert_overview'
 
 export const useAlertOverview = async (
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
-  currentSpec?: WidgetSpec | null
+  currentSpec: WidgetSpec | null
 ): Promise<UseAlertOverview> => {
+  const constants = useInjectDashboardConstants()
   const timeRangeType = ref<TimeRangeType>('current')
   const {
     title,
@@ -51,8 +51,9 @@ export const useAlertOverview = async (
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE
@@ -81,14 +82,13 @@ export const useAlertOverview = async (
 
   const _updateWidgetProps = async () => {
     const content = _generateContent()
-
     const [effectiveTitle, effectiveFilterContext] = await Promise.all([
       computePreviewWidgetTitle({
         generalSettings: widgetGeneralSettings.value,
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -121,6 +121,7 @@ export const useAlertOverview = async (
     showWidgetBackground,
     titleUrlEnabled,
     titleUrl,
+    titleMacros,
 
     titleUrlValidationErrors,
     validate,

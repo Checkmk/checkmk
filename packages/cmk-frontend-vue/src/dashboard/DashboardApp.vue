@@ -30,6 +30,7 @@ import { useDashboardFilters } from '@/dashboard/composables/useDashboardFilters
 import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVisualTitle.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard/composables/useDashboardsManager.ts'
+import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
 import { useComputeWidgetTitles } from '@/dashboard/composables/useWidgetTitles'
@@ -92,6 +93,7 @@ useProvideVisualInfos()
 provide(urlParamsKey, props.url_params)
 
 const dashboardsManager = useDashboardsManager()
+useProvideDashboardConstants(dashboardsManager.constants)
 
 onBeforeMount(async () => {
   const filterResp = await dashboardAPI.listFilterCollection()
@@ -221,10 +223,12 @@ const handleWizardClose = () => {
 }
 
 const handleAddWidget = (widgetIdent: string) => {
+  if (!dashboardsManager.isInitialized.value) {
+    throw new Error('Dashboard not yet initialized.')
+  }
   openAddWidgetDialog.value = false
   selectedWizard.value = widgetIdent
   openWizard.value = true
-  // TODO: better handling for cancelling
 }
 
 function generateWidgetId(widgetContentType: string): string {
@@ -262,18 +266,14 @@ function addWidget(
   generalSettings: WidgetGeneralSettings,
   filterContext: WidgetFilterContext
 ) {
-  const activeDashboard = dashboardsManager.activeDashboard.value?.model as DashboardModel
-  if (!activeDashboard) {
-    throw new Error('No active dashboard')
+  if (!dashboardsManager.isInitialized.value) {
+    throw new Error('Dashboard not yet initialized.')
   }
+  const activeDashboard = dashboardsManager.activeDashboard.value!.model as DashboardModel
   const widgetId = generateWidgetId(content.type)
   let layout: WidgetLayout
   if (activeDashboard.content.layout.type === 'responsive_grid') {
-    layout = createWidgetLayout(
-      activeDashboard.content as ContentResponsiveGrid,
-      content.type,
-      dashboardsManager.constants.value!
-    )
+    layout = createWidgetLayout(activeDashboard.content as ContentResponsiveGrid, content.type)
   } else if (activeDashboard.content.layout.type === 'relative_grid') {
     const widgetConstants = dashboardsManager.constants.value!.widgets[content.type]!
     // Add a static vertical offset to reduce the chance of placing the new widget in a way where it covers existing
@@ -296,6 +296,10 @@ function addWidget(
 }
 
 function editWidget(widgetId: string) {
+  if (!dashboardsManager.isInitialized.value) {
+    throw new Error('Dashboard not yet initialized.')
+  }
+
   widgetToEdit.value = widgetId
   const widgetSpec = dashboardsManager.activeDashboard.value!.model.content.widgets[widgetId]
   if (!widgetSpec) {
@@ -576,11 +580,11 @@ function deepClone<T>(obj: T): T {
         @close="openAddWidgetDialog = false"
       />
       <WizardSelector
+        v-if="dashboardsManager.constants.value"
         :is-open="openWizard"
         :selected-wizard="selectedWizard"
         :dashboard-key="dashboardsManager.activeDashboardKey.value!"
         :context-filters="dashboardFilters.contextFilters.value || {}"
-        :dashboard-constants="dashboardsManager.constants.value!"
         :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
         :edit-widget-id="widgetToEdit"
         :available-features="available_features"
@@ -642,7 +646,6 @@ function deepClone<T>(obj: T): T {
         :base-filters="dashboardFilters.baseFilters"
         :widget-cores="dashboardWidgets.widgetCores"
         :widget-titles="widgetTitles"
-        :constants="dashboardsManager.constants.value!"
         :is-editing="isDashboardEditingMode"
         @widget:edit="editWidget($event)"
         @widget:delete="dashboardWidgets.deleteWidget($event)"

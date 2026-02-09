@@ -13,18 +13,16 @@ import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpace
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
 import type { GetValidWidgetProps } from '@/dashboard/components/Wizard/wizards/other/types'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 
 import { useUserMessages } from './composables/useUserMessages'
 
 const { _t } = usei18n()
 interface Props extends BaseWidgetProp {
-  dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
 }
 const props = defineProps<Props>()
-const handler = useUserMessages(props.dashboardConstants, props.editWidgetSpec)
+const handler = useUserMessages(props.editWidgetSpec)
 
 function getValidWidgetProps(): WidgetProps | null {
   if (handler.validate()) {
@@ -57,6 +55,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
         v-model:title-url="handler.titleUrl.value"
         v-model:title-url-enabled="handler.titleUrlEnabled.value"
         v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
+        :title-macros="handler.titleMacros.value"
       />
     </CmkCatalogPanel>
 

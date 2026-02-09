@@ -11,13 +11,10 @@ import usei18n from '@/lib/i18n'
 import { useWidgetFilterManager } from '@/dashboard/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useInjectVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
 // Local components
-import type {
-  DashboardConstants,
-  DashboardFeatures,
-  DashboardKey
-} from '@/dashboard/types/dashboard'
+import type { DashboardFeatures, DashboardKey } from '@/dashboard/types/dashboard'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
 import type {
   WidgetContent,
@@ -49,7 +46,6 @@ const { _t } = usei18n()
 interface MetricsWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
   availableFeatures: DashboardFeatures
 }
@@ -76,6 +72,7 @@ const widgetFilterManager = useWidgetFilterManager(
 const addFilters = useAddFilter()
 
 const visualInfos = useInjectVisualInfos()
+const dashboardConstants = useInjectDashboardConstants()
 
 const defaultSelection =
   props.editWidgetSpec === null || props.editWidgetSpec?.content?.type === 'host_state'
@@ -84,7 +81,7 @@ const defaultSelection =
 
 const hostFilterType = ref<ElementSelection>(
   getInitialElementSelection(
-    props.dashboardConstants,
+    dashboardConstants,
     filterDefinitions,
     visualInfos,
     null,
@@ -195,7 +192,6 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :host-filter-type="hostFilterType"
           :filters="appliedFilters"
           :widget-filters="extractConfiguredFilters(widgetFilterManager)"
-          :dashboard-constants="dashboardConstants"
           :edit-widget-spec="editWidgetSpec ?? null"
           :available-features="availableFeatures"
           :preselected-widget-type="preselectedWidgetType"

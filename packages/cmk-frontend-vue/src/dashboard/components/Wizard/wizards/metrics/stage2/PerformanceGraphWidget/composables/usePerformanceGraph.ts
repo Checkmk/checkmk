@@ -18,8 +18,8 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -41,9 +41,9 @@ export interface UsePerformanceGraph
 export const usePerformanceGraph = async (
   metric: string,
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UsePerformanceGraph> => {
+  const constants = useInjectDashboardConstants()
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec?.content as PerformanceGraphContent)
@@ -61,9 +61,10 @@ export const usePerformanceGraph = async (
     titleUrlEnabled,
     titleUrl,
     titleUrlValidationErrors,
+    titleMacros,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const {
     horizontalAxis,
@@ -103,7 +104,7 @@ export const usePerformanceGraph = async (
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -135,6 +136,7 @@ export const usePerformanceGraph = async (
     titleUrl,
 
     titleUrlValidationErrors,
+    titleMacros,
     validate,
 
     horizontalAxis,

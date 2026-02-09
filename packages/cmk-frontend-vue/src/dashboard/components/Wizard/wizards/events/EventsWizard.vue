@@ -12,7 +12,7 @@ import CloseButton from '@/dashboard/components/Wizard/components/CloseButton.vu
 import { useWidgetFilterManager } from '@/dashboard/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
-import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
 import type {
   WidgetContent,
@@ -42,8 +42,6 @@ const { _t } = usei18n()
 interface MetricsWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
-  // TODO: widgetFilters?: ConfiguredFilters (during edit mode)
-  dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
 }
 
@@ -151,7 +149,6 @@ const appliedFilters = computed((): ConfiguredFilters => {
         <Stage2
           v-if="wizardHandler.stage.value === 1"
           :dashboard-key="dashboardKey"
-          :dashboard-constants="dashboardConstants"
           :filters="appliedFilters"
           :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"

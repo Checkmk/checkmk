@@ -121,6 +121,7 @@ const availableVisualizationTypes = getVisualizationTypes()
       v-model:title-url="handler.titleUrl.value"
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
+      :title-macros="handler.titleMacros.value"
     />
   </CmkCatalogPanel>
 

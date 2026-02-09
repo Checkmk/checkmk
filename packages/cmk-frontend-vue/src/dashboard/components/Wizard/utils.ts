@@ -150,8 +150,8 @@ function exactFilterMatch(
 
 function getWidgetRestrictedToSingle(
   widget: WidgetSpec,
-  dashboardConstants: DashboardConstants,
-  views: UseViewsCollection['byId'] | null
+  views: UseViewsCollection['byId'] | null,
+  dashboardConstants: DashboardConstants
 ): string[] {
   if (widget.content.type === 'linked_view') {
     if (!views) {
@@ -194,7 +194,7 @@ export function getInitialElementSelection(
   if (!editWidgetSpec) {
     return defaultSelection // not editing a widget, use default
   }
-  const restrictedToSingle = getWidgetRestrictedToSingle(editWidgetSpec, dashboardConstants, views)
+  const restrictedToSingle = getWidgetRestrictedToSingle(editWidgetSpec, views, dashboardConstants)
   if (restrictedToSingle.includes(infoName)) {
     // widget content is restricted to single selection for this info name
     return ElementSelection.SPECIFIC

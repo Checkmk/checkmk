@@ -9,11 +9,7 @@ import { ref, toValue } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import {
-  type DashboardConstants,
-  DashboardFeatures,
-  type DashboardKey
-} from '@/dashboard/types/dashboard'
+import { DashboardFeatures, type DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -50,7 +46,6 @@ interface Stage2Props {
 
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
   availableFeatures: DashboardFeatures
   preselectedWidgetType?: string | null
@@ -106,31 +101,13 @@ function getSelectedWidget(): Graph {
 const selectedWidget = ref<Graph>(getSelectedWidget())
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.HOST_STATS]: await useHostStatistics(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  )
+  [Graph.HOST_STATS]: await useHostStatistics(props.filters, props.editWidgetSpec)
 }
 
 if (props.availableFeatures === DashboardFeatures.UNRESTRICTED) {
-  handler[Graph.HOST_STATE] = await useHostState(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  )
-
-  handler[Graph.HOST_STATE_SUMMARY] = await useHostStateSummary(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  )
-
-  handler[Graph.SITE_OVERVIEW] = await useSiteOverview(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  )
+  handler[Graph.HOST_STATE] = await useHostState(props.filters, props.editWidgetSpec)
+  handler[Graph.HOST_STATE_SUMMARY] = await useHostStateSummary(props.filters, props.editWidgetSpec)
+  handler[Graph.SITE_OVERVIEW] = await useSiteOverview(props.filters, props.editWidgetSpec)
 }
 
 const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTED

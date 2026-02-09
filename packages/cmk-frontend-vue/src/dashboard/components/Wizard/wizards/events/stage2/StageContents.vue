@@ -17,8 +17,9 @@ import { useWidgetVisualizationProps } from '@/dashboard/components/Wizard/compo
 import type { EventStatsContent } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceRef } from '@/dashboard/composables/useDebounce.ts'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings, WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard/utils.ts'
 
@@ -29,7 +30,6 @@ const { _t } = usei18n()
 interface Stage2Props {
   dashboardKey: DashboardKey
   filters: ConfiguredFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
 }
 
@@ -54,11 +54,17 @@ const {
   titleUrl,
   titleUrlValidationErrors,
   validate: validateTitle,
-  widgetGeneralSettings
-} = useWidgetVisualizationProps('$DEFAULT_TITLE$', props.editWidgetSpec?.general_settings)
+  widgetGeneralSettings,
+  titleMacros
+} = useWidgetVisualizationProps(
+  '$DEFAULT_TITLE$',
+  props.editWidgetSpec?.general_settings,
+  'event_stats'
+)
 
 const content: EventStatsContent = { type: 'event_stats' }
 const debouncedGeneralSettings = useDebounceRef(widgetGeneralSettings, 300)
+const dashboardConstants = useInjectDashboardConstants()
 const effectiveTitle = usePreviewWidgetTitle(
   computed(() => {
     return {
@@ -78,7 +84,7 @@ const widgetProps = computed(() => {
       content,
       props.filters,
       filterUsesInfos,
-      props.dashboardConstants
+      dashboardConstants
     )
   }
 })
@@ -116,6 +122,7 @@ const gotoNextStage = () => {
       v-model:title-url="titleUrl"
       v-model:title-url-enabled="titleUrlEnabled"
       v-model:title-url-validation-errors="titleUrlValidationErrors"
+      :title-macros="titleMacros"
     />
   </CmkCatalogPanel>
 

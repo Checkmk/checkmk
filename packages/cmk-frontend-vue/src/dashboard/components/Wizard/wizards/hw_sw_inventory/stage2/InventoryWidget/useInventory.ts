@@ -22,8 +22,8 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
 type ToggleFunction = (value: boolean) => void
@@ -43,9 +43,9 @@ export interface UseInventory
 export const useInventory = async (
   inventoryPath: Ref<string | null>,
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
   editWidget: WidgetProps | null = null
 ): Promise<UseInventory> => {
+  const constants = useInjectDashboardConstants()
   const {
     title,
     showTitle,
@@ -57,8 +57,9 @@ export const useInventory = async (
     titleUrlValidationErrors,
     validate: validateTitle,
 
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', editWidget?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', editWidget?.general_settings, CONTENT_TYPE)
 
   const {
     linkType,
@@ -101,7 +102,7 @@ export const useInventory = async (
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -136,6 +137,7 @@ export const useInventory = async (
     titleUrlEnabled,
     titleUrl,
     toggleTitleUrl,
+    titleMacros,
 
     linkType,
     linkTarget,

@@ -16,18 +16,17 @@ import RelativeGrid from '@/dashboard/components/RelativeGrid/RelativeGrid.vue'
 import ResponsiveGrid from '@/dashboard/components/ResponsiveGrid/ResponsiveGrid.vue'
 import type { DashboardFilters } from '@/dashboard/composables/useDashboardFilters'
 import type { DashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import type { WidgetTitles } from '@/dashboard/composables/useWidgetTitles'
 import type {
   ContentRelativeGrid,
   ContentResponsiveGrid,
-  DashboardConstants,
   DashboardKey,
   DashboardModel
 } from '@/dashboard/types/dashboard'
 import type { WidgetLayout } from '@/dashboard/types/widget'
 
 interface DashboardProps {
-  constants: DashboardConstants
   dashboardKey: DashboardKey
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
@@ -36,6 +35,7 @@ interface DashboardProps {
 }
 
 const props = defineProps<DashboardProps>()
+const constants = useInjectDashboardConstants()
 
 const dashboard = defineModel<DashboardModel>('dashboard', { required: true })
 
@@ -48,7 +48,7 @@ defineEmits<{
 const widgetContentProps = computed<ContentPropsRecord>(() => {
   const record: Record<string, ContentProps> = {}
   for (const [widgetId, widget] of Object.entries(props.widgetCores.value)) {
-    const widgetConstants = props.constants.widgets[widget.content.type]!
+    const widgetConstants = constants.widgets[widget.content.type]!
     if (!widgetConstants) {
       // TODO: until we have not migrated to the new format for dashboards
       // the old view widget will throw an error
@@ -86,7 +86,6 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       v-if="dashboard.content.layout.type === 'responsive_grid'"
       v-model:content="dashboard.content as ContentResponsiveGrid"
       :dashboard-key="dashboardKey"
-      :constants="constants"
       :content-props="widgetContentProps"
       :is-editing="isEditing"
       @widget:edit="$emit('widget:edit', $event)"
@@ -98,7 +97,6 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       v-model:content="dashboard.content as ContentRelativeGrid"
       :content-props="widgetContentProps"
       :is-editing="isEditing"
-      :dashboard-constants="constants"
       @widget:edit="$emit('widget:edit', $event)"
       @widget:delete="$emit('widget:delete', $event)"
       @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"

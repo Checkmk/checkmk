@@ -18,8 +18,8 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -37,9 +37,10 @@ export interface UseScatterplot
 export const useScatterplot = async (
   metric: string,
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
+
   currentSpec?: WidgetSpec | null
 ): Promise<UseScatterplot> => {
+  const constants = useInjectDashboardConstants()
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec?.content as ScatterplotContent)
@@ -57,9 +58,10 @@ export const useScatterplot = async (
     titleUrlEnabled,
     titleUrl,
     titleUrlValidationErrors,
+    titleMacros,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const { metricColor, averageColor, medianColor } = useAdditionalOptions(
     currentContent?.metric_color,
@@ -93,7 +95,7 @@ export const useScatterplot = async (
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -129,6 +131,7 @@ export const useScatterplot = async (
     medianColor,
 
     titleUrlValidationErrors,
+    titleMacros,
     validate,
 
     widgetProps: widgetProps as Ref<WidgetProps>

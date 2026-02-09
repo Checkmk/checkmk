@@ -16,18 +16,20 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
+
+const CONTENT_TYPE = 'service_stats'
 
 export interface UseServiceStatistics extends UseWidgetHandler, UseWidgetVisualizationOptions {}
 
 export const useServiceStatistics = async (
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseServiceStatistics> => {
+  const constants = useInjectDashboardConstants()
   const {
     title,
     showTitle,
@@ -37,8 +39,9 @@ export const useServiceStatistics = async (
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const widgetProps = ref<WidgetProps>()
 
@@ -48,7 +51,7 @@ export const useServiceStatistics = async (
 
   const _generateContent = (): ServiceStatisticsContent => {
     return {
-      type: 'service_stats'
+      type: CONTENT_TYPE
     }
   }
 
@@ -60,7 +63,7 @@ export const useServiceStatistics = async (
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -88,6 +91,7 @@ export const useServiceStatistics = async (
     showWidgetBackground,
     titleUrlEnabled,
     titleUrl,
+    titleMacros,
 
     titleUrlValidationErrors,
     validate,

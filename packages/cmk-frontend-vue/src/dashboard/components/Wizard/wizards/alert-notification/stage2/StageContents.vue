@@ -10,7 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import type { ElementSelection, UseWidgetHandler } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -56,7 +56,6 @@ interface Stage2Props {
   serviceFilterType: ElementSelection
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
   preselectedWidgetType?: string | null
 }
@@ -100,26 +99,10 @@ const selectedWidget = ref<Graph>(
 )
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.ALERT_OVERVIEW]: await useAlertOverview(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.ALERT_TIMELINE]: await useAlertTimeline(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.NOTIFICATION_TIMELINE]: await useNotificationTimeline(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.PROBLEM_GRAPH]: await usePercentageOfServiceProblems(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  )
+  [Graph.ALERT_OVERVIEW]: await useAlertOverview(props.filters, props.editWidgetSpec),
+  [Graph.ALERT_TIMELINE]: await useAlertTimeline(props.filters, props.editWidgetSpec),
+  [Graph.NOTIFICATION_TIMELINE]: await useNotificationTimeline(props.filters, props.editWidgetSpec),
+  [Graph.PROBLEM_GRAPH]: await usePercentageOfServiceProblems(props.filters, props.editWidgetSpec)
 }
 </script>
 

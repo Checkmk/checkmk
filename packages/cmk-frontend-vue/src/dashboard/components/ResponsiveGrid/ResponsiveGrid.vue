@@ -13,12 +13,9 @@ import CmkDialog from '@/components/CmkDialog.vue'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import type { ContentPropsRecord } from '@/dashboard/components/DashboardContent/types'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useInjectMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
-import type {
-  ContentResponsiveGrid,
-  DashboardConstants,
-  DashboardKey
-} from '@/dashboard/types/dashboard'
+import type { ContentResponsiveGrid, DashboardKey } from '@/dashboard/types/dashboard'
 import type { ResponsiveGridWidgetLayouts } from '@/dashboard/types/widget'
 
 import ResponsiveGridWidget from './ResponsiveGridWidget.vue'
@@ -69,13 +66,13 @@ Layout changes:
 
 interface Props {
   dashboardKey: DashboardKey
-  constants: DashboardConstants
   contentProps: ContentPropsRecord
   isEditing: boolean
 }
 
 const props = defineProps<Props>()
 const { _t } = usei18n()
+const dashboardConstants = useInjectDashboardConstants()
 
 const content = defineModel<ContentResponsiveGrid>('content', {
   required: true
@@ -89,12 +86,12 @@ defineEmits<{
 
 const gridMargin = 10
 const internalBreakpointConfig = useInternalBreakpointConfig(
-  props.constants.responsive_grid_breakpoints
+  dashboardConstants.responsive_grid_breakpoints
 )
 const composable = useResponsiveGridLayout(
   internalBreakpointConfig,
   content,
-  props.constants.widgets
+  dashboardConstants.widgets
 )
 
 // unique key for the grid layout component to force reloading `responsive-layouts`

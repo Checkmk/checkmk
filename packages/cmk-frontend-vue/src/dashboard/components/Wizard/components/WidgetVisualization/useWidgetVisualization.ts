@@ -7,6 +7,7 @@ import { type Ref, computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import type { WidgetGeneralSettings } from '@/dashboard/types/widget'
 
 import type { TitleSpec } from '../../types'
@@ -22,6 +23,7 @@ export interface UseWidgetVisualizationOptions {
   titleUrlEnabled: Ref<boolean>
   titleUrl: Ref<string>
   titleUrlValidationErrors: Ref<string[]>
+  titleMacros: Ref<string[] | null>
 }
 
 export interface UseWidgetVisualizationProps extends UseWidgetVisualizationOptions {
@@ -31,7 +33,8 @@ export interface UseWidgetVisualizationProps extends UseWidgetVisualizationOptio
 
 export const useWidgetVisualizationProps = (
   initialTitle: string,
-  currentSettings?: WidgetGeneralSettings
+  currentSettings?: WidgetGeneralSettings,
+  contentType?: string
 ): UseWidgetVisualizationProps => {
   const title = ref<string>(currentSettings?.title?.text ?? initialTitle)
   const showTitle = ref<boolean>(currentSettings?.title?.render_mode !== 'hidden')
@@ -82,6 +85,15 @@ export const useWidgetVisualizationProps = (
     return false
   }
 
+  const dashboardConstants = useInjectDashboardConstants()
+
+  const titleMacros = computed((): string[] | null => {
+    if (!contentType) {
+      return null
+    }
+    return dashboardConstants.widgets[contentType]?.title_macros ?? null
+  })
+
   return {
     title,
     showTitle,
@@ -93,6 +105,7 @@ export const useWidgetVisualizationProps = (
     titleUrlValidationErrors,
     validate,
 
-    widgetGeneralSettings
+    widgetGeneralSettings,
+    titleMacros
   }
 }

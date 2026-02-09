@@ -184,7 +184,8 @@ const viewSelection = ref<NewViewSelection | CopyExistingViewSelection>()
 const content = ref<EmbeddedViewContent | LinkedViewContent | undefined>(getDefaultContent())
 const visualizationProps = useWidgetVisualizationProps(
   '$DEFAULT_TITLE$',
-  props.editWidgetSpec?.general_settings
+  props.editWidgetSpec?.general_settings,
+  content.value?.type
 )
 
 const wizardHandler = useWizard(3)

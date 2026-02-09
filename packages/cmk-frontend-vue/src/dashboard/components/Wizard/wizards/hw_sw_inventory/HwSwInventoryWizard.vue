@@ -16,7 +16,7 @@ import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
 import type { ConfiguredFilters } from '../../../../components/filter/types'
 import { useFilterDefinitions } from '../../../../components/filter/utils'
-import type { DashboardConstants, DashboardKey } from '../../../../types/dashboard'
+import type { DashboardKey } from '../../../../types/dashboard'
 import type { ContextFilters } from '../../../../types/filter'
 import type {
   WidgetContent,
@@ -46,7 +46,6 @@ const { _t } = usei18n()
 interface HwSwInventoryWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
 }
 
@@ -234,7 +233,6 @@ const handleAddWidget = (
           :filters="appliedFilters"
           :widget-filters="widgetFilterManager.getConfiguredFilters()"
           :edit-widget="editWidget"
-          :dashboard-constants="dashboardConstants"
           :inventory-path="inventoryPath"
           @go-prev="wizardHandler.prev"
           @add-widget="handleAddWidget"

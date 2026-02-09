@@ -11,7 +11,7 @@ import usei18n from '@/lib/i18n'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -30,17 +30,12 @@ const { _t } = usei18n()
 interface Stage1Props {
   dashboardKey: DashboardKey
   filters: ConfiguredFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
 }
 
 const props = defineProps<Stage1Props>()
 
-const handler = await useCustomGraph(
-  props.filters,
-  props.dashboardConstants,
-  props.editWidgetSpec || undefined
-)
+const handler = await useCustomGraph(props.filters, props.editWidgetSpec || undefined)
 
 const emit = defineEmits<{
   addWidget: [

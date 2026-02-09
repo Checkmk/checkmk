@@ -22,8 +22,8 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -53,9 +53,9 @@ export interface UseTopList extends UseWidgetHandler, UseWidgetVisualizationOpti
 export const useTopList = async (
   metric: string,
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseTopList> => {
+  const constants = useInjectDashboardConstants()
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as TopListContent) : null
 
@@ -82,8 +82,9 @@ export const useTopList = async (
     titleUrl,
     validate: validateTitle,
     titleUrlValidationErrors,
+    titleMacros,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const limitToValidationErrors = ref<string[]>([])
 
@@ -123,7 +124,7 @@ export const useTopList = async (
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -171,6 +172,7 @@ export const useTopList = async (
 
     MAX_ENTRIES,
     titleUrlValidationErrors,
+    titleMacros,
     limitToValidationErrors,
     validate,
 

@@ -10,8 +10,8 @@ import {
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type { UseWidgetHandler, WidgetProps } from '@/dashboard/components/Wizard/types'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { StaticTextContent, WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -21,10 +21,8 @@ export interface UseStaticText extends UseWidgetHandler, UseWidgetVisualizationO
   text: Ref<string>
 }
 
-export function useStaticText(
-  dashboardConstants: DashboardConstants,
-  currentSpec: WidgetSpec | null
-): UseStaticText {
+export function useStaticText(currentSpec: WidgetSpec | null): UseStaticText {
+  const constants = useInjectDashboardConstants()
   const {
     title,
     showTitle,
@@ -34,8 +32,9 @@ export function useStaticText(
     titleUrl,
     titleUrlValidationErrors,
     validate,
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE
@@ -69,7 +68,7 @@ export function useStaticText(
         content.value,
         {},
         [], // we know this doesn't use any infos, no need to ask the backend
-        dashboardConstants
+        constants
       )
     }
   })
@@ -82,6 +81,7 @@ export function useStaticText(
     titleUrlEnabled,
     titleUrl,
     titleUrlValidationErrors,
+    titleMacros,
     validate,
 
     text,

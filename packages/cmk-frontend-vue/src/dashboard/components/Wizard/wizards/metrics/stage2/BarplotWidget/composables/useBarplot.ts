@@ -17,8 +17,8 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -37,9 +37,9 @@ export interface UseBarplot extends UseWidgetHandler, UseWidgetVisualizationOpti
 export const useBarplot = async (
   metric: string,
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseBarplot> => {
+  const constants = useInjectDashboardConstants()
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as BarplotContent) : null
 
@@ -51,9 +51,10 @@ export const useBarplot = async (
     titleUrlEnabled,
     titleUrl,
     titleUrlValidationErrors,
+    titleMacros,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const {
     type: dataRangeType,
@@ -85,7 +86,7 @@ export const useBarplot = async (
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -120,6 +121,7 @@ export const useBarplot = async (
     titleUrl,
 
     titleUrlValidationErrors,
+    titleMacros,
     validate,
 
     widgetProps: widgetProps as Ref<WidgetProps>

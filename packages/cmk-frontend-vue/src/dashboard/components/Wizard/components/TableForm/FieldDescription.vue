@@ -4,37 +4,42 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { TranslatedString } from '@/lib/i18nString'
+
+import CmkHelpText from '@/components/CmkHelpText.vue'
+
 interface FieldDescriptionProps {
   dots?: boolean
+  help?: TranslatedString | null
 }
 
-withDefaults(defineProps<FieldDescriptionProps>(), {
-  dots: true
+const props = withDefaults(defineProps<FieldDescriptionProps>(), {
+  dots: true,
+  help: null
 })
 </script>
 
 <template>
-  <div class="table-form-row">
-    <div class="field-description">
-      <span class="field-description__label">
+  <div class="db-field-description__row">
+    <div class="db-field-description__inner">
+      <span class="db-field-description__label">
         <slot />
-        <span v-if="dots" class="field-description-dots"></span>
+        <span v-if="props.help">&nbsp;<CmkHelpText :help="props.help" /></span>
+        <span v-if="dots" class="db-field-description__dots"></span>
       </span>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.table-form-row {
+.db-field-description__row {
   flex: 1;
   width: 100%;
   display: flex;
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.field-description {
+.db-field-description__inner {
   flex: 1;
   direction: ltr;
   overflow-wrap: break-word;
@@ -45,22 +50,19 @@ withDefaults(defineProps<FieldDescriptionProps>(), {
   margin-right: 10px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.field-description__label {
+.db-field-description__label {
   width: 100%;
   display: block;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.field-description-dots {
+.db-field-description__dots {
   position: absolute;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.field-description-dots::after {
+.db-field-description__dots::after {
   content: '........................................................................................................................................................................................................';
 }
 </style>

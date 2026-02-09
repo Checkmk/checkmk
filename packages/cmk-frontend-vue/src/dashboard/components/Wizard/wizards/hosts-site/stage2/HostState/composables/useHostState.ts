@@ -16,8 +16,8 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -31,9 +31,10 @@ export interface UseHostState extends UseWidgetHandler, UseWidgetVisualizationOp
 
 export const useHostState = async (
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseHostState> => {
+  const constants = useInjectDashboardConstants()
+
   const {
     title,
     showTitle,
@@ -43,8 +44,9 @@ export const useHostState = async (
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as HostStateContent) : null
@@ -86,7 +88,7 @@ export const useHostState = async (
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -123,6 +125,7 @@ export const useHostState = async (
     showWidgetBackground,
     titleUrlEnabled,
     titleUrl,
+    titleMacros,
 
     titleUrlValidationErrors,
     validate,

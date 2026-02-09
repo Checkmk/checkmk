@@ -15,7 +15,7 @@ import {
   getAvailableGraphs
 } from '@/dashboard/components/Wizard/wizards/metrics/composables/useSelectGraphTypes'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -63,7 +63,6 @@ interface Stage2Props {
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
   metric: string
-  dashboardConstants: DashboardConstants
 
   editWidgetSpec: WidgetSpec | null
   preselectedWidgetType?: string | null
@@ -130,47 +129,17 @@ let handler: Partial<Record<Graph, UseWidgetHandler>> = {}
 
 if (props.metricType === MetricSelection.SINGLE_METRIC) {
   handler = {
-    [Graph.SINGLE_GRAPH]: await useGraph(
-      props.metric,
-      props.filters,
-      props.dashboardConstants,
-      props.editWidgetSpec
-    ),
+    [Graph.SINGLE_GRAPH]: await useGraph(props.metric, props.filters, props.editWidgetSpec),
 
-    [Graph.SINGLE_METRIC]: await useMetric(
-      props.metric,
-      props.filters,
-      props.dashboardConstants,
-      props.editWidgetSpec
-    ),
+    [Graph.SINGLE_METRIC]: await useMetric(props.metric, props.filters, props.editWidgetSpec),
 
-    [Graph.GAUGE]: await useGauge(
-      props.metric,
-      props.filters,
-      props.dashboardConstants,
-      props.editWidgetSpec
-    ),
+    [Graph.GAUGE]: await useGauge(props.metric, props.filters, props.editWidgetSpec),
 
-    [Graph.BARPLOT]: await useBarplot(
-      props.metric,
-      props.filters,
-      props.dashboardConstants,
-      props.editWidgetSpec
-    ),
+    [Graph.BARPLOT]: await useBarplot(props.metric, props.filters, props.editWidgetSpec),
 
-    [Graph.SCATTERPLOT]: await useScatterplot(
-      props.metric,
-      props.filters,
-      props.dashboardConstants,
-      props.editWidgetSpec
-    ),
+    [Graph.SCATTERPLOT]: await useScatterplot(props.metric, props.filters, props.editWidgetSpec),
 
-    [Graph.TOP_LIST]: await useTopList(
-      props.metric,
-      props.filters,
-      props.dashboardConstants,
-      props.editWidgetSpec
-    )
+    [Graph.TOP_LIST]: await useTopList(props.metric, props.filters, props.editWidgetSpec)
   }
 
   selectedWidget.value =
@@ -183,12 +152,7 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
   selectedWidget.value = isPerformanceGraph ? Graph.PERFORMANCE_GRAPH : Graph.COMBINED_GRAPH
 
   handler = {
-    [Graph.ANY_GRAPH]: await graphHandler(
-      props.metric,
-      props.filters,
-      props.dashboardConstants,
-      props.editWidgetSpec
-    )
+    [Graph.ANY_GRAPH]: await graphHandler(props.metric, props.filters, props.editWidgetSpec)
   }
 }
 </script>

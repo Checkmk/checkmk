@@ -31,12 +31,9 @@ import {
 } from '@/dashboard/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useInjectVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
-import type {
-  DashboardConstants,
-  DashboardFeatures,
-  DashboardKey
-} from '@/dashboard/types/dashboard'
+import type { DashboardFeatures, DashboardKey } from '@/dashboard/types/dashboard'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
 import type {
   WidgetContent,
@@ -56,7 +53,6 @@ const { _t } = usei18n()
 interface ServicesOverviewWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
   availableFeatures: DashboardFeatures
 }
@@ -83,9 +79,10 @@ const widgetFilterManager = useWidgetFilterManager(
 const addFilters = useAddFilter()
 
 const visualInfos = useInjectVisualInfos()
+const dashboardConstants = useInjectDashboardConstants()
 const hostFilterType = ref<ElementSelection>(
   getInitialElementSelection(
-    props.dashboardConstants,
+    dashboardConstants,
     filterDefinitions,
     visualInfos,
     null,
@@ -96,7 +93,7 @@ const hostFilterType = ref<ElementSelection>(
 )
 const serviceFilterType = ref<ElementSelection>(
   getInitialElementSelection(
-    props.dashboardConstants,
+    dashboardConstants,
     filterDefinitions,
     visualInfos,
     null,
@@ -213,7 +210,6 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         <Stage2
           v-if="wizardHandler.stage.value === 1"
           :dashboard-key="dashboardKey"
-          :dashboard-constants="dashboardConstants"
           :host-filter-type="hostFilterType"
           :service-filter-type="serviceFilterType"
           :filters="appliedFilters"

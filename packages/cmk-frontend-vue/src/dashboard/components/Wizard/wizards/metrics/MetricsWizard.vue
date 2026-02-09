@@ -12,11 +12,7 @@ import { useWidgetFilterManager } from '@/dashboard/components/Wizard/components
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
 // Local components
-import type {
-  DashboardConstants,
-  DashboardFeatures,
-  DashboardKey
-} from '@/dashboard/types/dashboard'
+import type { DashboardFeatures, DashboardKey } from '@/dashboard/types/dashboard'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
 import type {
   WidgetContent,
@@ -51,7 +47,6 @@ const { _t } = usei18n()
 interface MetricsWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
   availableFeatures: DashboardFeatures
 }
@@ -236,7 +231,6 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         <Stage2
           v-if="wizardHandler.stage.value === 1"
           :dashboard-key="dashboardKey"
-          :dashboard-constants="dashboardConstants"
           :host-filter-type="hostFilterType"
           :service-filter-type="serviceFilterType"
           :metric-type="metricType"

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
 import type {
   WidgetContent,
@@ -21,7 +21,6 @@ import Stage1 from './stage1/StageContents.vue'
 interface OtherWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
 }
 
@@ -44,7 +43,6 @@ defineEmits<{
       <CloseButton @close="$emit('close')" />
       <Stage1
         :dashboard-key="dashboardKey"
-        :dashboard-constants="dashboardConstants"
         :edit-widget-spec="editWidgetSpec ?? null"
         @add-widget="
           (content, generalSettings, filterContext) =>

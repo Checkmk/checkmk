@@ -8,7 +8,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
-import type { DashboardConstants, DashboardFeatures, DashboardKey } from '../../types/dashboard.ts'
+import type { DashboardFeatures, DashboardKey } from '../../types/dashboard.ts'
 import type { ContextFilters } from '../../types/filter.ts'
 import type {
   WidgetContent,
@@ -29,7 +29,6 @@ import ViewWizardWrapper from '../Wizard/wizards/view/ViewWizardWrapper.vue'
 interface AllWizardsProps {
   isOpen: boolean
   selectedWizard: string
-  dashboardConstants: DashboardConstants
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec: WidgetSpec | null
@@ -91,7 +90,6 @@ const handleAddEditWidget = (
       <AlertsAndNotificationsWizard
         v-if="selectedWizard === 'alerts_notifications'"
         :dashboard-key="dashboardKey"
-        :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
@@ -102,7 +100,6 @@ const handleAddEditWidget = (
       <HostsSiteWizard
         v-if="selectedWizard === 'host_site_overview'"
         :dashboard-key="dashboardKey"
-        :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         :available-features="availableFeatures"
@@ -115,7 +112,6 @@ const handleAddEditWidget = (
         v-if="selectedWizard === 'hw_sw_inventory'"
         :dashboard-key="dashboardKey"
         :context-filters="contextFilters"
-        :dashboard-constants="dashboardConstants"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @close="handleClose"
@@ -125,7 +121,6 @@ const handleAddEditWidget = (
       <MetricsWizard
         v-if="selectedWizard === 'metrics_graphs'"
         :dashboard-key="dashboardKey"
-        :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         :available-features="availableFeatures"
@@ -137,7 +132,6 @@ const handleAddEditWidget = (
       <ServicesOverviewWizard
         v-if="selectedWizard === 'service_overview'"
         :dashboard-key="dashboardKey"
-        :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         :available-features="availableFeatures"
@@ -160,7 +154,6 @@ const handleAddEditWidget = (
       <EventsWizard
         v-if="selectedWizard === 'event_stats'"
         :dashboard-key="dashboardKey"
-        :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
@@ -171,7 +164,6 @@ const handleAddEditWidget = (
       <CustomGraphsWizard
         v-if="selectedWizard === 'custom_graphs'"
         :dashboard-key="dashboardKey"
-        :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
@@ -182,7 +174,6 @@ const handleAddEditWidget = (
       <OtherWizard
         v-if="selectedWizard === 'other'"
         :dashboard-key="dashboardKey"
-        :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"

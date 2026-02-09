@@ -9,7 +9,7 @@ import { toRef } from 'vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import type { WidgetProps } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings } from '@/dashboard/types/widget'
 
 import ContentSpacer from '../../../components/ContentSpacer.vue'
@@ -21,7 +21,6 @@ interface Stage2Props {
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
   dashboardKey: DashboardKey
-  dashboardConstants: DashboardConstants
   editWidget: WidgetProps | null
   inventoryPath: string | null
 }
@@ -61,7 +60,6 @@ const gotoPrevStage = () => {
 const inventoryHandler = await useInventory(
   toRef(props, 'inventoryPath'),
   props.filters,
-  props.dashboardConstants,
   props.editWidget
 )
 </script>

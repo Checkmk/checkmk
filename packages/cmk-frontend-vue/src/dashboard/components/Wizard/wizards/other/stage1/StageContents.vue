@@ -15,7 +15,7 @@ import SectionBlock from '@/dashboard/components/Wizard/components/SectionBlock.
 import StepsHeader from '@/dashboard/components/Wizard/components/StepsHeader.vue'
 import SelectableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/SelectableWidgets.vue'
 import type { WidgetItemList } from '@/dashboard/components/Wizard/components/WidgetSelection/types'
-import type { DashboardConstants, DashboardKey } from '@/dashboard/types/dashboard'
+import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -33,7 +33,6 @@ const { _t } = usei18n()
 
 interface Stage1Props {
   dashboardKey: DashboardKey
-  dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
 }
 
@@ -135,7 +134,6 @@ function gotoNextStage() {
     v-show="selectedWidget === OtherWidgetType.USER_MESSAGES"
     ref="userMessagesRef"
     :dashboard-key="dashboardKey"
-    :dashboard-constants="dashboardConstants"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -143,7 +141,6 @@ function gotoNextStage() {
     v-show="selectedWidget === OtherWidgetType.SIDEBAR_WIDGET"
     ref="sidebarWidgetRef"
     :dashboard-key="dashboardKey"
-    :dashboard-constants="dashboardConstants"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -151,7 +148,6 @@ function gotoNextStage() {
     v-show="selectedWidget === OtherWidgetType.EMBEDDED_URL"
     ref="embeddedURLRef"
     :dashboard-key="dashboardKey"
-    :dashboard-constants="dashboardConstants"
     :edit-widget-spec="editWidgetSpec"
   />
 
@@ -159,7 +155,6 @@ function gotoNextStage() {
     v-show="selectedWidget === OtherWidgetType.STATIC_TEXT"
     ref="staticTextRef"
     :dashboard-key="dashboardKey"
-    :dashboard-constants="dashboardConstants"
     :edit-widget-spec="editWidgetSpec"
   />
 </template>

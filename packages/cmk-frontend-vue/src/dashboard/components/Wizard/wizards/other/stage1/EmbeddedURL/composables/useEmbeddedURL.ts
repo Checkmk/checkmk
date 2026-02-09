@@ -10,8 +10,8 @@ import {
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type { URLContent, UseWidgetHandler, WidgetProps } from '@/dashboard/components/Wizard/types'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -20,10 +20,8 @@ export interface UseEmbeddedURL extends UseWidgetHandler, UseWidgetVisualization
   url: Ref<string>
 }
 
-export function useEmbeddedURL(
-  dashboardConstants: DashboardConstants,
-  currentSpec: WidgetSpec | null
-): UseEmbeddedURL {
+export function useEmbeddedURL(currentSpec: WidgetSpec | null): UseEmbeddedURL {
+  const constants = useInjectDashboardConstants()
   const {
     title,
     showTitle,
@@ -33,8 +31,9 @@ export function useEmbeddedURL(
     titleUrl,
     titleUrlValidationErrors,
     validate,
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as URLContent) : undefined
@@ -67,7 +66,7 @@ export function useEmbeddedURL(
         content.value,
         {},
         [], // we know this doesn't use any infos, no need to ask the backend
-        dashboardConstants
+        constants
       )
     }
   })
@@ -80,6 +79,7 @@ export function useEmbeddedURL(
     titleUrlEnabled,
     titleUrl,
     titleUrlValidationErrors,
+    titleMacros,
     validate,
 
     url,

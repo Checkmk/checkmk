@@ -10,11 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import type { ElementSelection, UseWidgetHandler } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import {
-  type DashboardConstants,
-  DashboardFeatures,
-  type DashboardKey
-} from '@/dashboard/types/dashboard'
+import { DashboardFeatures, type DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -48,7 +44,6 @@ interface Stage2Props {
   serviceFilterType: ElementSelection
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
-  dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
   availableFeatures: DashboardFeatures
   preselectedWidgetType?: string | null
@@ -122,22 +117,13 @@ function getDefaultSelectedWidget(): Graph | null {
 const selectedWidget = ref<Graph | null>(getDefaultSelectedWidget())
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.SERVICE_STATS]: await useServiceStatistics(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  )
+  [Graph.SERVICE_STATS]: await useServiceStatistics(props.filters, props.editWidgetSpec)
 }
 
 if (props.availableFeatures === DashboardFeatures.UNRESTRICTED) {
-  handler[Graph.SERVICE_STATE] = await useServiceState(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  )
+  handler[Graph.SERVICE_STATE] = await useServiceState(props.filters, props.editWidgetSpec)
   handler[Graph.SERVICE_STATE_SUMMARY] = await useServiceStateSummary(
     props.filters,
-    props.dashboardConstants,
     props.editWidgetSpec
   )
 }

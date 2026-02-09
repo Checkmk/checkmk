@@ -17,8 +17,8 @@ import type {
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
@@ -29,9 +29,9 @@ export interface UseServiceStateSummary extends UseWidgetHandler, UseWidgetVisua
 
 export const useServiceStateSummary = async (
   filters: ConfiguredFilters,
-  dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseServiceStateSummary> => {
+  const constants = useInjectDashboardConstants()
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec.content as ServiceStateSummaryContent)
@@ -46,8 +46,9 @@ export const useServiceStateSummary = async (
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const selectedState = ref<string>(currentContent?.state || 'OK')
 
@@ -72,7 +73,7 @@ export const useServiceStateSummary = async (
         content,
         effectiveFilters: filters
       }),
-      determineWidgetEffectiveFilterContext(content, filters, dashboardConstants)
+      determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
     widgetProps.value = {
@@ -101,6 +102,7 @@ export const useServiceStateSummary = async (
     showWidgetBackground,
     titleUrlEnabled,
     titleUrl,
+    titleMacros,
 
     titleUrlValidationErrors,
     validate,

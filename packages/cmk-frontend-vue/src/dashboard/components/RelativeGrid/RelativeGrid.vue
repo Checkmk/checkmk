@@ -16,8 +16,9 @@ import {
   type ResizeDirection,
   createResizeHelper
 } from '@/dashboard/components/RelativeGrid/helpers/resizeHelper.ts'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useInjectMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
-import type { ContentRelativeGrid, DashboardConstants } from '@/dashboard/types/dashboard.ts'
+import type { ContentRelativeGrid } from '@/dashboard/types/dashboard.ts'
 import type { WidgetLayout } from '@/dashboard/types/widget'
 
 import { useRelativeGridLayout } from './composables/useRelativeGridLayout'
@@ -46,12 +47,12 @@ utils.calculateDashlets function.
 
 interface RelativeGridDashboardProps {
   contentProps: ContentPropsRecord
-  dashboardConstants: DashboardConstants
   isEditing: boolean
 }
 
 const props = defineProps<RelativeGridDashboardProps>()
 const { _t } = usei18n()
+const dashboardConstants = useInjectDashboardConstants()
 
 const content = defineModel<ContentRelativeGrid>('content', {
   required: true
@@ -165,7 +166,7 @@ function handleResizeForWidget(widgetId: string) {
 
 const cloneRelativeGridWidget = (oldWidgetId: string) => {
   const widgetType = props.contentProps[oldWidgetId]!.content.type
-  const layoutConstant = props.dashboardConstants.widgets[widgetType]!.layout.relative
+  const layoutConstant = dashboardConstants.widgets[widgetType]!.layout.relative
 
   emit('widget:clone', oldWidgetId, {
     type: 'relative_grid',

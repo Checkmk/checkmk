@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -26,9 +26,25 @@ interface WidgetVisualizationProps {
   linkValidation?: TranslatedString[]
   linkOptions?: Suggestion[]
   targetOptions?: Suggestion[]
+  titleMacros?: string[] | null
 }
 
-defineProps<WidgetVisualizationProps>()
+const props = withDefaults(defineProps<WidgetVisualizationProps>(), {
+  titleMacros: null
+})
+
+const titleHelpText = computed(() => {
+  if (!props.titleMacros || props.titleMacros.length === 0) {
+    return null
+  }
+  const macrosList = props.titleMacros.map((macro) => `<li><tt>${macro}</tt></li>`).join('')
+  return untranslated(
+    `<b>${_t('The widget title can be static or dynamic.')}</b><br><br>` +
+      `${_t('To create a dynamic title, use the following macros to automatically insert contextual information:')}` +
+      `<ul>${macrosList}</ul>` +
+      `${_t('These macros can be combined with custom text, e.g. "some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>".')}`
+  )
+})
 
 const title = defineModel<string>('title', { required: true })
 const titleUrlEnabled = defineModel<boolean>('titleUrlEnabled', { required: true })
@@ -51,7 +67,7 @@ const displayLinkContent = computed(
 <template>
   <TableForm>
     <TableFormRow>
-      <FieldDescription>{{ _t('Title') }}</FieldDescription>
+      <FieldDescription :help="titleHelpText">{{ _t('Title') }}</FieldDescription>
       <FieldComponent>
         <CmkInput
           :model-value="title"

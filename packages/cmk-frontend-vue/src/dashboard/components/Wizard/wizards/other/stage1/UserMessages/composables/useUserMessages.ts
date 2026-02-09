@@ -14,17 +14,17 @@ import type {
   UserMessagesContent,
   WidgetProps
 } from '@/dashboard/components/Wizard/types'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext, dashboardAPI } from '@/dashboard/utils'
 
+const CONTENT_TYPE = 'user_messages'
+
 export interface UseUserMessages extends UseWidgetHandler, UseWidgetVisualizationOptions {}
 
-export function useUserMessages(
-  dashboardConstants: DashboardConstants,
-  currentSpec: WidgetSpec | null
-): UseUserMessages {
+export function useUserMessages(currentSpec: WidgetSpec | null): UseUserMessages {
+  const constants = useInjectDashboardConstants()
   const {
     title,
     showTitle,
@@ -34,8 +34,9 @@ export function useUserMessages(
     titleUrl,
     titleUrlValidationErrors,
     validate,
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const content: UserMessagesContent = {
     type: 'user_messages'
@@ -66,7 +67,7 @@ export function useUserMessages(
         content,
         {},
         usesInfos.value,
-        dashboardConstants
+        constants
       )
     }
   })
@@ -79,6 +80,7 @@ export function useUserMessages(
     titleUrlEnabled,
     titleUrl,
     titleUrlValidationErrors,
+    titleMacros,
     validate,
     widgetProps
   }

@@ -10,8 +10,8 @@ import {
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type { UseWidgetHandler, WidgetProps } from '@/dashboard/components/Wizard/types'
+import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
-import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { SidebarElementContent, WidgetSpec } from '@/dashboard/types/widget'
 import { buildWidgetEffectiveFilterContext, dashboardAPI } from '@/dashboard/utils'
 
@@ -25,9 +25,9 @@ export interface UseSidebarWidget extends UseWidgetHandler, UseWidgetVisualizati
 
 export function useSidebarWidget(
   sidebarElements: UseSidebarElements['elements'],
-  dashboardConstants: DashboardConstants,
   currentSpec: WidgetSpec | null
 ): UseSidebarWidget {
+  const constants = useInjectDashboardConstants()
   const {
     title,
     showTitle,
@@ -37,8 +37,9 @@ export function useSidebarWidget(
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    widgetGeneralSettings
-  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings)
+    widgetGeneralSettings,
+    titleMacros
+  } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE
@@ -88,7 +89,7 @@ export function useSidebarWidget(
         content.value,
         {},
         usesInfos.value,
-        dashboardConstants
+        constants
       )
     }
   })
@@ -106,6 +107,7 @@ export function useSidebarWidget(
     titleUrlEnabled,
     titleUrl,
     titleUrlValidationErrors,
+    titleMacros,
     validate,
 
     sidebarElementName: elementName,

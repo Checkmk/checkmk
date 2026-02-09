@@ -76,7 +76,7 @@ test_registration_fails() {
     assertTrue "podman run with cmk-relay register should have been called" $?
 
     # Verify the arguments to podman run for registration
-    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
     assertTrue "podman run should have been called with correct registration arguments" $?
 }
 
@@ -108,7 +108,7 @@ test_registration_localhost_uses_host_containers_internal() {
     assertEquals "main should succeed" 0 "$exit_code"
 
     # Verify that localhost was replaced with host.containers.internal
-    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
     assertTrue "podman run should use host.containers.internal instead of localhost" $?
 }
 
@@ -140,7 +140,7 @@ test_registration_127_0_0_1_uses_host_containers_internal() {
     assertEquals "main should succeed" 0 "$exit_code"
 
     # Verify that 127.0.0.1 was replaced with host.containers.internal
-    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
     assertTrue "podman run should use host.containers.internal instead of 127.0.0.1" $?
 }
 
@@ -172,7 +172,7 @@ test_registration_127_0_1_1_uses_host_containers_internal() {
     assertEquals "main should succeed" 0 "$exit_code"
 
     # Verify that 127.0.1.1 was replaced with host.containers.internal
-    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
     assertTrue "podman run should use host.containers.internal instead of 127.0.1.1" $?
 }
 
@@ -204,7 +204,7 @@ test_registration_ipv6_localhost_uses_host_containers_internal() {
     assertEquals "main should succeed" 0 "$exit_code"
 
     # Verify that ::1 was replaced with host.containers.internal
-    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
     assertTrue "podman run should use host.containers.internal instead of ::1" $?
 }
 

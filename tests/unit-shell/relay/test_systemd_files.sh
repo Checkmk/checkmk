@@ -113,14 +113,14 @@ test_container_unit_exec() {
 
 test_container_unit_trigger_volume() {
     local file_path="${QUADLET_DIR}/checkmk_relay.container"
-    grep -q "^Volume=${TRIGGER_FILE}:/opt/check-mk-relay/workdir/site-version.txt:rw" "$file_path"
-    assertEquals "Container unit should mount trigger file volume" 0 $?
+    grep -q "^Volume=${TRIGGER_FILE}:/opt/check-mk-relay/workdir/site-version.txt:rw,Z" "$file_path"
+    assertEquals "Container unit should mount trigger file volume with SELinux label" 0 $?
 }
 
 test_container_unit_relay_volume() {
     local file_path="${QUADLET_DIR}/checkmk_relay.container"
-    grep -q "^Volume=relay:/opt/check-mk-relay/workdir:rw" "$file_path"
-    assertEquals "Container unit should mount relay volume" 0 $?
+    grep -q "^Volume=relay:/opt/check-mk-relay/workdir:rw,Z" "$file_path"
+    assertEquals "Container unit should mount relay volume with SELinux label" 0 $?
 }
 
 test_container_unit_restart_always() {

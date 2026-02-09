@@ -24,6 +24,7 @@ from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (
     AndOrNotLiteral,
+    BaseLabel,
     DiscoveredHostLabelsStore,
     HostLabel,
     LabelGroups,
@@ -1056,10 +1057,10 @@ def matches_labels(object_labels: Labels, required_label_groups: LabelGroups) ->
                 continue
 
             try:
-                key, value = label.split(":")
+                l = BaseLabel.from_str(label)
             except Exception:
                 raise NotImplementedError(f"HALLO DORT: wird hier zu wenig entpackt?  --  {label}")
-            label_match: bool = value == object_labels.get(key)
+            label_match: bool = l.value == object_labels.get(l.name)
             group_match = _and_or_not_group_match(group_match, label_match, label_operator)
 
         overall_match = _and_or_not_group_match(overall_match, group_match, group_operator)

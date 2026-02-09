@@ -23,7 +23,7 @@ from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
+from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group, Label
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
@@ -285,11 +285,11 @@ def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
                 group_html += HTMLWriter.render_i(label_op_str, class_="andornot_operator")
 
             # Render single label
-            key, val = label.split(":")
+            l = Label.from_str(label)
             group_html += HTMLWriter.render_tags(
                 _render_tag_group(
-                    key,
-                    val,
+                    l.id,
+                    l.value,
                     object_type,
                     with_link=False,
                     label_type="label",

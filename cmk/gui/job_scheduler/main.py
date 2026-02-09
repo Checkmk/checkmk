@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 from collections.abc import Callable
+from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from typing import override
 
@@ -151,7 +152,7 @@ def _setup_console_logging() -> None:
 
 
 def _setup_file_logging(log_file: Path) -> None:
-    handler = logging.FileHandler(log_file, encoding="UTF-8")
+    handler = WatchedFileHandler(log_file, encoding="UTF-8")
     handler.setFormatter(
         logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d/%(threadName)s] %(message)s")
     )

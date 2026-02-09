@@ -7,13 +7,14 @@ import contextlib
 import logging
 from collections.abc import Generator
 from logging import Logger
+from logging.handlers import WatchedFileHandler
 from pathlib import Path
 
 LOGGER = logging.getLogger()
 
 
 def configure_logger(log_directory: Path) -> None:
-    handler = logging.FileHandler(log_directory / "automation-helper.log", encoding="UTF-8")
+    handler = WatchedFileHandler(log_directory / "automation-helper.log", encoding="UTF-8")
     formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d] %(message)s")
     handler.setFormatter(formatter)
     LOGGER.addHandler(handler)

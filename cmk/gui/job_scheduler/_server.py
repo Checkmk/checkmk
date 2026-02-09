@@ -50,12 +50,12 @@ def run_server(config: ServerConfig, app: FastAPI, logger: Logger) -> None:
                     },
                     "handlers": {
                         "default": {
-                            "class": "logging.FileHandler",
+                            "class": "logging.handlers.WatchedFileHandler",
                             "filename": str(config.error_log),
                             "formatter": "default",
                         },
                         "access": {
-                            "class": "logging.FileHandler",
+                            "class": "logging.handlers.WatchedFileHandler",
                             "filename": str(config.access_log),
                             "formatter": "access",
                         },

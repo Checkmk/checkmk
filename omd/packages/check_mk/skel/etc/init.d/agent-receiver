@@ -126,6 +126,16 @@ case "$1" in
         $0 start
         ;;
 
+    logrotate)
+        echo -n 'Rotating logs of agent-receiver...'
+        if [ -z "$PID" ]; then
+            exit_failure 'not running.'
+        else
+            echo "killing $PID with SIGUSR1..."
+            kill -USR1 "$PID"
+        fi
+        ;;
+
     status)
         echo -n 'Checking status of agent-receiver...'
         if [ -z "$PID" ]; then

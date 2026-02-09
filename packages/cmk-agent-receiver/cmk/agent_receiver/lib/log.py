@@ -10,6 +10,7 @@ import logging
 import pathlib
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
+from logging.handlers import WatchedFileHandler
 from typing import override
 
 # Prefix for our context variables to avoid conflicts
@@ -23,7 +24,7 @@ logger = logging.getLogger("agent-receiver")
 
 
 def configure_logger(path: pathlib.Path) -> None:
-    handler = logging.FileHandler(path, encoding="UTF-8")
+    handler = WatchedFileHandler(path, encoding="UTF-8")
     formatter = ContextualFormatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
     context_filter = ContextInjectingFilter()
 

@@ -100,13 +100,13 @@ def test_update_with_preexisting_rulesets(
         pytest.param(
             AUTOMATION_HELPER_RULE_ID,
             None,
-            "~.*cmk-automation-helper.*",
+            "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
             id="no preexisting rule for automation helper",
         ),
         pytest.param(
             AUTOMATION_HELPER_RULE_ID,
             "~gunicorn:.*automation-helper",
-            "~.*cmk-automation-helper.*",
+            "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
             id="overwrite old default value in rule for automation helper",
         ),
         pytest.param(

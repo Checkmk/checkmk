@@ -646,9 +646,7 @@ def _parse_sample_v3_2(instance_id: UUID | None, site_hash: str, raw: object) ->
         num_synthetic_tests_excluded=raw["num_synthetic_tests_excluded"],
         num_synthetic_kpis=raw["num_synthetic_kpis"],
         num_synthetic_kpis_excluded=raw["num_synthetic_kpis_excluded"],
-        num_active_metric_series=raw.get(
-            "num_active_metric_series", 0
-        ),  # remove the default during SAASDEV-6265
+        num_active_metric_series=raw["num_active_metric_series"],
         extension_ntop=extensions.ntop,
     )
 

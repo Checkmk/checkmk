@@ -95,6 +95,8 @@ const setStartUrl = async (): Promise<void> => {
 
     if (response.data.result_code !== 0) {
       console.error('Error setting start URL:', response.data.result)
+    } else if (window.self !== window.top) {
+      window.top!.location.reload()
     } else {
       window.location.reload()
     }

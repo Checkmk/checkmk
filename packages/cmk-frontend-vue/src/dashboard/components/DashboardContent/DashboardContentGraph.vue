@@ -71,10 +71,10 @@ const resizeObserver = new ResizeObserver((entries) => {
   const entry = entries[0]!
 
   const size = entry.contentBoxSize![0]!
-  sizeVars.value.width = String(size.inlineSize)
-  sizeVars.value.height = String(size.blockSize)
-
-  updateGraph()
+  sizeVars.value = {
+    width: String(size.inlineSize),
+    height: String(size.blockSize)
+  }
 })
 
 const timer = useTimer(updateGraph, 60_000)

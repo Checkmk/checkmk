@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkBadge, { type Colors, type Types } from '@/components/CmkBadge.vue'
+import CmkChip, { type Colors, type Variants } from '@/components/CmkChip.vue'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import type {
   CmkMultitoneIconColor,
@@ -23,11 +23,11 @@ const props = defineProps<{
     | undefined
 }>()
 
-function getBadgeColor(): Colors {
-  return props.active ? props.activeColor : 'default'
+function getColor(): Colors {
+  return props.active ? props.activeColor : 'others'
 }
 
-function getBadgeType(): Types {
+function getVariant(): Variants {
   return props.active ? 'fill' : 'outline'
 }
 
@@ -37,26 +37,21 @@ function getIconColor(): CmkMultitoneIconColor | CustomIconColor {
 </script>
 
 <template>
-  <button
+  <CmkChip
     class="unified-search-filter-button__button"
     :class="{ 'unified-search-filter-button--active': props.active }"
+    :color="getColor()"
+    :variant="getVariant()"
   >
-    <CmkBadge
-      :color="getBadgeColor()"
-      :type="getBadgeType()"
-      size="small"
-      class="unified-search-filter-button__chip"
-    >
-      <CmkMultitoneIcon
+    <template #start
+      ><CmkMultitoneIcon
         v-if="icon"
         :name="icon.name"
         :primary-color="getIconColor()"
-        size="small"
         class="unified-search-filter-button__icon"
-      />
-      <slot />
-    </CmkBadge>
-  </button>
+    /></template>
+    <slot />
+  </CmkChip>
 </template>
 
 <style scoped>

@@ -9,7 +9,7 @@ import type {
   FormSpec,
   TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch.ts'
@@ -23,7 +23,11 @@ import FormEdit from '@/form/FormEdit.vue'
 
 import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
 
-import { filteredDataInFilteredDictionary, filteredDictionaryByGroupName } from './utils'
+import {
+  filteredDataInFilteredDictionary,
+  filteredDictionaryByGroupName,
+  filteredValidationMessagesInFilteredDictionary
+} from './utils'
 
 const { _t } = usei18n()
 
@@ -43,7 +47,6 @@ const model = defineModel<{ data: OAuth2FormData; validation: ValidationMessages
 
 async function validate(): Promise<boolean> {
   model.value.validation = []
-  model.value.data = { ...model.value.data, ...filteredData.value }
   if (
     model.value.data.client_secret[0] === 'explicit_password' &&
     !model.value.data.client_secret[2]
@@ -70,18 +73,22 @@ async function validate(): Promise<boolean> {
 }
 
 const groupName = 'Secret'
-const filteredDictionary = ref<TwoColumnDictionary>(
+const filteredDictionary = computed(() =>
   filteredDictionaryByGroupName(props.formSpec.spec as TwoColumnDictionary, groupName)
 )
 const filteredData = ref<Partial<OAuth2FormData>>(
   filteredDataInFilteredDictionary(model.value.data, filteredDictionary.value)
+)
+const filteredValidation = computed(() =>
+  filteredValidationMessagesInFilteredDictionary(model.value.validation, filteredDictionary.value)
 )
 
 immediateWatch(
   () => filteredData.value,
   (newValue) => {
     model.value.data = { ...model.value.data, ...newValue }
-  }
+  },
+  { deep: true }
 )
 </script>
 
@@ -99,7 +106,7 @@ immediateWatch(
       }}
       <FormEdit
         v-model:data="filteredData"
-        :backend-validation="model.validation"
+        :backend-validation="filteredValidation"
         :spec="filteredDictionary"
       />
     </template>

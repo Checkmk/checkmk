@@ -39,15 +39,17 @@ const props = defineProps<{
   connectorType: 'microsoft_entra_id'
 }>()
 
+const dataRef = defineModel<OAuth2FormData>('data', { required: true })
+
 const modelRef = ref<{ data: OAuth2FormData; validation: ValidationMessages }>({
   data: props.formSpec.data,
   validation: props.formSpec.validation ?? []
 })
 
 immediateWatch(
-  () => props.formSpec.data,
+  () => modelRef.value.data,
   (newValue) => {
-    modelRef.value.data = newValue
+    dataRef.value = newValue
   }
 )
 

@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
 import type { TwoColumnDictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { inject } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -32,7 +32,8 @@ import { waitForRedirect } from '../lib/waitForRedirect'
 import {
   buildRedirectUri,
   filteredDataInFilteredDictionary,
-  filteredDictionaryByGroupName
+  filteredDictionaryByGroupName,
+  filteredValidationMessagesInFilteredDictionary
 } from './utils'
 
 const { _t } = usei18n()
@@ -230,7 +231,6 @@ immediateWatch(
 
 async function validate(): Promise<boolean> {
   model.value.validation = []
-  model.value.data = { ...model.value.data, ...filteredData.value }
   if (!model.value.data.title) {
     model.value.validation.push({
       location: ['title'],
@@ -243,18 +243,22 @@ async function validate(): Promise<boolean> {
 }
 
 const groupName = 'General properties'
-const filteredDictionary = ref<TwoColumnDictionary>(
+const filteredDictionary = computed(() =>
   filteredDictionaryByGroupName(props.formSpec.spec as TwoColumnDictionary, groupName)
 )
 const filteredData = ref<Partial<OAuth2FormData>>(
   filteredDataInFilteredDictionary(model.value.data, filteredDictionary.value)
+)
+const filteredValidation = computed(() =>
+  filteredValidationMessagesInFilteredDictionary(model.value.validation, filteredDictionary.value)
 )
 
 immediateWatch(
   () => filteredData.value,
   (newValue) => {
     model.value.data = { ...model.value.data, ...newValue }
-  }
+  },
+  { deep: true }
 )
 </script>
 
@@ -284,7 +288,7 @@ immediateWatch(
         }}
         <FormEdit
           v-model:data="filteredData"
-          :backend-validation="model.validation"
+          :backend-validation="filteredValidation"
           :spec="filteredDictionary"
         />
       </template>

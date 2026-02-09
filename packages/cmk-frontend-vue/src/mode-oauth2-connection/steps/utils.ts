@@ -5,6 +5,8 @@
  */
 import type { TwoColumnDictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import type { ValidationMessages } from '@/form'
+
 import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
 
 /** UUID v4 regex pattern */
@@ -27,6 +29,21 @@ export function buildRedirectUri(redirectUrl: string): string {
   url.searchParams.delete('ident')
   url.searchParams.delete('entity_type_specifier')
   return url.toString()
+}
+
+export function filteredValidationMessagesInFilteredDictionary(
+  validationMessages: ValidationMessages,
+  filteredDictionary: TwoColumnDictionary
+): ValidationMessages {
+  const filteredValidationMessages: ValidationMessages = []
+  const dictionaryKeys = new Set(filteredDictionary.elements.map((e) => e.name))
+
+  for (const message of validationMessages) {
+    if (dictionaryKeys.has(message.location[0] as string)) {
+      filteredValidationMessages.push(message)
+    }
+  }
+  return filteredValidationMessages
 }
 
 export function filteredDataInFilteredDictionary(

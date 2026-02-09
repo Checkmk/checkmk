@@ -7,10 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Oauth2ConnectionConfig } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { provide } from 'vue'
+import { provide, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import { immediateWatch } from '@/lib/watch.ts'
 
 import type { ValidationMessages } from '@/form'
 
@@ -48,11 +49,19 @@ async function submit(data: OAuth2FormData): Promise<TranslatedString | null> {
   return _t(`Failed to save OAuth2 connection`)
 }
 
+immediateWatch(
+  () => props.form_spec.data,
+  (newValue) => {
+    dataRef.value = newValue
+  }
+)
+const dataRef = ref<OAuth2FormData>(props.form_spec.data)
 provide(submitKey, submit)
 </script>
 
 <template>
   <CreateOAuth2Connection
+    v-model:data="dataRef"
     :config="config"
     :form-spec="form_spec"
     :authority-mapping="authority_mapping"

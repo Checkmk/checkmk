@@ -9,7 +9,7 @@ import type {
   FormSpec,
   TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch.ts'
@@ -26,6 +26,7 @@ import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2
 import {
   filteredDataInFilteredDictionary,
   filteredDictionaryByGroupName,
+  filteredValidationMessagesInFilteredDictionary,
   isValidUUID
 } from './utils'
 
@@ -47,7 +48,6 @@ const model = defineModel<{ data: OAuth2FormData; validation: ValidationMessages
 
 async function validate(): Promise<boolean> {
   model.value.validation = []
-  model.value.data = { ...model.value.data, ...filteredData.value }
   let valid = true
   if (!model.value.data.tenant_id) {
     model.value.validation.push({
@@ -85,17 +85,22 @@ async function validate(): Promise<boolean> {
 }
 
 const groupName = 'IDs'
-const filteredDictionary = ref<TwoColumnDictionary>(
+const filteredDictionary = computed(() =>
   filteredDictionaryByGroupName(props.formSpec.spec as TwoColumnDictionary, groupName)
 )
 const filteredData = ref<Partial<OAuth2FormData>>(
   filteredDataInFilteredDictionary(model.value.data, filteredDictionary.value)
 )
+const filteredValidation = computed(() =>
+  filteredValidationMessagesInFilteredDictionary(model.value.validation, filteredDictionary.value)
+)
+
 immediateWatch(
   () => filteredData.value,
   (newValue) => {
     model.value.data = { ...model.value.data, ...newValue }
-  }
+  },
+  { deep: true }
 )
 </script>
 
@@ -113,7 +118,7 @@ immediateWatch(
       }}
       <FormEdit
         v-model:data="filteredData"
-        :backend-validation="model.validation"
+        :backend-validation="filteredValidation"
         :spec="filteredDictionary"
       />
     </template>

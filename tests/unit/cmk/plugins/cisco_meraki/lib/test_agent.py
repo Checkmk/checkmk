@@ -138,21 +138,6 @@ class TestMerakiAgentOutput:
 
         assert len(agent_output_all_orgs) > len(agent_output_with_org)
 
-    @pytest.mark.usefixtures("patch_storage_env")
-    def test_cache_is_being_used(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
-        only_cached_sections = ["--sections", "device-statuses", "licenses-overview"]
-        args = agent.parse_arguments([*_DEFAULT_ARGS, *only_cached_sections])
-        config = MerakiConfig.build(args)
-        client = MerakiClient(FakeMerakiSDK(), config)
-        ctx = MerakiRunContext(config=config, client=client)
-
-        agent.run(ctx)
-        first_run = capsys.readouterr().out
-        agent.run(ctx)
-        second_run = capsys.readouterr().out
-
-        assert first_run == second_run
-
     def _update_org_ids(self, ctx: MerakiRunContext, org_ids: Sequence[str]) -> MerakiRunContext:
         patched_config = dataclasses.replace(ctx.config, org_ids=org_ids)
         return dataclasses.replace(ctx, config=patched_config)

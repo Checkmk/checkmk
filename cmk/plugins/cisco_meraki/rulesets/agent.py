@@ -289,17 +289,6 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                                 custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
-                        "organizations": DictElement(
-                            parameter_form=TimeSpan(
-                                title=Title("Organizations"),
-                                displayed_magnitudes=(
-                                    TimeMagnitude.HOUR,
-                                    TimeMagnitude.MINUTE,
-                                ),
-                                prefill=DefaultValue(36000.0),  # 10 hours
-                                custom_validate=[NumberInRange(min_value=0.0)],
-                            )
-                        ),
                         "wireless_device_statuses": DictElement(
                             parameter_form=TimeSpan(
                                 title=Title("Wireless device statuses"),

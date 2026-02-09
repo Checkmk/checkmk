@@ -83,9 +83,7 @@ class MerakiClient:
         return fetch(id, name)
 
     def get_organizations(self) -> Sequence[schema.RawOrganisation]:
-        fn = self._org_client.get_organizations
-        fetch = fn if self._no_cache else self._cache.organizations(fn)
-        return fetch()
+        return self._org_client.get_organizations()
 
     def get_sensor_readings(self, id: str) -> Sequence[schema.RawSensorReadings]:
         return self._sensor_client.get_sensor_readings(id)

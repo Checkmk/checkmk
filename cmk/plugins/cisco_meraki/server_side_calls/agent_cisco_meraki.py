@@ -30,7 +30,6 @@ class CachePerSection(BaseModel):
     device_uplinks_info: int | None = None
     licenses_overview: int | None = None
     networks: int | None = None
-    organizations: int | None = None
     wireless_ethernet_statuses: int | None = None
 
 
@@ -103,8 +102,6 @@ def agent_cisco_meraki_arguments(
             args += ["--cache-licenses-overview", str(cache_per_section.licenses_overview)]
         if cache_per_section.networks:
             args += ["--cache-networks", str(cache_per_section.networks)]
-        if cache_per_section.organizations:
-            args += ["--cache-organizations", str(cache_per_section.organizations)]
         if cache_per_section.wireless_ethernet_statuses:
             args += [
                 "--cache-wireless-ethernet-statuses",

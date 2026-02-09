@@ -399,7 +399,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--cache-device-uplinks-info", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-licenses-overview", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-networks", type=float, default=36000.0)  # 10 hours
-    parser.add_argument("--cache-organizations", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-wireless-device-statuses", type=float, default=1800.0)  # 30 mins
     parser.add_argument("--cache-wireless-ethernet-statuses", type=float, default=1800.0)  # 30 mins
 

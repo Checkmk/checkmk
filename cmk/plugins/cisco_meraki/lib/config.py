@@ -78,7 +78,6 @@ class _CacheConfig:
     device_uplinks_info: _CacheDecorator[[str], Sequence[schema.RawDeviceUplinksAddress]]
     licenses_overview: _CacheDecorator[[str, str], schema.LicensesOverview | None]
     networks: _CacheDecorator[[str, str], Sequence[schema.Network]]
-    organizations: _CacheDecorator[[], Sequence[schema.RawOrganisation]]
     wireless_device_statuses: _CacheDecorator[[str], Sequence[schema.RawWirelessDeviceStatus]]
     wireless_ethernet_statuses: _CacheDecorator[[str], Sequence[schema.RawWirelessEthernetStatus]]
 
@@ -112,10 +111,6 @@ class _CacheConfig:
             networks=cache.cache_ttl(
                 Storage("cisco_meraki_networks", host=args.hostname),
                 ttl=args.cache_networks,
-            ),
-            organizations=cache.cache_ttl(
-                Storage("cisco_meraki_organizations", host=args.hostname),
-                ttl=args.cache_organizations,
             ),
             wireless_device_statuses=cache.cache_ttl(
                 Storage("cisco_meraki_wireless_device_statuses", host=args.hostname),

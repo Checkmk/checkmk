@@ -52,6 +52,7 @@ ENV \
 # cmake is required to install iwyu, requires +34MB
 # git is required to use tests and install iwyu, requires +0MB
 # gpg is required to use installation scripts, requires +0MB
+# libaio1 is required by mk-oracle
 # lsb-release is required to use installation scripts, requires +0MB
 # make is required for installations, requires +0MB
 # mbuffer is required for faster decompression with lz4, requires +1MB
@@ -65,6 +66,7 @@ RUN apt-get update && \
         curl \
         git \
         gpg \
+        libaio1 \
         lsb-release \
         make \
         mbuffer \

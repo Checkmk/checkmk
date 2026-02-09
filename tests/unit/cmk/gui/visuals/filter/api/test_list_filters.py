@@ -21,3 +21,10 @@ def test_list(
 
     assert resp.status_code == 200
     assert resp.json["id"] == "all"
+
+
+def test_list_filter_groups(clients: ClientRegistry) -> None:
+    resp = clients.VisualFilterGroupClient.get_all()
+
+    assert resp.status_code == 200
+    assert len(resp.json["value"]) > 0

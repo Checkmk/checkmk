@@ -7,6 +7,7 @@ from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
 from ._family import VISUAL_FILTER_FAMILY
+from .list_filter_groups import ENDPOINT_LIST_FILTER_GROUPS
 from .list_filters import ENDPOINT_LIST_FILTERS
 
 
@@ -19,3 +20,6 @@ def register(
     endpoint_family_registry.register(VISUAL_FILTER_FAMILY, ignore_duplicates=ignore_duplicates)
 
     versioned_endpoint_registry.register(ENDPOINT_LIST_FILTERS, ignore_duplicates=ignore_duplicates)
+    versioned_endpoint_registry.register(
+        ENDPOINT_LIST_FILTER_GROUPS, ignore_duplicates=ignore_duplicates
+    )

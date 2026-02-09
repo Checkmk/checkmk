@@ -3507,6 +3507,18 @@ class VisualFilterClient(RestApiClient):
         )
 
 
+class VisualFilterGroupClient(RestApiClient):
+    domain: DomainType = "visual_filter_group"
+    default_version = APIVersion.INTERNAL
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
 class DashboardClient(RestApiClient):
     domain: DomainType = "dashboard"
     domain_relative: DomainType = "dashboard_relative_grid"
@@ -3896,6 +3908,7 @@ class ClientRegistry:
     OtelConfigClient: OtelConfigClient
     OtelCollectorClient: OtelCollectorClient
     VisualFilterClient: VisualFilterClient
+    VisualFilterGroupClient: VisualFilterGroupClient
     DashboardClient: DashboardClient
     ConstantClient: ConstantClient
     ViewClient: ViewClient
@@ -3951,6 +3964,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         OtelConfigClient=OtelConfigClient(request_handler, url_prefix),
         OtelCollectorClient=OtelCollectorClient(request_handler, url_prefix),
         VisualFilterClient=VisualFilterClient(request_handler, url_prefix),
+        VisualFilterGroupClient=VisualFilterGroupClient(request_handler, url_prefix),
         DashboardClient=DashboardClient(request_handler, url_prefix),
         ConstantClient=ConstantClient(request_handler, url_prefix),
         ViewClient=ViewClient(request_handler, url_prefix),

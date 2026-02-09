@@ -23,7 +23,8 @@ from playwright.sync_api import BrowserContext, Page
 from requests.auth import HTTPBasicAuth
 
 from tests.testlib.site import ADMIN_USER as site_admin_user
-from tests.testlib.site import Site
+from tests.testlib.site import PythonHelper, Site
+from tests.testlib.utils import check_output
 
 from tests.performance.sysmon import track_resources
 
@@ -161,7 +162,7 @@ class PerformanceTest:
         return directory / f"{path.stem}.{next_num}{path.suffix}"
 
     @staticmethod
-    def _generate_ips(offset: int, max_count: int) -> list[str]:
+    def generate_ips(offset: int, max_count: int) -> list[str]:
         ips: list[str] = []
         for idx, (x, y, z) in enumerate(
             [(x, y, z) for x in range(0, 256) for y in range(0, 256) for z in range(1, 255)]
@@ -187,7 +188,7 @@ class PerformanceTest:
         for site in target_sites:
             is_central_site = site.id == central_site.id
             for idx, ip in enumerate(
-                PerformanceTest._generate_ips(host_ip_offset, host_count), start=1
+                PerformanceTest.generate_ips(host_ip_offset, host_count), start=1
             ):
                 hostname = f"{site.id}_{unixtime}_{idx}"
                 entry: dict[str, object] = {
@@ -426,3 +427,44 @@ class PerformanceTest:
         """
         self.central_site.ensure_running()
         assert self.central_site.openapi.changes.activate_and_wait_for_completion()
+
+    def setup_nagios_core_plugin_import(self) -> None:
+        """Setup: Nagios core plugin import
+
+        Executes "nagios_core_plugin_import.py --list-plugins" in the site context and stores the
+        output in the file $OMD_ROOT/plugins.json.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        helper_path = Path(__file__).parent / "nagios_core_plugin_import.py"
+        helper = PythonHelper(self.central_site, helper_path)
+        helper_stem = helper.helper_path.stem
+        self.central_site.write_file(f"var/log/{helper_stem}.log", helper.check_output())
+
+    def scenario_nagios_core_plugin_import(self, iterations: int) -> None:
+        """Scenario: Nagios core plugin import
+
+        Sequentially runs nagios_core_plugin_import.py 10 times per iteration in the site context.
+
+        Reads the list of plugins from the file $OMD_ROOT/plugins.json created in the setup.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        check_path = self.central_site.path(
+            "var/check_mk/core/helper_config/latest/host_checks/check_localhost.py"
+        )
+        assert self.central_site.file_exists(check_path), "Check file not found! Aborting."
+
+        cmd = ["python3", check_path.as_posix()]
+        logger.info("$ %s", " ".join(cmd))
+        with track_resources("test_nagios_core_plugin_import", sampling_interval=0.1):
+            for _ in range(iterations * 10):
+                check_output(cmd, sudo=True, substitute_user=self.central_site.id)

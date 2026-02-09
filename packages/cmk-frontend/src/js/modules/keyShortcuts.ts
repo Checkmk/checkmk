@@ -3,18 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { Ref } from 'vue'
-
-import usei18n from '@/lib/i18n'
-
-import { randomId } from './randomId'
-
-const { _t } = usei18n()
 
 export type KeyShortcutHandlerCallback = (shortcut: KeyShortcut) => void
 
 export interface KeyShortcutEnsured extends KeyShortcut {
-  id: string
   key: string[]
   ctrl: boolean
   shift: boolean
@@ -25,23 +17,22 @@ export interface KeyShortcutEnsured extends KeyShortcut {
 
 export interface KeyShortcut {
   key: string[]
-  ctrl?: boolean | undefined
-  shift?: boolean | undefined
-  alt?: boolean | undefined
-  preventDefault?: boolean | undefined
-  propagate?: boolean | undefined
+  ctrl?: boolean
+  shift?: boolean
+  alt?: boolean
+  preventDefault?: boolean
+  propagate?: boolean
 }
 
 export interface KeyShortcutHandler extends KeyShortcutEnsured {
   callback: KeyShortcutHandlerCallback
 }
 
-export interface KeyStates {
-  [key: string]: boolean
-}
+const MODIFIER_KEYS = ['Control', 'Shift', 'Alt']
+const N_KEYS_REMEMBERED = 10
 
 export class KeyShortcutService {
-  private keyStates: KeyStates = {}
+  private keySequence: string[] = []
   private handlers: KeyShortcutHandler[] = []
 
   constructor(
@@ -49,51 +40,17 @@ export class KeyShortcutService {
     private propagateTo: HTMLCollectionOf<HTMLIFrameElement> | null = null
   ) {
     this.window.addEventListener('keydown', this.handleKeyDown.bind(this))
-    this.window.addEventListener('keyup', this.handleKeyUp.bind(this))
   }
 
-  public on(shortcut: KeyShortcut, callback: KeyShortcutHandlerCallback): string {
+  public on(shortcut: KeyShortcut, callback: KeyShortcutHandlerCallback): void {
     shortcut = this.ensureShortcut(shortcut)
     ;(shortcut as KeyShortcutHandler).callback = callback
 
     this.handlers.push(shortcut as KeyShortcutHandler)
-
-    return (shortcut as KeyShortcutHandler).id
-  }
-
-  public remove(ids: string[]): void {
-    this.handlers = this.handlers
-      .map((handler) => {
-        if (ids.indexOf(handler.id) >= 0) {
-          return null
-        } else {
-          return handler
-        }
-      })
-      .filter((handler) => handler !== null)
   }
 
   public setPropagateTo(propagateTo: HTMLCollectionOf<HTMLIFrameElement>): void {
     this.propagateTo = propagateTo
-  }
-
-  public static getShortCutInfo(shortcut: KeyShortcut): string {
-    const keys = []
-    if (shortcut.ctrl) {
-      keys.push((_t('Ctrl') as unknown as Ref).value)
-    }
-
-    if (shortcut.shift) {
-      keys.push((_t('Shift') as unknown as Ref).value)
-    }
-
-    if (shortcut.alt) {
-      keys.push((_t('Alt') as unknown as Ref).value)
-    }
-
-    keys.push(shortcut.key.map((k) => k.toUpperCase()))
-
-    return keys.join(' + ')
   }
 
   private ensureShortcut(shortcut: KeyShortcut): KeyShortcutEnsured {
@@ -113,8 +70,6 @@ export class KeyShortcutService {
       shortcut.propagate = false
     }
 
-    ;(shortcut as KeyShortcutEnsured).id = randomId()
-
     return shortcut as KeyShortcutEnsured
   }
 
@@ -133,27 +88,27 @@ export class KeyShortcutService {
     }
   }
 
-  private setKeyState(key: string, pressed: boolean): void {
-    this.keyStates[key.toLowerCase()] = pressed
+  private recordKeyPress(key: string): void {
+    const newSize = this.keySequence.push(key)
+    if (newSize > N_KEYS_REMEMBERED) {
+      this.keySequence.shift()
+    }
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
-    this.setKeyState(e.key, true)
+    if (MODIFIER_KEYS.includes(e.key)) {
+      return
+    }
+    this.recordKeyPress(e.key.toLowerCase())
     this.callHandlers(e)
   }
 
-  private handleKeyUp(e: KeyboardEvent): void {
-    this.setKeyState(e.key, false)
-  }
-
-  private shortcutKeysPressed(keys: string[]): boolean {
-    for (const key of keys) {
-      if (!this.keyStates[key.toLowerCase()]) {
-        return false
-      }
+  private sequenceMatches(keys: string[]): boolean {
+    const startIndex = this.keySequence.length - keys.length
+    if (startIndex < 0) {
+      return false
     }
-
-    return true
+    return keys.every((key, index) => key === this.keySequence[startIndex + index])
   }
 
   private callHandlers(e: KeyboardEvent): void {
@@ -162,7 +117,7 @@ export class KeyShortcutService {
         e.ctrlKey === handler.ctrl &&
         e.shiftKey === handler.shift &&
         e.altKey === handler.alt &&
-        this.shortcutKeysPressed(handler.key)
+        this.sequenceMatches(handler.key)
       ) {
         if (handler.preventDefault) {
           e.preventDefault()

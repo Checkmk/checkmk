@@ -305,7 +305,12 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     const auto rrdcached_socket = core_->paths()->rrdcached_socket();
     auto sock =
         RRDUDSSocket{rrdcached_socket, logger, RRDUDSSocket::verbosity::none};
-    sock.connect();
+    try {
+        sock.connect();
+    } catch (const std::runtime_error &e) {
+        Error(logger) << rrdcached_socket << ": " << e.what();
+        return {};
+    }
 
     auto fetch = std::ostringstream{} << "FETCHBIN " << location.path_.string()
                                       << " " << *cf << " " << args_.start_time

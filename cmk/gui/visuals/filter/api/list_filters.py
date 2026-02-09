@@ -26,7 +26,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.utils import permission_verification as permissions
 
-from .._base import Filter
+from .._base import Filter, FilterGroup
 from .._registry import filter_registry
 from ._family import VISUAL_FILTER_FAMILY
 from ._model import filter_component_from_internal, FilterComponentModel
@@ -37,6 +37,7 @@ class FilterExtensions:
     info: str = api_field(
         description="For which type of object this filter is applicable.",
     )
+    group: str | None = api_field(description="The group this filter belongs to.")
     description: str | ApiOmitted = api_field(
         description="Description for this filter.", default_factory=ApiOmitted
     )
@@ -68,6 +69,12 @@ def _filter_sort_key(value: tuple[str, Filter]) -> tuple[int, str]:
     return value[1].sort_index, value[1].title
 
 
+def _filter_group_value(group: FilterGroup | None) -> str | None:
+    if group is None:
+        return None
+    return group.value
+
+
 def _iter_filter_models() -> Iterable[FilterDomainObject]:
     """Iterate over all filter models in the registry, correctly sorted."""
     for filter_name, filter_object in sorted(filter_registry.items(), key=_filter_sort_key):
@@ -81,6 +88,7 @@ def _iter_filter_models() -> Iterable[FilterDomainObject]:
             title=filter_object.title,
             extensions=FilterExtensions(
                 info=filter_object.info,
+                group=_filter_group_value(filter_object.group),
                 description=ApiOmitted.from_optional(filter_object.description),
                 is_show_more=filter_object.is_show_more,
                 components=[filter_component_from_internal(component) for component in components],

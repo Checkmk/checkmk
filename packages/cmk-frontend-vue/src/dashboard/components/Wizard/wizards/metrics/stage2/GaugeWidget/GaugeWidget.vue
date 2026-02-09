@@ -11,8 +11,6 @@ import usei18n from '@/lib/i18n'
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import GraphTimeRange from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
@@ -22,6 +20,7 @@ import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/F
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
+import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types.ts'
 
 import ShowServiceStatus from './ShowServiceStatus.vue'
@@ -105,56 +104,16 @@ const widgetProps = computed(() => handler.value.widgetProps)
   <ContentSpacer />
 
   <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
-    <TableForm>
-      <TableFormRow>
-        <FieldDescription>{{ _t('Title') }}</FieldDescription>
-        <FieldComponent>
-          <div class="db-gauge-widget__item">
-            <CmkInput
-              v-model="handler.title.value as string"
-              type="text"
-              field-size="MEDIUM"
-              placeholder=""
-            />
-          </div>
-
-          <div class="db-gauge-widget__item">
-            <CmkCheckbox v-model="handler.titleUrlEnabled.value" :label="_t('Link title to')" />
-            <CmkIndent v-if="handler.titleUrlEnabled.value">
-              <CmkInput
-                v-model="handler.titleUrl.value as string"
-                type="text"
-                field-size="MEDIUM"
-                :external-errors="handler.titleUrlValidationErrors.value"
-              />
-            </CmkIndent>
-          </div>
-        </FieldComponent>
-      </TableFormRow>
-
-      <TableFormRow>
-        <FieldDescription>{{ _t('Appearance') }}</FieldDescription>
-        <FieldComponent>
-          <div class="db-gauge-widget__item">
-            <CmkCheckbox v-model="handler.showTitle.value" :label="_t('Show title')" />
-          </div>
-          <div class="db-gauge-widget__item">
-            <CmkCheckbox
-              v-model="handler.showTitleBackground.value"
-              :label="_t('Show title background')"
-            />
-          </div>
-        </FieldComponent>
-      </TableFormRow>
-    </TableForm>
+    <WidgetVisualization
+      v-model:show-title="handler.showTitle.value"
+      v-model:show-title-background="handler.showTitleBackground.value"
+      v-model:show-widget-background="handler.showWidgetBackground.value"
+      v-model:title="handler.title.value"
+      v-model:title-url="handler.titleUrl.value"
+      v-model:title-url-enabled="handler.titleUrlEnabled.value"
+      v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
+    />
   </CmkCatalogPanel>
 
   <ContentSpacer />
 </template>
-
-<style scoped>
-.db-gauge-widget__item {
-  display: block;
-  padding-bottom: var(--spacing-half);
-}
-</style>

@@ -5,4 +5,7 @@
 	delaycompress
 	notifempty
 	create 640 ###SITE### ###SITE###
+	postrotate
+	    ###ROOT###/etc/init.d/automation-helper logrotate
+        endscript
 }

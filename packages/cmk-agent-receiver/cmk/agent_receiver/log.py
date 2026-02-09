@@ -5,12 +5,13 @@
 
 import logging
 import pathlib
+from logging.handlers import WatchedFileHandler
 
 logger = logging.getLogger("agent-receiver")
 
 
 def configure_logger(path: pathlib.Path) -> None:
-    handler = logging.FileHandler(path, encoding="UTF-8")
+    handler = WatchedFileHandler(path, encoding="UTF-8")
     formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)

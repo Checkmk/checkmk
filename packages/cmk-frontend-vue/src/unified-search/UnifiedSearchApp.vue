@@ -92,7 +92,12 @@ search.onSearch((result?: UnifiedSearchResult) => {
       const usprRes = await uspr.result
 
       if (usprRes instanceof UnifiedSearchError) {
-        if (usprRes.message === 'signal is aborted without reason') {
+        if (
+          [
+            'signal is aborted without reason', // abortion message on chromium browsers
+            'The operation was aborted.' // abortion message on firefox
+          ].indexOf(usprRes.message) >= 0
+        ) {
           return
         }
         searchError.value = usprRes

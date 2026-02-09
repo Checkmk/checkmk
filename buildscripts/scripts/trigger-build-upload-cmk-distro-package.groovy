@@ -59,13 +59,11 @@ void main() {
 
     def stages = all_editions.collectEntries { edition ->
         [("${edition}") : {
-            def build_instance = null;
-
             smart_stage(
                 name: "Trigger ${edition} package build",
                 raiseOnError: true,
             ) {
-                build_instance = smart_build(
+                smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
                     relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",

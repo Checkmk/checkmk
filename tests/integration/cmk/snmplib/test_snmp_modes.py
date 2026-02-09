@@ -25,10 +25,10 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.snmplib import (
     OID,
     SNMPBackendEnum,
+    SNMPContextConfig,
     SNMPHostConfig,
     SNMPRowInfoForStoredWalk,
     SNMPVersion,
-    SNMPContextConfig,
 )
 from tests.testlib.site import Site
 

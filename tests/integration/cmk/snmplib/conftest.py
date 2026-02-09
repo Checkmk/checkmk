@@ -18,7 +18,7 @@ import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import psutil
 import pytest
@@ -26,15 +26,11 @@ from pysnmp.hlapi.asyncio import (  # type: ignore[import-untyped]
     CommunityData,
     ContextData,
     get_cmd,
-    Integer32,
     ObjectIdentity,
     ObjectType,
     SnmpEngine,
     UdpTransportTarget,
-    UsmUserData,
 )
-from pysnmp.hlapi.transport import AbstractTransportTarget  # type: ignore[import-untyped]
-from pysnmp.proto.errind import ErrorIndication  # type: ignore[import-untyped]
 
 from cmk.ccc import debug
 from cmk.snmplib import SNMPBackendEnum

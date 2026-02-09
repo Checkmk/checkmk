@@ -67,7 +67,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           users in the`
         )
       }}
-      <a href="https://docs.checkmk.com/latest/en/intro_users.html">{{ _t('documentation.') }}</a>
+      <a :href="cards.intro_users">{{ _t('documentation.') }}</a>
     </CmkAlertBox>
 
     <CmkWizard v-model="currentStep" mode="guided">

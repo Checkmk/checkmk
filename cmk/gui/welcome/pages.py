@@ -294,6 +294,8 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 addvars=[],
                 filename="ajax_get_welcome_page_stage_information.py",
             ),
+            intro_users=doc_reference_url(DocReference.INTRO_USERS),
+            intro_notifications=doc_reference_url(DocReference.INTRO_NOTIFICATIONS),
         ),
         is_start_url=user.start_url == "welcome.py",
         stage_information=StageInformation(

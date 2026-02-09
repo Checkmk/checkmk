@@ -57,7 +57,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
       }}
       <br />
       {{ _t('Learn more about notifications in the') }}
-      <a href="https://docs.checkmk.com/latest/en/intro_notifications.html">
+      <a :href="cards.intro_notifications">
         {{ _t('documentation.') }}
       </a>
     </StepParagraph>

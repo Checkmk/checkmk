@@ -14,7 +14,6 @@ from ipaddress import (
 
 from cmk.agent_based.v2 import (
     exists,
-    HostLabel,
     HostLabelGenerator,
     InventoryPlugin,
     InventoryResult,
@@ -25,6 +24,7 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     TableRow,
 )
+from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 
 NamedInterface = Mapping[str, IPv4Interface | IPv6Interface]
 Section = Sequence[NamedInterface]
@@ -186,28 +186,9 @@ def host_label_ip_addresses(section: Section) -> HostLabelGenerator:
 
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
-    valid_v4_ips = 0
-    valid_v6_ips = 0
-    for interface_ips in section or []:
-        for interface_ip in interface_ips.values():
-            if interface_ip.version == 4 and not interface_ip.is_loopback:
-                valid_v4_ips += 1
-                if valid_v4_ips == 1:
-                    yield HostLabel(name="cmk/l3v4_topology", value="singlehomed")
-                if valid_v4_ips == 2:
-                    yield HostLabel(name="cmk/l3v4_topology", value="multihomed")
-
-            elif (
-                interface_ip.version == 6
-                and not interface_ip.is_loopback
-                and not interface_ip.is_link_local
-                and not interface_ip.is_unspecified
-            ):
-                valid_v6_ips += 1
-                if valid_v6_ips == 1:
-                    yield HostLabel(name="cmk/l3v6_topology", value="singlehomed")
-                if valid_v6_ips == 2:
-                    yield HostLabel(name="cmk/l3v6_topology", value="multihomed")
+    yield from host_labels_if(
+        interface for adapter in section or [] for interface in adapter.values()
+    )
 
 
 def inventory_ip_addresses(section: Section) -> InventoryResult:

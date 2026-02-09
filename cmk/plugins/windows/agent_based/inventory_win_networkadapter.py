@@ -32,13 +32,13 @@ from pydantic import BaseModel, field_validator
 
 from cmk.agent_based.v2 import (
     AgentSection,
-    HostLabel,
     HostLabelGenerator,
     InventoryPlugin,
     InventoryResult,
     StringTable,
     TableRow,
 )
+from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 
 Section = Sequence[Mapping[str, str]]
 
@@ -104,33 +104,11 @@ def host_label_win_ip_address(section: Section) -> HostLabelGenerator:
 
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
-    # Original author: thl-cmk[at]outlook[dot]com
-    #
-    # refactor-me: this should go to cmk.plugins.network.agent_based.ip_addresses.host_label_ip_addresses
-    #              but callers first have to use Adapter
-    valid_v4_ips = 0
-    valid_v6_ips = 0
-    for raw_adapter in section:
-        adapter = Adapter.model_validate(raw_adapter)
-        for interface_ip in adapter.interface_ips():
-            if interface_ip.version == 4 and not interface_ip.is_loopback:
-                valid_v4_ips += 1
-                if valid_v4_ips == 1:
-                    yield HostLabel(name="cmk/l3v4_topology", value="singlehomed")
-                if valid_v4_ips == 2:
-                    yield HostLabel(name="cmk/l3v4_topology", value="multihomed")
-
-            elif (
-                interface_ip.version == 6
-                and not interface_ip.is_loopback
-                and not interface_ip.is_link_local
-                and not interface_ip.is_unspecified
-            ):
-                valid_v6_ips += 1
-                if valid_v6_ips == 1:
-                    yield HostLabel(name="cmk/l3v6_topology", value="singlehomed")
-                if valid_v6_ips == 2:
-                    yield HostLabel(name="cmk/l3v6_topology", value="multihomed")
+    yield from host_labels_if(
+        interface
+        for adapter in map(Adapter.model_validate, section)
+        for interface in adapter.interface_ips()
+    )
 
 
 def parse_win_networkadapter(

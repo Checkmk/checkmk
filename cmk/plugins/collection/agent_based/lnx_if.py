@@ -6,7 +6,13 @@
 import time
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import dataclass, field, replace
-from ipaddress import AddressValueError, ip_interface, NetmaskValueError
+from ipaddress import (
+    AddressValueError,
+    ip_interface,
+    IPv4Interface,
+    IPv6Interface,
+    NetmaskValueError,
+)
 from typing import Any, Literal
 
 from cmk.agent_based.v2 import (
@@ -14,7 +20,6 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    HostLabel,
     HostLabelGenerator,
     InventoryPlugin,
     InventoryResult,
@@ -24,6 +29,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 from cmk.plugins.lib.interfaces import InterfaceWithCounters
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
 from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
@@ -274,41 +280,22 @@ def host_label_lnx_ip_address(section: Section) -> HostLabelGenerator:
 
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
-    # Original author: thl-cmk[at]outlook[dot]com
-    #
-    # refactor-me: this should go to cmk.plugins.network.agent_based.ip_addresses.host_label_ip_addresses
-    #              but Section has to be unified first
-    valid_v4_ips = 0
-    valid_v6_ips = 0
-    _interfaces_with_counters, ip_stats = section
-    for if_name, interface in ip_stats.items():
-        for raw_interface_ips, _ in [
-            (interface.inet, "ipv4"),
-            (interface.inet6, "ipv6"),
-        ]:
-            for raw_interface_ip in raw_interface_ips:
-                try:
-                    interface_ip = ip_interface(raw_interface_ip)
-                except (AddressValueError, NetmaskValueError, ValueError):
-                    continue
-                if interface_ip.version == 4 and not interface_ip.is_loopback:
-                    valid_v4_ips += 1
-                    if valid_v4_ips == 1:
-                        yield HostLabel(name="cmk/l3v4_topology", value="singlehomed")
-                    if valid_v4_ips == 2:
-                        yield HostLabel(name="cmk/l3v4_topology", value="multihomed")
 
-                elif (
-                    interface_ip.version == 6
-                    and not interface_ip.is_loopback
-                    and not interface_ip.is_link_local
-                    and not interface_ip.is_unspecified
-                ):
-                    valid_v6_ips += 1
-                    if valid_v6_ips == 1:
-                        yield HostLabel(name="cmk/l3v6_topology", value="singlehomed")
-                    if valid_v6_ips == 2:
-                        yield HostLabel(name="cmk/l3v6_topology", value="multihomed")
+    def maybe_interface(interface_str: str) -> IPv4Interface | IPv6Interface | None:
+        try:
+            return ip_interface(interface_str)
+        except (AddressValueError, NetmaskValueError, ValueError):
+            return None
+
+    _interfaces_with_counters, ip_stats = section
+
+    yield from host_labels_if(
+        interface_ip
+        for adapter in ip_stats.values()
+        for raw_interface_ips in [adapter.inet, adapter.inet6]
+        for interface_ip in map(maybe_interface, raw_interface_ips)
+        if interface_ip
+    )
 
 
 agent_section_lnx_if = AgentSection(

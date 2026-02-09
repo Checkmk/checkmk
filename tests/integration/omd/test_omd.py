@@ -204,6 +204,23 @@ def test_run_omd_create_welcome_message() -> None:
             site.rm()
 
 
+def test_run_omd_init() -> None:
+    """
+    Test the 'omd init' command.
+    """
+    package = CMKPackageInfo(version_from_env(), edition_from_env())
+    site_factory = SiteFactory(package=package, prefix="")
+    site = None
+    try:
+        site = site_factory.get_site("test_init_site")
+        run(["omd", "-V", package.version_directory(), "disable", site.id], sudo=True)
+        run(["omd", "-V", package.version_directory(), "--force", "init", site.id], sudo=True)
+        site.start()
+    finally:
+        if site is not None and site.exists():
+            site.rm()
+
+
 # TODO: Add tests for these modes (also check -h of each mode)
 # omd update                      Update site to other version of OMD
 # omd start      [SERVICE]        Start services of one or all sites

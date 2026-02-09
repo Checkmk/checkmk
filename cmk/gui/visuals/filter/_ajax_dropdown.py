@@ -24,7 +24,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
 
-from ._base import Filter
+from ._base import Filter, FilterGroup
 from .components import Checkbox, DynamicDropdown, FilterComponent, HorizontalGroup
 
 
@@ -43,6 +43,7 @@ class AjaxDropdownFilter(Filter):
         description: None | str | LazyString = None,
         is_show_more: bool = False,
         validate_value: Callable[[str, str], None] | None = None,
+        group: FilterGroup | None = None,
     ) -> None:
         self.query_filter = query_filter
         self.autocompleter = autocompleter
@@ -57,6 +58,7 @@ class AjaxDropdownFilter(Filter):
             link_columns=link_columns or self.query_filter.link_columns,
             description=description,
             is_show_more=is_show_more,
+            group=group,
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -110,6 +112,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
         autocompleter: AutocompleterConfig,
         query_filter: query_filters.TextQuery,
         description: None | str | LazyString = None,
+        group: FilterGroup | None = None,
     ) -> None:
         self.query_filter = query_filter
         self.group_type = group_type
@@ -122,6 +125,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
             query_filter=query_filter,
             link_columns=[group_type + "group_name"],
             description=description,
+            group=group,
         )
 
     def request_vars_from_row(self, row: Row) -> dict[str, str]:

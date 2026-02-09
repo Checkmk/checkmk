@@ -46,6 +46,7 @@ from .filter import (
     CheckboxRowFilter,
     DualListFilter,
     Filter,
+    FilterGroup,
     FilterGroupCombo,
     FilterNumberRange,
     FilterOption,
@@ -104,6 +105,7 @@ class RegexAjaxDropdownFilter(AjaxDropdownFilter):
         link_columns: list[ColumnName] | None = None,
         description: None | str | LazyString = None,
         is_show_more: bool = False,
+        group: FilterGroup | None = None,
     ) -> None:
         super().__init__(
             title=title,
@@ -115,6 +117,7 @@ class RegexAjaxDropdownFilter(AjaxDropdownFilter):
             description=description,
             is_show_more=is_show_more,
             validate_value=validate_regex,
+            group=group,
         )
 
 
@@ -150,6 +153,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 negateable=True,
             ),
             description=_l("Search field allowing regular expressions and partial matches"),
+            group=FilterGroup.HOST_NAME,
         )
     )
 
@@ -167,6 +171,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             ),
             description=_l("Exact match, used for linking"),
             is_show_more=True,
+            group=FilterGroup.HOST_NAME,
         )
     )
 
@@ -199,6 +204,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 negateable=True,
             ),
             description=_l("Search field allowing regular expressions and partial matches"),
+            group=FilterGroup.SERVICE_NAME,
         )
     )
 
@@ -215,6 +221,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             ),
             description=_l("Exact match, used for linking"),
             is_show_more=True,
+            group=FilterGroup.SERVICE_NAME,
         )
     )
 
@@ -254,6 +261,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             info="host",
             description=_l("Search field allowing regular expressions and partial matches"),
             query_filter=query_filters.HostnameOrAliasQuery(),
+            group=FilterGroup.HOST_NAME,
         )
     )
 
@@ -267,6 +275,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 ident="host_check_command",
                 op="~",
             ),
+            group=FilterGroup.HOST_CHECK_COMMAND,
         )
     )
 
@@ -281,6 +290,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 op="=",
                 column="host_check_command",
             ),
+            group=FilterGroup.HOST_CHECK_COMMAND,
         )
     )
 
@@ -295,6 +305,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 op="~",
                 column="service_check_command",
             ),
+            group=FilterGroup.SERVICE_CHECK_COMMAND,
         )
     )
 
@@ -309,6 +320,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 op="=",
                 column="service_check_command",
             ),
+            group=FilterGroup.SERVICE_CHECK_COMMAND,
         )
     )
 
@@ -322,6 +334,7 @@ class IPAddressFilter(Filter):
         query_filter: query_filters.IPAddressQuery,
         link_columns: list[str],
         is_show_more: bool = False,
+        group: FilterGroup | None = None,
     ):
         self.query_filter = query_filter
         super().__init__(
@@ -332,6 +345,7 @@ class IPAddressFilter(Filter):
             htmlvars=self.query_filter.request_vars,
             link_columns=link_columns,
             is_show_more=is_show_more,
+            group=group,
         )
 
     def components(self) -> Iterable[FilterComponent]:
@@ -365,6 +379,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 what="primary",
             ),
             is_show_more=True,
+            group=FilterGroup.HOST_ADDRESS,
         )
     )
 
@@ -377,6 +392,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 ident="host_ipv4_address",
                 what="ipv4",
             ),
+            group=FilterGroup.HOST_ADDRESS,
         )
     )
 
@@ -389,6 +405,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 ident="host_ipv6_address",
                 what="ipv6",
             ),
+            group=FilterGroup.HOST_ADDRESS,
         )
     )
 
@@ -403,6 +420,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 filter_code=query_filters.address_family,
             ),
             is_show_more=True,
+            group=FilterGroup.HOST_ADDRESS,
         )
     )
 
@@ -417,6 +435,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 filter_code=query_filters.address_families,
             ),
             is_show_more=True,
+            group=FilterGroup.HOST_ADDRESS,
         )
     )
 
@@ -461,6 +480,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
                 negateable=True,
             ),
             group_type="host",
+            group=FilterGroup.HOST_IS,
         )
     )
 
@@ -478,6 +498,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
                 negateable=True,
             ),
             group_type="service",
+            group=FilterGroup.SERVICE_IS,
         )
     )
 
@@ -497,6 +518,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
                 negateable=True,
             ),
             group_type="host_contact",
+            group=FilterGroup.HOST_CONTACT,
         )
     )
 
@@ -514,6 +536,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
                 negateable=True,
             ),
             group_type="service_contact",
+            group=FilterGroup.SERVICE_CONTACT,
         )
     )
 
@@ -524,6 +547,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
             info="host",
             query_filter=query_filters.TextQuery(ident="host_ctc", column="host_contacts", op=">="),
             is_show_more=True,
+            group=FilterGroup.HOST_CONTACT,
         )
     )
 
@@ -536,6 +560,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
                 ident="host_ctc_regex", column="host_contacts", op="~~"
             ),
             is_show_more=True,
+            group=FilterGroup.HOST_CONTACT,
         )
     )
 
@@ -548,6 +573,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
                 ident="service_ctc", column="service_contacts", op=">="
             ),
             is_show_more=True,
+            group=FilterGroup.SERVICE_CONTACT,
         )
     )
 
@@ -562,6 +588,7 @@ def register_contact_filters(filter_registry: FilterRegistry) -> None:
                 op="~~",
             ),
             is_show_more=True,
+            group=FilterGroup.SERVICE_CONTACT,
         )
     )
 
@@ -712,6 +739,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 options=query_filters.svc_state_options(""),
                 livestatus_query=partial(query_filters.service_state_filter, ""),
             ),
+            group=FilterGroup.SERVICE_STATE,
         )
     )
 
@@ -739,6 +767,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 options=query_filters.host_state_options(),
                 livestatus_query=query_filters.host_state_filter,
             ),
+            group=FilterGroup.HOST_STATE,
         )
     )
 
@@ -761,6 +790,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
         title=_l("Host state type"),
         sort_index=116,
         info="host",
+        group=FilterGroup.HOST_STATE,
     )
 
     filter_state_type_with_register(
@@ -769,6 +799,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
         title=_l("Service state type"),
         sort_index=217,
         info="service",
+        group=FilterGroup.SERVICE_STATE,
     )
 
     filter_registry.register(
@@ -803,6 +834,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 ident="host_staleness", filter_code=query_filters.staleness("host")
             ),
             is_show_more=True,
+            group=FilterGroup.HOST_IS,
         )
     )
 
@@ -815,6 +847,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 ident="service_staleness", filter_code=query_filters.staleness("service")
             ),
             is_show_more=True,
+            group=FilterGroup.SERVICE_IS,
         )
     )
 
@@ -826,6 +859,7 @@ def filter_state_type_with_register(
     title: str | LazyString,
     sort_index: int,
     info: str,
+    group: FilterGroup | None = None,
 ) -> None:
     filter_registry.register(
         FilterOption(
@@ -838,6 +872,7 @@ def filter_state_type_with_register(
                 options=query_filters.tri_state_type_options(),
             ),
             is_show_more=True,
+            group=group,
         )
     )
 
@@ -850,6 +885,7 @@ def filter_nagios_flag_with_register(
     sort_index: int,
     info: str,
     is_show_more: bool = False,
+    group: FilterGroup | None = None,
 ) -> None:
     filter_registry.register(
         FilterOption(
@@ -860,6 +896,7 @@ def filter_nagios_flag_with_register(
                 ident=ident, filter_code=query_filters.column_flag(ident)
             ),
             is_show_more=is_show_more,
+            group=group,
         )
     )
 
@@ -880,6 +917,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Host in notification period"),
         sort_index=130,
         info="host",
+        group=FilterGroup.HOST_IN,
     )
 
     filter_nagios_flag_with_register(
@@ -888,6 +926,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Host in service period"),
         sort_index=130,
         info="host",
+        group=FilterGroup.HOST_IN,
     )
 
     filter_nagios_flag_with_register(
@@ -929,6 +968,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Service in notification period"),
         sort_index=231,
         info="service",
+        group=FilterGroup.SERVICE_IN,
     )
 
     filter_nagios_flag_with_register(
@@ -937,6 +977,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Service in service period"),
         sort_index=231,
         info="service",
+        group=FilterGroup.SERVICE_IN,
     )
 
     filter_nagios_flag_with_register(
@@ -971,6 +1012,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Service in downtime"),
         sort_index=231,
         info="service",
+        group=FilterGroup.SERVICE_IN,
     )
 
     filter_nagios_flag_with_register(
@@ -979,6 +1021,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Host in downtime"),
         sort_index=132,
         info="host",
+        group=FilterGroup.HOST_IN,
     )
 
 
@@ -1315,6 +1358,7 @@ class TagFilter(Filter):
         title: str | LazyString,
         query_filter: query_filters.TagsQuery,
         is_show_more: bool = False,
+        group: FilterGroup | None = None,
     ):
         self.query_filter = query_filter
         super().__init__(
@@ -1325,6 +1369,7 @@ class TagFilter(Filter):
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
+            group=group,
         )
 
     def components(self) -> Iterable[FilterComponent]:
@@ -1475,6 +1520,7 @@ def filter_kubernetes_register(
     filter_registry: FilterRegistry,
     title: str,
     object_name: Literal["cluster", "node", "deployment", "namespace", "daemonset", "statefulset"],
+    group: FilterGroup | None = FilterGroup.KUBERNETES,
 ) -> None:
     filter_registry.register(
         AjaxDropdownFilter(
@@ -1491,6 +1537,7 @@ def filter_kubernetes_register(
                 label_base="cmk/kubernetes/",
                 object_type=object_name,
             ),
+            group=group,
         )
     )
 
@@ -1503,6 +1550,7 @@ class CustomAttributeFilter(Filter):
         title: str | LazyString,
         info: str,
         choice_func: Callable[[], ChoiceMapping],
+        group: FilterGroup | None = None,
     ):
         super().__init__(
             ident=ident,
@@ -1512,6 +1560,7 @@ class CustomAttributeFilter(Filter):
             htmlvars=[self.name_varname(ident), self.value_varname(ident)],
             link_columns=[],
             is_show_more=True,
+            group=group,
         )
         self._custom_attribute_choices = choice_func
 
@@ -1596,6 +1645,7 @@ def filter_starred_with_register(
     what: Literal["host", "service"],
     title: str | LazyString,
     sort_index: int,
+    group: FilterGroup | None = None,
 ) -> None:
     filter_registry.register(
         FilterOption(
@@ -1607,6 +1657,7 @@ def filter_starred_with_register(
                 filter_code=query_filters.starred(what),
             ),
             is_show_more=True,
+            group=group,
         )
     )
 
@@ -1654,6 +1705,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         info: str,
         htmlvars: list[str],
         link_columns: list[ColumnName],
+        group: FilterGroup | None = None,
     ):
         super().__init__(
             ident=ident,
@@ -1662,6 +1714,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             info=info,
             htmlvars=htmlvars,
             link_columns=link_columns,
+            group=group,
         )
 
     def components(self) -> Iterable[FilterComponent]:

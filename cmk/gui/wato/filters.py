@@ -16,7 +16,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ChoiceMapping, ColumnName, FilterHeader, FilterHTTPVariables
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, ValueSpec
-from cmk.gui.visuals.filter import Filter, FilterRegistry
+from cmk.gui.visuals.filter import Filter, FilterGroup, FilterRegistry
 from cmk.gui.visuals.filter.components import Dropdown, DualList, FilterComponent, StaticText
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
@@ -30,6 +30,7 @@ def register(filter_registry: FilterRegistry) -> None:
             info="host",
             htmlvars=["wato_folder"],
             link_columns=[],
+            group=FilterGroup.FOLDER,
         ),
     )
 
@@ -41,6 +42,7 @@ def register(filter_registry: FilterRegistry) -> None:
             info="host",
             htmlvars=["wato_folders"],
             link_columns=[],
+            group=FilterGroup.FOLDER,
         ),
     )
 
@@ -69,6 +71,7 @@ class FilterWatoFolder(Filter):
         info: str,
         htmlvars: list[str],
         link_columns: list[ColumnName],
+        group: FilterGroup | None = None,
     ) -> None:
         super().__init__(
             ident=ident,
@@ -77,6 +80,7 @@ class FilterWatoFolder(Filter):
             info=info,
             htmlvars=htmlvars,
             link_columns=link_columns,
+            group=group,
         )
         self.last_wato_data_update: None | float = None
 

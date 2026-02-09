@@ -17,7 +17,7 @@ from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import AutocompleterRegistry
 
-from .filter import Filter, FilterRegistry
+from .filter import Filter, FilterGroup, FilterRegistry
 from .filter.components import DualList, DynamicDropdown, FilterComponent
 
 
@@ -78,6 +78,7 @@ class SiteFilter(Filter):
             link_columns=[],
             description=description,
             is_show_more=is_show_more,
+            group=FilterGroup.SITE,
         )
         self.query_filter = query_filter
         self._heading_info = heading_info

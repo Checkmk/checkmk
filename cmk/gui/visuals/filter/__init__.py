@@ -9,6 +9,7 @@ from ._base import checkbox_component as checkbox_component
 from ._base import CheckboxRowFilter as CheckboxRowFilter
 from ._base import DualListFilter as DualListFilter
 from ._base import Filter as Filter
+from ._base import FilterGroup as FilterGroup
 from ._base import FilterNumberRange as FilterNumberRange
 from ._base import FilterOption as FilterOption
 from ._base import FilterTime as FilterTime

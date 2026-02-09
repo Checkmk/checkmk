@@ -29,6 +29,7 @@ from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
     DualListFilter,
     Filter,
+    FilterGroup,
     FilterNumberRange,
     FilterOption,
     InputTextFilter,
@@ -76,6 +77,7 @@ class FilterInvBool(FilterOption):
                 filter_row=_make_filter_row_bool(inventory_path),
             ),
             is_show_more=is_show_more,
+            group=FilterGroup.INVENTORY,
         )
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
@@ -122,6 +124,7 @@ class _FilterNumberRange(Filter):
                 self._html_var_until_prefix,
             ],
             link_columns=[],
+            group=FilterGroup.INVENTORY,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -313,6 +316,7 @@ class FilterInvText(InputTextFilter):
             ),
             show_heading=False,
             is_show_more=is_show_more,
+            group=FilterGroup.INVENTORY,
         )
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
@@ -393,6 +397,7 @@ class FilterInvTextWithSortKey(Filter):
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
+            group=FilterGroup.INVENTORY,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -443,6 +448,7 @@ class FilterInvChoice(FilterOption):
                 filter_row=lambda selection, row: (selection == "yes") == row.get(ident),
             ),
             is_show_more=is_show_more,
+            group=FilterGroup.INVENTORY,
         )
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
@@ -481,6 +487,7 @@ class FilterInvtableChoice(CheckboxRowFilter):
                 options=[(f"{ident}_{k}", v) for k, v in options],
                 rows_filter=partial(_filter_rows_table_choice, ident),
             ),
+            group=FilterGroup.INVENTORY,
         )
 
 
@@ -530,6 +537,7 @@ class FilterInvtableText(InputTextFilter):
                 ident=ident, row_filter=query_filters.filter_by_column_textregex
             ),
             show_heading=False,
+            group=FilterGroup.INVENTORY,
         )
 
 
@@ -577,6 +585,7 @@ class FilterInvtableTextWithSortKey(Filter):
             info=inv_info,
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
+            group=FilterGroup.INVENTORY,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -613,6 +622,7 @@ class FilterInvtableDualChoice(Filter):
             info=inv_info,
             htmlvars=[self._html_var],
             link_columns=[],
+            group=FilterGroup.INVENTORY,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -715,6 +725,7 @@ class FilterInvtableTimestampAsAge(FilterNumberRange):
             ),
             unit="days",
             is_show_more=False,
+            group=FilterGroup.INVENTORY,
         )
 
 
@@ -733,6 +744,7 @@ class FilterInvtableVersion(Filter):
             info=inv_info,
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
+            group=FilterGroup.INVENTORY,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -779,6 +791,7 @@ class FilterInvtableOperStatus(CheckboxRowFilter):
                 ],
                 rows_filter=partial(query_filters.if_oper_status_filter_table, ident),
             ),
+            group=FilterGroup.INVENTORY,
         )
 
 
@@ -799,6 +812,7 @@ class FilterInvtableAdminStatus(FilterOption):
                 filter_row=lambda selection, row: str(row.get("invinterface_admin_status", ""))
                 == selection,
             ),
+            group=FilterGroup.INVENTORY,
         )
 
 
@@ -819,6 +833,7 @@ class FilterInvtableAvailable(FilterOption):
                 filter_row=lambda selection, row: (selection == "yes")
                 == row.get("invinterface_available"),
             ),
+            group=FilterGroup.INVENTORY,
         )
 
 
@@ -834,6 +849,7 @@ class FilterInvtableInterfaceType(DualListFilter):
             info=inv_info,
             query_filter=query_filters.MultipleQuery(ident=ident, op="="),
             options=port_types,
+            group=FilterGroup.INVENTORY,
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -860,6 +876,7 @@ class FilterHasInv(FilterOption):
                 filter_row=query_filters.has_inventory,
             ),
             is_show_more=True,
+            group=FilterGroup.HOST_HAS,
         )
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
@@ -883,6 +900,7 @@ class FilterInvHasSoftwarePackage(Filter):
             ],
             link_columns=[],
             is_show_more=True,
+            group=FilterGroup.HOST_HAS,
         )
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:

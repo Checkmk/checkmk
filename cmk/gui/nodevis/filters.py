@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.visuals.filter import Filter
+from cmk.gui.visuals.filter import Filter, FilterGroup
 from cmk.gui.visuals.filter.components import FilterComponent, Slider
 
 
@@ -26,7 +26,11 @@ class _FilterRangeConfig:
 
 
 class FilterRange(Filter):
-    def __init__(self, filter_range_config: _FilterRangeConfig) -> None:
+    def __init__(
+        self,
+        filter_range_config: _FilterRangeConfig,
+        group: FilterGroup | None = None,
+    ) -> None:
         super().__init__(
             ident=filter_range_config.column,
             title=filter_range_config.title,
@@ -34,6 +38,7 @@ class FilterRange(Filter):
             info="host",
             htmlvars=[filter_range_config.column],
             link_columns=[filter_range_config.column],
+            group=group,
         )
         self._filter_range_config = filter_range_config
 
@@ -67,7 +72,8 @@ class FilterTopologyMeshDepth(FilterRange):
                 default=2,
                 min=0,
                 max=20,
-            )
+            ),
+            group=FilterGroup.TOPOLOGY,
         )
 
 
@@ -81,5 +87,6 @@ class FilterTopologyMaxNodes(FilterRange):
                 default=2000,
                 min=5,
                 max=10000,
-            )
+            ),
+            group=FilterGroup.TOPOLOGY,
         )

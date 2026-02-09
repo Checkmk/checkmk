@@ -6,6 +6,7 @@
 import abc
 import re
 from collections.abc import Callable, Iterable
+from enum import Enum
 from typing import Literal
 
 from cmk.gui import query_filters
@@ -36,6 +37,28 @@ from .components import (
 )
 
 
+class FilterGroup(Enum):
+    INVENTORY = "inventory"
+    FOLDER = "folder"
+    HOST_HAS = "host_has"
+    HOST_ADDRESS = "host_address"
+    HOST_CHECK_COMMAND = "host_check_command"
+    HOST_CONTACT = "host_contact"
+    HOST_IN = "host_in"
+    HOST_IS = "host_is"
+    HOST_NAME = "host_name"
+    HOST_STATE = "host_state"
+    KUBERNETES = "kubernetes"
+    SITE = "site"
+    TOPOLOGY = "topology"
+    SERVICE_NAME = "service_name"
+    SERVICE_CHECK_COMMAND = "service_check_command"
+    SERVICE_CONTACT = "service_contact"
+    SERVICE_IN = "service_in"
+    SERVICE_IS = "service_is"
+    SERVICE_STATE = "service_state"
+
+
 class Filter(abc.ABC):
     """Base class for all filters"""
 
@@ -50,6 +73,7 @@ class Filter(abc.ABC):
         link_columns: list[ColumnName],
         description: None | str | LazyString = None,
         is_show_more: bool = False,
+        group: FilterGroup | None = None,
     ) -> None:
         """
         info:          The datasource info this filter needs to work. If this
@@ -73,6 +97,7 @@ class Filter(abc.ABC):
         self.link_columns = link_columns
         self._description = description
         self.is_show_more = is_show_more
+        self.group = group
 
     @property
     def title(self) -> str:
@@ -151,6 +176,7 @@ class FilterOption(Filter):
         info: str,
         query_filter: query_filters.SingleOptionQuery,
         is_show_more: bool = False,
+        group: FilterGroup | None = None,
     ):
         self.query_filter = query_filter
         super().__init__(
@@ -161,6 +187,7 @@ class FilterOption(Filter):
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
+            group=group,
         )
 
     def components(self) -> Iterable[FilterComponent]:
@@ -204,6 +231,7 @@ class FilterNumberRange(Filter):  # type is int
         query_filter: query_filters.NumberRangeQuery,
         unit: str | LazyString = "",
         is_show_more: bool = True,
+        group: FilterGroup | None = None,
     ) -> None:
         self.query_filter = query_filter
         self.unit = unit
@@ -215,6 +243,7 @@ class FilterNumberRange(Filter):  # type is int
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
+            group=group,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -273,6 +302,7 @@ class FilterTime(Filter):
         info: Literal["comment", "crash", "downtime", "event", "history", "host", "log", "service"],
         query_filter: query_filters.TimeQuery,
         is_show_more: bool = False,
+        group: FilterGroup | None = None,
     ):
         self.query_filter = query_filter
 
@@ -284,6 +314,7 @@ class FilterTime(Filter):
             htmlvars=self.query_filter.request_vars,
             link_columns=[self.query_filter.column],
             is_show_more=is_show_more,
+            group=group,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -352,6 +383,7 @@ class InputTextFilter(Filter):
         show_heading: bool = True,
         description: None | str | LazyString = None,
         is_show_more: bool = False,
+        group: FilterGroup | None = None,
     ):
         self.query_filter = query_filter
 
@@ -364,6 +396,7 @@ class InputTextFilter(Filter):
             link_columns=self.query_filter.link_columns,
             description=description,
             is_show_more=is_show_more,
+            group=group,
         )
         self._show_heading = show_heading
 
@@ -406,6 +439,7 @@ class CheckboxRowFilter(Filter):
         info: str,
         query_filter: query_filters.MultipleOptionsQuery,
         is_show_more: bool = False,
+        group: FilterGroup | None = None,
     ) -> None:
         super().__init__(
             ident=query_filter.ident,
@@ -415,6 +449,7 @@ class CheckboxRowFilter(Filter):
             htmlvars=query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
+            group=group,
         )
         self.query_filter = query_filter
 
@@ -439,6 +474,7 @@ class DualListFilter(Filter):
         options: Callable[[str], query_filters.SitesOptions],
         description: None | str | LazyString = None,
         is_show_more: bool = True,
+        group: FilterGroup | None = None,
     ):
         self.query_filter = query_filter
         self._options = options
@@ -451,6 +487,7 @@ class DualListFilter(Filter):
             link_columns=[],
             description=description,
             is_show_more=is_show_more,
+            group=group,
         )
 
     def components(self) -> Iterable[FilterComponent]:

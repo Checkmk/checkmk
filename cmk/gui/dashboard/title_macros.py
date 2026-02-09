@@ -62,14 +62,22 @@ def render_title_with_macros_string(
     )
 
 
+def get_title_macros(
+    single_infos: SingleInfos, additional_title_macros: Iterable[str] = ()
+) -> list[str]:
+    return list(
+        chain(
+            ["$DEFAULT_TITLE$ " + _u("(default title of the element)")],
+            _get_title_macros_from_single_infos(single_infos),
+            additional_title_macros,
+        )
+    )
+
+
 def title_help_text_for_macros(
     single_infos: SingleInfos, additional_title_macros: Iterable[str]
 ) -> str:
-    available_macros = chain(
-        ["$DEFAULT_TITLE$ " + _u("(default title of the element)")],
-        _get_title_macros_from_single_infos(single_infos),
-        additional_title_macros,
-    )
+    available_macros = get_title_macros(single_infos, additional_title_macros)
     macros_as_list = (
         f"<ul>{''.join(f'<li><tt>{macro}</tt></li>' for macro in available_macros)}</ul>"
     )

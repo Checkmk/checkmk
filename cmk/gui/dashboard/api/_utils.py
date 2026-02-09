@@ -37,6 +37,7 @@ from ..store import (
     get_permitted_dashboards_by_owners,
     save_all_dashboards,
 )
+from ..title_macros import get_title_macros
 from .model.constants import (
     DashboardConstantsResponse,
     FilterContextConstants,
@@ -330,6 +331,9 @@ class DashboardConstants:
             if api_type_name := INTERNAL_TO_API_TYPE_NAME.get(widget_type):
                 relative_constraints = widget.relative_layout_constraints()
                 responsive_constraints = widget.responsive_layout_constraints()
+                title_macros = get_title_macros(
+                    widget.single_infos(), widget.get_additional_macro_names()
+                )
                 widgets_metadata[api_type_name] = WidgetConstraints(
                     layout=LayoutConstraintsModel(
                         relative=RelativeLayoutConstraintsModel(
@@ -368,6 +372,7 @@ class DashboardConstants:
                     filter_context=FilterContextConstants(
                         restricted_to_single=list(widget.single_infos()),
                     ),
+                    title_macros=title_macros,
                 )
 
         return DashboardConstantsResponse(

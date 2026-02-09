@@ -81,6 +81,7 @@ class WidgetConstraints:
     filter_context: FilterContextConstants = api_field(
         description="Filter context constraints for the widget type."
     )
+    title_macros: list[str] = api_field(description="Available macros for dynamic widget titles.")
 
 
 @api_model

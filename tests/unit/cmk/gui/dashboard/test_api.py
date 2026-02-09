@@ -54,7 +54,11 @@ def test_show_dashboard_constants(clients: ClientRegistry) -> None:
     assert len(resp.json["extensions"]["widgets"]) > 0, (
         "Expected at least one widget to be returned"
     )
-    assert set(list(resp.json["extensions"]["widgets"].values())[0]) == {"layout", "filter_context"}
+    assert set(list(resp.json["extensions"]["widgets"].values())[0]) == {
+        "layout",
+        "filter_context",
+        "title_macros",
+    }
     assert (
         resp.json["extensions"]["responsive_grid_breakpoints"].keys()
         == RESPONSIVE_GRID_BREAKPOINTS.keys()

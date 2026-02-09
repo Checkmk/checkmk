@@ -128,6 +128,7 @@ onMounted(() => {
           () => {
             searchUtils.history?.resetQueries()
             recentlySearches = []
+            recentlyViewed = []
           }
         "
       >

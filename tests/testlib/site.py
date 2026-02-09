@@ -2361,22 +2361,30 @@ class PythonHelper:
 
     def check_output(
         self,
-        input: str | None = None,  # pylint: disable=redefined-builtin
+        input_: str | None = None,
         encoding: str = "utf-8",
+        args: list[str] | None = None,
     ) -> str:
         with self.copy_helper():
             output = self.site.check_output(
-                ["python3", str(self.site_path)],
-                input=input,
+                ["python3", str(self.site_path)] + (args or []),
+                input=input_,
                 encoding=encoding,
                 stderr=subprocess.PIPE,
             )
             return output
 
     @contextmanager
-    def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]
+    def execute(
+        self,
+        preserve_env: list[str] | None = None,
+        args: list[str] | None = None,
+        **kwargs: Any,
+    ) -> Iterator[subprocess.Popen]:
         with self.copy_helper():
-            yield self.site.execute(["python3", str(self.site_path)], *args, **kwargs)
+            yield self.site.execute(
+                ["python3", str(self.site_path)] + (args or []), preserve_env, **kwargs
+            )
 
 
 def _assert_nagvis_server(version: CMKVersion) -> None:

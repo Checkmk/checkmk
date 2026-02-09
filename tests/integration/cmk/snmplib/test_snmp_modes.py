@@ -248,7 +248,7 @@ def walk_for_export(
 ) -> SNMPRowInfoForStoredWalk:
     return ast.literal_eval(
         site.python_helper("helper_walk_for_export.py").check_output(
-            input=repr(
+            input_=repr(
                 (
                     oid,
                     backend_type.serialize(),

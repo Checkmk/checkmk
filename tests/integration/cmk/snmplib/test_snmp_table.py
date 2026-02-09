@@ -80,7 +80,7 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
 
     with pytest.raises(CalledProcessError) as e:
         site.python_helper("helper_get_snmp_table.py").check_output(
-            input=repr(
+            input_=repr(
                 (
                     INFO_TREE.to_json(),
                     backend_type.serialize(),
@@ -107,7 +107,7 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
 
     with pytest.raises(CalledProcessError) as e:
         site.python_helper("helper_get_snmp_table.py").check_output(
-            input=repr(
+            input_=repr(
                 (
                     INFO_TREE.to_json(),
                     backend_type.serialize(),

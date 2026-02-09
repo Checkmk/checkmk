@@ -114,7 +114,7 @@ def test_xport(
 
     output = ast.literal_eval(
         site.python_helper("helper_test_xport.py")
-        .check_output(input=repr((str(rrd_database), qstart, qend)))
+        .check_output(input_=repr((str(rrd_database), qstart, qend)))
         .rstrip()
     )
     assert output == result

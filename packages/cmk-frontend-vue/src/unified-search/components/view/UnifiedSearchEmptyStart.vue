@@ -20,13 +20,13 @@ const { _t } = usei18n()
     <CmkHeading class="unified-search-empty-start__heading" type="h2">{{
       _t('Find rules, hosts, dashboards, settings ...')
     }}</CmkHeading>
-    <CmkParagraph
-      >{{ _t('Tip: Press') }}
+    <CmkParagraph class="unified-search-empty-start__text">
+      {{ _t('Tip: Press') }}
       <CmkKeyboardKey keyboard-key="/" size="small"></CmkKeyboardKey>
       {{
         _t('to view all search operator and, e.g., find all hosts with the same host label (hl:)')
-      }}</CmkParagraph
-    >
+      }}
+    </CmkParagraph>
   </div>
 </template>
 
@@ -38,6 +38,7 @@ const { _t } = usei18n()
   align-items: center;
   justify-content: center;
   height: 100%;
+  padding: 0 var(--spacing-double);
 
   .unified-search-empty-start__icon {
     margin-top: calc(-2 * var(--dimension-10));
@@ -51,6 +52,10 @@ const { _t } = usei18n()
 
   .unified-search-empty-start__heading {
     margin-bottom: var(--dimension-5);
+  }
+
+  .unified-search-empty-start__text {
+    text-align: center;
   }
 }
 </style>

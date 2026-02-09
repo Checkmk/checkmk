@@ -115,11 +115,49 @@ run_binary(
     tool = "//cmk:generate_api_spec",
 )
 
+run_binary(
+    name = "generate_unstable_doc.spec",
+    outs = ["unstable-doc.spec"],
+    args = [
+        "generate",
+        "--version",
+        "unstable",
+        "--target",
+        "doc",
+        "--out",
+        "$(execpath unstable-doc.spec)",
+        "--format",
+        "dict",
+    ],
+    tags = ["manual"],
+    tool = "//cmk:generate_api_spec",
+)
+
+run_binary(
+    name = "generate_unstable_swagger_ui.spec",
+    outs = ["unstable-swagger-ui.spec"],
+    args = [
+        "generate",
+        "--version",
+        "unstable",
+        "--target",
+        "swagger-ui",
+        "--out",
+        "$(execpath unstable-swagger-ui.spec)",
+        "--format",
+        "dict",
+    ],
+    tags = ["manual"],
+    tool = "//cmk:generate_api_spec",
+)
+
 pkg_files(
     name = "rest_api_spec",
     srcs = [
         ":doc.spec",
         ":swagger-ui.spec",
+        ":unstable-doc.spec",
+        ":unstable-swagger-ui.spec",
     ],
     prefix = "share/doc/check_mk/rest-api/spec",
 )

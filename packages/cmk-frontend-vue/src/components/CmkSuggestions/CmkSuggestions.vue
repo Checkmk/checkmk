@@ -62,7 +62,6 @@ const suggestionInputRef = ref<HTMLInputElement | null>(null)
 
 const filteredSuggestions = ref<Array<Suggestion>>([])
 const activeSuggestion: Ref<Suggestion | null> = ref(null) // null means no suggestion is highlighted, (no suggestions are selectable)
-const isSelectedSuggestionSetAsFilter = ref(false)
 
 function scrollCurrentActiveIntoView(): void {
   if (suggestionRefs.value === null) {
@@ -126,20 +125,13 @@ immediateWatch(
     } else {
       error.value = ''
       filteredSuggestions.value = result.choices
-      const foundSuggestion = newSelectedSuggestion
-        ? filteredSuggestions.value.find((s) => s.name === newSelectedSuggestion)
-        : null
+      activeSuggestion.value = null
+      setSiblingOrFirstActive(0)
+    }
 
-      if (newSelectedSuggestion !== null && !isSelectedSuggestionSetAsFilter.value) {
-        filterString.value = foundSuggestion?.title ?? newSelectedSuggestion
-        isSelectedSuggestionSetAsFilter.value = true
-      }
-      if (foundSuggestion) {
-        activeSuggestion.value = foundSuggestion
-      } else {
-        activeSuggestion.value = null
-        setSiblingOrFirstActive(0)
-      }
+    if (newSelectedSuggestion !== null) {
+      activeSuggestion.value =
+        filteredSuggestions.value.find((s: Suggestion) => s.name === newSelectedSuggestion) || null
     }
   },
   { deep: 2 }

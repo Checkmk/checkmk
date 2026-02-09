@@ -8,7 +8,6 @@ import re
 from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal
 
-import cmk.ccc.version as cmk_version
 from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
@@ -3257,9 +3256,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=DropdownChoice(
-                title=cmk_version.mark_edition_only(
-                    _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
-                ),
+                title=_("Choose SNMP backend"),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
                     (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
@@ -5764,9 +5761,7 @@ SnmpBackendHosts = HostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
-    title=lambda: cmk_version.mark_edition_only(
-        _("Hosts using a specific SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
-    ),
+    title=lambda: _("Hosts using a specific SNMP Backend"),
 )
 
 

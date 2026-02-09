@@ -175,7 +175,7 @@ class ACTestLiveproxyd(ACTest):
 
     def help(self) -> str:
         return _(
-            "The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
+            "The Livestatus Proxy Daemon is available with the commercial editions of Checkmk "
             "and improves the management of the inter site connections using livestatus. Using "
             "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
             "GUI and will decrease resource usage."

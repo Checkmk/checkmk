@@ -15,7 +15,7 @@ from typing import Any, Literal, NamedTuple, Never
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import Edition, edition, mark_edition_only
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
@@ -428,8 +428,6 @@ class Rulespec(abc.ABC):
             return None
         if self._is_deprecated:
             return "{}: {}".format(_("Deprecated"), plain_title)
-        if self._is_cloud_and_managed_edition_only:
-            return mark_edition_only(plain_title, [Edition.CME, Edition.CCE])
         return plain_title
 
     @property

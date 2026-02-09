@@ -608,8 +608,8 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
             raise MKUserError(
                 None,
                 _(
-                    "The Checkmk Managed Services Edition can only "
-                    "be connected with other sites using the CME."
+                    "Checkmk Ultimate with multi-tenancy (formerly MSP)  can only "
+                    "be connected with other sites using Checkmk Ultimate with multi-tenancy."
                 ),
             )
         return eval_response["login_secret"]

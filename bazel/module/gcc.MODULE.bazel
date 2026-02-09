@@ -1,16 +1,38 @@
-cpp_libs_repository = use_repo_rule("//omd/packages/cpp-libs:cpp-libs.repository.bzl", "cpp_libs_repository")
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
 
 # Local GCC cpp_libs repositories - provides runtime libraries matching the local GCC toolchain
 # These are non-hermetic but match the toolchain actually used for compilation
-# Library locations are auto-discovered via g++ -print-file-name
-#
-# gcc_path *must* match the gcc_path in bazel/toolchains/cc/gcc/local/BUILD for the toolchain definitions.
-cpp_libs_repository(
+# We create separate repositories for /opt and /usr, then select between them
+new_local_repository(
     name = "cpp_libs_opt",
-    gcc_path = "/opt/gcc-14.2.0/bin/gcc-14",
+    build_file_content = """
+filegroup(
+    name = "cpp_libs",
+    srcs = glob([
+        "gcc-14.2.0/lib64/libgcc_s.so*",
+        "gcc-14.2.0/lib64/libstdc++.so*",
+    ], exclude = ["**/*.py"], allow_empty = True),
+    visibility = ["//visibility:public"],
+)
+    """,
+    path = "/opt",
 )
 
-cpp_libs_repository(
+new_local_repository(
     name = "cpp_libs_usr",
-    gcc_path = "/usr/bin/gcc-14",
+    build_file_content = """
+filegroup(
+    name = "cpp_libs",
+    srcs = glob([
+        "lib/x86_64-linux-gnu/libgcc_s.so*",
+        "lib/x86_64-linux-gnu/libstdc++.so*",
+        "lib/gcc/x86_64-linux-gnu/14/libgcc_s.so*",
+        "lib/gcc/x86_64-linux-gnu/14/libstdc++.so*",
+        "lib64/libgcc_s.so*",
+        "lib64/libstdc++.so*",
+    ], exclude = ["**/*.py"], allow_empty = True),
+    visibility = ["//visibility:public"],
+)
+    """,
+    path = "/usr",
 )

@@ -87,20 +87,40 @@ alias(
 )
 
 # Filegroups for cpp_libs package - provides hermetic access to C++ runtime libraries
-# Separated into ELF files and symlinks for patchelf processing
+# libgcc_s.so files are typically in lib/gcc/<triple>/<version>/ or lib/
 filegroup(
-    name = "cpp_libs_files",
-    srcs = [
-        "x86_64-buildroot-linux-gnu/sysroot/lib/libgcc_s.so",
-    ],
+    name = "libgcc_s_files",
+    srcs = glob(
+        [
+            "lib/**/libgcc_s.so*",
+            "x86_64-buildroot-linux-gnu/sysroot/lib/libgcc_s.so*",
+            "x86_64-buildroot-linux-gnu/sysroot/usr/lib/libgcc_s.so*",
+        ],
+        allow_empty = True,
+    ),
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "cpp_libs_elf",
+    name = "libstdcxx_files",
     srcs = [
-        "x86_64-buildroot-linux-gnu/sysroot/lib/libgcc_s.so.1",
-        "x86_64-buildroot-linux-gnu/sysroot/usr/lib/libstdc++.so.6.0.33",
+        "x86_64-buildroot-linux-gnu/sysroot/usr/lib/libstdc++.so",
+    ] + glob(
+        [
+            "x86_64-buildroot-linux-gnu/sysroot/usr/lib/libstdc++.so.*",
+        ],
+        allow_empty = True,
+        exclude = ["**/*.py"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+# Combined filegroup for all cpp_libs
+filegroup(
+    name = "cpp_libs",
+    srcs = [
+        ":libgcc_s_files",
+        ":libstdcxx_files",
     ],
     visibility = ["//visibility:public"],
 )

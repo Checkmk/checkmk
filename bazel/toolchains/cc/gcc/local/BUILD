@@ -16,7 +16,6 @@ string_flag(
 config_setting(
     name = "opt",
     flag_values = {":gcc_path": "opt"},
-    visibility = ["//visibility:public"],
 )
 
 unix_cc_toolchain_config(
@@ -130,15 +129,13 @@ toolchain(
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
-# Unified targets that select the appropriate cpp libs based on gcc_path flag
+# Unified target that selects the appropriate cpp libs based on gcc_path flag
 # Repositories are defined in //bazel/module/gcc.MODULE.bazel
-
-# ELF files only - for patchelf processing
 filegroup(
-    name = "cpp_libs_elf",
+    name = "cpp_libs",
     srcs = select({
-        ":opt": ["@cpp_libs_opt//:cpp_libs_elf"],
-        "//conditions:default": ["@cpp_libs_usr//:cpp_libs_elf"],
+        ":opt": ["@cpp_libs_opt//:cpp_libs"],
+        "//conditions:default": ["@cpp_libs_usr//:cpp_libs"],
     }),
     visibility = ["//visibility:public"],
 )

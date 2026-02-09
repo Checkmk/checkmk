@@ -1922,7 +1922,7 @@ def main_init(
             "Please call 'omd disable %s' first." % site.name
         )
 
-    if not os.listdir(site_home):
+    if os.listdir(site_home):
         if not global_opts.force:
             sys.exit(
                 "The site's home directory is not empty. Please add use\n"

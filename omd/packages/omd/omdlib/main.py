@@ -335,6 +335,7 @@ def walk_skel(
         "local/share/nagios",
         "local/share/nagios/htdocs",
         "local/share/nagios/htdocs/theme",
+        "var/check_mk/persisted",
     ]
 
     with contextlib.chdir(root):

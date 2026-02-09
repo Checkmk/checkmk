@@ -180,7 +180,6 @@ pkg_mkdirs(
         "skel/local/share/check_mk/mibs",
         "skel/local/share/check_mk/alert_handlers",
         "skel/local/share/check_mk/reporting/images",
-        "skel/var/check_mk/persisted",
         "skel/var/check_mk/web",
         "skel/var/check_mk/discovered_host_labels",
         "skel/var/check_mk/precompiled",

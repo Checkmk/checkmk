@@ -23,13 +23,18 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import FilterHTTPVariables
-from cmk.utils.labels import AndOrNotLiteral, LabelGroups, single_label_group_from_labels
+from cmk.utils.labels import AndOrNotLiteral, BaseLabel, LabelGroups, single_label_group_from_labels
 
 
 class Label(NamedTuple):
     id: str
     value: str
     negate: bool
+
+    @classmethod
+    def from_str(cls, label: str, negate: bool = False) -> Label:
+        l = BaseLabel.from_str(label)
+        return cls(id=l.name, value=l.value, negate=negate)
 
 
 class LabelType(enum.StrEnum):
@@ -40,8 +45,8 @@ class LabelType(enum.StrEnum):
 
 Labels = Iterable[Label]
 
-# Labels need to be in the format "<key>:<value>", e.g. "os:windows"
-LABEL_REGEX = r"^[^:]+:[^:]+$"
+# Labels need to be in the format "<key>:<value_with_colons>", e.g. "os:windows", "os:windows:95"
+LABEL_REGEX = r"^[^:]+:.+$"
 
 
 class _LivestatusLabelResponse(NamedTuple):
@@ -62,15 +67,16 @@ def parse_labels_value(value: str) -> Labels:
 
     seen: set[str] = set()
     for entry in decoded_labels:
-        label_id, label_value = (p.strip() for p in entry["value"].split(":", 1))
-        if label_id in seen:
+        label = Label.from_str(entry["value"])
+
+        if label.id in seen:
             raise MKUserError(
                 None,
                 _('A label key can be used only once per object. The Label key "%s" is used twice.')
-                % label_id,
+                % label.id,
             )
-        yield Label(label_id, label_value, False)
-        seen.add(label_id)
+        yield Label(label.id, label.value, False)
+        seen.add(label.id)
 
 
 def encode_label_for_livestatus(column: str, label: Label) -> str:
@@ -114,6 +120,8 @@ def encode_label_groups_for_livestatus(
     "Filter: host_labels = 'label' 'a'\\nFilter: host_labels = 'label' 'b'\\nFilter: host_labels = 'even' 'true'\\nAnd: 2\\nOr: 2\\n"
     >>> encode_label_groups_for_livestatus("host_labels", [("and", [("not", "label:a")]), ("or", [("and", "label:b")]), ("not", [("and", "label:c")])])
     "Filter: host_labels = 'label' 'a'\\nNegate:\\nFilter: host_labels = 'label' 'b'\\nFilter: host_labels = 'label' 'c'\\nNegate:\\nAnd: 2\\nOr: 2\\n"
+    >>> encode_label_groups_for_livestatus("host_labels", [("and", [("not", "label:a:a")]), ("or", [("and", "label:b:b")]), ("not", [("and", "label:c:c")])])
+    "Filter: host_labels = 'label' 'a:a'\\nNegate:\\nFilter: host_labels = 'label' 'b:b'\\nFilter: host_labels = 'label' 'c:c'\\nNegate:\\nAnd: 2\\nOr: 2\\n"
     """
     filter_str: str = ""
     group_lvl_or_operators_str: str = ""
@@ -129,10 +137,7 @@ def encode_label_groups_for_livestatus(
             if not label:
                 continue
 
-            label_id, label_val = label.split(":")
-            filter_str += (
-                encode_label_for_livestatus(column, Label(label_id, label_val, False)) + "\n"
-            )
+            filter_str += encode_label_for_livestatus(column, Label.from_str(label, False)) + "\n"
             if label_operator == "or":
                 label_lvl_or_operators_str += _operator_filter_str(label_operator, is_first_label)
             else:

@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.gui import sites
-from cmk.gui.utils.labels import _get_labels_from_livestatus, LabelType
+from cmk.gui.utils.labels import _get_labels_from_livestatus, Label, LabelType
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
@@ -104,3 +104,85 @@ def test_collect_labels_from_livestatus_rows(
         all_labels = _get_labels_from_livestatus(label_type)
 
     assert all_labels == expected_labels
+
+
+@pytest.mark.parametrize(
+    "label_string, negate, expected_key, expected_value, expected_negate",
+    [
+        pytest.param(
+            "cmk/docker_image:filebrowser",
+            None,
+            "cmk/docker_image",
+            "filebrowser",
+            False,
+            id="No colon value, negate=None",
+        ),
+        pytest.param(
+            "cmk/docker_image:filebrowser",
+            False,
+            "cmk/docker_image",
+            "filebrowser",
+            False,
+            id="No colon value, negate=False",
+        ),
+        pytest.param(
+            "cmk/docker_image:filebrowser",
+            True,
+            "cmk/docker_image",
+            "filebrowser",
+            True,
+            id="No colon value, negate=True",
+        ),
+        pytest.param(
+            "cmk/docker_image:filebrowser/filebrowser:latest",
+            True,
+            "cmk/docker_image",
+            "filebrowser/filebrowser:latest",
+            True,
+            id="Single colon value, negate=True",
+        ),
+        pytest.param(
+            "cmk/docker_image:filebrowser/filebrowser:latest",
+            False,
+            "cmk/docker_image",
+            "filebrowser/filebrowser:latest",
+            False,
+            id="Single colon value, negate=False",
+        ),
+        pytest.param(
+            "cmk/docker_image:filebrowser/filebrowser:very:latest",
+            False,
+            "cmk/docker_image",
+            "filebrowser/filebrowser:very:latest",
+            False,
+            id="Multi colon (2) value, negate=False",
+        ),
+        pytest.param(
+            "cmk/docker_image:filebrowser/filebrowser:very:very:very:very:very:latest",
+            None,
+            "cmk/docker_image",
+            "filebrowser/filebrowser:very:very:very:very:very:latest",
+            False,
+            id="Multi colon (6) value, negate=None",
+        ),
+        pytest.param(
+            "cmk/docker_image:filebrowser/filebrowser:very:very:very:very:very:latest",
+            False,
+            "cmk/docker_image",
+            "filebrowser/filebrowser:very:very:very:very:very:latest",
+            False,
+            id="Multi colon (6) value, negate=False",
+        ),
+    ],
+)
+def test_label_from_str(
+    label_string: str,
+    negate: None | bool,
+    expected_key: str,
+    expected_value: str,
+    expected_negate: bool,
+) -> None:
+    label = Label.from_str(label_string, negate is not None and negate)
+    assert label.id == expected_key
+    assert label.value == expected_value
+    assert label.negate == expected_negate

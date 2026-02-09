@@ -1256,10 +1256,11 @@ class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
     def _input_to_key_value(inpt: str) -> Label:
         if ":" not in inpt:
             raise IncorrectLabelInputError(None, label_help_text())
-        key, value = inpt.split(":", maxsplit=1)
-        if not key or not value:
+
+        label = Label.from_str(inpt, False)
+        if not label.id or not label.value:
             raise IncorrectLabelInputError(None, label_help_text())
-        return Label(key, value, False)
+        return label
 
     def _user_inputs_to_labels(self, user_inputs: Iterable[str]) -> Labels:
         yield from (self._input_to_key_value(inpt) for inpt in user_inputs)

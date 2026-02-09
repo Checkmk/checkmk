@@ -13,7 +13,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import SectionName
 from cmk.utils.labels import (
-    _Label,
+    BaseLabel,
     DiscoveredHostLabelsStore,
     HostLabel,
     HostLabelValueDict,
@@ -85,7 +85,7 @@ def test_discovered_host_labels_store_save(discovered_host_labels_dir: Path) -> 
 
 def test_label() -> None:
     name, value = "äbc", "d{--lulu--}dd"
-    l = _Label(name, value)
+    l = BaseLabel(name, value)
     assert l.name == name
     assert l.value == value
     assert l.label == f"{name}:{value}"
@@ -93,10 +93,10 @@ def test_label() -> None:
 
 def test_label_validation() -> None:
     with pytest.raises(MKGeneralException, match="Invalid label name"):
-        _Label(b"\xc3\xbcbc", "abc")  # type: ignore[arg-type]
+        BaseLabel(b"\xc3\xbcbc", "abc")  # type: ignore[arg-type]
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
-        _Label("äbc", b"\xc3\xbcbc")  # type: ignore[arg-type]
+        BaseLabel("äbc", b"\xc3\xbcbc")  # type: ignore[arg-type]
 
 
 def test_discovered_host_labels_path(discovered_host_labels_dir: Path) -> None:

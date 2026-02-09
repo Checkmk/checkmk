@@ -21,7 +21,7 @@
   --default-help-icon-bg-color: rgb(6 103 193);
   --default-help-icon-bg-color-hover: rgb(56 133 205);
   --default-nav-popup-border-color: rgb(19 211 137);
-  --scrollbar-color: rgb(78 93 105);
+  --scrollbar-color: var(--color-mid-grey-60);
   --popup-dialog-success: var(--color-corporate-green-50);
   --popup-dialog-warning: var(--color-yellow-50);
   --popup-dialog-danger: var(--color-light-red-50);

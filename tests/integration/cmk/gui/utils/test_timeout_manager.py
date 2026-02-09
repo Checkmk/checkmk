@@ -15,6 +15,6 @@ def test_timeout_manager_raises_timeout(site: Site, test_name: str) -> None:
 
     See timeout_manager_test.py for the actual test cases.
     """
-    PythonHelper(
-        site, Path(__file__).parent / "timeout_manager_test.py", [test_name]
-    ).check_output()
+    PythonHelper(site, Path(__file__).parent / "timeout_manager_test.py").check_output(
+        args=[test_name]
+    )

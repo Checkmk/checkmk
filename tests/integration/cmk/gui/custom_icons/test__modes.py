@@ -9,4 +9,4 @@ from tests.testlib.site import PythonHelper, Site
 
 
 def test_icon_modes(site: Site) -> None:
-    PythonHelper(site, Path(__file__).parent / "icon_test.py", ["main"]).check_output()
+    PythonHelper(site, Path(__file__).parent / "icon_test.py").check_output(args=["main"])

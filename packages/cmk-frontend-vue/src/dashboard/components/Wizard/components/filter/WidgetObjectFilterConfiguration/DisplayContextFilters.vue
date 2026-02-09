@@ -82,9 +82,11 @@ const countInheritedFilters = computed(() => {
       />
     </li>
   </ul>
-  <CmkLabel v-else class="db-display-context-filters__no-filters">{{
-    props.emptyFiltersTitle
-  }}</CmkLabel>
+  <CmkLabel v-else
+    ><span class="db-display-context-filters__no-filters">{{
+      props.emptyFiltersTitle
+    }}</span></CmkLabel
+  >
 </template>
 
 <style scoped>
@@ -96,5 +98,6 @@ const countInheritedFilters = computed(() => {
 
 .db-display-context-filters__no-filters {
   font-size: 12px;
+  color: var(--menu-entry-disabled);
 }
 </style>

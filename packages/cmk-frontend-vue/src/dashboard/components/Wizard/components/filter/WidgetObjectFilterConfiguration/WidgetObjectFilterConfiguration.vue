@@ -85,7 +85,7 @@ const displayLabels = computed(() => {
   )
   if (props.objectSelectionMode === ElementSelection.SPECIFIC) {
     return {
-      contextFilterTitle: _t('Applied deshboard %{n} filter', {
+      contextFilterTitle: _t('Applied dashboard %{n} filter', {
         n: filterName
       }),
       contextFilterTooltip: tooltip,

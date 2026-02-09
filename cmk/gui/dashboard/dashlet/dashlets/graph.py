@@ -10,12 +10,11 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Generic, Literal, TypeVar
 
 import livestatus
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
@@ -31,13 +30,11 @@ from cmk.gui.graphing import (
     get_template_graph_specification,
     GraphDestinations,
     GraphPluginChoice,
+    GraphRecipe,
     graphs_from_api,
     GraphSpecification,
     metrics_from_api,
     MKCombinedGraphLimitExceededError,
-    MKGraphDashletTooSmallError,
-    MKGraphRecipeCalculationError,
-    MKGraphRecipeNotFoundError,
     RegisteredMetric,
     TemplateGraphSpecification,
     translated_metrics_from_row,
@@ -176,54 +173,51 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         if "timerange" not in self._dashlet_spec:
             self._dashlet_spec["timerange"] = "25h"
 
-        self._graph_specification: TGraphSpec | None = None
-        self._graph_title: str | None = None
+        self._cached_graph_specification: TGraphSpec | None = None
+        self._cached_recipes: Sequence[GraphRecipe] | None = None
         self._init_exception: Exception | None = None
         try:
-            self._graph_specification = self.build_graph_specification(
+            self._cached_graph_specification = self.build_graph_specification(
                 self.context if self.has_context() else {}
             )
-            self._graph_title = self._init_graph_title()
-        except Exception as exc:
-            # Passes error otherwise exception won't allow to enter dashlet editor
-            self._init_exception = exc
+            self._cached_recipes = self._compute_graph_recipes(
+                self._cached_graph_specification, active_config
+            )
+        except Exception as e:
+            self._init_exception = e
 
-    def graph_specification(self) -> TGraphSpec:
-        if self._graph_specification is None:
-            assert self._init_exception is not None
-            raise self._init_exception
-
-        return self._graph_specification
-
-    def _init_graph_title(self) -> str | None:
+    @staticmethod
+    def _compute_graph_recipes(
+        graph_specification: TGraphSpec, config: Config
+    ) -> Sequence[GraphRecipe]:
         try:
-            graph_recipes = self.graph_specification().recipes(
+            return graph_specification.recipes(
                 metrics_from_api,
                 graphs_from_api,
-                UserPermissions.from_config(active_config, permission_registry),
+                UserPermissions.from_config(config, permission_registry),
                 consolidation_function="max",
-                debug=active_config.debug,
-                temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
+                debug=config.debug,
+                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
             )
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:
             raise make_mk_missing_data_error(reason=_("Service or host not found."))
-        except (
-            MKGraphRecipeCalculationError,
-            MKGraphRecipeNotFoundError,
-            MKGraphDashletTooSmallError,
-        ):
-            raise make_mk_missing_data_error()
         except MKCombinedGraphLimitExceededError as limit_exceeded_error:
             raise make_mk_missing_data_error(reason=str(limit_exceeded_error))
-        except Exception:
-            raise MKGeneralException(_("Failed to calculate a graph recipe."))
+        except Exception as e:
+            raise make_mk_missing_data_error(reason=_("Failed to calculate a graph recipe.")) from e
 
-        return graph_recipes[0].title if graph_recipes else None
+    def graph_recipes(self) -> Sequence[GraphRecipe]:
+        if self._cached_recipes is None:
+            assert self._init_exception is not None
+            raise self._init_exception
+        return self._cached_recipes
 
     def default_display_title(self) -> str:
-        return self._graph_title if self._graph_title is not None else self.title()
+        if self._cached_recipes:
+            return self._cached_recipes[0].title
+        return self.title()
 
 
 class TemplateGraphDashletConfig(ABCGraphDashletConfig):
@@ -292,10 +286,10 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         )
 
     def _get_additional_macros(self) -> Mapping[str, str]:
-        if self._graph_specification is None:
+        if self._cached_graph_specification is None:
             return {}
 
-        site = self._graph_specification.site
+        site = self._cached_graph_specification.site
         return {"$SITE$": site} if site else {}
 
     @classmethod

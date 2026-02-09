@@ -81,7 +81,6 @@ from ._metric_backend_registry import (
 from ._unit import get_temperature_unit, user_specific_unit
 from ._utils import (
     MKGraphDashletTooSmallError,
-    MKGraphRecipeCalculationError,
     MKGraphRecipeNotFoundError,
     SizeEx,
 )
@@ -1310,11 +1309,9 @@ def _graph_title_height_ex(config: GraphRenderConfig) -> SizeEx:
 
 def host_service_graph_dashlet_cmk(
     request: Request,
-    graph_specification: GraphSpecification,
+    graph_recipes: Sequence[GraphRecipe],
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    user_permissions: UserPermissions,
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
@@ -1333,30 +1330,6 @@ def host_service_graph_dashlet_cmk(
     height -= _graph_title_height_ex(graph_render_config)
     height -= bounds.top + bounds.bottom
     width -= bounds.left + bounds.right
-
-    try:
-        graph_recipes = graph_specification.recipes(
-            registered_metrics,
-            registered_graphs,
-            user_permissions,
-            consolidation_function="max",
-            debug=debug,
-            temperature_unit=temperature_unit,
-        )
-    except MKLivestatusNotFoundError as e:
-        raise MKGraphRecipeCalculationError(
-            "%s\n\n%s: %r"
-            % (
-                _("Cannot fetch data via Livestatus"),
-                _("The graph specification is"),
-                graph_specification,
-            )
-        ) from e
-    except MKMissingDataError:
-        # In case of missing data, re-raise to be handled at call-sites
-        raise
-    except Exception as e:
-        raise MKGraphRecipeCalculationError(_("Cannot calculate graph recipes")) from e
 
     if graph_recipes:
         graph_recipe = graph_recipes[0]

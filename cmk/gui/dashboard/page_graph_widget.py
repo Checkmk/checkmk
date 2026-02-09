@@ -36,12 +36,10 @@ from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import (
     get_temperature_unit,
     GraphRenderConfig,
-    graphs_from_api,
     host_service_graph_dashlet_cmk,
     metric_backend_registry,
     metrics_from_api,
     MKGraphDashletTooSmallError,
-    MKGraphRecipeCalculationError,
     MKGraphRecipeNotFoundError,
 )
 from cmk.gui.htmllib.html import html
@@ -66,7 +64,7 @@ def render_graph_widget_content(
     dashlet_type = cast(type[ABCGraphDashlet], dashlet_registry[dashlet_config["type"]])
 
     graph_dashlet = dashlet_type(dashlet_config, base_context)
-    graph_spec = graph_dashlet.graph_specification()
+    graph_recipes = graph_dashlet.graph_recipes()
 
     try:
         html.write_html(
@@ -75,7 +73,7 @@ def render_graph_widget_content(
                 #       get_validated_internal_graph_request.
                 #       for that we need to adapt host_service_graph_dashlet_cmk and its call sites
                 ctx.request,
-                graph_spec,
+                graph_recipes,
                 GraphRenderConfig.model_validate(
                     dashlet_config["graph_render_options"]
                     | {
@@ -85,8 +83,6 @@ def render_graph_widget_content(
                     }
                 ),
                 metrics_from_api,
-                graphs_from_api,
-                UserPermissions.from_config(ctx.config, permission_registry),
                 debug=ctx.config.debug,
                 graph_timeranges=ctx.config.graph_timeranges,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
@@ -97,11 +93,7 @@ def render_graph_widget_content(
                 time_range=dashlet_config["timerange"],
             )
         )
-    except (
-        MKGraphRecipeCalculationError,
-        MKGraphRecipeNotFoundError,
-        MKGraphDashletTooSmallError,
-    ):
+    except (MKGraphRecipeNotFoundError, MKGraphDashletTooSmallError):
         raise make_mk_missing_data_error()
 
 

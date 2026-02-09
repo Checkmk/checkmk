@@ -22,11 +22,7 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
 )
 from cmk.gui.dashboard.page_graph_widget import render_graph_widget_content
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing import (
-    MKGraphDashletTooSmallError,
-    MKGraphRecipeCalculationError,
-    MKGraphRecipeNotFoundError,
-)
+from cmk.gui.graphing import MKGraphDashletTooSmallError, MKGraphRecipeNotFoundError
 
 
 class TestGraphWidgetErrorHandling:
@@ -35,10 +31,6 @@ class TestGraphWidgetErrorHandling:
     @pytest.mark.parametrize(
         "exception_class,exception_message",
         [
-            (
-                MKGraphRecipeCalculationError,
-                "Cannot calculate graph recipes",
-            ),
             (
                 MKGraphRecipeNotFoundError,
                 "Failed to calculate a graph recipe.",
@@ -87,19 +79,9 @@ class TestGraphWidgetErrorHandling:
         "exception_class,exception_message,expected_error_substring",
         [
             (
-                MKGraphRecipeNotFoundError,
-                "Failed to calculate a graph recipe.",
-                "No data was found with the current parameters of this widget",
-            ),
-            (
                 MKLivestatusNotFoundError,
                 "Host not found",
                 "Service or host not found.",
-            ),
-            (
-                MKGraphDashletTooSmallError,
-                "Dashlet too small",
-                "No data was found with the current parameters of this widget",
             ),
         ],
     )
@@ -132,11 +114,6 @@ class TestGraphWidgetErrorHandling:
     @pytest.mark.parametrize(
         "exception_class,exception_message,expected_user_message",
         [
-            (
-                MKGraphRecipeCalculationError,
-                "INTERNAL ERROR: failed to load metric backend",
-                "No data was found with the current parameters of this widget.",
-            ),
             (
                 MKGraphRecipeNotFoundError,
                 "Failed to calculate a graph recipe.",

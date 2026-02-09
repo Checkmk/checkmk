@@ -17,10 +17,6 @@ class MKCombinedGraphLimitExceededError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST
 
 
-class MKGraphRecipeCalculationError(MKHTTPException):
-    status = http.HTTPStatus.BAD_REQUEST
-
-
 class MKGraphRecipeNotFoundError(MKHTTPException):
     status = http.HTTPStatus.NOT_FOUND
 

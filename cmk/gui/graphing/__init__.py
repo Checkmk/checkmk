@@ -32,6 +32,7 @@ from ._graph_render_config import (
 from ._graph_specification import (
     GraphDataRange,
     GraphMetric,
+    GraphRecipe,
     GraphSpecification,
     parse_raw_graph_specification,
 )
@@ -81,7 +82,6 @@ from ._unit import (
 from ._utils import (
     MKCombinedGraphLimitExceededError,
     MKGraphDashletTooSmallError,
-    MKGraphRecipeCalculationError,
     MKGraphRecipeNotFoundError,
 )
 from ._valuespecs import (
@@ -106,6 +106,7 @@ __all__ = [
     "GraphDestinations",
     "GraphMetric",
     "GraphMetricConstant",
+    "GraphRecipe",
     "GraphMetricExpression",
     "GraphMetricOperation",
     "GraphPluginChoice",
@@ -115,7 +116,6 @@ __all__ = [
     "GraphSpecification",
     "MKCombinedGraphLimitExceededError",
     "MKGraphDashletTooSmallError",
-    "MKGraphRecipeCalculationError",
     "MKGraphRecipeNotFoundError",
     "MetricName",
     "MetricSpec",

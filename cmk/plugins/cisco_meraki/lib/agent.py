@@ -86,8 +86,8 @@ class MerakiOrganisation:
         return self.organisation["name"]
 
     @property
-    def api_disabled(self) -> bool:
-        return not self.organisation["api"]["enabled"]
+    def api_enabled(self) -> bool:
+        return self.organisation["api"]["enabled"]
 
     def query(self) -> Iterator[Section]:
         yield Section(
@@ -100,6 +100,7 @@ class MerakiOrganisation:
                 response_codes = ApiResponseCodes(
                     organization_id=self.id,
                     organization_name=self.name,
+                    api_enabled=self.api_enabled,
                     **raw_response_codes,
                 )
                 yield Section(
@@ -108,7 +109,7 @@ class MerakiOrganisation:
                 )
 
         # If API is disabled for organization, it doesn't make sense to continue.
-        if self.api_disabled:
+        if not self.api_enabled:
             return
 
         if self.config.required.licenses_overview:

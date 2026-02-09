@@ -11,6 +11,7 @@
 import json
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
+from typing import TypedDict
 
 from pydantic import BaseModel, computed_field
 
@@ -38,12 +39,18 @@ class ResponseCodeCount(BaseModel, frozen=True):
 class ResponseCodes(BaseModel, frozen=True):
     organization_id: str
     organization_name: str
+    api_enabled: bool
     counts: list[ResponseCodeCount]
 
     @computed_field
     @property
     def identifier(self) -> str:
         return f"{self.organization_name}/{self.organization_id}"
+
+    @computed_field
+    @property
+    def api_status(self) -> str:
+        return "enabled" if self.api_enabled else "disabled"
 
 
 def parse_api_response_codes(string_table: StringTable) -> Section:
@@ -67,6 +74,10 @@ def discover_api_response_codes(section: Section) -> DiscoveryResult:
         yield Service(item=identifier)
 
 
+class CheckParams(TypedDict):
+    state_api_not_enabled: int
+
+
 def check_response_code_count_levels(value: int | None, *, code: int) -> Iterable[Result | Metric]:
     if not value:
         return []
@@ -76,16 +87,25 @@ def check_response_code_count_levels(value: int | None, *, code: int) -> Iterabl
         label=f"Code {code}xx",
         render_func=lambda v: str(v),
         metric_name=f"api_code_{code}xx",
-        notice_only=False,
+        notice_only=True,
     )
 
 
-def check_api_response_codes(item: str, section: Section) -> CheckResult:
+def check_api_response_codes(item: str, params: CheckParams, section: Section) -> CheckResult:
     if (info := section.get(item)) is None:
         return
 
     yield Result(state=State.OK, notice=f"Organization name: {info.organization_name}")
     yield Result(state=State.OK, notice=f"Organization ID: {info.organization_id}")
+
+    yield Result(
+        state=State.OK if info.api_enabled else State(params["state_api_not_enabled"]),
+        summary=f"Status: {info.api_status}",
+    )
+
+    # exit early if no response code counts are available.
+    if not info.counts:
+        return
 
     counter: dict[int, int] = defaultdict(int)
 
@@ -105,4 +125,8 @@ check_plugin_cisco_meraki_org_api_response_codes = CheckPlugin(
     service_name="API %s",
     discovery_function=discover_api_response_codes,
     check_function=check_api_response_codes,
+    check_ruleset_name="cisco_meraki_org_api_response_codes",
+    check_default_parameters=CheckParams(
+        state_api_not_enabled=State.CRIT.value,
+    ),
 )

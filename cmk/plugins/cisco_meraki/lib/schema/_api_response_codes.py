@@ -22,6 +22,7 @@ class RawApiResponseCodes(TypedDict):
 class ApiResponseCodes(RawApiResponseCodes):
     organization_id: str
     organization_name: str
+    api_enabled: bool
 
 
 class _Count(TypedDict):

@@ -5,8 +5,8 @@
 
 import logging
 import re
-from collections.abc import Mapping
-from typing import Any, Literal, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -3213,10 +3213,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=DropdownChoice(
-                title=cmk_version.mark_edition_only(
-                    _("Choose SNMP backend"),
-                    [cmk_version.Edition.CME, cmk_version.Edition.CEE],
-                ),
+                title=_("Choose SNMP backend"),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
                     (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
@@ -3262,10 +3259,7 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
                 "Changes to this option will have no effect to the behaviour of "
                 "Checkmk"
             )
-            % cmk_version.mark_edition_only(
-                _("Choose SNMP backend"),
-                [cmk_version.Edition.CME, cmk_version.Edition.CEE],
-            ),
+            % _("Choose SNMP backend"),
         )
 
 
@@ -5655,10 +5649,7 @@ SnmpBackendHosts = HostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
-    title=lambda: cmk_version.mark_edition_only(
-        _("Hosts using a specific SNMP Backend"),
-        [cmk_version.Edition.CME, cmk_version.Edition.CEE],
-    ),
+    title=lambda: _("Hosts using a specific SNMP Backend"),
 )
 
 

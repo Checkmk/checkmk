@@ -93,9 +93,9 @@ def _generate_additional_plugins(
 def _get_edition_only(plugin_module: str) -> Edition:
     """
     >>> _get_edition_only('cmk.plugins.family.rulesets.module_name')
-    <Edition.CRE: _EditionValue(short='cre', long='raw', title='Checkmk Raw Edition')>
+    <Edition.CRE: _EditionValue(short='cre', long='raw', title='Checkmk Community (formerly Raw)')>
     >>> _get_edition_only('cmk.plugins.family.rulesets.cce')
-    <Edition.CCE: _EditionValue(short='cce', long='cloud', title='Checkmk Cloud Edition')>
+    <Edition.CCE: _EditionValue(short='cce', long='cloud', title='Checkmk Ultimate (formerly Cloud)')>
     """
     edition_folder = plugin_module.split(".")[-1]
     for edition in Edition:

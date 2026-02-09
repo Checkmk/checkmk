@@ -17,7 +17,6 @@ import os
 import re
 import sys
 import time
-from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -34,11 +33,11 @@ class _EditionValue(NamedTuple):
 
 
 class Edition(_EditionValue, enum.Enum):
-    CRE = _EditionValue("cre", "raw", "Checkmk Raw Edition")
-    CEE = _EditionValue("cee", "enterprise", "Checkmk Enterprise Edition")
-    CCE = _EditionValue("cce", "cloud", "Checkmk Cloud Edition")
-    CSE = _EditionValue("cse", "saas", "Checkmk Cloud (SaaS)")
-    CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
+    CRE = _EditionValue("cre", "raw", "Checkmk Community (formerly Raw)")
+    CEE = _EditionValue("cee", "enterprise", "Checkmk Pro (formerly Enterprise)")
+    CCE = _EditionValue("cce", "cloud", "Checkmk Ultimate (formerly Cloud)")
+    CSE = _EditionValue("cse", "saas", "Checkmk Cloud")
+    CME = _EditionValue("cme", "managed", "Checkmk Ultimate with multi-tenancy (formerly MSP)")
 
     @classmethod
     def from_version_string(cls, raw: str) -> Edition:
@@ -78,24 +77,6 @@ def edition_has_enforced_licensing() -> bool:
 
 def edition_supports_nagvis() -> bool:
     return edition() is not Edition.CSE
-
-
-def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
-    """
-    >>> mark_edition_only("Feature", [Edition.CRE])
-    'Feature (Raw Edition)'
-    >>> mark_edition_only("Feature", [Edition.CEE])
-    'Feature (Enterprise Edition)'
-    >>> mark_edition_only("Feature", [Edition.CCE])
-    'Feature (Cloud Edition)'
-    >>> mark_edition_only("Feature", [Edition.CME])
-    'Feature (Managed Services Edition)'
-    >>> mark_edition_only("Feature", [Edition.CCE, Edition.CME])
-    'Feature (Cloud Edition, Managed Services Edition)'
-    """
-    return (
-        f"{feature_to_mark} ({', '.join([e.title.removeprefix('Checkmk ') for e in exclusive_to])})"
-    )
 
 
 # Version string: <major>.<minor>.<sub><vtype><patch>-<year>.<month>.<day>

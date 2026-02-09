@@ -17,7 +17,7 @@ from cmk.utils.rulesets.definition import (
     RuleGroup,
     RuleGroupType,
 )
-from cmk.utils.version import Edition, edition, mark_edition_only
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -393,8 +393,6 @@ class Rulespec(abc.ABC):
             return None
         if self._is_deprecated:
             return "{}: {}".format(_("Deprecated"), plain_title)
-        if self._is_cloud_and_managed_edition_only:
-            return mark_edition_only(plain_title, [Edition.CME, Edition.CCE])
         return plain_title
 
     @property

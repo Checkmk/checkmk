@@ -11,6 +11,7 @@ import {
   has_row_info,
   querySelectorAllByClassName,
   remove_class,
+  replaceIcon,
   update_row_info
 } from './utils'
 
@@ -288,14 +289,14 @@ export function toggle_all_rows(obj?: HTMLElement | HTMLElement[]) {
   }
 
   const entry = document.getElementById('menu_entry_checkbox_selection') as HTMLDivElement
-  const img: HTMLImageElement | null = entry ? entry.getElementsByTagName('img')[0] : null
+  const img = entry ? entry.getElementsByTagName('cmk-dynamic-icon')[0] : null
   // Toggle the state
   if (all_selected) {
     remove_selected_rows(checkboxes)
-    if (img) img.src = img.src.replace('toggle_on', 'toggle_off')
+    if (img) replaceIcon(img, 'toggle-off')
   } else {
     select_all_rows(checkboxes, some_failed && none_selected)
-    if (img) img.src = img.src.replace('toggle_off', 'toggle_on')
+    if (img) replaceIcon(img, 'toggle-on')
   }
 }
 

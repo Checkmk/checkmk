@@ -435,7 +435,7 @@ def main(version: APIVersion) -> int:
     with gui_context(), SuperUserContext():
         for target in get_args(EndpointTarget):
             store.save_object_to_file(
-                spec_path(target),
+                spec_path(target, version),
                 _generate_spec(version, _make_spec(version), target, omd_site()),
                 pprint_value=False,
             )

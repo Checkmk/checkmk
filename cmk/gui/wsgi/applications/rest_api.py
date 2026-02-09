@@ -355,6 +355,7 @@ def _serve_spec(
     target: EndpointTarget,
     url: str,
     extension: Literal["yaml", "json"],
+    version: APIVersion,
 ) -> Response:
     match extension:
         case "yaml":
@@ -363,7 +364,7 @@ def _serve_spec(
             content_type = "application/json"
 
     response = Response(status=200)
-    response.data = _serialize_spec_cached(target, url, extension)
+    response.data = _serialize_spec_cached(target, url, extension, version)
     response.content_type = content_type
     response.freeze()
     return response
@@ -373,10 +374,16 @@ def _serialize_spec_cached(
     target: EndpointTarget,
     url: str,
     extension: Literal["yaml", "json"],
+    version: APIVersion,
 ) -> str:
-    spec_mtime = spec_path(target).stat().st_mtime
+    spec_mtime = spec_path(target, version).stat().st_mtime
     url_hash = sha256(url.encode("utf-8")).hexdigest()
-    cache_file = paths.tmp_dir / "rest_api" / "spec_cache" / f"{target}-{extension}-{url_hash}.spec"
+    cache_file = (
+        paths.tmp_dir
+        / "rest_api"
+        / "spec_cache"
+        / f"{version.value}-{target}-{extension}-{url_hash}.spec"
+    )
     cache_file.parent.mkdir(parents=True, exist_ok=True)
 
     try:
@@ -385,23 +392,28 @@ def _serialize_spec_cached(
     except FileNotFoundError:
         pass
 
-    serialized = _serialize_spec(target, url, extension)
+    serialized = _serialize_spec(target, url, extension, version)
     cache_file.write_text(serialized)
     return serialized
 
 
-def _serialize_spec(target: EndpointTarget, url: str, extension: Literal["yaml", "json"]) -> str:
+def _serialize_spec(
+    target: EndpointTarget,
+    url: str,
+    extension: Literal["yaml", "json"],
+    version: APIVersion,
+) -> str:
     serialize: Callable[[dict[str, Any]], str]
     match extension:
         case "yaml":
             serialize = dict_to_yaml
         case "json":
             serialize = json.dumps
-    return serialize(_add_site_server(_read_spec(target), omd_site(), url))
+    return serialize(_add_site_server(_read_spec(target, version), omd_site(), url))
 
 
-def _read_spec(target: EndpointTarget) -> dict[str, Any]:
-    path = spec_path(target)
+def _read_spec(target: EndpointTarget, version: APIVersion) -> dict[str, Any]:
+    path = spec_path(target, version)
     spec = store.load_object_from_file(path, default={})
     if not spec:
         raise ValueError(f"Failed to load spec from {path}")
@@ -454,14 +466,19 @@ def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
 
 
 class ServeSpec(AbstractWSGIApp):
-    __slots__ = ("target", "extension")
+    __slots__ = ("target", "extension", "version")
 
     def __init__(
-        self, target: EndpointTarget, extension: Literal["yaml", "json"], debug: bool = False
+        self,
+        target: EndpointTarget,
+        extension: Literal["yaml", "json"],
+        version: APIVersion,
+        debug: bool = False,
     ) -> None:
         super().__init__(debug)
         self.target = target
         self.extension = extension
+        self.version = version
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         def _url(_environ: WSGIEnvironment) -> str:
@@ -471,6 +488,7 @@ class ServeSpec(AbstractWSGIApp):
             target=self.target,
             url=_url(environ),
             extension=self.extension,
+            version=self.version,
         )(environ, start_response)
 
 
@@ -592,25 +610,25 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 # TODO: These rules are from legacy. Need update to versioned
                 self._add_versioned_rule(
                     path_entries=["/openapi-swagger-ui.yaml"],
-                    endpoint=ServeSpec("swagger-ui", "yaml"),
+                    endpoint=ServeSpec("swagger-ui", "yaml", version=version),
                     content_type="application/yaml",
                     version=version,
                 )
                 self._add_versioned_rule(
                     path_entries=["/openapi-swagger-ui.json"],
-                    endpoint=ServeSpec("swagger-ui", "json"),
+                    endpoint=ServeSpec("swagger-ui", "json", version=version),
                     content_type="application/json",
                     version=version,
                 )
                 self._add_versioned_rule(
                     path_entries=["/openapi-doc.yaml"],
-                    endpoint=ServeSpec("doc", "yaml"),
+                    endpoint=ServeSpec("doc", "yaml", version=version),
                     content_type="application/yaml",
                     version=version,
                 )
                 self._add_versioned_rule(
                     path_entries=["/openapi-doc.json"],
-                    endpoint=ServeSpec("doc", "json"),
+                    endpoint=ServeSpec("doc", "json", version=version),
                     content_type="application/json",
                     version=version,
                 )

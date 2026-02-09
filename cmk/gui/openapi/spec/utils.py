@@ -5,6 +5,7 @@
 from pathlib import Path
 
 import cmk.utils.paths
+from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 
 LIVESTATUS_GENERIC_EXPLANATION = (
@@ -16,5 +17,7 @@ LIVESTATUS_GENERIC_EXPLANATION = (
 )
 
 
-def spec_path(target: EndpointTarget) -> Path:
-    return cmk.utils.paths.doc_dir / "rest-api" / "spec" / f"{target}.spec"
+def spec_path(target: EndpointTarget, version: APIVersion = APIVersion.V1) -> Path:
+    if version == APIVersion.V1:
+        return cmk.utils.paths.doc_dir / "rest-api" / "spec" / f"{target}.spec"
+    return cmk.utils.paths.doc_dir / "rest-api" / "spec" / f"{version.value}-{target}.spec"

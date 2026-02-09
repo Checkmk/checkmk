@@ -275,6 +275,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         debug: bool,
         use_git: bool,
     ) -> None:
+        if not tasks:
+            job_interface.send_result_message(
+                _("The selected options do not match any hosts, nothing to do.")
+            )
+            return
         job_interface.send_progress_update(_("Waiting to acquire lock"))
         with (
             job_interface.gui_context(

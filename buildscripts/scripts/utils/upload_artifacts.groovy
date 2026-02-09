@@ -138,7 +138,8 @@ def deploy_to_website(CMK_VERS) {
         // We also do not want to keep rc versions on the archive.
         // So rename the folder in case we have a rc
         if (TARGET_VERSION != CMK_VERS) {
-            execute_cmd_on_archive_server("mv ${downloads_path}${CMK_VERS} ${downloads_path}${TARGET_VERSION};");
+            execute_cmd_on_archive_server("mkdir -p ${downloads_path}${CMK_VERS};");
+            execute_cmd_on_archive_server("mv ${downloads_path}${CMK_VERS} ${downloads_path}${TARGET_VERSION}/;");
         }
         execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION} ${SYMLINK_PATH};");
     }

@@ -25,7 +25,6 @@ import cmk.base.dump_host
 import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.ec.export as ec
 import cmk.fetchers.snmp as snmp_factory
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -1051,6 +1050,11 @@ _CLEANUP_PIGGYBACK_MODE = Mode(
 #   '----------------------------------------------------------------------'
 
 
+def _make_local_mibs_dir(omd_root: Path) -> Path:
+    # This must be kept in sync with cmk.ec.create_paths(...).local_mibs_dir
+    return omd_root / "local/share/snmp/mibs"
+
+
 def mode_snmptranslate(app: CheckmkBaseApp, walk_filename: str) -> None:
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
@@ -1063,7 +1067,7 @@ def mode_snmptranslate(app: CheckmkBaseApp, walk_filename: str) -> None:
         "snmptranslate",
         "-m",
         "ALL",
-        f"-M+{ec.create_paths(cmk.utils.paths.omd_root).local_mibs_dir.value}",
+        f"-M+{_make_local_mibs_dir(cmk.utils.paths.omd_root)}",
         "-",
     ]
     with walk_path.open("rb") as walk_file:
@@ -1110,7 +1114,7 @@ _SNMPTRANSLATE_MODE = Mode(
     long_help=[
         "Does not contact the host again, but reuses the hosts walk from the directory "
         f"{cmk.utils.paths.snmpwalks_dir}. You can add further MIBs to the directory "
-        f"{ec.create_paths(cmk.utils.paths.omd_root).local_mibs_dir.value}."
+        f"{_make_local_mibs_dir(cmk.utils.paths.omd_root)}."
     ],
 )
 

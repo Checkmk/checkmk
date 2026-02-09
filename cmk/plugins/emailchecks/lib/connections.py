@@ -155,7 +155,7 @@ class EWS(_Connection):
     def _disconnect(self) -> None:
         self._account.protocol.close()
 
-    def folders(self) -> Iterable[str]:
+    def folders(self) -> Mapping[str, str]:
         logging.debug("Account::msg_folder_root.tree():\n%s", self._account.msg_folder_root.tree())
         logging.debug(
             "folder, [folder.children]:\n%s",
@@ -169,7 +169,12 @@ class EWS(_Connection):
         # Since `.absolute` returns a path with a useless and longish prefix
         # this has to be removed.
         root_folder = f"{self._account.msg_folder_root.absolute}/"
-        return [f.absolute[len(root_folder) :] for f in self._account.msg_folder_root.walk()]
+        return {
+            folder: folder
+            for folder in [
+                f.absolute[len(root_folder) :] for f in self._account.msg_folder_root.walk()
+            ]
+        }
 
     def select_folder(self, folder_name: str) -> int:
         selected_folder = self._account.msg_folder_root
@@ -319,11 +324,11 @@ class GraphApi(_Connection):
     def _disconnect(self) -> None:
         pass
 
-    def folders(self) -> Iterable[str]:
+    def folders(self) -> Mapping[str, str]:
         with self._build_api_client() as client:
             response = client.get("me/mailFolders")
         assert isinstance(response, dict)
-        return [folder["id"] for folder in response.get("value", [])]
+        return {folder["displayName"]: folder["id"] for folder in response.get("value", [])}
 
     def select_folder(self, folder_name: str) -> int:
         with self._build_api_client() as client:
@@ -580,10 +585,13 @@ class IMAP(_Connection):
             verified_result(self._imap.close())
         verified_result(self._imap.logout())
 
-    def folders(self) -> Iterable[str]:
-        return self.extract_folder_names(
-            e for e in verified_result(self._imap.list()) if isinstance(e, bytes)
-        )
+    def folders(self) -> Mapping[str, str]:
+        return {
+            folder: folder
+            for folder in self.extract_folder_names(
+                e for e in verified_result(self._imap.list()) if isinstance(e, bytes)
+            )
+        }
 
     @staticmethod
     def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:

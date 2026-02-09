@@ -88,7 +88,7 @@ def check_mailboxes(args: Args) -> CheckResult:
         assert not isinstance(mailbox, POP3)
 
         logging.info("connected, fetch mailbox folders..")
-        available_mailboxes = list(mailbox.folders())
+        available_mailboxes = mailbox.folders()
 
         logging.debug("Found %d mailbox folders", len(available_mailboxes))
         logging.debug("Mailboxes to check: %r", args.mailbox)
@@ -102,7 +102,7 @@ def check_mailboxes(args: Args) -> CheckResult:
 
         for i, folder in enumerate(args.mailbox or available_mailboxes):
             logging.debug("Check folder %r (%d/%d)", folder, i, len(available_mailboxes))
-            mail_count = mailbox.select_folder(folder)
+            mail_count = mailbox.select_folder(available_mailboxes[folder])
             logging.debug("%d mails", mail_count)
 
             if args.crit_count and args.warn_count and mail_count >= args.warn_count:

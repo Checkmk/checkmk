@@ -4,17 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { call_ajax } from './ajax'
-import { add_class, remove_class } from './utils'
+import { add_class, remove_class, replaceIcon } from './utils'
 
 export function getFirstElementByNameAsInput(name: string): HTMLInputElement {
   return document.getElementsByName(name)[0] as HTMLInputElement
-}
-
-function replaceIcon(img: HTMLImageElement, new_icon: string) {
-  const imgData = img.getAttribute('data')
-  if (imgData) {
-    img.setAttribute('data', imgData.replace(/(.*"icon": ").*(".*)/, `$1${new_icon}$2`))
-  }
 }
 
 export function start_test(ident: string, hostname: string, transid: string) {

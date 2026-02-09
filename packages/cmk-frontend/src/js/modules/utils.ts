@@ -971,3 +971,16 @@ export function makeLoadingTransition(
     body.appendChild(transition)
   }, delay || 0)
 }
+
+export function replaceIcon(img: Element, new_icon: string) {
+  const imgData = img.getAttribute('data')
+  if (imgData) {
+    const data = JSON.parse(imgData)
+    if ('spec' in data) {
+      data.spec.id = new_icon
+    } else {
+      data.icon = new_icon
+    }
+    img.setAttribute('data', JSON.stringify(data))
+  }
+}

@@ -8,7 +8,13 @@ import { json, select, selectAll } from 'd3'
 
 import { call_ajax } from './ajax'
 import type { CMKAjaxReponse } from './types'
-import { change_class, execute_javascript_by_object, has_class, toggle_folding } from './utils'
+import {
+  change_class,
+  execute_javascript_by_object,
+  has_class,
+  replaceIcon,
+  toggle_folding
+} from './utils'
 import { list_of_strings_extend } from './valuespecs'
 
 export function toggle_subtree(oImg: HTMLElement, lazy: boolean) {
@@ -108,12 +114,11 @@ export function toggle_box(container: HTMLElement, lazy: boolean) {
 }
 
 export function toggle_assumption(link: HTMLElement, site: string, host: string, service: string) {
-  const img = link.getElementsByTagName('img')[0]
+  const img = link.getElementsByTagName('cmk-dynamic-icon')[0]
 
   // get current state
-  const path_parts = img.src.split('/')
-  const file_part = path_parts.pop()
-  let current = file_part!.replace(/icon_assume_/, '').replace(/.png/, '')
+  let data = JSON.parse(img.getAttribute('data')?.replace(/'/g, '"') || '{}')
+  let current = data.spec.id.replace('assume-', '')
 
   if (current == 'none')
     // Assume WARN when nothing assumed yet
@@ -133,7 +138,7 @@ export function toggle_assumption(link: HTMLElement, site: string, host: string,
     url += '&service=' + encodeURIComponent(service)
   }
   url += '&state=' + current
-  img.src = path_parts.join('/') + '/icon_assume_' + current + '.png'
+  replaceIcon(img, `assume-${current}`)
   call_ajax(url)
 }
 

@@ -197,6 +197,13 @@ class ViewWidgetIFramePageHelper:
         if request.var("filled_in") is None:
             request.set_var("filled_in", "filter")
 
+    @staticmethod
+    def setup_view_name(request: Request, view_name: str) -> None:
+        """The `view_name` query parameter needs to be set for the view to be identified,
+        this method sets a default value."""
+        if request.var("view_name") is None:
+            request.set_var("view_name", view_name)
+
     @classmethod
     def _wrapper_context(
         cls, is_reload: bool, is_preview: bool
@@ -367,6 +374,7 @@ class ViewWidgetIFramePage(Page):
             return
 
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
+        ViewWidgetIFramePageHelper.setup_view_name(ctx.request, parameters.unique_widget_name())
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         row_limit = get_limit(
@@ -474,6 +482,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             ctx.request, unique_widget_name
         )
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
+        ViewWidgetIFramePageHelper.setup_view_name(ctx.request, unique_widget_name)
 
         ViewWidgetIFramePageHelper.render_iframe_content(
             unique_widget_name,

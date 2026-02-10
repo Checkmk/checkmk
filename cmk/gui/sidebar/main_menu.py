@@ -43,6 +43,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.activate_changes import ActivateChanges
+from cmk.gui.watolib.mode import mode_url
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 from cmk.shared_typing.unified_search import Provider, ProviderName, Providers
 
@@ -53,6 +54,29 @@ class MainMenuPopupTrigger(NamedTuple):
     icon: DynamicIcon
     sort_index: int
     onopen: str | None
+
+
+def render_direct_link_instead_of_changes_slideout(popup_trigger: MainMenuPopupTrigger) -> None:
+    """Renders a direct link to the activate changes page instead of the 'Changes' slideout"""
+
+    html.open_li()
+
+    icon_content = html.render_dynamic_icon(popup_trigger.icon, size=IconSizes.xlarge)
+    if not user.get_attribute("nav_hide_icons_title"):
+        icon_content += HTMLWriter.render_div(popup_trigger.title)
+
+    html.open_div(
+        class_=["popup_trigger", popup_trigger.name],
+        id_="popup_trigger_main_menu_changes",
+    )
+    html.a(
+        icon_content,
+        href=mode_url("changelog"),
+        target="main",
+        class_="popup_trigger",
+    )
+    html.close_div()
+    html.close_li()
 
 
 class MainMenuRenderer:
@@ -120,6 +144,10 @@ class MainMenuRenderer:
         self, user_permissions: UserPermissions, popup_triggers: list[MainMenuPopupTrigger]
     ) -> None:
         for popup_trigger in popup_triggers:
+            if popup_trigger.name == "changes" and user.get_attribute("navbar_changes_action"):
+                render_direct_link_instead_of_changes_slideout(popup_trigger)
+                continue
+
             # TODO: those active icons should be defined explicitly in the MainMenuPopupTrigger
             if isinstance(popup_trigger.icon, dict):
                 active_icon: DynamicIcon = {

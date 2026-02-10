@@ -22,7 +22,7 @@ failure() {
 if [[ -z "${CI_ORA2_DB_TEST_PASSWORD}" ]]; then
     failure "CI_ORA2_DB_TEST_PASSWORD is not set in the environment, component testing will fail."
 fi
-export CI_ORA2_DB_TEST="ora-rocktest.dev.checkmk.net:system:$CI_ORA2_DB_TEST_PASSWORD:1521:FREE::FREE.cmkoratest:_:_:"
+export CI_ORA2_DB_TEST="ora-rocktest.dev.checkmk.net:system:$CI_ORA2_DB_TEST_PASSWORD:1521:TEST23::TEST23:_:_:"
 path_to_runtime="${PWD}/runtimes/plugins/packages/mk-oracle"
 export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
 export MK_CONFDIR="${PWD}"

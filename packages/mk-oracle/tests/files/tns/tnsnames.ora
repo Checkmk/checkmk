@@ -16,7 +16,7 @@ ora_remote =
   (ADDRESS = (PROTOCOL = TCP)(HOST =  ora-rocktest.dev.checkmk.net)(PORT = 1521))
   )
   (CONNECT_DATA =
-  (SID = FREE)
+  (SID = TEST23)
   (SERVER = DEDICATED)
   )
   )

@@ -42,6 +42,7 @@ use mk_oracle::types::{
     ConnectionStringType, Credentials, InstanceName, InstanceNumVersion, InstanceVersion,
     ServiceName, Tenant, UseHostClient,
 };
+use regex::Regex;
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -284,7 +285,6 @@ fn test_local_connection() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_remote_mini_connection() {
     add_runtime_to_path();
     let endpoint = remote_reference_endpoint();
@@ -304,7 +304,6 @@ fn test_remote_mini_connection() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 async fn test_remote_custom_instance_connection() {
     add_runtime_to_path();
     let endpoint = remote_reference_endpoint();
@@ -381,7 +380,6 @@ SELECT
     join v$database d
         on i.con_id = d.con_id";
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_remote_mini_connection_version() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -411,7 +409,6 @@ fn test_remote_mini_connection_version() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_io_stats_query() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -493,7 +490,6 @@ fn connect_and_query(
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_ts_quotas() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -506,7 +502,6 @@ fn test_ts_quotas() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_jobs() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -534,7 +529,6 @@ fn test_jobs() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_jobs_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -559,7 +553,6 @@ fn test_jobs_old() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_resumable() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -583,7 +576,6 @@ fn test_resumable() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_undo_stats() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -613,7 +605,6 @@ fn test_undo_stats() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_locks_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -630,19 +621,19 @@ fn test_locks_last() {
             );
         });
         // We may receive here either
-        // ???CDB/PDB???|206|37328|klapp-0336|pa@klapp-0336 (TNS V1-V3)|12|sergeykipnis|SYSTEM|0|VALID|1|179|64573|klapp-0336|pa@klapp-0336 (TNS V1-V3)|12|sergeykipnis|SYSTEM
+        // ???CDB/???PDB???|206|37328|klapp-0336|pa@klapp-0336 (TNS V1-V3)|12|sergeykipnis|SYSTEM|0|VALID|1|179|64573|klapp-0336|pa@klapp-0336 (TNS V1-V3)|12|sergeykipnis|SYSTEM
         // or
         // FREE|||||||||||||||||
         // Let's QA team checks correctness
-        let instance = get_instance(endpoint);
-        let instance_name = instance.as_str();
+        let inst = get_instance(endpoint);
+        let instance_name = inst.as_str();
         assert!(
             rows[0].starts_with(format!("{}.CDB$ROOT|", instance_name).as_str()),
             "expected {instance_name} {}",
             rows[0]
         );
         assert!(
-            rows[1].starts_with(format!("{0}.{0}PDB1|", instance_name).as_str()),
+            rows[1].starts_with(format!("{0}.", instance_name).as_str()),
             "expected {instance_name} {}",
             rows[1]
         );
@@ -655,7 +646,6 @@ fn test_locks_last() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_locks_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -685,7 +675,6 @@ fn test_locks_old() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_log_switches() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -710,7 +699,6 @@ fn test_log_switches() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_long_active_sessions_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -729,20 +717,25 @@ fn test_long_active_sessions_last() {
                 rows.len()
             );
         });
-        assert_eq!(
-            rows[0],
-            format!("{}.CDB$ROOT||||||||", get_instance(endpoint))
-        );
-        assert_eq!(
-            rows[1],
-            format!("{0}.{0}PDB1||||||||", get_instance(endpoint))
-        );
-        assert_eq!(rows[2], format!("{}||||||||", get_instance(endpoint)));
+
+        let inst = get_instance(endpoint);
+        assert_eq!(rows[0], format!("{}.CDB$ROOT||||||||", inst));
+        // may contain something like
+        // "TEST23.PDB23_1||||||||"
+        // "TEST23.TEST23PDB1||||||||"
+        // <inst>.<anything>PDB<anything>1||||||||
+        let re = Regex::new(&format!(
+            r"^{}\..*PDB.*1\|\|\|\|\|\|\|\|$",
+            regex::escape(&inst),
+        ))
+        .unwrap();
+
+        assert!(re.is_match(&rows[1]), "row did not match: {}", rows[1]);
+        assert_eq!(rows[2], format!("{}||||||||", inst));
     }
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_long_active_sessions_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -758,7 +751,6 @@ fn test_long_active_sessions_old() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_processes() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -779,7 +771,6 @@ fn test_processes() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_recovery_status_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -795,7 +786,11 @@ fn test_recovery_status_last() {
                     .len(),
             );
             assert!(array[0].starts_with(get_instance(endpoint).as_str()));
-            assert_eq!(array[1], get_instance(endpoint).as_str());
+            // column 1 contains uniq database name which may differ in casing from SID/Instance
+            assert_eq!(
+                array[1].to_lowercase(),
+                get_instance(endpoint).as_str().to_lowercase()
+            );
             assert!(!array[2].is_empty());
             assert!(!array[3].is_empty());
             assert!(array[4].parse::<u32>().is_ok());
@@ -809,7 +804,6 @@ fn test_recovery_status_last() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_recovery_status_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -824,7 +818,11 @@ fn test_recovery_status_old() {
             let array = r.split('|').collect::<Vec<&str>>();
             assert_eq!(array.len(), 11);
             assert_eq!(array[0], get_instance(endpoint).as_str());
-            assert_eq!(array[1], get_instance(endpoint).as_str());
+            // column 1 contains uniq database name which may differ in casing from SID/Instance
+            assert_eq!(
+                array[1].to_lowercase(),
+                get_instance(endpoint).as_str().to_lowercase()
+            );
             assert!(!array[2].is_empty());
             assert!(!array[3].is_empty());
             assert!(array[4].parse::<u32>().is_ok());
@@ -838,7 +836,6 @@ fn test_recovery_status_old() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_rman() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -849,7 +846,6 @@ fn test_rman() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_rman_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -864,7 +860,6 @@ fn test_rman_old() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_sessions_last() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -906,7 +901,6 @@ fn test_sessions_last() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_sessions_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -926,7 +920,6 @@ fn test_sessions_old() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_system_parameter() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -954,7 +947,6 @@ fn test_system_parameter() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_table_spaces() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -970,7 +962,8 @@ fn test_table_spaces() {
                     .collect::<Vec<_>>()
                     .len(),
             );
-            assert_eq!(line[0], get_instance(endpoint).as_str());
+            // TEST23 or TEST23.CDB$ROOT or TEST23.PDBXXX
+            assert!(line[0].starts_with(get_instance(endpoint).as_str()));
             assert!(
                 line[1].to_uppercase().ends_with(".DBF"),
                 "File name does not end with .DBF: {}",
@@ -1002,7 +995,6 @@ fn test_table_spaces() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_table_spaces_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -1016,7 +1008,8 @@ fn test_table_spaces_old() {
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
             assert_eq!(line.len(), 15);
-            assert_eq!(line[0], get_instance(endpoint).as_str());
+            // TEST23 or TEST23.CDB$ROOT or TEST23.PDBXXX
+            assert!(line[0].starts_with(get_instance(endpoint).as_str()));
             assert!(
                 line[1].to_uppercase().ends_with(".DBF"),
                 "File name does not end with .DBF: {}",
@@ -1048,7 +1041,6 @@ fn test_table_spaces_old() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_data_guard_stats() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -1059,7 +1051,6 @@ fn test_data_guard_stats() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_instance() {
     use crate::system::convert_to_num_version;
     add_runtime_to_path();
@@ -1097,7 +1088,6 @@ fn test_instance() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_instance_full_version() {
     use crate::system::convert_to_num_version;
     add_runtime_to_path();
@@ -1135,7 +1125,6 @@ fn test_instance_full_version() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_instance_old() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -1222,7 +1211,6 @@ fn test_asm_instance_new() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_performance_new() {
     add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
@@ -1303,7 +1291,6 @@ fn test_performance_new() {
 }
 
 #[test]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 fn test_performance_old() {
     for endpoint in WORKING_ENDPOINTS.iter() {
         println!("endpoint.host = {}", &endpoint.host);

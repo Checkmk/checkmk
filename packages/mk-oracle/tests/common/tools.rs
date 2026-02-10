@@ -81,6 +81,7 @@ fn _make_mini_config(
     credentials: &Credentials,
     auth_type: AuthType,
     address: &str,
+    port: u16,
     service_name: &String,
     instance_name: &Option<String>,
 ) -> Config {
@@ -96,6 +97,7 @@ oracle:
        role: {}
     connection:
        hostname: {}
+       port: {}
        timeout: 10
        service_name: {}
        {}
@@ -105,6 +107,7 @@ oracle:
         auth_type,
         if address == "localhost" { "sysdba" } else { "" },
         address,
+        port,
         service_name,
         instance_name
             .as_ref()
@@ -119,6 +122,7 @@ fn _make_mini_config_custom_instance(
     credentials: &Credentials,
     auth_type: AuthType,
     address: &str,
+    port: u16,
     include: &str,
     alias: Option<InstanceAlias>,
 ) -> Config {
@@ -154,6 +158,7 @@ oracle:
         {6}
         connection: # mandatory
           hostname: {4}
+          port: {7}
         authentication: # mandatory
           username: "{0}"
           password: "{1}"
@@ -166,7 +171,8 @@ oracle:
         if address == "localhost" { "sysdba" } else { "" },
         address,
         include,
-        alias_raw(&alias)
+        alias_raw(&alias),
+        port
     );
     Config::from_string(config_str).unwrap().unwrap()
 }
@@ -183,6 +189,7 @@ pub fn make_mini_config_custom_instance(
         },
         AuthType::Standard,
         &endpoint.host,
+        endpoint.port,
         include,
         alias,
     )
@@ -196,6 +203,7 @@ pub fn make_mini_config(endpoint: &SqlDbEndpoint) -> Config {
         },
         AuthType::Standard,
         &endpoint.host,
+        endpoint.port,
         &endpoint.service_name,
         &endpoint.instance_name,
     )

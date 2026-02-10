@@ -202,7 +202,7 @@ run_test_component() {
     if [[ -z "${CI_ORA2_DB_TEST_PASSWORD}" ]]; then
         failure "CI_ORA2_DB_TEST_PASSWORD is not set in the environment, component testing will fail."
     fi
-    export CI_ORA2_DB_TEST="ora-rocktest.dev.checkmk.net:system:$CI_ORA2_DB_TEST_PASSWORD:1521:FREE::FREE.cmkoratest:_:_:"
+    export CI_ORA2_DB_TEST="ora-rocktest.dev.checkmk.net:system:$CI_ORA2_DB_TEST_PASSWORD:1521:TEST23::TEST23:_:_:"
     echo "CI_ORA2_DB_TEST is constructed and exported"
     setup_tests
 

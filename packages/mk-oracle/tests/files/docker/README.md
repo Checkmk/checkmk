@@ -49,10 +49,10 @@ Start Oracle 23 (Free) on default port 1521:
 ./run-db.sh -v 23
 ```
 
-Start Oracle 19c on port 1522:
+Start Oracle 19c on port 1521:
 
 ```bash
-./run-db.sh -v 19 -P 1522
+./run-db.sh -v 19 -P 1521
 ```
 
 The script will output the connection details (Host, Port, SID, Password) once the database is ready to accept connections.

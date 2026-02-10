@@ -14,12 +14,13 @@ oracle:
       - instance: # special section
     discovery: # optional, defines instances to be monitored
       detect: no # optional
-      include: ["FREE.cmkoratest"] # optional
+      include: ["TEST23"] # optional
       exclude: [] # optional
     instances: # optional
-      - service_name: FREE.cmkoratest
+      - service_name: TEST23
         connection: # mandatory
           hostname: ora-rocktest.dev.checkmk.net
+          port: 1521
         authentication: # mandatory
           username: $CI_ORA2_DB_TEST
           password: $CI_ORA2_DB_TEST

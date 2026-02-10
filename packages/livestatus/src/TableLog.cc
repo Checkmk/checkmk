@@ -234,6 +234,17 @@ void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
     }
 
     auto is_authorized = [&user](const row_type &row) {
+        // The host or service referenced by a notification log entry may not
+        // exist on the local site. This happens when entries are forwarded from
+        // remote sites via the notification spooler, or when the host/service
+        // has since been removed from the monitoring configuration.
+        // Delegate to is_authorized_for_notification_object which falls back to
+        // contact name matching in those cases.
+        if (row.entry->log_class() == LogEntry::Class::hs_notification) {
+            return user.is_authorized_for_notification_object(
+                row.hst, row.svc, !row.entry->service_description().empty(),
+                row.entry->contact_name());
+        }
         // If we have an AuthUser, suppress entries for messages with hosts
         // that do not exist anymore, otherwise use the common authorization
         // logic.

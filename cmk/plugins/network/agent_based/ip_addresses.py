@@ -187,7 +187,7 @@ def host_label_ip_addresses(section: Section) -> HostLabelGenerator:
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
     yield from host_labels_if(
-        interface for adapter in section or [] for interface in adapter.values()
+        {name: [interface] for adapter in section or [] for name, interface in adapter.items()}
     )
 
 

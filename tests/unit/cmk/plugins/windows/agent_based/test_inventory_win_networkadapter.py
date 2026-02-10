@@ -239,7 +239,6 @@ def test_inventory_win_ip_address(section: Section, expected_result: InventoryRe
         (
             __section,
             [
-                HostLabel("cmk/l3v4_topology", "singlehomed"),
                 HostLabel("cmk/l3v4_topology", "multihomed"),
             ],
         ),

@@ -290,11 +290,14 @@ def host_label_lnx_ip_address(section: Section) -> HostLabelGenerator:
     _interfaces_with_counters, ip_stats = section
 
     yield from host_labels_if(
-        interface_ip
-        for adapter in ip_stats.values()
-        for raw_interface_ips in [adapter.inet, adapter.inet6]
-        for interface_ip in map(maybe_interface, raw_interface_ips)
-        if interface_ip
+        {
+            name: [
+                interface
+                for raw_if in (*adapter.inet, *adapter.inet6)
+                if (interface := maybe_interface(raw_if))
+            ]
+            for name, adapter in ip_stats.items()
+        }
     )
 
 

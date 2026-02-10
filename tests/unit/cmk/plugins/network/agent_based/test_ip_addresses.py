@@ -203,7 +203,6 @@ def test_parse_ip_addresses(
                 {"if_index1": IPv4Interface("12.12.12.1/3")},
             ),
             [
-                HostLabel("cmk/l3v4_topology", "singlehomed"),
                 HostLabel("cmk/l3v4_topology", "multihomed"),
             ],
         ),

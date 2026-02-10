@@ -38,12 +38,22 @@ const dashboards = ref<DashboardMetadata[]>([])
 const isLoading = ref(false)
 
 const filteredDashboards = computed(() => {
+  const visibleDashboards = dashboards.value.filter((dashboard) => {
+    if (!dashboard?.display.title) {
+      return false
+    }
+    if (dashboard.display.hide_in_drop_down_menus) {
+      return false
+    }
+    return true
+  })
+
   if (!inputValue.value.trim()) {
-    return dashboards.value.filter((dashboard) => dashboard?.display.title)
+    return visibleDashboards
   }
 
   const filterText = inputValue.value.toLowerCase().trim()
-  return dashboards.value.filter((dashboard) =>
+  return visibleDashboards.filter((dashboard) =>
     dashboard?.display.title.toLowerCase().includes(filterText)
   )
 })

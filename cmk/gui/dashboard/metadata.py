@@ -35,6 +35,7 @@ class DashboardDisplay:
     topic: Topic
     hidden: bool
     sort_index: int
+    hide_in_drop_down_menus: bool
 
 
 @dataclass
@@ -78,6 +79,7 @@ class DashboardMetadataObject:
                 ),
                 hidden=dashboard["hidden"],
                 sort_index=dashboard["sort_index"],
+                hide_in_drop_down_menus=dashboard["hidebutton"],
             ),
         )
 

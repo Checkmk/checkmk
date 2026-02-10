@@ -36,6 +36,9 @@ class DashboardDisplay:
     topic: Topic = api_field(description="Topic area the dashboard covers")
     hidden: bool = api_field(description="Whether the dashboard is hidden from general listings")
     sort_index: int = api_field(description="Numeric value used for ordering dashboards in lists.")
+    hide_in_drop_down_menus: bool = api_field(
+        description="Whether the dashboard is hidden from dropdown menus."
+    )
 
 
 @api_model
@@ -76,6 +79,7 @@ class DashboardMetadata:
                 ),
                 hidden=obj.display.hidden,
                 sort_index=obj.display.sort_index,
+                hide_in_drop_down_menus=obj.display.hide_in_drop_down_menus,
             ),
         )
 

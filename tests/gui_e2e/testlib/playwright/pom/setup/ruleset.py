@@ -41,9 +41,18 @@ class Ruleset(CmkPage):
         logger.info("Navigate to '%s' page", self.rule_name)
         self.main_menu.global_searchbar.fill(self.rule_name)
 
-        results = self.main_menu.active_side_menu_popup.get_by_role(role="listitem")
+        popup = self.main_menu.active_side_menu_popup
         if self.section_name:
-            results = results.filter(has_text=self.section_name)
+            # Search results are grouped by topic; section names appear as group
+            # headings rather than inside individual list items.
+            group_heading = popup.locator(".result-group-heading").filter(
+                has_text=self.section_name
+            )
+            results = group_heading.locator("xpath=following-sibling::div[1]").get_by_role(
+                role="listitem"
+            )
+        else:
+            results = popup.get_by_role(role="listitem")
 
         rule_pattern = re.compile(f"{re.escape(self.rule_name)}$")
         selection = results.get_by_role(role="link", name=rule_pattern, exact=self._exact)

@@ -79,7 +79,7 @@ class UnifiedSearchSlideout(LocatorHelper):
     @property
     def search_operator_select(self) -> SearchOperatorSelect:
         return SearchOperatorSelect(
-            locator=self.slideout.locator(".unified-search-operator-switch")
+            locator=self.slideout.locator(".unified-search-operator-select__switch")
         )
 
     @property

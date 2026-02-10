@@ -81,16 +81,16 @@ def test_global_searchbar_sanity_check(dashboard_page: MainDashboard) -> None:
     TODO: Breakdown and replace with test(s) arising from test-plan.
     """
 
-    # validate items corresponding to 'Monitor' only.
-    prefix = "Monitor"
     main_menu = dashboard_page.main_menu
     main_menu.global_searchbar.fill("all hosts")
 
     # validate ordering of the found items.
+    # Search results are grouped by topic; individual list items no longer
+    # carry the provider prefix (e.g. "Monitor").
     expect(main_menu.active_side_menu_popup.get_by_role("listitem")).to_contain_text(
         [
-            re.compile(rf"{prefix}.*All hosts$"),
-            re.compile(rf"{prefix}.*CPU inventory of all hosts$"),
+            re.compile(r"All hosts$"),
+            re.compile(r"CPU inventory of all hosts$"),
         ]
     )
 

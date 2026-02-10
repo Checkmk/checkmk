@@ -175,7 +175,7 @@ function getFilterOptions(): FilterOption[] {
   height: auto;
   border-bottom-left-radius: var(--border-radius-half);
   border-bottom-right-radius: var(--border-radius-half);
-  z-index: +1;
+  z-index: +2;
 }
 
 .unified-search-filters__suggestions-list {

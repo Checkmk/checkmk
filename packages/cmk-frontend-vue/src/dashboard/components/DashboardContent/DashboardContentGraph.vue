@@ -12,12 +12,13 @@ import CmkIcon from '@/components/CmkIcon'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
-import type { FilterHTTPVars } from '@/dashboard/types/widget.ts'
+import type { FilterHTTPVars, GraphWidgetContent } from '@/dashboard/types/widget.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
+const content = props.content as GraphWidgetContent
 const cmkToken = useInjectCmkToken()
 const dataEndpointUrl: Ref<string> = computed(() => {
   return cmkToken ? 'widget_graph_token_auth.py' : 'widget_graph.py'
@@ -29,6 +30,17 @@ const cmkToolkit = window['cmk']
 const contentDiv = ref<HTMLDivElement | null>(null)
 const parentDiv = computed(() => contentDiv.value?.parentElement || null)
 const isLoading = ref<boolean>(true)
+
+const observedElement = computed(() => {
+  if (props.isPreview && contentDiv.value) {
+    return (
+      (contentDiv.value.closest(
+        '.db-content-container__preview-scroll-container'
+      ) as HTMLElement) ?? parentDiv.value
+    )
+  }
+  return parentDiv.value
+})
 
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
   if (cmkToken !== undefined) {
@@ -81,11 +93,14 @@ const resizeObserver = new ResizeObserver((entries) => {
   }
 })
 
+const showLegend = computed(() => content.graph_render_options?.show_legend ?? false)
 const timer = useTimer(updateGraph, 60_000)
 
 onMounted(() => {
   timer.start()
-  resizeObserver.observe(parentDiv.value!)
+  if (observedElement.value) {
+    resizeObserver.observe(observedElement.value)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -100,6 +115,7 @@ onBeforeUnmount(() => {
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
     content-overflow="hidden"
+    :is-scrollable-preview="isPreview && showLegend"
   >
     <CmkIcon
       v-show="isLoading"

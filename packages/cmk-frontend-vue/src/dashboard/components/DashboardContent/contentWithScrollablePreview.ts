@@ -6,6 +6,16 @@
 import { type WidgetContentType } from '@/dashboard/types/widget.ts'
 
 export const isContentWithScrollablePreview = (widgetType: WidgetContentType): boolean => {
-  const scrollablePreviewTypes: string[] = ['url', 'linked_view', 'embedded_view', 'top_list']
+  const scrollablePreviewTypes: string[] = [
+    'url',
+    'linked_view',
+    'embedded_view',
+    'top_list',
+    'combined_graph',
+    'custom_graph',
+    'performance_graph',
+    'problem_graph',
+    'single_timeseries'
+  ]
   return scrollablePreviewTypes.includes(widgetType)
 }

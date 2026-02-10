@@ -54,5 +54,11 @@ export type LinkedViewContent = components['schemas']['LinkedViewContent']
 export type StaticTextContent = components['schemas']['StaticTextContent']
 export type TopListContent = components['schemas']['TopListContent']
 export type SidebarElementContent = components['schemas']['SidebarElementContent']
+// Only picks graph_render_options, used to check legend visibility in the scrollable preview
+// as this is used by multiple widget types we extract it only once here
+export type GraphWidgetContent = Pick<
+  components['schemas']['PerformanceGraphContent'],
+  'graph_render_options'
+>
 export type WidgetAvailableInventory =
   components['schemas']['WidgetAvailableInventoryCollectionModel']

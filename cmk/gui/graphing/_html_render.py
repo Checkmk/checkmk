@@ -1380,8 +1380,14 @@ def host_service_graph_dashlet_cmk(
     )
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
-    # make the graph fit into the dashlet area.
-    if graph_render_config.show_legend and graph_artwork_or_errors.artwork.curves:
+    # make the graph fit into the dashlet area. In preview mode, the Vue scroll container
+    # handles legend overflow, so we skip the height reduction.
+    is_preview = graph_display_id.endswith("-preview")
+    if (
+        graph_render_config.show_legend
+        and graph_artwork_or_errors.artwork.curves
+        and not is_preview
+    ):
         # Estimates the height of the graph legend in pixels TODO: This is not
         # acurate! Especially when the font size is changed this does not lead
         # to correct results. But this is a more generic problem of the

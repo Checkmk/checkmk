@@ -112,7 +112,10 @@ def configure_authentication() -> QuickSetupStage:
                     ),
                     Text(
                         text=_(
-                            'If you plan to monitor Azure resources via Azure Resource Manager, assign the built-in Reader role to the app at the subscription (or appropriate resource group) level in Access control (IAM). Additionally, if resources available through the Graph API will be monitored, add the Microsoft Graph application permissions "Directory.Read.All" and "User.Read.All" and grant admin consent. These resources include "Users in Entra ID", "Entra Connect Sync", and "App Registrations".'
+                            "If you plan to monitor Azure resources via Azure Resource Manager, assign the built-in Reader role to the app at the subscription (or appropriate resource group) level in Access control (IAM)"
+                            " and ensure that the required Azure Resource Providers are registered in the subscription. The exact set of providers depends on the Azure resource types you intend to monitor and"
+                            ' may include, but is not limited to, "Microsoft.Compute", "Microsoft.Network", "Microsoft.Storage", "Microsoft.ResourceHealth" and "Microsoft.Insights". If resources available through the Microsoft Graph API will be'
+                            ' monitored, add the Microsoft Graph application permissions "Directory.Read.All" and "User.Read.All" and grant admin consent. These resources include "Users in Entra ID", "Entra Connect Sync", and "App Registrations".'
                         ),
                     ),
                     Text(text=_("Create a client secret for the app and note it down.")),

@@ -424,7 +424,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
     buttonTwoClick = reTestAgentClick
   } else {
     header = _t('Failed to connect to the Checkmk agent')
-    txt = _t('This problem might be caused by a missing agent or the firewall settings.')
+    txt =
+      _t(`This can have different reasons. The Checkmk agent might not be installed, or communication may be blocked by firewall or network settings.
+If this host should be monitored via an agent, download and install the agent and check the connectivity.
+If not, you can ignore this message.`)
     buttonOneTitle = _t('Download & install agent')
     buttonOneButton = _t('Download Checkmk agent')
     buttonOneClick = openSlideoutClick
@@ -485,7 +488,9 @@ const agentPort: Ref<number> = ref(6556)
         <CmkParagraph v-if="warnContainerValues.error">
           {{ _t('Error: ') }} {{ warnContainerValues.error }}<br /><br />
         </CmkParagraph>
-        {{ warnContainerValues.txt }}
+        <CmkParagraph>
+          {{ warnContainerValues.txt }}
+        </CmkParagraph>
         <div class="warn-button-container">
           <CmkButton
             type="button"
@@ -584,6 +589,7 @@ button {
   padding: var(--dimension-4) var(--dimension-5);
 
   .warn-txt-container {
+    white-space: pre-line;
     display: inline-flex;
     flex-direction: column;
   }

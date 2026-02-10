@@ -55,7 +55,7 @@
     padding-right: 10px;
   }
 
-  &:has(.warning) .cse-banner {
+  &:has(> .warning) .cse-banner {
     margin-top: 63px;
   }
 }

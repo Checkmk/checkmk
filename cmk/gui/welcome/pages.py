@@ -167,7 +167,7 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 filename="wato.py",
                 is_snapin=is_snapin,
             ),
-            setup_folder_structure=doc_reference_url(DocReference.HOST_STRUCTURE),
+            setup_folder_structure=doc_reference_url(DocReference.HOSTS_STRUCTURE),
             start_page=_make_url(
                 addvars=[],
                 filename="user_profile.py",

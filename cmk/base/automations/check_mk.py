@@ -4191,7 +4191,11 @@ def automation_get_agent_output(
                     if cmk.ccc.debug.enabled():
                         raise
                     success = False
-                    output += f"OID '{oid}': {e}\n"
+                    try:
+                        output += f"OID '{oid}': {e}\n"
+                    except UnboundLocalError:
+                        # Surprise, the exception was raised before the `oid` is assigned.
+                        output += f"{e}\n"
 
             info = b"".join(lines)
     except Exception as e:

@@ -85,14 +85,106 @@ Third party developers are encouraged to try them out and provide feedback.
 The "internal" APIs are used by plugins maintained by Checkmk, but they are not intended for use by third party developers.
 Their contents may or may not become part of a future regular API.
 
+Overriding plugin families and the role of ``__init__.py``
+==========================================================
+
+Shipped plugins can be overriden by placing your own plugins in the local folder.
+The recommended way to do this by installing an MKP.
+This section explains how the shadowing mechanism works and how it is affected by the presence or absence of ``__init__.py`` files in plugin family folders.
+
+Understanding Python namespace packages
+---------------------------------------
+
+Checkmk's plugin system leverages Python's standard import mechanics to determine which plugins are loaded and how they can be overridden.
+A crucial aspect of this mechanism is the presence or absence of ``__init__.py`` files in plugin family folders.
+Understanding this concept is essential for developers who want to customize or extend Checkmk's functionality.
+
+When you add your own plugins into the local folder (``~/local/lib/python3/cmk/plugins``), they are placed earlier on ``PYTHONPATH`` than the shipped Python libraries.
+This allows you to shadow (override) shipped plugins with your own implementations.
+
+The shadowing mechanism
+-----------------------
+
+Python's import system works similarly to how a shell finds commands: it searches through a list of directories (``sys.path``) in order and uses the first match it finds.
+However, there's an important complication: **if a folder contains an ``__init__.py`` file, that folder becomes the smallest unit that can be shadowed**.
+
+The key principle: **The first folder where an ``__init__.py`` file is found wins, and takes precedence over all other folders with the same name.**
+
+Coherent plugin families (with ``__init__.py``)
+-----------------------------------------------
+
+Some plugin families in Checkmk are organized as coherent units and contain an ``__init__.py`` file.
+For example, ``cmk/plugins/fritzbox`` has an ``__init__.py`` file, which makes the entire family "atomic" in terms of shadowing.
+
+**Consequences for shadowing:**
+
+- If you want to shadow such a family, you **must** include an ``__init__.py`` file in your local version
+- Once you do this, **all** shipped files from that family folder will be shadowed
+- If you don't include an ``__init__.py`` file, your custom plugin files will be completely ignored
+- This ensures consistency: you can shadow the family, but then you must take responsibility for the entire family
+
+**Example:**
+
+.. code-block:: text
+
+   # Shipped plugins:
+   ~/lib/python3/cmk/plugins/fritzbox/__init__.py
+   ~/lib/python3/cmk/plugins/fritzbox/agent_based/device.py
+
+   # Your local override (correct):
+   ~/local/lib/python3/cmk/plugins/fritzbox/__init__.py
+   ~/local/lib/python3/cmk/plugins/fritzbox/agent_based/custom.py
+   # Result: Only your local plugins are loaded
+
+   # Your local override (incorrect):
+   ~/local/lib/python3/cmk/plugins/fritzbox/agent_based/custom.py
+   # Result: Your plugin is ignored because __init__.py is missing!
+
+This approach makes sense for coherent plugin families where the plugins work together as a unit.
+
+Namespace packages (without ``__init__.py``)
+--------------------------------------------
+
+Other plugin families, particularly the ``collection`` family (which contains plugins that haven't been categorized into specific families yet), are organized as namespace packages without ``__init__.py`` files.
+
+**Consequences for shadowing:**
+
+- Individual plugin files can be shadowed independently
+- You don't need to take responsibility for the entire family
+- Each plugin file is treated as a separate unit
+- No ``__init__.py`` file is needed in your local version
+
+**Example:**
+
+.. code-block:: text
+
+   # Shipped plugins:
+   ~/lib/python3/cmk/plugins/collection/agent_based/plugin_a.py
+   ~/lib/python3/cmk/plugins/collection/agent_based/plugin_b.py
+   
+   # Your local override:
+   ~/local/lib/python3/cmk/plugins/collection/agent_based/plugin_a.py
+   # Result: Your plugin_a.py shadows the shipped one, 
+   #         but plugin_b.py still loads from the shipped location
+
+This approach is ideal for collections where plugins are independent and can be customized individually.
+
+Further reading
+---------------
+
+For more details about Python's namespace package concept, see `PEP 420 – Implicit Namespace Packages <https://peps.python.org/pep-0420/>`_.
+
+Table of contents
+=================
+
 .. toctree::
    :maxdepth: 1
    :glob:
 
    **/index
 
-Indices and tables
-==================
+Indices
+=======
 
 * :ref:`genindex`
 * :ref:`modindex`

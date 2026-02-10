@@ -158,12 +158,8 @@ impl SqlInstanceBuilder {
         self.endpoint.as_ref()
     }
 
-    pub fn get_port(&self) -> Port {
-        self.get_port_ref().cloned().unwrap_or(Port(0))
-    }
-
-    fn get_port_ref(&self) -> Option<&Port> {
-        self.port.as_ref().or(self.dynamic_port.as_ref())
+    fn get_port(&self) -> Option<Port> {
+        self.port.clone().or(self.dynamic_port.clone())
     }
 
     pub fn build(self, ep: &Endpoint) -> SqlInstance {
@@ -178,8 +174,7 @@ impl SqlInstanceBuilder {
             edition: self.edition.unwrap_or_default(),
             version: self.version.unwrap_or_default(),
             cluster: self.cluster,
-            port: self.port,
-            dynamic_port: self.dynamic_port,
+            port: self.dynamic_port.or(self.port),
             available: None,
             endpoint,
             computer_name: self.computer_name,
@@ -214,7 +209,6 @@ pub struct SqlInstance {
     pub edition: InstanceEdition,
     pub cluster: Option<InstanceCluster>,
     port: Option<Port>,
-    dynamic_port: Option<Port>,
     pub available: Option<bool>,
     endpoint: Endpoint,
     computer_name: Option<ComputerName>,
@@ -235,7 +229,7 @@ impl fmt::Display for SqlInstance {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "{} `{}` `{}` [{}:{}]",
+            "{} `{}` `{}` [{}]",
             self.full_name(),
             self.version,
             self.edition,
@@ -243,10 +237,6 @@ impl fmt::Display for SqlInstance {
                 .clone()
                 .map(|p| u16::from(p).to_string())
                 .unwrap_or("None".to_string()),
-            self.dynamic_port
-                .clone()
-                .map(|p| u16::from(p).to_string())
-                .unwrap_or("None".to_string())
         )
     }
 }
@@ -254,18 +244,11 @@ impl fmt::Display for SqlInstance {
 impl SqlInstance {
     pub fn dump(&self) -> String {
         format!(
-            "{:30}{:14}{:32}[{:5}:{:5}] `{}` id:{:32} '{}' {:3} '{:?}' u: {} <{:?}> @ {}:{}",
+            "{:30}{:14}{:32}[{:5?}] `{}` id:{:32} '{}' {:3} '{:?}' u: {} <{:?}> @ {}:{:?}",
             self.full_name(),
             self.version,
             self.edition,
-            self.port
-                .clone()
-                .map(|p| u16::from(p).to_string())
-                .unwrap_or("None".to_string()),
-            self.dynamic_port
-                .clone()
-                .map(|p| u16::from(p).to_string())
-                .unwrap_or("None".to_string()),
+            self.port,
             self.alias.clone().unwrap_or_default(),
             &self.id,
             if self.tcp { "TCP" } else { "---" },
@@ -1324,7 +1307,7 @@ impl SqlInstance {
     }
 
     pub fn port(&self) -> Option<Port> {
-        self.dynamic_port.clone().or(self.port.clone())
+        self.port.clone()
     }
 
     pub fn computer_name(&self) -> &Option<ComputerName> {
@@ -2187,7 +2170,7 @@ async fn get_custom_instance_builder(
         }
     }
     let port = get_reasonable_port(builder, endpoint);
-    log::debug!("Trying to connect to `{instance_name}` using config port {port}");
+    log::debug!("Trying to connect to `{instance_name}` using config port {port:?}");
     let result = match client::connect_custom_endpoint(endpoint, port.clone()).await {
         Ok(mut client) => {
             let b = obtain_properties(&mut client, instance_name)
@@ -2211,7 +2194,7 @@ async fn get_custom_instance_builder(
     #[cfg(windows)]
     if result.is_none() {
         log::info!(
-            "Instance `{instance_name}` at port {} not found. Try to use named connection.",
+            "Instance `{instance_name}` at port {:?} not found. Try to use named connection.",
             port.clone()
         );
         match client::connect_custom_instance(endpoint, instance_name).await {
@@ -2244,28 +2227,31 @@ async fn find_custom_instance(
             log::error!("Error creating client for instance `{instance_name}`: {e}",);
             Vec::<SqlInstanceBuilder>::new()
         });
-    match detect_instance_port(instance_name, &builders) {
-        Some(port) => {
-            log::info!("Instance `{instance_name}` found at port {port}");
-            if let Ok(mut client) = client::connect_custom_endpoint(endpoint, port.clone()).await {
-                obtain_properties(&mut client, instance_name)
-                    .await
-                    .map(|p| to_instance_builder(endpoint, &p).port(Some(port)))
-            } else {
-                None
-            }
-        }
-        _ => {
-            log::error!(
-                "Impossible to detect port for `{instance_name}` known: `{}`",
-                builders
-                    .iter()
-                    .map(|i| i.get_name().into())
-                    .collect::<Vec<String>>()
-                    .join(", ")
-            );
+    let detected_port = detect_instance_port(instance_name, &builders);
+    if detected_port.is_some() {
+        log::info!(
+            "Instance `{instance_name}` found at port {:?}",
+            detected_port.clone()
+        );
+        if let Ok(mut client) =
+            client::connect_custom_endpoint(endpoint, detected_port.clone()).await
+        {
+            obtain_properties(&mut client, instance_name)
+                .await
+                .map(|p| to_instance_builder(endpoint, &p).port(detected_port))
+        } else {
             None
         }
+    } else {
+        log::error!(
+            "Impossible to detect port for `{instance_name}` known: `{}`",
+            builders
+                .iter()
+                .map(|i| i.get_name().into())
+                .collect::<Vec<String>>()
+                .join(", ")
+        );
+        None
     }
 }
 
@@ -2273,16 +2259,16 @@ fn detect_instance_port(name: &InstanceName, builders: &[SqlInstanceBuilder]) ->
     builders
         .iter()
         .find(|b| b.get_name() == *name)
-        .map(|b| b.get_port())
+        .and_then(|b| b.get_port())
 }
 
-fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> Port {
-    if builder.get_port() == Port(0) {
-        log::info!("Connecting using port from endpoint {}", endpoint.port());
+fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> Option<Port> {
+    if builder.get_port().is_none() {
+        log::info!("Connecting using port from endpoint {:?}", endpoint.port());
         endpoint.port()
     } else {
         log::info!(
-            "Connecting using port from detection {}",
+            "Connecting using port from detection {:?}",
             builder.get_port()
         );
         builder.get_port()
@@ -2322,7 +2308,7 @@ fn to_instance_builder(
         .version(&properties.version)
         .edition(&properties.edition)
         .endpoint(endpoint)
-        .port(Some(endpoint.conn().port()))
+        .port(endpoint.conn().port())
 }
 /// returns
 /// - SQL instances with custom endpoint if any
@@ -2502,7 +2488,7 @@ async fn _obtain_instance_builders(
             Ok(name) => {
                 let mut builder = SqlInstanceBuilder::new()
                     .name(name)
-                    .port(Some(endpoint.conn().port()));
+                    .port(endpoint.conn().port());
                 if let Ok(properties) = SqlInstanceProperties::obtain_by_query(client).await {
                     builder = builder
                         .version(&properties.version)
@@ -2745,6 +2731,7 @@ connection:
             .alias(&Some("alias".to_string().into()))
             .dynamic_port(Some(Port(1u16)))
             .port(Some(Port(2u16)))
+            .dynamic_port(Some(Port(3u16)))
             .computer_name(Some("computer_name".to_string().into()))
             .cache_dir("hash")
             .version(&"version".to_string().into())
@@ -2752,7 +2739,7 @@ connection:
             .environment(&Env::new(&args))
             .id("id")
             .piggyback(Some("piggYback".to_string().into()));
-        assert_eq!(standard.get_port(), Port(2u16));
+        assert_eq!(standard.get_port(), Some(Port(2u16)));
         let cluster = standard.clone().cluster(Some("cluster".to_string().into()));
         let parent_ep = standard.clone();
 
@@ -2764,8 +2751,7 @@ connection:
         assert_eq!(s.version.to_string(), "version");
         assert_eq!(s.edition.to_string(), "edition");
         assert_eq!(s.cache_dir, "hash");
-        assert_eq!(s.port, Some(Port(2u16)));
-        assert_eq!(s.dynamic_port, Some(Port(1u16)));
+        assert_eq!(s.port, Some(Port(3u16)));
 
         assert_eq!(s.piggyback(), &Some("piggYback".to_string().into()));
         assert_eq!(s.computer_name(), &Some("computer_name".to_string().into()));

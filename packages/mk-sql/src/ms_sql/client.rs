@@ -321,7 +321,10 @@ pub async fn connect_main_endpoint(endpoint: &Endpoint) -> Result<UniClient> {
     connect_custom_endpoint(endpoint, endpoint.port()).await
 }
 
-pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<UniClient> {
+pub async fn connect_custom_endpoint(
+    endpoint: &Endpoint,
+    some_port: Option<Port>,
+) -> Result<UniClient> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
         anyhow::anyhow!(
@@ -329,13 +332,20 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
             conn.timeout()
         )
     };
+    let use_port = if some_port.is_some() {
+        some_port
+    } else if endpoint.port().is_some() {
+        endpoint.port().clone()
+    } else {
+        Some(Port(defaults::STANDARD_PORT))
+    };
     let client = match auth.auth_type() {
         AuthType::SqlServer | AuthType::Windows => {
             if let Some(credentials) = obtain_config_credentials(auth) {
                 tokio::time::timeout(
                     conn.timeout(),
                     ClientBuilder::new()
-                        .logon_on_port(&conn.hostname(), Some(port), credentials)
+                        .logon_on_port(&conn.hostname(), use_port, credentials)
                         .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                         .trust_server_certificate(conn.trust_server_certificate())
                         .build(),
@@ -351,7 +361,7 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
         AuthType::Integrated => tokio::time::timeout(
             conn.timeout(),
             ClientBuilder::new()
-                .local_by_port(Some(port), Some(conn.hostname()))
+                .local_by_port(use_port, Some(conn.hostname()))
                 .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                 .trust_server_certificate(conn.trust_server_certificate())
                 .build(),

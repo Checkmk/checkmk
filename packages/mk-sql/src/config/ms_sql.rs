@@ -439,7 +439,7 @@ impl Backend {
 pub struct Connection {
     hostname: HostName,
     fail_over_partner: Option<String>,
-    port: Port,
+    port: Option<Port>,
     socket: Option<PathBuf>,
     trust_server_certificate: bool,
     tls: Option<ConnectionTls>,
@@ -471,10 +471,7 @@ impl Connection {
                     .to_lowercase()
                     .into(),
                 fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
-                port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
-                    log::debug!("no port specified, using default");
-                    defaults::CONNECTION_PORT
-                })),
+                port: conn.get_int::<u16>(keys::PORT).map(Port),
                 socket: conn.get_pathbuf(keys::SOCKET),
                 trust_server_certificate: conn.get_bool(
                     keys::TRUST_SERVER_CERTIFICATE,
@@ -510,7 +507,7 @@ impl Connection {
     pub fn fail_over_partner(&self) -> Option<&String> {
         self.fail_over_partner.as_ref()
     }
-    pub fn port(&self) -> Port {
+    pub fn port(&self) -> Option<Port> {
         self.port.clone()
     }
     pub fn sql_browser_port(&self) -> Option<u16> {
@@ -552,7 +549,7 @@ impl Default for Connection {
         Self {
             hostname: defaults::CONNECTION_HOST_NAME.to_string().into(),
             fail_over_partner: None,
-            port: Port(defaults::CONNECTION_PORT),
+            port: None,
             socket: None,
             trust_server_certificate: defaults::TRUST_SERVER_CERTIFICATE,
             tls: None,
@@ -620,7 +617,7 @@ impl Endpoint {
         &self.conn
     }
 
-    pub fn port(&self) -> Port {
+    pub fn port(&self) -> Option<Port> {
         self.conn.port()
     }
 
@@ -634,7 +631,7 @@ impl Endpoint {
 
     pub fn dump_compact(&self) -> String {
         format!(
-            "host: {} port: {} user: {} auth: {:?}",
+            "host: {} port: {:?} user: {} auth: {:?}",
             self.hostname(),
             self.port(),
             self.auth().username(),
@@ -767,12 +764,8 @@ impl CustomInstance {
         hostname: &Option<HostName>,
         port: &Option<Port>,
     ) -> Self {
-        let (auth, conn) = CustomInstance::make_registry_auth_and_conn(
-            main_auth,
-            main_conn,
-            hostname,
-            port.as_ref().unwrap_or(&Port::from(0)),
-        );
+        let (auth, conn) =
+            CustomInstance::make_registry_auth_and_conn(main_auth, main_conn, hostname, port);
         Self {
             name: name.clone(),
             auth,
@@ -823,7 +816,7 @@ impl CustomInstance {
         main_auth: &Authentication,
         main_conn: &Connection,
         hostname: &Option<HostName>,
-        port: &Port,
+        port: &Option<Port>,
     ) -> (Authentication, Connection) {
         let conn = Connection {
             hostname: hostname
@@ -1215,7 +1208,7 @@ authentication:
             .unwrap();
         assert_eq!(c.hostname(), "alice".to_string().into());
         assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
-        assert_eq!(c.port(), Port(9999));
+        assert_eq!(c.port(), Some(Port(9999)));
         assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
         assert!(!c.trust_server_certificate());
         assert_eq!(c.timeout(), Duration::from_secs(341));
@@ -1297,7 +1290,7 @@ connection:
             .unwrap();
         assert_eq!(c.hostname(), "alice".to_string().into());
         assert_eq!(c.fail_over_partner(), None);
-        assert_eq!(c.port(), Port(9999));
+        assert_eq!(c.port(), Some(Port(9999)));
         assert_eq!(c.socket(), None);
         assert_eq!(c.timeout(), Duration::from_secs(341));
         let tls = c.tls().unwrap();
@@ -1632,7 +1625,7 @@ connection:
         assert_eq!(&inst2.auth().username, "u");
         assert_eq!(inst2.auth().auth_type, AuthType::SqlServer);
         assert_eq!(inst2.conn().hostname, HostName::from("local".to_string()));
-        assert_eq!(inst2.conn().port, Port(500));
+        assert_eq!(inst2.conn().port, Some(Port(500)));
         assert_eq!(inst2.conn().backend(), &Backend::Tcp);
         assert_eq!(inst2.conn().exclude_databases(), &vec!["master", "model"]);
         assert_eq!(c.mode(), &Mode::Socket);
@@ -1648,7 +1641,7 @@ connection:
         assert_eq!(c.auth().access_token().unwrap(), "baz");
         assert_eq!(c.conn().hostname(), "localhost".to_string().into());
         assert_eq!(c.conn().fail_over_partner().unwrap(), "localhost2");
-        assert_eq!(c.conn().port(), Port(defaults::CONNECTION_PORT));
+        assert_eq!(c.conn().port(), Some(Port(defaults::CONNECTION_PORT)));
         assert!(!c.conn().trust_server_certificate());
         assert_eq!(
             c.conn().socket().unwrap(),
@@ -1709,7 +1702,7 @@ connection:
         // nothing found
         fn print_array(a: &[CustomInstance]) -> String {
             a.iter()
-                .map(|i| format!("{}: {}-{}", i.name(), i.conn().port(), i.is_tcp()))
+                .map(|i| format!("{}: {:?}-{}", i.name(), i.conn().port(), i.is_tcp()))
                 .collect::<Vec<String>>()
                 .join(", ")
         }
@@ -1721,7 +1714,7 @@ connection:
         assert_eq!(full.len(), 3);
         assert!(full.iter().all(|i| i.is_tcp()), "{:?}", print_array(&full));
         assert!(
-            full.iter().all(|i| i.conn().port() >= Port(1433)),
+            full.iter().all(|i| i.conn().port().unwrap() >= Port(1433)),
             "{:?}",
             print_array(&full)
         );
@@ -1734,7 +1727,7 @@ connection:
         let a = get_additional_registry_instances(&found, &auth, &conn);
         let a = filter_from_custom_instances(a);
         assert_eq!(a.len(), 2);
-        assert!(a.iter().all(|i| i.conn().port() > Port(10000)));
+        assert!(a.iter().all(|i| i.conn().port().unwrap() > Port(10000)));
     }
 
     #[cfg(windows)]

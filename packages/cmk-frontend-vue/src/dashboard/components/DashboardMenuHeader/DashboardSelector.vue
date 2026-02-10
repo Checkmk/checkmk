@@ -4,9 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useClickOutside from '@/lib/useClickOutside'
 
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
@@ -18,6 +19,7 @@ import { dashboardAPI } from '@/dashboard/utils.ts'
 import type { SelectedDashboard } from './types.ts'
 
 const { _t } = usei18n()
+const vClickOutside = useClickOutside()
 
 interface Props {
   selectedDashboard: SelectedDashboard | null
@@ -94,31 +96,29 @@ const handleInputFocus = () => {
   void fetchDashboards()
 }
 
-const handleInputBlur = () => {
-  // Delay hiding dropdown to allow for clicks on dropdown items
-  setTimeout(() => {
-    showDashboardDropdown.value = false
-    inputValue.value = props.selectedDashboard?.title || ''
-  }, 150)
-}
-
 const handleDashboardSelect = (dashboard: DashboardMetadata) => {
   if (!dashboard?.display?.title) {
     console.warn('Dashboard selected without valid title:', dashboard)
     return
   }
-
   emit('dashboard-change', dashboard)
   inputValue.value = dashboard.display.title
   showDashboardDropdown.value = false
   inputRef.value?.blur()
 }
 
-const handleClickOutside = (event: Event) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
-    showDashboardDropdown.value = false
-    inputValue.value = props.selectedDashboard?.title || ''
+const handleCloseDropdown = () => {
+  showDashboardDropdown.value = false
+  inputValue.value = props.selectedDashboard?.title || ''
+}
+
+const handleFocusOut = (event: FocusEvent) => {
+  // relatedTarget is the element receiving focus next
+  // If it's still inside our dropdown container, don't close
+  if (dropdownRef.value?.contains(event.relatedTarget as Node)) {
+    return
   }
+  handleCloseDropdown()
 }
 
 const isActiveDashboard = (dashboard: DashboardMetadata) => {
@@ -137,20 +137,12 @@ watch(
   },
   { immediate: true }
 )
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-  inputValue.value = props.selectedDashboard?.title || ''
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
 </script>
 
 <template>
   <div
     ref="dropdownRef"
+    v-click-outside="handleCloseDropdown"
     class="dashboard-dropdown"
     :class="{ 'dropdown-open': showDashboardDropdown }"
   >
@@ -164,7 +156,7 @@ onUnmounted(() => {
         :placeholder="props.selectedDashboard?.title || _t('Select dashboard')"
         :disabled="props.disabled"
         @focus="handleInputFocus"
-        @blur="handleInputBlur"
+        @focusout="handleFocusOut"
       />
       <ArrowDown
         class="db-selector--arrow"
@@ -189,6 +181,7 @@ onUnmounted(() => {
             <div
               v-for="dashboard in groupedDashboards.custom"
               :key="`${dashboard.owner}-${dashboard.name}`"
+              tabindex="0"
               class="dropdown-item"
               :class="{ active: isActiveDashboard(dashboard) }"
               @click="handleDashboardSelect(dashboard)"
@@ -205,6 +198,7 @@ onUnmounted(() => {
             <div
               v-for="dashboard in groupedDashboards.builtIn"
               :key="dashboard.name"
+              tabindex="0"
               class="dropdown-item"
               :class="{ active: isActiveDashboard(dashboard) }"
               @click="handleDashboardSelect(dashboard)"

@@ -180,6 +180,25 @@ def default_developer_entries() -> MainMenuTopicEntries:
                         ),
                     ],
                 ),
+                MainMenuTopicSegment(
+                    mode="indented",
+                    name="rest_api_unstable",
+                    title=_("Unstable"),
+                    sort_index=30,
+                    entries=[
+                        MainMenuItem(
+                            name="rest_api_unstable_documentation",
+                            title=_("Documentation"),
+                            url="api/unstable/doc/",
+                            target="_blank",
+                            sort_index=10,
+                            icon=StaticIcon(
+                                IconNames.global_settings,
+                                emblem="api",
+                            ),
+                        ),
+                    ],
+                ),
             ],
             icon=StaticIcon(
                 IconNames.global_settings,

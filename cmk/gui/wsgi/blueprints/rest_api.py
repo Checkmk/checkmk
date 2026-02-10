@@ -55,6 +55,19 @@ def endpoint(site: str, version: str, path: str) -> WSGIApplication:
 @rest_api.route("/doc/", defaults={"file_name": "index.html"})
 @rest_api.route("/doc/<path:file_name>")
 def serve_redoc(site: str, file_name: str) -> Response:
+    return _serve_redoc_file(file_name, spec_url="../1.0/openapi-doc.yaml")
+
+
+@rest_api.route("/<string:version>/doc/", defaults={"file_name": "index.html"})
+@rest_api.route("/<string:version>/doc/<path:file_name>")
+def serve_versioned_redoc(site: str, version: str, file_name: str) -> Response:
+    return _serve_redoc_file(file_name, spec_url=f"../../{version}/openapi-doc.yaml")
+
+
+def _serve_redoc_file(file_name: str, spec_url: str) -> Response:
+    if file_name == "index.html":
+        content = (paths.web_dir / "htdocs/openapi/index.html").read_text()
+        return make_response(content.format(spec_url=spec_url))
     return send_from_directory(paths.web_dir / "htdocs/openapi", file_name)
 
 

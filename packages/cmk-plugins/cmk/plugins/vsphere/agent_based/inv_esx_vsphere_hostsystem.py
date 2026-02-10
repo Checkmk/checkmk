@@ -107,8 +107,8 @@ def inv_esx_vsphere_hostsystem(section: Section) -> InventoryResult:
                 for inv_key, metric in (("cores_per_cpu", "cores"), ("threads_per_cpu", "threads")):
                     data[inv_key] = int(data[metric]) / int(data["cpus"])  # type: ignore[arg-type]
         if name == "sys":
-            # We only know for HP that ServiceTag is the serial...
-            if data["vendor"] == "HP":
+            # We only know for HP and DELL that ServiceTag is the serial...
+            if data["vendor"] in ["HP", "Dell Inc."]:
                 # ...but it is missing in some cases
                 try:
                     data["serial"] = section[

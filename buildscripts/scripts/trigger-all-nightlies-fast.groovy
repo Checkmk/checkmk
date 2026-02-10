@@ -12,7 +12,10 @@ void main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
     def safe_branch_name = versioning.safe_branch_name();
 
-    def all_editions = versioning.get_editions();
+    def all_editions = [];
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        all_editions = versioning.get_editions();
+    }
     def editions_to_test = all_editions;
 
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15) {

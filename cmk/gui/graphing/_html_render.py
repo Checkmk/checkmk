@@ -519,12 +519,15 @@ def _render_attributes(
             id=table_uuid_str,
         )
 
+        html.open_thead()
         html.open_tr()
         html.th(_("Attribute name"), style="text-align: left; width: 20%;")
         html.th(_("Attribute value"), style="text-align: left")
         html.th(_("Attribute type"), style="text-align: left; width: 10%;")
         html.close_tr()
+        html.close_thead()
 
+        html.open_tbody()
         for attribute in attributes:
             html.open_tr()
             html.td(attribute.name)
@@ -532,6 +535,7 @@ def _render_attributes(
             html.td(attribute.type)
             html.close_tr()
 
+        html.close_tbody()
         html.close_table()
 
         return HTML.without_escaping(output_funnel.drain())
@@ -549,6 +553,7 @@ def _show_graph_legend(
     html.open_table(class_="legend", style=graph_legend_styles)
 
     # Render the title row
+    html.open_thead()
     html.open_tr()
     html.th("")
     for scalar, title, inactive in scalars:
@@ -580,8 +585,10 @@ def _show_graph_legend(
 
         html.th(title, class_=classes, style=font_size_style, title=descr)
     html.close_tr()
+    html.close_thead()
 
     # Render the curve related rows
+    html.open_tbody()
     for curve in order_graph_curves_for_legend_and_mouse_hover(graph_artwork.curves):
         html.open_tr()
 
@@ -655,6 +662,7 @@ def _show_graph_legend(
             html.close_tr()
             first = False
 
+    html.close_tbody()
     html.close_table()
 
 

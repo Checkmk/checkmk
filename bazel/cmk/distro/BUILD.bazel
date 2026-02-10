@@ -118,9 +118,10 @@ selects.config_setting_group(
 selects.config_setting_group(
     name = "incompatible-openssl",
     match_any = [
-        ":sles",
-        ":debian-13",
-        ":almalinux-9",
-        ":almalinux-10",
+        ":almalinux-8",
+        ":sles-15sp5",
+        ":sles-15sp6",
+        ":sles-15sp7",
+        ":ubuntu-22.04",
     ],
 )

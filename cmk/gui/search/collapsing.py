@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from itertools import groupby
-from typing import Literal, Protocol
+from typing import Protocol
 
 from cmk.gui.i18n import _
 from cmk.shared_typing.unified_search import (
@@ -15,7 +15,6 @@ from cmk.shared_typing.unified_search import (
 )
 
 type CollapsedResult = tuple[list[UnifiedSearchResultItem], UnifiedSearchResultCounts]
-type HostTopic = Literal["Hosts", "Host name", "Hostalias"]
 
 
 class Collapser(Protocol):
@@ -46,34 +45,56 @@ def _collapse_items(
     collapsed_results: list[UnifiedSearchResultItem] = []
     collapsed_result_count = 0
 
+    tr_hostsetup, tr_hostname, tr_hostalias = _("Hosts"), _("Host name"), _("Hostalias")
+    tr_host_keys = frozenset({tr_hostsetup, tr_hostname, tr_hostalias})
+
     for _title, group in groupby(results, key=lambda item: item.title):
-        host_items: dict[HostTopic, UnifiedSearchResultItem] = {}
+        host_items: dict[str, UnifiedSearchResultItem] = {}
         other_items: list[UnifiedSearchResultItem] = []
 
         # WARN: this logic only works because of some assumptions we make about the ordering from
-        # the sort algorithm. We expect:
+        # the sort algorithm. We expect the following (translated) topics:
         #   1. setup host (topic "Hosts")
         #   2. monitoring host (topic "Host name")
         #   3. optionally: monitoring host alias (topic "Hostalias")
         # to be grouped together and in this order in the unified search result. When that changes,
         # then this functionality will no longer work.
         for item in group:
-            match item.topic:
-                case "Hosts" | "Host name" | "Hostalias":
-                    host_items.update({item.topic: item})
-                case _:
-                    other_items.append(item)
+            if item.topic in tr_host_keys:
+                host_items.update({item.topic: item})
+            else:
+                other_items.append(item)
 
-        match host_items:
-            case {"Hosts": setup_item, "Host name": name, "Hostalias": alias}:
-                collapsed_results.append(_collapse_host_items([name, alias], setup_item))
+        match (
+            host_items.get(tr_hostsetup),
+            host_items.get(tr_hostname),
+            host_items.get(tr_hostalias),
+        ):
+            case (
+                UnifiedSearchResultItem() as setup,
+                UnifiedSearchResultItem() as name,
+                UnifiedSearchResultItem() as alias,
+            ):
+                collapsed_results.append(_collapse_host_items([name, alias], setup))
                 collapsed_result_count += 1
-            case {"Hosts": setup_item, "Host name": name}:
-                collapsed_results.append(_collapse_host_items([name], setup_item))
-            case {"Host name": name, "Hostalias": alias}:
+            case (
+                UnifiedSearchResultItem() as setup,
+                UnifiedSearchResultItem() as name,
+                None,
+            ):
+                collapsed_results.append(_collapse_host_items([name], setup))
+            case (
+                None,
+                UnifiedSearchResultItem() as name,
+                UnifiedSearchResultItem() as alias,
+            ):
                 collapsed_results.append(_collapse_host_items([name, alias]))
                 collapsed_result_count += 1
-            case {"Host name": name}:
+            case (
+                None,
+                UnifiedSearchResultItem() as name,
+                None,
+            ):
                 collapsed_results.append(_collapse_host_items([name]))
             case _:
                 collapsed_results.extend(host_items.values())

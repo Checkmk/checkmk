@@ -23,7 +23,7 @@ const relayAlias = ref<string>('')
 const relayId = ref<string>('')
 
 const openCreateHostPage = () => {
-  const url = `${props.urls.create_host}&relay=${relayId.value}&prefill=relay`
+  const url = `${props.urls.create_host}&relayid=${relayId.value}&prefill=relay`
   window.location.href = url
 }
 const openRelayOverviewPage = () => {

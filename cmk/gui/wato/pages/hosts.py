@@ -1036,7 +1036,7 @@ class ModeCreateHost(CreateHostMode):
                         folder=folder_from_request(request.var("folder"), host_name),
                         host_name=host_name,
                         attributes=HostAttributes(
-                            relay=request.get_str_input_mandatory("relay"),
+                            relay=request.get_str_input_mandatory("relayid"),
                         ),
                         cluster_nodes=None,
                     )

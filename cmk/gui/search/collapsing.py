@@ -8,6 +8,8 @@ from typing import Protocol
 
 from cmk.gui.i18n import _
 from cmk.shared_typing.unified_search import (
+    DefaultIcon,
+    IconNames,
     ProviderName,
     UnifiedSearchResultCounts,
     UnifiedSearchResultItem,
@@ -126,6 +128,7 @@ def _collapse_host_items(
             UnifiedSearchResultItemInlineButton(
                 target=setup_item.target,
                 title=_("Edit"),
+                icon=DefaultIcon(id=IconNames.edit),
             )
         ]
         if setup_item

@@ -119,12 +119,3 @@ export function getIconForTopic(
 
   return icon
 }
-
-const _TITLE_ICONS: Record<string, IconNames> = {
-  edit: 'edit'
-}
-
-export function getIconByTitle(title: string): DynamicIcon {
-  const defaultIcon: IconNames = 'check'
-  return { type: 'default_icon', id: _TITLE_ICONS[title.toLowerCase()] ?? defaultIcon }
-}

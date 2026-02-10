@@ -852,9 +852,9 @@ devpi-client==7.2.0 \
     --hash=sha256:0dc11d8e3d73e38d87748f6bde07e451565aac0ed4bd99ce4634aa590035b5c3 \
     --hash=sha256:c143368458c3878ba7bee6a1d9b418e2e659571a3856614f58d76b8a28269d7b
     # via -r requirements_dev.txt
-devpi-common==4.1.0 \
-    --hash=sha256:58d7f761e3fe7fdfe449c4a6a9e2350d4ddfbeb66cb0f6d208025142943030d3 \
-    --hash=sha256:d1e48a1cb68ad473591fdaf562c39aee2a0ca2762a32228bd7b4235ea97c0679
+devpi-common==4.1.1 \
+    --hash=sha256:8fda7e8965d3744b1184d6c426fd5caf1345ed74513db687beeb5ee0e63a675c \
+    --hash=sha256:a413dcc9d1cb6430ff09c7f4e0d76b39910fb5b3419882d78384c3e0fb785931
     # via devpi-client
 dill==0.3.9 \
     --hash=sha256:468dff3b89520b474c0397703366b7b95eebe6303f108adf9b19da1f702be87a \
@@ -2750,9 +2750,9 @@ paramiko==3.5.0 \
     --hash=sha256:1fedf06b085359051cd7d0d270cebe19e755a8a921cc2ddbfa647fb0cd7d68f9 \
     --hash=sha256:ad11e540da4f55cedda52931f1a3f812a8238a7af7f62a60de538cd80bb28124
     # via -r requirements_all.txt
-parso==0.8.5 \
-    --hash=sha256:034d7354a9a018bdce352f48b2a8a450f05e9d6ee85db84764e9b6bd96dafe5a \
-    --hash=sha256:646204b5ee239c396d040b90f9e272e9a8017c630092bf59980beb62fd033887
+parso==0.8.6 \
+    --hash=sha256:2b9a0332696df97d454fa67b81618fd69c35a7b90327cbe6ba5c92d2c68a7bfd \
+    --hash=sha256:2c549f800b70a5c4952197248825584cb00f033b29c692671d3bf08bf380baff
     # via jedi
 pathable==0.4.4 \
     --hash=sha256:5ae9e94793b6ef5a4cbe0a7ce9dbbefc1eec38df253763fd0aeeacf2762dbbc2 \

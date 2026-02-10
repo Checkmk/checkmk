@@ -56,7 +56,9 @@ export function useDashboardsManager() {
     activeDashboardKey.value = key
   }
 
+  let loadGeneration = 0
   async function loadDashboard(key: DashboardKey, layoutType: DashboardLayout): Promise<void> {
+    const thisGeneration = ++loadGeneration
     let dashboardPromise
     if (layoutType === DashboardLayout.RELATIVE_GRID) {
       dashboardPromise = dashboardAPI.getRelativeDashboard(key.name, key.owner)
@@ -66,6 +68,12 @@ export function useDashboardsManager() {
     // fetch in parallel, make sure all promises are created before awaiting any of them
     const metadata = await dashboardAPI.showDashboardMetadata(key.name, key.owner)
     const dashboardResp = (await dashboardPromise).extensions
+
+    if (thisGeneration !== loadGeneration) {
+      // this means that while we were loading, another load was triggered. in this case, we do not set the loaded
+      // dashboard as active, as it is outdated already
+      return
+    }
 
     const dashboard = createDashboardModel(dashboardResp, layoutType)
     setActiveDashboard(key, dashboard, metadata)

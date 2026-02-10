@@ -12,7 +12,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
 from cmk.gui.type_defs import Choices
 
-AutocompleterFunc = Callable[[Config, str, dict], Choices]
+AutocompleterFunc = Callable[[Config, str, dict[str, object]], Choices]
 
 
 class AutocompleterRegistry(Registry[AutocompleterFunc]):

@@ -20,7 +20,7 @@ use super::yaml::{Get, Yaml};
 use crate::config::authentication::Authentication;
 use crate::config::connection::Connection;
 use crate::config::options::Options;
-use crate::types::{HostName, InstanceAlias, InstanceName, ServiceName, SqlBindParam};
+use crate::types::{HostName, InstanceAlias, InstanceName, ServiceName, Sid, SqlBindParam};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -395,6 +395,9 @@ impl CustomService {
     pub fn instance_name(&self) -> Option<&InstanceName> {
         self.conn.instance_name()
     }
+    pub fn sid(&self) -> Option<&Sid> {
+        self.conn.sid()
+    }
     pub fn auth(&self) -> &Authentication {
         &self.auth
     }
@@ -423,7 +426,7 @@ fn ensure_auth(yaml: &Yaml, main_auth: &Authentication) -> Result<Authentication
 
 /// Make auth and conn for custom instance using yaml
 /// - fallback on main_conn if not defined in yaml
-/// - patch service_name and instance_name from yaml if defined
+/// - patch service_name, instance_name, and sid from yaml if defined
 fn ensure_conn(yaml: &Yaml, main_conn: &Connection) -> Result<Connection> {
     let conn = Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone());
 
@@ -431,6 +434,7 @@ fn ensure_conn(yaml: &Yaml, main_conn: &Connection) -> Result<Connection> {
         &conn,
         &yaml.get_string(keys::SERVICE_NAME).map(ServiceName::from),
         &yaml.get_string(keys::INSTANCE_NAME).map(InstanceName::from),
+        &yaml.get_string(keys::SID).map(Sid::from),
     ))
 }
 
@@ -481,7 +485,7 @@ mod tests {
     use crate::config::authentication::AuthType;
     use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
     use crate::types::UseHostClient;
-    use crate::types::{MaxConnections, MaxQueries};
+    use crate::types::{MaxConnections, MaxQueries, Port};
     mod data {
         /// copied from tests/files/test-config.yaml
         pub const TEST_CONFIG: &str = r#"
@@ -1081,6 +1085,121 @@ oracle:
                 ("instance", SectionKind::Sync),
                 ("jobs", SectionKind::Async),
             ]
+        );
+    }
+
+    #[test]
+    fn test_custom_instance_with_sid() {
+        pub const INSTANCE_WITH_SID: &str = r#"
+sid: "FREE"
+authentication:
+  username: "system"
+  password: "oracle"
+  type: "standard"
+connection:
+  hostname: "localhost"
+  port: 1521
+"#;
+        let instance = CustomService::from_yaml(
+            &create_yaml(INSTANCE_WITH_SID),
+            &Authentication::default(),
+            &Connection::default(),
+            &Sections::default(),
+        )
+        .unwrap();
+        assert_eq!(instance.sid().unwrap().to_string(), "FREE");
+        assert!(instance.service_name().is_none());
+        assert!(instance.instance_name().is_none());
+        assert_eq!(instance.auth().username(), "system");
+        assert_eq!(instance.conn().hostname(), "localhost".to_string().into());
+        assert_eq!(instance.conn().port(), Port::from(1521));
+    }
+
+    #[test]
+    fn test_config_with_sid_in_connection() {
+        const CONFIG: &str = r#"
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+      sid: ORCL
+    authentication:
+      username: system
+      password: oracle
+"#;
+        let config = Config::from_string(CONFIG).unwrap().unwrap();
+        assert_eq!(config.conn().sid().unwrap().to_string(), "ORCL");
+        assert!(config.conn().service_name().is_none());
+    }
+
+    #[test]
+    fn test_config_with_sid_and_service_name_in_connection() {
+        const CONFIG: &str = r#"
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+      sid: ORCL
+      service_name: ORCL.service_name
+    authentication:
+      username: system
+      password: oracle
+"#;
+        let config = Config::from_string(CONFIG).unwrap().unwrap();
+        assert_eq!(config.conn().sid().unwrap().to_string(), "ORCL");
+        assert_eq!(
+            config.conn().service_name().unwrap().to_string(),
+            "ORCL.service_name"
+        );
+    }
+
+    #[test]
+    fn test_config_with_sid_in_instance() {
+        const CONFIG: &str = r#"
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: system
+      password: oracle
+    instances:
+      - sid: FREE
+"#;
+        let config = Config::from_string(CONFIG).unwrap().unwrap();
+        assert_eq!(config.instances().len(), 1);
+        assert_eq!(config.instances()[0].sid().unwrap().to_string(), "FREE");
+        assert!(config.instances()[0].service_name().is_none());
+    }
+
+    #[test]
+    fn test_config_with_sid_and_service_name_in_instance() {
+        const CONFIG: &str = r#"
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: system
+      password: oracle
+    instances:
+      - sid: FREE
+        service_name: FREE.service_name
+"#;
+        let config = Config::from_string(CONFIG).unwrap().unwrap();
+        assert_eq!(config.instances().len(), 1);
+        assert_eq!(config.instances()[0].sid().unwrap().to_string(), "FREE");
+        assert_eq!(
+            config.instances()[0].service_name().unwrap().to_string(),
+            "FREE.service_name"
         );
     }
 }

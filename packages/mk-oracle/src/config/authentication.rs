@@ -27,6 +27,7 @@ const SQL_DB_ENDPOINT_PORT: usize = 3;
 const SQL_DB_ENDPOINT_INSTANCE: usize = 4;
 const SQL_DB_ENDPOINT_ROLE: usize = 5;
 const SQL_DB_ENDPOINT_SERVICE_NAME: usize = 6;
+const SQL_DB_ENDPOINT_SID: usize = 7;
 
 // See ticket CMK-23904 for details on the format of this environment variable.
 // CI_ORA1_DB_TEST=ora1.lan.tribe29.net:system:ABcd#1234:1521:XE:sysdba:_:_:_
@@ -40,6 +41,7 @@ pub struct SqlDbEndpoint {
     pub role: Option<Role>,
     pub service_name: String,
     pub instance_name: Option<String>,
+    pub sid: Option<String>,
 }
 
 impl SqlDbEndpoint {
@@ -68,6 +70,10 @@ impl FromStr for SqlDbEndpoint {
             role: Role::new(parts[SQL_DB_ENDPOINT_ROLE]),
             instance_name: parts
                 .get(SQL_DB_ENDPOINT_INSTANCE)
+                .filter(|s| !s.is_empty() && **s != "_")
+                .map(|s| s.to_string()),
+            sid: parts
+                .get(SQL_DB_ENDPOINT_SID)
                 .filter(|s| !s.is_empty() && **s != "_")
                 .map(|s| s.to_string()),
         })
@@ -275,6 +281,7 @@ mod tests {
                 service_name: "xe".to_string(),
                 role: Role::new("sysdba"),
                 instance_name: None,
+                sid: None,
             }
         )
     }

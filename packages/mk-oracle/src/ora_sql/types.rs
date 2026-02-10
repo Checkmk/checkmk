@@ -16,6 +16,7 @@
 
 use crate::types::{
     ConnectionStringType, HostName, InstanceAlias, InstanceName, Port, ServiceName, ServiceType,
+    Sid,
 };
 
 use crate::config::authentication::Authentication;
@@ -26,6 +27,7 @@ pub struct Target {
     pub service_name: Option<ServiceName>,
     pub service_type: Option<ServiceType>,
     pub instance_name: Option<InstanceName>,
+    pub sid: Option<Sid>,
     pub alias: Option<InstanceAlias>,
     pub port: Port,
     pub auth: Authentication,
@@ -99,6 +101,10 @@ impl Target {
             .unwrap_or_else(|| "DEDICATED".to_string());
         connect_data_parts.push(format!("(SERVER = {})", server));
 
+        if let Some(sid) = &self.sid {
+            connect_data_parts.push(format!("(SID = {})", sid));
+        }
+
         if let Some(service_name) = &self.service_name {
             connect_data_parts.push(format!("(SERVICE_NAME = {})", service_name));
         }
@@ -138,6 +144,7 @@ authentication:
             service_name: Some(ServiceName::from("my_service")),
             service_type: Some(ServiceType::from("dedicated")),
             instance_name: Some(InstanceName::from("orcl")),
+            sid: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -160,6 +167,7 @@ authentication:
             service_name: Some(ServiceName::from("my_service")),
             service_type: Some(ServiceType::from("dedicated")),
             instance_name: Some(InstanceName::from("orcl")),
+            sid: None,
             alias: Some(InstanceAlias::from("my_alias".to_string())),
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -182,6 +190,7 @@ authentication:
             service_name: None,
             service_type: None,
             instance_name: None,
+            sid: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -197,6 +206,7 @@ authentication:
             service_name: Some(ServiceName::from("oRcl")),
             service_type: None,
             instance_name: None,
+            sid: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -216,6 +226,7 @@ authentication:
             service_name: Some(ServiceName::from("FREE.test")),
             service_type: Some(ServiceType::from("dedicated")),
             instance_name: Some(InstanceName::from("FREE")),
+            sid: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -232,6 +243,7 @@ authentication:
             service_name: Some(ServiceName::from("ORCL")),
             service_type: None,
             instance_name: None,
+            sid: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -248,6 +260,7 @@ authentication:
             service_name: None,
             service_type: None,
             instance_name: Some(InstanceName::from("orcl")),
+            sid: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -264,6 +277,7 @@ authentication:
             service_name: Some(ServiceName::from("my_service")),
             service_type: Some(ServiceType::from("dedicated")),
             instance_name: Some(InstanceName::from("orcl")),
+            sid: None,
             alias: Some(InstanceAlias::from("my_alias".to_string())),
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -280,6 +294,7 @@ authentication:
             service_name: Some(ServiceName::from("ORCL")),
             service_type: Some(ServiceType::from("shared")),
             instance_name: Some(InstanceName::from("inst1")),
+            sid: None,
             alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
@@ -289,6 +304,57 @@ authentication:
         assert_eq!(
             target.make_connection_string(Some(InstanceName::from("INST2")).as_ref(), ConnectionStringType::Tns),
             "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521)) (CONNECT_DATA = (SERVER = SHARED) (SERVICE_NAME = ORCL) (INSTANCE_NAME = INST2)))"
+        );
+
+        let target = Target {
+            host: HostName::from("localhost".to_owned()),
+            service_name: None,
+            service_type: None,
+            instance_name: None,
+            sid: Some(Sid::from("ORCL")),
+            alias: None,
+            port: Port(1521),
+            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
+                .unwrap()
+                .unwrap(),
+        };
+        assert_eq!(
+            target.make_connection_string(None, ConnectionStringType::Tns),
+            "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521)) (CONNECT_DATA = (SERVER = DEDICATED) (SID = ORCL)))"
+        );
+
+        let target = Target {
+            host: HostName::from("localhost".to_owned()),
+            service_name: Some(ServiceName::from("MY_SERVICE")),
+            service_type: None,
+            instance_name: None,
+            sid: Some(Sid::from("ORCL")),
+            alias: None,
+            port: Port(1521),
+            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
+                .unwrap()
+                .unwrap(),
+        };
+        assert_eq!(
+            target.make_connection_string(None, ConnectionStringType::Tns),
+            "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521)) (CONNECT_DATA = (SERVER = DEDICATED) (SID = ORCL) (SERVICE_NAME = MY_SERVICE)))"
+        );
+
+        let target = Target {
+            host: HostName::from("localhost".to_owned()),
+            service_name: Some(ServiceName::from("MY_SERVICE")),
+            service_type: None,
+            instance_name: Some(InstanceName::from("INST")),
+            sid: Some(Sid::from("ORCL")),
+            alias: None,
+            port: Port(1521),
+            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
+                .unwrap()
+                .unwrap(),
+        };
+        assert_eq!(
+            target.make_connection_string(None, ConnectionStringType::Tns),
+            "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521)) (CONNECT_DATA = (SERVER = DEDICATED) (SID = ORCL) (SERVICE_NAME = MY_SERVICE) (INSTANCE_NAME = INST)))"
         );
     }
 }

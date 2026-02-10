@@ -227,7 +227,7 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
                 .iter()
                 .flat_map(|(instance, queries)| {
                     log::info!("Instance: {}", instance);
-                    let r = spot.clone().connect(Some(instance));
+                    let r = spot.clone().connect(None);
                     match r {
                         Ok(opened) => queries
                             .iter()
@@ -304,7 +304,7 @@ fn open_spots(
     instance_name: &InstanceName,
     thread_count: usize,
 ) -> Vec<OpenedSpot> {
-    std::iter::repeat_with(|| spot.clone().connect(Some(instance_name)))
+    std::iter::repeat_with(|| spot.clone().connect(None))
         .take(thread_count)
         .filter_map(|r| match r {
             Ok(conn) => Some(conn),
@@ -522,6 +522,7 @@ mod tests {
                 &Connection::default(),
                 &Some(ServiceName::from(service_name)),
                 &None,
+                &None,
             ),
             None,
             None,
@@ -552,6 +553,7 @@ mod tests {
             Connection::from_connection(
                 &base_connection,
                 &Some(ServiceName::from(service_name)),
+                &None,
                 &None,
             ),
             None,

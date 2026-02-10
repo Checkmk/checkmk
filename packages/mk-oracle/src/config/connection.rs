@@ -16,7 +16,7 @@
 
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
-use crate::types::{HostName, InstanceName, Port, ServiceName, ServiceType};
+use crate::types::{HostName, InstanceName, Port, ServiceName, ServiceType, Sid};
 use anyhow::Context;
 use anyhow::Result;
 use std::fs;
@@ -62,6 +62,7 @@ pub struct Connection {
     service_name: Option<ServiceName>,
     instance_name: Option<InstanceName>,
     service_type: Option<ServiceType>,
+    sid: Option<Sid>,
     engine: EngineTag, // Std if not defined
 }
 
@@ -70,6 +71,7 @@ impl Connection {
         s: &Connection,
         service_name: &Option<ServiceName>,
         instance_name: &Option<InstanceName>,
+        sid: &Option<Sid>,
     ) -> Self {
         Self {
             hostname: s.hostname.clone(),
@@ -88,6 +90,11 @@ impl Connection {
                 s.instance_name().cloned()
             },
             service_type: s.service_type.clone(),
+            sid: if sid.is_some() {
+                sid.clone()
+            } else {
+                s.sid().cloned()
+            },
             engine: s.engine.clone(),
         }
     }
@@ -122,6 +129,7 @@ impl Connection {
                 .get_string(keys::INSTANCE_NAME)
                 .as_deref()
                 .map(InstanceName::from),
+            sid: conn.get_string(keys::SID).as_deref().map(Sid::from),
             port: conn.get_int::<u16>(keys::PORT).map(Port::from),
             timeout: conn.get_int::<u64>(keys::TIMEOUT),
             engine: {
@@ -165,6 +173,9 @@ impl Connection {
     }
     pub fn instance_name(&self) -> Option<&InstanceName> {
         self.instance_name.as_ref()
+    }
+    pub fn sid(&self) -> Option<&Sid> {
+        self.sid.as_ref()
     }
     pub fn is_local(&self) -> bool {
         self.hostname() == HostName::from("localhost".to_owned())
@@ -259,6 +270,7 @@ impl Default for Connection {
             service_name: None,
             service_type: None,
             instance_name: None,
+            sid: None,
             port: None,
             timeout: None,
             engine: EngineTag::default(),
@@ -286,6 +298,13 @@ connection:
   instance_name: instance_NAME
   engine: std
 "#;
+
+        pub const CONNECTION_WITH_SID: &str = r#"
+connection:
+  hostname: "localhost"
+  port: 1521
+  sid: FREE
+"#;
     }
 
     #[test]
@@ -308,6 +327,7 @@ connection:
                 service_name: Some(ServiceName::from("service_NAME")),
                 service_type: Some(ServiceType::from("dedicated")),
                 instance_name: Some(InstanceName::from("instance_NAME")),
+                sid: None,
                 engine: EngineTag::Std,
             }
         );
@@ -323,12 +343,26 @@ connection:
                 service_name: None,
                 service_type: None,
                 instance_name: None,
+                sid: None,
                 port: None,
                 timeout: None,
                 engine: EngineTag::default(),
             }
         );
     }
+
+    #[test]
+    fn test_connection_with_sid() {
+        let conn = Connection::from_yaml(&create_yaml(data::CONNECTION_WITH_SID))
+            .unwrap()
+            .unwrap();
+        assert_eq!(conn.hostname(), HostName::from("localhost".to_string()));
+        assert_eq!(conn.port(), Port(1521));
+        assert_eq!(conn.sid(), Some(&Sid::from("FREE")));
+        assert_eq!(conn.service_name(), None);
+        assert_eq!(conn.instance_name(), None);
+    }
+
     fn create_connection_with_engine(value: &str) -> String {
         format!(
             r#"
@@ -457,13 +491,14 @@ connection:
             service_name: Some(ServiceName::from("service1")),
             instance_name: Some(InstanceName::from("instance1")),
             service_type: Some(ServiceType::from("dedicated")),
+            sid: Some(Sid::from("ORCL")),
             engine: EngineTag::Jdbc,
         };
-        let custom = Connection::from_connection(&base, &None, &None);
+        let custom = Connection::from_connection(&base, &None, &None, &None);
         assert_eq!(custom, base);
 
         let custom_service = Some(ServiceName::from("new_service"));
-        let custom = Connection::from_connection(&base, &custom_service, &None);
+        let custom = Connection::from_connection(&base, &custom_service, &None, &None);
         let mut expected = base.clone();
         expected.service_name = custom_service;
         assert_eq!(custom, expected);
@@ -471,7 +506,13 @@ connection:
         let custom_instance = Some(InstanceName::from("new_instance"));
         let mut expected = base.clone();
         expected.instance_name = custom_instance.clone();
-        let custom = Connection::from_connection(&base, &None, &custom_instance);
+        let custom = Connection::from_connection(&base, &None, &custom_instance, &None);
+        assert_eq!(custom, expected);
+
+        let custom_sid = Some(Sid::from("NEW_SID"));
+        let mut expected = base.clone();
+        expected.sid = Some(Sid::from("NEW_SID"));
+        let custom = Connection::from_connection(&base, &None, &None, &custom_sid);
         assert_eq!(custom, expected);
     }
 

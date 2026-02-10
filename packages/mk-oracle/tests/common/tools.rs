@@ -209,6 +209,56 @@ pub fn make_mini_config(endpoint: &SqlDbEndpoint) -> Config {
     )
 }
 
+fn _make_mini_config_with_sid(
+    credentials: &Credentials,
+    auth_type: AuthType,
+    address: &str,
+    port: &u16,
+    sid: &str,
+) -> Config {
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{}"
+       password: "{}"
+       type: {}
+       role: {}
+    connection:
+       hostname: {}
+       port: {}
+       timeout: 10
+    sections:
+       - instance:
+    instances:
+       - sid: {}
+"#,
+        credentials.user,
+        credentials.password,
+        auth_type,
+        if address == "localhost" { "sysdba" } else { "" },
+        address,
+        port,
+        sid,
+    );
+    Config::from_string(config_str).unwrap().unwrap()
+}
+
+pub fn make_mini_config_with_sid(endpoint: &SqlDbEndpoint, sid: &str) -> Config {
+    _make_mini_config_with_sid(
+        &Credentials {
+            user: endpoint.user.clone(),
+            password: endpoint.pwd.clone(),
+        },
+        AuthType::Standard,
+        &endpoint.host,
+        &endpoint.port,
+        sid,
+    )
+}
+
 pub fn make_wallet_config(endpoint: &SqlDbEndpoint) -> Config {
     let config_str = format!(
         r#"

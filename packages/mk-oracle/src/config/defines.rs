@@ -37,6 +37,7 @@ pub mod keys {
     pub const SERVICE_NAME: &str = "service_name";
     pub const INSTANCE_NAME: &str = "instance_name";
     pub const SERVICE_TYPE: &str = "service_type";
+    pub const SID: &str = "sid";
     pub const PORT: &str = "port";
     pub const SOCKET: &str = "socket";
     pub const TIMEOUT: &str = "timeout";

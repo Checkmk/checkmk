@@ -20,8 +20,9 @@ extern crate common;
 mod common;
 
 use crate::common::tools::{
-    make_mini_config, make_mini_config_custom_instance, make_wallet_config,
-    platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
+    make_mini_config, make_mini_config_custom_instance, make_mini_config_with_sid,
+    make_wallet_config, platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT,
+    ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
@@ -301,6 +302,30 @@ fn test_remote_mini_connection() {
     assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &instance_name)));
     assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &instance_name)));
     assert_eq!(rows.len(), 2);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_remote_sid_only_connection() {
+    add_runtime_to_path();
+    let endpoint = remote_reference_endpoint();
+    let sid = endpoint
+        .sid
+        .clone()
+        .or_else(|| endpoint.instance_name.clone())
+        .unwrap_or_else(|| endpoint.service_name.clone());
+    let config = make_mini_config_with_sid(&endpoint, &sid);
+
+    let env = Env::default();
+    let result = generate_data(&config, &env).await;
+    assert!(result.is_ok());
+    let table = result.unwrap();
+    assert_eq!(table.len(), 2);
+    assert_eq!(table[0], "<<<oracle_instance>>>");
+    let rows: Vec<&str> = table[1].split("\n").collect();
+    assert!(!rows.is_empty());
+    for r in rows[1..].iter() {
+        assert!(r.starts_with(&format!("{}|", sid.to_uppercase())));
+    }
 }
 
 #[tokio::test(flavor = "multi_thread")]

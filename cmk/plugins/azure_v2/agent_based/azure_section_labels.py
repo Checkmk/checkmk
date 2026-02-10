@@ -34,6 +34,9 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
         cmk/azure/resource_group:
             This label contains the name of the resource group.
 
+        cmk/azure/name:
+            This label contains the name of the resource.
+
         cmk/azure/subscription_name:
             This label contains the name of the subscription.
 

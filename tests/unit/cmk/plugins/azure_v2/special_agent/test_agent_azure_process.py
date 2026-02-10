@@ -78,7 +78,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "resource_group": "burningman", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "name": "MyVM", "resource_group": "burningman", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name",'
                     ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                 ],
@@ -117,7 +117,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
                     ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
@@ -153,7 +153,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
                     ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     "{}\n",
                 ],
@@ -192,7 +192,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"cloud": "azure", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
                     ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
@@ -238,7 +238,7 @@ def test_get_resource_host_labels_section(
                     use_unique_names=False,
                 )
             },
-            '{"cloud": "azure", "resource_group": "cosmos_group", "resource": "databaseaccounts", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "eastus", "cosmosdb_account": "my_cosmos_db"}\n',
+            '{"cloud": "azure", "name": "my_cosmos_db", "resource_group": "cosmos_group", "resource": "databaseaccounts", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "eastus", "cosmosdb_account": "my_cosmos_db"}\n',
             id="CosmosDB account with cosmosdb_account label",
         ),
         pytest.param(
@@ -263,7 +263,7 @@ def test_get_resource_host_labels_section(
                     use_unique_names=False,
                 )
             },
-            '{"cloud": "azure", "resource_group": "vm_group", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true}\n',
+            '{"cloud": "azure", "name": "my_vm", "resource_group": "vm_group", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true}\n',
             id="Virtual machine with vm_instance label",
         ),
     ],

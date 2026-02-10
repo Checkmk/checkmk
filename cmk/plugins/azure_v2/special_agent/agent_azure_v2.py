@@ -1892,6 +1892,7 @@ def get_resource_host_labels_section(
 ) -> AzureLabelsSection:
     subscription = resource.subscription
     labels = {
+        "name": resource.name,
         "resource_group": resource.group,
         "resource": resource.section,
         "entity": "resource",

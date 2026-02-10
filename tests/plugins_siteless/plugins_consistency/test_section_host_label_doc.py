@@ -32,6 +32,7 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/region:<region>",
     "cmk/azure/entity:subscription",
     "cmk/azure/entity:tenant",
+    "cmk/azure/name",
     "cmk/azure/vm:instance",
     "cmk/aws/tag/{key}:{value}",
     "cmk/check_mk_server",

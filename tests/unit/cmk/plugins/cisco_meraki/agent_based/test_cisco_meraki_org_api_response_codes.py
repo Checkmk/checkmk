@@ -131,6 +131,7 @@ def test_check_api_disabled(state_override: int) -> None:
         organization_id="123",
         organization_name="Name1",
         api_enabled=False,
+        counts=[],
     )
     string_table = [[f"[{json.dumps(overviews)}]"]]
     section = parse_api_response_codes(string_table)

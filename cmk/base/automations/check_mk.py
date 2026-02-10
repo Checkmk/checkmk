@@ -183,7 +183,12 @@ from cmk.fetchers.snmp import make_backend as make_snmp_backend
 from cmk.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
-from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
+from cmk.piggyback.backend import (
+    get_messages_for as get_piggyback_messages_for,
+)
+from cmk.piggyback.backend import (
+    move_for_host_rename as move_piggyback_for_host_rename,
+)
 from cmk.server_side_calls_backend import (
     config_processing,
     ExecutableFinder,
@@ -4166,8 +4171,16 @@ def automation_get_agent_output(
                     output += (
                         f"[{source_info.ident}] {', '.join(r.summary for r in source_results)}\n"
                     )
-                assert raw_data.ok is not None
-                info += raw_data.ok
+                if source_info.fetcher_type is FetcherType.PIGGYBACK:
+                    # The PiggybackFetcher returns empty data by design.
+                    # The actual piggyback data is read from disk by the
+                    # PiggybackParser, so we need to read it directly here.
+
+                    for msg in get_piggyback_messages_for(hostname, cmk.utils.paths.omd_root):
+                        info += msg.raw_data
+                else:
+                    assert raw_data.ok is not None
+                    info += raw_data.ok
         else:
             if not ipaddress:
                 raise MKGeneralException("Failed to gather IP address of %s" % hostname)

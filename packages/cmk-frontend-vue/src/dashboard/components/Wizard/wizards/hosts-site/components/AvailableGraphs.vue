@@ -9,6 +9,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import type { SimpleIcons } from '@/components/CmkIcon'
 
+import DisabledTooltipWrapper from '@/dashboard/components/WidgetWorkflow/DisabledTooltipWrapper.vue'
+
 import WidgetButton from '../../../components/WidgetButton.vue'
 import { Graph } from '../types'
 
@@ -38,14 +40,18 @@ const graphDirectory: GraphDirectory = [
 
 <template>
   <div class="db-available-graphs__container">
-    <WidgetButton
+    <DisabledTooltipWrapper
       v-for="(graph, index) in graphDirectory"
       :key="index"
-      class="db-available-graphs__item"
-      :icon="graph.icon"
-      :label="graph.label"
       :disabled="!props.availableGraphs.includes(graph.id)"
-    />
+    >
+      <WidgetButton
+        class="db-available-graphs__item"
+        :icon="graph.icon"
+        :label="graph.label"
+        :disabled="!props.availableGraphs.includes(graph.id)"
+      />
+    </DisabledTooltipWrapper>
   </div>
 </template>
 

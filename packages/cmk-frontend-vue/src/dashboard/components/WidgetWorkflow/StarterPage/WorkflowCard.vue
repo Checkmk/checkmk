@@ -9,6 +9,7 @@ import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import DisabledTooltipWrapper from '../DisabledTooltipWrapper.vue'
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 
 interface WorkflowCardProps extends WorkflowItem {
@@ -27,20 +28,22 @@ const doSelect = () => {
 </script>
 
 <template>
-  <a
-    href="#"
-    class="db-workflow-card"
-    :class="!!disabled ? 'db-workflow-card__disabled' : ''"
-    @click="doSelect"
-  >
-    <CmkIconEmblem :emblem="icon_emblem"><CmkIcon :name="icon" size="xxlarge" /></CmkIconEmblem>
-    <div class="db-workflow-card__content">
-      <CmkHeading type="h2">
-        {{ title }}
-      </CmkHeading>
-      <CmkParagraph class="db-workflow-card__subtitle">{{ subtitle }}</CmkParagraph>
-    </div>
-  </a>
+  <DisabledTooltipWrapper :disabled="!!disabled">
+    <a
+      href="#"
+      class="db-workflow-card"
+      :class="{ 'db-workflow-card__disabled': disabled }"
+      @click="doSelect"
+    >
+      <CmkIconEmblem :emblem="icon_emblem"><CmkIcon :name="icon" size="xxlarge" /></CmkIconEmblem>
+      <div class="db-workflow-card__content">
+        <CmkHeading type="h2">
+          {{ title }}
+        </CmkHeading>
+        <CmkParagraph class="db-workflow-card__subtitle">{{ subtitle }}</CmkParagraph>
+      </div>
+    </a>
+  </DisabledTooltipWrapper>
 </template>
 
 <style scoped>
@@ -70,7 +73,6 @@ const doSelect = () => {
 
 .db-workflow-card__disabled {
   pointer-events: none;
-  cursor: not-allowed;
   opacity: 0.5;
 }
 

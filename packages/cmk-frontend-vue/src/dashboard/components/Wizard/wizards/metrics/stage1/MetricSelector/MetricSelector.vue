@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkHelpText from '@/components/CmkHelpText.vue'
@@ -40,6 +42,13 @@ const metricType = defineModel<MetricSelection>('metricType', {
 })
 const handler = defineModel<UseMetric>('metricHandler', { required: true })
 
+const isSingleMetricDisabled = computed(
+  () => !props.availableMetricTypes.includes(MetricSelection.SINGLE_METRIC)
+)
+const isCombinedGraphDisabled = computed(
+  () => !props.availableMetricTypes.includes(MetricSelection.COMBINED_GRAPH)
+)
+
 const _updateMetricType = (value: string) => {
   metricType.value =
     value === 'SINGLE' ? MetricSelection.SINGLE_METRIC : MetricSelection.COMBINED_GRAPH
@@ -53,12 +62,15 @@ const _updateMetricType = (value: string) => {
       {
         label: _t('Metric (single)'),
         value: MetricSelection.SINGLE_METRIC,
-        disabled: !props.availableMetricTypes.includes(MetricSelection.SINGLE_METRIC)
+        disabled: isSingleMetricDisabled,
+        disabledTooltip: isSingleMetricDisabled
+          ? _t('Available in Checkmk Pro or higher.')
+          : undefined
       },
       {
         label: _t('Graph (combined)'),
         value: MetricSelection.COMBINED_GRAPH,
-        disabled: !props.availableMetricTypes.includes(MetricSelection.COMBINED_GRAPH)
+        disabled: isCombinedGraphDisabled
       }
     ]"
     @update:model-value="_updateMetricType"

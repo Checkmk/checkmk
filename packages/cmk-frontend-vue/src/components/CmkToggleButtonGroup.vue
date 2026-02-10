@@ -4,10 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { TranslatedString } from '@/lib/i18nString'
+
 export type ToggleButtonOption = {
   label: string
   value: string
+  tooltip?: TranslatedString | undefined
   disabled?: boolean | string | undefined
+  disabledTooltip?: TranslatedString | undefined
 }
 
 export interface ToggleButtonGroupProps {
@@ -22,6 +26,8 @@ const emit = defineEmits({
 })
 
 const isSelected = (value: string) => props.modelValue !== null && value === props.modelValue
+const isDisabled = (disabled: boolean | string | undefined) =>
+  disabled === true || disabled === 'true'
 function setSelectedOption(value: string) {
   emit('update:modelValue', value)
 }
@@ -35,10 +41,11 @@ function setSelectedOption(value: string) {
       class="toggle_option"
       :class="{
         selected: isSelected(option.value),
-        disabled: option.disabled === true || option.disabled === 'true'
+        disabled: isDisabled(option.disabled)
       }"
       :aria-label="`Toggle ${option.label}`"
-      :disabled="option.disabled === true || option.disabled === 'true'"
+      :disabled="isDisabled(option.disabled)"
+      :title="isDisabled(option.disabled) ? option.disabledTooltip : option.tooltip"
       @click.prevent="setSelectedOption(option.value)"
     >
       {{ option.label }}

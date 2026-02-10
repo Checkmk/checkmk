@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { unref } from 'vue'
 
+import DisabledTooltipWrapper from '@/dashboard/components/WidgetWorkflow/DisabledTooltipWrapper.vue'
+
 import AvailableWidget from './AvailableWidget.vue'
 import type { WidgetItemList } from './types'
 
@@ -38,11 +40,13 @@ const emit = defineEmits<AvailableWidgetsEmits>()
         }
       "
     >
-      <AvailableWidget
-        :label="item.label"
-        :icon="item.icon"
-        :disabled="!enabledWidgets.includes(item.id)"
-      />
+      <DisabledTooltipWrapper :disabled="!enabledWidgets.includes(item.id)">
+        <AvailableWidget
+          :label="item.label"
+          :icon="item.icon"
+          :disabled="!enabledWidgets.includes(item.id)"
+        />
+      </DisabledTooltipWrapper>
     </div>
   </div>
 </template>

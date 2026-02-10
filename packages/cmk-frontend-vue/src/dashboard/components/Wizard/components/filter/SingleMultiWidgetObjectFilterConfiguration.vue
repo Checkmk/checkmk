@@ -50,6 +50,13 @@ const emit = defineEmits<Emits>()
 const modeSelection = defineModel<ElementSelection>('modeSelection', {
   default: ElementSelection.SPECIFIC
 })
+
+const isSingleDisabled = computed(
+  () => !props.availableFilterTypes?.includes(ElementSelection.SPECIFIC)
+)
+const isMultipleDisabled = computed(
+  () => !props.availableFilterTypes?.includes(ElementSelection.MULTIPLE)
+)
 </script>
 
 <template>
@@ -60,12 +67,15 @@ const modeSelection = defineModel<ElementSelection>('modeSelection', {
         {
           label: _t('Single %{n}', { n: strings.singular }),
           value: ElementSelection.SPECIFIC,
-          disabled: !props.availableFilterTypes?.includes(ElementSelection.SPECIFIC)
+          disabled: isSingleDisabled
         },
         {
           label: _t('Multiple %{n}', { n: strings.plural }),
           value: ElementSelection.MULTIPLE,
-          disabled: !props.availableFilterTypes?.includes(ElementSelection.MULTIPLE)
+          disabled: isMultipleDisabled,
+          disabledTooltip: isMultipleDisabled
+            ? _t('Available in Checkmk Pro or higher.')
+            : undefined
         }
       ]"
       @update:model-value="

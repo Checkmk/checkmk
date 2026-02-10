@@ -215,6 +215,9 @@ export const dashboardAPI = {
   listFilterCollection: async (): Promise<FilterCollection> => {
     return unwrap(await client.GET('/domain-types/visual_filter/collections/all'))
   },
+  listFilterGroups: async () => {
+    return unwrap(await client.GET('/domain-types/visual_filter_group/collections/all'))
+  },
   listAvailableInventory: async (): Promise<WidgetAvailableInventory> => {
     return unwrap(await client.GET('/objects/constant/widget_available_inventory/collections/all'))
   },

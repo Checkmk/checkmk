@@ -14,7 +14,11 @@ export interface FilterType {
   type: 'filter'
   id: string
   title: string
+  group: string | null
 }
+
+export type FilterGroupDefinition = components['schemas']['FilterGroupDomainObject']
+export type FilterGroups = Record<string, FilterGroupDefinition>
 
 export type CheckboxConfig = components['schemas']['CheckboxComponentModel']
 export type CheckboxGroupConfig = components['schemas']['CheckboxGroupComponentModel']

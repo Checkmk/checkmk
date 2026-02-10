@@ -25,7 +25,11 @@ import CloneDashboardWizard from '@/dashboard/components/Wizard/CloneDashboardWi
 import CreateDashboardWizard from '@/dashboard/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard/components/WizardSelector/WizardSelector.vue'
 import { widgetTypeToSelectorMatcher } from '@/dashboard/components/WizardSelector/utils.ts'
-import type { ConfiguredFilters, FilterDefinition } from '@/dashboard/components/filter/types.ts'
+import type {
+  ConfiguredFilters,
+  FilterDefinition,
+  FilterGroups
+} from '@/dashboard/components/filter/types.ts'
 import { useDashboardFilters } from '@/dashboard/composables/useDashboardFilters.ts'
 import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVisualTitle.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
@@ -87,6 +91,9 @@ const dashboardFilterSettingsStartingWindow = ref<'runtime-filters' | 'filter-se
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
 
+const filterGroups = ref<FilterGroups | null>(null)
+provide('filterGroups', filterGroups)
+
 useProvideVisualInfos()
 
 // So far, this is only needed and used by the DashboardContentNtop component
@@ -96,12 +103,22 @@ const dashboardsManager = useDashboardsManager()
 useProvideDashboardConstants(dashboardsManager.constants)
 
 onBeforeMount(async () => {
-  const filterResp = await dashboardAPI.listFilterCollection()
+  const [filterResp, filterGroupsResp] = await Promise.all([
+    dashboardAPI.listFilterCollection(),
+    dashboardAPI.listFilterGroups()
+  ])
+
   const filterDefsRecord: Record<string, FilterDefinition> = {}
   filterResp.value.forEach((filter) => {
     filterDefsRecord[filter.id!] = filter
   })
   filterCollection.value = filterDefsRecord
+
+  const groups: FilterGroups = {}
+  filterGroupsResp.value.forEach((group) => {
+    groups[group.id!] = group
+  })
+  filterGroups.value = groups
 
   if (props.dashboard) {
     const dashboard = props.dashboard

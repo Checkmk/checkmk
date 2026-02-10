@@ -10,6 +10,7 @@ import type {
   ConfiguredValues,
   FilterDefinition,
   FilterDefinitions,
+  FilterGroups,
   FilterType
 } from './types.ts'
 
@@ -38,7 +39,8 @@ export function parseFilterTypes(
         (filterDef): FilterType => ({
           type: 'filter',
           id: filterDef.id!,
-          title: filterDef.title!
+          title: filterDef.title!,
+          group: filterDef.extensions.group ?? null
         })
       )
 
@@ -60,6 +62,18 @@ export function useFilterDefinitions(): FilterDefinitions {
   }
 
   return filterDefinitions
+}
+
+export function useFilterGroups(): FilterGroups {
+  const filterGroups = inject<Ref<FilterGroups | null>>('filterGroups')
+  if (!filterGroups) {
+    throw new Error('No provider for filterGroups')
+  }
+  const groups = filterGroups.value
+  if (!groups) {
+    throw new Error('Filter groups are not available yet')
+  }
+  return groups
 }
 
 /**

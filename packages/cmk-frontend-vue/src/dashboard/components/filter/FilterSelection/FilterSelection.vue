@@ -16,6 +16,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import type { Filters } from '../composables/useFilters.ts'
 import type { FilterType } from '../types.ts'
+import { useFilterGroups } from '../utils.ts'
 import FilterSelectionActiveIcon from './FilterSelectionActiveIcon.vue'
 import FilterSelectionSearch from './FilterSelectionSearch.vue'
 import type { FlatFilter } from './types'
@@ -35,6 +36,7 @@ interface ProcessedFilterCategory {
 
 const { _t } = usei18n()
 const props = defineProps<Props>()
+const filterGroups = useFilterGroups()
 
 const collapsibleStates = ref<Record<string, boolean>>({})
 const processedCategory = ref<ProcessedFilterCategory | null>(null)
@@ -116,7 +118,11 @@ function initializeCategory() {
   const categoryMap = new Map()
   categoryMap.set(props.categoryDefinition.name, props.categoryFilter)
 
-  const processedCategories = buildProcessedCategories([props.categoryDefinition], categoryMap)
+  const processedCategories = buildProcessedCategories(
+    [props.categoryDefinition],
+    categoryMap,
+    filterGroups
+  )
 
   processedCategory.value = processedCategories[0] || null
 

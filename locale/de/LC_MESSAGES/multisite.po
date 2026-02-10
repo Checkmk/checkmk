@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-01-29 18:32+0000\n"
+"PO-Revision-Date: 2026-02-10 07:42+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -3031,9 +3031,8 @@ msgstr "Absoluter freier Speicherplatz"
 msgid "Absolute free space"
 msgstr "Absoluter freier Speicherplatz"
 
-#, fuzzy
 msgid "Absolute free virtual memory"
-msgstr "Absoluter freier Speicherplatz"
+msgstr "Absoluter freier virtueller Speicherplatz"
 
 msgid "Absolute levels"
 msgstr "Absolute Levels"
@@ -3125,9 +3124,8 @@ msgstr "Absolute Levels für benutzte Leases"
 msgid "Absolute used memory"
 msgstr "Absoluter genutzter Speicherplatz"
 
-#, fuzzy
 msgid "Absolute used virtual memory"
-msgstr "Absoluter genutzter Speicherplatz"
+msgstr "Absoluter genutzter virtueller Speicherplatz"
 
 msgid "Absolute value"
 msgstr "Absoluter Wert"
@@ -42037,9 +42035,8 @@ msgstr "Netapp Port-Erkennung"
 msgid "Netapp power supply unit discovery"
 msgstr "Erkennung des Netapp-Netzteils"
 
-#, fuzzy
 msgid "Netapp system time offset"
-msgstr "NetApp-Systemzeit"
+msgstr "NetApp-Systemzeitversatz"
 
 msgid "Netmask"
 msgstr "Netzmaske"
@@ -44457,9 +44454,8 @@ msgstr "Nvidia GPU Memory Auslastung"
 msgid "Nvidia GPU Power"
 msgstr "Nvidia GPU Power"
 
-#, fuzzy
 msgid "Nvidia GPU monitoring (Linux, Windows)"
-msgstr "Nvidia GPU-Monitoring (Windows)"
+msgstr "Nvidia GPU-Monitoring (Linux, Windows)"
 
 msgid "Nvidia GPU utilization"
 msgstr "Nvidia GPU-Auslastung"
@@ -47587,9 +47583,8 @@ msgstr "Pfad zu den Kategorien"
 msgid "Path to ceph.conf"
 msgstr "Pfad zu ceph.conf"
 
-#, fuzzy
 msgid "Path to nvidia-smi.exe (Windows only)"
-msgstr "Pfad zur nvidia-smi.exe"
+msgstr "Pfad zur nvidia-smi.exe (nur Windows)"
 
 msgid "Path to sapgenpse"
 msgstr "Pfad zu sapgenpse"
@@ -49142,9 +49137,8 @@ msgstr "Bitte mindestens einen Wert angeben"
 msgid "Please specify at least one value for \"%s\""
 msgstr "Bitte geben Sie mindestens einen Wert für \"%s\" an"
 
-#, fuzzy
 msgid "Please specify either host or folder or hash."
-msgstr "Bitte Host oder Hash angeben."
+msgstr "Bitte Host oder Ordner oder Hash angeben."
 
 msgid "Please specify the extensions in lower case and without dot."
 msgstr ""
@@ -50507,9 +50501,8 @@ msgstr "RAID: Sammelzustand"
 msgid "RAM"
 msgstr "RAM"
 
-#, fuzzy
 msgid "RAM (Total, cached, buffers)"
-msgstr "Gesamte Cache-Auslastung"
+msgstr "RAM (gesamt, gecacht, Puffer)"
 
 msgid "RAM (averaged)"
 msgstr "RAM (gemittelt)"
@@ -52872,16 +52865,15 @@ msgstr "Auf Benachrichtigungsnummer einschränken"
 msgid "Restricted address mismatch"
 msgstr "Fehlende Übereinstimmung der Adressbeschränkung"
 
-#, fuzzy
 msgid ""
 "Restricts the list of contacts created by the previous options to those who "
 "are members of the selected contact groups. If more than one contact group "
 "is selected, the contact must be a member of all selected groups."
 msgstr ""
-"Hier können Sie die Kontaktgruppen, die von den vorherigen Optionen "
-"ausgewählt wurden, wieder <i>reduzieren</i>. Wenn Sie hier mehr als eine "
-"Gruppe auswählen, dann muss der Benutzer Mitglied von <i>allen</i> diesen "
-"Gruppen sein, um alarmiert zu werden."
+"Beschränkt die Liste der durch die vorherigen Optionen erstellten Kontakte "
+"auf diejenigen, die Mitglieder der ausgewählten Kontaktgruppen sind. Wenn "
+"mehr als eine Kontaktgruppe ausgewählt ist, muss der Kontakt Mitglied aller "
+"ausgewählten Gruppen sein."
 
 msgid "Result"
 msgstr "Ergebnis"

@@ -44,6 +44,16 @@ public:
     [[nodiscard]] virtual bool is_authorized_for_event(
         const std::string &precedence, const std::string &contact_groups,
         const IHost *hst) const = 0;
+    [[nodiscard]] virtual bool is_authorized_for_contact_name(
+        const std::string &contact_name) const = 0;
+    // Authorization for HOST/SERVICE NOTIFICATION log entries. Falls back to
+    // contact name matching when the host or service object is not found
+    // locally — either because the entry was forwarded from a remote site via
+    // the notification spooler, or because the host/service has since been
+    // removed from the monitoring configuration.
+    [[nodiscard]] virtual bool is_authorized_for_notification_object(
+        const IHost *hst, const IService *svc, bool is_service_notification,
+        const std::string &contact_name) const = 0;
 };
 
 class AuthUser : public User {
@@ -66,6 +76,11 @@ public:
     [[nodiscard]] bool is_authorized_for_event(
         const std::string &precedence, const std::string &contact_groups,
         const IHost *hst) const override;
+    [[nodiscard]] bool is_authorized_for_contact_name(
+        const std::string &contact_name) const override;
+    [[nodiscard]] bool is_authorized_for_notification_object(
+        const IHost *hst, const IService *svc, bool is_service_notification,
+        const std::string &contact_name) const override;
 
 private:
     const IContact &auth_user_;
@@ -104,6 +119,16 @@ public:
         const IHost * /*hst*/) const override {
         return true;
     }
+    [[nodiscard]] bool is_authorized_for_contact_name(
+        const std::string & /*contact_name*/) const override {
+        return true;
+    }
+    [[nodiscard]] bool is_authorized_for_notification_object(
+        const IHost * /*hst*/, const IService * /*svc*/,
+        bool /*is_service_notification*/,
+        const std::string & /*contact_name*/) const override {
+        return true;
+    }
 };
 
 class UnknownUser : public User {
@@ -133,6 +158,16 @@ public:
         const std::string & /*precedence*/,
         const std::string & /*contact_groups*/,
         const IHost * /*hst*/) const override {
+        return false;
+    }
+    [[nodiscard]] bool is_authorized_for_contact_name(
+        const std::string & /*contact_name*/) const override {
+        return false;
+    }
+    [[nodiscard]] bool is_authorized_for_notification_object(
+        const IHost * /*hst*/, const IService * /*svc*/,
+        bool /*is_service_notification*/,
+        const std::string & /*contact_name*/) const override {
         return false;
     }
 };

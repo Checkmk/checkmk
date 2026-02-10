@@ -196,7 +196,7 @@ Args = argparse.Namespace
                     ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
-                ["my_resource-9cdf84ce"],
+                ["my_resource_6c554708"],
             ),
             id="Load balancer with safe hostnames",
         ),
@@ -693,12 +693,12 @@ async def test_filter_tags(
                     use_safe_names=True,
                 ),
             ],
-            "<<<<burningman-d4e2b7e7>>>>\n"
+            "<<<<burningman_cb8bc18c>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
-            "<<<<mock_subscription_name-28779f5f>>>>\n"
+            "<<<<mock_subscription_name_9bb22fdd>>>>\n"
             "<<<azure_v2_agent_info:sep(124)>>>\n"
             'monitored-groups|["burningman"]\n'
             'monitored-resources|["MyVM"]\n'
@@ -720,12 +720,12 @@ async def test_filter_tags(
                 )
             },
             [],
-            "<<<<burningman-d4e2b7e7>>>>\n"
+            "<<<<burningman_cb8bc18c>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
             "{}\n"
             "<<<<>>>>\n"
-            "<<<<mock_subscription_name-28779f5f>>>>\n"
+            "<<<<mock_subscription_name_9bb22fdd>>>>\n"
             "<<<azure_v2_agent_info:sep(124)>>>\n"
             'monitored-groups|["burningman"]\n'
             "monitored-resources|[]\n"
@@ -1357,7 +1357,7 @@ RESOURCE_DATA_DIFFERENT_TYPE = {
             AzureResourceInfo(
                 section="storageaccounts",
                 info_group="resource_group_1",
-                piggytarget="storage_account_1-3e321c43",
+                piggytarget="storage_account_1_01b48bd7",
                 tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
             ),
             id="Resource with imported tags, safe hostname",
@@ -1369,7 +1369,7 @@ RESOURCE_DATA_DIFFERENT_TYPE = {
             AzureResourceInfo(
                 section="storageaccounts",
                 info_group="resource_group_2",
-                piggytarget="storage_account_1-5c21d142",
+                piggytarget="storage_account_1_cc6ac70f",
                 tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
             ),
             id="Resource with safe hostname, ensures resource group uniqueness",
@@ -1381,7 +1381,7 @@ RESOURCE_DATA_DIFFERENT_TYPE = {
             AzureResourceInfo(
                 section="virtualmachines",
                 info_group="resource_group_1",
-                piggytarget="storage_account_1-cd9aa24d",
+                piggytarget="storage_account_1_6bba70d5",
                 tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
             ),
             id="Resource with safe hostname, ensures resource type uniqueness 2",
@@ -1430,7 +1430,7 @@ async def test_write_subscription_section_safe_hostname(capsys: pytest.CaptureFi
     captured = capsys.readouterr()
     assert (
         captured.out
-        == """<<<<mock_subscription_name-28779f5f>>>>
+        == """<<<<mock_subscription_name_9bb22fdd>>>>
 <<<azure_v2_subscription:sep(124)>>>
 Resource
 {"name": "mock_subscription_name", "tags": {}, "id": "mock_subscription_id", "type": "subscription", "group": "", "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name"}

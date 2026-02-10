@@ -48,7 +48,7 @@ Args = argparse.Namespace
                 use_safe_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
-            "subscription:name-8df88c96",
+            "subscription:name_2a0cae26",
             id="Subscription with safe names",
         ),
         pytest.param(
@@ -59,19 +59,8 @@ Args = argparse.Namespace
                 use_safe_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
-            "My Subscription-1f5867a9",
-            id="Subscription with safe names, different tenant",
-        ),
-        pytest.param(
-            AzureSubscription(
-                id="subscription_id_abcdefgh",
-                name="My Subscription",
-                tags={},
-                use_safe_names=True,
-                tenant_id="different-tenant-id-12345",
-            ),
-            "My Subscription-dc8ce3d7",
-            id="Subscription with safe names, different tenant, ensures uniqueness",
+            "My Subscription_560cb603",
+            id="Subscription with safe names, different subscription id",
         ),
         pytest.param(
             AzureSubscription(
@@ -81,7 +70,7 @@ Args = argparse.Namespace
                 use_safe_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
-            "My Subscription-71981702",
+            "My Subscription_6ab7efb2",
             id="Subscription with safe names, same subscription name, ensures uniqueness",
         ),
     ],
@@ -138,7 +127,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             },
             RESOURCE_SUBSCRIPTION,
             True,
-            "myresourcegroup-777cbbbf",
+            "myresourcegroup_5d6f43b3",
             id="Resourcegroup with safe names",
         ),
         pytest.param(
@@ -151,7 +140,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             },
             RESOURCE_SUBSCRIPTION_2,
             True,
-            "myresourcegroup-0b9ced6e",
+            "myresourcegroup_64a5c469",
             id="Resourcegroup with safe names, different subscription, ensures subscription uniqueness",
         ),
         pytest.param(
@@ -164,7 +153,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             },
             RESOURCE_SUBSCRIPTION,
             True,
-            "productionrg-777cbbbf",
+            "productionrg_5d6f43b3",
             id="Resourcegroup with safe names different_name",
         ),
     ],
@@ -242,7 +231,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             },
             RESOURCE_SUBSCRIPTION,
             True,
-            "myVM-d32f00fa",
+            "myVM_555a1dc6",
             id="resource_with_safe_names",
         ),
         pytest.param(
@@ -256,7 +245,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             },
             RESOURCE_SUBSCRIPTION,
             True,
-            "myVM-3e068203",
+            "myVM_b7b0437c",
             id="resource_with_safe_names_ensures_resourcegroup_uniqueness",
         ),
         pytest.param(
@@ -270,7 +259,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             },
             RESOURCE_SUBSCRIPTION_2,
             True,
-            "myVM-ef19b55e",
+            "myVM_e9a9a152",
             id="resource_with_safe_names_ensures_subscription_uniqueness",
         ),
         pytest.param(
@@ -284,7 +273,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             },
             RESOURCE_SUBSCRIPTION,
             True,
-            "mystorageaccount-11ed1ec4",
+            "mystorageaccount_f5118f4b",
             id="resource_with_safe_names_ensures_type_uniqueness",
         ),
     ],

@@ -133,14 +133,14 @@ class _AzureEntity(ABC):
 
     @property
     def piggytarget(self) -> str:
-        return self._entity_name if not self._use_safe_names else self._safename()
+        return self._entity_name if not self._use_safe_names else self._unique_name()
 
-    def _compute_safename(self, uniqueness_keys: Sequence[str]) -> str:
+    def _compute_unique_name(self, uniqueness_keys: Sequence[str]) -> str:
         """
-        The concept of "safe name" should be only known and used by a resource object.
+        The concept of "unique name" should be only known and used by a resource object.
         The rest of the code must trust the piggytarget property.
 
-        We compute safe names to avoid conflicts in host names in Azure,
+        We compute unique names to avoid conflicts in host names in Azure,
         since we can have the same resource-type with the same name in different
         resource-groups or subscriptions. We can also have the same subscription-name
         in the same tenant.
@@ -149,12 +149,10 @@ class _AzureEntity(ABC):
         Tenant: no need to add anything, since the tenant should be unique (and the tenant is
         the "main" host in checkmk, so the user-defined-name)
 
-        Subscription:   tenant-id,
-                        subscription-id
-        Resource-group: tenant-id,
-                        subscription-id  (it is not possibile to create two resource-groups with the same name in the same subscription)
-        Resource:   tenant-id,
-                    subscription-id,
+        Subscription:   subscription-id
+        Resource-group: subscription-id,  (it is not possibile to create two resource-groups with the same name in the same subscription)
+                        resource-type (a resource-group can have the same name of a subscription)
+        Resource:   subscription-id,
                     resource-group (lower, because azure do not ensure returning a consistent casing),
                     resource-type (not lower, wecause we have seen types with different casing)
 
@@ -165,10 +163,10 @@ class _AzureEntity(ABC):
         hashed = hashlib.sha256(unique_string.encode("utf-8"), usedforsecurity=False).hexdigest()[
             -HASH_CHARS_TO_KEEP:
         ]
-        return f"{self._entity_name}-{hashed}"
+        return f"{self._entity_name}_{hashed}"
 
     @abstractmethod
-    def _safename(self) -> str:
+    def _unique_name(self) -> str:
         raise NotImplementedError()
 
     def dumpinfo(self) -> Sequence[tuple]:
@@ -202,8 +200,8 @@ class AzureSubscription(_AzureEntity):
             "subscription_name": name,
         }
 
-    def _safename(self) -> str:
-        return self._compute_safename((self.tenant_id, self.id))
+    def _unique_name(self) -> str:
+        return self._compute_unique_name((self.id,))
 
 
 class AzureResourceGroup(_AzureEntity):
@@ -228,12 +226,11 @@ class AzureResourceGroup(_AzureEntity):
         }
         self.subscription = subscription
 
-    def _safename(self) -> str:
-        return self._compute_safename(
+    def _unique_name(self) -> str:
+        return self._compute_unique_name(
             # adding type because a resource-group can have the same name of a subscription
             # the type add more uniqueness
             (
-                self.subscription.tenant_id,
                 self.subscription.id,
                 self.info["type"],  # "Microsoft.Resources/resourceGroups"
             )
@@ -819,10 +816,9 @@ class AzureResource(_AzureEntity):
         if region := self.info.get("location"):
             self.labels["region"] = region
 
-    def _safename(self) -> str:
-        return self._compute_safename(
+    def _unique_name(self) -> str:
+        return self._compute_unique_name(
             (
-                self.subscription.tenant_id,
                 self.subscription.id,
                 self.group,
                 self.info["type"],

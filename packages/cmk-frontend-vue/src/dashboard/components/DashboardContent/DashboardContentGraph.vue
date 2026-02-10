@@ -8,6 +8,8 @@ import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import useTimer from '@/lib/useTimer.ts'
 
+import CmkIcon from '@/components/CmkIcon'
+
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import type { FilterHTTPVars } from '@/dashboard/types/widget.ts'
 
@@ -25,6 +27,7 @@ const cmkToolkit = window['cmk']
 
 const contentDiv = ref<HTMLDivElement | null>(null)
 const parentDiv = computed(() => contentDiv.value?.parentElement || null)
+const isLoading = ref<boolean>(true)
 
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
   if (cmkToken !== undefined) {
@@ -45,20 +48,19 @@ const sizeVars: Ref<FilterHTTPVars> = ref({
   height: '0'
 })
 
-const handleRefreshData = (widgetId: string, body: string) => {
-  const container = document.getElementById(`db-content-graph-${widgetId}`)
-  if (container) {
-    container.innerHTML = body
-    cmkToolkit.utils.execute_javascript_by_object(container)
+const handleRefreshData = (_handlerData: null, body: string) => {
+  if (contentDiv.value) {
+    contentDiv.value.innerHTML = body
+    cmkToolkit.utils.execute_javascript_by_object(contentDiv.value)
   }
+  isLoading.value = false
 }
 
 const updateGraph = () => {
   cmkToolkit.ajax.call_ajax(dataEndpointUrl.value, {
     post_data: new URLSearchParams({ ...httpVars.value, ...sizeVars.value }).toString(),
     method: 'POST',
-    response_handler: handleRefreshData,
-    handler_data: props.widget_id
+    response_handler: handleRefreshData
   })
 }
 
@@ -87,6 +89,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   timer.stop()
   resizeObserver.disconnect()
+  isLoading.value = false
 })
 </script>
 
@@ -96,6 +99,23 @@ onBeforeUnmount(() => {
     :general_settings="general_settings"
     content-overflow="hidden"
   >
-    <div :id="`db-content-graph-${widget_id}`" ref="contentDiv" class="db-content-graph" />
+    <CmkIcon
+      v-show="isLoading"
+      name="load-graph"
+      size="xlarge"
+      class="db-content-graph__loading-icon"
+    />
+    <div
+      v-show="!isLoading"
+      :id="`db-content-graph-${widget_id}`"
+      ref="contentDiv"
+      class="db-content-graph"
+    />
   </DashboardContentContainer>
 </template>
+
+<style scoped>
+.db-content-graph__loading-icon {
+  margin: auto;
+}
+</style>

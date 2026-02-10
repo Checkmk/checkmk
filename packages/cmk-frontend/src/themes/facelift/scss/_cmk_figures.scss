@@ -95,18 +95,18 @@ div.cmk_figure {
     background-image: url('../facelift/images/load_graph.png');
     background-repeat: no-repeat;
     background-position: left;
-    background-size: 24px 24px;
+    background-size: 20px 20px;
   }
 
   div.loading_img {
     position: relative;
     left: 50%;
-    width: 48px;
+    width: 40px;
     height: 100%;
     background-image: url('../facelift/images/load_graph.png');
     background-position: center;
     background-repeat: no-repeat;
-    background-size: 24px 24px;
+    background-size: 20px 20px;
   }
 
   div.tooltip {
@@ -122,8 +122,8 @@ div.cmk_figure {
 
     div.loading_img {
       left: 0;
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
     }
   }
 

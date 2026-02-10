@@ -11,7 +11,14 @@ import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
+
 const { _t } = usei18n()
+const searchUtils = getSearchUtils()
+
+function isMonitoringSearch(): boolean {
+  return ['all', 'monitoring'].indexOf(searchUtils.query.provider.value) >= 0
+}
 </script>
 
 <template>
@@ -20,7 +27,7 @@ const { _t } = usei18n()
     <CmkHeading class="unified-search-empty-start__heading" type="h2">{{
       _t('Find rules, hosts, dashboards, settings ...')
     }}</CmkHeading>
-    <CmkParagraph class="unified-search-empty-start__text">
+    <CmkParagraph v-if="isMonitoringSearch()" class="unified-search-empty-start__text">
       {{ _t('Tip: Press') }}
       <CmkKeyboardKey keyboard-key="/" size="small"></CmkKeyboardKey>
       {{

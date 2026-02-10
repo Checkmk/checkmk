@@ -58,6 +58,9 @@ tracer = get_tracer()
 class BackgroundJobTimedOut(Exception): ...
 
 
+class BackgroundJobFailure(Exception): ...
+
+
 def run_process(job_parameters: JobParameters) -> None:
     (
         stop_event,
@@ -143,6 +146,9 @@ def run_process(job_parameters: JobParameters) -> None:
     except BackgroundJobTimedOut:
         logger.warning("Job stopped due to timeout")
         final_status_update = {"state": JobStatusStates.STOPPED}
+    except BackgroundJobFailure:
+        logger.warning("job stopped due to an error")
+        final_status_update = {"state": JobStatusStates.STOPPED}
     except Exception:
         crash = create_gui_crash_report()
         logger.error(
@@ -195,7 +201,7 @@ def _execute_function(
         target.callable(job_interface, target.args)
     except MKTerminate:
         raise
-    except BackgroundJobTimedOut:
+    except (BackgroundJobTimedOut, BackgroundJobFailure):
         raise
     except Exception as e:
         crash = create_gui_crash_report()

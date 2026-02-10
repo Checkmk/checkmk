@@ -19,6 +19,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.background_job import (
     BackgroundJob,
+    BackgroundJobFailure,
     BackgroundJobRegistry,
     BackgroundJobTimedOut,
     BackgroundProcessInterface,
@@ -398,7 +399,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             job_interface.send_progress_update(
                 _("Failed: %s") % agent_output_result.service_details
             )
-            if agent_output_result.service_details.find("timed out"):
+            if "timed out" in agent_output_result.service_details:
                 if self._agent_type == "agent":
                     result = _("Background job timed out after 3 minutes.")
                 else:
@@ -419,7 +420,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
                 job_interface.send_result_message(result)
 
                 raise BackgroundJobTimedOut()
-            raise MKGeneralException()
+            raise BackgroundJobFailure()
 
         preview_filepath = Path(job_interface.get_work_dir()) / AgentOutputPage.file_name(
             self._site_id, self._host_name, self._agent_type

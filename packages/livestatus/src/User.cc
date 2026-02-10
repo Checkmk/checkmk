@@ -57,6 +57,26 @@ bool AuthUser::is_authorized_for_service_group(const IServiceGroup &sg) const {
                  });
 }
 
+bool AuthUser::is_authorized_for_contact_name(
+    const std::string &contact_name) const {
+    return contact_name == auth_user_.name();
+}
+
+bool AuthUser::is_authorized_for_notification_object(
+    const IHost *hst, const IService *svc, bool is_service_notification,
+    const std::string &contact_name) const {
+    // Fall back to contact name matching when the host or service is not found
+    // locally. This covers two cases:
+    // - Notifications forwarded from remote sites via the notification spooler,
+    //   where the host or service is not configured on the central site.
+    // - Historical notifications for hosts or services that have since been
+    //   removed from the monitoring configuration.
+    if (hst == nullptr || (is_service_notification && svc == nullptr)) {
+        return is_authorized_for_contact_name(contact_name);
+    }
+    return is_authorized_for_object(hst, svc, /*authorized_if_no_host=*/false);
+}
+
 bool AuthUser::is_authorized_for_event(const std::string &precedence,
                                        const std::string &contact_groups,
                                        const IHost *hst) const {

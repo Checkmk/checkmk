@@ -26,6 +26,16 @@ type DashboardData = {
   metadata: DashboardMetadata
 }
 
+/**
+ * Converts a DashboardKey to a string representation for use as a Map key.
+ * The owner and name are concatenated with a null character as a separator to ensure uniqueness.
+ * @param key The DashboardKey to convert
+ * @returns A string representation of the DashboardKey
+ */
+function dashboardKeyToString(key: DashboardKey): string {
+  return `${key.owner}\0${key.name}`
+}
+
 export function useDashboardsManager() {
   const constants = ref<DashboardConstants>()
 
@@ -33,11 +43,13 @@ export function useDashboardsManager() {
     constants.value = await dashboardAPI.getDashboardConstants()
   })
 
-  const dashboards = ref<Map<DashboardKey, DashboardData>>(new Map())
+  const dashboards = ref<Map<string, DashboardData>>(new Map())
   const activeDashboardKey: Ref<DashboardKey | undefined> = ref(undefined)
 
   const activeDashboard = computed<DashboardData | undefined>(() => {
-    return activeDashboardKey.value ? dashboards.value.get(activeDashboardKey.value) : undefined
+    return activeDashboardKey.value
+      ? dashboards.value.get(dashboardKeyToString(activeDashboardKey.value))
+      : undefined
   })
 
   const isInitialized = computed<boolean>(() => {
@@ -49,7 +61,7 @@ export function useDashboardsManager() {
     model: DashboardModel,
     metadata: DashboardMetadata
   ): void {
-    dashboards.value.set(key, {
+    dashboards.value.set(dashboardKeyToString(key), {
       model,
       metadata
     })
@@ -220,7 +232,7 @@ export function useDashboardsManager() {
     if (response.success) {
       if (rename) {
         // remove the old dashboard entry
-        dashboards.value.delete(key)
+        dashboards.value.delete(dashboardKeyToString(key))
 
         const newKey: DashboardKey = { name: rename, owner: key.owner }
         const newDashboard = createDashboardModel(response.data.extensions, layoutType)
@@ -237,7 +249,6 @@ export function useDashboardsManager() {
 
   return {
     constants,
-    dashboards,
     activeDashboard,
     activeDashboardKey,
     isInitialized,

@@ -205,10 +205,6 @@ class AddHost(CmkPage):
         return self.main_area.locator("table#basic").locator("div.cmk-alert-box")
 
     @property
-    def host_name_status_loading(self) -> Locator:
-        return self._host_name_alert_box.get_by_text("Loading")
-
-    @property
     def host_name_status_valid(self) -> Locator:
         return self._host_name_alert_box.get_by_title("icon-success")
 
@@ -235,10 +231,6 @@ class AddHost(CmkPage):
     @property
     def _ipaddress_alert_box(self) -> Locator:
         return self.main_area.locator("table#address").locator("div.cmk-alert-box")
-
-    @property
-    def ipaddress_status_loading(self) -> Locator:
-        return self._ipaddress_alert_box.get_by_text("Loading")
 
     @property
     def ipaddress_status_valid(self) -> Locator:

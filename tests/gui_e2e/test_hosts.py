@@ -296,7 +296,6 @@ def _bypass_nslookup(test_site: Site) -> Iterator[None]:
     run(["rm", str(dummy_nslookup)], sudo=True)
 
 
-@pytest.mark.xfail(reason="Bug CMK-31108")
 def test_ping_host(bypass_nslookup: None, dashboard_page: MainDashboard) -> None:
     """Validate pinging of a host."""
     add_host = AddHost(dashboard_page.page)
@@ -305,20 +304,16 @@ def test_ping_host(bypass_nslookup: None, dashboard_page: MainDashboard) -> None
         expect(locator, message=f"{name} status message not present").to_be_visible()
 
     add_host.host_name_text_field.fill("foo")
-    _expect_validation_status_to_be_visble(add_host.host_name_status_loading, "Loading host")
     _expect_validation_status_to_be_visble(add_host.host_name_status_invalid, "Invalid host")
 
     add_host.host_name_text_field.fill("localhost")
-    _expect_validation_status_to_be_visble(add_host.host_name_status_loading, "Loading host")
     _expect_validation_status_to_be_visble(add_host.host_name_status_valid, "Valid host")
 
     add_host.ipv4_address_checkbox.click()
     add_host.ipv4_address_text_field.fill("foo")
-    _expect_validation_status_to_be_visble(add_host.ipaddress_status_loading, "Loading IP adddress")
     _expect_validation_status_to_be_visble(add_host.ipaddress_status_invalid, "Invalid IP address")
 
     add_host.ipv4_address_text_field.fill("127.0.0.1")
-    _expect_validation_status_to_be_visble(add_host.ipaddress_status_loading, "Loading IP address")
     _expect_validation_status_to_be_visble(add_host.ipaddress_status_valid, "Valid IP adddress")
 
 

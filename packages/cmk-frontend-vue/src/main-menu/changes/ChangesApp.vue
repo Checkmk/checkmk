@@ -48,6 +48,7 @@ const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
 const activateChangesInProgress = ref<boolean>(false)
 const alreadyMadeAjaxCall = ref<boolean>(false)
+const activationError = ref<string | null>(null)
 
 const sitesAndChanges = ref<SitesAndChanges>({
   sites: [],
@@ -152,7 +153,7 @@ async function activateAllChanges() {
   } catch (error) {
     await fetchPendingChangesAjax()
     activateChangesInProgress.value = false
-    throw new Error(`Activation failed: ${error}`)
+    activationError.value = `Activation failed: ${error}`
   }
 }
 
@@ -202,6 +203,7 @@ async function checkIfMenuActive(): Promise<void> {
   if (cmk.popup_menu.is_open('main_menu_changes')) {
     if (!alreadyMadeAjaxCall.value) {
       recentlyActivatedSites.value = []
+      activationError.value = null
       await fetchPendingChangesAjax()
       alreadyMadeAjaxCall.value = true
     }
@@ -328,6 +330,9 @@ onMounted(async () => {
       />
       <CmkAlertBox v-if="!userCanActivateSelectedSites" variant="warning" class="cmk-alert-box">
         {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
+      </CmkAlertBox>
+      <CmkAlertBox v-if="activationError" variant="error" class="cmk-alert-box">
+        {{ activationError }}
       </CmkAlertBox>
       <ChangesActivating
         v-if="activateChangesInProgress"

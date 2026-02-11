@@ -77,4 +77,5 @@ export interface PendingChanges {
 export interface SitesAndChanges {
   sites: Array<Site>
   pendingChanges: Array<PendingChanges>
+  licenseMessage: string | null
 }

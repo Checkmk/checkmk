@@ -1119,6 +1119,7 @@ class PendingChangesSummary(TypedDict):
 class ActivationChangesSummary(TypedDict):
     sites: list[ActivationSitesSummary]
     pendingChanges: list[PendingChangesSummary]
+    licenseMessage: str | None
 
 
 class ActivateChanges:
@@ -1390,6 +1391,17 @@ class ActivateChanges:
                 base_summary["lastActivationStatus"] = asdict(last_status)
             return base_summary
 
+        def _get_license_message() -> str | None:
+            if (
+                user_effect := get_licensing_user_effect(
+                    licensing_settings_link=makeuri_contextless(
+                        _request, [("mode", "licensing")], filename="wato.py"
+                    ),
+                )
+            ) is not None and user_effect.header is not None:
+                return user_effect.header.message_html
+            return None
+
         site_change_counter: Counter = Counter()
         pending_changes: list[PendingChangesSummary] = []
         for _changeid, change in self._all_changes:
@@ -1416,6 +1428,7 @@ class ActivateChanges:
                 for site_id, site in activation_sites(sites).items()
             ],
             pendingChanges=pending_changes,
+            licenseMessage=_get_license_message(),
         )
 
 

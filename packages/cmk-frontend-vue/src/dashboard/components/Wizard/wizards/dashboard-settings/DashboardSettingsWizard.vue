@@ -8,6 +8,7 @@ import { computed, reactive, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import { immediateWatch } from '@/lib/watch'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
@@ -55,6 +56,7 @@ const dashboardIcon = ref<string | null>(generalSettings.menu.icon?.name || null
 const dashboardEmblem = ref<string | null>(generalSettings.menu.icon?.emblem || null)
 const sortIndexError = ref<string[]>([])
 const openedTab = ref<string | number>('general')
+const accessErrors = ref<TranslatedString[]>([])
 
 const _nameValidation = (): [boolean, TranslatedString[]] => {
   if (generalSettings.title.text.trim() === '') {
@@ -89,6 +91,23 @@ const cancel = () => {
   emit('cancel')
 }
 
+const _validateAccess = () => {
+  const accessSettings = generalSettings.visibility.share
+
+  if (accessSettings === 'no' || accessSettings.type === 'with_all_users') {
+    accessErrors.value = []
+    return true
+  }
+
+  if (accessSettings.type === 'with_contact_groups' && accessSettings.contact_groups.length === 0) {
+    accessErrors.value = [_t('Select at least one contact group.')]
+  } else if (accessSettings.type === 'with_sites' && accessSettings.sites.length === 0) {
+    accessErrors.value = [_t('Select at least one site.')]
+  }
+
+  return accessErrors.value.length === 0
+}
+
 const save = async () => {
   const [nameIsValid, nameValidationErrors] = _nameValidation()
   const [uniqueIdIsValid, uniqueIdValidationErrors] = await _uniqueIdValidation()
@@ -101,7 +120,14 @@ const save = async () => {
       ? [_t('Must be a non-negative integer.')]
       : []
 
-  if (nameIsValid && uniqueIdIsValid && sortIndexError.value.length === 0) {
+  _validateAccess()
+
+  if (
+    nameIsValid &&
+    uniqueIdIsValid &&
+    sortIndexError.value.length === 0 &&
+    accessErrors.value.length === 0
+  ) {
     if (dashboardIcon.value !== null) {
       const icon: DashboardIcon = { name: dashboardIcon.value }
       if (dashboardEmblem.value !== null) {
@@ -114,7 +140,13 @@ const save = async () => {
   }
 }
 
+immediateWatch(
+  () => generalSettings.visibility.share,
+  () => (accessErrors.value = [])
+)
+
 const hasGeneralErrors = computed(() => nameErrors.value.length + uniqueIdErrors.value.length > 0)
+const hasAccessErrors = computed(() => accessErrors.value.length > 0)
 const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
 </script>
 
@@ -151,7 +183,15 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
               class="db-settings-wizard__error-icon"
             />{{ _t('General') }}
           </CmkTab>
-          <CmkTab id="access">{{ _t('Access') }}</CmkTab>
+          <CmkTab id="access" :variant="hasAccessErrors ? 'error' : undefined">
+            <CmkIcon
+              v-if="hasAccessErrors"
+              name="inline-error"
+              variant="inline"
+              size="large"
+              class="db-settings-wizard__error-icon"
+            />{{ _t('Access') }}
+          </CmkTab>
           <CmkTab id="visibility" :variant="hasVisibilityErrors ? 'error' : undefined">
             <CmkIcon
               v-if="hasVisibilityErrors"
@@ -181,7 +221,10 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
             />
           </CmkTabContent>
           <CmkTabContent id="access" class="db-settings-wizard__box">
-            <AccessSettings v-model:share="generalSettings.visibility.share" />
+            <AccessSettings
+              v-model:share="generalSettings.visibility.share"
+              :errors="accessErrors"
+            />
           </CmkTabContent>
           <CmkTabContent id="visibility" class="db-settings-wizard__box">
             <VisibilitySettings

@@ -7,16 +7,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import type { DualListElement } from '@/components/CmkDualList'
 import CmkDualList from '@/components/CmkDualList/CmkDualList.vue'
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type DashboardShare } from '@/dashboard/types/shared'
 
 import { getContactGroups, getSites } from '../api'
 
 const { _t } = usei18n()
+
+interface AccessSettingsProps {
+  errors: TranslatedString[]
+}
+
+defineProps<AccessSettingsProps>()
 
 const share = defineModel<DashboardShare>('share', { required: true })
 
@@ -128,6 +136,7 @@ if (shareMode.value === 'with_contact_groups' || shareMode.value === 'with_sites
     ]"
   />
 
+  <CmkInlineValidation v-if="displayDualList && errors.length > 0" :validation="errors" />
   <CmkDualList
     v-if="displayDualList"
     v-model:data="selectedElements"

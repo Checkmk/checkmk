@@ -39,7 +39,6 @@ void main() {
             // to be fixed with CMK-29585
             if (p.path in [
                 "packages/cmk-agent-receiver",
-                "non-free/packages/cmk-update-agent",
             ]) {
                 relative_job_name = relative_job_name.split("-k8s")[0];
             }

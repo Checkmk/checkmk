@@ -728,10 +728,10 @@ STAGES:
     - NAME: "Package cmk-update-agent"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_UPDATE_AGENT_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "non-free/packages/cmk-update-agent"
-      COMMAND: "./run --unit-tests --lint=mypy --lint=bandit --lint=semgrep &> ${RESULTS}/cmk-update-agent.txt"
+      COMMAND: "./run --unit-tests --lint=mypy --lint=bandit --lint=semgrep"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-update-agent files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-update-agent.txt"
+      RESULT_CHECK_FILE_PATTERN: "cmk-update-agent.txt"
 
     - NAME: "Package cmk-frontend-vue"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES

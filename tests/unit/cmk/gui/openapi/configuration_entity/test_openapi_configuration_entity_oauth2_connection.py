@@ -95,10 +95,12 @@ def test_create_already_existing_oauth2_connection(
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
             "entity_type": ConfigEntityType.oauth2_connection.value,
-            "entity_type_specifier": "all",
+            "entity_type_specifier": "microsoft_entra_id",
             "data": {
                 "ident": MY_OAUTH2_CONNECTION_UUID,
                 "title": "My OAuth2 Connection",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
                 "client_secret": ("explicit_password", "", "my_client_secret", False),
                 "access_token": ("explicit_password", "", "my_access_token", False),
                 "refresh_token": ("explicit_password", "", "my_refresh_token", False),
@@ -116,6 +118,42 @@ def test_create_already_existing_oauth2_connection(
 
 
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_update_already_existing_oauth2_connection(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    # GIVEN
+    for ident, details in OAUTH2_CONNECTION_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    # WHEN
+    resp = clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_id": MY_OAUTH2_CONNECTION_UUID,
+            "entity_type": ConfigEntityType.oauth2_connection.value,
+            "entity_type_specifier": "microsoft_entra_id",
+            "data": {
+                "ident": MY_OAUTH2_CONNECTION_UUID,
+                "title": "My OAuth2 Connection",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
+                "client_secret": ("explicit_password", "", "my_client_secret", False),
+                "access_token": ("explicit_password", "", "my_access_token", False),
+                "refresh_token": ("explicit_password", "", "my_refresh_token", False),
+                "client_id": MY_CLIENT_ID,
+                "tenant_id": MY_TENANT_ID,
+                "authority": option_id("global"),
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 200, resp.json
+    assert resp.json["id"] == MY_OAUTH2_CONNECTION_UUID, resp.json
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_create_non_existing_oauth2_connection(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
@@ -129,10 +167,12 @@ def test_create_non_existing_oauth2_connection(
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
             "entity_type": ConfigEntityType.oauth2_connection.value,
-            "entity_type_specifier": "all",
+            "entity_type_specifier": "microsoft_entra_id",
             "data": {
                 "ident": my_new_uuid,
                 "title": "My non existing OAuth2 Connection",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
                 "client_secret": ("explicit_password", "", "my_client_secret", False),
                 "access_token": ("explicit_password", "", "my_access_token", False),
                 "refresh_token": ("explicit_password", "", "my_refresh_token", False),
@@ -171,10 +211,12 @@ def test_create_non_existing_oauth2_connection_without_permissions(
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
             "entity_type": ConfigEntityType.oauth2_connection.value,
-            "entity_type_specifier": "all",
+            "entity_type_specifier": "microsoft_entra_id",
             "data": {
                 "ident": my_new_uuid,
                 "title": "My non existing OAuth2 Connection",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
                 "client_secret": ("explicit_password", "", "my_client_secret", False),
                 "access_token": ("explicit_password", "", "my_access_token", False),
                 "refresh_token": ("explicit_password", "", "my_refresh_token", False),

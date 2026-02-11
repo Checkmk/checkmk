@@ -24,6 +24,7 @@ from cmk.gui.oauth2_connections.watolib.store import (
     save_tokens_to_passwordstore,
     update_reference,
 )
+from cmk.gui.watolib.passwords import load_passwords
 from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType
 
 
@@ -44,12 +45,26 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
     disk_data = visitor.to_disk(data)
     assert isinstance(disk_data, dict)
 
+    owned_by = None
+    match disk_data.get("editable_by"):
+        case ("administrators", None):
+            owned_by = None
+        case ("contact_group", group_name):
+            owned_by = group_name
+        case _:
+            raise ValidationError(
+                message=_("Invalid value for 'owned_by'."),
+                field_name="data",
+            )
+
     save_tokens_to_passwordstore(
         ident=disk_data["ident"],
         title=disk_data["title"],
         client_secret=extract_password_store_entry(disk_data["client_secret"]),
         access_token=extract_password_store_entry(disk_data["access_token"]),
         refresh_token=extract_password_store_entry(disk_data["refresh_token"]),
+        owned_by=owned_by,
+        shared_with=disk_data.get("shared_with", []),
         user_id=user.id,
         pprint_value=pprint_value,
         use_git=use_git,
@@ -91,12 +106,23 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
             field_name="data",
         )
 
+    owned_by = None
+    match disk_data.get("editable_by"):
+        case ("administrators", None):
+            owned_by = None
+        case ("contact_group", group_name):
+            owned_by = group_name
+        case _:
+            raise ValidationError(message=_("Invalid value for 'owned_by'."), field_name="data")
+
     save_tokens_to_passwordstore(
         ident=disk_data["ident"],
         title=disk_data["title"],
         client_secret=extract_password_store_entry(disk_data["client_secret"]),
         access_token=extract_password_store_entry(disk_data["access_token"]),
         refresh_token=extract_password_store_entry(disk_data["refresh_token"]),
+        owned_by=owned_by,
+        shared_with=disk_data.get("shared_with", []),
         user_id=user.id,
         pprint_value=pprint_value,
         use_git=use_git,
@@ -127,10 +153,20 @@ def get_oauth2_connection(
         raise KeyError(f"OAuth2 connection with ident '{oauth2_connection_id}' does not exist")
 
     connection = load_oauth2_connections()[oauth2_connection_id]
+    client_secret = load_passwords()[connection["client_secret"][2][0]]
+    editable_by = client_secret["owned_by"]
     form_spec = OAuth2ConnectionSetup(connector_type=connection["connector_type"])
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     _, values = visitor.to_vue(
-        RawDiskData({k: v for k, v in connection.items() if k != "connector_type"})
+        RawDiskData(
+            {k: v for k, v in connection.items() if k != "connector_type"}
+            | {
+                "editable_by": ("contact_group", editable_by)
+                if editable_by
+                else ("administrators", None),
+                "shared_with": client_secret["shared_with"],
+            }
+        )
     )
     assert isinstance(values, Mapping)
     return OAuth2ConnectionData(

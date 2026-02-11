@@ -9,15 +9,19 @@ from collections.abc import Collection, Mapping
 from dataclasses import asdict
 from typing import override
 
+from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import RawDiskData, serialize_data_for_frontend
 from cmk.gui.form_specs.unstable import (
+    MultipleChoiceExtended,
+    MultipleChoiceExtendedLayout,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
     TwoColumnDictionary,
 )
+from cmk.gui.form_specs.unstable.multiple_choice import MultipleChoiceElementExtended
 from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -41,20 +45,25 @@ from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIco
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
+from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.passwords import remove_password
+from cmk.gui.watolib.passwords import load_passwords, remove_password
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
     DictGroup,
     Dictionary,
+    FixedValue,
     Password,
     String,
     validators,
 )
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing.mode_oauth2_connection import (
     AuthorityUrls,
     MicrosoftEntraIdUrls,
@@ -77,6 +86,28 @@ def uuid4_validator(error_msg: Message | None = None) -> validators.MatchRegex:
         regex="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
         error_msg=error_msg,
     )
+
+
+def _custom_validate_editable_by(value: tuple[str, object]) -> None:
+    if user.may("wato.edit_all_passwords"):
+        return
+
+    assert user.id
+    match value:
+        case ("administrators", None):
+            raise ValidationError(
+                Message(
+                    "Only users with the permission 'Write access to all passwords' can assign ownership to 'Administrators'."
+                )
+            )
+        case ("contact_group", group_name):
+            user_groups = userdb.contactgroups_of_user(user.id)
+            if group_name not in user_groups:
+                raise ValidationError(
+                    Message("You can only assign ownership to contact groups you are a member of.")
+                )
+        case _:
+            pass
 
 
 def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
@@ -108,6 +139,54 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                             min_value=1, error_msg=Message("Title is required")
                         ),
                     ],
+                ),
+                group=DictGroup(title=Title("General properties")),
+            ),
+            "editable_by": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Editable by"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="administrators",
+                            title=Title("Administrators"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="contact_group",
+                            title=Title("Members of the contact group"),
+                            parameter_form=SingleChoiceExtended(
+                                title=Title("Select contact group"),
+                                help_text=Help(
+                                    "Select the contact group that can edit this OAuth2 connection."
+                                ),
+                                elements=[
+                                    SingleChoiceElementExtended(
+                                        name=name,
+                                        title=Title("%s") % title,
+                                    )
+                                    for name, title in sorted_contact_group_choices()
+                                ],
+                            ),
+                        ),
+                    ],
+                    custom_validate=[_custom_validate_editable_by],
+                ),
+                group=DictGroup(title=Title("General properties")),
+            ),
+            "shared_with": DictElement(
+                required=True,
+                parameter_form=MultipleChoiceExtended(
+                    title=Title("Share with"),
+                    elements=[
+                        MultipleChoiceElementExtended(
+                            name=name,
+                            title=Title("%s") % title,
+                        )
+                        for name, title in sorted_contact_group_choices()
+                    ],
+                    show_toggle_all=True,
+                    layout=MultipleChoiceExtendedLayout.dual_list,
                 ),
                 group=DictGroup(title=Title("General properties")),
             ),
@@ -454,7 +533,18 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
     @override
     def page(self, config: Config, form_name: str = "edit") -> None:
         html.enable_help_toggle()
+        assert user.id
+        if len(userdb.contactgroups_of_user(user.id)) == 0 and not user.may(
+            "wato.edit_all_passwords"
+        ):
+            raise MKUserError(
+                "",
+                _("You need to be a member of at least one contact group to create a %s.")
+                % self._mode_type.name_singular(),
+            )
         if self._clone:
+            client_secret = load_passwords()[self._entry["client_secret"][2][0]]
+            editable_by = client_secret["owned_by"]
             html.vue_component(
                 "cmk-mode-create-oauth2-connection",
                 data={
@@ -472,6 +562,10 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                                     "client_secret": self.entry["client_secret"],
                                     "access_token": self._entry["access_token"],
                                     "refresh_token": self._entry["refresh_token"],
+                                    "editable_by": ("contact_group", editable_by)
+                                    if editable_by
+                                    else ("administrators", None),
+                                    "shared_with": client_secret["shared_with"],
                                 }
                             ),
                             field_id=form_name,
@@ -503,6 +597,8 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
             )
             return
 
+        client_secret = load_passwords()[self._entry["client_secret"][2][0]]
+        editable_by = client_secret["owned_by"]
         html.vue_component(
             "cmk-mode-create-oauth2-connection",
             data={
@@ -521,6 +617,10 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                                 "client_secret": self.entry["client_secret"],
                                 "access_token": self._entry["access_token"],
                                 "refresh_token": self._entry["refresh_token"],
+                                "editable_by": ("contact_group", editable_by)
+                                if editable_by
+                                else ("administrators", None),
+                                "shared_with": client_secret["shared_with"],
                             }
                         ),
                         field_id=form_name,

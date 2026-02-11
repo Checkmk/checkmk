@@ -265,7 +265,7 @@ immediateWatch(
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h2"> {{ _t('Set connection title') }}</CmkHeading>
+      <CmkHeading type="h2"> {{ _t('Set connection information') }}</CmkHeading>
     </template>
 
     <template #content>

@@ -7,6 +7,7 @@ from typing import override
 
 import requests
 
+from cmk.gui import userdb
 from cmk.gui.form_specs import (
     get_visitor,
     parse_and_validate_frontend_data,
@@ -14,6 +15,8 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.form_specs.visitors._utils import option_id
+from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.wato._modes import get_oauth2_connection_form_spec
 from cmk.gui.oauth2_connections.watolib.store import extract_password_store_entry
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
@@ -31,8 +34,22 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         result = ctx.request.get_json()
         form_spec = get_oauth2_connection_form_spec()
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
+        editable_by: tuple[str, str | None]
+        if user.may("wato.edit_all_passwords"):
+            editable_by = ("administrators", None)
+        else:
+            assert user.id
+            editable_by = ("contact_group", option_id(userdb.contactgroups_of_user(user.id)[0]))
         data = parse_and_validate_frontend_data(
-            form_spec, RawFrontendData(value=result["data"] | {"title": "dummy"})
+            form_spec,
+            RawFrontendData(
+                value=result["data"]
+                | {
+                    "title": "dummy",
+                    "editable_by": editable_by,
+                    "shared_with": [],
+                }
+            ),
         )
         assert isinstance(data, dict)
         if not (client_secret_raw := data.get("client_secret")):

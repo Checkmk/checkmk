@@ -229,18 +229,21 @@ Map capture_folder_state(download_dest) {
     // Note: .cache/bazel is excluded as it's managed by MOUNT_SHARED_REPOSITORY_CACHE
     def folder_state = [:];
     try {
-        def output = sh(script: """
-            cd ${download_dest}
-            find . -maxdepth 1 -type d ! -name '.' -exec du -sb {} \\; | sort
-        """, returnStdout: true).trim();
+        // average runtime of this part is up to 10sec when restoring mypy with 25GB
+        timeout(time: 15, unit: 'SECONDS') {
+            def output = sh(script: """
+                cd ${download_dest}
+                find . -maxdepth 1 -type d ! -name '.' -exec du -sb {} \\; | sort
+            """, returnStdout: true).trim();
 
-        if (output) {
-            output.split('\n').each { line ->
-                def parts = line.split('\t');
-                if (parts.size() == 2) {
-                    def size = parts[0];
-                    def folder = parts[1];
-                    folder_state[folder] = size;
+            if (output) {
+                output.split('\n').each { line ->
+                    def parts = line.split('\t');
+                    if (parts.size() == 2) {
+                        def size = parts[0];
+                        def folder = parts[1];
+                        folder_state[folder] = size;
+                    }
                 }
             }
         }

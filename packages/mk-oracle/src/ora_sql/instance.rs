@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::config::{self, OracleConfig};
+use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
 use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
@@ -27,6 +28,7 @@ use crate::config::authentication::AuthType;
 use crate::config::connection::{add_tns_admin_to_env, setup_wallet_environment};
 use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomService;
+use crate::config::section::names;
 use crate::ora_sql::detect::find_sids_by_processes;
 use crate::platform::get_local_instances;
 use anyhow::{Context, Result};
@@ -140,7 +142,7 @@ pub async fn generate_data(
 
     let all = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
     let all = filter_spots(all, ora_sql.discovery());
-    let connected = connect_spots(all, None);
+    let spot_candidates = connect_spots(all, None);
 
     let sections = ora_sql
         .product()
@@ -163,11 +165,25 @@ pub async fn generate_data(
         .iter()
         .filter_map(|s| s.to_signaling_header())
         .collect();
-    let works = make_spot_works(connected, sections, ora_sql.params());
+    let (spots, errors): (Vec<OpenedSpot>, Vec<anyhow::Error>) =
+        spot_candidates
+            .into_iter()
+            .fold((Vec::new(), Vec::new()), |(mut spots, mut errors), r| {
+                match r {
+                    Ok(s) => spots.push(s),
+                    Err(e) => errors.push(e),
+                }
+                (spots, errors)
+            });
+    let works = make_spot_works(spots, sections, ora_sql.params());
     if ora_sql.options().threads() > 1 {
         output.extend(process_spot_works_para(works, ora_sql.options().threads()));
     } else {
         output.extend(process_spot_works(works));
+    }
+    for error in errors {
+        output.push(header(names::INSTANCE, '|'));
+        output.push(format!("{}", error));
     }
     Ok(output)
 }
@@ -408,24 +424,30 @@ fn _exec_queries(
 }
 
 // tested only in integration tests
-fn connect_spots(spots: Vec<ClosedSpot>, service_name: Option<&InstanceName>) -> Vec<OpenedSpot> {
+fn connect_spots(
+    spots: Vec<ClosedSpot>,
+    instance_name: Option<&InstanceName>,
+) -> Vec<Result<OpenedSpot>> {
     let connected = spots
         .into_iter()
-        .filter_map(|t| match t.connect(service_name) {
-            Ok(opened) => {
-                log::info!("Connected to instance: {:?}", &opened.target());
-                Some(opened)
-            }
-            Err(e) => {
-                log::error!("Error connecting to instance: {}", e);
-                None
+        .map(|t| {
+            let x = t.target().display_name();
+            match t.connect(instance_name) {
+                Ok(opened) => {
+                    log::info!("Connected to instance: {:?}", &opened.target());
+                    Ok(opened)
+                }
+                Err(e) => {
+                    log::error!("Error connecting to instance: {}", e);
+                    anyhow::bail!(
+                        "REMOTE_INSTANCE_{}|FAILURE|ERROR: {} ",
+                        x,
+                        e.to_string().replace("OCI Error: ", "")
+                    )
+                }
             }
         })
-        .collect::<Vec<OpenedSpot>>();
-    log::info!(
-        "CONNECTED SPOTS: {:?}",
-        connected.iter().map(|t| t.target()).collect::<Vec<_>>()
-    );
+        .collect::<Vec<Result<OpenedSpot>>>();
 
     connected
 }
@@ -436,7 +458,15 @@ fn calc_all_spots(
 ) -> Vec<ClosedSpot> {
     let mut all = calc_main_spots(endpoints);
     all.extend(calc_custom_spots(instances));
-    all
+    all.into_iter()
+        .filter(|spot| {
+            if !spot.target.is_defined() {
+                log::info!("Spot is not defined, it may happen: {:?}", spot.target());
+                return false;
+            }
+            true
+        })
+        .collect::<Vec<ClosedSpot>>()
 }
 
 fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) -> Vec<ClosedSpot> {
@@ -583,17 +613,17 @@ mod tests {
             vec![config::ora_sql::Endpoint::default()],
             &[make_instance("A"), make_instance("B")],
         );
-        assert_eq!(all.len(), 3);
+        assert_eq!(all.len(), 2);
         let d = Discovery::default();
-        assert_eq!(filter_spots(all.clone(), &d).len(), 3);
+        assert_eq!(filter_spots(all.clone(), &d).len(), 2);
         let d = Discovery::new(false, vec!["".to_string()], vec![]);
-        assert_eq!(filter_spots(all.clone(), &d).len(), 1);
+        assert_eq!(filter_spots(all.clone(), &d).len(), 0);
         let d = Discovery::new(
             false,
             vec!["".to_string(), "A".to_string(), "x".to_string()], // 2 left
             vec!["".to_string(), "A".to_string(), "B".to_string()], // ignored
         );
-        assert_eq!(filter_spots(all.clone(), &d).len(), 2);
+        assert_eq!(filter_spots(all.clone(), &d).len(), 1);
         let d = Discovery::new(
             false,
             vec![],                                                 // 2 left
@@ -605,6 +635,6 @@ mod tests {
             vec![],                                 // 2 left
             vec!["A".to_string(), "B".to_string()], // ignored
         );
-        assert_eq!(filter_spots(all.clone(), &d).len(), 1);
+        assert_eq!(filter_spots(all.clone(), &d).len(), 0);
     }
 }

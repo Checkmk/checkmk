@@ -122,6 +122,25 @@ impl Target {
 
         conn_string
     }
+
+    pub fn display_name(&self) -> String {
+        if let Some(alias) = &self.alias {
+            alias.to_string()
+        } else if let Some(service_name) = &self.service_name {
+            self.instance_name
+                .as_ref()
+                .map_or_else(|| service_name.to_string(), ToString::to_string)
+        } else if let Some(sid) = &self.sid {
+            sid.to_string()
+        } else {
+            "undefined".to_string()
+        }
+        .to_uppercase()
+    }
+
+    pub fn is_defined(&self) -> bool {
+        self.service_name.is_some() || self.sid.is_some() || self.alias.is_some()
+    }
 }
 
 #[cfg(test)]
@@ -217,6 +236,75 @@ authentication:
             target.make_connection_string(None, ConnectionStringType::EzConnect),
             "localhost:1521/oRcl"
         );
+    }
+
+    fn _make_target(
+        service_name: Option<&ServiceName>,
+        instance_name: Option<&InstanceName>,
+        sid: Option<&Sid>,
+        alias: Option<&InstanceAlias>,
+    ) -> Target {
+        Target {
+            host: HostName::from("localhost".to_owned()),
+            service_name: service_name.cloned(),
+            service_type: None,
+            instance_name: instance_name.cloned(),
+            sid: sid.cloned(),
+            alias: alias.cloned(),
+            port: Port(1521),
+            auth: Authentication::default(),
+        }
+    }
+    #[test]
+    fn test_get_display_name() {
+        let service_name = ServiceName::from("service");
+        let instance_name = InstanceName::from("instance");
+        let sid = Sid::from("sid");
+        let alias = InstanceAlias::from("alias".to_string());
+
+        let full =
+            _make_target(Some(&service_name), Some(&instance_name), None, None).display_name();
+        assert_eq!(full, "INSTANCE");
+        let service = _make_target(Some(&service_name), None, None, None).display_name();
+        assert_eq!(service, "SERVICE");
+        let undefined = _make_target(None, None, None, None).display_name();
+        assert_eq!(undefined, "UNDEFINED");
+        assert_eq!(
+            _make_target(Some(&service_name), Some(&instance_name), Some(&sid), None)
+                .display_name(),
+            "INSTANCE"
+        );
+        assert_eq!(
+            _make_target(Some(&service_name), None, Some(&sid), None).display_name(),
+            "SERVICE"
+        );
+        assert_eq!(
+            _make_target(None, None, Some(&sid), None).display_name(),
+            "SID"
+        );
+        assert_eq!(
+            _make_target(
+                Some(&service_name),
+                Some(&instance_name),
+                None,
+                Some(&alias)
+            )
+            .display_name(),
+            "ALIAS"
+        );
+    }
+
+    #[test]
+    fn test_is_defined() {
+        let service_name = ServiceName::from("service");
+        let instance_name = InstanceName::from("instance");
+        let sid = Sid::from("sid");
+        let alias = InstanceAlias::from("alias".to_string());
+        assert!(!_make_target(None, None, None, None).is_defined());
+        assert!(!_make_target(None, Some(&instance_name), None, None).is_defined());
+        assert!(_make_target(Some(&service_name), None, None, None).is_defined());
+        assert!(_make_target(None, None, Some(&sid), None).is_defined());
+        assert!(_make_target(None, None, None, Some(&alias)).is_defined());
     }
 
     #[test]

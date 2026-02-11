@@ -319,7 +319,13 @@ async fn test_remote_sid_only_connection() {
     let result = generate_data(&config, &env).await;
     assert!(result.is_ok());
     let table = result.unwrap();
-    assert_eq!(table.len(), 2);
+    assert_eq!(
+        table.len(),
+        2,
+        "Unexpected table length: {:?}, table: {:?}",
+        table.len(),
+        table
+    );
     assert_eq!(table[0], "<<<oracle_instance>>>");
     let rows: Vec<&str> = table[1].split("\n").collect();
     assert!(!rows.is_empty());
@@ -359,7 +365,14 @@ async fn test_absent_remote_custom_instance_connection() {
     let r = generate_data(&config, &env).await;
 
     assert!(r.is_ok());
-    assert_eq!(r.unwrap()[0], "<<<oracle_instance>>>");
+    let table = r.unwrap();
+    assert_eq!(table[0], "<<<oracle_instance>>>");
+    assert_eq!(table[1], "<<<oracle_instance:sep(124)>>>");
+    assert!(
+        table[2].starts_with("REMOTE_INSTANCE_ABSENT|FAILURE|ERROR: ORA-"),
+        "Unexpected output: {:?}",
+        table
+    );
 }
 
 // TODO: Remove this test when TNS_ADMIN is properly supported on non-Windows platforms

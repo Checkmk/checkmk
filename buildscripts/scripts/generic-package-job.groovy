@@ -52,7 +52,6 @@ void main() {
     dir(checkout_dir) {
         // to be fixed with CMK-29585
         if (params.PACKAGE_PATH in [
-            "non-free/packages/cmk-relay-engine",
             "packages/cmk-agent-receiver",
             "non-free/packages/cmk-update-agent",
         ]) {

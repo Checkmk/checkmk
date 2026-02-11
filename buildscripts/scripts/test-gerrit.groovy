@@ -147,6 +147,9 @@ void main() {
                             ];
                             break;
                         case "Package cmc":
+                        case "Package cmk-relay-engine":
+                        // "cmk-relay-engine" does not work with the default container of the pod used for test-gerrit-single
+                        // 'testing-ubuntu-2204-checkmk-master' works 'ubuntu-2404-master-latest' does not
                         case "Package neb":
                         case "Package livestatus":
                         case "Package unixcat":
@@ -161,7 +164,6 @@ void main() {
                             ];
                             break;
                         case "Package cmk-agent-receiver":  // Tries to start docker containers, CMK-29585
-                        case "Package cmk-relay-engine":    // Tries to start docker containers, CMK-29585
                         case "Package cmk-update-agent":    // Has issues with pytest
                         // exception: The 'enchant' C library was not found and maybe needs to be installed.
                         case "Software Documentation Generation":

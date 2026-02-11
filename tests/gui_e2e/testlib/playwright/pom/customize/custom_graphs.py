@@ -88,7 +88,7 @@ class BaseGraph(CmkPage):
 
     def _value_cell_selector(self, n_child: int) -> Locator:
         return self.main_area.locator(
-            f"#graph_0 > div > table > tbody > tr:nth-child(2) > td:nth-child({n_child})"
+            f"#graph_0 > div > table > tbody > tr:nth-child(1) > td:nth-child({n_child})"
         )
 
     @property

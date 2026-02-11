@@ -74,7 +74,9 @@ class UnifiedSearchSlideout(LocatorHelper):
 
     @property
     def provider_select(self) -> ProviderSelect:
-        return ProviderSelect(locator=self.slideout.locator(".unified-search-provider-switch"))
+        return ProviderSelect(
+            locator=self.slideout.locator(".unified-search-search-provider__wrapper")
+        )
 
     @property
     def search_operator_select(self) -> SearchOperatorSelect:

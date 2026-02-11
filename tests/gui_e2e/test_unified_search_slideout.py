@@ -26,13 +26,9 @@ def test_unified_search_slideout(dashboard_page: MainDashboard) -> None:
     logger.info("Validate provider select functionality")
     provider_name: Literal["Monitoring"] = "Monitoring"
     search.provider_select.select(provider_name)
-    expect(
-        search.provider_select.button,
-        message=(
-            "Provider select button text is incorrect."
-            f" Expected '{provider_name}'; got '{search.provider_select.button_text}'."
-        ),
-    ).to_have_text(provider_name)
+    assert search.provider_select.is_active(provider_name), (
+        f"Provider button '{provider_name}' should be active after selection"
+    )
 
     logger.info("Validate search operator select functionality")
     search_operator: Literal["hg:"] = "hg:"

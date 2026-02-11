@@ -5,48 +5,80 @@
 
 import logging
 
+import pytest
+
 from tests.testlib import CMKEventConsole
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.config import Config, Rule, ServiceLevel
-from cmk.ec.defaults import default_rule_pack
-from cmk.ec.event import Event
-from cmk.ec.main import (
-    create_history,
-    EventServer,
-    StatusTableEvents,
-    StatusTableHistory,
+import cmk.ec.export as ec
+from cmk.ec.config import Config, MatchGroups, ServiceLevel, State
+from cmk.ec.main import create_history, EventServer, StatusTableEvents, StatusTableHistory
+
+
+def _make_rule(state: State) -> ec.Rule:
+    return ec.Rule(
+        actions=[],
+        actions_in_downtime=True,
+        autodelete=False,
+        cancel_action_phases="always",
+        cancel_actions=[],
+        comment="",
+        description="",
+        disabled=False,
+        docu_url="",
+        id="patterns",
+        invert_matching=False,
+        sl=ServiceLevel(precedence="message", value=0),
+        state=state,
+    )
+
+
+@pytest.mark.parametrize(
+    "state,priority,expected",
+    [
+        pytest.param(-1, ec.SyslogPriority(0), 2, id="set by syslog, prio 0"),
+        pytest.param(-1, ec.SyslogPriority(1), 2, id="set by syslog, prio 1"),
+        pytest.param(-1, ec.SyslogPriority(2), 2, id="set by syslog, prio 2"),
+        pytest.param(-1, ec.SyslogPriority(3), 2, id="set by syslog, prio 3"),
+        pytest.param(-1, ec.SyslogPriority(4), 1, id="set by syslog, prio 4"),
+        pytest.param(-1, ec.SyslogPriority(5), 0, id="set by syslog, prio 5"),
+        pytest.param(-1, ec.SyslogPriority(6), 0, id="set by syslog, prio 6"),
+        pytest.param(-1, ec.SyslogPriority(7), 0, id="set by syslog, prio 7"),
+        pytest.param(0, ec.SyslogPriority(0), 0, id="set to OK"),
+        pytest.param(1, ec.SyslogPriority(0), 1, id="set to WARN"),
+        pytest.param(2, ec.SyslogPriority(0), 2, id="set to CRIT"),
+        pytest.param(3, ec.SyslogPriority(0), 3, id="set to UNKNOWN"),
+        pytest.param(
+            ("text_pattern", {"0": "^UND.*as ", "1": "Lamm", "2": "HURZ"}),
+            ec.SyslogPriority(0),
+            2,
+            id="set via text (CRIT)",
+        ),
+        pytest.param(
+            ("text_pattern", {"0": "^UND.*as ", "1": "Lamm", "2": "foo"}),
+            ec.SyslogPriority(0),
+            1,
+            id="set via text (WARN)",
+        ),
+        pytest.param(
+            ("text_pattern", {"0": "^UND.*as ", "1": "foo", "2": "bar"}),
+            ec.SyslogPriority(0),
+            0,
+            id="set via text (OK)",
+        ),
+    ],
 )
-from cmk.ec.settings import Settings
-
-RULE = Rule(
-    actions=[],
-    actions_in_downtime=True,
-    autodelete=False,
-    cancel_action_phases="always",
-    cancel_actions=[],
-    comment="",
-    description="",
-    disabled=False,
-    docu_url="",
-    id="patterns",
-    invert_matching=False,
-    sl=ServiceLevel(precedence="message", value=0),
-    state=("text_pattern", {"1": "supercrit", "2": "superwarn"}),
-)
-
-
-def test_event_rewrite(
+def test_rewrite_event_state(
     event_server: EventServer,
-    settings: Settings,
+    settings: ec.Settings,
     config: Config,
+    state: State,
+    priority: ec.SyslogPriority,
+    expected: int,
 ) -> None:
-    """
-    Event server rewrite_event() method should change event state
-    even if incomplete StatePatterns are given in rule["State"].
-    """
-    config_rule_packs: Config = {**config, "rule_packs": [default_rule_pack([RULE])]}
+    rule = _make_rule(state)
+    config_rule_packs = config | {"rule_packs": [ec.default_rule_pack([rule])]}
     history = create_history(
         settings,
         config_rule_packs,
@@ -56,15 +88,15 @@ def test_event_rewrite(
     )
     event_server.reload_configuration(config_rule_packs, history=history)
     event = CMKEventConsole.new_event(
-        Event(
+        ec.Event(
             host=HostName("heute"),
-            text="SUPERWARN",
+            text='Und das Lamm schrie: "Hurz!"',
             core_host=HostName("heute"),
+            priority=priority.value,
         )
     )
     assert "state" not in event
 
-    event_server.rewrite_event(rule=RULE, event=event, match_groups={})
+    event_server.rewrite_event(rule=rule, event=event, match_groups=MatchGroups())
 
-    assert event["text"] == "SUPERWARN"
-    assert event["state"] == 2
+    assert event["state"] == expected

@@ -628,7 +628,7 @@ node_software_applications_docker_images = Node(
         columns={
             "id": TextField(Title("ID")),
             "creation": TextField(Title("Creation")),
-            "size": NumberField(Title("Size"), render=UNIT_COUNT),
+            "size": NumberField(Title("Size"), render=UNIT_BYTES),
             "labels": TextField(Title("Labels")),
             "amount_containers": TextField(Title("#Containers")),
             "repotags": TextField(Title("Repository/Tag")),

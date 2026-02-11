@@ -449,6 +449,7 @@ class DocReference(Enum):
     REPLACE_AGENT_SIGNATURE_KEYS = "agent_deployment#replacing_signature_keys"
     REST_API = "rest_api"
     REPORTS = "reporting"
+    RELAY = "relay"
     SLA_CONFIGURATION = "sla"
     TIMEPERIODS = "timeperiods"
     TEST_NOTIFICATIONS = "notifications#notification_testing"

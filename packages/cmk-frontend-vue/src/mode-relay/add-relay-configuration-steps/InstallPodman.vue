@@ -50,8 +50,8 @@ const installInstructions = computed(() => {
       <CmkParagraph>
         {{
           _t(
-            `Before deploying the Relay, ensure that Podman is installed on the host operating system.
-            The Relay is distributed as a container image and requires a functional Podman environment.`
+            'Before deploying the Relay, ensure that Podman is installed on the machine on which the Relay will be running. ' +
+              'The Relay is distributed as a container image and requires a functional Podman environment.'
           )
         }}
       </CmkParagraph>

@@ -26,9 +26,12 @@
         },
         "automation_secret": {
           "type": "string"
+        },
+        "documentation": {
+          "type": "string"
         }
       },
-      "required": ["create_host", "relay_overview", "automation_secret"]
+      "required": ["create_host", "relay_overview", "automation_secret", "documentation"]
     },
     "site_name": {
       "type": "string"
@@ -44,6 +47,12 @@
     },
     "user_id": {
       "type": "string"
+    },
+    "supported_os": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [
@@ -53,6 +62,7 @@
     "domain",
     "site_version",
     "is_cloud_edition",
-    "user_id"
+    "user_id",
+    "supported_os"
   ]
 }

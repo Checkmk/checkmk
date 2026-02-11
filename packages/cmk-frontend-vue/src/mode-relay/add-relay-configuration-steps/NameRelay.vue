@@ -62,11 +62,11 @@ async function validate(): Promise<boolean> {
 
     <template #content>
       <CmkParagraph>
-        {{ _t('Provide a display alias for your Relay.') }}
+        {{ _t('Provide a display alias for your Relay. This alias can be changed later.') }}
       </CmkParagraph>
       <div class="mode-relay-name-relay__form-row">
         <CmkLabel>
-          {{ _t('Relay display alias') }}
+          {{ _t('Relay alias') }}
           <CmkLabelRequired />
         </CmkLabel>
         <CmkInput
@@ -79,7 +79,7 @@ async function validate(): Promise<boolean> {
       <CmkAlertBox variant="info">
         {{
           _t(
-            'The alias you enter here will be automatically inserted into the terminal code in the next step.'
+            'This alias will be used to identify your Relay. It will automatically be inserted into the command shown in the next step.'
           )
         }}
       </CmkAlertBox>

@@ -55,36 +55,35 @@ const installCommand = computed(() => {
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h2">
-        {{ _t('Download and register the Relay with your Checkmk site') }}</CmkHeading
-      >
+      <CmkHeading type="h2"> {{ _t('Run the installation script') }}</CmkHeading>
     </template>
 
     <template #content>
       <CmkParagraph>
         {{
           _t(
-            'The script will automatically download, register, and run the Relay with your Checkmk site.'
+            'On the machine on which the Relay will be running, run the command below to execute ' +
+              'the downloaded installation script with the parameters shown. The script will ' +
+              'automatically download and register the Relay to your Checkmk site and run it afterwards.'
           )
         }}
       </CmkParagraph>
-      <CmkAlertBox v-if="props.isCloudEdition" variant="info">
-        {{ _t('Before executing the script, visit ') }}
-        <a
-          :href="props.urlToGetAnAutomationSecret"
-          style="text-decoration: underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {{ _t('this page') }}
-        </a>
+      <CmkParagraph v-if="!props.isCloudEdition">
         {{
-          _t(' to get an automation secret. You will be prompted for it when running the script.')
+          _t(
+            'If you do not want to run the script as the specified user — or 2FA is active for that user —, ' +
+              'change the parameter to another user with sufficient permissions, such an automation user.'
+          )
         }}
+      </CmkParagraph>
+      <CmkAlertBox variant="info">
+        {{ _t('You can only execute the following command as rootless.') }}
+        <br />
+        {{ _t('If you are logged in as root make sure to change the user using ') }}
+        <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
+        <code>su -l &lt;user&gt;</code>
       </CmkAlertBox>
-      <CmkAlertBox v-else variant="info">
-        {{ _t('You will be prompted for your user password when running the script.') }}
-      </CmkAlertBox>
+
       <CmkCode :code_txt="installCommand"></CmkCode>
     </template>
 

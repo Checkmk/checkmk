@@ -30,16 +30,14 @@ const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h2">
-        {{ _t('Download the Relay installation script to your environment') }}</CmkHeading
-      >
+      <CmkHeading type="h2"> {{ _t('Download the Relay installation script') }}</CmkHeading>
     </template>
 
     <template #content>
       <CmkParagraph>
         {{
           _t(
-            'Download the Relay installation script. The script orchestrates downloading the Relay and registering it with your Checkmk site.'
+            'Run the command below to make the Relay installation script available to the machine on which the Relay will be running.'
           )
         }}
       </CmkParagraph>

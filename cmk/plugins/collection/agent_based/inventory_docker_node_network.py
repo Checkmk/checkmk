@@ -32,7 +32,7 @@ def inventory_docker_node_network(section: Section) -> InventoryResult:
         network_path = ["software", "applications", "docker", "networks"]
         container_path = network_path + ["containers"]
 
-        for container_id, container in sorted(network["Containers"].items()):
+        for container_id, container in sorted(network.get("Containers", {}).items()):
             yield TableRow(
                 path=container_path,
                 key_columns={

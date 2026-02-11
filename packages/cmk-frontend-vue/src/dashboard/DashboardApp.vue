@@ -273,7 +273,11 @@ function addWidget(
   const widgetId = generateWidgetId(content.type)
   let layout: WidgetLayout
   if (activeDashboard.content.layout.type === 'responsive_grid') {
-    layout = createWidgetLayout(activeDashboard.content as ContentResponsiveGrid, content.type)
+    layout = createWidgetLayout(
+      activeDashboard.content as ContentResponsiveGrid,
+      content.type,
+      dashboardsManager.constants.value!
+    )
   } else if (activeDashboard.content.layout.type === 'relative_grid') {
     const widgetConstants = dashboardsManager.constants.value!.widgets[content.type]!
     // Add a static vertical offset to reduce the chance of placing the new widget in a way where it covers existing

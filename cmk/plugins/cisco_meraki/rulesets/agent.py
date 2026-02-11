@@ -183,26 +183,6 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     value=True,
                 )
             ),
-            "timespan": DictElement(
-                parameter_form=TimeSpan(
-                    title=Title("Timespan"),
-                    label=Label("The interval for which the information will be fetched."),
-                    displayed_magnitudes=(
-                        TimeMagnitude.DAY,
-                        TimeMagnitude.HOUR,
-                        TimeMagnitude.MINUTE,
-                    ),
-                    help_text=Help(
-                        "<p>The minimum value is 15 minutes and the maximum value is 31 days.</p>"
-                        "This applies to the following sections: "
-                        "<ul>"
-                        "<li>switch port statuses</li>"
-                        "</ul>"
-                    ),
-                    prefill=DefaultValue(900),  # 15 minutes
-                    custom_validate=[NumberInRange(min_value=900, max_value=2678400)],
-                )
-            ),
             "cache_per_section": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Cache per section"),

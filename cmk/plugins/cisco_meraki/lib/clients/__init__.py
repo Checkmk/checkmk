@@ -43,7 +43,6 @@ class MerakiClient:
     def __init__(self, sdk: MerakiSDK, config: MerakiConfig) -> None:
         self._no_cache = config.no_cache
         self._cache = config.cache
-        self._timespan = config.timespan
 
         self._appliance_client = ApplianceClient(sdk.appliance)
         self._org_client = OrganizationsClient(sdk.organizations)
@@ -89,7 +88,7 @@ class MerakiClient:
         return self._sensor_client.get_sensor_readings(id)
 
     def get_switch_port_statuses(self, serial: str) -> Sequence[schema.RawSwitchPortStatus]:
-        return self._switch_client.get_switch_port_statuses(serial, self._timespan)
+        return self._switch_client.get_switch_port_statuses(serial)
 
     def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:
         fn = self._appliance_client.get_uplink_statuses

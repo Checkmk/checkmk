@@ -24,7 +24,6 @@ class MerakiConfig:
     org_id_as_prefix: bool
     net_id_as_prefix: bool
     no_cache: bool
-    timespan: int
     cache: _CacheConfig
     required: _RequiredSections
 
@@ -36,7 +35,6 @@ class MerakiConfig:
             org_id_as_prefix=args.org_id_as_prefix,
             net_id_as_prefix=args.net_id_as_prefix,
             no_cache=args.no_cache,
-            timespan=args.timespan,
             cache=_CacheConfig.build(args),
             required=_RequiredSections.build(set(args.sections)),
         )

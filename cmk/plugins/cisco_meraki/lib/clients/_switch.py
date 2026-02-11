@@ -23,11 +23,11 @@ class SwitchClient:
     def __init__(self, sdk: SwitchSDK) -> None:
         self._sdk = sdk
 
-    def get_switch_port_statuses(
-        self, serial: str, timespan: int, /
-    ) -> Sequence[schema.RawSwitchPortStatus]:
+    def get_switch_port_statuses(self, serial: str, /) -> Sequence[schema.RawSwitchPortStatus]:
         try:
-            return self._sdk.getDeviceSwitchPortsStatuses(serial, timespan=timespan)
+            # The minimum timespan value for this resource is 15 min (900 sec).
+            # Hence, why we are not using the DEFAULT_TIMESPAN here.
+            return self._sdk.getDeviceSwitchPortsStatuses(serial, timespan=900)
         except APIError as e:
             log.LOGGER.debug("Serial: %r: Get Switch Port Statuses: %r", serial, e)
             return []

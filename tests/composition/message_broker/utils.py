@@ -112,7 +112,7 @@ def check_broker_ping(site: Site, destination: str, time_out_: int = 5) -> None:
 
         if "UUIDs match" not in output[-1]:
             raise RuntimeError(
-                f"cmk-broker-test received another message from {destination} than sent"
+                f"cmk-broker-test received another message from {destination} than sent, output is: {output}"
             )
         if ping.stderr is not None and (error_output := ping.stderr.read()):
             logger.error("stderr: %s", error_output)

@@ -45,7 +45,7 @@ const onShowMoreLabel = _t('Only show when "Show more" is enabled')
     <template #extra-visibility-settings>
       <CmkCheckbox
         :model-value="showInDropdownsMenu"
-        :label="_t('Show in dropdown menus')"
+        :label="_t('Show in dashboard name dropdown')"
         @update:model-value="(val) => (hideInDropdownsMenu = !val)"
       />
 

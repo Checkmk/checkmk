@@ -198,11 +198,13 @@ class ViewWidgetIFramePageHelper:
             request.set_var("filled_in", "filter")
 
     @staticmethod
-    def setup_view_name(request: Request, view_name: str) -> None:
-        """The `view_name` query parameter needs to be set for the view to be identified,
-        this method sets a default value."""
-        if request.var("view_name") is None:
-            request.set_var("view_name", view_name)
+    def setup_datasource(request: Request, datasource: str) -> None:
+        """Set the ``__view_datasource`` query parameter for the delete event icon painter.
+
+        This is used by :func:`cmk.gui.mkeventd.views.render_delete_event_icons` to determine
+        the datasource of the view when rendered inside a dashboard widget."""
+        if request.var("__view_datasource") is None:
+            request.set_var("__view_datasource", datasource)
 
     @classmethod
     def _wrapper_context(
@@ -374,7 +376,7 @@ class ViewWidgetIFramePage(Page):
             return
 
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
-        ViewWidgetIFramePageHelper.setup_view_name(ctx.request, parameters.unique_widget_name())
+        ViewWidgetIFramePageHelper.setup_datasource(ctx.request, view_spec["datasource"])
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         row_limit = get_limit(
@@ -482,7 +484,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             ctx.request, unique_widget_name
         )
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
-        ViewWidgetIFramePageHelper.setup_view_name(ctx.request, unique_widget_name)
+        ViewWidgetIFramePageHelper.setup_datasource(ctx.request, view_spec["datasource"])
 
         ViewWidgetIFramePageHelper.render_iframe_content(
             unique_widget_name,

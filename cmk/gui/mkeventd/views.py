@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-call"
 
 
-import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, TypeGuard, TypeVar
 
@@ -979,37 +978,28 @@ def render_delete_event_icons(row: Row, *, request: Request) -> str | HTML:
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
     filename: str | None = None
-    if _is_rendered_from_view_dashlet(request):
-        ident = request.get_integer_input_mandatory("id")
-
-        from cmk.gui import dashboard
-
-        # With the typed dicts we currently don't have an easy way of determining the type
-        dashlet_config = dashboard.get_dashlet(request.get_str_input_mandatory("name"), ident)
-        view: ViewDashletConfig | ViewSpec
-        if _is_view_dashlet(dashlet_config):
-            view = dashlet_config
-        elif _is_linked_view_dashlet(dashlet_config):
-            view = get_permitted_views()[dashlet_config["name"]]
-        else:
-            return ""
+    _view_datasource = request.get_str_input("__view_datasource", None)
+    if _view_datasource:
+        datasource = _view_datasource
 
         # These actions are not performed within the dashlet. Assume the title url still
         # links to the source view where the action can be performed.
-        title_url = dashlet_config.get("title_url")
-        if title_url:
-            parsed_url = urllib.parse.urlparse(title_url)
-            filename = parsed_url.path
-            urlvars += urllib.parse.parse_qsl(parsed_url.query)
+        # TODO: this didn't work since the port to the new widget. Will be handled in CMK-31242
+        # title_url = request.get_str_input("title_url", None)
+        # if title_url:
+        #     parsed_url = urllib.parse.urlparse(title_url)
+        #     filename = parsed_url.path
+        #     urlvars += urllib.parse.parse_qsl(parsed_url.query)
     else:
         # Regular view
         view = get_permitted_views()[request.get_str_input_mandatory("view_name")]
+        datasource = view["datasource"]
 
     urlvars += [
         ("filled_in", "actions"),
         ("actions", "yes"),
         ("_do_actions", "yes"),
-        ("_row_id", row_id(view["datasource"], row)),
+        ("_row_id", row_id(datasource, row)),
         ("_delete_event", _("Archive Event")),
         ("_show_result", "0"),
     ]

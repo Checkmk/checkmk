@@ -106,7 +106,7 @@ export class UnifiedSearchProvider extends SearchProvider {
 
     const collapse = '&collapse=1'
 
-    return { q: query.input.replace(/^\//, ''), provider, sort, collapse }
+    return { q: encodeURIComponent(query.input.replace(/^\//, '')), provider, sort, collapse }
   }
 
   protected getNotAvailableProvidersForFilterOptions(q: QueryProvider): {

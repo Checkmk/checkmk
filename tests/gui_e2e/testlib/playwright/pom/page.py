@@ -213,11 +213,14 @@ class MainMenu(LocatorHelper):
         """
         _loc = self.locator().get_by_role(role="link", name=menu)
         if sub_menu:
-            _loc.click()
+            if self._active_side_menu_popup_locator.count():
+                _loc.hover()
+            else:
+                _loc.click()
+
             if show_more:
-                self.page.get_by_role(role="link", name="show more", exact=True)
-            _popup_menu = self.page.locator("div.popup_trigger.active").locator("div.popup_menu")
-            _loc = _popup_menu.get_by_role(role="link", name=sub_menu, exact=exact)
+                self.locator().get_by_role(role="link", name="show more", exact=True)
+            _loc = self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
         self._unique_web_element(_loc)
         return _loc
 
@@ -262,11 +265,30 @@ class MainMenu(LocatorHelper):
         """main menu -> Open help -> show more(optional) -> sub menu"""
         return self._sub_menu("Help", sub_menu, show_more=False, exact=exact)
 
-    def rest_api_help_menu(self, sub_menu: str | None = None, exact: bool = False) -> Locator:
+    def rest_api_help_menu(
+        self,
+        sub_menu: str | None = None,
+        exact: bool = False,
+        link_url: str | None = None,
+    ) -> Locator:
         """main menu -> Open help -> REST API -> sub menu"""
         rest_api_text = "REST API"
-        self.help_menu(rest_api_text)
-        return self._sub_menu(rest_api_text, sub_menu, show_more=False, exact=exact)
+
+        _loc = self.help_menu(rest_api_text)
+
+        if sub_menu:
+            _loc.click()
+            if link_url:
+                _loc = self.locator().locator(f"a[href*='{link_url}']")
+                self._unique_web_element(_loc)
+                return _loc
+            return self._sub_menu(sub_menu, None, show_more=False, exact=exact)
+        else:
+            return _loc
+
+    @property
+    def _active_side_menu_popup_locator(self) -> Locator:
+        return self.page.locator("div.mm-item-popup--active")
 
     @property
     def active_side_menu_popup(self) -> Locator:
@@ -366,7 +388,11 @@ class MainMenu(LocatorHelper):
 
     @property
     def help_rest_api_docs(self) -> Locator:
-        return self.rest_api_help_menu("Documentation")
+        return self.rest_api_help_menu("Documentation", link_url="openapi/")
+
+    @property
+    def help_rest_api_unstable_docs(self) -> Locator:
+        return self.rest_api_help_menu("Documentation", link_url="unstable/doc/")
 
     @property
     def help_rest_api_gui(self) -> Locator:

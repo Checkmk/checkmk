@@ -55,6 +55,10 @@ class HelpMenuButton:
             id="rest_api_docs",
         ),
         pytest.param(
+            HelpMenuButton("help_rest_api_unstable_docs", "/check_mk/api/unstable/doc/"),
+            id="rest_api_unstable_docs",
+        ),
+        pytest.param(
             HelpMenuButton("help_rest_api_gui", "/check_mk/api/.*/ui/"),
             id="rest_api_gui",
         ),

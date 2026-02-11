@@ -459,16 +459,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # Clean the requested action after performing it
         performed_action = api_request.discovery_options.action
         discovery_options = api_request.discovery_options._replace(action=DiscoveryAction.NONE)
-        message, message_type = (
-            self._get_status_message(
-                previous_discovery_result,
-                discovery_result,
-                performed_action,
-                api_request.requesting_status_for_initial_action,
-                api_request.host_name,
-            )
-            if discovery_result.sources
-            else (None, None)
+        message, message_type = self._get_status_message(
+            previous_discovery_result,
+            discovery_result,
+            performed_action,
+            api_request.requesting_status_for_initial_action,
+            api_request.host_name,
         )
 
         return {
@@ -648,6 +644,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         initial_action: DiscoveryAction | None,
         host_name: HostName,
     ) -> tuple[str, MsgType]:
+        if not discovery_result.sources:
+            return _("Updating..."), "waiting"
+
         if initial_action and performed_action != DiscoveryAction.NONE:
             initial_action = None
         if not initial_action:

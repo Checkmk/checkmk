@@ -185,7 +185,7 @@ def test_widget_filters(
         WidgetType.METRICS_AND_GRAPHS, widget_title
     )
 
-    widget_wizard.add_filter_to_host_selection(site_filter)
+    widget_wizard.add_filter_to_host_selection(site_filter, "Site")
     widget_wizard.select_dropdown_option(
         "Filter widget by host site",
         widget_wizard.get_host_filter_combobox(site_filter),
@@ -208,7 +208,7 @@ def test_widget_filters(
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     cloned_linux_hosts_dashboard.edit_widget_properties_button(widget_title).click()
 
-    widget_wizard.add_filter_to_host_selection(host_name_filter)
+    widget_wizard.add_filter_to_host_selection(host_name_filter, "Host name")
     widget_wizard.select_dropdown_option(
         "Filter widget by host labels",
         widget_wizard.get_host_filter_combobox(host_name_filter),

@@ -8,7 +8,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Literal, overload, override
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import expect, Locator, Page
 
 from tests.gui_e2e.testlib.playwright.dropdown import DropdownHelper, DropdownOptions
 from tests.gui_e2e.testlib.playwright.pom.sidebar.base_sidebar import SidebarHelper
@@ -200,6 +200,16 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         """Locator property of 'Save widget' button."""
         return self.locator().get_by_role("button", name="Save widget")
 
+    @property
+    def _add_filter_section(self) -> Locator:
+        """Locator property of 'Add filter' section."""
+        return self.locator("div.db-add-filters__container")
+
+    @property
+    def _filter_menu_entries(self) -> Locator:
+        """Locator property of 'Add filter' menu entries."""
+        return self._add_filter_section.locator("div.filter-menu__entries")
+
     def _get_filter_menu_item(self, item_name: str, exact: bool) -> Locator:
         """Get an item from filter menu.
 
@@ -210,7 +220,9 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         Returns:
             The locator of the filter menu item.
         """
-        return self.locator("div.filter-menu__entries").get_by_text(item_name, exact=exact)
+        return self._filter_menu_entries.locator("div.filter-menu__filter-item").get_by_text(
+            item_name, exact=exact
+        )
 
     def get_host_filter_container(self, filter_name: str) -> Locator:
         """Get the locator of the container of a filter from 'Host selection' region.
@@ -305,7 +317,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
             self._combobox_text_input if search else None,
         )
 
-    def add_filter_to_host_selection(self, filter_name: str, exact: bool = True) -> None:
+    def add_filter_to_host_selection(self, filter_name: str, sub_menu: str | None = None) -> None:
         """Add filter to widget in host selection region.
 
         Args:
@@ -313,7 +325,20 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
             exact: whether the name match has to be exact or not.
         """
         self._host_selection_add_filter_button.click()
-        self._get_filter_menu_item(filter_name, exact=exact).click()
+        expect(
+            self._add_filter_section, message="'Add filter' section is not visible"
+        ).to_be_visible()
+
+        filter_menu_item = self._get_filter_menu_item(filter_name, exact=True)
+
+        if sub_menu is not None and not filter_menu_item.is_visible():
+            self._filter_menu_entries.get_by_role("button", name=sub_menu).click()
+            expect(
+                filter_menu_item,
+                message=f"Filter menu item '{filter_name}' not visible",
+            ).to_be_visible()
+
+        filter_menu_item.click()
 
     def remove_filter_from_host_selection(self, filter_name: str) -> None:
         """Remove filter from host selection region.

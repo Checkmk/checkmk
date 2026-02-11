@@ -756,9 +756,9 @@ export function render_metric_series_usage_graph(
       subscription_sizing_title: 'Subscription sizing',
       subscription_sizing_line_class: 'line-subscription-limit',
       subscription_sizing_legend_class: 'legend-subscription-limit',
-      daily_title: 'Daily active metric series',
-      monthly_averages_title: 'Monthly active metric series averages',
-      tooltip_title: 'Active Metric Series',
+      daily_title: 'Daily custom metrics',
+      monthly_averages_title: 'Monthly custom metric averages',
+      tooltip_title: 'Custom Metrics',
       first_above_limit_title: 'First monthly average usage above subscription limit'
     },
     metric_series_aggregation
@@ -774,12 +774,12 @@ export function render_free_metric_series_usage_graph(
       y_domain_max: 1000,
       width: Math.floor((0.9 * window.innerWidth) / num_graphs),
       graph_title: 'Telemetry',
-      subscription_sizing_title: 'Free metric series',
+      subscription_sizing_title: 'Free custom metrics',
       subscription_sizing_line_class: 'line-free-limit',
       subscription_sizing_legend_class: 'legend-free-limit',
-      daily_title: 'Daily active metric series',
-      monthly_averages_title: 'Monthly active metric series averages',
-      tooltip_title: 'Active Metric Series',
+      daily_title: 'Daily custom metrics',
+      monthly_averages_title: 'Monthly custom metric averages',
+      tooltip_title: 'Custom Metrics',
       first_above_limit_title: 'First monthly average usage above free limit'
     },
     metric_series_aggregation

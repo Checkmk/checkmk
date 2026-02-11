@@ -162,11 +162,12 @@ onMounted(() => {
   siteServer.value = props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
 
   if (sessionStorage.getItem('reopenSlideIn') === 'true') {
-    void startAjax().then(() => {
+    if (!props.setupError) {
       slideInOpen.value = true
-      sessionStorage.removeItem('reopenSlideIn')
-    })
+    }
+    sessionStorage.removeItem('reopenSlideIn')
   }
+
   props.formElement.addEventListener('change', (e: Event) => {
     switch (e.target) {
       case props.formElement:

@@ -1486,13 +1486,13 @@ class EventServer(ECServerThread):
             else:
                 event["state"] = 0
         elif isinstance(rule["state"], tuple) and rule["state"][0] == "text_pattern":
-            state_patterns = rule["state"][1]
+            pats = rule["state"][1]
             text = event["text"]
-            if match(state_patterns.get("2", None), text, complete=False) is not False:
+            if (p := pats.get("2")) is not None and match(p, text, complete=False) is not False:
                 event["state"] = 2
-            elif match(state_patterns.get("1", None), text, complete=False) is not False:
+            elif (p := pats.get("1")) is not None and match(p, text, complete=False) is not False:
                 event["state"] = 1
-            elif match(state_patterns.get("0", None), text, complete=False) is not False:
+            elif (p := pats.get("0")) is not None and match(p, text, complete=False) is not False:
                 event["state"] = 0
             else:
                 event["state"] = 3

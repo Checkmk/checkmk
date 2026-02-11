@@ -66,6 +66,18 @@ def _make_rule(state: ec.State) -> ec.Rule:
             0,
             id="set via text (OK)",
         ),
+        pytest.param(
+            ("text_pattern", {"0": "^UND.*as ", "1": "Lamm"}),
+            ec.SyslogPriority(0),
+            1,
+            id="set via text (OK, missing CRIT)",
+        ),
+        pytest.param(
+            ("text_pattern", {"0": "^UND.*as ", "2": "foo"}),
+            ec.SyslogPriority(0),
+            0,
+            id="set via text (OK, missing WARN)",
+        ),
     ],
 )
 def test_rewrite_event_state(

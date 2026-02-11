@@ -28,6 +28,9 @@ site_factory = get_site_factory(prefix="perf_")
 
 logger = logging.getLogger(__name__)
 
+# Rewrite assertions in helper modules
+pytest.register_assert_rewrite("tests.performance.perftest")
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(

@@ -124,7 +124,9 @@ class AgentReceiverClient:
             },
         )
 
-    def get_relay_status(self, relay_id: str) -> httpx.Response:
+    def get_relay_status(
+        self, relay_id: str, injected_uuid_header_value: str | None = None
+    ) -> httpx.Response:
         """Get relay status.
 
         This endpoint returns the relay state by comparing local config and CMK API.
@@ -132,6 +134,8 @@ class AgentReceiverClient:
 
         Args:
             relay_id: The UUID of the relay to get status for
+            injected_uuid_header_value: if None, will use the relay_id valus as header
+                otherwise use the custom value
 
         Returns:
             httpx.Response containing RelayStatusResponse with:
@@ -145,7 +149,7 @@ class AgentReceiverClient:
         """
         return self.client.get(
             f"/{self.site_name}/relays/{relay_id}/status",
-            headers={INJECTED_UUID_HEADER: relay_id},
+            headers={INJECTED_UUID_HEADER: injected_uuid_header_value or relay_id},
         )
 
     def push_task(

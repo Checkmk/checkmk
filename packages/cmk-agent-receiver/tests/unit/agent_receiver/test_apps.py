@@ -42,7 +42,7 @@ def test_uuid_validation_route() -> None:
         "/endpoint/1234",
         headers={INJECTED_UUID_HEADER: "5678"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 403
     assert response.json() == {
         "detail": "Verified client UUID (5678) does not match UUID in URL (1234)"
     }
@@ -58,7 +58,7 @@ def test_uuid_validation_route() -> None:
         "/other/1234/bar",
         headers={INJECTED_UUID_HEADER: "5678"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 403
     assert response.json() == {
         "detail": "Verified client UUID (5678) does not match UUID in URL (1234)"
     }

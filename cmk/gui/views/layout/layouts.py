@@ -284,6 +284,7 @@ class GroupedBoxesLayout(Layout):
         self, group_cells: Sequence[Cell], first_row: Row, user_permissions: UserPermissions
     ) -> None:
         html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
+        html.open_thead()
         html.open_tr(class_="groupheader")
         painted = False
 
@@ -294,6 +295,7 @@ class GroupedBoxesLayout(Layout):
                 html.td(",&nbsp;")
             painted = cell.paint(first_row, link_renderer, user=user)
         html.close_tr()
+        html.close_thead()
         html.close_table()
 
     def _show_header_line(self, cells: Sequence[Cell], show_checkboxes: bool) -> None:

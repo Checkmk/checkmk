@@ -68808,6 +68808,9 @@ msgstr "Gazdele selectate nu au atribute explicite"
 msgid "The selected icon does not exist."
 msgstr "Pictograma selectată nu există."
 
+msgid "The selected options do not match any hosts, nothing to do."
+msgstr ""
+
 msgid "The sensor name"
 msgstr "Numele senzorului"
 

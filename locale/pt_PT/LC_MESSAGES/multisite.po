@@ -68594,6 +68594,9 @@ msgstr "Os anfitriões seleccionados não têm atributos explícitos"
 msgid "The selected icon does not exist."
 msgstr "O ícone selecionado não existe."
 
+msgid "The selected options do not match any hosts, nothing to do."
+msgstr ""
+
 msgid "The sensor name"
 msgstr "O nome do sensor"
 

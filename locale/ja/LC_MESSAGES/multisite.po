@@ -64564,6 +64564,9 @@ msgstr "選択したホストには明示的な属性がありません"
 msgid "The selected icon does not exist."
 msgstr "選択したアイコンは存在しません。"
 
+msgid "The selected options do not match any hosts, nothing to do."
+msgstr ""
+
 msgid "The sensor name"
 msgstr "センサー名"
 

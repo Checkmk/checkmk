@@ -69253,6 +69253,9 @@ msgstr "Les hôtes sélectionnés n'ont pas d'attributs explicites"
 msgid "The selected icon does not exist."
 msgstr "L'icône sélectionnée n'existe pas."
 
+msgid "The selected options do not match any hosts, nothing to do."
+msgstr ""
+
 msgid "The sensor name"
 msgstr "Le nom du capteur"
 

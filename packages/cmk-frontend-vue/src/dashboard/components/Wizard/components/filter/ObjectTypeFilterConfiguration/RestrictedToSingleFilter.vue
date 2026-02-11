@@ -87,10 +87,12 @@ onMounted(async () => {
         v-for="component in components"
         :key="`${'id' in component ? component.id : component.component_type}`"
       >
-        <CmkParagraph class="db-restricted-to-single-filter__filter-title">{{
-          capitalizeFirstLetter(filterName)
-        }}</CmkParagraph>
-        <RemoveFilterButton :filter-name="filterName" @remove="handleClear" />
+        <div class="db-restricted-to-single-filter__header">
+          <CmkParagraph class="db-restricted-to-single-filter__filter-title">{{
+            capitalizeFirstLetter(filterName)
+          }}</CmkParagraph>
+          <RemoveFilterButton :filter-name="filterName" @remove="handleClear" />
+        </div>
 
         <FilterInputComponentRenderer
           :component="component"
@@ -108,6 +110,12 @@ onMounted(async () => {
   padding: var(--spacing-double);
   position: relative;
   display: block;
+}
+
+.db-restricted-to-single-filter__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .db-restricted-to-single-filter__filter-title {

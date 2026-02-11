@@ -51,6 +51,7 @@ const filterDefinitions = useFilterDefinitions()
       "
     />
     <RemoveFilterButton
+      class="db-multi-filter__remove-button"
       :filter-name="filterDefinitions[name]!.title || ''"
       @remove="emit('remove-filter', name as string)"
     />
@@ -75,5 +76,11 @@ const filterDefinitions = useFilterDefinitions()
   padding: var(--spacing-double);
   position: relative;
   display: block;
+}
+
+.db-multi-filter__remove-button {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 </style>

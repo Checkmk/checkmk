@@ -571,7 +571,8 @@ table.groupheader {
   margin: 0 0 $h3-margin-bottom;
   position: sticky;
   top: 0;
-  z-index: $sticky-table-header-z-index;
+  // Group headers should stack above the table headers
+  z-index: calc($sticky-table-header-z-index + 1);
 
   td {
     text-align: left;

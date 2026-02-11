@@ -399,7 +399,9 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             job_interface.send_progress_update(
                 _("Failed: %s") % agent_output_result.service_details
             )
-            if "timed out" in agent_output_result.service_details:
+            # Specifically catch the phrase used in the job timeout message.
+            # It is not enough to catch a generic "timed out" phrase.
+            if "Action timed out" in agent_output_result.service_details:
                 if self._agent_type == "agent":
                     result = _("Background job timed out after 3 minutes.")
                 else:

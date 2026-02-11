@@ -50,8 +50,8 @@ const getTransformRotate = () => {
       { png: iconSrc.endsWith('.png') }
     ]"
     :src="iconSrc"
-    :title="title || ''"
-    :alt="title || ''"
+    :title="title || undefined"
+    :alt="title || undefined"
   />
 </template>
 

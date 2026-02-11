@@ -130,18 +130,46 @@ def test_user_config_move_snapin_before(
     ]
 
 
-def test_load_default_config() -> None:
-    user_permissions = UserPermissions({}, {}, {}, [])
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
-    assert user_config.folded is False
-    assert user_config.snapins == [
-        UserSidebarSnapin.from_snapin_type_id("a_welcome", user_permissions),
-        UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions),
-        UserSidebarSnapin.from_snapin_type_id("bookmarks", user_permissions),
-        UserSidebarSnapin(
-            sidebar.snapin_registry["master_control"], sidebar.SnapinVisibility.CLOSED
-        ),
-    ]
+def test_load_default_config_for_new_user(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that new users (with created_on_version >= 2.5.0) get the welcome snapin by default."""
+    # Mock the user to have the created_on_version attribute (new user created in 2.5+)
+    with monkeypatch.context() as m:
+        m.setattr(
+            user,
+            "get_attribute",
+            lambda key, default=None: "2.5.0" if key == "created_on_version" else default,
+        )
+
+        user_permissions = UserPermissions({}, {}, {}, [])
+        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
+        assert user_config.folded is False
+        assert user_config.snapins == [
+            UserSidebarSnapin.from_snapin_type_id("a_welcome", user_permissions),
+            UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions),
+            UserSidebarSnapin.from_snapin_type_id("bookmarks", user_permissions),
+            UserSidebarSnapin(
+                sidebar.snapin_registry["master_control"], sidebar.SnapinVisibility.CLOSED
+            ),
+        ]
+
+
+def test_load_default_config_for_existing_user(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that existing users (without created_on_version attribute) don't get the welcome snapin."""
+    # Mock the user to NOT have the created_on_version attribute (existing user from 2.4)
+    with monkeypatch.context() as m:
+        m.setattr(user, "get_attribute", lambda key, default=None: default)
+
+        user_permissions = UserPermissions({}, {}, {}, [])
+        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
+        assert user_config.folded is False
+        # Should NOT include a_welcome snapin for existing users
+        assert user_config.snapins == [
+            UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions),
+            UserSidebarSnapin.from_snapin_type_id("bookmarks", user_permissions),
+            UserSidebarSnapin(
+                sidebar.snapin_registry["master_control"], sidebar.SnapinVisibility.CLOSED
+            ),
+        ]
 
 
 def test_load_legacy_list_user_config(monkeypatch: pytest.MonkeyPatch) -> None:

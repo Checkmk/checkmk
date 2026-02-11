@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.ccc.version import __version__
 from cmk.gui.type_defs import UserSpec
 
 # count this up, if new user attributes are used or old are marked as
@@ -26,4 +27,5 @@ def new_user_template(connection_id: str, default_user_profile: UserSpec) -> Use
 
 def add_internal_attributes(usr: UserSpec) -> int:
     usr.setdefault("start_url", "welcome.py")
+    usr.setdefault("created_on_version", __version__)
     return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)

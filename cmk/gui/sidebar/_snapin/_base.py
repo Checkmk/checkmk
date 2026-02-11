@@ -67,6 +67,20 @@ class SidebarSnapin(abc.ABC):
     def may_see(cls, user_permissions: UserPermissions) -> bool:
         return user.may(cls.permission_name())
 
+    @classmethod
+    def included_in_default_sidebar(cls) -> bool:
+        """Determine if this snapin should be included in the default sidebar configuration.
+
+        This method allows snapins to control whether they appear in the default sidebar
+        for users who don't have a saved configuration. Most snapins should return True
+        (always included by default), but specific snapins can override this to implement
+        custom logic based on user attributes or other conditions.
+
+        Returns:
+            True if the snapin should be included in default sidebar, False otherwise.
+        """
+        return True
+
     def styles(self) -> str | None:
         return None
 

@@ -24,6 +24,7 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc import version
 from cmk.ccc.user import UserId
+from cmk.ccc.version import __version__
 from cmk.crypto.password import PasswordPolicy
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui import userdb
@@ -189,6 +190,7 @@ def test_openapi_user_minimal_settings(
         "serial": 0,
         "is_automation_user": False,
         "store_automation_secret": False,
+        "created_on_version": __version__,
     }
 
 
@@ -353,6 +355,7 @@ def test_openapi_user_internal_with_notifications(
         "num_failed_logins": 0,
         "is_automation_user": False,
         "store_automation_secret": False,
+        "created_on_version": __version__,
     }
 
 

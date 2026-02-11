@@ -278,8 +278,17 @@ class UserSidebarConfig:
         return self._config["snapins"]
 
     def _initial_config(self) -> dict[str, bool | list[dict[str, Any]]]:
+        # Filter default config based on each snapin's included_in_default_sidebar() method
+        # This allows snapins to control whether they appear in the default configuration
+        # based on user attributes or other conditions
+        default_config = [
+            snapin
+            for snapin in self._default_config
+            if snapin_registry[snapin[0]].included_in_default_sidebar()
+        ]
+
         return {
-            "snapins": self._transform_legacy_tuples(self._default_config),
+            "snapins": self._transform_legacy_tuples(default_config),
             "fold": False,
         }
 

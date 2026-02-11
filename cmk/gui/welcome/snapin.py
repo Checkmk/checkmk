@@ -6,6 +6,7 @@
 from dataclasses import asdict
 from typing import override
 
+from cmk.ccc.version import Version
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -50,6 +51,23 @@ class SidebarWelcomeSnapin(SidebarSnapin):
         if not all(user.may(perm) for perm in WELCOME_PERMISSIONS):
             return False
         return True
+
+    @override
+    @classmethod
+    def included_in_default_sidebar(cls) -> bool:
+        """Only include welcome snapin for users created in 2.5+.
+
+        The 'created_on_version' attribute stores the Checkmk version string at user creation
+        time (e.g., "2.5.0p1"). This is a permanent marker that never changes, regardless of
+        user actions (unchecking "Show welcome page on start", completing steps, etc.).
+
+        Returns:
+            True for users created in 2.5+, False for users upgraded from 2.4 or earlier.
+        """
+        created_version = user.get_attribute("created_on_version", None)
+        if created_version is None:
+            return False  # User from before 2.5
+        return bool(Version.from_str(created_version) >= Version.from_str("2.5.0"))
 
     @override
     def show(self, config: Config) -> None:

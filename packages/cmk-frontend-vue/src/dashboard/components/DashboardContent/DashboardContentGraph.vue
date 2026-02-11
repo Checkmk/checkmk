@@ -11,6 +11,7 @@ import useTimer from '@/lib/useTimer.ts'
 import CmkIcon from '@/components/CmkIcon'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useDebounceFn } from '@/dashboard/composables/useDebounce'
 import type { FilterHTTPVars } from '@/dashboard/types/widget.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
@@ -63,9 +64,10 @@ const updateGraph = () => {
     response_handler: handleRefreshData
   })
 }
+const debouncedUpdateGraph = useDebounceFn(updateGraph, 300)
 
 watch([httpVars, sizeVars], () => {
-  updateGraph()
+  debouncedUpdateGraph()
 })
 
 const resizeObserver = new ResizeObserver((entries) => {

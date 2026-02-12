@@ -6,7 +6,7 @@ from typing import Annotated, Final
 
 from fastapi import Header, HTTPException, Path
 from fastapi.params import Depends
-from starlette.status import HTTP_403_FORBIDDEN
+from starlette.status import HTTP_400_BAD_REQUEST
 
 INJECTED_UUID_HEADER: Final[str] = "verified-uuid"
 
@@ -35,7 +35,7 @@ def mtls_authorization_dependency(path_alias: str) -> Depends:
       this dependency
 
     Raises:
-        HTTPException: HTTP 403 if the certificate CN doesn't match the URL UUID
+        HTTPException: HTTP 400 if the certificate CN doesn't match the URL UUID
 
     Example:
         @router.post("/{uuid}/data", dependencies=[mtls_authorization_dependency("uuid")])
@@ -48,7 +48,7 @@ def mtls_authorization_dependency(path_alias: str) -> Depends:
     ) -> None:
         if header_uuid != path_uuid:
             raise HTTPException(
-                status_code=HTTP_403_FORBIDDEN,
+                status_code=HTTP_400_BAD_REQUEST,
                 detail=f"Verified client UUID ({header_uuid}) does not match UUID in URL ({path_uuid})",
             )
 

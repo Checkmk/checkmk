@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# pylint: disable=duplicate-code
 
 from collections.abc import Sequence
 
@@ -99,3 +100,47 @@ def test_get_average(backlog_min: int, timeseries: Sequence[tuple[float, float, 
             backlog_min,
         )
         assert avg == expected_average, f"at [{idx!r}]: got {avg!r} expected {expected_average!r}"
+
+
+@pytest.mark.parametrize(
+    "timeseries, expected_averages",
+    [
+        (
+            [
+                # Phase 1: epoch timestamps (like 2.2)
+                (1718810400.0, 500000.0),
+                (1718810460.0, 600000.0),
+                # Phase 2: sysUpTime (like 2.3) — backward jump
+                (35577158.0, 470000.0),
+                # Phase 3: next sysUpTime — should resume normally
+                (35577218.0, 480000.0),
+            ],
+            [500000.0, 541766.5956718214, 541766.5956718214, 515968.791397323],
+        )
+    ],
+)
+def test_get_average_time_goes_backwards_resets(
+    timeseries: Sequence[tuple[float, float]], expected_averages: Sequence[float]
+) -> None:
+    """Simulate 2.2->2.3 migration: time source changes from epoch to sysUpTime."""
+    store: dict[str, object] = {}
+
+    # Phase 1: Build up an average using epoch timestamps
+    avg = get_average(store, "foo", *timeseries[0], 5)
+
+    assert avg == expected_averages[0]
+    avg = get_average(store, "foo", *timeseries[1], 5)
+    old_avg = avg
+
+    assert avg == expected_averages[1]
+
+    # Phase 2: Time source switches to sysUpTime (much smaller number)
+    avg = get_average(store, "foo", *timeseries[2], 5)
+
+    # After fix: should reset times but preserve the previous average
+    assert avg == expected_averages[2]
+    assert store["foo"] == (timeseries[2][0], timeseries[2][0], old_avg)
+
+    # Phase 3: Subsequent calls with sysUpTime should work normally
+    avg = get_average(store, "foo", *timeseries[3], 5)
+    assert avg == expected_averages[3]

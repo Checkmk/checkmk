@@ -79,7 +79,7 @@ class DashboardMetadataObject:
                 ),
                 hidden=dashboard["hidden"],
                 sort_index=dashboard["sort_index"],
-                hide_in_drop_down_menus=dashboard["hidebutton"],
+                hide_in_drop_down_menus=dashboard.get("hidebutton", False),
             ),
         )
 

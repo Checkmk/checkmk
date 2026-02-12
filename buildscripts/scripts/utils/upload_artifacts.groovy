@@ -155,7 +155,7 @@ boolean download_hot_cache(Map args) {
             cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} ${args.download_dest}
         """);
 
-        if (!verify_hash("${args.download_dest}/${args.file_pattern}")) {
+        if (!is_hash_verified("${args.download_dest}/${args.file_pattern}")) {
             raise("The sha256sum of the downloaded file does not match the expectation");
         }
     }
@@ -340,10 +340,11 @@ void create_hash(FILE_PATH) {
     """);
 }
 
-boolean verify_hash(HASH_FILE) {
-    return sh(script: """
-        cd \$(dirname ${HASH_FILE});
-        sha256sum --check --status \$(basename ${HASH_FILE})
+boolean is_hash_verified(FILE_PATH) {
+    // sha256sum exits with 0 on success
+    return !sh(script: """
+        cd \$(dirname ${FILE_PATH});
+        sha256sum --check --status \$(basename ${FILE_PATH})${hashfile_extension}
         """,
         returnStatus: true
     );

@@ -1113,7 +1113,7 @@ class PerftestPlot:
             start_time = Datetime.fromisoformat(timestamps[0])
             end_time = Datetime.fromisoformat(timestamps[-1])
             duration = end_time - start_time
-            interval = round(duration.total_seconds() / len(timestamps))
+            interval = round(duration.total_seconds() / len(timestamps), 1)
             return [i * interval for i in range(len(timestamps))]
 
         timestamps: list[str] = []

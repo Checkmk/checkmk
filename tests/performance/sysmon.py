@@ -206,10 +206,12 @@ def _init_resources_file(task_name: str) -> Path:
 
 
 def _log_resources(
-    file_path: Path, start_event: threading.Event, stop_event: threading.Event
+    file_path: Path,
+    start_event: threading.Event,
+    stop_event: threading.Event,
+    sampling_interval: float,
 ) -> None:
     max_duration = 0.0
-    statistics_interval = 1
     with open(file_path, "w") as stats_file:
         while not stop_event.is_set():
             start_time = time.time()
@@ -218,9 +220,9 @@ def _log_resources(
             end_time = time.time()
             duration = end_time - start_time
             max_duration = duration if duration > max_duration else max_duration
-            # wait until next interval
-            if duration < statistics_interval:
-                time.sleep(statistics_interval - duration)
+            # wait until next sampling interval
+            if duration < sampling_interval:
+                time.sleep(sampling_interval - duration)
         write_statistics(stats_file, close=True)
 
 
@@ -229,6 +231,7 @@ def track_resources(
     task_name: str,
     start_event: threading.Event | None = None,
     stop_event: threading.Event | None = None,
+    sampling_interval: float = 1.0,
 ) -> Iterator[None]:
     """Monitor and track the resource usage of the host while executing a task context.
 
@@ -240,13 +243,16 @@ def track_resources(
         task_name: The name of the task (used for naming the resources file).
         start_event: Controls the actual start of the resource tracking (optional).
         stop_event: Controls the actual end of the resource tracking (optional).
+        sampling_interval: The measurement sampling interval in seconds (default: 1.0).
     """
     file_path = _init_resources_file(task_name)
     if start_event is None:
         start_event = threading.Event()
         start_event.set()
     stop_event = stop_event or threading.Event()
-    thread = threading.Thread(target=_log_resources, args=(file_path, start_event, stop_event))
+    thread = threading.Thread(
+        target=_log_resources, args=(file_path, start_event, stop_event, sampling_interval)
+    )
     thread.start()
 
     yield

@@ -65,7 +65,8 @@ const triggerRescan = () => {
         align="center"
         side="right"
         :avoid-collisions="false"
-        class="tooltip-content"
+        :use-portal="true"
+        class="setup-agent-download-dialog__tooltip-content"
       >
         <TooltipArrow
           :style="{ fill: 'var(--default-help-icon-bg-color)' }"
@@ -75,7 +76,7 @@ const triggerRescan = () => {
         <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
         <CmkIcon
           :title="dialogCloseIconTitle"
-          class="tooltip-close"
+          class="setup-agent-download-dialog__tooltip-close"
           name="close"
           size="small"
           @click.stop="tooltipClosed = true"
@@ -131,18 +132,25 @@ const triggerRescan = () => {
 
 <style scoped>
 .setup-agent-download-dialog__dialog {
-  margin: 20px 0 0 !important;
+  position: relative;
+  top: 25px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tooltip-close {
+.setup-agent-download-dialog__tooltip-close {
   position: absolute;
-  top: 22px;
-  right: 4px;
-  background: transparent;
-  border: none;
+  top: 40px;
+  right: var(--spacing);
+  z-index: 1;
+  margin-right: 3px;
+  opacity: 0.6;
   cursor: pointer;
-  margin: 0;
-  padding: 0;
+}
+</style>
+
+<style>
+/* Unscoped, portal -> body */
+.setup-agent-download-dialog__tooltip-content {
+  z-index: var(--z-index-modal);
+  max-width: var(--radix-tooltip-content-available-width);
 }
 </style>

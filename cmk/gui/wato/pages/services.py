@@ -811,6 +811,7 @@ class DiscoveryPageRenderer:
                     ),
                 )
             ),
+            style="display: inline; margin-left: 10px",
         )
 
     def render_datasources(self, sources: Mapping[str, tuple[int, str]]) -> str | None:
@@ -851,19 +852,6 @@ class DiscoveryPageRenderer:
 
             html.open_table()
             for state, output in sources.values():
-                html.open_tr()
-                html.open_td()
-                html.write_html(HTML.without_escaping(get_html_state_marker(state)))
-                html.close_td()
-                # Make sure not to show long output
-                html.td(
-                    format_plugin_output(
-                        output.split("\n", 1)[0].replace(" ", ": ", 1),
-                        request=request,
-                        must_escape=not active_config.sites[self._host.site_id()]["is_trusted"],
-                    )
-                )
-
                 outputMessagePartials = [
                     "No cached data available",
                     "This data source is not supported for relay hosts",
@@ -875,14 +863,28 @@ class DiscoveryPageRenderer:
                     "not found (exit code 127)",
                 ]
 
-                if (
+                show_agent_tooltip = (
                     "[agent]" in output
                     and state == 2
                     and not any(msg in output for msg in outputMessagePartials)
-                ):
-                    html.open_td()
+                )
+
+                html.open_tr()
+                html.open_td()
+                html.write_html(HTML.without_escaping(get_html_state_marker(state)))
+                html.close_td()
+                # Make sure not to show long output
+                html.open_td()
+                html.write_html(
+                    format_plugin_output(
+                        output.split("\n", 1)[0].replace(" ", ": ", 1),
+                        request=request,
+                        must_escape=not active_config.sites[self._host.site_id()]["is_trusted"],
+                    )
+                )
+                if show_agent_tooltip:
                     self._render_agent_download_tooltip(output)
-                    html.close_td()
+                html.close_td()
                 html.close_tr()
             html.close_table()
 

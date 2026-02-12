@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkBadge from '@/components/CmkBadge.vue'
@@ -13,7 +15,8 @@ import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import type { Site } from '../../ChangesInterfaces'
+import type { PendingChanges, Site } from '../../ChangesInterfaces'
+import SiteStatusIcons from './SiteStatusIcons.vue'
 
 const { _t } = usei18n()
 
@@ -31,18 +34,40 @@ const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'defaul
   return mapping[status] ?? 'warning'
 }
 
-defineProps<{
+const props = defineProps<{
   site: Site
   idx: number
   activating: boolean
   checked: boolean
   isRecentlyActivated: boolean
   hideCheckbox?: boolean
+  pendingChanges: PendingChanges[]
+  userHasActivateForeign: boolean
 }>()
 
 const emit = defineEmits<{
   updateChecked: [string, boolean]
 }>()
+
+const hasForeignChangesWithoutPermission = computed(() => {
+  const siteHasForeignChanges = props.pendingChanges.some(
+    (change) =>
+      (change.whichSites.includes(props.site.siteId) || change.whichSites.includes('All sites')) &&
+      change.foreignChange
+  )
+  return siteHasForeignChanges && !props.userHasActivateForeign
+})
+
+const hasActivationIssues = computed(() => {
+  return (
+    !!props.site.lastActivationStatus &&
+    ['warning', 'error'].includes(props.site.lastActivationStatus.state)
+  )
+})
+
+const siteHasProblems = computed(() => {
+  return !['online', 'disabled'].includes(props.site.onlineStatus)
+})
 </script>
 
 <template>
@@ -64,18 +89,13 @@ const emit = defineEmits<{
         }}</CmkBadge>
         <div class="cmk-changes-sites-item-name">{{ site.siteName }}</div>
       </div>
-      <div
-        v-if="site.changes > 0 && !activating && !isRecentlyActivated"
-        class="cmk-changes-sites-item-end"
-      >
-        <span class="cmk-span-changes-text">{{ _t('Changes:') }}</span>
-        <CmkBadge color="warning" size="small">{{ site.changes }}</CmkBadge>
-      </div>
-      <div
-        v-if="site.changes === 0 && !activating && !isRecentlyActivated"
-        class="cmk-changes-sites-item-end"
-      >
-        <span class="cmk-span-changes-text">{{ _t('No changes') }}</span>
+      <div v-if="!activating && !isRecentlyActivated" class="cmk-changes-sites-item-end">
+        <SiteStatusIcons
+          :activation-issues="hasActivationIssues"
+          :has-foreign-changes-without-permission="hasForeignChangesWithoutPermission"
+          :site-problems="siteHasProblems"
+        />
+        <CmkBadge color="default" size="small">{{ site.changes }}</CmkBadge>
       </div>
       <div
         v-if="isRecentlyActivated && site.lastActivationStatus !== undefined"
@@ -146,12 +166,6 @@ const emit = defineEmits<{
     display: flex;
     flex-direction: row;
     align-items: center;
-  }
-
-  .cmk-span-changes-text {
-    color: var(--font-color-dimmed);
-    font-size: var(--font-size-normal);
-    font-weight: var(--font-weight-default);
   }
 }
 

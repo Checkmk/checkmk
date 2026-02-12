@@ -296,7 +296,7 @@ onMounted(async () => {
 <template>
   <DefaultPopup class="cmk-default-popup-mainmenu">
     <div class="cmk-default-popup-mainmenu__header">
-      <h1>{{ _t('Activate pending changes') }}</h1>
+      <CmkHeading type="h1">{{ _t('Quick activation of pending changes') }}</CmkHeading>
     </div>
     <div class="cmk-div-mainmenu-container">
       <div class="cmk-div-buttons-container">
@@ -397,6 +397,8 @@ onMounted(async () => {
           :open="activationStatusCollapsible"
           :activating="activateChangesInProgress"
           :recently-activated-sites="recentlyActivatedSites"
+          :pending-changes="sitesAndChanges.pendingChanges"
+          :user-has-activate-foreign="props.user_has_activate_foreign"
         ></SiteStatusList>
         <PendingChangesList
           v-if="weHavePendingChanges"

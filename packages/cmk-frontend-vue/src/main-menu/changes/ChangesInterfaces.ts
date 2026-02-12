@@ -49,7 +49,15 @@ export interface ActivatePendingChangesResponse {
 export interface Site {
   siteId: string
   siteName: string
-  onlineStatus: string
+  onlineStatus:
+    | 'online'
+    | 'disabled'
+    | 'down'
+    | 'unreach'
+    | 'dead'
+    | 'waiting'
+    | 'missing'
+    | 'unknown'
   changes: number
   version: string
   loggedIn: boolean

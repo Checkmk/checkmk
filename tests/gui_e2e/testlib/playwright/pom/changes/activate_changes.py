@@ -20,13 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class ActivateChangesSlideout(LocatorHelper):
-    """Represents main menu 'Changes > Activate pending changes' slideout"""
+    """Represents main menu 'Changes > Quick activation of pending changes' slideout"""
 
-    slide_title: str = "Activate pending changes"
+    slide_title: str = "Quick activation of pending changes"
+    activate_changes_btn_name: str = "Activate pending changes"
 
     def __init__(self, cmk_page: CmkPage) -> None:
         self.cmk_page = cmk_page
-        logger.info("Navigate to 'Main menu' -> 'Activate pending changes' slideout")
+        logger.info("Navigate to 'Main menu' -> 'Quick activation of pending changes' slideout")
         if not self.title.is_visible():
             self.cmk_page.main_menu.changes_menu().click()
         logger.info("Validate that slideout is %s open", self.slide_title)
@@ -68,7 +69,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def activate_changes_btn(self) -> Locator:
-        return self.slideout.get_by_role("button", name=self.slide_title)
+        return self.slideout.get_by_role("button", name=self.activate_changes_btn_name)
 
     @property
     def full_view_btn(self) -> Locator:
@@ -157,7 +158,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     def site_changes_count(self, site_entry: Locator) -> int:
         """Get the locator of round badge showing the number of changes."""
-        txt = site_entry.locator("div.cmk-badge.cmk-badge--warning").text_content()
+        txt = site_entry.locator("div.cmk-badge.cmk-badge--default").text_content()
         if not txt or not txt.isdigit():
             raise AssertionError(
                 f"The site entry does not contain a valid changes count badge! Found text: '{txt}'"

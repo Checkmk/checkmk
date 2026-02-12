@@ -14,7 +14,7 @@ import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
-import type { Site } from '../../ChangesInterfaces'
+import type { PendingChanges, Site } from '../../ChangesInterfaces'
 import SiteStatusItem from './SiteStatusItem.vue'
 
 const { _t } = usei18n()
@@ -24,6 +24,8 @@ const props = defineProps<{
   open: boolean
   activating: boolean
   recentlyActivatedSites: string[]
+  pendingChanges: PendingChanges[]
+  userHasActivateForeign: boolean
 }>()
 
 const selectedSites = defineModel<string[]>({ required: true })
@@ -41,10 +43,15 @@ function toggleSelectedSite(siteId: string, value: boolean) {
 <template>
   <div class="cmk-changes-sites" :class="{ 'add-flex': props.sites.length === 1 }">
     <div
-      v-if="props.sites.length === 1 && typeof props.sites[0] !== 'undefined' && !activating"
+      v-if="
+        props.sites.length === 1 &&
+        typeof props.sites[0] !== 'undefined' &&
+        !activating &&
+        props.sites[0].changes > 0
+      "
       class="cmk-changes-site-single"
     >
-      <div class="cmk-changes-site-single-title">{{ _t('Site') }}</div>
+      <div class="cmk-changes-site-single-title">{{ _t('Site(s) with changes') }}</div>
       <CmkScrollContainer max-height="30vh">
         <SiteStatusItem
           :idx="0"
@@ -53,6 +60,8 @@ function toggleSelectedSite(siteId: string, value: boolean) {
           :checked="selectedSites.includes(props.sites[0].siteId)"
           :is-recently-activated="recentlyActivatedSites.includes(props.sites[0].siteId)"
           :hide-checkbox="true"
+          :pending-changes="props.pendingChanges"
+          :user-has-activate-foreign="props.userHasActivateForeign"
           @update-checked="toggleSelectedSite"
         ></SiteStatusItem>
       </CmkScrollContainer>
@@ -75,6 +84,8 @@ function toggleSelectedSite(siteId: string, value: boolean) {
               :activating="activating"
               :checked="selectedSites.includes(site.siteId)"
               :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
+              :pending-changes="props.pendingChanges"
+              :user-has-activate-foreign="props.userHasActivateForeign"
               @update-checked="toggleSelectedSite"
             ></SiteStatusItem>
           </CmkScrollContainer>

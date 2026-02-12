@@ -529,7 +529,15 @@ def test_certificate_results(
     )
 
     with time_machine.travel(datetime(2001, 5, 25, 13, 13, 13, tzinfo=ZoneInfo("UTC"))):
-        assert [*_check_cmk_agent_update({}, None, section)] == [
+        assert [
+            *_check_cmk_agent_update(
+                {
+                    "max_time_since_last_update_check": (2 * 3600 * 24, 7 * 3600 * 24),
+                },
+                None,
+                section,
+            )
+        ] == [
             Result(state=State.OK, notice="Time since last update check: 2 hours 0 minutes"),
             Result(state=State.OK, notice="Last update check: 2001-05-25 11:13:00"),
             Result(state=State.OK, notice="Update URL: foo"),
@@ -542,7 +550,9 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
     with time_machine.travel(datetime.fromtimestamp(1645800081.5039608, tz=ZoneInfo("UTC"))):
         actual = list(
             _check_cmk_agent_update(
-                {},
+                {
+                    "max_time_since_last_update_check": (2 * 3600 * 24, 7 * 3600 * 24),
+                },
                 {
                     "agentupdate": " ".join(
                         (1 + duplicate)
@@ -567,8 +577,8 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             details="503 Server Error: Service Unavailable\nSomething for second line",
         ),
         Result(
-            state=State.WARN,
-            summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/never)",
+            state=State.CRIT,
+            summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/7 days 0 hours)",
         ),
         Result(state=State.OK, notice="Last update check: 2022-02-16 08:28:01"),
         Result(state=State.OK, summary="Last update: 2022-02-16 08:29:41"),

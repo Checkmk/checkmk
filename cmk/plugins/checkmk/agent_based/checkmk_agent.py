@@ -381,7 +381,7 @@ def _check_cmk_agent_update(
         if (age := time.time() - last_check) >= 0:
             yield from check_levels_v1(
                 age,
-                levels_upper=(2 * 3600 * 24, None),  # type: ignore[arg-type]
+                levels_upper=params["max_time_since_last_update_check"],
                 render_func=render.timespan,
                 label="Time since last update check",
                 notice_only=True,
@@ -642,5 +642,6 @@ check_plugin_checkmk_agent = CheckPlugin(
         "only_from": ("cmk_postprocessed", "only_from", None),
         # This next entry will be postprocessed by the backend.
         "host_name": ("cmk_postprocessed", "host_name", None),
+        "max_time_since_last_update_check": (2 * 3600 * 24, 30 * 3600 * 24),
     },
 )

@@ -156,6 +156,8 @@ onMounted(() => {
   switchVisibility()
   ipV4Selected.value = props.ipv4InputButtonElement.checked
   ipV6Selected.value = props.ipv6InputButtonElement.checked
+  ipV4.value = props.ipv4InputElement.value || ''
+  ipV6.value = props.ipv6InputElement.value || ''
   selectedSiteIdHash.value = props.siteSelectElement.value
   siteId.value =
     props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''

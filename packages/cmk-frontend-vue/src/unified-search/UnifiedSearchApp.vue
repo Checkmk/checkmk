@@ -25,6 +25,7 @@ import { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import {
   type SearchProviderResult,
   UnifiedSearch,
+  UnifiedSearchAborted,
   UnifiedSearchError,
   type UnifiedSearchResult
 } from '@/unified-search/lib/unified-search'
@@ -91,15 +92,11 @@ search.onSearch((result?: UnifiedSearchResult) => {
       isManipulated.value = uspr.isManipulated || false
       const usprRes = await uspr.result
 
+      if (usprRes instanceof UnifiedSearchAborted) {
+        return
+      }
+
       if (usprRes instanceof UnifiedSearchError) {
-        if (
-          [
-            'signal is aborted without reason', // abortion message on chromium browsers
-            'The operation was aborted.' // abortion message on firefox
-          ].indexOf(usprRes.message) >= 0
-        ) {
-          return
-        }
         searchError.value = usprRes
         searchResult.value = undefined
       } else {

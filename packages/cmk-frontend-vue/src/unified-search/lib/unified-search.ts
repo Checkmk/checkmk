@@ -53,6 +53,16 @@ export class UnifiedSearchError extends Error {
   }
 }
 
+export class UnifiedSearchAborted extends UnifiedSearchError {
+  constructor(
+    public override provider: string,
+    message: string
+  ) {
+    super(provider, message)
+    this.name = 'UnifiedSearchAborted'
+  }
+}
+
 export abstract class SearchProvider {
   private api: Api | null = null
   public searchActive: Ref<boolean> = ref(false)
@@ -103,6 +113,10 @@ export abstract class SearchProvider {
   ): Promise<T | UnifiedSearchError> {
     this.searchActive.value = true
     return new Promise((resolve) => {
+      abortSignal.addEventListener('abort', () => {
+        resolve(new UnifiedSearchAborted(this.id, 'Search aborted.'))
+      })
+
       void this.search(query, abortSignal)
         .catch((e) =>
           resolve(

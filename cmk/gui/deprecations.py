@@ -81,13 +81,17 @@ class _MarkerFileStore:
                     logger.error("Cannot remove %r", path)
 
 
-def _filter_non_ok_ac_test_results(
+def _filter_ac_test_results(
     ac_test_results_by_site_id: Mapping[SiteId, Sequence[ACTestResult]],
 ) -> Mapping[SiteId, Sequence[ACTestResult]]:
     return {
-        s: not_ok_rs
+        s: warn_or_crit_rs
         for s, rs in ac_test_results_by_site_id.items()
-        if (not_ok_rs := [r for r in rs if r.state is not ACResultState.OK])
+        if (
+            warn_or_crit_rs := [
+                r for r in rs if r.state in (ACResultState.WARN, ACResultState.CRIT)
+            ]
+        )
     }
 
 
@@ -352,11 +356,11 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
 
 
 def _find_ac_test_result_problems(
-    not_ok_ac_test_results: Mapping[SiteId, Sequence[ACTestResult]],
+    filtered_ac_test_results: Mapping[SiteId, Sequence[ACTestResult]],
     manifests_by_path: Mapping[Path, Manifest],
 ) -> Sequence[_ACTestResultProblem]:
     problem_by_ident: dict[str, _ACTestResultProblem] = {}
-    for site_id, ac_test_results in not_ok_ac_test_results.items():
+    for site_id, ac_test_results in filtered_ac_test_results.items():
         for ac_test_result in ac_test_results:
             if ac_test_result.path:
                 path = _try_rel_path(site_id, ac_test_result.path)
@@ -465,7 +469,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
     }
 
     if not (
-        not_ok_ac_test_results := _filter_non_ok_ac_test_results(
+        filtered_ac_test_results := _filter_ac_test_results(
             perform_tests(
                 logger,
                 config,
@@ -480,7 +484,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
     ):
         return
 
-    for site_id, ac_test_results in not_ok_ac_test_results.items():
+    for site_id, ac_test_results in filtered_ac_test_results.items():
         marker_file_store.save(site_id, site_versions_by_site_id[site_id], ac_test_results)
         marker_file_store.cleanup_site_dir(site_id)
 
@@ -504,7 +508,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
 
     for problem_to_send in _find_problems_to_send(
         Version.from_str(__version__).version_base,
-        _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path),
+        _find_ac_test_result_problems(filtered_ac_test_results, manifests_by_path),
         list(
             _filter_notifiable_users(
                 load_users(),

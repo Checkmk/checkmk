@@ -48,6 +48,7 @@ class ACResultState(enum.IntEnum):
     OK = 0
     WARN = 1
     CRIT = 2
+    EXCEPTION = 3
 
     @property
     def short_name(self) -> str:
@@ -86,6 +87,8 @@ class ACTestResult:
                 return f"{self.text} (!)"
             case ACResultState.CRIT:
                 return f"{self.text} (!!)"
+            case ACResultState.EXCEPTION:
+                return f"{self.text} (?)"
         assert_never(self.state)
 
     @classmethod
@@ -119,6 +122,7 @@ class ACTestResult:
                     ACResultState.OK: "ACResultOK",
                     ACResultState.WARN: "ACResultWARN",
                     ACResultState.CRIT: "ACResultCRIT",
+                    ACResultState.EXCEPTION: "ACResultEXCEPTION",
                 }[self.state],
                 "path": str(self.path) if self.path else None,
             }
@@ -187,12 +191,18 @@ class ACTest:
                     path=result.path,
                 )
         except Exception:
-            gui_logger.exception("error executing configuration test %s", self.__class__.__name__)
+            gui_logger.exception(
+                "Error executing configuration test %s: %s",
+                self.__class__.__name__,
+                traceback.format_exc(),
+            )
             yield ACTestResult(
-                state=ACResultState.CRIT,
-                text="<pre>%s</pre>"
-                % _("Failed to execute the test %s: %s")
-                % (escaping.escape_attribute(self.__class__.__name__), traceback.format_exc()),
+                state=ACResultState.EXCEPTION,
+                text=(
+                    "<pre>%s</pre>"
+                    % _("Failed to execute the test %s: See web.log for further details")
+                    % escaping.escape_attribute(self.__class__.__name__)
+                ),
                 test_id=self.id(),
                 category=self.category(),
                 title=self.title(),

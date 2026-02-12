@@ -15,7 +15,7 @@ from cmk.gui.deprecations import (
     _ACTestResultProblemFile,
     _ACTestResultProblemMKP,
     _ACTestResultProblemUnsorted,
-    _filter_non_ok_ac_test_results,
+    _filter_ac_test_results,
     _find_ac_test_result_problems,
     _find_problems_to_send,
     _MarkerFileStore,
@@ -155,13 +155,43 @@ def test__marker_file_store_cleanup_site_dir(tmp_path: Path) -> None:
             },
             id="all",
         ),
+        pytest.param(
+            {
+                SiteId("site_id_1"): [
+                    ACTestResult(
+                        ACResultState.EXCEPTION,
+                        "text",
+                        "test_id_1",
+                        "deprecations",
+                        "Title",
+                        "Help",
+                        SiteId("site_id_1"),
+                        None,
+                    )
+                ],
+                SiteId("site_id_2"): [
+                    ACTestResult(
+                        ACResultState.EXCEPTION,
+                        "text",
+                        "test_id_2",
+                        "deprecations",
+                        "Title",
+                        "Help",
+                        SiteId("site_id_2"),
+                        None,
+                    )
+                ],
+            },
+            {},
+            id="exception",
+        ),
     ],
 )
-def test__filter_non_ok_ac_test_results(
+def test__filter_ac_test_results(
     ac_test_results_by_site_id: Mapping[SiteId, Sequence[ACTestResult]],
     result: Mapping[SiteId, Sequence[ACTestResult]],
 ) -> None:
-    assert _filter_non_ok_ac_test_results(ac_test_results_by_site_id) == result
+    assert _filter_ac_test_results(ac_test_results_by_site_id) == result
 
 
 @pytest.mark.parametrize(

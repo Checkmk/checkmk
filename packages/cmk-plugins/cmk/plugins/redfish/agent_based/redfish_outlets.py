@@ -59,15 +59,21 @@ def check_redfish_outlets(
 ) -> CheckResult:
     """Check single outlet state"""
     if item.startswith("0"):
+        # Handle zero-padded numeric IDs (e.g., "001" -> "1")
         section_id = item
         while True:
             section_id = section_id[1:]
             if not section_id.startswith("0"):
                 break
     elif item.isdigit():
+        # Handle pure numeric IDs
         section_id = item
-    elif len(item.split("-")) == 2:
+    elif "-" in item and len(item.split("-")) == 2:
+        # Handle label format (e.g., "1-MyOutlet" -> "1")
         section_id = item.split("-")[0]
+    else:
+        # Handle alphanumeric IDs (e.g., "L3_F2_30" common for three-phase PDU outlets)
+        section_id = item
 
     data = section.get(section_id, None)
     if data is None:

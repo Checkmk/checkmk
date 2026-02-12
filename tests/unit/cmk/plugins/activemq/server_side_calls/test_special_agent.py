@@ -57,6 +57,24 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             ),
             id="with credentials",
         ),
+        pytest.param(
+            {
+                "servername": "$HOSTNAME$",
+                "port": 123,
+                "protocol": "http",
+                "use_piggyback": True,
+            },
+            SpecialAgentCommand(
+                command_arguments=[
+                    "macroserver",
+                    "123",
+                    "--protocol",
+                    "http",
+                    "--piggyback",
+                ]
+            ),
+            id="with macro",
+        ),
     ],
 )
 def test_command_creation(
@@ -69,6 +87,7 @@ def test_command_creation(
             HostConfig(
                 name="hostname",
                 ipv4_config=IPv4Config(address="1.2.3.4"),
+                macros={"$HOSTNAME$": "macroserver"},
             ),
         )
     ) == [expected_result]

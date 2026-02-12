@@ -7,7 +7,13 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    replace_macros,
+    Secret,
+    SpecialAgentCommand,
+    SpecialAgentConfig,
+)
 
 
 class BasicAuth(BaseModel, frozen=True):
@@ -41,7 +47,7 @@ def _commands_function(
     yield SpecialAgentCommand(
         command_arguments=(
             [
-                params.servername,
+                replace_macros(params.servername, host_config.macros),
                 str(params.port),
                 "--protocol",
                 params.protocol,

@@ -17,12 +17,13 @@ Supported API versions are defined in `APIVersion` enum:
 - `unstable`: For new features, considered higher than `v1`.
 - `internal`: For internal use, considered highest.
 
-Versioning follows a bottom-up inheritance model. Higher versions inherit handlers
-from lower versions if not explicitly overridden.
+Versioning follows a bottom-up inheritance model. Higher versions inherit
+handlers from lower versions if not explicitly overridden.
 
 ### Generating and inspecting the specification
 
-The specification is now static and is independent of any running Checkmk site hence the specification can be rendered using the current state of your branch.
+The specification is now static and is independent of any running Checkmk site
+hence the specification can be rendered using the current state of your branch.
 
 To generate the specification file (`spec.yaml`), run the following command:
 
@@ -36,7 +37,8 @@ Then use `redocly` to preview and inspect the documentation:
 redocly preview-docs spec.yaml
 ```
 
-You can use any tool of your preference to inspect the specification hence you may have to install `redocly` locally
+You can use any tool of your preference to inspect the specification hence you
+may have to install `redocly` locally
 
 ### Code structure
 
@@ -125,6 +127,7 @@ Then, add a `body` parameter to the handler, with the correct type annotation.
 ```python
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
+
 @api_model
 class RequestBodyModel:
     required_field: str = api_field(
@@ -136,6 +139,7 @@ class RequestBodyModel:
         description="Optional field.",
         example=123,
     )
+
 
 def handler(body: RequestBodyModel) -> None:
     return
@@ -154,6 +158,7 @@ The types can be anything, as long as pydantic can deserialize into them.
 from typing import Annotated
 from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam
 from cmk.gui.openapi.framework.model import ApiOmitted
+
 
 def handler(
     path_param: Annotated[str, PathParam(description="...", example="example")],
@@ -187,6 +192,7 @@ The type checking will be the closest we get to "validating" the response body.
 ```python
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
+
 @api_model
 class ResponseModel:
     required_field: str = api_field(
@@ -199,6 +205,7 @@ class ResponseModel:
         example=123,
     )
 
+
 def handler() -> ResponseModel:
     return ResponseModel(required_field="value")
 ```
@@ -206,7 +213,9 @@ def handler() -> ResponseModel:
 This would return a 200 OK response with this JSON body:
 
 ```json
-{ "required_field": "value" }
+{
+  "required_field": "value"
+}
 ```
 
 If you need to return a different status code or additional headers,
@@ -218,12 +227,14 @@ which wraps your `ResponseModel`.
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 
+
 @api_model
 class ResponseModel:
     field: str = api_field(
         description="Required field.",
         example="example",
     )
+
 
 def handler() -> TypedResponse[ResponseModel]:
     return ApiResponse(
@@ -245,8 +256,10 @@ from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.token_auth import TokenType
 from cmk.gui.utils import permission_verification as permissions
 
+
 def handler() -> None:
     return
+
 
 my_endpoint = VersionedEndpoint(
     metadata=EndpointMetadata(
@@ -291,21 +304,24 @@ Once you have your versioned endpoint defined, you can register it in the
 
 #### Permissions
 
-Permissions are defined using `EndpointPermissions`. The `required` argument takes
-a permission object. Available permission classes are in
+Permissions are defined using `EndpointPermissions`. The `required` argument
+takes a permission object. Available permission classes are in
 `cmk.gui.utils.permission_verification` (usually imported as `permissions`):
 
 - `Perm("name")`: a single permission.
 - `AnyPerm([p1, p2])`: matches if _any_ of the permissions are present.
 - `AllPerm([p1, p2])`: matches if _all_ of the permissions are present.
 - `NoPerm()`: never matches (useful for disabling access).
-- `Optional(p)`: always matches (documenting that a permission _might_ be checked; usually relevant when a permission gets checked inside an if-statement).
+- `Optional(p)`: always matches (documenting that a permission _might_ be
+  checked; usually relevant when a permission gets checked inside an
+  if-statement).
 - `PrefixPerm("name")`: matches any permission starting with the given prefix.
 
 ```python
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.openapi.framework import EndpointPermissions
 
-permissions=EndpointPermissions(
+permissions = EndpointPermissions(
     required=permissions.AnyPerm([
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.access"),
@@ -317,10 +333,10 @@ permissions=EndpointPermissions(
 
 #### Error Handling
 
-You can document expected error codes using `error_schemas` in `EndpointHandler`.
-The keys are HTTP status codes (e.g. 404, 409) and values are error classes
-(usually `ApiErrorDataclass`). You can also provide `status_descriptions` for
-non-error codes.
+You can document expected error codes using `error_schemas` in
+`EndpointHandler`. The keys are HTTP status codes (e.g. 404, 409) and values are
+error classes (usually `ApiErrorDataclass`). You can also provide
+`status_descriptions` for non-error codes.
 
 ## Advanced models
 
@@ -359,6 +375,7 @@ correct internal representation is.
 from typing import TypedDict, NotRequired
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
+
 @api_model
 class MyModel:
     id: str = api_field(description="Unique identifier.", example="abc")
@@ -368,12 +385,15 @@ class MyModel:
         example="foo",
     )
 
+
 class InternalModel(TypedDict):
     id: str
     name: NotRequired[str]
 
+
 def _some_internal_function(internal: InternalModel) -> InternalModel:
     return internal  # do something with the data
+
 
 def handler(body: MyModel) -> MyModel:
     as_internal: InternalModel = {
@@ -412,10 +432,12 @@ return the value (even if unmodified) or raise an exception in case of errors.
 from typing import Annotated
 from pydantic import AfterValidator
 
+
 def _validate(value: str) -> str:
     if " " in value:
         raise ValueError("Value must not contain spaces")
     return value
+
 
 # this can be used as a type in your model
 NoSpaces = Annotated[str, AfterValidator(_validate)]
@@ -454,12 +476,16 @@ like a "flat" object. The only difference would be that the custom attributes
 don't show up in the schema.
 
 ```python
-from cmk.gui.openapi.framework.model import api_field, api_model, json_dump_without_omitted
+from cmk.gui.openapi.framework.model import (
+    api_field, api_model, json_dump_without_omitted
+)
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
+
 
 @api_model
 class MyModel(WithDynamicFields):
     id: str = api_field(description="Unique identifier.")
+
 
 x = MyModel(id="123", dynamic_fields={"custom": "value"})
 print(json_dump_without_omitted(MyModel, x))
@@ -474,6 +500,7 @@ from typing import Annotated, Mapping
 from pydantic import AfterValidator
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
+
 
 @api_model
 class MyModel(WithDynamicFields):
@@ -495,10 +522,12 @@ implementations with strong typing and improved validation.
 ```python
 from marshmallow import Schema, fields, validate
 
+
 class LinkSchema(Schema):
     """Schema for link resources."""
     href = fields.String(required=True)
     rel = fields.String(required=True)
+
 
 class UserSchema(Schema):
     """Schema representing a user."""
@@ -628,9 +657,9 @@ class UserModel:
     )
 
     # Field with custom validation
-    active_users: list[Annotated[str, AfterValidator(active_user_check)]] = api_field(
-        description="List of active users.",
-    )
+    active_users: list[
+        Annotated[str, AfterValidator(active_user_check)]
+    ] = api_field(description="List of active users.")
 
     # Optional field
     display_name: str | ApiOmitted = api_field(
@@ -720,6 +749,7 @@ set this correctly.
 from cmk.gui.openapi.framework import ETag
 from cmk.gui.openapi.framework.model.response import ApiResponse
 
+
 def handler() -> ApiResponse[None]:
     # this should contain everything that makes up this resource
     # not just fields that are returned!
@@ -738,6 +768,7 @@ This header is automatically handled by the framework, and added to the
 
 ```python
 from cmk.gui.openapi.framework import ETag, ApiContext
+
 
 def handler(api_context: ApiContext) -> None:
     # lock the resource before checking the ETag!

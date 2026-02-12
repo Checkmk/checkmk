@@ -57,7 +57,10 @@ const filterDefinitions = useFilterDefinitions()
         @remove="emit('remove-filter', name as string)"
       />
     </div>
-    <div v-if="!inFocus" class="db-multi-filter__add-button">
+    <div
+      v-if="!inFocus"
+      :class="{ 'db-multi-filter__add-container': Object.keys(objectConfiguredFilters).length > 0 }"
+    >
       <CmkParagraph style="padding-bottom: var(--dimension-4)">{{
         _t('Add optional filters to refine this widget')
       }}</CmkParagraph>
@@ -72,6 +75,10 @@ const filterDefinitions = useFilterDefinitions()
   </div>
 </template>
 <style scoped>
+.db-multi-filter__add-container {
+  padding-top: var(--dimension-5);
+}
+
 .db-multi-filter__item-container {
   background-color: var(--ux-theme-3);
   padding: var(--dimension-7);

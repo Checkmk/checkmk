@@ -87,24 +87,21 @@ onMounted(async () => {
         v-for="component in components"
         :key="`${'id' in component ? component.id : component.component_type}`"
       >
+        <RemoveFilterButton
+          class="db-restricted-to-single-filter__remove-button"
+          :filter-name="filterName"
+          @remove="handleClear"
+        />
         <div class="db-restricted-to-single-filter__header">
           <CmkParagraph class="db-restricted-to-single-filter__filter-title">{{
             capitalizeFirstLetter(filterName)
           }}</CmkParagraph>
         </div>
-
-        <div class="db-restricted-to-single-filter__input-row">
-          <FilterInputComponentRenderer
-            :component="component"
-            :configured-filter-values="configuredFilterValues"
-            @update-component-values="handleComponentChange"
-          />
-          <RemoveFilterButton
-            class="db-restricted-to-single-filter__remove-button"
-            :filter-name="filterName"
-            @remove="handleClear"
-          />
-        </div>
+        <FilterInputComponentRenderer
+          :component="component"
+          :configured-filter-values="configuredFilterValues"
+          @update-component-values="handleComponentChange"
+        />
       </div>
     </div>
   </div>
@@ -129,13 +126,9 @@ onMounted(async () => {
   font-size: var(--font-size-normal);
 }
 
-.db-restricted-to-single-filter__input-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--dimension-4);
-}
-
 .db-restricted-to-single-filter__remove-button {
-  margin-top: var(--dimension-2);
+  position: absolute;
+  top: var(--dimension-4);
+  right: var(--dimension-4);
 }
 </style>

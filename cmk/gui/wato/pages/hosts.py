@@ -427,7 +427,8 @@ class ABCHostMode(WatoMode, abc.ABC):
                         host_exists=Host.host_exists(self._host.name()),
                         all_agents_url=all_agents_url,
                         user_settings_url=makeuri_contextless(
-                            request=request, vars_=[("mode", "users")]
+                            request=request,
+                            vars_=[("mode", "edit_user"), ("edit", "agent_registration")],
                         ),
                         agent_slideout_cls=AgentSlideout,
                         agent_install_cls=AgentInstallCmds,

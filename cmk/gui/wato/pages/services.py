@@ -801,7 +801,8 @@ class DiscoveryPageRenderer:
                             [("mode", "agent_of_host"), ("host", hostname)]
                         ),
                         user_settings_url=makeuri_contextless(
-                            request=request, vars_=[("mode", "users")]
+                            request=request,
+                            vars_=[("mode", "edit_user"), ("edit", "agent_registration")],
                         ),
                         agent_slideout_cls=AgentSlideout,
                         agent_install_cls=AgentInstallCmds,

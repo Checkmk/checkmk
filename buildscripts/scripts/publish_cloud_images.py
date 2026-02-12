@@ -292,6 +292,10 @@ class AzurePublisher(CloudPublisher):
             filter=f"name eq '{self.image_name}'",
         )
         first_id = next(resource_list).id
+        if first_id is None:
+            raise RuntimeError(
+                f"Cannot identify a unique azure image by using {self.image_name=}. Got no results."
+            )
         if another_match := next(resource_list, None):
             raise RuntimeError(
                 f"Cannot identify a unique azure image by using {self.image_name=}. "

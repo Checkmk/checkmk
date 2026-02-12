@@ -7,6 +7,7 @@ datamodel-code-generator==0.39.0  # CMK-28525
 vcrpy==7.0.0  # CMK-28526
 mypy-protobuf==3.7.0  # CMK-28939
 types-lxml==2025.11.25  # CMK-28940
+telnetlib3==2.0.8  # CMK-31264
 aiohttp~=3.13.2
 annotated-types~=0.7.0
 apispec-oneofschema~=3.0.2

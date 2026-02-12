@@ -165,6 +165,7 @@ const handleUpdate = async () => {
 
     <CmkButton
       v-if="!publicToken"
+      :disabled="handler.runningCreateTokenCall.value"
       :class="{ 'shimmer-input-button': handler.runningCreateTokenCall.value }"
       @click="handleCreate"
       >{{ _t('Generate public link') }}</CmkButton

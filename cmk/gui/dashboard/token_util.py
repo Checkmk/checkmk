@@ -151,14 +151,20 @@ def issue_dashboard_token(
     token_store: TokenStore | None = None,
 ) -> AuthToken:
     """Issues a new dashboard token for the given dashboard."""
-    if dashboard.get("public_token_id"):
-        raise DashboardTokenAlreadyExists(
-            varname=None,
-            message=_("A token for this dashboard already exists, cannot create another one."),
-        )
-
     if token_store is None:
         token_store = get_token_store()
+
+    if existing_token_id := dashboard.get("public_token_id"):
+        # Verify the token actually exists in the store, not just the config reference.
+        # The reference can become stale if the token was removed from the store.
+        with token_store.read_locked() as data:
+            if data.get(TokenId(existing_token_id)) is not None:
+                raise DashboardTokenAlreadyExists(
+                    varname=None,
+                    message=_(
+                        "A token for this dashboard already exists, cannot create another one."
+                    ),
+                )
     now = dt.datetime.now(dt.UTC)
     expiration_time = _validate_expiration(now, expiration_time)
     return token_store.issue(

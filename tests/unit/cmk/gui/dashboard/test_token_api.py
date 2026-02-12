@@ -9,6 +9,7 @@ from collections.abc import Generator
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.token_auth import get_token_store, TokenId
 from tests.testlib.common.repo import is_non_free_repo
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -340,3 +341,29 @@ def test_get_token_user_dashboard(
     resp = clients.DashboardClient.get_relative_grid_dashboard(user_dashboard_with_token)
     assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.json!r}"
     assert resp.json["extensions"]["public_token"]["token_id"] is not None
+
+
+def test_create_token_with_stale_reference(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard_with_token: str,
+) -> None:
+    """Regression test: creating a token should succeed when the dashboard config
+    references a token that no longer exists in the token store (stale reference)."""
+    resp = clients.DashboardClient.get_relative_grid_dashboard(user_dashboard_with_token)
+    assert resp.status_code == 200
+    token_id = resp.json["extensions"]["public_token"]["token_id"]
+
+    # Simulate a stale token reference by deleting the token directly from the token store
+    token_store = get_token_store()
+    token_store.delete(TokenId(token_id))
+
+    payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard_with_token,
+        "comment": "Re-created after stale reference",
+        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat(),
+    }
+    resp = clients.DashboardClient.create_dashboard_token(payload)
+    assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.json!r}"
+    assert resp.json["id"] is not None

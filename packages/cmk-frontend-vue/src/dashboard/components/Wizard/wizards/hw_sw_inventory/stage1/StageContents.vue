@@ -81,11 +81,11 @@ const inventoryPathError = computed(() => {
     </CmkIndent>
   </SectionBlock>
 
-  <SectionBlock :title="_t('Metric selection')">
+  <SectionBlock :title="_t('HW/SW Inventory (value) selection')">
     <CmkIndent>
       <div class="db-stage-contents__base-container">
         <CmkLabel style="font-weight: var(--font-weight-bold)">{{
-          _t('HW/SW inventory property')
+          _t('HW/SW Inventory single value')
         }}</CmkLabel
         ><CmkLabelRequired space="before" />
 
@@ -98,7 +98,7 @@ const inventoryPathError = computed(() => {
             :input-hint="_t('Select inventory path')"
             :label="_t('Inventory path')"
             :options="{
-              type: 'fixed',
+              type: 'filtered',
               suggestions: props.inventoryPaths
             }"
             :form-validation="inventoryPathError !== undefined"

@@ -11,14 +11,14 @@ from functools import partial
 from cmk.ccc.site import SiteId
 from cmk.gui import query_filters
 from cmk.gui.config import active_config, Config
-from cmk.gui.i18n import _l
+from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import Choices, FilterHTTPVariables, Row
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import AutocompleterRegistry
 
 from .filter import Filter, FilterGroup, FilterRegistry
-from .filter.components import DualList, DynamicDropdown, FilterComponent
+from .filter.components import DualList, DynamicDropdown, FilterComponent, StaticText
 
 
 def register(
@@ -126,10 +126,13 @@ class MultipleSitesFilter(SiteFilter):
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
     def components(self) -> Iterable[FilterComponent]:
-        yield DualList(
-            id=self.query_filter.request_vars[0],
-            choices=dict(self._site_choices(active_config)),
-        )
+        if choices := dict(self._site_choices(active_config)):
+            yield DualList(
+                id=self.query_filter.request_vars[0],
+                choices=choices,
+            )
+        else:
+            yield StaticText(text=_("There are no elements for selection."))
 
 
 def sites_autocompleter(

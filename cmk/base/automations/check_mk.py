@@ -1074,6 +1074,7 @@ def _execute_autodiscovery(
     file_cache_options = FileCacheOptions(use_outdated=True)
 
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
+        console.verbose("No hosts to discover, returning.")
         return {}, False
 
     # Note: we can't resolve the `latest` link here, because the core might
@@ -1237,7 +1238,7 @@ def _execute_autodiscovery(
     rediscovery_reference_time = time.time()
 
     hosts_processed = set()
-    discovery_results = {}
+    discovery_results: dict[HostName, DiscoveryReport] = {}
 
     start = time.monotonic()
     limit = 120
@@ -1270,10 +1271,9 @@ def _execute_autodiscovery(
                 params = config_cache.discovery_check_parameters(host_name)
                 if params.commandline_only:
                     console.verbose("  failed: discovery check disabled")
-                    discovery_result, activate_host = None, False
                 else:
                     hosts_config = config_cache.hosts_config
-                    discovery_result, activate_host = autodiscovery(
+                    autodiscovery_result = autodiscovery(
                         host_name,
                         cluster_nodes=config_cache.nodes(host_name),
                         active_hosts={
@@ -1304,15 +1304,14 @@ def _execute_autodiscovery(
                         enforced_services=enforced_services_table(host_name),
                         on_error=on_error,
                     )
-                    # delete the file even in error case, otherwise we might be causing the same error
-                    # every time the cron job runs
-                    (autodiscovery_queue.path / str(host_name)).unlink(
-                        missing_ok=True
-                    )  # TODO: should be a method of autodiscovery_queue
+                    if not autodiscovery_result.skipped:
+                        (autodiscovery_queue.path / str(host_name)).unlink(
+                            missing_ok=True
+                        )  # TODO: should be a method of autodiscovery_queue
 
-                if discovery_result:
-                    discovery_results[host_name] = discovery_result
-                    activation_required |= activate_host
+                    if autodiscovery_result.discovery_result:
+                        discovery_results[host_name] = autodiscovery_result.discovery_result
+                        activation_required |= autodiscovery_result.activate
 
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc))

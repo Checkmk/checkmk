@@ -447,6 +447,14 @@ def _make_diff(
     )
 
 
+@dataclasses.dataclass(frozen=True)
+class AutodiscoveryResult:
+    discovery_result: DiscoveryReport | None
+    activate: bool
+    skipped: bool
+    error: bool
+
+
 def autodiscovery(
     host_name: HostName,
     *,
@@ -468,7 +476,7 @@ def autodiscovery(
     oldest_queued: float,
     enforced_services: Container[ServiceID],
     on_error: OnError,
-) -> tuple[DiscoveryReport | None, bool]:
+) -> AutodiscoveryResult:
     reason = _may_rediscover(
         rediscovery_parameters=rediscovery_parameters,
         reference_time=reference_time,
@@ -476,7 +484,7 @@ def autodiscovery(
     )
     if reason:
         console.verbose(f"  skipped: {reason}")
-        return None, False
+        return AutodiscoveryResult(discovery_result=None, activate=False, skipped=True, error=False)
 
     result = automation_discovery(
         host_name,
@@ -504,7 +512,7 @@ def autodiscovery(
         # for offline hosts the error message is empty. This is to remain
         # compatible with the automation code
         console.verbose(f"  failed: {result.error_text or 'host is offline'}")
-        return None, False
+        return AutodiscoveryResult(discovery_result=None, activate=False, skipped=False, error=True)
 
     something_changed = (
         result.services.has_changes
@@ -535,7 +543,17 @@ def autodiscovery(
         # Now ensure that the discovery service is updated right after the changes
         schedule_discovery_check(host_name)
 
-    return (result, activation_required) if something_changed else (None, False)
+    if something_changed:
+        return AutodiscoveryResult(
+            discovery_result=result,
+            activate=activation_required,
+            skipped=False,
+            error=False,
+        )
+    else:
+        return AutodiscoveryResult(
+            discovery_result=None, activate=False, skipped=False, error=False
+        )
 
 
 def _may_rediscover(

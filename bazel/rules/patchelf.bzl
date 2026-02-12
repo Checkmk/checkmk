@@ -3,22 +3,23 @@
 def _set_runpath_impl(ctx):
     """Patches ELF files with the given RUNPATH."""
     patchelf = ctx.executable._patchelf
+    rpath = ":".join(ctx.attr.rpaths)
     outputs = []
     for src in ctx.files.srcs:
-        out = ctx.actions.declare_file(src.basename)
+        out = ctx.actions.declare_file(ctx.label.name + "/" + src.basename)
         ctx.actions.run(
             outputs = [out],
             inputs = [src],
             executable = patchelf,
             arguments = [
                 "--set-rpath",
-                ctx.attr.rpath,
+                rpath,
                 "--output",
                 out.path,
                 src.path,
             ],
             mnemonic = "SetRunpath",
-            progress_message = "Patching %s with RUNPATH %s" % (src.basename, ctx.attr.rpath),
+            progress_message = "Patching %s with RUNPATH %s" % (src.basename, rpath),
         )
         outputs.append(out)
 
@@ -27,9 +28,9 @@ def _set_runpath_impl(ctx):
 set_runpath = rule(
     implementation = _set_runpath_impl,
     attrs = {
-        "rpath": attr.string(
-            default = "${ORIGIN}",
-            doc = "RUNPATH to set. Defaults to ${ORIGIN}.",
+        "rpaths": attr.string_list(
+            default = ["${ORIGIN}"],
+            doc = "RUNPATH entries to set, joined with ':'. Defaults to ['${ORIGIN}'].",
         ),
         "srcs": attr.label_list(
             allow_files = True,

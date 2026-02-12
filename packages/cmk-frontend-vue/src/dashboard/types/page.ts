@@ -40,7 +40,6 @@ export interface DashboardPageProperties {
   links: {
     list_dashboards: string
     user_guide: string
-    navigation_embedding_page: string
   }
   available_layouts: DashboardLayout[]
   available_features: DashboardFeatures

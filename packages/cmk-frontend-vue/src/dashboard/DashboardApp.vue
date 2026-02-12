@@ -540,9 +540,9 @@ function deepClone<T>(obj: T): T {
           dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
         "
         :link-user-guide="props.links.user_guide"
-        :link-navigation-embedding-page="props.links.navigation_embedding_page"
         :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
         :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
+        :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
         @open-runtime-filter="openRuntimeFilters"
         @open-filter-settings="openFilterSettings"
         @open-settings="openDashboardSettings = true"

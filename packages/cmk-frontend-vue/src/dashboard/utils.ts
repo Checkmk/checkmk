@@ -348,6 +348,17 @@ export const urlHandler = {
     return url
   },
 
+  /** Construct an index URL with the given start URL as a query parameter. The index page adds
+   * page navigation and the sidebar.
+   * @param startUrl - The URL to set as the 'start_url' query parameter.
+   * @returns A URL object representing the constructed index URL.
+   */
+  getIndexUrl(startUrl: URL): URL {
+    const url = replaceFileName(window.location.origin + window.location.pathname, FILE_INDEX)
+    url.searchParams.set('start_url', toPathAndSearch(startUrl))
+    return url
+  },
+
   /**
    * Update query params while **preserving** the specified keys.
    * - `preserveKeys`: keys to keep unmodified (e.g., ['name'])
@@ -385,7 +396,7 @@ export const urlHandler = {
     // because most url operations after this work with the current window's URL,
     // we need to always update this one
     window.history.replaceState({}, '', url.toString())
-    if (isOnIndexPage()) {
+    if (urlHandler.isOnIndexPage()) {
       // updating the parent window's URL is only done so that the user has the correct link
       const parentUrl = new URL(window.parent.location.href)
       parentUrl.searchParams.set('start_url', toPathAndSearch(url))
@@ -404,12 +415,15 @@ export const urlHandler = {
     )
     url.searchParams.set('cmk-token', `0:${publicToken}`)
     return url.toString()
-  }
-}
+  },
 
-function isOnIndexPage(): boolean {
-  const parent = window.parent.location
-  return parent.origin === window.location.origin && parent.pathname.endsWith(FILE_INDEX)
+  /** Check if the dashboard is opened within the index page (has page navigation).
+   * @returns A boolean indicating whether the current page is the index page.
+   */
+  isOnIndexPage(): boolean {
+    const parent = window.parent.location
+    return parent.origin === window.location.origin && parent.pathname.endsWith(FILE_INDEX)
+  }
 }
 
 function replaceFileName(input: string, newFileName: string): URL {

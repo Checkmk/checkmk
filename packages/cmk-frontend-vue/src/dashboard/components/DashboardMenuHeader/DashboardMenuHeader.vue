@@ -17,7 +17,7 @@ import {
   DashboardOwnerType,
   type DashboardTokenModel
 } from '@/dashboard/types/dashboard.ts'
-import { copyToClipboard, toPathAndSearch, urlHandler } from '@/dashboard/utils.ts'
+import { copyToClipboard, urlHandler } from '@/dashboard/utils.ts'
 
 import DashboardSelector from './DashboardSelector.vue'
 import DropdownMenu from './DropdownMenu.vue'
@@ -29,11 +29,11 @@ interface Props {
   selectedDashboard: SelectedDashboard | null
   canEditDashboard: boolean
   linkUserGuide: string
-  linkNavigationEmbeddingPage: string
   isEditMode: boolean
   publicToken: DashboardTokenModel | null
   isEmptyDashboard: boolean
   isDashboardLoading: boolean
+  runtimeFilters: Record<string, string>
 }
 
 const { _t } = usei18n()
@@ -105,22 +105,17 @@ const setStartUrl = async (): Promise<void> => {
   }
 }
 
-const parsePageNavigation = () => {
-  let redirectLink
-  let toggle
-  if (window.self !== window.top) {
-    // inside the embedding iframe which show the page nagivation
-    redirectLink = window.location.href
-    toggle = 'on'
-  } else {
-    redirectLink = `${props.linkNavigationEmbeddingPage}?start_url=${toPathAndSearch(new URL(window.location.href))}`
-    toggle = 'off'
+const navigationToggleIcon = urlHandler.isOnIndexPage() ? 'toggle-on' : 'toggle-off'
+const navigationToggleLink = computed(() => {
+  if (!props.selectedDashboard) {
+    return '' // dropdown is disabled when no dashboard is selected, so this doesn't matter
   }
-  return {
-    redirectLink,
-    toggle
+  const dashboardUrl = urlHandler.getDashboardUrl(props.selectedDashboard, props.runtimeFilters)
+  if (urlHandler.isOnIndexPage()) {
+    return dashboardUrl.toString()
   }
-}
+  return urlHandler.getIndexUrl(dashboardUrl).toString()
+})
 
 const isBuiltInDashboard = computed(
   () => props.selectedDashboard?.type === DashboardOwnerType.BUILT_IN
@@ -139,8 +134,6 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   const url = window?.parent?.location?.href || window.location.href
   await copyToClipboard(url)
 }
-
-const pageNavigation = parsePageNavigation()
 </script>
 
 <template>
@@ -232,9 +225,9 @@ const pageNavigation = parsePageNavigation()
             { label: _t('Set as start URL'), action: () => setStartUrl() },
             {
               label: _t('Show page navigation'),
-              url: pageNavigation.redirectLink,
+              url: navigationToggleLink,
               target: '_top',
-              icon: pageNavigation.toggle === 'on' ? 'toggle-on' : 'toggle-off'
+              icon: navigationToggleIcon
             }
           ]"
         />

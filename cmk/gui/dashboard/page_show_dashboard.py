@@ -132,7 +132,6 @@ def page_dashboard_app(ctx: PageContext) -> None:
         "links": {
             "list_dashboards": f"{PAGE_EDIT_DASHBOARDS_LINK}.py",
             "user_guide": "https://docs.checkmk.com/master/en/dashboards.html",
-            "navigation_embedding_page": makeuri_contextless(ctx.request, [], filename="index.py"),
         },
         "available_layouts": available_layouts,
         "available_features": available_features,

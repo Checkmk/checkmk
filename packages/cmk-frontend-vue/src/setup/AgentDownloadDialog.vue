@@ -33,6 +33,7 @@ interface Props {
   closeButtonTitle: TranslatedString
   agentSlideout: AgentSlideout
   isNotRegistered: boolean
+  noTlsProvided: boolean
   siteId: string
   siteServer: string
 }
@@ -88,7 +89,7 @@ const triggerRescan = () => {
               onclick: () => {
                 slideInOpen = true
               },
-              variant: 'info'
+              variant: noTlsProvided || isNotRegistered ? 'info' : 'optional'
             },
             {
               title: hideButtonTitle,

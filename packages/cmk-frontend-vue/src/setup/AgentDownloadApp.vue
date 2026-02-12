@@ -23,9 +23,11 @@ const props = defineProps<{
 }>()
 
 const slideInTitle = ref(_t('Install Checkmk agent'))
-const dialogTitle = ref(_t('Already installed the Checkmk agent?'))
+const dialogTitle = ref(_t('Agent communication failed during service discovery'))
 const dialogMessage = ref(
-  _t('This problem might be caused by a missing agent or the firewall settings.')
+  _t(`This can have different reasons. The Checkmk agent might not be installed, or communication may be blocked by firewall or network settings.
+If this host should be monitored via an agent, check the installation and connectivity.
+If not, you can ignore this message.`)
 )
 const slideInButtonTitle = ref(_t('Download & install agent'))
 
@@ -63,6 +65,7 @@ const siteServer = props.server_per_site.find((item) => item.site_id === props.s
     :close-button-title="_t('Close & run service discovery')"
     :agent-slideout="agent_slideout"
     :is-not-registered="output.includes(notRegisteredSearchTerm)"
+    :no-tls-provided="props.output.includes(noTlsSearchTerm)"
     :site-id="site"
     :site-server="siteServer"
   />

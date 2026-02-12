@@ -1143,6 +1143,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("tests.gui_e2e"): _allow(
         *PACKAGE_CRYPTO,
+        "cmk.utils.licensing",
         "cmk.utils.nonfree.pro.licensing",
         "cmk.utils.paths",
         "cmk.utils.rulesets",

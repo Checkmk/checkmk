@@ -7,6 +7,7 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.composition.message_broker.utils import await_broker_ready
 from tests.testlib.site import Site
 
 
@@ -23,4 +24,5 @@ def message_broker_running(
         remote_site.omd_config("PIGGYBACK_HUB", "on"),
         remote_site_2.omd_config("PIGGYBACK_HUB", "on"),
     ):
+        await_broker_ready(central_site, remote_site, remote_site_2)
         yield

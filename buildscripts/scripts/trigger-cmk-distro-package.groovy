@@ -43,6 +43,7 @@ void main() {
         }
     }
     def bazel_log_prefix = "bazel_log_";
+    def signing_build_instance = null;
 
     print(
         """
@@ -147,7 +148,7 @@ void main() {
             condition: currentBuild.result == "SUCCESS",
             raiseOnError: true,
         ) {
-            smart_build(
+            signing_build_instance = smart_build(
                 // see global-defaults.yml, needs to run in minimal container
                 use_upstream_build: true,
                 relative_job_name: "${branch_base_folder}/builders/sign-cmk-distro-package",
@@ -171,7 +172,11 @@ void main() {
         }
     }
 
-    stage("Archive stuff") {
+    smart_stage(
+        name: "Archive stuff",
+        condition: signing_build_instance && signing_build_instance.result.toString() == "SUCCESS",
+        raiseOnError: true,
+    ) {
         dir("${checkout_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(

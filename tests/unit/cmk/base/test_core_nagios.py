@@ -558,6 +558,7 @@ def test_create_nagios_servicedefs_active_check(
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
+    monkeypatch.setattr(config, "use_new_descriptions_for", {"cmk_inventory": False})
 
     hostname = HostName("my_host")
     config_cache = config._create_config_cache()
@@ -578,6 +579,7 @@ def test_create_nagios_servicedefs_active_check(
 def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(hostname := HostName("localhost"))
+    ts.set_option("use_new_descriptions_for", {"cmk_inventory": False})
     ts.set_option(
         "extra_service_conf",
         {
@@ -704,6 +706,7 @@ def test_create_nagios_servicedefs_with_warnings(
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
+    monkeypatch.setattr(config, "use_new_descriptions_for", {"cmk_inventory": False})
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -768,6 +771,7 @@ def test_create_nagios_servicedefs_omit_service(
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
+    monkeypatch.setattr(config, "use_new_descriptions_for", {"cmk_inventory": False})
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -827,6 +831,7 @@ def test_create_nagios_servicedefs_invalid_args(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
+    monkeypatch.setattr(config, "use_new_descriptions_for", {"cmk_inventory": False})
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -907,6 +912,7 @@ def test_create_nagios_config_commands(
         },
     )
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
+    monkeypatch.setattr(config, "use_new_descriptions_for", {"cmk_inventory": False})
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)

@@ -59,7 +59,7 @@ async def register_relay(
 @router.get(
     "/{relay_id}/status",
     status_code=fastapi.status.HTTP_200_OK,
-    dependencies=[mtls_authorization_dependency("relay_id")],
+    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
 )
 async def get_relay_status(
     handler: Annotated[
@@ -94,7 +94,7 @@ async def get_relay_status(
 @router.post(
     "/{relay_id}/csr",
     status_code=fastapi.status.HTTP_200_OK,
-    dependencies=[mtls_authorization_dependency("relay_id")],
+    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
 )
 async def refresh_cert(
     handler: Annotated[
@@ -120,7 +120,7 @@ async def refresh_cert(
 @router.post(
     "/{relay_id}/monitoring",
     status_code=fastapi.status.HTTP_204_NO_CONTENT,
-    dependencies=[mtls_authorization_dependency("relay_id")],
+    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
 )
 async def forward_monitoring_data(
     monitoring_data: MonitoringData,

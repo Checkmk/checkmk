@@ -6,12 +6,11 @@ from typing import Annotated, Final
 
 from fastapi import Header, HTTPException, Path
 from fastapi.params import Depends
-from starlette.status import HTTP_400_BAD_REQUEST
 
 INJECTED_UUID_HEADER: Final[str] = "verified-uuid"
 
 
-def mtls_authorization_dependency(path_alias: str) -> Depends:
+def mtls_authorization_dependency(path_alias: str, failure_status_code: int) -> Depends:
     """FastAPI dependency generator for mutual TLS (mTLS) authorization.
 
     This function validates that the client certificate common name (CN) matches the
@@ -26,7 +25,7 @@ def mtls_authorization_dependency(path_alias: str) -> Depends:
        ("verified-uuid") before the request reaches FastAPI
     3. This dependency function extracts both the injected header and the UUID
        from the URL path
-    4. If they don't match, the request is rejected with HTTP 400
+    4. If they don't match, the request is rejected with the status code provided as argument.
 
     This approach ensures:
     - The certificate validation happens at the protocol level before FastAPI processing
@@ -35,7 +34,7 @@ def mtls_authorization_dependency(path_alias: str) -> Depends:
       this dependency
 
     Raises:
-        HTTPException: HTTP 400 if the certificate CN doesn't match the URL UUID
+        HTTPException: if the certificate CN doesn't match the URL UUID
 
     Example:
         @router.post("/{uuid}/data", dependencies=[mtls_authorization_dependency("uuid")])
@@ -48,7 +47,7 @@ def mtls_authorization_dependency(path_alias: str) -> Depends:
     ) -> None:
         if header_uuid != path_uuid:
             raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
+                status_code=failure_status_code,
                 detail=f"Verified client UUID ({header_uuid}) does not match UUID in URL ({path_uuid})",
             )
 

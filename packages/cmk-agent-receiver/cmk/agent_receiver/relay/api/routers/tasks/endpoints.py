@@ -104,7 +104,7 @@ async def create_task_endpoint(
     responses={
         202: {"model": tasks_protocol.TaskResponse},
     },
-    dependencies=[mtls_authorization_dependency("relay_id")],
+    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
 )
 async def update_task(
     relay_id: str,
@@ -154,7 +154,7 @@ async def update_task(
 # TODO try to use dependency to check the serial mismatch
 @router.get(
     "/{relay_id}/tasks",
-    dependencies=[mtls_authorization_dependency("relay_id")],
+    dependencies=[mtls_authorization_dependency("relay_id", fastapi.status.HTTP_403_FORBIDDEN)],
 )
 async def get_tasks_endpoint(
     relay_id: str,

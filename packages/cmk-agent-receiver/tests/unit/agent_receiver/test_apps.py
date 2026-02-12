@@ -16,8 +16,8 @@ from cmk.agent_receiver.main import main_app
 
 def test_uuid_validation_route() -> None:
     app = FastAPI()
-    uuid_validation_router = APIRouter(dependencies=[mtls_authorization_dependency("uuid")])
-    foo_validation_router = APIRouter(dependencies=[mtls_authorization_dependency("foo")])
+    uuid_validation_router = APIRouter(dependencies=[mtls_authorization_dependency("uuid", 400)])
+    foo_validation_router = APIRouter(dependencies=[mtls_authorization_dependency("foo", 400)])
 
     @uuid_validation_router.get("/endpoint/{uuid}")
     def endpoint() -> dict[str, str]:

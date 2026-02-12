@@ -183,35 +183,31 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     value=True,
                 )
             ),
-            "cache_per_section": DictElement(
+            "cache_per_resource": DictElement(
                 parameter_form=Dictionary(
-                    title=Title("Cache per section"),
+                    title=Title("Cache per resource"),
                     help_text=Help(
                         "By setting a higher value for a given resource, you reduce the amount of "
                         "requests sent to the Meraki API instance. If not changed, the predefined "
                         "default time to live (TTL) cache interval will be used."
                     ),
                     elements={
-                        "appliance_uplinks": DictElement(
+                        "appliances": DictElement(
                             parameter_form=TimeSpan(
-                                title=Title("Appliance uplink statuses"),
+                                title=Title("Appliances"),
                                 displayed_magnitudes=(
                                     TimeMagnitude.HOUR,
                                     TimeMagnitude.MINUTE,
                                 ),
                                 prefill=DefaultValue(3600.0),  # 1 hour
                                 custom_validate=[NumberInRange(min_value=0.0)],
-                            )
-                        ),
-                        "appliance_vpns": DictElement(
-                            parameter_form=TimeSpan(
-                                title=Title("Appliance uplink VPN statuses"),
-                                displayed_magnitudes=(
-                                    TimeMagnitude.HOUR,
-                                    TimeMagnitude.MINUTE,
+                                help_text=Help(
+                                    "The following sections utilize this setting:"
+                                    "<ul>"
+                                    "<li>Appliance uplink statuses</li>"
+                                    "<li>Appliance uplink VPN statuses</li>"
+                                    "</ul>"
                                 ),
-                                prefill=DefaultValue(3600.0),  # 1 hour
-                                custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
                         "devices": DictElement(
@@ -223,39 +219,30 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                                 ),
                                 prefill=DefaultValue(3600.0),  # 1 hour
                                 custom_validate=[NumberInRange(min_value=0.0)],
-                            )
-                        ),
-                        "device_statuses": DictElement(
-                            parameter_form=TimeSpan(
-                                title=Title("Device statuses"),
-                                displayed_magnitudes=(
-                                    TimeMagnitude.HOUR,
-                                    TimeMagnitude.MINUTE,
+                                help_text=Help(
+                                    "The following sections utilize this setting:"
+                                    "<ul>"
+                                    "<li>Device statuses</li>"
+                                    "<li>Device uplinks</li>"
+                                    "</ul>"
                                 ),
-                                prefill=DefaultValue(3600.0),  # 1 hour
-                                custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
-                        "device_uplinks_info": DictElement(
+                        "licenses": DictElement(
                             parameter_form=TimeSpan(
-                                title=Title("Device uplinks"),
-                                displayed_magnitudes=(
-                                    TimeMagnitude.HOUR,
-                                    TimeMagnitude.MINUTE,
-                                ),
-                                prefill=DefaultValue(3600.0),  # 1 hour
-                                custom_validate=[NumberInRange(min_value=0.0)],
-                            )
-                        ),
-                        "licenses_overview": DictElement(
-                            parameter_form=TimeSpan(
-                                title=Title("Licenses overview"),
+                                title=Title("Licenses"),
                                 displayed_magnitudes=(
                                     TimeMagnitude.HOUR,
                                     TimeMagnitude.MINUTE,
                                 ),
                                 prefill=DefaultValue(36000.0),  # 10 hours
                                 custom_validate=[NumberInRange(min_value=0.0)],
+                                help_text=Help(
+                                    "The following sections utilize this setting:"
+                                    "<ul>"
+                                    "<li>Licenses overview</li>"
+                                    "</ul>"
+                                ),
                             )
                         ),
                         "networks": DictElement(
@@ -267,28 +254,32 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                                 ),
                                 prefill=DefaultValue(36000.0),  # 10 hours
                                 custom_validate=[NumberInRange(min_value=0.0)],
+                                help_text=Help(
+                                    "The following sections utilize this setting:"
+                                    "<ul>"
+                                    "<li>Networks</li>"
+                                    "</ul>"
+                                    "This setting also indirectly affects the piggyback headings "
+                                    "when the 'Use Network-ID as host prefix' setting is applied."
+                                ),
                             )
                         ),
-                        "wireless_device_statuses": DictElement(
+                        "wireless": DictElement(
                             parameter_form=TimeSpan(
-                                title=Title("Wireless device statuses"),
+                                title=Title("Wireless"),
                                 displayed_magnitudes=(
                                     TimeMagnitude.HOUR,
                                     TimeMagnitude.MINUTE,
                                 ),
                                 prefill=DefaultValue(1800.0),  # 30 minutes
                                 custom_validate=[NumberInRange(min_value=0.0)],
-                            )
-                        ),
-                        "wireless_ethernet_statuses": DictElement(
-                            parameter_form=TimeSpan(
-                                title=Title("Wireless ethernet statuses"),
-                                displayed_magnitudes=(
-                                    TimeMagnitude.HOUR,
-                                    TimeMagnitude.MINUTE,
+                                help_text=Help(
+                                    "The following sections utilize this setting:"
+                                    "<ul>"
+                                    "<li>Wireless device statuses</li>"
+                                    "<li>Wireless ethernet statuses</li>"
+                                    "</ul>"
                                 ),
-                                prefill=DefaultValue(1800.0),  # 30 minutes
-                                custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
                     },

@@ -22,15 +22,12 @@ from cmk.server_side_calls.v1 import (
 )
 
 
-class CachePerSection(BaseModel):
-    appliance_uplinks: int | None = None
-    appliance_vpns: int | None = None
+class CachePerResource(BaseModel):
+    appliances: int | None = None
     devices: int | None = None
-    device_statuses: int | None = None
-    device_uplinks_info: int | None = None
-    licenses_overview: int | None = None
+    licenses: int | None = None
     networks: int | None = None
-    wireless_ethernet_statuses: int | None = None
+    wireless: int | None = None
 
 
 class Params(BaseModel):
@@ -42,7 +39,7 @@ class Params(BaseModel):
     org_id_as_prefix: bool | None = None
     net_id_as_prefix: bool | None = None
     no_cache: bool | None = None
-    cache_per_section: CachePerSection | None = None
+    cache_per_resource: CachePerResource | None = None
 
 
 def agent_cisco_meraki_arguments(
@@ -83,26 +80,17 @@ def agent_cisco_meraki_arguments(
     if params.no_cache:
         args.append("--no-cache")
 
-    if not params.no_cache and (cache_per_section := params.cache_per_section):
-        if cache_per_section.appliance_uplinks:
-            args += ["--cache-appliance-uplinks", str(cache_per_section.appliance_uplinks)]
-        if cache_per_section.appliance_vpns:
-            args += ["--cache-appliance-vpns", str(cache_per_section.appliance_vpns)]
-        if cache_per_section.devices:
-            args += ["--cache-devices", str(cache_per_section.devices)]
-        if cache_per_section.device_statuses:
-            args += ["--cache-device-statuses", str(cache_per_section.device_statuses)]
-        if cache_per_section.device_uplinks_info:
-            args += ["--cache-device-uplinks-info", str(cache_per_section.device_uplinks_info)]
-        if cache_per_section.licenses_overview:
-            args += ["--cache-licenses-overview", str(cache_per_section.licenses_overview)]
-        if cache_per_section.networks:
-            args += ["--cache-networks", str(cache_per_section.networks)]
-        if cache_per_section.wireless_ethernet_statuses:
-            args += [
-                "--cache-wireless-ethernet-statuses",
-                str(cache_per_section.wireless_ethernet_statuses),
-            ]
+    if not params.no_cache and (cache_per_resource := params.cache_per_resource):
+        if cache_per_resource.appliances:
+            args += ["--cache-appliances", str(cache_per_resource.appliances)]
+        if cache_per_resource.devices:
+            args += ["--cache-devices", str(cache_per_resource.devices)]
+        if cache_per_resource.licenses:
+            args += ["--cache-licenses", str(cache_per_resource.licenses)]
+        if cache_per_resource.networks:
+            args += ["--cache-networks", str(cache_per_resource.networks)]
+        if cache_per_resource.wireless:
+            args += ["--cache-wireless", str(cache_per_resource.wireless)]
 
     yield SpecialAgentCommand(command_arguments=args)
 

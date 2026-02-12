@@ -84,11 +84,11 @@ class _CacheConfig:
         return cls(
             appliance_uplinks=cache.cache_ttl(
                 Storage("cisco_meraki_appliance_uplinks", host=args.hostname),
-                ttl=args.cache_appliance_uplinks,
+                ttl=args.cache_appliances,
             ),
             appliance_vpns=cache.cache_ttl(
                 Storage("cisco_meraki_appliance_vpns", host=args.hostname),
-                ttl=args.cache_appliance_vpns,
+                ttl=args.cache_appliances,
             ),
             devices=cache.cache_ttl(
                 Storage("cisco_meraki_devices", host=args.hostname),
@@ -96,15 +96,15 @@ class _CacheConfig:
             ),
             device_statuses=cache.cache_ttl(
                 Storage("cisco_meraki_devices_statuses", host=args.hostname),
-                ttl=args.cache_device_statuses,
+                ttl=args.cache_devices,
             ),
             device_uplinks_info=cache.cache_ttl(
                 Storage("cisco_meraki_device_uplinks_info", host=args.hostname),
-                ttl=args.cache_device_uplinks_info,
+                ttl=args.cache_devices,
             ),
             licenses_overview=cache.cache_ttl(
                 Storage("cisco_meraki_licenses_overview", host=args.hostname),
-                ttl=args.cache_licenses_overview,
+                ttl=args.cache_licenses,
             ),
             networks=cache.cache_ttl(
                 Storage("cisco_meraki_networks", host=args.hostname),
@@ -112,11 +112,11 @@ class _CacheConfig:
             ),
             wireless_device_statuses=cache.cache_ttl(
                 Storage("cisco_meraki_wireless_device_statuses", host=args.hostname),
-                ttl=args.cache_wireless_device_statuses,
+                ttl=args.cache_wireless,
             ),
             wireless_ethernet_statuses=cache.cache_ttl(
                 Storage("cisco_meraki_wireless_ethernet_statuses", host=args.hostname),
-                ttl=args.cache_wireless_ethernet_statuses,
+                ttl=args.cache_wireless,
             ),
         )
 

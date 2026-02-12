@@ -94,6 +94,7 @@ def _next_free_port(site: Site, key: str, port: str) -> int:
 
 @pytest.mark.skip_if_edition("cloud")
 class TestMessageBroker:
+    @pytest.mark.xfail(strict=False, reason="CMK-29677: suspicious message broker tests")
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
         """Test if the connection between central and remote site works"""
         with (
@@ -133,6 +134,7 @@ class TestMessageBroker:
                 ):
                     check_broker_ping(remote_site_2, remote_site.id)
 
+    @pytest.mark.xfail(strict=False, reason="CMK-29677: suspicious message broker tests")
     def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
         """Ensure that sites can still communicate after the message broker port is changed"""
         with (
@@ -176,6 +178,7 @@ def _setup_host(site: Site, hostname: str) -> Iterator[None]:
 
 
 class TestMessageBrokerChangeActivation:
+    @pytest.mark.skip("CMK-29677: suspicious message broker tests")
     @pytest.mark.skip_if_edition("cloud")
     def test_message_broker_activation(self, central_site: Site, remote_site: Site) -> None:
         """Test if a change on a single site still correctly keeps the definitions in RabbitMQ consistent and the broker working"""

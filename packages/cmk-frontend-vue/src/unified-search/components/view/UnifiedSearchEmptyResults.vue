@@ -13,13 +13,8 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import type { HistoryEntry } from '@/unified-search/lib/searchHistory'
 import type { UnifiedSearchError } from '@/unified-search/lib/unified-search'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
-
-import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
-
-const maxRecentlyViewed = 5
 
 const { _t } = usei18n()
 
@@ -28,9 +23,6 @@ defineProps<{
 }>()
 
 const searchUtils = getSearchUtils()
-const recentlyViewed = ref<HistoryEntry[]>(
-  searchUtils.history?.getEntries(null, 'date', maxRecentlyViewed) || []
-)
 
 const resetButton = useTemplateRef('reset-button')
 const currentlySelected = ref<number>(-1)
@@ -65,19 +57,18 @@ function calcCurrentlySelected(d: number, set: boolean = false) {
       currentlySelected.value += d
     }
 
-    if (currentlySelected.value === 0) {
-      resetButton.value?.$el.focus()
-    }
-
-    if (currentlySelected.value === -1 || currentlySelected.value > recentlyViewed.value.length) {
+    if (currentlySelected.value > 0) {
       currentlySelected.value = -1
-      searchUtils.input?.setFocus()
-      return
     }
 
-    if (currentlySelected.value < 0) {
-      currentlySelected.value = recentlyViewed.value.length
-      return
+    if (currentlySelected.value < -1) {
+      currentlySelected.value = 0
+    }
+
+    if (currentlySelected.value === -1) {
+      searchUtils.input?.setFocus()
+    } else {
+      resetButton.value?.$el.focus()
     }
   }
 }
@@ -105,10 +96,6 @@ onBeforeUnmount(() => {
       {{ _t('Reset search') }}
     </CmkButton>
   </div>
-  <UnifiedSearchRecentlyViewed
-    :focus="currentlySelected - 1"
-    :history-entries="recentlyViewed"
-  ></UnifiedSearchRecentlyViewed>
 </template>
 
 <style scoped>

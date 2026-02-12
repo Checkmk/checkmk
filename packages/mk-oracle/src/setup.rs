@@ -276,18 +276,20 @@ pub const RUNTIME_SUB_DIR: &str = "mk-oracle";
 
 pub fn detect_host_runtime() -> Option<PathBuf> {
     match get_local_instances() {
-        Err(e) => try_find_instance_runtime(&e.to_string()),
+        Err(e) => {
+            log::info!("Local Oracle instances detection failed with {} - can't use them to detect runtime path", &e.to_string());
+            try_find_instance_runtime()
+        }
         Ok(instances) if instances.is_empty() => {
-            try_find_instance_runtime("detection list is empty too")
+            log::info!(
+                "Local Oracle instances are not detected - can't use them to detect runtime path"
+            );
+            try_find_instance_runtime()
         }
         Ok(instances) => {
-            if instances.is_empty() {
-                log::warn!("No local Oracle instances found");
-                return None;
-            }
             for instance in &instances {
                 log::info!(
-                    "Found local Oracle instance: name={}, home={:?}, base={:?}",
+                    "Try to find runtime using local Oracle instance: name={}, home={:?}, base={:?}",
                     instance.name,
                     instance.home,
                     instance.base
@@ -304,7 +306,7 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
     }
 }
 
-fn try_find_instance_runtime(message: &str) -> Option<PathBuf> {
+fn try_find_instance_runtime() -> Option<PathBuf> {
     const CLIENT_ENV_VAR: &str = "ORACLE_INSTANT_CLIENT";
     if let Ok(env_var) = std::env::var(CLIENT_ENV_VAR) {
         let candidate = PathBuf::from(env_var);
@@ -326,7 +328,7 @@ fn try_find_instance_runtime(message: &str) -> Option<PathBuf> {
     {
         Some(runtime)
     } else {
-        log::error!("Failed to get local Oracle instances using {ENV_VAR}, also {message}");
+        log::info!("Failed to find local Oracle instances using {ENV_VAR}");
         None
     }
 }

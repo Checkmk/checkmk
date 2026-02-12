@@ -58,7 +58,11 @@ def update_password_v1(
         use_git=api_context.config.wato_use_git,
     )
     password = load_password(name)
-    return ApiResponse(body=serialize_password(name, password), etag=password_etag(name, password))
+    return ApiResponse(
+        status_code=200,
+        body=serialize_password(name, password),
+        etag=password_etag(name, password),
+    )
 
 
 ENDPOINT_UPDATE_PASSWORD = VersionedEndpoint(

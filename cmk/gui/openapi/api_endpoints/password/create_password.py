@@ -44,6 +44,7 @@ def create_password_v1(
     )
     password = load_password(ident)
     return ApiResponse(
+        status_code=200,
         body=serialize_password(ident, password),
         etag=password_etag(ident, password),
     )

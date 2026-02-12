@@ -531,7 +531,7 @@ def test_handle_endpoint_output_etag(permission_validator: PermissionValidator) 
     etag = ETag({"key": "value"})
 
     def handler() -> ApiResponse[None]:
-        return ApiResponse(body=None, etag=etag)
+        return ApiResponse(body=None, status_code=204, etag=etag)
 
     request_endpoint = RequestEndpointFactory.build(handler=handler, etag="output")
     request_data = RawRequestDataFactory.build(

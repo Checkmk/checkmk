@@ -25,7 +25,6 @@ from cmk.gui.openapi.framework.model.converter import (
     HostConverter,
     TypedPlainValidator,
 )
-from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.utils import ProblemException
@@ -51,7 +50,7 @@ def register_host_via_token_v1(
         PathParam(description="An existing host name.", example="my_host"),
     ],
     body: RegisterHost,
-) -> ApiResponse[ConnectionMode]:
+) -> ConnectionMode:
     """Register an existing host, i.e. link it to a UUID"""
     if not api_context.token:
         raise ProblemException(
@@ -84,7 +83,7 @@ def register_host_via_token_v1(
             connection_mode,
         )
         get_token_store().delete(api_context.token.token_id)
-        return ApiResponse(ConnectionMode(connection_mode=connection_mode))
+        return ConnectionMode(connection_mode=connection_mode)
 
 
 def _verified_host(host_name: HostName) -> Host:

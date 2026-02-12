@@ -95,6 +95,7 @@ def update_host_v1(
 
     return ApiResponse(
         body=serialize_host(host, compute_effective_attributes=False, compute_links=True),
+        status_code=200,
         etag=host_etag(host),
     )
 

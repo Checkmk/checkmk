@@ -89,6 +89,7 @@ def update_cluster_nodes_v1(
                 )
             ],
         ),
+        status_code=200,
         etag=host_etag(host),
     )
 

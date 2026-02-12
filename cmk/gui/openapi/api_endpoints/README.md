@@ -755,6 +755,7 @@ def handler() -> ApiResponse[None]:
     # not just fields that are returned!
     etag = ETag({"key": "value"})
     return ApiResponse(
+        status_code=204,
         body=None,  # or some response body
         etag=etag,
     )

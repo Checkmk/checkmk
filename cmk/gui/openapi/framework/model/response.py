@@ -17,7 +17,7 @@ type TypedResponse[T] = T | ApiResponse[T]
 @dataclass(slots=True)  # this isn't an api model, and we want positional arguments
 class ApiResponse[T]:
     body: T
-    status_code: int = 200
+    status_code: int
     headers: dict[str, str] = field(default_factory=dict)
     etag: InitVar[ETag | None] = None
 

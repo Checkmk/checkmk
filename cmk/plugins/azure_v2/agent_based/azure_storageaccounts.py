@@ -4,20 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from cmk.agent_based.v1.type_defs import CheckResult
 from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
     CheckPlugin,
+    DiscoveryResult,
+    IgnoreResultsError,
     InventoryPlugin,
     render,
+    Result,
+    Service,
+    State,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
-    CheckFunctionWithoutItem,
-    create_check_metrics_function_single,
-    create_discover_by_metrics_function_single,
+    check_resource_metrics,
     create_inventory_function,
+    get_service_labels_from_resource_tags,
     MetricData,
     parse_resource,
+    Resource,
 )
 
 inventory_plugin_azure_storageaccounts = InventoryPlugin(
@@ -26,8 +35,41 @@ inventory_plugin_azure_storageaccounts = InventoryPlugin(
 )
 
 
-def create_check_azure_storage() -> CheckFunctionWithoutItem:
-    return create_check_metrics_function_single(
+def _check_metrics_with_inactivity_fallback(
+    resource: Resource,
+    params: Mapping[str, Any],
+    metrics_data: Sequence[MetricData],
+) -> CheckResult:
+    """Check metrics individually and yield inactivity message only if all fail."""
+    all_failed = True
+    for metric in metrics_data:
+        try:
+            yield from check_resource_metrics(
+                resource.id,
+                resource.metrics,
+                params,
+                [metric],
+                check_levels=check_levels,
+            )
+            all_failed = False
+        except IgnoreResultsError:
+            pass
+
+    if all_failed:
+        yield Result(
+            state=State.OK,
+            summary="No data in the Azure API response due to inactivity on the storage account.",
+        )
+
+
+def discover_azure_storageaccounts(section: Resource) -> DiscoveryResult:
+    yield Service(labels=get_service_labels_from_resource_tags(section.tags))
+
+
+def check_azure_storage(params: Mapping[str, Any], section: Resource) -> CheckResult:
+    yield from _check_metrics_with_inactivity_fallback(
+        section,
+        params,
         [
             MetricData(
                 "total_UsedCapacity",
@@ -37,7 +79,6 @@ def create_check_azure_storage() -> CheckFunctionWithoutItem:
                 upper_levels_param="used_capacity_levels",
             )
         ],
-        check_levels=check_levels,
     )
 
 
@@ -48,8 +89,8 @@ check_plugin_azure_storageaccounts = CheckPlugin(
     name="azure_v2_storageaccounts",
     service_name="Azure/Storage account",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function_single("total_UsedCapacity"),
-    check_function=create_check_azure_storage(),
+    discovery_function=discover_azure_storageaccounts,
+    check_function=check_azure_storage,
     check_ruleset_name="azure_v2_storageaccounts_usage",
     check_default_parameters={
         "used_capacity_levels": (
@@ -71,8 +112,10 @@ FLOW_METRICS = {
 }
 
 
-def create_check_azure_storageaccounts_flow() -> CheckFunctionWithoutItem:
-    return create_check_metrics_function_single(
+def check_azure_storageaccounts_flow(params: Mapping[str, Any], section: Resource) -> CheckResult:
+    yield from _check_metrics_with_inactivity_fallback(
+        section,
+        params,
         [
             MetricData(
                 metric_key,
@@ -83,7 +126,6 @@ def create_check_azure_storageaccounts_flow() -> CheckFunctionWithoutItem:
             )
             for metric_key, render_func in FLOW_METRICS.items()
         ],
-        check_levels=check_levels,
     )
 
 
@@ -91,8 +133,8 @@ check_plugin_azure_storageaccounts_flow = CheckPlugin(
     name="azure_v2_storageaccounts_flow",
     service_name="Azure/Storage flow",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function_single(*FLOW_METRICS.keys()),
-    check_function=create_check_azure_storageaccounts_flow(),
+    discovery_function=discover_azure_storageaccounts,
+    check_function=check_azure_storageaccounts_flow,
     check_ruleset_name="azure_v2_storageaccounts_flow",
     check_default_parameters={
         "ingress_levels": ("no_levels", None),
@@ -131,8 +173,12 @@ PERFORMANCE_METRICS = {
 }
 
 
-def create_check_azure_storageaccounts_performance() -> CheckFunctionWithoutItem:
-    return create_check_metrics_function_single(
+def check_azure_storageaccounts_performance(
+    params: Mapping[str, Any], section: Resource
+) -> CheckResult:
+    yield from _check_metrics_with_inactivity_fallback(
+        section,
+        params,
         [
             MetricData(
                 metric_key,
@@ -150,7 +196,6 @@ def create_check_azure_storageaccounts_performance() -> CheckFunctionWithoutItem
                 lower_levels,
             ) in PERFORMANCE_METRICS.items()
         ],
-        check_levels=check_levels,
     )
 
 
@@ -158,8 +203,8 @@ check_plugin_azure_storageaccounts_performance = CheckPlugin(
     name="azure_v2_storageaccounts_performance",
     service_name="Azure/Storage performance",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function_single(*PERFORMANCE_METRICS.keys()),
-    check_function=create_check_azure_storageaccounts_performance(),
+    discovery_function=discover_azure_storageaccounts,
+    check_function=check_azure_storageaccounts_performance,
     check_ruleset_name="azure_v2_storageaccounts_performance",
     check_default_parameters={
         "server_latency_levels": ("fixed", (701, 1001)),

@@ -13,7 +13,9 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import (
+    Age,
     CascadingDropdown,
     Dictionary,
     FixedValue,
@@ -284,6 +286,15 @@ def _parameter_valuespec_checkmk_agent():
                         "with the required versions specified in '%s' and from the duplicates check."
                     )
                     % _("Local checks: versions"),
+                ),
+            ),
+            (
+                "max_time_since_last_update_check",
+                SimpleLevels(
+                    Age,
+                    title=_("Maximum time since last update check"),
+                    help=_("Choose the maximum time to allow between last-update checks"),
+                    default_levels=(2 * 3600 * 24, 30 * 3600 * 24),
                 ),
             ),
         ],

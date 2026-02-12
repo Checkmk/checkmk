@@ -123,7 +123,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 <style scoped>
 table {
-  background: var(--ux-theme-6);
+  background: var(--ux-theme-3);
   color: var(--color);
 }
 

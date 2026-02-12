@@ -93,8 +93,8 @@ defineProps<CmkBadgeProps>()
 }
 
 .cmk-badge--default {
-  background: var(--custom-scroll-bar-thumb-color);
-  border-color: var(--custom-scroll-bar-thumb-color);
+  background: var(--color-midnight-grey-30, #48566a);
+  border-color: var(--color-midnight-grey-30, #48566a);
   color: var(--white);
 }
 
@@ -120,7 +120,7 @@ defineProps<CmkBadgeProps>()
   background: transparent;
 
   &.cmk-badge--default {
-    color: var(--custom-scroll-bar-thumb-color);
+    color: var(--color-midnight-grey-30, #48566a);
   }
 
   &.cmk-badge--warning {

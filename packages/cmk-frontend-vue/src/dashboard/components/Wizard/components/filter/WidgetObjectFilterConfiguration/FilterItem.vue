@@ -103,7 +103,7 @@ withDefaults(defineProps<FilterItemProp>(), {
   flex-shrink: 1;
   align-self: auto;
   order: 0;
-  padding-right: var(--spacing);
+  padding-right: var(--dimension-5);
 }
 
 .db-filter-item__disabled-icon {

@@ -38,49 +38,56 @@ const filterDefinitions = useFilterDefinitions()
 </script>
 
 <template>
-  <div
-    v-for="(configuredValues, name) in objectConfiguredFilters"
-    :key="name as string"
-    class="db-multi-filter__item-container"
-  >
-    <FilterInputItem
-      :filter-id="name as string"
-      :configured-filter-values="configuredValues"
-      @update-filter-values="
-        (id: string, values: ConfiguredValues) => emit('update-filter-values', id, values)
-      "
-    />
-    <RemoveFilterButton
-      class="db-multi-filter__remove-button"
-      :filter-name="filterDefinitions[name]!.title || ''"
-      @remove="emit('remove-filter', name as string)"
-    />
-  </div>
-  <div v-if="!inFocus">
-    <CmkParagraph style="padding-bottom: var(--dimension-4)">{{
-      _t('Add optional filters to refine this widget')
-    }}</CmkParagraph>
-    <FormButton
-      class="db-multi-filter__add-filter-button"
-      icon="plus"
-      @click="emit('set-focus', objectType)"
-      >{{ _t('Add filter') }}</FormButton
+  <div class="db-multi-filter__list-container">
+    <div
+      v-for="(configuredValues, name) in objectConfiguredFilters"
+      :key="name as string"
+      class="db-multi-filter__item-container"
     >
+      <FilterInputItem
+        :filter-id="name as string"
+        :configured-filter-values="configuredValues"
+        @update-filter-values="
+          (id: string, values: ConfiguredValues) => emit('update-filter-values', id, values)
+        "
+      />
+      <RemoveFilterButton
+        class="db-multi-filter__remove-button"
+        :filter-name="filterDefinitions[name]!.title || ''"
+        @remove="emit('remove-filter', name as string)"
+      />
+    </div>
+    <div v-if="!inFocus" class="db-multi-filter__add-button">
+      <CmkParagraph style="padding-bottom: var(--dimension-4)">{{
+        _t('Add optional filters to refine this widget')
+      }}</CmkParagraph>
+      <FormButton
+        class="db-multi-filter__add-filter-button"
+        icon="plus"
+        @click="emit('set-focus', objectType)"
+        >{{ _t('Add filter') }}</FormButton
+      >
+    </div>
+    <AddFilterMessage v-else />
   </div>
-  <AddFilterMessage v-else />
 </template>
 <style scoped>
 .db-multi-filter__item-container {
-  border: var(--ux-theme-8) var(--dimension-1) solid;
-  margin: var(--spacing);
-  padding: var(--spacing-double);
+  background-color: var(--ux-theme-3);
+  padding: var(--dimension-7);
   position: relative;
   display: block;
 }
 
 .db-multi-filter__remove-button {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: var(--dimension-4);
+  right: var(--dimension-4);
+}
+
+.db-multi-filter__list-container {
+  gap: var(--dimension-4);
+  display: flex;
+  flex-direction: column;
 }
 </style>

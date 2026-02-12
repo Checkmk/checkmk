@@ -27,9 +27,9 @@ defineProps<AddFilterMessageProps>()
 
 <style scoped>
 .db-add-filter-message__container {
-  margin: var(--spacing);
-  padding: var(--dimension-7);
+  padding: var(--dimension-4);
   color: var(--font-color-breadcrumb-inactive);
+  background-color: var(--ux-theme-3);
 }
 
 .db-add-filter-message__inner {

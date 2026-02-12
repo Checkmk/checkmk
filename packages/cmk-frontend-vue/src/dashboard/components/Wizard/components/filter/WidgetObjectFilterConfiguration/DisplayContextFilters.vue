@@ -97,7 +97,7 @@ const countInheritedFilters = computed(() => {
 }
 
 .db-display-context-filters__no-filters {
-  font-size: 12px;
+  font-size: var(--font-size-normal);
   color: var(--menu-entry-disabled);
 }
 </style>

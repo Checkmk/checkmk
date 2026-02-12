@@ -52,7 +52,7 @@ const emit = defineEmits<{
 
 .db-filter-selection-collection__item {
   background-color: var(--ux-theme-3);
-  padding: var(--dimension-5) 0 var(--dimension-5) var(--dimension-7);
+  padding: var(--dimension-5) var(--dimension-4) var(--dimension-5) var(--dimension-7);
   display: flex;
   justify-content: space-between;
   align-items: center;

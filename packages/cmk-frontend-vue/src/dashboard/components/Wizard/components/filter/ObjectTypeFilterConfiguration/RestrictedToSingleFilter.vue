@@ -91,23 +91,28 @@ onMounted(async () => {
           <CmkParagraph class="db-restricted-to-single-filter__filter-title">{{
             capitalizeFirstLetter(filterName)
           }}</CmkParagraph>
-          <RemoveFilterButton :filter-name="filterName" @remove="handleClear" />
         </div>
 
-        <FilterInputComponentRenderer
-          :component="component"
-          :configured-filter-values="configuredFilterValues"
-          @update-component-values="handleComponentChange"
-        />
+        <div class="db-restricted-to-single-filter__input-row">
+          <FilterInputComponentRenderer
+            :component="component"
+            :configured-filter-values="configuredFilterValues"
+            @update-component-values="handleComponentChange"
+          />
+          <RemoveFilterButton
+            class="db-restricted-to-single-filter__remove-button"
+            :filter-name="filterName"
+            @remove="handleClear"
+          />
+        </div>
       </div>
     </div>
   </div>
 </template>
 <style scoped>
 .db-restricted-to-single-filter__container {
-  border: var(--ux-theme-8) 1px solid;
-  margin: var(--spacing);
-  padding: var(--spacing-double);
+  background-color: var(--ux-theme-3);
+  padding: var(--dimension-7);
   position: relative;
   display: block;
 }
@@ -116,10 +121,21 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: var(--dimension-4);
 }
 
 .db-restricted-to-single-filter__filter-title {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-normal);
+}
+
+.db-restricted-to-single-filter__input-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dimension-4);
+}
+
+.db-restricted-to-single-filter__remove-button {
+  margin-top: var(--dimension-2);
 }
 </style>

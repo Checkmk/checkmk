@@ -512,10 +512,8 @@ def test_handle_endpoint_with_context(permission_validator: PermissionValidator)
     def handler(api_context: ApiContext) -> None:
         assert api_context.version == APIVersion.UNSTABLE
 
-    request_endpoint = RequestEndpointFactory.build(handler=handler)
-    request_data = RawRequestDataFactory.build(
-        headers=Headers({"Accept": request_endpoint.content_type}),
-    )
+    request_endpoint = RequestEndpointFactory.build(handler=handler, content_type=None)
+    request_data = RawRequestDataFactory.build()
     handle_endpoint_request(
         request_endpoint,
         request_data,
@@ -533,10 +531,10 @@ def test_handle_endpoint_output_etag(permission_validator: PermissionValidator) 
     def handler() -> ApiResponse[None]:
         return ApiResponse(body=None, status_code=204, etag=etag)
 
-    request_endpoint = RequestEndpointFactory.build(handler=handler, etag="output")
-    request_data = RawRequestDataFactory.build(
-        headers=Headers({"Accept": request_endpoint.content_type}),
+    request_endpoint = RequestEndpointFactory.build(
+        handler=handler, content_type=None, etag="output"
     )
+    request_data = RawRequestDataFactory.build()
     response = handle_endpoint_request(
         request_endpoint,
         request_data,
@@ -553,10 +551,10 @@ def test_handle_endpoint_missing_etag(permission_validator: PermissionValidator)
     def handler() -> None:
         return None
 
-    request_endpoint = RequestEndpointFactory.build(handler=handler, etag="output")
-    request_data = RawRequestDataFactory.build(
-        headers=Headers({"Accept": request_endpoint.content_type}),
+    request_endpoint = RequestEndpointFactory.build(
+        handler=handler, content_type=None, etag="output"
     )
+    request_data = RawRequestDataFactory.build()
     with pytest.raises(RestAPIResponseException, match="ETag header expected"):
         handle_endpoint_request(
             request_endpoint,

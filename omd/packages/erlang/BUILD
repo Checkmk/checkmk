@@ -1,6 +1,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 load("//omd/packages/erlang:vars.bzl", "PLACE_HOLDER")
 
 OMD_ROOT_AWARE = [
@@ -27,13 +28,21 @@ LIB_OSMON_PRIV_BIN = [
     "lib/erlang/lib/os_mon-2.9.1/priv/bin/cpu_sup",
 ]
 
-LIB_ERTS_BIN = [
+LIB_CRYPTO_PRIV_LIB = [
+    "lib/erlang/lib/crypto-5.4.2.3/priv/lib/crypto.so",
+    "lib/erlang/lib/crypto-5.4.2.3/priv/lib/otp_test_engine.so",
+]
+
+LIB_ERL_INTERFACE_BIN = [
+    "lib/erlang/lib/erl_interface-5.5.1/bin/erl_call",
+]
+
+LIB_ERTS_BIN_ELF = [
     "lib/erlang/erts-14.2.5.10/bin/beam.smp",
     "lib/erlang/erts-14.2.5.10/bin/ct_run",
     "lib/erlang/erts-14.2.5.10/bin/dialyzer",
     "lib/erlang/erts-14.2.5.10/bin/dyn_erl",
     "lib/erlang/erts-14.2.5.10/bin/epmd",
-    "lib/erlang/erts-14.2.5.10/bin/erl.src",
     "lib/erlang/erts-14.2.5.10/bin/erl_call",
     "lib/erlang/erts-14.2.5.10/bin/erl_child_setup",
     "lib/erlang/erts-14.2.5.10/bin/erlc",
@@ -42,29 +51,40 @@ LIB_ERTS_BIN = [
     "lib/erlang/erts-14.2.5.10/bin/heart",
     "lib/erlang/erts-14.2.5.10/bin/inet_gethost",
     "lib/erlang/erts-14.2.5.10/bin/run_erl",
-    "lib/erlang/erts-14.2.5.10/bin/start.src",
-    "lib/erlang/erts-14.2.5.10/bin/start_erl.src",
     "lib/erlang/erts-14.2.5.10/bin/to_erl",
     "lib/erlang/erts-14.2.5.10/bin/typer",
     "lib/erlang/erts-14.2.5.10/bin/yielding_c_fun",
 ]
 
-LIB_BIN = [
+LIB_ERTS_BIN_NOELF = [
+    "lib/erlang/erts-14.2.5.10/bin/erl.src",
+    "lib/erlang/erts-14.2.5.10/bin/start.src",
+    "lib/erlang/erts-14.2.5.10/bin/start_erl.src",
+]
+
+LIB_ERTS_BIN = LIB_ERTS_BIN_ELF + LIB_ERTS_BIN_NOELF
+
+LIB_BIN_ELF = [
     "lib/erlang/bin/ct_run",
     "lib/erlang/bin/dialyzer",
     "lib/erlang/bin/erl_call",
     "lib/erlang/bin/erlc",
     "lib/erlang/bin/escript",
-    "lib/erlang/bin/no_dot_erlang.boot",
     "lib/erlang/bin/run_erl",
+    "lib/erlang/bin/to_erl",
+    "lib/erlang/bin/typer",
+]
+
+LIB_BIN_NOELF = [
+    "lib/erlang/bin/no_dot_erlang.boot",
     "lib/erlang/bin/start.boot",
     "lib/erlang/bin/start.script",
     "lib/erlang/bin/start_clean.boot",
     "lib/erlang/bin/start_erl",
     "lib/erlang/bin/start_sasl.boot",
-    "lib/erlang/bin/to_erl",
-    "lib/erlang/bin/typer",
 ]
+
+LIB_BIN = LIB_BIN_ELF + LIB_BIN_NOELF
 
 exclude_from_filegroup(
     name = "erlang_purged",
@@ -75,7 +95,7 @@ exclude_from_filegroup(
         "misc",
         "include",
         "src",
-    ] + OMD_ROOT_AWARE + LIB_OSMON_PRIV_BIN + LIB_ERTS_BIN + BIN_SYMLINKS,
+    ] + OMD_ROOT_AWARE + LIB_OSMON_PRIV_BIN + LIB_CRYPTO_PRIV_LIB + LIB_ERL_INTERFACE_BIN + LIB_ERTS_BIN + LIB_BIN + BIN_SYMLINKS,
     tags = ["manual"],
 )
 
@@ -143,6 +163,73 @@ genrule(
     tags = ["manual"],
 )
 
+genrule(
+    name = "erlang_lib_erl_interface_bin",
+    srcs = [
+        "@erlang//:gen_dir",
+    ],
+    outs = LIB_ERL_INTERFACE_BIN,
+    cmd = """
+        #!/bin/bash
+        for F in $(OUTS); do
+            cp -L $(location @erlang//:gen_dir)/%s/$${F#$(RULEDIR)/} $$F
+            chmod 750 $$F
+        done
+    """ % PLACE_HOLDER,
+    tags = ["manual"],
+)
+
+genrule(
+    name = "erlang_lib_crypto_priv_lib",
+    srcs = [
+        "@erlang//:gen_dir",
+    ],
+    outs = LIB_CRYPTO_PRIV_LIB,
+    cmd = """
+        #!/bin/bash
+        for F in $(OUTS); do
+            cp -L $(location @erlang//:gen_dir)/%s/$${F#$(RULEDIR)/} $$F
+            chmod 750 $$F
+        done
+    """ % PLACE_HOLDER,
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "erl_interface_bin_runpath",
+    srcs = LIB_ERL_INTERFACE_BIN,
+    rpaths = ["$ORIGIN/../../../../../lib"],
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "erts_bin_runpath",
+    srcs = LIB_ERTS_BIN_ELF,
+    rpaths = ["$ORIGIN/../../../../lib"],
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "osmon_priv_bin_runpath",
+    srcs = LIB_OSMON_PRIV_BIN,
+    rpaths = ["$ORIGIN/../../../../../../lib"],
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "crypto_priv_lib_runpath",
+    srcs = LIB_CRYPTO_PRIV_LIB,
+    rpaths = ["$ORIGIN/../../../../../../lib"],
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "lib_bin_runpath",
+    srcs = LIB_BIN_ELF,
+    rpaths = ["$ORIGIN/../../../lib"],
+    tags = ["manual"],
+)
+
 pkg_files(
     name = "omd_root_aware_pkg",
     srcs = [
@@ -174,7 +261,7 @@ pkg_mklink(
 
 pkg_files(
     name = "lib_osmon_priv_bin_pkg",
-    srcs = LIB_OSMON_PRIV_BIN,
+    srcs = [":osmon_priv_bin_runpath"],
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -183,8 +270,28 @@ pkg_files(
 )
 
 pkg_files(
+    name = "lib_crypto_priv_lib_pkg",
+    srcs = [":crypto_priv_lib_runpath"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "lib/erlang/lib/crypto-5.4.2.3/priv/lib",
+    tags = ["manual"],
+)
+
+pkg_files(
+    name = "lib_erl_interface_bin_pkg",
+    srcs = [":erl_interface_bin_runpath"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "lib/erlang/lib/erl_interface-5.5.1/bin",
+    tags = ["manual"],
+)
+
+pkg_files(
     name = "lib_erts_bin_pkg",
-    srcs = LIB_ERTS_BIN,
+    srcs = [":erts_bin_runpath"] + LIB_ERTS_BIN_NOELF,
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -194,7 +301,7 @@ pkg_files(
 
 pkg_files(
     name = "lib_bin_pkg",
-    srcs = LIB_BIN,
+    srcs = [":lib_bin_runpath"] + LIB_BIN_NOELF,
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -223,6 +330,8 @@ pkg_tar(
     srcs = [
         ":epmd_lib_link",
         ":lib_bin_pkg",
+        ":lib_crypto_priv_lib_pkg",
+        ":lib_erl_interface_bin_pkg",
         ":lib_erts_bin_pkg",
         ":lib_osmon_priv_bin_pkg",
         ":omd_root_aware_pkg",

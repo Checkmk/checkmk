@@ -21,6 +21,7 @@
     "agent_download": {
       "type": "object",
       "properties": {
+        "user_id": { "type": "string" },
         "output": { "type": "string" },
         "site": { "type": "string" },
         "server_per_site": {
@@ -29,10 +30,9 @@
             "$ref": "#/$defs/agent_download_server_per_site"
           }
         },
-        "docs_url": { "type": "string" },
         "agent_slideout": { "$ref": "agent_slideout.json" }
       },
-      "required": ["site", "server_per_site", "docs_url", "agent_slideout"]
+      "required": ["user_id", "site", "server_per_site", "agent_slideout"]
     }
   }
 }

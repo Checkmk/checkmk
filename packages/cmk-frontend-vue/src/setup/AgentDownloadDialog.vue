@@ -9,8 +9,10 @@ import { TooltipArrow } from 'radix-vue'
 import { ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
+import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkDialog from '@/components/CmkDialog.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkTooltip, {
   CmkTooltipContent,
@@ -21,12 +23,13 @@ import CmkTooltip, {
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 
 interface Props {
+  userId: string
   dialogTitle: TranslatedString
   dialogMessage: TranslatedString
+  dialogCloseIconTitle: TranslatedString
   slideInTitle: TranslatedString
   slideInButtonTitle: TranslatedString
-  docsButtonTitle: TranslatedString
-  docsUrl: string
+  hideButtonTitle: TranslatedString
   closeButtonTitle: TranslatedString
   agentSlideout: AgentSlideout
   isNotRegistered: boolean
@@ -38,11 +41,10 @@ const props = defineProps<Props>()
 
 const slideInOpen = ref(false)
 
-const openDocs = () => {
-  window.open(props.docsUrl, '_blank')
-}
+const localStorageKey = `service-discovery-${props.userId}-${props.agentSlideout.host_name}-hidden`
+const tooltipHidden = usePersistentRef(localStorageKey, false, (v) => v as boolean)
+const tooltipClosed = ref(false)
 
-const tooltipOpen = ref(true)
 // The rescan button always contains the current js call with all needed
 // params. Solution is not the best but without VUE on the setup page we have
 // limited options to solve this.
@@ -56,7 +58,7 @@ const triggerRescan = () => {
 
 <template>
   <CmkTooltipProvider>
-    <CmkTooltip :open="tooltipOpen" class="tooltip">
+    <CmkTooltip :open="!tooltipHidden && !tooltipClosed" class="tooltip">
       <CmkTooltipTrigger as="span"></CmkTooltipTrigger>
       <CmkTooltipContent
         align="center"
@@ -70,7 +72,13 @@ const triggerRescan = () => {
           :height="6"
         />
         <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-        <button class="tooltip-close" @click.prevent="tooltipOpen = false">×</button>
+        <CmkIcon
+          :title="dialogCloseIconTitle"
+          class="tooltip-close"
+          name="close"
+          size="small"
+          @click.stop="tooltipClosed = true"
+        ></CmkIcon>
         <CmkDialog
           :title="dialogTitle"
           :message="dialogMessage"
@@ -83,9 +91,9 @@ const triggerRescan = () => {
               variant: 'info'
             },
             {
-              title: docsButtonTitle,
+              title: hideButtonTitle,
               onclick: () => {
-                openDocs()
+                tooltipHidden = true
               },
               variant: 'optional'
             }
@@ -115,7 +123,7 @@ const triggerRescan = () => {
       :setup-error="false"
       :agent-installed="isNotRegistered"
       :is-push-mode="false"
-      @close="((slideInOpen = false), (tooltipOpen = false), triggerRescan())"
+      @close="((slideInOpen = false), (tooltipHidden = true), triggerRescan())"
     />
   </CmkSlideInDialog>
 </template>

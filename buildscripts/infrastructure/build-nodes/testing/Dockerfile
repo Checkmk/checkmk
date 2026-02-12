@@ -46,7 +46,7 @@ ENV \
 
 # above image is ubuntu-22.04:2.5.0-latest
 # docker inspect -f "{{ .Size }}" testing-ubuntu-checkmk-2.5.0:latest
-# 3849MB (3849192841)
+# 4145MB (4145291470)
 # bash is required to be used in Jenkins with image.inside(), requires +0MB
 # curl is required to download artifacts, requires +0MB
 # cmake is required to install iwyu, requires +34MB
@@ -54,8 +54,10 @@ ENV \
 # gpg is required to use installation scripts, requires +0MB
 # libaio1 is required by mk-oracle
 # lsb-release is required to use installation scripts, requires +0MB
+# libenchant-2-dev is required to build the software architecture due to sphinxcontrib.spelling, requires +5MB
 # make is required for installations, requires +0MB
 # mbuffer is required for faster decompression with lz4, requires +1MB
+# openjdk-21-jdk-headless is required to build the software architecture, requires +301MB
 # sudo is required to install packer, requires +0MB
 # unzip is required to install aws-cli, requires +0MB
 # wget is required to download artifacts, requires +0MB
@@ -68,8 +70,10 @@ RUN apt-get update && \
         gpg \
         libaio1 \
         lsb-release \
+        libenchant-2-dev \
         make \
         mbuffer \
+        openjdk-21-jdk-headless \
         sudo \
         unzip \
         wget && \

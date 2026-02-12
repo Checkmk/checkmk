@@ -2232,11 +2232,6 @@ def main_mv_or_cp(
     chown_tree(new_site_home, new_site.name)
 
     old_site = site_environment_as_root(old_site_name, global_opts.verbose)
-    # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(
-        conflict_mode, old_site.name, new_site, old_replacements, new_site.replacements()
-    )
-
     # In case of mv now delete old user
     if command_type is CommandType.move and not reuse:
         userdel(old_site.name)
@@ -2248,6 +2243,11 @@ def main_mv_or_cp(
     # Entry for tmps in /etc/fstab
     if not reuse:
         add_to_fstab(new_site.name, new_site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
+
+    # Change config files from old to new site (see rename_site())
+    patch_skeleton_files(
+        conflict_mode, old_site.name, new_site, old_replacements, new_site.replacements()
+    )
 
     outcome = finalize_site(
         version_info,

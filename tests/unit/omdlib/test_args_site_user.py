@@ -5,7 +5,14 @@
 
 import pytest
 
-from omdlib.args_site_user import args_to_command_line, Finalize, parse_arguments, Restore
+from omdlib.args_site_user import (
+    args_to_command_line,
+    Copy,
+    Finalize,
+    Move,
+    parse_arguments,
+    Restore,
+)
 from omdlib.type_defs import Skeleton
 
 
@@ -55,6 +62,54 @@ from omdlib.type_defs import Skeleton
             verbose=False,
             reuse=True,
             kill=True,
+            skeleton=Skeleton.ASK,
+        ),
+        Move(
+            site="a",
+            old_site="b",
+            verbose=False,
+            skeleton=Skeleton.INSTALL,
+        ),
+        Move(
+            site="a",
+            old_site="b",
+            verbose=True,
+            skeleton=Skeleton.KEEPOLD,
+        ),
+        Move(
+            site="a",
+            old_site="b",
+            verbose=True,
+            skeleton=Skeleton.ABORT,
+        ),
+        Move(
+            site="a",
+            old_site="b",
+            verbose=False,
+            skeleton=Skeleton.ASK,
+        ),
+        Copy(
+            site="a",
+            old_site="b",
+            verbose=False,
+            skeleton=Skeleton.INSTALL,
+        ),
+        Copy(
+            site="a",
+            old_site="b",
+            verbose=True,
+            skeleton=Skeleton.KEEPOLD,
+        ),
+        Copy(
+            site="a",
+            old_site="b",
+            verbose=True,
+            skeleton=Skeleton.ABORT,
+        ),
+        Copy(
+            site="a",
+            old_site="b",
+            verbose=False,
             skeleton=Skeleton.ASK,
         ),
     ],

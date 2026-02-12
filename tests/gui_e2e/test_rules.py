@@ -185,7 +185,7 @@ def test_create_rules(
         )
 
         current_setting.get_by_role("textbox").fill("test")
-        current_setting.get_by_role("cell", name="Icon").get_by_role("link").click()
+        current_setting.get_by_role("link", name="Choose another Icon").click()
         current_setting.get_by_role("link", name="Built-in").click()
         current_setting.get_by_title("2fa", exact=True).first.click()
         dashboard_page.click_and_wait(

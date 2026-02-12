@@ -93,7 +93,7 @@ export function useDashboardFilters(
     appliedRuntimeFilters.value = {}
   }
 
-  const getRuntimeFiltersSearchParams = (): Record<string, string> => {
+  const runtimeFiltersSearchParams = computed<Record<string, string>>(() => {
     const mode = runtimeFiltersMode.value
     const filters = appliedRuntimeFilters.value
 
@@ -117,7 +117,7 @@ export function useDashboardFilters(
     }
 
     return urlSearchParams
-  }
+  })
 
   return {
     configuredDashboardFilters,
@@ -127,12 +127,12 @@ export function useDashboardFilters(
     baseFilters,
     contextFilters,
     runtimeFiltersMode: computed(() => runtimeFiltersMode.value),
+    runtimeFiltersSearchParams,
     setRuntimeFiltersMode,
     handleSaveDashboardFilters,
     handleApplyRuntimeFilters,
     handleSaveMandatoryRuntimeFilters,
-    handleResetRuntimeFilters,
-    getRuntimeFiltersSearchParams
+    handleResetRuntimeFilters
   }
 }
 

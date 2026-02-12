@@ -181,7 +181,7 @@ const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: Dashboar
 
   const updatedDashboardUrl = urlHandler.getDashboardUrl(
     dashboardKey,
-    dashboardFilters.getRuntimeFiltersSearchParams()
+    dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }
@@ -465,11 +465,10 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilt
   dashboardFilters.handleApplyRuntimeFilters(filters)
   dashboardFilters.setRuntimeFiltersMode(mode)
 
-  const urlSearchParams = dashboardFilters.getRuntimeFiltersSearchParams()
   const updatedDashboardUrl = urlHandler.updateWithPreserve(
     window.location.href,
     ['name'],
-    urlSearchParams
+    dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }
@@ -513,7 +512,7 @@ const updateDashboardSettings = async (
 
   const updatedDashboardUrl = urlHandler.getDashboardUrl(
     newKey,
-    dashboardFilters.getRuntimeFiltersSearchParams()
+    dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }

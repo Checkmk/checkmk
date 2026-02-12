@@ -21,6 +21,7 @@ daily_reduced: &daily_reduced
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "sles-15sp7"
+    - "sles-16.0"
 
 daily_saas: &daily_saas
     - "ubuntu-22.04"

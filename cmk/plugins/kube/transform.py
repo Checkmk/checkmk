@@ -171,6 +171,8 @@ def pod_conditions(
         "ContainersReady": api.ConditionType.CONTAINERSREADY,
         "Ready": api.ConditionType.READY,
         "DisruptionTarget": api.ConditionType.DISRUPTIONTARGET,
+        "PodResizePending": api.ConditionType.PODRESIZEPENDING,
+        "PodResizeInProgress": api.ConditionType.PODRESIZEINPROGRESS,
     }
     result = []
     for condition in conditions:

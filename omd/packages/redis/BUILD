@@ -1,17 +1,25 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 exports_files(["skel.permissions"])
+
+set_runpath(
+    name = "bin_runpath",
+    srcs = ["@redis//:build"],
+    rpaths = ["$ORIGIN/../lib"],
+    tags = ["manual"],
+)
 
 pkg_files(
     name = "bin_pkg",
     srcs = [
-        "@redis//:build",
+        ":bin_runpath",
     ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
-    strip_prefix = strip_prefix.from_pkg(""),
+    prefix = "bin",
     tags = ["manual"],
 )
 

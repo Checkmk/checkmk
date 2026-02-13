@@ -332,16 +332,43 @@ def configuration_services() -> Mapping[str, DictElement]:
 def configuration_advanced() -> Mapping[str, DictElement]:
     return {
         "safe_hostnames": DictElement(
-            parameter_form=BooleanChoice(
-                label=Label("Enable safe host names"),
+            parameter_form=CascadingSingleChoice(
+                title=Title("Make piggyback host names globally unique"),
                 help_text=Help(
-                    "Enabling this option lets Checkmk create safe host names for piggyback hosts. "
+                    "Enabling this option lets Checkmk create unique host names for piggyback hosts. "
                     "This avoids conflicts caused by entities having the same name in Azure, which could lead to monitoring data "
                     "being overwritten or lost. The option works by appending a unique hash to the Checkmk piggyback host names "
                     "(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, resources, or resource groups "
                     "with the same name across multiple Azure tenants or subscriptions."
                 ),
-                prefill=DefaultValue(False),
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="disabled",
+                        title=Title("Disable unique host names"),
+                        parameter_form=FixedValue(value=None),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="enabled",
+                        title=Title("Enable unique host names"),
+                        parameter_form=Dictionary(
+                            elements={
+                                "exclude_vms": DictElement(
+                                    parameter_form=BooleanChoice(
+                                        label=Label("Exclude VMs from unique host names"),
+                                        help_text=Help(
+                                            "When enabled, virtual machines will keep their original "
+                                            "name without the appended unique hash. All other resource "
+                                            "types will still use unique host names."
+                                        ),
+                                        prefill=DefaultValue(True),
+                                    ),
+                                    required=True,
+                                ),
+                            },
+                        ),
+                    ),
+                ],
+                prefill=DefaultValue("disabled"),
             ),
             required=True,
         ),

@@ -271,6 +271,110 @@ div.cmk_figure {
   }
 }
 
+.cmk-figure-tooltip-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: $z-index-popup-offset + 1;
+}
+
+.cmk-figure-tooltip {
+  position: absolute;
+  z-index: 1;
+  padding: $spacing;
+  color: $font-color;
+  pointer-events: none;
+  background-color: $graph-hover-popup-bg-color;
+  border: $graph-hover-popup-border;
+  box-shadow: $graph-hover-popup-box-shadow;
+  border-radius: $theme-border-radius;
+}
+
+.cmk-figure-tooltip.average_scatterplot {
+  max-width: 450px;
+  min-width: $spacing;
+  min-height: $spacing;
+  overflow: hidden;
+
+  table {
+    border-collapse: collapse;
+
+    tr {
+      width: 450px;
+    }
+
+    td {
+      padding: 2px;
+    }
+
+    tr:first-child td {
+      width: 250px;
+      text-align: left;
+    }
+
+    td:first-child {
+      padding-right: 12px;
+    }
+
+    tr:nth-child(2) {
+      width: 50px;
+      padding-right: 12px;
+    }
+
+    tr.mean + tr.median {
+      td {
+        padding-bottom: 4px;
+      }
+
+      + tr td {
+        padding-top: 4px;
+        padding-bottom: 4px;
+      }
+    }
+
+    tr.scatterpoint + tr,
+    tr.median + tr {
+      border-top: 1px solid $font-color;
+
+      td {
+        padding-top: 4px;
+      }
+    }
+
+    tr.top_matches td:nth-child(2) {
+      color: $font-color-red;
+    }
+
+    tr.bottom_matches td:nth-child(2) {
+      color: $font-color-green;
+    }
+  }
+
+  div.collapser {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    width: 12px;
+    height: 12px;
+    pointer-events: auto;
+
+    img {
+      height: 12px;
+      transform: rotate(90deg);
+    }
+
+    &.active {
+      img {
+        transform: rotate(180deg);
+      }
+
+      + table tr:not(.scatterpoint):not(.date) {
+        display: none;
+      }
+    }
+  }
+}
+
 circle.scatterdot {
   fill: $dc-graph-color-0;
 }

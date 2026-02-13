@@ -1242,13 +1242,15 @@ section_mailqueue() {
 }
 
 section_omd_status() {
-    if inpath omd; then
-        # 60 is _probably_ the agents polling interval. Why would you use that??
-        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; ${ROOT_OR_SUDO} omd status --bare || true"
-    fi
+    inpath omd || return
+
+    # 60 is _probably_ the agents polling interval. Why would you use that??
+    _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; ${ROOT_OR_SUDO} omd status --bare || true"
 }
 
 section_omd() {
+    inpath omd || return
+
     # list of monitoring scripts not to be executed here
     ignorelist="cmk-monitor-core cmk-monitor-mkbackup"
 
@@ -1289,6 +1291,9 @@ section_omd() {
         number=${number%.*}
         echo "${version};${number};${edition};${demo}"
     done
+
+    # Stop now if there are no sites. Otherwise the host would be mislabelled with "cmk/check_mk_server:yes"
+    { [ -d /omd/sites/ ] && [ -n "$(ls -A /omd/sites/)" ]; } || return 0
     echo '[sites]'
     echo 'site;used_version;autostart'
     for sitedir in /omd/sites/*; do

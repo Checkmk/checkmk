@@ -68,7 +68,7 @@ def _make_form() -> Dictionary:
                     title=Title("Stratum"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
-                    prefill_fixed_levels=DefaultValue((5, 10)),
+                    prefill_fixed_levels=DefaultValue((5, 5)),
                 ),
             ),
         },

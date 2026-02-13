@@ -448,6 +448,13 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
     },
 }
 
+KNOWN_UNDECLAREABLE_DEPENDENCIES = {
+    # https://github.com/python/typeshed/tree/main/stdlib/_typeshed
+    # Shipped with the standard library part of typeshed, which is bundled with mypy:
+    # https://github.com/python/typeshed/tree/main#using
+    "_typeshed",
+}
+
 
 def _asym_diff(
     minuend: Mapping[ImportName, Iterable[Path]], subtrahend: Mapping[ImportName, Iterable[Path]]
@@ -486,7 +493,11 @@ def test_dependencies_are_declared() -> None:
     """Test for unknown imports which could not be mapped to the requirements files
 
     mostly optional imports and OMD-only shiped packages."""
-    undeclared_dependencies = {i.name: i.paths for i in get_undeclared_dependencies()}
+    undeclared_dependencies = {
+        i.name: i.paths
+        for i in get_undeclared_dependencies()
+        if i.name not in KNOWN_UNDECLAREABLE_DEPENDENCIES
+    }
 
     assert not (outdated := _asym_diff(KNOWN_UNDECLARED_DEPENDENCIES, undeclared_dependencies)), (
         f"The exceptionlist is outdated, these are the 'offenders': {outdated!r}"

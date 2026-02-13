@@ -1619,7 +1619,10 @@ class PerftestPlot:
         cpu_tolerance = self.args.cpu_tolerance
         mem_tolerance = self.args.mem_tolerance
         runtime_tolerance = self.args.runtime_tolerance
-
+        baseline_offset = self.args.baseline_offset
+        baseline_name = {0: "weekly", 30: "monthly", 365: "yearly"}.get(
+            baseline_offset, f"{baseline_offset}d"
+        )
         alerts = []
         for scenario_name in self.scenario_names:
             msg_prefix = f"Scenario {scenario_name}: "
@@ -1641,7 +1644,7 @@ class PerftestPlot:
             if averages.avg_time > baseline.avg_time * (100 + runtime_tolerance) / 100:
                 overshoot = round((averages.avg_time / baseline.avg_time) * 100 - 100, 2)
                 msg = (
-                    f"Execution time baseline exceeded by {overshoot}% "
+                    f"Execution time baseline {baseline_name} exceeded by {overshoot}% "
                     f"(baseline: {round(baseline.avg_time, 2)};"
                     f" actual: {round(averages.avg_time, 2)}"
                 )
@@ -1650,7 +1653,7 @@ class PerftestPlot:
             if averages.avg_cpu > baseline.avg_cpu * (100 + cpu_tolerance) / 100:
                 overshoot = round((averages.avg_cpu / baseline.avg_cpu) * 100 - 100, 2)
                 msg = (
-                    f"CPU usage baseline exceeded by {overshoot}% "
+                    f"CPU usage baseline {baseline_name} exceeded by {overshoot}% "
                     f"(baseline: {round(baseline.avg_cpu, 2)}%;"
                     f" actual: {round(averages.avg_cpu, 2)}%"
                 )
@@ -1658,7 +1661,7 @@ class PerftestPlot:
             if averages.avg_mem > baseline.avg_mem * (100 + mem_tolerance) / 100:
                 overshoot = round((averages.avg_mem / baseline.avg_mem) * 100 - 100, 2)
                 msg = (
-                    f"Memory usage baseline exceeded by {overshoot}% "
+                    f"Memory usage baseline {baseline_name} exceeded by {overshoot}% "
                     f"(baseline: {round(baseline.avg_mem, 2)}%;"
                     f" actual: {round(averages.avg_mem, 2)}%"
                 )

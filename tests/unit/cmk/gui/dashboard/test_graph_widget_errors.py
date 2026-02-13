@@ -111,6 +111,24 @@ class TestGraphWidgetErrorHandling:
             assert isinstance(dashlet._init_exception, MKMissingDataError)
             assert expected_error_substring in str(dashlet._init_exception)
 
+    def test_resolve_site_missing_host_provides_specific_message(
+        self,
+        request_context: None,
+    ) -> None:
+        missing_host = "ghost-host"
+
+        with patch("cmk.gui.dashboard.dashlet.dashlets.graph.sites.live") as live_mock:
+            live_mock.return_value.query_value.side_effect = MKLivestatusNotFoundError(
+                "Host not found"
+            )
+
+            with pytest.raises(MKMissingDataError) as exc_info:
+                TemplateGraphDashlet._resolve_site(missing_host)
+
+        error_message = str(exc_info.value)
+        assert missing_host in error_message
+        assert "could not be found on any active site" in error_message
+
     @pytest.mark.parametrize(
         "exception_class,exception_message,expected_user_message",
         [

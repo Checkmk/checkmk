@@ -156,7 +156,9 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
             try:
                 return sites.live().query_value(query)
             except livestatus.MKLivestatusNotFoundError:
-                raise MKUserError("host", _("The host could not be found on any active site."))
+                raise make_mk_missing_data_error(
+                    reason=_("The host '%s' could not be found on any active site.") % host
+                )
 
     @abc.abstractmethod
     def build_graph_specification(self, context: VisualContext) -> TGraphSpec: ...
@@ -251,7 +253,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         single_context = get_singlecontext_vars(context, self.single_infos())
         host = single_context.get("host")
         if not host:
-            raise MKUserError("host", _("Missing needed host parameter."))
+            raise make_mk_missing_data_error(reason=_("Missing needed host parameter."))
 
         host = HostName(host)
 

@@ -14,7 +14,6 @@
 .mypy_cache
 .mypy_cache/
 .python-*-stamp
-.cargo
 .ropeproject
 .hypothesis
 .syntastic
@@ -111,3 +110,4 @@ remote.bazelrc
 test-results/
 /*.png
 .aider*
+/.claude/settings.local.json

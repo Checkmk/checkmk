@@ -86,7 +86,6 @@ def main() {
                     download: false,    // use copyArtifacts to avoid nested directories
                 );
             }
-            return (build_instance.result == "SUCCESS")
         }]
     }
 

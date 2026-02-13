@@ -580,7 +580,6 @@ class DeploymentCondition(BaseModel):
 class DeploymentStatus(BaseModel):
     # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
     replicas: Replicas
-    number_terminating: int | None = None
     conditions: Mapping[str, DeploymentCondition]
 
 

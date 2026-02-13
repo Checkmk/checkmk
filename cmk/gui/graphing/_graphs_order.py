@@ -145,7 +145,6 @@ GRAPHS_ORDER = [
     "kube_replica_available_state",
     "kube_replica_state",
     "kube_replica_update_state",
-    "kube_replica_terminating_state",
     "kube_cronjob_status",
     "k8s_resources.pods",
     "k8s_resources.pod",

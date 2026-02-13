@@ -48,7 +48,6 @@ def test_parse_kube_deployment_replicas() -> None:
                         "desired": 3,
                         "updated": 0,
                         "ready": 3,
-                        "terminating": 1,
                     }
                 )
             ]
@@ -58,7 +57,6 @@ def test_parse_kube_deployment_replicas() -> None:
         desired=3,
         updated=0,
         ready=3,
-        terminating=1,
     )
 
 
@@ -175,7 +173,6 @@ def test_discover_kube_replicas() -> None:
         desired=3,
         updated=0,
         ready=3,
-        terminating=1,
     )
     strategy = UpdateStrategy(
         strategy=RollingUpdate(
@@ -192,19 +189,16 @@ def test_discover_kube_replicas() -> None:
 @pytest.mark.usefixtures("initialised_item_state")
 def test_check_kube_replicas() -> None:
     assert list(
-        _check_kube_replicas(
+        check_kube_replicas(
             {},
             DeploymentReplicas(
                 available=3,
                 desired=3,
                 updated=3,
                 ready=3,
-                terminating=1,
             ),
             None,
             None,
-            now=800.0,
-            value_store={"terminating_timestamp": 100.0},
         )
     ) == [
         Result(state=State.OK, summary="Ready: 3/3"),
@@ -212,9 +206,6 @@ def test_check_kube_replicas() -> None:
         Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
         Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
         Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
-        Result(state=State.OK, summary="Terminating: 1"),
-        Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-        Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
     ]
 
 
@@ -228,7 +219,6 @@ def test_check_kube_replicas() -> None:
                 desired=3,
                 updated=0,
                 ready=3,
-                terminating=1,
             ),
             UpdateStrategy(
                 strategy=RollingUpdate(
@@ -236,16 +226,13 @@ def test_check_kube_replicas() -> None:
                     max_unavailable="25%",
                 ),
             ),
-            {"update_started_timestamp": 100.0, "terminating_timestamp": 100.0},
+            {"update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 3/3"),
                 Result(state=State.OK, summary="Up-to-date: 0/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(state=State.OK, summary="Not updated for: 11 minutes 40 seconds"),
                 Result(
                     state=State.OK,
@@ -261,7 +248,6 @@ def test_check_kube_replicas() -> None:
                 desired=3,
                 updated=0,
                 ready=3,
-                terminating=1,
             ),
             UpdateStrategy(
                 strategy=RollingUpdate(
@@ -269,16 +255,13 @@ def test_check_kube_replicas() -> None:
                     max_unavailable="25%",
                 ),
             ),
-            {"update_started_timestamp": 100.0, "terminating_timestamp": 100.0},
+            {"update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 3/3"),
                 Result(state=State.OK, summary="Up-to-date: 0/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(state=State.OK, summary="Not updated for: 11 minutes 40 seconds"),
                 Result(
                     state=State.OK,
@@ -294,7 +277,6 @@ def test_check_kube_replicas() -> None:
                 desired=3,
                 updated=0,
                 ready=3,
-                terminating=1,
             ),
             UpdateStrategy(
                 strategy=RollingUpdate(
@@ -302,16 +284,13 @@ def test_check_kube_replicas() -> None:
                     max_unavailable="25%",
                 ),
             ),
-            {"update_started_timestamp": 100.0, "terminating_timestamp": 100.0},
+            {"update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 3/3"),
                 Result(state=State.OK, summary="Up-to-date: 0/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(
                     state=State.CRIT,
                     summary="Not updated for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
@@ -438,18 +417,14 @@ def test_check_kube_replicas_misscheduled_pods(
                 desired=3,
                 updated=3,
                 ready=0,
-                terminating=1,
             ),
-            {"not_ready_started_timestamp": 100.0, "terminating_timestamp": 100.0},
+            {"not_ready_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),
                 Result(state=State.OK, summary="Up-to-date: 3/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 0.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(state=State.OK, summary="Not ready for: 11 minutes 40 seconds"),
             ],
             id="Not ready replicas is OK when no parameters are specified, update strategy is not shown",
@@ -461,18 +436,14 @@ def test_check_kube_replicas_misscheduled_pods(
                 desired=3,
                 updated=3,
                 ready=0,
-                terminating=1,
             ),
-            {"not_ready_started_timestamp": 100.0, "terminating_timestamp": 100.0},
+            {"not_ready_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),
                 Result(state=State.OK, summary="Up-to-date: 3/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 0.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(state=State.OK, summary="Not ready for: 11 minutes 40 seconds"),
             ],
             id="Not ready replicas is OK when thresholds are not reached, update strategy is not shown",
@@ -484,18 +455,14 @@ def test_check_kube_replicas_misscheduled_pods(
                 desired=3,
                 updated=3,
                 ready=0,
-                terminating=1,
             ),
-            {"not_ready_started_timestamp": 100.0, "terminating_timestamp": 100.0},
+            {"not_ready_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),
                 Result(state=State.OK, summary="Up-to-date: 3/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 0.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(
                     state=State.CRIT,
                     summary="Not ready for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
@@ -530,7 +497,6 @@ def test_check_kube_replicas_not_ready_replicas(
                 desired=3,
                 updated=0,
                 ready=0,
-                terminating=1,
             ),
             UpdateStrategy(
                 strategy=RollingUpdate(
@@ -538,20 +504,13 @@ def test_check_kube_replicas_not_ready_replicas(
                     max_unavailable="25%",
                 ),
             ),
-            {
-                "not_ready_started_timestamp": 100.0,
-                "update_started_timestamp": 100.0,
-                "terminating_timestamp": 100.0,
-            },
+            {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),
                 Result(state=State.OK, summary="Up-to-date: 0/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 0.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(
                     state=State.CRIT,
                     summary="Not ready for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
@@ -577,7 +536,6 @@ def test_check_kube_replicas_not_ready_replicas(
                 desired=3,
                 updated=0,
                 ready=0,
-                terminating=None,
             ),
             UpdateStrategy(strategy=Recreate()),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
@@ -637,22 +595,14 @@ def test_check_kube_replicas_not_ready_and_outdated(
                 desired=3,
                 updated=0,
                 ready=3,
-                terminating=1,
             ),
-            {
-                "not_ready_started_timestamp": 100.0,
-                "update_started_timestamp": 100.0,
-                "terminating_timestamp": 100.0,
-            },
+            {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 3/3"),
                 Result(state=State.OK, summary="Up-to-date: 0/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(
                     state=State.CRIT,
                     summary="Not updated for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
@@ -670,22 +620,14 @@ def test_check_kube_replicas_not_ready_and_outdated(
                 desired=3,
                 updated=3,
                 ready=0,
-                terminating=1,
             ),
-            {
-                "not_ready_started_timestamp": 100.0,
-                "update_started_timestamp": 100.0,
-                "terminating_timestamp": 100.0,
-            },
+            {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),
                 Result(state=State.OK, summary="Up-to-date: 3/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 0.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(
                     state=State.CRIT,
                     summary="Not ready for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
@@ -700,7 +642,6 @@ def test_check_kube_replicas_not_ready_and_outdated(
                 desired=3,
                 updated=3,
                 ready=0,
-                terminating=None,
             ),
             {"not_ready_started_timestamp": None, "update_started_timestamp": None},
             [
@@ -722,22 +663,14 @@ def test_check_kube_replicas_not_ready_and_outdated(
                 desired=3,
                 updated=0,
                 ready=3,
-                terminating=1,
             ),
-            {
-                "not_ready_started_timestamp": None,
-                "update_started_timestamp": None,
-                "terminating_timestamp": 100.0,
-            },
+            {"not_ready_started_timestamp": None, "update_started_timestamp": None},
             [
                 Result(state=State.OK, summary="Ready: 3/3"),
                 Result(state=State.OK, summary="Up-to-date: 0/3"),
                 Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
                 Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating: 1"),
-                Metric("kube_terminating_replicas", 1.0, boundaries=(0.0, 3.0)),
-                Result(state=State.OK, summary="Terminating for: 11 minutes 40 seconds"),
                 Result(state=State.OK, summary="Not updated for: 0 seconds"),
             ],
             id="Counter is started once the deployment has transitioned from a "

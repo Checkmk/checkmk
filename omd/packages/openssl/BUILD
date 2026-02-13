@@ -4,13 +4,19 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:binreplace_version_from_flag.bzl", "binreplace_version_from_flag")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 exports_files(["skel.permissions"])
 
-bin_paths = [
-    "bin/c_rehash",
+bin_elf_paths = [
     "bin/openssl",
 ]
+
+bin_noelf_paths = [
+    "bin/c_rehash",
+]
+
+bin_paths = bin_elf_paths + bin_noelf_paths
 
 lib_symlinks = [
     ("libcrypto.so", "libcrypto.so.3"),
@@ -29,27 +35,35 @@ executable_paths = [
     "skel/etc/ssl/misc/tsget.pl",
 ]
 
-lib_with_rpath_paths = [
+lib_paths = [
     "lib/libssl.so.3",
     "lib/libcrypto.so.3",
 ]
 
 genrule(
-    name = "openssl_bin_deployable",
+    name = "openssl_files",
     srcs = ["@openssl//:gen_dir"],
-    outs = bin_paths + lib_with_rpath_paths,
+    outs = bin_paths + lib_paths,
     cmd = """
         for F in $(OUTS); do
             cp -L $(location @openssl//:gen_dir)/$${F#$(RULEDIR)/} $$F
         done
-
         chmod u+w $(OUTS)
-
-        # set RPATH for all ELF binaries we find
-        file -L $(OUTS) \\
-            | grep ELF | cut -d ':' -f1 \\
-            | xargs patchelf --force-rpath --set-rpath "\\$$ORIGIN/../lib"
     """,
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "openssl_bin_runpath",
+    srcs = bin_elf_paths,
+    rpaths = ["$ORIGIN/../lib"],
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "openssl_libssl_runpath",
+    srcs = ["lib/libssl.so.3"],
+    rpaths = ["$ORIGIN"],
     tags = ["manual"],
 )
 
@@ -67,7 +81,7 @@ genrule(
 
 pkg_files(
     name = "openssl_bin_pkg",
-    srcs = bin_paths,
+    srcs = [":openssl_bin_runpath"] + bin_noelf_paths,
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -96,8 +110,7 @@ py_binary(
 
 binreplace_version_from_flag(
     name = "run_binreplace",
-    src =
-        ":lib/libcrypto.so.3",
+    src = ":lib/libcrypto.so.3",
     # File has to be called .replaced because this produce in this format by binreplace
     out = "lib/libcrypto.so.3.replaced",
     reg_ex = r"/(?:home|root)/.*?/openssl\.build_tmpdir/openssl/",
@@ -110,14 +123,21 @@ binreplace_version_from_flag(
     tool = ":binreplace_binary",
 )
 
+set_runpath(
+    name = "openssl_libcrypto_runpath",
+    srcs = ["lib/libcrypto.so.3.replaced"],
+    rpaths = ["$ORIGIN"],
+    tags = ["manual"],
+)
+
 pkg_files(
-    name = "openssl_lib_with_rpath_pkg",
+    name = "openssl_lib_pkg",
     srcs = [
-        "lib/libssl.so.3",
-        "run_binreplace",
+        ":openssl_libcrypto_runpath",
+        ":openssl_libssl_runpath",
     ],
     prefix = "lib",
-    renames = {"lib/libcrypto.so.3.replaced": "libcrypto.so.3"},
+    renames = {":openssl_libcrypto_runpath": "libcrypto.so.3"},
     tags = ["manual"],
 )
 
@@ -175,7 +195,7 @@ pkg_files(
 filter_directory(
     name = "openssl_filtered",
     src = "@openssl//:gen_dir",
-    excludes = bin_paths + lib_with_rpath_paths +
+    excludes = bin_paths + lib_paths +
                ["lib/%s" % i[0] for i in lib_symlinks] +
                ["skel/etc/ssl/misc/%s" % i[0] for i in skel_symlinks] +
                executable_paths,
@@ -199,8 +219,8 @@ pkg_filegroup(
         ":openssl_bin_pkg",
         ":openssl_empty_dirs",
         ":openssl_executables_pkg",
+        ":openssl_lib_pkg",
         ":openssl_lib_symlinks_pkg",
-        ":openssl_lib_with_rpath_pkg",
         ":openssl_rest_pkg",
         ":openssl_skel_symlinks_pkg",
     ],

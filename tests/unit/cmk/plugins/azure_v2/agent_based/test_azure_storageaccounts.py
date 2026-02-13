@@ -12,6 +12,9 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.azure_v2.agent_based.azure_storageaccounts import (
+    check_azure_storage,
+    check_azure_storageaccounts_flow,
+    check_azure_storageaccounts_performance,
     check_plugin_azure_storageaccounts,
     check_plugin_azure_storageaccounts_flow,
     check_plugin_azure_storageaccounts_performance,
@@ -340,3 +343,69 @@ def test_azure_storageaccounts_inventory() -> None:
     resource = _parse_section(STRING_TABLE_STORAGETESTACCOUNT)
     inventory = inventory_plugin_azure_storageaccounts.inventory_function(resource)
     assert get_inventory_value(inventory, "region") == "westeurope"
+
+
+INACTIVITY_RESULT = Result(
+    state=State.OK,
+    summary="No data in the Azure API response due to inactivity on the storage account.",
+)
+
+
+def _make_resource(metrics: Mapping[str, AzureMetric]) -> Resource:
+    return Resource(
+        id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
+        name="st0ragetestaccount",
+        type="Microsoft.Storage/storageAccounts",
+        group="BurningMan",
+        location="westeurope",
+        tags={"monitoring": "some value"},
+        properties={},
+        specific_info={},
+        metrics=metrics,
+    )
+
+
+def test_check_azure_storageaccounts_inactivity_all_missing():
+    resource = _make_resource({})
+    result = list(check_azure_storage({}, resource))
+    assert result == [INACTIVITY_RESULT]
+
+
+def test_check_azure_storageaccounts_flow_inactivity_all_missing():
+    resource = _make_resource({})
+    result = list(check_azure_storageaccounts_flow({}, resource))
+    assert result == [INACTIVITY_RESULT]
+
+
+def test_check_azure_storageaccounts_flow_inactivity_partial():
+    resource = _make_resource(
+        {
+            "total_Ingress": AzureMetric(
+                name="Ingress", aggregation="total", value=31620.0, unit="bytes"
+            ),
+        }
+    )
+    result = list(check_azure_storageaccounts_flow({}, resource))
+    assert result == [
+        Result(state=State.OK, summary="Ingress: 30.9 KiB"),
+        Metric("ingress", 31620.0),
+    ]
+
+
+def test_check_azure_storageaccounts_performance_inactivity_all_missing():
+    resource = _make_resource({})
+    result = list(check_azure_storageaccounts_performance({}, resource))
+    assert result == [INACTIVITY_RESULT]
+
+
+def test_check_azure_storageaccounts_performance_inactivity_partial():
+    resource = _make_resource(
+        {
+            "average_Availability": AzureMetric(
+                name="Availability", aggregation="average", value=99.99, unit="percent"
+            ),
+        }
+    )
+    result = list(check_azure_storageaccounts_performance({}, resource))
+    assert Result(state=State.OK, summary="Availability: 99.99%") in result
+    assert INACTIVITY_RESULT not in result

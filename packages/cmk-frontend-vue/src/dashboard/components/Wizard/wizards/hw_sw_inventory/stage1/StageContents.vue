@@ -95,7 +95,7 @@ const inventoryPathError = computed(() => {
           <CmkDropdown
             v-model:selected-option="inventoryPath"
             width="fill"
-            :input-hint="_t('Select inventory path')"
+            :input-hint="_t('Select single value')"
             :label="_t('Inventory path')"
             :options="{
               type: 'filtered',

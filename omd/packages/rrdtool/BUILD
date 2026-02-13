@@ -2,35 +2,36 @@ load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 exports_files(["skel.permissions"])
-
-rrd_cli_tools = [
-    "rrdtool",
-    "rrdcached",
-    "rrdupdate",
-]
 
 rrd_cli_symlinks = [
     "rrdcreate",
     "rrdinfo",
 ]
 
-[genrule(
-    name = "%s_deployable" % binary,
-    srcs = ["@rrdtool_native//:%s" % binary],
-    outs = [binary],
-    cmd = """
-           cp -L $< $@
-           chmod u+w $@
-           patchelf $@ --force-rpath --set-rpath "\\$$ORIGIN/../lib"
-       """,
+set_runpath(
+    name = "rrdtool_bin_runpath",
+    srcs = [
+        "@rrdtool_native//:rrdcached",
+        "@rrdtool_native//:rrdtool",
+        "@rrdtool_native//:rrdupdate",
+    ],
+    rpaths = ["$ORIGIN/../lib"],
     tags = ["manual"],
-) for binary in rrd_cli_tools]
+)
+
+set_runpath(
+    name = "rrdtool_lib_runpath",
+    srcs = ["@rrdtool_native//:rrd_shared"],
+    rpaths = ["$ORIGIN"],
+    tags = ["manual"],
+)
 
 pkg_files(
     name = "rrdtool_bin",
-    srcs = rrd_cli_tools,
+    srcs = [":rrdtool_bin_runpath"],
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -40,9 +41,7 @@ pkg_files(
 
 pkg_files(
     name = "rrdtool_lib",
-    srcs = [
-        "@rrdtool_native//:rrd_shared",
-    ],
+    srcs = [":rrdtool_lib_runpath"],
     attributes = pkg_attributes(
         mode = "0644",
     ),

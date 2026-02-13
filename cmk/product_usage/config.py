@@ -9,11 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from cmk.base.app import make_app
-from cmk.base.config import load
-from cmk.ccc.version import edition
 from cmk.product_usage.exceptions import ConfigError
-from cmk.utils import http_proxy_config, paths
+from cmk.utils import http_proxy_config
 
 type ProxySetting = (
     tuple[Literal["environment"], Literal["environment"]]
@@ -36,32 +33,18 @@ class ProductUsageConfig:
     proxy_config: http_proxy_config.HTTPProxyConfig
 
 
-def load_config(logger: logging.Logger) -> ProductUsageConfig:
-    base_config = load(
-        discovery_rulesets=(),
-        get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
-    )
-
+def load_product_usage_config(
+    config_dir: Path, logger: logging.Logger
+) -> ProductUsageAnalyticsSettings:
     try:
-        config = read_config_file(paths.default_config_dir)
+        return read_config_file(config_dir)
     except ConfigError:
         logger.exception("Failed to load config from file")
 
-        config = ProductUsageAnalyticsSettings(
+        return ProductUsageAnalyticsSettings(
             enabled="not_decided",
             proxy_setting=("environment", "environment"),
         )
-
-    proxy_config = get_proxy_config(
-        proxy_setting=config.proxy_setting,
-        global_proxies=base_config.loaded_config.http_proxies,
-    )
-
-    return ProductUsageConfig(
-        enabled=config.enabled == "enabled",
-        state=config.enabled,
-        proxy_config=proxy_config,
-    )
 
 
 def read_config_file(config_dir: Path) -> ProductUsageAnalyticsSettings:

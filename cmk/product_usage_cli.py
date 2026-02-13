@@ -4,17 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import logging
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
+from cmk.base.app import make_app
+from cmk.base.config import load
+from cmk.ccc.version import edition
 from cmk.product_usage.collection import (
     collect_data,
     data_storage_path,
     store_data,
 )
-from cmk.product_usage.config import load_config
+from cmk.product_usage.config import get_proxy_config, load_product_usage_config, ProductUsageConfig
 from cmk.product_usage.logger import init_logging
 from cmk.product_usage.schedule import (
     create_next_random_ts,
@@ -34,6 +38,26 @@ class ProductUsageRequest:
     store: bool = False
     upload: bool = False
     schedule: bool = False
+
+
+def load_config(logger: logging.Logger) -> ProductUsageConfig:
+    base_config = load(
+        discovery_rulesets=(),
+        get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
+    )
+
+    config = load_product_usage_config(paths.default_config_dir, logger)
+
+    proxy_config = get_proxy_config(
+        proxy_setting=config.proxy_setting,
+        global_proxies=base_config.loaded_config.http_proxies,
+    )
+
+    return ProductUsageConfig(
+        enabled=config.enabled == "enabled",
+        state=config.enabled,
+        proxy_config=proxy_config,
+    )
 
 
 def main(args: Sequence[str]) -> int:

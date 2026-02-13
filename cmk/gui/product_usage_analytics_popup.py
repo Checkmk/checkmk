@@ -20,8 +20,9 @@ from cmk.gui.utils.product_usage_analytics_popup_cookie import (
     set_user_product_usage_analytics_popup_cookie,
 )
 from cmk.gui.utils.urls import makeuri
-from cmk.product_usage.config import load_config
+from cmk.product_usage.config import load_product_usage_config
 from cmk.shared_typing.product_usage_analytics import ProductUsageAnalyticsConfig
+from cmk.utils import paths
 
 
 @dataclass
@@ -56,9 +57,7 @@ def render_product_usage_analytics_popup(
 
     if "admin" in user.role_ids:
         if is_not_distributed_setup or is_central_site_in_distributed_setup:
-            not_decided = load_config(logger).state == "not_decided"
-
-            if not_decided:
+            if load_product_usage_config(paths.default_config_dir, logger).enabled == "not_decided":
                 popup_timestamp_cookie = product_usage_analytics_popup_timestamp_cookie(request)
 
                 if popup_timestamp_cookie is None:

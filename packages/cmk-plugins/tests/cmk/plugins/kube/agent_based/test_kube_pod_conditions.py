@@ -47,18 +47,9 @@ class PodConditionFactory(ModelFactory):
     last_transition_time = TIMESTAMP
 
 
-def ready(time_diff_minutes=0):
+def status_dict(status, time_diff_minutes=0):
     return {
-        "status": True,
-        "reason": None,
-        "detail": None,
-        "last_transition_time": TIMESTAMP - time_diff_minutes * MINUTE,
-    }
-
-
-def not_ready(time_diff_minutes=0):
-    return {
-        "status": False,
+        "status": status,
         "reason": REASON,
         "detail": DETAIL,
         "last_transition_time": TIMESTAMP - time_diff_minutes * MINUTE,
@@ -128,25 +119,29 @@ def string_table_element(
 ):
     return {
         "initialized": (
-            ready(state_initialized)
+            status_dict(True, state_initialized)
             if status_initialized
-            else (not_ready(state_initialized) if status_initialized is False else None)
+            else (status_dict(False, state_initialized) if status_initialized is False else None)
         ),
-        "hasnetwork": ready(True),
+        "hasnetwork": status_dict(True),
         "scheduled": (
-            ready(state_scheduled)
+            status_dict(True, state_scheduled)
             if status_scheduled
-            else (not_ready(state_scheduled) if status_scheduled is False else None)
+            else (status_dict(False, state_scheduled) if status_scheduled is False else None)
         ),
         "containersready": (
-            ready(state_containersready)
+            status_dict(True, state_containersready)
             if status_containersready
-            else (not_ready(state_containersready) if status_containersready is False else None)
+            else (
+                status_dict(False, state_containersready)
+                if status_containersready is False
+                else None
+            )
         ),
         "ready": (
-            ready(state_ready)
+            status_dict(True, state_ready)
             if status_ready
-            else (not_ready(state_ready) if status_ready is False else None)
+            else (status_dict(False, state_ready) if status_ready is False else None)
         ),
     }
 
@@ -182,7 +177,7 @@ def test_parse(string_table: StringTable) -> None:
     def assert_ready(cond: PodCondition | None) -> None:
         if cond is None:
             raise AssertionError("Condition should not be None")
-        assert cond.model_dump() == ready()
+        assert cond.model_dump() == status_dict(True)
 
     assert_ready(section.initialized)
     assert_ready(section.scheduled)
@@ -202,11 +197,38 @@ def test_parse(string_table: StringTable) -> None:
         expected_ready,
     """,
     [
-        (True, True, True, True, ready(), ready(), ready(), ready()),
-        (True, True, False, False, ready(), ready(), not_ready(), not_ready()),
-        (None, False, None, None, None, not_ready(), None, None),
-        (False, False, None, None, not_ready(), not_ready(), None, None),
-        (False, False, False, False, not_ready(), not_ready(), not_ready(), not_ready()),
+        (
+            True,
+            True,
+            True,
+            True,
+            status_dict(True),
+            status_dict(True),
+            status_dict(True),
+            status_dict(True),
+        ),
+        (
+            True,
+            True,
+            False,
+            False,
+            status_dict(True),
+            status_dict(True),
+            status_dict(False),
+            status_dict(False),
+        ),
+        (None, False, None, None, None, status_dict(False), None, None),
+        (False, False, None, None, status_dict(False), status_dict(False), None, None),
+        (
+            False,
+            False,
+            False,
+            False,
+            status_dict(False),
+            status_dict(False),
+            status_dict(False),
+            status_dict(False),
+        ),
     ],
     ids=[
         "all_ok",
@@ -254,7 +276,7 @@ def test_check_all_states_ok(check_result: CheckResult) -> None:
     assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
 
 
-def test_check_all_results_with_summary_status_false():
+def test_check_all_results_with_summary_status_unexpected():
     condition_status = False
     section = PodConditionsFactory.build(
         initialized=PodConditionFactory.build(
@@ -277,7 +299,7 @@ def test_check_all_results_with_summary_status_false():
 
 @pytest.mark.parametrize("status", [True])
 @pytest.mark.parametrize("state", [0, WARN, CRIT])
-def test_check_results_state_ok_when_status_true(
+def test_check_results_state_ok_when_status_expected(
     check_result: CheckResult,
 ) -> None:
     assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
@@ -296,7 +318,7 @@ def test_check_results_state_ok_when_status_true(
     ],
 )
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
-def test_check_results_state_ok_when_status_false_and_no_levels(
+def test_check_results_state_ok_when_status_unexpected_and_no_levels(
     check_result: CheckResult,
 ) -> None:
     assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
@@ -305,13 +327,13 @@ def test_check_results_state_ok_when_status_false_and_no_levels(
 @pytest.mark.parametrize("status", [False])
 @pytest.mark.parametrize("params", [{}])
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
-def test_check_results_state_ok_when_status_false_and_no_params(
+def test_check_results_state_ok_when_status_unexpected_and_no_params(
     check_result: CheckResult,
 ) -> None:
     assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
 
 
-def test_check_results_sets_summary_when_status_false(
+def test_check_results_sets_summary_when_status_unexpected(
     state: float, check_result: CheckResult
 ) -> None:
     condition_status = False

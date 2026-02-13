@@ -32,17 +32,19 @@ type ShareType = 'with_sites' | 'with_contact_groups' | 'with_all_users' | 'no'
 
 const isLoading = ref<boolean>(false)
 const availableElements = ref<DualListElement[]>([])
+const selectedContactGroups = ref<string[]>([])
+const selectedSites = ref<string[]>([])
 
-const _getSelectedNames = (): string[] => {
-  if (share.value === 'no' || share.value.type === 'with_all_users') {
-    return []
-  }
+const isContactGroupOptionDisabled = ref<boolean>(false)
+const cg = await getContactGroups()
+isContactGroupOptionDisabled.value = cg.length === 0
 
-  if (share.value.type === 'with_contact_groups') {
-    return share.value.contact_groups
-  }
+if (share.value !== 'no' && share.value.type === 'with_contact_groups') {
+  selectedContactGroups.value = share.value.contact_groups
+}
 
-  return share.value.sites
+if (share.value !== 'no' && share.value.type === 'with_sites') {
+  selectedSites.value = share.value.sites
 }
 
 const selectedElements = computed({
@@ -52,20 +54,22 @@ const selectedElements = computed({
     }
 
     if (shareMode.value === 'with_contact_groups') {
-      return availableElements.value.filter((el) => _getSelectedNames().includes(el.name))
+      return availableElements.value.filter((el) => selectedContactGroups.value.includes(el.name))
     }
 
-    return availableElements.value.filter((el) => _getSelectedNames().includes(el.name))
+    return availableElements.value.filter((el) => selectedSites.value.includes(el.name))
   },
 
   set(newSelected: DualListElement[]) {
     if (shareMode.value === 'with_contact_groups') {
+      selectedContactGroups.value = newSelected.map((el) => el.name)
       share.value = {
         type: 'with_contact_groups',
-        contact_groups: newSelected.map((el) => el.name)
+        contact_groups: selectedContactGroups.value
       }
     } else if (shareMode.value === 'with_sites') {
-      share.value = { type: 'with_sites', sites: newSelected.map((el) => el.name) }
+      selectedSites.value = newSelected.map((el) => el.name)
+      share.value = { type: 'with_sites', sites: selectedSites.value }
     }
   }
 })
@@ -94,12 +98,12 @@ const shareMode = computed({
   set(newMode: string) {
     switch (newMode) {
       case 'with_sites':
-        share.value = { type: 'with_sites', sites: [] }
+        share.value = { type: 'with_sites', sites: selectedSites.value }
         void loadAvailableElements('with_sites')
         break
 
       case 'with_contact_groups':
-        share.value = { type: 'with_contact_groups', contact_groups: [] }
+        share.value = { type: 'with_contact_groups', contact_groups: selectedContactGroups.value }
         void loadAvailableElements('with_contact_groups')
         break
 
@@ -131,7 +135,12 @@ if (shareMode.value === 'with_contact_groups' || shareMode.value === 'with_sites
     :options="[
       { label: _t('Only me (private)'), value: 'no' },
       { label: _t('All users'), value: 'with_all_users' },
-      { label: _t('Members of contact groups'), value: 'with_contact_groups' },
+      {
+        label: _t('Members of contact groups'),
+        value: 'with_contact_groups',
+        disabled: isContactGroupOptionDisabled,
+        disabledTooltip: _t('No contact groups found')
+      },
       { label: _t('Users of site'), value: 'with_sites' }
     ]"
   />

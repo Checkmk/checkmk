@@ -1132,6 +1132,7 @@ RESOURCES_API_RESPONSE = [
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 safe_hostnames=False,
+                safe_hostnames_exclude_vms=False,
             ),
             [
                 AzureResourceInfo(
@@ -1181,6 +1182,7 @@ RESOURCES_API_RESPONSE = [
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.ignore_all,
                 safe_hostnames=False,
+                safe_hostnames_exclude_vms=False,
             ),
             [
                 AzureResourceInfo(
@@ -1230,6 +1232,7 @@ RESOURCES_API_RESPONSE = [
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 safe_hostnames=False,
+                safe_hostnames_exclude_vms=False,
             ),
             [
                 AzureResourceInfo(
@@ -1253,6 +1256,56 @@ RESOURCES_API_RESPONSE = [
             ],
             ["resource_group_1"],
             id="Resources selected on explicit config group",
+        ),
+        pytest.param(
+            RESOURCES_API_RESPONSE,
+            Args(
+                explicit_config=[],
+                require_tag=[],
+                require_tag_value=[],
+                debug=False,
+                tag_key_pattern=TagsImportPatternOption.import_all,
+                safe_hostnames=True,
+                safe_hostnames_exclude_vms=True,
+            ),
+            [
+                AzureResourceInfo(
+                    section="virtualnetworks",
+                    info_group="resource_group_1",
+                    piggytarget="virtual_network_1_732c5006",
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="virtualnetworks",
+                    info_group="resource_group_2",
+                    piggytarget="virtual_network_2_115eead9",
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="virtualmachines",
+                    info_group="resource_group_3",
+                    piggytarget="virtual_machine_1",
+                    tags={},
+                ),
+                AzureResourceInfo(
+                    section="storageaccounts",
+                    info_group="resource_group_1",
+                    piggytarget="storage_account_1_01b48bd7",
+                    tags={"ms-resource-usage": "azure-cloud-shell"},
+                ),
+                AzureResourceInfo(
+                    section="redis",
+                    info_group="resource_group_1",
+                    piggytarget="redis_cache_1_d427a52c",
+                    tags={},
+                ),
+            ],
+            [
+                "resource_group_1",
+                "resource_group_2",
+                "resource_group_3",
+            ],
+            id="Safe hostnames with VMs excluded",
         ),
     ],
 )

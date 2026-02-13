@@ -386,6 +386,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "This option will append the last part of the subscription ID to host names. Example: 'my-vm-1a2b3c4d'",
     )
     parser.add_argument(
+        "--safe-hostnames-exclude-vms",
+        default=False,
+        action="store_true",
+        help="When used with --safe-hostnames, exclude virtual machines from safe hostname generation. ",
+    )
+    parser.add_argument(
         "--authority",
         default="global",
         choices=["global", "china"],
@@ -2541,6 +2547,12 @@ async def process_resources(
             )
 
 
+def _should_use_unique_hostname(unique_hostnames: bool, exclude_vms: bool, r: dict) -> bool:
+    if r.get("type") == "Microsoft.Compute/virtualMachines" and exclude_vms:
+        return False
+    return unique_hostnames
+
+
 async def _collect_resources(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
@@ -2552,7 +2564,13 @@ async def _collect_resources(
     )
 
     all_resources = (
-        AzureResource(r, args.tag_key_pattern, subscription, args.safe_hostnames) for r in resources
+        AzureResource(
+            r,
+            args.tag_key_pattern,
+            subscription,
+            _should_use_unique_hostname(args.safe_hostnames, args.safe_hostnames_exclude_vms, r),
+        )
+        for r in resources
     )
 
     # Selected resources are all the resources that match the selector.

@@ -112,6 +112,7 @@ ARGS = Args(
     tag_key_pattern=TagsImportPatternOption.import_all,
     connection_test=False,
     safe_hostnames=True,
+    safe_hostnames_exclude_vms=False,
 )
 
 
@@ -145,6 +146,7 @@ ARGS_MULTI_CONFIG = Args(
     tag_key_pattern=TagsImportPatternOption.import_all,
     connection_test=False,
     safe_hostnames=True,
+    safe_hostnames_exclude_vms=False,
 )
 
 
@@ -179,6 +181,7 @@ ARGS_MULTI_CONFIG = Args(
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
                 "argparse: connection_test = False",
                 "argparse: safe_hostnames = True",
+                "argparse: safe_hostnames_exclude_vms = False",
             ],
         ),
         (
@@ -209,6 +212,7 @@ ARGS_MULTI_CONFIG = Args(
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
                 "argparse: connection_test = False",
                 "argparse: safe_hostnames = True",
+                "argparse: safe_hostnames_exclude_vms = False",
             ],
         ),
     ],

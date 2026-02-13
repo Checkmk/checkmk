@@ -45,9 +45,14 @@ async function submit(data: OAuth2FormData): Promise<TranslatedString | null> {
   if (res.type === 'success') {
     window.location.href = props.config.urls.back
     return null
+  } else if (res.type === 'error' && res.validationMessages) {
+    validationRef.value = res.validationMessages
+    return _t(`Please fix the validation errors and try again.`)
   }
   return _t(`Failed to save OAuth2 connection`)
 }
+
+const validationRef = ref<ValidationMessages>(props.form_spec.validation ?? [])
 
 immediateWatch(
   () => props.form_spec.data,
@@ -63,7 +68,12 @@ provide(submitKey, submit)
   <CreateOAuth2Connection
     v-model:data="dataRef"
     :config="config"
-    :form-spec="form_spec"
+    :form-spec="{
+      id: form_spec.id,
+      spec: form_spec.spec,
+      validation: validationRef,
+      data: dataRef
+    }"
     :authority-mapping="authority_mapping"
     :api="api"
     :connector-type="connector_type"

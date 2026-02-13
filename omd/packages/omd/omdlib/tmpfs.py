@@ -18,12 +18,7 @@ from pathlib import Path
 from omdlib.console import ok
 from omdlib.skel_permissions import Permissions
 from omdlib.type_defs import Config, Replacements
-from omdlib.utils import (
-    chown_tree,
-    create_skeleton_files,
-    delete_directory_contents,
-    is_containerized,
-)
+from omdlib.utils import create_skeleton_files, delete_directory_contents, is_containerized
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc import tty
@@ -304,7 +299,6 @@ def prepare_and_populate_tmpfs(
 
     if not os.listdir(site_tmp_dir):
         create_skeleton_files(site_home, replacements, skelroot, skel_permissions, "tmp")
-        chown_tree(site_tmp_dir, site_name)
         mark_tmpfs_initialized(site_tmp_dir)
         _restore_tmpfs_dump(site_home, site_tmp_dir)
 

@@ -302,16 +302,6 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
         f.write("%s\n" % version)
 
 
-def try_chown(filename: str, user: str) -> None:
-    if os.path.exists(filename):
-        try:
-            uid = pwd.getpwnam(user).pw_uid
-            gid = pwd.getpwnam(user).pw_gid
-            os.chown(filename, uid, gid)
-        except Exception as e:
-            sys.stderr.write(f"Cannot chown {filename} to {user}: {e}\n")
-
-
 # Walks all files in the skeleton dir to execute a function for each file
 #
 # When called with a path in 'exclude_if_in' then paths existing relative to
@@ -455,10 +445,8 @@ def _patch_template_file(
     content = Path(src).read_bytes()
     filename = Path(f"{dst}.skel.{new_site.name}")
     filename.write_bytes(replace_tags(content, new_replacements))
-    try_chown(str(filename), new_site.name)
     filename = Path(f"{dst}.skel.{old_site_name}")
     filename.write_bytes(replace_tags(content, old_replacements))
-    try_chown(str(filename), new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
     old_orig_path = Path(f"{dst}.skel.{old_site_name}")
@@ -476,9 +464,6 @@ def _patch_template_file(
         f"diff -u {old_orig_path} {new_orig_path} | {new_site_home}/bin/patch --force --backup --forward --silent {dst}"
     )
 
-    try_chown(dst, new_site.name)
-    try_chown(dst + ".rej", new_site.name)
-    try_chown(dst + ".orig", new_site.name)
     if result == 0:
         sys.stdout.write(StateMarkers.good + " Converted      %s\n" % src)
     else:

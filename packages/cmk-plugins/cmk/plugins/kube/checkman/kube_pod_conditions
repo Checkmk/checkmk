@@ -4,14 +4,16 @@ catalog: containerization/kubernetes
 license: GPLv2
 distribution: check_mk
 description:
- A pod's status depends on an array of PodConditions through which the
+ A Pod's status depends on an array of PodConditions through which the
  Pod has or has not yet passed. This check monitors the status of each
- condition (scheduled, initialized, containersready and ready) and the
- duration if the condition has not yet passed. This check does not
+ condition (scheduled, initialized, containersready and ready, along with
+ resizepending and resizeinprogress as of Kubernetes v1.33) and the
+ duration of the condition if it is in an abnormal state. This check does not
  monitor custom conditions.
 
- Upper levels for {WARN}/{CRIT} can be defined for time until a
- condition is not yet passed.
+ Upper levels for WARN/CRIT can be defined to determine how much time must pass
+ before an alert is triggered when a condition is in an abnormal state for an
+ extended period of time.
 
 discovery:
  One service is created representing pod conditions.

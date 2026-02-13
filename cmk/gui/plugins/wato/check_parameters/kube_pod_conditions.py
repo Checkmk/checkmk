@@ -48,8 +48,23 @@ def _parameter_valuespec():
                 "ready",
                 age_levels_dropdown(_("Time until alert, if READY condition is false")),
             ),
+            (
+                "resizepending",
+                age_levels_dropdown(_("Time until alert, if RESIZEPENDING condition is true")),
+            ),
+            (
+                "resizeinprogress",
+                age_levels_dropdown(_("Time until alert, if RESIZEINPROGRESS condition is true")),
+            ),
         ],
-        optional_keys=["initialized", "scheduled", "containersready", "ready"],
+        optional_keys=[
+            "initialized",
+            "scheduled",
+            "containersready",
+            "ready",
+            "resizepending",
+            "resizeinprogress",
+        ],
     )
 
 

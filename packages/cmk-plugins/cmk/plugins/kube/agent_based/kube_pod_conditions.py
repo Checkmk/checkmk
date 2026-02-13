@@ -37,12 +37,16 @@ def discovery(section: PodConditions) -> DiscoveryResult:
 
 
 def _check_condition(
-    now: float, name: str, cond: PodCondition | None, levels_upper: tuple[int, int] | None
+    now: float,
+    name: str,
+    cond: PodCondition | None,
+    levels_upper: tuple[int, int] | None,
+    invert: bool = False,  # if True, alert when the condition is *False*
 ) -> CheckResult:
     if cond is not None:
         # keep the last-seen one
         time_diff = now - cond.last_transition_time  # type: ignore[operator]  # SUP-12170
-        if cond.status:
+        if (not invert and cond.status) or (invert and not cond.status):
             # TODO: CMK-11697
             yield Result(state=State.OK, summary=condition_short_description(name, cond.status))
             return
@@ -100,6 +104,22 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
         section.ready,
         get_age_levels_for(params, "ready"),
     )
+    if section.resizepending is not None:  # v1.33+
+        yield from _check_condition(
+            now,
+            "resizepending",
+            section.resizepending,
+            get_age_levels_for(params, "resizepending"),
+            invert=True,
+        )
+    if section.resizeinprogress is not None:  # v1.33+
+        yield from _check_condition(
+            now,
+            "resizeinprogress",
+            section.resizeinprogress,
+            get_age_levels_for(params, "resizeinprogress"),
+            invert=True,
+        )
     if (disruptiontarget := section.disruptiontarget) is not None:
         yield Result(
             state=State.OK,
@@ -133,6 +153,8 @@ check_plugin_kube_pod_conditions = CheckPlugin(
         "initialized": "no_levels",
         "containersready": "no_levels",
         "ready": "no_levels",
+        "resizepending": ("levels", (300, 600)),
+        "resizeinprogress": ("levels", (300, 600)),
     },
     check_ruleset_name="kube_pod_conditions",
 )

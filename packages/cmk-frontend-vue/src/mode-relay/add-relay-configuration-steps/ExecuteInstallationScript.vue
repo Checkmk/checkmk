@@ -84,7 +84,7 @@ const installCommand = computed(() => {
         <code>su -l &lt;user&gt;</code>
       </CmkAlertBox>
 
-      <CmkCode :code_txt="installCommand"></CmkCode>
+      <CmkCode :code_txt="installCommand" data-testid="run-relay-install-script"></CmkCode>
     </template>
 
     <template #actions>

@@ -41,7 +41,7 @@ const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)
           )
         }}
       </CmkParagraph>
-      <CmkCode :code_txt="downloadCommand"></CmkCode>
+      <CmkCode :code_txt="downloadCommand" data-testid="download-relay-install-script"></CmkCode>
     </template>
 
     <template #actions>

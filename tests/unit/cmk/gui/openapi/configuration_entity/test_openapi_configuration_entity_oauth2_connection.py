@@ -18,6 +18,10 @@ MY_OAUTH2_CONNECTION_UUID = str(uuid.uuid4())
 MY_CLIENT_ID = str(uuid.uuid4())
 MY_TENANT_ID = str(uuid.uuid4())
 
+SECOND_OAUTH2_CONNECTION_UUID = str(uuid.uuid4())
+SECOND_CLIENT_ID = str(uuid.uuid4())
+SECOND_TENANT_ID = str(uuid.uuid4())
+
 OAUTH2_CONNECTION_CONTENT = {
     MY_OAUTH2_CONNECTION_UUID: OAuth2Connection(
         title="My OAuth2 connection",
@@ -26,6 +30,20 @@ OAUTH2_CONNECTION_CONTENT = {
         refresh_token=("cmk_postprocessed", "stored_password", ("my_refresh_token", "")),
         client_id=MY_CLIENT_ID,
         tenant_id=MY_TENANT_ID,
+        authority="global",
+        connector_type="microsoft_entra_id",
+    ),
+}
+
+TWO_OAUTH2_CONNECTIONS_CONTENT = {
+    **OAUTH2_CONNECTION_CONTENT,
+    SECOND_OAUTH2_CONNECTION_UUID: OAuth2Connection(
+        title="Second OAuth2 connection",
+        client_secret=("cmk_postprocessed", "stored_password", ("second_client_secret", "")),
+        access_token=("cmk_postprocessed", "stored_password", ("second_access_token", "")),
+        refresh_token=("cmk_postprocessed", "stored_password", ("second_refresh_token", "")),
+        client_id=SECOND_CLIENT_ID,
+        tenant_id=SECOND_TENANT_ID,
         authority="global",
         connector_type="microsoft_entra_id",
     ),
@@ -231,3 +249,117 @@ def test_create_non_existing_oauth2_connection_without_permissions(
     # THEN
     assert resp.status_code == 401
     assert resp.json["title"] == "Unauthorized"
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_create_oauth2_connection_with_duplicate_title(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    # GIVEN
+    for ident, details in OAUTH2_CONNECTION_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+    my_new_uuid = str(uuid.uuid4())
+
+    # WHEN
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.oauth2_connection.value,
+            "entity_type_specifier": "microsoft_entra_id",
+            "data": {
+                "ident": my_new_uuid,
+                "title": "My OAuth2 connection",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
+                "client_secret": ("explicit_password", "", "my_client_secret", False),
+                "access_token": ("explicit_password", "", "my_access_token", False),
+                "refresh_token": ("explicit_password", "", "my_refresh_token", False),
+                "client_id": MY_CLIENT_ID,
+                "tenant_id": MY_TENANT_ID,
+                "authority": option_id("global"),
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 422, resp.json
+    validation_errors = resp.json["ext"]["validation_errors"]
+    assert len(validation_errors) == 1
+    assert validation_errors[0]["location"] == ["title"]
+    assert "The title must be unique" in validation_errors[0]["message"]
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_update_oauth2_connection_keeping_same_title(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    # GIVEN
+    for ident, details in OAUTH2_CONNECTION_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    # WHEN
+    resp = clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_id": MY_OAUTH2_CONNECTION_UUID,
+            "entity_type": ConfigEntityType.oauth2_connection.value,
+            "entity_type_specifier": "microsoft_entra_id",
+            "data": {
+                "ident": MY_OAUTH2_CONNECTION_UUID,
+                "title": "My OAuth2 connection",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
+                "client_secret": ("explicit_password", "", "my_client_secret", False),
+                "access_token": ("explicit_password", "", "my_access_token", False),
+                "refresh_token": ("explicit_password", "", "my_refresh_token", False),
+                "client_id": MY_CLIENT_ID,
+                "tenant_id": MY_TENANT_ID,
+                "authority": option_id("global"),
+            },
+        },
+        expect_ok=True,
+    )
+
+    # THEN
+    assert resp.status_code == 200, resp.json
+    assert resp.json["id"] == MY_OAUTH2_CONNECTION_UUID, resp.json
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_update_oauth2_connection_to_existing_title(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    # GIVEN
+    for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    # WHEN
+    resp = clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_id": MY_OAUTH2_CONNECTION_UUID,
+            "entity_type": ConfigEntityType.oauth2_connection.value,
+            "entity_type_specifier": "microsoft_entra_id",
+            "data": {
+                "ident": MY_OAUTH2_CONNECTION_UUID,
+                "title": "Second OAuth2 connection",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
+                "client_secret": ("explicit_password", "", "my_client_secret", False),
+                "access_token": ("explicit_password", "", "my_access_token", False),
+                "refresh_token": ("explicit_password", "", "my_refresh_token", False),
+                "client_id": MY_CLIENT_ID,
+                "tenant_id": MY_TENANT_ID,
+                "authority": option_id("global"),
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 422, resp.json
+    validation_errors = resp.json["ext"]["validation_errors"]
+    assert len(validation_errors) == 1
+    assert validation_errors[0]["location"] == ["title"]
+    assert "The title must be unique" in validation_errors[0]["message"]

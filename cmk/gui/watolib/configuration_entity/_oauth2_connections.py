@@ -8,6 +8,7 @@ from typing import NamedTuple
 from marshmallow import ValidationError
 
 from cmk.gui.form_specs import (
+    FormSpecValidationError,
     get_visitor,
     process_validation_messages,
     RawDiskData,
@@ -25,7 +26,29 @@ from cmk.gui.oauth2_connections.watolib.store import (
     update_reference,
 )
 from cmk.gui.watolib.passwords import load_passwords
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType
+
+
+def _validate_unique_title(title: str, exclude_ident: str | None = None) -> None:
+    """Raise FormSpecValidationError if title is already used by another connection."""
+    for ident, entry in load_oauth2_connections().items():
+        if ident == exclude_ident:
+            continue
+        if entry["title"] == title:
+            raise FormSpecValidationError(
+                [
+                    shared_type_defs.ValidationMessage(
+                        location=["title"],
+                        message=_(
+                            "The title must be unique. The title '%s' is already used by "
+                            "the OAuth2 connection with ID %s."
+                        )
+                        % (title, ident),
+                        replacement_value=title,
+                    )
+                ]
+            )
 
 
 def update_oauth2_connection_and_passwords_from_slidein_schema(
@@ -44,6 +67,8 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
 
     disk_data = visitor.to_disk(data)
     assert isinstance(disk_data, dict)
+
+    _validate_unique_title(disk_data["title"], exclude_ident=disk_data["ident"])
 
     owned_by = None
     match disk_data.get("editable_by"):
@@ -105,6 +130,8 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
             message=_("This ID is already in use."),
             field_name="data",
         )
+
+    _validate_unique_title(disk_data["title"])
 
     owned_by = None
     match disk_data.get("editable_by"):

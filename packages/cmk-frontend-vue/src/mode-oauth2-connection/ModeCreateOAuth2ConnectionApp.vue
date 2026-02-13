@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Oauth2ConnectionConfig } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { provide, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -62,18 +62,21 @@ immediateWatch(
 )
 const dataRef = ref<OAuth2FormData>(props.form_spec.data)
 provide(submitKey, submit)
+
+const initialData = props.form_spec.data
+const formSpecRef = computed(() => ({
+  id: props.form_spec.id,
+  spec: props.form_spec.spec,
+  validation: validationRef.value,
+  data: initialData
+}))
 </script>
 
 <template>
   <CreateOAuth2Connection
     v-model:data="dataRef"
     :config="config"
-    :form-spec="{
-      id: form_spec.id,
-      spec: form_spec.spec,
-      validation: validationRef,
-      data: dataRef
-    }"
+    :form-spec="formSpecRef"
     :authority-mapping="authority_mapping"
     :api="api"
     :connector-type="connector_type"

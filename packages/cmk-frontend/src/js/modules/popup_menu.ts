@@ -29,6 +29,7 @@ interface PopUpSpec {
   onclose: string | null
   onopen: string | null
   remove_on_close: boolean
+  popup_element?: HTMLElement | null
 }
 
 class PopUp {
@@ -64,7 +65,7 @@ class PopUp {
 
     if (spec.trigger_obj) {
       this.container = spec.trigger_obj ? (spec.trigger_obj.parentNode as HTMLElement) : null
-      this.popup = this.container ? this.container.lastChild : null
+      this.popup = spec.popup_element || (this.container ? this.container.lastChild : null)
     }
 
     if (this.container) {
@@ -83,7 +84,7 @@ class PopUp {
     if (this.container) {
       remove_class(this.container, 'active')
       if (this.remove_on_close && this.popup) {
-        this.container.removeChild(this.popup)
+        this.popup.parentNode?.removeChild(this.popup)
       }
     }
 
@@ -123,10 +124,15 @@ export function is_open(ident: string): boolean {
 // This is used to close the menu when the user clicks elsewhere
 function handle_popup_close(event: Event | undefined): true | void {
   const container = active_popup.container
+  const popup = active_popup.popup
   const target = event!.target as HTMLElement
 
   if (container && container.contains(target as Node)) {
     return true // clicked menu or statusicon
+  }
+
+  if (popup instanceof HTMLElement && popup.contains(target as Node)) {
+    return true
   }
 
   close_popup()
@@ -204,25 +210,45 @@ export function toggle_popup(
   }
 
   // Add the popup to the DOM if required by the method.
-  if (method.type === 'colorpicker') {
-    const rgb = (trigger_obj.firstChild as HTMLElement).style.backgroundColor
-    if (rgb !== '') {
-      method.value = rgb2hex(rgb)
-    }
-    const content = generate_menu(trigger_obj.parentNode as HTMLElement, resizable)
-    generate_colorpicker_body(content, method.varprefix!, method.value!)
-  } else if (method.type === 'ajax') {
-    const content = generate_menu(trigger_obj.parentNode as HTMLElement, resizable)
-    content.innerHTML = '<img src="themes/facelift/images/icon_reload.svg" class="icon reloading">'
-    const url_vars = !method.url_vars ? '' : '?' + method.url_vars
-    call_ajax('ajax_popup_' + method.endpoint + '.py' + url_vars, {
-      response_handler: handle_render_popup_contents,
-      handler_data: {
-        ident: ident,
-        content: content,
-        event: event!
+  if (['colorpicker', 'ajax'].includes(method.type)) {
+    const { content, menu } = generate_menu(
+      trigger_obj.parentNode as HTMLElement,
+      resizable,
+      trigger_obj,
+      event
+    )
+
+    if (method.type === 'colorpicker') {
+      const rgb = (trigger_obj.firstChild as HTMLElement).style.backgroundColor
+      if (rgb !== '') {
+        method.value = rgb2hex(rgb)
       }
+      generate_colorpicker_body(content, method.varprefix!, method.value!)
+    } else if (method.type === 'ajax') {
+      content.innerHTML =
+        '<img src="themes/facelift/images/icon_reload.svg" class="icon reloading">'
+      const url_vars = !method.url_vars ? '' : '?' + method.url_vars
+      call_ajax('ajax_popup_' + method.endpoint + '.py' + url_vars, {
+        response_handler: handle_render_popup_contents,
+        handler_data: {
+          ident: ident,
+          content: content,
+          event: event!
+        }
+      })
+    }
+
+    active_popup.register({
+      id: ident,
+      trigger_obj: trigger_obj,
+      data: data,
+      onclose: onclose,
+      onopen: onopen,
+      remove_on_close: method.type !== 'inline',
+      popup_element: menu
     })
+    open_popup()
+    return
   }
 
   active_popup.register({
@@ -284,7 +310,12 @@ export function stop_popup_menu_group_switch(trigger: HTMLElement) {
   }
 }
 
-function generate_menu(container: HTMLElement, resizable: boolean) {
+function generate_menu(
+  container: HTMLElement,
+  resizable: boolean,
+  trigger: HTMLElement,
+  trigger_event: Event | undefined
+) {
   // Generate the popup menu structure and return the content div
   const menu = document.createElement('div')
   menu.setAttribute('id', 'popup_menu')
@@ -302,10 +333,24 @@ function generate_menu(container: HTMLElement, resizable: boolean) {
     add_class(menu, 'resizable')
   }
 
-  container.appendChild(menu)
-  fix_popup_menu_position(event, menu)
+  const portal_root = container.closest('.graph_container') ? document.body : container
+  if (portal_root === document.body) {
+    add_class(menu, 'popup_menu--portal')
+    const mouse_event = trigger_event instanceof MouseEvent ? trigger_event : null
+    const trigger_rect = trigger.getBoundingClientRect()
+    const left = mouse_event ? mouse_event.clientX : trigger_rect.left
+    const top = mouse_event ? mouse_event.clientY : trigger_rect.bottom
+    menu.style.left = `${left}px`
+    menu.style.top = `${top}px`
+    // Reset any previous overflow adjustments before clamping inside the viewport
+    menu.style.right = 'auto'
+    menu.style.bottom = 'auto'
+  }
 
-  return content
+  portal_root.appendChild(menu)
+  fix_popup_menu_position(trigger_event, menu)
+
+  return { content, menu }
 }
 
 function generate_colorpicker_body(content: HTMLElement, varprefix: string, value: string) {
@@ -357,6 +402,21 @@ function handle_render_popup_contents(
 
 function fix_popup_menu_position(_event: Event | undefined, menu: HTMLElement) {
   const rect = menu.getBoundingClientRect()
+  if (menu.classList.contains('popup_menu--portal')) {
+    const viewport_width = window.innerWidth || document.documentElement.clientWidth
+    const viewport_height = window.innerHeight || document.documentElement.clientHeight
+    const margin = 15
+    const max_left = Math.max(margin, viewport_width - rect.width - margin)
+    const max_top = Math.max(margin, viewport_height - rect.height - margin)
+    const next_left = Math.min(Math.max(rect.left, margin), max_left)
+    const next_top = Math.min(Math.max(rect.top, margin), max_top)
+    menu.style.left = `${next_left}px`
+    menu.style.top = `${next_top}px`
+    // Ensure stale right/bottom offsets from non-portal positioning do not apply
+    menu.style.right = 'auto'
+    menu.style.bottom = 'auto'
+    return
+  }
 
   // Check whether or not the menu is out of the bottom border
   // -> if so, move the menu up

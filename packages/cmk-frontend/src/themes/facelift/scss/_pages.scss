@@ -1171,7 +1171,7 @@ div.help {
 
 body.main .popup_menu {
   position: absolute;
-  z-index: 50;
+  z-index: $z-index-popup-offset + 1;
   min-width: 300px;
   color: $font-color-white;
   white-space: normal;
@@ -1223,6 +1223,10 @@ body.main .popup_menu {
   li:first-child span {
     margin-top: 0;
   }
+}
+
+body.main .popup_menu.popup_menu--portal {
+  position: fixed;
 }
 
 body.main .popup_menu {

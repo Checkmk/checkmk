@@ -16,7 +16,7 @@ class HostnameValidationAdapter(HTTPAdapter):
     its IP address, but the server's SSL certificate is issued for a hostname. This adapter allows
     us to enforce hostname validation against the expected hostname, even when connecting via IP.
 
-    Example:
+    Example::
 
         #!/usr/bin/env/python3
         ...
@@ -28,6 +28,7 @@ class HostnameValidationAdapter(HTTPAdapter):
 
         response = session.get(f"https://{address}/some/api/endpoint")
         ...
+
 
     """
 

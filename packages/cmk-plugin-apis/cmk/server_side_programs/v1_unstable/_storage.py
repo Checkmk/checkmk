@@ -58,7 +58,13 @@ class Storage:
         """
         Write text content to the storage.
 
-        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
+        Args:
+            key: The unique key to identify the content. It will be sanitized and used as file name.
+                After url quoting, the key must not be longer than 255 characters, otherwise a ValueError is raised.
+            content: The serialized content to be stored.
+
+        Raises:
+            A RuntimeError is raised if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -68,7 +74,11 @@ class Storage:
         """
         Remove key and its content from the storage.
 
-        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
+        Args:
+            key: The unique key to identify the content.
+
+        Raises:
+            A RuntimeError is raised if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         path.unlink(missing_ok=True)
@@ -77,9 +87,12 @@ class Storage:
         """
         Read content from the storage.
 
-        If the key is unknown or the content is corrupted, return default.
+        Args:
+            key: The unique key to identify the content.
+            default: The default value to return if the key is unknown or the content is corrupted.
 
-        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
+        Raises:
+            A RuntimeError is raised if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         try:

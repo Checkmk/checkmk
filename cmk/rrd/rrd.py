@@ -166,11 +166,10 @@ def _create_rrd(
         case _:
             assert_never(spec.format)
 
-    base_file_name = storage.path(".rrd")
-    if base_file_name is None:
+    rrd_file_name = storage.path(".rrd")
+    if rrd_file_name is None:
         _report_create_failed(f"rrd {spec.format}", spec.host, spec.service)
         return storage
-    rrd_file_name = base_file_name
 
     _unused_configured_rrd_format, rra_config, step, heartbeat = _get_rrd_conf(config, spec.service)
     migration_arguments = []  # List[str]
@@ -180,13 +179,13 @@ def _create_rrd(
             raise Exception("Tried to create %s, but this RRD exists." % rrd_file_name)
 
         # Need to migrate data from existing RRD
-        existing_metrics = _read_existing_metrics(base_file_name.with_suffix(".info"))
+        existing_metrics = _read_existing_metrics(rrd_file_name.with_suffix(".info"))
         migration_arguments = ["--source", str(rrd_file_name)]
         for nr, varname in enumerate(existing_metrics, 1):
             migration_mapping[varname] = nr
 
-    if not os.path.exists(base_file_name.parent):
-        os.makedirs(base_file_name.parent)
+    if not os.path.exists(rrd_file_name.parent):
+        os.makedirs(rrd_file_name.parent)
 
     if config.cmc_log_rrdcreation():
         log(f"Creating {rrd_file_name}")

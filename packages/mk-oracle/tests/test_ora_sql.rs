@@ -433,14 +433,22 @@ fn test_remote_mini_connection_version() {
         // which doesn't report VERSION_FULL
         let instances_new = system::WorkInstances::new(&conn, None);
         let instances_old = system::WorkInstances::new(&conn, Some(INSTANCE_INFO_SQL_TEXT_FAIL));
-        let r_new = instances_new.get_full_version(&InstanceName::from(get_instance(endpoint)));
-        let r_old = instances_old.get_full_version(&InstanceName::from(get_instance(endpoint)));
+        let r_new = instances_new
+            .unwrap()
+            .get_full_version(&InstanceName::from(get_instance(endpoint)));
+        let r_old = instances_old
+            .unwrap()
+            .get_full_version(&InstanceName::from(get_instance(endpoint)));
         let version_ok = r_new.unwrap();
         let version_old = r_old.unwrap();
         //check that both methods return the same values
         assert_eq!(version_ok, version_old);
         assert!(String::from(version_ok).starts_with("2"));
+
+        // check missing db again
+        let instances_new = system::WorkInstances::new(&conn, None);
         assert!(instances_new
+            .unwrap()
             .get_full_version(&InstanceName::from("no-such-db"))
             .is_none());
     }

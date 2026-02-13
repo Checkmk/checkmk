@@ -25,12 +25,9 @@ type _InstanceEntries = HashMap<InstanceName, (InstanceVersion, Tenant)>;
 pub struct WorkInstances(_InstanceEntries);
 
 impl WorkInstances {
-    pub fn new(spot: &OpenedSpot, custom_query: Option<&str>) -> Self {
-        let hashmap = _get_instances(spot, custom_query).unwrap_or_else(|e| {
-            log::error!("Failed to get instances: {}", e);
-            _InstanceEntries::new()
-        });
-        WorkInstances(hashmap)
+    pub fn new(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<Self> {
+        let hashmap = _get_instances(spot, custom_query)?;
+        Ok(WorkInstances(hashmap))
     }
     pub fn get_full_version(&self, instance: &InstanceName) -> Option<InstanceVersion> {
         self.0.get(instance).cloned().map(|(version, _)| version)
@@ -178,11 +175,13 @@ mod tests {
         let conn = simulated_spot.connect(None).unwrap();
         assert_eq!(
             &WorkInstances::new(&conn, None)
+                .unwrap()
                 .get_full_version(&InstanceName::from("fREe"))
                 .unwrap(),
             &InstanceVersion::from("22.1.1.6.0".to_string())
         );
         assert!(&WorkInstances::new(&conn, None)
+            .unwrap()
             .get_full_version(&InstanceName::from("HURZ"))
             .is_none());
     }

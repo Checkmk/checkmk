@@ -17,11 +17,9 @@
 use crate::config::{self, OracleConfig};
 use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
-use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
-use crate::ora_sql::system::WorkInstances;
 use crate::setup::{detect_runtime, Env};
-use crate::types::{InstanceName, SqlBindParam, SqlQuery, UseHostClient};
+use crate::types::{InstanceName, SqlQuery, UseHostClient};
 use std::collections::HashSet;
 
 use crate::config::authentication::AuthType;
@@ -30,6 +28,7 @@ use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomService;
 use crate::config::section::names;
 use crate::ora_sql::detect::find_sids_by_processes;
+use crate::ora_sql::spots::{make_spot_work_results, SpotWorks};
 use crate::platform::get_local_instances;
 use anyhow::{Context, Result};
 use std::sync::{Arc, Mutex};
@@ -113,9 +112,6 @@ fn dump_local_instances() -> String {
     format!("{}\nTotal instances found: {}\n", rows, instances.len())
 }
 
-type InstanceWorks = (InstanceName, Vec<(Vec<SqlQuery>, String)>);
-type SpotWorks = (ClosedSpot, Vec<InstanceWorks>);
-
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 pub async fn generate_data(
@@ -142,7 +138,6 @@ pub async fn generate_data(
 
     let all = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
     let all = filter_spots(all, ora_sql.discovery());
-    let spot_candidates = connect_spots(all, None);
 
     let sections = ora_sql
         .product()
@@ -165,73 +160,25 @@ pub async fn generate_data(
         .iter()
         .filter_map(|s| s.to_signaling_header())
         .collect();
-    let (spots, errors): (Vec<OpenedSpot>, Vec<anyhow::Error>) =
-        spot_candidates
-            .into_iter()
-            .fold((Vec::new(), Vec::new()), |(mut spots, mut errors), r| {
-                match r {
-                    Ok(s) => spots.push(s),
-                    Err(e) => errors.push(e),
-                }
-                (spots, errors)
-            });
-    let works = make_spot_works(spots, sections, ora_sql.params());
-    if ora_sql.options().threads() > 1 {
-        output.extend(process_spot_works_para(works, ora_sql.options().threads()));
+
+    let (root_spots, root_errors) = connect_spots(all, None);
+    let (work_spots, work_errors) = make_spot_work_results(root_spots, sections, ora_sql.params());
+    let results = if ora_sql.options().threads() > 1 {
+        process_spot_works_para(work_spots, ora_sql.options().threads())
     } else {
-        output.extend(process_spot_works(works));
+        process_spot_works(work_spots)
+    };
+    output.extend(results);
+
+    for error in root_errors {
+        output.push(header(names::INSTANCE, '|'));
+        output.push(format!("{}", error));
     }
-    for error in errors {
+    for (_closed, error) in work_errors {
         output.push(header(names::INSTANCE, '|'));
         output.push(format!("{}", error));
     }
     Ok(output)
-}
-
-fn make_spot_works(
-    spots: Vec<OpenedSpot>,
-    sections: Vec<Section>,
-    params: &[SqlBindParam],
-) -> Vec<SpotWorks> {
-    spots
-        .into_iter()
-        .map(|spot| {
-            let instances = WorkInstances::new(&spot, None);
-            let closed = spot.close();
-            let instance_works = instances
-                .all()
-                .keys()
-                .filter_map(|instance| {
-                    if let Some(info) = instances.get_info(instance) {
-                        Some((instance, info))
-                    } else {
-                        log::warn!("No info found for instance: {}", instance);
-                        None
-                    }
-                })
-                .map(|(service, info)| {
-                    let queries = sections
-                        .iter()
-                        .filter_map(|section| {
-                            if !service.is_suitable_affinity(section.affinity()) {
-                                log::info!(
-                                    "Skip section with not suitable affinity: {:?} instance {}",
-                                    section,
-                                    service
-                                );
-                                return None;
-                            }
-                            section
-                                .find_queries(get_sql_dir(), info.0, info.1, params)
-                                .map(|q| (q, section.to_work_header()))
-                        })
-                        .collect::<Vec<(Vec<SqlQuery>, String)>>();
-                    (service.clone(), queries)
-                })
-                .collect::<Vec<InstanceWorks>>();
-            (closed, instance_works)
-        })
-        .collect::<Vec<SpotWorks>>()
 }
 
 fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
@@ -427,7 +374,7 @@ fn _exec_queries(
 fn connect_spots(
     spots: Vec<ClosedSpot>,
     instance_name: Option<&InstanceName>,
-) -> Vec<Result<OpenedSpot>> {
+) -> (Vec<OpenedSpot>, Vec<anyhow::Error>) {
     let connected = spots
         .into_iter()
         .map(|t| {
@@ -449,7 +396,19 @@ fn connect_spots(
         })
         .collect::<Vec<Result<OpenedSpot>>>();
 
-    connected
+    _split_spots(connected)
+}
+
+fn _split_spots(spots: Vec<Result<OpenedSpot>>) -> (Vec<OpenedSpot>, Vec<anyhow::Error>) {
+    spots
+        .into_iter()
+        .fold((Vec::new(), Vec::new()), |(mut spots, mut errors), r| {
+            match r {
+                Ok(s) => spots.push(s),
+                Err(e) => errors.push(e),
+            }
+            (spots, errors)
+        })
 }
 
 fn calc_all_spots(

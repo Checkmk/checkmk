@@ -20,6 +20,7 @@ pub mod defaults;
 pub mod detect;
 pub mod instance;
 pub mod section;
+mod spots;
 pub mod sqls;
 pub mod system;
 mod types;

@@ -33,6 +33,7 @@ rust_library(
         "src/ora_sql/detect.rs",
         "src/ora_sql/instance.rs",
         "src/ora_sql/section.rs",
+        "src/ora_sql/spots.rs",
         "src/ora_sql/sqls.rs",
         "src/ora_sql/system.rs",
         "src/ora_sql/types.rs",

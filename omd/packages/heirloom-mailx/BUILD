@@ -1,16 +1,24 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
+
+set_runpath(
+    name = "mailx_runpath",
+    srcs = ["@heirloom-mailx//:mailx"],
+    rpaths = ["$ORIGIN/../lib"],
+    tags = ["manual"],
+)
 
 pkg_files(
     name = "bin_pkg",
     srcs = [
-        "@heirloom-mailx//:mailx",
+        ":mailx_runpath",
     ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     prefix = "bin",
-    renames = {"@heirloom-mailx//:mailx": "heirloom-mailx"},
+    renames = {":mailx_runpath": "heirloom-mailx"},
     tags = ["manual"],
 )
 

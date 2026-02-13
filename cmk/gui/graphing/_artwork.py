@@ -631,13 +631,8 @@ def _compute_labels_from_api(
                 )
                 return [
                     *(
-                        Label(
-                            -l.position,
-                            l.text,
-                        )
-                        for l in labels[
-                            1:  # exclude zero label
-                        ]
+                        Label(-label.position, label.text)
+                        for label in labels[1:]  # exclude zero label
                     ),
                     *labels,
                 ] or [Label(0, "0")]
@@ -651,9 +646,7 @@ def _compute_labels_from_api(
                 *formatter.render_y_labels(
                     y_range=NegativeYRange(start=min_y, end=0),
                     target_number_of_labels=target_num_labels_neg,
-                )[
-                    1:  # exclude zero label
-                ],
+                )[1:],  # exclude zero label
                 *formatter.render_y_labels(
                     y_range=PositiveYRange(start=0, end=max_y),
                     target_number_of_labels=target_num_labels_pos,

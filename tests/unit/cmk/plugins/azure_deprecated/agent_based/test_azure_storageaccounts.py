@@ -12,6 +12,8 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.azure_deprecated.agent_based.azure_storageaccounts import (
+    check_azure_storageaccounts_flow,
+    check_azure_storageaccounts_performance,
     check_plugin_azure_storageaccounts,
     check_plugin_azure_storageaccounts_flow,
     check_plugin_azure_storageaccounts_performance,
@@ -202,9 +204,7 @@ def test_check_azure_storageaccounts_flow(
     results_expected: list[object],
     section_fixture: Section,
 ) -> None:
-    actual = list(
-        check_plugin_azure_storageaccounts_flow.check_function(item, params, section_fixture)
-    )
+    actual = list(check_azure_storageaccounts_flow(item, params, section_fixture))
     assert actual == results_expected
 
 
@@ -290,9 +290,7 @@ def test_check_plugin_azure_storageaccounts_performance(
     results_expected: list[object],
     section_fixture: Section,
 ) -> None:
-    actual = list(
-        check_plugin_azure_storageaccounts_performance.check_function(item, params, section_fixture)
-    )
+    actual = list(check_azure_storageaccounts_performance(item, params, section_fixture))
     assert actual == results_expected
 
 
@@ -352,3 +350,75 @@ def test_check_azure_storageaccounts_performance_defaults():
         Result(state=State.CRIT, summary="Availability: 97.98% (warn/crit below 99.80%/99.00%)"),
         Metric("availability", 97.98),
     ]
+
+
+INACTIVITY_RESULT = Result(
+    state=State.OK,
+    summary="No data in the Azure API response due to inactivity on the storage account.",
+)
+
+
+def _make_section(metrics: Mapping[str, AzureMetric]) -> Section:
+    return {
+        "st0ragetestaccount": Resource(
+            id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
+            name="st0ragetestaccount",
+            type="Microsoft.Storage/storageAccounts",
+            group="BurningMan",
+            kind="BlobStorage",
+            location="westeurope",
+            tags={"monitoring": "some value"},
+            properties={},
+            specific_info={},
+            metrics=metrics,
+        )
+    }
+
+
+def test_check_azure_storageaccounts_inactivity_all_missing():
+    section = _make_section({})
+    result = list(
+        check_plugin_azure_storageaccounts.check_function("st0ragetestaccount", {}, section)
+    )
+    assert result == [INACTIVITY_RESULT]
+
+
+def test_check_azure_storageaccounts_flow_inactivity_all_missing():
+    section = _make_section({})
+    result = list(check_azure_storageaccounts_flow("st0ragetestaccount", {}, section))
+    assert result == [INACTIVITY_RESULT]
+
+
+def test_check_azure_storageaccounts_flow_inactivity_partial():
+    """When only some flow metrics are missing, present metrics should still produce results."""
+    section = _make_section(
+        {
+            "total_Ingress": AzureMetric(
+                name="Ingress", aggregation="total", value=31620.0, unit="bytes"
+            ),
+        }
+    )
+    result = list(check_azure_storageaccounts_flow("st0ragetestaccount", {}, section))
+    assert result == [
+        Result(state=State.OK, summary="Ingress: 30.9 KiB"),
+        Metric("ingress", 31620.0),
+    ]
+
+
+def test_check_azure_storageaccounts_performance_inactivity_all_missing():
+    section = _make_section({})
+    result = list(check_azure_storageaccounts_performance("st0ragetestaccount", {}, section))
+    assert result == [INACTIVITY_RESULT]
+
+
+def test_check_azure_storageaccounts_performance_inactivity_partial():
+    section = _make_section(
+        {
+            "average_Availability": AzureMetric(
+                name="Availability", aggregation="average", value=99.99, unit="percent"
+            ),
+        }
+    )
+    result = list(check_azure_storageaccounts_performance("st0ragetestaccount", {}, section))
+    assert Result(state=State.OK, summary="Availability: 99.99%") in result
+    assert INACTIVITY_RESULT not in result

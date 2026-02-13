@@ -132,11 +132,17 @@ class ApiContext:
     config: ApiConfig
     version: APIVersion
     etag: ApiETagHandler
+    user_id: UserId | None
     token: AuthToken | None
 
     @classmethod
     def new(
-        cls, config: Config, version: APIVersion, etag_if_match: ETags, token: AuthToken | None
+        cls,
+        config: Config,
+        version: APIVersion,
+        etag_if_match: ETags,
+        user_id: UserId | None,
+        token: AuthToken | None,
     ) -> Self:
         return cls(
             config=ApiConfig.from_config(config),
@@ -145,5 +151,6 @@ class ApiContext:
                 enabled=config.rest_api_etag_locking,
                 if_match=etag_if_match,
             ),
+            user_id=user_id,
             token=token,
         )

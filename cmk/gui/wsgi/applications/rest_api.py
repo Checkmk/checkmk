@@ -229,6 +229,7 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
             config=active_config,
             version=self.requested_version,
             etag_if_match=request.if_match,
+            user_id=session.session.user.id,
             token=token,
         )
 

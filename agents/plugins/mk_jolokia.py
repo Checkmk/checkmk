@@ -250,10 +250,10 @@ QUERY_SPECS_SPECIFIC_LEGACY = {
     "tomcat": [
         ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
         ("*:j2eeType=Servlet,name=default,*", "stateName", None, ["WebModule"], False),
-        # Check not yet working
-        ("*:j2eeType=Servlet,name=default,*", "requestCount", None, ["WebModule"], False),
-        # too wide location for addressing the right info
-        # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
+        # Check not yet working. Counts only requests handled by the default servlet.
+        # ("*:j2eeType=Servlet,name=default,*", "requestCount", None, ["WebModule"], False),
+        # Too wide location for addressing the right info. Compensation implemented in fetch_metric.
+        ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
     ],
     "jboss": [
         ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
@@ -577,6 +577,17 @@ def extract_item(key, itemspec):
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
     values = fetch_var(inst, "read", path, use_target=True)
     item_list = make_item_list((), values, itemspec)
+
+    # aggregate request counts over all servlets per web application
+    # (identified by the web applications context path) and rewrite item list
+    if path == "*:j2eeType=Servlet,*/requestCount":
+        request_counts = {}  # type: dict[str, int]
+        for subinstance, partial_request_count in item_list:
+            context_path = subinstance[0]
+            request_counts[context_path] = request_counts.get(context_path, 0) + partial_request_count
+        item_list = []
+        for context_path, total_request_count in request_counts.items():
+            item_list.append(((context_path, 'requestCount'), total_request_count))
 
     for subinstance, value in item_list:
         if not subinstance and not title:

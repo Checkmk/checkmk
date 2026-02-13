@@ -33,7 +33,8 @@ const {
   sitesWithChanges,
   siteHasStatusProblems,
   siteHasActivationIssues,
-  siteHasForeignChangesWithoutPermission
+  siteHasForeignChangesWithoutPermission,
+  siteSelectionIsDisabled
 } = useSiteStatus(
   toRef(props, 'sites'),
   toRef(props, 'pendingChanges'),
@@ -74,6 +75,7 @@ function toggleSelectedSite(siteId: string, value: boolean) {
           :has-foreign-changes-without-permission="
             siteHasForeignChangesWithoutPermission(props.sites[0])
           "
+          :selection-disabled="siteSelectionIsDisabled(props.sites[0])"
           @update-checked="toggleSelectedSite"
         ></SiteStatusItem>
       </CmkScrollContainer>
@@ -99,6 +101,7 @@ function toggleSelectedSite(siteId: string, value: boolean) {
               :has-activation-issues="siteHasActivationIssues(site)"
               :has-status-problems="siteHasStatusProblems(site)"
               :has-foreign-changes-without-permission="siteHasForeignChangesWithoutPermission(site)"
+              :selection-disabled="siteSelectionIsDisabled(site)"
               @update-checked="toggleSelectedSite"
             ></SiteStatusItem>
           </CmkScrollContainer>

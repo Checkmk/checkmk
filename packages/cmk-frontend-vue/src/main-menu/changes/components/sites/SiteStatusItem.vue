@@ -42,6 +42,7 @@ defineProps<{
   hasActivationIssues: boolean
   hasStatusProblems: boolean
   hasForeignChangesWithoutPermission: boolean
+  selectionDisabled: boolean
 }>()
 
 const emit = defineEmits<{
@@ -50,13 +51,17 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <CmkZebra :num="idx" class="cmk-changes-sites-item-wrapper">
+  <CmkZebra
+    :num="idx"
+    class="cmk-changes-sites-item-wrapper"
+    :class="{ 'cmk-changes-site-status-item-disabled': selectionDisabled }"
+  >
     <div class="cmk-changes-sites-item">
       <div class="cmk-changes-sites-item-start">
         <CmkCheckbox
           v-if="!hideCheckbox"
           :model-value="checked"
-          :disabled="!['online', 'disabled'].includes(site.onlineStatus)"
+          :disabled="selectionDisabled"
           @update:model-value="
             (val) => {
               emit('updateChecked', site.siteId, val)
@@ -187,5 +192,9 @@ const emit = defineEmits<{
 
 .red-text {
   color: var(--color-danger);
+}
+
+.cmk-changes-site-status-item-disabled {
+  opacity: 0.5;
 }
 </style>

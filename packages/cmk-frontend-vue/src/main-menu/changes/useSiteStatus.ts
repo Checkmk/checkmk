@@ -46,6 +46,21 @@ export function useSiteStatus(
     return siteHasForeignChanges(site) && !userCanActivateForeign.value
   }
 
+  function siteSelectionIsDisabled(site: Site): boolean {
+    return (
+      siteHasStatusProblems(site) ||
+      siteIsLoggedOut(site) ||
+      siteHasForeignChangesWithoutPermission(site)
+    )
+  }
+
+  const allSitesWithChangesAreNotSelectable = computed((): boolean => {
+    const sitesWithChanges = sites.value.filter((site) => site.changes > 0)
+    if (sitesWithChanges.length === 0) {
+      return false
+    }
+    return sitesWithChanges.every((site) => siteSelectionIsDisabled(site))
+  })
   const sitesWithChanges = computed(() => sites.value.filter(siteHasChanges))
 
   const sitesWithErrors = computed(() => sites.value.filter(siteHasErrors))
@@ -69,6 +84,8 @@ export function useSiteStatus(
     siteHasErrors,
     siteIsLoggedOut,
     siteHasForeignChangesWithoutPermission,
+    siteSelectionIsDisabled,
+    allSitesWithChangesAreNotSelectable,
 
     sitesWithChanges,
     sitesWithErrors,

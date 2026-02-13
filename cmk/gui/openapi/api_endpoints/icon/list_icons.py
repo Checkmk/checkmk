@@ -23,7 +23,8 @@ from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.theme.current_theme import theme
+from cmk.gui.theme import make_theme
+from cmk.gui.userdb import load_custom_attr
 from cmk.gui.watolib.icons import all_available_icon_data
 
 
@@ -52,6 +53,10 @@ class IconCollectionModel(DomainObjectCollectionModel):
 
 def list_icons_v1(api_context: ApiContext) -> IconCollectionModel:
     """Show all icons."""
+    theme = make_theme(validate_choices=False)
+    theme.from_config(api_context.config.ui_theme)
+    if user_id := api_context.user_id:
+        theme.set(load_custom_attr(user_id=user_id, key="ui_theme", parser=str))
     return IconCollectionModel(
         domainType="icon",
         id="all",

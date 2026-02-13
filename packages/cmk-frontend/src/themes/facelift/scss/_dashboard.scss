@@ -844,7 +844,14 @@ div.eventstats,
 div.hoststats,
 div.servicestats {
   position: relative;
+  display: flex;
   height: 100%;
+
+  svg,
+  div.stats_table {
+    width: 50%;
+    margin: auto;
+  }
 
   path.hexagon.empty {
     fill: $hexagon-empty-color;
@@ -854,9 +861,6 @@ div.servicestats {
   }
 
   div.stats_table {
-    position: absolute;
-    right: 0;
-
     table {
       border-collapse: collapse;
     }
@@ -928,13 +932,4 @@ div.servicestats {
       background-color: transparent;
     }
   }
-}
-
-div.hoststats div.stats_table,
-div.eventstats div.stats_table {
-  top: 44px;
-}
-
-div.servicestats div.stats_table {
-  top: 28px;
 }

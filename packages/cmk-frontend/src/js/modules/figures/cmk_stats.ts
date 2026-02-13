@@ -55,14 +55,14 @@ export class HostStats extends FigureBase<FigureResponseData> {
         super.initialize(debug);
 
         this._div_selection.classed("stats_dashlet", true);
-        this._table_div = this._div_selection
-            .append("div")
-            .classed("stats_table", true);
         this.svg = this._div_selection.append("svg");
         // NOTE: for IE11 support we set the attribute here and do not use a CSS class
         this._hexagon_box = this.svg
             .append("g")
-            .attr("transform", "translate(60, 95)");
+            .attr("transform", "translate(60, 74)");
+        this._table_div = this._div_selection
+            .append("div")
+            .classed("stats_table", true);
         this._max_radius = 48;
     }
 

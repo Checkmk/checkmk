@@ -200,10 +200,3 @@ onBeforeUnmount(() => {
   }
 }
 </style>
-
-<style>
-.db-content-figure__size-svg > svg {
-  width: 100%;
-  height: 100%;
-}
-</style>

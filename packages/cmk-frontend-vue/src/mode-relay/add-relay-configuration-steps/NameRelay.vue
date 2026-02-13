@@ -79,7 +79,7 @@ async function validate(): Promise<boolean> {
       <CmkAlertBox variant="info">
         {{
           _t(
-            'This alias will be used to identify your Relay. It will automatically be inserted into the command shown in the next step.'
+            'This alias will be used to identify your Relay. It will automatically be inserted into the command shown in the next steps.'
           )
         }}
       </CmkAlertBox>

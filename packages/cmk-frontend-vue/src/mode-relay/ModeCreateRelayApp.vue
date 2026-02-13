@@ -37,7 +37,11 @@ const openRelayOverviewPage = () => {
 </script>
 
 <template>
-  <div class="mode-relay-mode-create-relay-app">
+  <div
+    role="region"
+    :aria-label="_t('Relay configuration wizard')"
+    class="mode-relay-mode-create-relay-app"
+  >
     <CmkParagraph>
       {{ _t('The Relay is officially supported to run on the following operating systems:') }}
       <ul>

@@ -26,11 +26,7 @@ class Storage:
         return path
 
     def get_expected_path(self, suffix: str) -> Path:
-        return attach_suffix(self._path, suffix)
-
-
-def attach_suffix(p: Path, suffix: str) -> Path:
-    return p.with_name(p.name + suffix)
+        return self._path.with_suffix(suffix)
 
 
 def pnp_host_dir(hostname: HostName) -> Path:

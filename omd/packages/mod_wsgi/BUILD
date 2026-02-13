@@ -1,10 +1,17 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
+
+set_runpath(
+    name = "mod_wsgi_runpath",
+    srcs = ["@mod_wsgi//:mod_wsgi.so"],
+    rpaths = ["${ORIGIN}/../../../lib"],
+)
 
 pkg_files(
     name = "lib_pkg",
     srcs = [
-        "@mod_wsgi//:mod_wsgi.so",
+        ":mod_wsgi_runpath",
     ],
     prefix = "lib/apache/modules",
     tags = ["manual"],

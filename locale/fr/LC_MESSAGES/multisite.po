@@ -6941,6 +6941,15 @@ msgstr "Longueurs des files d'attente Apache ActiveMQ"
 msgid "Apache ActiveMQ queues"
 msgstr "Files d'attente Apache ActiveMQ"
 
+#, fuzzy
+msgid "Apache Config"
+msgstr "Optimisation des processus Apache"
+
+msgid ""
+"Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
+"and $OMD_ROOT/etc/apache"
+msgstr ""
+
 msgid "Apache Server"
 msgstr "Serveur Apache"
 
@@ -14146,6 +14155,10 @@ msgstr ""
 msgid "Command"
 msgstr "Commande"
 
+#, fuzzy, python-format
+msgid "Command %s"
+msgstr "Commandes"
+
 #, python-format
 msgid "Command %s/%d not found"
 msgstr "Commande %s/%d non trouvée"
@@ -14545,6 +14558,10 @@ msgstr "Fichiers de configuration ('*.mk' ou '*.conf') de etc/check_mk.%s"
 #, python-format
 msgid "Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s"
 msgstr "Fichiers de configuration ('*.mk' ou '*.conf') de etc/checkmk : %s"
+
+#, fuzzy, python-format
+msgid "Configuration files from %s"
+msgstr "Fichiers de configuration"
 
 msgid "Configuration generation"
 msgstr "Génération de la configuration"
@@ -25140,8 +25157,8 @@ msgstr "Échec de l'estimation de la taille du processus Apache"
 msgid "Failed to execute DCD connection (%s)"
 msgstr "Échec de l'exécution de la connexion DCD (%s)"
 
-#, python-format
-msgid "Failed to execute the test %s: %s"
+#, fuzzy, python-format
+msgid "Failed to execute the test %s: See web.log for further details"
 msgstr "Échec de l'exécution du test %s : %s"
 
 #, python-format
@@ -25712,6 +25729,10 @@ msgstr "Niveaux de disques de filer (NetApp, IBM SVC)"
 
 msgid "Files"
 msgstr "Fichiers"
+
+#, fuzzy, python-format
+msgid "Files in %s"
+msgstr "Nom de fichier : %s"
 
 msgid "Filestore"
 msgstr "Filestore"
@@ -48788,6 +48809,10 @@ msgstr "Sortie des paquets non-unicast"
 #, fuzzy
 msgid "Output octets"
 msgstr "Octets de sortie"
+
+#, fuzzy, python-format
+msgid "Output of %s"
+msgstr "Sorties"
 
 #, fuzzy
 msgid ""

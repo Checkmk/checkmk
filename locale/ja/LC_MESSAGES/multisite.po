@@ -6512,6 +6512,15 @@ msgstr "Apache ActiveMQ Queueの長さ"
 msgid "Apache ActiveMQ queues"
 msgstr "Apache ActiveMQキュー"
 
+#, fuzzy
+msgid "Apache Config"
+msgstr "Apacheプロセスのチューニング"
+
+msgid ""
+"Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
+"and $OMD_ROOT/etc/apache"
+msgstr ""
+
 msgid "Apache Server"
 msgstr "Apacheサーバー"
 
@@ -13207,6 +13216,10 @@ msgstr ""
 msgid "Command"
 msgstr "コマンド"
 
+#, fuzzy, python-format
+msgid "Command %s"
+msgstr "コマンド"
+
 #, python-format
 msgid "Command %s/%d not found"
 msgstr "コマンド %s/%d が見つかりません"
@@ -13583,6 +13596,10 @@ msgstr "etc/check_mk.%sからの設定ファイル( '* .mk'または '* .conf')"
 #, python-format
 msgid "Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s"
 msgstr "構成ファイル ('*.mk' or '*.conf') from etc/checkmk: %s"
+
+#, fuzzy, python-format
+msgid "Configuration files from %s"
+msgstr "設定ファイル"
 
 msgid "Configuration generation"
 msgstr "構成の生成"
@@ -23493,8 +23510,8 @@ msgstr "Apacheプロセスサイズの見積もりに失敗しました"
 msgid "Failed to execute DCD connection (%s)"
 msgstr "DCD接続の実行に失敗しました(%s)"
 
-#, python-format
-msgid "Failed to execute the test %s: %s"
+#, fuzzy, python-format
+msgid "Failed to execute the test %s: See web.log for further details"
 msgstr "テスト %s の実行に失敗しました: %s"
 
 #, python-format
@@ -24038,6 +24055,10 @@ msgstr "ファイラーディスクレベル(NetApp、IBM SVC)"
 
 msgid "Files"
 msgstr "ファイル"
+
+#, fuzzy, python-format
+msgid "Files in %s"
+msgstr "ファイル名: %s"
 
 msgid "Filestore"
 msgstr "ファイルストア"
@@ -45350,6 +45371,10 @@ msgstr "出力非ユニキャストパケット"
 
 msgid "Output octets"
 msgstr "出力オクテット"
+
+#, fuzzy, python-format
+msgid "Output of %s"
+msgstr "出力"
 
 msgid ""
 "Output of `dpkg -l`. See the corresponding commandline help for more details."

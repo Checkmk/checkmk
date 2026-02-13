@@ -40,6 +40,7 @@ from cmk.utils.misc import pnp_cleanup
 from ._const import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from ._crash import create_crash_report
 from ._fs import (
+    attach_suffix,
     cmc_host_dir,
     cmc_storage,
     pnp_custom_storage,
@@ -180,7 +181,7 @@ def _create_rrd(
             raise Exception("Tried to create %s, but this RRD exists." % rrd_file_name)
 
         # Need to migrate data from existing RRD
-        existing_metrics = _read_existing_metrics(base_file_name.with_suffix(".info"))
+        existing_metrics = _read_existing_metrics(attach_suffix(base_file_name, ".info"))
         migration_arguments = ["--source", str(rrd_file_name)]
         for nr, varname in enumerate(existing_metrics, 1):
             migration_mapping[varname] = nr

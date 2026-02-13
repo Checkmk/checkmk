@@ -80,7 +80,7 @@ ConfigVariableProductUsageAnalytics = ConfigVariable(
     group=ConfigVariableGroupProductUsageAnalytics,
     primary_domain=ConfigDomainProductUsageAnalytics,
     ident="product_usage_analytics",
-    hint=lambda: HTML.without_escaping(
+    domain_hint=HTML.without_escaping(
         _(
             "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %s. "
             "This allows you to review the data locally; it does not enable the feature or transmit any information."
@@ -88,6 +88,19 @@ ConfigVariableProductUsageAnalytics = ConfigVariable(
         % HTMLWriter.render_a(
             content=_("download the full JSON report"),
             href="download_product_usage.py",
+        )
+    ),
+    hint=lambda: HTML.without_escaping(
+        _(
+            "<b>Consent Requirement: </b>"
+            "You must request and receive permission from each customer before enabling the collection of product analytics data. "
+            "Do not activate data collection for any site unless the customer has agreed to data transmission. "
+            "For configuration options specifically for multi-tenant sites, please visit the %s."
+        )
+        % HTMLWriter.render_a(
+            content=_("User Guide"),
+            href="https://docs-internal.lan.checkmk.net/master/de/product_usage_analytics.html#distributed",
+            target="_blank",
         )
     ),
     valuespec=lambda context: Dictionary(

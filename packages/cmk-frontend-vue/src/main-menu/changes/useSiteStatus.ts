@@ -5,23 +5,45 @@
  */
 import { type Ref, computed } from 'vue'
 
-import type { Site } from '@/main-menu/changes/ChangesInterfaces'
+import type { PendingChanges, Site } from '@/main-menu/changes/ChangesInterfaces'
 
-export function useSiteStatus(sites: Ref<Site[]>) {
+export function useSiteStatus(
+  sites: Ref<Site[]>,
+  pendingChanges: Ref<PendingChanges[]>,
+  userCanActivateForeign: Ref<boolean>
+) {
   function siteHasChanges(site: Site): boolean {
     return site.changes > 0
   }
 
-  function siteHasErrors(site: Site): boolean {
+  function siteHasStatusProblems(site: Site): boolean {
+    return !['online', 'disabled'].includes(site.onlineStatus)
+  }
+
+  function siteHasActivationIssues(site: Site): boolean {
     return (
-      (site.lastActivationStatus &&
-        ['error', 'warning'].includes(site.lastActivationStatus.state)) ||
-      (site.onlineStatus !== 'online' && site.onlineStatus !== 'disabled')
+      !!site.lastActivationStatus && ['error', 'warning'].includes(site.lastActivationStatus.state)
     )
+  }
+
+  function siteHasErrors(site: Site): boolean {
+    return siteHasActivationIssues(site) || siteHasStatusProblems(site)
   }
 
   function siteIsLoggedOut(site: Site): boolean {
     return site.loggedIn === false
+  }
+
+  function siteHasForeignChanges(site: Site): boolean {
+    return pendingChanges.value.some(
+      (change) =>
+        (change.whichSites.includes(site.siteId) || change.whichSites.includes('All sites')) &&
+        change.foreignChange
+    )
+  }
+
+  function siteHasForeignChangesWithoutPermission(site: Site): boolean {
+    return siteHasForeignChanges(site) && !userCanActivateForeign.value
   }
 
   const sitesWithChanges = computed(() => sites.value.filter(siteHasChanges))
@@ -42,8 +64,11 @@ export function useSiteStatus(sites: Ref<Site[]>) {
 
   return {
     siteHasChanges,
+    siteHasStatusProblems,
+    siteHasActivationIssues,
     siteHasErrors,
     siteIsLoggedOut,
+    siteHasForeignChangesWithoutPermission,
 
     sitesWithChanges,
     sitesWithErrors,

@@ -59,7 +59,14 @@ const sitesAndChanges = ref<SitesAndChanges>({
 })
 
 const sitesRef = computed(() => sitesAndChanges.value.sites)
-const { hasSitesWithChangesOrErrors } = useSiteStatus(sitesRef)
+const pendingChangesRef = computed(() => sitesAndChanges.value.pendingChanges)
+const userCanActivateForeignRef = computed(() => props.user_has_activate_foreign)
+
+const { hasSitesWithChangesOrErrors } = useSiteStatus(
+  sitesRef,
+  pendingChangesRef,
+  userCanActivateForeignRef
+)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any

@@ -5,8 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import usei18n from '@/lib/i18n'
 
 import CmkBadge from '@/components/CmkBadge.vue'
@@ -15,7 +13,7 @@ import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import type { PendingChanges, Site } from '../../ChangesInterfaces'
+import type { Site } from '../../ChangesInterfaces'
 import SiteStatusIcons from './SiteStatusIcons.vue'
 
 const { _t } = usei18n()
@@ -34,40 +32,21 @@ const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'defaul
   return mapping[status] ?? 'warning'
 }
 
-const props = defineProps<{
+defineProps<{
   site: Site
   idx: number
   activating: boolean
   checked: boolean
   isRecentlyActivated: boolean
   hideCheckbox?: boolean
-  pendingChanges: PendingChanges[]
-  userHasActivateForeign: boolean
+  hasActivationIssues: boolean
+  hasStatusProblems: boolean
+  hasForeignChangesWithoutPermission: boolean
 }>()
 
 const emit = defineEmits<{
   updateChecked: [string, boolean]
 }>()
-
-const hasForeignChangesWithoutPermission = computed(() => {
-  const siteHasForeignChanges = props.pendingChanges.some(
-    (change) =>
-      (change.whichSites.includes(props.site.siteId) || change.whichSites.includes('All sites')) &&
-      change.foreignChange
-  )
-  return siteHasForeignChanges && !props.userHasActivateForeign
-})
-
-const hasActivationIssues = computed(() => {
-  return (
-    !!props.site.lastActivationStatus &&
-    ['warning', 'error'].includes(props.site.lastActivationStatus.state)
-  )
-})
-
-const siteHasProblems = computed(() => {
-  return !['online', 'disabled'].includes(props.site.onlineStatus)
-})
 </script>
 
 <template>
@@ -93,7 +72,7 @@ const siteHasProblems = computed(() => {
         <SiteStatusIcons
           :activation-issues="hasActivationIssues"
           :has-foreign-changes-without-permission="hasForeignChangesWithoutPermission"
-          :site-problems="siteHasProblems"
+          :site-problems="hasStatusProblems"
         />
         <CmkBadge color="default" size="small">{{ site.changes }}</CmkBadge>
       </div>

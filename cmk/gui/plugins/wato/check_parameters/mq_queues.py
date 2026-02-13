@@ -50,16 +50,19 @@ def _parameter_valuespec_mq_queues():
             (
                 "size",
                 SimpleLevels(
-                    title=_("Levels for the queue length"),
-                    help=_("Set the maximum and minimum length for the queue size"),
+                    title=_("Upper levels for the queue length"),
+                    help=_(
+                        "Queue length refers to the total number of messages that have "
+                        "not been acknowledged by a consumer."
+                    ),
                     spec=Integer,
                 ),
             ),
             (
                 "consumer_count_levels_upper",
                 SimpleLevels(
-                    title=_("Upper Levels for the consumer count"),
-                    help=_("Consumer Count is the size of connected consumers to a queue"),
+                    title=_("Upper levels for the consumer count"),
+                    help=_("Consumer count is the size of connected consumers to a queue"),
                     spec=Integer,
                     direction="upper",
                 ),
@@ -68,7 +71,7 @@ def _parameter_valuespec_mq_queues():
                 "consumer_count_levels_lower",
                 SimpleLevels(
                     title=_("Lower levels for the consumer count"),
-                    help=_("Consumer Count is the size of connected consumers to a queue"),
+                    help=_("Consumer count is the size of connected consumers to a queue"),
                     spec=Integer,
                     direction="lower",
                 ),

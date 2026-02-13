@@ -37,6 +37,9 @@ class Schedule(BaseModel):
     check_interval: Annotated[Seconds, Field(description="Check interval in seconds", gt=0)]
     retry_interval: Annotated[Seconds, Field(description="Retry interval in seconds", gt=0)]
     max_attempts: Annotated[int, Field(description="Maximum number of attempts", gt=0)]
+    timeout: Annotated[
+        Seconds, Field(description="Timeout for the fetching task passed into the fetcher", gt=0)
+    ]
 
 
 class Service(BaseModel):

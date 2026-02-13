@@ -8,7 +8,11 @@
 """Performance test classes"""
 
 import logging
+import os
+import re
+from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from time import time
 from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
 
@@ -139,6 +143,28 @@ class PerformanceTest:
             context.add_cookies([auth_cookie])
 
         return context.new_page()
+
+    @staticmethod
+    def auto_increment_filename(
+        path: Path, listdir: Callable[[str | Path | None], list[str]] = os.listdir
+    ) -> Path:
+        """Return a path with an auto-incremented numeric suffix.
+
+        Scans the target directory for files matching "{stem}.{n}{suffix}", picks the
+        next available integer, and returns the corresponding Path. Uses the provided
+        listdir callable for testability.
+
+        Args:
+            path: The path to add the auto-incremented number to.
+            listdir: An optional alternative callable to list a directory.
+        """
+        directory = path.parent
+        pattern = re.compile(rf"{re.escape(path.stem)}\.(\d+){re.escape(path.suffix)}$")
+        numbers = [
+            int(match.group(1)) for fname in listdir(directory) if (match := pattern.match(fname))
+        ]
+        next_num = max(numbers) + 1 if numbers else 1
+        return directory / f"{path.stem}.{next_num}{path.suffix}"
 
     @staticmethod
     def _generate_ips(offset: int, max_count: int) -> list[str]:

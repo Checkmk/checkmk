@@ -13,7 +13,8 @@ import termios
 from re import Pattern
 from tty import setraw
 
-from omdlib.type_defs import ConfigChoiceHasError, Skeleton
+from omdlib.config_choices import ConfigChoiceHasError
+from omdlib.type_defs import Skeleton
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate

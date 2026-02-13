@@ -37,6 +37,7 @@ import omdlib.backup
 import omdlib.utils
 from omdlib.args_site_user import args_to_command_line, Copy, Move, Restore
 from omdlib.buffer import BufferWithCopy
+from omdlib.config_choices import ConfigChoiceHasError
 from omdlib.config_hooks import (
     config_set_all,
     config_set_value,
@@ -99,7 +100,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs,
     unmount_tmpfs_as_root,
 )
-from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements, Skeleton
+from omdlib.type_defs import Config, Replacements, Skeleton
 from omdlib.update import get_conflict_mode_update, get_edition, ManageUpdate, PreFlight
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes

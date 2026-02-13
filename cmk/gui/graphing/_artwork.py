@@ -602,6 +602,15 @@ def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesVal
 #   '----------------------------------------------------------------------'
 
 
+def _sanitize_target_number_of_labels(target_number_of_labels: float) -> float:
+    # If there's too little space the 'target_number_of_labels' is set to zero.
+    if target_number_of_labels < 0:
+        raise ValueError(target_number_of_labels)
+    if target_number_of_labels < 1:
+        return 0
+    return target_number_of_labels
+
+
 def _compute_labels_from_api(
     formatter: NotationFormatter,
     height_ex: SizeEx,
@@ -616,7 +625,7 @@ def _compute_labels_from_api(
         case True, True:
             return formatter.render_y_labels(
                 y_range=PositiveYRange(start=min_y, end=max_y),
-                target_number_of_labels=height_ex / 4.0 + 1,
+                target_number_of_labels=_sanitize_target_number_of_labels(height_ex / 4.0 + 1),
             )
         case False, True:
             abs_min_y = abs(min_y)
@@ -625,7 +634,7 @@ def _compute_labels_from_api(
             if mirrored:
                 labels = formatter.render_y_labels(
                     y_range=PositiveYRange(start=0, end=max(abs_min_y, abs_max_y)),
-                    target_number_of_labels=height_ex / 8.0 + 1,
+                    target_number_of_labels=_sanitize_target_number_of_labels(height_ex / 8.0 + 1),
                 )
                 return [
                     *(
@@ -643,17 +652,21 @@ def _compute_labels_from_api(
             return [
                 *formatter.render_y_labels(
                     y_range=NegativeYRange(start=min_y, end=0),
-                    target_number_of_labels=target_num_labels_neg,
+                    target_number_of_labels=_sanitize_target_number_of_labels(
+                        target_num_labels_neg
+                    ),
                 )[1:],  # exclude zero label
                 *formatter.render_y_labels(
                     y_range=PositiveYRange(start=0, end=max_y),
-                    target_number_of_labels=target_num_labels_pos,
+                    target_number_of_labels=_sanitize_target_number_of_labels(
+                        target_num_labels_pos
+                    ),
                 ),
             ] or [Label(0, "0")]
         case False, False:
             return formatter.render_y_labels(
                 y_range=NegativeYRange(start=min_y, end=max_y),
-                target_number_of_labels=height_ex / 4.0 + 1,
+                target_number_of_labels=_sanitize_target_number_of_labels(height_ex / 4.0 + 1),
             )
         case _:
             raise ValueError((min_y, max_y))

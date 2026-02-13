@@ -1164,6 +1164,26 @@ def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
             ],
             id="mirrored,neg,neg",
         ),
+        pytest.param(
+            -64,
+            5120,
+            False,
+            [
+                Label(
+                    position=0,
+                    text="0",
+                ),
+                Label(
+                    position=2000,
+                    text="2\u2009000 s",
+                ),
+                Label(
+                    position=4000,
+                    text="4\u2009000 s",
+                ),
+            ],
+            id="small-neg,big-pos",
+        ),
     ],
 )
 def test__compute_labels_from_api(

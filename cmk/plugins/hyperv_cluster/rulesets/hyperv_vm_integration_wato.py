@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 # Thanks to Andreas Döhler for the contribution.
@@ -120,7 +119,7 @@ def create_match_services_element() -> DictElement:
     )
 
 
-def _parameter_valuespec_hyperv_vm_integration():
+def _parameter_valuespec_hyperv_vm_integration() -> Dictionary:
     return Dictionary(
         elements={
             "default_status": create_default_status_element(),

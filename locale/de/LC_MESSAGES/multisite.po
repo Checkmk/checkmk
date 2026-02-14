@@ -52206,6 +52206,10 @@ msgstr "Replikationsverzögerung"
 msgid "Replica ready state"
 msgstr "Bereitschaftszustand der Replik"
 
+#, fuzzy
+msgid "Replica terminating state"
+msgstr "Bereitschaftszustand der Replik"
+
 msgid "Replica update state"
 msgstr "Update-Zustand des Replicas"
 
@@ -61859,6 +61863,14 @@ msgstr "Beendete Container"
 
 msgid "Terminated pod resources"
 msgstr "Beendete Pod-Ressourcen"
+
+#, fuzzy
+msgid "Terminating duration (Deployment only)"
+msgstr "Fehlgeplante Dauer (nur DaemonSet)"
+
+#, fuzzy
+msgid "Terminating replicas"
+msgstr "Verbleibende Leseoperationen"
 
 msgid "Terse"
 msgstr "Knapp"

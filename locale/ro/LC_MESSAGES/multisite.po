@@ -54373,6 +54373,10 @@ msgstr "Replica lag"
 msgid "Replica ready state"
 msgstr "Starea de pregătire a replicilor"
 
+#, fuzzy
+msgid "Replica terminating state"
+msgstr "Starea de pregătire a replicilor"
+
 msgid "Replica update state"
 msgstr "Starea de actualizare a replicilor"
 
@@ -64422,6 +64426,14 @@ msgstr "Containere terminate"
 
 msgid "Terminated pod resources"
 msgstr "Resursele de poduri terminate"
+
+#, fuzzy
+msgid "Terminating duration (Deployment only)"
+msgstr "Durată neprogramată (numai pentru DaemonSet)"
+
+#, fuzzy
+msgid "Terminating replicas"
+msgstr "Lecturi rămase"
 
 msgid "Terse"
 msgstr "Tern"

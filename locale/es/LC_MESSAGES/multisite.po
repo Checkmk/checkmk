@@ -54727,6 +54727,10 @@ msgstr "Réplica del retraso"
 msgid "Replica ready state"
 msgstr "Estado de la réplica"
 
+#, fuzzy
+msgid "Replica terminating state"
+msgstr "Estado de la réplica"
+
 msgid "Replica update state"
 msgstr "Estado de actualización de la réplica"
 
@@ -64813,6 +64817,14 @@ msgstr "Contenedores terminados"
 
 msgid "Terminated pod resources"
 msgstr "Recursos de pods terminados"
+
+#, fuzzy
+msgid "Terminating duration (Deployment only)"
+msgstr "Duración no programada (sólo DaemonSet)"
+
+#, fuzzy
+msgid "Terminating replicas"
+msgstr "Lecturas restantes"
 
 msgid "Terse"
 msgstr "Terse"

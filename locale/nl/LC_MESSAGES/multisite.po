@@ -54309,6 +54309,10 @@ msgstr "Replica Lag"
 msgid "Replica ready state"
 msgstr "Replica klaar staat"
 
+#, fuzzy
+msgid "Replica terminating state"
+msgstr "Replica klaar staat"
+
 msgid "Replica update state"
 msgstr "Replica bijwerken staat"
 
@@ -64268,6 +64272,14 @@ msgstr "Beëindigde containers"
 
 msgid "Terminated pod resources"
 msgstr "Beëindigde pod bronnen"
+
+#, fuzzy
+msgid "Terminating duration (Deployment only)"
+msgstr "Misplande duur (alleen DaemonSet)"
+
+#, fuzzy
+msgid "Terminating replicas"
+msgstr "Resterende Lezingen"
 
 msgid "Terse"
 msgstr "Terse"

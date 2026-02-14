@@ -50913,6 +50913,10 @@ msgstr "レプリカラグ"
 msgid "Replica ready state"
 msgstr "レプリカ準備完了状態"
 
+#, fuzzy
+msgid "Replica terminating state"
+msgstr "レプリカ準備完了状態"
+
 msgid "Replica update state"
 msgstr "レプリカ更新状態"
 
@@ -60341,6 +60345,14 @@ msgstr "終了したコンテナの数"
 
 msgid "Terminated pod resources"
 msgstr "Terminated pod リソース"
+
+#, fuzzy
+msgid "Terminating duration (Deployment only)"
+msgstr "ミススケジュールされた期間（DaemonSetのみ）"
+
+#, fuzzy
+msgid "Terminating replicas"
+msgstr "読み残し"
 
 msgid "Terse"
 msgstr "簡潔"

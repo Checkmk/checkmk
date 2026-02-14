@@ -38,7 +38,7 @@ class Config(BaseModel):
     tag_based: list[TagBased] | None = None
 
 
-class SafeHostnamesConfig(BaseModel):
+class UniqueHostnamesConfig(BaseModel):
     exclude_vms: bool = False
 
 
@@ -60,8 +60,8 @@ class AzureParams(BaseModel):
         tuple[Literal["filter_tags"], str] | tuple[Literal["dont_import_tags"], None] | None
     ) = None
     connection_test: bool = False  # only used by quick setup
-    safe_hostnames: (
-        tuple[Literal["disabled"], None] | tuple[Literal["enabled"], SafeHostnamesConfig]
+    unique_hostnames: (
+        tuple[Literal["disabled"], None] | tuple[Literal["enabled"], UniqueHostnamesConfig]
     ) = ("disabled", None)
 
 
@@ -142,12 +142,10 @@ def agent_azure_arguments(
     for p in params.services:
         args.extend(["--service", p.replace("Microsoft_", "Microsoft.").replace("_slash_", "/")])
 
-    if params.safe_hostnames[0] == "enabled":
-        args += ["--safe-hostnames"]
-        if params.safe_hostnames[1].exclude_vms:
-            args += ["--safe-hostnames-exclude-vms"]
-    # else:
-    #    pass
+    if params.unique_hostnames[0] == "enabled":
+        args += ["--unique-hostnames"]
+        if params.unique_hostnames[1].exclude_vms:
+            args += ["--unique-hostnames-exclude-vms"]
 
     config = params.config
 

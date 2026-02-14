@@ -124,16 +124,16 @@ BULK_QUERIED_RESOURCES = {
 
 
 class _AzureEntity(ABC):
-    def __init__(self, entity_name: str, section: str, use_safe_names: bool) -> None:
+    def __init__(self, entity_name: str, section: str, use_unique_names: bool) -> None:
         self.info: dict[str, Any]
 
         self.section = section
         self._entity_name = entity_name
-        self._use_safe_names = use_safe_names
+        self._use_unique_names = use_unique_names
 
     @property
     def piggytarget(self) -> str:
-        return self._entity_name if not self._use_safe_names else self._unique_name()
+        return self._entity_name if not self._use_unique_names else self._unique_name()
 
     def _compute_unique_name(self, uniqueness_keys: Sequence[str]) -> str:
         """
@@ -181,10 +181,12 @@ class AzureSubscription(_AzureEntity):
         id: str,
         name: str,
         tags: Mapping[str, str],
-        use_safe_names: bool,
+        use_unique_names: bool,
         tenant_id: str,
     ) -> None:
-        super().__init__(entity_name=name, section="subscription", use_safe_names=use_safe_names)
+        super().__init__(
+            entity_name=name, section="subscription", use_unique_names=use_unique_names
+        )
         self.id: Final[str] = id
         self.tags: Final[Mapping[str, str]] = tags
         self.name: Final[str] = name
@@ -210,11 +212,11 @@ class AzureResourceGroup(_AzureEntity):
         info: Mapping[str, Any],
         tag_key_pattern: TagsOption,
         subscription: AzureSubscription,
-        use_safe_names: bool,
+        use_unique_names: bool,
     ) -> None:
         section = info["type"].split("/")[-1].lower()
         super().__init__(
-            entity_name=info["name"].lower(), section=section, use_safe_names=use_safe_names
+            entity_name=info["name"].lower(), section=section, use_unique_names=use_unique_names
         )
         self.tags = filter_tags(info.get("tags", {}), tag_key_pattern)
         self.info = {
@@ -379,17 +381,17 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         dest="services",
     )
     parser.add_argument(
-        "--safe-hostnames",
+        "--unique-hostnames",
         default=False,
         action="store_true",
-        help="Create safe host names for piggyback hosts to avoid conflicts in entity names in Azure. "
+        help="Create unique host names for piggyback hosts to avoid conflicts in entity names in Azure. "
         "This option will append the last part of the subscription ID to host names. Example: 'my-vm-1a2b3c4d'",
     )
     parser.add_argument(
-        "--safe-hostnames-exclude-vms",
+        "--unique-hostnames-exclude-vms",
         default=False,
         action="store_true",
-        help="When used with --safe-hostnames, exclude virtual machines from safe hostname generation. ",
+        help="When used with --unique-hostnames, exclude virtual machines from unique hostname generation. ",
     )
     parser.add_argument(
         "--authority",
@@ -799,11 +801,11 @@ class AzureResource(_AzureEntity):
         info: dict[str, Any],
         tag_key_pattern: TagsOption,
         subscription: AzureSubscription,
-        use_safe_names: bool,
+        use_unique_names: bool,
     ) -> None:
         self.name = info["name"]
         section = info["type"].split("/")[-1].lower()
-        super().__init__(entity_name=self.name, section=section, use_safe_names=use_safe_names)
+        super().__init__(entity_name=self.name, section=section, use_unique_names=use_unique_names)
         self.tags = filter_tags(info.get("tags", {}), tag_key_pattern)
         self.info = {
             **info,
@@ -1407,7 +1409,7 @@ async def process_cosmosdb(
                     db_resource_info,
                     TagsImportPatternOption.import_all,
                     resource.subscription,
-                    args.safe_hostnames,
+                    args.unique_hostnames,
                 )
                 db_resource.metrics.append(metric)
                 db_resource.labels["cosmosdb_account"] = resource.name
@@ -1933,7 +1935,7 @@ async def get_resource_groups(
                 group,
                 args.tag_key_pattern,
                 subscription,
-                args.safe_hostnames,
+                args.unique_hostnames,
             )
 
     return groups
@@ -2118,7 +2120,7 @@ def write_usage_section(
     monitored_groups: Mapping[str, AzureResourceGroup],
     subscription: AzureSubscription,
     tag_key_pattern: TagsOption,
-    safe_hostnames: bool,
+    unique_hostnames: bool,
 ) -> None:
     """
     Usage (Cost) services go under the resource group AND the related subscription
@@ -2135,7 +2137,7 @@ def write_usage_section(
         usage["type"] = "Microsoft.Consumption/usageDetails"
         usage["group"] = usage["properties"]["ResourceGroupName"]
 
-        usage_resource = AzureResource(usage, tag_key_pattern, subscription, safe_hostnames)
+        usage_resource = AzureResource(usage, tag_key_pattern, subscription, unique_hostnames)
 
         # usage data end up in both the resource group host and the subscription host
         piggytargets = [subscription.piggytarget]
@@ -2170,7 +2172,7 @@ async def process_usage_details(
             monitored_groups,
             subscription,
             args.tag_key_pattern,
-            args.safe_hostnames,
+            args.unique_hostnames,
         )
 
     except NoConsumptionAPIError:
@@ -2182,7 +2184,7 @@ async def process_usage_details(
             raise
         write_exception_to_agent_info_section(exc, "Usage client", subscription)
         write_usage_section(
-            [], monitored_groups, subscription, args.tag_key_pattern, args.safe_hostnames
+            [], monitored_groups, subscription, args.tag_key_pattern, args.unique_hostnames
         )
 
 
@@ -2568,7 +2570,9 @@ async def _collect_resources(
             r,
             args.tag_key_pattern,
             subscription,
-            _should_use_unique_hostname(args.safe_hostnames, args.safe_hostnames_exclude_vms, r),
+            _should_use_unique_hostname(
+                args.unique_hostnames, args.unique_hostnames_exclude_vms, r
+            ),
         )
         for r in resources
     )
@@ -2669,7 +2673,7 @@ async def _get_subscriptions(args: argparse.Namespace) -> set[AzureSubscription]
                     id=item["subscriptionId"],
                     name=item["displayName"],
                     tags=item.get("tags", {}),
-                    use_safe_names=args.safe_hostnames,
+                    use_unique_names=args.unique_hostnames,
                     tenant_id=args.tenant,
                 )
                 for item in response.get("value", [])

@@ -34,44 +34,44 @@ Args = argparse.Namespace
                 id="subscription_id_12345678",
                 name="subscription name",
                 tags={},
-                use_safe_names=False,
+                use_unique_names=False,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "subscription name",
-            id="Subscription without safe names",
+            id="Subscription without unique names",
         ),
         pytest.param(
             AzureSubscription(
                 id="subscription_id_12345678",
                 name="subscription:name",
                 tags={},
-                use_safe_names=True,
+                use_unique_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "subscription:name_2a0cae26",
-            id="Subscription with safe names",
+            id="Subscription with unique names",
         ),
         pytest.param(
             AzureSubscription(
                 id="subscription_id_abcdefgh",
                 name="My Subscription",
                 tags={},
-                use_safe_names=True,
+                use_unique_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "My Subscription_560cb603",
-            id="Subscription with safe names, different subscription id",
+            id="Subscription with unique names, different subscription id",
         ),
         pytest.param(
             AzureSubscription(
                 id="subscription_id_xyz12345",
                 name="My Subscription",
                 tags={},
-                use_safe_names=True,
+                use_unique_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "My Subscription_6ab7efb2",
-            id="Subscription with safe names, same subscription name, ensures uniqueness",
+            id="Subscription with unique names, same subscription name, ensures uniqueness",
         ),
     ],
 )
@@ -85,24 +85,24 @@ RESOURCE_SUBSCRIPTION = AzureSubscription(
     id="subscription_id",
     name="My Subscription",
     tags={},
-    # this should not affect resource groups, although use_safe_name
+    # this should not affect resource groups, although use_unique_name
     # must always be valid for the entire run, and be identical for every object
-    use_safe_names=False,
+    use_unique_names=False,
     tenant_id="tenant_id_123",
 )
 RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
     id="different_subscription_id",
     name="My Subscription 2",
     tags={},
-    # this should not affect resource groups, although use_safe_name
+    # this should not affect resource groups, although use_unique_name
     # must always be valid for the entire run, and be identical for every object
-    use_safe_names=False,
+    use_unique_names=False,
     tenant_id="tenant_id_123",
 )
 
 
 @pytest.mark.parametrize(
-    "resource_group_info, subscription, use_safe_names, expected_piggytarget",
+    "resource_group_info, subscription, use_unique_names, expected_piggytarget",
     [
         pytest.param(
             {
@@ -115,7 +115,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             RESOURCE_SUBSCRIPTION,
             False,
             "myresourcegroup",
-            id="Resourcegroup without safe names",
+            id="Resourcegroup without unique names",
         ),
         pytest.param(
             {
@@ -128,7 +128,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             RESOURCE_SUBSCRIPTION,
             True,
             "myresourcegroup_5d6f43b3",
-            id="Resourcegroup with safe names",
+            id="Resourcegroup with unique names",
         ),
         pytest.param(
             {
@@ -141,7 +141,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             RESOURCE_SUBSCRIPTION_2,
             True,
             "myresourcegroup_64a5c469",
-            id="Resourcegroup with safe names, different subscription, ensures subscription uniqueness",
+            id="Resourcegroup with unique names, different subscription, ensures subscription uniqueness",
         ),
         pytest.param(
             {
@@ -154,32 +154,32 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             RESOURCE_SUBSCRIPTION,
             True,
             "productionrg_5d6f43b3",
-            id="Resourcegroup with safe names different_name",
+            id="Resourcegroup with unique names different_name",
         ),
     ],
 )
 def test_azureresourcegroup_piggytarget(
     resource_group_info: Mapping[str, Any],
     subscription: AzureSubscription,
-    use_safe_names: bool,
+    use_unique_names: bool,
     expected_piggytarget: str,
 ) -> None:
     resource_group = AzureResourceGroup(
         info=resource_group_info,
         tag_key_pattern=TagsImportPatternOption.import_all,
         subscription=subscription,
-        use_safe_names=use_safe_names,
+        use_unique_names=use_unique_names,
     )
     assert resource_group.piggytarget == expected_piggytarget
 
 
 def test_ensure_different_hashes_subscription_resourcegroups() -> None:
-    for use_safe_names in (True, False):
+    for use_unique_names in (True, False):
         subscription = AzureSubscription(
             id="subscription_id",
             name="my_subscription",
             tags={},
-            use_safe_names=use_safe_names,
+            use_unique_names=use_unique_names,
             tenant_id="tenant_id_123",
         )
 
@@ -193,18 +193,18 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             },
             tag_key_pattern=TagsImportPatternOption.import_all,
             subscription=subscription,
-            use_safe_names=use_safe_names,
+            use_unique_names=use_unique_names,
         )
-        # with safe names, the hashes must be different because of different types
-        # without safe names, the piggytarget are identical because names are identical
-        if use_safe_names:
+        # with unique names, the hashes must be different because of different types
+        # without unique names, the piggytarget are identical because names are identical
+        if use_unique_names:
             assert resource_group.piggytarget != subscription.piggytarget
         else:
             assert resource_group.piggytarget == subscription.piggytarget
 
 
 @pytest.mark.parametrize(
-    "resource_info, subscription, use_safe_names, expected_piggytarget",
+    "resource_info, subscription, use_unique_names, expected_piggytarget",
     [
         pytest.param(
             {
@@ -218,7 +218,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             RESOURCE_SUBSCRIPTION,
             False,
             "myVM",
-            id="resource_without_safe_names",
+            id="resource_without_unique_names",
         ),
         pytest.param(
             {
@@ -232,7 +232,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             RESOURCE_SUBSCRIPTION,
             True,
             "myVM_555a1dc6",
-            id="resource_with_safe_names",
+            id="resource_with_unique_names",
         ),
         pytest.param(
             {
@@ -246,7 +246,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             RESOURCE_SUBSCRIPTION,
             True,
             "myVM_b7b0437c",
-            id="resource_with_safe_names_ensures_resourcegroup_uniqueness",
+            id="resource_with_unique_names_ensures_resourcegroup_uniqueness",
         ),
         pytest.param(
             {
@@ -260,7 +260,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             RESOURCE_SUBSCRIPTION_2,
             True,
             "myVM_e9a9a152",
-            id="resource_with_safe_names_ensures_subscription_uniqueness",
+            id="resource_with_unique_names_ensures_subscription_uniqueness",
         ),
         pytest.param(
             {
@@ -274,21 +274,21 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             RESOURCE_SUBSCRIPTION,
             True,
             "mystorageaccount_f5118f4b",
-            id="resource_with_safe_names_ensures_type_uniqueness",
+            id="resource_with_unique_names_ensures_type_uniqueness",
         ),
     ],
 )
 def test_azureresource_piggytarget(
     resource_info: dict[str, Any],
     subscription: AzureSubscription,
-    use_safe_names: bool,
+    use_unique_names: bool,
     expected_piggytarget: str,
 ) -> None:
     resource = AzureResource(
         info=resource_info,
         tag_key_pattern=TagsImportPatternOption.import_all,
         subscription=subscription,
-        use_safe_names=use_safe_names,
+        use_unique_names=use_unique_names,
     )
     assert resource.piggytarget == expected_piggytarget
 
@@ -328,7 +328,7 @@ RESOURCE_GROUPS_RESPONSE = {
                 no_subscriptions=True,
                 all_subscriptions=False,
                 subscriptions=None,
-                safe_hostnames=False,
+                unique_hostnames=False,
                 subscriptions_require_tag=[],
                 subscriptions_require_tag_value=[],
             ),
@@ -345,7 +345,7 @@ RESOURCE_GROUPS_RESPONSE = {
                 no_subscriptions=False,
                 all_subscriptions=True,
                 subscriptions=None,
-                safe_hostnames=False,
+                unique_hostnames=False,
                 subscriptions_require_tag=[],
                 subscriptions_require_tag_value=[],
             ),
@@ -369,7 +369,7 @@ RESOURCE_GROUPS_RESPONSE = {
                     "subscription_id_987654321",
                     "subscription_id_abcdefgh",
                 ],
-                safe_hostnames=False,
+                unique_hostnames=False,
                 subscriptions_require_tag=[],
                 subscriptions_require_tag_value=[],
             ),
@@ -389,7 +389,7 @@ RESOURCE_GROUPS_RESPONSE = {
                 no_subscriptions=False,
                 all_subscriptions=False,
                 subscriptions=None,
-                safe_hostnames=False,
+                unique_hostnames=False,
                 subscriptions_require_tag=[("key2")],
                 subscriptions_require_tag_value=[("key1", "value1")],
             ),
@@ -408,7 +408,7 @@ RESOURCE_GROUPS_RESPONSE = {
                 no_subscriptions=False,
                 all_subscriptions=False,
                 subscriptions=None,
-                safe_hostnames=False,
+                unique_hostnames=False,
                 subscriptions_require_tag=[("key_non_existent")],
                 subscriptions_require_tag_value=[("key1", "value1")],
             ),
@@ -449,7 +449,7 @@ async def test_get_subscriptions_wrong_subscription(mock_api_client: AsyncMock) 
             "subscription_id_987654321",
             "non_existent_subscription_id",
         ],
-        safe_hostnames=False,
+        unique_hostnames=False,
         subscriptions_require_tag=[],
         subscriptions_require_tag_value=[],
     )

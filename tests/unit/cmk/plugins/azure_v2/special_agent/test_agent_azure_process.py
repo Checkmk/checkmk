@@ -59,7 +59,7 @@ Args = argparse.Namespace
                 },
                 TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_safe_names=False,
+                use_unique_names=False,
             ),
             {
                 "burningman": AzureResourceGroup(
@@ -73,7 +73,7 @@ Args = argparse.Namespace
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 )
             },
             (
@@ -98,7 +98,7 @@ Args = argparse.Namespace
                 },
                 TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_safe_names=False,
+                use_unique_names=False,
             ),
             {
                 "resource_group_name": AzureResourceGroup(
@@ -112,7 +112,7 @@ Args = argparse.Namespace
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 )
             },
             (
@@ -137,7 +137,7 @@ Args = argparse.Namespace
                 },
                 TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_safe_names=False,
+                use_unique_names=False,
             ),
             {
                 "resource_group_name": AzureResourceGroup(
@@ -148,7 +148,7 @@ Args = argparse.Namespace
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 )
             },
             (
@@ -172,8 +172,8 @@ Args = argparse.Namespace
                     "group": "resource_group_name",
                 },
                 TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(use_safe_names=True),
-                use_safe_names=True,
+                subscription=fake_azure_subscription(use_unique_names=True),
+                use_unique_names=True,
             ),
             {
                 "resource_group_name": AzureResourceGroup(
@@ -186,8 +186,8 @@ Args = argparse.Namespace
                         "name": "resource_group_name",
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
-                    subscription=fake_azure_subscription(use_safe_names=True),
-                    use_safe_names=True,
+                    subscription=fake_azure_subscription(use_unique_names=True),
+                    use_unique_names=True,
                 )
             },
             (
@@ -198,7 +198,7 @@ Args = argparse.Namespace
                 ],
                 ["my_resource_6c554708"],
             ),
-            id="Load balancer with safe hostnames",
+            id="Load balancer with unique hostnames",
         ),
     ],
 )
@@ -235,7 +235,7 @@ def test_get_resource_host_labels_section(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 )
             },
             '{"cloud": "azure", "resource_group": "cosmos_group", "resource": "databaseaccounts", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "eastus", "cosmosdb_account": "my_cosmos_db"}\n',
@@ -260,7 +260,7 @@ def test_get_resource_host_labels_section(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 )
             },
             '{"cloud": "azure", "resource_group": "vm_group", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true}\n',
@@ -278,7 +278,7 @@ def test_resource_with_custom_labels(
         dict(resource_info),
         TagsImportPatternOption.import_all,
         subscription=fake_azure_subscription(),
-        use_safe_names=False,
+        use_unique_names=False,
     )
     resource.labels.update(custom_labels)
 
@@ -315,7 +315,7 @@ RESOURCE_GROUPS_RESPONSE = [
             ["resource_group_non_existent"],
             Args(
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                safe_hostnames=False,
+                unique_hostnames=False,
             ),
             {},
             id="No labels monitored",
@@ -324,7 +324,7 @@ RESOURCE_GROUPS_RESPONSE = [
             ["resource_group_1"],
             Args(
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                safe_hostnames=False,
+                unique_hostnames=False,
             ),
             {"resource_group_1": {"group_tag_key_1": "group_tag_value_1"}},
             id="Labels monitored, import all tags",
@@ -333,7 +333,7 @@ RESOURCE_GROUPS_RESPONSE = [
             ["resource_group_1", "resource_group_2"],
             Args(
                 tag_key_pattern=TagsImportPatternOption.ignore_all,
-                safe_hostnames=False,
+                unique_hostnames=False,
             ),
             {"resource_group_1": {}, "resource_group_2": {}},
             id="Labels monitored, ignore tags",
@@ -342,7 +342,7 @@ RESOURCE_GROUPS_RESPONSE = [
             ["resource_group_1", "resource_group_2"],
             Args(
                 tag_key_pattern="group_tag",
-                safe_hostnames=False,
+                unique_hostnames=False,
             ),
             {
                 "resource_group_1": {"group_tag_key_1": "group_tag_value_1"},
@@ -354,7 +354,7 @@ RESOURCE_GROUPS_RESPONSE = [
             ["resource_group_1", "resource_group_2"],
             Args(
                 tag_key_pattern="groups_tag",
-                safe_hostnames=False,
+                unique_hostnames=False,
             ),
             {"resource_group_1": {}, "resource_group_2": {}},
             id="Labels monitored with not matching pattern for tags",
@@ -363,10 +363,10 @@ RESOURCE_GROUPS_RESPONSE = [
             ["resource_group_1"],
             Args(
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                safe_hostnames=True,
+                unique_hostnames=True,
             ),
             {"resource_group_1": {"group_tag_key_1": "group_tag_value_1"}},
-            id="Labels monitored, import all tags, safe names",
+            id="Labels monitored, import all tags, unique names",
         ),
     ],
 )
@@ -416,7 +416,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 ),
             },
             id="One group monitored",
@@ -440,7 +440,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 ),
                 "resource_group_2": AzureResourceGroup(
                     info={
@@ -457,7 +457,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 ),
             },
             id="Multiple groups monitored",
@@ -478,7 +478,7 @@ async def test_get_resource_groups(
         fake_azure_subscription(),
         Args(
             tag_key_pattern=TagsImportPatternOption.import_all,
-            safe_hostnames=False,
+            unique_hostnames=False,
         ),
     )
     assert len(groups) == len(expected_result)
@@ -502,7 +502,7 @@ async def test_write_resource_groups_sections(
         mock_azure_subscription,
         Args(
             tag_key_pattern=TagsImportPatternOption.import_all,
-            safe_hostnames=False,
+            unique_hostnames=False,
         ),
     )
     write_resource_groups_sections(groups)
@@ -565,7 +565,7 @@ async def test_filter_tags(
 
 
 @pytest.mark.parametrize(
-    "use_safe_names, monitored_groups, monitored_resources, expected_result",
+    "use_unique_names, monitored_groups, monitored_resources, expected_result",
     [
         pytest.param(
             False,
@@ -578,7 +578,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 )
             },
             [
@@ -593,7 +593,7 @@ async def test_filter_tags(
                     },
                     TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 ),
             ],
             "<<<<burningman>>>>\n"
@@ -619,7 +619,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 ),
                 "resource_group_name": AzureResourceGroup(
                     info={
@@ -629,7 +629,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 ),
             },
             [
@@ -644,7 +644,7 @@ async def test_filter_tags(
                     },
                     TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_safe_names=False,
+                    use_unique_names=False,
                 ),
             ],
             "<<<<burningman>>>>\n"
@@ -674,8 +674,8 @@ async def test_filter_tags(
                         "name": "burningman",
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
-                    subscription=fake_azure_subscription(use_safe_names=True),
-                    use_safe_names=True,
+                    subscription=fake_azure_subscription(use_unique_names=True),
+                    use_unique_names=True,
                 )
             },
             [
@@ -689,8 +689,8 @@ async def test_filter_tags(
                         "group": "BurningMan",
                     },
                     TagsImportPatternOption.import_all,
-                    subscription=fake_azure_subscription(use_safe_names=True),
-                    use_safe_names=True,
+                    subscription=fake_azure_subscription(use_unique_names=True),
+                    use_unique_names=True,
                 ),
             ],
             "<<<<burningman_cb8bc18c>>>>\n"
@@ -715,8 +715,8 @@ async def test_filter_tags(
                         "name": "burningman",
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
-                    subscription=fake_azure_subscription(use_safe_names=True),
-                    use_safe_names=True,
+                    subscription=fake_azure_subscription(use_unique_names=True),
+                    use_unique_names=True,
                 )
             },
             [],
@@ -730,12 +730,12 @@ async def test_filter_tags(
             'monitored-groups|["burningman"]\n'
             "monitored-resources|[]\n"
             "<<<<>>>>\n",
-            id="Empty tags and resources with safe hostnames",
+            id="Empty tags and resources with unique hostnames",
         ),
     ],
 )
 def test_write_group_info(
-    use_safe_names: bool,
+    use_unique_names: bool,
     monitored_groups: Mapping[str, AzureResourceGroup],
     monitored_resources: Sequence[AzureResource],
     expected_result: Sequence[str],
@@ -744,7 +744,7 @@ def test_write_group_info(
     write_group_info(
         monitored_groups,
         monitored_resources,
-        fake_azure_subscription(use_safe_names=use_safe_names),
+        fake_azure_subscription(use_unique_names=use_unique_names),
     )
     captured = capsys.readouterr()
     assert captured.out == expected_result
@@ -768,10 +768,10 @@ _monitored_vm_resource = lambda tag_pattern_option: {
             id="mock_subscription_id",
             name="mock_subscription_name",
             tags={},
-            use_safe_names=False,
+            use_unique_names=False,
             tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
         ),
-        use_safe_names=False,
+        use_unique_names=False,
     )
 }
 
@@ -801,8 +801,8 @@ RESOURCE_GROUPS = {
             "name": "resource_group_1",
         },
         tag_key_pattern=TagsImportPatternOption.import_all,
-        subscription=fake_azure_subscription(use_safe_names=False),
-        use_safe_names=False,
+        subscription=fake_azure_subscription(use_unique_names=False),
+        use_unique_names=False,
     )
 }
 
@@ -1131,8 +1131,8 @@ RESOURCES_API_RESPONSE = [
                 require_tag_value=[],
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                safe_hostnames=False,
-                safe_hostnames_exclude_vms=False,
+                unique_hostnames=False,
+                unique_hostnames_exclude_vms=False,
             ),
             [
                 AzureResourceInfo(
@@ -1181,8 +1181,8 @@ RESOURCES_API_RESPONSE = [
                 require_tag_value=[],
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.ignore_all,
-                safe_hostnames=False,
-                safe_hostnames_exclude_vms=False,
+                unique_hostnames=False,
+                unique_hostnames_exclude_vms=False,
             ),
             [
                 AzureResourceInfo(
@@ -1231,8 +1231,8 @@ RESOURCES_API_RESPONSE = [
                 require_tag_value=[],
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                safe_hostnames=False,
-                safe_hostnames_exclude_vms=False,
+                unique_hostnames=False,
+                unique_hostnames_exclude_vms=False,
             ),
             [
                 AzureResourceInfo(
@@ -1265,8 +1265,8 @@ RESOURCES_API_RESPONSE = [
                 require_tag_value=[],
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                safe_hostnames=True,
-                safe_hostnames_exclude_vms=True,
+                unique_hostnames=True,
+                unique_hostnames_exclude_vms=True,
             ),
             [
                 AzureResourceInfo(
@@ -1365,7 +1365,7 @@ RESOURCE_DATA_DIFFERENT_TYPE = {
 
 
 @pytest.mark.parametrize(
-    "resource_data, tags_pattern, safe_hostname, expected_resource",
+    "resource_data, tags_pattern, unique_hostname, expected_resource",
     [
         pytest.param(
             RESOURCE_DATA,
@@ -1413,7 +1413,7 @@ RESOURCE_DATA_DIFFERENT_TYPE = {
                 piggytarget="storage_account_1_01b48bd7",
                 tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
             ),
-            id="Resource with imported tags, safe hostname",
+            id="Resource with imported tags, unique hostname",
         ),
         pytest.param(
             RESOURCE_DATA_DIFFERENT_GROUP,
@@ -1425,7 +1425,7 @@ RESOURCE_DATA_DIFFERENT_TYPE = {
                 piggytarget="storage_account_1_cc6ac70f",
                 tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
             ),
-            id="Resource with safe hostname, ensures resource group uniqueness",
+            id="Resource with unique hostname, ensures resource group uniqueness",
         ),
         pytest.param(
             RESOURCE_DATA_DIFFERENT_TYPE,
@@ -1437,19 +1437,19 @@ RESOURCE_DATA_DIFFERENT_TYPE = {
                 piggytarget="storage_account_1_6bba70d5",
                 tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
             ),
-            id="Resource with safe hostname, ensures resource type uniqueness 2",
+            id="Resource with unique hostname, ensures resource type uniqueness 2",
         ),
     ],
 )
 def test_azure_resource(
     resource_data: Mapping,
     expected_resource: AzureResourceInfo,
-    safe_hostname: bool,
+    unique_hostname: bool,
     tags_pattern: TagsOption,
     mock_azure_subscription: AzureSubscription,
 ) -> None:
     resource = AzureResource(
-        dict(resource_data), tags_pattern, mock_azure_subscription, safe_hostname
+        dict(resource_data), tags_pattern, mock_azure_subscription, unique_hostname
     )
 
     assert resource.section == expected_resource.section, "Section mismatch"
@@ -1477,8 +1477,10 @@ Resource
 
 
 @pytest.mark.asyncio
-async def test_write_subscription_section_safe_hostname(capsys: pytest.CaptureFixture[str]) -> None:
-    subscription = fake_azure_subscription(use_safe_names=True)
+async def test_write_subscription_section_unique_hostname(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    subscription = fake_azure_subscription(use_unique_names=True)
     write_subscription_section(subscription)
     captured = capsys.readouterr()
     assert (

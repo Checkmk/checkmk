@@ -331,7 +331,7 @@ def configuration_services() -> Mapping[str, DictElement]:
 
 def configuration_advanced() -> Mapping[str, DictElement]:
     return {
-        "safe_hostnames": DictElement(
+        "unique_hostnames": DictElement(
             parameter_form=CascadingSingleChoice(
                 title=Title("Make piggyback host names globally unique"),
                 help_text=Help(
@@ -344,21 +344,21 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                 elements=[
                     CascadingSingleChoiceElement(
                         name="disabled",
-                        title=Title("Disable unique host names"),
+                        title=Title("Disable unique piggyback host names"),
                         parameter_form=FixedValue(value=None),
                     ),
                     CascadingSingleChoiceElement(
                         name="enabled",
-                        title=Title("Enable unique host names"),
+                        title=Title("Enable unique piggyback host names"),
                         parameter_form=Dictionary(
                             elements={
                                 "exclude_vms": DictElement(
                                     parameter_form=BooleanChoice(
-                                        label=Label("Exclude VMs from unique host names"),
+                                        label=Label("Exclude VMs from unique piggyback host names"),
                                         help_text=Help(
                                             "When enabled, virtual machines will keep their original "
                                             "name without the appended unique hash. All other resource "
-                                            "types will still use unique host names."
+                                            "types will still use unique piggyback host names."
                                         ),
                                         prefill=DefaultValue(True),
                                     ),

@@ -39,9 +39,11 @@ def test_performance_hosts_restart(perftest: PerformanceTest, benchmark: Benchma
     """Bulk host creation"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest.scenario_create_and_delete_hosts,
-        args=[perftest.iterations],  # pass the iterations to switch to restart mode
-        rounds=perftest.rounds,
-        iterations=1,  # run a single time (iterations passed to scenario)
+        args=[
+            perftest.rounds * perftest.iterations
+        ],  # pass the iterations to switch to restart mode
+        rounds=1,  # run a single time
+        iterations=1,  # run a single time
     )
 
 

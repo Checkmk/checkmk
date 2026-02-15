@@ -8,10 +8,12 @@ Checkmk special agent for monitoring JMX using Mbeans exposed by jolokia.
 """
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="import-not-found"
+# mypy: disable-error-code="unused-ignore"
 
 import argparse
 import sys
+from collections.abc import Sequence
 from contextlib import suppress
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
@@ -23,7 +25,7 @@ __version__ = "2.6.0b1"
 USER_AGENT = "checkmk-special-jolokia-" + __version__
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(prog=prog, description=description)
 
@@ -64,7 +66,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def main(sys_argv=None):
+def main(sys_argv: list[str] | None = None) -> None:
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 

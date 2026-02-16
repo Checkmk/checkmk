@@ -13,7 +13,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-TARGET=":all"
+TARGET=":livestatus_shared_runpath"
 bazel build "${TARGET}"
 EXECUTION_ROOT=$(bazel info execution_root)
 for FILE in $(bazel cquery --output=files "${TARGET}"); do
@@ -22,7 +22,6 @@ for FILE in $(bazel cquery --output=files "${TARGET}"); do
     case "${BASENAME}" in
         liblivestatus.so)
             install --mode 644 "${FULL_PATH}" "${ROOT}/lib/liblivestatus.so.0.1"
-            patchelf --set-rpath "\$ORIGIN/../lib" "${ROOT}/lib/liblivestatus.so.0.1"
             ;;
     esac
 done

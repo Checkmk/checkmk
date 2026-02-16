@@ -102,7 +102,7 @@ def _validate_absolute_posix_path(value: str) -> None:
 
 rule_spec_podman_bakelet = AgentConfig(
     name="mk_podman",
-    title=Title("Podman node and containers"),
+    title=Title("Podman hosts and containers (Linux)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_agent_config_mk_podman,
 )

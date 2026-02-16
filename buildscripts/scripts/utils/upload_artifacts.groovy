@@ -150,17 +150,25 @@ void clean_caches() {
 
 boolean download_hot_cache(Map args) {
     try {
-        sh("""
-            mkdir -p ${args.download_dest}
-            cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} ${args.download_dest}
-        """);
+        // average runtime of this part is up to 60sec when transfering a 11GB linter archive
+        timeout(time: 120, unit: 'SECONDS') {
+            sh("""
+                mkdir -p ${args.download_dest}
+                cp ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} ${args.download_dest}
+            """);
+        }
+    } catch (Exception exc) {
+        println("hot cache: Warning - ran into exception while copying artifact from network volume: ${exc}");
+        return true;
+    }
 
+    try {
         if (!is_hash_verified("${args.download_dest}/${args.file_pattern}")) {
             raise("The sha256sum of the downloaded file does not match the expectation");
         }
     }
     catch (Exception exc) {
-        print("hot cache: ran into exception while running download_hot_cache() for ${args.file_pattern}: ${exc}");
+        print("hot cache: ran into exception while verifying artifact integrity of ${args.file_pattern}: ${exc}");
         return true;
     }
 

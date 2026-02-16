@@ -3,6 +3,7 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("@site_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 rust_library(
     name = "check-http-lib",
@@ -73,14 +74,21 @@ genrule(
     cmd = "strip -s $< -o $@",
 )
 
+set_runpath(
+    name = "check_http_runpath",
+    srcs = [":check-http-strip"],
+    rpaths = ["$ORIGIN/../../../lib"],
+    tags = ["manual"],
+)
+
 pkg_files(
     name = "check_http_pkg",
-    srcs = [":check-http-strip"],
+    srcs = [":check_http_runpath"],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     prefix = "lib/nagios/plugins/",
-    renames = {"check-http.strip": "check_httpv2"},
+    renames = {":check_http_runpath": "check_httpv2"},
     visibility = ["//omd:__pkg__"],
 )
 

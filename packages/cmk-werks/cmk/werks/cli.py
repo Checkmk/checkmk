@@ -30,7 +30,7 @@ from .config import Config, load_config, try_load_current_version_from_defines_m
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
 from .models import EditionV3
-from .parse import WerkV2ParseResult, WerkV3ParseResult
+from .parse import parse_werk_v3, WERK_V3_START, WerkV2ParseResult, WerkV3ParseResult
 from .utils import edition_v3_to_v2
 
 T = TypeVar("T", bound="Stash")
@@ -478,24 +478,20 @@ def change_werk_version(werk_path: Path, new_version: str, werk_version: WerkVer
     git_add(werk)
 
 
-def adapt_werk_for_target_branch(werk_path: Path, werk_version: WerkVersion) -> None:
+def adapt_werk_for_target_branch(werk_path: Path) -> None:
     """Adapt a V3 werk to V2 format if the target branch uses V2 editions."""
-    werk = load_werk(werk_path)
 
-    if not isinstance(werk.content, WerkV3ParseResult):
+    if not werk_path.read_text().startswith(WERK_V3_START):
+        # not sure what werk this is, but it's not a werk v3
         return
 
-    # Check if target branch uses V2 editions
-    editions = get_config().editions
-    if editions and editions[0][0] in {e.value for e in EditionV3}:
-        return
-
-    werk.content.metadata["edition"] = edition_v3_to_v2(
-        EditionV3(werk.content.metadata["edition"])
+    parsed_werk = parse_werk_v3(werk_path.read_text(), werk_path.name)
+    parsed_werk.metadata["edition"] = edition_v3_to_v2(
+        EditionV3(parsed_werk.metadata["edition"])
     ).value
 
-    save_werk(werk, werk_version)
-    git_add(werk)
+    werk_path.write_text(format_as_werk_v2(parsed_werk))
+    git_add(load_werk(werk_path))
     sys.stdout.write(f"Adapted Werk {werk_path} from v3 to v2 format (converted edition names).\n")
 
 
@@ -1038,7 +1034,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
 
     if found_werk_path is not None:
         # Adapt V3 werks to V2 format if necessary (e.g., when picking from master to 2.4)
-        adapt_werk_for_target_branch(found_werk_path.source, werk_version)
+        adapt_werk_for_target_branch(found_werk_path.source)
 
         # Find werks that have been cherry-picked and change their version
         # to our current checkmk version.

@@ -103,7 +103,7 @@ def parse_werk_v3(content: str, werk_id: str) -> WerkV3ParseResult:
         raise WerkError(
             "Markdown formatted werks need to start with header: '[//]: # (werk v3)\\n'"
         )
-    # V3 has the same format as V2, just different header
+    # V3 has the same layout as V2, just different header
     v2_content = content.replace(WERK_V3_START, WERK_V2_START, 1)
     result = parse_werk_v2(v2_content, werk_id)
     return WerkV3ParseResult(result.metadata, result.description)

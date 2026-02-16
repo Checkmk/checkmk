@@ -7,6 +7,7 @@
 WARNING: Use at your own risk, not supported.
 """
 
+import http.client
 from collections.abc import Mapping
 from typing import Any, Literal
 from uuid import UUID
@@ -15,7 +16,8 @@ import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 from cmk.gui.agent_registration import PERMISSION_SECTION_AGENT_REGISTRATION
-from cmk.gui.exceptions import MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.fields import HostField
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
@@ -75,7 +77,14 @@ permission_registry.register(
         403: "You do not have the permissions to register this host.",
         405: "This host cannot be registered on this site.",
     },
-    path_params=[HOST_NAME],
+    path_params=[
+        {
+            "host_name": HostField(
+                description="A host name.",
+                should_exist=None,
+            )
+        }
+    ],
     request_schema=RegisterHost,
     response_schema=ConnectionMode,
     permissions_required=permissions.AnyPerm(
@@ -112,6 +121,27 @@ def register_host(params: Mapping[str, Any]) -> Response:
 
 
 def _verified_host(host_name: HostName) -> Host:
+    try:
+        host = Host.load_host(host_name)
+
+    except MKUserError:
+        if not user.may("agent_registration.register_any_existing_host") and not user.may(
+            "wato.all_folders"
+        ):
+            raise ProblemException(
+                status=403,
+                title="Insufficient permissions",
+                detail="You have insufficient permissions to register this host. You either need the "
+                "explicit permission to register any host, the explict permission to register this host or "
+                "read and write access to this host.",
+            )
+
+        raise ProblemException(
+            status=404,
+            title=http.client.responses[404],
+            detail=f"Host {host_name} does not exist.",
+        )
+
     host = Host.load_host(host_name)
     _verify_permissions(host)
     _verify_host_properties(host)

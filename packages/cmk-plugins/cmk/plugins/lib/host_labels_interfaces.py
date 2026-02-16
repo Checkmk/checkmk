@@ -7,6 +7,7 @@ from collections.abc import Iterable, Mapping
 from ipaddress import (
     IPv4Interface,
     IPv6Interface,
+    IPv6Network,
 )
 
 from cmk.agent_based.v2 import HostLabel, HostLabelGenerator
@@ -26,6 +27,7 @@ TEMP_DEVICES = (
     "vEthernet",
     "vmnet",
 )
+IPV6_ULA_NETWORK = IPv6Network("fc00::/7")  # fc.. and fd.. => ULA
 
 
 def host_labels_if(
@@ -33,8 +35,9 @@ def host_labels_if(
 ) -> HostLabelGenerator:
     """Return host labels describing the host's network 'single-/multihomed' property based on
     the IP addresses of its interfaces.
-    Filters away temporary interfaces and local IP addresses (based on name and link-local/
-    unspecified/local-host properties) and checks if the remaining IPs belong to one or more subnets.
+    Filters away temporary interfaces and local IP addresses (based on interface name and IP's
+    ULA prefix, link-local/unspecified/local-host properties) and checks if the remaining IPs
+    belong to one or more subnets.
     """
     # Original author: thl-cmk[at]outlook[dot]com
 
@@ -53,6 +56,7 @@ def host_labels_if(
                     interface_ip.is_loopback,
                     interface_ip.is_link_local,
                     interface_ip.is_unspecified,
+                    interface_ip in IPV6_ULA_NETWORK,
                 )
             )
         ):

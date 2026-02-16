@@ -107,6 +107,106 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
             [
                 HostLabel("cmk/l3v4_topology", "singlehomed"),
             ],
+            id="host_labels_04",
+        ),
+        pytest.param(
+            {
+                "lo": [
+                    IPv4Interface("127.0.0.1/8"),
+                    IPv6Interface("::1/128"),
+                ],
+                "ens18": [
+                    IPv4Interface("192.168.1.14/24"),
+                    IPv6Interface("2a00:6666:4444:3333:2222:1111:1d90:a380/64"),
+                    IPv6Interface("fe80::b570:2342:84a8:678/64"),
+                ],
+                "wls16": [
+                    IPv4Interface("192.168.200.2/24"),
+                    IPv6Interface("fe80::7406:4444:4444:6550/64"),
+                ],
+                "docker0": [
+                    IPv4Interface("172.17.0.1/16"),
+                    IPv6Interface("fe80::48bf:4444:4444:db67/64"),
+                ],
+                "hassio": [
+                    IPv4Interface("172.30.32.1/23"),
+                    IPv6Interface("fe80::a001:fff:4444:7ec6/64"),
+                ],
+                "br-7bddd354643c": [
+                    IPv4Interface("172.18.0.1/16"),
+                    IPv6Interface("fe80::9031:8dff:fec2:24f1/64"),
+                ],
+                "veth9e42229@if2": [
+                    IPv6Interface("fe80::b09d:4aff:fe50:683b/64"),
+                ],
+                "veth40657ac@if2": [
+                    IPv6Interface("fe80::d4d7:e9ff:fec6:4df8/64"),
+                ],
+                "vetha8ae1a1@if2": [
+                    IPv6Interface("fe80::5c75:e0ff:fe54:2b7b/64"),
+                ],
+                "wpan0": [
+                    # Adds some ULAs
+                    IPv6Interface("fddf:d584:190e:49b5:0:ff:fe00:fc10/64"),
+                    IPv6Interface("fd00:14dd:8bdc:1:b96b:d0e5:21e6:9eec/64"),
+                    IPv6Interface("fddf:d584:190e:49b5:0:ff:fe00:8400/64"),
+                    IPv6Interface("fddf:d584:190e:49b5:f50c:c53c:bb5:e652/64"),
+                    IPv6Interface("fe80::8005:a23c:7a6f:4c3a/64"),
+                ],
+            },
+            [
+                HostLabel("cmk/l3v4_topology", "multihomed"),
+                HostLabel("cmk/l3v6_topology", "singlehomed"),
+            ],
+            id="host_labels_05_ULA",
+        ),
+        pytest.param(
+            {
+                "lo": [
+                    IPv4Interface("127.0.0.1/8"),
+                    IPv6Interface("::1/128"),
+                ],
+                "eth0@if14": [
+                    IPv4Interface("192.168.1.20/24"),
+                    IPv6Interface("fe80::48f:17ff:fefc:2731/64"),
+                ],
+                "wg0": [
+                    IPv4Interface("10.99.90.2/24"),
+                ],
+            },
+            [
+                HostLabel("cmk/l3v4_topology", "multihomed"),
+            ],
+            id="host_labels_06_regression_only",
+        ),
+        pytest.param(
+            {
+                "lo": [
+                    IPv4Interface("127.0.0.1/8"),
+                    IPv6Interface("::1/128"),
+                ],
+                "ens18": [
+                    IPv4Interface("192.168.1.2/24"),
+                    IPv6Interface("2a00:6666:4444:3333:222:3eff:fe0e:7d2b/64"),
+                    IPv6Interface("fe80::216:3eff:fe0e:7d2b/64"),
+                ],
+                "ztr2qtmfyn": [
+                    IPv4Interface("172.28.1.1/16"),
+                    IPv6Interface("fe80::ca1c:baff:fe55:3b2f/64"),
+                ],
+                "ztmosjnylr": [
+                    IPv4Interface("172.27.74.55/16"),
+                    IPv6Interface("fe80::a820:a8ff:fea1:a3dd/64"),
+                ],
+                "tailscale0": [
+                    IPv6Interface("fe80::dead:22ff:4223:6f57/64"),
+                ],
+            },
+            [
+                HostLabel("cmk/l3v4_topology", "multihomed"),
+                HostLabel("cmk/l3v6_topology", "singlehomed"),
+            ],
+            id="host_labels_07_regression_only",
         ),
     ],
 )

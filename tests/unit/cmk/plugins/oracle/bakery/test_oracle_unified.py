@@ -115,7 +115,6 @@ oracle_config_min: GuiConfig = GuiConfig(
             port=None,
             timeout=None,
             tns_admin=None,
-            oracle_id=None,
         ),
         options=None,
         cache_age=None,
@@ -157,7 +156,6 @@ oracle_config_full: GuiConfig = GuiConfig(
             port=1521,
             timeout=10,
             tns_admin="/etc/oracle/tns",
-            oracle_id=None,
         ),
         options=GuiAdditionalOptionsConf(
             max_connections=10,
@@ -195,14 +193,15 @@ oracle_config_full: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            service_name="Service_Name_1",
-            instance_name=None,
-            auth=None,
-            connection=None,
+            oracle_id=GuiOracleIdentificationConf(
+                service_name="Service_Name_1",
+            ),
         ),
         GuiInstanceConf(
-            service_name="Service_Name_2",
-            instance_name="Instance_Name_2",
+            oracle_id=GuiOracleIdentificationConf(
+                service_name="Service_Name_2",
+                instance_name="Instance_Name_2",
+            ),
             auth=GuiAuthConf(
                 auth_type=(
                     OracleAuthType.STANDARD,
@@ -218,14 +217,10 @@ oracle_config_full: GuiConfig = GuiConfig(
                 port=1522,
                 timeout=20,
                 tns_admin="/etc/oracle/tns2",
-                oracle_id=None,
             ),
         ),
         GuiInstanceConf(
-            service_name=None,
-            instance_name=None,
-            auth=None,
-            connection=None,
+            oracle_id=GuiOracleIdentificationConf(),
         ),
     ],
 )
@@ -296,9 +291,6 @@ oracle_config_section: GuiConfig = GuiConfig(
             timeout=None,
             tns_admin="some_tns_admin",
             oracle_local_registry="some_registry",
-            oracle_id=GuiOracleIdentificationConf(
-                service_name="some_name", instance_name="some_instance"
-            ),
         ),
         options=None,
         cache_age=None,
@@ -339,10 +331,8 @@ expected_yaml_lines_section = [
     "    cache_age: 600",
     "    connection:",
     "      hostname: localhost",
-    "      instance: some_instance",
     "      oracle_local_registry: some_registry",
     "      port: 1521",
-    "      service_name: some_name",
     "      tns_admin: some_tns_admin",
     "    sections:",
     "    - instance:",
@@ -376,10 +366,9 @@ oracle_config_instance_sid: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            service_name="SIDONLY",
-            instance_name=None,
-            auth=None,
-            connection=None,
+            oracle_id=GuiOracleIdentificationConf(
+                service_name="SIDONLY",
+            ),
         ),
     ],
 )
@@ -430,14 +419,14 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            service_name=None,
-            instance_name="SID_A",
-            auth=None,
-            connection=None,
+            oracle_id=GuiOracleIdentificationConf(
+                instance_name="SID_A",
+            ),
         ),
         GuiInstanceConf(
-            service_name=None,
-            instance_name="SID_B",
+            oracle_id=GuiOracleIdentificationConf(
+                instance_name="SID_B",
+            ),
             auth=GuiAuthConf(
                 auth_type=(
                     OracleAuthType.STANDARD,

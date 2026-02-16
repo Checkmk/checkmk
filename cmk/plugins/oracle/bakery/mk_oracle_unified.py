@@ -92,8 +92,10 @@ class GuiAuthConf(BaseModel):
 
 
 class GuiOracleIdentificationConf(BaseModel):
-    service_name: str
+    service_name: str | None = None
     instance_name: str | None = None
+    sid: str | None = None
+    alias: str | None = None
 
 
 class GuiConnectionConf(BaseModel):
@@ -102,7 +104,6 @@ class GuiConnectionConf(BaseModel):
     timeout: int | None = None
     tns_admin: str | None = None
     oracle_local_registry: str | None = None
-    oracle_id: GuiOracleIdentificationConf | None = None
 
 
 class GuiDiscoveryConf(BaseModel):
@@ -144,8 +145,7 @@ class GuiInstanceAdditionalOptionsConf(BaseModel):
 
 
 class GuiInstanceConf(BaseModel):
-    service_name: str | None
-    instance_name: str | None
+    oracle_id: GuiOracleIdentificationConf
     auth: GuiAuthConf | None = None
     connection: GuiConnectionConf | None = None
 
@@ -189,8 +189,6 @@ class OracleConnection(BaseModel):
     timeout: int | None = None
     tns_admin: str | None = None
     oracle_local_registry: str | None = None
-    service_name: str | None = None
-    instance: str | None = None
 
 
 class OracleInstanceAdditionalOptions(BaseModel):
@@ -201,6 +199,8 @@ class OracleInstanceAdditionalOptions(BaseModel):
 class OracleInstance(BaseModel):
     service_name: str | None = None
     instance_name: str | None = None
+    sid: str | None = None
+    alias: str | None = None
     authentication: OracleAuth | None = None
     connection: OracleConnection | None = None
 
@@ -288,20 +288,12 @@ def _get_oracle_connection(conn: GuiConnectionConf | None) -> OracleConnection |
     if conn is None:
         return None
 
-    service_name = None
-    instance = None
-    if oracle_id := conn.oracle_id:
-        service_name = oracle_id.service_name
-        instance = oracle_id.instance_name
-
     return OracleConnection(
         hostname=conn.host,
         port=conn.port,
         timeout=conn.timeout,
         tns_admin=conn.tns_admin,
         oracle_local_registry=conn.oracle_local_registry,
-        service_name=service_name,
-        instance=instance,
     )
 
 
@@ -374,16 +366,21 @@ def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[Oracl
 
     result: list[OracleInstance] = []
     for instance in instances:
+        oracle_id = instance.oracle_id
         if (
-            not instance.service_name
-            and not instance.instance_name
+            oracle_id.service_name is None
+            and oracle_id.instance_name is None
+            and oracle_id.sid is None
+            and oracle_id.alias is None
             and instance.auth is None
             and instance.connection is None
         ):
             continue
         oracle_instance = OracleInstance(
-            service_name=instance.service_name,
-            instance_name=instance.instance_name,
+            service_name=oracle_id.service_name,
+            instance_name=oracle_id.instance_name,
+            sid=oracle_id.sid,
+            alias=oracle_id.alias,
             authentication=_get_oracle_authentication(instance.auth),
             connection=_get_oracle_connection(instance.connection),
         )

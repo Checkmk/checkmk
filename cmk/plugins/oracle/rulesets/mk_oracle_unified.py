@@ -239,15 +239,48 @@ def _oracle_id() -> Dictionary:
             "service_name": DictElement(
                 parameter_form=String(
                     title=Title("Service Name"),
-                    help_text=Help("Oracle Service Name of the database instance."),
+                    help_text=Help(
+                        "The Oracle service name used to connect to the database. "
+                        "A service name typically represents a database and can map to "
+                        "one or more instances in a RAC environment."
+                    ),
                 ),
-                required=True,
+                required=False,
             ),
             "instance_name": DictElement(
                 parameter_form=String(
-                    title=Title("Instance Name(SID)"),
+                    title=Title("Instance Name"),
                     help_text=Help(
-                        "Oracle Instance Name of the database instance. May be the same as SID."
+                        "The Oracle instance name (ORACLE_SID running instance) to connect to. "
+                        "Use this to target a specific instance when multiple instances serve "
+                        "the same service name, e.g. in Oracle RAC configurations. "
+                        "If not set, the connection is made to the service name without "
+                        "specifying a particular instance."
+                    ),
+                ),
+                required=False,
+            ),
+            "sid": DictElement(
+                parameter_form=String(
+                    title=Title("SID"),
+                    help_text=Help(
+                        "The Oracle System Identifier (SID) that identifies "
+                        "a specific database instance on the host. "
+                        "Use SID-based connections for older Oracle configurations or "
+                        "when connecting to a database that does not use service names. "
+                        "If both a service name and SID are specified, "
+                        "the service name takes precedence."
+                    ),
+                ),
+                required=False,
+            ),
+            "alias": DictElement(
+                parameter_form=String(
+                    title=Title("TNS Alias"),
+                    help_text=Help(
+                        "A TNS alias as defined in the <tt>tnsnames.ora</tt> file. "
+                        "Requires a properly configured <tt>tnsnames.ora</tt> file accessible "
+                        "via the TNS_ADMIN directory path."
                     ),
                 ),
                 required=False,
@@ -256,7 +289,7 @@ def _oracle_id() -> Dictionary:
     )
 
 
-def _connection_options(*, with_service_name: bool) -> Dictionary:
+def _connection_options() -> Dictionary:
     base: dict[str, DictElement[str] | DictElement[int]] = {
         "host": DictElement(
             parameter_form=String(
@@ -305,16 +338,9 @@ def _connection_options(*, with_service_name: bool) -> Dictionary:
             required=False,
         ),
     }
-
-    extension: dict[str, DictElement[_NamedOption]] = {
-        "oracle_id": DictElement(
-            parameter_form=_oracle_id(),
-            required=False,
-        ),
-    }
     return Dictionary(
         title=Title("Connection options"),
-        elements=base | extension if with_service_name else base,
+        elements=base,
     )
 
 
@@ -511,7 +537,7 @@ def _endpoint(
             required=is_main_entry,
         ),
         "connection": DictElement(
-            parameter_form=_connection_options(with_service_name=is_main_entry),
+            parameter_form=_connection_options(),
             required=is_main_entry,
         ),
     }
@@ -519,7 +545,12 @@ def _endpoint(
 
 def _main() -> Dictionary:
     return Dictionary(
-        title=Title("Default configuration"),
+        title=Title("Default settings"),
+        help_text=Help(
+            "These settings apply to all monitored Oracle databases by default. "
+            "They define the authentication, connection, and data collection options "
+            "used unless overridden for a specific database in the instance list below."
+        ),
         elements={
             **_endpoint(is_main_entry=True),
             "cache_age": DictElement(
@@ -544,27 +575,20 @@ def _main() -> Dictionary:
 
 def _instances() -> List[_NamedOption]:
     return List(
-        title=Title("Database instances"),
+        title=Title("Databases to monitor"),
         help_text=Help(
-            "Define Oracle database instances to monitor to overwrite default settings."
+            "Define the Oracle databases you want to monitor. Each entry must include "
+            "an Oracle database identifier (service name, instance name, SID, or TNS alias). "
+            "Authentication and connection options from the default settings are used "
+            "automatically, but can be overridden per database if needed."
         ),
-        add_element_label=Label("Add new database instance"),
+        add_element_label=Label("Add new database"),
         element_template=Dictionary(
-            title=Title("Database instance"),
+            title=Title("Database"),
             elements={
-                "service_name": DictElement(
-                    parameter_form=String(
-                        title=Title("Service name"),
-                        help_text=Help("Oracle Service Name"),
-                    ),
-                    required=False,
-                ),
-                "instance_name": DictElement(
-                    parameter_form=String(
-                        title=Title("Oracle instance name"),
-                        help_text=Help("Oracle Instance Name, may be the same as SID."),
-                    ),
-                    required=False,
+                "oracle_id": DictElement(
+                    parameter_form=_oracle_id(),
+                    required=True,
                 ),
                 **_endpoint(is_main_entry=False),
             },

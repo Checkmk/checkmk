@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="misc"
 
+import sys
 from collections.abc import Iterable, Mapping
 from ipaddress import (
     IPv4Interface,
@@ -22,9 +23,9 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 
 
 @pytest.mark.parametrize(
-    "section, expected_result",
+    ("section", "expected_result"),
     [
-        (
+        pytest.param(
             {
                 "eth0": [
                     IPv4Interface("10.86.60.1/27"),
@@ -38,8 +39,9 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
             [
                 HostLabel("cmk/l3v4_topology", "multihomed"),
             ],
+            id="host_labels_01_v4_multihomed",
         ),
-        (
+        pytest.param(
             {
                 "lo": [
                     IPv4Interface("127.0.0.1/8"),
@@ -53,8 +55,9 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
             [
                 HostLabel("cmk/l3v4_topology", "singlehomed"),
             ],
+            id="host_labels_02_v4_singlehomed",
         ),
-        (
+        pytest.param(
             {
                 "lo": [
                     IPv4Interface("127.0.0.1/8"),
@@ -80,8 +83,9 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
                 HostLabel("cmk/l3v4_topology", "multihomed"),
                 HostLabel("cmk/l3v6_topology", "multihomed"),
             ],
+            id="host_labels_03",
         ),
-        (
+        pytest.param(
             {
                 "lo": [
                     IPv4Interface("127.0.0.1/8"),
@@ -119,7 +123,7 @@ if __name__ == "__main__":
     source_file_path = (
         (base := (test_file := Path(__file__)).parents[4])
         / test_file.parent.relative_to(base / "tests")
-        / test_file.name.lstrip("test_")
+        / test_file.name[5:]
     ).as_posix()
     assert pytest.main(["--doctest-modules", source_file_path]) in {0, 5}
-    pytest.main(["-vvsx", __file__])
+    pytest.main(["-vvsx", *sys.argv[1:], __file__])

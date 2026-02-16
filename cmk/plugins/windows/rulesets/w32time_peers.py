@@ -9,6 +9,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     Integer,
     LevelDirection,
+    LevelsType,
     SimpleLevels,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
@@ -26,7 +27,8 @@ def _make_form() -> Dictionary:
                     title=Title("Consecutive reachability failures (up to 8)"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
-                    prefill_fixed_levels=DefaultValue((4, 6)),
+                    prefill_levels_type=DefaultValue(LevelsType.NONE),
+                    prefill_fixed_levels=DefaultValue((0, 0)),
                     help_text=Help(
                         "Normally, the Windows Time Service (being an NTP client) follows the NTP "
                         "convention of maintaining a 'reachbility' register, which remembers the "
@@ -46,7 +48,8 @@ def _make_form() -> Dictionary:
                     title=Title("Total reachability failures (up to 8)"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
-                    prefill_fixed_levels=DefaultValue((4, 6)),
+                    prefill_levels_type=DefaultValue(LevelsType.NONE),
+                    prefill_fixed_levels=DefaultValue((0, 0)),
                     help_text=Help(
                         "Normally, the Windows Time Service (being an NTP client) follows the NTP "
                         "convention of maintaining a 'reachbility' register, which remembers the "

@@ -673,8 +673,8 @@ def test_parse_w32time_peers_parse_fail(string_table: StringTable, substr: str) 
                 Result(state=State.OK, summary="Last successful sync time: 9/18/2025 10:08:35 AM"),
                 Result(state=State.OK, notice="Total failures (last 8 attempts): 5"),
                 Result(
-                    state=State.WARN,
-                    notice="Consecutive failures (last 8 attempts): 3 (warn/crit at 2/5)",
+                    state=State.OK,
+                    notice="Consecutive failures (last 8 attempts): 3",
                 ),
                 Result(state=State.OK, summary="Last sync error: The peer is unreachable."),
                 Result(
@@ -744,8 +744,8 @@ def test_parse_w32time_peers_parse_fail(string_table: StringTable, substr: str) 
                     summary="Total failures (3 attempts): 3 (warn/crit at 2/3)",
                 ),
                 Result(
-                    state=State.WARN,
-                    notice="Consecutive failures (3 attempts): 3 (warn/crit at 2/5)",
+                    state=State.OK,
+                    notice="Consecutive failures (3 attempts): 3",
                 ),
                 Result(state=State.OK, summary="Last sync error: The peer is unreachable."),
                 Result(

@@ -68,7 +68,7 @@ class Params(TypedDict):
 
 
 DEFAULT_PARAMS = Params(
-    reachability_consecutive_failures=("fixed", (2, 5)),
+    reachability_consecutive_failures=("no_levels", None),
     reachability_total_failures=("no_levels", None),
     stratum=("no_levels", None),
 )

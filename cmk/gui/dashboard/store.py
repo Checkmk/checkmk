@@ -18,6 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
@@ -58,13 +59,23 @@ class DashboardStore:
 
     def _load_all(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
-        return visuals.load(
+        dashboards = visuals.load(
             "dashboards",
             builtin_dashboard_extender_registry[str(cmk_version.edition(paths.omd_root))].callable(
                 builtin_dashboards, active_config
             ),
             _internal_dashboard_to_runtime_dashboard,
         )
+        for (owner_id, dashboard_name), dashboard in dashboards.items():
+            if dashboard_name != dashboard["name"]:
+                logger.warning(
+                    f"Dashboard name {dashboard['name']!r} does not match its key "
+                    f"{dashboard_name!r} for owner {owner_id!r}. Adjusting the name to match the "
+                    f"key, but this should be fixed in the underlying config file.",
+                )
+                dashboard["name"] = dashboard_name
+
+        return dashboards
 
     def _load_permitted(
         self,

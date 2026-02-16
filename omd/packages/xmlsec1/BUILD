@@ -84,7 +84,6 @@ filter_directory(
         "share/aclocal/xmlsec1.m4",
     ] + selects.with_or({
         (
-            "@cmk//distro:sles-15sp5",
             "@cmk//distro:sles-15sp6",
             "@cmk//distro:sles-15sp7",
             "@cmk//distro:sles-16.0",
@@ -142,7 +141,6 @@ pkg_files(
             "@cmk//distro:almalinux-10",
             "@cmk//distro:almalinux-8",
             "@cmk//distro:almalinux-9",
-            "@cmk//distro:sles-15sp5",
             "@cmk//distro:sles-15sp6",
             "@cmk//distro:sles-15sp7",
             "@cmk//distro:sles-16.0",

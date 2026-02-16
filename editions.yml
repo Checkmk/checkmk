@@ -7,7 +7,6 @@ common: &common
     - "almalinux-8"
     - "almalinux-9"
     - "almalinux-10"
-    - "sles-15sp5"
     - "sles-15sp6"
     - "sles-15sp7"
     - "sles-16.0"

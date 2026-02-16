@@ -20,7 +20,7 @@ def _reinstall_command(distro: str) -> list[str]:
     if distro.startswith("sles"):
         # It would be nice to run this:
         # return ["zypper", "install", "--force", "-y", "apache2"]
-        # However, this will install a newer version of apache2, which on `sles-15sp5` is not
+        # However, this will install a newer version of apache2, which on some SLES versions is not
         # compatible with apache2-prefork. It might be possible to work around this, but not worth
         # it in my opinion.
         raise NotImplementedError()

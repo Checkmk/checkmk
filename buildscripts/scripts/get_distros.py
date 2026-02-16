@@ -74,7 +74,7 @@ def test_distro_lists():
         "cma-4",
         "debian-12",
         "debian-13",
-        "sles-15sp5", "sles-15sp6", "sles-15sp7",
+        "sles-15sp6", "sles-15sp7",
         "ubuntu-22.04", "ubuntu-24.04",
     ]
     assert distros_for_use_case(edition_distros, "pro", "daily") == [
@@ -82,7 +82,7 @@ def test_distro_lists():
         "cma-4",
         "debian-12",
         "debian-13",
-        "sles-15sp5", "sles-15sp6", "sles-15sp7",
+        "sles-15sp6", "sles-15sp7",
         "ubuntu-22.04", "ubuntu-24.04",
     ]
     assert distros_for_use_case(edition_distros, "all", "all") == [
@@ -90,7 +90,7 @@ def test_distro_lists():
         "cma-4",
         "debian-12",
         "debian-13",
-        "sles-15sp5", "sles-15sp6", "sles-15sp7",
+        "sles-15sp6", "sles-15sp7",
         "ubuntu-22.04", "ubuntu-24.04",
     ]
     # fmt: on

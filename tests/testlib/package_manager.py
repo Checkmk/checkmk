@@ -49,7 +49,6 @@ DISTRO_CODES = {
     "almalinux-10": "el10",
     "sles-15sp1": "sles15sp1",
     "sles-15sp2": "sles15sp2",
-    "sles-15sp5": "sles15sp5",
     "sles-15sp6": "sles15sp6",
     "sles-15sp7": "sles15sp7",
     "sles-16.0": "sles16.0",

@@ -128,6 +128,8 @@ _PERMISSIONS_GRAPH_WIDGET = permissions.Optional(
     permissions.AllPerm(
         [
             permissions.OkayToIgnorePerm("general.edit_custom_graph"),  # yes, even for reads
+            permissions.OkayToIgnorePerm("general.see_user_custom_graph"),
+            permissions.OkayToIgnorePerm("general.see_user_graph_tuning"),
         ]
     )
 )

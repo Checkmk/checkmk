@@ -281,16 +281,22 @@ immediateWatch(
         <CmkAlertBox variant="success">
           {{ _t('OAuth2 connection parameters requested successfully!') }}
         </CmkAlertBox>
-        {{
-          _t(
-            'Enter the Checkmk display title for this connection. You can then save and use the connection.'
-          )
-        }}
         <FormEdit
           v-model:data="filteredData"
           :backend-validation="filteredValidation"
           :spec="filteredDictionary"
         />
+        <span>
+          {{ _t('Enter the Checkmk display title for this connection.') }}
+          {{ _t('You can then') }}
+          <b>
+            {{ _t('save') }}
+          </b>
+          {{ _t('and use the connection.') }}
+        </span>
+        <span>
+          {{ _t('Saving this connection will create three entries in the password store.') }}
+        </span>
       </template>
       <CmkAlertBox v-else variant="error" :heading="errorTitle">
         <template v-if="errorDetails !== null">{{ errorDetails }}</template>

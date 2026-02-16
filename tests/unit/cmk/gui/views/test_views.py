@@ -51,6 +51,7 @@ from tests.unit.cmk.web_test_app import WebTestAppForCMK
 def test_registered_painter_options(request_context: None) -> None:
     expected = [
         "aggr_expand",
+        "aggr_onlydiff",
         "aggr_onlyproblems",
         "aggr_treetype",
         "aggr_wrap",

@@ -44,6 +44,7 @@ from .view import (
     PainterAggrTreestateBoxed,
     PainterAggrTreestateFrozenDiff,
     PainterOptionAggrExpand,
+    PainterOptionAggrOnlyDifferences,
     PainterOptionAggrOnlyProblems,
     PainterOptionAggrTreeType,
     PainterOptionAggrWrap,
@@ -92,6 +93,7 @@ def register(
     painter_registry.register(PainterAggrTreestateBoxed)
 
     painter_option_registry.register(PainterOptionAggrExpand())
+    painter_option_registry.register(PainterOptionAggrOnlyDifferences())
     painter_option_registry.register(PainterOptionAggrOnlyProblems())
     painter_option_registry.register(PainterOptionAggrTreeType())
     painter_option_registry.register(PainterOptionAggrWrap())

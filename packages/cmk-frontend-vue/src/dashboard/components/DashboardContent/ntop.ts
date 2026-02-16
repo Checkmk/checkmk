@@ -24,6 +24,7 @@ export const getIfid = async (cmkToken: string | undefined): Promise<string> => 
   if ('ifid' in urlParams && urlParams.ifid) {
     return urlParams.ifid
   } else {
+    let exceptionSeverity: 'warning' | 'error' | null = null
     try {
       let ifidEndpointUrl: string
       if (cmkToken === undefined) {
@@ -35,12 +36,15 @@ export const getIfid = async (cmkToken: string | undefined): Promise<string> => 
       const response = await axios.get(ifidEndpointUrl)
 
       if (response.data.result_code !== 0) {
-        throw new Error(`Error fetching ifid: ${response.data.result}`)
+        exceptionSeverity = response.data.severity
+        throw response.data.result
       } else {
         return response.data.result as string
       }
-    } catch (error) {
-      throw new Error(`DashboardContentNtop: Request of ifid failed: ${error}`)
+    } catch (exception) {
+      throw exceptionSeverity === 'warning'
+        ? exception
+        : new Error(`DashboardContentNtop: Request of ifid failed: ${exception}`)
     }
   }
 }

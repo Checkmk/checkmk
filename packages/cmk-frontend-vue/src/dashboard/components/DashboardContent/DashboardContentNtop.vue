@@ -18,7 +18,7 @@ let ntop: NtopBase | undefined = undefined
 const interfaceDivId: string = 'ntop_interface_quickstats'
 const contentDivId: string = `db-content-ntop-${props.widget_id}`
 let ifid: string
-const warningMessage = ref<string | null>(null)
+const exception = ref<{ class: 'warning' | 'error'; msg: string } | null>(null)
 
 onMounted(async () => {
   try {
@@ -30,10 +30,20 @@ onMounted(async () => {
       ifid,
       cmkToken
     )
-  } catch (error) {
+  } catch (exc) {
     // Can't let the site crash because of ntop warnings, they are for the user
     // e.g. ntopng integration is not activated under global settings.
-    warningMessage.value = (error as Error).message
+    if (exc instanceof Error) {
+      exception.value = {
+        class: 'error',
+        msg: exc.message
+      }
+    } else {
+      exception.value = {
+        class: 'warning',
+        msg: exc as string
+      }
+    }
   }
 })
 
@@ -45,8 +55,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="warningMessage" class="db-content-ntop__warning warning">
-    {{ warningMessage }}
+  <div v-if="exception" :class="['db-content-ntop__warning', exception.class]">
+    {{ exception.msg }}
   </div>
   <div
     v-else

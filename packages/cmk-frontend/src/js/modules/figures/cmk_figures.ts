@@ -198,6 +198,7 @@ export abstract class FigureBase<
     // }}
     if (api_response.result_code != 0) {
       this._show_error_info(String(api_response.result), api_response.severity)
+      this.remove_loading_image()
       return
     }
     this._clear_error_info()

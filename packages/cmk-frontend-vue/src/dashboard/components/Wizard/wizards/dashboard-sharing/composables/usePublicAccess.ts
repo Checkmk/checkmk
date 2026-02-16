@@ -27,10 +27,6 @@ interface UsePublicAccess {
   validationError: Ref<TranslatedString[]>
   isShared: Ref<boolean>
 
-  runningCreateTokenCall: Ref<boolean>
-  runningUpdateTokenCall: Ref<boolean>
-  runningDeleteTokenCall: Ref<boolean>
-
   createToken: () => Promise<void>
   deleteToken: () => Promise<void>
   updateToken: () => Promise<void>
@@ -50,10 +46,6 @@ export const usePublicAccess = (
   const isDisabled = ref<boolean>(false)
   const isShared = ref<boolean>(false)
 
-  const runningCreateTokenCall = ref<boolean>(false)
-  const runningUpdateTokenCall = ref<boolean>(false)
-  const runningDeleteTokenCall = ref<boolean>(false)
-
   watch(
     [publicToken],
     ([newToken]) => {
@@ -67,26 +59,16 @@ export const usePublicAccess = (
   )
 
   const createToken = async () => {
-    if (!runningCreateTokenCall.value) {
-      runningCreateTokenCall.value = true
-
-      if (availableFeatures === DashboardFeatures.RESTRICTED && !hasValidity.value) {
-        const expiresAt = new Date()
-        expiresAt.setMonth(expiresAt.getMonth() + 1)
-        validUntil.value = expiresAt
-      }
-
-      await createTokenApi(dashboardName, dashboardOwner, validUntil.value)
-      runningCreateTokenCall.value = false
+    if (availableFeatures === DashboardFeatures.RESTRICTED && !hasValidity.value) {
+      const expiresAt = new Date()
+      expiresAt.setMonth(expiresAt.getMonth() + 1)
+      validUntil.value = expiresAt
     }
+    await createTokenApi(dashboardName, dashboardOwner, validUntil.value)
   }
 
   const deleteToken = async () => {
-    if (!runningDeleteTokenCall.value) {
-      runningDeleteTokenCall.value = true
-      await deleteTokenApi(dashboardName, dashboardOwner)
-      runningDeleteTokenCall.value = false
-    }
+    await deleteTokenApi(dashboardName, dashboardOwner)
   }
 
   const updateToken = async () => {
@@ -96,18 +78,7 @@ export const usePublicAccess = (
       expiresAt?.setHours(23, 59, 59, 999)
     }
 
-    if (!runningUpdateTokenCall.value) {
-      runningUpdateTokenCall.value = true
-      await updateTokenApi(
-        dashboardName,
-        dashboardOwner,
-        isDisabled.value,
-        expiresAt,
-        comment.value
-      )
-
-      runningUpdateTokenCall.value = false
-    }
+    await updateTokenApi(dashboardName, dashboardOwner, isDisabled.value, expiresAt, comment.value)
   }
 
   const _limitExpirationDate = () => {
@@ -183,10 +154,6 @@ export const usePublicAccess = (
     validationError,
     isDisabled,
     isShared,
-
-    runningCreateTokenCall,
-    runningUpdateTokenCall,
-    runningDeleteTokenCall,
 
     createToken,
     deleteToken,

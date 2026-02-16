@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Reactive, reactive, toRef } from 'vue'
+import { type Reactive, computed, reactive, ref, toRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -53,89 +53,109 @@ const handler = usePublicAccess(
   props.availableFeatures
 )
 
-const handleEnableAccess = async () => {
-  if (!handler.runningUpdateTokenCall.value && handler.validate()) {
-    dialogData.title = _t('Enable public link?')
-    dialogData.message = [_t('Anyone with the link can view this dashboard.')]
+const activeAction = ref<'create' | 'update' | 'delete' | null>(null)
+const actionInProgress = computed(() => activeAction.value !== null)
 
-    if (handler.validUntil.value) {
-      const expiryDateStr = handler.validUntil.value.toISOString().split('T')[0]!
-      dialogData.message.push(
-        _t('Access will automatically expire on %{date}.', { date: expiryDateStr })
-      )
-    }
-
-    dialogData.buttons = [
-      {
-        title: _t('Enable access'),
-        variant: 'warning',
-        onclick: async () => {
-          dialogData.open = false
-          handler.isDisabled.value = false
-          await handler.updateToken()
-          emit('refreshDashboardSettings')
-        }
-      }
-    ]
-
-    dialogData.open = true
+watch(
+  () => props.publicToken,
+  () => {
+    activeAction.value = null
   }
+)
+
+const handleEnableAccess = async () => {
+  if (actionInProgress.value || !handler.validate()) {
+    return
+  }
+  dialogData.title = _t('Enable public link?')
+  dialogData.message = [_t('Anyone with the link can view this dashboard.')]
+
+  if (handler.validUntil.value) {
+    const expiryDateStr = handler.validUntil.value.toISOString().split('T')[0]!
+    dialogData.message.push(
+      _t('Access will automatically expire on %{date}.', { date: expiryDateStr })
+    )
+  }
+
+  dialogData.buttons = [
+    {
+      title: _t('Enable access'),
+      variant: 'warning',
+      onclick: async () => {
+        dialogData.open = false
+        activeAction.value = 'update'
+        handler.isDisabled.value = false
+        await handler.updateToken()
+        emit('refreshDashboardSettings')
+      }
+    }
+  ]
+
+  dialogData.open = true
 }
 
 const handleDisableAccess = async () => {
-  if (!handler.runningUpdateTokenCall.value && handler.validate()) {
-    dialogData.title = _t('Stop sharing public link?')
-    dialogData.message = _t('This will disable the link and revoke access for all viewers.')
-
-    dialogData.buttons = [
-      {
-        title: _t('Disable access'),
-        variant: 'warning',
-        onclick: async () => {
-          dialogData.open = false
-          handler.isDisabled.value = true
-          await handler.updateToken()
-          emit('refreshDashboardSettings')
-        }
-      }
-    ]
-
-    dialogData.open = true
+  if (actionInProgress.value || !handler.validate()) {
+    return
   }
+  dialogData.title = _t('Stop sharing public link?')
+  dialogData.message = _t('This will disable the link and revoke access for all viewers.')
+
+  dialogData.buttons = [
+    {
+      title: _t('Disable access'),
+      variant: 'warning',
+      onclick: async () => {
+        dialogData.open = false
+        activeAction.value = 'update'
+        handler.isDisabled.value = true
+        await handler.updateToken()
+        emit('refreshDashboardSettings')
+      }
+    }
+  ]
+
+  dialogData.open = true
 }
 
 const handleCreate = async () => {
-  if (!handler.runningCreateTokenCall.value) {
-    await handler.createToken()
-    emit('refreshDashboardSettings')
+  if (actionInProgress.value) {
+    return
   }
+  activeAction.value = 'create'
+  await handler.createToken()
+  emit('refreshDashboardSettings')
 }
 
 const handleDelete = () => {
-  if (!handler.runningDeleteTokenCall.value) {
-    dialogData.title = _t('Delete public link?')
-    dialogData.message = _t('This will delete the link and revoke access for all viewers.')
-
-    dialogData.buttons = [
-      {
-        title: _t('Delete public link?'),
-        variant: 'warning',
-        onclick: async () => {
-          dialogData.open = false
-          await handler.deleteToken()
-          emit('refreshDashboardSettings')
-        }
-      }
-    ]
-    dialogData.open = true
+  if (actionInProgress.value) {
+    return
   }
+  dialogData.title = _t('Delete public link?')
+  dialogData.message = _t('This will delete the link and revoke access for all viewers.')
+
+  dialogData.buttons = [
+    {
+      title: _t('Delete public link?'),
+      variant: 'warning',
+      onclick: async () => {
+        dialogData.open = false
+        activeAction.value = 'delete'
+        await handler.deleteToken()
+        emit('refreshDashboardSettings')
+      }
+    }
+  ]
+  dialogData.open = true
 }
 
 const handleUpdate = async () => {
-  if (!handler.runningUpdateTokenCall.value && handler.validate()) {
-    await handler.updateToken()
-    emit('refreshDashboardSettings')
+  if (actionInProgress.value || !handler.validate()) {
+    return
   }
+  activeAction.value = 'update'
+  await handler.updateToken()
+  emit('refreshDashboardSettings')
 }
 </script>
 
@@ -146,7 +166,7 @@ const handleUpdate = async () => {
       <ul class="db-public-access__info">
         <li>{{ _t('Navigation and menus are hidden.') }}</li>
         <li>
-          {{ _t('Runtime filtering isn’t available. Set default filter values before sharing.') }}
+          {{ _t("Runtime filtering isn't available. Set default filter values before sharing.") }}
         </li>
       </ul>
     </CmkAlertBox>
@@ -165,8 +185,8 @@ const handleUpdate = async () => {
 
     <CmkButton
       v-if="!publicToken"
-      :disabled="handler.runningCreateTokenCall.value"
-      :class="{ 'shimmer-input-button': handler.runningCreateTokenCall.value }"
+      :disabled="actionInProgress"
+      :class="{ 'shimmer-input-button': activeAction === 'create' }"
       @click="handleCreate"
       >{{ _t('Generate public link') }}</CmkButton
     >
@@ -181,14 +201,16 @@ const handleUpdate = async () => {
         <div class="db-public-access__cell">
           <CmkButton
             v-if="publicToken.is_disabled"
-            :class="{ 'shimmer-input-button': handler.runningUpdateTokenCall.value }"
+            :disabled="actionInProgress"
+            :class="{ 'shimmer-input-button': activeAction === 'update' }"
             @click="handleEnableAccess"
             >{{ _t('Enable access') }}</CmkButton
           >
 
           <CmkButton
             v-else
-            :class="{ 'shimmer-input-button': handler.runningUpdateTokenCall.value }"
+            :disabled="actionInProgress"
+            :class="{ 'shimmer-input-button': activeAction === 'update' }"
             @click="handleDisableAccess"
             >{{ _t('Disable access') }}</CmkButton
           >

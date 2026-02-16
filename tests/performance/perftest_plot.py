@@ -59,8 +59,8 @@ import logging
 import re
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
+from datetime import date, timedelta
 from datetime import datetime as Datetime
-from datetime import timedelta
 from os import getenv
 from pathlib import Path
 from statistics import fmean
@@ -83,6 +83,20 @@ class AverageValues(NamedTuple):
     avg_time: float
     avg_cpu: float
     avg_mem: float
+
+
+class SkippedScenario(NamedTuple):
+    """Represents a scenario that should be skipped during validation.
+
+    Attributes:
+        pattern: A regex pattern to match the scenario name against.
+        reason: Human-readable explanation for why the scenario is skipped.
+        condition: Optional boolean indicating if the scenario should be skipped.
+    """
+
+    pattern: str
+    reason: str
+    condition: bool = True
 
 
 class JobDetails(NamedTuple):
@@ -1596,6 +1610,34 @@ class PerftestPlot:
 
         return AverageValues(*(time_avg, cpu_avg, mem_avg))
 
+    @staticmethod
+    def _skipped_scenario(
+        scenario_name: str,
+        baseline_name: str,
+        skipped_scenarios: list[SkippedScenario],
+    ) -> bool:
+        """
+        Check if a scenario should be skipped based on pattern matching and an optional condition.
+
+        Args:
+            scenario_name: The name of the scenario to check.
+            baseline_name: The name of the baseline being evaluated.
+            skipped_scenarios: A list of SkippedScenario objects.
+
+        Returns:
+            True if the scenario should be skipped, False otherwise.
+        """
+        for skipped_scenario in skipped_scenarios:
+            if re.fullmatch(skipped_scenario.pattern, scenario_name) and skipped_scenario.condition:
+                logger.info(
+                    "Ignoring baseline %s scenario %s due to %s.",
+                    baseline_name,
+                    scenario_name,
+                    skipped_scenario.reason,
+                )
+                return True
+        return False
+
     def validate_performance_baselines(self) -> list[str]:
         """
         Validate current performance metrics against calculated baselines for each test scenario.
@@ -1623,8 +1665,24 @@ class PerftestPlot:
         baseline_name = {0: "weekly", 30: "monthly", 365: "yearly"}.get(
             baseline_offset, f"{baseline_offset}d"
         )
+        baseline_date = Datetime.today() - timedelta(days=baseline_offset)
+
+        skipped_scenarios = [
+            SkippedScenario(pattern="test_performance_piggyback", reason="CMK-27171"),
+            SkippedScenario(
+                pattern="test_performance_ui_response_.*",
+                reason="scenario changes on 2026-02-06",
+                condition=baseline_date < date(2026, 2, 6),
+            ),
+        ]
+
         alerts = []
         for scenario_name in self.scenario_names:
+            if not scenario_name.startswith("test_"):
+                continue
+            if self._skipped_scenario(scenario_name, baseline_name, skipped_scenarios):
+                continue
+
             msg_prefix = f"Scenario {scenario_name}: "
             msg_suffix = (
                 f"; tolerance: +{cpu_tolerance}% CPU"

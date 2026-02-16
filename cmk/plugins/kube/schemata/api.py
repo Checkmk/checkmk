@@ -625,21 +625,18 @@ class RollingUpdate(BaseModel):
 class StatefulSetRollingUpdate(BaseModel):
     """
     max_unavailable:
-        * only available since 1.24
-        * requirement: the field is only honored by servers that enable the
-        MaxUnavailableStatefulSet gate-feature (https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/)
+        * only available since 1.24 (Graduated to Beta in 1.35, enabled by default)
         * maximum number of pods that can be unavailable during the update
         * value can be an absolute number or a percentage of desired pods (10%); absolute number is
-        calculate from percentage by rounding up
+          calculated from percentage by rounding up
         * defaults to 1 (which is the same behaviour as pre 1.24)
         * field applies to all pods in the range 0 to (replicas - 1); any unavailable pod in the
-        range 0 to (replicas -1) will be counted towards maxunavailable
-
+          range 0 to (replicas -1) will be counted towards maxunavailable
     """
 
     type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate")
     partition: int
-    max_unavailable: str | None = Field(None)
+    max_unavailable: str | int | None = Field(None)
 
 
 class Recreate(BaseModel):

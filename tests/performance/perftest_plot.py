@@ -1603,7 +1603,7 @@ class PerftestPlot:
                 continue
             benchmark = next((_ for _ in benchmarks if _["name"] == scenario_name), None)
             if not benchmark:
-                logger.error('Scenario "%s" not found in job "%s"!', scenario_name, job_name)
+                logger.warning('Scenario "%s" not found in job "%s"!', scenario_name, job_name)
                 continue
             time_averages.append(benchmark["stats"]["mean"])
             if scenario_name not in job[1]:

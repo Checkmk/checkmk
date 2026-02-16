@@ -54,6 +54,10 @@ export const getAvailableWidgets = (): WidgetItemList => {
   ]
 }
 
+export const getLogCompatibleGraphs = (): Graph[] => {
+  return [Graph.ALERT_TIMELINE, Graph.NOTIFICATION_TIMELINE]
+}
+
 export const getGraphFromWidgetType = (widgetType: string): Graph => {
   switch (widgetType) {
     case 'alert_timeline':

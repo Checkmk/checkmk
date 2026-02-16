@@ -51,6 +51,7 @@ const allFiltersByCategory: Record<string, ConfiguredFilters> = splitFiltersByCa
 const MAX_PREVIEW_ITEMS = 5
 const showAllHosts = ref<boolean>(false)
 const showAllServices = ref<boolean>(false)
+const showAllLogs = ref<boolean>(false)
 
 const _getFilterSubset = (collection: ConfiguredFilters): ConfiguredFilters => {
   const selectedFilters = Object.keys(collection).slice(0, MAX_PREVIEW_ITEMS)
@@ -62,7 +63,7 @@ const _getFilterSubset = (collection: ConfiguredFilters): ConfiguredFilters => {
 }
 
 const hostFilters = computed((): ConfiguredFilters => {
-  const collection = allFiltersByCategory['host']!
+  const collection = allFiltersByCategory['host'] || {}
   if (showAllHosts.value) {
     return collection
   }
@@ -71,7 +72,7 @@ const hostFilters = computed((): ConfiguredFilters => {
 })
 
 const serviceFilters = computed((): ConfiguredFilters => {
-  const collection = allFiltersByCategory['service']!
+  const collection = allFiltersByCategory['service'] || {}
   if (showAllServices.value) {
     return collection
   }
@@ -80,11 +81,24 @@ const serviceFilters = computed((): ConfiguredFilters => {
 })
 
 const hostFiltersCount = computed((): number => {
-  return Object.keys(allFiltersByCategory['host']!).length
+  return Object.keys(allFiltersByCategory['host'] || {}).length
 })
 
 const serviceFiltersCount = computed((): number => {
-  return Object.keys(allFiltersByCategory['service']!).length
+  return Object.keys(allFiltersByCategory['service'] || {}).length
+})
+
+const logFilters = computed((): ConfiguredFilters => {
+  const collection = allFiltersByCategory['log'] || {}
+  if (showAllLogs.value) {
+    return collection
+  }
+
+  return _getFilterSubset(collection)
+})
+
+const logFiltersCount = computed((): number => {
+  return Object.keys(allFiltersByCategory['log'] || {}).length
 })
 </script>
 
@@ -122,6 +136,23 @@ const serviceFiltersCount = computed((): number => {
       <a href="#" @click.prevent="showAllServices = true"
         >{{ _t('See all') }} {{ serviceFiltersCount }}</a
       >
+    </div>
+
+    <ContentSpacer variant="line" />
+  </div>
+
+  <div v-if="logFiltersCount > 0">
+    <CmkHeading type="h2">{{ _t('Logs') }}</CmkHeading>
+    <div class="filters-recap__category-container">
+      <FilterDisplayItem
+        v-for="(configuredValues, flt) of logFilters"
+        :key="flt"
+        :filter-id="flt"
+        :configured-values="configuredValues"
+      />
+    </div>
+    <div v-if="!showAllLogs && logFiltersCount > MAX_PREVIEW_ITEMS">
+      <a href="#" @click.prevent="showAllLogs = true">{{ _t('See all') }} {{ logFiltersCount }}</a>
     </div>
 
     <ContentSpacer variant="line" />

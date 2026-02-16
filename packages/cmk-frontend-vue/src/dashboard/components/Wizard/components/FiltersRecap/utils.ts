@@ -45,9 +45,12 @@ export const splitFiltersByCategory = (
   filters: ConfiguredFilters,
   filterDefinitions: Record<string, FilterDefinition>
 ): ConfiguredFiltersByCategory => {
-  const filtersByCategory: Record<string, ConfiguredFilters> = { host: {}, service: {} }
+  const filtersByCategory: Record<string, ConfiguredFilters> = {}
   for (const flt in filters) {
     const category = filterDefinitions![flt]?.extensions?.info || 'host'
+    if (!filtersByCategory[category]) {
+      filtersByCategory[category] = {}
+    }
     filtersByCategory[category]![flt] = filters[flt] || {}
   }
   return filtersByCategory

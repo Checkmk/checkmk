@@ -22,7 +22,11 @@ import type { ObjectType } from '@/dashboard/types/shared.ts'
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage1Header from '../../../components/Stage1Header.vue'
 import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
-import { getAvailableGraphs, getAvailableWidgets } from '../composables/useSelectGraphTypes'
+import {
+  getAvailableGraphs,
+  getAvailableWidgets,
+  getLogCompatibleGraphs
+} from '../composables/useSelectGraphTypes'
 
 const { _t } = usei18n()
 
@@ -56,7 +60,15 @@ const hostFilterType = defineModel<ElementSelection>('hostFilterType', { require
 const serviceFilterType = defineModel<ElementSelection>('serviceFilterType', { required: true })
 
 const availableWidgets = getAvailableWidgets()
-const enabledWidgets = getAvailableGraphs()
+
+const hasLogFilters = computed(() => {
+  const logFilters = configuredFiltersByObjectType.value['log'] || {}
+  return Object.keys(logFilters).length > 0
+})
+
+const enabledWidgets = computed(() =>
+  hasLogFilters.value ? getLogCompatibleGraphs() : getAvailableGraphs()
+)
 
 // Filters
 const filterDefinitions = useFilterDefinitions()

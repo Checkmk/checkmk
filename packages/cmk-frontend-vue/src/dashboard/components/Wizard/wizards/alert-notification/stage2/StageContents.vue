@@ -4,12 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, toValue } from 'vue'
+import { computed, ref, toValue } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import type { ElementSelection, UseWidgetHandler } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
+import { useFilterDefinitions } from '@/dashboard/components/filter/utils'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
   WidgetContent,
@@ -25,7 +26,8 @@ import {
   Graph,
   getAvailableGraphs,
   getAvailableWidgets,
-  getGraphFromWidgetType
+  getGraphFromWidgetType,
+  getLogCompatibleGraphs
 } from '../composables/useSelectGraphTypes'
 import AlertOverview from './AlertOverview/AlertOverview.vue'
 import {
@@ -91,7 +93,17 @@ const gotoPrevStage = () => {
   emit('goPrev')
 }
 
-const enabledWidgets = getAvailableGraphs()
+const filterDefinitions = useFilterDefinitions()
+
+const hasLogFilters = computed(() => {
+  return Object.keys(props.widgetFilters).some(
+    (flt) => filterDefinitions?.[flt]?.extensions?.info === 'log'
+  )
+})
+
+const enabledWidgets = computed(() =>
+  hasLogFilters.value ? getLogCompatibleGraphs() : getAvailableGraphs()
+)
 const availableWidgets = getAvailableWidgets()
 
 const selectedWidget = ref<Graph>(

@@ -47,6 +47,7 @@ from cmk.gui.views.store import multisite_builtin_views
 def test_registered_painter_options(request_context: None) -> None:
     expected = [
         "aggr_expand",
+        "aggr_onlydiff",
         "aggr_onlyproblems",
         "aggr_treetype",
         "aggr_wrap",

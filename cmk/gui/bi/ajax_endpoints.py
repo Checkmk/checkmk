@@ -52,6 +52,7 @@ def ajax_render_tree() -> None:
     aggr_group = request.get_str_input("group")
     aggr_title = request.get_str_input("title")
     omit_root = bool(request.var("omit_root"))
+    only_diff = bool(request.var("only_diff"))
     only_problems = bool(request.var("only_problems"))
     show_frozen_difference = bool(request.var("show_frozen_difference"))
 
@@ -87,6 +88,7 @@ def ajax_render_tree() -> None:
         row,
         omit_root=omit_root,
         expansion_level=user.bi_expansion_level,
+        only_diff=only_diff,
         only_problems=only_problems,
         lazy=False,
         show_frozen_difference=show_frozen_difference,

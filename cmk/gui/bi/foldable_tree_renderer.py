@@ -41,6 +41,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         row: Row,
         omit_root: bool,
         expansion_level: int,
+        only_diff: bool,
         only_problems: bool,
         lazy: bool,
         wrap_texts: Literal["wrap", "nowrap"] = "nowrap",
@@ -50,6 +51,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         self._show_frozen_difference = show_frozen_difference
         self._omit_root = omit_root
         self._expansion_level = expansion_level
+        self._only_diff = only_diff
         self._only_problems = only_problems
         self._lazy = lazy
         self._wrap_texts = wrap_texts
@@ -85,6 +87,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
                 ("title", title),
                 ("omit_root", "yes" if self._omit_root else ""),
                 ("renderer", self.__class__.__name__),
+                ("only_diff", "yes" if self._only_diff else ""),
                 ("only_problems", "yes" if self._only_problems else ""),
                 ("reqhosts", ",".join("%s#%s" % sitehost for sitehost in affected_hosts)),
             ]
@@ -110,9 +113,23 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
     def _get_tree(self) -> BIAggrTreeState:
         tree = self._row["aggr_treestate"]
+        if self._show_frozen_difference and self._only_diff:
+            tree = self._filter_tree_only_diff(tree)
         if self._only_problems:
             tree = self._filter_tree_only_problems(tree)
         return tree
+
+    def _filter_tree_only_diff(self, tree: BIAggrTreeState) -> BIAggrTreeState:
+        state, assumed_state, node, subtrees = tree
+        new_subtrees: list[BIAggrTreeState | BILeafTreeState] = []
+        for subtree in subtrees:
+            if subtree[2]["frozen_marker"]:
+                if is_leaf(subtree):
+                    new_subtrees.append(subtree)
+                elif is_aggr(subtree):
+                    new_subtrees.append(self._filter_tree_only_diff(subtree))
+
+        return state, assumed_state, node, new_subtrees
 
     # Convert tree to tree contain only node in non-OK state
     def _filter_tree_only_problems(self, tree: BIAggrTreeState) -> BIAggrTreeState:
@@ -290,6 +307,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             new_path = tuple([*path, node[2]["title"]])
             frozen_marker = node[2].get("frozen_marker")
             frozen_aggregation_css = ""
+            frozen_symbol = ""
             tooltip_text = ""
             if not frozen_marker_set and frozen_marker and self._show_frozen_difference:
                 if frozen_marker.status == "new":
@@ -297,17 +315,19 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                         tooltip_text = _("This node is not in the frozen aggregation")
                     else:
                         tooltip_text = _("These nodes are not in the frozen aggregation")
+                    frozen_symbol = "+"
                     frozen_aggregation_css = "frozen_aggregation missing_in_frozen_aggregation"
-                else:
+                elif frozen_marker.status == "missing":
                     if is_leaf(new_path):
                         tooltip_text = _("This node is only in the frozen aggregation")
                     else:
                         tooltip_text = _("These nodes are only in the frozen aggregation")
+                    frozen_symbol = "-"
                     frozen_aggregation_css = "frozen_aggregation only_in_frozen_aggregation"
             html.open_li(class_=frozen_aggregation_css)
-            if frozen_aggregation_css and frozen_marker:
+            if frozen_aggregation_css and frozen_marker and frozen_symbol:
                 html.span(
-                    "+" if frozen_marker.status == "new" else "-",
+                    frozen_symbol,
                     class_=["frozen_marker", frozen_marker.status],
                     title=tooltip_text,
                 )
@@ -373,6 +393,10 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         if not tree[0]["in_service_period"]:
             icon_name = "outof_serviceperiod"
             icon_title = _("This element is currently not in its service period.")
+
+        if (frozen_marker := tree[2].get("frozen_marker")) and frozen_marker.status == "parent":
+            icon_name = "warning"
+            icon_title = _("This node has nested aggregation differences.")
 
         if icon_name and icon_title:
             html.icon(icon_name, title=icon_title, class_=["icon", "bi"])

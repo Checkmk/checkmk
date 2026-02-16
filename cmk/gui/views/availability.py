@@ -914,6 +914,7 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                     row,
                     omit_root=False,
                     expansion_level=user.bi_expansion_level,
+                    only_diff=False,
                     only_problems=False,
                     lazy=False,
                 )

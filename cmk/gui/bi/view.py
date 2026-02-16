@@ -728,6 +728,23 @@ class PainterOptionAggrExpand(PainterOption):
         )
 
 
+class PainterOptionAggrOnlyDifferences(PainterOption):
+    @property
+    def ident(self) -> str:
+        return "aggr_onlydiff"
+
+    @property
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Show only aggregation differences"),
+            default_value="0",
+            choices=[
+                ("0", _("off")),
+                ("1", _("on")),
+            ],
+        )
+
+
 class PainterOptionAggrOnlyProblems(PainterOption):
     @property
     def ident(self) -> str:
@@ -739,8 +756,8 @@ class PainterOptionAggrOnlyProblems(PainterOption):
             title=_("Show only problems"),
             default_value="0",
             choices=[
-                ("0", _("show all")),
-                ("1", _("show only problems")),
+                ("0", _("off")),
+                ("1", _("on")),
             ],
         )
 
@@ -791,6 +808,7 @@ def paint_aggregated_tree_state(
 ) -> CellSpec:
     treetype = painter_options.get("aggr_treetype")
     expansion_level = int(painter_options.get("aggr_expand"))
+    only_diff = painter_options.get("aggr_onlydiff") == "1"
     only_problems = painter_options.get("aggr_onlyproblems") == "1"
     wrap_texts = painter_options.get("aggr_wrap")
 
@@ -816,6 +834,7 @@ def paint_aggregated_tree_state(
         row,
         omit_root=(treetype == "boxes-omit-root"),
         expansion_level=expansion_level,
+        only_diff=only_diff,
         only_problems=only_problems,
         lazy=True,
         wrap_texts=wrap_texts,
@@ -873,7 +892,7 @@ class PainterAggrTreestateFrozenDiff(Painter):
 
     @property
     def painter_options(self) -> list[str]:
-        return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
+        return ["aggr_expand", "aggr_onlydiff", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         frozen_info = row["aggr_compiled_aggregation"].frozen_info
@@ -940,6 +959,16 @@ def combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledR
     if set(ref_ids) == set(other_ids):
         return True
 
+    affected_parent_ids: set[tuple[tuple[int, str], ...]] = set()
+
+    def extract_and_update_affected_parents_ids(ident: tuple[tuple[int, str], ...]) -> None:
+        # If a diff was detected in the following identifier:
+        #   - ((1, "Host heute"), (1, "Performance"), (1, "Memory"))
+        # Two parent ids would be extracted pointing to the grandparent and parent node:
+        #   - ((1, "Host heute"),)
+        #   - ((1, "Host heute"), (1, "Performance"))
+        affected_parent_ids.update(ident[: idx + 1] for idx in range(len(ident) - 1))
+
     # Iterate over reference branch, mark missing elements
     for missing_id in set(ref_ids) - set(other_ids):
         # TODO: check if it wasn't shifted to another number
@@ -948,6 +977,7 @@ def combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledR
         #    - check for matches
         #    will be implemented once the graphical representation is complete, easier to debug
         #        html.debug("set missing", missing_id)
+        extract_and_update_affected_parents_ids(missing_id)
         ref_ids[missing_id].set_frozen_marker(FrozenMarker("missing"))
 
     def common_prefix(
@@ -963,6 +993,7 @@ def combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledR
     mod_ids = {x.id: x.node_ref for x in mod_idents}
 
     for new_id in set(other_ids) - set(ref_ids):
+        extract_and_update_affected_parents_ids(new_id)
         other_ids[new_id].set_frozen_marker(FrozenMarker("new"))
         if new_id in mod_ids:
             continue
@@ -974,6 +1005,10 @@ def combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledR
         insert_location.nodes.append(nodes_to_insert)
         mod_idents = reference_branch.get_identifiers((), set())
         mod_ids = {x.id: x.node_ref for x in mod_idents}
+
+    for pid in affected_parent_ids:
+        if (ref := ref_ids.get(pid)) or (ref := other_ids.get(pid)):
+            ref.set_frozen_marker(FrozenMarker("parent"))
 
     return False
 

@@ -480,7 +480,7 @@ CompiledNodeKind = Literal[
 
 @dataclass(frozen=True)
 class FrozenMarker:
-    status: Literal["missing", "new", "ok"]
+    status: Literal["missing", "new", "ok", "parent"]
 
 
 @dataclass(frozen=True)

@@ -4,16 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Generator, Iterable, Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
+from cmk.agent_based.v2 import StringTable
 from cmk.legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 
 check_info = {}
 
 
-def parse_ddn_s2a_errors(string_table):
+def parse_ddn_s2a_errors(string_table: StringTable) -> dict[str, Any]:
     preparsed = parse_ddn_s2a_api_response(string_table)
     return {
         "port_type": preparsed["port_type"],
@@ -29,8 +31,10 @@ def parse_ddn_s2a_errors(string_table):
     }
 
 
-def discover_ddn_s2a_errors(parsed):
-    def value_to_levels(value):
+def discover_ddn_s2a_errors(
+    parsed: dict[str, Any],
+) -> Iterable[tuple[str, dict[str, tuple[int, int]]]]:
+    def value_to_levels(value: int) -> tuple[int, int]:
         # As the values in this check are all error counters since last reset,
         # we calculate default levels according to the current counter state,
         # so we'll be warned if an error occurs.
@@ -59,8 +63,12 @@ def discover_ddn_s2a_errors(parsed):
             )
 
 
-def check_ddn_s2a_errors(item, params, parsed):
-    def check_errors(value, levels, infotext_formatstring):
+def check_ddn_s2a_errors(
+    item: str, params: Mapping[str, Any], parsed: dict[str, Any]
+) -> Generator[LegacyResult]:
+    def check_errors(
+        value: int, levels: tuple[int, int] | None, infotext_formatstring: str
+    ) -> tuple[int, str]:
         infotext = infotext_formatstring % value
         if levels is None:
             return 0, infotext

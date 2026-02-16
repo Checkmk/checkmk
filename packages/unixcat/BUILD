@@ -1,5 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary", "cc_test")
 
 cc_binary(
@@ -18,10 +19,17 @@ cc_binary(
     ],
 )
 
+set_runpath(
+    name = "unixcat-runpath",
+    srcs = [":unixcat"],
+    rpaths = ["$ORIGIN/../lib"],
+    tags = ["manual"],
+)
+
 pkg_files(
     name = "unixcat_pkg",
     srcs = [
-        ":unixcat",
+        ":unixcat-runpath",
     ],
     attributes = pkg_attributes(
         mode = "0755",

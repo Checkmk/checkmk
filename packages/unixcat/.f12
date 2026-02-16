@@ -13,16 +13,15 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-TARGET=":all"
+TARGET=":unixcat_pkg"
 bazel build "${TARGET}"
 EXECUTION_ROOT=$(bazel info execution_root)
 for FILE in $(bazel cquery --output=files "${TARGET}"); do
     FULL_PATH=${EXECUTION_ROOT}/${FILE}
     BASENAME=${FILE##*/}
-    case "${BASENAME}" in
-        unixcat)
-            install --mode=755 "${FULL_PATH}" "${ROOT}/bin"
-            patchelf --set-rpath "\$ORIGIN/../lib" "${ROOT}/bin/${BASENAME}"
-            ;;
+        case "${BASENAME}" in
+            unixcat)
+                install --mode=755 "${FULL_PATH}" "${ROOT}/bin"
+                ;;
     esac
 done

@@ -92,7 +92,7 @@ DEFAULT_PARAMS = Params(
         time_diff_too_large=int(State.WARN),
         shutting_down=int(State.WARN),
     ),
-    stratum=("fixed", (10, 10)),
+    stratum=("fixed", (5, 5)),
 )
 
 

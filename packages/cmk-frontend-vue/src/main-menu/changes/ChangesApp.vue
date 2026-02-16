@@ -16,6 +16,7 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { showLoadingTransition } from '@/loading-transition/loadingTransition'
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'

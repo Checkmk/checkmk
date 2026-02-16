@@ -13,7 +13,7 @@ from pathlib import Path
 from shutil import which
 from typing import Literal, TypedDict, Union
 
-__version__ = "2.6.0b1"
+__version__ = "2.5.0b1"
 
 DEFAULT_CFG_FILE = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman.cfg"
 

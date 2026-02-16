@@ -181,12 +181,21 @@ def _await_port_ready(site: Site) -> None:
 
 
 def _await_shovels_ready(site: Site) -> None:
+    # TODO: try reducing the waiting time here
     for _ in range(180):
-        raw = json.loads(site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout)
-        if all(shovel["state"] == "running" for shovel in raw):
+        try:
+            raw = site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout
+        except subprocess.CalledProcessError:
+            logger.exception("Failed to get shovel status on %s; waiting...", site.id)
+            time.sleep(1)
+            continue
+
+        data = json.loads(raw)
+        if all(shovel["state"] == "running" for shovel in data):
             return
+        logger.info("Shovels on %s are not running. Waiting...", site.id)
         time.sleep(1)
-    raise Timeout(f"Rabbitmq shovels not started properly: {raw!r}")
+    raise Timeout("Rabbitmq shovels not started properly.")
 
 
 @contextmanager

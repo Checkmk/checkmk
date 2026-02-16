@@ -172,7 +172,10 @@ def get_average(
 
     # at the current rate, how many values are in the backlog?
     if (time_diff := time - last_time) <= 0:
-        # Gracefully handle time-anomaly of target systems
+        # Time source changed( e.g. epoch -> sysUpTime) or anomaly.
+        # Reset time references but seed with the previous average
+        # so we don't lost history
+        value_store[key] = (time, time, last_average)
         return last_average
 
     backlog_count = (backlog_minutes * 60.0) / time_diff

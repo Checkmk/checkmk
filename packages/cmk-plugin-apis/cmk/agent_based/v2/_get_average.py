@@ -66,11 +66,16 @@ def get_average(
 
     # at the current rate, how many values are in the backlog?
     if (time_diff := time - last_time) <= 0:
-        # Gracefully handle time-anomaly of target systems
+        # Update the "last time" to recover from a time source change,
+        # but keep the start time to not change the weight computation
+        value_store[key] = (start_time, time, last_average)
         return last_average
 
     time_since_starting_averaging = time - start_time
-    if backlog_minutes * 60.0 < time_since_starting_averaging:
+    if (
+        time_since_starting_averaging < 0  # time anomaly. Assume we have a long backlog.
+        or backlog_minutes * 60.0 < time_since_starting_averaging
+    ):
         backlog_count = (backlog_minutes * 60.0) / time_diff
     else:
         backlog_count = time_since_starting_averaging / time_diff

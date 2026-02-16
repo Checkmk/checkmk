@@ -6,9 +6,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
+import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
@@ -23,6 +25,15 @@ const props = defineProps<
     urls: Oauth2Urls
   }
 >()
+
+const redirectUri = computed(() => buildRedirectUri(props.urls.redirect))
+const redirectUriValid = computed(() => {
+  const url = new URL(redirectUri.value)
+  if (url.protocol === 'https:') {
+    return true
+  }
+  return url.protocol === 'http:' && url.hostname === 'localhost'
+})
 </script>
 
 <template>
@@ -37,6 +48,13 @@ const props = defineProps<
           'Open the Redirect URIs or navigate to the Authentication settings and register the following Web redirect URI'
         )
       }}
+      <CmkAlertBox v-if="!redirectUriValid" variant="warning">
+        {{
+          _t(
+            'Only valid redirect URIs starting with https:// or http://localhost can be used. Please check if either of these two options can be applied.'
+          )
+        }}
+      </CmkAlertBox>
       <CmkCode :code_txt="buildRedirectUri(props.urls.redirect)" />
     </template>
 

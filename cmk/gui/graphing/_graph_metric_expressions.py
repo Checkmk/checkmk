@@ -12,7 +12,7 @@ import operator
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import chain
 from typing import Annotated, assert_never, final, Literal, TypeVar
 
@@ -233,18 +233,16 @@ def time_series_operators() -> dict[
 
 
 @dataclass(frozen=True, kw_only=True)
-class TimeSeriesMetaData:
-    title: str | None
-    line_type: LineType | Literal["ref"] | None
-    color: str | None
-    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
-    metric_name: str | None = None
-
-
-@dataclass(frozen=True)
 class AugmentedTimeSeries:
     time_series: TimeSeries
-    meta_data: TimeSeriesMetaData | None = None
+    # meta infos
+    title: str | None = None
+    line_type: LineType | Literal["ref"] | None = None
+    color: str | None = None
+    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]] = field(
+        default_factory=dict
+    )
+    metric_name: str | None = None
 
 
 class GraphMetricExpression(BaseModel, ABC, frozen=True):

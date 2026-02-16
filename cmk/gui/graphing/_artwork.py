@@ -380,19 +380,17 @@ def compute_graph_artwork_curves(
             continue
 
         augmented_time_series = result.ok
-        if not augmented_time_series.meta_data:
-            continue
         if (
-            augmented_time_series.meta_data.line_type is not None
-            and augmented_time_series.meta_data.color is not None
-            and augmented_time_series.meta_data.title is not None
+            augmented_time_series.line_type is not None
+            and augmented_time_series.color is not None
+            and augmented_time_series.title is not None
         ):
             curves.append(
                 Curve(
-                    line_type=augmented_time_series.meta_data.line_type,
-                    color=augmented_time_series.meta_data.color,
-                    title=augmented_time_series.meta_data.title,
-                    attributes=augmented_time_series.meta_data.attributes,
+                    line_type=augmented_time_series.line_type,
+                    color=augmented_time_series.color,
+                    title=augmented_time_series.title,
+                    attributes=augmented_time_series.attributes,
                     rrddata=augmented_time_series.time_series,
                 )
             )

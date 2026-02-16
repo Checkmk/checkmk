@@ -20,7 +20,6 @@ from ._graph_metric_expressions import (
     QueryDataKey,
     QueryDataValue,
     RRDDataKey,
-    TimeSeriesMetaData,
 )
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._metric_backend_registry import FetchTimeSeries
@@ -131,40 +130,35 @@ def _refine_augmented_time_series(
         title = graph_metric_title
         line_type = graph_metric_line_type
         color = graph_metric_color
-        if ats.meta_data:
-            if graph_metric_expression_name == "query" and ats.meta_data.title is not None:
-                macros: dict[str, str] = {
-                    "$SERIES_ID$": ats.meta_data.title,
-                }
-                if ats.meta_data.metric_name is not None:
-                    macros["$METRIC_NAME$"] = ats.meta_data.metric_name
-                for key, value in ats.meta_data.attributes.get("resource", {}).items():
-                    macros[f"$RESOURCE_ATTR.{key}$"] = value
-                for key, value in ats.meta_data.attributes.get("scope", {}).items():
-                    macros[f"$SCOPE_ATTR.{key}$"] = value
-                for key, value in ats.meta_data.attributes.get("data_point", {}).items():
-                    macros[f"$DATA_POINT_ATTR.{key}$"] = value
+        if graph_metric_expression_name == "query" and ats.title is not None:
+            macros: dict[str, str] = {
+                "$SERIES_ID$": ats.title,
+            }
+            if ats.metric_name is not None:
+                macros["$METRIC_NAME$"] = ats.metric_name
+            for key, value in ats.attributes.get("resource", {}).items():
+                macros[f"$RESOURCE_ATTR.{key}$"] = value
+            for key, value in ats.attributes.get("scope", {}).items():
+                macros[f"$SCOPE_ATTR.{key}$"] = value
+            for key, value in ats.attributes.get("data_point", {}).items():
+                macros[f"$DATA_POINT_ATTR.{key}$"] = value
 
-                title = replace_macros_in_str(graph_metric_title, macros)
-            elif (
-                multi or graph_metric_expression_name == "query"
-            ) and ats.meta_data.title is not None:
-                title = f"{graph_metric_title} - {ats.meta_data.title}"
-            if multi and ats.meta_data.line_type is not None:
-                line_type = ats.meta_data.line_type
-            if ats.meta_data.color:
-                color = ats.meta_data.color
+            title = replace_macros_in_str(graph_metric_title, macros)
+        elif (multi or graph_metric_expression_name == "query") and ats.title is not None:
+            title = f"{graph_metric_title} - {ats.title}"
+        if multi and ats.line_type is not None:
+            line_type = ats.line_type
+        if ats.color:
+            color = ats.color
 
         if i % 2 == 1 and fade_odd_color:
             color = render_color(fade_color(parse_color(color), 0.3))
 
         yield AugmentedTimeSeries(
             time_series=ats.time_series,
-            meta_data=TimeSeriesMetaData(
-                title=title,
-                line_type=line_type,
-                color=color,
-                attributes={} if ats.meta_data is None else ats.meta_data.attributes,
-                metric_name=None if ats.meta_data is None else ats.meta_data.metric_name,
-            ),
+            title=title,
+            line_type=line_type,
+            color=color,
+            attributes=ats.attributes,
+            metric_name=ats.metric_name,
         )

@@ -18,7 +18,6 @@ from cmk.gui.graphing._graph_metric_expressions import (
     GraphMetricRRDSource,
     QueryData,
     QueryDataError,
-    TimeSeriesMetaData,
 )
 from cmk.gui.graphing._graph_specification import (
     GraphDataRange,
@@ -127,12 +126,9 @@ def test_fetch_augmented_time_series(
         ] == [
             AugmentedTimeSeries(
                 time_series=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
-                meta_data=TimeSeriesMetaData(
-                    title="Temperature",
-                    line_type="area",
-                    color="#ffa000",
-                    attributes={},
-                ),
+                title="Temperature",
+                line_type="area",
+                color="#ffa000",
             ),
         ]
 
@@ -154,12 +150,9 @@ def test_fetch_augmented_time_series_with_conversion(
         ] == [
             AugmentedTimeSeries(
                 time_series=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
-                meta_data=TimeSeriesMetaData(
-                    title="Temperature",
-                    line_type="area",
-                    color="#ffa000",
-                    attributes={},
-                ),
+                title="Temperature",
+                line_type="area",
+                color="#ffa000",
             ),
         ]
 

@@ -30,6 +30,10 @@ const handler = defineModel<UseSiteOverview>('handler', { required: true })
 defineProps<BaseWidgetProp>()
 
 const widgetProps = computed(() => handler.value.widgetProps)
+const hexagonSizeHelpText = _t(
+  `When many hexagons are displayed, they scale to fit into the widget.
+   Differences between "Small" and "Large" may not be visible in the preview.`
+)
 </script>
 
 <template>
@@ -68,14 +72,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
       <TableFormRow>
         <FieldDescription>
           {{ _t('Hexagon size') }}
-          <CmkHelpText
-            :help="
-              _t(
-                `When many hexagons are displayed, they scale to fit into the widget.
-                 Differences between &quot;Small&quot; and &quot;Large&quot; may not be visible in the preview.`
-              )
-            "
-          />
+          <CmkHelpText :help="hexagonSizeHelpText" />
         </FieldDescription>
         <FieldComponent>
           <FieldComponent>

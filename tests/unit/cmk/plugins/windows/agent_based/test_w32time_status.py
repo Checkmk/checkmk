@@ -365,7 +365,7 @@ def test_parse_w32time_status(
         pytest.param(
             {"no_data": int(State.CRIT)},
             2,
-            State.WARN,
+            State.OK,
             id="stale_data not set, but something else set",
         ),
         pytest.param(

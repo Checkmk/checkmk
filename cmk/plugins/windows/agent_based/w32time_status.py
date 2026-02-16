@@ -88,7 +88,7 @@ DEFAULT_PARAMS = Params(
     states=StateParams(
         never_synced=int(State.WARN),
         no_data=int(State.WARN),
-        stale_data=int(State.WARN),
+        stale_data=int(State.OK),
         time_diff_too_large=int(State.WARN),
         shutting_down=int(State.WARN),
     ),

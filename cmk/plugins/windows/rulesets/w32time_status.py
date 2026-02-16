@@ -57,7 +57,7 @@ def _make_form() -> Dictionary:
                             required=False,
                             parameter_form=ServiceState(
                                 title=Title("Stale data received from time provider"),
-                                prefill=DefaultValue(ServiceState.WARN),
+                                prefill=DefaultValue(ServiceState.OK),
                             ),
                         ),
                         "time_diff_too_large": DictElement(

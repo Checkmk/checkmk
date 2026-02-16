@@ -357,6 +357,7 @@ onMounted(() => {
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-menu__group {
   overflow: hidden;
+  padding: var(--dimension-3) 0;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

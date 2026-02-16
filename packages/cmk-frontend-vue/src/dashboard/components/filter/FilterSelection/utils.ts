@@ -71,12 +71,13 @@ export function buildProcessedCategories(
       })
     })
 
+    standaloneFilters.sort((a, b) =>
+      a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+    )
+    filterGroupEntries.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    )
     const allEntries: (FilterType | FilterGroup)[] = [...standaloneFilters, ...filterGroupEntries]
-    allEntries.sort((a, b) => {
-      const nameA = a.type === 'group' ? a.name : a.title
-      const nameB = b.type === 'group' ? b.name : b.title
-      return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' })
-    })
 
     return {
       name: categoryDef.name,

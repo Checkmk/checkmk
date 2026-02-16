@@ -33,3 +33,21 @@ def test_migrate_credentials_configured() -> None:
         "credentials",
         {"user": "bi_user", "secret": "SECRET"},
     )
+
+
+def test_migrate_credentials_configured_already_migrated() -> None:
+    assert migrate_credentials(
+        (
+            "configured",
+            {
+                "user": "bi_user",
+                "secret": ("cmk_postprocessed", "explicit_password", ("uuid", "SECRET")),
+            },
+        )
+    ) == (
+        "configured",
+        {
+            "user": "bi_user",
+            "secret": ("cmk_postprocessed", "explicit_password", ("uuid", "SECRET")),
+        },
+    )

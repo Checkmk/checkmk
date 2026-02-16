@@ -709,7 +709,8 @@ function computeOddEven(index: number) {
   return index % 2 === 0 ? 'even0' : 'odd0'
 }
 
-const { trContainerRef: _, dragStart, dragEnd, dragging } = useDragging()
+const trContainerRef = ref<HTMLTableElement | null>(null)
+const { dragStart, dragEnd, dragging } = useDragging(trContainerRef)
 
 function dragElement(event: DragEvent) {
   const dragReturn = dragging(event)

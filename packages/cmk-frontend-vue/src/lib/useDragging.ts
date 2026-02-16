@@ -5,8 +5,7 @@
  */
 import { type Ref, ref } from 'vue'
 
-export default function useDragging(): {
-  trContainerRef: Ref<HTMLTableElement | null>
+export default function useDragging(trContainerRef: Ref<HTMLTableElement | null>): {
   dragStart: (event: DragEvent) => void
   dragEnd: (event: DragEvent) => void
   dragging: (event: DragEvent) => { draggedIndex: number; targetIndex: number } | null
@@ -23,8 +22,6 @@ export default function useDragging(): {
   function update(event: MouseEvent) {
     clientY.value = event.clientY
   }
-
-  const trContainerRef = ref<HTMLTableElement | null>(null)
 
   function dragStart(event: DragEvent) {
     ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')
@@ -69,5 +66,5 @@ export default function useDragging(): {
     return { draggedIndex, targetIndex }
   }
 
-  return { trContainerRef, dragStart, dragEnd, dragging }
+  return { dragStart, dragEnd, dragging }
 }

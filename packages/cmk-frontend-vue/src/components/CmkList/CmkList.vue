@@ -47,7 +47,8 @@ immediateWatch(
   }
 )
 
-const { trContainerRef: _, dragStart, dragEnd: _dragEnd, dragging: _dragging } = useDragging()
+const trContainerRef = ref<HTMLTableElement | null>(null)
+const { dragStart, dragEnd: _dragEnd, dragging: _dragging } = useDragging(trContainerRef)
 
 function dragging(event: DragEvent) {
   const dragReturn = _dragging(event)

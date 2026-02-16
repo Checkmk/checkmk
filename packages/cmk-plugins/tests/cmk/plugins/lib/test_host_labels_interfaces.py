@@ -28,12 +28,12 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
         pytest.param(
             {
                 "eth0": [
-                    IPv4Interface("10.86.60.1/27"),
+                    IPv4Interface("10.86.60.1/24"),
                     IPv6Interface("fe80::200:5efe:515c:6232/64"),
                 ],
                 "eth1": [
                     IPv6Interface("fe80::200:5efe:515c:6232/64"),
-                    IPv4Interface("12.12.12.1/3"),
+                    IPv4Interface("12.12.12.1/24"),
                 ],
             },
             [
@@ -65,12 +65,12 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
                 ],
                 "enp0s31f6": [
                     IPv4Interface("95.216.118.249"),
-                    IPv6Interface("2a01:4f9:2b:1c86::2/128"),  # note: different subnet than..
+                    IPv6Interface("2a01:4f9:2b:1c86::2/128"),
                     IPv6Interface("fe80::921b:eff:fefe:8a16/64"),
                 ],
                 "vmbr0": [
                     IPv4Interface("95.217.149.46/32"),
-                    IPv6Interface("2a01:4f9:2b:1c86::2/64"),  #  .. this one -> multihomed for now
+                    IPv6Interface("2a01:4f9:2b:1c86::2/64"),
                     IPv6Interface("fe80::6871:a0ff:fefe:cd60/64"),
                 ],
                 "vmbr1": [
@@ -81,7 +81,7 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
             },
             [
                 HostLabel("cmk/l3v4_topology", "multihomed"),
-                HostLabel("cmk/l3v6_topology", "multihomed"),
+                HostLabel("cmk/l3v6_topology", "singlehomed"),
             ],
             id="host_labels_03",
         ),

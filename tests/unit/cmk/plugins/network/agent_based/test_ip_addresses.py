@@ -198,9 +198,9 @@ def test_parse_ip_addresses(
         (None, []),
         (
             (
-                {"16": IPv4Interface("10.86.60.1/27")},
+                {"16": IPv4Interface("10.86.60.1/24")},
                 {"20": IPv6Interface("fe80::200:5efe:515c:6232/64")},
-                {"if_index1": IPv4Interface("12.12.12.1/3")},
+                {"if_index1": IPv4Interface("12.12.12.1/24")},
             ),
             [
                 HostLabel("cmk/l3v4_topology", "multihomed"),

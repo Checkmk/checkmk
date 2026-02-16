@@ -31,24 +31,24 @@ from cmk.plugins.kube.schemata.section import (
 )
 from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_result
 
+STATEFUL_SET = StatefulSetInfo(
+    name="oh-lord",
+    namespace=NamespaceName("have-mercy"),
+    labels={},
+    annotations=FilteredAnnotations({}),
+    selector=Selector(match_labels={}, match_expressions=[]),
+    creation_timestamp=Timestamp(1600000000.0),
+    containers=ThinContainers(images=frozenset({"i/name:0.5"}), names=[ContainerName("name")]),
+    cluster="cluster",
+    kubernetes_cluster_hostname="host",
+)
+
 
 @pytest.mark.parametrize(
     "section_info, section_strategy, expected_inventory_result",
     [
         pytest.param(
-            StatefulSetInfo(
-                name="oh-lord",
-                namespace=NamespaceName("have-mercy"),
-                labels={},
-                annotations=FilteredAnnotations({}),
-                selector=Selector(match_labels={}, match_expressions=[]),
-                creation_timestamp=Timestamp(1600000000.0),
-                containers=ThinContainers(
-                    images=frozenset({"i/name:0.5"}), names=[ContainerName("name")]
-                ),
-                cluster="cluster",
-                kubernetes_cluster_hostname="host",
-            ),
+            STATEFUL_SET,
             UpdateStrategy(strategy=StatefulSetRollingUpdate(partition=0)),
             [
                 Attributes(
@@ -70,6 +70,78 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
                 ),
             ],
             id="overall look of StatefulSet inventory",
+        ),
+        pytest.param(
+            STATEFUL_SET,
+            UpdateStrategy(strategy=StatefulSetRollingUpdate(partition=0, max_unavailable=29)),
+            [
+                Attributes(
+                    path=["software", "applications", "kube", "metadata"],
+                    inventory_attributes={
+                        "object": "StatefulSet",
+                        "name": "oh-lord",
+                        "namespace": "have-mercy",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "statefulset"],
+                    inventory_attributes={
+                        "strategy": "RollingUpdate (partitioned at: 0, max unavailable: 29)",
+                        "match_labels": "",
+                        "match_expressions": "",
+                    },
+                    status_attributes={},
+                ),
+            ],
+            id="StatefulSet inventory, integer max_unavailable",
+        ),
+        pytest.param(
+            STATEFUL_SET,
+            UpdateStrategy(strategy=StatefulSetRollingUpdate(partition=0, max_unavailable="7%")),
+            [
+                Attributes(
+                    path=["software", "applications", "kube", "metadata"],
+                    inventory_attributes={
+                        "object": "StatefulSet",
+                        "name": "oh-lord",
+                        "namespace": "have-mercy",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "statefulset"],
+                    inventory_attributes={
+                        "strategy": "RollingUpdate (partitioned at: 0, max unavailable: 7%)",
+                        "match_labels": "",
+                        "match_expressions": "",
+                    },
+                    status_attributes={},
+                ),
+            ],
+            id="StatefulSet inventory, string max_unavailable",
+        ),
+        pytest.param(
+            STATEFUL_SET,
+            UpdateStrategy(strategy=StatefulSetRollingUpdate(partition=0, max_unavailable=None)),
+            [
+                Attributes(
+                    path=["software", "applications", "kube", "metadata"],
+                    inventory_attributes={
+                        "object": "StatefulSet",
+                        "name": "oh-lord",
+                        "namespace": "have-mercy",
+                    },
+                ),
+                Attributes(
+                    path=["software", "applications", "kube", "statefulset"],
+                    inventory_attributes={
+                        "strategy": "RollingUpdate (partitioned at: 0)",
+                        "match_labels": "",
+                        "match_expressions": "",
+                    },
+                    status_attributes={},
+                ),
+            ],
+            id="StatefulSet inventory, None max_unavailable",
         ),
     ],
 )

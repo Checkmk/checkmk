@@ -133,7 +133,7 @@ void main() {
             stage("Archive stuff") {
                 show_duration("archiveArtifacts") {
                     archiveArtifacts(
-                        artifacts: "*.deb, *.rpm, *.cma",
+                        artifacts: "*.deb, *.rpm, *.cma, bazel_log_*",
                         fingerprint: true,
                     );
                 }

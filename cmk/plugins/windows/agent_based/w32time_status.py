@@ -84,7 +84,7 @@ class Params(TypedDict):
 
 DEFAULT_PARAMS = Params(
     offset=("fixed", (0.2, 0.5)),
-    time_since_last_successful_sync=("no_levels", None),
+    time_since_last_successful_sync=("fixed", (30.0 * 60, 60.0 * 60)),
     states=StateParams(
         never_synced=int(State.WARN),
         no_data=int(State.WARN),

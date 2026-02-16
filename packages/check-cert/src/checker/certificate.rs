@@ -11,6 +11,7 @@ use std::convert::AsRef;
 use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::{BasicExtension, Validity, X509Certificate};
+use x509_parser::der_parser::asn1_rs::{BmpString, Tag};
 use x509_parser::error::X509Error;
 use x509_parser::extensions::{GeneralName, SubjectAlternativeName};
 use x509_parser::prelude::FromDer;
@@ -29,9 +30,24 @@ macro_rules! unwrap_into {
     };
 }
 
-fn first_of<'a>(iter: &mut impl Iterator<Item = &'a AttributeTypeAndValue<'a>>) -> &'a str {
+fn attr_value_to_string(a: &AttributeTypeAndValue) -> Option<String> {
+    let val = a.attr_value();
+    match val.tag() {
+        Tag::NumericString
+        | Tag::VisibleString
+        | Tag::PrintableString
+        | Tag::GeneralString
+        | Tag::T61String
+        | Tag::Utf8String
+        | Tag::Ia5String => std::str::from_utf8(val.as_bytes()).ok().map(String::from),
+        Tag::BmpString => BmpString::try_from(val.clone()).ok().map(|s| s.string()),
+        _ => None,
+    }
+}
+
+fn first_of<'a>(iter: &mut impl Iterator<Item = &'a AttributeTypeAndValue<'a>>) -> String {
     iter.next()
-        .and_then(|a| a.as_str().ok())
+        .and_then(|a| attr_value_to_string(a))
         .unwrap_or_default()
 }
 
@@ -80,17 +96,17 @@ pub fn check(der: &[u8], config: Config) -> Check {
     let issuer_cn = first_of(&mut cert.issuer().iter_common_name());
 
     Check::from(&mut unwrap_into!(
-        Some(check_subject_cn(subject_cn, config.subject_cn)),
+        Some(check_subject_cn(&subject_cn, config.subject_cn)),
         check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
         config.subject_o.map(|expected| {
             let name = "Subject O";
             let value = first_of(&mut cert.subject().iter_organization());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(&value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
-                    handle_empty(value),
+                    handle_empty(&value),
                 ))
             }
         }),
@@ -98,25 +114,25 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Subject OU";
             let value = first_of(&mut cert.subject().iter_organizational_unit());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(&value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
-                    handle_empty(value),
+                    handle_empty(&value),
                 ))
             }
         }),
         check_serial(cert.raw_serial_as_string(), config.serial),
-        Some(check_issuer_cn(issuer_cn, config.issuer_cn)),
+        Some(check_issuer_cn(&issuer_cn, config.issuer_cn)),
         config.issuer_o.map(|expected| {
             let name = "Issuer O";
             let value = first_of(&mut cert.issuer().iter_organization());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(&value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
-                    handle_empty(value),
+                    handle_empty(&value),
                 ))
             }
         }),
@@ -124,11 +140,11 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Issuer OU";
             let value = first_of(&mut cert.issuer().iter_organizational_unit());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(&value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
-                    handle_empty(value),
+                    handle_empty(&value),
                 ))
             }
         }),
@@ -136,11 +152,11 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Issuer ST";
             let value = first_of(&mut cert.issuer().iter_state_or_province());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(&value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
-                    handle_empty(value),
+                    handle_empty(&value),
                 ))
             }
         }),
@@ -148,11 +164,11 @@ pub fn check(der: &[u8], config: Config) -> Check {
             let name = "Issuer C";
             let value = first_of(&mut cert.issuer().iter_country());
             if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", handle_empty(&value)))
             } else {
                 SimpleCheckResult::warn(format!(
                     "{name}: {} but expected {expected}",
-                    handle_empty(value),
+                    handle_empty(&value),
                 ))
             }
         }),
@@ -385,6 +401,66 @@ fn check_max_validity(
             SimpleCheckResult::crit("Invalid certificate validity")
         }
     })
+}
+
+#[cfg(test)]
+mod test_attr_value_to_string {
+    use super::attr_value_to_string;
+    use x509_parser::der_parser::asn1_rs::{Any, Oid, Tag};
+    use x509_parser::x509::AttributeTypeAndValue;
+
+    fn make_attr(tag: Tag, data: &[u8]) -> AttributeTypeAndValue<'_> {
+        let oid = Oid::from(&[2, 5, 4, 3]).unwrap(); // CN OID
+        let any = Any::from_tag_and_data(tag, data);
+        AttributeTypeAndValue::new(oid, any)
+    }
+
+    #[test]
+    fn test_utf8string() {
+        let attr = make_attr(Tag::Utf8String, b"example.com");
+        assert_eq!(attr_value_to_string(&attr), Some("example.com".to_string()));
+    }
+
+    #[test]
+    fn test_printable_string() {
+        let attr = make_attr(Tag::PrintableString, b"example.com");
+        assert_eq!(attr_value_to_string(&attr), Some("example.com".to_string()));
+    }
+
+    #[test]
+    fn test_ia5string() {
+        let attr = make_attr(Tag::Ia5String, b"example.com");
+        assert_eq!(attr_value_to_string(&attr), Some("example.com".to_string()));
+    }
+
+    #[test]
+    fn test_t61string() {
+        let attr = make_attr(Tag::T61String, b"*.badssl.com");
+        assert_eq!(
+            attr_value_to_string(&attr),
+            Some("*.badssl.com".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bmpstring() {
+        // BmpString is UTF-16BE: "test" = 0x00 0x74 0x00 0x65 0x00 0x73 0x00 0x74
+        let data: &[u8] = &[0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74];
+        let attr = make_attr(Tag::BmpString, data);
+        assert_eq!(attr_value_to_string(&attr), Some("test".to_string()));
+    }
+
+    #[test]
+    fn test_unsupported_tag_returns_none() {
+        let attr = make_attr(Tag::Boolean, b"\x01");
+        assert_eq!(attr_value_to_string(&attr), None);
+    }
+
+    #[test]
+    fn test_invalid_utf8_returns_none() {
+        let attr = make_attr(Tag::Utf8String, &[0xff, 0xfe]);
+        assert_eq!(attr_value_to_string(&attr), None);
+    }
 }
 
 #[cfg(test)]

@@ -281,4 +281,6 @@ class GetUserMessagesTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
     def _post(
         self, token: AuthToken, token_details: DashboardToken, ctx: PageContext
     ) -> PageResult:
-        return sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True)
+        return sorted(
+            message.get_gui_messages(user_id=token.issuer), key=lambda e: e["time"], reverse=True
+        )

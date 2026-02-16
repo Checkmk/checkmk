@@ -4,18 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import json
 import time
-from json import loads
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.kube.schemata.section import StartTime
 from cmk.plugins.lib.uptime import Section
 
 
 def _parse_kube_start_time(now: float, string_table: StringTable) -> Section | None:
     if not string_table:
         return None
-    return Section(uptime_sec=now - StartTime(**loads(string_table[0][0])).start_time, message=None)
+
+    # We parse this manually (without using the Pydantic model) intentionally.
+    # Since we have parsed_section_name="uptime" in the AgentSection, this file
+    # gets imported/evaluated - particularly with the nagios core - for every
+    # host that has an uptime service. And importing the Pydantic models is
+    # slow. Don't use this as a good pattern to follow in the Kube plugins.
+    start_time = json.loads(string_table[0][0])["start_time"]
+    return Section(uptime_sec=now - start_time, message=None)
 
 
 def parse_kube_start_time(string_table: StringTable) -> Section | None:

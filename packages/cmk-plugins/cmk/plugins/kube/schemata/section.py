@@ -598,7 +598,12 @@ class CollectorDaemons(Section):
 
 
 class StartTime(Section):
-    """section: kube_start_time_v1"""
+    """section: kube_start_time_v1
+
+    Note that for performance reasons (to avoid dragging in pydantic on *every*
+    host that has an uptime service), we only use this as a serializer, and we
+    deserialize the JSON manually in kube_uptime, without using Pydantic.
+    """
 
     start_time: api.Timestamp
 

@@ -8,7 +8,7 @@
 import abc
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Generic, Self, TypeVar
+from typing import cast, Generic, Self, TypeVar
 
 from cmk.gui import visuals
 from cmk.gui.i18n import _u
@@ -99,6 +99,11 @@ class ResponsiveLayoutConstraints:
             "L": self.L,
             "XL": self.XL,
         }
+
+    def get_breakpoint(
+        self, breakpoint_id: ResponsiveGridBreakpoint
+    ) -> ResponsiveLayoutBreakpointConstraints:
+        return cast(ResponsiveLayoutBreakpointConstraints, getattr(self, breakpoint_id))
 
 
 T = TypeVar("T", bound=DashletConfig)

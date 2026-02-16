@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 
 from collections import defaultdict
@@ -102,7 +101,7 @@ class LED:
                 color = LEDColor.UNKNOWN
         return cls(name=name, status=status, color=color, module_index=module_index)
 
-    def to_state(self):
+    def to_state(self) -> State:
         # Currently flashing vs not isn't taken into account, only the color
         match self.color:
             case LEDColor.GREEN:

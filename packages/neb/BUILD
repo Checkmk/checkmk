@@ -1,6 +1,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
 
 define_from_flag(
@@ -86,11 +87,18 @@ cc_shared_library(
     ],
 )
 
+set_runpath(
+    name = "neb_shared_runpath",
+    srcs = [":neb_shared"],
+    rpaths = ["${ORIGIN}/../../lib"],
+    tags = ["manual"],
+)
+
 pkg_files(
     name = "neb_shared_files",
-    srcs = [":neb_shared"],
+    srcs = [":neb_shared_runpath"],
     prefix = "lib/mk-livestatus/",
-    renames = {":neb_shared": "livestatus.o"},
+    renames = {":neb_shared_runpath": "livestatus.o"},
 )
 
 pkg_tar(

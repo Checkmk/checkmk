@@ -13,7 +13,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-TARGET=":all"
+TARGET=":neb_shared_runpath"
 VERSION=$(make --quiet --directory="$(bazel info workspace)" print-VERSION)
 bazel build --cmk_version="${VERSION}" "${TARGET}"
 EXECUTION_ROOT=$(bazel info execution_root)
@@ -23,7 +23,6 @@ for FILE in $(bazel --cmk_version="${VERSION}" cquery --output=files "${TARGET}"
     case "${BASENAME}" in
         libneb_shared.so)
             install "${FULL_PATH}" "${ROOT}/lib/mk-livestatus/livestatus.o"
-            patchelf --set-rpath "\$ORIGIN/../lib" "${ROOT}/lib/mk-livestatus/livestatus.o"
             ;;
     esac
 done

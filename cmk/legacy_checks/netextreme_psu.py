@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterable
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.legacy_includes.elphase import check_elphase
 from cmk.plugins.netextreme.lib import DETECT_NETEXTREME
 
@@ -20,14 +21,16 @@ check_info = {}
 # as in the documentation 'Summit-X460-G2-DS.pdf'
 
 
-def parse_netextreme_psu(string_table):
+def parse_netextreme_psu(string_table: StringTable) -> dict[str, dict[str, float]]:
     try:
         return {"1": {"power": float(string_table[0][0]) * pow(10, int(string_table[0][1]))}}
     except (IndexError, ValueError):
         return {}
 
 
-def discover_netextreme_psu(section):
+def discover_netextreme_psu(
+    section: dict[str, dict[str, float]],
+) -> Iterable[tuple[str, dict[str, Any]]]:
     yield from ((item, {}) for item in section)
 
 

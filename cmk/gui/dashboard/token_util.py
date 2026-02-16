@@ -91,7 +91,7 @@ def _validate_expiration(
             raise DashboardTokenExpirationInvalid(
                 varname="expiration_time",
                 message=_(
-                    "In the Checkmk Community Edition, dashboard tokens can only be valid for up to one month."
+                    "In Checkmk Community, dashboard tokens can only be valid for up to one month."
                 ),
             )
 

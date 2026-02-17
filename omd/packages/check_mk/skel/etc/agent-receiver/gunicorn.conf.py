@@ -21,6 +21,9 @@ access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
 errorlog = os.path.join(log_dir, "error.log")
 loglevel = "info"
 
+# Disable control socket as it's not needed for our use case and causes trouble with omd backup
+control_socket_disable = True
+
 # Log rotation settings
 # Max 100MB per log file, keep 5 backup files
 logconfig_dict = {

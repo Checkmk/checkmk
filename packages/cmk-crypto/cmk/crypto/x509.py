@@ -15,6 +15,7 @@ from uuid import UUID
 
 from cryptography import x509 as pyca_x509
 
+from cmk.ccc.regex import REGEX_ID
 from cmk.ccc.site import SiteId
 
 X509NameOid: TypeAlias = pyca_x509.oid.NameOID
@@ -171,6 +172,31 @@ class SAN:
         return cls(pyca_x509.UniformResourceIdentifier(f"urn:checkmk-site:{name}"))
 
     @classmethod
+    def customer_id(cls, customer_id: str) -> SAN:
+        """Create a SubjectAlternativeName that represents a customer ID.
+
+        >>> SAN.customer_id("testcustomer")
+        SAN(name=<UniformResourceIdentifier(value='urn:customer-id:testcustomer')>)
+
+        >>> SAN.customer_id("TestCustomer1").name.value
+        'urn:customer-id:TestCustomer1'
+
+        >>> SAN.customer_id("test invalid customer")
+        Traceback (most recent call last):
+            ...
+        ValueError: Invalid customer ID: 'test invalid customer'
+
+        >>> SAN.customer_id("0testinvalidcustomer")
+        Traceback (most recent call last):
+            ...
+        ValueError: Invalid customer ID: '0testinvalidcustomer'
+        """
+        if not re.match(REGEX_ID, customer_id):
+            raise ValueError(f"Invalid customer ID: {customer_id!r}")
+
+        return cls(pyca_x509.UniformResourceIdentifier(f"urn:customer-id:{customer_id}"))
+
+    @classmethod
     def from_urn(cls, uri: str) -> SAN:
         """Create a SubjectAlternativeName from a URN string.
 
@@ -181,6 +207,8 @@ class SAN:
             return cls.uuid(UUID(uri))
         if uri.startswith("urn:checkmk-site:"):
             return cls.checkmk_site(SiteId(uri.removeprefix("urn:checkmk-site:")))
+        if uri.startswith("urn:customer-id:"):
+            return cls.customer_id(uri.removeprefix("urn:customer-id:"))
 
         raise ValueError(f"Invalid URI: {uri!r}")
 

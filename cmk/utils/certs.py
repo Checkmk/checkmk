@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
@@ -489,13 +490,18 @@ class SiteBrokerCA:
     def create_and_persist(
         self, site_name: str, expiry: relativedelta = relativedelta(years=5), key_size: int = 4096
     ) -> PersistedCertificateWithPrivateKey:
-        common_name = f"Site '{site_name}' broker CA"
+        common_name = f"Msg Broker CA: {site_name}"
         organization = f"Checkmk Site {site_name}"
         is_ca = True
 
         cert = CertificateWithPrivateKey.generate_self_signed(
             common_name=common_name,
             organization=organization,
+            subject_alternative_names=SubjectAlternativeNames(
+                [
+                    SAN.checkmk_site(SiteId(site_name)),
+                ]
+            ),
             expiry=expiry,
             key_size=key_size,
             is_ca=is_ca,
@@ -524,10 +530,38 @@ class CustomerBrokerCA:
         self.cert_path: Final = cert_path
         self.key_path: Final = key_path
 
+    @staticmethod
+    def _format_customer_id(customer: str, max_length: int = 16) -> str:
+        """Truncates a customer id to a specific length using an ellipsis in the center.
+        If the id is within the max_length, it returns the id unchanged.
+
+        Args:
+            customer: The full id string.
+            max_length: The character limit (default 16).
+
+        Returns:
+            A string formatted to fit within the max_length.
+
+        >>> CustomerBrokerCA._format_customer_id("")
+        ''
+        >>> CustomerBrokerCA._format_customer_id("shortcustomer")
+        'shortcustomer'
+        >>> CustomerBrokerCA._format_customer_id("016charscustomer")
+        '016charscustomer'
+        >>> CustomerBrokerCA._format_customer_id("veryveryverylongcustomer")
+        'veryve...ustomer'
+        """
+        if len(customer) <= max_length:
+            return customer
+        return f"{customer[:6]}...{customer[-7:]}"
+
     def create_and_persist(
         self, customer: str, site_name: str
     ) -> PersistedCertificateWithPrivateKey:
-        common_name = f"Message broker '{customer}' CA"
+        common_name = (
+            f"Msg Broker CA {self._format_customer_id(customer=customer, max_length=16)}: "
+            f"{hashlib.sha256(customer.encode()).hexdigest()[:32]}"
+        )
         organization = f"Checkmk Site {site_name}"
         expires = relativedelta(years=5)
         key_size = 4096
@@ -536,6 +570,9 @@ class CustomerBrokerCA:
         cert = CertificateWithPrivateKey.generate_self_signed(
             common_name=common_name,
             organization=organization,
+            subject_alternative_names=SubjectAlternativeNames(
+                [SAN.checkmk_site(SiteId(site_name)), SAN.customer_id(customer)]
+            ),
             expiry=expires,
             key_size=key_size,
             is_ca=is_ca,

@@ -45,6 +45,8 @@ from cryptography import x509 as pyca_x509
 from cryptography.hazmat import primitives as pyca_primitives
 from dateutil.relativedelta import relativedelta
 
+from cmk.ccc.site import SiteId
+
 from . import MKCryptoException
 from .hash import HashAlgorithm
 from .keys import (
@@ -419,8 +421,14 @@ class Certificate:
         )
 
         if subject_alternative_names is not None:
+            # RFC 5280 4.2.1.6.  Subject Alternative Name
+            #
+            # ... When including the subjectAltName extension in a certificate
+            # that has a non-empty subject distinguished name, conforming CAs
+            # SHOULD mark the subjectAltName extension as non-critical
             builder = builder.add_extension(
-                subject_alternative_names.to_extension(), critical=False
+                subject_alternative_names.to_extension(),
+                critical=True if not subject_name.name else False,
             )
 
         hash_algo = (
@@ -676,6 +684,44 @@ class Certificate:
                 return HashAlgorithm.Sha512
             case unreachable:
                 assert_never(unreachable)
+
+    def get_san_checkmk_sites(self) -> list[SiteId]:
+        """
+        Retrieves Checkmk site identifiers from the certificate's Subject Alternative Names (SAN).
+
+        If no matching SANs are found or if the SAN extension is missing, an empty list is returned.
+
+        Returns:
+            list[SiteId]: A list of validated SiteId objects extracted from the
+                matching URI SAN entries.
+        """
+        prefix = "urn:checkmk-site:"
+        checkmk_sites = [
+            SiteId(san.name.value[len(prefix) :])
+            for san in self.subject_alternative_names or []
+            if isinstance(san.name, pyca_x509.UniformResourceIdentifier)
+            and san.name.value.startswith(prefix)
+        ]
+        return checkmk_sites
+
+    def get_san_customer_ids(self) -> list[str]:
+        """
+        Retrieves Customer IDs from the certificate's Subject Alternative Names (SAN).
+
+        If no matching SANs are found or if the SAN extension is missing, an empty list is returned.
+
+        Returns:
+            list[str]: A list of raw customer ID strings extracted by stripping
+                the URN prefix from matching SAN entries.
+        """
+        prefix = "urn:customer-id:"
+        customer_ids = [
+            san.name.value[len(prefix) :]
+            for san in self.subject_alternative_names or []
+            if isinstance(san.name, pyca_x509.UniformResourceIdentifier)
+            and san.name.value.startswith(prefix)
+        ]
+        return customer_ids
 
 
 class CertificateSigningRequestPEM(_PEMData):

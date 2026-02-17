@@ -304,6 +304,7 @@ ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
                 [
                     SAN.uuid(UUID("12345678-1234-5678-1234-567812345678")),
                     SAN.checkmk_site(SiteId("testsite")),
+                    SAN.customer_id("testcustomer"),
                     SAN.ip_address(ip_network("127.0.0.1/24", strict=False)),
                 ]
             )
@@ -319,19 +320,44 @@ def test_subject_alt_names(
     This is relevant because they get written into the x509 structure and need to be
     read back correctly. See SubjectAlternativeNames.from_extension().
     """
-    assert (
-        Certificate.create(
-            subject_public_key=self_signed_cert.private_key.public_key,
-            subject_name=X509Name.create(common_name="sans_test"),
-            subject_alternative_names=sans,
-            expiry=relativedelta(days=1),
-            start_date=datetime.now(UTC),
-            is_ca=False,
-            issuer_signing_key=self_signed_cert.private_key,
-            issuer_name=X509Name.create(common_name="sans_test"),
-        ).subject_alternative_names
-        == sans
+    parsed = Certificate.create(
+        subject_public_key=self_signed_cert.private_key.public_key,
+        subject_name=X509Name.create(common_name="sans_test"),
+        subject_alternative_names=sans,
+        expiry=relativedelta(days=1),
+        start_date=datetime.now(UTC),
+        is_ca=False,
+        issuer_signing_key=self_signed_cert.private_key,
+        issuer_name=X509Name.create(common_name="sans_test"),
+    ).subject_alternative_names
+
+    assert parsed is not None
+    assert sorted(parsed, key=str) == sorted(sans, key=str)
+
+
+def test_get_san_methods(self_signed_cert: CertificateWithPrivateKey) -> None:
+    sans = [
+        SAN.uuid(UUID("12345678-1234-5678-1234-567812345678")),
+        SAN.customer_id("provider"),
+        SAN.checkmk_site(SiteId("testsite")),
+        SAN.customer_id("testcustomer"),
+        SAN.ip_address(ip_network("127.0.0.1/24", strict=False)),
+    ]
+
+    priv_key = self_signed_cert.private_key
+    cert = Certificate.create(
+        subject_public_key=priv_key.public_key,
+        subject_name=X509Name.create(common_name="sans_test"),
+        subject_alternative_names=SubjectAlternativeNames(sans),
+        expiry=relativedelta(days=1),
+        start_date=datetime.now(UTC),
+        is_ca=False,
+        issuer_signing_key=priv_key,
+        issuer_name=X509Name.create(common_name="sans_test"),
     )
+
+    assert sorted(cert.get_san_customer_ids()) == ["provider", "testcustomer"]
+    assert sorted(cert.get_san_checkmk_sites()) == ["testsite"]
 
 
 def test_may_sign_certificates() -> None:

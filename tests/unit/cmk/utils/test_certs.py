@@ -17,7 +17,7 @@ from cmk.ccc.site import SiteId
 from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
-from cmk.utils.certs import CN_TEMPLATE, RelaysCA, RootCA, SiteCA
+from cmk.utils.certs import CN_TEMPLATE, CustomerBrokerCA, RelaysCA, RootCA, SiteCA
 
 
 @pytest.fixture(name="ca_cert_files")
@@ -300,3 +300,27 @@ def test_relays_ca_create_and_load(tmp_path: Path) -> None:
         loaded.root_ca.certificate.dump_pem().bytes
         == relays_ca.root_ca.certificate.dump_pem().bytes
     )
+
+
+def test_customer_broker_ca_create_and_load(tmp_path: Path) -> None:
+    cert_path = tmp_path / "etc" / "rabbitmq" / "ssl" / "multisite_cas" / "ca.pem"
+    key_path = tmp_path / "etc" / "rabbitmq" / "ssl" / "multisite_cas" / "ca_key.pem"
+
+    broker_ca = CustomerBrokerCA(cert_path, key_path)
+    created = broker_ca.create_and_persist(customer="testcustomer", site_name="test_site")
+
+    assert cert_path.is_file()
+    assert key_path.is_file()
+
+    loaded = CustomerBrokerCA(cert_path, key_path).load()
+
+    assert created.certificate.dump_pem().bytes == loaded.certificate.dump_pem().bytes
+
+    expected_sans = [SAN.customer_id("testcustomer"), SAN.checkmk_site(SiteId("test_site"))]
+    assert sorted(loaded.certificate.subject_alternative_names or [], key=str) == sorted(
+        expected_sans, key=str
+    )
+
+    broker_ca.delete()
+    assert not cert_path.exists()
+    assert not key_path.exists()

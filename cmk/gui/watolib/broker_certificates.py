@@ -195,13 +195,13 @@ def create_remote_broker_certs(
     Create a new certificate with private key for the broker of a remote site.
     """
 
-    site_broker_ca = SiteBrokerCertificate(
+    site_broker_certificate = SiteBrokerCertificate(
         messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
     )
-    site_ca_bundle = site_broker_ca.create_bundle(site_id, signing_ca_bundle)
+    site_certificate_bundle = site_broker_certificate.create_bundle(site_id, signing_ca_bundle)
 
     return messaging.BrokerCertificates(
-        cert=site_ca_bundle.certificate.dump_pem().bytes,
+        cert=site_certificate_bundle.certificate.dump_pem().bytes,
         signing_ca=signing_ca_bundle.certificate.dump_pem().bytes,
     )
 
@@ -270,10 +270,12 @@ def _create_message_broker_certs() -> CertificateWithPrivateKey:
         ca_bundle.certificate_path.read_bytes()
     )
 
-    site_broker_ca = SiteBrokerCertificate(
+    site_broker_certificate = SiteBrokerCertificate(
         messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
     )
-    site_broker_ca.persist(bundle := site_broker_ca.create_bundle(omd_site(), issuer=ca_bundle))
+    site_broker_certificate.persist(
+        bundle := site_broker_certificate.create_bundle(omd_site(), issuer=ca_bundle)
+    )
 
     return bundle
 

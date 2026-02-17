@@ -145,6 +145,7 @@ def test_apispec_plugin_string_to_schema_dict(spec: APISpec) -> None:
     schemas = spec.to_dict()["components"]["schemas"]
     assert schemas["MovieDict"] == {
         "type": "object",
+        "title": "MovieDict",
         "additionalProperties": {"$ref": "#/components/schemas/Movie"},
     }
 
@@ -155,6 +156,7 @@ def test_apispec_plugin_string_to_string_dict(spec: APISpec) -> None:
     schemas = spec.to_dict()["components"]["schemas"]
     assert schemas["CustomTagDict"] == {
         "type": "object",
+        "title": "CustomTagDict",
         "additionalProperties": {
             "type": "string",
             "description": "Tag value here",

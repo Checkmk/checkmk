@@ -14,6 +14,7 @@ import typing
 from apispec.ext import marshmallow
 from apispec.ext.marshmallow import common, field_converter
 from marshmallow import fields, Schema
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema
 
@@ -107,29 +108,38 @@ def field_properties(field: fields.Field) -> FieldProperties:
 
 
 class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[name-defined,misc,unused-ignore]
+    def ensure_title(self, schema, json_schema: dict) -> dict:
+        if "title" not in json_schema and not isinstance(schema, OneOfSchema):
+            # Don't set the title for oneOf, it would become the title for all options
+            json_schema["title"] = self.schema_name_resolver(schema)
+        return json_schema
+
     def schema2jsonschema(self, schema):
-        if not is_value_typed_dict(schema):
-            return super().schema2jsonschema(schema)
+        if is_value_typed_dict(schema):
+            if isinstance(schema.ValueTypedDict.value_type, FieldWrapper):
+                properties = field_properties(schema.ValueTypedDict.value_type.field)
+            elif isinstance(schema.ValueTypedDict.value_type, Schema) or (
+                isinstance(schema.ValueTypedDict.value_type, type)
+                and issubclass(schema.ValueTypedDict.value_type, Schema)
+            ):
+                schema_instance = common.resolve_schema_instance(schema.ValueTypedDict.value_type)
+                schema_key = common.make_schema_key(schema_instance)
+                if schema_key not in self.refs:
+                    component_name = self.schema_name_resolver(schema.ValueTypedDict.value_type)
+                    self.spec.components.schema(component_name, schema=schema_instance)
+                properties = self.get_ref_dict(schema_instance)
+            else:
+                raise RuntimeError(f"Unsupported value_type: {schema.ValueTypedDict.value_type}")
 
-        if isinstance(schema.ValueTypedDict.value_type, FieldWrapper):
-            properties = field_properties(schema.ValueTypedDict.value_type.field)
-        elif isinstance(schema.ValueTypedDict.value_type, Schema) or (
-            isinstance(schema.ValueTypedDict.value_type, type)
-            and issubclass(schema.ValueTypedDict.value_type, Schema)
-        ):
-            schema_instance = common.resolve_schema_instance(schema.ValueTypedDict.value_type)
-            schema_key = common.make_schema_key(schema_instance)
-            if schema_key not in self.refs:
-                component_name = self.schema_name_resolver(schema.ValueTypedDict.value_type)
-                self.spec.components.schema(component_name, schema=schema_instance)
-            properties = self.get_ref_dict(schema_instance)
+            out = {
+                "type": "object",
+                "additionalProperties": properties,
+            }
+
         else:
-            raise RuntimeError(f"Unsupported value_type: {schema.ValueTypedDict.value_type}")
+            out = super().schema2jsonschema(schema)
 
-        return {
-            "type": "object",
-            "additionalProperties": properties,
-        }
+        return self.ensure_title(schema, out)
 
     def nested2properties(self, field: fields.Field, ret: dict) -> dict:
         """Return a dictionary of properties from :class:`Nested <marshmallow.fields.Nested` fields.

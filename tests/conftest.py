@@ -349,10 +349,6 @@ def pytest_configure(config: pytest.Config) -> None:
         "<ul><li>\n" + ("</li><li>\n".join(env_lines)) + "</li></ul>"
     )
 
-    # Exclude schemathesis_openapi tests from global collection
-    global collect_ignore
-    collect_ignore = ["schemathesis_openapi"]
-
     config.addinivalue_line(
         "markers",
         f"{EditionMarker.skip_if}(edition): skips the tests for the given edition(s)",

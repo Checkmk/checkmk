@@ -1,5 +1,4 @@
 pluggy<1.6.0  # test-unit target fails with some weird constraint error CMK-24026
-schemathesis<4 # breaking changes here that require updates to the code CMK-24390
 pytest<8.4 # breaking changes with pytest-playwright CMK-24472
 marshmallow<4 # breaking changes CMK-25251
 time-machine<3.0.0 # breaks agent-receiver tests CMK-27768

@@ -43,7 +43,6 @@ SYSTEM_TESTS := \
     test-update-cross-edition-pro-to-ultimatemt \
     test-update-cross-edition-community-to-ultimate \
     test-update-cross-edition-community-to-pro \
-    test-schemathesis-openapi \
     test-plugins \
     test-plugins-piggyback \
     test-gui-crawl \
@@ -286,11 +285,6 @@ test-update-cross-edition-community-to-ultimate: # from community to ultimate
 	$(PYTEST) --cmk-edition community $(realpath update)/community/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=ultimate --disable-interactive-mode --session-timeout 5400
 
-test-schemathesis-openapi:
-	SCHMATHESIS_PROFILE=ci $(PYTEST) $(realpath schemathesis_openapi) \
-	$(PYTEST_SYSTEM_TEST_ARGS) -p schemathesis -k stateless \
-	--html="../results/schemathesis_openapi.html" --self-contained-html
-
 test-plugins:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
 	--ignore=plugins_integration/nonfree/pro/test_plugin_piggyback.py --session-timeout 7200
@@ -478,7 +472,7 @@ what-gerrit-makes:
 	    -e WORKSPACE="$$WORKSPACE" \
 	    -e RESULTS="$$WORKSPACE/results"
 
-EXCLUDE_PATTERN_MEDIUM_CHAIN := unit|unit-shell|agent-plugin-unit|schemathesis_openapi|qa-test-data
+EXCLUDE_PATTERN_MEDIUM_CHAIN := unit|unit-shell|agent-plugin-unit|qa-test-data
 TEST_DIRS_MEDIUM_CHAIN := $(shell find $(realpath) -mindepth 1 -maxdepth 1 -type d | grep -v -E "/($(EXCLUDE_PATTERN_MEDIUM_CHAIN))$$")
 
 test-medium-chain:

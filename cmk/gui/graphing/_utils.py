@@ -21,7 +21,7 @@ class MKGraphRecipeNotFoundError(MKHTTPException):
     status = http.HTTPStatus.NOT_FOUND
 
 
-class MKGraphDashletTooSmallError(MKHTTPException):
+class MKGraphWidgetTooSmallError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST
 
 

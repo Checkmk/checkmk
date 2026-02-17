@@ -39,8 +39,8 @@ from cmk.gui.graphing import (
     host_service_graph_dashlet_cmk,
     metric_backend_registry,
     metrics_from_api,
-    MKGraphDashletTooSmallError,
     MKGraphRecipeNotFoundError,
+    MKGraphWidgetTooSmallError,
 )
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
@@ -93,8 +93,10 @@ def render_graph_widget_content(
                 time_range=dashlet_config["timerange"],
             )
         )
-    except (MKGraphRecipeNotFoundError, MKGraphDashletTooSmallError):
+    except MKGraphRecipeNotFoundError:
         raise make_mk_missing_data_error()
+    except MKGraphWidgetTooSmallError as e:
+        raise WidgetRenderError(str(e))
 
 
 class GraphWidgetPage(cmk.gui.pages.Page):

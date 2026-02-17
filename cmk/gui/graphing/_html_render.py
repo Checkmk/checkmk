@@ -80,8 +80,8 @@ from ._metric_backend_registry import (
 )
 from ._unit import get_temperature_unit, user_specific_unit
 from ._utils import (
-    MKGraphDashletTooSmallError,
     MKGraphRecipeNotFoundError,
+    MKGraphWidgetTooSmallError,
     SizeEx,
 )
 
@@ -1402,8 +1402,8 @@ def host_service_graph_dashlet_cmk(
             * 1.5
         )
         if height <= 0:
-            raise MKGraphDashletTooSmallError(
-                _("Either increase the dashlet height or disable the graph legend.")
+            raise MKGraphWidgetTooSmallError(
+                _("Either increase the widget height or disable the graph legend.")
             )
 
         graph_render_config.size = (width, height)

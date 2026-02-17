@@ -8,6 +8,9 @@ from logging import Logger
 from pathlib import Path
 from typing import override
 
+from cmk.ccc import debug
+from cmk.discover_plugins import discover_all_plugins, PluginGroup
+from cmk.graphing.v1 import entry_point_prefixes
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils import remove_failed_plugin
@@ -78,6 +81,29 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 continue
 
             raise MKUserError(None, "incompatible extension package")
+
+        self._check_graphing_v1_plugin_errors(logger, conflict_mode)
+
+    def _check_graphing_v1_plugin_errors(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+        if not (
+            discovered_plugins_errors := discover_all_plugins(
+                PluginGroup.GRAPHING,
+                entry_point_prefixes(),
+                raise_errors=debug.enabled(),
+            ).errors
+        ):
+            return
+        logger.error(
+            "One or more graphing plugins (using cmk.graphing.v1) failed to load.\n"
+            "This can lead to missing graphs or other issues in the UI.\n"
+            "It is likely caused by incompatible customizations.\n"
+            "These where the errors we encountered:",
+        )
+        for exc in discovered_plugins_errors:
+            logger.error(f"    {exc}")
+        if _continue_on_incomp_local_file(conflict_mode).is_not_abort():
+            return
+        raise MKUserError(None, "incompatible graphing plugins")
 
 
 def _continue_on_incomp_local_file(conflict_mode: ConflictMode) -> Resume:

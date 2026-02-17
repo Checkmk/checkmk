@@ -20,7 +20,7 @@ use crate::config::{
     connection::EngineTag,
     ora_sql::Endpoint,
 };
-use crate::ora_sql::types::Target;
+use crate::ora_sql::types::{Target, TargetIdBuilder};
 use crate::types::{ConnectionStringType, Credentials, InstanceName, SqlQuery};
 use anyhow::{Context, Result};
 use oracle::sql_type::{FromSql, ToSql};
@@ -55,10 +55,14 @@ impl OraDbEngine for StdEngine {
             return Ok(());
         }
 
-        let connection_string =
-            target.make_connection_string(instance_name, ConnectionStringType::Tns);
-        log::info!("Connection string: {}", connection_string);
-        log::info!("Auth type: {:?}", target.auth.auth_type());
+        let connection_string = target
+            .make_connection_string(instance_name, ConnectionStringType::Tns)
+            .context("Target is not defined")?;
+        log::info!(
+            "Connection string: {}, auth type {:?}",
+            connection_string,
+            target.auth.auth_type()
+        );
 
         let mut connector = match target.auth.auth_type() {
             AuthType::Standard => {
@@ -249,13 +253,7 @@ impl Clone for Spot<Closed> {
 
 impl Spot<Closed> {
     pub fn connect(mut self, use_instance: Option<&InstanceName>) -> Result<Spot<Opened>> {
-        log::info!(
-            "{} {:?} -> {}",
-            "Connecting to",
-            self.target,
-            self.target
-                .make_connection_string(use_instance, ConnectionStringType::Tns)
-        );
+        log::info!("Connecting to {:?}", self.target);
         self.engine.connect(&self.target, use_instance)?;
         Ok(Spot {
             target: self.target,
@@ -327,28 +325,30 @@ impl SpotBuilder {
     pub fn endpoint_target(mut self, endpoint: &Endpoint) -> Self {
         self.target = Some(Target {
             host: endpoint.hostname().clone(),
-            service_name: endpoint.conn().service_name().map(|i| i.to_owned()),
-            service_type: endpoint.conn().service_type().map(|t| t.to_owned()),
-            instance_name: endpoint.conn().instance_name().map(|i| i.to_owned()),
-            sid: endpoint.conn().sid().map(|s| s.to_owned()),
-            alias: None,
+            target_id: TargetIdBuilder::new()
+                .service_name(endpoint.conn().service_name())
+                .service_type(endpoint.conn().service_type())
+                .instance_name(endpoint.conn().instance_name())
+                .sid(endpoint.conn().sid().map(|sid| sid.to_string()).as_deref())
+                .build(),
             port: endpoint.conn().port().clone(),
             auth: endpoint.auth().clone(),
         });
         self
     }
 
-    pub fn custom_instance_target(mut self, instance: &CustomService) -> Self {
-        let ep = &instance.endpoint();
+    pub fn custom_instance_target(mut self, custom_instance: &CustomService) -> Self {
         self.target = Some(Target {
-            host: ep.hostname().clone(),
-            service_name: instance.service_name().map(|t| t.to_owned()),
-            service_type: ep.conn().service_type().map(|t| t.to_owned()),
-            instance_name: ep.conn().instance_name().map(|t| t.to_owned()),
-            sid: instance.sid().map(|s| s.to_owned()),
-            alias: instance.alias().clone(),
-            port: ep.conn().port().clone(),
-            auth: ep.auth().clone(),
+            host: custom_instance.conn().hostname().clone(),
+            target_id: TargetIdBuilder::new()
+                .service_name(custom_instance.service_name())
+                .service_type(custom_instance.service_type())
+                .instance_name(custom_instance.instance_name())
+                .sid(custom_instance.sid().map(|sid| sid.to_string()).as_deref())
+                .alias(custom_instance.alias().as_ref())
+                .build(),
+            port: custom_instance.conn().port().clone(),
+            auth: custom_instance.auth().clone(),
         });
         self
     }

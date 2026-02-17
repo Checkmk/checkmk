@@ -20,7 +20,9 @@ use super::yaml::{Get, Yaml};
 use crate::config::authentication::Authentication;
 use crate::config::connection::Connection;
 use crate::config::options::Options;
-use crate::types::{HostName, InstanceAlias, InstanceName, ServiceName, Sid, SqlBindParam};
+use crate::types::{
+    HostName, InstanceAlias, InstanceName, ServiceName, ServiceType, Sid, SqlBindParam,
+};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -391,6 +393,9 @@ impl CustomService {
     /// may be overridden with a connection value
     pub fn service_name(&self) -> Option<&ServiceName> {
         self.conn.service_name()
+    }
+    pub fn service_type(&self) -> Option<&ServiceType> {
+        self.conn.service_type()
     }
     pub fn instance_name(&self) -> Option<&InstanceName> {
         self.conn.instance_name()

@@ -18,6 +18,7 @@ use crate::config::{self, OracleConfig};
 use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
 use crate::ora_sql::section::Section;
+use crate::ora_sql::types::TargetId;
 use crate::setup::{detect_runtime, Env};
 use crate::types::{InstanceName, SqlQuery, UseHostClient};
 use std::collections::HashSet;
@@ -428,6 +429,16 @@ fn calc_all_spots(
         .collect::<Vec<ClosedSpot>>()
 }
 
+/// Filters spots according to discovery config.
+/// Tactic:
+/// Filtering depends on the TargetId enum variant.
+/// If TargetId is Descriptor, instance name is taken from descriptor.instance_name.
+/// If TargetId is Sid, instance name is taken from sid. If TargetId is something else, spot is included without filtering and a warning is logged.
+/// It may be changed in the future.
+/// Lists:
+/// If include list is not empty, only spots with instance names in it are included.
+/// If include list is empty and exclude list is not empty, only spots with instance names not in exclude list are included.
+/// If both lists are empty, all spots are included.
 fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) -> Vec<ClosedSpot> {
     let include: HashSet<&String> = HashSet::from_iter(discovery.include());
     let exclude: HashSet<&String> = if include.is_empty() {
@@ -438,19 +449,37 @@ fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) 
     spots
         .into_iter()
         .filter(|spot| {
-            let service_name: String = spot
-                .target()
-                .service_name
-                .clone()
-                .unwrap_or_default()
-                .into();
-            let uppercased_name: String = service_name.to_uppercase();
-            if !include.is_empty() {
-                return include.contains(&uppercased_name);
-            } else if !exclude.is_empty() {
-                return !exclude.contains(&uppercased_name);
+            let target_id = &spot.target().target_id;
+            match target_id {
+                TargetId::Descriptor(_) => {
+                    let instance_name = target_id
+                        .instance_name()
+                        .map(|e| e.to_string().to_uppercase());
+                    if let Some(uppercased_name) = instance_name {
+                        if !include.is_empty() {
+                            return include.contains(&uppercased_name);
+                        } else if !exclude.is_empty() {
+                            return !exclude.contains(&uppercased_name);
+                        }
+                        true
+                    } else {
+                        true
+                    }
+                }
+                TargetId::Sid(sid) => {
+                    let uppercased_name: String = sid.to_string().to_uppercase();
+                    if !include.is_empty() {
+                        return include.contains(&uppercased_name);
+                    } else if !exclude.is_empty() {
+                        return !exclude.contains(&uppercased_name);
+                    }
+                    true
+                }
+                _ => {
+                    log::info!("Spot can't be filtered: {:?}", spot.target());
+                    true
+                }
             }
-            true
         })
         .collect()
 }
@@ -504,13 +533,13 @@ mod tests {
         ]);
         assert_eq!(all.len(), 2);
     }
-    fn make_instance(service_name: &str) -> CustomService {
+    fn make_instance(instance_name: &str) -> CustomService {
         CustomService::new(
             config::authentication::Authentication::default(),
             Connection::from_connection(
                 &Connection::default(),
-                &Some(ServiceName::from(service_name)),
-                &None,
+                &Some(ServiceName::from("XXX")),
+                &Some(InstanceName::from(instance_name)),
                 &None,
             ),
             None,
@@ -523,12 +552,12 @@ mod tests {
         let all = calc_custom_spots(&[make_instance("A"), make_instance("B")]);
         assert_eq!(all.len(), 2);
         assert_eq!(
-            all[0].target().service_name.as_ref().unwrap(),
-            &ServiceName::from("A")
+            all[0].target().target_id.instance_name().unwrap(),
+            &InstanceName::from("A")
         );
         assert_eq!(
-            all[1].target().service_name.as_ref().unwrap(),
-            &ServiceName::from("B")
+            all[1].target().target_id.instance_name().unwrap(),
+            &InstanceName::from("B")
         );
     }
 
@@ -558,11 +587,11 @@ mod tests {
         ]);
         assert_eq!(all.len(), 2);
         assert_eq!(
-            all[0].target().service_name.as_ref().unwrap(),
+            all[0].target().service_name().unwrap(),
             &ServiceName::from("A")
         );
         assert_eq!(
-            all[1].target().service_name.as_ref().unwrap(),
+            all[1].target().service_name().unwrap(),
             &ServiceName::from("B")
         );
     }

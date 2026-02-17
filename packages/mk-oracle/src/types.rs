@@ -117,6 +117,21 @@ impl From<&String> for Sid {
     }
 }
 
+#[derive(PartialEq, From, Debug, Display, Clone, Into, Hash, Eq)]
+pub struct DescriptorSid(String);
+
+impl From<&str> for DescriptorSid {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+impl From<&String> for DescriptorSid {
+    fn from(s: &String) -> Self {
+        Self(s.clone())
+    }
+}
+
 #[derive(PartialEq, From, Clone, Debug, Display)]
 pub struct ServiceType(String);
 impl From<&str> for ServiceType {

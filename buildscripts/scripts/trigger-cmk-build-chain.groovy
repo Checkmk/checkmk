@@ -206,19 +206,6 @@ void main() {
             );
         }[0]
 
-        success &= smart_stage(
-                name: "Trigger Cloud Gitlab jobs",
-                condition: false,
-                raiseOnError: false,) {
-            smart_build(
-                use_upstream_build: true,
-                relative_job_name: "${edition_base_folder}/trigger-cloud-gitlab",
-                build_params: job_parameters,
-                build_params_no_check: job_parameters_no_check,
-                download: false,
-            );
-        }[0]
-
         currentBuild.result = success ? "SUCCESS" : "FAILURE";
     }
 }

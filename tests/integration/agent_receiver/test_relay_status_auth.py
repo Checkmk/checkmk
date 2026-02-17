@@ -39,6 +39,10 @@ from tests.testlib.site import Site
 # but we need their functionality here.
 # TODO find a better (shared) place for these functions.
 
+pytestmark = pytest.mark.skip(
+    reason="These tests do not remove relays (and hence update tasks) causing other tests to fail."
+)
+
 
 def current_time_naive() -> datetime:
     """

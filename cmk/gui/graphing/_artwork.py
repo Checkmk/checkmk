@@ -161,7 +161,7 @@ class GraphArtwork(BaseModel):
 @dataclass(frozen=True)
 class GraphArtworkOrErrors:
     artwork: GraphArtwork
-    errors: Sequence[QueryDataError] | None
+    errors: Sequence[QueryDataError]
 
 
 def compute_graph_artwork(

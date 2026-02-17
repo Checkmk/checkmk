@@ -418,7 +418,7 @@ def handle_containers_stats_cli(
             section=query_container_inspect_cli(container_id, run_as_user),
         )
 
-        if stats := container_stats.get(container_id):
+        if stats := container_stats.get(container_id) or container_stats.get(container_id[:12]):
             write_piggyback_section(
                 target_host=target_host,
                 section=JSONSection("container_stats", json.dumps(stats)),
@@ -549,7 +549,14 @@ def query_raw_stats(session: Session, socket_path: str) -> Union[Mapping[str, ob
 def extract_container_stats(stats_data: Mapping[str, object]) -> Mapping[str, object]:
     if not isinstance(stats := stats_data.get("Stats", []), list):
         return {}
-    return {stat["ContainerID"]: stat for stat in stats if "ContainerID" in stat}
+
+    result = {}
+    for stat in stats:
+        container_id = stat.get("ContainerID") or stat.get("id")
+        if container_id:
+            result[container_id] = stat
+
+    return result
 
 
 def get_container_name(names: object) -> str:

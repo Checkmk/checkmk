@@ -21,6 +21,16 @@ STRING_TABLE = [
 ]
 
 
+CLI_STRING_TABLE = [
+    [
+        '{"id": "63f10448c71c", "name": "nonroot-test", "cpu_time": "3.472ms",'
+        '"cpu_percent": "5.28%", "avg_cpu": "5.28%",'
+        '"mem_usage": "45.06kB / 16.48GB", "mem_percent": "0.00%",'
+        '"net_io": "1.98kB / 430B", "block_io": "3.67MB / 512kB", "pids": "1"}'
+    ]
+]
+
+
 def test_discover_podman_container_stats() -> None:
     section = parse_podman_container_stats(STRING_TABLE)
     assert section == SectionPodmanContainerStats(
@@ -29,4 +39,15 @@ def test_discover_podman_container_stats() -> None:
         MemUsage=45056,
         BlockInput=3674112,
         BlockOutput=0,
+    )
+
+
+def test_parse_podman_container_stats_cli_format() -> None:
+    section = parse_podman_container_stats(CLI_STRING_TABLE)
+    assert section == SectionPodmanContainerStats(
+        CPU=5.28,
+        MemUsage=45060,
+        MemLimit=16480000000,
+        BlockInput=3670000,
+        BlockOutput=512000,
     )

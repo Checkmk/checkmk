@@ -20,10 +20,7 @@ from .utils import (
 
 
 @pytest.fixture(name="unpack", scope="module")
-def unpack_fixture(
-    root_dir: Path,
-    module_dir: Path,
-) -> YieldFixture[None]:
+def unpack_fixture(root_dir: Path, module_dir: Path) -> YieldFixture[None]:
     unpack_modules(root_dir, module_dir=module_dir)
     yield
     shutil.rmtree(module_dir)

@@ -6,3 +6,10 @@ py_binary(
     main = "check_hashes.py",
     visibility = ["//visibility:public"],
 )
+
+py_binary(
+    name = "check_crlf",
+    srcs = ["check_crlf.py"],
+    main = "check_crlf.py",
+    visibility = ["//visibility:public"],
+)

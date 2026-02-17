@@ -230,7 +230,7 @@ def create_user(
     acting_user.need_permission("wato.edit")
 
     if user_id == "":  # reserved for UserId.builtin()
-        raise ValueError("UserId cannot be empty")
+        raise MKUserError("user_id", _("UserId cannot be empty"))
 
     all_users = userdb.load_users(lock=True)
 

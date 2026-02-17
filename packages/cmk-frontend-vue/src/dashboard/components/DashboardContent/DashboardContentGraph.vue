@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { type Ref, computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import useTimer from '@/lib/useTimer.ts'
 
@@ -18,7 +18,6 @@ import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
-const content = props.content as GraphWidgetContent
 const cmkToken = useInjectCmkToken()
 const dataEndpointUrl: Ref<string> = computed(() => {
   return cmkToken ? 'widget_graph_token_auth.py' : 'widget_graph.py'
@@ -31,8 +30,8 @@ const contentDiv = ref<HTMLDivElement | null>(null)
 const parentDiv = computed(() => contentDiv.value?.parentElement || null)
 const isLoading = ref<boolean>(true)
 
-const observedElement = computed(() => {
-  if (props.isPreview && contentDiv.value) {
+const resolveObservedElement = (): HTMLElement | null => {
+  if (props.isPreview && showLegend.value && contentDiv.value) {
     return (
       (contentDiv.value.closest(
         '.db-content-container__preview-scroll-container'
@@ -40,7 +39,7 @@ const observedElement = computed(() => {
     )
   }
   return parentDiv.value
-})
+}
 
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
   if (cmkToken !== undefined) {
@@ -93,14 +92,35 @@ const resizeObserver = new ResizeObserver((entries) => {
   }
 })
 
-const showLegend = computed(() => content.graph_render_options?.show_legend ?? false)
+const showLegend = computed(
+  () => (props.content as GraphWidgetContent).graph_render_options?.show_legend ?? false
+)
 const timer = useTimer(updateGraph, 60_000)
+
+let currentObservedElement: HTMLElement | null = null
+const reconnectResizeObserver = () => {
+  const newElement = resolveObservedElement()
+  if (newElement !== currentObservedElement) {
+    if (currentObservedElement) {
+      resizeObserver.unobserve(currentObservedElement)
+    }
+    if (newElement) {
+      resizeObserver.observe(newElement)
+    }
+    currentObservedElement = newElement
+  }
+}
+
+// Reconnect the ResizeObserver after DOM updates when the scroll container appears/disappears
+watch([showLegend, () => props.isPreview], () => {
+  void nextTick(() => {
+    reconnectResizeObserver()
+  })
+})
 
 onMounted(() => {
   timer.start()
-  if (observedElement.value) {
-    resizeObserver.observe(observedElement.value)
-  }
+  reconnectResizeObserver()
 })
 
 onBeforeUnmount(() => {

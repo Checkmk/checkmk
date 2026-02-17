@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Final, override
 
@@ -76,69 +77,66 @@ class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
         }
 
 
-ConfigVariableProductUsageAnalytics = ConfigVariable(
-    group=ConfigVariableGroupProductUsageAnalytics,
-    primary_domain=ConfigDomainProductUsageAnalytics,
-    ident="product_usage_analytics",
-    domain_hint=HTML.without_escaping(
-        _(
-            "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %s. "
-            "This allows you to review the data locally; it does not enable the feature or transmit any information."
-        )
-        % HTMLWriter.render_a(
-            content=_("download the full JSON report"),
-            href="download_product_usage.py",
-        )
-    ),
-    hint=lambda: HTML.without_escaping(
-        _(
-            "<b>Consent Requirement: </b>"
-            "You must request and receive permission from each customer before enabling the collection of product analytics data. "
-            "Do not activate data collection for any site unless the customer has agreed to data transmission. "
-            "For configuration options specifically for multi-tenant sites, please visit the %s."
-        )
-        % HTMLWriter.render_a(
-            content=_("User Guide"),
-            href="https://docs-internal.lan.checkmk.net/master/de/product_usage_analytics.html#distributed",
-            target="_blank",
-        )
-    ),
-    valuespec=lambda context: Dictionary(
-        title=_("Product usage analytics"),
-        elements=[
-            (
-                "enabled",
-                DropdownChoice(
-                    title=_("Enable product usage analytics"),
-                    help=_(
-                        "Consent to product usage analytics data collection. "
-                        "By default, this is disabled, the user will be asked for consent via pop-up. "
-                        "Run  <tt>cmk-product-usage --dry-run</tt> in the command line to see a preview of the data."
-                    ),
-                    choices=[
-                        ("enabled", _("Allow collection and transmission of product usage data")),
-                        ("disabled", _("Do not collect product usage data")),
-                        ("not_decided", _("Disabled. Reminder scheduled")),
-                    ],
-                    html_attrs={"width": "fit-content"},
-                ),
-            ),
-            (
-                "proxy_setting",
-                HTTPProxyReference(),
-            ),
-        ],
-        optional_keys=[],
-        default_keys=["enabled", "proxy_setting"],
-        help=_(
-            "<p><b>Network Configuration: </b>"
-            "To transmit analytics data, ensure your firewall permits outbound traffic to "
-            "<tt>https://analytics.checkmk.com/upload</tt> on port <tt>443</tt>. "
-            "If you are using a proxy, please verify that it allows connections to this destination.</p>"
-            "<p><b>Per-Site Configuration: </b>"
-            "You have to ensure connectivity for <b>each site individually</b>. "
-            "As every site collects and transmits data independently, "
-            "please verify that your firewall rules permit traffic from every site to prevent local transmission errors.</p>"
+def make_product_usage_analytics_config_variable(
+    hint: Callable[[], HTML] = lambda: HTML.empty(),
+) -> ConfigVariable:
+    return ConfigVariable(
+        group=ConfigVariableGroupProductUsageAnalytics,
+        primary_domain=ConfigDomainProductUsageAnalytics,
+        ident="product_usage_analytics",
+        domain_hint=HTML.without_escaping(
+            _(
+                "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %s. "
+                "This allows you to review the data locally; it does not enable the feature or transmit any information."
+            )
+            % HTMLWriter.render_a(
+                content=_("download the full JSON report"),
+                href="download_product_usage.py",
+            )
         ),
-    ),
-)
+        hint=hint,
+        valuespec=lambda context: Dictionary(
+            title=_("Product usage analytics"),
+            elements=[
+                (
+                    "enabled",
+                    DropdownChoice(
+                        title=_("Enable product usage analytics"),
+                        help=_(
+                            "Consent to product usage analytics data collection. "
+                            "By default, this is disabled, the user will be asked for consent via pop-up. "
+                            "Run  <tt>cmk-product-usage --dry-run</tt> in the command line to see a preview of the data."
+                        ),
+                        choices=[
+                            (
+                                "enabled",
+                                _("Allow collection and transmission of product usage data"),
+                            ),
+                            ("disabled", _("Do not collect product usage data")),
+                            ("not_decided", _("Disabled. Reminder scheduled")),
+                        ],
+                        html_attrs={"width": "fit-content"},
+                    ),
+                ),
+                (
+                    "proxy_setting",
+                    HTTPProxyReference(),
+                ),
+            ],
+            optional_keys=[],
+            default_keys=["enabled", "proxy_setting"],
+            help=_(
+                "<p><b>Network Configuration: </b>"
+                "To transmit analytics data, ensure your firewall permits outbound traffic to "
+                "<tt>https://analytics.checkmk.com/upload</tt> on port <tt>443</tt>. "
+                "If you are using a proxy, please verify that it allows connections to this destination.</p>"
+                "<p><b>Per-Site Configuration: </b>"
+                "You have to ensure connectivity for <b>each site individually</b>. "
+                "As every site collects and transmits data independently, "
+                "please verify that your firewall rules permit traffic from every site to prevent local transmission errors.</p>"
+            ),
+        ),
+    )
+
+
+ConfigVariableProductUsageAnalytics = make_product_usage_analytics_config_variable()

@@ -231,7 +231,6 @@ def test_registered_pages() -> None:
             "noauth:saml_metadata",
             "noauth:saml_sso",
             "robotmk_suite_log",
-            "robotmk_suite_report",
             "download_robotmk_suite_report",
             "ajax_fetch_metric_color",
             "ajax_fetch_ajax_graph",

@@ -13,7 +13,6 @@ from tests.pylint.checker_localization import HTMLTagsChecker, LiteralStringChec
 
 # Using astroid within a pytest context causes recursion errors. This fixture avoids these errors,
 # but with unknown side effects.
-# https://github.com/schemathesis/schemathesis/issues/2170
 # https://github.com/pylint-dev/astroid/issues/2427
 @pytest.fixture(autouse=True)
 def deactivate_astroid_bootstrapping(mocker: MockerFixture) -> None:

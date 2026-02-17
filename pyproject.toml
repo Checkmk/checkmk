@@ -719,7 +719,6 @@ addopts = [
   "--durations=20",
   # Disable a few plugins which slow down the pytest startup even when not used
   "-p no:faker",
-  "-p no:schemathesis",
   "-p no:hypothesispytest",
 ]
 markers = [
@@ -738,10 +737,6 @@ filterwarnings = [
   'error::marshmallow.warnings.RemovedInMarshmallow4Warning',
   # Fun fact: pkg_resources calls declare_namespace() itself when it processes namespace_packages.txt files.
   'ignore:Deprecated call to `pkg_resources\.declare_namespace:DeprecationWarning:pkg_resources:0',
-  # ignore schemathesis testing related warnings
-  'ignore:^jsonschema\.RefResolver is deprecated.*$:DeprecationWarning:schemathesis\..*:0',
-  'ignore:^jsonschema\.exceptions\.RefResolutionError is deprecated.*$:DeprecationWarning:schemathesis\..*:0',
-  'ignore:^Generating overly large repr.*$:Warning:hypothesis\..*:0',
   # ignore DeprecationWarning for ast.NameConstant in reportlab <= 4.2
   'ignore:^ast\.NameConstant is deprecated and will be removed in Python 3\.14\; use ast\.Constant instead$:DeprecationWarning:reportlab\..*:0',
   # ignore warnings caused by probuf 4.25.3 until updating to 5.x

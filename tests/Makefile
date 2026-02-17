@@ -43,7 +43,6 @@ SYSTEM_TESTS := \
     test-update-cross-edition-cee-to-cme \
     test-update-cross-edition-cre-to-cce \
     test-update-cross-edition-cre-to-cee \
-    test-schemathesis-openapi \
     test-plugins \
     test-plugins-piggyback \
     test-gui-crawl \
@@ -340,11 +339,6 @@ test-update-cross-edition-cre-to-cee: # from CRE to CEE
 test-update-cross-edition-cre-to-cce: # from CRE to CCE
 	EDITION=cre $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cre/test_update.py) -m cre \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
-
-test-schemathesis-openapi:
-	SCHMATHESIS_PROFILE=ci $(PYTEST) $(realpath schemathesis_openapi) \
-	$(PYTEST_SYSTEM_TEST_ARGS) -p schemathesis -k stateless \
-	--html="../results/schemathesis_openapi.html" --self-contained-html
 
 test-plugins:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \

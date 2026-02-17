@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import { CmkFetchError } from '@/lib/cmkFetch'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -36,7 +37,14 @@ const selectedContactGroups = ref<string[]>([])
 const selectedSites = ref<string[]>([])
 
 const isContactGroupOptionDisabled = ref<boolean>(false)
-const cg = await getContactGroups()
+let cg: DualListElement[] = []
+try {
+  cg = await getContactGroups()
+} catch (e) {
+  if (!(e instanceof CmkFetchError && e.statusCode === 403)) {
+    throw e
+  }
+}
 isContactGroupOptionDisabled.value = cg.length === 0
 
 if (share.value !== 'no' && share.value.type === 'with_contact_groups') {
@@ -75,13 +83,25 @@ const selectedElements = computed({
 })
 
 const loadAvailableElements = async (shareMode: ShareType) => {
-  if (shareMode === 'with_contact_groups') {
-    isLoading.value = true
-    availableElements.value = await getContactGroups()
-    isLoading.value = false
-  } else if (shareMode === 'with_sites') {
-    isLoading.value = true
-    availableElements.value = await getSites()
+  const fetchers: Record<string, () => Promise<DualListElement[]>> = {
+    with_contact_groups: getContactGroups,
+    with_sites: getSites
+  }
+
+  const fetchData = fetchers[shareMode]
+  if (!fetchData) {
+    return
+  }
+
+  isLoading.value = true
+  try {
+    availableElements.value = await fetchData()
+  } catch (e) {
+    if (!(e instanceof CmkFetchError && e.statusCode === 403)) {
+      throw e
+    }
+    availableElements.value = []
+  } finally {
     isLoading.value = false
   }
 }

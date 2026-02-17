@@ -60,9 +60,19 @@ class CreateRelay(CmkPage):
         return self.active_step.get_by_role("heading", level=2)
 
     @property
-    def active_step_code(self) -> Locator:
-        """Return the code block in the active step."""
-        return self.active_step.locator("pre code")
+    def download_script_code(self) -> Locator:
+        """Return the download relay install script code block."""
+        return self.vue_app.get_by_test_id("download-relay-install-script").locator("pre code")
+
+    @property
+    def install_podman_code(self) -> Locator:
+        """Return the install podman command code block."""
+        return self.vue_app.get_by_test_id("install-podman-command").locator("pre code")
+
+    @property
+    def run_install_script_code(self) -> Locator:
+        """Return the run installation script code block."""
+        return self.vue_app.get_by_test_id("run-relay-install-script").locator("pre code")
 
     @property
     def next_step_button(self) -> Locator:

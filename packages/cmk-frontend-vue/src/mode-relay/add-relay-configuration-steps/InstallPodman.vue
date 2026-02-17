@@ -56,7 +56,7 @@ const installInstructions = computed(() => {
         }}
       </CmkParagraph>
 
-      <CmkCode :code_txt="installInstructions"></CmkCode>
+      <CmkCode :code_txt="installInstructions" data-testid="install-podman-command"></CmkCode>
     </template>
 
     <template #actions>

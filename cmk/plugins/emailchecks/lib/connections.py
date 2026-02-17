@@ -301,6 +301,7 @@ class GraphApi(_Connection):
         self._login_url = authority_urls.login
         self.auth = auth
         self.storage_id = storage_id
+        self._base_folder_uri = "me/messages"
 
     def _build_api_client(self) -> GraphApiClient:
         if (store_secret := _read_store_secret()) is None:
@@ -331,8 +332,9 @@ class GraphApi(_Connection):
         return {folder["displayName"]: folder["id"] for folder in response.get("value", [])}
 
     def select_folder(self, folder_name: str) -> int:
+        self._base_folder_uri = f"me/mailFolders/{folder_name}/messages"
         with self._build_api_client() as client:
-            response = client.get(f"me/mailFolders/{folder_name}/messages")
+            response = client.get(self._base_folder_uri)
         assert isinstance(response, dict)
         return len(response.get("value", []))
 
@@ -344,7 +346,7 @@ class GraphApi(_Connection):
     ) -> Iterable[float]:
         with self._build_api_client() as client:
             response = client.get(
-                "me/messages?$filter=receivedDateTime ge "
+                f"{self._base_folder_uri}/messages?$filter=receivedDateTime ge "
                 f"{datetime.fromtimestamp(after).isoformat() if after else datetime.fromtimestamp(0).isoformat()}Z"
                 " and receivedDateTime le "
                 f"{datetime.fromtimestamp(before).isoformat() if before else datetime.now().isoformat()}Z"

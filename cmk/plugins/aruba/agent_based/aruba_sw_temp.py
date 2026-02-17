@@ -34,12 +34,14 @@ class SensorStatus(IntEnum):
     fault = 0
     normal = 1
     emergency = 2
+    absent = 3
 
 
 SensorStateMapping = {
     SensorStatus.fault: State.WARN,
     SensorStatus.normal: State.OK,
     SensorStatus.emergency: State.CRIT,
+    SensorStatus.absent: State.UNKNOWN,
 }
 
 
@@ -102,8 +104,11 @@ def parse_aruba_sw_temp(string_table: StringTable) -> Section:
 
 
 def discover_aruba_sw_temp(section: Section) -> DiscoveryResult:
-    for item, entry in section.items():
-        yield Service(item=item)
+    yield from (
+        Service(item=item)
+        for item, entry in section.items()
+        if SensorStatus[entry.status] != SensorStatus.absent
+    )
 
 
 def check_aruba_sw_temp(

@@ -28,4 +28,4 @@ item:
  The sensor name.
 
 discovery:
- One service is created for each temperature sensor.
+ One service is created for each temperature sensor. Sensors with the state 'absent' will not be discovered.

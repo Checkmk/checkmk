@@ -536,7 +536,7 @@ def parse_lldp_cache_fortinet(string_table: Sequence[StringByteTable]) -> Lldp |
                 port_id_sub_type,
                 port_id,
                 port_description,
-                neighbour_name,
+                neighbor_name,
                 system_description,
                 capabilities_map_supported,
                 cache_capabilities,

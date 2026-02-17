@@ -76,7 +76,7 @@ LLDP_GLOBAL = LldpGlobal(
     cap_enabled="Phone, Repeater, Router",
 )
 
-LLDP_NEIGHBOURS = [
+LLDP_NEIGHBORS = [
     LldpNeighbor(
         capabilities="Phone, Router",
         capabilities_map_supported="Phone, Router",
@@ -93,7 +93,7 @@ LLDP_NEIGHBOURS = [
 
 LLDP = Lldp(
     lldp_global=LLDP_GLOBAL,
-    lldp_neighbors=LLDP_NEIGHBOURS,
+    lldp_neighbors=LLDP_NEIGHBORS,
 )
 
 

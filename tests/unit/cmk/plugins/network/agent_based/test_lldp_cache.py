@@ -129,7 +129,7 @@ LLDP_GLOBAL = LldpGlobal(
     cap_enabled="Phone, Repeater, Router",
 )
 
-LLDP_NEIGHBOURS = [
+LLDP_NEIGHBORS = [
     LldpNeighbor(
         capabilities="Phone, Router",
         capabilities_map_supported="Phone, Router",
@@ -146,7 +146,7 @@ LLDP_NEIGHBOURS = [
 
 LLDP = Lldp(
     lldp_global=LLDP_GLOBAL,
-    lldp_neighbors=LLDP_NEIGHBOURS,
+    lldp_neighbors=LLDP_NEIGHBORS,
 )
 
 
@@ -159,7 +159,7 @@ LLDP = Lldp(
             STRING_TABLE_2_NEIGHBORS,
             Lldp(
                 lldp_global=LLDP_GLOBAL,
-                lldp_neighbors=LLDP_NEIGHBOURS
+                lldp_neighbors=LLDP_NEIGHBORS
                 + [
                     LldpNeighbor(
                         capabilities="Phone, Router",
@@ -203,7 +203,7 @@ def test_parse_lldp_cache(data: Sequence[StringByteTable], expected: Lldp | None
         (
             Lldp(
                 lldp_global=LLDP_GLOBAL,
-                lldp_neighbors=LLDP_NEIGHBOURS
+                lldp_neighbors=LLDP_NEIGHBORS
                 + [
                     LldpNeighbor(
                         capabilities="Phone, Router",
@@ -244,7 +244,7 @@ LLDP_GLOBAL_ATTRIBUTE = Attributes(
 )
 
 
-LLDP_NEIGHBOUR_ATTRIBUTE = TableRow(
+LLDP_NEIGHBOR_ATTRIBUTE = TableRow(
     path=["networking", "lldp_cache", "neighbors"],
     key_columns={
         "local_port": "78:18:EC:2E:BA:8A",
@@ -273,7 +273,7 @@ LLDP_NEIGHBOUR_ATTRIBUTE = TableRow(
         (
             LLDP,
             {},
-            [LLDP_GLOBAL_ATTRIBUTE, LLDP_NEIGHBOUR_ATTRIBUTE],
+            [LLDP_GLOBAL_ATTRIBUTE, LLDP_NEIGHBOR_ATTRIBUTE],
         ),
     ],
     ids=["no neighbors", "with neighbors"],

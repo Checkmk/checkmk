@@ -569,8 +569,8 @@ node_networking_lldp_cache = Node(
 )
 
 
-node_networking_lldp_cache_neighbours = Node(
-    name="networking_lldp_cache_neighbours",
+node_networking_lldp_cache_neighbors = Node(
+    name="networking_lldp_cache_neighbors",
     path=["networking", "lldp_cache", "neighbors"],
     title=Title("LLDP neighbors"),
     table=Table(
@@ -579,10 +579,10 @@ node_networking_lldp_cache_neighbours = Node(
             "capabilities": TextField(Title("Capabilities supported")),
             "capabilities_map_supported": TextField(Title("Capabilities supported")),
             "local_port": TextField(Title("Local port")),
-            "neighbour_address": TextField(Title("Neighbor address")),
-            "neighbour_id": TextField(Title("Neighbor ID")),
-            "neighbour_name": TextField(Title("Neighbor name")),
-            "neighbour_port": TextField(Title("Neighbor port")),
+            "neighbor_address": TextField(Title("Neighbor address")),
+            "neighbor_id": TextField(Title("Neighbor ID")),
+            "neighbor_name": TextField(Title("Neighbor name")),
+            "neighbor_port": TextField(Title("Neighbor port")),
             "port_description": TextField(Title("Neighbor port description")),
             "system_description": TextField(Title("Neighbor description")),
         },

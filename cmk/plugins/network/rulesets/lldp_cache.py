@@ -69,7 +69,7 @@ def _parameter_form_lldp_cache() -> Dictionary:
                     label=Label("enabled"),
                 )
             ),
-            "one_neighbour_per_port": DictElement(
+            "one_neighbor_per_port": DictElement(
                 parameter_form=FixedValue(
                     value=True,
                     title=Title("Accept only one neighbor per local port"),

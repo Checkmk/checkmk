@@ -258,6 +258,11 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 parameter_form=Password(
                     title=Title("Access token"),
                     help_text=Help("The access token for this OAuth2 connection."),
+                    custom_validate=[
+                        validators.LengthInRange(
+                            min_value=1, error_msg=Message("Access token is required")
+                        ),
+                    ],
                 ),
                 group=DictGroup(title=Title("Hidden")),
             ),
@@ -267,6 +272,11 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 parameter_form=Password(
                     title=Title("Refresh token"),
                     help_text=Help("The refresh token for this OAuth2 connection."),
+                    custom_validate=[
+                        validators.LengthInRange(
+                            min_value=1, error_msg=Message("Refresh token is required")
+                        ),
+                    ],
                 ),
                 group=DictGroup(title=Title("Hidden")),
             ),

@@ -327,6 +327,41 @@ def test_update_oauth2_connection_keeping_same_title(
 
 
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_create_oauth2_connection_without_tokens(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    # GIVEN
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+    my_new_uuid = str(uuid.uuid4())
+
+    # WHEN
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.oauth2_connection.value,
+            "entity_type_specifier": "microsoft_entra_id",
+            "data": {
+                "ident": my_new_uuid,
+                "title": "OAuth2 Connection without tokens",
+                "editable_by": ("administrators", None),
+                "shared_with": [],
+                "client_secret": ("explicit_password", "", "my_client_secret", False),
+                "access_token": ("explicit_password", "", "", False),
+                "refresh_token": ("explicit_password", "", "", False),
+                "client_id": MY_CLIENT_ID,
+                "tenant_id": MY_TENANT_ID,
+                "authority": option_id("global"),
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 422, resp.json
+    validation_errors = resp.json["ext"]["validation_errors"]
+    assert len(validation_errors) > 0
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_update_oauth2_connection_to_existing_title(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:

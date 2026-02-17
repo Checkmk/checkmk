@@ -48,6 +48,8 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
                     "title": "dummy",
                     "editable_by": editable_by,
                     "shared_with": [],
+                    "access_token": ("explicit_password", "", "dummy", False),
+                    "refresh_token": ("explicit_password", "", "dummy", False),
                 }
             ),
         )

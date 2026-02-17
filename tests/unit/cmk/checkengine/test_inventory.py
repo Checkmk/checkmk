@@ -7,8 +7,14 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.agent_based.v1 import TableRow
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.inventory import _check_trees, HWSWInventoryParameters
+from cmk.checkengine.inventory import (
+    _check_trees,
+    _create_trees_from_inventory_plugin_items,
+    HWSWInventoryParameters,
+    ItemsOfInventoryPlugin,
+)
 from cmk.inventory.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 
@@ -112,3 +118,79 @@ def test__check_trees_hardware_or_software_changes() -> None:
             metrics=(),
         ),
     ]
+
+
+def test__create_trees_from_inventory_plugin_items_only_key_columns() -> None:
+    trees = _create_trees_from_inventory_plugin_items(
+        [
+            ItemsOfInventoryPlugin(
+                [
+                    TableRow(
+                        path=["path-to-node"],
+                        key_columns={"key": "value"},
+                    )
+                ],
+                None,
+            ),
+        ]
+    )
+    assert trees.inventory
+    assert not trees.status_data
+
+
+def test__create_trees_from_inventory_plugin_items_key_and_inventory_columns() -> None:
+    trees = _create_trees_from_inventory_plugin_items(
+        [
+            ItemsOfInventoryPlugin(
+                [
+                    TableRow(
+                        path=["path-to-node"],
+                        key_columns={"kkey": "kvalue"},
+                        inventory_columns={"ikey": "ivalue"},
+                    )
+                ],
+                None,
+            ),
+        ]
+    )
+    assert trees.inventory
+    assert not trees.status_data
+
+
+def test__create_trees_from_inventory_plugin_items_key_and_status_columns() -> None:
+    trees = _create_trees_from_inventory_plugin_items(
+        [
+            ItemsOfInventoryPlugin(
+                [
+                    TableRow(
+                        path=["path-to-node"],
+                        key_columns={"kkey": "kvalue"},
+                        status_columns={"skey": "svalue"},
+                    )
+                ],
+                None,
+            ),
+        ]
+    )
+    assert not trees.inventory
+    assert trees.status_data
+
+
+def test__create_trees_from_inventory_plugin_items() -> None:
+    trees = _create_trees_from_inventory_plugin_items(
+        [
+            ItemsOfInventoryPlugin(
+                [
+                    TableRow(
+                        path=["path-to-node"],
+                        key_columns={"kkey": "kvalue"},
+                        inventory_columns={"ikey": "ivalue"},
+                        status_columns={"skey": "svalue"},
+                    )
+                ],
+                None,
+            ),
+        ]
+    )
+    assert trees.inventory
+    assert trees.status_data

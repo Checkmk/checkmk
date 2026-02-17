@@ -116,7 +116,7 @@ class TableRow(_TableRowTuple):
 
     Args:
         path: List of node names leading to a node where these column-value pairs will be inserted.
-        key_columns: Column-value pairs containing static data which are also used to identify a row
+        key_columns: Column-value pairs which are used to identify a row
         inventory_columns: Column-value pairs containing static data
         status_columns: Column-value pairs containing live/monitoring data
     """

@@ -459,17 +459,15 @@ def _collect_item(item: Attributes | TableRow, collection: ItemDataCollection) -
                 )
 
         case TableRow():
-            # TableRow provides:
-            #   - key_columns: {"kc": "kc-val", ...}
-            #   - rows: [{"c": "c-val", ...}, ...]
             key_columns = {SDKey(k): v for k, v in item.key_columns.items()}
             collection.key_columns.extend(key_columns)
-            collection.inventory_rows.append(
-                {
-                    **key_columns,
-                    **{SDKey(k): v for k, v in item.inventory_columns.items()},
-                }
-            )
+            if item.inventory_columns or not item.status_columns:
+                collection.inventory_rows.append(
+                    {
+                        **key_columns,
+                        **{SDKey(k): v for k, v in item.inventory_columns.items()},
+                    }
+                )
             if item.status_columns:
                 collection.status_data_rows.append(
                     {

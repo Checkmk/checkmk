@@ -93,6 +93,43 @@ void main() {
     }
 
     smart_stage(
+        name: "Closing branch on failure",
+        condition: currentBuild.result != "SUCCESS",
+    ) {
+        build(
+            job: "maintenance/sheriffing",
+            parameters: [
+                stringParam(name: "ACTION", value: "close"),
+                stringParam(name: "BRANCH", value: safe_branch_name),
+                stringParam(
+                    name: "REASON",
+                    value: "Branch ${safe_branch_name} failed to build CMK distro packages ${currentBuild.number}"
+                ),
+            ],
+            wait: false,
+        );
+    }
+
+    // only open the branch if the previous build failed but this passed
+    smart_stage(
+        name: "Opening branch after recovering",
+        condition: currentBuild.result == "SUCCESS" && currentBuild.getPreviousBuild()?.result.toString() != "SUCCESS",
+    ) {
+        build(
+            job: "maintenance/sheriffing",
+            parameters: [
+                stringParam(name: "ACTION", value: "open"),
+                stringParam(name: "BRANCH", value: safe_branch_name),
+                stringParam(
+                    name: "REASON",
+                    value: "Branch ${safe_branch_name} recovered to build CMK distro packages ${currentBuild.number}"
+                ),
+            ],
+            wait: false,
+        );
+    }
+
+    smart_stage(
         name: "Trigger trigger-post-submit-test-cascade-heavy",
         condition: trigger_post_submit_heavy_chain && currentBuild.result == "SUCCESS",
     ) {

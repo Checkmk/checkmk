@@ -24,11 +24,11 @@ const handleCheckboxChange = (componentId: string, values: ConfiguredValues): vo
 </script>
 
 <template>
-  <fieldset class="checkbox-group">
+  <fieldset class="db-checkbox-group-component">
     <CmkLabel v-if="component.label" variant="subtitle">
       {{ component.label }}
     </CmkLabel>
-    <div class="checkbox-group-items">
+    <div class="db-checkbox-group-component__items">
       <CheckboxComponent
         v-for="[choiceId, choiceLabel] in Object.entries(component.choices)"
         :key="choiceId"
@@ -46,16 +46,15 @@ const handleCheckboxChange = (componentId: string, values: ConfiguredValues): vo
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.checkbox-group {
+.db-checkbox-group-component {
   border: none;
   padding: 0;
   margin: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.checkbox-group-items {
+.db-checkbox-group-component__items {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--dimension-6);
 }

@@ -52,7 +52,11 @@ def discover_packages(args: argparse.Namespace) -> Iterator[Package]:
 
 def main():
     args = parse_arguments()
-    print(json.dumps([asdict(p) for p in discover_packages(args)], indent=2))
+    print(
+        json.dumps(
+            [asdict(p) for p in sorted(discover_packages(args), key=lambda p: p.name)], indent=2
+        )
+    )
 
 
 if __name__ == "__main__":

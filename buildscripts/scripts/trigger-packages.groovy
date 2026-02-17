@@ -28,8 +28,16 @@ void main() {
         }
     }
 
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 100ms).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
+    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
+    def timeOffsetForOrder = 0;
+
     def test_stages = packages.collectEntries { p ->
         [("${p.name}"): {
+            sleep(0.1 * timeOffsetForOrder++);
+
             def relative_job_name = "${branch_base_folder}/builders/build-cmk-package";
             if (env.USE_K8S_GENERIC_PACKAGES == "1") {
                 relative_job_name = "${relative_job_name}-k8s";

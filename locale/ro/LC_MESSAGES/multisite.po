@@ -13202,6 +13202,9 @@ msgstr "Alegeți următoarele taste"
 msgid "Choose the logic with which the value is to be interpreted."
 msgstr "Alegeți logica cu care urmează să fie interpretată valoarea."
 
+msgid "Choose the maximum time to allow between last-update checks"
+msgstr ""
+
 msgid ""
 "Choose the monitoring core to run for monitoring. You can also decide to run "
 "no monitoring core in this site. This can be useful for instances running "
@@ -41089,6 +41092,10 @@ msgid "Maximum test runtime"
 msgstr "Durata maximă de funcționare a testului"
 
 msgid "Maximum time since last start of job execution"
+msgstr "Timpul maxim de la ultima pornire a execuției sarcinii"
+
+#, fuzzy
+msgid "Maximum time since last update check"
 msgstr "Timpul maxim de la ultima pornire a execuției sarcinii"
 
 #, fuzzy

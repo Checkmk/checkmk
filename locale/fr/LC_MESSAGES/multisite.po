@@ -13283,6 +13283,9 @@ msgstr "Choisissez les touches suivantes"
 msgid "Choose the logic with which the value is to be interpreted."
 msgstr "Choisissez la logique avec laquelle la valeur doit être interprétée."
 
+msgid "Choose the maximum time to allow between last-update checks"
+msgstr ""
+
 msgid ""
 "Choose the monitoring core to run for monitoring. You can also decide to run "
 "no monitoring core in this site. This can be useful for instances running "
@@ -41376,6 +41379,10 @@ msgid "Maximum test runtime"
 msgstr "Durée d'exécution du processus"
 
 msgid "Maximum time since last start of job execution"
+msgstr "Temps maximum depuis le dernier démarrage de l'exécution du travail"
+
+#, fuzzy
+msgid "Maximum time since last update check"
 msgstr "Temps maximum depuis le dernier démarrage de l'exécution du travail"
 
 #, fuzzy

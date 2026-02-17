@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-12 22:34+0000\n"
+"PO-Revision-Date: 2026-02-17 03:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.15.2\n"
 
 msgid " "
 msgstr " "
@@ -7813,7 +7813,7 @@ msgid "Automation calls"
 msgstr "Automatisierungsaufrufe"
 
 msgid "Automation secret for machine accounts"
-msgstr "Automatisierungspasswort für Maschinenkonten"
+msgstr "Automationspasswort für Maschinenkonten"
 
 msgid "Automation user authentication via HTTP parameters"
 msgstr "Authentifizierung des Automationsbenutzers über HTTP-Parameter"
@@ -12760,6 +12760,9 @@ msgstr "Wählen Sie die folgenden Schlüssel"
 msgid "Choose the logic with which the value is to be interpreted."
 msgstr "Wähle die Logik, mit welcher der Wert interpretiert werden soll."
 
+msgid "Choose the maximum time to allow between last-update checks"
+msgstr ""
+
 msgid ""
 "Choose the monitoring core to run for monitoring. You can also decide to run "
 "no monitoring core in this site. This can be useful for instances running "
@@ -13623,9 +13626,9 @@ msgstr ""
 msgid "Command"
 msgstr "Befehl"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Command %s"
-msgstr "Befehle"
+msgstr "Befehl %s"
 
 #, python-format
 msgid "Command %s/%d not found"
@@ -22842,6 +22845,8 @@ msgid ""
 "Error reading parent scan settings. Please delete the file ''%s' and try "
 "again."
 msgstr ""
+"Fehler beim Lesen der Einstellungen zum Elter-Scan. Bitte löschen Sie die "
+"Datei ''%s' und versuchen Sie es erneut."
 
 #, python-format
 msgid "Error showing view: %s"
@@ -24175,9 +24180,9 @@ msgstr "Schätzung der Apache-Prozessgröße fehlgeschlagen"
 msgid "Failed to execute DCD connection (%s)"
 msgstr "DCD-Verbindung konnte nicht ausgeführt werden (%s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Failed to execute the test %s: See web.log for further details"
-msgstr "Fehler beim Ausführen des Tests %s: %s"
+msgstr "Fehler beim Ausführen des Tests %s: für weitere Details siehe web.log"
 
 #, python-format
 msgid "Failed to extract %s"
@@ -39620,6 +39625,10 @@ msgstr "Maximale Testlaufzeit"
 msgid "Maximum time since last start of job execution"
 msgstr "Maximale Zeit seit der letzten Ausführung des Jobs"
 
+#, fuzzy
+msgid "Maximum time since last update check"
+msgstr "Maximale Zeit seit der letzten Ausführung des Jobs"
+
 msgid "Maximum uptime of the device"
 msgstr "Maximale Laufzeit des Geräts"
 
@@ -39764,7 +39773,7 @@ msgid "Members "
 msgstr "Mitglieder "
 
 msgid "Members of contact groups"
-msgstr "Mitglieder der Kontaktgruppe"
+msgstr "Mitglieder von Kontaktgruppen"
 
 msgid "Members of the contact group:"
 msgstr "Mitglieder der Kontaktgruppe:"
@@ -46541,9 +46550,9 @@ msgstr "Ausgehende Non-Unicast-Pakete"
 msgid "Output octets"
 msgstr "Ausgabe-Oktette"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Output of %s"
-msgstr "Ausgaben"
+msgstr "Ausgabe von %s"
 
 msgid ""
 "Output of `dpkg -l`. See the corresponding commandline help for more details."
@@ -52206,9 +52215,8 @@ msgstr "Replikationsverzögerung"
 msgid "Replica ready state"
 msgstr "Bereitschaftszustand der Replik"
 
-#, fuzzy
 msgid "Replica terminating state"
-msgstr "Bereitschaftszustand der Replik"
+msgstr "Status für das Beenden der Replica"
 
 msgid "Replica update state"
 msgstr "Update-Zustand des Replicas"
@@ -55164,6 +55172,9 @@ msgid ""
 "Select the site to create a dump for. The actual contents of the dump can be "
 "selected in the next screen."
 msgstr ""
+"Wählen Sie die Instanz aus, für die Sie einen Speicherauszug erstellen "
+"möchten. Der tatsächliche Inhalt des Speicherauszugs kann im nächsten "
+"Bildschirm ausgewählt werden."
 
 msgid ""
 "Select the software the LDAP directory is based on. Depending on the "
@@ -57995,7 +58006,7 @@ msgstr ""
 "Gradienten ab, 100% macht ihn so stark wie möglich."
 
 msgid "Slot"
-msgstr ""
+msgstr "Slot"
 
 msgid "Slow views"
 msgstr "Langsame Ansichten"
@@ -61864,13 +61875,11 @@ msgstr "Beendete Container"
 msgid "Terminated pod resources"
 msgstr "Beendete Pod-Ressourcen"
 
-#, fuzzy
 msgid "Terminating duration (Deployment only)"
-msgstr "Fehlgeplante Dauer (nur DaemonSet)"
+msgstr "Dauer der Beendigung (nur Verteilung)"
 
-#, fuzzy
 msgid "Terminating replicas"
-msgstr "Verbleibende Leseoperationen"
+msgstr "Beendigungs-Replica"
 
 msgid "Terse"
 msgstr "Knapp"
@@ -66426,6 +66435,8 @@ msgstr "Das ausgewählte Symbol ist nicht vorhanden."
 
 msgid "The selected options do not match any hosts, nothing to do."
 msgstr ""
+"Die ausgewählten Optionen stimmen mit keinem Host überein, es gibt nichts zu "
+"tun."
 
 msgid "The sensor name"
 msgstr "Der Sensorname"
@@ -71574,6 +71585,10 @@ msgid ""
 "The rule only works when the Nagios core is used. If the Checkmk Micro Core "
 "is used, this rule has no effect at all."
 msgstr ""
+"Mit dieser Einstellung können Sie aktive Checks für einen Service "
+"deaktivieren oder aktivieren. Die Regel funktioniert nur, wenn der Nagios-"
+"Kern verwendet wird. Bei Verwendung des Checkmk Micro Core hat diese Regel "
+"keinerlei Auswirkungen."
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -79512,7 +79527,7 @@ msgid "Venue ID"
 msgstr "Venue-ID"
 
 msgid "Vera (embedded)"
-msgstr ""
+msgstr "Vera (eingebettet)"
 
 msgid "Verbose"
 msgstr "Verboses Logging"
@@ -86966,7 +86981,7 @@ msgstr "Sie haben eine Verbindungsüberlaufrate von %.2f/s"
 
 #, python-format
 msgid "you need to set %s parameter to either %s."
-msgstr ""
+msgstr "Sie müssen den Parameter %s auf einen der folgenden Werte setzen %s."
 
 msgid "z/OS"
 msgstr "z/OS"

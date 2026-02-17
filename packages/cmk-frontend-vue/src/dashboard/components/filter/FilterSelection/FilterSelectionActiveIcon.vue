@@ -13,13 +13,13 @@ defineProps<Props>()
 </script>
 
 <template>
-  <CmkMultitoneIcon
-    v-if="isActive"
-    name="check-circle"
-    :primary-color="{ custom: 'var(--db-filter-selection-active-icon-color)' }"
-    class="db-filter-selection-active-icon"
-  />
-  <span v-else class="db-filter-selection-active-icon" />
+  <span class="db-filter-selection-active-icon">
+    <CmkMultitoneIcon
+      v-if="isActive"
+      name="check-circle"
+      :primary-color="{ custom: 'var(--db-filter-selection-active-icon-color)' }"
+    />
+  </span>
 </template>
 
 <style scoped>

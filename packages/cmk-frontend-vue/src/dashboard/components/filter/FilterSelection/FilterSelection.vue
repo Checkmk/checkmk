@@ -72,6 +72,10 @@ const totalFilterCount = computed(() => {
   return props.categoryFilter.length
 })
 
+const categorySelectedCount = computed(() => {
+  return props.categoryFilter.filter((filter) => props.filters.isFilterActive(filter.id)).length
+})
+
 const getGroupFilterCount = (group: FilterGroup) => {
   const selectedCount = group.entries.filter((filter) =>
     props.filters.isFilterActive(filter.id)
@@ -209,7 +213,10 @@ onMounted(() => {
           </div>
           <div class="filter-menu__selection-summary">
             {{
-              `${filters.selectedFilterCount.value} ${_t('of')} ${totalFilterCount} ${_t('selected')}`
+              _t('%{selected} of %{total} selected', {
+                selected: categorySelectedCount,
+                total: totalFilterCount
+              })
             }}
           </div>
         </div>

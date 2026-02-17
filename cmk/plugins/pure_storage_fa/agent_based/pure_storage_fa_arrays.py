@@ -32,11 +32,11 @@ from cmk.plugins.lib.df import (
 class Array(BaseModel, frozen=True):
     total_physical: float
     capacity: float
-    data_reduction: float
+    data_reduction: float | None
     unique: float
     snapshots: float
     shared: float
-    system: float
+    system: float | None
     replication: float
 
 
@@ -84,13 +84,15 @@ def check_overall_capacity(item: str, params: Mapping[str, Any], section: Array)
 
     yield Metric("fs_size", section.capacity, boundaries=(0, None))
 
-    yield from check_levels_v1(
-        section.data_reduction,
-        metric_name="data_reduction",
-        levels_lower=params.get("data_reduction"),
-        render_func=lambda x: f"{x:.2f} to 1",
-        label="Data reduction",
-    )
+    # Only show data reduction if available (not None due to subscription limits)
+    if section.data_reduction is not None:
+        yield from check_levels_v1(
+            section.data_reduction,
+            metric_name="data_reduction",
+            levels_lower=params.get("data_reduction"),
+            render_func=lambda x: f"{x:.2f} to 1",
+            label="Data reduction",
+        )
 
     yield Result(state=State.OK, notice=f"Unique: {render.bytes(section.unique)}")
     yield Metric("unique_size", section.unique)
@@ -101,8 +103,10 @@ def check_overall_capacity(item: str, params: Mapping[str, Any], section: Array)
     yield Result(state=State.OK, notice=f"Shared: {render.bytes(section.shared)}")
     yield Metric("shared_size", section.shared)
 
-    yield Result(state=State.OK, notice=f"System: {render.bytes(section.system)}")
-    yield Metric("system_size", section.system)
+    # Only show system size if available (not None due to subscription limits)
+    if section.system is not None:
+        yield Result(state=State.OK, notice=f"System: {render.bytes(section.system)}")
+        yield Metric("system_size", section.system)
 
     yield Result(state=State.OK, notice=f"Replication: {render.disksize(section.replication)}")
     yield Metric("replication_size", section.replication)

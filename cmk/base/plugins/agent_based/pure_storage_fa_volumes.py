@@ -29,7 +29,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 class Volume(BaseModel, frozen=True):
     virtual: float
     total_provisioned: float
-    data_reduction: float
+    data_reduction: float | None
     unique: float
     snapshots: float
 
@@ -76,13 +76,15 @@ def check_volume_capacity(
         params,
     )
 
-    yield from check_levels(
-        volume.data_reduction,
-        metric_name="data_reduction",
-        levels_lower=params.get("data_reduction"),
-        render_func=lambda x: f"{x:.2f} to 1",
-        label="Data reduction",
-    )
+    # Only show data reduction if available (not None due to subscription limits)
+    if volume.data_reduction is not None:
+        yield from check_levels(
+            volume.data_reduction,
+            metric_name="data_reduction",
+            levels_lower=params.get("data_reduction"),
+            render_func=lambda x: f"{x:.2f} to 1",
+            label="Data reduction",
+        )
 
     yield Result(state=State.OK, notice=f"Size: {render.bytes(volume.total_provisioned)}")
     yield Metric("fs_size", volume.total_provisioned, boundaries=(0, None))

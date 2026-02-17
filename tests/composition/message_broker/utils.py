@@ -185,8 +185,14 @@ def _await_shovels_ready(site: Site) -> None:
     for _ in range(180):
         try:
             raw = site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout
-        except subprocess.CalledProcessError:
-            logger.exception("Failed to get shovel status on %s; waiting...", site.id)
+        except subprocess.CalledProcessError as e:
+            logger.exception(
+                "Failed to get shovel status on %s (rc=%s, stdout=%r, stderr=%r); waiting...",
+                site.id,
+                e.returncode,
+                e.stdout,
+                e.stderr,
+            )
             time.sleep(1)
             continue
 

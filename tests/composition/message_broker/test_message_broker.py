@@ -102,6 +102,7 @@ class TestMessageBroker:
             _trace_broker_messages(central_site),
             _trace_broker_messages(remote_site),
         ):
+            await_broker_ready(central_site, remote_site)
             assert_message_exchange_working(central_site, remote_site)
 
     @pytest.mark.skip("CMK-29677: suspicious message broker tests")

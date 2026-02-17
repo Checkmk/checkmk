@@ -111,6 +111,15 @@ class Config(BaseModel):
     def internal_rest_api_url(self) -> str:
         return f"{self.base_url}/check_mk/api/internal"
 
+    @property
+    def is_remote_site(self) -> bool:
+        distributed_mk = self.omd_root / "etc/omd/distributed.mk"
+        if not distributed_mk.exists():
+            return False
+        file_vars: dict[str, object] = {}
+        exec(distributed_mk.read_text(), file_vars, file_vars)  # nosec B102
+        return file_vars.get("is_wato_remote_site") is True
+
 
 @cache
 def get_config() -> Config:

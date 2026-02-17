@@ -71,3 +71,10 @@ Interfaces
 ^^^^^^^^^^
 The relay engine does not expose any interfaces.
 It only talks to the REST API of the agent receiver
+
+Constraints
+-----------
+
+The relay can only be registered with a **central site**.
+Registration with a remote site in a distributed monitoring setup is not supported.
+The agent receiver rejects relay registration requests on remote sites with HTTP 403.

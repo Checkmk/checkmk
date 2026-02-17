@@ -65,3 +65,12 @@ class CertificateCNError(HTTPException):
             status_code=HTTPStatus.BAD_GATEWAY,
             detail=f"Unexpected certificate CN value: expected '{expected_cn}', actual '{actual_cn}'",
         )
+
+
+class RemoteSiteError(HTTPException):
+    def __init__(self) -> None:
+        super().__init__(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail="Relay registration is not supported on remote sites. "
+            "Please register the Relay with the central site instead.",
+        )

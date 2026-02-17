@@ -6,12 +6,13 @@ import dataclasses
 
 from pydantic import SecretStr
 
+from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.cert_retriever import get_certificates
 from cmk.agent_receiver.relay.lib.relays_repository import (
     RelayNotFoundError,
     RelaysRepository,
 )
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, RemoteSiteError
 from cmk.agent_receiver.relay.lib.site_auth import InternalAuth, UserAuth
 from cmk.relay_protocols import relays as relay_protocols
 
@@ -23,6 +24,8 @@ class RegisterRelayHandler:
     def process(
         self, authorization: SecretStr, request: relay_protocols.RelayRegistrationRequest
     ) -> relay_protocols.RelayRegistrationResponse:
+        if get_config().is_remote_site:
+            raise RemoteSiteError()
         relay_id = RelayID(request.relay_id)
         # Important: First authenticate
         auth = UserAuth(authorization)

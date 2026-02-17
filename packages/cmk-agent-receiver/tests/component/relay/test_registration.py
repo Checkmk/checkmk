@@ -76,6 +76,53 @@ def test_registering_a_relay_does_not_affect_other_relays(
     assert len(tasks_A.tasks) == 1
 
 
+def test_relay_registration_rejected_on_remote_site(
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+    site_context: Config,
+) -> None:
+    """Verify that relay registration is rejected when the agent receiver runs on a remote site.
+
+    Test steps:
+    1. Configure the site as a remote site by creating distributed.mk
+    2. Attempt to register a relay
+    3. Verify registration is rejected with 403 and an informative error message
+    """
+    distributed_mk = site_context.omd_root / "etc/omd/distributed.mk"
+    distributed_mk.write_text("is_wato_remote_site = True\n")
+
+    relay_id = random_relay_id()
+    site.set_scenario([], [(relay_id, OP.ADD)])
+
+    resp = agent_receiver.register_relay(relay_id, "relay1")
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    assert "remote site" in resp.json()["detail"].lower()
+
+
+def test_relay_registration_allowed_on_central_site_in_distributed_setup(
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+    site_context: Config,
+) -> None:
+    """Verify that relay registration is allowed on a central site in a distributed setup.
+
+    Test steps:
+    1. Configure the site as a central site by creating distributed.mk with is_wato_remote_site = False
+    2. Register a relay
+    3. Verify registration succeeds
+    """
+    distributed_mk = site_context.omd_root / "etc/omd/distributed.mk"
+    distributed_mk.write_text("is_wato_remote_site = False\n")
+
+    relay_id = random_relay_id()
+    site.set_scenario([], [(relay_id, OP.ADD)])
+
+    resp = agent_receiver.register_relay(relay_id, "relay1")
+
+    assert resp.status_code == HTTPStatus.OK
+
+
 def test_certificate_validity_period(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,

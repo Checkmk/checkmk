@@ -145,8 +145,16 @@ div#top_heading {
         text-align: center;
       }
 
+      div.icon_container > cmk-static-icon {
+        display: inline-block;
+        /* compensate border offset of the "> img.icon" */
+        position: relative;
+        top: -3px;
+        left: -3px;
+      }
+
       div.icon_container,
-      div.icon_container > img.icon {
+      div.icon_container > cmk-static-icon > img.icon {
         width: 25px;
         height: 25px;
         border: 3px solid rgba($font-color, 0.4);
@@ -155,11 +163,7 @@ div#top_heading {
         transition: clip-path 0.25s;
       }
 
-      div.icon_container > img.icon {
-        /* compensate border offset */
-        position: relative;
-        top: -3px;
-        left: -3px;
+      div.icon_container > cmk-static-icon > img.icon {
         border: 3px solid $font-color;
         clip-path: polygon(0 0);
       }
@@ -167,7 +171,7 @@ div#top_heading {
       > a:hover {
         color: $font-color;
 
-        div.icon_container > img.icon {
+        div.icon_container > cmk-static-icon > img.icon {
           border-color: $success;
         }
       }

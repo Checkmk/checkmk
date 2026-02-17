@@ -44,15 +44,6 @@ def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
     return False
 
 
-@contextmanager
-def _trace_broker_messages(site: Site) -> Iterator[None]:
-    try:
-        site.run(["cmk-monitor-broker", "--enable_tracing"])
-        yield
-    finally:
-        site.run(["cmk-monitor-broker", "--disable_tracing"])
-
-
 @pytest.mark.skip("CMK-29677: suspicious message broker tests")
 @pytest.mark.skip_if_edition("cloud")
 class TestCMKBrokerTest:
@@ -97,11 +88,7 @@ class TestMessageBroker:
     @pytest.mark.xfail(strict=False, reason="CMK-29677: suspicious message broker tests")
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
         """Test if the connection between central and remote site works"""
-        with (
-            rabbitmq_info_on_failure([central_site, remote_site]),
-            _trace_broker_messages(central_site),
-            _trace_broker_messages(remote_site),
-        ):
+        with rabbitmq_info_on_failure([central_site, remote_site]):
             await_broker_ready(central_site, remote_site)
             assert_message_exchange_working(central_site, remote_site)
 
@@ -138,11 +125,7 @@ class TestMessageBroker:
     @pytest.mark.xfail(strict=False, reason="CMK-29677: suspicious message broker tests")
     def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
         """Ensure that sites can still communicate after the message broker port is changed"""
-        with (
-            rabbitmq_info_on_failure([central_site, remote_site]),
-            _trace_broker_messages(central_site),
-            _trace_broker_messages(remote_site),
-        ):
+        with rabbitmq_info_on_failure([central_site, remote_site]):
             site_connection = central_site.openapi.sites.show(remote_site.id)
             site_connection_port = int(
                 site_connection["configuration_connection"]["message_broker_port"]

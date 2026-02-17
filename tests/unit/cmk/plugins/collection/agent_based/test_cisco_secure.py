@@ -295,13 +295,9 @@ def test_discovery_cisco_secure() -> None:
 
 def test_check_cisco_secure() -> None:
     results = list(check_cisco_secure(_section()))
-    assert len(results) == 72
-    assert results[40] == Result(
-        state=State.CRIT,
-        summary=(
-            "Port Ethernet1/1/2: shutdown due to security violation (violation count: 0, last MAC: )"
-        ),
-    )
+    # All ports have status=3 but no actual violations (violation_count=0 and no lastmac)
+    # so they are all skipped, resulting in OK
+    assert results == [Result(state=State.OK, summary="No port security violation")]
 
 
 def _section_unknown() -> Section:
@@ -415,10 +411,47 @@ def _section_unknown() -> Section:
 
 def test_check_cisco_secure_unknown() -> None:
     results = list(check_cisco_secure(_section_unknown()))
-    assert len(results) == 11
+    # Ports with status=3 and no violations are skipped.
+    # Only ports with status=None (unknown) and unknown enabled state produce UNKNOWN.
+    assert len(results) == 2
     assert results[0] == Result(
         state=State.UNKNOWN,
+        summary="Port Vethernet693: unknown (violation count: 0, last MAC: ) unknown enabled state",
+    )
+    assert results[1] == Result(
+        state=State.UNKNOWN,
+        summary="Port Vethernet697: unknown (violation count: 0, last MAC: ) unknown enabled state",
+    )
+
+
+def test_check_cisco_secure_with_real_violation() -> None:
+    """Test that CRIT is still triggered when there are actual violations."""
+    section = parse_cisco_secure(
+        [
+            [
+                ["436207616", "Ethernet1/1", "1"],
+                ["436211712", "Ethernet1/2", "1"],
+            ],
+            [
+                # Port with violation_count > 0 should be CRIT
+                ["436207616", "2", "3", "5", ""],
+                # Port with lastmac should be CRIT
+                ["436211712", "2", "3", "0", "\x00\x11\x22\x33\x44\x55"],
+            ],
+        ]
+    )
+    results = list(check_cisco_secure(section))
+    assert len(results) == 2
+    assert results[0] == Result(
+        state=State.CRIT,
         summary=(
-            "Port Vethernet693: unknown (violation count: 0, last MAC: ) unknown enabled state"
+            "Port Ethernet1/1: shutdown due to security violation (violation count: 5, last MAC: )"
+        ),
+    )
+    assert results[1] == Result(
+        state=State.CRIT,
+        summary=(
+            "Port Ethernet1/2: shutdown due to security violation "
+            "(violation count: 0, last MAC: 00:11:22:33:44:55)"
         ),
     )

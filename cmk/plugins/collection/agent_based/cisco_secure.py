@@ -95,6 +95,12 @@ def check_cisco_secure(section: Section) -> CheckResult:
 
     at_least_one_problem = False
     for name, op_state, is_enabled, status, violation_count, lastmac in section:
+        # Skip ports with status=3 (shutdown) but no actual violation evidence.
+        # Some devices (e.g. Cisco Firepower) report status=3 on virtual interfaces
+        # without real security violations.
+        if status == 3 and violation_count == 0 and not lastmac:
+            continue
+
         message = "Port %s: %s (violation count: %d, last MAC: %s)" % (
             name,
             secure_states.get(status, "unknown"),
@@ -107,7 +113,7 @@ def check_cisco_secure(section: Section) -> CheckResult:
             if status == 2 and op_state == 1 and violation_count > 0:
                 yield Result(state=State.WARN, summary=message)
                 at_least_one_problem = True
-            # Security issue -> CEIT
+            # Security issue -> CRIT
             elif status == 3:
                 yield Result(state=State.CRIT, summary=message)
                 at_least_one_problem = True

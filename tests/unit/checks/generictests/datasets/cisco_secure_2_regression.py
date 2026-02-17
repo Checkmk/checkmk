@@ -131,51 +131,6 @@ checks = {
                     "Port Vethernet697: unknown (violation count: 0, last MAC: ) unknown enabled state",
                     [],
                 ),
-                (
-                    3,
-                    "Port Vethernet701: shutdown due to security violation (violation count: 0, last MAC: ) unknown enabled state",
-                    [],
-                ),
-                (
-                    3,
-                    "Port Ethernet1/1/2: shutdown due to security violation (violation count: 0, last MAC: ) unknown enabled state",
-                    [],
-                ),
-                (
-                    2,
-                    "Port Ethernet1/1/4: shutdown due to security violation (violation count: 0, last MAC: )",
-                    [],
-                ),
-                (
-                    2,
-                    "Port Ethernet1/1/6: shutdown due to security violation (violation count: 0, last MAC: )",
-                    [],
-                ),
-                (
-                    2,
-                    "Port Ethernet1/1/8: shutdown due to security violation (violation count: 0, last MAC: )",
-                    [],
-                ),
-                (
-                    2,
-                    "Port Ethernet1/1/10: shutdown due to security violation (violation count: 0, last MAC: )",
-                    [],
-                ),
-                (
-                    2,
-                    "Port Ethernet1/1/12: shutdown due to security violation (violation count: 0, last MAC: )",
-                    [],
-                ),
-                (
-                    2,
-                    "Port Ethernet1/1/18: shutdown due to security violation (violation count: 0, last MAC: )",
-                    [],
-                ),
-                (
-                    2,
-                    "Port Ethernet1/1/20: shutdown due to security violation (violation count: 0, last MAC: )",
-                    [],
-                ),
             ],
         )
     ]

@@ -37,7 +37,7 @@ class Entity:
     size: float
     active: bool
     reclaimable_size: float | None = None
-    creation: str | None = None
+    creation: str | int | None = None
     repository: str | None = None
     tag: str | None = None
     containers: int | None = None
@@ -131,7 +131,8 @@ def parse_entities(
     result = []
     for line in string_table:
         data = json.loads(line[0])
-        for entry in data.get(key, []):
+        entries = data.get(key, []) if isinstance(data, dict) else data
+        for entry in entries:
             result.append(factory(entry))
     return result
 
@@ -159,7 +160,7 @@ def pre_parse_podman_disk_usage(
             repository=i.get("Repository", ""),
             tag=i.get("Tag", ""),
             containers=int(i.get("Containers", 0)),
-            creation=i["Created"],
+            creation=i.get("Created"),
         ),
     )
     volumes = parse_entities(

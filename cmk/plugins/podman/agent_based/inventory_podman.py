@@ -18,7 +18,9 @@ def _container_to_table(container: Container) -> TableRow:
         path=["software", "applications", "podman", "containers"],
         key_columns={"id": container.Id},
         inventory_columns={
-            "creation": datetime.fromisoformat(container.creation).timestamp(),
+            "creation": datetime.fromisoformat(container.creation).timestamp()
+            if isinstance(container.creation, str)
+            else container.creation,
             "name": container.name[0].strip("/") if container.name else "unnamed",
             "labels": (",".join(f"{k}={v}" for k, v in container.labels.items()))
             if container.labels
@@ -35,8 +37,8 @@ def _image_to_table(image: Entity) -> TableRow:
         key_columns={"id": image.id},
         inventory_columns={
             "creation": datetime.fromisoformat(image.creation).timestamp()
-            if image.creation
-            else "",
+            if isinstance(image.creation, str)
+            else (image.creation if image.creation is not None else ""),
             "size": image.size,
             "container_num": image.containers or 0,
             "repository": image.repository or "",

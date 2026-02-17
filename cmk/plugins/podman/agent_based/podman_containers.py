@@ -45,7 +45,7 @@ class Container(BaseModel, frozen=True):
     State: str
     ExitCode: int
     status: str = Field(alias="Status")
-    creation: str = Field(alias="Created")
+    creation: str | int = Field(alias="Created")
     name: Sequence[str] = Field(alias="Names")
     image: str = Field(alias="Image")
     labels: Mapping[str, str] | None = Field(alias="Labels")

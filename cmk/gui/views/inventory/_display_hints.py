@@ -153,6 +153,7 @@ class TDStyles:
     text_align: str
     background_color: str
     color: str
+    prevent_line_break: bool
 
 
 PaintResultFromAPI = tuple[TDStyles, str | HTML]
@@ -163,7 +164,13 @@ def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
     def _wrap(now: float, value: SDValue) -> PaintResultFromAPI:
         css_class, rendered_value = paint_function(value)
         return (
-            TDStyles(css_class=css_class, text_align="", background_color="", color=""),
+            TDStyles(
+                css_class=css_class,
+                text_align="",
+                background_color="",
+                color="",
+                prevent_line_break=css_class == "number",
+            ),
             rendered_value,
         )
 
@@ -185,6 +192,8 @@ def _set_text_color(bg_color: Color) -> Color:
 def _compute_td_styles(
     styles: Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI],
     default_alignment: AlignmentFromAPI,
+    *,
+    prevent_line_break: bool,
 ) -> TDStyles:
     alignments = []
     background_colors = []
@@ -208,6 +217,7 @@ def _compute_td_styles(
         text_align=_parse_alignment_from_api(alignments[0] if alignments else default_alignment),
         background_color=background_colors[0].value if background_colors else "",
         color=color,
+        prevent_line_break=prevent_line_break,
     )
 
 
@@ -223,7 +233,11 @@ class _PaintBool:
         if not isinstance(value, bool):
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
-            _compute_td_styles(self._field.style(value), self.default_alignment),
+            _compute_td_styles(
+                self._field.style(value),
+                self.default_alignment,
+                prevent_line_break=False,
+            ),
             _make_str(self._field.render_true if value else self._field.render_false),
         )
 
@@ -284,7 +298,11 @@ class _PaintNumber:
                 assert_never(self._field.render)
 
         return (
-            _compute_td_styles(self._field.style(value), self.default_alignment),
+            _compute_td_styles(
+                self._field.style(value),
+                self.default_alignment,
+                prevent_line_break=True,
+            ),
             rendered_value,
         )
 
@@ -301,7 +319,11 @@ class _PaintText:
         if not isinstance(value, str):
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
-            _compute_td_styles(self._field.style(value), self.default_alignment),
+            _compute_td_styles(
+                self._field.style(value),
+                self.default_alignment,
+                prevent_line_break=False,
+            ),
             _make_str(_make_str(self._field.render(value))),
         )
 
@@ -318,7 +340,11 @@ class _PaintChoice:
         if not isinstance(value, (int | float | str)):
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
-            _compute_td_styles(self._field.style(value), self.default_alignment),
+            _compute_td_styles(
+                self._field.style(value),
+                self.default_alignment,
+                prevent_line_break=False,
+            ),
             (
                 f"<{value}> (%s)" % _("No such value")
                 if (rendered := self._field.mapping.get(value)) is None

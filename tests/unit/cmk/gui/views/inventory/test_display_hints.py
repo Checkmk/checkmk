@@ -1184,6 +1184,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1210,6 +1211,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1236,6 +1238,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1262,6 +1265,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1288,6 +1292,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1314,6 +1319,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1340,6 +1346,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1366,6 +1373,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1392,6 +1400,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1418,6 +1427,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1444,6 +1454,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1470,6 +1481,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1496,6 +1508,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1522,6 +1535,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1548,6 +1562,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1574,6 +1589,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1600,6 +1616,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1626,6 +1643,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                 text_align="",
                                 background_color="",
                                 color="",
+                                prevent_line_break=False,
                             ),
                             "",
                         ),
@@ -1674,6 +1692,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1695,6 +1714,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1716,6 +1736,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1737,6 +1758,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1758,6 +1780,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1779,6 +1802,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1800,6 +1824,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1931,6 +1956,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1952,6 +1978,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1973,6 +2000,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -1994,6 +2022,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -2015,6 +2044,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -2036,6 +2066,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                                     text_align="",
                                     background_color="",
                                     color="",
+                                    prevent_line_break=False,
                                 ),
                                 "",
                             ),
@@ -2485,11 +2516,23 @@ def test_render_bool() -> None:
         render_false=LabelFromAPI("It's false"),
     )
     assert _PaintBool(bool_field)(123, True) == (
-        TDStyles(css_class="", text_align="left", background_color="", color=""),
+        TDStyles(
+            css_class="",
+            text_align="left",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
         "It's true",
     )
     assert _PaintBool(bool_field)(456, False) == (
-        TDStyles(css_class="", text_align="left", background_color="", color=""),
+        TDStyles(
+            css_class="",
+            text_align="left",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
         "It's false",
     )
 
@@ -2546,7 +2589,13 @@ def test_render_number(
     )
     now = datetime.datetime(2025, 1, 1, 0, 1, 0, tzinfo=datetime.UTC).timestamp()
     assert _PaintNumber(number_field)(now, value) == (
-        TDStyles(css_class="", text_align="center", background_color="", color=""),
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=True,
+        ),
         expected,
     )
 
@@ -2558,7 +2607,13 @@ def test_render_text() -> None:
         style=lambda _: [LabelColorFromAPI.PINK],
     )
     assert _PaintText(text_field)(123, "world") == (
-        TDStyles(css_class="", text_align="left", background_color="", color="#ec48b6"),
+        TDStyles(
+            css_class="",
+            text_align="left",
+            background_color="",
+            color="#ec48b6",
+            prevent_line_break=False,
+        ),
         "hello world",
     )
 
@@ -2570,7 +2625,13 @@ def test_render_text_with_background_color() -> None:
         style=lambda _: [BackgroundColorFromAPI.BLUE],
     )
     assert _PaintText(text_field)(123, "world") == (
-        TDStyles(css_class="", text_align="left", background_color="#28a2f3", color="#1e262e"),
+        TDStyles(
+            css_class="",
+            text_align="left",
+            background_color="#28a2f3",
+            color="#1e262e",
+            prevent_line_break=False,
+        ),
         "hello world",
     )
 
@@ -2582,7 +2643,13 @@ def test_render_text_with_background_and_text_color() -> None:
         style=lambda _: [LabelColorFromAPI.PINK, BackgroundColorFromAPI.BLUE],
     )
     assert _PaintText(text_field)(123, "world") == (
-        TDStyles(css_class="", text_align="left", background_color="#28a2f3", color="#ec48b6"),
+        TDStyles(
+            css_class="",
+            text_align="left",
+            background_color="#28a2f3",
+            color="#ec48b6",
+            prevent_line_break=False,
+        ),
         "hello world",
     )
 
@@ -2593,11 +2660,23 @@ def test_render_choice() -> None:
         mapping={1: LabelFromAPI("One")},
     )
     assert _PaintChoice(choice_field)(123, 1) == (
-        TDStyles(css_class="", text_align="center", background_color="", color=""),
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
         "One",
     )
     assert _PaintChoice(choice_field)(456, 2) == (
-        TDStyles(css_class="", text_align="center", background_color="", color=""),
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
         "<2> (No such value)",
     )
 

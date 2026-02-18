@@ -65,13 +65,14 @@ class TDSpec:
     text_align: str
     background_color: str
     color: str
+    prevent_line_break: bool
     html_values: Sequence[HTML]
     html_values_separator: str = ""
 
 
 def compute_cell_spec(td_spec: TDSpec, text_align: Literal["", "left"]) -> tuple[str, HTML]:
     css_classes = list(td_spec.css_classes)
-    styles = []
+    styles = ["white-space: nowrap;"] if td_spec.prevent_line_break else []
     if text_align:
         styles.append(f"text-align: {text_align};")
     elif td_spec.text_align:
@@ -120,6 +121,7 @@ class SDItem:
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
+                prevent_line_break=td_styles.prevent_line_break,
                 html_values=[html_value],
             )
 
@@ -135,6 +137,7 @@ class SDItem:
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
+                prevent_line_break=td_styles.prevent_line_break,
                 html_values=[
                     HTMLWriter.render_span(
                         html_value
@@ -158,6 +161,7 @@ class SDItem:
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
+                prevent_line_break=td_styles.prevent_line_break,
                 html_values=[
                     HTMLWriter.render_span(
                         html_value,
@@ -176,6 +180,7 @@ class SDItem:
             text_align=td_styles.text_align,
             background_color=td_styles.background_color,
             color=td_styles.color,
+            prevent_line_break=td_styles.prevent_line_break,
             html_values=[html_value],
         )
 
@@ -196,6 +201,7 @@ class _SDDeltaItem:
                 text_align="",
                 background_color="",
                 color="",
+                prevent_line_break=td_styles.prevent_line_break,
                 html_values=[HTMLWriter.render_span(rendered_value, css="invnew")],
             )
 
@@ -206,6 +212,7 @@ class _SDDeltaItem:
                 text_align="",
                 background_color="",
                 color="",
+                prevent_line_break=td_styles.prevent_line_break,
                 html_values=[HTMLWriter.render_span(rendered_value, css="invold")],
             )
 
@@ -216,6 +223,7 @@ class _SDDeltaItem:
                 text_align="",
                 background_color="",
                 color="",
+                prevent_line_break=td_styles.prevent_line_break,
                 html_values=[HTML.with_escaping(rendered_value)],
             )
 
@@ -227,6 +235,7 @@ class _SDDeltaItem:
                 text_align="",
                 background_color="",
                 color="",
+                prevent_line_break=td_styles.prevent_line_break,
                 html_values=[
                     HTMLWriter.render_span(rendered_old_value, css="invold"),
                     HTMLWriter.render_span(rendered_new_value, css="invnew"),

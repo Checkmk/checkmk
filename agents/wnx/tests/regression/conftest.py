@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="import"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -12,7 +13,7 @@ import subprocess
 import time
 
 import pytest
-import telnetlib3  # type: ignore[import-untyped]
+import telnetlib3
 import yaml
 
 from .local import DEFAULT_CONFIG, host, main_exe, port, run_agent, user_yaml_config
@@ -46,11 +47,15 @@ _result = ""
 
 async def _telnet_shell(reader: telnetlib3.TelnetReader, _: telnetlib3.TelnetWriter) -> None:
     global _result
+
+    data = b""
     while True:
-        data = await reader.read(1024)
-        if not data:
+        block = await reader.read(1024)
+        if not block:
             break
-        _result += data
+        data += block
+
+    _result = data.decode("utf-8", errors="replace")
 
 
 def _read_client_data(addr_host: str, addr_port: int) -> None:

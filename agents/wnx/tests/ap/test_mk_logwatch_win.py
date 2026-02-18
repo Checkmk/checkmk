@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="import"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="no-any-return"
 
 # fmt: off
 
@@ -13,11 +15,10 @@ import locale
 import os
 import re
 import sys
-from collections.abc import Mapping
-
-import pytest
+from collections.abc import Mapping, Sequence
 
 import agents.plugins.mk_logwatch as lw
+import pytest
 
 try:
     from collections.abc import Sequence
@@ -96,9 +97,7 @@ CLUSTER empty
 
 
 @pytest.fixture(name="parsed_config", scope="module")
-def _get_parsed_config() -> (
-    tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]
-):
+def _get_parsed_config() -> ( tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]):
     return lw.read_config(_TEST_CONFIG.split("\n"), files=[], debug=False)
 
 

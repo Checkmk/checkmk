@@ -65,7 +65,8 @@ class TDSpec:
     text_align: str
     background_color: str
     color: str
-    html_value: HTML
+    html_values: Sequence[HTML]
+    html_values_separator: str = ""
 
 
 def compute_cell_spec(td_spec: TDSpec, text_align: Literal["", "left"]) -> tuple[str, HTML]:
@@ -90,10 +91,9 @@ def compute_cell_spec(td_spec: TDSpec, text_align: Literal["", "left"]) -> tuple
         )
     return (
         " ".join(css_classes),
-        (
-            HTMLWriter.render_div(td_spec.html_value, style=" ".join(styles))
-            if styles
-            else td_spec.html_value
+        HTML(td_spec.html_values_separator, escape=False).join(
+            HTMLWriter.render_div(v, style=" ".join(styles)) if styles else v
+            for v in td_spec.html_values
         ),
     )
 
@@ -120,7 +120,7 @@ class SDItem:
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
-                html_value=html_value,
+                html_values=[html_value],
             )
 
         valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
@@ -135,13 +135,17 @@ class SDItem:
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
-                html_value=HTMLWriter.render_span(
-                    html_value
-                    + HTMLWriter.render_nbsp()
-                    + HTMLWriter.render_img(self.icon_path_svc_problems, class_=["icon"]),
-                    title=_("Data is outdated and will be removed with the next check execution"),
-                    css=["muted_text"],
-                ),
+                html_values=[
+                    HTMLWriter.render_span(
+                        html_value
+                        + HTMLWriter.render_nbsp()
+                        + HTMLWriter.render_img(self.icon_path_svc_problems, class_=["icon"]),
+                        title=_(
+                            "Data is outdated and will be removed with the next check execution"
+                        ),
+                        css=["muted_text"],
+                    )
+                ],
             )
 
         if now > valid_until:
@@ -154,15 +158,17 @@ class SDItem:
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
-                html_value=HTMLWriter.render_span(
-                    html_value,
-                    title=_("Data was provided at %s and is considered valid until %s")
-                    % (
-                        cmk.utils.render.date_and_time(self.retention_interval.cached_at),
-                        cmk.utils.render.date_and_time(keep_until),
-                    ),
-                    css=["muted_text"],
-                ),
+                html_values=[
+                    HTMLWriter.render_span(
+                        html_value,
+                        title=_("Data was provided at %s and is considered valid until %s")
+                        % (
+                            cmk.utils.render.date_and_time(self.retention_interval.cached_at),
+                            cmk.utils.render.date_and_time(keep_until),
+                        ),
+                        css=["muted_text"],
+                    )
+                ],
             )
 
         return TDSpec(
@@ -170,7 +176,7 @@ class SDItem:
             text_align=td_styles.text_align,
             background_color=td_styles.background_color,
             color=td_styles.color,
-            html_value=html_value,
+            html_values=[html_value],
         )
 
 
@@ -190,7 +196,7 @@ class _SDDeltaItem:
                 text_align="",
                 background_color="",
                 color="",
-                html_value=HTMLWriter.render_span(rendered_value, css="invnew"),
+                html_values=[HTMLWriter.render_span(rendered_value, css="invnew")],
             )
 
         if self.old is not None and self.new is None:
@@ -200,7 +206,7 @@ class _SDDeltaItem:
                 text_align="",
                 background_color="",
                 color="",
-                html_value=HTMLWriter.render_span(rendered_value, css="invold"),
+                html_values=[HTMLWriter.render_span(rendered_value, css="invold")],
             )
 
         if self.old == self.new:
@@ -210,7 +216,7 @@ class _SDDeltaItem:
                 text_align="",
                 background_color="",
                 color="",
-                html_value=HTML.with_escaping(rendered_value),
+                html_values=[HTML.with_escaping(rendered_value)],
             )
 
         if self.old is not None and self.new is not None:
@@ -221,11 +227,11 @@ class _SDDeltaItem:
                 text_align="",
                 background_color="",
                 color="",
-                html_value=(
-                    HTMLWriter.render_span(rendered_old_value, css="invold")
-                    + " → "
-                    + HTMLWriter.render_span(rendered_new_value, css="invnew")
-                ),
+                html_values=[
+                    HTMLWriter.render_span(rendered_old_value, css="invold"),
+                    HTMLWriter.render_span(rendered_new_value, css="invnew"),
+                ],
+                html_values_separator=" → ",
             )
 
         raise NotImplementedError()

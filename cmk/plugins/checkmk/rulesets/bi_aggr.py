@@ -32,18 +32,15 @@ from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 def migrate_credentials(
     params: object,
-) -> (
-    tuple[Literal["automation"], None]
-    | tuple[Literal["credentials"] | Literal["configured"], Mapping[str, object]]
-):
+) -> tuple[Literal["automation"], None] | tuple[Literal["configured"], Mapping[str, object]]:
     match params:
         case "automation" | ("automation", None):
             return "automation", None
-        case "credentials", ((user, secret) | {"user": user, "secret": secret}):
-            return "credentials", {"user": user, "secret": secret}
-        case "configured", (user, ("password", secret)):
-            return "credentials", {"user": user, "secret": secret}
-        case "configured", {"user": user, "secret": secret}:
+        case (
+            ("credentials", ((user, secret) | {"user": user, "secret": secret}))
+            | ("configured", (user, ("password", secret)))
+            | ("configured", {"user": user, "secret": secret})
+        ):
             return "configured", {"user": user, "secret": secret}
     raise ValueError(params)
 

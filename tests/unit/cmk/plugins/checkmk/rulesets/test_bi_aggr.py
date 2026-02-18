@@ -16,21 +16,21 @@ def test_migrate_automation() -> None:
 
 def test_migrate_credentials_already_migrated() -> None:
     assert migrate_credentials(("credentials", {"user": "USER", "secret": "SECRET"})) == (
-        "credentials",
+        "configured",
         {"user": "USER", "secret": "SECRET"},
     )
 
 
 def test_migrate_credentials() -> None:
     assert migrate_credentials(("credentials", ("USER", "SECRET"))) == (
-        "credentials",
+        "configured",
         {"user": "USER", "secret": "SECRET"},
     )
 
 
 def test_migrate_credentials_configured() -> None:
     assert migrate_credentials(("configured", ("bi_user", ("password", "SECRET")))) == (
-        "credentials",
+        "configured",
         {"user": "bi_user", "secret": "SECRET"},
     )
 

@@ -2207,7 +2207,7 @@ async def process_resource_health(
         if isinstance(response, BaseException):
             if debug:
                 raise response
-            write_exception_to_agent_info_section(response, "Resource Health client", subscription)
+            write_exception_to_agent_info_section(response, "Resource Health client")
             continue
         health_values.extend(response)
 
@@ -2412,9 +2412,7 @@ async def process_bulk_resources(
         if isinstance(resources_async, BaseException):
             if args.debug:
                 raise resources_async
-            write_exception_to_agent_info_section(
-                resources_async, "Process bulk resources (async)", subscription
-            )
+            write_exception_to_agent_info_section(resources_async, "Process bulk resources (async)")
             continue
 
         processed_resources.extend(resources_async)
@@ -2458,7 +2456,8 @@ async def process_single_resources(
             if args.debug:
                 raise resource_async
             write_exception_to_agent_info_section(
-                resource_async, "Process single resources (async)", subscription
+                resource_async,
+                f"Process single resources (async), subscription: {subscription.name}",
             )
             continue
 
@@ -2532,7 +2531,9 @@ async def process_resources(
         except Exception as e:
             if args.debug:
                 raise
-            write_exception_to_agent_info_section(e, "Management client (async)", subscription)
+            write_exception_to_agent_info_section(
+                e, f"Management client (async)  subscription: {subscription.name}"
+            )
 
 
 async def _collect_resources(
@@ -2616,7 +2617,9 @@ async def main_subscription(
     except Exception as exc:
         if args.debug:
             raise
-        write_exception_to_agent_info_section(exc, "Management client", subscription)
+        write_exception_to_agent_info_section(
+            exc, f"Management client, subscription: {subscription.name}"
+        )
 
 
 async def _get_subscriptions(args: argparse.Namespace) -> set[AzureSubscription]:

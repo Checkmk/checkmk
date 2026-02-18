@@ -41,7 +41,7 @@ const filterCategory = computed(() => {
 <template>
   <div class="db-add-filters__container">
     <StepsHeader :title="_t('Add filter')" @back="props.close" />
-    <ContentSpacer :height="40" />
+    <ContentSpacer :height="40" class="db-add-filters__spacer" />
 
     <FilterSelection
       :key="`${filterSelectionTarget}`"
@@ -58,6 +58,10 @@ const filterCategory = computed(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.db-add-filters__spacer {
+  flex: 0;
 }
 
 .db-add-filters__selection {

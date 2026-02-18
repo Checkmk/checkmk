@@ -391,7 +391,6 @@ const serviceMandatoryFilters = computed(() => {
 }
 
 .db-filter-settings__selection-item {
-  flex: 1;
   min-height: 0;
 }
 

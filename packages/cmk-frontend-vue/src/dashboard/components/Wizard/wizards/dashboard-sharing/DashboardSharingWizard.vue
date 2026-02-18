@@ -9,7 +9,7 @@ import { computed } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton.vue'
-import CmkSlideIn from '@/components/CmkSlideIn.vue'
+import CmkSlideIn from '@/components/CmkSlideIn'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { DashboardFeatures, DashboardKey } from '@/dashboard/types/dashboard'

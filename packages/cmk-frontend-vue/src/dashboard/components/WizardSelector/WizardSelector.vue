@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkSlideIn from '@/components/CmkSlideIn.vue'
+import CmkSlideIn from '@/components/CmkSlideIn'
 
 import type { DashboardFeatures, DashboardKey } from '../../types/dashboard.ts'
 import type { ContextFilters } from '../../types/filter.ts'

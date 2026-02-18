@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon'
-import CmkSlideIn from '@/components/CmkSlideIn.vue'
+import CmkSlideIn from '@/components/CmkSlideIn'
 
 import type { DashboardGeneralSettings } from '@/dashboard/types/dashboard'
 

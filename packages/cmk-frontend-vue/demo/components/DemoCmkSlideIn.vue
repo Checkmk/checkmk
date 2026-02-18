@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 
 import CmkButton from '@/components/CmkButton.vue'
-import CmkSlideIn from '@/components/CmkSlideIn.vue'
+import CmkSlideIn from '@/components/CmkSlideIn'
 
 const isOpen = ref(false)
 

@@ -6,7 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+
+import { useSlideInStack } from './useSlideInStack'
 
 // *************************************************************************************************
 // Two different variants of SlideIn overlay are required
@@ -37,14 +39,30 @@ export interface CmkSlideInProps {
   size?: SlideInVariants['size']
   isIndexPage?: boolean | undefined // will be removed after the removal of the iframe
   ariaLabel?: string | undefined
+  stackPriority?: number | undefined
 }
 
 const props = defineProps<CmkSlideInProps>()
 const emit = defineEmits(['close'])
 const dialogContentRef = ref<InstanceType<typeof DialogContent>>()
 
+const { isTopMost, register, unregister } = useSlideInStack(props.stackPriority ?? null)
+const effectiveOpen = computed(() => props.open && isTopMost.value)
+
 watch(
   () => props.open,
+  (isOpen) => {
+    if (isOpen) {
+      register()
+    } else {
+      unregister()
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => effectiveOpen.value,
   async (isOpen) => {
     if (isOpen) {
       await nextTick(() => {
@@ -53,13 +71,21 @@ watch(
     }
   }
 )
+
+onBeforeUnmount(() => {
+  unregister()
+})
 </script>
 
 <template>
-  <DialogRoot :open="open" :modal="!isIndexPage">
+  <DialogRoot v-if="open" :open="effectiveOpen" :modal="!isIndexPage">
     <DialogPortal :to="isIndexPage ? '#content_area' : 'body'">
-      <DialogOverlay v-if="!isIndexPage" class="cmk-slide-in__overlay" @click="emit('close')" />
-      <div v-else-if="open" class="cmk-slide-in__overlay" @click="emit('close')" />
+      <DialogOverlay
+        v-if="!isIndexPage && effectiveOpen"
+        class="cmk-slide-in__overlay"
+        @click="emit('close')"
+      />
+      <div v-if="effectiveOpen" class="cmk-slide-in__overlay" @click="emit('close')" />
       <DialogContent
         ref="dialogContentRef"
         class="cmk-vue-app cmk-slide-in__container"

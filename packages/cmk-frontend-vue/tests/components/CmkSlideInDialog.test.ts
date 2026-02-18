@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen, waitForElementToBeRemoved } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import CmkHelpText from '@/components/CmkHelpText.vue'
@@ -50,7 +50,7 @@ test.each([{ addTooltip: true }, { addTooltip: false }])(
     const closeButton = screen.getByRole('button', { name: 'Close' })
     await fireEvent.click(closeButton)
 
-    await waitForElementToBeRemoved(() => screen.queryByText('Main Content'))
+    await waitFor(() => expect(screen.queryByText('Main Content')).not.toBeInTheDocument())
   }
 )
 
@@ -139,7 +139,7 @@ test('Multiple slide-ins opened sequentially: body styles are managed correctly 
 
   const closeButton = screen.getByRole('button', { name: 'Close' })
   await fireEvent.click(closeButton)
-  await waitForElementToBeRemoved(() => screen.queryByTestId('second-content'))
+  await waitFor(() => expect(screen.queryByTestId('second-content')).not.toBeInTheDocument())
 
   await screen.findByTestId('first-content')
   expect(screen.getByTestId('first-content')).toBeInTheDocument()
@@ -148,7 +148,7 @@ test('Multiple slide-ins opened sequentially: body styles are managed correctly 
 
   const remainingCloseButton = screen.getByRole('button', { name: 'Close' })
   await fireEvent.click(remainingCloseButton)
-  await waitForElementToBeRemoved(() => screen.queryByTestId('first-content'))
+  await waitFor(() => expect(screen.queryByTestId('first-content')).not.toBeInTheDocument())
 
   expect(document.body.style.pointerEvents).toBe('')
   expect(document.body.style.overflow).toBe('')

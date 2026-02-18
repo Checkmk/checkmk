@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon'
-import CmkSlideIn from '@/components/CmkSlideIn.vue'
+import CmkSlideIn from '@/components/CmkSlideIn'
 
 import type {
   DashboardGeneralSettings,
@@ -56,7 +56,7 @@ const cancel = () => {
 </script>
 
 <template>
-  <CmkSlideIn :open="open" :aria-label="_t('Clone dashboard')">
+  <CmkSlideIn :open="open" :aria-label="_t('Clone dashboard')" :stack-priority="10">
     <Suspense>
       <CloneDashboardWizard
         :reference-dashboard-id="activeDashboardId"

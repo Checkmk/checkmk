@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import asdict
-from typing import override
+from typing import Final, override
 
 from cmk.gui.http import Request
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
@@ -18,6 +18,10 @@ from .engines.monitoring import MonitoringSearchEngine
 from .engines.setup import SetupSearchEngine
 from .unified import UnifiedSearch
 
+# Before making this something configurable, we want to first hardcode this setting to a reasonable
+# value and get feedback from users.
+_MONITORING_ENGINE_ROW_LIMIT: Final = 500
+
 
 class PageUnifiedSearch(AjaxPage):
     @override
@@ -30,7 +34,8 @@ class PageUnifiedSearch(AjaxPage):
         unified_search_engine = UnifiedSearch(
             setup_engine=SetupSearchEngine(ctx.config),
             monitoring_engine=MonitoringSearchEngine(
-                UserPermissions.from_config(ctx.config, permission_registry)
+                user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+                row_limit=_MONITORING_ENGINE_ROW_LIMIT,
             ),
             customize_engine=CustomizeSearchEngine(),
         )

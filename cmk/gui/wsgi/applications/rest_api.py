@@ -681,11 +681,11 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         once the call graph to the Endpoint class is properly refactored.
         """
 
-        # example: /heute/check_mk/api/1.0/openapi-doc.yaml
+        # example: /heute/check_mk/api/v1/openapi-doc.yaml
         requested_version_str = environ.get("PATH_INFO", "").split("/")[4]
 
         try:
-            # 1.0 is an alias of APIVersion.V1
+            # "1.0" is kept as a legacy alias for APIVersion.V1 (backwards compatibility)
             requested_version = (
                 APIVersion.V1
                 if requested_version_str == "1.0"

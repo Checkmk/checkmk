@@ -276,7 +276,7 @@ The following script is an example of how to create a host downtime and check th
     USERNAME = "automation"
     PASSWORD = "test123"
     PROTOCOL = "http"
-    API_URL = f"{PROTOCOL}://{SERVER}/{SITE_NAME}/check_mk/api/1.0"
+    API_URL = f"{PROTOCOL}://{SERVER}/{SITE_NAME}/check_mk/api/v1"
 
     session = requests.Session()
     session.headers["Authorization"] = f"Bearer {USERNAME} {PASSWORD}"
@@ -359,7 +359,7 @@ The *major* number is incremented when backwards incompatible changes to the API
 This will reset the *minor* number to *0*. A *werk* which contains the details of the change and
 marking the change as incompatible will be released when this happens.
 
-Th *minor* number will be increased when backwards compatible changes are added to the API. A
+The *minor* number will be increased when backwards compatible changes are added to the API. A
 *werk* detailing the additions will be released when this happens.
 
 **Note:** Despite the noted backward compatibility, API consumers are best to ensure that their
@@ -560,7 +560,7 @@ _SECURITY_SCHEMES = {
 def _make_spec(version: APIVersion) -> APISpec:
     spec = APISpec(
         "Checkmk REST-API",
-        f"{version.numeric_value}.0",
+        str(version),
         "3.1.1",
         plugins=[
             CheckmkPydanticPlugin(),

@@ -197,7 +197,7 @@ class ActivationRunCollection(Linkable):
                     {
                         "domainType": "link",
                         "rel": "self",
-                        "href": "http://localhost/mysite/check_mk/api/1.0/objects/activation_run/b0a0bf49-ff5f-454b-a5d5-9731cb0fb5fa",
+                        "href": "http://localhost/mysite/check_mk/api/v1/objects/activation_run/b0a0bf49-ff5f-454b-a5d5-9731cb0fb5fa",
                         "method": "GET",
                         "type": "application/json",
                     }

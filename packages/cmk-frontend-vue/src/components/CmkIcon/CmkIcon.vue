@@ -17,20 +17,8 @@ const { theme } = useTheme()
 
 const iconSrc = ref('')
 
-watchEffect((onCleanup) => {
-  let isCancelled = false
-  onCleanup(() => {
-    isCancelled = true
-  })
-
-  const fetchIcon = async () => {
-    const path = await getIconPath(props.name, theme.value)
-
-    if (!isCancelled) {
-      iconSrc.value = path
-    }
-  }
-  void fetchIcon()
+watchEffect(() => {
+  iconSrc.value = getIconPath(props.name, theme.value)
 })
 
 const getTransformRotate = () => {

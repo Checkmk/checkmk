@@ -43,7 +43,11 @@ from cmk import trace
 from cmk.gui.http import HTTPMethod
 from cmk.gui.type_defs import KeyId
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
-from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
+from cmk.relay_protocols.relays import (
+    RelayRegistrationRequest,
+    RelayRegistrationResponse,
+    RelayStatusResponse,
+)
 from cmk.relay_protocols.tasks import (
     FetchAdHocTask,
     TaskCreateRequest,
@@ -2027,6 +2031,14 @@ class AgentReceiverRelayAPI(ARBaseAPI):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
+
+    def get_status(self, relay_id: str, cert: tuple[str, str] | None) -> RelayStatusResponse:
+        response = self.session.get(
+            url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/status"), cert=cert
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return RelayStatusResponse.model_validate(response.json())
 
     def put_task(self, relay_id: str, task: FetchAdHocTask) -> TaskCreateResponse:
         response = self.session.post(

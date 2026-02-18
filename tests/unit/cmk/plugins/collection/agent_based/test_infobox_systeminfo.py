@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 import cmk.plugins.collection.agent_based.infoblox_systeminfo as ibsi
 from cmk.agent_based.v2 import Attributes
+from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
 
 
 def _section() -> ibsi.Section:
@@ -36,3 +39,45 @@ def test_inventory_infoblox_systeminfo() -> None:
             },
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    "oid_data, expected_detected",
+    [
+        pytest.param(
+            {
+                ".1.3.6.1.2.1.1.1.0": "Infoblox-NIOS 8.5.2",
+                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.7779.1.1402",
+            },
+            True,
+            id="sysDescr contains infoblox",
+        ),
+        pytest.param(
+            {
+                ".1.3.6.1.2.1.1.1.0": "NIOS 8.5.2",
+                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.7779.1.1402",
+            },
+            True,
+            id="sysObjectID starts with Infoblox enterprise OID",
+        ),
+        pytest.param(
+            {
+                ".1.3.6.1.2.1.1.1.0": "Some other device",
+                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.123",
+            },
+            False,
+            id="neither sysDescr nor sysObjectID match",
+        ),
+    ],
+)
+def test_infoblox_systeminfo_detection(
+    oid_data: dict[str, str],
+    expected_detected: bool,
+) -> None:
+    assert (
+        evaluate_snmp_detection(
+            detect_spec=ibsi.snmp_section_infoblox_systeminfo.detect,
+            oid_value_getter=oid_data.get,
+        )
+        == expected_detected
+    )

@@ -8,13 +8,13 @@ from dataclasses import asdict, dataclass
 
 from cmk.agent_based.v2 import (
     Attributes,
-    contains,
     InventoryPlugin,
     InventoryResult,
     SimpleSNMPSection,
     SNMPTree,
     StringTable,
 )
+from cmk.plugins.infoblox.lib import DETECT_INFOBLOX
 
 
 @dataclass
@@ -40,7 +40,7 @@ snmp_section_infoblox_systeminfo = SimpleSNMPSection(
             "7",  # IB-PLATFORMONE-MIB::ibSerialVersion
         ],
     ),
-    detect=contains(".1.3.6.1.2.1.1.1.0", "infoblox"),
+    detect=DETECT_INFOBLOX,
     parse_function=parse_infoblox_systeminfo,
 )
 

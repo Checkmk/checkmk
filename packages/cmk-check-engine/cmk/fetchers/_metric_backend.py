@@ -12,7 +12,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Final, Self
 
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, FetcherError
 
 from ._abstract import Fetcher
 
@@ -62,6 +62,14 @@ class MetricBackendFetcherConfig:
         )
 
 
+def _has_cause(exc: Exception, cause_type: type[Exception]) -> bool:
+    while exc.__cause__ is not None:
+        _exc = exc.__cause__
+        if isinstance(_exc, cause_type):
+            return True
+    return False
+
+
 class MetricBackendFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
@@ -93,5 +101,15 @@ class MetricBackendFetcher(Fetcher[AgentRawData]):
     @typing.override
     def _fetch_from_io(self, mode: object) -> AgentRawData:
         self._logger.debug("Get data from metric backend")
-
-        return AgentRawData(self.make_output(self.omd_root, self.argv).encode("utf-8"))
+        try:
+            return AgentRawData(self.make_output(self.omd_root, self.argv).encode("utf-8"))
+        except Exception as e:
+            if not _has_cause(e, ConnectionRefusedError):
+                raise
+            else:
+                raise FetcherError(
+                    "Backend initializing, please wait for 2-3 check cycles. "
+                    "If this error persists, make sure the metric backend (Clickhouse) is running. "
+                    "If the error still persists, please contact the Checkmk support. "
+                    f"(Details: {e})\n"
+                ) from e

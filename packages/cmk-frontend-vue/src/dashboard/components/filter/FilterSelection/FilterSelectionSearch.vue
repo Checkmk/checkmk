@@ -45,7 +45,11 @@ const searchResults = computed(() => {
     return []
   }
 
-  return props.allFilters.filter((filter) => searchRegex.value.test(filter.title))
+  return props.allFilters.filter(
+    (filter: FlatFilter) =>
+      searchRegex.value.test(filter.title) ||
+      (filter.groupName !== undefined && searchRegex.value.test(filter.groupName))
+  )
 })
 
 const showSearchDropdown = computed(() => searchTerm.value.trim().length > 0)

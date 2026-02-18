@@ -12,6 +12,7 @@ import CmkIcon from '@/components/CmkIcon'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
+import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { FilterHTTPVars, GraphWidgetContent } from '@/dashboard/types/widget.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
@@ -19,6 +20,7 @@ import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
 const cmkToken = useInjectCmkToken()
+const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
 const dataEndpointUrl: Ref<string> = computed(() => {
   return cmkToken ? 'widget_graph_token_auth.py' : 'widget_graph.py'
 })
@@ -149,6 +151,8 @@ onBeforeUnmount(() => {
       ref="contentDiv"
       class="db-content-graph"
       :class="{ 'db-content-graph__preview': isPreview && !showLegend }"
+      @click.capture="suppressEventOnPublicDashboard"
+      @keydown.capture="suppressEventOnPublicDashboard"
     />
   </DashboardContentContainer>
 </template>

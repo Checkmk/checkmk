@@ -13,6 +13,7 @@ import SharedDashboardMenuHeader from '@/dashboard/components/DashboardMenuHeade
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useDashboardFilters } from '@/dashboard/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
+import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction'
 import { type DashboardKey, DashboardLayout } from '@/dashboard/types/dashboard.ts'
@@ -39,6 +40,7 @@ const sharedDashboard = createDashboardModel(props.dashboard.spec, DashboardLayo
 provide(urlParamsKey, props.url_params)
 // TODO: remove this hard coded "0:" once the backend can provide the token version
 useProvideCmkToken(`0:${props.token_value}`)
+useProvideIsPublicDashboard()
 useProvideDashboardConstants(props.dashboard_constants)
 
 const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filter_context))

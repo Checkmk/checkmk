@@ -14,6 +14,7 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkPerfometer from '@/components/CmkPerfometer.vue'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type {
   ComputedTopList,
   TopListContent,
@@ -28,6 +29,7 @@ import type { ContentProps } from './types.ts'
 const { _t } = usei18n()
 const props = defineProps<ContentProps<TopListContent>>()
 const cmkToken = useInjectCmkToken()
+const isPublicDashboard = useInjectIsPublicDashboard()
 const data = ref<ComputedTopList | undefined>(undefined)
 const fetchingErrorMessage = ref<string | null>(null)
 
@@ -135,14 +137,14 @@ const valueRange: Ref<[number, number] | undefined> = computed(() => {
           </tr>
           <tr v-for="(entry, index) in data!.entries" :key="index">
             <td>
-              <a :href="hostViewUrl(entry)">
-                {{ entry.host_name }}
-              </a>
+              <a v-if="!isPublicDashboard" :href="hostViewUrl(entry)">{{ entry.host_name }}</a>
+              <span v-else>{{ entry.host_name }}</span>
             </td>
             <td v-if="content.columns.show_service_description === true">
-              <a :href="serviceViewUrl(entry)">
-                {{ entry.service_description }}
-              </a>
+              <a v-if="!isPublicDashboard" :href="serviceViewUrl(entry)">{{
+                entry.service_description
+              }}</a>
+              <span v-else>{{ entry.service_description }}</span>
             </td>
             <td v-if="content.columns.show_bar_visualization === false">
               {{ entry.metric.formatted }}
@@ -171,19 +173,20 @@ const valueRange: Ref<[number, number] | undefined> = computed(() => {
           </tr>
           <tr v-for="(error, index) in data!.errors" :key="index">
             <td>
-              <a :href="hostViewUrl(error)">
-                {{ error.host_name }}
-              </a>
+              <a v-if="!isPublicDashboard" :href="hostViewUrl(error)">{{ error.host_name }}</a>
+              <span v-else>{{ error.host_name }}</span>
             </td>
             <td>
-              <a :href="serviceViewUrl(error)">
-                {{ error.service_description }}
-              </a>
+              <a v-if="!isPublicDashboard" :href="serviceViewUrl(error)">{{
+                error.service_description
+              }}</a>
+              <span v-else>{{ error.service_description }}</span>
             </td>
             <td>
-              <a :href="checkCommandViewUrl(error)">
-                {{ error.check_command }}
-              </a>
+              <a v-if="!isPublicDashboard" :href="checkCommandViewUrl(error)">{{
+                error.check_command
+              }}</a>
+              <span v-else>{{ error.check_command }}</span>
             </td>
           </tr>
         </tbody>

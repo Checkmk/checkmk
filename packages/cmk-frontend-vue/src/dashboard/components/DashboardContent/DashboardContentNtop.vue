@@ -7,12 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 
 import { NtopBase, getIfid } from './ntop.ts'
 import type { ContentProps, NtopType } from './types.ts'
 
 const props = defineProps<ContentProps>()
 const cmkToken = useInjectCmkToken()
+const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
 
 let ntop: NtopBase | undefined = undefined
 const interfaceDivId: string = 'ntop_interface_quickstats'
@@ -61,9 +63,9 @@ onBeforeUnmount(() => {
   <div
     v-else
     class="db-content-ntop__wrapper ntop"
-    :class="{
-      'db-content-ntop__background': !!general_settings.render_background
-    }"
+    :class="{ 'db-content-ntop__background': !!general_settings.render_background }"
+    @click.capture="suppressEventOnPublicDashboard"
+    @keydown.capture="suppressEventOnPublicDashboard"
   >
     <div :id="interfaceDivId" class="ntop_interface_quickstats" />
     <div :id="contentDivId" class="db-content-ntop" />

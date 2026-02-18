@@ -17,6 +17,7 @@ import {
 
 import DashboardContentContainer from '@/dashboard/components/DashboardContent/DashboardContentContainer.vue'
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { FilterHTTPVars } from '@/dashboard/types/widget.ts'
 
 import { FigureBase } from './cmk_figures.ts'
@@ -24,6 +25,7 @@ import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
 const cmkToken = useInjectCmkToken()
+const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
 const dataEndpointUrl: Ref<string> = computed(() => {
   return cmkToken ? 'widget_figure_token_auth.py' : 'widget_figure.py'
 })
@@ -179,6 +181,8 @@ onBeforeUnmount(() => {
           },
           legacyFigureType
         ]"
+        @click.capture="suppressEventOnPublicDashboard"
+        @keydown.capture="suppressEventOnPublicDashboard"
       ></div>
     </div>
   </DashboardContentContainer>

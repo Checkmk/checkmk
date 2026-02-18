@@ -8,6 +8,7 @@ import { computed } from 'vue'
 
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
+import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { WidgetGeneralSettings } from '@/dashboard/types/widget'
 
 interface DashboardContentContainerProps {
@@ -29,6 +30,8 @@ const {
 const hasBackground = computed<boolean>(() => {
   return !!generalSettings.render_background
 })
+
+const isPublicDashboard = useInjectIsPublicDashboard()
 </script>
 
 <template>
@@ -43,7 +46,7 @@ const hasBackground = computed<boolean>(() => {
       role="heading"
     >
       <a
-        v-if="generalSettings.title?.url && !isScrollablePreview"
+        v-if="generalSettings.title?.url && !isScrollablePreview && !isPublicDashboard"
         :href="generalSettings.title.url"
         >{{ effectiveTitle }}</a
       >

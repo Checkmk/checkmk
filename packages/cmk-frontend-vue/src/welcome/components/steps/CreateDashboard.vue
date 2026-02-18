@@ -61,7 +61,7 @@ const emit = defineEmits(['step-completed'])
     </StepParagraph>
 
     <CmkWizard v-model="currentStep" mode="guided">
-      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Explore the Checkmk built-in dashboards') }}</CmkHeading>
         </template>
@@ -87,7 +87,7 @@ const emit = defineEmits(['step-completed'])
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create your own custom dashboard') }}</CmkHeading>
         </template>

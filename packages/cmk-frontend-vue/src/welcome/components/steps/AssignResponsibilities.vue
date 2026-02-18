@@ -71,7 +71,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
     </CmkAlertBox>
 
     <CmkWizard v-model="currentStep" mode="guided">
-      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a contact group') }}</CmkHeading>
         </template>
@@ -95,7 +95,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign users to a contact group') }}</CmkHeading>
         </template>
@@ -122,7 +122,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="2" :is-completed="() => currentStep >= 2">
+      <CmkWizardStep :index="2" :is-completed="() => currentStep > 2 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign hosts to a contact group') }}</CmkHeading>
         </template>

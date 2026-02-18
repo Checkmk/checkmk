@@ -71,7 +71,7 @@ This allows monitoring to start with minimal configuration effort.`
     </StepParagraph>
 
     <CmkWizard v-model="currentStep" mode="guided">
-      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Set up basic folder structure') }}</CmkHeading>
         </template>
@@ -102,7 +102,7 @@ This allows monitoring to start with minimal configuration effort.`
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 0">
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Add your first host') }}</CmkHeading>
         </template>

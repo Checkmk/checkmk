@@ -74,7 +74,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
     </CmkAlertBox>
 
     <CmkWizard v-model="currentStep" mode="guided">
-      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Open and run service discovery') }}</CmkHeading>
         </template>
@@ -101,7 +101,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Open the ruleset for a check parameter') }}</CmkHeading>
         </template>
@@ -128,7 +128,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="2" :is-completed="() => currentStep >= 2">
+      <CmkWizardStep :index="2" :is-completed="() => currentStep > 2 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a check parameter rule') }}</CmkHeading>
         </template>

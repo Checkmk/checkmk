@@ -77,7 +77,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
     </CmkAlertBox>
 
     <CmkWizard v-model="currentStep" mode="guided">
-      <CmkWizardStep :index="0" :is-completed="() => currentStep >= 0">
+      <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a notification rule') }}</CmkHeading>
         </template>
@@ -103,7 +103,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         </template>
       </CmkWizardStep>
 
-      <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
         <template #header>
           <CmkHeading type="h3">{{ _t('Send a test notification') }}</CmkHeading>
         </template>

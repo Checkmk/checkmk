@@ -246,10 +246,16 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
         )
         expect(agent_download_dialog).to_be_visible()
 
-        agent_download_button = dashboard_page.main_area.locator(
-            "div.cmk-dialog__content > div > button.cmk-button.cmk-button--variant-info"
+        agent_download_button = agent_download_dialog.get_by_role(
+            "button", name="Download & install agent"
         )
-        agent_download_button.click()
+
+        if agent_download_button.is_visible():
+            button_to_click = agent_download_button
+        else:
+            button_to_click = agent_download_dialog.get_by_role("button", name="Register agent")
+
+        button_to_click.click()
 
         slideout = dashboard_page.main_area.locator("div.cmk-vue-app.cmk-slide-in__container")
         expect(slideout).to_be_visible()

@@ -263,6 +263,20 @@ export class SiteOverview extends FigureBase<SiteData> {
     this.render_title(this._data.title, this._data.title_url!)
   }
 
+  override clear_display() {
+    if (this.canvas) {
+      this.canvas.style('display', 'none')
+    }
+    super.clear_display()
+  }
+
+  override clear_error_info() {
+    if (this.canvas) {
+      this.canvas.style('display', null)
+    }
+    super.clear_error_info()
+  }
+
   _compute_host_geometry(num_elements: number, box_area: BoxArea): HostGeometry {
     let box_width = this._max_box_width[this._data.box_scale]
     let num_columns = Math.max(Math.floor(box_area.width / box_width), 1)

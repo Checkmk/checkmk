@@ -168,6 +168,13 @@ export class HostStats extends FigureBase<FigureResponseData> {
 
         this.render_title(this._title, this._title_url);
     }
+
+    override clear_display() {
+        if (this._table_div) {
+            this._table_div.selectAll("*").remove();
+        }
+        super.clear_display()
+    }
 }
 
 export class ServiceStats extends HostStats {

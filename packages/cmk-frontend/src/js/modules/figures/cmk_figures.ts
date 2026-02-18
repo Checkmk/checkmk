@@ -201,7 +201,7 @@ export abstract class FigureBase<
       this.remove_loading_image()
       return
     }
-    this._clear_error_info()
+    this.clear_error_info()
     this.process_data(api_response.result.figure_response)
     this._fetch_data_latency = +(new Date().getDate() - this._fetch_start) / 1000
   }
@@ -220,6 +220,11 @@ export abstract class FigureBase<
     this._call_post_render_hooks(data)
   }
 
+  clear_display() {
+    if (!this.svg) return
+    this.svg.style('display', 'none')
+  }
+
   _show_error_info(error_info: string, div_class: string) {
     this._div_selection
       .selectAll('div#figure_error')
@@ -227,12 +232,12 @@ export abstract class FigureBase<
       .join('div')
       .attr('id', 'figure_error')
       .attr('class', div_class)
+      .style('position', 'absolute')
       .text(error_info)
-    if (!this.svg) return
-    this.svg.style('display', 'none')
+    this.clear_display()
   }
 
-  _clear_error_info() {
+  clear_error_info() {
     this._div_selection.select('#figure_error').remove()
     if (!this.svg) return
     this.svg.style('display', null)

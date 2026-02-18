@@ -568,9 +568,31 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                 _("You need to be a member of at least one contact group to create a %s.")
                 % self._mode_type.name_singular(),
             )
+
+        if self._new:
+            html.vue_component(
+                "cmk-mode-create-oauth2-connection",
+                data={
+                    "new": True,
+                    "config": asdict(get_oauth2_connection_config()),
+                    "form_spec": asdict(
+                        serialize_data_for_frontend(
+                            form_spec=get_oauth2_connection_form_spec(),
+                            field_id=form_name,
+                            do_validate=False,
+                        )
+                    ),
+                    "authority_mapping": get_authority_mapping(),
+                    "connector_type": self._connector_type(),
+                },
+            )
+            return
+
+        client_secret = load_passwords()[self._entry["client_secret"][2][0]]
+        editable_by = client_secret["owned_by"]
+        self._check_connection_permissions(editable_by)
+
         if self._clone:
-            client_secret = load_passwords()[self._entry["client_secret"][2][0]]
-            editable_by = client_secret["owned_by"]
             html.vue_component(
                 "cmk-mode-create-oauth2-connection",
                 data={
@@ -604,28 +626,6 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
             )
             return
 
-        if self._new:
-            html.vue_component(
-                "cmk-mode-create-oauth2-connection",
-                data={
-                    "new": True,
-                    "config": asdict(get_oauth2_connection_config()),
-                    "form_spec": asdict(
-                        serialize_data_for_frontend(
-                            form_spec=get_oauth2_connection_form_spec(),
-                            field_id=form_name,
-                            do_validate=False,
-                        )
-                    ),
-                    "authority_mapping": get_authority_mapping(),
-                    "connector_type": self._connector_type(),
-                },
-            )
-            return
-
-        client_secret = load_passwords()[self._entry["client_secret"][2][0]]
-        editable_by = client_secret["owned_by"]
-        self._check_connection_permissions(editable_by)
         html.vue_component(
             "cmk-mode-create-oauth2-connection",
             data={

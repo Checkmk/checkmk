@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-17 03:34+0000\n"
+"PO-Revision-Date: 2026-02-17 18:34+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -1146,7 +1146,7 @@ msgid "15 minutes"
 msgstr "15分"
 
 msgid "17"
-msgstr ""
+msgstr "17"
 
 msgid "2 weeks back"
 msgstr "2週間前"
@@ -1163,9 +1163,8 @@ msgstr "20.0 - 50.0ミリ秒"
 msgid "200.0 - 500.0 ms"
 msgstr "200.0 - 500.0ミリ秒"
 
-#, fuzzy
 msgid "3"
-msgstr "A3"
+msgstr "3"
 
 msgid "3 months"
 msgstr "3ヶ月"
@@ -2921,9 +2920,8 @@ msgstr "絶対空きメモリ"
 msgid "Absolute free space"
 msgstr "絶対空きスペース"
 
-#, fuzzy
 msgid "Absolute free virtual memory"
-msgstr "絶対空きメモリ"
+msgstr "完全な空き仮想メモリ"
 
 msgid "Absolute levels"
 msgstr "絶対レベル"
@@ -2988,9 +2986,8 @@ msgstr "ビットまたはバイト/秒単位の絶対レベル"
 msgid "Absolute levels of active sessions"
 msgstr "アクティブなセッションの絶対レベル"
 
-#, fuzzy
 msgid "Absolute limit"
-msgstr "絶対"
+msgstr "絶対限界"
 
 msgid "Absolute number of active connections"
 msgstr "アクティブな接続の絶対数"
@@ -3016,9 +3013,8 @@ msgstr "絶対使用済みリースレベル"
 msgid "Absolute used memory"
 msgstr "絶対使用メモリ"
 
-#, fuzzy
 msgid "Absolute used virtual memory"
-msgstr "絶対使用メモリ"
+msgstr "完全使用済み仮想メモリ"
 
 msgid "Absolute value"
 msgstr "絶対値"
@@ -3779,13 +3775,11 @@ msgstr "NGINXインスタンスを追加します"
 msgid "Add OID descriptions"
 msgstr "OIDの説明を追加する"
 
-#, fuzzy
 msgid "Add OpenTelemetry collector prometheus scraping configuration"
-msgstr "OpenTelemetryコレクターの設定を追加する"
+msgstr "OpenTelemetryコレクターPrometheusスクレイピング設定を追加する"
 
-#, fuzzy
 msgid "Add OpenTelemetry collector receiver configuration"
-msgstr "OpenTelemetryコレクターの設定を追加する"
+msgstr "OpenTelemetryコレクターレシーバー設定を追加する"
 
 msgid "Add Prefix"
 msgstr "プレフィックスを追加"
@@ -5697,17 +5691,16 @@ msgstr "すべてのプロトコル"
 msgid "All queues listed here will be skipped."
 msgstr "ここにリストされているすべてのキューはスキップされます。"
 
-#, fuzzy
 msgid ""
 "All related configuration of the integrated OpenTelemetry collector "
 "Prometheus scraping."
-msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
+msgstr ""
+"統合 OpenTelemetry コレクタPrometheusスクレイピングに関連するすべての設定。"
 
-#, fuzzy
 msgid ""
 "All related configuration of the integrated OpenTelemetry collector "
 "receivers."
-msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
+msgstr "統合されたOpenTelemetryコレクターレシーバーの関連するすべての設定。"
 
 msgid "All related information or settings of licensing of Checkmk sites."
 msgstr "Checkmkサイトのライセンスに関する全ての関連情報または設定。"
@@ -8288,7 +8281,7 @@ msgid "Azure"
 msgstr "Azure"
 
 msgid "Azure AD Connect"
-msgstr "Azure AD Connect"
+msgstr "Azure AD 接続"
 
 msgid "Azure Agent Info"
 msgstr "Azureエージェント情報"
@@ -37376,7 +37369,7 @@ msgid "Main dashboard"
 msgstr "メインダッシュボード"
 
 msgid "Main folder"
-msgstr "メインフォルダ"
+msgstr "メインフォルダー"
 
 msgid "Main memory usage (UNIX / Other Devices)"
 msgstr "メインメモリ使用量(UNIX /その他のデバイス)"
@@ -70594,6 +70587,14 @@ msgid "Time until alert, if READY condition is false"
 msgstr "READYがfalseの場合の、警告までの許容期間"
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
+msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの時間"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEINPROGRESS condition is true"
+msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの時間"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEPENDING condition is true"
 msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの時間"
 
 msgid "Time until alert, if latest CronJob job is in pending state"

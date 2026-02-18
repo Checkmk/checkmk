@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-17 03:34+0000\n"
+"PO-Revision-Date: 2026-02-17 18:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -33743,7 +33743,7 @@ msgid "Instance identifier & region"
 msgstr "Instanz-Identifier & -Region"
 
 msgid "Instance name"
-msgstr "Name der Instanz"
+msgstr "Instanzname"
 
 msgid "Instance state"
 msgstr "Zustand der Instanz"
@@ -62662,7 +62662,7 @@ msgstr "Der Object Name der MBean, zum Beispiel java.lang:type=Memory"
 
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
-"Der MSSQL Instanzname und der Tablespacename getrennt durch ein Leerzeichen."
+"Der MSSQL Instanzname und der Tablespace-Name getrennt durch ein Leerzeichen."
 
 msgid ""
 "The MSSQL instance name, the tablespace name and the backup type, each "
@@ -64636,7 +64636,7 @@ msgid "The installed agent needs an update"
 msgstr "Der installierte Agent benötigt ein Update"
 
 msgid "The instance name"
-msgstr "Name der Instanz"
+msgstr "Der Instanzname"
 
 msgid "The instance name and backup type"
 msgstr "Der Instanzname und der Sicherungstyp"
@@ -72790,6 +72790,14 @@ msgid "Time until alert, if READY condition is false"
 msgstr "Zeit bis zum Alert, wenn die Bedingung READY falsch ist"
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
+msgstr "Zeit bis zum Alert, wenn die Bedingung REPLICAFAILURE erfüllt ist"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEINPROGRESS condition is true"
+msgstr "Zeit bis zum Alert, wenn die Bedingung REPLICAFAILURE erfüllt ist"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEPENDING condition is true"
 msgstr "Zeit bis zum Alert, wenn die Bedingung REPLICAFAILURE erfüllt ist"
 
 msgid "Time until alert, if latest CronJob job is in pending state"

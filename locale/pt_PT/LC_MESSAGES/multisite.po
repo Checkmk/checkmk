@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-11 08:33+0000\n"
+"PO-Revision-Date: 2026-02-17 18:34+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 5.11.4\n"
+"X-Generator: Weblate 5.15.2\n"
 
 msgid " "
 msgstr ""
@@ -74872,6 +74872,14 @@ msgid "Time until alert, if READY condition is false"
 msgstr "Tempo até ao alerta, se a condição READY for falsa"
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
+msgstr "Tempo até ao alerta, se a condição REPLICAFAILURE for verdadeira"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEINPROGRESS condition is true"
+msgstr "Tempo até ao alerta, se a condição REPLICAFAILURE for verdadeira"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEPENDING condition is true"
 msgstr "Tempo até ao alerta, se a condição REPLICAFAILURE for verdadeira"
 
 msgid "Time until alert, if latest CronJob job is in pending state"

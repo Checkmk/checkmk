@@ -75648,6 +75648,14 @@ msgstr "Temps jusqu'à l'alerte, si la condition READY est fausse"
 msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "Temps jusqu'à l'alerte, si la condition REPLICAFAILURE est vraie"
 
+#, fuzzy
+msgid "Time until alert, if RESIZEINPROGRESS condition is true"
+msgstr "Temps jusqu'à l'alerte, si la condition REPLICAFAILURE est vraie"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEPENDING condition is true"
+msgstr "Temps jusqu'à l'alerte, si la condition REPLICAFAILURE est vraie"
+
 msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr ""
 "Délai avant alerte, si le dernier travail CronJob est en cours d'exécution"

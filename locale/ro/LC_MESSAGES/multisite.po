@@ -75176,6 +75176,18 @@ msgstr ""
 "Timpul până la alertă, în cazul în care condiția REPLICAFAILURE este "
 "adevărată"
 
+#, fuzzy
+msgid "Time until alert, if RESIZEINPROGRESS condition is true"
+msgstr ""
+"Timpul până la alertă, în cazul în care condiția REPLICAFAILURE este "
+"adevărată"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEPENDING condition is true"
+msgstr ""
+"Timpul până la alertă, în cazul în care condiția REPLICAFAILURE este "
+"adevărată"
+
 msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr ""
 "Timpul până la alertă, dacă ultima sarcină CronJob este în stare de așteptare"

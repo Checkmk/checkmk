@@ -74933,6 +74933,14 @@ msgstr "Tijd tot waarschuwing, indien voorwaarde GEREED vals is"
 msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "Tijd tot waarschuwing, indien voorwaarde REPLICAFAILURE waar is"
 
+#, fuzzy
+msgid "Time until alert, if RESIZEINPROGRESS condition is true"
+msgstr "Tijd tot waarschuwing, indien voorwaarde REPLICAFAILURE waar is"
+
+#, fuzzy
+msgid "Time until alert, if RESIZEPENDING condition is true"
+msgstr "Tijd tot waarschuwing, indien voorwaarde REPLICAFAILURE waar is"
+
 msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr "Tijd tot waarschuwing, als de laatste CronJob-taak in afwachting is"
 

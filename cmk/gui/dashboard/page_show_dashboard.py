@@ -108,7 +108,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
             },
         }
 
-    html.body_start()
+    html.body_start(title)
     html.begin_page_content(enable_scrollbar=True)
 
     _may_show_license_messages(ctx.request)

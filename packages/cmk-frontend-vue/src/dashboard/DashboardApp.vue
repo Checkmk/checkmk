@@ -223,6 +223,12 @@ const dashboardVisualTitle = useDashboardVisualTitle(
   dashboardFilters.baseFilters
 )
 
+watch(dashboardVisualTitle, (newTitle) => {
+  // We only set the title for the current document. If we're inside the index page,
+  // the tabs title will be correctly updated via initialize_sidebar() periodically.
+  document.title = newTitle
+})
+
 const handleWizardSelectorGoBack = () => {
   // when editing, do not go back to widget type selection (and clear the edit state)
   if (widgetToEdit.value) {

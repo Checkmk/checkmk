@@ -51,8 +51,8 @@ class SharedDashboardPageComponents:
             raise ValueError("Referenced invalid dashboard token")
 
     @staticmethod
-    def html_section(page_properties: dict[str, Any]) -> None:
-        html.body_start()
+    def html_section(title: str, page_properties: dict[str, Any]) -> None:
+        html.body_start(title)
         html.begin_page_content(enable_scrollbar=True)
         html.vue_component("cmk-shared-dashboard", data=page_properties)
 
@@ -129,7 +129,7 @@ def page_shared_dashboard(
         "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
         "token_value": token_id,
     }
-    SharedDashboardPageComponents.html_section(page_properties)
+    SharedDashboardPageComponents.html_section(title, page_properties)
 
 
 def page_dashboard_token_invalid(title: str) -> Response:

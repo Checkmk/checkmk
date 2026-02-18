@@ -165,7 +165,6 @@ def test_registered_pages() -> None:
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_pages += [
-            "ajax_host_overview_tooltip",
             "ajax_pagetype_add_element",
             "ajax_popup_add_metric_to_graph",
             "combined_graphs",

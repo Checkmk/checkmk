@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { BaseType, D3ZoomEvent, Quadtree, Selection, ZoomTransform } from 'd3'
-import { group, json, pointer, quadtree, scaleLinear, select, zoom, zoomIdentity } from 'd3'
+import { group, pointer, quadtree, scaleLinear, select, zoom, zoomIdentity } from 'd3'
 import { hexbin as d3Hexbin_hexbin } from 'd3-hexbin'
 
 import { FigureTooltip } from '@/modules/figures/cmk_figure_tooltip'
@@ -17,7 +17,70 @@ import type {
   IconElement,
   SiteElement
 } from '@/modules/figures/figure_types'
-import { makeuri, makeuri_contextless } from '@/modules/utils'
+import { makeuri } from '@/modules/utils'
+
+interface HostTooltipI18n {
+  host_is: string
+  in_downtime: string
+  problem_services: string
+  service_in_state: string
+  worst_state: string
+  services_plural: string
+  service_singular: string
+}
+
+const DEFAULT_HOST_TOOLTIP_I18N: HostTooltipI18n = {
+  host_is: 'Host is',
+  in_downtime: 'in downtime',
+  problem_services: 'problem services',
+  service_in_state: 'service in %s state',
+  worst_state: ' (worst state: %s)',
+  services_plural: 'services',
+  service_singular: 'service'
+}
+
+/**
+ * Build host tooltip HTML from the structured data already present in the HostElement.
+ *
+ * This is the single source of truth for the tooltip content.  The backend sends
+ * the raw fields (host_css_class, service_css_class, num_services, num_problems)
+ * and pre-translated i18n labels; the frontend renders the HTML here.
+ */
+function _render_host_tooltip_html(
+  host: HostElement,
+  i18n: HostTooltipI18n = DEFAULT_HOST_TOOLTIP_I18N
+): string {
+  const host_css = host.host_css_class
+  const state_label = host_css !== 'downtime' ? host_css : i18n.in_downtime
+  let tooltip = '<h3>' + host.title + '</h3>'
+  tooltip += '<span>' + i18n.host_is + ' ' + state_label + '</span>'
+
+  if (host_css !== 'up') {
+    return tooltip
+  }
+
+  const num_services = host.num_services
+  const num_problems = host.num_problems
+  const service_css = host.service_css_class
+
+  let problem_label = i18n.problem_services
+  if (num_problems === 1) {
+    problem_label = i18n.service_in_state.replace('%s', service_css)
+  } else if (num_problems > 1) {
+    problem_label += i18n.worst_state.replace('%s', service_css)
+  }
+
+  tooltip += '<table>'
+  tooltip +=
+    '<tr><td class="count">' +
+    num_services +
+    '</td><td>' +
+    (num_services > 1 ? i18n.services_plural : i18n.service_singular) +
+    '</td></tr>'
+  tooltip += '<tr><td class="count">' + num_problems + '</td><td>' + problem_label + '</td></tr>'
+  tooltip += '</table>'
+  return tooltip
+}
 
 export interface HostGeometry {
   radius: number
@@ -62,6 +125,7 @@ interface SiteData extends FigureData<ABCElement> {
   render_mode: SiteOverviewRenderMode
   upper_bound: number
   box_scale: 'default' | 'large'
+  host_tooltip_i18n?: HostTooltipI18n
 }
 
 type HexagonContent<Geometry = HostGeometry | SiteGeometry, Element = HostElement | SiteElement> = {
@@ -78,10 +142,8 @@ export class SiteOverview extends FigureBase<SiteData> {
   _last_zoom!: ZoomTransform
   _tooltip!: Selection<HTMLDivElement, unknown, BaseType, unknown>
   tooltip_generator!: FigureTooltip
-  _fetching_host_tooltip!: boolean
   _last_hovered_host!: null | HostElement
   _tooltip_timestamp!: number
-  _loading_img_html!: string
   _hexagon_content!: null | HexagonContent
 
   getEmptyData(): SiteData {
@@ -155,13 +217,8 @@ export class SiteOverview extends FigureBase<SiteData> {
     this._tooltip = this._div_selection.append('div').classed('tooltip', true)
     this.tooltip_generator = new FigureTooltip(this._tooltip)
 
-    this._fetching_host_tooltip = false
     this._last_hovered_host = null
     this._tooltip_timestamp = 0
-
-    const loading_img = this._tooltip.append('div').classed('loading_img', true)
-    this._loading_img_html = loading_img.node()!.outerHTML
-    loading_img.remove()
   }
 
   add_filter() {
@@ -556,21 +613,16 @@ export class SiteOverview extends FigureBase<SiteData> {
       (this._hexagon_content!.geometry as HostGeometry).radius
     )
 
-    // Only fetch host tooltip if a new host is hovered or if the given tooltip is older than 5s
+    // Render tooltip when a new host is hovered or current one is stale (>5 s)
     if (host && (host != this._last_hovered_host || Date.now() - this._tooltip_timestamp >= 5000)) {
-      // Display a loading image when a new host is hovered
-      if (host != this._last_hovered_host) {
-        this._last_hovered_host = host
-        host.hexagon_config.forEach(
-          (d) => (d.tooltip = '<h3>' + host.title + '</h3>' + this._loading_img_html)
-        )
-      }
+      this._last_hovered_host = host
 
-      // Only fetch host tooltip, if no fetch is currently underway
-      if (!this._fetching_host_tooltip) {
-        this._fetching_host_tooltip = true
-        this._fetch_host_tooltip(host)
-      }
+      const tooltip_html = _render_host_tooltip_html(
+        host,
+        this._data.host_tooltip_i18n ?? DEFAULT_HOST_TOOLTIP_I18N
+      )
+      host.hexagon_config.forEach((d) => (d.tooltip = tooltip_html))
+      this._tooltip.html(tooltip_html)
 
       this._tooltip_timestamp = Date.now()
     }
@@ -807,47 +859,5 @@ export class SiteOverview extends FigureBase<SiteData> {
       geometry = compute_geometry(num_columns++)
     }
     return geometry
-  }
-
-  _fetch_host_tooltip(host: HostElement) {
-    // Destructuring the object host to post the needed data only
-    const post_data = (({
-      title,
-      host_css_class,
-      service_css_class,
-      num_services,
-      num_problems
-    }) => ({
-      title,
-      host_css_class,
-      service_css_class,
-      num_services,
-      num_problems
-    }))(host)
-
-    json(makeuri_contextless(post_data, 'ajax_host_overview_tooltip.py'), {
-      credentials: 'include',
-      method: 'POST',
-      headers: {
-        'Content-type': 'application/x-www-form-urlencoded'
-      }
-    })
-      .then((json_data) => {
-        if (host == this._last_hovered_host) {
-          // @ts-ignore
-          const host_tooltip: string = json_data.result.host_tooltip
-          host.hexagon_config.forEach((d: { tooltip: string }) => (d.tooltip = host_tooltip))
-          this._tooltip.html(host_tooltip)
-          this._fetching_host_tooltip = false
-        } else {
-          // Start a new fetch if the hovered host has already changed
-          this._fetch_host_tooltip(this._last_hovered_host!)
-        }
-      })
-      .catch((e) => {
-        console.error(e)
-        this._show_error_info('Error fetching tooltip data', '')
-        this._fetching_host_tooltip = false
-      })
   }
 }

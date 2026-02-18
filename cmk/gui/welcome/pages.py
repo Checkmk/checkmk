@@ -225,10 +225,11 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 identifier="robotmk_managed_robots_overview",
                 permitted=user.may("edit_managed_robots"),
             ),
-            opentelemetry=_make_url_or_callback_from_registry(
-                is_snapin=is_snapin,
-                identifier="otel_collectors",
-            ),
+            # TODO Readd if target is implemented, see CMK-31599
+            # opentelemetry=_make_url_or_callback_from_registry(
+            #    is_snapin=is_snapin,
+            #    identifier="otel_collectors",
+            # ),
             activate_changes=_make_url(
                 addvars=[("mode", "changelog")],
                 filename="wato.py",

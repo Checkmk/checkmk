@@ -9,7 +9,7 @@ import { computed } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import FilterSelection from '@/dashboard/components/filter/FilterSelection/FilterSelection.vue'
-import { CATEGORY_DEFINITIONS } from '@/dashboard/components/filter/FilterSelection/utils'
+import { getCategoryDefinition } from '@/dashboard/components/filter/FilterSelection/utils'
 import { type Filters } from '@/dashboard/components/filter/composables/useFilters'
 import { parseFilterTypes, useFilterDefinitions } from '@/dashboard/components/filter/utils'
 import type { ObjectType } from '@/dashboard/types/shared.ts'
@@ -46,7 +46,7 @@ const filterCategory = computed(() => {
     <FilterSelection
       :key="`${filterSelectionTarget}`"
       :category-filter="filterCategory || []"
-      :category-definition="CATEGORY_DEFINITIONS[filterSelectionTarget]!"
+      :category-definition="getCategoryDefinition(filterSelectionTarget)"
       :filters="filters"
       class="db-add-filters__selection"
     />

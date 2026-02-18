@@ -37,6 +37,10 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryDefinition> = {
   }
 }
 
+export function getCategoryDefinition(name: string): CategoryDefinition {
+  return CATEGORY_DEFINITIONS[name] ?? { name, title: name.charAt(0).toUpperCase() + name.slice(1) }
+}
+
 export function buildProcessedCategories(
   categoryDefinitions: CategoryDefinition[],
   categoryFilters: Map<string, FilterType[]>,

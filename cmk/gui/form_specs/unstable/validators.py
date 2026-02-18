@@ -82,7 +82,7 @@ class HostAddress:
 
     def __init__(
         self,
-        error_msg: Message = Message("Your input is not a valid hostname or IP address."),
+        error_msg: Message = Message("Enter a valid IP address or host name."),
     ) -> None:
         self.error_msg = error_msg
 

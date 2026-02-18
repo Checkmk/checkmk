@@ -94,7 +94,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         return self._receiver(receiver_type).get_by_label("Encrypt communication with TLS")
 
     def ip_address_or_hostname_textfield(self, receiver_type: str) -> Locator:
-        return self._receiver(receiver_type).get_by_role("textbox", name="IP address or hostname")
+        return self._receiver(receiver_type).get_by_role("textbox", name="IP address or host name")
 
     def port_textfield(self, receiver_type: str) -> Locator:
         return self._receiver(receiver_type).get_by_role("spinbutton", name="Port")

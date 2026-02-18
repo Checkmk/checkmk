@@ -256,15 +256,29 @@ Only rely on non-standard modules that are mentioned in the `Pipfile`.
 
 All python files must have a `.py`-extension.
 Vice versa all files with `.py`-extension must be valid python files.
-For a transition phase existing files are still tolerated.
 
-Executable python scripts should be replaced by shell wrappers like
+Executable scripts can be executed from shell wrappers like
 
 ```
 #!/bin/sh
 # $LICENSE-TEXT
 
 exec python3 -m cmk.something.ninja_module "$@"
+```
+
+Alternatively, the `.py` file can be deployed under an extension-free
+name using Bazel's rename-on-deploy, so the running process keeps
+`argv[0]` matching the legacy name. In the relevant `pkg_files`
+target, add the `.py` file as an explicit `srcs` entry and register a
+per-file rename:
+
+```starlark
+pkg_files(
+    name = "…",
+    srcs = ["//path/to:check_foo.py"],
+    attributes = pkg_attributes(mode = "0755"),
+    renames = {"//path/to:check_foo.py": "check_foo"},
+)
 ```
 
 For the license text, please refer to [Copyright and Licensing](#copyright-and-licensing)

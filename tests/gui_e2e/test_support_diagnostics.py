@@ -40,6 +40,8 @@ def test_download_diagnostics(dashboard_page: Dashboard, request: pytest.Fixture
 
     error_pattern = re.compile(r"ERROR.*?[:\n]")
     ignore_errors = {
+        # TODO: CMK-31563; update ignore list once ticket is resolved.
+        "ERROR - Command ss -tulpen not available on this system.",
         # TODO: CMK-23084; update ignore list once ticket is resolved.
         "ERROR - No Checkmk server found",
         # TODO: CMK-20811; update ignore list once ticket is resolved.

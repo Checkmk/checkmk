@@ -29,13 +29,25 @@ from cmk.shared_typing.setup import AgentInstallCmds as SetupAgentInstallCmds
 from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrationCmds
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 
-WINDOWS_AGENT_INSTALL_CMD = """curl.exe -fOG {{SERVER}}/{{SITE}}/check_mk/agents/windows/check_mk_agent.msi && ^
-msiexec /i check_mk_agent.msi"""
+WINDOWS_AGENT_INSTALL_CMD = """curl.exe -o check-mk-agent_{version}.msi \\
+    {{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/1.0/domain-types/agent/actions/download/invoke \\
+    --header 'Accept: application/octet-stream' \\
+    --header 'Authorization: Bearer USERNAME PASSWORD' \\
+    --data-urlencode 'os_type=windows_msi' ^ \\
+msiexec /i check_mk_agent_{version}.msi"""
 
-LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -fOG {{{{SERVER}}}}/{{{{SITE}}}}/check_mk/agents/check-mk-agent_{version}-1_all.deb && \\
+LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1_all.deb -fJG \\
+    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/1.0/domain-types/agent/actions/download/invoke' \\
+    --header 'Accept: application/octet-stream' \\
+    --header 'Authorization: Bearer USERNAME PASSWORD' \\
+    --data-urlencode 'os_type=linux_deb' && \\
 sudo dpkg -i check-mk-agent_{version}-1_all.deb"""
 
-LINUX_RPM_AGENT_INSTALL_CMD = """curl -fOG {{{{SERVER}}}}/{{{{SITE}}}}/check_mk/agents/check-mk-agent-{version}-1.noarch.rpm && \\
+LINUX_RPM_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1.noarch.rpm -fJG  \\
+    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/1.0/domain-types/agent/actions/download/invoke' \\
+    --header 'Accept: application/octet-stream' \\
+    --header 'Authorization: Bearer USERNAME PASSWORD' \\
+    --data-urlencode 'os_type=linux_rpm' && \\
 sudo rpm -Uvh check-mk-agent-{version}-1.noarch.rpm"""
 
 
@@ -44,7 +56,7 @@ def build_agent_install_cmds(
     hostname: HostName,
 ) -> AgentInstallCmds:
     return AgentInstallCmds(
-        windows=WINDOWS_AGENT_INSTALL_CMD,
+        windows=WINDOWS_AGENT_INSTALL_CMD.format(version=version),
         linux_deb=LINUX_DEBIAN_AGENT_INSTALL_CMD.format(version=version),
         linux_rpm=LINUX_RPM_AGENT_INSTALL_CMD.format(version=version),
     )

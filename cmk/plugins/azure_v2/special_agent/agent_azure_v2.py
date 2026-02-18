@@ -2281,6 +2281,11 @@ async def process_vault(
 
     try:
         properties = filter_keys(response[0]["properties"], vault_properties)
+    except IndexError:
+        LOGGER.info(
+            "No backup items found for vault %s, writing empty properties", resource.info["name"]
+        )
+        properties = {}
     except KeyError:
         write_exception_to_agent_info_section(
             ApiErrorMissingData("Vault properties must be present"), "Vaults", resource.subscription

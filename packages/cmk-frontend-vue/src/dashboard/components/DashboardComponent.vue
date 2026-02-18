@@ -30,6 +30,7 @@ interface DashboardProps {
   dashboardKey: DashboardKey
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
+  updatedWidgetRenderKeys: DashboardWidgets['updatedWidgetRenderKeys']
   widgetTitles: WidgetTitles
   isEditing: boolean
 }
@@ -87,6 +88,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       v-model:content="dashboard.content as ContentResponsiveGrid"
       :dashboard-key="dashboardKey"
       :content-props="widgetContentProps"
+      :updated-widget-render-keys="updatedWidgetRenderKeys.value"
       :is-editing="isEditing"
       @widget:edit="$emit('widget:edit', $event)"
       @widget:delete="$emit('widget:delete', $event)"
@@ -96,6 +98,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       v-else-if="dashboard.content.layout.type === 'relative_grid'"
       v-model:content="dashboard.content as ContentRelativeGrid"
       :content-props="widgetContentProps"
+      :updated-widget-render-keys="updatedWidgetRenderKeys.value"
       :is-editing="isEditing"
       @widget:edit="$emit('widget:edit', $event)"
       @widget:delete="$emit('widget:delete', $event)"

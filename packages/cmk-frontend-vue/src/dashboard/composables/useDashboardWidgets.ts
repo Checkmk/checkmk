@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, computed } from 'vue'
+import { type Ref, computed, ref, watch } from 'vue'
 
 import type {
   RelativeGridWidgets,
@@ -25,6 +25,17 @@ export interface WidgetCore {
 export function useDashboardWidgets(
   widgetsRef: Ref<RelativeGridWidgets | ResponsiveGridWidgets | undefined>
 ) {
+  // Tracks render keys for widgets that have been updated. This is used to force Vue to remount a
+  // widget after it is modified. This is necessary for widgets like the view widget whose iframe
+  // URL does not change when the configuration changes, meaning the iframe would not reload without
+  // an explicit remount.
+  const updatedWidgetRenderKeys = ref<Record<string, string>>({})
+
+  // Shallow watch: only triggers when widgetsRef.value is replaced, not on nested mutations.
+  watch(widgetsRef, () => {
+    updatedWidgetRenderKeys.value = {}
+  })
+
   const widgetCores = computed<Record<string, WidgetCore>>(() => {
     const widgets = widgetsRef.value
     if (!widgets) {
@@ -94,6 +105,8 @@ export function useDashboardWidgets(
     }
     if (widgets[widgetId]) {
       delete widgets[widgetId]
+      const { [widgetId]: _, ...rest } = updatedWidgetRenderKeys.value
+      updatedWidgetRenderKeys.value = rest
     }
   }
 
@@ -117,10 +130,16 @@ export function useDashboardWidgets(
       filter_context: filterContext,
       layout: widgets[id]!.layout
     } as AnyWidget
+
+    updatedWidgetRenderKeys.value = {
+      ...updatedWidgetRenderKeys.value,
+      [id]: `${Date.now()}-${id}`
+    }
   }
 
   return {
     widgetCores,
+    updatedWidgetRenderKeys,
     getWidget,
     addWidget,
     updateWidget,

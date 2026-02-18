@@ -67,6 +67,7 @@ Layout changes:
 interface Props {
   dashboardKey: DashboardKey
   contentProps: ContentPropsRecord
+  updatedWidgetRenderKeys: Record<string, string>
   isEditing: boolean
 }
 
@@ -217,6 +218,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
       >
         <template #item="{ item }">
           <ResponsiveGridWidget
+            :key="props.updatedWidgetRenderKeys[<string>item.i] ?? <string>item.i"
             :spec="props.contentProps[<string>item.i]!"
             :is-editing="props.isEditing"
             @click:edit="$emit('widget:edit', <string>item.i)"

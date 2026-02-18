@@ -665,6 +665,7 @@ function deepClone<T>(obj: T): T {
         :dashboard-key="dashboardsManager.activeDashboardKey.value!"
         :base-filters="dashboardFilters.baseFilters"
         :widget-cores="dashboardWidgets.widgetCores"
+        :updated-widget-render-keys="dashboardWidgets.updatedWidgetRenderKeys"
         :widget-titles="widgetTitles"
         :is-editing="isDashboardEditingMode"
         @widget:edit="editWidget($event)"

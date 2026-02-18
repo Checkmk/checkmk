@@ -56,6 +56,7 @@ useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApp
       :dashboard-key="dashboardKey"
       :base-filters="dashboardFilters.baseFilters"
       :widget-cores="dashboardWidgets.widgetCores"
+      :updated-widget-render-keys="dashboardWidgets.updatedWidgetRenderKeys"
       :widget-titles="widget_titles"
       :is-editing="false"
     />

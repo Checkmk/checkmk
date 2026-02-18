@@ -47,6 +47,7 @@ utils.calculateDashlets function.
 
 interface RelativeGridDashboardProps {
   contentProps: ContentPropsRecord
+  updatedWidgetRenderKeys: Record<string, string>
   isEditing: boolean
 }
 
@@ -186,7 +187,10 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
       class="db-relative-grid__missing-filters-dialog"
     />
     <div id="dashboard" ref="dashboard" class="dashboard dashboard_main">
-      <div v-for="spec of contentProps" :key="spec.widget_id">
+      <div
+        v-for="spec of contentProps"
+        :key="updatedWidgetRenderKeys[spec.widget_id] ?? spec.widget_id"
+      >
         <RelativeWidgetFrame
           :debug="false"
           :is-editing="isEditing"

@@ -15,6 +15,7 @@ from cmk.ccc.exceptions import MKException
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.gui import visuals
+from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.store import DashboardStore
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig, LinkedViewDashletConfig
 from cmk.gui.exceptions import HTTPRedirect, MKMethodNotAllowed, MKMissingDataError, MKUserError
@@ -237,10 +238,8 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
     @staticmethod
     def __check_token_details(token: AuthToken) -> DashboardToken:
         if not isinstance(token.details, DashboardToken) or token.details.disabled:
-            raise MKUserError(
-                "cmk-token",
-                _("The provided token is not valid for dashboard access."),
-            )
+            raise WidgetRenderError(_("The provided token is not valid for dashboard access."))
+
         return token.details
 
     def _disable_and_redirect(self, token: AuthToken) -> PageResult:
@@ -299,7 +298,11 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
 
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
         """Override this to implement custom exception handling logic"""
-        html.write_html(html.render_message(str(exception)))
+        if isinstance(exception, WidgetRenderError):
+            content = html.render_error(str(exception))
+        else:
+            content = html.render_message(str(exception))
+        html.write_html(content)
         return None
 
     def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> PageResult:

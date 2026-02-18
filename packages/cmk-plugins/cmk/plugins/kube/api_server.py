@@ -23,7 +23,6 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     ApiClient,
     V1CronJob,
     V1DaemonSet,
-    V1Deployment,
     V1Job,
     V1Namespace,
     V1PersistentVolume,
@@ -40,7 +39,6 @@ from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import (
     cron_job_from_client,
     daemonset_from_client,
-    deployment_from_client,
     job_from_client,
     namespace_from_client,
     parse_object_to_owners,
@@ -51,6 +49,8 @@ from cmk.plugins.kube.transform import (
 from cmk.plugins.kube.transform_any import parse_open_metric_samples
 from cmk.plugins.kube.transform_json import (
     dependent_object_uid_from_json,
+    deployment_from_json,
+    JSONDeploymentList,
     JSONNodeList,
     JSONStatefulSetList,
     node_list_from_json,
@@ -131,10 +131,9 @@ class ClientCoreAPI(ClientAPI):
 
 
 class ClientAppsAPI(ClientAPI):
-    def query_raw_deployments(self) -> Sequence[V1Deployment]:
+    def query_raw_deployments(self) -> JSONDeploymentList:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/deployments"))
-        response = send_request(self._config, self._client, request)
-        return self._deserializer.run("V1DeploymentList", response).items
+        return send_request(self._config, self._client, request).json()
 
     def query_raw_daemon_sets(self) -> Sequence[V1DaemonSet]:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/daemonsets"))
@@ -379,7 +378,7 @@ class UnparsedAPIData:
     raw_resource_quotas: Sequence[V1ResourceQuota]
     raw_persistent_volume_claims: Sequence[V1PersistentVolumeClaim]
     raw_persistent_volumes: Sequence[V1PersistentVolume]
-    raw_deployments: Sequence[V1Deployment]
+    raw_deployments: JSONDeploymentList
     raw_daemonsets: Sequence[V1DaemonSet]
     raw_replica_sets: Sequence[V1ReplicaSet]
     node_to_kubelet_health: Mapping[str, api.HealthZ | api.NodeConnectionError]
@@ -426,7 +425,7 @@ def parse_api_data(
     raw_nodes: JSONNodeList,
     raw_namespaces: Sequence[V1Namespace],
     raw_resource_quotas: Sequence[V1ResourceQuota],
-    raw_deployments: Sequence[V1Deployment],
+    raw_deployments: JSONDeploymentList,
     raw_daemonsets: Sequence[V1DaemonSet],
     raw_statefulsets: JSONStatefulSetList,
     raw_persistent_volume_claims: Sequence[V1PersistentVolumeClaim],
@@ -453,11 +452,11 @@ def parse_api_data(
         for raw_cron_job in raw_cron_jobs
     ]
     deployments = [
-        deployment_from_client(
+        deployment_from_json(
             raw_deployment,
-            pod_uids=controller_graph.pods_controlled_by(raw_deployment.metadata.uid),
+            pod_uids=controller_graph.pods_controlled_by(raw_deployment["metadata"]["uid"]),
         )
-        for raw_deployment in raw_deployments
+        for raw_deployment in raw_deployments["items"]
     ]
     daemonsets = [
         daemonset_from_client(
@@ -546,14 +545,16 @@ def create_api_data_v2(
     )
     object_to_owners = parse_object_to_owners(
         workload_resources_client=itertools.chain(
-            raw_api_data.raw_deployments,
             raw_api_data.raw_daemonsets,
             raw_api_data.raw_replica_sets,
             raw_api_data.raw_cron_jobs,
             raw_api_data.raw_jobs,
             raw_api_data.raw_pods,
         ),
-        workload_resources_json=raw_api_data.raw_statefulsets["items"],
+        workload_resources_json=itertools.chain(
+            raw_api_data.raw_statefulsets["items"],
+            raw_api_data.raw_deployments["items"],
+        ),
     )
     controller_graph = ControllerGraph(raw_api_data.raw_pods, object_to_owners=object_to_owners)
 

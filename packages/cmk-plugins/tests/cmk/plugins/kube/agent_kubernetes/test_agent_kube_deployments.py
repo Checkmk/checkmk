@@ -10,7 +10,8 @@
 from kubernetes import client
 
 from cmk.plugins.kube.schemata import api
-from cmk.plugins.kube.transform import deployment_conditions, parse_metadata
+from cmk.plugins.kube.transform import parse_metadata
+from cmk.plugins.kube.transform_json import deployment_conditions, JSONDeploymentStatus
 from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
@@ -73,34 +74,27 @@ class TestAPIDeployments:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_conditions(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
-        deployment_with_conditions = {
-            "status": {
-                "conditions": [
-                    {
-                        "type": "Available",
-                        "status": "True",
-                        "lastUpdateTime": "2021-12-06T14:49:09Z",
-                        "lastTransitionTime": "2021-12-06T14:49:09Z",
-                        "reason": "MinimumReplicasAvailable",
-                        "message": "Deployment has minimum availability.",
-                    },
-                    {
-                        "type": "Progressing",
-                        "status": "True",
-                        "lastUpdateTime": "2021-12-06T14:49:09Z",
-                        "lastTransitionTime": "2021-12-06T14:49:06Z",
-                        "reason": "NewReplicaSetAvailable",
-                        "message": "ReplicaSet has successfully progressed.",
-                    },
-                ]
-            }
+    def test_parse_conditions(self) -> None:
+        status: JSONDeploymentStatus = {
+            "conditions": [
+                {
+                    "type": "Available",
+                    "status": "True",
+                    "lastTransitionTime": "2021-12-06T14:49:09Z",
+                    "reason": "MinimumReplicasAvailable",
+                    "message": "Deployment has minimum availability.",
+                },
+                {
+                    "type": "Progressing",
+                    "status": "True",
+                    "lastTransitionTime": "2021-12-06T14:49:06Z",
+                    "reason": "NewReplicaSetAvailable",
+                    "message": "ReplicaSet has successfully progressed.",
+                },
+            ]
         }
 
-        deployment = apps_client.api_client.deserialize(
-            FakeResponse(deployment_with_conditions), "V1Deployment"
-        )
-        conditions = deployment_conditions(deployment.status)
+        conditions = deployment_conditions(status)
         assert len(conditions) == 2
         assert all(
             isinstance(condition, api.DeploymentCondition) for _, condition in conditions.items()
@@ -109,20 +103,11 @@ class TestAPIDeployments:
             condition.status == api.ConditionStatus.TRUE for _, condition in conditions.items()
         )
 
-    def test_parse_conditions_no_conditions(
-        self, apps_client: client.AppsV1Api, dummy_host: str
-    ) -> None:
+    def test_parse_conditions_no_conditions(self) -> None:
         """Deployment with empty status.
 
         Sometimes a Deployment has an empty status. This occurs during start-up
         of the Minikube with the core-dns Deployment."""
-        # Arrange
-        deployment_with_conditions: dict[str, dict] = {"status": {}}
-
-        deployment = apps_client.api_client.deserialize(
-            FakeResponse(deployment_with_conditions), "V1Node"
-        )
-        # Act
-        conditions = deployment_conditions(deployment.status)
-        # Assert
+        status: JSONDeploymentStatus = {}
+        conditions = deployment_conditions(status)
         assert conditions == {}

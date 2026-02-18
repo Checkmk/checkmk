@@ -25,8 +25,6 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     V1DaemonSetSpec,
     V1DaemonSetStatus,
     V1Deployment,
-    V1DeploymentSpec,
-    V1DeploymentStatus,
     V1Job,
     V1JobCondition,
     V1JobStatus,
@@ -225,37 +223,6 @@ def pod_conditions(
     return result
 
 
-def deployment_replicas(status: V1DeploymentStatus, spec: V1DeploymentSpec) -> api.Replicas:
-    # A deployment always has at least 1 replica. It is not possible to deploy
-    # a deployment that has 0 replicas. On the other hand, it is possible to have
-    # 0 available/unavailable/updated/ready replicas. This is shown as 'null'
-    # (i.e. None) in the source data, but the interpretation is that the number
-    # of the replicas in this case is 0.
-    # Under certain conditions, the status.replicas can report a 'null' value, therefore
-    # the spec.replicas is taken as base value since this reflects the desired value
-    return api.Replicas(
-        replicas=spec.replicas,
-        available=status.available_replicas or 0,
-        unavailable=status.unavailable_replicas or 0,
-        updated=status.updated_replicas or 0,
-        ready=status.ready_replicas or 0,
-    )
-
-
-def deployment_conditions(
-    status: V1DeploymentStatus,
-) -> Mapping[str, api.DeploymentCondition]:
-    return {
-        condition.type.lower(): api.DeploymentCondition(
-            status=condition.status,
-            last_transition_time=convert_to_timestamp(condition.last_transition_time),
-            reason=condition.reason,
-            message=condition.message,
-        )
-        for condition in status.conditions or []
-    }
-
-
 def pod_from_client(pod: V1Pod, controllers: Sequence[api.Controller]) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
@@ -285,40 +252,6 @@ def parse_selector(selector: V1LabelSelector) -> api.Selector:
     return api.Selector(
         match_labels=parse_match_labels(selector.match_labels or {}),
         match_expressions=parse_match_expressions(selector.match_expressions),
-    )
-
-
-def parse_deployment_spec(deployment_spec: V1DeploymentSpec) -> api.DeploymentSpec:
-    if deployment_spec.strategy.type == "Recreate":
-        return api.DeploymentSpec(
-            min_ready_seconds=deployment_spec.min_ready_seconds or 0,
-            strategy=api.Recreate(),
-            selector=parse_selector(deployment_spec.selector),
-        )
-    if deployment_spec.strategy.type == "RollingUpdate":
-        return api.DeploymentSpec(
-            min_ready_seconds=deployment_spec.min_ready_seconds or 0,
-            strategy=api.RollingUpdate(
-                max_surge=deployment_spec.strategy.rolling_update.max_surge,
-                max_unavailable=deployment_spec.strategy.rolling_update.max_unavailable,
-            ),
-            selector=parse_selector(deployment_spec.selector),
-        )
-    raise ValueError(f"Unknown strategy type: {deployment_spec.strategy.type}")
-
-
-def deployment_from_client(
-    deployment: V1Deployment, pod_uids: Sequence[api.PodUID]
-) -> api.Deployment:
-    return api.Deployment(
-        metadata=parse_metadata(deployment.metadata),
-        spec=parse_deployment_spec(deployment.spec),
-        status=api.DeploymentStatus(
-            conditions=deployment_conditions(deployment.status),
-            replicas=deployment_replicas(deployment.status, deployment.spec),
-            number_terminating=deployment.status.terminating_replicas,
-        ),
-        pods=pod_uids,
     )
 
 
@@ -583,7 +516,7 @@ def dependent_object_owner_refererences_from_client(
 
 def parse_object_to_owners(
     workload_resources_client: Iterable[WorkloadResource],
-    workload_resources_json: Iterable[transform_json.JSONStatefulSet],
+    workload_resources_json: Iterable[transform_json.JSONObjectWithMetadata],
 ) -> Mapping[str, api.OwnerReferences]:
     return {
         workload_resource.metadata.uid: dependent_object_owner_refererences_from_client(

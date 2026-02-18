@@ -39,7 +39,7 @@ def main() {
     // the downloaded package.
     def download_dir = "package_download";
     def setup_values = single_tests.common_prepare(version: "daily");
-    def all_editions = ["enterprise", "managed", "raw", params.EDITION].unique();
+    def all_editions = ["enterprise", "managed", "raw", params.EDITION].unique().sort();
 
     print(
         """
@@ -63,8 +63,16 @@ def main() {
         build_node = "fra"
     }
 
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 100ms).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
+    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
+    def timeOffsetForOrder = 0;
+
     def stages = all_editions.collectEntries { edition ->
         [("${edition}") : {
+            sleep(0.1 * timeOffsetForOrder++);
+
             def build_instance = null;
 
             smart_stage(

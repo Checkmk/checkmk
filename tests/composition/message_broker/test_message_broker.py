@@ -88,7 +88,6 @@ class TestMessageBroker:
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
         """Test if the connection between central and remote site works"""
         with rabbitmq_info_on_failure([central_site, remote_site]):
-            await_broker_ready(central_site, remote_site)
             assert_message_exchange_working(central_site, remote_site)
 
     def test_message_broker_remote_remote_via_central(
@@ -98,7 +97,6 @@ class TestMessageBroker:
         remote_site_2: Site,
     ) -> None:
         with rabbitmq_info_on_failure([central_site, remote_site, remote_site_2]):
-            await_broker_ready(central_site, remote_site, remote_site_2)
             with broker_pong(remote_site):
                 # test complement: should not work without the central site running:
                 with broker_stopped(central_site):
@@ -112,7 +110,6 @@ class TestMessageBroker:
     ) -> None:
         with rabbitmq_info_on_failure([central_site, remote_site, remote_site_2]):
             with p2p_connection(central_site, remote_site, remote_site_2):
-                await_broker_ready(central_site, remote_site, remote_site_2)
                 with (
                     broker_pong(remote_site),
                     broker_stopped(central_site),
@@ -163,7 +160,6 @@ class TestMessageBrokerChangeActivation:
     def test_message_broker_activation(self, central_site: Site, remote_site: Site) -> None:
         """Test if a change on a single site still correctly keeps the definitions in RabbitMQ consistent and the broker working"""
         with rabbitmq_info_on_failure([central_site, remote_site]):
-            await_broker_ready(central_site, remote_site)
             assert_message_exchange_working(central_site, remote_site)
             # dummy change to trigger activation for the central site, but not the remote
             with _setup_host(central_site, "message-broker-dummy-host"):

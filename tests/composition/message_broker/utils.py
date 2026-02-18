@@ -213,6 +213,7 @@ def p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -
             connection_id, connecter=remote_site.id, connectee=remote_site_2.id
         )
         central_site.openapi.changes.activate_and_wait_for_completion()
+        await_broker_ready(central_site, remote_site, remote_site_2)
         yield
     finally:
         central_site.openapi.broker_connections.delete(connection_id)
@@ -236,6 +237,7 @@ def _rabbitmq_status_vhost(site: Site, vhost: str) -> str:
 @contextlib.contextmanager
 def rabbitmq_info_on_failure(sites: Sequence[Site]) -> Iterator[None]:
     try:
+        await_broker_ready(*sites)
         yield
     except (AssertionError, RuntimeError) as e:
         error_message = f"{e}\n"

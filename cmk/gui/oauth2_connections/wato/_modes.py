@@ -540,6 +540,22 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
 
+    def _check_connection_permissions(self, editable_by: str | None) -> None:
+        if user.may("wato.edit_all_passwords"):
+            return
+
+        if editable_by is None:
+            raise MKUserError(
+                "",
+                _("You don't have permission to edit this %s.") % self._mode_type.name_singular(),
+            )
+        assert user.id
+        if editable_by not in userdb.contactgroups_of_user(user.id):
+            raise MKUserError(
+                "",
+                _("You don't have permission to edit this %s.") % self._mode_type.name_singular(),
+            )
+
     @override
     def page(self, config: Config, form_name: str = "edit") -> None:
         html.enable_help_toggle()
@@ -609,6 +625,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
 
         client_secret = load_passwords()[self._entry["client_secret"][2][0]]
         editable_by = client_secret["owned_by"]
+        self._check_connection_permissions(editable_by)
         html.vue_component(
             "cmk-mode-create-oauth2-connection",
             data={

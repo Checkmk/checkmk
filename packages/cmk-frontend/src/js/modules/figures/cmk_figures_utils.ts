@@ -272,8 +272,8 @@ export function state_component(
     // status_label css class is also defined for WATO and not encapsulated
     // it predifines other sizes, we use thus style instead of attr for size
     // to override that
-    .style('width', font_size * 8)
-    .style('height', font_size * 1.5)
+    .style('width', font_size * 8 + 'px')
+    .style('height', font_size * 1.5 + 'px')
     .attr('rx', 2)
 
   state_component

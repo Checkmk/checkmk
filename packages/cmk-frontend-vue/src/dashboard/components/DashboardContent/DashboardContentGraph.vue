@@ -148,6 +148,7 @@ onBeforeUnmount(() => {
       :id="`db-content-graph-${widget_id}`"
       ref="contentDiv"
       class="db-content-graph"
+      :class="{ 'db-content-graph__preview': isPreview && !showLegend }"
     />
   </DashboardContentContainer>
 </template>
@@ -155,5 +156,9 @@ onBeforeUnmount(() => {
 <style scoped>
 .db-content-graph__loading-icon {
   margin: auto;
+}
+
+.db-content-graph__preview {
+  pointer-events: none;
 }
 </style>

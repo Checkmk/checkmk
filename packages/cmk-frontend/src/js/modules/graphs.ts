@@ -12,6 +12,7 @@ import {
   content_scrollbar,
   current_script,
   execute_javascript_by_object,
+  get_url_param,
   has_class,
   is_in_viewport,
   makeuri,
@@ -215,6 +216,45 @@ const g_delayed_graphs: DelayedGraph[] = []
 // Global graph constructs to store the graphs etc.
 const g_graphs: Record<string, GraphArtwork> = {}
 let g_current_graph_id = 0
+
+// Graph hover cache for shared dashboards (bounded LRU).
+const HOVER_CACHE_MAX_SIZE = 200
+const HOVER_CACHE_BUCKET_S = 2 // bucket size in seconds for hover timestamps
+interface HoverCacheEntry {
+  data: GraphHover
+  timestamp: number
+}
+const g_hover_cache: Map<string, HoverCacheEntry> = new Map()
+
+function _hover_cache_key(display_id: string, hover_time: number): string {
+  const bucket = Math.floor(hover_time / HOVER_CACHE_BUCKET_S)
+  return display_id + '|' + bucket
+}
+
+function _hover_cache_get(key: string): GraphHover | null {
+  const entry = g_hover_cache.get(key)
+  if (!entry) return null
+  // Evict entries older than 30 seconds
+  if (Date.now() - entry.timestamp > 30000) {
+    g_hover_cache.delete(key)
+    return null
+  }
+  // Move to end (LRU)
+  g_hover_cache.delete(key)
+  g_hover_cache.set(key, entry)
+  return entry.data
+}
+
+function _hover_cache_set(key: string, data: GraphHover): void {
+  if (g_hover_cache.size >= HOVER_CACHE_MAX_SIZE) {
+    // Evict oldest entry (first key in Map iteration order)
+    const oldest_key = g_hover_cache.keys().next().value
+    if (oldest_key !== undefined) {
+      g_hover_cache.delete(oldest_key)
+    }
+  }
+  g_hover_cache.set(key, { data, timestamp: Date.now() })
+}
 
 interface DelayedGraph {
   graph_load_container: HTMLElement | Node | null
@@ -1596,21 +1636,46 @@ function update_graph_hover_popup(event: Event, graph: GraphArtwork): boolean | 
   )
     return prevent_default_events(event)
 
-  const post_data =
-    'context=' +
-    encodeURIComponent(JSON.stringify(graph.ajax_context)) +
-    '&hover_time=' +
-    encodeURIComponent(Math.trunc(hover_timestamp))
+  const cmk_token = get_url_param('cmk-token')
+  const display_id = graph.display_id || ''
+
+  // Check hover cache (shared dashboards)
+  if (cmk_token) {
+    // In a shared dashboard context the widget must be identifiable; skip hover if not.
+    if (!display_id) {
+      return prevent_default_events(event)
+    }
+    const cache_key = _hover_cache_key(display_id, Math.trunc(hover_timestamp))
+    const cached = _hover_cache_get(cache_key)
+    if (cached) {
+      render_graph_hover_popup(graph, event, cached)
+      return prevent_default_events(event)
+    }
+  }
+
+  let post_data = 'hover_time=' + encodeURIComponent(Math.trunc(hover_timestamp))
+
+  let endpoint = 'ajax_graph_hover.py'
+
+  if (cmk_token) {
+    // Shared dashboard: use token-auth endpoint. Recipe and step are built server-side.
+    endpoint = 'ajax_graph_hover_token_auth.py'
+    post_data += '&cmk-token=' + encodeURIComponent(cmk_token)
+    post_data += '&widget_id=' + encodeURIComponent(display_id)
+  } else {
+    post_data += '&context=' + encodeURIComponent(JSON.stringify(graph.ajax_context))
+  }
 
   g_graph_update_in_process = true
   set_graph_update_cooldown()
 
-  call_ajax('ajax_graph_hover.py', {
+  call_ajax(endpoint, {
     method: 'POST',
     response_handler: handle_graph_hover_popup_update,
     handler_data: {
       graph: graph,
-      event: event
+      event: event,
+      hover_timestamp: Math.trunc(hover_timestamp)
     },
     post_data: post_data
   })
@@ -1620,6 +1685,7 @@ function handle_graph_hover_popup_update(
   handler_data: {
     graph: GraphArtwork
     event: Event
+    hover_timestamp?: number
   },
   ajax_response: string
 ) {
@@ -1633,6 +1699,11 @@ function handle_graph_hover_popup_update(
     return
   }
 
+  if (handler_data.hover_timestamp !== undefined && get_url_param('cmk-token')) {
+    const display_id = handler_data.graph.display_id || ''
+    const cache_key = _hover_cache_key(display_id, handler_data.hover_timestamp)
+    _hover_cache_set(cache_key, popup_data)
+  }
   render_graph_hover_popup(handler_data.graph, handler_data.event, popup_data)
 
   //render_graph_and_subgraphs(graph);

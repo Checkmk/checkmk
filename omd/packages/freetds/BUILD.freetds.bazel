@@ -12,7 +12,7 @@ filegroup(
 
 configure_make(
     name = "freetds",
-    args = ["-j4 DESTDIR=$BUILD_TMPDIR/$INSTALL_PREFIX"],
+    args = ["DESTDIR=$BUILD_TMPDIR/$INSTALL_PREFIX"],
     configure_command = "configure",
     configure_in_place = True,
     configure_options = [
@@ -72,8 +72,11 @@ configure_make(
     cp -a "$$BUILD_TMPDIR/$$INSTALL_PREFIX"/lib/libsybdb.so* "$$BUILD_TMPDIR"/tar/freetds/lib/
     """,
     targets = [
-        "all",
-        "install",
+        # Run 'all' in parallel and 'install' sequentially (-j1) to avoid a race
+        # condition in freetds's automake-generated Makefile where parallel jobs
+        # try to mkdir the same include directory simultaneously (Ubuntu 25.10+).
+        "all -j4",
+        "install -j1",
     ],
     visibility = ["//visibility:public"],
     deps = [],

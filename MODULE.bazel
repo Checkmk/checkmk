@@ -516,6 +516,7 @@ http_archive(
         "//omd/packages/heirloom-pkgtools/patches:0008-libfl.dif",
         "//omd/packages/heirloom-pkgtools/patches:0010-fix-missing-makedev.dif",
         "//omd/packages/heirloom-pkgtools/patches:0011-add-fcommon.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0012-fix-termio-glibc-2.42.dif",
     ],
     sha256 = "aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
     strip_prefix = "heirloom-pkgtools-070227",

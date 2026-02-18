@@ -4,6 +4,7 @@ common: &common
     - "debian-13"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
+    - "ubuntu-25.10"
     - "almalinux-8"
     - "almalinux-9"
     - "almalinux-10"
@@ -19,6 +20,7 @@ daily_reduced: &daily_reduced
     - "debian-13"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
+    - "ubuntu-25.10"
     - "sles-16.0"
 
 daily_saas: &daily_saas
@@ -26,8 +28,8 @@ daily_saas: &daily_saas
     - "ubuntu-24.04"
 
 # Builds for those distros will only be available internally for development purpose
-# internal_distros: &internal_distros
-#     - "ubuntu-23.10"
+internal_distros: &internal_distros
+    - "ubuntu-25.10"
 
 # Currently, all builds of the cloud (formerly saas) edition should stay completley internal
 internal_editions:
@@ -96,4 +98,4 @@ editions:
 # where we want to exclude the internal distros, we are only using the distro codes and not the
 # distro name anymore.
 distro_to_codename:
-    ubuntu-23.10: "mantic"
+    ubuntu-25.10: "questing"

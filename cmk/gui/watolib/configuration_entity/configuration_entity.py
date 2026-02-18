@@ -22,6 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.oauth2_connections.watolib.store import (
     load_oauth2_connections,
+    load_usable_oauth2_connections,
 )
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
@@ -304,9 +305,16 @@ def get_list_of_configuration_entities(
             ]
         case ConfigEntityType.oauth2_connection:
             user.need_permission("general.oauth2_connections")
+            if user.may("wato.edit_all_passwords"):
+                return [
+                    ConfigurationEntityDescription(
+                        ident=EntityId(ident), description=entry["title"]
+                    )
+                    for ident, entry in load_oauth2_connections().items()
+                ]
             return [
                 ConfigurationEntityDescription(ident=EntityId(ident), description=entry["title"])
-                for ident, entry in load_oauth2_connections().items()
+                for ident, entry in load_usable_oauth2_connections().items()
             ]
         case ConfigEntityType.passwordstore_password:
             return [

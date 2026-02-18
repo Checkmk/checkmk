@@ -21,6 +21,7 @@ from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.oauth2_connections.watolib.store import (
     extract_password_store_entry,
     load_oauth2_connections,
+    load_usable_oauth2_connections,
     save_new_reference_to_config_file,
     save_tokens_to_passwordstore,
     update_reference,
@@ -176,10 +177,17 @@ class OAuth2ConnectionData(NamedTuple):
 def get_oauth2_connection(
     oauth2_connection_id: str,
 ) -> OAuth2ConnectionData:
-    if oauth2_connection_id not in load_oauth2_connections():
+    usable_oauth2_connections = load_usable_oauth2_connections()
+    oauth2_connections = load_oauth2_connections()
+    if oauth2_connection_id not in oauth2_connections:
         raise KeyError(f"OAuth2 connection with ident '{oauth2_connection_id}' does not exist")
 
-    connection = load_oauth2_connections()[oauth2_connection_id]
+    if oauth2_connection_id not in usable_oauth2_connections:
+        raise KeyError(
+            f"OAuth2 connection with ident '{oauth2_connection_id}' is not shared with the current user. "
+        )
+
+    connection = usable_oauth2_connections[oauth2_connection_id]
     client_secret = load_passwords()[connection["client_secret"][2][0]]
     editable_by = client_secret["owned_by"]
     form_spec = OAuth2ConnectionSetup(connector_type=connection["connector_type"])

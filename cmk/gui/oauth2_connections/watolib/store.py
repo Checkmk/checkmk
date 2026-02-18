@@ -80,6 +80,12 @@ def save_oauth2_connection(
     oauth2_connections_config_file.save(entries, pprint_value)
 
 
+def load_usable_oauth2_connections() -> dict[str, OAuth2Connection]:
+    oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
+    entries = oauth2_connections_config_file.load_for_reading()
+    return oauth2_connections_config_file.filter_usable_entries(entries)
+
+
 def load_oauth2_connections() -> dict[str, OAuth2Connection]:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     return oauth2_connections_config_file.load_for_reading()

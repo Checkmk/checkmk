@@ -9,9 +9,13 @@ import pytest
 
 from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.oauth2_connections.watolib.store import save_oauth2_connection
+from cmk.gui.userdb import UserRolesConfigFile
 from cmk.gui.watolib import password_store
+from cmk.gui.watolib.passwords import save_password
+from cmk.gui.watolib.userroles import clone_role, get_all_roles, RoleID
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils.oauth2_connection import OAuth2Connection
+from cmk.utils.password_store import Password
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 MY_OAUTH2_CONNECTION_UUID = str(uuid.uuid4())
@@ -82,12 +86,14 @@ def test_list_oauth2_connections_without_permissions(clients: ClientRegistry) ->
     assert resp.json["title"] == "Unauthorized"
 
 
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
 def test_list_oauth2_connections_as_admin(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
     # GIVEN
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
         save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    _create_passwords_for_connection(OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID])
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
 
     # WHEN
@@ -398,3 +404,129 @@ def test_update_oauth2_connection_to_existing_title(
     assert len(validation_errors) == 1
     assert validation_errors[0]["location"] == ["title"]
     assert "The title must be unique" in validation_errors[0]["message"]
+
+
+def _create_passwords_for_connection(
+    connection: OAuth2Connection,
+    *,
+    owned_by: str | None = None,
+    shared_with: list[str] | None = None,
+) -> None:
+    """Create password store entries for all password references in an OAuth2 connection."""
+    for field in ("client_secret", "access_token", "refresh_token"):
+        pw_id = connection[field][2][0]
+        save_password(
+            ident=pw_id,
+            details=Password(
+                title=f"Test {pw_id}",
+                comment="",
+                docu_url="",
+                password="secret",
+                owned_by=owned_by,
+                shared_with=shared_with or [],
+            ),
+            new_password=True,
+            user_id=None,
+            pprint_value=False,
+            use_git=False,
+        )
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_list_oauth2_connections_shows_all_as_admin(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    """List endpoint should only return connections whose passwords are accessible."""
+    # GIVEN - two connections, but only the first has passwords in the store
+    for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    _create_passwords_for_connection(OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID])
+    _create_passwords_for_connection(
+        TWO_OAUTH2_CONNECTIONS_CONTENT[SECOND_OAUTH2_CONNECTION_UUID],
+        owned_by="other_group",
+    )
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    # WHEN
+    resp = clients.ConfigurationEntity.list_configuration_entities(
+        entity_type=ConfigEntityType.oauth2_connection,
+        entity_type_specifier="microsoft_entra_id",
+    )
+
+    # THEN - only the connection with passwords should be listed
+    titles = {entry["title"] for entry in resp.json["value"]}
+    assert titles == {"My OAuth2 connection", "Second OAuth2 connection"}
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_show_oauth2_connection_not_usable(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    """Show endpoint should return 404 for a connection whose passwords are not accessible."""
+    # GIVEN - connection exists but without passwords in the store
+    for ident, details in OAUTH2_CONNECTION_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity(
+        entity_type=ConfigEntityType.oauth2_connection,
+        entity_id=MY_OAUTH2_CONNECTION_UUID,
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 404
+    assert resp.json["title"] == "Not found"
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_list_oauth2_connections_filtered_by_contact_group(
+    clients: ClientRegistry,
+) -> None:
+    """A user should only see connections whose passwords are owned by their contact group."""
+    # GIVEN - create a custom role based on admin but without wato.edit_all_passwords
+    custom_role = clone_role(RoleID("admin"), pprint_value=False)
+    custom_role.permissions["wato.edit_all_passwords"] = False
+    all_roles = get_all_roles()
+    all_roles[RoleID(custom_role.name)] = custom_role
+    UserRolesConfigFile().save(
+        {role.name: role.to_dict() for role in all_roles.values()}, pprint_value=False
+    )
+
+    # Create contact groups
+    clients.ContactGroup.create("my_group", "My Group")
+    clients.ContactGroup.create("other_group", "Other Group")
+
+    # Create a user in "my_group" with the custom role
+    clients.User.create(
+        username="oauth2_user",
+        fullname="OAuth2 User",
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        contactgroups=["my_group"],
+        roles=[custom_role.name],
+    )
+
+    # Create both connections with passwords
+    for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    _create_passwords_for_connection(
+        OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID],
+        owned_by="my_group",
+    )
+    _create_passwords_for_connection(
+        TWO_OAUTH2_CONNECTIONS_CONTENT[SECOND_OAUTH2_CONNECTION_UUID],
+        owned_by="other_group",
+    )
+
+    clients.ConfigurationEntity.set_credentials("oauth2_user", "supersecretish")
+
+    # WHEN
+    resp = clients.ConfigurationEntity.list_configuration_entities(
+        entity_type=ConfigEntityType.oauth2_connection,
+        entity_type_specifier="microsoft_entra_id",
+    )
+
+    # THEN - only the connection owned by user's contact group should be listed
+    titles = {entry["title"] for entry in resp.json["value"]}
+    assert titles == {"My OAuth2 connection"}

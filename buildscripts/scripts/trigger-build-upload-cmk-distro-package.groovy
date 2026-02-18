@@ -1,5 +1,7 @@
 #!groovy
 
+/* groovylint-disable MethodSize*/
+
 /// file: trigger-build-upload-cmk-distro-package.groovy
 
 void main() {
@@ -34,7 +36,7 @@ void main() {
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
     def setup_values = single_tests.common_prepare(version: "daily", docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
-    def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud", params.EDITION].unique();
+    def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud", params.EDITION].unique().sort();
 
     print(
         """
@@ -57,8 +59,16 @@ void main() {
         build_node = "fra";
     }
 
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 100ms).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
+    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
+    def timeOffsetForOrder = 0;
+
     def stages = all_editions.collectEntries { edition ->
         [("${edition}") : {
+            sleep(0.1 * timeOffsetForOrder++);
+
             smart_stage(
                 name: "Trigger ${edition} package build",
                 raiseOnError: true,

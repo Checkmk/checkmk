@@ -21,6 +21,7 @@ from .dashlet import DashletRegistry, register_dashlets
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
+from .page_graph_hover import GraphHoverTokenAuthPage
 from .page_graph_widget import GraphWidgetPage, GraphWidgetTokenAuthPage
 from .page_show_dashboard import page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
@@ -66,6 +67,9 @@ def register(
     )
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("widget_iframe_view_token_auth", ViewWidgetIFrameTokenPage())
+    )
+    token_authenticated_page_registry.register(
+        TokenAuthenticatedEndpoint(GraphHoverTokenAuthPage.ident(), GraphHoverTokenAuthPage())
     )
 
     register_dashlets(dashlet_registry_, autocompleter_registry)

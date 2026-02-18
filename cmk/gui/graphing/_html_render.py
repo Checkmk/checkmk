@@ -1222,40 +1222,51 @@ def estimate_graph_step_for_html(
 class AjaxGraphHover(Page):
     def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph_hover`."""
-        response.set_content_type("application/json")
-        try:
-            context_var = ctx.request.get_str_input_mandatory("context")
-            context = json.loads(context_var)
-            hover_time = ctx.request.get_integer_input_mandatory("hover_time")
-            response_data = _render_ajax_graph_hover(
-                context,
-                hover_time,
-                metrics_from_api,
-                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                backend_time_series_fetcher=metric_backend_registry[
-                    str(edition(paths.omd_root))
-                ].get_time_series_fetcher(),
-            )
-            response.set_data(json.dumps(response_data))
-        except Exception as e:
-            logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
-            if ctx.config.debug:
-                raise
-            response.set_data("ERROR: %s" % e)
+        context = json.loads(ctx.request.get_str_input_mandatory("context"))
+        render_graph_hover_for_recipe(
+            ctx,
+            GraphRecipe.model_validate(context["definition"]),
+            GraphDataRange.model_validate(context["data_range"]),
+        )
         return None
 
 
+def render_graph_hover_for_recipe(
+    ctx: PageContext,
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+) -> None:
+    """Write the JSON graph hover response for a pre-built recipe and data range."""
+    response.set_content_type("application/json")
+    try:
+        hover_time = ctx.request.get_integer_input_mandatory("hover_time")
+        response_data = _render_ajax_graph_hover(
+            graph_recipe,
+            graph_data_range,
+            hover_time,
+            metrics_from_api,
+            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
+            backend_time_series_fetcher=metric_backend_registry[
+                str(edition(paths.omd_root))
+            ].get_time_series_fetcher(),
+        )
+        response.set_data(json.dumps(response_data))
+    except Exception as e:
+        logger.error("Ajax call ajax_graph_hover failed: %s\n%s", e, traceback.format_exc())
+        if ctx.config.debug:
+            raise
+        response.set_data("ERROR: %s" % e)
+
+
 def _render_ajax_graph_hover(
-    context: Mapping[str, Any],
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
     hover_time: int,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> dict[str, object]:
-    graph_data_range = GraphDataRange.model_validate(context["data_range"])
-    graph_recipe = GraphRecipe.model_validate(context["definition"])
-
     curves = [
         r.ok
         for r in compute_graph_artwork_curves(

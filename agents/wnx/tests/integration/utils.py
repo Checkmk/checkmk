@@ -90,11 +90,15 @@ _result = ""
 
 async def _telnet_shell(reader: telnetlib3.TelnetReader, _: telnetlib3.TelnetWriter) -> None:
     global _result
+
+    chunks: list[bytes] = []
     while True:
-        data = await reader.read(1024)
-        if not data:
+        block = await reader.read(1024)
+        if not block:
             break
-        _result += data.decode("utf-8", errors="replace")
+        chunks.append(block)  # we can't decode block by block, because we can get broken utf-8
+
+    _result = b"".join(chunks).decode("utf-8", errors="replace")
 
 
 def _read_client_data(host: str, port: int) -> None:

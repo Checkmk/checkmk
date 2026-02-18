@@ -107,10 +107,13 @@ def _build_url(url_params: HTTPVariables) -> str:
 
 
 class ABCQuicksearchConductor(abc.ABC):
-    def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
+    def __init__(
+        self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour, row_limit: int
+    ) -> None:
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
         self._used_filters = used_filters
         self._filter_behaviour = filter_behaviour
+        self._row_limit = row_limit
 
     @property
     def filter_behaviour(self) -> FilterBehaviour:
@@ -133,7 +136,7 @@ class ABCQuicksearchConductor(abc.ABC):
 
     @abc.abstractmethod
     def row_limit_exceeded(self) -> bool:
-        """Whether or not the results exceeded the config.quicksearch_dropdown_limit"""
+        """Whether or not the results exceeded the row limit."""
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -170,8 +173,9 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         used_filters: UsedFilters,
         filter_behaviour: FilterBehaviour,
         user_permissions: UserPermissions,
+        row_limit: int,
     ) -> None:
-        super().__init__(used_filters, filter_behaviour)
+        super().__init__(used_filters, filter_behaviour, row_limit)
         self._results: list[SearchResult] = []
         self._user_permissions = user_permissions
 
@@ -199,8 +203,8 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
 
     @override
     def row_limit_exceeded(self) -> bool:
-        """Whether or not the results exceeded the config.quicksearch_dropdown_limit"""
-        return len(self._results) > active_config.quicksearch_dropdown_limit
+        """Whether or not the results exceeded the row limit."""
+        return len(self._results) > self._row_limit
 
     @override
     def get_search_url_params(self) -> HTTPVariables:
@@ -209,7 +213,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
 
     @override
     def create_results(self) -> list[SearchResult]:
-        return self._results[: active_config.quicksearch_dropdown_limit]
+        return self._results[: self._row_limit]
 
 
 class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
@@ -227,8 +231,10 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
     selected table.
     """
 
-    def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
-        super().__init__(used_filters, filter_behaviour)
+    def __init__(
+        self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour, row_limit: int
+    ) -> None:
+        super().__init__(used_filters, filter_behaviour, row_limit)
 
         self._livestatus_table: str | None = None
         self._livestatus_command: str = ""  # Computed livestatus query
@@ -277,8 +283,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         headers = ["site"] + self._queried_livestatus_columns
         self._rows = [dict(zip(headers, x)) for x in results]
 
-        limit = active_config.quicksearch_dropdown_limit
-        if len(self._rows) > limit:
+        if len(self._rows) > self._row_limit:
             self._too_much_rows = True
             self._rows.pop()  # Remove limit+1nth element
 
@@ -315,8 +320,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         )
 
         # Limit number of results
-        limit = active_config.quicksearch_dropdown_limit
-        self._livestatus_command += "Cache: reload\nLimit: %d\nColumnHeaders: off" % (limit + 1)
+        command_with_limit = "Cache: reload\nLimit: %d\nColumnHeaders: off" % (self._row_limit + 1)
+        self._livestatus_command += command_with_limit
 
     def _get_used_search_plugins(self) -> list["ABCLivestatusMatchPlugin"]:
         return [
@@ -516,8 +521,18 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 class QuicksearchManager:
     """Producing the results for the given search query"""
 
-    def __init__(self, raise_too_many_rows_error: bool = True) -> None:
+    def __init__(
+        self, raise_too_many_rows_error: bool = True, row_limit: int | None = None
+    ) -> None:
         self.raise_too_many_rows_error = raise_too_many_rows_error
+        # NOTE: we cannot access the active_config at initialization as this would lead to a
+        # traceback during registration. Therefore, performing this fallback mechanism in a
+        # dedicated method.
+        self._row_limit = row_limit
+
+    def _get_row_limit(self) -> int:
+        # TODO: look into whether we want to add protection here against very large limit values.
+        return self._row_limit or active_config.quicksearch_dropdown_limit
 
     def generate_results(
         self, query: SearchQuery, user_permissions: UserPermissions
@@ -571,6 +586,7 @@ class QuicksearchManager:
         livestatus based search plugins.
         """
 
+        row_limit = self._get_row_limit()
         found_filters = self._find_search_object_expressions(query)
 
         if found_filters:
@@ -580,6 +596,7 @@ class QuicksearchManager:
                 LivestatusQuicksearchConductor(
                     used_filters,
                     FilterBehaviour.CONTINUE,
+                    row_limit,
                 )
             ]
 
@@ -639,11 +656,14 @@ class QuicksearchManager:
         filter_behaviour: FilterBehaviour,
         user_permissions: UserPermissions,
     ) -> ABCQuicksearchConductor:
+        row_limit = self._get_row_limit()
         plugin = match_plugin_registry[filter_name]
         if isinstance(plugin, ABCLivestatusMatchPlugin):
-            return LivestatusQuicksearchConductor(used_filters, filter_behaviour)
+            return LivestatusQuicksearchConductor(used_filters, filter_behaviour, row_limit)
 
-        return BasicPluginQuicksearchConductor(used_filters, filter_behaviour, user_permissions)
+        return BasicPluginQuicksearchConductor(
+            used_filters, filter_behaviour, user_permissions, row_limit
+        )
 
     def _conduct_search(self, search_objects: list[ABCQuicksearchConductor]) -> None:
         """Collect the raw data from livestatus
@@ -653,24 +673,20 @@ class QuicksearchManager:
            depending on the configured filter behavior.
         """
         total_rows = 0
+        row_limit = self._get_row_limit()
+
         for idx, search_object in enumerate(search_objects):
             search_object.do_query()
             total_rows += search_object.num_rows()
 
-            if total_rows > active_config.quicksearch_dropdown_limit:
-                search_object.remove_rows_from_end(
-                    total_rows - active_config.quicksearch_dropdown_limit
-                )
+            if total_rows > row_limit:
+                search_object.remove_rows_from_end(total_rows - row_limit)
                 if self.raise_too_many_rows_error:
-                    raise TooManyRowsError(
-                        _("More than %d results") % active_config.quicksearch_dropdown_limit
-                    )
+                    raise TooManyRowsError(_("More than %d results") % row_limit)
 
             if search_object.row_limit_exceeded():
                 if self.raise_too_many_rows_error:
-                    raise TooManyRowsError(
-                        _("More than %d results") % active_config.quicksearch_dropdown_limit
-                    )
+                    raise TooManyRowsError(_("More than %d results") % row_limit)
 
             if (
                 search_object.num_rows() > 0
@@ -679,9 +695,7 @@ class QuicksearchManager:
                 if search_object.filter_behaviour is FilterBehaviour.FINISHED_DISTINCT:
                     # Discard all data of previous filters and break
                     for i in range(idx - 1, -1, -1):
-                        search_objects[i].remove_rows_from_end(
-                            active_config.quicksearch_dropdown_limit
-                        )
+                        search_objects[i].remove_rows_from_end(row_limit)
                 break
 
     def _evaluate_results(

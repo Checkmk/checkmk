@@ -154,6 +154,7 @@ class ViewWidgetIFramePageHelper:
         is_reload: bool,
         is_debug: bool,
         is_preview: bool = False,
+        is_public: bool = False,
     ) -> None:
         view = View(
             widget_name,
@@ -164,7 +165,7 @@ class ViewWidgetIFramePageHelper:
         view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
-        with cls._wrapper_context(is_reload, is_preview):
+        with cls._wrapper_context(is_reload, is_preview, is_public):
             process_view(
                 GUIViewRenderer(
                     view,
@@ -208,18 +209,20 @@ class ViewWidgetIFramePageHelper:
 
     @classmethod
     def _wrapper_context(
-        cls, is_reload: bool, is_preview: bool
+        cls, is_reload: bool, is_preview: bool, is_public: bool = False
     ) -> contextlib.AbstractContextManager[None]:
         if not is_reload:
-            return cls._content_wrapper(is_preview)
+            return cls._content_wrapper(is_preview, is_public)
 
         return contextlib.nullcontext()
 
     @staticmethod
     @contextlib.contextmanager
-    def _content_wrapper(is_preview: bool) -> Generator[None]:
+    def _content_wrapper(is_preview: bool, is_public: bool = False) -> Generator[None]:
         html.add_body_css_class("view")
         html.add_body_css_class("dashlet")
+        if is_public:
+            html.add_body_css_class("dashboard_public_view")
         html.open_div(id_="dashlet_content_wrapper")
         if is_preview:
             html.open_div(class_="click_shield")
@@ -230,6 +233,8 @@ class ViewWidgetIFramePageHelper:
                 html.close_div()
             html.close_div()
             html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
+            if is_public:
+                html.javascript("cmk.dashboard.ignore_public_dashboard_clicks();")
 
 
 class _ViewWidgetIFrameAuthTokenRequestParameters(BaseModel):
@@ -495,6 +500,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             user_permissions=user_permissions,
             is_reload=parameters.is_reload(),
             is_debug=False,
+            is_public=True,
         )
 
     @override

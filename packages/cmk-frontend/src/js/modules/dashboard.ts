@@ -1327,3 +1327,17 @@ function toggle_slim_controls(controls_obj: HTMLElement, width: number, height: 
     remove_class(controls_obj, 'slim_controls')
   }
 }
+
+export function ignore_public_dashboard_clicks(): void {
+  document.addEventListener(
+    'click',
+    (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest('a[href]')
+      if (a) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    },
+    true
+  )
+}

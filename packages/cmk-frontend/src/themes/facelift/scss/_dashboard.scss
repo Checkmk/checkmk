@@ -213,6 +213,13 @@ body.main.dashlet {
   }
 }
 
+body.dashboard_public_view {
+  // Override the browser's pointer cursor on links — navigation is disabled here.
+  .dashlet a {
+    cursor: default;
+  }
+}
+
 div[id^='dashlet'] div.dashlet_inner > div {
   box-sizing: border-box;
   transition: 0.15s ease-in-out;

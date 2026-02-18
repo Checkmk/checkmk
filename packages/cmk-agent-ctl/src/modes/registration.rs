@@ -10,7 +10,7 @@ use crate::{
     certs, config, misc, site_spec, types, version,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
-use log::{error, info};
+use log::{error, info, warn};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
@@ -701,7 +701,12 @@ pub fn register_updater_subprocess(
     let cmk_update_agent_path = match _get_cmk_update_agent_path(CMK_UPDATE_AGENT_CMD) {
         Ok(path) => path,
         Err(e) => {
-            error!("Command '{}' not found: {}", CMK_UPDATE_AGENT_CMD, e);
+            warn!(
+                "You requested to register for automatic updates, \
+                   but the agent updater is not found. \
+                   Skipping agent updater registration. ({})",
+                e
+            );
             return Ok(()); // Skip updater registration gracefully
         }
     };

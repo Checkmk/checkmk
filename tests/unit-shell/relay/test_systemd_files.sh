@@ -100,9 +100,8 @@ test_container_unit_auto_update() {
 
 test_container_unit_network_host() {
     local file_path="${QUADLET_DIR}/checkmk_relay.container"
-    # shellcheck disable=SC2251
-    ! grep -q "^Network=host" "$file_path"
-    assertEquals "Container unit should not define Network=host" 0 $?
+    grep -q "^Network=host" "$file_path"
+    assertEquals "Container unit should not define Network=host" 1 $?
 }
 
 test_container_unit_exec() {
@@ -172,10 +171,28 @@ test_path_unit_description() {
     assertEquals "Path unit should have correct description" 0 $?
 }
 
-test_path_unit_binds_to() {
+test_path_unit_no_binds_to() {
     local file_path="${SYSTEMD_USER_DIR}/checkmk_relay-update-manager.path"
-    grep -q "^BindsTo=checkmk_relay.service" "$file_path"
-    assertEquals "Path unit should bind to checkmk_relay.service" 0 $?
+    # BindsTo= would stop the path unit whenever the relay restarts (e.g. after
+    # podman-auto-update), permanently killing the update watcher. Must not be present.
+    grep -q "^BindsTo=" "$file_path"
+    assertEquals "Path unit must not use BindsTo= (breaks across container restarts)" 1 $?
+}
+
+test_path_unit_after_relay_service() {
+    local file_path="${SYSTEMD_USER_DIR}/checkmk_relay-update-manager.path"
+    # After= ensures the path unit starts only once the relay is up on boot,
+    # preventing updates from being triggered before the relay is running.
+    grep -q "^After=checkmk_relay.service" "$file_path"
+    assertEquals "Path unit should start after checkmk_relay.service" 0 $?
+}
+
+test_path_unit_wants_relay_service() {
+    local file_path="${SYSTEMD_USER_DIR}/checkmk_relay-update-manager.path"
+    # Wants= is a soft dependency: the relay is preferred to be running, but the
+    # path unit stays alive if the relay restarts (unlike BindsTo=).
+    grep -q "^Wants=checkmk_relay.service" "$file_path"
+    assertEquals "Path unit should declare Wants=checkmk_relay.service" 0 $?
 }
 
 test_path_unit_path_modified() {

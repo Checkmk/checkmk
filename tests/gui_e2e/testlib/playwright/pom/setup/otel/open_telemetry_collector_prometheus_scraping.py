@@ -16,21 +16,20 @@ logger = logging.getLogger(__name__)
 
 
 class OpenTelemetryCollectorPrometheusScraping(CmkPage):
-    """Represent the page `Setup -> Hosts -> Prometheus scraping`"""
+    """Represent the page `Setup -> Hosts -> Prometheus scraper`"""
 
     def __init__(
         self,
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "OpenTelemetry Collector: Prometheus scraping"
-        self.main_menu_name = "Prometheus scraping"
+        self.page_title = "Prometheus scraper"
+        self.main_menu_name = "Prometheus scraper"
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to
-        `OpenTelemetry Collector: Prometheus scraping` page."""
+        """Instructions to navigate to `Prometheus scraper` page."""
         logger.info(f"Navigate to '{self.page_title}' page")
         self.main_menu.setup_menu(self.main_menu_name).click()
         _url_pattern: str = quote_plus("wato.py?mode=otel_collectors_prom_scrapes")
@@ -51,16 +50,14 @@ class OpenTelemetryCollectorPrometheusScraping(CmkPage):
 
     @property
     def add_open_telemetry_collector_configuration_btn(self) -> Locator:
-        return self.main_area.get_suggestion(
-            "Add OpenTelemetry Collector Prometheus scraping configuration"
-        )
+        return self.main_area.get_suggestion("Add Prometheus scraper configuration")
 
     def collector_configuration_row(self, collector_id: str) -> Locator:
         return self.main_area.locator(f"tr:has(td:has-text('{collector_id}'))")
 
     def delete_collector_configuration_button(self, collector_id: str) -> Locator:
         return self.collector_configuration_row(collector_id).get_by_role(
-            "link", name="Delete this Prometheus scraping"
+            "link", name="Delete this Prometheus scraper"
         )
 
     @property

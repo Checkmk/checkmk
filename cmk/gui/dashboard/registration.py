@@ -18,6 +18,7 @@ from .api import register_endpoints
 from .builtin_dashboards import builtin_dashboards
 from .community_dashboards import register_builtin_dashboards
 from .dashlet import DashletRegistry, register_dashlets
+from .page_check_token_validity import CheckTokenValidityPage
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
@@ -70,6 +71,9 @@ def register(
     )
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint(GraphHoverTokenAuthPage.ident(), GraphHoverTokenAuthPage())
+    )
+    token_authenticated_page_registry.register(
+        TokenAuthenticatedEndpoint("check_token_validity", CheckTokenValidityPage())
     )
 
     register_dashlets(dashlet_registry_, autocompleter_registry)

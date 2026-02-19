@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, provide } from 'vue'
+import { computed, onMounted, onUnmounted, provide } from 'vue'
 
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
@@ -19,7 +19,7 @@ import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/u
 import { type DashboardKey, DashboardLayout } from '@/dashboard/types/dashboard.ts'
 import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { SharedDashboardPageProperties } from '@/dashboard/types/page.ts'
-import { createDashboardModel } from '@/dashboard/utils.ts'
+import { createDashboardModel, setupTokenValidityCheck } from '@/dashboard/utils.ts'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { CmkErrorBoundary } = useCmkErrorBoundary()
@@ -39,9 +39,15 @@ const sharedDashboard = createDashboardModel(props.dashboard.spec, DashboardLayo
 //         cmkToken only by the DashboardContentFigure component
 provide(urlParamsKey, props.url_params)
 // TODO: remove this hard coded "0:" once the backend can provide the token version
-useProvideCmkToken(`0:${props.token_value}`)
+const cmkToken = `0:${props.token_value}`
+useProvideCmkToken(cmkToken)
 useProvideIsPublicDashboard()
 useProvideDashboardConstants(props.dashboard_constants)
+
+onMounted(() => {
+  const stopChecking = setupTokenValidityCheck(cmkToken)
+  onUnmounted(stopChecking)
+})
 
 const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filter_context))
 const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.content.widgets))

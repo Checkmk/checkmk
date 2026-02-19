@@ -450,3 +450,45 @@ export async function copyToClipboard(text: string): Promise<void> {
     console.error('Failed to copy to clipboard:', err)
   }
 }
+
+const INITIAL_TOKEN_CHECK_DELAY_MS = 5_000
+const SUBSEQUENT_TOKEN_CHECK_INTERVAL_MS = 60_000
+
+async function checkTokenValidity(token: string): Promise<boolean> {
+  const url = `check_token_validity.py?cmk-token=${encodeURIComponent(token)}`
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      window.location.reload()
+      return false
+    }
+    return true
+  } catch {
+    window.location.reload()
+    return false
+  }
+}
+
+export function setupTokenValidityCheck(token: string): () => void {
+  let initialCheckTimeout: ReturnType<typeof setTimeout> | null = null
+  let subsequentChecksInterval: ReturnType<typeof setInterval> | null = null
+
+  initialCheckTimeout = setTimeout(() => {
+    void checkTokenValidity(token).then((isValid) => {
+      if (isValid) {
+        subsequentChecksInterval = setInterval(() => {
+          void checkTokenValidity(token)
+        }, SUBSEQUENT_TOKEN_CHECK_INTERVAL_MS)
+      }
+    })
+  }, INITIAL_TOKEN_CHECK_DELAY_MS)
+
+  return () => {
+    if (initialCheckTimeout !== null) {
+      clearTimeout(initialCheckTimeout)
+    }
+    if (subsequentChecksInterval !== null) {
+      clearInterval(subsequentChecksInterval)
+    }
+  }
+}

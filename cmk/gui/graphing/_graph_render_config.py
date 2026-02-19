@@ -88,7 +88,7 @@ class GraphRenderConfigBase(BaseModel):
     show_time_range_previews: bool = True
     show_title: bool | Literal["inline"] = True
     show_vertical_axis: bool = True
-    size: tuple[int, int] = (70, 16)
+    size: tuple[float, float] = (70, 16)
     title_format: GraphTitleFormat = GraphTitleFormat(
         plain=True,
         add_host_name=False,

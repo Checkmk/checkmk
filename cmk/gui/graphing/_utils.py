@@ -17,7 +17,7 @@ class MKCombinedGraphLimitExceededError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST
 
 
-SizeEx = NewType("SizeEx", int)
+SizeEx = NewType("SizeEx", float)
 
 
 def get_graph_data_from_livestatus(only_sites, host_name, service_description):

@@ -121,7 +121,7 @@ class Curve(TypedDict):
 
 
 GraphRangeSpec = tuple[int | str, int | str]
-SizeEx = NewType("SizeEx", int)
+SizeEx = NewType("SizeEx", float)
 
 
 class RawGraphTemplate(TypedDict):

@@ -26,7 +26,7 @@ use std::collections::HashSet;
 use crate::config::authentication::AuthType;
 use crate::config::connection::{add_tns_admin_to_env, setup_wallet_environment};
 use crate::config::defines::defaults::SECTION_SEPARATOR;
-use crate::config::ora_sql::CustomService;
+use crate::config::ora_sql::CustomInstance;
 use crate::config::section::names;
 use crate::ora_sql::detect::find_sids_by_processes;
 use crate::ora_sql::spots::{make_spot_work_results, SpotWorks};
@@ -414,7 +414,7 @@ fn _split_spots(spots: Vec<Result<OpenedSpot>>) -> (Vec<OpenedSpot>, Vec<anyhow:
 
 fn calc_all_spots(
     endpoints: Vec<config::ora_sql::Endpoint>,
-    instances: &[CustomService],
+    instances: &[CustomInstance],
 ) -> Vec<ClosedSpot> {
     let mut all = calc_main_spots(endpoints);
     all.extend(calc_custom_spots(instances));
@@ -500,7 +500,7 @@ fn calc_main_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot>
         .collect::<Vec<ClosedSpot>>()
 }
 
-fn calc_custom_spots(instances: &[CustomService]) -> Vec<ClosedSpot> {
+fn calc_custom_spots(instances: &[CustomInstance]) -> Vec<ClosedSpot> {
     log::info!("CUSTOM INSTANCES: {:?}", instances);
     instances
         .iter()
@@ -533,8 +533,8 @@ mod tests {
         ]);
         assert_eq!(all.len(), 2);
     }
-    fn make_instance(instance_name: &str) -> CustomService {
-        CustomService::new(
+    fn make_instance(instance_name: &str) -> CustomInstance {
+        CustomInstance::new(
             config::authentication::Authentication::default(),
             Connection::from_connection(
                 &Connection::default(),
@@ -561,12 +561,12 @@ mod tests {
         );
     }
 
-    fn make_instance_with_custom_conn(service_name: &str) -> config::ora_sql::CustomService {
+    fn make_instance_with_custom_conn(service_name: &str) -> config::ora_sql::CustomInstance {
         let base_connection =
             Connection::from_yaml(&create_yaml("connection:\n    service_name: X"))
                 .unwrap()
                 .unwrap();
-        CustomService::new(
+        CustomInstance::new(
             config::authentication::Authentication::default(),
             Connection::from_connection(
                 &base_connection,

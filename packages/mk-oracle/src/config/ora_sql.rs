@@ -36,7 +36,7 @@ pub struct Config {
     discovery: Discovery,
     piggyback_host: Option<String>,
     mode: Mode,
-    custom_instances: Vec<CustomService>,
+    custom_instances: Vec<CustomInstance>,
     configs: Vec<Config>,
     hash: String,
     options: Options,
@@ -109,8 +109,8 @@ impl Config {
         let mut custom_instances = main
             .get_yaml_vector(keys::INSTANCES)
             .into_iter()
-            .map(|v| CustomService::from_yaml(&v, &auth, &conn, &section_info))
-            .collect::<Result<Vec<CustomService>>>()?;
+            .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &section_info))
+            .collect::<Result<Vec<CustomInstance>>>()?;
         if discovery.detect() {
             let registry_instances =
                 get_additional_registry_instances(&custom_instances, &auth, &conn);
@@ -184,7 +184,7 @@ impl Config {
     pub fn mode(&self) -> &Mode {
         &self.mode
     }
-    pub fn instances(&self) -> &Vec<CustomService> {
+    pub fn instances(&self) -> &Vec<CustomInstance> {
         &self.custom_instances
     }
     pub fn configs(&self) -> &Vec<Config> {
@@ -210,10 +210,10 @@ impl Config {
 }
 
 fn get_additional_registry_instances(
-    _already_found_instances: &[CustomService],
+    _already_found_instances: &[CustomInstance],
     _auth: &Authentication,
     conn: &Connection,
-) -> Vec<CustomService> {
+) -> Vec<CustomInstance> {
     if !conn.is_local() {
         log::info!("skipping registry instances: the host is not enough localhost");
     }
@@ -353,7 +353,7 @@ impl TryFrom<&str> for Mode {
 }
 
 #[derive(PartialEq, Debug, Clone, Default)]
-pub struct CustomService {
+pub struct CustomInstance {
     /// also known as sid
     auth: Authentication,
     conn: Connection,
@@ -361,7 +361,7 @@ pub struct CustomService {
     piggyback: Option<Piggyback>,
 }
 
-impl CustomService {
+impl CustomInstance {
     pub fn new(
         auth: Authentication,
         conn: Connection,
@@ -825,7 +825,7 @@ authentication:
         ))
         .unwrap()
         .unwrap();
-        let instance = CustomService::from_yaml(
+        let instance = CustomInstance::from_yaml(
             &create_yaml(data::CUSTOM_INSTANCE),
             &a,
             &Connection::default(),
@@ -852,7 +852,7 @@ authentication:
 connection:
   hostname: "h1"
 "#;
-        let instance = CustomService::from_yaml(
+        let instance = CustomInstance::from_yaml(
             &create_yaml(INSTANCE_INTEGRATED),
             &Authentication::default(),
             &Connection::default(),
@@ -874,7 +874,7 @@ authentication:
 connection:
   port: 5555
 "#;
-        let instance = CustomService::from_yaml(
+        let instance = CustomInstance::from_yaml(
             &create_yaml(INSTANCE_OS),
             &Authentication::default(),
             &Connection::default(),
@@ -902,7 +902,7 @@ connection:
   service_name: "SERVICE_NAME_3"
   instance_name: "INSTANCE_NAME_3"
 "#;
-        let instance = CustomService::from_yaml(
+        let instance = CustomInstance::from_yaml(
             &create_yaml(INSTANCE_INTEGRATED),
             &Authentication::default(),
             &Connection::default(),
@@ -936,7 +936,7 @@ connection:
   service_name: "SERVICE_NAME_3"
   instance_name: "INSTANCE_NAME_3"
 "#;
-        let instance = CustomService::from_yaml(
+        let instance = CustomInstance::from_yaml(
             &create_yaml(INSTANCE_INTEGRATED),
             &Authentication::default(),
             &Connection::default(),
@@ -969,7 +969,7 @@ connection:
   port: 5555
   service_name: "SERVICE_NAME_1"
 "#;
-        let instance = CustomService::from_yaml(
+        let instance = CustomInstance::from_yaml(
             &create_yaml(INSTANCE_INTEGRATED),
             &Authentication::default(),
             &Connection::default(),
@@ -1105,7 +1105,7 @@ connection:
   hostname: "localhost"
   port: 1521
 "#;
-        let instance = CustomService::from_yaml(
+        let instance = CustomInstance::from_yaml(
             &create_yaml(INSTANCE_WITH_SID),
             &Authentication::default(),
             &Connection::default(),

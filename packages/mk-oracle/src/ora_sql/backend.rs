@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::ora_sql::CustomService;
+use crate::config::ora_sql::CustomInstance;
 use crate::config::{
     authentication::{AuthType, Authentication, Role},
     connection::EngineTag,
@@ -337,7 +337,7 @@ impl SpotBuilder {
         self
     }
 
-    pub fn custom_instance_target(mut self, custom_instance: &CustomService) -> Self {
+    pub fn custom_instance_target(mut self, custom_instance: &CustomInstance) -> Self {
         self.target = Some(Target {
             host: custom_instance.conn().hostname().clone(),
             target_id: TargetIdBuilder::new()
@@ -390,7 +390,7 @@ pub fn make_spot(endpoint: &Endpoint) -> Result<ClosedSpot> {
         .build()
 }
 
-pub fn make_custom_spot(instance: &CustomService) -> Result<ClosedSpot> {
+pub fn make_custom_spot(instance: &CustomInstance) -> Result<ClosedSpot> {
     SpotBuilder::new()
         .custom_instance_target(instance)
         .engine_type(instance.endpoint().conn().engine_tag())

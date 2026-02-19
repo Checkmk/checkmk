@@ -105,8 +105,8 @@ def _piggyback_env_two_site_setup(
             _setup_source_host(central_site, remote_site.id, _HOSTNAME_SOURCE_REMOTE),
             set_omd_config_piggyback_hub(central_site, "on"),
             set_omd_config_piggyback_hub(remote_site, "on"),
-            _trace_broker_messages(central_site),
-            _trace_broker_messages(remote_site),
+            # _trace_broker_messages(central_site),
+            # _trace_broker_messages(remote_site),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
             yield central_site, remote_site
@@ -122,7 +122,7 @@ def _piggyback_env_three_site_setup(
     try:
         with (
             set_omd_config_piggyback_hub(remote_site_2, "on"),
-            _trace_broker_messages(remote_site_2),
+            # _trace_broker_messages(remote_site_2),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
             yield central_site, remote_site, remote_site_2

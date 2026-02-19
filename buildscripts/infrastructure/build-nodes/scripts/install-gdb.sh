@@ -48,15 +48,13 @@ build_gdb() {
     fi
     mkdir gdb-${GDB_VERSION}-build
     cd gdb-${GDB_VERSION}-build
-    # sles-12* had (we don't build it anymore anyways) ancient makeinfo versions, so let's just skip
-    # info generation for all distros, we don't really need it.
-    MAKEINFO=true ../gdb-${GDB_VERSION}/configure \
+    ../gdb-${GDB_VERSION}/configure \
         --prefix="${PREFIX}" \
         CC="${GCC_PREFIX}/bin/gcc-${GCC_MAJOR}" \
         CXX="${GCC_PREFIX}/bin/g++-${GCC_MAJOR}" \
         "$(python -V 2>&1 | grep -q 'Python 2\.4\.' && echo "--with-python=no")"
-    make -j4 MAKEINFO=true
-    make install MAKEINFO=true
+    make -j4
+    make install
 }
 
 set_symlinks() {

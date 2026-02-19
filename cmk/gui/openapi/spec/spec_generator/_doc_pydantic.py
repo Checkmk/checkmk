@@ -77,6 +77,26 @@ class PydanticSchemaDefinitions:
         return None
 
 
+def _extract_body_example(body_type: type | None) -> dict[str, object] | None:
+    """Extract example values from a dataclass body type's field metadata.
+
+    Returns a dict mapping each field's serialization alias (or name) to its
+    example value, or None if body_type is None or no fields have examples.
+    """
+    if body_type is None:
+        return None
+    result: dict[str, object] = {}
+    for field in dataclasses.fields(body_type):
+        key = str(field.metadata.get("alias", field.name))
+        if "examples" in field.metadata:
+            result[key] = field.metadata["examples"][0]
+        elif dataclasses.is_dataclass(field.type) and isinstance(field.type, type):
+            nested = _extract_body_example(field.type)
+            if nested is not None:
+                result[key] = nested
+    return result or None
+
+
 def pydantic_endpoint_to_doc_endpoint(
     spec: APISpec, endpoint: VersionedSpecEndpoint, site_name: str
 ) -> DocEndpoint:
@@ -229,7 +249,7 @@ def _to_operation_dict(
     operation_spec["x-codeSamples"] = code_samples(
         spec,
         spec_endpoint,
-        request_schema_example=None,
+        request_schema_example=_extract_body_example(schema_definitions.get_type("body")),
         multiple_request_schemas=False,
         includes_redirect=False,
         header_params=header_parameters,

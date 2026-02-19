@@ -92,9 +92,10 @@ void main() {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }
 
+    // only close the branch if the previous build passed but this failed
     smart_stage(
         name: "Closing branch on failure",
-        condition: currentBuild.result != "SUCCESS",
+        condition: currentBuild.result != "SUCCESS" && currentBuild.getPreviousBuild()?.result.toString() == "SUCCESS",
     ) {
         build(
             job: "maintenance/sheriffing",

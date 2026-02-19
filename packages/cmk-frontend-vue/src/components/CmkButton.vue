@@ -32,6 +32,8 @@ export interface ButtonProps {
   variant?: ButtonVariants['variant']
   disabled?: boolean | string | undefined
   title?: string | undefined
+  href?: string | undefined
+  target?: string | undefined
 }
 </script>
 
@@ -39,7 +41,7 @@ export interface ButtonProps {
 import { type VariantProps, cva } from 'class-variance-authority'
 import { computed, ref } from 'vue'
 
-const buttonRef = ref<HTMLButtonElement | null>(null)
+const buttonRef = ref<HTMLButtonElement | HTMLAnchorElement | null>(null)
 
 // Expose the focus method
 defineExpose({
@@ -51,12 +53,30 @@ defineExpose({
 const props = defineProps<ButtonProps>()
 
 const isDisabled = computed(() => props.disabled === true || props.disabled === 'true')
+const isLink = computed(() => props.href !== undefined)
 
 defineEmits(['click'])
 </script>
 
 <template>
+  <a
+    v-if="isLink"
+    ref="buttonRef"
+    class="cmk-button"
+    :class="buttonVariants({ variant: props.variant, disabled: isDisabled })"
+    :href="props.href"
+    :target="props.target"
+    :title="title || ''"
+    @click="
+      (e) => {
+        $emit('click', e)
+      }
+    "
+  >
+    <slot />
+  </a>
   <button
+    v-else
     ref="buttonRef"
     class="cmk-button"
     :class="buttonVariants({ variant: props.variant, disabled: isDisabled })"
@@ -82,10 +102,14 @@ defineEmits(['click'])
   justify-content: center;
   letter-spacing: unset;
   border-radius: var(--dimension-3);
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .cmk-button--variant-primary,
-button.cmk-button--variant-success {
+.cmk-button--variant-success {
   color: var(--button-primary-text-color);
   background-color: var(--default-button-primary-color);
   border: 1px solid var(--button-primary-border-color);
@@ -103,7 +127,7 @@ button.cmk-button--variant-success {
   }
 }
 
-button.cmk-button--variant-secondary {
+.cmk-button--variant-secondary {
   background-color: var(--default-button-secondary-color);
   border: 1px solid var(--button-secondary-border-color);
   color: var(--button-secondary-text-color);
@@ -125,7 +149,7 @@ button.cmk-button--variant-secondary {
   }
 }
 
-button.cmk-button--variant-optional {
+.cmk-button--variant-optional {
   background-color: var(--default-button-optional-color);
   border: 1px solid var(--button-optional-border-color);
   color: var(--button-optional-text-color);
@@ -147,7 +171,7 @@ button.cmk-button--variant-optional {
   }
 }
 
-button.cmk-button--variant-info {
+.cmk-button--variant-info {
   background-color: var(--default-button-info-color);
   border: 1px solid var(--button-info-border-color);
   color: var(--button-info-text-color);
@@ -165,7 +189,7 @@ button.cmk-button--variant-info {
   }
 }
 
-button.cmk-button--variant-danger {
+.cmk-button--variant-danger {
   background-color: var(--default-button-danger-color);
   border: 1px solid var(--button-danger-border-color);
   color: var(--button-danger-text-color);
@@ -183,7 +207,7 @@ button.cmk-button--variant-danger {
   }
 }
 
-button.cmk-button--variant-warning {
+.cmk-button--variant-warning {
   background-color: var(--default-button-warning-color);
   border: 1px solid var(--button-warning-border-color);
   color: var(--button-warning-text-color);
@@ -201,7 +225,7 @@ button.cmk-button--variant-warning {
   }
 }
 
-button.cmk-button--disabled {
+.cmk-button--disabled {
   opacity: 0.5;
   cursor: not-allowed;
 
@@ -209,7 +233,7 @@ button.cmk-button--disabled {
   filter: none;
 }
 
-button.cmk-button--disabled:active {
+.cmk-button--disabled:active {
   /* Reset global style from old framework */
   box-shadow: none;
 }

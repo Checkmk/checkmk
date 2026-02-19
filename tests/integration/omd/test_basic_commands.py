@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
+
 import pytest
 
 from tests.testlib.site import Site
@@ -34,9 +36,29 @@ def test_basic_commands(site: Site) -> None:
     "command",
     [
         ["bc", "--help"],
+        ["curl", "--help"],
+        ["dig", "-v"],
         ["file", "--help"],
+        ["host", "-V"],
+        ["nc", "-h"],
+        # ["nmap", "--help"], # not present in build images
+        ["nslookup", "help"],
+        ["pdftoppm", "--help"],
+        ["php", "--help"],
+        ["php-cgi", "--help"],
+        ["resolvectl", "--help"],
+        ["rpmbuild", "--help"],
+        ["which", "scp"],
+        ["ssh", "-V"],
+        ["systemctl", "--help"],
+        ["zypper", "--help"],
     ],
+    ids=lambda cmd: cmd[0],
 )
 def test_additional_os_command_availability(site: Site, command: list[str]) -> None:
+    # 'zypper' is only available in SLES-based images, so we skip the test if it's not present.
+    if command[0] == "zypper" and not os.environ.get("DISTRO", "").startswith("sles"):
+        pytest.skip("'zypper' is not available in this image")
+
     # Commands executed here should return with exit code 0
     site.check_output(command)

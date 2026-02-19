@@ -16,7 +16,8 @@
 
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
-use crate::types::{HostName, InstanceName, Port, ServiceName, ServiceType, Sid};
+use crate::config::target::{TargetId, TargetIdBuilder};
+use crate::types::{HostName, InstanceName, Port, ServiceName, ServiceType};
 use anyhow::Context;
 use anyhow::Result;
 use std::fs;
@@ -59,19 +60,20 @@ pub struct Connection {
     timeout: Option<u64>,       // 5 if not defined
     tns_admin: Option<PathBuf>, // config dir if not defined
     oracle_local_registry: Option<PathBuf>,
-    service_name: Option<ServiceName>,
-    instance_name: Option<InstanceName>,
-    service_type: Option<ServiceType>,
-    sid: Option<Sid>,
     engine: EngineTag, // Std if not defined
+
+    target_id: TargetId,
 }
 
 impl Connection {
+    /// Possible to change service_name, instance_name and sid, but other fields will be copied from the original connection
+    /// Changing of service_name may lead to changing SID type too.
+    /// This help[s to simplify code where three parameters fully define target_id
     pub fn from_connection(
         s: &Connection,
         service_name: &Option<ServiceName>,
         instance_name: &Option<InstanceName>,
-        sid: &Option<Sid>,
+        sid_value: Option<&str>, // at this moment we don't know precise sid type
     ) -> Self {
         Self {
             hostname: s.hostname.clone(),
@@ -79,22 +81,24 @@ impl Connection {
             timeout: s.timeout,
             tns_admin: s.tns_admin.clone(),
             oracle_local_registry: s.oracle_local_registry.clone(),
-            service_name: if service_name.is_some() {
-                service_name.clone()
-            } else {
-                s.service_name().cloned()
-            },
-            instance_name: if instance_name.is_some() {
-                instance_name.clone()
-            } else {
-                s.instance_name().cloned()
-            },
-            service_type: s.service_type.clone(),
-            sid: if sid.is_some() {
-                sid.clone()
-            } else {
-                s.sid().cloned()
-            },
+            target_id: TargetIdBuilder::new()
+                .service_name(if service_name.is_some() {
+                    service_name.as_ref()
+                } else {
+                    s.target_id().service_name()
+                })
+                .instance_name(if instance_name.is_some() {
+                    instance_name.as_ref()
+                } else {
+                    s.target_id().instance_name()
+                })
+                .service_type(s.target_id().service_type())
+                .sid(if sid_value.is_some() {
+                    sid_value
+                } else {
+                    s.target_id().raw_sid()
+                })
+                .build(),
             engine: s.engine.clone(),
         }
     }
@@ -103,6 +107,17 @@ impl Connection {
         if conn.is_badvalue() {
             return Ok(None);
         }
+        let service_name = conn
+            .get_string(keys::SERVICE_NAME)
+            .as_deref()
+            .map(ServiceName::from);
+        let service_type = conn.get_string(keys::SERVICE_TYPE).map(ServiceType::from);
+        let instance_name = conn
+            .get_string(keys::INSTANCE_NAME)
+            .as_deref()
+            .map(InstanceName::from);
+        let sid = conn.get_string(keys::SID);
+
         Ok(Some(Self {
             hostname: conn
                 .get_string(keys::HOSTNAME)
@@ -120,16 +135,12 @@ impl Connection {
             oracle_local_registry: conn
                 .get_string(keys::ORACLE_LOCAL_REGISTRY)
                 .map(PathBuf::from),
-            service_name: conn
-                .get_string(keys::SERVICE_NAME)
-                .as_deref()
-                .map(ServiceName::from),
-            service_type: conn.get_string(keys::SERVICE_TYPE).map(ServiceType::from),
-            instance_name: conn
-                .get_string(keys::INSTANCE_NAME)
-                .as_deref()
-                .map(InstanceName::from),
-            sid: conn.get_string(keys::SID).as_deref().map(Sid::from),
+            target_id: TargetIdBuilder::new()
+                .service_name(service_name.as_ref())
+                .instance_name(instance_name.as_ref())
+                .service_type(service_type.as_ref())
+                .sid(sid.as_deref())
+                .build(),
             port: conn.get_int::<u16>(keys::PORT).map(Port::from),
             timeout: conn.get_int::<u64>(keys::TIMEOUT),
             engine: {
@@ -165,17 +176,8 @@ impl Connection {
     pub fn engine_tag(&self) -> &EngineTag {
         &self.engine
     }
-    pub fn service_name(&self) -> Option<&ServiceName> {
-        self.service_name.as_ref()
-    }
-    pub fn service_type(&self) -> Option<&ServiceType> {
-        self.service_type.as_ref()
-    }
-    pub fn instance_name(&self) -> Option<&InstanceName> {
-        self.instance_name.as_ref()
-    }
-    pub fn sid(&self) -> Option<&Sid> {
-        self.sid.as_ref()
+    pub fn target_id(&self) -> &TargetId {
+        &self.target_id
     }
     pub fn is_local(&self) -> bool {
         self.hostname() == HostName::from("localhost".to_owned())
@@ -267,10 +269,7 @@ impl Default for Connection {
             hostname: HostName::from(defaults::CONNECTION_HOST_NAME.to_string()),
             oracle_local_registry: None,
             tns_admin: None,
-            service_name: None,
-            service_type: None,
-            instance_name: None,
-            sid: None,
+            target_id: TargetIdBuilder::default().build(),
             port: None,
             timeout: None,
             engine: EngineTag::default(),
@@ -282,6 +281,7 @@ impl Default for Connection {
 mod tests {
     use super::*;
     use crate::config::yaml::test_tools::create_yaml;
+    use crate::types::Sid;
 
     mod data {
 
@@ -324,10 +324,11 @@ connection:
                 timeout: Some(341),
                 tns_admin: Some(PathBuf::from("/path/to/oracle/config/files/")),
                 oracle_local_registry: Some(PathBuf::from("/etc/oracle/olr.loc")),
-                service_name: Some(ServiceName::from("service_NAME")),
-                service_type: Some(ServiceType::from("dedicated")),
-                instance_name: Some(InstanceName::from("instance_NAME")),
-                sid: None,
+                target_id: TargetIdBuilder::new()
+                    .service_name(Some(&ServiceName::from("service_NAME")))
+                    .service_type(Some(&ServiceType::from("dedicated")))
+                    .instance_name(Some(&InstanceName::from("instance_NAME")))
+                    .build(),
                 engine: EngineTag::Std,
             }
         );
@@ -340,10 +341,7 @@ connection:
                 hostname: HostName::from("localhost".to_string()),
                 tns_admin: None,
                 oracle_local_registry: None,
-                service_name: None,
-                service_type: None,
-                instance_name: None,
-                sid: None,
+                target_id: TargetIdBuilder::new().build(),
                 port: None,
                 timeout: None,
                 engine: EngineTag::default(),
@@ -352,15 +350,15 @@ connection:
     }
 
     #[test]
-    fn test_connection_with_sid() {
+    fn test_connection_with_only_sid() {
         let conn = Connection::from_yaml(&create_yaml(data::CONNECTION_WITH_SID))
             .unwrap()
             .unwrap();
         assert_eq!(conn.hostname(), HostName::from("localhost".to_string()));
         assert_eq!(conn.port(), Port(1521));
-        assert_eq!(conn.sid(), Some(&Sid::from("FREE")));
-        assert_eq!(conn.service_name(), None);
-        assert_eq!(conn.instance_name(), None);
+        assert_eq!(conn.target_id().standalone_sid(), Some(&Sid::from("FREE")));
+        assert_eq!(conn.target_id().service_name(), None);
+        assert_eq!(conn.target_id().instance_name(), None);
     }
 
     fn create_connection_with_engine(value: &str) -> String {
@@ -381,7 +379,9 @@ connection:
                 .unwrap()
                 .unwrap(),
             Connection {
-                service_name: Some(ServiceName::from("")),
+                target_id: TargetIdBuilder::new()
+                    .service_name(Some(&ServiceName::from("")))
+                    .build(),
                 ..Default::default()
             }
         );
@@ -480,39 +480,49 @@ connection:
         }
     }
 
-    #[test]
-    fn test_from_connection() {
-        let base = Connection {
+    fn create_connection(
+        service_name: &Option<ServiceName>,
+        instance_name: &Option<InstanceName>,
+        sid: Option<&str>,
+    ) -> Connection {
+        Connection {
             hostname: HostName::from("host1".to_string()),
             port: Some(Port(1234)),
             timeout: Some(10),
             tns_admin: Some(PathBuf::from("/path/to/tns_admin")),
             oracle_local_registry: Some(PathBuf::from("/path/to/olr.loc")),
-            service_name: Some(ServiceName::from("service1")),
-            instance_name: Some(InstanceName::from("instance1")),
-            service_type: Some(ServiceType::from("dedicated")),
-            sid: Some(Sid::from("ORCL")),
+            target_id: TargetIdBuilder::new()
+                .service_name(service_name.as_ref())
+                .instance_name(instance_name.as_ref())
+                .service_type(Some(&ServiceType::from("dedicated")))
+                .sid(sid)
+                .build(),
             engine: EngineTag::Jdbc,
-        };
-        let custom = Connection::from_connection(&base, &None, &None, &None);
+        }
+    }
+
+    #[test]
+    fn test_from_connection() {
+        let base_service = Some(ServiceName::from("service1"));
+        let base_instance = Some(InstanceName::from("instance1"));
+        let base_sid = Some("ORCL");
+        let base = create_connection(&base_service, &base_instance, base_sid);
+        let custom = Connection::from_connection(&base, &None, &None, None);
         assert_eq!(custom, base);
 
         let custom_service = Some(ServiceName::from("new_service"));
-        let custom = Connection::from_connection(&base, &custom_service, &None, &None);
-        let mut expected = base.clone();
-        expected.service_name = custom_service;
+        let custom = Connection::from_connection(&base, &custom_service, &None, None);
+        let expected = create_connection(&custom_service, &base_instance, base_sid);
         assert_eq!(custom, expected);
 
         let custom_instance = Some(InstanceName::from("new_instance"));
-        let mut expected = base.clone();
-        expected.instance_name = custom_instance.clone();
-        let custom = Connection::from_connection(&base, &None, &custom_instance, &None);
+        let expected = create_connection(&base_service, &custom_instance, base_sid);
+        let custom = Connection::from_connection(&base, &None, &custom_instance, None);
         assert_eq!(custom, expected);
 
-        let custom_sid = Some(Sid::from("NEW_SID"));
-        let mut expected = base.clone();
-        expected.sid = Some(Sid::from("NEW_SID"));
-        let custom = Connection::from_connection(&base, &None, &None, &custom_sid);
+        let custom_sid = Some("NEW_SID");
+        let expected = create_connection(&base_service, &base_instance, custom_sid);
+        let custom = Connection::from_connection(&base, &None, &None, custom_sid);
         assert_eq!(custom, expected);
     }
 

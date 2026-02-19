@@ -19,7 +19,6 @@ use crate::config::{
     authentication::{AuthType, Authentication, Role},
     connection::EngineTag,
     ora_sql::Endpoint,
-    target::TargetIdBuilder,
 };
 use crate::ora_sql::types::Target;
 use crate::types::{ConnectionStringType, Credentials, InstanceName, SqlQuery};
@@ -326,12 +325,7 @@ impl SpotBuilder {
     pub fn endpoint_target(mut self, endpoint: &Endpoint) -> Self {
         self.target = Some(Target {
             host: endpoint.hostname().clone(),
-            target_id: TargetIdBuilder::new()
-                .service_name(endpoint.conn().service_name())
-                .service_type(endpoint.conn().service_type())
-                .instance_name(endpoint.conn().instance_name())
-                .sid(endpoint.conn().sid().map(|sid| sid.to_string()).as_deref())
-                .build(),
+            target_id: endpoint.conn().target_id().clone(),
             port: endpoint.conn().port().clone(),
             auth: endpoint.auth().clone(),
         });
@@ -341,13 +335,7 @@ impl SpotBuilder {
     pub fn custom_instance_target(mut self, custom_instance: &CustomInstance) -> Self {
         self.target = Some(Target {
             host: custom_instance.conn().hostname().clone(),
-            target_id: TargetIdBuilder::new()
-                .service_name(custom_instance.service_name())
-                .service_type(custom_instance.service_type())
-                .instance_name(custom_instance.instance_name())
-                .sid(custom_instance.sid().map(|sid| sid.to_string()).as_deref())
-                .alias(custom_instance.alias().as_ref())
-                .build(),
+            target_id: custom_instance.target_id().clone(),
             port: custom_instance.conn().port().clone(),
             auth: custom_instance.auth().clone(),
         });

@@ -117,6 +117,12 @@ impl From<&String> for Sid {
     }
 }
 
+impl<'a> From<&'a Sid> for &'a str {
+    fn from(sid: &'a Sid) -> &'a str {
+        sid.0.as_str()
+    }
+}
+
 #[derive(PartialEq, From, Debug, Display, Clone, Into, Hash, Eq)]
 pub struct DescriptorSid(String);
 
@@ -129,6 +135,12 @@ impl From<&str> for DescriptorSid {
 impl From<&String> for DescriptorSid {
     fn from(s: &String) -> Self {
         Self(s.clone())
+    }
+}
+
+impl<'a> From<&'a DescriptorSid> for &'a str {
+    fn from(sid: &'a DescriptorSid) -> &'a str {
+        sid.0.as_str()
     }
 }
 

@@ -20,8 +20,10 @@ use super::yaml::{Get, Yaml};
 use crate::config::authentication::Authentication;
 use crate::config::connection::Connection;
 use crate::config::options::Options;
+use crate::config::target::TargetId;
 use crate::types::{
-    HostName, InstanceAlias, InstanceName, ServiceName, ServiceType, Sid, SqlBindParam,
+    DescriptorSid, HostName, InstanceAlias, InstanceName, ServiceName, ServiceType, Sid,
+    SqlBindParam,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
@@ -392,16 +394,22 @@ impl CustomInstance {
 
     /// may be overridden with a connection value
     pub fn service_name(&self) -> Option<&ServiceName> {
-        self.conn.service_name()
+        self.conn.target_id().service_name()
     }
     pub fn service_type(&self) -> Option<&ServiceType> {
-        self.conn.service_type()
+        self.conn.target_id().service_type()
     }
     pub fn instance_name(&self) -> Option<&InstanceName> {
-        self.conn.instance_name()
+        self.conn.target_id().instance_name()
     }
-    pub fn sid(&self) -> Option<&Sid> {
-        self.conn.sid()
+    pub fn standalone_sid(&self) -> Option<&Sid> {
+        self.conn.target_id().standalone_sid()
+    }
+    pub fn descriptor_sid(&self) -> Option<&DescriptorSid> {
+        self.conn.target_id().descriptor_sid()
+    }
+    pub fn target_id(&self) -> &TargetId {
+        self.conn.target_id()
     }
     pub fn auth(&self) -> &Authentication {
         &self.auth
@@ -439,7 +447,7 @@ fn ensure_conn(yaml: &Yaml, main_conn: &Connection) -> Result<Connection> {
         &conn,
         &yaml.get_string(keys::SERVICE_NAME).map(ServiceName::from),
         &yaml.get_string(keys::INSTANCE_NAME).map(InstanceName::from),
-        &yaml.get_string(keys::SID).map(Sid::from),
+        yaml.get_string(keys::SID).as_deref(),
     ))
 }
 
@@ -1112,7 +1120,7 @@ connection:
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.sid().unwrap().to_string(), "FREE");
+        assert_eq!(instance.standalone_sid().unwrap().to_string(), "FREE");
         assert!(instance.service_name().is_none());
         assert!(instance.instance_name().is_none());
         assert_eq!(instance.auth().username(), "system");
@@ -1135,8 +1143,16 @@ oracle:
       password: oracle
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
-        assert_eq!(config.conn().sid().unwrap().to_string(), "ORCL");
-        assert!(config.conn().service_name().is_none());
+        assert_eq!(
+            config
+                .conn()
+                .target_id()
+                .standalone_sid()
+                .unwrap()
+                .to_string(),
+            "ORCL"
+        );
+        assert!(config.conn().target_id().service_name().is_none());
     }
 
     #[test]
@@ -1155,9 +1171,22 @@ oracle:
       password: oracle
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
-        assert_eq!(config.conn().sid().unwrap().to_string(), "ORCL");
         assert_eq!(
-            config.conn().service_name().unwrap().to_string(),
+            config
+                .conn()
+                .target_id()
+                .descriptor_sid()
+                .unwrap()
+                .to_string(),
+            "ORCL"
+        );
+        assert_eq!(
+            config
+                .conn()
+                .target_id()
+                .service_name()
+                .unwrap()
+                .to_string(),
             "ORCL.service_name"
         );
     }
@@ -1179,7 +1208,10 @@ oracle:
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(config.instances().len(), 1);
-        assert_eq!(config.instances()[0].sid().unwrap().to_string(), "FREE");
+        assert_eq!(
+            config.instances()[0].standalone_sid().unwrap().to_string(),
+            "FREE"
+        );
         assert!(config.instances()[0].service_name().is_none());
     }
 
@@ -1201,7 +1233,10 @@ oracle:
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(config.instances().len(), 1);
-        assert_eq!(config.instances()[0].sid().unwrap().to_string(), "FREE");
+        assert_eq!(
+            config.instances()[0].descriptor_sid().unwrap().to_string(),
+            "FREE"
+        );
         assert_eq!(
             config.instances()[0].service_name().unwrap().to_string(),
             "FREE.service_name"

@@ -16,7 +16,7 @@
 
 use crate::types::{DescriptorSid, InstanceAlias, InstanceName, ServiceName, ServiceType, Sid};
 
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Descriptor {
     service_name: ServiceName,
     service_type: Option<ServiceType>,
@@ -24,7 +24,7 @@ pub struct Descriptor {
     sid: Option<DescriptorSid>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum TargetId {
     Descriptor(Descriptor),
     Sid(Sid),
@@ -64,6 +64,17 @@ impl TargetId {
     pub fn standalone_sid(&self) -> Option<&Sid> {
         match self {
             TargetId::Sid(sid) => Some(sid),
+            _ => None,
+        }
+    }
+
+    pub fn raw_sid(&self) -> Option<&str> {
+        match self {
+            TargetId::Sid(sid) => Some(<&str>::from(sid)),
+            TargetId::Descriptor(d) => {
+                let s = &d.sid;
+                s.as_ref().map(<&str>::from)
+            }
             _ => None,
         }
     }

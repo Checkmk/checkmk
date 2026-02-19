@@ -222,7 +222,7 @@ def _wait_for_file_change(site: Site, file_path: Path, original_mtime: float) ->
 )
 def test_disabled_on_central__enable_on_remote__error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     global_settings: Mapping[str, object] | None,
     site_specific_settings: Mapping[str, Mapping[str, object]] | None,
@@ -230,13 +230,15 @@ def test_disabled_on_central__enable_on_remote__error(
 ) -> None:
     """Test that enabling the piggyback-hub site-specific for a remote site fails if it is not enabled for the central site"""
     # given
-    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+    with _setup_settings(
+        global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
+    ):
         original_settings = test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)[
             "sites"
-        ][remote_site.id]
+        ][remote_site_wato_disabled.id]
 
         # when
-        _enable_hub_site_specific(dashboard_page, remote_site.id, enable_action)
+        _enable_hub_site_specific(dashboard_page, remote_site_wato_disabled.id, enable_action)
 
         # then
         dashboard_page.main_area.check_error(
@@ -245,11 +247,11 @@ def test_disabled_on_central__enable_on_remote__error(
 
         assert (
             test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
-                remote_site.id
+                remote_site_wato_disabled.id
             ]
             == original_settings
         ), (
-            f"Piggyback-hub was enabled for remote site '{remote_site.id}' although it should remain disabled"
+            f"Piggyback-hub was enabled for remote site '{remote_site_wato_disabled.id}' although it should remain disabled"
         )
 
 
@@ -277,26 +279,28 @@ def test_disabled_on_central__enable_on_remote__error(
 )
 def test_enabled_on_central__enable_on_remote__no_error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     global_settings: Mapping[str, object],
     site_specific_settings: Mapping[str, Mapping[str, object]] | None,
     enable_action: HubEnableActions,
 ) -> None:
     """Test that enabling the piggyback-hub site-specific for a remote site works if it is enabled for the central site"""
-    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+    with _setup_settings(
+        global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
+    ):
         original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
-        _enable_hub_site_specific(dashboard_page, remote_site.id, enable_action)
+        _enable_hub_site_specific(dashboard_page, remote_site_wato_disabled.id, enable_action)
 
         _wait_for_file_change(test_site, SITE_SPECIFIC_SETTINGS_REL_PATH, original_mtime)
 
         # then
         assert test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
-            remote_site.id
+            remote_site_wato_disabled.id
         ]["globals"] == {"site_piggyback_hub": True}, (
-            f"Expected piggyback-hub to be enabled for remote site '{remote_site.id}'"
+            f"Expected piggyback-hub to be enabled for remote site '{remote_site_wato_disabled.id}'"
         )
 
 
@@ -328,7 +332,7 @@ def test_enabled_on_central__enable_on_remote__no_error(
 )
 def test_enabled_on_remote__disable_on_remote__no_error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     global_settings: Mapping[str, object] | None,
     site_specific_settings: Mapping[str, Mapping[str, object]],
@@ -337,21 +341,23 @@ def test_enabled_on_remote__disable_on_remote__no_error(
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for a remote site works in general"""
     # given
-    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+    with _setup_settings(
+        global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
+    ):
         original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
-        _disable_hub_site_specific(dashboard_page, remote_site.id, disable_action)
+        _disable_hub_site_specific(dashboard_page, remote_site_wato_disabled.id, disable_action)
 
         _wait_for_file_change(test_site, SITE_SPECIFIC_SETTINGS_REL_PATH, original_mtime)
 
         # then
         assert (
             test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
-                remote_site.id
+                remote_site_wato_disabled.id
             ]["globals"]
             == expected_settings
-        ), f"Expected piggyback-hub to be disabled for remote site '{remote_site.id}'"
+        ), f"Expected piggyback-hub to be disabled for remote site '{remote_site_wato_disabled.id}'"
 
 
 @pytest.mark.parametrize(
@@ -381,17 +387,19 @@ def test_enabled_on_remote__disable_on_remote__no_error(
 )
 def test_enabled_on_remote__disable_on_central__error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     global_settings: dict[str, object] | None,
     site_specific_settings: dict[str, dict[str, object]],
     disable_action: HubDisableActions,
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for the central site fails if it is enabled for a remote site"""
-    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+    with _setup_settings(
+        global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
+    ):
         original_settings = (
             test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
-                remote_site.id
+                remote_site_wato_disabled.id
             ]["globals"]
             if "gui_e2e_remote" in site_specific_settings
             else {}
@@ -407,7 +415,7 @@ def test_enabled_on_remote__disable_on_central__error(
 
         assert (
             test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
-                remote_site.id
+                remote_site_wato_disabled.id
             ]["globals"]
             if "gui_e2e_remote" in site_specific_settings
             else {} == original_settings
@@ -418,7 +426,7 @@ def test_enabled_on_remote__disable_on_central__error(
 
 def test_enabled_on_remote__disable_on_central_by_reset__error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for the central site by resetting to factory setting fails if it is enabled for a remote site"""
@@ -430,7 +438,7 @@ def test_enabled_on_remote__disable_on_central_by_reset__error(
             "gui_e2e_remote": {"site_piggyback_hub": True},
         },
         test_site,
-        [remote_site],
+        [remote_site_wato_disabled],
     ):
         original_settings = test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)[
             "sites"
@@ -486,7 +494,7 @@ def test_enabled_on_remote__disable_on_central_by_reset__error(
 )
 def test_disabled_on_remote_site__disable_on_central__no_error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     global_settings: dict[str, object] | None,
     site_specific_settings: dict[str, dict[str, object]],
@@ -495,7 +503,9 @@ def test_disabled_on_remote_site__disable_on_central__no_error(
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for the central site works if it is not enabled for any remote sites"""
     # given
-    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+    with _setup_settings(
+        global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
+    ):
         original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
@@ -509,7 +519,7 @@ def test_disabled_on_remote_site__disable_on_central__no_error(
                 test_site.id
             ]["globals"]
             == expected_settings
-        ), f"Expected piggyback-hub to be disabled for remote site '{remote_site.id}'"
+        ), f"Expected piggyback-hub to be disabled for remote site '{remote_site_wato_disabled.id}'"
 
 
 @pytest.mark.parametrize(
@@ -522,7 +532,7 @@ def test_disabled_on_remote_site__disable_on_central__no_error(
 )
 def test_enabled_on_remote__disable_globally__error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     disable_action: HubDisableActions,
 ) -> None:
@@ -532,7 +542,7 @@ def test_enabled_on_remote__disable_globally__error(
         {"site_piggyback_hub": True},
         {"gui_e2e_remote": {"site_piggyback_hub": True}},
         test_site,
-        [remote_site],
+        [remote_site_wato_disabled],
     ):
         original_settings = test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH)
 
@@ -573,7 +583,7 @@ def test_enabled_on_remote__disable_globally__error(
 )
 def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     global_settings: Mapping[str, object] | None,
     site_specific_settings: Mapping[str, Mapping[str, object]] | None,
@@ -582,7 +592,9 @@ def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
 ) -> None:
     """Test that disabling the piggyback-hub globally works if it is not enabled for any remote sites or it is enabled for the central site"""
     # given
-    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+    with _setup_settings(
+        global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
+    ):
         original_mtime = test_site.file_mtime(GLOBAL_SETTINGS_REL_PATH)
 
         # when
@@ -605,14 +617,17 @@ def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
 )
 def test_disabled_on_central__enable_globally__error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     enable_action: HubEnableActions,
 ) -> None:
     """Test that enabling the piggyback-hub globally fails if it is disabled for the central site"""
     # given
     with _setup_settings(
-        None, {"gui_e2e_central": {"site_piggyback_hub": False}}, test_site, [remote_site]
+        None,
+        {"gui_e2e_central": {"site_piggyback_hub": False}},
+        test_site,
+        [remote_site_wato_disabled],
     ):
         original_settings = test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH)
 
@@ -637,13 +652,13 @@ def test_disabled_on_central__enable_globally__error(
 )
 def test_unset_on_central_and_remote__enable_globally__no_error(
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     dashboard_page: MainDashboard,
     enable_action: HubEnableActions,
 ) -> None:
     """Test that enabling the piggyback-hub globally works if it is not disabled for the central site"""
     # given
-    with _setup_settings(None, None, test_site, [remote_site]):
+    with _setup_settings(None, None, test_site, [remote_site_wato_disabled]):
         original_mtime = test_site.file_mtime(GLOBAL_SETTINGS_REL_PATH)
 
         # when

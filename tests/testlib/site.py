@@ -2533,6 +2533,7 @@ class SiteFactory:
         central_site: Site,
         site_description: str = "",
         enable_replication: bool | None = None,
+        disable_remote_configuration: bool = True,
     ) -> Iterator[Site]:
         """Use a dynamically created, connected a remote site.
 
@@ -2544,6 +2545,9 @@ class SiteFactory:
             site_description: The description text for the remote site.
             enable_replication: Specifies if replication will be enabled or not.
                 By default, replication will be enabled for sites with matching editions.
+            disable_remote_configuration: Disables WATO on the remote site when True (default).
+                Set to False to keep WATO enabled on the remote site while it is still recognised
+                as a distributed-setup remote (is_distributed_setup_remote_site = True).
 
         Yields:
             Site object for the connected remote site.
@@ -2558,6 +2562,7 @@ class SiteFactory:
                 central_site=central_site,
                 remote_site=remote_site,
                 enable_replication=enable_replication,
+                disable_remote_configuration=disable_remote_configuration,
             ):
                 yield remote_site
 
@@ -2752,7 +2757,11 @@ def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
 
 @contextmanager
 def connection(
-    *, central_site: Site, remote_site: Site, enable_replication: bool | None = None
+    *,
+    central_site: Site,
+    remote_site: Site,
+    enable_replication: bool | None = None,
+    disable_remote_configuration: bool = True,
 ) -> Iterator[None]:
     """Set up the site connection between central and remote site for a distributed setup
 
@@ -2761,6 +2770,9 @@ def connection(
         remote_site: The remote site to connect to.
         enable_replication: Specifies if replication will be enabled or not.
             By default, replication will be enabled for sites with matching editions.
+        disable_remote_configuration: Disables WATO on the remote site when True (default).
+            Set to False to keep WATO enabled on the remote site while it is still recognised
+            as a distributed-setup remote (is_distributed_setup_remote_site = True).
     """
     basic_settings = {
         "alias": f"Remote site {remote_site.id}",
@@ -2774,7 +2786,7 @@ def connection(
         configuration_connection = {
             "enable_replication": True,
             "url_of_remote_site": remote_site.internal_url,
-            "disable_remote_configuration": True,
+            "disable_remote_configuration": disable_remote_configuration,
             "ignore_tls_errors": True,
             "direct_login_to_web_gui_allowed": True,
             "user_sync": {"sync_with_ldap_connections": "all"},

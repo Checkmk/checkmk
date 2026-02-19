@@ -325,7 +325,7 @@ def test_dashboard_required_context_filter_by_host_name(
 def test_builtin_dashboard_filter_by_site(
     dashboard_page: MainDashboard,
     test_site: Site,
-    remote_site: Site,
+    remote_site_wato_disabled: Site,
     bulk_create_hosts_remote_site: list[dict[str, object]],
     dashlet_to_add: SummaryDashletType,
     dashlet_title: str,
@@ -402,7 +402,7 @@ def test_builtin_dashboard_filter_by_site(
 
         logger.info("Filter by remote site")
         custom_dashboard.apply_filter_to_the_dashboard(
-            "Site", f"Remote site {remote_site.id}", exact=True
+            "Site", f"Remote site {remote_site_wato_disabled.id}", exact=True
         )
         custom_dashboard.leave_layout_mode()
         custom_dashboard.verify_summary_dashlet_shows_site_related_data(
@@ -410,7 +410,7 @@ def test_builtin_dashboard_filter_by_site(
             exp_remote_hosts_count
             if dashlet_to_add == SummaryDashletType.HOST
             else exp_remote_services_count,
-            f"Filter: remote site {remote_site.id} only",
+            f"Filter: remote site {remote_site_wato_disabled.id} only",
         )
 
         logger.info("Filter by central site")

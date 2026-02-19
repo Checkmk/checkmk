@@ -62,11 +62,14 @@ def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory)
         yield from site_factory.get_test_site(name="central")
 
 
-@pytest.fixture(name="remote_site", scope="module")
-def fixture_remote_site(
+@pytest.fixture(name="remote_site_wato_disabled", scope="module")
+def fixture_remote_site_wato_disabled(
     test_site: Site, request: pytest.FixtureRequest, site_factory: SiteFactory
 ) -> Iterator[Site]:
-    """Return a second Checkmk site object for a distributed setup."""
+    """Return a second Checkmk site object for a distributed setup.
+
+    WATO is disabled on the remote site (disable_remote_configuration=True).
+    """
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
@@ -330,7 +333,7 @@ def fixture_bulk_create_hosts_central_site(
 
 @pytest.fixture(name="bulk_create_hosts_remote_site")
 def fixture_bulk_create_hosts_remote_site(
-    request: pytest.FixtureRequest, remote_site: Site, test_site: Site
+    request: pytest.FixtureRequest, remote_site_wato_disabled: Site, test_site: Site
 ) -> Iterator[list[dict[str, Any]]]:
     """Create hosts in bulk on remote_site, parametrized by number."""
     if isinstance(request.param, tuple):
@@ -338,4 +341,4 @@ def fixture_bulk_create_hosts_remote_site(
     else:
         num_hosts = int(request.param)
         activate = False
-    yield from _create_bulk_hosts(remote_site, num_hosts, test_site, activate)
+    yield from _create_bulk_hosts(remote_site_wato_disabled, num_hosts, test_site, activate)

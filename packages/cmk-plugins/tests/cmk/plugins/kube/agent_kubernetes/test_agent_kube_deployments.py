@@ -7,37 +7,48 @@
 # mypy: disable-error-code="name-defined"
 
 
-from kubernetes import client
+from typing import cast
 
 from cmk.plugins.kube.schemata import api
-from cmk.plugins.kube.transform import parse_metadata
-from cmk.plugins.kube.transform_json import deployment_conditions, JSONDeploymentStatus
-from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
+from cmk.plugins.kube.transform_json import (
+    _metadata_from_json,
+    deployment_conditions,
+    deployment_from_json,
+    JSONDeployment,
+    JSONDeploymentStatus,
+    JSONMetaData,
+)
+from tests.cmk.plugins.kube.data.kube_1_33 import simple_deployment_default_fg
 
 
 class TestAPIDeployments:
-    def test_parse_metadata(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
-        mocked_deployments = {
-            "metadata": {
-                "name": "cluster-collector",
-                "namespace": "checkmk-monitoring",
-                "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
-                "resourceVersion": "207264",
-                "generation": 2,
-                "creationTimestamp": "2022-03-25T13:24:42Z",
-                "labels": {"app": "cluster-collector"},
-                "annotations": {
-                    "deployment.kubernetes.io/revision": "2",
-                    "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
-                },
-            },
-        }
-        deployment = apps_client.api_client.deserialize(
-            FakeResponse(mocked_deployments),
-            "V1Deployment",
+    def test_parse_full_deployment_json(self) -> None:
+        """
+        Test that we can load a raw Deployment response from Kube successfully
+        into schemata.api objects.
+        """
+        deployment = deployment_from_json(
+            cast(JSONDeployment, simple_deployment_default_fg.DATA), []
         )
 
-        metadata = parse_metadata(deployment.metadata)
+        assert deployment.metadata.name == "myrelease-checkmk-cluster-collector"
+        assert deployment.status.number_terminating is None
+        assert deployment.status.replicas.ready == 1
+
+    def test_parse_metadata(self) -> None:
+        metadata_obj: JSONMetaData = {
+            "name": "cluster-collector",
+            "namespace": "checkmk-monitoring",
+            "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
+            "creationTimestamp": "2022-03-25T13:24:42Z",
+            "labels": {"app": "cluster-collector"},
+            "annotations": {
+                "deployment.kubernetes.io/revision": "2",
+                "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
+            },
+        }
+
+        metadata = _metadata_from_json(metadata_obj)
         assert metadata.name == "cluster-collector"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)
@@ -49,25 +60,15 @@ class TestAPIDeployments:
             "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
         }
 
-    def test_parse_metadata_missing_annotations_and_labels(
-        self, apps_client: client.AppsV1Api, dummy_host: str
-    ) -> None:
-        mocked_deployments = {
-            "metadata": {
-                "name": "cluster-collector",
-                "namespace": "checkmk-monitoring",
-                "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
-                "resourceVersion": "207264",
-                "generation": 2,
-                "creationTimestamp": "2022-03-25T13:24:42Z",
-            },
+    def test_parse_metadata_missing_annotations_and_labels(self) -> None:
+        metadata_obj: JSONMetaData = {
+            "name": "cluster-collector",
+            "namespace": "checkmk-monitoring",
+            "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
+            "creationTimestamp": "2022-03-25T13:24:42Z",
         }
-        deployment = apps_client.api_client.deserialize(
-            FakeResponse(mocked_deployments),
-            "V1Deployment",
-        )
 
-        metadata = parse_metadata(deployment.metadata)
+        metadata = _metadata_from_json(metadata_obj)
         assert metadata.name == "cluster-collector"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)

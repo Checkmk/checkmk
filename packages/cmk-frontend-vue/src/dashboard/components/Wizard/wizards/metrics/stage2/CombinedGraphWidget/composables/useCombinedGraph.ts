@@ -99,8 +99,8 @@ export const useCombinedGraph = async (
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
 
-      graph_template: currentContent?.graph_template ?? metric,
-      presentation: 'lines'
+      graph_template: metric,
+      presentation: presentation.value
     }
   }
 

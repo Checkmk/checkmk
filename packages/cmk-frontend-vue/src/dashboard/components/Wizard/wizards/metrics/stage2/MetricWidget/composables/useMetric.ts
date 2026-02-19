@@ -65,8 +65,8 @@ export const useMetric = async (
   const {
     type: dataRangeType,
     symbol: dataRangeSymbol,
-    maximum: dataRangeMin,
-    minimum: dataRangeMax,
+    maximum: dataRangeMax,
+    minimum: dataRangeMin,
     dataRangeProps
   } = useDataRangeInput(currentContent?.display_range)
 

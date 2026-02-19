@@ -9,7 +9,6 @@ from pydantic import SecretStr
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.cert_retriever import get_certificates
 from cmk.agent_receiver.relay.lib.relays_repository import (
-    RelayNotFoundError,
     RelaysRepository,
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RemoteSiteError
@@ -50,8 +49,10 @@ class RefreshCertHandler:
         self, relay_id: RelayID, request: relay_protocols.RelayRefreshCertRequest
     ) -> relay_protocols.RelayRefreshCertResponse:
         auth = InternalAuth()
-        if not self.relays_repository.relay_exists(auth, relay_id):
-            raise RelayNotFoundError(relay_id)
+        # Allow cert refresh for any relay known to the agent-receiver, including
+        # relays in PENDING_DELETION (deleted from the site but change not yet activated).
+        # get_relay_state() raises RelayNotFoundError if the relay is unknown everywhere.
+        self.relays_repository.get_relay_state(auth, relay_id)
         certificates = get_certificates(request.csr, relay_id)
         return relay_protocols.RelayRefreshCertResponse(
             root_cert=certificates.root_cert,

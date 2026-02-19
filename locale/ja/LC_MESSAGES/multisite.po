@@ -31994,24 +31994,6 @@ msgstr ""
 "変更をアクティブ化</i> してください。"
 
 msgid ""
-"In order to make Checkmk more consistent, the descriptions of several "
-"services have been renamed in newer Checkmk versions. One example is the "
-"filesystem services that have been renamed from <tt>fs_</tt> into "
-"<tt>Filesystem</tt>. But since renaming of existing services has many "
-"implications - including existing rules, performance data and availability "
-"history - these renamings are disabled per default for existing "
-"installations. Here you can switch to the new descriptions for selected "
-"check types"
-msgstr ""
-"Checkmkの一貫性を高めるために、いくつかのサービスの説明は、新しいCheck_MKバー"
-"ジョンで名前が変更されました。一例として、<tt>fs_</tt>から<tt>Filesystem</tt>"
-"に名前が変更されたファイルシステムサービスがあります。ただし、既存のサービス"
-"の名前変更には、既存のルール、パフォーマンスデータ、可用性履歴など、多くの影"
-"響があるため、これらの名前変更は、既存のインストールではデフォルトで無効に"
-"なっています。ここで、選択したチェックタイプの新しい説明に切り替えることがで"
-"きます"
-
-msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
 "latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. This "
@@ -40944,6 +40926,10 @@ msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtreeの検出"
 
 msgid "NetApp Snapshot Reserve"
+msgstr "NetAppスナップショットリザーブ"
+
+#, fuzzy
+msgid "NetApp Snapshot Volumes"
 msgstr "NetAppスナップショットリザーブ"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -75675,6 +75661,15 @@ msgstr "マルチパスエイリアスが設定されている場合は、サー
 msgid "Use the name specified in the ESX system"
 msgstr "ESXシステムで指定された名前を使用します"
 
+#, fuzzy
+msgid "Use the new service name"
+msgstr "新しいサービス名を使用する"
+
+msgid ""
+"Use the new service name. Disabling this option does not work for services "
+"where the monitored SVM or volume names contain colons"
+msgstr ""
+
 msgid "Use the ntopng username as configured in the User settings"
 msgstr "ユーザー設定で設定したntopngユーザー名を使用"
 
@@ -84401,6 +84396,24 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid ""
+#~ "In order to make Checkmk more consistent, the descriptions of several "
+#~ "services have been renamed in newer Checkmk versions. One example is the "
+#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
+#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
+#~ "implications - including existing rules, performance data and "
+#~ "availability history - these renamings are disabled per default for "
+#~ "existing installations. Here you can switch to the new descriptions for "
+#~ "selected check types"
+#~ msgstr ""
+#~ "Checkmkの一貫性を高めるために、いくつかのサービスの説明は、新しいCheck_MK"
+#~ "バージョンで名前が変更されました。一例として、<tt>fs_</tt>から"
+#~ "<tt>Filesystem</tt>に名前が変更されたファイルシステムサービスがあります。"
+#~ "ただし、既存のサービスの名前変更には、既存のルール、パフォーマンスデータ、"
+#~ "可用性履歴など、多くの影響があるため、これらの名前変更は、既存のインストー"
+#~ "ルではデフォルトで無効になっています。ここで、選択したチェックタイプの新し"
+#~ "い説明に切り替えることができます"
 
 #~ msgid "Absolute commitable memory"
 #~ msgstr "絶対コミット可能メモリ"

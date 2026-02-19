@@ -12,7 +12,11 @@ import pytest
 from flask import Flask
 
 import cmk.ccc.version as cmk_version
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
+from cmk.automations.results import (
+    ABCAutomationResult,
+    ResultTypeRegistry,
+    SerializedResult,
+)
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKAuthException

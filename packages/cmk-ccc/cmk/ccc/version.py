@@ -666,6 +666,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
         (
             Version.from_str("2.3.0p11"),  # dcd piggyback config converted to modern format
             Version.from_str("2.3.0p26"),  # CMK-19258 - \n separated audit log
+            Version.from_str("2.3.0p43"),  # SUP-27803 - \n changed custom graph size config
         ),
     ),
     _BaseVersion(2, 5, 0): max(

@@ -775,8 +775,8 @@ def render_ajax_graph(
 
     if resize_x_var is not None and resize_y_var is not None:
         render_opt_x, render_opt_y = graph_render_config.size
-        size_x = int(max(min_resize_width, float(resize_x_var) / html_size_per_ex + render_opt_x))
-        size_y = int(max(min_resize_height, float(resize_y_var) / html_size_per_ex + render_opt_y))
+        size_x = max(min_resize_width, float(resize_x_var) / html_size_per_ex + render_opt_x)
+        size_y = max(min_resize_height, float(resize_y_var) / html_size_per_ex + render_opt_y)
         user.save_file("graph_size", (size_x, size_y))
         graph_render_config.size = (size_x, size_y)
 
@@ -1266,7 +1266,7 @@ def _render_time_range_selection(
 
 def make_graph_data_range(
     time_range: tuple[int, int],
-    height_in_ex: int,
+    height_in_ex: float,
 ) -> GraphDataRange:
     return GraphDataRange(
         time_range=time_range,
@@ -1276,7 +1276,7 @@ def make_graph_data_range(
 
 def estimate_graph_step_for_html(
     time_range: tuple[int, int],
-    height_in_ex: int,
+    height_in_ex: float,
 ) -> int:
     steps_per_ex = html_size_per_ex * 4
     number_of_steps = height_in_ex * steps_per_ex
@@ -1424,10 +1424,10 @@ def host_service_graph_dashlet_cmk(
     time_range: TimerangeValue = None,
 ) -> HTML:
     width_var = request.get_float_input_mandatory("width", 0.0)
-    width = int(width_var / html_size_per_ex)
+    width = width_var / html_size_per_ex
 
     height_var = request.get_float_input_mandatory("height", 0.0)
-    height = int(height_var / html_size_per_ex)
+    height = height_var / html_size_per_ex
 
     bounds = _graph_margin_ex(graph_render_config.show_margin)
     height -= _graph_title_height_ex(graph_render_config)

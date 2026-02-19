@@ -25,7 +25,7 @@ class MKGraphWidgetTooSmallError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST
 
 
-SizeEx = NewType("SizeEx", int)
+SizeEx = NewType("SizeEx", float)
 
 
 # TODO: Refactor to some namespace object

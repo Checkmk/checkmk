@@ -117,8 +117,8 @@ class CurveValue(TypedDict):
 class GraphArtwork(BaseModel):
     # Labelling, size, layout
     title: str
-    width: int
-    height: int
+    width: float
+    height: float
     mirrored: bool
     # Actual data and axes
     curves: list[LayoutedCurve]
@@ -169,7 +169,7 @@ class GraphArtworkOrErrors:
 def compute_graph_artwork(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    size: tuple[int, int],
+    size: tuple[float, float],
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
@@ -890,7 +890,7 @@ def _remove_useless_zeroes(label: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
-def _compute_graph_t_axis(start_time: int, end_time: int, width: int, step: Seconds) -> TimeAxis:
+def _compute_graph_t_axis(start_time: int, end_time: int, width: float, step: Seconds) -> TimeAxis:
     # Depending on which time range is being shown we have different
     # steps of granularity
 
@@ -992,7 +992,7 @@ def _compute_graph_t_axis(start_time: int, end_time: int, width: int, step: Seco
 def _select_t_axis_label_producer(
     *,
     time_range: int,
-    width: int,
+    width: float,
     label_size: float,
     label_distance_at_least: float,
 ) -> Callable[[int, int], Iterator[float]]:
@@ -1013,7 +1013,7 @@ def _select_t_axis_label_producer(
 def _select_t_axis_label_producer_datetime(
     *,
     time_range: int,
-    width: int,
+    width: float,
     label_size: float,
     label_distance_at_least: float,
 ) -> Callable[[datetime, datetime], Iterator[datetime]]:

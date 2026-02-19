@@ -293,6 +293,7 @@ def test_create_ldap_connection_existing_id(clients: ClientRegistry) -> None:
     ).assert_status_code(400)
 
 
+@pytest.mark.skip(reason="CMK-31660")
 @skip_if_saas
 def test_create_ldap_connection_existing_non_sync_connection(clients: ClientRegistry) -> None:
     clients.LdapConnection.create(

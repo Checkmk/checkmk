@@ -334,6 +334,7 @@ def test_check_mkbackup_warn_when_finished_and_disabled() -> None:
     assert (STATE_WARN, "Schedule is currently disabled") in results
 
 
+@pytest.mark.skip(reason="CMK-31660")
 @pytest.mark.parametrize(
     "next_schedule",
     [

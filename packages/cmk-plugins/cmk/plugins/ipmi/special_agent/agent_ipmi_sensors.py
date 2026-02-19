@@ -326,7 +326,9 @@ def _main(args: argparse.Namespace) -> int:
             errors.append(str(e))
 
     if errors:
-        sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
+        sys.stderr.write(
+            "ERROR: '%s'.\n" % ", ".join(e.strip().replace("\n", "; ") for e in errors)
+        )
         return 1
     return 0
 

@@ -42,6 +42,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Table
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
@@ -146,6 +147,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 required=True,
                 parameter_form=CascadingSingleChoice(
                     title=Title("Editable by"),
+                    prefill=DefaultValue("administrators"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="administrators",
@@ -187,6 +189,43 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                     ],
                     show_toggle_all=True,
                     layout=MultipleChoiceExtendedLayout.dual_list,
+                ),
+                group=DictGroup(title=Title("General properties")),
+            ),
+            "sites": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Sites"),
+                    help_text=Help(
+                        "Restrict this OAuth2 connection to specific sites or make it available on all sites."
+                    ),
+                    prefill=DefaultValue("all"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="all",
+                            title=Title("All sites"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="restricted",
+                            title=Title("Restricted to specific sites"),
+                            parameter_form=MultipleChoiceExtended(
+                                title=Title("Site restriction"),
+                                help_text=Help(
+                                    "Restrict this OAuth2 connection to specific sites."
+                                ),
+                                elements=[
+                                    MultipleChoiceElementExtended(
+                                        name=site_id,
+                                        title=Title("%s") % name,
+                                    )
+                                    for site_id, name in get_configured_site_choices()
+                                ],
+                                show_toggle_all=True,
+                                layout=MultipleChoiceExtendedLayout.dual_list,
+                            ),
+                        ),
+                    ],
                 ),
                 group=DictGroup(title=Title("General properties")),
             ),
@@ -602,14 +641,8 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                         serialize_data_for_frontend(
                             form_spec=get_oauth2_connection_form_spec(),
                             value=RawDiskData(
-                                value={
-                                    "title": self._entry["title"] + " (Clone)",
-                                    "authority": self._entry["authority"],
-                                    "tenant_id": self._entry["tenant_id"],
-                                    "client_id": self._entry["client_id"],
-                                    "client_secret": self.entry["client_secret"],
-                                    "access_token": self._entry["access_token"],
-                                    "refresh_token": self._entry["refresh_token"],
+                                {k: v for k, v in self._entry.items() if k != "connector_type"}
+                                | {
                                     "editable_by": ("contact_group", editable_by)
                                     if editable_by
                                     else ("administrators", None),
@@ -635,15 +668,8 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                     serialize_data_for_frontend(
                         form_spec=get_oauth2_connection_form_spec(self._ident),
                         value=RawDiskData(
-                            value={
-                                "ident": self._ident,
-                                "title": self._entry["title"],
-                                "authority": self._entry["authority"],
-                                "tenant_id": self._entry["tenant_id"],
-                                "client_id": self._entry["client_id"],
-                                "client_secret": self.entry["client_secret"],
-                                "access_token": self._entry["access_token"],
-                                "refresh_token": self._entry["refresh_token"],
+                            value={k: v for k, v in self._entry.items() if k != "connector_type"}
+                            | {
                                 "editable_by": ("contact_group", editable_by)
                                 if editable_by
                                 else ("administrators", None),

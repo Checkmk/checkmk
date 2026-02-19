@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from typing import Literal, TypeGuard
 
 from cmk.ccc.site import omd_site, SiteId
@@ -14,7 +13,7 @@ from cmk.gui.watolib.passwords import load_passwords, load_passwords_to_modify, 
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
-from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType
+from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType, OAuth2Sites
 from cmk.utils.password_store import Password
 
 
@@ -207,6 +206,7 @@ def update_reference(
     client_id: str,
     tenant_id: str,
     authority: str,
+    sites: OAuth2Sites,
     connector_type: OAuth2ConnectorType,
     user_id: UserId | None,
     pprint_value: bool,
@@ -220,14 +220,25 @@ def update_reference(
         refresh_token=("cmk_postprocessed", "stored_password", (f"{ident}_refresh_token", "")),
         tenant_id=tenant_id,
         authority=authority,
+        sites=sites,
         connector_type=connector_type,
     )
+
+    affected_sites: list[SiteId] | None = None
+    match sites:
+        case ("all", None):
+            pass
+        case ("restricted", list() as site_ids):
+            affected_sites = [SiteId(site_id) for site_id in site_ids]
+        case _:
+            raise MKUserError("sites", "Invalid value for sites")
     update_oauth2_connection(
         ident=ident,
         details=details,
         user_id=user_id,
         pprint_value=pprint_value,
         use_git=use_git,
+        affected_sites=affected_sites,
     )
     return ident, details
 
@@ -239,6 +250,7 @@ def save_new_reference_to_config_file(
     client_id: str,
     tenant_id: str,
     authority: str,
+    sites: OAuth2Sites,
     connector_type: OAuth2ConnectorType,
     user_id: UserId | None,
     pprint_value: bool,
@@ -252,14 +264,25 @@ def save_new_reference_to_config_file(
         refresh_token=("cmk_postprocessed", "stored_password", (f"{ident}_refresh_token", "")),
         tenant_id=tenant_id,
         authority=authority,
+        sites=sites,
         connector_type=connector_type,
     )
+
+    affected_sites: list[SiteId] | None = None
+    match sites:
+        case ("all", None):
+            pass
+        case ("restricted", list() as site_ids):
+            affected_sites = [SiteId(site_id) for site_id in site_ids]
+        case _:
+            raise MKUserError("sites", "Invalid value for sites")
     save_oauth2_connection(
         ident=ident,
         details=details,
         user_id=user_id,
         pprint_value=pprint_value,
         use_git=use_git,
+        affected_sites=affected_sites,
     )
     return ident, details
 

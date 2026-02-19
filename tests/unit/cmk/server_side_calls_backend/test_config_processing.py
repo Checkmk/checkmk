@@ -265,6 +265,7 @@ def test_process_configuration_to_parameter_oauth2_connection() -> None:
                 client_id="client_id_value",
                 tenant_id="tenant_id_value",
                 authority="global",
+                sites=("all", None),
                 connector_type="microsoft_entra_id",
             )
         },

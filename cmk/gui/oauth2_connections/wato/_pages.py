@@ -50,6 +50,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
                     "shared_with": [],
                     "access_token": ("explicit_password", "", "dummy", False),
                     "refresh_token": ("explicit_password", "", "dummy", False),
+                    "sites": ("all", None),
                 }
             ),
         )

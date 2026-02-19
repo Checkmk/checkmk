@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
+from cmk.ccc.site import SiteId
 from cmk.password_store.v1_unstable import Secret as StoreSecret
 from cmk.server_side_calls import internal, v1
 from cmk.utils import config_warnings
@@ -69,6 +70,7 @@ class GlobalProxiesWithLookup:
 
 
 OAuth2ConnectorType = Literal["microsoft_entra_id"]
+OAuth2Sites = tuple[Literal["all"], None] | tuple[Literal["restricted"], Sequence[SiteId]]
 
 
 @dataclass(frozen=True)
@@ -80,6 +82,7 @@ class OAuth2Connection:
     client_id: str
     tenant_id: str
     authority: str
+    sites: OAuth2Sites
     connector_type: OAuth2ConnectorType
 
 

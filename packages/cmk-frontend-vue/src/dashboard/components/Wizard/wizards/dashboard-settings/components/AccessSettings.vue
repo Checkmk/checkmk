@@ -36,16 +36,16 @@ const availableElements = ref<DualListElement[]>([])
 const selectedContactGroups = ref<string[]>([])
 const selectedSites = ref<string[]>([])
 
-const isContactGroupOptionDisabled = ref<boolean>(false)
-let cg: DualListElement[] = []
+let contactGroups: DualListElement[] = []
 try {
-  cg = await getContactGroups()
+  contactGroups = await getContactGroups()
 } catch (e) {
-  if (!(e instanceof CmkFetchError && e.statusCode === 403)) {
+  if (!(e instanceof CmkFetchError && (e.statusCode === 401 || e.statusCode === 403))) {
     throw e
   }
+  // 401/403 are silently caught. contactGroups stays empty, so the option will be disabled below.
 }
-isContactGroupOptionDisabled.value = cg.length === 0
+const isContactGroupOptionDisabled = ref<boolean>(contactGroups.length === 0)
 
 if (share.value !== 'no' && share.value.type === 'with_contact_groups') {
   selectedContactGroups.value = share.value.contact_groups
@@ -97,7 +97,7 @@ const loadAvailableElements = async (shareMode: ShareType) => {
   try {
     availableElements.value = await fetchData()
   } catch (e) {
-    if (!(e instanceof CmkFetchError && e.statusCode === 403)) {
+    if (!(e instanceof CmkFetchError && (e.statusCode === 401 || e.statusCode === 403))) {
       throw e
     }
     availableElements.value = []

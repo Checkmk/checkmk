@@ -6,21 +6,18 @@
 import re
 from dataclasses import dataclass
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
-from tests.gui_e2e.testlib.playwright.pom.monitor.empty_dashboard import EmptyDashboard
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 from tests.gui_e2e.testlib.playwright.pom.sidebar.create_dashboard_sidebar import (
-    CreateDashboardSidebar,
     DashboardType,
 )
 
 
 @dataclass
-class NewDashboardCaracteristics:
+class NewDashboardCharacteristics:
     """Characteristics for creating a new dashboard.
 
     Attributes:
@@ -83,51 +80,6 @@ class EditDashboards(CmkPage):
             self._customized_dashboards_table if is_customized else self._built_in_dashboards_table
         )
         table.get_by_role("link", name=dashboard_name, exact=True).click()
-
-    def create_new_dashboard(
-        self, dashboard_caracteristics: NewDashboardCaracteristics
-    ) -> EmptyDashboard:
-        """Create a new dashboard with specified characteristics.
-
-        Args:
-            dashboard_caracteristics: the characteristics of the new dashboard including
-                name, type, and unique ID.
-
-        Returns:
-            EmptyDashboard instance representing the newly created dashboard.
-        """
-        self.main_area.click_item_in_dropdown_list("Dashboards", "Add dashboard", exact=True)
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("dashboard.py?mode=create")), wait_until="load"
-        )
-
-        create_dashboard_sidebar = CreateDashboardSidebar(self.page)
-
-        # Select dashboard type if provided
-        if dashboard_caracteristics.dashboard_type is not None:
-            create_dashboard_sidebar._get_dashboard_type_button(
-                dashboard_caracteristics.dashboard_type
-            ).click()
-
-        # Fill in dashboard name
-        create_dashboard_sidebar.name_input.fill(dashboard_caracteristics.name)
-
-        # Fill in unique ID if provided
-        if dashboard_caracteristics.unique_id is not None:
-            create_dashboard_sidebar.fill_unique_id(dashboard_caracteristics.unique_id)
-
-        else:
-            create_dashboard_sidebar.expect_auto_generated_unique_id_to_be_populated(
-                dashboard_caracteristics.name.lower().replace(" ", "_")
-            )
-
-        create_dashboard_sidebar.create_button.click()
-
-        return EmptyDashboard(
-            self.page,
-            page_title=dashboard_caracteristics.name,
-            navigate_to_page=False,
-        )
 
     def delete_dashboard(self, dashboard_name: str) -> None:
         """Delete a dashboard by name and verify deletion.

@@ -8,6 +8,7 @@ from typing import Literal, overload, override
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.gui_e2e.testlib.playwright.pom.customize.edit_dashboard import EditDashboards
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 from tests.gui_e2e.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     AddWidgetSidebar,
@@ -32,9 +33,6 @@ class CustomDashboard(BaseDashboard):
 
     @override
     def navigate(self) -> None:
-        # Method level import to avoid circular import errors
-        from tests.gui_e2e.testlib.playwright.pom.customize.edit_dashboard import EditDashboards
-
         logger.info("Navigate to '%s'", self.page_title)
         EditDashboards(self.page).navigate_to_dashboard(self.page_title, is_customized=True)
         self.validate_page()

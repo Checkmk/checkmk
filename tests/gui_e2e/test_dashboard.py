@@ -3,18 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Iterator
+from urllib.parse import quote_plus
 
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page
 
 from tests.gui_e2e.testlib.playwright.pom.customize.edit_dashboard import (
     EditDashboards,
-    NewDashboardCaracteristics,
+    NewDashboardCharacteristics,
 )
 from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.empty_dashboard import EmptyDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
+from tests.gui_e2e.testlib.playwright.pom.sidebar.create_dashboard_sidebar import (
+    CreateDashboardSidebar,
+)
 from tests.gui_e2e.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     ServiceMetricDropdownOptions,
     SiteFilterDropdownOptions,
@@ -43,6 +49,54 @@ def cloned_linux_hosts_dashboard(
         edit_dashboards.delete_dashboard(cloned_linux_hosts_dashboard.page_title)
 
 
+def _create_new_dashboard(
+    page: Page, dashboard_characteristics: NewDashboardCharacteristics
+) -> EmptyDashboard:
+    """Create a new dashboard with specified characteristics.
+
+    Args:
+        page: playwright Page object.
+        dashboard_characteristics: the characteristics of the new dashboard including
+            name, type, and unique ID.
+
+    Returns:
+        EmptyDashboard instance representing the newly created dashboard.
+    """
+    edit_dashboards = EditDashboards(page)
+    edit_dashboards.main_area.click_item_in_dropdown_list("Dashboards", "Add dashboard", exact=True)
+    edit_dashboards.page.wait_for_url(
+        url=re.compile(quote_plus("dashboard.py?mode=create")), wait_until="load"
+    )
+
+    create_dashboard_sidebar = CreateDashboardSidebar(page)
+
+    # Select dashboard type if provided
+    if dashboard_characteristics.dashboard_type is not None:
+        create_dashboard_sidebar.get_dashboard_type_button(
+            dashboard_characteristics.dashboard_type
+        ).click()
+
+    # Fill in dashboard name
+    create_dashboard_sidebar.name_input.fill(dashboard_characteristics.name)
+
+    # Fill in unique ID if provided
+    if dashboard_characteristics.unique_id is not None:
+        create_dashboard_sidebar.fill_unique_id(dashboard_characteristics.unique_id)
+
+    else:
+        create_dashboard_sidebar.expect_auto_generated_unique_id_to_be_populated(
+            dashboard_characteristics.name.lower().replace(" ", "_")
+        )
+
+    create_dashboard_sidebar.create_button.click()
+
+    return EmptyDashboard(
+        edit_dashboards.page,
+        page_title=dashboard_characteristics.name,
+        navigate_to_page=False,
+    )
+
+
 def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[str]) -> None:
     """Test dashboard creation from scratch.
 
@@ -55,9 +109,8 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
         6. Delete the created dashboard.
     """
 
-    edit_dashboards = EditDashboards(dashboard_page.page)
-    custom_dashboard: CustomDashboard = edit_dashboards.create_new_dashboard(
-        NewDashboardCaracteristics(name="Test Dashboard")
+    custom_dashboard: CustomDashboard = _create_new_dashboard(
+        dashboard_page.page, NewDashboardCharacteristics(name="Test Dashboard")
     )
 
     widget_metric = "CPU utilization"
@@ -86,8 +139,7 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
 
     finally:
         if is_cleanup_enabled():
-            edit_dashboards.navigate()
-            edit_dashboards.delete_dashboard(custom_dashboard.page_title)
+            EditDashboards(dashboard_page.page).delete_dashboard(custom_dashboard.page_title)
 
 
 @pytest.mark.parametrize(

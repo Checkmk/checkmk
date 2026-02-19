@@ -95,7 +95,7 @@ class CreateDashboardSidebar(BaseDashboarCreationSidebar):
         """Locator property for the button to create the dashboard."""
         return self.locator().get_by_role("button", name="Create")
 
-    def _get_dashboard_type_button(self, dashboard_type: DashboardType) -> Locator:
+    def get_dashboard_type_button(self, dashboard_type: DashboardType) -> Locator:
         """Get the locator for the button to select a specific dashboard type.
 
         Args:

@@ -689,7 +689,7 @@ export function render_services_usage_graph(
     {
       y_domain_max: 1000,
       width: Math.floor((0.9 * window.innerWidth) / num_graphs),
-      graph_title: 'Checkmk',
+      graph_title: 'Services',
       subscription_sizing_title: 'Subscription sizing',
       subscription_sizing_line_class: 'line-subscription-limit',
       subscription_sizing_legend_class: 'legend-subscription-limit',
@@ -710,7 +710,7 @@ export function render_tests_usage_graph(
     {
       y_domain_max: 10,
       width: Math.floor((0.9 * window.innerWidth) / num_graphs),
-      graph_title: 'Synthetic Monitoring',
+      graph_title: 'Synthetic tests',
       subscription_sizing_title: 'Subscription sizing',
       subscription_sizing_line_class: 'line-subscription-limit',
       subscription_sizing_legend_class: 'legend-subscription-limit',
@@ -731,7 +731,7 @@ export function render_free_tests_usage_graph(
     {
       y_domain_max: 10,
       width: Math.floor((0.9 * window.innerWidth) / num_graphs),
-      graph_title: 'Synthetic Monitoring',
+      graph_title: 'Synthetic tests',
       subscription_sizing_title: 'Free tests',
       subscription_sizing_line_class: 'line-free-limit',
       subscription_sizing_legend_class: 'legend-free-limit',
@@ -752,7 +752,7 @@ export function render_metric_series_usage_graph(
     {
       y_domain_max: 1000,
       width: Math.floor((0.9 * window.innerWidth) / num_graphs),
-      graph_title: 'Telemetry',
+      graph_title: 'Custom metrics',
       subscription_sizing_title: 'Subscription sizing',
       subscription_sizing_line_class: 'line-subscription-limit',
       subscription_sizing_legend_class: 'legend-subscription-limit',
@@ -773,7 +773,7 @@ export function render_free_metric_series_usage_graph(
     {
       y_domain_max: 1000,
       width: Math.floor((0.9 * window.innerWidth) / num_graphs),
-      graph_title: 'Telemetry',
+      graph_title: 'Custom metrics',
       subscription_sizing_title: 'Free custom metrics',
       subscription_sizing_line_class: 'line-free-limit',
       subscription_sizing_legend_class: 'legend-free-limit',

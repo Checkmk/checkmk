@@ -72,15 +72,13 @@ class _FakeApplianceSDK:
         }
         return uplink_usage.get(organizationId, [])
 
-    def getDeviceAppliancePerformance(
-        self, serial: str
-    ) -> Sequence[schema.RawAppliancePerformance]:
+    def getDeviceAppliancePerformance(self, serial: str) -> schema.RawAppliancePerformance:
         appliance_performance = {
-            "S123-1": [schema.RawAppliancePerformance(perfScore=20.0)],
-            "S123-2": [schema.RawAppliancePerformance(perfScore=40.0)],
-            "S456": [schema.RawAppliancePerformance(perfScore=60.0)],
+            "S123-1": schema.RawAppliancePerformance(perfScore=20.0),
+            "S123-2": schema.RawAppliancePerformance(perfScore=40.0),
+            "S456": schema.RawAppliancePerformance(perfScore=60.0),
         }
-        return appliance_performance.get(serial, [])
+        return appliance_performance[serial]
 
 
 class _FakeOrganisationsSDK:
@@ -112,7 +110,7 @@ class _FakeOrganisationsSDK:
         devices = {
             "123": [
                 factories.RawDeviceFactory.build(
-                    serial="S124-1", name="dev1", networkId="net1", productType="appliance"
+                    serial="S123-1", name="dev1", networkId="net1", productType="appliance"
                 ),
                 factories.RawDeviceFactory.build(
                     serial="S123-2", name="dev2", networkId="net2", productType="appliance"

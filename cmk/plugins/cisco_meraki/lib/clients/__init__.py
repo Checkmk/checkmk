@@ -53,7 +53,7 @@ class MerakiClient:
     def get_api_response_codes(self, id: str) -> Sequence[schema.RawApiResponseCodes]:
         return self._org_client.get_api_response_codes(id)
 
-    def get_appliance_performance(self, serial: str) -> Sequence[schema.RawAppliancePerformance]:
+    def get_appliance_performance(self, serial: str) -> schema.RawAppliancePerformance | None:
         return self._appliance_client.get_appliance_performance(serial)
 
     def get_devices(self, id: str) -> Sequence[schema.RawDevice]:

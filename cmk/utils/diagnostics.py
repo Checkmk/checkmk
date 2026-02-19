@@ -482,8 +482,13 @@ def redact_passwords_in_content(content: str, rel_filepath: Path) -> str:
 
 
 def redact_passwords_in_file(filepath: Path, rel_filepath: Path) -> int:
-    with open(filepath) as f:
-        content = f.read()
+    try:
+        with open(filepath) as f:
+            content = f.read()
+
+    except UnicodeDecodeError:
+        # We won't redact non-ASCII files
+        return 0
 
     content = redact_passwords_in_content(content, rel_filepath)
 

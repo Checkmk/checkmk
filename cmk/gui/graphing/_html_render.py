@@ -634,12 +634,12 @@ def _show_graph_legend(
 
         html.close_tr()
 
-        html.open_tr()
-        html.open_td(style=font_size_style, colspan=len(scalars) + 1)
         if attributes and expandable_legend_appearance is ExpandableLegendAppearance.FOLDABLE:
+            html.open_tr()
+            html.open_td(style=font_size_style, colspan=len(scalars) + 1)
             html.write_html(_render_attributes(table_uuid_str, graph_legend_styles, attributes))
-        html.close_td()
-        html.close_tr()
+            html.close_td()
+            html.close_tr()
 
     # Render scalar values
     if graph_artwork.horizontal_rules:

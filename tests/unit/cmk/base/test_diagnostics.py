@@ -613,7 +613,7 @@ def test_diagnostics_element_checkmk_overview_error(
             meta=make_meta(do_archive=False),
         )
 
-    with pytest.raises(diagnostics.DiagnosticsElementError) as e:
+    with pytest.raises(diagnostics.DiagnosticsElementWarning) as e:
         diagnostics._get_checkmk_overview_content(inv_store, "")
         assert error == str(e)
 
@@ -811,23 +811,31 @@ def test_diagnostics_element_performance_graphs() -> None:
 
 
 @pytest.mark.parametrize(
-    "host_list, status_code, text, content, error",
+    "host_list, status_code, text, content, warning, error",
     [
         # no Checkmk server
-        ([], 123, "", b"", "No Checkmk server found"),
-        ([], 200, "<html>foo bar</html>", b"", "No Checkmk server found"),
-        ([], 200, "", b"", "No Checkmk server found"),
-        ([], 200, "", b"%PDF-", "No Checkmk server found"),
+        ([], 123, "", b"", "No Checkmk server found", None),
+        ([], 200, "<html>foo bar</html>", b"", "No Checkmk server found", None),
+        ([], 200, "", b"", "No Checkmk server found", None),
+        ([], 200, "", b"%PDF-", "No Checkmk server found", None),
         # Checkmk server
-        ([["checkmk-server-name"]], 123, "", b"", "HTTP error - 123 ()"),
+        ([["checkmk-server-name"]], 123, "", b"", None, "HTTP error - 123 ()"),
         (
             [["checkmk-server-name"]],
             200,
             "<html>foo bar</html>",
             b"",
+            None,
             "Login failed - Invalid automation user or secret",
         ),
-        ([["checkmk-server-name"]], 200, "", b"", "Verification of PDF document header failed"),
+        (
+            [["checkmk-server-name"]],
+            200,
+            "",
+            b"",
+            None,
+            "Verification of PDF document header failed",
+        ),
     ],
 )
 def test_diagnostics_element_performance_graphs_error(
@@ -838,6 +846,7 @@ def test_diagnostics_element_performance_graphs_error(
     status_code,
     text,
     content,
+    warning,
     error,
 ):
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("")
@@ -869,9 +878,15 @@ CONFIG_APACHE_TCP_PORT='5000'"""
     tmppath = Path(tmp_path).joinpath("tmp")
     tmppath.mkdir(parents=True, exist_ok=True)
 
-    with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        next(diagnostics_element.add_or_get_files(tmppath))
-        assert error == str(e)
+    if warning:
+        with pytest.raises(diagnostics.DiagnosticsElementWarning) as w:
+            next(diagnostics_element.add_or_get_files(tmppath))
+            assert warning == str(w)
+
+    if error:
+        with pytest.raises(diagnostics.DiagnosticsElementError) as e:
+            next(diagnostics_element.add_or_get_files(tmppath))
+            assert error == str(e)
 
     shutil.rmtree(str(automation_dir))
     shutil.rmtree(str(etc_omd_dir))

@@ -2305,7 +2305,7 @@ class PluginNameBuiltInOrCustom(BaseSchema):
     )
 
 
-class PluginWithoutParams(BaseSchema):
+class CancelPreviousNotification(BaseSchema):
     option = fields.Constant(
         PluginOptions.CANCEL.value,
         required=True,
@@ -2319,7 +2319,7 @@ class PluginWithoutParams(BaseSchema):
     )
 
 
-class PluginWithParams(BaseSchema):
+class CreateNotificationsWithParameters(BaseSchema):
     option = fields.Constant(
         PluginOptions.WITH_PARAMS.value,
         load_default=PluginOptions.WITH_PARAMS.value,
@@ -2396,7 +2396,7 @@ class CustomPlugin(BaseSchema):
         return original_data
 
 
-class CustomPluginWithParams(BaseSchema):
+class CreateNotificationsWithCustomParameters(BaseSchema):
     option = fields.Constant(
         PluginOptions.WITH_CUSTOM_PARAMS.value,
         required=True,
@@ -2585,7 +2585,7 @@ class RestrictNotificationNumCheckbox(CheckboxOneOfSchema):
     }
 
 
-class ThorttlePeriodicNotificationsCheckbox(CheckboxOneOfSchema):
+class ThrottlePeriodicNotificationsCheckbox(CheckboxOneOfSchema):
     type_schemas = {
         "disabled": Checkbox,
         "enabled": CheckboxThrottlePeriodicNotifcations,
@@ -2629,9 +2629,9 @@ class RuleProperties(BaseSchema):
 
 class PluginOptionsSelector(OptionOneOfSchema):
     type_schemas = {
-        PluginOptions.CANCEL.value: PluginWithoutParams,
-        PluginOptions.WITH_PARAMS.value: PluginWithParams,
-        PluginOptions.WITH_CUSTOM_PARAMS.value: CustomPluginWithParams,
+        PluginOptions.CANCEL.value: CancelPreviousNotification,
+        PluginOptions.WITH_PARAMS.value: CreateNotificationsWithParameters,
+        PluginOptions.WITH_CUSTOM_PARAMS.value: CreateNotificationsWithCustomParameters,
     }
 
 
@@ -2797,7 +2797,7 @@ class RuleConditions(BaseSchema):
         load_default=lambda: {"state": "disabled"},
     )
     throttle_periodic_notifications = fields.Nested(
-        ThorttlePeriodicNotificationsCheckbox,
+        ThrottlePeriodicNotificationsCheckbox,
         load_default=lambda: {"state": "disabled"},
     )
     match_notification_comment = fields.Nested(

@@ -21,6 +21,7 @@ from cmk.gui.openapi.endpoints.notification_rules.request_example import (
 from cmk.gui.openapi.endpoints.notification_rules.request_schemas import (
     AsciiMailPluginCreate,
     CiscoWebexPluginCreate,
+    CreateNotificationsWithParameters,
     HTMLMailPluginCreate,
     IlertPluginCreate,
     JiraPluginCreate,
@@ -28,7 +29,6 @@ from cmk.gui.openapi.endpoints.notification_rules.request_schemas import (
     MSTeamsPluginCreate,
     OpsGeniePluginCreate,
     PagerDutyPluginCreate,
-    PluginWithParams,
     PushOverPluginCreate,
     RuleNotification,
     RuleNotificationMethod,
@@ -2387,7 +2387,11 @@ def test_defaults_are_loaded(plugin: dict[str, Any], clients: ClientRegistry) ->
                         {"description": "Test rule with defaults"}
                     ),
                     "notification_method": RuleNotificationMethod().load(
-                        {"notify_plugin": PluginWithParams().load({"plugin_params": plugin})}
+                        {
+                            "notify_plugin": CreateNotificationsWithParameters().load(
+                                {"plugin_params": plugin}
+                            )
+                        }
                     ),
                 }
             ),

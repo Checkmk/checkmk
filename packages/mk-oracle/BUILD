@@ -22,6 +22,7 @@ rust_library(
         "src/config/ora_sql.rs",
         "src/config/section.rs",
         "src/config/system.rs",
+        "src/config/target.rs",
         "src/config/yaml.rs",
         "src/constants.rs",
         "src/emit.rs",

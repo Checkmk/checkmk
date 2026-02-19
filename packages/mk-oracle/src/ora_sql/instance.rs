@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::target::TargetId;
 use crate::config::{self, OracleConfig};
 use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
 use crate::ora_sql::section::Section;
-use crate::ora_sql::types::TargetId;
 use crate::setup::{detect_runtime, Env};
 use crate::types::{InstanceName, SqlQuery, UseHostClient};
 use std::collections::HashSet;

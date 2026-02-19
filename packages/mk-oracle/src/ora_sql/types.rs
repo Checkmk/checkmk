@@ -19,127 +19,7 @@ use crate::types::{
     ServiceType, Sid,
 };
 
-use crate::config::authentication::Authentication;
-
-#[derive(Debug, Clone)]
-pub struct Descriptor {
-    service_name: ServiceName,
-    service_type: Option<ServiceType>,
-    instance_name: Option<InstanceName>,
-    sid: Option<DescriptorSid>,
-}
-
-#[derive(Debug, Clone)]
-pub enum TargetId {
-    Descriptor(Descriptor),
-    Sid(Sid),
-    Alias(InstanceAlias),
-    NoId,
-}
-
-impl TargetId {
-    pub fn service_name(&self) -> Option<&ServiceName> {
-        match self {
-            TargetId::Descriptor(descriptor) => Some(&descriptor.service_name),
-            _ => None,
-        }
-    }
-
-    pub fn instance_name(&self) -> Option<&InstanceName> {
-        match self {
-            TargetId::Descriptor(descriptor) => descriptor.instance_name.as_ref(),
-            _ => None,
-        }
-    }
-
-    pub fn descriptor_sid(&self) -> Option<&DescriptorSid> {
-        match self {
-            TargetId::Descriptor(descriptor) => descriptor.sid.as_ref(),
-            _ => None,
-        }
-    }
-
-    pub fn service_type(&self) -> Option<&ServiceType> {
-        match self {
-            TargetId::Descriptor(descriptor) => descriptor.service_type.as_ref(),
-            _ => None,
-        }
-    }
-
-    pub fn standalone_sid(&self) -> Option<&Sid> {
-        match self {
-            TargetId::Sid(sid) => Some(sid),
-            _ => None,
-        }
-    }
-
-    pub fn alias(&self) -> Option<&InstanceAlias> {
-        match self {
-            TargetId::Alias(alias) => Some(alias),
-            _ => None,
-        }
-    }
-}
-
-pub struct TargetIdBuilder {
-    service_name: Option<ServiceName>,
-    sid: Option<String>,
-    alias: Option<InstanceAlias>,
-    instance_name: Option<InstanceName>,
-    service_type: Option<ServiceType>,
-}
-
-impl TargetIdBuilder {
-    pub fn new() -> Self {
-        Self {
-            service_name: None,
-            sid: None,
-            alias: None,
-            instance_name: None,
-            service_type: None,
-        }
-    }
-    pub fn service_name(mut self, service_name: Option<&ServiceName>) -> Self {
-        self.service_name = service_name.cloned();
-        self
-    }
-
-    pub fn sid(mut self, sid: Option<&str>) -> Self {
-        self.sid = sid.map(|s| s.to_string());
-        self
-    }
-
-    pub fn alias(mut self, alias: Option<&InstanceAlias>) -> Self {
-        self.alias = alias.cloned();
-        self
-    }
-
-    pub fn instance_name(mut self, instance_name: Option<&InstanceName>) -> Self {
-        self.instance_name = instance_name.cloned();
-        self
-    }
-    pub fn service_type(mut self, service_type: Option<&ServiceType>) -> Self {
-        self.service_type = service_type.cloned();
-        self
-    }
-
-    pub fn build(self) -> TargetId {
-        if let Some(alias) = self.alias {
-            TargetId::Alias(alias)
-        } else if let Some(service_name) = self.service_name {
-            TargetId::Descriptor(Descriptor {
-                service_name,
-                service_type: self.service_type,
-                instance_name: self.instance_name,
-                sid: self.sid.map(DescriptorSid::from),
-            })
-        } else if let Some(sid) = self.sid {
-            TargetId::Sid(Sid::from(sid))
-        } else {
-            TargetId::NoId
-        }
-    }
-}
+use crate::config::{authentication::Authentication, target::TargetId};
 
 #[derive(Debug, Clone)]
 pub struct Target {
@@ -283,16 +163,7 @@ impl Target {
     }
 
     pub fn display_name(&self) -> String {
-        match &self.target_id {
-            TargetId::Alias(alias) => alias.to_string().to_uppercase(),
-            TargetId::Sid(sid) => sid.to_string().to_uppercase(),
-            TargetId::Descriptor(descriptor) => descriptor
-                .instance_name
-                .as_ref()
-                .map_or_else(|| descriptor.service_name.to_string(), ToString::to_string),
-            TargetId::NoId => "undefined".to_string(),
-        }
-        .to_uppercase()
+        self.target_id.display_name().to_uppercase()
     }
 
     pub fn is_defined(&self) -> bool {
@@ -304,6 +175,7 @@ impl Target {
 mod tests {
     use super::*;
     use crate::config::authentication::Authentication;
+    use crate::config::target::TargetIdBuilder;
     use crate::config::yaml::test_tools::create_yaml;
     use crate::types::HostName;
 
@@ -632,130 +504,5 @@ authentication:
             target.make_connection_string(None, ConnectionStringType::Tns).unwrap(),
             "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = MY_SERVICE) (INSTANCE_NAME = INST) (SID = ORCL)))"
         );
-    }
-
-    fn create_descriptor(
-        service_name: &str,
-        instance_name: Option<&str>,
-        sid: Option<&str>,
-    ) -> Descriptor {
-        Descriptor {
-            service_name: ServiceName::from(service_name),
-            service_type: None,
-            instance_name: instance_name.map(InstanceName::from),
-            sid: sid.map(DescriptorSid::from),
-        }
-    }
-
-    #[test]
-    fn test_service_name_from_descriptor() {
-        let descriptor = create_descriptor("my_service", None, None);
-        let target_id = TargetId::Descriptor(descriptor);
-
-        assert_eq!(
-            target_id.service_name().map(|s| s.to_string()),
-            Some("my_service".to_string())
-        );
-    }
-
-    #[test]
-    fn test_service_name_from_sid() {
-        let target_id = TargetId::Sid(Sid::from("ORCL"));
-        assert!(target_id.service_name().is_none());
-    }
-
-    #[test]
-    fn test_service_name_from_alias() {
-        let target_id = TargetId::Alias(InstanceAlias::from("my_alias".to_string()));
-        assert!(target_id.service_name().is_none());
-    }
-
-    #[test]
-    fn test_all_from_noid() {
-        assert!(TargetId::NoId.service_name().is_none());
-        assert!(TargetId::NoId.instance_name().is_none());
-        assert!(TargetId::NoId.alias().is_none());
-    }
-
-    #[test]
-    fn test_instance_name_from_descriptor_with_instance() {
-        let descriptor = create_descriptor("service", Some("instance"), None);
-        let target_id = TargetId::Descriptor(descriptor);
-
-        assert_eq!(
-            target_id.instance_name().map(|s| s.to_string()),
-            Some("INSTANCE".to_string())
-        );
-    }
-
-    #[test]
-    fn test_instance_name_from_descriptor_without_instance() {
-        let descriptor = create_descriptor("service", None, None);
-        let target_id = TargetId::Descriptor(descriptor);
-
-        assert!(target_id.instance_name().is_none());
-    }
-
-    #[test]
-    fn test_instance_name_from_non_descriptor() {
-        assert!(TargetId::Sid(Sid::from("ORCL")).instance_name().is_none());
-        assert!(TargetId::Alias(InstanceAlias::from("alias".to_string()))
-            .instance_name()
-            .is_none());
-    }
-
-    #[test]
-    fn test_sid_from_descriptor_with_sid() {
-        let descriptor = create_descriptor("service", None, Some("ORCL"));
-        let target_id = TargetId::Descriptor(descriptor);
-
-        assert_eq!(
-            target_id.descriptor_sid().map(|s| s.to_string()),
-            Some("ORCL".to_string())
-        );
-        assert!(target_id.standalone_sid().is_none());
-    }
-
-    #[test]
-    fn test_sid_from_descriptor_without_sid() {
-        let descriptor = create_descriptor("service", None, None);
-        let target_id = TargetId::Descriptor(descriptor);
-
-        assert!(target_id.descriptor_sid().is_none());
-        assert!(target_id.standalone_sid().is_none());
-    }
-
-    #[test]
-    fn test_sid_from_sid() {
-        let target_id = TargetId::Sid(Sid::from("ORCL"));
-        assert_eq!(
-            target_id.standalone_sid().map(|s| s.to_string()),
-            Some("ORCL".to_string())
-        );
-        assert!(target_id.descriptor_sid().is_none());
-    }
-
-    #[test]
-    fn test_sid_from_alias() {
-        let target_id = TargetId::Alias(InstanceAlias::from("alias".to_string()));
-        assert!(target_id.standalone_sid().is_none());
-        assert!(target_id.descriptor_sid().is_none());
-    }
-
-    #[test]
-    fn test_alias_from_alias() {
-        let target_id = TargetId::Alias(InstanceAlias::from("my_alias".to_string()));
-        assert_eq!(
-            target_id.alias().map(|s| s.to_string()),
-            Some("my_alias".to_string())
-        );
-    }
-
-    #[test]
-    fn test_alias_from_non_alias() {
-        let descriptor = create_descriptor("service", None, None);
-        assert!(TargetId::Descriptor(descriptor).alias().is_none());
-        assert!(TargetId::Sid(Sid::from("ORCL")).alias().is_none());
-        assert!(TargetId::NoId.alias().is_none());
     }
 }

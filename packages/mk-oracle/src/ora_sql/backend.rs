@@ -19,8 +19,9 @@ use crate::config::{
     authentication::{AuthType, Authentication, Role},
     connection::EngineTag,
     ora_sql::Endpoint,
+    target::TargetIdBuilder,
 };
-use crate::ora_sql::types::{Target, TargetIdBuilder};
+use crate::ora_sql::types::Target;
 use crate::types::{ConnectionStringType, Credentials, InstanceName, SqlQuery};
 use anyhow::{Context, Result};
 use oracle::sql_type::{FromSql, ToSql};

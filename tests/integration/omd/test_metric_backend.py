@@ -14,6 +14,7 @@ def test_clickhouse_exists(site: Site) -> None:
 
 @pytest.mark.skip_if_edition("community", "pro", "cloud")
 def test_clickhouse_executable(site: Site) -> None:
-    assert "ClickHouse local version 25.8.11.66 (official build)." in site.check_output(
-        ["clickhouse", "--version"]
+    assert (
+        "ClickHouse local version 25.8.16.10001.altinitystable (altinity build)."
+        in site.check_output(["clickhouse", "--version"])
     )

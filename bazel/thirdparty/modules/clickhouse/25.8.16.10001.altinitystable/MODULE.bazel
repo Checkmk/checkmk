@@ -1,0 +1,7 @@
+module(
+    name = "clickhouse",
+    version = "25.8.16.10001.altinitystable",
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")

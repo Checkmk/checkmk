@@ -57,7 +57,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
       }}
       <br />
       {{ _t('Learn more about notifications in the') }}
-      <a :href="cards.intro_notifications">
+      <a :href="cards.intro_notifications" target="_blank">
         {{ _t('documentation.') }}
       </a>
     </StepParagraph>

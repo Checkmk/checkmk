@@ -83,7 +83,10 @@ This allows monitoring to start with minimal configuration effort.`
             the start and makes it easier to manage similar hosts later on through inheritance. Learn more about
             folders and inheritance in the`)
             }}
-            <a href="https://docs.checkmk.com/latest/en/hosts_structure.html?lquery=folder#folder">
+            <a
+              href="https://docs.checkmk.com/latest/en/hosts_structure.html?lquery=folder#folder"
+              target="_blank"
+            >
               {{ _t('documentation.') }}
             </a>
           </StepParagraph>

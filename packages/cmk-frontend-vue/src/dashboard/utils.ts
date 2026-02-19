@@ -404,6 +404,10 @@ export const urlHandler = {
     }
   },
 
+  pushCurrentUrl(url: URL): void {
+    window.history.pushState({}, '', url.toString())
+  },
+
   /** Generate a shared dashboard link using the provided public token.
    * @param publicToken - The public token for the shared dashboard.
    * @returns A string representing the shared dashboard URL.

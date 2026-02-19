@@ -4,7 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, nextTick, onBeforeMount, provide, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeMount,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  watch
+} from 'vue'
 
 import { randomId } from '@/lib/randomId'
 
@@ -168,6 +177,16 @@ watch(dashboardsManager.activeDashboard, (value) => {
   }
 })
 
+const handlePopState = () => window.location.reload()
+
+onMounted(() => {
+  window.addEventListener('popstate', handlePopState)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', handlePopState)
+})
+
 const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: DashboardLayout) => {
   isDashboardLoading.value = true
   loadingError.value = null
@@ -178,12 +197,6 @@ const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: Dashboar
   } finally {
     isDashboardLoading.value = false
   }
-
-  const updatedDashboardUrl = urlHandler.getDashboardUrl(
-    dashboardKey,
-    dashboardFilters.runtimeFiltersSearchParams.value
-  )
-  urlHandler.updateCurrentUrl(updatedDashboardUrl)
 }
 
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
@@ -198,6 +211,7 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
     owner: dashboard.owner || '' // built-in conversion: null -> ""
   }
   await setAsActiveDashboard(key, dashboard.layout_type as DashboardLayout)
+  urlHandler.pushCurrentUrl(urlHandler.getDashboardUrl(key, {}))
 
   if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
     openDashboardFilterSettings.value = true
@@ -450,6 +464,9 @@ const cloneDashboard = async (
   }
 
   await setAsActiveDashboard(newKey, layout)
+  urlHandler.pushCurrentUrl(
+    urlHandler.getDashboardUrl(newKey, dashboardFilters.runtimeFiltersSearchParams.value)
+  )
   showCloneSuccessAlert.value = false
   await nextTick()
 
@@ -473,7 +490,7 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilt
 
   const updatedDashboardUrl = urlHandler.updateWithPreserve(
     window.location.href,
-    ['name'],
+    ['name', 'owner'],
     dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)

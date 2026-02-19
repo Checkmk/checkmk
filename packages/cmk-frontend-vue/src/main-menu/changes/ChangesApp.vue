@@ -326,6 +326,8 @@ onMounted(async () => {
         <CmkButton
           variant="secondary"
           class="cmk-button-secondary"
+          :href="props.activate_changes_url"
+          target="main"
           @click="() => openActivateChangesPage()"
         >
           <CmkIcon variant="inline" name="frameurl" />

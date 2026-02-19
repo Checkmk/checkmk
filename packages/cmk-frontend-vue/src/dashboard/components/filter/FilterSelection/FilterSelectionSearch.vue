@@ -66,17 +66,10 @@ function handleClickOutside(event: Event) {
 }
 
 function formatFilterDisplay(filter: FlatFilter) {
-  const title = filter.title.replace(
+  return filter.title.replace(
     highlightRegex.value,
     `<span class="db-filter-selection-search__result-highlight">$&</span>`
   )
-  if (filter.groupName) {
-    return _t('%{filterName} in %{filterGroup}', {
-      filterName: title,
-      filterGroup: filter.groupName
-    })
-  }
-  return title
 }
 
 onMounted(() => {

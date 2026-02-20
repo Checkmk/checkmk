@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-18 18:34+0000\n"
+"PO-Revision-Date: 2026-02-20 08:42+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -15349,7 +15349,8 @@ msgstr "Memória do hospedeiro consumida"
 msgid "Consumed load balancer capacity units"
 msgstr "Unidades de Capacidade do Balanceador de Carga Consumida"
 
-msgid "Consumer Count is the size of connected consumers to a queue"
+#, fuzzy
+msgid "Consumer count is the size of connected consumers to a queue"
 msgstr ""
 "A Contagem de Consumidores é o tamanho de consumidores conectados a uma fila"
 
@@ -37510,9 +37511,6 @@ msgstr "Níveis para o crescimento percentual por intervalo de tempo"
 msgid "Levels for the percentual shrinking per time range"
 msgstr "Níveis para a percentagem de contracção por intervalo de tempo"
 
-msgid "Levels for the queue length"
-msgstr "Níveis para o comprimento da fila"
-
 #, fuzzy
 msgid "Levels for time since last update"
 msgstr "Nível de aviso para o tempo desde a última actualização"
@@ -52392,6 +52390,11 @@ msgstr "Informações da fila"
 msgid "Queue length"
 msgstr "Comprimento da fila"
 
+msgid ""
+"Queue length refers to the total number of messages that have not been "
+"acknowledged by a consumer."
+msgstr ""
+
 #, fuzzy
 msgid "Queue manager name"
 msgstr "Nome do Gerente de Fila"
@@ -58710,9 +58713,6 @@ msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Definir o nível de registro para Windows Agent"
-
-msgid "Set the maximum and minimum length for the queue size"
-msgstr "Defina o comprimento máximo e mínimo para o tamanho da fila"
 
 msgid "Set the maximum number of concurrent pings sent to target IP addresses."
 msgstr ""
@@ -79352,10 +79352,6 @@ msgstr "Pacote de extensão carregado %s-%s (%s)"
 msgid "Upper"
 msgstr "Alto"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Níveis para a contagem do consumidor"
-
 msgid "Upper Temperature Levels"
 msgstr "Níveis superiores de temperatura"
 
@@ -79813,6 +79809,10 @@ msgstr "Níveis superiores para a idade de backup"
 msgid "Upper levels for the bucket size"
 msgstr "Níveis superiores para o tamanho do balde"
 
+#, fuzzy
+msgid "Upper levels for the consumer count"
+msgstr "Níveis para a contagem do consumidor"
+
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr ""
 "Níveis superiores para a velocidade do ventilador de um dispositivo de "
@@ -79860,6 +79860,10 @@ msgstr "Níveis superiores para o número de sessões"
 
 msgid "Upper levels for the number of table extents"
 msgstr "Níveis superiores para o número de extensões da tabela"
+
+#, fuzzy
+msgid "Upper levels for the queue length"
+msgstr "Níveis superiores para comprimentos de fila"
 
 #, fuzzy
 msgid "Upper levels for the time the service is active"
@@ -87912,6 +87916,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -88412,6 +88417,7 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -89852,6 +89858,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#~ msgid "Levels for the queue length"
+#~ msgstr "Níveis para o comprimento da fila"
+
+#~ msgid "Set the maximum and minimum length for the queue size"
+#~ msgstr "Defina o comprimento máximo e mínimo para o tamanho da fila"
 
 #, fuzzy
 #~ msgid ""

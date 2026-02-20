@@ -15357,7 +15357,8 @@ msgstr "Verbruikt hostgeheugen"
 msgid "Consumed load balancer capacity units"
 msgstr "Verbruikte Load Balancer-capaciteitseenheden"
 
-msgid "Consumer Count is the size of connected consumers to a queue"
+#, fuzzy
+msgid "Consumer count is the size of connected consumers to a queue"
 msgstr ""
 "Consumententelling is de grootte van het aantal aangesloten consumenten op "
 "een wachtrij"
@@ -37533,9 +37534,6 @@ msgstr "Niveaus voor de percentuele groei per tijdspanne"
 msgid "Levels for the percentual shrinking per time range"
 msgstr "Niveaus voor de procentuele inkrimping per tijdspanne"
 
-msgid "Levels for the queue length"
-msgstr "Niveaus voor de lengte van de wachtrij"
-
 #, fuzzy
 msgid "Levels for time since last update"
 msgstr "Waarschuwingsniveau voor tijd sinds laatste bijwerking"
@@ -52429,6 +52427,11 @@ msgstr "Wachtrij info"
 msgid "Queue length"
 msgstr "Lengte wachtrij"
 
+msgid ""
+"Queue length refers to the total number of messages that have not been "
+"acknowledged by a consumer."
+msgstr ""
+
 #, fuzzy
 msgid "Queue manager name"
 msgstr "Naam wachtrij-manager"
@@ -58733,9 +58736,6 @@ msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Stel het logging niveau in voor Windows Agent"
-
-msgid "Set the maximum and minimum length for the queue size"
-msgstr "Stel de maximale en minimale lengte voor de wachtrijgrootte in"
 
 msgid "Set the maximum number of concurrent pings sent to target IP addresses."
 msgstr ""
@@ -79417,10 +79417,6 @@ msgstr "Uploaden uitbreidingspakket %s-%s (%s)"
 msgid "Upper"
 msgstr "Boven"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Niveaus voor de consumententelling"
-
 msgid "Upper Temperature Levels"
 msgstr "Bovenste temperatuurniveaus"
 
@@ -79873,6 +79869,10 @@ msgstr "Bovenste niveaus voor het back-up tijdperk"
 msgid "Upper levels for the bucket size"
 msgstr "Bovenste niveaus voor de emmer"
 
+#, fuzzy
+msgid "Upper levels for the consumer count"
+msgstr "Niveaus voor de consumententelling"
+
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr "Bovenste niveaus voor de ventilatorsnelheid van een hardwareapparaat"
 
@@ -79919,6 +79919,10 @@ msgstr "Bovenste niveaus voor het aantal sessies"
 
 msgid "Upper levels for the number of table extents"
 msgstr "Bovenste niveaus voor het aantal tabeluitbreidingen"
+
+#, fuzzy
+msgid "Upper levels for the queue length"
+msgstr "Bovenste niveaus voor wachtrijlengtes"
 
 #, fuzzy
 msgid "Upper levels for the time the service is active"
@@ -89964,6 +89968,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Levels for the queue length"
+#~ msgstr "Niveaus voor de lengte van de wachtrij"
+
+#~ msgid "Set the maximum and minimum length for the queue size"
+#~ msgstr "Stel de maximale en minimale lengte voor de wachtrijgrootte in"
 
 #, fuzzy
 #~ msgid ""

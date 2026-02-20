@@ -15458,7 +15458,8 @@ msgstr "Memoria de host consumida"
 msgid "Consumed load balancer capacity units"
 msgstr "Unidades de capacidad del balanceador de carga consumidas"
 
-msgid "Consumer Count is the size of connected consumers to a queue"
+#, fuzzy
+msgid "Consumer count is the size of connected consumers to a queue"
 msgstr ""
 "El recuento de consumidores es el tamaño de los consumidores conectados a "
 "una cola"
@@ -37791,9 +37792,6 @@ msgstr "Niveles de crecimiento porcentual por intervalo de tiempo"
 msgid "Levels for the percentual shrinking per time range"
 msgstr "Niveles de crecimiento porcentual por intervalo de tiempo"
 
-msgid "Levels for the queue length"
-msgstr "Niveles para la longitud de la cola"
-
 #, fuzzy
 msgid "Levels for time since last update"
 msgstr ""
@@ -52833,6 +52831,11 @@ msgstr "Información de la cola"
 msgid "Queue length"
 msgstr "Longitud de la cola"
 
+msgid ""
+"Queue length refers to the total number of messages that have not been "
+"acknowledged by a consumer."
+msgstr ""
+
 #, fuzzy
 msgid "Queue manager name"
 msgstr "Nombre del gestor de colas"
@@ -59213,9 +59216,6 @@ msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Establezca el nivel de registro para el Agente de Windows"
-
-msgid "Set the maximum and minimum length for the queue size"
-msgstr "Establezca la longitud máxima y mínima del tamaño de la cola"
 
 msgid "Set the maximum number of concurrent pings sent to target IP addresses."
 msgstr ""
@@ -80045,10 +80045,6 @@ msgstr "Paquete de ampliación cargado %s-%s (%s)"
 msgid "Upper"
 msgstr "OK"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Niveles para el recuento de consumidores"
-
 msgid "Upper Temperature Levels"
 msgstr "Niveles de temperatura superiores"
 
@@ -80509,6 +80505,10 @@ msgstr "Niveles superiores para la edad de respaldo"
 msgid "Upper levels for the bucket size"
 msgstr "Niveles superiores para el tamaño del cubo"
 
+#, fuzzy
+msgid "Upper levels for the consumer count"
+msgstr "Niveles para el recuento de consumidores"
+
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr ""
 "Niveles superiores para la velocidad del ventilador de un dispositivo de "
@@ -80558,6 +80558,10 @@ msgstr "Niveles superiores para el número de sesiones"
 
 msgid "Upper levels for the number of table extents"
 msgstr "Niveles superiores para el número de extensiones de la tabla"
+
+#, fuzzy
+msgid "Upper levels for the queue length"
+msgstr "Nivel superior de la longitud de la cola"
 
 #, fuzzy
 msgid "Upper levels for the time the service is active"
@@ -90670,6 +90674,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#~ msgid "Levels for the queue length"
+#~ msgstr "Niveles para la longitud de la cola"
+
+#~ msgid "Set the maximum and minimum length for the queue size"
+#~ msgstr "Establezca la longitud máxima y mínima del tamaño de la cola"
 
 #, fuzzy
 #~ msgid ""

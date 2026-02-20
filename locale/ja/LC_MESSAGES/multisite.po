@@ -14440,7 +14440,8 @@ msgstr "消費されたホストメモリ"
 msgid "Consumed load balancer capacity units"
 msgstr "消費されたロードバランサー容量ユニット"
 
-msgid "Consumer Count is the size of connected consumers to a queue"
+#, fuzzy
+msgid "Consumer count is the size of connected consumers to a queue"
 msgstr ""
 "コンシューマーカウントは、キューに接続されているコンシューマーのサイズです"
 
@@ -35235,9 +35236,6 @@ msgstr "時間範囲ごとのパーセント成長のレベル"
 msgid "Levels for the percentual shrinking per time range"
 msgstr "時間軸ごとのパーセント縮小率のレベル"
 
-msgid "Levels for the queue length"
-msgstr "キューの長さのレベル"
-
 msgid "Levels for time since last update"
 msgstr "最終更新からの時間のレベル"
 
@@ -49144,6 +49142,11 @@ msgstr "キュー情報"
 msgid "Queue length"
 msgstr "キューの長さ"
 
+msgid ""
+"Queue length refers to the total number of messages that have not been "
+"acknowledged by a consumer."
+msgstr ""
+
 msgid "Queue manager name"
 msgstr "キューマネージャー名"
 
@@ -55100,9 +55103,6 @@ msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Windowsエージェントのログレベルを設定します"
-
-msgid "Set the maximum and minimum length for the queue size"
-msgstr "キューサイズの最大長と最小長を設定します"
 
 msgid "Set the maximum number of concurrent pings sent to target IP addresses."
 msgstr "ターゲットIPアドレスに送信するPingの最大同時送信数を設定します。"
@@ -74466,10 +74466,6 @@ msgstr "アップロードされた拡張パッケージ %s-%s (%s)"
 msgid "Upper"
 msgstr "アッパー"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "コンシューマーカウントのレベル"
-
 msgid "Upper Temperature Levels"
 msgstr "上限温度レベル"
 
@@ -74901,6 +74897,10 @@ msgstr "バックアップ経過日数の上位レベル"
 msgid "Upper levels for the bucket size"
 msgstr "バケットサイズの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for the consumer count"
+msgstr "コンシューマーカウントのレベル"
+
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の上位レベル"
 
@@ -74942,6 +74942,10 @@ msgstr "セッション数の上位レベル"
 
 msgid "Upper levels for the number of table extents"
 msgstr "テーブルエクステントの数の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for the queue length"
+msgstr "キューの長さの上位レベル"
 
 msgid "Upper levels for the time the service is active"
 msgstr "サービス稼働期間の上位レベル"
@@ -84396,6 +84400,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Levels for the queue length"
+#~ msgstr "キューの長さのレベル"
+
+#~ msgid "Set the maximum and minimum length for the queue size"
+#~ msgstr "キューサイズの最大長と最小長を設定します"
 
 #~ msgid ""
 #~ "In order to make Checkmk more consistent, the descriptions of several "

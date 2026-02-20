@@ -15160,7 +15160,8 @@ msgstr "Memoria host consumata"
 msgid "Consumed load balancer capacity units"
 msgstr "Unità di capacità del bilanciatore di carico consumate"
 
-msgid "Consumer Count is the size of connected consumers to a queue"
+#, fuzzy
+msgid "Consumer count is the size of connected consumers to a queue"
 msgstr "Consumer Count è la dimensione dei consumatori collegati a una coda"
 
 msgid "Consumers"
@@ -37301,9 +37302,6 @@ msgstr "Livelli per la crescita percentuale per intervallo di tempo"
 msgid "Levels for the percentual shrinking per time range"
 msgstr "Livelli per la crescita percentuale per intervallo di tempo"
 
-msgid "Levels for the queue length"
-msgstr "Livelli per la lunghezza della coda"
-
 msgid "Levels for time since last update"
 msgstr "Livelli per il tempo trascorso dall'ultimo aggiornamento"
 
@@ -52139,6 +52137,11 @@ msgstr "Informazioni sulla coda"
 msgid "Queue length"
 msgstr "Lunghezza della coda"
 
+msgid ""
+"Queue length refers to the total number of messages that have not been "
+"acknowledged by a consumer."
+msgstr ""
+
 #, fuzzy
 msgid "Queue manager name"
 msgstr "Nome del gestore della coda"
@@ -58433,9 +58436,6 @@ msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Impostare il livello di registrazione per Windows Agent"
-
-msgid "Set the maximum and minimum length for the queue size"
-msgstr "Impostare la lunghezza massima e minima per la dimensione della coda"
 
 msgid "Set the maximum number of concurrent pings sent to target IP addresses."
 msgstr ""
@@ -79124,10 +79124,6 @@ msgstr "Pacchetto di estensione caricato %s-%s (%s)"
 msgid "Upper"
 msgstr "Superiore"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Livelli per il conteggio dei consumatori"
-
 msgid "Upper Temperature Levels"
 msgstr "Livelli superiori di temperatura"
 
@@ -79580,6 +79576,10 @@ msgstr "Livelli superiori per l'età di backup"
 msgid "Upper levels for the bucket size"
 msgstr "Livelli superiori per la dimensione del secchio"
 
+#, fuzzy
+msgid "Upper levels for the consumer count"
+msgstr "Livelli per il conteggio dei consumatori"
+
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr ""
 "Livelli superiori per la velocità della ventola di un dispositivo hardware"
@@ -79622,6 +79622,10 @@ msgstr "Livelli superiori per il numero di sessioni"
 
 msgid "Upper levels for the number of table extents"
 msgstr "Livelli superiori per il numero di estensioni della tabella"
+
+#, fuzzy
+msgid "Upper levels for the queue length"
+msgstr "Livello superiore per la lunghezza della coda"
 
 #, fuzzy
 msgid "Upper levels for the time the service is active"
@@ -89667,6 +89671,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>non disponibile</b> perché Robotmk Core MKP è stato installato"
+
+#~ msgid "Levels for the queue length"
+#~ msgstr "Livelli per la lunghezza della coda"
+
+#~ msgid "Set the maximum and minimum length for the queue size"
+#~ msgstr ""
+#~ "Impostare la lunghezza massima e minima per la dimensione della coda"
 
 #~ msgid ""
 #~ "In order to make Checkmk more consistent, the descriptions of several "

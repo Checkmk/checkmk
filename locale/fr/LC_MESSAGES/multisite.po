@@ -15472,7 +15472,8 @@ msgstr "Mémoire hôte consommée"
 msgid "Consumed load balancer capacity units"
 msgstr "Unités de capacité d'équilibreur de charge consommées"
 
-msgid "Consumer Count is the size of connected consumers to a queue"
+#, fuzzy
+msgid "Consumer count is the size of connected consumers to a queue"
 msgstr ""
 "Le nombre de consommateurs est le nombre de consommateurs connectés à une "
 "file d'attente"
@@ -37851,9 +37852,6 @@ msgstr "Niveaux de croissance en pourcentage par période de temps"
 msgid "Levels for the percentual shrinking per time range"
 msgstr "Niveaux pour le rétrécissement en pourcentage par tranche de temps"
 
-msgid "Levels for the queue length"
-msgstr "Niveaux pour la longueur de la file d'attente"
-
 #, fuzzy
 msgid "Levels for time since last update"
 msgstr "Niveau d'alerte pour le temps écoulé depuis la dernière mise à jour"
@@ -52879,6 +52877,11 @@ msgstr "Informations sur la file d'attente"
 msgid "Queue length"
 msgstr "Longueur de la file d'attente"
 
+msgid ""
+"Queue length refers to the total number of messages that have not been "
+"acknowledged by a consumer."
+msgstr ""
+
 #, fuzzy
 msgid "Queue manager name"
 msgstr "Nom du gestionnaire de la file d'attente"
@@ -59259,10 +59262,6 @@ msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Définir le niveau de journalisation de l'agent Windows"
-
-msgid "Set the maximum and minimum length for the queue size"
-msgstr ""
-"Définir la longueur maximale et minimale pour la taille de la file d'attente"
 
 msgid "Set the maximum number of concurrent pings sent to target IP addresses."
 msgstr ""
@@ -80137,10 +80136,6 @@ msgstr "Téléchargement du paquet d'extensions %s-%s (%s)"
 msgid "Upper"
 msgstr "Upper"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Niveaux pour le comptage des consommateurs"
-
 msgid "Upper Temperature Levels"
 msgstr "Niveaux de température supérieurs"
 
@@ -80604,6 +80599,10 @@ msgstr "Niveaux supérieurs pour l'âge de la sauvegarde"
 msgid "Upper levels for the bucket size"
 msgstr "Niveaux supérieurs pour la taille du seau"
 
+#, fuzzy
+msgid "Upper levels for the consumer count"
+msgstr "Niveaux pour le comptage des consommateurs"
+
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr ""
 "Niveaux supérieurs pour la vitesse du ventilateur d'un dispositif matériel"
@@ -80659,6 +80658,10 @@ msgstr "Niveaux supérieurs pour le nombre de sessions"
 
 msgid "Upper levels for the number of table extents"
 msgstr "Niveaux supérieurs pour le nombre d'extents de table"
+
+#, fuzzy
+msgid "Upper levels for the queue length"
+msgstr "Niveau supérieur pour la longueur de la file d'attente"
 
 #, fuzzy
 msgid "Upper levels for the time the service is active"
@@ -90835,6 +90838,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#~ msgid "Levels for the queue length"
+#~ msgstr "Niveaux pour la longueur de la file d'attente"
+
+#~ msgid "Set the maximum and minimum length for the queue size"
+#~ msgstr ""
+#~ "Définir la longueur maximale et minimale pour la taille de la file "
+#~ "d'attente"
 
 #, fuzzy
 #~ msgid ""

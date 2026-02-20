@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-18 18:34+0000\n"
+"PO-Revision-Date: 2026-02-19 18:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -6727,14 +6727,15 @@ msgstr "Apache ActiveMQ Länge der Warteschlangen"
 msgid "Apache ActiveMQ queues"
 msgstr "Apache ActiveMQ Warteschlangen"
 
-#, fuzzy
 msgid "Apache Config"
-msgstr "Apache-Prozessoptimierung"
+msgstr "Apache-Konfiguration"
 
 msgid ""
 "Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
 "and $OMD_ROOT/etc/apache"
 msgstr ""
+"Apache-Konfigurationsdateien in /etc/apache2 oder /etc/httpd, /opt/omd/"
+"apache und $OMD_ROOT/etc/apache"
 
 msgid "Apache Server"
 msgstr "Apache-Server"
@@ -12353,11 +12354,8 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Auslastung Checkmk-Helper"
 
-#, fuzzy
 msgid "Checkmk metrics are created from OpenTelemetry datapoints."
-msgstr ""
-"Checkmk-Metriken werden aus OTel-Datenpunkten erstellt. Konfigurieren Sie "
-"diese hier."
+msgstr "Checkmk-Metriken werden aus OpenTelemetry-Datenpunkten erstellt."
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmk-Partner und -Reseller"
@@ -12761,7 +12759,7 @@ msgid "Choose the logic with which the value is to be interpreted."
 msgstr "Wähle die Logik, mit welcher der Wert interpretiert werden soll."
 
 msgid "Choose the maximum time to allow between last-update checks"
-msgstr ""
+msgstr "Wählen Sie die maximale Zeitspanne zwischen den Last-Update-Checks"
 
 msgid ""
 "Choose the monitoring core to run for monitoring. You can also decide to run "
@@ -14015,9 +14013,9 @@ msgstr "Konfigurationsdateien ('*.mk' oder '*.conf') aus etc/check_mk.%s"
 msgid "Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s"
 msgstr "Konfigurationsdateien ('*.mk' oder '*.conf') aus etc/checkmk: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Configuration files from %s"
-msgstr "Konfigurationsdateien"
+msgstr "Konfigurationsdateien aus %s"
 
 msgid "Configuration generation"
 msgstr "Konfigurationserzeugung"
@@ -14903,7 +14901,8 @@ msgstr "Benutzer Speicher auf dem Host"
 msgid "Consumed load balancer capacity units"
 msgstr "Verbrauchte Load Balancer Kapazitätseinheiten"
 
-msgid "Consumer Count is the size of connected consumers to a queue"
+#, fuzzy
+msgid "Consumer count is the size of connected consumers to a queue"
 msgstr ""
 "Verbraucher-Anzahl ist die Anzahl der an eine Warteschlange angeschlossenen "
 "Verbraucher"
@@ -24739,9 +24738,9 @@ msgstr "Levels für Filer-Platten (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Dateien"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Files in %s"
-msgstr "Dateiname: %s"
+msgstr "Dateien in %s"
 
 msgid "Filestore"
 msgstr "Dateienspeicher"
@@ -36213,9 +36212,6 @@ msgstr "Levels für prozentuales Wachstum pro Zeitraum"
 msgid "Levels for the percentual shrinking per time range"
 msgstr "Levels für das prozentuale Schrumpfen pro Zeitraum"
 
-msgid "Levels for the queue length"
-msgstr "Levels für die Längen der Schlange"
-
 msgid "Levels for time since last update"
 msgstr "Levels für die Zeit seit letztem Update"
 
@@ -39606,9 +39602,8 @@ msgstr "Maximale Testlaufzeit"
 msgid "Maximum time since last start of job execution"
 msgstr "Maximale Zeit seit der letzten Ausführung des Jobs"
 
-#, fuzzy
 msgid "Maximum time since last update check"
-msgstr "Maximale Zeit seit der letzten Ausführung des Jobs"
+msgstr "Maximale Zeit seit dem letzten Update-Check"
 
 msgid "Maximum uptime of the device"
 msgstr "Maximale Laufzeit des Geräts"
@@ -42019,9 +42014,8 @@ msgstr "NetApp Qtree Erkennung"
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot-Reserve"
 
-#, fuzzy
 msgid "NetApp Snapshot Volumes"
-msgstr "NetApp Snapshot-Reserve"
+msgstr "NetApp Snapshot Volumes"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
 msgstr "NetApp Snapvaults / Snapmirror Lag-Zeit"
@@ -50427,6 +50421,11 @@ msgstr "Warteschlangeninfo"
 msgid "Queue length"
 msgstr "Länge der Warteschlange"
 
+msgid ""
+"Queue length refers to the total number of messages that have not been "
+"acknowledged by a consumer."
+msgstr ""
+
 msgid "Queue manager name"
 msgstr "Name des Warteschlangenmanagers"
 
@@ -56474,9 +56473,6 @@ msgstr ""
 
 msgid "Set the logging level for Windows Agent"
 msgstr "Loglevel des Windows-Agenten festlegen"
-
-msgid "Set the maximum and minimum length for the queue size"
-msgstr "Die maximale und minimale Länge der Schlangengröße festlegen"
 
 msgid "Set the maximum number of concurrent pings sent to target IP addresses."
 msgstr ""
@@ -64469,8 +64465,7 @@ msgstr ""
 "den OpenTelemetry Collector und das Ergebnis wird im Attribut \"%s\" "
 "gespeichert. Für jede hier konfigurierte Regel werden die angegebenen Felder "
 "in der Reihenfolge ihrer Auflistung verkettet. Die erste Regel, die zu einem "
-"nicht leeren Wert führt, wird verwendet. Beispiel:\n"
-"\n"
+"nicht leeren Wert führt, wird verwendet. Zum Beispiel:\n"
 "<ol><li>Eine erste Regel, die aus einem Feld \"Wert des Attributs: "
 "service.name\" besteht, setzt \"%s\" auf den Wert dieses Attributs, sofern "
 "es vorhanden ist. Dieses Attribut wird beispielsweise auf den Namen des "
@@ -76713,10 +76708,6 @@ msgstr "Hochgeladenes Erweiterungspaket %s-%s (%s)"
 msgid "Upper"
 msgstr "Obere"
 
-#, fuzzy
-msgid "Upper Levels for the consumer count"
-msgstr "Obergrenzen für die Consumer-Zählung"
-
 msgid "Upper Temperature Levels"
 msgstr "Obergrenzen für Temperatur"
 
@@ -77153,6 +77144,10 @@ msgstr "Obergrenzen für das Sicherungsalter"
 msgid "Upper levels for the bucket size"
 msgstr "Obergrenzen für die Bucket-Größe"
 
+#, fuzzy
+msgid "Upper levels for the consumer count"
+msgstr "Obergrenzen für die Consumer-Zählung"
+
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr "Obergrenzen für die Lüftergeschwindigkeit von Geräten"
 
@@ -77194,6 +77189,10 @@ msgstr "Obergrenzen für die Anzahl der Sitzungen"
 
 msgid "Upper levels for the number of table extents"
 msgstr "Obergrenzen für die Anzahl der Tabellen-Extents"
+
+#, fuzzy
+msgid "Upper levels for the queue length"
+msgstr "Obergrenzen für Warteschlangenlänge"
 
 msgid "Upper levels for the time the service is active"
 msgstr "Obergrenzen für die Zeit, in welcher der Service aktiv ist"
@@ -77935,14 +77934,16 @@ msgstr "Alias des Multipathgeräts als Service-Namen verwenden, falls vorhanden"
 msgid "Use the name specified in the ESX system"
 msgstr "Benutze den Namen, der im ESX System festgelegt ist"
 
-#, fuzzy
 msgid "Use the new service name"
-msgstr "Neue Service-Namen verwenden"
+msgstr "Den neuen Service-Namen verwenden"
 
 msgid ""
 "Use the new service name. Disabling this option does not work for services "
 "where the monitored SVM or volume names contain colons"
 msgstr ""
+"Verwenden Sie den neuen Service-Namen. Das Deaktivieren dieser Option "
+"funktioniert nicht für Services, bei denen die überwachten SVM- oder Volume-"
+"Namen Doppelpunkte enthalten"
 
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
@@ -87024,6 +87025,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Levels for the queue length"
+#~ msgstr "Levels für die Längen der Schlange"
+
+#~ msgid "Set the maximum and minimum length for the queue size"
+#~ msgstr "Die maximale und minimale Länge der Schlangengröße festlegen"
 
 #~ msgid ""
 #~ "In order to make Checkmk more consistent, the descriptions of several "

@@ -25,7 +25,7 @@ from cmk.gui.form_specs.unstable.multiple_choice import MultipleChoiceElementExt
 from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import (
     delete_oauth2_connection,
@@ -43,14 +43,18 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import Table
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.passwords import load_passwords, remove_password
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively
+from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -498,6 +502,48 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         if ident not in entries:
             raise MKUserError(
                 "_delete", _("This %s does not exist.") % self._mode_type.name_singular()
+            )
+
+        found_rules = []
+        for ruleset_name in [
+            "active_checks:mail",
+            "active_checks:mail_loop",
+            "active_checks:mailboxes",
+        ]:
+            for folder, index, rule in (
+                SingleRulesetRecursively.load_single_ruleset_recursively(ruleset_name)
+                .get_rulesets()[ruleset_name]
+                .get_rules()
+            ):
+                if str(("cmk_postprocessed", "oauth2_connection", ident)) in repr(rule.value):
+                    found_rules.append((ruleset_name, (folder, index, rule)))
+
+        if found_rules:
+            content = HTML.with_escaping("").join(
+                html.render_li(
+                    html.render_a(
+                        f"{rulespec_registry[ruleset_name].title} {index}",
+                        folder_preserving_link(
+                            [
+                                ("mode", "edit_rule"),
+                                ("varname", ruleset_name),
+                                ("rulenr", index),
+                                ("rule_folder", folder.path()),
+                                ("rule_id", rule.id),
+                            ]
+                        ),
+                    )
+                )
+                for ruleset_name, (folder, index, rule) in found_rules
+            )
+            raise MKUserError(
+                "_delete",
+                ungettext(
+                    "OAuth2 connection '%s' is still being used by this rule: %s",
+                    "OAuth2 connection '%s' is still being used by these rules: %s",
+                    len(found_rules),
+                )
+                % (entries[ident]["title"], html.render_ul(content)),
             )
 
         self._delete_passwords(entries[ident], config)

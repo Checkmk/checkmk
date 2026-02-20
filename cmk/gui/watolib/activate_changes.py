@@ -151,6 +151,7 @@ from cmk.messaging import rabbitmq
 from cmk.utils import agent_registration, paths, render, setup_search_index
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.licensing.export import LicenseUsageExtensions
+from cmk.utils.licensing.handler import ActivationBlock
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.paths import configuration_lockfile
@@ -1120,6 +1121,7 @@ class ActivationChangesSummary(TypedDict):
     sites: list[ActivationSitesSummary]
     pendingChanges: list[PendingChangesSummary]
     licenseMessage: str | None
+    licenseIsBlocking: bool
 
 
 class ActivateChanges:
@@ -1398,9 +1400,12 @@ class ActivateChanges:
                         _request, [("mode", "licensing")], filename="wato.py"
                     ),
                 )
-            ) is not None and user_effect.header is not None:
+            ).header is not None:
                 return user_effect.header.message_html
             return None
+
+        def _is_license_blocking() -> bool:
+            return _get_license_block_effect() is not None
 
         site_change_counter: Counter = Counter()
         pending_changes: list[PendingChangesSummary] = []
@@ -1429,6 +1434,7 @@ class ActivateChanges:
             ],
             pendingChanges=pending_changes,
             licenseMessage=_get_license_message(),
+            licenseIsBlocking=_is_license_blocking(),
         )
 
 
@@ -3752,12 +3758,16 @@ def get_restapi_response_for_activation_id(
     )
 
 
-def _raise_for_license_block() -> None:
-    if block_effect := get_licensing_user_effect(
+def _get_license_block_effect() -> ActivationBlock | None:
+    return get_licensing_user_effect(
         licensing_settings_link=makeuri_contextless(
             _request, [("mode", "licensing")], filename="wato.py"
         ),
-    ).block:
+    ).block
+
+
+def _raise_for_license_block() -> None:
+    if block_effect := _get_license_block_effect():
         raise MKLicensingError(block_effect.message_raw)
 
 

@@ -55,7 +55,8 @@ const activationError = ref<string | null>(null)
 const sitesAndChanges = ref<SitesAndChanges>({
   sites: [],
   pendingChanges: [],
-  licenseMessage: null
+  licenseMessage: null,
+  licenseIsBlocking: false
 })
 
 const sitesRef = computed(() => sitesAndChanges.value.sites)
@@ -244,7 +245,7 @@ const userCanActivateSelectedSites = computed((): boolean => {
 })
 
 const activateChangesButtonDisabled = computed((): boolean => {
-  if (sitesAndChanges.value.licenseMessage !== null) {
+  if (sitesAndChanges.value.licenseIsBlocking) {
     return true
   }
   if (!userCanActivateSelectedSites.value) {

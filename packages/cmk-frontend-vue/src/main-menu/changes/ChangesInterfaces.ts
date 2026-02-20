@@ -78,4 +78,5 @@ export interface SitesAndChanges {
   sites: Array<Site>
   pendingChanges: Array<PendingChanges>
   licenseMessage: string | null
+  licenseIsBlocking: boolean
 }

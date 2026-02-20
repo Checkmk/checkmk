@@ -52,6 +52,14 @@ void execute_test(Map config = [:]) {
                     ]) {
                         run_sh_command(cmd);
                     }
+
+                    if (defaultDict.output_file) {
+                        archiveArtifacts(
+                            allowEmptyArchive: true,
+                            artifacts: defaultDict.output_file,
+                            fingerprint: true,
+                        );
+                    }
                 }
             }
         }

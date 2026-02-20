@@ -1221,7 +1221,7 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
                 "Command %s not available on this system." % " ".join(self.command)
             )
 
-        return "\n".join(sorted(output.split("\n")))
+        return "\n".join(output.split("\n"))
 
 
 #   ---cee dumps------------------------------------------------------------

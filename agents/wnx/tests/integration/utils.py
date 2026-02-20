@@ -94,7 +94,7 @@ async def _telnet_shell(reader: telnetlib3.TelnetReader, _: telnetlib3.TelnetWri
         data = await reader.read(1024)
         if not data:
             break
-        _result += data.decode("utf-8", errors="replace")
+        _result += data
 
 
 def _read_client_data(host: str, port: int) -> None:

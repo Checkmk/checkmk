@@ -127,7 +127,7 @@ class TestGraphWidgetErrorHandling:
                 "Host not found"
             )
 
-            with pytest.raises(MKUserError) as exc_info:
+            with pytest.raises(WidgetRenderError) as exc_info:
                 TemplateGraphDashlet._resolve_site(missing_host)
 
         error_message = str(exc_info.value)

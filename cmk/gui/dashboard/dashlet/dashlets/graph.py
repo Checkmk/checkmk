@@ -20,6 +20,7 @@ from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
+from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
@@ -156,8 +157,7 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
             try:
                 return sites.live().query_value(query)
             except livestatus.MKLivestatusNotFoundError:
-                raise MKUserError(
-                    "host",
+                raise WidgetRenderError(
                     _("The host '%s' could not be found on any active site.") % host,
                 )
 

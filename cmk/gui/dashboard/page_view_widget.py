@@ -49,7 +49,11 @@ from cmk.gui.views.store import get_permitted_views, get_view_by_name
 from cmk.gui.visuals import get_only_sites_from_context
 from cmk.gui.visuals.info import visual_info_registry
 
-__all__ = ["ViewWidgetIFramePage", "ViewWidgetIFrameTokenPage", "ViewWidgetEditPage"]
+__all__ = [
+    "ViewWidgetIFramePage",
+    "ViewWidgetIFrameTokenPage",
+    "ViewWidgetEditPage",
+]
 
 
 class EmbeddedViewSpecManager:
@@ -177,12 +181,14 @@ class ViewWidgetIFramePageHelper:
             )
 
     @staticmethod
-    def setup_display_and_painter_options(request: Request, widget_name: str) -> None:
+    def setup_display_and_painter_options(
+        request: Request, widget_name: str, display_opts: str = "HRSIXLW"
+    ) -> None:
         """Setup display options and painter options for the view widget iframe page."""
         # set default display options for view widgets
         # for reloads, the `_display_options` parameter is also supplied by the caller
         # which will overwrite these in `display_options.load_from_html` (for some things)
-        request.set_var("display_options", "HRSIXLW")
+        request.set_var("display_options", display_opts)
 
         # Need to be loaded before processing the painter_options below.
         # TODO: Make this dependency explicit
@@ -368,8 +374,13 @@ class ViewWidgetIFramePage(Page):
             2. Render a view that's embedded in the dashboard config, identified by its internal ID
         """
         parameters = _ViewWidgetIFrameRequestParameters.from_request(ctx.request)
+        # When processing EC actions, C must be included in display options so that
+        # should_show_command_form() returns True and the action processing branch
+        # in GUIViewRenderer.render() is taken (confirmation dialog + redirect). DisplayOptions generally
+        # are very fragile so putting at least an explanation here
+        display_opts = "HRSIXLWC" if ctx.request.var("_do_actions") == "yes" else "HRSIXLW"
         ViewWidgetIFramePageHelper.setup_display_and_painter_options(
-            ctx.request, parameters.unique_widget_name()
+            ctx.request, parameters.unique_widget_name(), display_opts
         )
         try:
             view_spec = parameters.load_view_spec()

@@ -982,14 +982,11 @@ def render_delete_event_icons(row: Row, *, request: Request) -> str | HTML:
     if _view_datasource:
         datasource = _view_datasource
 
-        # These actions are not performed within the dashlet. Assume the title url still
-        # links to the source view where the action can be performed.
-        # TODO: this didn't work since the port to the new widget. Will be handled in CMK-31242
-        # title_url = request.get_str_input("title_url", None)
-        # if title_url:
-        #     parsed_url = urllib.parse.urlparse(title_url)
-        #     filename = parsed_url.path
-        #     urlvars += urllib.parse.parse_qsl(parsed_url.query)
+        # Redirect to the dedicated widget view page
+        # _do_actions should be handled in the page to ensure that the correct DisplayOption is set
+        # This is needed to ensure that the user gets the correct feedback after deleting an event and that the view is correctly updated after the deletion.
+        # Yes this is terrible and should get tackled with the new views.
+        filename = "widget_iframe_view.py"
     else:
         # Regular view
         view = get_permitted_views()[request.get_str_input_mandatory("view_name")]

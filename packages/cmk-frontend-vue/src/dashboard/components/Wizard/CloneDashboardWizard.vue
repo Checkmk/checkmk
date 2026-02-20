@@ -56,7 +56,7 @@ const cancel = () => {
 </script>
 
 <template>
-  <CmkSlideIn :open="open" :aria-label="_t('Clone dashboard')" :stack-priority="10">
+  <CmkSlideIn :open="open" :aria-label="_t('Clone dashboard')">
     <Suspense>
       <CloneDashboardWizard
         :reference-dashboard-id="activeDashboardId"

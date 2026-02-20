@@ -26,6 +26,7 @@ const emit = defineEmits<FilterSettingsEmits>()
 <template>
   <CmkSlideIn
     :open="open"
+    :stack-priority="-10"
     class="db-filter-settings__slide-in"
     :aria-label="_t('Dashboard filter')"
     @close="emit('close')"

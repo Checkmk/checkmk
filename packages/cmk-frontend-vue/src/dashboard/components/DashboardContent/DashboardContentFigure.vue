@@ -182,7 +182,10 @@ onBeforeUnmount(() => {
           legacyFigureType
         ]"
         @click.capture="suppressEventOnPublicDashboard"
+        @auxclick.capture="suppressEventOnPublicDashboard"
+        @mousedown.capture="suppressEventOnPublicDashboard"
         @keydown.capture="suppressEventOnPublicDashboard"
+        @wheel.capture="suppressEventOnPublicDashboard"
       ></div>
     </div>
   </DashboardContentContainer>

@@ -14,6 +14,7 @@ import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
@@ -27,6 +28,7 @@ const headers: string[] = [_t('Actions'), _t('Message'), _t('Sent on'), _t('Expi
 
 defineProps<ContentProps>()
 const cmkToken = useInjectCmkToken()
+const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
 
 type UserMessage = {
   id: string
@@ -100,7 +102,11 @@ function formatTimestamp(timestamp: number): string {
 
 <template>
   <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
-    <div>
+    <div
+      @click.capture="suppressEventOnPublicDashboard"
+      @auxclick.capture="suppressEventOnPublicDashboard"
+      @mousedown.capture="suppressEventOnPublicDashboard"
+    >
       <table v-if="messages!.length" class="db-content-user-messages__table">
         <tbody>
           <tr>

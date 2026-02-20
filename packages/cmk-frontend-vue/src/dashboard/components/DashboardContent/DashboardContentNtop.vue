@@ -65,7 +65,10 @@ onBeforeUnmount(() => {
     class="db-content-ntop__wrapper ntop"
     :class="{ 'db-content-ntop__background': !!general_settings.render_background }"
     @click.capture="suppressEventOnPublicDashboard"
+    @auxclick.capture="suppressEventOnPublicDashboard"
+    @mousedown.capture="suppressEventOnPublicDashboard"
     @keydown.capture="suppressEventOnPublicDashboard"
+    @wheel.capture="suppressEventOnPublicDashboard"
   >
     <div :id="interfaceDivId" class="ntop_interface_quickstats" />
     <div :id="contentDivId" class="db-content-ntop" />

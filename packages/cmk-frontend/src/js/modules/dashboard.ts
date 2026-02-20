@@ -1329,15 +1329,15 @@ function toggle_slim_controls(controls_obj: HTMLElement, width: number, height: 
 }
 
 export function ignore_public_dashboard_clicks(): void {
-  document.addEventListener(
-    'click',
-    (e: MouseEvent) => {
-      const a = (e.target as Element | null)?.closest('a[href]')
-      if (a) {
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    },
-    true
-  )
+  const suppress = (e: MouseEvent) => {
+    const a = (e.target as Element | null)?.closest('a[href]')
+    if (a) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+  document.addEventListener('click', suppress, true)
+  document.addEventListener('mousedown', suppress, true)
+  document.addEventListener('mouseup', suppress, true)
+  document.addEventListener('auxclick', suppress, true)
 }

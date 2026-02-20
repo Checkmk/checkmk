@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { EmbeddedViewContent, IFrameContent } from '@/dashboard/types/widget'
 
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
@@ -14,6 +15,7 @@ import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
 const cmkToken = useInjectCmkToken()
+const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
 
 const iFrameUrl = computed(() => {
   if (cmkToken !== undefined) {
@@ -52,5 +54,11 @@ const iFrameProps = computed(() => {
 </script>
 
 <template>
-  <DashboardContentIFrame v-bind="iFrameProps" />
+  <DashboardContentIFrame
+    v-bind="iFrameProps"
+    :disable-click-shield="true"
+    @click.capture="suppressEventOnPublicDashboard"
+    @auxclick.capture="suppressEventOnPublicDashboard"
+    @mousedown.capture="suppressEventOnPublicDashboard"
+  />
 </template>

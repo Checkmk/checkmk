@@ -152,7 +152,10 @@ onBeforeUnmount(() => {
       class="db-content-graph"
       :class="{ 'db-content-graph__preview': isPreview && !showLegend }"
       @click.capture="suppressEventOnPublicDashboard"
+      @auxclick.capture="suppressEventOnPublicDashboard"
+      @mousedown.capture="suppressEventOnPublicDashboard"
       @keydown.capture="suppressEventOnPublicDashboard"
+      @wheel.capture="suppressEventOnPublicDashboard"
     />
   </DashboardContentContainer>
 </template>

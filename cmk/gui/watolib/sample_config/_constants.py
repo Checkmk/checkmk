@@ -23,6 +23,10 @@ _SHIPPED_RULE_OPTIONS = RuleOptionsSpec(
 _PS_COMMON_OPTS = {"user": False, "default_params": {"cpu_rescale_max": True}}
 
 
+_PROXMOX_CONDITION = RuleConditionsSpec(
+    host_label_groups=[("and", [("and", "cmk/os_platform:debian"), ("and", "cmk/pve/entity:node")])]
+)
+
 PROXMOX_RULES: list[RuleSpec[Mapping[str, object]]] = [
     {
         "id": id_,
@@ -31,11 +35,7 @@ PROXMOX_RULES: list[RuleSpec[Mapping[str, object]]] = [
             "match": match,
             "default_params": {"cpu_rescale_max": True, "levels": levels},
         },
-        "condition": RuleConditionsSpec(
-            host_label_groups=[
-                ("and", [("and", "cmk/os_platform:debian"), ("and", "cmk/pve/entity:node")])
-            ]
-        ),
+        "condition": _PROXMOX_CONDITION,
         "options": {
             "description": description,
             **_SHIPPED_RULE_OPTIONS,
@@ -69,7 +69,7 @@ PROXMOX_RULES: list[RuleSpec[Mapping[str, object]]] = [
     ]
 ]
 
-PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [  # sorted by descr
+PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [
     {
         "id": id_,
         "value": {"descr": f"%u {ps_name}", "match": match, **_PS_COMMON_OPTS},
@@ -195,6 +195,9 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [  # sorted by descr
     ]
 ]
 
+INVENTORY_PROCESS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = (
+    PS_DISCOVERY_RULES + PROXMOX_RULES
+)
 
 # Rules that match the host tag definition from `sample_tag_config`
 SHIPPED_RULES = {
@@ -363,7 +366,7 @@ SHIPPED_RULES = {
             },
         },
     ],
-    "inventory_processes_rules": PS_DISCOVERY_RULES + PROXMOX_RULES,
+    "inventory_processes_rules": INVENTORY_PROCESS_DISCOVERY_RULES,
 }
 
 

@@ -9,14 +9,17 @@ import pytest
 
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleConditions, RuleOptions, Ruleset, RulesetCollection
-from cmk.gui.watolib.sample_config import PS_DISCOVERY_RULES
+from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
 from cmk.gui.watolib.sample_config._constants import _PS_COMMON_OPTS
 from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
+    _NEW_DEFAULT_RULE_IDS,
     add_ps_discovery_rules,
     AUTOMATION_HELPER_RULE_ID,
     overwrite_ps_discovery_rules,
+    PROXMOX_RULE_IDS,
     PS_DISCOVERY_RULE_NAME,
     RABBITMQ_RULE_ID,
+    rule_present,
     UI_JOB_SCHEDULER_RULE_ID,
 )
 
@@ -40,39 +43,55 @@ def test_update_without_preexisting_rulesets() -> None:
 
     add_ps_discovery_rules(logging.getLogger(), rulesets)
     assert (
-        rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == len(PS_DISCOVERY_RULES) + 1
+        rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules()
+        == len(INVENTORY_PROCESS_DISCOVERY_RULES) + 1
     )
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize(
-    ["preexisting_rule_id", "expected_num_rules", "expected_rule_match"],
-    [
-        pytest.param(
-            UI_JOB_SCHEDULER_RULE_ID,
-            1,
-            None,
-            id="new default rule already present",
-        ),
-        pytest.param(
-            PS_DISCOVERY_RULES[0]["id"],
-            2,
-            "~.*cmk-ui-job-scheduler.*",
-            id="some other preexisting rule, add new default",
-        ),
-    ],
-)
-def test_update_with_preexisting_rulesets(
-    preexisting_rule_id: str, expected_num_rules: int, expected_rule_match: str
-) -> None:
-    rulesets = _make_ruleset_collection_with_preexisting_rule(preexisting_rule_id)
+def test_update_with_one_preexisting_adds_new_defaults() -> None:
+    preexisting_id = INVENTORY_PROCESS_DISCOVERY_RULES[0]["id"]
+    rulesets = _make_ruleset_collection_with_preexisting_rule(preexisting_id)
     assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == 1
 
     add_ps_discovery_rules(logging.getLogger(), rulesets)
 
-    assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == expected_num_rules
-    rule = rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].get_rule_by_id(UI_JOB_SCHEDULER_RULE_ID)
-    assert rule.value.get("match", None) == expected_rule_match
+    new_ids = _NEW_DEFAULT_RULE_IDS - {preexisting_id}
+    assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == 1 + len(new_ids)
+    for rule_id in new_ids:
+        assert rule_present(rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME], rule_id)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_update_with_preexisting_ui_job_scheduler() -> None:
+    rulesets = _make_ruleset_collection_with_preexisting_rule(UI_JOB_SCHEDULER_RULE_ID)
+    assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == 1
+
+    add_ps_discovery_rules(logging.getLogger(), rulesets)
+
+    ruleset = rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME]
+    assert ruleset.num_rules() == 1 + len(PROXMOX_RULE_IDS)
+    assert rule_present(ruleset, UI_JOB_SCHEDULER_RULE_ID)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_update_with_all_preexisting_adds_nothing() -> None:
+    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME)
+    folder = folder_tree().root_folder()
+    for shipped_rule in INVENTORY_PROCESS_DISCOVERY_RULES:
+        rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
+        rule.id = shipped_rule["id"]
+        ruleset.append_rule(folder, rule)
+    rulesets = RulesetCollection({ruleset.name: ruleset})
+    assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == len(
+        INVENTORY_PROCESS_DISCOVERY_RULES
+    )
+
+    add_ps_discovery_rules(logging.getLogger(), rulesets)
+
+    assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == len(
+        INVENTORY_PROCESS_DISCOVERY_RULES
+    )
 
 
 @pytest.mark.usefixtures("request_context")

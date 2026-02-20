@@ -9,7 +9,7 @@ from typing import override
 from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollection
-from cmk.gui.watolib.sample_config import PS_DISCOVERY_RULES
+from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
@@ -17,6 +17,15 @@ PS_DISCOVERY_RULE_NAME = "inventory_processes_rules"
 RABBITMQ_RULE_ID = "65a3dca4-8d71-45d8-8887-53ef0c63d06f"
 AUTOMATION_HELPER_RULE_ID = "94190e27-2836-488a-b6b4-f23f694a455e"
 UI_JOB_SCHEDULER_RULE_ID = "8b5616fb-a457-404e-a136-24065da7f170"
+PROXMOX_RULE_IDS = frozenset(
+    {
+        "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e",
+        "bed89ece-0997-4052-ac1e-9a0ce369dd8a",
+        "e041c6f5-3b62-4de0-b4da-6e031c820c7c",
+        "23bd2fc2-a834-421c-8b7f-c790377f9d59",
+    }
+)
+_NEW_DEFAULT_RULE_IDS = frozenset({UI_JOB_SCHEDULER_RULE_ID}) | PROXMOX_RULE_IDS
 
 
 class UpdatePSDiscovery(UpdateAction):
@@ -38,33 +47,32 @@ def add_ps_discovery_rules(
     root_folder = folder_tree().root_folder()
     if _some_shipped_rules_present(ps_discovery_rules):
         # a new default rule was added since the previous batch was added
-        add_new_default_rule(logger, ps_discovery_rules, root_folder)
+        add_new_default_rules(logger, ps_discovery_rules, root_folder)
         return
 
-    for rule in reversed(PS_DISCOVERY_RULES):
+    for rule in reversed(INVENTORY_PROCESS_DISCOVERY_RULES):
         logger.info("Adding: %s", rule["options"]["description"])
         ps_discovery_rules.prepend_rule(
             root_folder, Rule.from_config(root_folder, ps_discovery_rules, rule)
         )
 
 
-def add_new_default_rule(logger: Logger, ps_discovery_rules: Ruleset, root_folder: Folder) -> None:
-    if _rule_present(ps_discovery_rules, UI_JOB_SCHEDULER_RULE_ID):
-        return
+def add_new_default_rules(logger: Logger, ps_discovery_rules: Ruleset, root_folder: Folder) -> None:
+    for rule in reversed(INVENTORY_PROCESS_DISCOVERY_RULES):
+        if rule["id"] not in _NEW_DEFAULT_RULE_IDS or rule_present(ps_discovery_rules, rule["id"]):
+            continue
 
-    ui_job_scheduler_rule = next(
-        rule for rule in PS_DISCOVERY_RULES if rule["id"] == UI_JOB_SCHEDULER_RULE_ID
-    )
-    ui_job_scheduler_rule["options"]["comment"] = (
-        "This rule is shipped with Checkmk. It is added to give insights on the resource usage of "
-        "Checkmk servers. If you do not want this service, consider disabling this rule, rather "
-        "than deleting it. It will be added again during future updates."
-    )
-
-    logger.info("Adding: %s", ui_job_scheduler_rule["options"]["description"])
-    ps_discovery_rules.prepend_rule(
-        root_folder, Rule.from_config(root_folder, ps_discovery_rules, ui_job_scheduler_rule)
-    )
+        if rule["id"] == UI_JOB_SCHEDULER_RULE_ID:
+            rule["options"]["comment"] = (
+                "This rule is shipped with Checkmk. It is added to give insights on the resource"
+                " usage of Checkmk servers. If you do not want this service, consider disabling"
+                " this rule, rather than deleting it. It will be added again during future"
+                " updates."
+            )
+        logger.info("Adding: %s", rule["options"]["description"])
+        ps_discovery_rules.prepend_rule(
+            root_folder, Rule.from_config(root_folder, ps_discovery_rules, rule)
+        )
 
 
 def overwrite_ps_discovery_rule(
@@ -78,7 +86,9 @@ def overwrite_ps_discovery_rule(
 
     if rule.value["match"] == old_rule_match:
         try:
-            default_rule = next(rule for rule in PS_DISCOVERY_RULES if rule["id"] == rule_id)
+            default_rule = next(
+                rule for rule in INVENTORY_PROCESS_DISCOVERY_RULES if rule["id"] == rule_id
+            )
         except StopIteration:
             logger.debug("No actual rule for %s.", ps_descr)
             return
@@ -109,7 +119,7 @@ def overwrite_ps_discovery_rules(logger: Logger, all_rulesets: RulesetCollection
     )
 
 
-def _rule_present(current_rules: Ruleset, rule_id: str) -> bool:
+def rule_present(current_rules: Ruleset, rule_id: str) -> bool:
     try:
         current_rules.get_rule_by_id(rule_id)
         return True
@@ -119,8 +129,8 @@ def _rule_present(current_rules: Ruleset, rule_id: str) -> bool:
 
 
 def _some_shipped_rules_present(current_rules: Ruleset) -> bool:
-    for rule in PS_DISCOVERY_RULES:
-        if _rule_present(current_rules, rule["id"]):
+    for rule in INVENTORY_PROCESS_DISCOVERY_RULES:
+        if rule_present(current_rules, rule["id"]):
             return True
     return False
 

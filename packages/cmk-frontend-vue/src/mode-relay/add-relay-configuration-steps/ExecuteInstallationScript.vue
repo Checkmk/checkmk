@@ -72,7 +72,7 @@ const installCommand = computed(() => {
         {{
           _t(
             'If you do not want to run the script as the specified user — or 2FA is active for that user —, ' +
-              'change the parameter to another user with sufficient permissions, such an automation user.'
+              'change the parameter to another user with sufficient permissions, such as an automation user.'
           )
         }}
       </CmkParagraph>

@@ -151,109 +151,69 @@ const getTagAutocompleter = (index: number): ComputedRef<Autocompleter> =>
 </script>
 
 <template>
-  <div class="tag-filter-container">
-    <table class="tag-filter-table">
-      <tbody>
-        <tr v-for="index in numberOfRows" :key="index - 1" class="tag-filter-row">
-          <td class="tag-filter-cell">
-            <FormAutocompleter
-              :model-value="getTagGroupValue(index - 1)"
-              :autocompleter="groupAutocompleter"
-              :placeholder="_t('Select group...')"
-              :size="20"
-              @update:model-value="(value: string | null) => updateTagGroup(index - 1, value)"
-            />
-          </td>
-          <td class="tag-filter-cell">
-            <CmkDropdown
-              :options="{ type: 'fixed', suggestions: operatorChoices }"
-              :label="_t('Operator')"
-              :selected-option="getOperatorValue(index - 1)"
-              @update:selected-option="(value: string | null) => updateOperator(index - 1, value)"
-            />
-          </td>
-          <td class="tag-filter-cell">
-            <FormAutocompleter
-              :model-value="getTagValue(index - 1)"
-              :autocompleter="getTagAutocompleter(index - 1).value"
-              :placeholder="_t('Select value...')"
-              :size="20"
-              @update:model-value="(value: string | null) => updateTagValue(index - 1, value)"
-            />
-          </td>
-          <td class="tag-filter-cell tag-filter-cell--clear">
-            <button
-              v-if="hasAnyValue(index - 1)"
-              class="tag-filter-clear-button"
-              @click="clearRow(index - 1)"
-            >
-              <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
-            </button>
-            <div v-else class="tag-filter-clear-spacer"></div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="db-tag-match-component">
+    <template v-for="index in numberOfRows" :key="index - 1">
+      <div class="db-tag-match-component__group">
+        <FormAutocompleter
+          :model-value="getTagGroupValue(index - 1)"
+          :autocompleter="groupAutocompleter"
+          :placeholder="_t('Select group...')"
+          :size="20"
+          :width="`fill`"
+          @update:model-value="(value: string | null) => updateTagGroup(index - 1, value)"
+        />
+      </div>
+      <div class="db-tag-match-component__operator">
+        <CmkDropdown
+          :options="{ type: 'fixed', suggestions: operatorChoices }"
+          :label="_t('Operator')"
+          :selected-option="getOperatorValue(index - 1)"
+          @update:selected-option="(value: string | null) => updateOperator(index - 1, value)"
+        />
+      </div>
+      <div class="db-tag-match-component__value">
+        <FormAutocompleter
+          :model-value="getTagValue(index - 1)"
+          :autocompleter="getTagAutocompleter(index - 1).value"
+          :placeholder="_t('Select value...')"
+          :size="20"
+          :width="`fill`"
+          @update:model-value="(value: string | null) => updateTagValue(index - 1, value)"
+        />
+      </div>
+      <div class="db-tag-match-component__clear">
+        <button
+          v-if="hasAnyValue(index - 1)"
+          type="button"
+          class="db-tag-match-component__clear-button"
+          @click="clearRow(index - 1)"
+        >
+          <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
+        </button>
+        <div v-else class="db-tag-match-component__clear-spacer"></div>
+      </div>
+    </template>
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-container {
+.db-tag-match-component {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  gap: var(--dimension-4);
+}
+
+.db-tag-match-component__group,
+.db-tag-match-component__value {
+  min-width: 0;
+}
+
+.db-tag-match-component__clear {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-table {
-  border-collapse: separate;
-  border-spacing: 0 var(--dimension-4);
-  width: 100%;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-row {
-  display: table-row;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-cell {
-  vertical-align: middle;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-cell:first-child {
-  padding-left: 0;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-cell:last-child {
-  padding-right: 0;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-cell > * {
-  width: 40%;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-cell:nth-child(2) > * {
-  width: 15%;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-cell:nth-child(3) > * {
-  width: 40%;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-cell--clear {
-  width: 5%;
-  text-align: center;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-clear-button {
+.db-tag-match-component__clear-button {
   width: var(--dimension-7);
   height: var(--dimension-7);
   color: var(--font-color);
@@ -262,13 +222,12 @@ const getTagAutocompleter = (index: number): ComputedRef<Autocompleter> =>
   align-items: center;
   justify-content: center;
   line-height: 1;
-  margin: 0 auto;
+  margin: 0;
+  padding: var(--dimension-4) var(--dimension-5);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tag-filter-clear-spacer {
-  width: var(--dimension-7);
+.db-tag-match-component__clear-spacer {
+  width: var(--dimension-10);
   height: var(--dimension-7);
-  margin: 0 auto;
 }
 </style>

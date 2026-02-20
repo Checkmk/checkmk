@@ -27,13 +27,8 @@ export function tagMatchItemsToDict(
     const valueKey = `${variablePrefix}_${index}_val`
 
     result[operatorKey] = item.operator
-
-    if (item.group) {
-      result[groupKey] = item.group
-    }
-    if (item.value) {
-      result[valueKey] = item.value
-    }
+    result[groupKey] = item.group ?? ''
+    result[valueKey] = item.value ?? ''
   })
 
   return result

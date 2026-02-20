@@ -1184,6 +1184,34 @@ def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
             ],
             id="small-neg,big-pos",
         ),
+        pytest.param(
+            -5.523,
+            0,
+            False,
+            [
+                Label(
+                    position=-1.0,
+                    text="-1 s",
+                ),
+                Label(
+                    position=-2.0,
+                    text="-2 s",
+                ),
+                Label(
+                    position=-3.0,
+                    text="-3 s",
+                ),
+                Label(
+                    position=-4.0,
+                    text="-4 s",
+                ),
+                Label(
+                    position=-5.0,
+                    text="-5 s",
+                ),
+            ],
+            id="rounding-error",
+        ),
     ],
 )
 def test__compute_labels_from_api(

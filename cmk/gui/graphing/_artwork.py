@@ -647,7 +647,7 @@ def _compute_labels_from_api(
             # Computing labels for the negative and positive range separately is a product decision,
             # not a workaround.
             target_num_labels = height_ex / 4.0 + 1
-            target_num_labels_neg = target_num_labels * abs_min_y / (abs_min_y + abs_max_y)
+            target_num_labels_neg = target_num_labels * (abs_min_y / (abs_min_y + abs_max_y))
             target_num_labels_pos = target_num_labels - target_num_labels_neg
             return [
                 *formatter.render_y_labels(

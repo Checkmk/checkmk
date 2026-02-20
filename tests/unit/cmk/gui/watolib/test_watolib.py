@@ -317,6 +317,11 @@ def test_registered_configvars() -> None:
             "site_opentelemetry_collector_memory_limit",
         ]
 
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:
+        expected_vars += [
+            "enable_ai_explanations",
+        ]
+
     registered = sorted(config_variable_registry.keys())
     assert registered == sorted(expected_vars)
 
@@ -348,6 +353,11 @@ def test_registered_configvar_groups() -> None:
             "Monitoring core",
             "Ntopng (chargeable add-on)",
             "Telemetry",
+        ]
+
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:
+        expected_groups += [
+            "AI features",
         ]
 
     registered = sorted(config_variable_group_registry.keys())

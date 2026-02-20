@@ -109,6 +109,8 @@ def get_command_groups(info_name: InfoName) -> dict[type[CommandGroup], list[Com
     by_group: dict[type[CommandGroup], list[Command]] = {}
 
     for command in command_registry.values():
+        if not command.enabled():
+            continue
         if info_name in command.tables and user.may(command.permission.name):
             # Some special commands can be shown on special views using this option.  It is
             # currently only used by custom commands, not shipped with Checkmk.

@@ -53,6 +53,16 @@ else:
         pass
 
 
+if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:
+    from cmk.gui.nonfree.cloud.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
+        CloudConfig,
+    )
+else:
+    # Stub needed for non cloud edition
+    class CloudConfig:  # type: ignore[no-redef]
+        pass
+
+
 tracer = trace.get_tracer()
 
 #   .--Declarations--------------------------------------------------------.
@@ -79,7 +89,7 @@ builtin_role_ids: Final[list[RoleName]] = [
 
 
 @dataclass
-class Config(CREConfig, CEEConfig, CMEConfig):  # type: ignore[misc, unused-ignore]
+class Config(CREConfig, CEEConfig, CMEConfig, CloudConfig):  # type: ignore[misc, unused-ignore]
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.

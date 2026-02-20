@@ -72,6 +72,7 @@ class Command(abc.ABC):
         show_command_form: bool = True,
         executor: CommandExecutor | None = None,
         vue_props: Callable[[LoggedInUser, Rows], PageMenuVue] | None = None,
+        enabled: Callable[[], bool] | None = None,
     ) -> None:
         self.ident = ident
         self.title = title
@@ -96,6 +97,7 @@ class Command(abc.ABC):
         self._affected_output_cb = affected_output_cb
         self._executor = executor
         self._vue_props = vue_props
+        self.enabled: Callable[[], bool] = enabled if enabled else lambda: True
 
     @property
     def confirm_title(self) -> str:

@@ -372,6 +372,7 @@ class ChangesAPI(BaseAPI):
         force_foreign_changes: bool = False,
         timeout: int = 300,  # TODO: revert to 60 seconds once performance is improved.
         strict: bool = True,
+        allow_warnings: bool = False,
     ) -> bool:
         """Activate changes via REST API and wait for completion.
 
@@ -396,10 +397,11 @@ class ChangesAPI(BaseAPI):
             if activation_id:
                 activation_status = self.get_activation_status(activation_id)
                 if "status_per_site" in activation_status["extensions"]:
+                    allowed_states = {"success", "warning"} if allow_warnings else {"success"}
                     if not_succeeded_sites := [
                         status
                         for status in activation_status["extensions"]["status_per_site"]
-                        if status["state"] != "success"
+                        if status["state"] not in allowed_states
                     ]:
                         raise RuntimeError(
                             "Activation of the following sites did not succeed:\n"

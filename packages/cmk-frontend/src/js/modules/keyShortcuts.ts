@@ -96,7 +96,7 @@ export class KeyShortcutService {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
-    if (MODIFIER_KEYS.includes(e.key)) {
+    if (!e.key || MODIFIER_KEYS.includes(e.key)) {
       return
     }
     this.recordKeyPress(e.key.toLowerCase())

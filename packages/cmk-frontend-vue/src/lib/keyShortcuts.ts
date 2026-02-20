@@ -134,6 +134,9 @@ export class KeyShortcutService {
   }
 
   private setKeyState(key: string, pressed: boolean): void {
+    if (!key) {
+      return
+    }
     this.keyStates[key.toLowerCase()] = pressed
   }
 
@@ -148,7 +151,7 @@ export class KeyShortcutService {
 
   private shortcutKeysPressed(keys: string[]): boolean {
     for (const key of keys) {
-      if (!this.keyStates[key.toLowerCase()]) {
+      if (!key || !this.keyStates[key.toLowerCase()]) {
         return false
       }
     }

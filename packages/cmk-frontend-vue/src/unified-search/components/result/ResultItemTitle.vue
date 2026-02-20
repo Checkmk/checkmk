@@ -22,7 +22,7 @@ export default defineComponent({
   render() {
     return h('div', [
       h('span', { innerHTML: this.processedTitle, class: 'title' }),
-      h('span', { class: 'context' }, this.context)
+      h('span', { class: 'context', title: this.context }, this.context)
     ])
   }
 })
@@ -39,11 +39,15 @@ export default defineComponent({
 }
 
 div {
+  --gap: var(--dimension-3);
+  --context-width: 100px;
+
   width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
   position: relative;
+  gap: var(--gap);
 }
 
 span {
@@ -56,11 +60,16 @@ span {
   overflow-wrap: break-word;
   text-align: left;
   min-width: 0;
+  max-width: calc(100% - var(--context-width) - var(--gap));
 }
 
 .context {
-  padding-left: var(--spacing-half);
+  min-width: var(--context-width);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
 }
 </style>

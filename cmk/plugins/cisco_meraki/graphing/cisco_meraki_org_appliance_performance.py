@@ -16,7 +16,7 @@ metric_utilization = metrics.Metric(
 
 graph_cisco_meraki_appliance_utilization = graphs.Graph(
     name="cisco_meraki_appliance_utilization",
-    title=Title("Cisco Meraki Appliance Performance Utilization"),
+    title=Title("Appliance device utilization"),
     compound_lines=["utilization"],
     simple_lines=[
         metrics.WarningOf("utilization"),

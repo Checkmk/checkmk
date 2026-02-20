@@ -58,7 +58,7 @@ def check_appliance_performance(params: CheckParams, section: Section) -> CheckR
 
 check_plugin_cisco_meraki_org_appliance_performance = CheckPlugin(
     name="cisco_meraki_org_appliance_performance",
-    service_name="Utilization",
+    service_name="Device utilization",
     check_function=check_appliance_performance,
     discovery_function=discover_appliance_performance,
     check_ruleset_name="cisco_meraki_org_appliance_performance",

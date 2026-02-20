@@ -5,15 +5,11 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-# Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="prop-decorator"
-
-import dataclasses
 import json
 from collections.abc import Mapping
 from typing import TypedDict
 
-from pydantic import BaseModel, computed_field, Field
+from pydantic import BaseModel, Field
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -26,33 +22,11 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-type Section = Mapping[str, VpnStatus]
-
-
-@dataclasses.dataclass
-class PeerInfo:
-    reachability: str | None = None
-    public_ip: str | None = None
-    type: str | None = None
-
-    def __post_init__(self) -> None:
-        self.reachability = self.reachability or "n/a"
-        self.public_ip = self.public_ip or "n/a"
-        self.type = self.type or "n/a"
-
-    @property
-    def status_reachable(self) -> bool:
-        if not self.reachability:
-            return False
-        return self.reachability.lower() == "reachable"
-
-
-class Uplink(BaseModel, frozen=True):
-    interface: str
-    public_ip: str = Field(alias="publicIp")
+type Section = Mapping[str, MerakiVpnPeer | ThirdPartyVpnPeer]
 
 
 class MerakiVpnPeer(BaseModel, frozen=True):
+    network_id: str = Field(alias="networkId")
     network_name: str = Field(alias="networkName")
     reachability: str
 
@@ -64,45 +38,21 @@ class ThirdPartyVpnPeer(BaseModel, frozen=True):
 
 
 class VpnStatus(BaseModel, frozen=True):
-    meraki_vpn_peers_list: list[MerakiVpnPeer] = Field(alias="merakiVpnPeers")
-    network_name: str = Field(alias="networkName")
-    third_party_vpn_peers_list: list[ThirdPartyVpnPeer] = Field(alias="thirdPartyVpnPeers")
-    uplinks: list[Uplink]
-    vpn_mode: str = Field(alias="vpnMode")
+    meraki_vpn_peers: list[MerakiVpnPeer] = Field(alias="merakiVpnPeers")
+    third_party_vpn_peers: list[ThirdPartyVpnPeer] = Field(alias="thirdPartyVpnPeers")
 
-    @computed_field
-    @property
-    def meraki_vpn_peers(self) -> dict[str, MerakiVpnPeer]:
-        return {peer.network_name: peer for peer in self.meraki_vpn_peers_list}
-
-    @computed_field
-    @property
-    def third_party_vpn_peers(self) -> dict[str, ThirdPartyVpnPeer]:
-        return {peer.name: peer for peer in self.third_party_vpn_peers_list}
-
-    @computed_field
-    @property
-    def info(self) -> PeerInfo:
-        if meraki_peer := self.meraki_vpn_peers.get(self.network_name):
-            return PeerInfo(
-                public_ip=None,
-                reachability=meraki_peer.reachability,
-                type="Meraki VPN peer",
-            )
-        if third_party_peer := self.third_party_vpn_peers.get(self.network_name):
-            return PeerInfo(
-                public_ip=third_party_peer.public_ip,
-                reachability=third_party_peer.reachability,
-                type="Third party VPN peer",
-            )
-        return PeerInfo()
+    def get_peers_by_name(self) -> Section:
+        return {
+            **{peer.network_name: peer for peer in self.meraki_vpn_peers},
+            **{peer.name: peer for peer in self.third_party_vpn_peers},
+        }
 
 
 def parse_appliance_vpns(string_table: StringTable) -> Section:
     match string_table:
         case [[payload]] if payload:
-            vpn_statuses = (VpnStatus.model_validate(data) for data in json.loads(payload))
-            return {vpn.network_name: vpn for vpn in vpn_statuses}
+            vpn_status = VpnStatus.model_validate(json.loads(payload)[0])
+            return vpn_status.get_peers_by_name()
         case _:
             return {}
 
@@ -126,24 +76,20 @@ def check_appliance_vpns(item: str, params: CheckParams, section: Section) -> Ch
     if (peer := section.get(item)) is None:
         return None
 
-    if peer.info.status_reachable:
-        yield Result(state=State.OK, summary=f"Status: {peer.info.reachability}")
-    else:
-        yield Result(
-            state=State(params["status_not_reachable"]),
-            summary=f"Status: {peer.info.reachability}",
-        )
+    yield Result(
+        state=State.OK
+        if peer.reachability.lower() == "reachable"
+        else State(params["status_not_reachable"]),
+        summary=f"Reachability: {peer.reachability}",
+    )
 
-    yield Result(state=State.OK, summary=f"Type: {peer.info.type}")
-    if peer.info.public_ip:
-        yield Result(state=State.OK, summary=f"Peer IP: {peer.info.public_ip}")
-
-    yield Result(state=State.OK, notice=f"VPN mode: {peer.vpn_mode}")
-    yield Result(state=State.OK, notice="Uplink(s):")
-    for uplink in peer.uplinks:
-        yield Result(
-            state=State.OK, notice=f"Name: {uplink.interface}, Public IP: {uplink.public_ip}"
-        )
+    match peer:
+        case MerakiVpnPeer():
+            yield Result(state=State.OK, summary="Type: Meraki VPN peer")
+            yield Result(state=State.OK, notice=f"Network ID: {peer.network_id}")
+        case ThirdPartyVpnPeer():
+            yield Result(state=State.OK, summary="Type: Third party VPN peer")
+            yield Result(state=State.OK, notice=f"Public IP: {peer.public_ip}")
 
 
 check_plugin_cisco_meraki_org_appliance_vpns = CheckPlugin(
@@ -152,5 +98,5 @@ check_plugin_cisco_meraki_org_appliance_vpns = CheckPlugin(
     discovery_function=discover_appliance_vpns,
     check_function=check_appliance_vpns,
     check_ruleset_name="cisco_meraki_org_appliance_vpns",
-    check_default_parameters=CheckParams(status_not_reachable=1),
+    check_default_parameters=CheckParams(status_not_reachable=State.WARN.value),
 )

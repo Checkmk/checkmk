@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::config::ora_sql::CustomInstance;
-use crate::config::target::TargetId;
 use crate::config::{
     authentication::{AuthType, Authentication, Role},
     connection::EngineTag,
@@ -323,35 +322,23 @@ impl SpotBuilder {
         self
     }
 
-    fn obtain_target_id(target_id: Option<&TargetId>) -> TargetId {
-        if let Some(target_id) = target_id {
-            if target_id == &TargetId::NoId {
-                log::info!("Target id is empty");
-            }
-            target_id.clone()
-        } else {
-            log::info!("Target id is not defined, using default");
-            TargetId::NoId
-        }
-    }
-
     pub fn endpoint_target(mut self, endpoint: &Endpoint) -> Self {
-        self.target = Some(Target {
-            host: endpoint.conn().hostname().clone(),
-            target_id: SpotBuilder::obtain_target_id(endpoint.target_id()),
-            port: endpoint.conn().port().clone(),
-            auth: endpoint.auth().clone(),
-        });
+        self.target = Some(Target::new(
+            endpoint.conn().hostname().clone(),
+            endpoint.conn().port().clone(),
+            endpoint.auth().clone(),
+            endpoint.target_id().cloned(),
+        ));
         self
     }
 
     pub fn custom_instance_target(mut self, custom_instance: &CustomInstance) -> Self {
-        self.target = Some(Target {
-            host: custom_instance.conn().hostname().clone(),
-            target_id: SpotBuilder::obtain_target_id(custom_instance.target_id()),
-            port: custom_instance.conn().port().clone(),
-            auth: custom_instance.auth().clone(),
-        });
+        self.target = Some(Target::new(
+            custom_instance.conn().hostname().clone(),
+            custom_instance.conn().port().clone(),
+            custom_instance.auth().clone(),
+            custom_instance.target_id().cloned(),
+        ));
         self
     }
 

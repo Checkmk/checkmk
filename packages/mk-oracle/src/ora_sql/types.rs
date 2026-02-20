@@ -27,64 +27,78 @@ pub struct Target {
     pub port: Port,
     pub auth: Authentication,
 
-    pub target_id: TargetId,
+    target_id: Option<TargetId>,
 }
 
 impl Target {
+    pub fn new(
+        host: HostName,
+        port: Port,
+        auth: Authentication,
+        target_id: Option<TargetId>,
+    ) -> Self {
+        Target {
+            host,
+            port,
+            auth,
+            target_id,
+        }
+    }
+
     pub fn service_name(&self) -> Option<&ServiceName> {
-        self.target_id.service_name()
+        self.target_id.as_ref().and_then(|t| t.service_name())
     }
 
     pub fn instance_name(&self) -> Option<&InstanceName> {
-        self.target_id.instance_name()
+        self.target_id.as_ref().and_then(|t| t.instance_name())
     }
 
     pub fn descriptor_sid(&self) -> Option<&DescriptorSid> {
-        self.target_id.descriptor_sid()
+        self.target_id.as_ref().and_then(|t| t.descriptor_sid())
     }
 
     pub fn standalone_sid(&self) -> Option<&Sid> {
-        self.target_id.standalone_sid()
+        self.target_id.as_ref().and_then(|t| t.standalone_sid())
     }
 
     pub fn alias(&self) -> Option<&InstanceAlias> {
-        self.target_id.alias()
+        self.target_id.as_ref().and_then(|t| t.alias())
     }
 
     pub fn service_type(&self) -> Option<&ServiceType> {
-        self.target_id.service_type()
+        self.target_id.as_ref().and_then(|t| t.service_type())
     }
 }
 
 impl Target {
     pub fn make_connection_string(
         &self,
-        use_instance: Option<&InstanceName>,
+        optional_instance: Option<&InstanceName>,
         conn_type: ConnectionStringType,
     ) -> Option<String> {
-        match &self.target_id {
-            TargetId::Alias(alias) => {
+        let Some(target_id) = self.target_id.as_ref() else {
+            log::warn!("Target is not defined");
+            return None;
+        };
+
+        match (target_id, conn_type) {
+            (TargetId::Alias(alias), _) => {
                 log::info!("Using alias connection: {}", alias);
                 Some(alias.to_string())
             }
-
-            TargetId::NoId => {
-                log::warn!("Target is not defined");
+            (TargetId::Sid(_), ConnectionStringType::EzConnect) => {
+                log::error!("Sid target doesn't support ez connection strings");
                 None
             }
-
-            TargetId::Sid(_) => match conn_type {
-                ConnectionStringType::EzConnect => {
-                    log::error!("Sid target doesn't support ez connection strings");
-                    None
-                }
-                ConnectionStringType::Tns => Some(self.make_tns_connect_string(None)),
-            },
-
-            TargetId::Descriptor(_) => match conn_type {
-                ConnectionStringType::EzConnect => Some(self.make_ez_connect_string(use_instance)),
-                ConnectionStringType::Tns => Some(self.make_tns_connect_string(use_instance)),
-            },
+            (TargetId::Sid(_), ConnectionStringType::Tns) => {
+                Some(self.make_tns_connect_string(None))
+            }
+            (TargetId::Descriptor(_), ConnectionStringType::EzConnect) => {
+                Some(self.make_ez_connect_string(optional_instance))
+            }
+            (TargetId::Descriptor(_), ConnectionStringType::Tns) => {
+                Some(self.make_tns_connect_string(optional_instance))
+            }
         }
     }
 
@@ -163,11 +177,15 @@ impl Target {
     }
 
     pub fn display_name(&self) -> String {
-        self.target_id.display_name().to_uppercase()
+        self.target_id
+            .as_ref()
+            .map(|t| t.display_name())
+            .unwrap_or_else(|| "undefined".to_string())
+            .to_uppercase()
     }
 
     pub fn is_defined(&self) -> bool {
-        !matches!(self.target_id, TargetId::NoId)
+        self.target_id.is_some()
     }
 }
 

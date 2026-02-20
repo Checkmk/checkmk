@@ -711,10 +711,11 @@ piggyback:
         assert_eq!(c.options().use_host_client(), &UseHostClient::Never);
         assert_eq!(c.options().max_queries(), MaxQueries::from(16));
         assert_eq!(
-            *c.target_id().unwrap(),
+            c.target_id(),
             TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("orcl")))
                 .build()
+                .as_ref()
         );
 
         let auth = c.auth();
@@ -819,10 +820,11 @@ piggyback:
         assert_eq!(cfg.auth().password(), Some("bar"));
         assert_eq!(cfg.conn().hostname(), "localhost".to_string().into());
         assert_eq!(
-            cfg.target_id().unwrap(),
-            &TargetIdBuilder::new()
+            cfg.target_id(),
+            TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("will be used")))
                 .build()
+                .as_ref()
         );
         assert_eq!(cfg.piggyback_host(), Some("no"));
         assert!(cfg.discovery().detect());
@@ -1302,11 +1304,12 @@ oracle:
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(
-            config.target_id().unwrap(),
-            &TargetIdBuilder::new()
+            config.target_id(),
+            TargetIdBuilder::new()
                 .service_name(Some(&ServiceName::from("ORCL.service_name")))
                 .sid(Some("ORCL"))
                 .build()
+                .as_ref()
         );
     }
 

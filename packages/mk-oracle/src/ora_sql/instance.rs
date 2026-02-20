@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::target::TargetId;
 use crate::config::{self, OracleConfig};
 use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
@@ -439,6 +438,7 @@ fn calc_all_spots(
 /// If include list is not empty, only spots with instance names in it are included.
 /// If include list is empty and exclude list is not empty, only spots with instance names not in exclude list are included.
 /// If both lists are empty, all spots are included.
+/// The spots which have no defined target id are excluded
 fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) -> Vec<ClosedSpot> {
     let include: HashSet<&String> = HashSet::from_iter(discovery.include());
     let exclude: HashSet<&String> = if include.is_empty() {
@@ -449,36 +449,33 @@ fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) 
     spots
         .into_iter()
         .filter(|spot| {
-            let target_id = &spot.target().target_id;
-            match target_id {
-                TargetId::Descriptor(_) => {
-                    let instance_name = target_id
-                        .instance_name()
-                        .map(|e| e.to_string().to_uppercase());
-                    if let Some(uppercased_name) = instance_name {
-                        if !include.is_empty() {
-                            return include.contains(&uppercased_name);
-                        } else if !exclude.is_empty() {
-                            return !exclude.contains(&uppercased_name);
-                        }
-                        true
-                    } else {
-                        true
-                    }
-                }
-                TargetId::Sid(sid) => {
-                    let uppercased_name: String = sid.to_string().to_uppercase();
-                    if !include.is_empty() {
-                        return include.contains(&uppercased_name);
-                    } else if !exclude.is_empty() {
-                        return !exclude.contains(&uppercased_name);
-                    }
+            let target = spot.target();
+            if target.alias().is_some() {
+                return true;
+            }
+            let check_name = if let Some(sid) = target.standalone_sid() {
+                // sid need to be filtrated
+                Some(sid.to_string().to_uppercase())
+            } else if let Some(instance_name) = target.instance_name() {
+                // instance name need to be filtrated
+                Some(instance_name.to_string().to_uppercase())
+            } else if target.service_name().is_some() {
+                // Targets with only service name can't be filtrated thus we will include them always
+                return true;
+            } else {
+                log::info!("Spot has no TargetId and will be dropped immediately");
+                None
+            };
+            if let Some(uppercased_name) = check_name {
+                if !include.is_empty() {
+                    include.contains(&uppercased_name)
+                } else if !exclude.is_empty() {
+                    !exclude.contains(&uppercased_name)
+                } else {
                     true
                 }
-                _ => {
-                    log::info!("Spot can't be filtered: {:?}", spot.target());
-                    true
-                }
+            } else {
+                false
             }
         })
         .collect()
@@ -538,12 +535,10 @@ mod tests {
         CustomInstance::new(
             config::authentication::Authentication::default(),
             Connection::default(),
-            Some(
-                TargetIdBuilder::new()
-                    .service_name(Some(&ServiceName::from("XXX")))
-                    .instance_name(Some(&InstanceName::from(instance_name)))
-                    .build(),
-            ),
+            TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from("XXX")))
+                .instance_name(Some(&InstanceName::from(instance_name)))
+                .build(),
             None,
             None,
         )
@@ -554,11 +549,11 @@ mod tests {
         let all = calc_custom_spots(&[make_instance("A"), make_instance("B")]);
         assert_eq!(all.len(), 2);
         assert_eq!(
-            all[0].target().target_id.instance_name().unwrap(),
+            all[0].target().instance_name().unwrap(),
             &InstanceName::from("A")
         );
         assert_eq!(
-            all[1].target().target_id.instance_name().unwrap(),
+            all[1].target().instance_name().unwrap(),
             &InstanceName::from("B")
         );
     }
@@ -571,11 +566,9 @@ mod tests {
         CustomInstance::new(
             config::authentication::Authentication::default(),
             base_connection,
-            Some(
-                TargetIdBuilder::new()
-                    .service_name(Some(&ServiceName::from(service_name)))
-                    .build(),
-            ),
+            TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from(service_name)))
+                .build(),
             None,
             None,
         )

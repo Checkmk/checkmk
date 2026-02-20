@@ -1,3 +1,8 @@
+# Monitoring instance data consists from 3
+# 1. authentication: username + password + role
+# 2. connection: host + port
+# 3. target: (service_name[, instance_name[, sid]] [, service_type]) or alias or sid
+# previously target was a part of the connection, now it is separated but without special section
 ---
 system:
   logging:
@@ -22,6 +27,11 @@ oracle:
       timeout: 5 # optional, default 5
       tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
+      service_name: "INST1" # optional, deprecated
+      instance_name: "INST1" # optional, deprecated
+      sid: "INST1" # optional, deprecated
+    alias: myservicename # optional, deprecated
+
     sections: # optional, if absent will use default as defined below
     - instance: # special section
       affinity: "db"
@@ -59,10 +69,12 @@ oracle:
       include: ["foo", "bar", "inst1"] # optional
       exclude: ["baz"] # optional
     instances: # optional
-      - service_name: "INST1" # mandatory
+      - service_name: "INST1" # optional
+        instance_name: "INST1" # optional
+        sid: "INST1" # optional
+        alias: myservicename # optional
         authentication: # optional, if absent will use main
         connection: # optional, is absent will use main
-        alias: myservicename # optional, default: empty. Is used as TNS alias to overwrite sid and connection config
         piggyback: # optional
           hostname: "mypiggybackhost" # mandatory
           sections: # optional, if absent will use main

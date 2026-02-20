@@ -26,13 +26,11 @@ pub struct Descriptor {
     sid: Option<DescriptorSid>,
 }
 
-#[derive(PartialEq, Debug, Clone, Default)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum TargetId {
     Descriptor(Descriptor),
     Sid(Sid),
     Alias(InstanceAlias),
-    #[default]
-    NoId, // TODO(sk): remove -> replace with Option<TargetId>
 }
 
 impl TargetId {
@@ -97,7 +95,6 @@ impl TargetId {
                 .instance_name
                 .as_ref()
                 .map_or_else(|| descriptor.service_name.to_string(), ToString::to_string),
-            TargetId::NoId => "undefined".to_string(),
         }
     }
 
@@ -134,11 +131,7 @@ impl TargetId {
             .sid(sid.as_deref())
             .alias(alias.as_ref())
             .build();
-        if result == TargetId::NoId {
-            log::debug!("No target information found in yaml");
-            return Ok(None);
-        }
-        Ok(Some(result))
+        Ok(result)
     }
     /// Gets a string value from the primary YAML, falling back to the backup YAML if the key is not found in the primary.
     /// This API is mandatory to support backward compatibility with old configs where connection
@@ -196,21 +189,21 @@ impl TargetIdBuilder {
         self
     }
 
-    pub fn build(self) -> TargetId {
+    pub fn build(self) -> Option<TargetId> {
         if let Some(alias) = self.alias {
-            TargetId::Alias(alias)
-        } else if let Some(service_name) = self.service_name {
-            TargetId::Descriptor(Descriptor {
+            return Some(TargetId::Alias(alias));
+        }
+
+        if let Some(service_name) = self.service_name {
+            return Some(TargetId::Descriptor(Descriptor {
                 service_name,
                 service_type: self.service_type,
                 instance_name: self.instance_name,
                 sid: self.sid.map(DescriptorSid::from),
-            })
-        } else if let Some(sid) = self.sid {
-            TargetId::Sid(Sid::from(sid))
-        } else {
-            TargetId::NoId
+            }));
         }
+
+        self.sid.map(|sid| TargetId::Sid(Sid::from(sid)))
     }
 }
 
@@ -228,8 +221,7 @@ mod tests {
 
     #[test]
     fn test_default() {
-        let target_id = TargetIdBuilder::default().build();
-        assert!(matches!(target_id, TargetId::NoId));
+        assert!(TargetIdBuilder::default().build().is_none());
     }
 
     fn create_descriptor(
@@ -266,13 +258,6 @@ mod tests {
     fn test_service_name_from_alias() {
         let target_id = TargetId::Alias(InstanceAlias::from("my_alias".to_string()));
         assert!(target_id.service_name().is_none());
-    }
-
-    #[test]
-    fn test_all_from_noid() {
-        assert!(TargetId::NoId.service_name().is_none());
-        assert!(TargetId::NoId.instance_name().is_none());
-        assert!(TargetId::NoId.alias().is_none());
     }
 
     #[test]
@@ -354,7 +339,6 @@ mod tests {
         let descriptor = create_descriptor("service", None, None);
         assert!(TargetId::Descriptor(descriptor).alias().is_none());
         assert!(TargetId::Sid(Sid::from("ORCL")).alias().is_none());
-        assert!(TargetId::NoId.alias().is_none());
     }
 
     mod data {
@@ -392,6 +376,7 @@ connection:
                 .service_type(Some(&ServiceType::from("dedicated")))
                 .instance_name(Some(&InstanceName::from("instance_NAME")))
                 .build()
+                .unwrap()
         );
     }
 

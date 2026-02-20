@@ -495,24 +495,23 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             view_spec = self._get_view_spec_by_widget_id(
                 issuer, token_details, dashboard, parameters.widget_id, unique_widget_name
             )
+            ViewWidgetIFramePageHelper.setup_display_and_painter_options(
+                ctx.request, unique_widget_name
+            )
+            ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
+            ViewWidgetIFramePageHelper.setup_datasource(ctx.request, view_spec["datasource"])
 
-        ViewWidgetIFramePageHelper.setup_display_and_painter_options(
-            ctx.request, unique_widget_name
-        )
-        ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
-        ViewWidgetIFramePageHelper.setup_datasource(ctx.request, view_spec["datasource"])
-
-        ViewWidgetIFramePageHelper.render_iframe_content(
-            unique_widget_name,
-            view_spec,
-            row_limit=ctx.config.soft_query_limit,
-            # includes dashboard context via _get_view_spec_by_widget_id
-            context=view_spec.get("context", {}),
-            user_permissions=user_permissions,
-            is_reload=parameters.is_reload(),
-            is_debug=False,
-            is_public=True,
-        )
+            ViewWidgetIFramePageHelper.render_iframe_content(
+                unique_widget_name,
+                view_spec,
+                row_limit=ctx.config.soft_query_limit,
+                # includes dashboard context via _get_view_spec_by_widget_id
+                context=view_spec.get("context", {}),
+                user_permissions=user_permissions,
+                is_reload=parameters.is_reload(),
+                is_debug=False,
+                is_public=True,
+            )
 
     @override
     def _redirect_to_shared_dashboard_page(self, token: AuthToken) -> PageResult:

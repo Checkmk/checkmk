@@ -66,6 +66,7 @@ const handleValueUpdate = (value: string | null): void => {
     :label="untranslated(component.label ?? '')"
     :input-hint="_t('Select an option...')"
     :no-results-hint="_t('No options available')"
+    :width="`fill`"
     @update:selected-option="handleValueUpdate"
   />
 </template>

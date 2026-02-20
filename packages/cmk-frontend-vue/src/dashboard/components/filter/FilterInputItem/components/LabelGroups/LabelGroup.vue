@@ -7,9 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed } from 'vue'
 
-import usei18n, { untranslated } from '@/lib/i18n'
+import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
+import CmkIcon from '@/components/CmkIcon'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
@@ -113,12 +114,12 @@ if (model.value.length === 0) {
 </script>
 
 <template>
-  <div class="label-group">
-    <div class="simple-list">
-      <div v-for="(_item, index) in model" :key="index" class="simple-list-item">
-        <div class="simple-list-item__content">
-          <div class="label-group-item">
-            <div class="label-group-item__operator">
+  <div class="db-label-group">
+    <div class="db-label-group__simple-list">
+      <div v-for="(_item, index) in model" :key="index" class="db-label-group__simple-list-item">
+        <div class="db-label-group__simple-list-item-content">
+          <div class="db-label-group__item">
+            <div class="db-label-group__item-operator">
               <CmkDropdown
                 :options="{ type: 'fixed', suggestions: getOperatorChoices(index) }"
                 :label="_t('Operator')"
@@ -126,7 +127,7 @@ if (model.value.length === 0) {
                 @update:selected-option="(value: string | null) => updateOperator(index, value)"
               />
             </div>
-            <div class="label-group-item__label">
+            <div class="db-label-group__item-label">
               <FormAutocompleter
                 :model-value="getCurrentLabelValue(index)"
                 :autocompleter="autocompleter"
@@ -137,70 +138,64 @@ if (model.value.length === 0) {
             </div>
           </div>
         </div>
-        <button v-if="canRemove(index)" class="simple-list-item__remove" @click="tryDelete(index)">
-          {{ untranslated('×') }}
+        <button
+          v-if="canRemove(index)"
+          class="db-label-group__simple-list-item-remove"
+          @click="tryDelete(index)"
+        >
+          <CmkIcon :aria-label="_t('Remove row')" name="close" size="xxsmall" />
         </button>
-        <div v-else class="simple-list-item__spacer"></div>
+        <div v-else class="db-label-group__spacer"></div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.label-group {
+.db-label-group {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.simple-list {
+.db-label-group__simple-list {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: var(--dimension-4);
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.simple-list-item {
+.db-label-group__simple-list-item {
   display: contents;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.simple-list-item__content {
+.db-label-group__simple-list-item-content {
   display: contents;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.simple-list-item__remove {
-  width: var(--dimension-8);
-  height: var(--dimension-8);
-  border: 1px solid #ccc;
-  border-radius: var(--dimension-3);
-  background: var(--font-color);
-  color: #666;
+.db-label-group__simple-list-item-remove {
+  width: var(--dimension-7);
+  height: var(--dimension-7);
+  color: var(--font-color);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--dimension-6);
   line-height: 1;
+  margin: 0;
+  padding: var(--dimension-4) var(--dimension-5);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.simple-list-item__spacer {
-  width: var(--dimension-8);
-  height: var(--dimension-8);
+.db-label-group__spacer {
+  width: var(--dimension-10);
+  height: var(--dimension-7);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.label-group-item {
+.db-label-group__item {
   display: contents;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.label-group-item__operator {
+.db-label-group__item-operator {
   width: 70px;
 }
 </style>

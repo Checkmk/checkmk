@@ -64,7 +64,7 @@ watch(
 )
 
 const maxWidthMap: Record<SearchableListWidthVariants, number> = {
-  xsmall: 18,
+  xsmall: 17.4,
   small: 22.4,
   medium: 50,
   large: 75
@@ -73,7 +73,7 @@ const maxWidthMap: Record<SearchableListWidthVariants, number> = {
 const selectStyle = computed(() => {
   const contentBasedWidth = (props.lengthElements + 1) * 0.7
   const effectiveMaxWidth = maxWidthMap[(props.width ?? 'medium') as SearchableListWidthVariants]
-  const width = Math.max(18, Math.min(contentBasedWidth, effectiveMaxWidth))
+  const width = Math.max(17.4, Math.min(contentBasedWidth, effectiveMaxWidth))
   return {
     height: props.countElements < 10 ? '200px' : `${Math.min(props.countElements * 15, 400)}px`,
     width: `${width}em`

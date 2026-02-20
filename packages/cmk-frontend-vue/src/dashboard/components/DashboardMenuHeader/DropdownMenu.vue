@@ -8,8 +8,9 @@ import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import type { SimpleIcons } from '@/components/CmkIcon'
-import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { CmkMultitoneIconNames, SimpleIcons } from '@/components/CmkIcon'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import ButtonDropdownMenu from './ButtonDropdownMenu.vue'
 
@@ -32,7 +33,7 @@ interface DropdownMenuCallbackOption extends DropdownMenuItemBase {
 type DropdownMenuOption = DropdownMenuLinkOption | DropdownMenuCallbackOption
 
 interface DropdownMenuProps {
-  icon?: SimpleIcons
+  icon?: SimpleIcons | { name: CmkMultitoneIconNames; primaryColor: string }
   label: TranslatedString
   options: DropdownMenuOption[]
   right?: boolean
@@ -41,7 +42,7 @@ interface DropdownMenuProps {
 
 const props = defineProps<DropdownMenuProps>()
 
-const visibleOptions = computed(() => {
+const visibleOptions = computed((): DropdownMenuOption[] => {
   return props.options.filter((option) => !option.hidden)
 })
 </script>
@@ -49,7 +50,14 @@ const visibleOptions = computed(() => {
 <template>
   <ButtonDropdownMenu :label="label" :right="!!right" :disabled="props.disabled">
     <template #button>
-      <CmkIcon v-if="icon" :name="icon" size="large" />
+      <CmkMultitoneIcon
+        v-if="icon instanceof Object"
+        :name="icon.name"
+        class="db-dropdown-menu__share-icon"
+        :primary-color="{ custom: `var(${icon.primaryColor})` }"
+        size="large"
+      />
+      <CmkIcon v-else-if="icon" :name="icon" size="large" />
       <span>{{ label }}</span>
     </template>
     <template #menu="{ hideMenu }">

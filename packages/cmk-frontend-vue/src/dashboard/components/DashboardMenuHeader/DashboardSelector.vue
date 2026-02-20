@@ -164,6 +164,7 @@ watch(
           'db-selector--rotated': showDashboardDropdown,
           'db-selector--arrow-disabled': props.disabled
         }"
+        @click="showDashboardDropdown ? handleCloseDropdown() : handleInputFocus()"
       />
     </div>
     <div v-if="showDashboardDropdown" class="dropdown-menu">
@@ -226,6 +227,10 @@ watch(
 
   &.db-selector--arrow-disabled {
     opacity: 0.5;
+  }
+
+  &:not(.db-selector--arrow-disabled) {
+    cursor: pointer;
   }
 }
 

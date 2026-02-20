@@ -22,11 +22,6 @@ const props = defineProps<AddWidgetDialogProperties>()
 
 const emit = defineEmits(['select'])
 
-/* Set background gradient */
-const bg = document.getElementById('main_page_content') as HTMLElement
-bg.style.backgroundImage = 'linear-gradient(to bottom, var(--ux-theme-1), var(--ux-theme-8))'
-/* End set background gradient */
-
 const isDisabled = (id: string): boolean => {
   return (
     props.availableFeatures === DashboardFeatures.RESTRICTED &&

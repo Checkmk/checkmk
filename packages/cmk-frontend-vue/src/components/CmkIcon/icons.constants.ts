@@ -743,7 +743,8 @@ export const oneColorIcons = [
   'warning',
   'back',
   'chain',
-  'broken-chain'
+  'broken-chain',
+  'share'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

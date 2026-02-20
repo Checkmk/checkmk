@@ -8,7 +8,7 @@ import { useTemplateRef } from 'vue'
 
 import CmkButton from '@/components/CmkButton.vue'
 
-const { variant = 'secondary', disabled = false } = defineProps<{
+const { variant, disabled = false } = defineProps<{
   variant?: 'primary' | 'secondary'
   disabled?: boolean
 }>()

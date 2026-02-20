@@ -149,7 +149,7 @@ onUnmounted(() => {
 .db-shared-dashboard-menu-header__left-section {
   display: flex;
   align-items: center;
-  gap: var(--dimension-6);
+  gap: var(--dimension-4);
   flex: 1;
 }
 

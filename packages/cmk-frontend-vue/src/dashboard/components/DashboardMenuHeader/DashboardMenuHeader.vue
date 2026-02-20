@@ -171,7 +171,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
         />
 
         <DropdownMenu
-          icon="export-link"
+          :icon="{ name: 'share', primaryColor: '--db-dashboard-menu-header-share-icon-color' }"
           :label="_t('Share')"
           :disabled="isInteractionDisabled"
           :options="[
@@ -294,7 +294,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 .left-section {
   display: flex;
   align-items: center;
-  gap: var(--dimension-6);
+  gap: var(--dimension-4);
   flex: 1;
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -330,6 +330,14 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   gap: var(--dimension-3);
   flex: 1;
   justify-content: flex-end;
+
+  body[data-theme='modern-dark'] & {
+    --db-dashboard-menu-header-share-icon-color: var(--color-corporate-green-50);
+  }
+
+  body[data-theme='facelift'] & {
+    --db-dashboard-menu-header-share-icon-color: var(--color-corporate-green-70);
+  }
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

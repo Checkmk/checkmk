@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class AddOpenTelemetryCollectorReceiver(CmkPage):
-    """Represent the page `Add OpenTelemetry Collector: Receiver`"""
+    """Represent the page `Add OpenTelemetry Collector`"""
 
     incorrect_form_error_message = "Cannot save the form because it contains errors."
     one_collector_per_site_error_detail = (
@@ -39,7 +39,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `Add OpenTelemetry collector: Receiver` page."""
+        """Instructions to navigate to `Add OpenTelemetry collector` page."""
         otel_collector_receiver_page = OpenTelemetryCollectorReceiver(self.page)
         otel_collector_receiver_page.add_open_telemetry_collector_receiver_configuration_btn.click()
         _url_pattern: str = quote_plus("mode=edit_otel_collectors_receiver")
@@ -195,7 +195,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         http_receiver_properties: dict[str, Any] | None = None,
         http_password_data: list[dict[str, str]] | None = None,
     ) -> None:
-        logger.info("Fill in the 'OpenTelemetry Collector: Receiver' form")
+        logger.info("Fill in the 'OpenTelemetry Collector' form")
         self.unique_id_textfield.fill(collector_id)
         self.title_textfield.fill(collector_title)
         self.site_restriction_checkbox(site_id).check()
@@ -216,8 +216,8 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
 
 
 class NewPasswordSlideIn(LocatorHelper):
-    """Represents 'Setup > Hosts > OpenTelemetry collector: Receiver
-    > Add OpenTelemetry Collector: Receiver' slid-in for adding new password."""
+    """Represents 'Setup > Hosts > OpenTelemetry collector
+    > Add OpenTelemetry Collector' slid-in for adding new password."""
 
     @override
     def locator(

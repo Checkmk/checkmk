@@ -23,13 +23,13 @@ class OpenTelemetryCollectorReceiver(CmkPage):
         page: Page,
         navigate_to_page: bool = True,
     ) -> None:
-        self.page_title = "OpenTelemetry Collector: Receiver"
+        self.page_title = "OpenTelemetry Collector"
         self.main_menu_name = "OpenTelemetry Collector"
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
-        """Instructions to navigate to `OpenTelemetry Collector: Receiver` page."""
+        """Instructions to navigate to `OpenTelemetry Collector` page."""
         logger.info(f"Navigate to '{self.page_title}' page")
 
         self.main_menu.setup_menu(self.main_menu_name).click()
@@ -51,7 +51,7 @@ class OpenTelemetryCollectorReceiver(CmkPage):
 
     @property
     def add_open_telemetry_collector_receiver_configuration_btn(self) -> Locator:
-        return self.main_area.get_suggestion("Add OpenTelemetry Collector receiver configuration")
+        return self.main_area.get_suggestion("Add OpenTelemetry Collector configuration")
 
     def collector_configuration_row(self, collector_id: str) -> Locator:
         return self.main_area.locator(f"tr:has(td:has-text('{collector_id}'))")

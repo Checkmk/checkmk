@@ -44,7 +44,7 @@ def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
     return False
 
 
-@pytest.mark.skip("CMK-29677: suspicious message broker tests")
+@pytest.mark.xfail(strict=False, reason="CMK-29677: suspicious message broker tests")
 @pytest.mark.skip_if_edition("cloud")
 class TestCMKBrokerTest:
     """Make sure our cmk-broker-test tool works"""
@@ -155,7 +155,7 @@ def _setup_host(site: Site, hostname: str) -> Iterator[None]:
 
 
 class TestMessageBrokerChangeActivation:
-    @pytest.mark.skip("CMK-29677: suspicious message broker tests")
+    @pytest.mark.xfail(strict=False, reason="CMK-29677: suspicious message broker tests")
     @pytest.mark.skip_if_edition("cloud")
     def test_message_broker_activation(self, central_site: Site, remote_site: Site) -> None:
         """Test if a change on a single site still correctly keeps the definitions in RabbitMQ consistent and the broker working"""

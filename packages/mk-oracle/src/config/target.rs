@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::defines::keys;
+use crate::config::yaml::{Get, Yaml};
 use crate::types::{DescriptorSid, InstanceAlias, InstanceName, ServiceName, ServiceType, Sid};
 
 #[derive(PartialEq, Debug, Clone)]
@@ -24,12 +26,13 @@ pub struct Descriptor {
     sid: Option<DescriptorSid>,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub enum TargetId {
     Descriptor(Descriptor),
     Sid(Sid),
     Alias(InstanceAlias),
-    NoId,
+    #[default]
+    NoId, // TODO(sk): remove -> replace with Option<TargetId>
 }
 
 impl TargetId {
@@ -97,6 +100,53 @@ impl TargetId {
             TargetId::NoId => "undefined".to_string(),
         }
     }
+
+    /// returns None if no target information is found in the yaml, otherwise returns a TargetId
+    pub fn from_yaml(yaml: &Yaml) -> anyhow::Result<Option<Self>> {
+        if yaml.is_badvalue() {
+            return Ok(None);
+        }
+
+        let conn = {
+            let c = yaml.get(keys::CONNECTION);
+            if c.is_badvalue() {
+                None
+            } else {
+                Some(c)
+            }
+        };
+
+        let service_name = TargetId::get_string(keys::SERVICE_NAME, yaml, conn)
+            .as_deref()
+            .map(ServiceName::from);
+        let service_type =
+            TargetId::get_string(keys::SERVICE_TYPE, yaml, conn).map(ServiceType::from);
+        let instance_name = TargetId::get_string(keys::INSTANCE_NAME, yaml, conn)
+            .as_deref()
+            .map(InstanceName::from);
+        let sid = TargetId::get_string(keys::SID, yaml, conn);
+        let alias = yaml.get_string(keys::ALIAS).map(InstanceAlias::from);
+
+        let result = TargetIdBuilder::new()
+            .service_name(service_name.as_ref())
+            .service_type(service_type.as_ref())
+            .instance_name(instance_name.as_ref())
+            .sid(sid.as_deref())
+            .alias(alias.as_ref())
+            .build();
+        if result == TargetId::NoId {
+            log::debug!("No target information found in yaml");
+            return Ok(None);
+        }
+        Ok(Some(result))
+    }
+    /// Gets a string value from the primary YAML, falling back to the backup YAML if the key is not found in the primary.
+    /// This API is mandatory to support backward compatibility with old configs where connection
+    /// contains also target information. It should be used for all target related keys that can be defined in both places.
+    fn get_string(name: &str, main: &Yaml, fallback: Option<&Yaml>) -> Option<String> {
+        main.get_string(name)
+            .or_else(|| fallback.and_then(|bk| bk.get_string(name)))
+    }
 }
 
 pub struct TargetIdBuilder {
@@ -107,6 +157,9 @@ pub struct TargetIdBuilder {
     service_type: Option<ServiceType>,
 }
 
+/// The builder pattern is used to create a TargetId from various optional fields.
+/// The priority for determining the TargetId type is as follows:
+/// Alias -> ServiceName -> Sid -> NoId
 impl TargetIdBuilder {
     pub fn new() -> Self {
         Self {
@@ -127,6 +180,8 @@ impl TargetIdBuilder {
         self
     }
 
+    /// Top priority, if alias is set, it will be used as TargetId,
+    /// otherwise the builder will check for service_name and sid to determine the TargetId type.
     pub fn alias(mut self, alias: Option<&InstanceAlias>) -> Self {
         self.alias = alias.cloned();
         self
@@ -168,6 +223,8 @@ impl Default for TargetIdBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::yaml::test_tools::create_yaml;
+    use crate::types::Sid;
 
     #[test]
     fn test_default() {
@@ -298,5 +355,53 @@ mod tests {
         assert!(TargetId::Descriptor(descriptor).alias().is_none());
         assert!(TargetId::Sid(Sid::from("ORCL")).alias().is_none());
         assert!(TargetId::NoId.alias().is_none());
+    }
+
+    mod data {
+
+        pub const CONNECTION_FULL: &str = r#"
+connection:
+  hostname: "alice"
+  port: 9999
+  timeout: 341
+  tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
+  oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
+  # not defined in docu, reserved for a future use
+  service_name: service_NAME  #
+  service_type: dedicated # dedicated or shared
+  instance_name: instance_NAME
+  engine: std
+"#;
+
+        pub const CONNECTION_WITH_SID: &str = r#"
+connection:
+  hostname: "localhost"
+  port: 1521
+  sid: FREE
+"#;
+    }
+
+    #[test]
+    fn test_target_full() {
+        assert_eq!(
+            TargetId::from_yaml(&create_yaml(data::CONNECTION_FULL))
+                .unwrap()
+                .unwrap(),
+            TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from("service_NAME")))
+                .service_type(Some(&ServiceType::from("dedicated")))
+                .instance_name(Some(&InstanceName::from("instance_NAME")))
+                .build()
+        );
+    }
+
+    #[test]
+    fn test_target_with_only_sid() {
+        let target = TargetId::from_yaml(&create_yaml(data::CONNECTION_WITH_SID))
+            .unwrap()
+            .unwrap();
+        assert_eq!(target.standalone_sid(), Some(&Sid::from("FREE")));
+        assert_eq!(target.service_name(), None);
+        assert_eq!(target.instance_name(), None);
     }
 }

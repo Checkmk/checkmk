@@ -521,6 +521,7 @@ mod tests {
     use super::*;
     use crate::config::connection::Connection;
     use crate::config::ora_sql::Discovery;
+    use crate::config::target::TargetIdBuilder;
     use crate::config::yaml::test_tools::create_yaml;
     use crate::types::ServiceName;
 
@@ -536,11 +537,12 @@ mod tests {
     fn make_instance(instance_name: &str) -> CustomInstance {
         CustomInstance::new(
             config::authentication::Authentication::default(),
-            Connection::from_connection(
-                &Connection::default(),
-                &Some(ServiceName::from("XXX")),
-                &Some(InstanceName::from(instance_name)),
-                None,
+            Connection::default(),
+            Some(
+                TargetIdBuilder::new()
+                    .service_name(Some(&ServiceName::from("XXX")))
+                    .instance_name(Some(&InstanceName::from(instance_name)))
+                    .build(),
             ),
             None,
             None,
@@ -568,11 +570,11 @@ mod tests {
                 .unwrap();
         CustomInstance::new(
             config::authentication::Authentication::default(),
-            Connection::from_connection(
-                &base_connection,
-                &Some(ServiceName::from(service_name)),
-                &None,
-                None,
+            base_connection,
+            Some(
+                TargetIdBuilder::new()
+                    .service_name(Some(&ServiceName::from(service_name)))
+                    .build(),
             ),
             None,
             None,

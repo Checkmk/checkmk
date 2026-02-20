@@ -34,6 +34,7 @@ use yaml_rust2::YamlLoader;
 pub struct Config {
     auth: Authentication,
     conn: Connection,
+    target_id: Option<TargetId>,
     sections: Sections,
     discovery: Discovery,
     piggyback_host: Option<String>,
@@ -49,6 +50,7 @@ impl Default for Config {
         Self {
             auth: Authentication::default(),
             conn: Connection::default(),
+            target_id: None,
             sections: Sections::default(),
             discovery: Discovery::default(),
             piggyback_host: None,
@@ -123,7 +125,9 @@ impl Config {
                     .iter()
                     .map(|i| format!(
                         "{}:{:?}",
-                        i.service_name().unwrap_or(&ServiceName::default()),
+                        i.target_id()
+                            .map(|t| t.display_name())
+                            .unwrap_or("N/A".to_string()),
                         i.conn().port()
                     ))
                     .collect::<Vec<_>>()
@@ -140,6 +144,7 @@ impl Config {
         Ok(Some(Self {
             auth,
             conn,
+            target_id: TargetId::from_yaml(main)?,
             sections: section_info,
             discovery,
             piggyback_host,
@@ -156,13 +161,16 @@ impl Config {
     }
 
     pub fn endpoint(&self) -> Endpoint {
-        Endpoint::new(&self.auth, &self.conn)
+        Endpoint::new(&self.auth, &self.conn, self.target_id.as_ref())
     }
     pub fn auth(&self) -> &Authentication {
         &self.auth
     }
     pub fn conn(&self) -> &Connection {
         &self.conn
+    }
+    pub fn target_id(&self) -> Option<&TargetId> {
+        self.target_id.as_ref()
     }
     pub fn all_sections(&self) -> &Vec<Section> {
         self.sections.sections()
@@ -228,13 +236,15 @@ fn get_additional_registry_instances(
 pub struct Endpoint {
     auth: Authentication,
     conn: Connection,
+    target_id: Option<TargetId>,
 }
 
 impl Endpoint {
-    pub fn new(auth: &Authentication, conn: &Connection) -> Self {
+    pub fn new(auth: &Authentication, conn: &Connection, target_id: Option<&TargetId>) -> Self {
         Self {
             auth: auth.clone(),
             conn: conn.clone(),
+            target_id: target_id.cloned(),
         }
     }
     pub fn auth(&self) -> &Authentication {
@@ -245,21 +255,18 @@ impl Endpoint {
         &self.conn
     }
 
-    pub fn split(&self) -> (&Authentication, &Connection) {
-        (self.auth(), self.conn())
-    }
-
-    pub fn hostname(&self) -> HostName {
-        self.conn().hostname().clone()
+    pub fn target_id(&self) -> Option<&TargetId> {
+        self.target_id.as_ref()
     }
 
     pub fn dump_compact(&self) -> String {
         format!(
-            "host: {} port: {} user: {} auth: {:?}",
-            self.hostname(),
+            "host: {} port: {} user: {} auth: {:?} target: {:?}",
+            self.conn().hostname(),
             self.conn().port(),
             self.auth().username(),
-            self.auth().auth_type()
+            self.auth().auth_type(),
+            self.target_id
         )
     }
 }
@@ -359,6 +366,7 @@ pub struct CustomInstance {
     /// also known as sid
     auth: Authentication,
     conn: Connection,
+    target_id: Option<TargetId>,
     alias: Option<InstanceAlias>,
     piggyback: Option<Piggyback>,
 }
@@ -367,12 +375,14 @@ impl CustomInstance {
     pub fn new(
         auth: Authentication,
         conn: Connection,
+        target_id: Option<TargetId>,
         alias: Option<InstanceAlias>,
         piggyback: Option<Piggyback>,
     ) -> Self {
         Self {
             auth,
             conn,
+            target_id,
             alias,
             piggyback,
         }
@@ -387,6 +397,7 @@ impl CustomInstance {
         Ok(Self::new(
             ensure_auth(yaml, main_auth)?,
             ensure_conn(yaml, main_conn)?,
+            TargetId::from_yaml(yaml)?,
             yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
             Piggyback::from_yaml(yaml, sections)?,
         ))
@@ -394,22 +405,22 @@ impl CustomInstance {
 
     /// may be overridden with a connection value
     pub fn service_name(&self) -> Option<&ServiceName> {
-        self.conn.target_id().service_name()
+        self.target_id().and_then(|t| t.service_name())
     }
     pub fn service_type(&self) -> Option<&ServiceType> {
-        self.conn.target_id().service_type()
+        self.target_id().and_then(|t| t.service_type())
     }
     pub fn instance_name(&self) -> Option<&InstanceName> {
-        self.conn.target_id().instance_name()
+        self.target_id().and_then(|t| t.instance_name())
     }
     pub fn standalone_sid(&self) -> Option<&Sid> {
-        self.conn.target_id().standalone_sid()
+        self.target_id().and_then(|t| t.standalone_sid())
     }
     pub fn descriptor_sid(&self) -> Option<&DescriptorSid> {
-        self.conn.target_id().descriptor_sid()
+        self.target_id().and_then(|t| t.descriptor_sid())
     }
-    pub fn target_id(&self) -> &TargetId {
-        self.conn.target_id()
+    pub fn target_id(&self) -> Option<&TargetId> {
+        self.target_id.as_ref()
     }
     pub fn auth(&self) -> &Authentication {
         &self.auth
@@ -418,7 +429,7 @@ impl CustomInstance {
         &self.conn
     }
     pub fn endpoint(&self) -> Endpoint {
-        Endpoint::new(&self.auth, &self.conn)
+        Endpoint::new(&self.auth, &self.conn, self.target_id())
     }
     pub fn alias(&self) -> &Option<InstanceAlias> {
         &self.alias
@@ -441,14 +452,7 @@ fn ensure_auth(yaml: &Yaml, main_auth: &Authentication) -> Result<Authentication
 /// - fallback on main_conn if not defined in yaml
 /// - patch service_name, instance_name, and sid from yaml if defined
 fn ensure_conn(yaml: &Yaml, main_conn: &Connection) -> Result<Connection> {
-    let conn = Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone());
-
-    Ok(Connection::from_connection(
-        &conn,
-        &yaml.get_string(keys::SERVICE_NAME).map(ServiceName::from),
-        &yaml.get_string(keys::INSTANCE_NAME).map(InstanceName::from),
-        yaml.get_string(keys::SID).as_deref(),
-    ))
+    Ok(Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone()))
 }
 
 pub fn calc_real_host(conn: &Connection) -> HostName {
@@ -495,7 +499,9 @@ mod tests {
     use self::data::TEST_CONFIG;
 
     use super::*;
-    use crate::config::authentication::AuthType;
+    use crate::config::authentication::{AuthType, Role};
+    use crate::config::connection::EngineTag;
+    use crate::config::target::TargetIdBuilder;
     use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
     use crate::types::UseHostClient;
     use crate::types::{MaxConnections, MaxQueries, Port};
@@ -567,7 +573,7 @@ oracle:
         authentication: # optional, same as above
         connection: # optional,  same as above
           engine: jdbc
-        alias: "someApplicationName" # optional
+        alias: "SomeAlias" # optional
         piggyback: # optional
           hostname: "myPiggybackHost" # mandatory
           sections: # optional, same as above
@@ -635,14 +641,17 @@ piggyback:
 piggyback:
   hostname: "piggy_host"
 "#;
-        pub const CUSTOM_INSTANCE: &str = r#"
+        pub const CUSTOM_INSTANCE_ALIAS: &str = r#"
+service_name: "INST1"
+alias: "a1"
+"#;
+        pub const CUSTOM_INSTANCE_SERVICE: &str = r#"
 service_name: "INST1"
 authentication:
   username: "customised"
   type: "standard"
 connection:
   hostname: "h1"
-alias: "a1"
 piggyback:
   hostname: "piggy"
   sections:
@@ -669,6 +678,7 @@ piggyback:
             Config {
                 auth: Authentication::default(),
                 conn: Connection::default(),
+                target_id: None,
                 sections: Sections::default(),
                 discovery: Discovery::default(),
                 piggyback_host: None,
@@ -700,23 +710,135 @@ piggyback:
         assert_eq!(c.options().max_connections(), MaxConnections::from(5));
         assert_eq!(c.options().use_host_client(), &UseHostClient::Never);
         assert_eq!(c.options().max_queries(), MaxQueries::from(16));
+        assert_eq!(
+            *c.target_id().unwrap(),
+            TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from("orcl")))
+                .build()
+        );
+
         let auth = c.auth();
         assert_eq!(auth.username(), "foo");
         assert_eq!(auth.password(), Some("bar"));
-        let conn = c.conn();
-        assert_eq!(conn.hostname(), "localhost2".to_string().into());
+        assert_eq!(auth.role(), Some(&Role::SysDba));
+
         let product = c.product();
         assert_eq!(product.cache_age(), 501);
         assert_eq!(product.sections().len(), 21);
         assert_eq!(c.piggyback_host(), Some("some_pb_host"));
         assert!(!c.discovery().detect);
+
         let instances = c.instances();
         assert_eq!(instances.len(), 2);
         assert_eq!(c.mode, Mode::Special);
-        /*
-        mode: "port" # optional(default:"port")
-        instances: # optional
-        */
+    }
+
+    #[test]
+    fn test_config_connection() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let conn = c.conn();
+        assert_eq!(conn.hostname(), "localhost2".to_string().into());
+        assert_eq!(conn.port(), Port::from(1521));
+        assert_eq!(conn.timeout(), std::time::Duration::from_secs(11));
+        assert_eq!(
+            conn.tns_admin(),
+            Some(&std::path::PathBuf::from("/path/to/oracle/config/files/"))
+        );
+        assert_eq!(
+            conn.oracle_local_registry(),
+            Some(&std::path::PathBuf::from("/etc/oracle/olr.loc"))
+        );
+    }
+
+    #[test]
+    fn test_config_discovery_include_exclude() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let discovery = c.discovery();
+        assert!(!discovery.detect());
+        assert_eq!(
+            discovery.include(),
+            &vec!["FOO".to_string(), "BAR".to_string(), "INST2".to_string()]
+        );
+        assert_eq!(discovery.exclude(), &vec!["BAZ".to_string()]);
+    }
+
+    #[test]
+    fn test_config_instance_first() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let instances = c.instances();
+        let inst = &instances[0];
+        assert!(inst.service_name().is_none());
+        assert_eq!(
+            *inst.alias(),
+            Some(InstanceAlias::from("SomeAlias".to_string()))
+        );
+        assert_eq!(inst.conn().engine_tag(), &EngineTag::Jdbc);
+        let piggyback = inst.piggyback().unwrap();
+        assert_eq!(piggyback.hostname(), "myPiggybackHost");
+    }
+
+    #[test]
+    fn test_config_instance_second() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let instances = c.instances();
+        let inst = &instances[1];
+        assert_eq!(inst.service_name().unwrap().to_string(), "INST2");
+        assert_eq!(inst.auth().username(), "u");
+        assert_eq!(inst.auth().password(), Some("p"));
+        assert_eq!(inst.auth().auth_type(), &AuthType::Standard);
+        assert_eq!(inst.conn().hostname(), "local".to_string().into());
+        assert_eq!(inst.conn().port(), Port::from(500));
+        assert_eq!(inst.conn().engine_tag(), &EngineTag::Std);
+        assert!(inst.alias().is_none());
+        assert!(inst.piggyback().is_none());
+    }
+
+    #[test]
+    fn test_config_configs_first() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let configs = c.configs();
+        assert_eq!(configs.len(), 3);
+        let cfg = &configs[0];
+        assert_eq!(cfg.options().max_connections(), MaxConnections::from(11));
+        assert_eq!(cfg.auth().username(), "f");
+        assert_eq!(cfg.auth().password(), Some("b"));
+        assert_eq!(cfg.auth().auth_type(), &AuthType::Standard);
+        assert_eq!(cfg.conn().hostname(), "localhost".to_string().into());
+        assert_eq!(cfg.conn().timeout(), std::time::Duration::from_secs(5));
+        assert!(cfg.discovery().detect());
+    }
+
+    #[test]
+    fn test_config_configs_second() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let configs = c.configs();
+        let cfg = &configs[1];
+        assert_eq!(cfg.options().max_connections(), MaxConnections::from(11));
+        // inherits auth from main
+        assert_eq!(cfg.auth().username(), "foo");
+        assert_eq!(cfg.auth().password(), Some("bar"));
+        assert_eq!(cfg.conn().hostname(), "localhost".to_string().into());
+        assert_eq!(
+            cfg.target_id().unwrap(),
+            &TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from("will be used")))
+                .build()
+        );
+        assert_eq!(cfg.piggyback_host(), Some("no"));
+        assert!(cfg.discovery().detect());
+    }
+
+    #[test]
+    fn test_config_configs_third() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        let configs = c.configs();
+        let cfg = &configs[2];
+        // inherits options from main
+        assert_eq!(cfg.options().max_connections(), MaxConnections::from(5));
+        assert_eq!(cfg.auth().username(), "f");
+        assert_eq!(cfg.auth().password(), Some("b"));
+        // inherits connection from main
+        assert_eq!(cfg.conn().hostname(), "localhost2".to_string().into());
     }
 
     #[test]
@@ -823,7 +945,7 @@ discovery:
         );
     }
     #[test]
-    fn test_custom_instance() {
+    fn test_custom_instance_service() {
         let a = Authentication::from_yaml(&create_yaml(
             r#"
 authentication:
@@ -834,7 +956,7 @@ authentication:
         .unwrap()
         .unwrap();
         let instance = CustomInstance::from_yaml(
-            &create_yaml(data::CUSTOM_INSTANCE),
+            &create_yaml(data::CUSTOM_INSTANCE_SERVICE),
             &a,
             &Connection::default(),
             &Sections::default(),
@@ -844,9 +966,23 @@ authentication:
         assert_eq!(instance.auth().username(), "customised");
         assert_eq!(instance.conn().hostname(), "h1".to_string().into());
         assert_eq!(instance.calc_real_host(), "h1".to_string().into());
-        assert_eq!(instance.alias(), &Some("a1".to_string().into()));
         assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
+        assert!(instance.alias().is_none());
+    }
+
+    #[test]
+    fn test_custom_instance_alias() {
+        let instance = CustomInstance::from_yaml(
+            &create_yaml(data::CUSTOM_INSTANCE_ALIAS),
+            &Authentication::default(),
+            &Connection::default(),
+            &Sections::default(),
+        )
+        .unwrap();
+        assert_eq!(instance.alias(), &Some("a1".to_string().into()));
+        assert!(instance.service_name().is_none()); // alias kills service_name
+        assert!(instance.piggyback().is_none()); // piggyback is absent
     }
 
     #[cfg(windows)]
@@ -1144,15 +1280,9 @@ oracle:
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(
-            config
-                .conn()
-                .target_id()
-                .standalone_sid()
-                .unwrap()
-                .to_string(),
-            "ORCL"
+            config.target_id().unwrap(),
+            &TargetId::Sid(Sid::from("ORCL"))
         );
-        assert!(config.conn().target_id().service_name().is_none());
     }
 
     #[test]
@@ -1172,22 +1302,11 @@ oracle:
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(
-            config
-                .conn()
-                .target_id()
-                .descriptor_sid()
-                .unwrap()
-                .to_string(),
-            "ORCL"
-        );
-        assert_eq!(
-            config
-                .conn()
-                .target_id()
-                .service_name()
-                .unwrap()
-                .to_string(),
-            "ORCL.service_name"
+            config.target_id().unwrap(),
+            &TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from("ORCL.service_name")))
+                .sid(Some("ORCL"))
+                .build()
         );
     }
 

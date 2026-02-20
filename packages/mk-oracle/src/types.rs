@@ -352,6 +352,15 @@ mod tests {
         assert_eq!(SectionFilter::from("SYNC"), SectionFilter::Sync);
         assert_eq!(SectionFilter::from("aSync"), SectionFilter::Async);
     }
+
+    #[test]
+    fn test_instance_name_uppercase() {
+        assert_eq!(&InstanceName::from("alice").to_string(), "ALICE");
+        assert_eq!(
+            &InstanceName::from(&("alice".to_string())).to_string(),
+            "ALICE"
+        );
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]

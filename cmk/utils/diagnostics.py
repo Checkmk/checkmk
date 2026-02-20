@@ -97,6 +97,7 @@ _FILES_OPTS = [
 COMPONENT_COMMANDS = {
     "df": ["df"],
     "df-i": ["df", "-i"],
+    "ip-a": ["ip", "a"],
     "ss-tulpen": ["ss", "-tulpen"],
     "w": ["w"],
 }

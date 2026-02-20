@@ -27,4 +27,24 @@ defineProps<{ screenshotMode: boolean }>()
     :buttons="[{ title: 'Button 1', onclick: () => console.log('bar'), variant: 'info' }]"
   />
   <CmkDialog :message="'Very simple message'" />
+
+  <CmkDialog
+    :title="'Title'"
+    :message="'Some message, dismissal will be stored in localStorage for this session and sent to backend for retrieval.'"
+    :buttons="[{ title: 'Button 1', onclick: () => console.log('foo'), variant: 'danger' }]"
+    :dismissal_button="{ title: 'Dismiss', key: 'immediate_slideout_change' }"
+    :variant="'error'"
+  />
+  <CmkDialog
+    :title="'Title'"
+    :message="'Some message with buttons.'"
+    :buttons="[{ title: 'Button 1', onclick: () => console.log('foo'), variant: 'danger' }]"
+    :variant="'error'"
+  />
+  <CmkDialog
+    :message="'Simple message with a button without title'"
+    :buttons="[{ title: 'Button 1', onclick: () => console.log('bar'), variant: 'danger' }]"
+    :variant="'error'"
+  />
+  <CmkDialog :message="'Very simple message'" :variant="'error'" />
 </template>

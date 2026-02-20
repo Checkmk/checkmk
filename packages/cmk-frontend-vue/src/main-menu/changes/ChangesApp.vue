@@ -51,7 +51,7 @@ const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
 const activateChangesInProgress = ref<boolean>(false)
 const alreadyMadeAjaxCall = ref<boolean>(false)
-const activationError = ref<string | null>(null)
+const activationError = ref<boolean>(false)
 
 const sitesAndChanges = ref<SitesAndChanges>({
   sites: [],
@@ -164,10 +164,10 @@ async function activateAllChanges() {
     activationPollStartTime.value = Date.now()
     void pollActivationStatusUntilComplete(activateChangesResponse.id)
     return
-  } catch (error) {
+  } catch {
     await fetchPendingChangesAjax()
     activateChangesInProgress.value = false
-    activationError.value = `Activation failed: ${error}`
+    activationError.value = true
   }
 }
 
@@ -217,7 +217,7 @@ async function checkIfMenuActive(): Promise<void> {
   if (cmk.popup_menu.is_open('main_menu_changes')) {
     if (!alreadyMadeAjaxCall.value) {
       recentlyActivatedSites.value = []
-      activationError.value = null
+      activationError.value = false
       await fetchPendingChangesAjax()
       alreadyMadeAjaxCall.value = true
     }
@@ -353,9 +353,21 @@ onMounted(async () => {
       <CmkAlertBox v-if="!userCanActivateSelectedSites" variant="warning" class="cmk-alert-box">
         {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
       </CmkAlertBox>
-      <CmkAlertBox v-if="activationError" variant="error" class="cmk-alert-box">
-        {{ activationError }}
-      </CmkAlertBox>
+
+      <CmkDialog
+        v-if="activationError"
+        :title="_t('Activation of changes failed')"
+        :message="_t(`Open the full activation page for more details.`)"
+        :buttons="[
+          {
+            title: _t('Open full view'),
+            variant: 'danger',
+            onclick: () => openActivateChangesPage()
+          }
+        ]"
+        variant="error"
+      />
+
       <CmkAlertBox
         v-if="sitesAndChanges.licenseMessage !== null"
         variant="warning"

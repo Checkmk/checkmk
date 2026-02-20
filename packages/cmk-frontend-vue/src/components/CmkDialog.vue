@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { cva } from 'class-variance-authority'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { onMounted, ref } from 'vue'
 
@@ -21,11 +22,24 @@ export interface CmkDialogProps {
   message: TranslatedString
   buttons?: { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
   dismissal_button?: { title: TranslatedString; key: DismissalButtonKey }
+  variant?: 'info' | 'error'
 }
 
 export type DismissalButtonKey = components['schemas']['UserDismissWarning']['warning']
 
 const props = defineProps<CmkDialogProps>()
+
+const propsCva = cva('', {
+  variants: {
+    variant: {
+      error: 'cmk-dialog__icon-box--error',
+      info: 'cmk-dialog__icon-box--info'
+    }
+  },
+  defaultVariants: {
+    variant: 'info'
+  }
+})
 
 const dialogHidden = props.dismissal_button
   ? usePersistentRef(props.dismissal_button.key, false, (v) => v as boolean, 'session')
@@ -51,8 +65,12 @@ onMounted(() => {
 
 <template>
   <div v-if="!dialogHidden" class="cmk-dialog help">
-    <div class="info_icon">
-      <CmkIcon name="info" />
+    <div :class="['cmk-dialog__icon-box', propsCva({ variant: props.variant })]">
+      <CmkIcon
+        :class="'cmk-dialog__icon'"
+        :name="props.variant === 'error' ? 'host-svc-problems' : 'info'"
+        :size="'small'"
+      />
     </div>
     <div class="cmk-dialog__content">
       <span v-if="props.title" class="cmk-dialog__title">{{ props.title }}<br /></span>
@@ -92,6 +110,25 @@ div.cmk-dialog {
       margin-bottom: var(--spacing);
       display: block;
     }
+  }
+
+  .cmk-dialog__icon-box {
+    display: flex;
+    align-items: center;
+    border-radius: var(--dimension-3) 0 0 var(--dimension-3);
+  }
+
+  .cmk-dialog__icon-box--info {
+    background-color: var(--color-dark-blue-50);
+  }
+
+  .cmk-dialog__icon-box--error {
+    background-color: var(--color-dark-red-50);
+  }
+
+  .cmk-dialog__icon {
+    filter: brightness(0) invert(1);
+    padding: var(--dimension-4);
   }
 }
 </style>

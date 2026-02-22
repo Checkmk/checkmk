@@ -11,7 +11,7 @@ import pytest
 
 import omdlib
 import omdlib.backup
-from omdlib.backup import get_exclude_patterns
+from omdlib.backup import BackupExclusions, get_exclude_patterns
 from omdlib.options import CommandOptions
 
 
@@ -28,7 +28,7 @@ def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     tar_path = tmp_path / "backup.tar"
     with tarfile.open(tar_path, mode="w:") as tar:
         omdlib.backup._backup_site_to_tarfile(
-            site_name, str(site_home), True, tar, options={}, verbose=False
+            site_name, str(site_home), True, tar, BackupExclusions.from_options({}), verbose=False
         )
 
     with tarfile.open(name=tar_path, mode="r|*") as tar:
@@ -53,7 +53,7 @@ def test_backup_site_to_tarfile_broken_link(
     tar_path = tmp_path / "backup.tar"
     with tarfile.open(tar_path, mode="w:") as tar:
         omdlib.backup._backup_site_to_tarfile(
-            site_name, str(site_home), True, tar, options={}, verbose=False
+            site_name, str(site_home), True, tar, BackupExclusions.from_options({}), verbose=False
         )
 
     with tarfile.open(name=tar_path, mode="r|*") as tar:
@@ -89,7 +89,7 @@ def test_backup_site_to_tarfile_vanishing_files(
     tar_path = tmp_path / "backup.tar"
     with tarfile.open(tar_path, mode="w:") as tar:
         omdlib.backup._backup_site_to_tarfile(
-            site_name, str(site_home), True, tar, options={}, verbose=False
+            site_name, str(site_home), True, tar, BackupExclusions.from_options({}), verbose=False
         )
 
     assert not test_file.exists()  # check that the monkeypatch worked
@@ -101,7 +101,7 @@ def test_backup_site_to_tarfile_vanishing_files(
 def test_get_exclude_patterns_default() -> None:
     options: CommandOptions = {}
 
-    actual_excludes = get_exclude_patterns(options)
+    actual_excludes = get_exclude_patterns(BackupExclusions.from_options(options))
 
     assert "tmp/*" in actual_excludes
     assert "var/check_mk/agents/*" not in actual_excludes
@@ -112,7 +112,7 @@ def test_get_exclude_patterns_default() -> None:
 def test_get_exclude_patterns_no_past() -> None:
     options: CommandOptions = {"no-past": None}
 
-    actual_excludes = get_exclude_patterns(options)
+    actual_excludes = get_exclude_patterns(BackupExclusions.from_options(options))
 
     assert "tmp/*" in actual_excludes
     assert "var/check_mk/agents/*" in actual_excludes
@@ -123,7 +123,7 @@ def test_get_exclude_patterns_no_past() -> None:
 def test_get_exclude_patterns_single() -> None:
     options: CommandOptions = {"no-rrds": None}
 
-    actual_excludes = get_exclude_patterns(options)
+    actual_excludes = get_exclude_patterns(BackupExclusions.from_options(options))
 
     assert "tmp/*" in actual_excludes
     assert "var/check_mk/rrd/*" in actual_excludes
@@ -134,7 +134,7 @@ def test_get_exclude_patterns_single() -> None:
 def test_get_exlude_patterns_mixed() -> None:
     options: CommandOptions = {"no-agents": None, "no-logs": None}
 
-    actual_excludes = get_exclude_patterns(options)
+    actual_excludes = get_exclude_patterns(BackupExclusions.from_options(options))
 
     assert "tmp/*" in actual_excludes
     assert "var/check_mk/agents/*" in actual_excludes

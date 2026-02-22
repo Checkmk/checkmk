@@ -2194,7 +2194,9 @@ def main_mv_or_cp(
             os.mkdir(new_site_home)
 
         addopts = []
-        for p in omdlib.backup.get_exclude_patterns(options):
+        for p in omdlib.backup.get_exclude_patterns(
+            omdlib.backup.BackupExclusions.from_options(options)
+        ):
             addopts += ["--exclude", "/%s" % p]
 
         if global_opts.verbose:

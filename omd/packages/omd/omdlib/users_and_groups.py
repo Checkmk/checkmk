@@ -277,6 +277,7 @@ def run_as_site_user(
     command: list[str],
     capture_output: bool,
     stdin: int | IO[bytes] | None = None,
+    pass_fds: Sequence[int] = (),
 ) -> subprocess.CompletedProcess[str]:
     passwd = pwd.getpwnam(user)
     return subprocess.run(
@@ -289,6 +290,7 @@ def run_as_site_user(
         env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
         extra_groups=os.getgrouplist(user, passwd.pw_gid),
         group=passwd.pw_gid,
+        pass_fds=pass_fds,
         stdin=stdin,
         umask=0o077,
         user=user,

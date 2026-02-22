@@ -15,32 +15,55 @@ import sqlite3
 import sys
 import tarfile
 from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import override
+from typing import IO, override
 
+from omdlib.args_site_user import args_to_command_line, Backup
+from omdlib.contexts import SiteContext
 from omdlib.global_options import GlobalOptions
 from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
 from omdlib.site_user import site_environment_as_root
+from omdlib.users_and_groups import run_as_site_user
+
+
+@dataclass(frozen=True)
+class BackupExclusions:
+    rrds: bool
+    agents: bool
+    logs: bool
+
+    @classmethod
+    def from_options(cls, options: CommandOptions) -> "BackupExclusions":
+        if "no-past" in options:
+            return cls(rrds=False, agents=False, logs=False)
+        return cls(
+            rrds="no-rrds" not in options,
+            agents="no-agents" not in options,
+            logs="no-logs" not in options,
+        )
+
+    @classmethod
+    def from_args(cls, args: Backup) -> "BackupExclusions":
+        return cls(rrds=args.rrds, agents=args.agents, logs=args.logs)
 
 
 def _try_backup_site_to_tarfile(
     tar: tarfile.TarFile,
-    options: CommandOptions,
-    site_name: str,
-    global_opts: GlobalOptions,
+    exclusions: BackupExclusions,
+    site: SiteContext,
+    verbose: bool,
 ) -> None:
-    site = site_environment_as_root(site_name, global_opts.verbose)
     try:
-        site_home = SitePaths.from_site_name(site.name).home
         _backup_site_to_tarfile(
             site.name,
-            site_home,
-            site.is_stopped(global_opts.verbose),
+            SitePaths.from_site_name(site.name).home,
+            site.is_stopped(verbose),
             tar,
-            options,
-            global_opts.verbose,
+            exclusions,
+            verbose,
         )
     except OSError as e:
         sys.exit("Failed to perform backup: %s" % e)
@@ -58,23 +81,46 @@ def main_backup(
         sys.exit(
             'You need to provide either a path to the destination file or "-" for backup to stdout.'
         )
-
     dest = args[0]
 
     if dest == "-":
-        with tarfile.open(
-            fileobj=sys.stdout.buffer,
-            mode="w|" if "no-compression" in options else "w|gz",
-        ) as tar:
-            _try_backup_site_to_tarfile(tar, options, site_name, global_opts)
+        context: contextlib.AbstractContextManager[IO[bytes]] = contextlib.nullcontext(
+            sys.stdout.buffer
+        )
     else:
         if not (dest_path := Path(dest)).is_absolute():
             dest_path = orig_working_directory / dest_path
-        with tarfile.open(
-            dest_path,
-            mode="w:" if "no-compression" in options else "w:gz",
-        ) as tar:
-            _try_backup_site_to_tarfile(tar, options, site_name, global_opts)
+        context = contextlib.closing(dest_path.open("wb"))
+    with context as buffer:
+        backup_args = Backup(
+            verbose=global_opts.verbose,
+            descriptor=buffer.fileno(),
+            site=site_name,
+            compression="no-compression" not in options,
+            rrds=not ("no-rrds" in options or "no-past" in options),
+            agents=not ("no-agents" in options or "no-past" in options),
+            logs=not ("no-logs" in options or "no-past" in options),
+        )
+        if os.getuid() == 0:
+            returncode = run_as_site_user(
+                site_name,
+                args_to_command_line(backup_args),
+                capture_output=False,
+                pass_fds=[buffer.fileno()],
+            ).returncode
+        else:
+            returncode = main_site_backup(backup_args)
+    sys.exit(returncode)
+
+
+def main_site_backup(args: Backup) -> int:
+    site = site_environment_as_root(args.site, args.verbose)
+    with (
+        open(args.descriptor, mode="wb", closefd=False) as fileobj,
+        tarfile.open(fileobj=fileobj, mode="w|gz" if args.compression else "w|") as tar,
+    ):
+        _try_backup_site_to_tarfile(tar, BackupExclusions.from_args(args), site, args.verbose)
+    return 0
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:
@@ -92,13 +138,13 @@ def _backup_site_to_tarfile(
     site_home: str,
     site_is_stopped: bool,
     tar: tarfile.TarFile,
-    options: CommandOptions,
+    exclusions: BackupExclusions,
     verbose: bool,
 ) -> None:
     if not os.path.isdir(site_home):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), site_home)
 
-    excludes = get_exclude_patterns(options)
+    excludes = get_exclude_patterns(exclusions)
 
     def accepted_files(tarinfo: tarfile.TarInfo) -> bool:
         # patterns are relative to site directory, tarinfo.name includes site name.
@@ -130,7 +176,7 @@ def _backup_site_to_tarfile(
         )
 
 
-def get_exclude_patterns(options: CommandOptions) -> list[str]:
+def get_exclude_patterns(options: BackupExclusions) -> list[str]:
     excludes = []
     excludes.append("tmp/*")  # Exclude all tmpfs files
 
@@ -152,17 +198,17 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     # monitoring. Once we use a more long-term storage, we will have to come with a backup.
     excludes.append("var/clickhouse-server/*")
 
-    if "no-rrds" in options or "no-past" in options:
+    if not options.rrds:
         excludes.append("var/pnp4nagios/perfdata/*")
         excludes.append("var/pnp4nagios/spool/*")
         excludes.append("var/rrdcached/*")
         excludes.append("var/pnp4nagios/states/*")
         excludes.append("var/check_mk/rrd/*")
 
-    if "no-agents" in options or "no-past" in options:
+    if not options.agents:
         excludes.append("var/check_mk/agents/*")
 
-    if "no-logs" in options or "no-past" in options:
+    if not options.logs:
         # Logs of different components
         excludes.append("var/log/*.log*")
         excludes.append("var/log/*/*")

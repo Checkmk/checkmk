@@ -38,10 +38,19 @@ class Copy(_Shared):
     skeleton: Skeleton
 
 
-type Finalize = Annotated[Restore | Move | Copy, Field(discriminator="command")]
+class Backup(_Shared):
+    command: Literal["backup"] = "backup"
+    descriptor: int
+    compression: bool
+    rrds: bool
+    agents: bool
+    logs: bool
 
 
-def args_to_command_line(args: Finalize, version: str = omdlib.__version__) -> list[str]:
+type SiteArgs = Annotated[Restore | Move | Copy | Backup, Field(discriminator="command")]
+
+
+def args_to_command_line(args: SiteArgs, version: str = omdlib.__version__) -> list[str]:
     cmd_line = [f"/omd/versions/{version}/lib/omd/omd_site_user"]
     cmd_line.extend([args.command, "--site", args.site])
     if args.verbose:
@@ -58,14 +67,24 @@ def args_to_command_line(args: Finalize, version: str = omdlib.__version__) -> l
         case Move() | Copy():
             cmd_line.extend(["--old-site", args.old_site])
             cmd_line.extend(["--skeleton", args.skeleton.value])
+        case Backup():
+            cmd_line.extend(["--descriptor", str(args.descriptor)])
+            if args.compression:
+                cmd_line.append("--compression")
+            if args.rrds:
+                cmd_line.append("--rrds")
+            if args.agents:
+                cmd_line.append("--agents")
+            if args.logs:
+                cmd_line.append("--logs")
     return cmd_line
 
 
-class _ArgsParser(RootModel[Finalize]):
-    root: Finalize
+class _ArgsParser(RootModel[SiteArgs]):
+    root: SiteArgs
 
 
-def parse_arguments(sysv: Sequence[str] | None = None) -> Finalize:
+def parse_arguments(sysv: Sequence[str] | None = None) -> SiteArgs:
     parser = argparse.ArgumentParser(description="Run `omd` code as site user.")
     subparser = parser.add_subparsers(
         dest="command",
@@ -143,6 +162,41 @@ def parse_arguments(sysv: Sequence[str] | None = None) -> Finalize:
         choices=[c.value for c in Skeleton],
         required=True,
         help="The conflict option for renaming",
+    )
+
+    parser_backup = subparser.add_parser(
+        "backup",
+        parents=[shared_parser],
+        help="Finalize site backup.",
+    )
+    parser_backup.add_argument(
+        "--compression",
+        default=False,
+        action="store_true",
+        help="Whether to compress the backup",
+    )
+    parser_backup.add_argument(
+        "--descriptor",
+        required=True,
+        help="An open file descriptor from the backup content can be streamed",
+    )
+    parser_backup.add_argument(
+        "--rrds",
+        default=False,
+        action="store_true",
+        help="Whether to backup RRDs",
+    )
+    parser_backup.add_argument(
+        "--agents",
+        default=False,
+        action="store_true",
+        help="Whether to backup agents",
+    )
+    parser_backup.add_argument(
+        "--logs",
+        default=False,
+        action="store_true",
+        help="Whether to backup logs",
     )
 
     args = parser.parse_args(sysv)

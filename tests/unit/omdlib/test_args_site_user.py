@@ -8,10 +8,10 @@ import pytest
 from omdlib.args_site_user import (
     args_to_command_line,
     Copy,
-    Finalize,
     Move,
     parse_arguments,
     Restore,
+    SiteArgs,
 )
 from omdlib.type_defs import Skeleton
 
@@ -114,7 +114,7 @@ from omdlib.type_defs import Skeleton
         ),
     ],
 )
-def test_args_roundtrip(finalize: Finalize) -> None:
+def test_args_roundtrip(finalize: SiteArgs) -> None:
     sysv = args_to_command_line(finalize, version="any")[1:]
     parsed_model = parse_arguments(sysv)
     assert parsed_model == finalize

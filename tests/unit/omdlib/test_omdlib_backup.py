@@ -11,6 +11,8 @@ import pytest
 
 import omdlib
 import omdlib.backup
+from omdlib.backup import get_exclude_patterns
+from omdlib.options import CommandOptions
 
 
 def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -94,3 +96,47 @@ def test_backup_site_to_tarfile_vanishing_files(
 
     with tarfile.open(name=tar_path, mode="r|*") as tar:
         _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
+
+
+def test_get_exclude_patterns_default() -> None:
+    options: CommandOptions = {}
+
+    actual_excludes = get_exclude_patterns(options)
+
+    assert "tmp/*" in actual_excludes
+    assert "var/check_mk/agents/*" not in actual_excludes
+    assert "var/log/*/*" not in actual_excludes
+    assert "var/check_mk/rrd/*" not in actual_excludes
+
+
+def test_get_exclude_patterns_no_past() -> None:
+    options: CommandOptions = {"no-past": None}
+
+    actual_excludes = get_exclude_patterns(options)
+
+    assert "tmp/*" in actual_excludes
+    assert "var/check_mk/agents/*" in actual_excludes
+    assert "var/log/*/*" in actual_excludes
+    assert "var/check_mk/rrd/*" in actual_excludes
+
+
+def test_get_exclude_patterns_single() -> None:
+    options: CommandOptions = {"no-rrds": None}
+
+    actual_excludes = get_exclude_patterns(options)
+
+    assert "tmp/*" in actual_excludes
+    assert "var/check_mk/rrd/*" in actual_excludes
+    assert "var/check_mk/agents/*" not in actual_excludes
+    assert "var/log/*/*" not in actual_excludes
+
+
+def test_get_exlude_patterns_mixed() -> None:
+    options: CommandOptions = {"no-agents": None, "no-logs": None}
+
+    actual_excludes = get_exclude_patterns(options)
+
+    assert "tmp/*" in actual_excludes
+    assert "var/check_mk/agents/*" in actual_excludes
+    assert "var/log/*/*" in actual_excludes
+    assert "var/check_mk/rrd/*" not in actual_excludes

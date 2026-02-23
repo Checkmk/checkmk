@@ -21,6 +21,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import type { AgentSlideOutTabs } from '../lib/type_def'
+import GenerateToken from './GenerateToken.vue'
 import RegisterAgent from './steps/RegisterAgent.vue'
 
 const props = defineProps<{
@@ -70,6 +71,18 @@ function saveHostAction() {
   sessionStorage.setItem('slideInAgentInstalled', String(props.agentInstalled))
   cmk.page_menu.form_submit('edit_host', 'save_and_edit')
 }
+const ott = ref<string | null | Error>(null)
+
+function installCmdWithToken(cmd: string | undefined): string {
+  if (!cmd) {
+    return ''
+  }
+  if (ott.value && !(ott.value instanceof Error)) {
+    return cmd.replace('[AGENT_DOWNLOAD_OTT]', ott.value)
+  }
+  return cmd
+}
+
 const currentStep = ref(getInitStep())
 function getInitStep() {
   if (props.saveHost) {
@@ -168,50 +181,65 @@ function getInitStep() {
               <CmkHeading> {{ _t('Download and install') }}</CmkHeading>
             </template>
             <template #content>
-              <div v-if="currentStep === 2">
-                <CmkParagraph>{{ tab.installMsg }}</CmkParagraph>
-                <CmkCode
-                  v-if="tab.installMsg && tab.installCmd"
-                  :code_txt="tab.installCmd"
-                  class="code"
-                />
-                <div
-                  v-if="
-                    tab.installUrl &&
-                    !tab.installCmd &&
-                    !(tab.installDebCmd && model === packageFormatDeb) &&
-                    !(tab.installRpmCmd && model === packageFormatRpm) &&
-                    !(tab.installTgzCmd && model === packageFormatTgz)
-                  "
-                  class="install_url__div"
-                >
-                  <CmkParagraph v-if="tab.installUrl.msg">{{ tab.installUrl.msg }}</CmkParagraph>
-                  <CmkLinkCard
-                    :title="tab.installUrl.title"
-                    :url="tab.installUrl.url"
-                    :icon-name="tab.installUrl.icon"
-                    :open-in-new-tab="true"
+              <div v-if="currentStep === 2" class="download_install__content">
+                <div class="download_install__token">
+                  <CmkParagraph>{{ tab.installMsg }}</CmkParagraph>
+                  <GenerateToken
+                    v-model="ott"
+                    token-generation-endpoint-uri="domain-types/agent_download_token/collections/all"
+                    :description="_t('This requires the generation of a download token.')"
+                    :expires-in-days="7"
+                    :token-generation-body="{}"
                   />
                 </div>
-                <CmkCode
-                  v-if="tab.installMsg && tab.installDebCmd && model === packageFormatDeb"
-                  :code_txt="tab.installDebCmd"
-                  class="code"
-                />
-                <CmkCode
-                  v-if="tab.installMsg && tab.installRpmCmd && model === packageFormatRpm"
-                  :code_txt="tab.installRpmCmd"
-                  class="code"
-                />
-                <CmkCode
-                  v-if="tab.installMsg && tab.installTgzCmd && model === packageFormatTgz"
-                  :code_txt="tab.installTgzCmd"
-                  class="code"
-                />
+                <template v-if="ott !== null">
+                  <CmkCode
+                    v-if="tab.installMsg && tab.installCmd"
+                    :code_txt="installCmdWithToken(tab.installCmd)"
+                    class="code"
+                  />
+                  <div
+                    v-if="
+                      tab.installUrl &&
+                      !tab.installCmd &&
+                      !(tab.installDebCmd && model === packageFormatDeb) &&
+                      !(tab.installRpmCmd && model === packageFormatRpm) &&
+                      !(tab.installTgzCmd && model === packageFormatTgz)
+                    "
+                    class="install_url__div"
+                  >
+                    <CmkParagraph v-if="tab.installUrl.msg">{{ tab.installUrl.msg }}</CmkParagraph>
+                    <CmkLinkCard
+                      :title="tab.installUrl.title"
+                      :url="tab.installUrl.url"
+                      :icon-name="tab.installUrl.icon"
+                      :open-in-new-tab="true"
+                    />
+                  </div>
+                  <CmkCode
+                    v-if="tab.installMsg && tab.installDebCmd && model === packageFormatDeb"
+                    :code_txt="installCmdWithToken(tab.installDebCmd)"
+                    class="code"
+                  />
+                  <CmkCode
+                    v-if="tab.installMsg && tab.installRpmCmd && model === packageFormatRpm"
+                    :code_txt="installCmdWithToken(tab.installRpmCmd)"
+                    class="code"
+                  />
+                  <CmkCode
+                    v-if="tab.installMsg && tab.installTgzCmd && model === packageFormatTgz"
+                    :code_txt="installCmdWithToken(tab.installTgzCmd)"
+                    class="code"
+                  />
+                </template>
               </div>
             </template>
             <template v-if="currentStep === 2" #actions>
-              <CmkWizardButton type="next" :override-label="_t('Next step: Register agent')" />
+              <CmkWizardButton
+                type="next"
+                :disabled="ott === null || ott instanceof Error"
+                :override-label="_t('Next step: Register agent')"
+              />
               <CmkWizardButton type="previous" />
             </template>
           </CmkWizardStep>
@@ -299,6 +327,14 @@ button.all_agents {
 
 .install_url__div {
   margin-bottom: var(--spacing);
+}
+
+.download_install__content {
+  width: 100%;
+}
+
+.download_install__token {
+  width: fit-content;
 }
 
 .agent_slideout__paragraph_host_exists {

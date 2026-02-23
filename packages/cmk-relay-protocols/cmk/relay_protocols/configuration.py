@@ -93,3 +93,6 @@ class EngineConfig(UserEngineConfig):
     @classmethod
     def load(cls, path: Path) -> Self:
         return cls.model_validate_json(path.read_text())
+
+    def dumps(self) -> str:
+        return self.model_dump_json()

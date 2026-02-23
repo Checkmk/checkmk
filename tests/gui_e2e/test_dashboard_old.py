@@ -51,32 +51,6 @@ def cloned_linux_hosts_dashboard(
         cloned_linux_hosts_dashboard.delete()
 
 
-def test_dashboard_sanity_check(dashboard_page: MainDashboard) -> None:
-    """Sanity check for the dashboard page.
-
-    Check that all default dashlets, dropdown buttons and icons are visible on the dashboard page.
-
-    Steps:
-        1. Navigate to the 'Main dashboard' page.
-        2. Check that the page title is correct.
-        3. Check that all default dashlets are visible.
-        4. Check that all dropdown buttons are visible.
-        5. Check that all icons are visible.
-        6. Check that the SVGs for 'Host statistics' and 'Service statistics' dashlets are visible.
-    """
-    for dashlet_title in dashboard_page.default_dashlets_list:
-        dashboard_page.check_dashlet_is_present(dashlet_title)
-
-    for dropdown_button_name in dashboard_page.dropdown_buttons:
-        expect(dashboard_page.main_area.dropdown_button(dropdown_button_name)).to_be_visible()
-
-    for button_title in dashboard_page.header_buttons:
-        expect(dashboard_page.menu_button(button_title)).to_be_visible()
-
-    expect(dashboard_page.dashlet_svg("Host statistics")).to_be_visible()
-    expect(dashboard_page.dashlet_svg("Service statistics")).to_be_visible()
-
-
 def test_builtin_dashboard_filter_by_host(
     dashboard_page: MainDashboard, linux_hosts: list[str]
 ) -> None:

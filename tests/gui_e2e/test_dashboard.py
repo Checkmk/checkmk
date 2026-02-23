@@ -97,6 +97,28 @@ def _create_new_dashboard(
     )
 
 
+def test_main_dashboard_sanity_check(dashboard_page: MainDashboard) -> None:
+    """Sanity check for the main dashboard page.
+
+    Check that all default widgets, menu buttons and icons are visible on the dashboard page.
+
+    Steps:
+        1. Navigate to the 'Main dashboard' page.
+        2. Check that the dashboard selector text is correct.
+        3. Check that all default widgets are visible.
+        4. Check that the menu buttons are visible.
+        5. Check that the SVGs for 'Host statistics' and 'Service statistics' widgets are visible.
+    """
+    for dashlet_title in dashboard_page.default_widget_list:
+        dashboard_page.check_widget_is_present(dashlet_title)
+
+    for button_name in dashboard_page.header_buttons:
+        dashboard_page.check_menu_button_is_present(button_name)
+
+    dashboard_page.check_widget_icon_is_present("Host statistics")
+    dashboard_page.check_widget_icon_is_present("Service statistics")
+
+
 def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[str]) -> None:
     """Test dashboard creation from scratch.
 

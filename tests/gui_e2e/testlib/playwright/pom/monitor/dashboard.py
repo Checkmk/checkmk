@@ -89,6 +89,17 @@ class BaseDashboard(CmkPage):
         """
         return self._menu_header.get_by_role("button", name=button_name)
 
+    def check_menu_button_is_present(self, button_name: str) -> None:
+        """Check that a specific button of the top menu is present.
+
+        Args:
+            button_name: name of the button to check.
+        """
+        expect(
+            self.get_menu_button(button_name),
+            message=f"'{button_name}' button of the dashboard top menu is not present",
+        ).to_be_visible()
+
     def clone_dashboard(self, automatic_unique_id: bool = True) -> None:
         """Clone a dashboard creating a customized copy"""
         self.get_menu_button("Clone").click()
@@ -116,7 +127,7 @@ class BaseDashboard(CmkPage):
         return (
             self.main_area.locator()
             .get_by_label("Widget")
-            .filter(has=self.page.get_by_role("heading", name=widget_title))
+            .filter(has=self.page.get_by_role("heading", name=widget_title, exact=True))
         )
 
     def get_widget_table(self, widget_title: str) -> Locator:
@@ -164,6 +175,17 @@ class BaseDashboard(CmkPage):
             self.get_widget(widget_title), f"Widget '{widget_title}' is not presented on the page"
         ).to_be_visible()
 
+    def check_widget_icon_is_present(self, widget_title: str) -> None:
+        """Check that the icon of a specific widget is present on the page.
+
+        Args:
+            widget_title: the title of the widget to check.
+        """
+        expect(
+            self.get_widget(widget_title).locator("svg"),
+            message=f"Icon is not present in widget '{widget_title}'",
+        ).to_be_visible()
+
     def edit_widget_properties_button(self, widget_title: str) -> Locator:
         return self.get_widget(widget_title).get_by_role("button", name="Edit widget")
 
@@ -176,7 +198,7 @@ class MainDashboard(BaseDashboard):
 
     page_title: str = "Main dashboard"
 
-    default_widget_list: list[str] = [
+    default_widget_list = (
         "Host statistics",
         "Service statistics",
         "Problem notifications",
@@ -185,12 +207,13 @@ class MainDashboard(BaseDashboard):
         "Total service problems",
         "Percentage of total service problems",
         "Top alerters (last 7 days)",
-    ]
+    )
 
     header_buttons = (
         "Filter",
+        "Share",
         "Settings",
-        "Edit widgets",
+        "Clone",
     )
 
     @override

@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon'
@@ -19,14 +21,25 @@ const searchUtils = getSearchUtils()
 function isMonitoringSearch(): boolean {
   return ['all', 'monitoring'].indexOf(searchUtils.query.provider.value) >= 0
 }
+
+const findText = computed(() => {
+  switch (searchUtils.query.provider.value) {
+    case 'monitoring':
+      return _t('Find services, hosts, dashboards, ...')
+    case 'customize':
+      return _t('Find customization options"')
+    case 'setup':
+      return _t('ind rules, hosts, settings ...')
+    default:
+      return _t('Find rules, hosts, dashboards, settings ...')
+  }
+})
 </script>
 
 <template>
   <div class="unified-search-empty-start">
     <CmkIcon class="unified-search-empty-start__icon" name="search" size="xxxlarge"></CmkIcon>
-    <CmkHeading class="unified-search-empty-start__heading" type="h2">{{
-      _t('Find rules, hosts, dashboards, settings ...')
-    }}</CmkHeading>
+    <CmkHeading class="unified-search-empty-start__heading" type="h2">{{ findText }}</CmkHeading>
     <CmkParagraph v-if="isMonitoringSearch()" class="unified-search-empty-start__text">
       {{ _t('Tip: Press') }}
       <CmkKeyboardKey keyboard-key="/" size="small"></CmkKeyboardKey>

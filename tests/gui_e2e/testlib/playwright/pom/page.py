@@ -249,7 +249,10 @@ class MainMenu(LocatorHelper):
         _loc = self._sub_menu("Changes", None, False, False)
         if button:
             _loc.click()
-            _loc = self.page.get_by_role(role="button", name=button, exact=exact)
+            # CmkButton renders as <a> (role="link") when given an href prop, or as <button>
+            _loc = self.page.get_by_role(role="button", name=button, exact=exact).or_(
+                self.page.get_by_role(role="link", name=button, exact=exact)
+            )
         self._unique_web_element(_loc)
         return _loc
 

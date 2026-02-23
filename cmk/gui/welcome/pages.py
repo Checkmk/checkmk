@@ -276,8 +276,8 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 is_snapin=is_snapin,
             ),
             add_custom_dashboard=_make_url(
-                addvars=[],
-                filename="dashboard.py?mode=create",
+                addvars=[("mode", "create")],
+                filename="dashboard.py",
                 is_snapin=is_snapin,
             ),
             all_dashboards=_make_url(

@@ -5,12 +5,12 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
-import type { UseValidate } from '@/dashboard/components/Wizard/types'
+import type { LabelValueItem, UseValidate } from '@/dashboard/components/Wizard/types'
 
 export interface UseMetric extends UseValidate {
   host: Ref<string | null>
   service: Ref<string | null>
-  metric: Ref<string | null>
+  metric: Ref<LabelValueItem | null>
 
   metricValidationError: Ref<boolean>
 }
@@ -22,7 +22,9 @@ export const useMetric = (
 ): UseMetric => {
   const host = ref<string | null>(hostName || null)
   const service = ref<string | null>(serviceDescription || null)
-  const metric = ref<string | null>(selectedMetric || null)
+  const metric = ref<LabelValueItem | null>(
+    selectedMetric ? { value: selectedMetric, label: selectedMetric } : null
+  )
   const metricValidationError = ref<boolean>(false)
 
   watch(

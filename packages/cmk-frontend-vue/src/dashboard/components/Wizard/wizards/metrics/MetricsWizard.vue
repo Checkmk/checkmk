@@ -155,7 +155,7 @@ const recapAndNext = (selectedWidgetType: string | null) => {
   widgetFilterManager.closeSelectionMenu()
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     metricType: metricType.value,
-    metric: metricHandler.metric.value,
+    metric: metricHandler.metric.value?.label ?? metricHandler.metric.value?.value ?? null,
     contextConfiguredFilters: contextConfiguredFilters.value,
     widgetFilters: extractConfiguredFilters(widgetFilterManager)
   })
@@ -236,7 +236,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :metric-type="metricType"
           :filters="appliedFilters"
           :widget-filters="extractConfiguredFilters(widgetFilterManager)"
-          :metric="metricHandler.metric.value!"
+          :metric="metricHandler.metric.value!.value"
           :edit-widget-spec="editWidgetSpec ?? null"
           :preselected-widget-type="preselectedWidgetType"
           @go-prev="wizardHandler.prev"

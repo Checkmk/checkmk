@@ -11,6 +11,8 @@ import usei18n from '@/lib/i18n'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
+import { useLabelValueAutocomplete } from '@/dashboard/components/Wizard/components/autocompleters/useLabelValueAutocomplete'
+import type { LabelValueItem } from '@/dashboard/components/Wizard/types'
 import { ElementSelection } from '@/dashboard/components/Wizard/types'
 
 const { _t } = usei18n()
@@ -21,15 +23,7 @@ interface GraphAutocompleterProps {
 }
 
 const props = defineProps<GraphAutocompleterProps>()
-const metrics = defineModel<string | null>('combinedMetrics', { required: true })
-
-watch(
-  () => [props.hostSelectionMode, props.serviceSelectionMode],
-  () => {
-    metrics.value = null
-  },
-  { deep: true }
-)
+const metrics = defineModel<LabelValueItem | null>('combinedMetrics', { required: true })
 
 const combinedMetricsAutocompleter = computed(() => {
   const autocompleterId =
@@ -53,11 +47,21 @@ const combinedMetricsAutocompleter = computed(() => {
 
   return autocompleter
 })
+
+const { internalValue } = useLabelValueAutocomplete(metrics, combinedMetricsAutocompleter)
+
+watch(
+  () => [props.hostSelectionMode, props.serviceSelectionMode],
+  () => {
+    metrics.value = null
+  },
+  { deep: true }
+)
 </script>
 
 <template>
   <FormAutocompleter
-    v-model="metrics"
+    v-model="internalValue"
     :autocompleter="combinedMetricsAutocompleter"
     :size="0"
     :placeholder="_t('Select graph')"

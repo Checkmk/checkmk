@@ -11,7 +11,10 @@ import usei18n from '@/lib/i18n'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
+import type { LabelValueItem } from '@/dashboard/components/Wizard/types'
+
 import { type HostServiceContext } from './types'
+import { useLabelValueAutocomplete } from './useLabelValueAutocomplete'
 
 const { _t } = usei18n()
 
@@ -21,7 +24,7 @@ interface CmkAutocompleteServiceProps {
 }
 
 const props = defineProps<CmkAutocompleteServiceProps>()
-const serviceMetrics = defineModel<string | null>('serviceMetrics', { required: true })
+const serviceMetrics = defineModel<LabelValueItem | null>('serviceMetrics', { required: true })
 
 const metricNameAutocompleter = computed(() => {
   const context: HostServiceContext = {}
@@ -47,11 +50,13 @@ const metricNameAutocompleter = computed(() => {
   }
   return autocompleter
 })
+
+const { internalValue } = useLabelValueAutocomplete(serviceMetrics, metricNameAutocompleter)
 </script>
 
 <template>
   <FormAutocompleter
-    v-model="serviceMetrics"
+    v-model="internalValue"
     :autocompleter="metricNameAutocompleter"
     :size="0"
     :placeholder="_t('Select service metric')"

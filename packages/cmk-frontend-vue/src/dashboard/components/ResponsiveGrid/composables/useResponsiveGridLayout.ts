@@ -270,9 +270,14 @@ export function useResponsiveGridLayout(
     newArrangement: ResponsiveGridInternalArrangement
   ): void {
     newArrangement.forEach((element) => {
-      responsiveGridContent.value.widgets[element.i]!.layout.layouts[selectedLayoutName.value]![
-        breakpointFromInternal[breakpoint]
-      ] = {
+      const widget = responsiveGridContent.value.widgets[element.i]
+      if (!widget) {
+        console.warn(
+          `Widget with id ${element.i} not found in content, skipping layout update for it`
+        )
+        return
+      }
+      widget.layout.layouts[selectedLayoutName.value]![breakpointFromInternal[breakpoint]] = {
         position: {
           x: element.x,
           y: element.y

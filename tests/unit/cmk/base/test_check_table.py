@@ -552,7 +552,6 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
 
     ts = Scenario()
     ts.add_host(hostname)
-    ts.set_option("use_new_descriptions_for", {"df": True})
     ts.set_option(
         "static_checks",
         {
@@ -604,7 +603,6 @@ def test_check_table__get_static_check_entries(
 
     ts = Scenario()
     ts.add_host(hostname)
-    ts.set_option("use_new_descriptions_for", {"ps": True})
     ts.set_option("static_checks", static_checks)
 
     ts.set_option(

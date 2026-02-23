@@ -1,1 +1,1 @@
-## Directory may also contain binary artifacts normally delivered by CI
+## Directory may contain binary artifacts normally delivered by CI

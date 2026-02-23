@@ -39,4 +39,4 @@ if [ ! -f "${MK_CONFDIR}/oracle.yml" ]; then
     exit 1
 fi
 
-${bin_exe} -c "${MK_CONFDIR}/oracle.yml" --filter sync
+${bin_exe} -c "${MK_CONFDIR}/oracle.yml" --filter async

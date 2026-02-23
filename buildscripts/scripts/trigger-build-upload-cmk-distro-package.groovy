@@ -96,7 +96,9 @@ def main() {
     // only close the branch if the previous build passed but this failed
     smart_stage(
         name: "Closing branch on failure",
-        condition: currentBuild.result != "SUCCESS" && currentBuild.getPreviousBuild()?.result.toString() == "SUCCESS",
+        condition: env.USE_BRANCH_AUTO_CLOSING == "1" &&
+            currentBuild.result != "SUCCESS" &&
+            currentBuild.getPreviousBuild()?.result.toString() == "SUCCESS",
     ) {
         build(
             job: "maintenance/sheriffing",
@@ -115,7 +117,9 @@ def main() {
     // only open the branch if the previous build failed but this passed
     smart_stage(
         name: "Opening branch after recovering",
-        condition: currentBuild.result == "SUCCESS" && currentBuild.getPreviousBuild()?.result.toString() != "SUCCESS",
+        condition: env.USE_BRANCH_AUTO_CLOSING == "1" &&
+            currentBuild.result == "SUCCESS" &&
+            currentBuild.getPreviousBuild()?.result.toString() != "SUCCESS",
     ) {
         build(
             job: "maintenance/sheriffing",

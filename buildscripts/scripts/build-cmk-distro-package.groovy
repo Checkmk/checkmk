@@ -218,6 +218,7 @@ void main() {
                                 'requirements.txt',
                                 'bazel/tools/package.json',
                             ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
+                            disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER_CMK_DISTRO_BUILD == "0",
                         ]) {
                             sh("""
                                 bazel build \

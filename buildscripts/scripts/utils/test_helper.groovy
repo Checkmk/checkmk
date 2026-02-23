@@ -49,6 +49,7 @@ void execute_test(Map config = [:]) {
                             'requirements.txt',
                             'bazel/tools/package.json',
                         ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
+                        disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER == "0",
                     ]) {
                         run_sh_command(cmd);
                     }

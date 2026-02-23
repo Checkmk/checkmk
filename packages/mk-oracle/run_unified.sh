@@ -15,7 +15,7 @@ export DB_PASSWORD="${CI_ORA2_DB_TEST_PASSWORD}"
 export DB_HOST="ora-rocktest.dev.checkmk.net"
 export DB_SERVICE_NAME="TEST23"
 export DB_SECTION="${DB_SECTION:-instance}"
-envsubst <"${MK_CONFDIR}/oracle.yml.conf" >"${MK_CONFDIR}/oracle.yml"
+envsubst <"${MK_CONFDIR}/mk-oracle.yml.conf" >"${MK_CONFDIR}/mk-oracle.yml"
 
 # run
-./cargo_run run -- -c "${PKG_DIR}/etc/check_mk/oracle.yml"
+./cargo_run run -- -c "${PKG_DIR}/etc/check_mk/mk-oracle.yml"

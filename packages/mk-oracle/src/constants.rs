@@ -28,7 +28,7 @@ pub mod log {
 pub const SQL_QUERY_EXTENSION: &str = "sql";
 
 pub mod environment {
-    pub const CONFIG_NAME: &str = "oracle.yml";
+    pub const CONFIG_NAME: &str = "mk-oracle.yml";
     pub const CONFIG_DIR_ENV_VAR: &str = "MK_CONFDIR";
     pub const LOG_DIR_ENV_VAR: &str = "MK_LOGDIR";
     pub const TEMP_DIR_ENV_VAR: &str = "MK_TEMPDIR";

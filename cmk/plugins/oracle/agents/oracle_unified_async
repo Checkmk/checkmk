@@ -34,9 +34,9 @@ if [ -z "${MK_CONFDIR}" ] || [ ! -d "${MK_CONFDIR}" ]; then
     exit 1
 fi
 
-if [ ! -f "${MK_CONFDIR}/oracle.yml" ]; then
-    echo "Configuration file oracle.yml not found in ${MK_CONFDIR}"
+if [ ! -f "${MK_CONFDIR}/mk-oracle.yml" ]; then
+    echo "Configuration file mk-oracle.yml not found in ${MK_CONFDIR}"
     exit 1
 fi
 
-${bin_exe} -c "${MK_CONFDIR}/oracle.yml" --filter async
+${bin_exe} -c "${MK_CONFDIR}/mk-oracle.yml" --filter async

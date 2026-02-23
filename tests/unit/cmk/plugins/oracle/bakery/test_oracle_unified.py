@@ -89,7 +89,7 @@ files_base: list[Plugin] = linux_files + windows_files
 
 def _combine(files: Sequence[Plugin], yaml_lines: Sequence[str]) -> Sequence[Plugin | PluginConfig]:
     ret = list(files) + [
-        PluginConfig(base_os=base_os, lines=list(yaml_lines), target=Path("oracle.yml"))
+        PluginConfig(base_os=base_os, lines=list(yaml_lines), target=Path("mk-oracle.yml"))
         for base_os in (OS.LINUX, OS.WINDOWS)
     ]
 

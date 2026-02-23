@@ -237,7 +237,7 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
         yield PluginConfig(
             base_os=base_os,
             lines=config_lines,
-            target=Path("oracle.yml"),
+            target=Path("mk-oracle.yml"),
         )
 
 

@@ -481,7 +481,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 $CMK_VERSION = "{}"
 
-& $env:MK_PLUGINSDIR\packages\mk-oracle\mk-oracle.exe -c $env:MK_CONFDIR/oracle.yml "#,
+& $env:MK_PLUGINSDIR\packages\mk-oracle\mk-oracle.exe -c $env:MK_CONFDIR/mk-oracle.yml "#,
         VERSION
     )
 });
@@ -519,7 +519,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 CMK_VERSION="{}"
 
-"${{MK_LIBDIR}}/plugins/packages/mk-oracle/mk-oracle" -c "${{MK_CONFDIR}}/oracle.yml" "#,
+"${{MK_LIBDIR}}/plugins/packages/mk-oracle/mk-oracle" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
         VERSION
     )
 });

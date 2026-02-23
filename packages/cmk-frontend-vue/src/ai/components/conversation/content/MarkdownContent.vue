@@ -41,11 +41,11 @@ onMounted(async () => {
 <style scoped>
 .ai-markdown-content {
   padding-bottom: var(--dimension-4);
+}
 
-  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-  :deep(code) {
-    background: var(--code-background-color);
-    border-radius: var(--border-radius);
-  }
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.ai-markdown-content :deep(code) {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 </style>

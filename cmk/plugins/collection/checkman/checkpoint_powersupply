@@ -9,9 +9,13 @@ item:
 
 description:
  This check monitors the health of the power supplies in checkpoint firewalls.
- The status of this check is translated directly from a device status.
- "Up" is the only known state for this, which indicates a healthy PS ({OK}),
- any other state will be treated as {CRIT}.
+ The resulting state is determined by mapping the reported device status to a
+ monitoring state via the rule "Check Point powersupply".
+
+ By default, the status "Up" results in {OK}. Any other status, including
+ "Present", results in {CRIT} unless explicitly configured otherwise,
+ to be backward compatible.
+
 
 discovery:
  One service is created for each power supply.

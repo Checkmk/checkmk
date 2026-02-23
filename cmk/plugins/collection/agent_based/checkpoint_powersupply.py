@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -23,13 +24,13 @@ def discover_checkpoint_powersupply(section: StringTable) -> DiscoveryResult:
         yield Service(item=index)
 
 
-def check_checkpoint_powersupply(item: str, section: StringTable) -> CheckResult:
+def check_checkpoint_powersupply(
+    item: str, params: Mapping[str, object], section: StringTable
+) -> CheckResult:
     for index, dev_status in section:
         if index == item:
-            # found no documentation on possible power supply status,
-            # "Up" is the only one observed so far
             yield Result(
-                state=State.OK if dev_status == "Up" else State.CRIT,
+                state=State(params.get(dev_status.lower(), State.CRIT)),
                 summary=dev_status,
             )
             return
@@ -53,4 +54,11 @@ check_plugin_checkpoint_powersupply = CheckPlugin(
     service_name="Power Supply %s",
     discovery_function=discover_checkpoint_powersupply,
     check_function=check_checkpoint_powersupply,
+    # for possible device statuses see SUP-27826
+    # only "Present" seems officially supported, but we've also seen "up"
+    check_default_parameters={
+        "up": State.OK.value,
+        "present": State.CRIT.value,
+    },
+    check_ruleset_name="checkpoint_powersupply",
 )

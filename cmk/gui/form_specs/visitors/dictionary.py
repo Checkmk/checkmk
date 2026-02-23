@@ -45,8 +45,18 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
     def _get_static_elements(self) -> set[str]:
         return set(self.form_spec.ignored_elements or ())
 
-    def _compute_static_elements(self, parsed_value: Mapping[str, object]) -> dict[str, str]:
-        return {x: repr(y) for x, y in parsed_value.items() if x in self._get_static_elements()}
+    def _compute_static_elements(self, parsed_value: _ParsedValueModel) -> dict[str, str]:
+        static_values: dict[str, str] = {}
+        for key in self._get_static_elements():
+            try:
+                if key not in parsed_value:
+                    continue
+                static_value = parsed_value[key]
+                assert isinstance(static_value, (RawFrontendData, RawDiskData))
+                static_values[key] = repr(static_value.value)
+            except KeyError:
+                continue
+        return static_values
 
     def _resolve_static_elements(self, raw_value: dict[str, object]) -> dict[str, object]:
         for ignored_key in self._get_static_elements():
@@ -207,5 +217,12 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
 
         for key in self._get_static_elements():
             if key in parsed_value:
-                disk_values[key] = parsed_value[key]
+                # The static elements are also wrapped in RawFrontendData/RawDiskData,
+                # so we need to extract the value before saving it to disk.
+                static_value = parsed_value[key]
+                if isinstance(static_value, DefaultValue):
+                    # This case should not happen. Static elements have no default values
+                    continue
+                else:
+                    disk_values[key] = static_value.value
         return disk_values

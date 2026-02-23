@@ -251,7 +251,7 @@ class BaseHostAttribute(BaseSchema):
     locked_attributes = HostAttributeLockedAttributes().openapi_field()
     inventory_failed = HostAttributeDiscoveryFailed().openapi_field()
     relay = RelayField(
-        description="The relay-id through which this host is monitored, if not empty."
+        description="The relay ID through which this host is monitored, if not empty."
     )
 
 

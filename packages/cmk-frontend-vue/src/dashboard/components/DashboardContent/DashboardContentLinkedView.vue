@@ -60,5 +60,7 @@ const iFrameProps = computed(() => {
     @click.capture="suppressEventOnPublicDashboard"
     @auxclick.capture="suppressEventOnPublicDashboard"
     @mousedown.capture="suppressEventOnPublicDashboard"
+    @keydown.capture="suppressEventOnPublicDashboard"
+    @wheel.capture="suppressEventOnPublicDashboard"
   />
 </template>

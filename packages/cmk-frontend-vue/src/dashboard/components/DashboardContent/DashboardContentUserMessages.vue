@@ -106,6 +106,8 @@ function formatTimestamp(timestamp: number): string {
       @click.capture="suppressEventOnPublicDashboard"
       @auxclick.capture="suppressEventOnPublicDashboard"
       @mousedown.capture="suppressEventOnPublicDashboard"
+      @keydown.capture="suppressEventOnPublicDashboard"
+      @wheel.capture="suppressEventOnPublicDashboard"
     >
       <table v-if="messages!.length" class="db-content-user-messages__table">
         <tbody>

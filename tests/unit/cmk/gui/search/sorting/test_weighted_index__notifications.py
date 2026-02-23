@@ -67,6 +67,7 @@ def test_weighted_index_sorting_with_notifications_query() -> None:
         ("Delay service notifications", "Service monitoring rules"),
         ("Enable/disable notifications for services", "Service monitoring rules"),
         ("Periodic notifications during service problems", "Service monitoring rules"),
+        ("Push Notifications (using Pushover)", "Service monitoring rules"),
         ("Fallback email address for notifications", "Global settings"),
         ("Interval for checking for ripe bulk notifications", "Global settings"),
         ("Logging of the notification mechanics", "Global settings"),
@@ -74,7 +75,6 @@ def test_weighted_index_sorting_with_notifications_query() -> None:
         ("Send notifications to remote Event Console", "Global settings"),
         ("Store notifications for rule analysis", "Global settings"),
         ("Syslog facility for Event console notifications", "Global settings"),
-        ("Push Notifications (using Pushover)", "Service monitoring rules"),
     ]
 
     assert value == expected

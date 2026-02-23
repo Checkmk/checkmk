@@ -6,6 +6,7 @@
 import enum
 from collections.abc import Callable
 
+from cmk.gui.i18n import _
 from cmk.shared_typing.unified_search import SortType, UnifiedSearchResultItem
 
 type Sorter = Callable[[list[UnifiedSearchResultItem]], None]
@@ -44,9 +45,14 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
     topic_ranking_map = {topic: rank for rank, topic in enumerate(_TOPIC_RANKING)}
     unranked_topic = max(topic_ranking_map.values()) + 1
 
-    def algorithm(item: UnifiedSearchResultItem) -> tuple[_MatchRank, int, str, str]:
+    def algorithm(item: UnifiedSearchResultItem) -> tuple[_MatchRank, int, bool, str, str]:
         title_ = item.title.lower()
         topic_ = item.topic.lower()
+
+        # TODO: once metadata is factored out of code, introduce a "deprecated" attribute.
+        # NOTE: need to check for both translated and untranslated patterns since some titles are
+        # don't have translations.
+        is_deprecated = any(pattern in title_ for pattern in ("(deprecated)", _("(deprecated)")))
 
         if query_ == title_:
             match_rank = _MatchRank.EXACT_TITLE
@@ -54,7 +60,7 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
             match_rank = _MatchRank.EXACT_TITLE_IN_PARENTHESES
         elif title_.startswith(query_):
             match_rank = _MatchRank.TITLE_STARTS_WITH_QUERY
-        elif is_deprecated_result_item(title_, topic_):
+        elif is_deprecated:
             match_rank = _MatchRank.DEPRECATED_RESULT_ITEM
         else:
             match_rank = _MatchRank.DEFAULT_RANK
@@ -63,7 +69,7 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
 
         # TODO: try and figure out if we can improve shared typing to account for non-Optional str
         # type with a blank string as default (original behavior).
-        return match_rank, topic_rank, item.title, item.context or ""
+        return match_rank, topic_rank, is_deprecated, item.title, item.context or ""
 
     def sorter(items: list[UnifiedSearchResultItem]) -> None:
         items.sort(key=algorithm)
@@ -90,10 +96,3 @@ class _MatchRank(enum.IntEnum):
     TITLE_STARTS_WITH_QUERY = 2
     DEFAULT_RANK = 3
     DEPRECATED_RESULT_ITEM = 4
-
-
-# TODO: once metadata is factored out of code, introduce a "deprecated" attribute to result item.
-def is_deprecated_result_item(title: str, topic: str) -> bool:
-    if title.startswith("push notifications") and topic == "service monitoring rules":
-        return True
-    return False

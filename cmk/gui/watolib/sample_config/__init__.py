@@ -5,7 +5,7 @@
 """Create an initial Checkmk configuration for new sites"""
 
 from ._abc import SampleConfigGeneratorABCGroups
-from ._constants import INVENTORY_PROCESS_DISCOVERY_RULES
+from ._constants import CMK_INV_RULES, INVENTORY_PROCESS_DISCOVERY_RULES
 from ._impl import (
     ConfigGeneratorAcknowledgeInitialWerks,
     ConfigGeneratorBasicWATOConfig,
@@ -22,6 +22,7 @@ from ._impl import (
 __all__ = [
     "SampleConfigGeneratorABCGroups",
     "SampleConfigGeneratorGroups",
+    "CMK_INV_RULES",
     "ConfigGeneratorAcknowledgeInitialWerks",
     "ConfigGeneratorLocalSiteConnection",
     "ConfigGeneratorBasicWATOConfig",

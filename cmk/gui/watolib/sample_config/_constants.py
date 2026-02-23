@@ -199,6 +199,24 @@ INVENTORY_PROCESS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = (
     PS_DISCOVERY_RULES + PROXMOX_RULES
 )
 
+CMK_INV_RULES: list[RuleSpec[Mapping[str, object]]] = [
+    {
+        "id": "de3be70a-5efb-4a00-8173-441329887c4a",
+        "condition": {"host_label_groups": [("and", [("and", "cmk/cloud:azure")])]},
+        "value": {"status_data_inventory": True},
+        "options": {
+            "description": "Factory default. Required for the shipped dashboards.",
+            "disabled": False,
+            "comment": (
+                "If you do not want this rule, consider disabling it, rather "
+                "than deleting it. If you delete it, it will come back after "
+                "the next update."
+            ),
+        },
+    },
+]
+
+
 # Rules that match the host tag definition from `sample_tag_config`
 SHIPPED_RULES = {
     # Make the tag 'offline' remove hosts from the monitoring
@@ -308,14 +326,8 @@ SHIPPED_RULES = {
                     "description": "Factory default. Required for the shipped dashboards.",
                 },
             },
-            {
-                "id": "de3be70a-5efb-4a00-8173-441329887c4a",
-                "condition": {"host_label_groups": [("and", [("and", "cmk/cloud:azure")])]},
-                "value": {"status_data_inventory": True},
-                "options": {
-                    "description": "Factory default. Required for the shipped dashboards.",
-                },
-            },
+            # TODO: Should the above rules also move into this list?
+            *CMK_INV_RULES,
         ]
     },
     # Interval for HW/SW Inventory check

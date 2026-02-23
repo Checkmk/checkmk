@@ -4,16 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import {
-  type Ref,
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  useTemplateRef,
-  watch
-} from 'vue'
+import { type Ref, computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+
+import CmkIcon from '@/components/CmkIcon'
 
 import DashboardContentContainer from '@/dashboard/components/DashboardContent/DashboardContentContainer.vue'
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
@@ -29,16 +22,19 @@ const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
 const dataEndpointUrl: Ref<string> = computed(() => {
   return cmkToken ? 'widget_figure_token_auth.py' : 'widget_figure.py'
 })
-const emit = defineEmits(['vue:mounted', 'vue:updated'])
 
 const wrapperDiv = useTemplateRef<HTMLDivElement>('wrapperDiv')
+const figureDiv = useTemplateRef<HTMLDivElement>('figureDiv')
+const figureId = computed(() => `db-content-figure-${props.widget_id}`)
 
 const currentDimensions = ref({ width: 0, height: 0 })
+const isLoading = ref(true)
 
 let figure: FigureBase | null = null
+let mutationObserver: MutationObserver | null = null
 
 watch(
-  wrapperDiv,
+  () => wrapperDiv.value,
   (newValue, _oldValue, onCleanup) => {
     if (!newValue) {
       return
@@ -136,10 +132,37 @@ const sizeSvg = computed(() =>
 
 const updateInterval = 60
 
+function setupMutationObserver(targetElement: HTMLElement) {
+  if (mutationObserver) {
+    mutationObserver.disconnect()
+  }
+  mutationObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.removedNodes) {
+        if (node instanceof HTMLElement && node.classList.contains('loading_img')) {
+          isLoading.value = false
+          return
+        }
+      }
+      for (const node of mutation.addedNodes) {
+        if (node instanceof HTMLElement && node.id === 'figure_error') {
+          isLoading.value = false
+          return
+        }
+      }
+    }
+  })
+  mutationObserver.observe(targetElement, { childList: true })
+}
+
 const initializeFigure = () => {
+  if (figureDiv.value) {
+    setupMutationObserver(figureDiv.value)
+  }
+
   figure = new FigureBase(
     legacyFigureType.value,
-    `#db-content-figure-${props.widget_id}`,
+    `#${figureId.value}`,
     dataEndpointUrl.value,
     new URLSearchParams(httpVars.value).toString(),
     props.content,
@@ -147,20 +170,21 @@ const initializeFigure = () => {
   )
 }
 
-onMounted(async () => {
+onMounted(() => {
   initializeFigure()
-  await nextTick()
-  emit('vue:mounted')
 })
 
-watch(httpVars, (newHttpVars) => {
+watch(httpVars, (newHttpVars: FilterHTTPVars) => {
   if (figure) {
+    isLoading.value = true
     figure.update(dataEndpointUrl.value, new URLSearchParams(newHttpVars).toString(), props.content)
   }
 })
 
 onBeforeUnmount(() => {
   figure?.disable()
+  mutationObserver?.disconnect()
+  mutationObserver = null
 })
 </script>
 
@@ -170,32 +194,63 @@ onBeforeUnmount(() => {
     :general_settings="general_settings"
     content-overflow="hidden"
   >
-    <div ref="wrapperDiv" class="db-content-figure__wrapper">
+    <div class="db-content-figure__loading-container">
+      <CmkIcon
+        v-if="isLoading"
+        name="load-graph"
+        size="xlarge"
+        class="db-content-figure__loading-icon"
+      />
       <div
-        :id="`db-content-figure-${widget_id}`"
-        class="db-content-figure cmk_figure"
-        :class="[
-          {
-            'db-content-figure__size-svg': sizeSvg,
-            'db-content-figure__background': !!general_settings.render_background
-          },
-          legacyFigureType
-        ]"
-        @click.capture="suppressEventOnPublicDashboard"
-        @auxclick.capture="suppressEventOnPublicDashboard"
-        @mousedown.capture="suppressEventOnPublicDashboard"
-        @keydown.capture="suppressEventOnPublicDashboard"
-        @wheel.capture="suppressEventOnPublicDashboard"
-      ></div>
+        ref="wrapperDiv"
+        class="db-content-figure__wrapper"
+        :class="{ 'db-content-figure__wrapper--loading': isLoading }"
+      >
+        <div
+          :id="figureId"
+          ref="figureDiv"
+          class="db-content-figure cmk_figure"
+          :class="[
+            {
+              'db-content-figure__size-svg': sizeSvg,
+              'db-content-figure__background': !!general_settings.render_background
+            },
+            legacyFigureType
+          ]"
+          @click.capture="suppressEventOnPublicDashboard"
+          @auxclick.capture="suppressEventOnPublicDashboard"
+          @mousedown.capture="suppressEventOnPublicDashboard"
+          @keydown.capture="suppressEventOnPublicDashboard"
+          @wheel.capture="suppressEventOnPublicDashboard"
+        ></div>
+      </div>
     </div>
   </DashboardContentContainer>
 </template>
 
 <style scoped>
+.db-content-figure__loading-container {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+.db-content-figure__loading-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
 .db-content-figure__wrapper {
   display: flex;
   width: 100%;
   height: 100%;
+}
+
+.db-content-figure__wrapper--loading {
+  visibility: hidden;
 }
 
 .db-content-figure {

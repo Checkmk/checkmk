@@ -59,9 +59,8 @@ export class FigureBase {
 
   public update(dataEndpointUrl: string, postBody: string, widgetContent: WidgetContent) {
     this.instance.set_post_url_and_body(dataEndpointUrl, postBody)
-    this.forceUpdate() // running the scheduler and fetching data
     this.instance.set_widget_content(widgetContent)
-    this.instance.update_gui()
+    this.forceUpdate() // running the scheduler and fetching data
   }
 
   public disable() {

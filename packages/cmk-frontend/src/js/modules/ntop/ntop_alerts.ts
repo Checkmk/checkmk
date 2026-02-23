@@ -146,6 +146,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
   }
 
   override initialize(_with_debugging?: boolean) {
+    super.initialize(_with_debugging)
     // Date and hour filters
     this._initialize_time_filters(
       this._div_selection.append('div').classed('time_filters ' + this.page_id(), true)

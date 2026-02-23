@@ -96,6 +96,7 @@ export class TimeseriesFigure<
   }
 
   override initialize() {
+    super.initialize()
     // TODO: check double diff, currently used for absolute/auto styling
     this._div_selection.classed('timeseries', true).style('overflow', 'visible')
     const main_div = this._div_selection

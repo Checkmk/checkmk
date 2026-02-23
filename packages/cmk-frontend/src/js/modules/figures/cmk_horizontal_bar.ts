@@ -9,7 +9,7 @@ import { axisLeft, axisRight, axisTop, max, range, scaleLinear } from 'd3'
 
 import { FigureTooltip } from '@/modules/figures/cmk_figure_tooltip'
 import { FigureBase } from '@/modules/figures/cmk_figures'
-import { add_scheduler_debugging, getIn } from '@/modules/figures/cmk_figures_utils'
+import { getIn } from '@/modules/figures/cmk_figures_utils'
 import { Domain, FigureData, SingleMetricDataPlotDefinitions } from '@/modules/figures/figure_types'
 import { domainIntervals, partitionableDomain } from '@/modules/number_format'
 
@@ -47,6 +47,7 @@ export class HorizontalBarFigure extends FigureBase<BarplotFigureData> {
   }
 
   override initialize() {
+    super.initialize()
     this.svg = this._div_selection.append('svg').classed('renderer', true)
     this.plot = this.svg.append('g')
     this.bars = this.plot.append('g').classed('barplot', true)

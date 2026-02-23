@@ -584,7 +584,7 @@ class ViewWidgetEditPage(Page):
             - mode: The mode of the editor, one of "create", "copy", "edit".
             - dashboard: The name of the dashboard the view is embedded in.
             - owner: The owner of the dashboard. Must match the logged-in user, unless the user
-                     has the `general.edit_foreign_dashboards` permission and the mode is "edit".
+                     has the `general.edit_foreign_dashboards` permission.
             - embedded_id: The internal ID of the embedded view in the dashboard. Must be generated
                            on the client side even for new views.
 
@@ -683,14 +683,10 @@ class ViewWidgetEditPage(Page):
     def _get_owner(request: Request, mode: Mode) -> UserId:
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
         if owner_id != user.id:
-            if mode == "edit":
-                # we're editing views that are saved inside the dashboard config
-                if not user.may("general.edit_foreign_dashboards"):
-                    raise MKAuthException(
-                        _("You are not allowed to edit foreign %s.") % "dashboards"
-                    )
-            else:  # create/copy mode
-                raise MKAuthException(_("Mismatching owner in `%s` mode.") % mode)
+            # Applies to all modes (create, copy, edit): editing foreign dashboards
+            # requires the general.edit_foreign_dashboards permission.
+            if not user.may("general.edit_foreign_dashboards"):
+                raise MKAuthException(_("You are not allowed to edit foreign %s.") % "dashboards")
         return owner_id
 
     @staticmethod

@@ -37,9 +37,9 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
+from .api_endpoints import agent_download, icon, pagetype_topic, site_management
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
-from .api_endpoints import icon, pagetype_topic, site_management
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
 from .api_endpoints.sidebar_element import registration as sidebar_element
@@ -95,6 +95,9 @@ def register(
     quick_setup.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     broker_connection.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
 
+    agent_download.register(
+        versioned_endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints
+    )
     api_host_config.register(
         versioned_endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints
     )

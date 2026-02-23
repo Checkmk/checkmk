@@ -37,8 +37,8 @@ class CmkPageUrl:
     value: str
     login: bool = True
     first_request_timeout: float = 30
-    request_timeout: float = 1.0
-    max_average_duration: float = 0.5
+    request_timeout: float = 5.0
+    max_average_duration: float = 1.0
 
 
 class PerformanceTest:

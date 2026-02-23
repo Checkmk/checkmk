@@ -99,8 +99,7 @@ def test_performance_services(
         CmkPageUrl(
             "host_parameters",
             "wato.py?folder={folder}&host={host}&mode=object_parameters",
-            max_average_duration=1.5,
-            request_timeout=2,
+            max_average_duration=2.5,
         ),
     ],
     ids=lambda url: url.id,

@@ -217,7 +217,7 @@ const handleUpdate = async () => {
         </div>
 
         <div class="db-public-access__cell">
-          <a href="#" @click="handleDelete">{{ _t('Delete') }}</a>
+          <a href="#" @click.prevent="handleDelete">{{ _t('Delete') }}</a>
         </div>
       </div>
     </template>

@@ -44,7 +44,7 @@ const bullet: string = '●'
     <span>{{ text }}</span>
     <template v-if="linkedText">
       <CmkSpace />
-      <a href="#" @click="$emit('click')">{{ linkedText }}</a>
+      <a href="#" @click.prevent="$emit('click')">{{ linkedText }}</a>
     </template>
   </div>
 </template>

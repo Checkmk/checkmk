@@ -33,7 +33,7 @@ const doSelect = () => {
       href="#"
       class="db-workflow-card"
       :class="{ 'db-workflow-card__disabled': disabled }"
-      @click="doSelect"
+      @click.prevent="doSelect"
     >
       <CmkIconEmblem :emblem="icon_emblem"><CmkIcon :name="icon" size="xxlarge" /></CmkIconEmblem>
       <div class="db-workflow-card__content">

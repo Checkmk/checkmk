@@ -1410,7 +1410,7 @@ class UserWebAuthnLoginComplete(JsonPage):
                     raw_id=b64decode(json_data["credentialId"]), response=data
                 ),
             )
-        except BaseException:
+        except ValueError:
             _log_event_auth(ctx.request.remote_ip, "Webauthn")
             _handle_failed_auth(
                 user.id,
@@ -1419,7 +1419,7 @@ class UserWebAuthnLoginComplete(JsonPage):
                 ctx.config.lock_on_logon_failures,
                 ctx.config.log_logon_failures,
             )
-            raise
+            raise MKUserError(None, _("WebAuthn login failed"), HTTPStatus.UNAUTHORIZED)
 
         session.session_info.webauthn_action_state = None
         session.check_and_update_session_state()

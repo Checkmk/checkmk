@@ -6,6 +6,7 @@
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 
 from .create_agent_download_token import ENDPOINT_CREATE_AGENT_DOWNLOAD_TOKEN
+from .download_by_token import ENDPOINT_DOWNLOAD_BY_TOKEN
 
 
 def register(
@@ -13,4 +14,7 @@ def register(
 ) -> None:
     versioned_endpoint_registry.register(
         ENDPOINT_CREATE_AGENT_DOWNLOAD_TOKEN, ignore_duplicates=ignore_duplicates
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_DOWNLOAD_BY_TOKEN, ignore_duplicates=ignore_duplicates
     )

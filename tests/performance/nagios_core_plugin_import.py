@@ -78,7 +78,8 @@ class NagiosCorePluginImport:
             for plugin_name in dir(module):
                 try:
                     plugin_type = getattr(module, plugin_name).__class__.__name__
-                    if plugin_type not in get_args(_AgentBasedPlugins):
+                    AgentBasedPluginTypes = [_.__name__ for _ in get_args(_AgentBasedPlugins)]
+                    if plugin_type not in AgentBasedPluginTypes:
                         continue
                 except AttributeError:
                     continue

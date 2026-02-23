@@ -6,6 +6,7 @@ import ipaddress
 import re
 import typing
 
+from cmk.ccc.hostaddress import HostAddress as CheckmkHostAddress
 from cmk.rulesets.v1._localize import Message
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
 
@@ -128,12 +129,9 @@ class HostAddress:
 
 
 class HostAddressList:
-    """Validator that ensures all values in a list are valid hostnames, IP addresses, or regex patterns.
+    """Validator that ensures all values in a list are valid Checkmk hostnames, IP addresses, or regex patterns.
     Regex patterns are indicated by a leading ~ character.
     """
-
-    def __init__(self) -> None:
-        self._validator = HostAddress()
 
     def __call__(self, value: typing.Sequence[str]) -> None:
         for hostname in value:
@@ -144,4 +142,9 @@ class HostAddressList:
                     except re.error as e:
                         raise ValidationError(Message("Invalid regex pattern: %s") % str(e))
                 else:
-                    self._validator(hostname)
+                    try:
+                        CheckmkHostAddress(hostname)
+                    except ValueError as e:
+                        raise ValidationError(
+                            Message(str(e).title())  # astrein: disable=localization-checker
+                        )

@@ -86,7 +86,7 @@ agent_section_azure_virtualmachines = AgentSection(
 
 
 def discover_azure_virtual_machine(section: Resource) -> DiscoveryResult:
-    yield Service(labels=get_service_labels_from_resource_tags(section.tags))
+    yield Service(item=section.name, labels=get_service_labels_from_resource_tags(section.tags))
 
 
 def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:
@@ -102,7 +102,9 @@ def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:
         yield status_name, VMStatus(status_name, parsed_status_value, parsed_message)
 
 
-def check_azure_virtual_machine(params: Mapping[str, int], section: Resource) -> CheckResult:
+def check_azure_virtual_machine(
+    item: str, params: Mapping[str, int], section: Resource
+) -> CheckResult:
     statuses = dict(get_statuses(section))
 
     map_provisioning_states = {k: v for k, v in params.items() if k in _PROVISIONING_STATES}
@@ -131,7 +133,7 @@ def check_azure_virtual_machine(params: Mapping[str, int], section: Resource) ->
 check_plugin_azure_virtual_machine = CheckPlugin(
     name="azure_v2_virtual_machine",
     sections=["azure_v2_virtualmachines"],
-    service_name="Azure/VM",
+    service_name="VM %s",
     discovery_function=discover_azure_virtual_machine,
     check_function=check_azure_virtual_machine,
     check_ruleset_name="azure_v2_vms",
@@ -162,7 +164,7 @@ def check_azure_vm_cpu_utilization(
 check_plugin_azure_vm_cpu_utilization = CheckPlugin(
     name="azure_v2_vm_cpu_utilization",
     sections=["azure_v2_virtualmachines"],
-    service_name="Azure/VM CPU utilization",
+    service_name="Azure/VM CPU Utilization",
     discovery_function=discover_azure_vm_cpu_utilization,
     check_function=check_azure_vm_cpu_utilization,
     check_ruleset_name="cpu_utilization",

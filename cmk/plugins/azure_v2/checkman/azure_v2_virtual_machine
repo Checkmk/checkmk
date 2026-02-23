@@ -12,6 +12,9 @@ description:
  The service state resulting from the different provisioning and power states can be
  configured using the rule "Azure Virtual Machines".
 
+item:
+ The check item is the name of the VM.
+
 discovery:
  One service is created for each VM, on every Checkmk host that receives information
  about the VMs via the piggyback mechanism.

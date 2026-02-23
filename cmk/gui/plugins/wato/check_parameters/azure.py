@@ -393,8 +393,9 @@ rulespec_registry.register(
 
 # TODO: migrate and move to new folder structure
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="azure_v2_vms",
+        item_spec=_item_spec_azure_vms,
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms,

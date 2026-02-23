@@ -102,7 +102,7 @@ SECTION = Resource(
     [
         pytest.param(
             SECTION,
-            [Service()],
+            [Service(item="VM-test-1")],
             id="VM resource",
         )
     ],
@@ -115,9 +115,10 @@ def test_discover_azure_virtual_machine(
 
 
 @pytest.mark.parametrize(
-    "params,section,expected_result",
+    "item, params, section, expected_result",
     [
         pytest.param(
+            "VM-test-1",
             _MAP_STATES,
             SECTION,
             [
@@ -128,6 +129,7 @@ def test_discover_azure_virtual_machine(
             id="statuses present, no message",
         ),
         pytest.param(
+            "VM-test-1",
             _MAP_STATES,
             Resource(
                 id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test-group/providers/Microsoft.Compute/virtualMachines/VM-test-1",
@@ -149,6 +151,7 @@ def test_discover_azure_virtual_machine(
             id="missing statusses",
         ),
         pytest.param(
+            "VM-test-1",
             _MAP_STATES,
             Resource(
                 id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test-group/providers/Microsoft.Compute/virtualMachines/VM-test-1",
@@ -186,6 +189,7 @@ def test_discover_azure_virtual_machine(
             id="statuses unknown, messages present",
         ),
         pytest.param(
+            "VM-test-1",
             _MAP_STATES,
             Resource(
                 id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test-group/providers/Microsoft.Compute/virtualMachines/VM-test-1",
@@ -223,11 +227,15 @@ def test_discover_azure_virtual_machine(
     ],
 )
 def test_check_azure_virtual_machines(
+    item: str,
     params: Mapping[str, int],
     section: Resource,
     expected_result: CheckResult,
 ) -> None:
-    assert list(check_azure_virtual_machine(params=params, section=section)) == expected_result
+    assert (
+        list(check_azure_virtual_machine(item=item, params=params, section=section))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(

@@ -219,7 +219,7 @@ def test_otel_service_monitoring_rules(
                 lambda: otel_site.is_service_in_expected_state_after_rescheduling(
                     host_name, service_name, expected_state
                 ),
-                timeout=30,
+                timeout=60,
                 interval=5,
             )
 

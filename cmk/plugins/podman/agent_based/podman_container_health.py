@@ -74,6 +74,6 @@ check_plugin_podman_container_health = CheckPlugin(
         healthy=0,
         starting=0,
         unhealthy=2,
-        no_healthcheck=1,
+        no_healthcheck=0,
     ),
 )

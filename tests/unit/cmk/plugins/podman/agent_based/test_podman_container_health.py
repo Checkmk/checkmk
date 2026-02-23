@@ -26,7 +26,7 @@ _DEFAULT_PARAMS = Params(
     healthy=0,
     starting=0,
     unhealthy=2,
-    no_healthcheck=1,
+    no_healthcheck=0,
 )
 
 SECTION_NO_HEALTHCHECK = SectionPodmanContainerInspect(
@@ -84,7 +84,7 @@ def test_discover_podman_container_health() -> None:
             _DEFAULT_PARAMS,
             [
                 Result(
-                    state=State.WARN,
+                    state=State.OK,
                     summary="No health check configured",
                     details="Last health report: testOutput\n    "
                     "Health check command: No health check command configured\n    "
@@ -93,7 +93,7 @@ def test_discover_podman_container_health() -> None:
                     "Last saved exit code: 0",
                 ),
             ],
-            id="No Healthcheck -> WARN",
+            id="No Healthcheck -> OK",
         ),
         pytest.param(
             SECTION_RUNNING,

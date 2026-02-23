@@ -5,25 +5,20 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-from cmk.graphing.v1 import metrics, Title
-
-metric_channel_width = metrics.Metric(
-    name="channel_width",
-    title=Title("Channel width"),
-    unit=metrics.Unit(metrics.SINotation("hZ")),
-    color=metrics.Color.BLUE,
-)
-
-metric_channel = metrics.Metric(
-    name="channel",
-    title=Title("Channel"),
-    unit=metrics.Unit(metrics.DecimalNotation("")),
-    color=metrics.Color.DARK_YELLOW,
-)
+from cmk.graphing.v1 import metrics, perfometers, Title
 
 metric_signal_power = metrics.Metric(
     name="signal_power",
     title=Title("Signal power"),
     unit=metrics.Unit(metrics.DecimalNotation("dBm")),
     color=metrics.Color.GREEN,
+)
+
+perfometer_signal_power = perfometers.Perfometer(
+    name="signal_power",
+    focus_range=perfometers.FocusRange(
+        perfometers.Closed(0),
+        perfometers.Open(30),
+    ),
+    segments=["signal_power"],
 )

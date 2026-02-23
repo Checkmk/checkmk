@@ -225,7 +225,7 @@ class MerakiOrganisation:
                 for device in devices_by_type["wireless"]:
                     serial = device["serial"]
                     if piggyback := self._get_device_piggyback(serial, devices_by_serial):
-                        for wireless_device in self.client.get_wireless_device_statuses(serial):
+                        if wireless_device := self.client.get_wireless_device_statuses(serial):
                             yield Section(
                                 name="cisco_meraki_org_wireless_device_statuses",
                                 data=wireless_device,

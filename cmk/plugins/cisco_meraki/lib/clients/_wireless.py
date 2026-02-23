@@ -13,7 +13,7 @@ from cmk.plugins.cisco_meraki.lib.type_defs import TotalPages
 
 
 class WirelessSDK(Protocol):
-    def getDeviceWirelessStatus(self, serial: str) -> Sequence[schema.RawWirelessDeviceStatus]: ...
+    def getDeviceWirelessStatus(self, serial: str) -> schema.RawWirelessDeviceStatus: ...
     def getOrganizationWirelessDevicesEthernetStatuses(
         self, organizationId: str, total_pages: TotalPages
     ) -> Sequence[schema.RawWirelessEthernetStatus]: ...
@@ -23,12 +23,12 @@ class WirelessClient:
     def __init__(self, sdk: WirelessSDK) -> None:
         self._sdk = sdk
 
-    def get_device_statuses(self, serial: str, /) -> Sequence[schema.RawWirelessDeviceStatus]:
+    def get_device_statuses(self, serial: str, /) -> schema.RawWirelessDeviceStatus | None:
         try:
             return self._sdk.getDeviceWirelessStatus(serial)
         except APIError as e:
             log.LOGGER.debug("Serial: %r: Get wireless device status: %r", serial, e)
-            return []
+            return None
 
     def get_ethernet_statuses(self, id: str, /) -> Sequence[schema.RawWirelessEthernetStatus]:
         try:

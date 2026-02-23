@@ -76,7 +76,7 @@ class _CacheConfig:
     device_uplinks_info: _CacheDecorator[[str], Sequence[schema.RawDeviceUplinksAddress]]
     licenses_overview: _CacheDecorator[[str, str], schema.LicensesOverview | None]
     networks: _CacheDecorator[[str, str], Sequence[schema.Network]]
-    wireless_device_statuses: _CacheDecorator[[str], Sequence[schema.RawWirelessDeviceStatus]]
+    wireless_device_statuses: _CacheDecorator[[str], schema.RawWirelessDeviceStatus | None]
     wireless_ethernet_statuses: _CacheDecorator[[str], Sequence[schema.RawWirelessEthernetStatus]]
 
     @classmethod

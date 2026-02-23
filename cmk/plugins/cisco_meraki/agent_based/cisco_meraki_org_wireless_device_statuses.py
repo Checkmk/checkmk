@@ -106,10 +106,10 @@ def check_wireless_device_statuses_ssids(
         return
 
     if not ssid.enabled:
-        yield Result(state=State(params["state_if_not_enabled"]), summary="Status: disabled")
+        yield Result(state=State(params["state_if_not_enabled"]), summary="Status: Disabled")
         return
 
-    yield Result(state=State.OK, summary="Status: enabled")
+    yield Result(state=State.OK, summary="Status: Enabled")
     yield Result(state=State.OK, notice=f"Visible: {ssid.visible}")
     yield Result(state=State.OK, notice=f"SSID number: {ssid.ssid_number}")
 

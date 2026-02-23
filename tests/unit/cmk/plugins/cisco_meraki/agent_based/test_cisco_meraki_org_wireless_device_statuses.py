@@ -65,7 +65,7 @@ class TestWirelessDeviceStatusesSSIDs:
 
         value = list(check_wireless_device_statuses_ssids("SSID 1", params, section))
         expected = [
-            Result(state=State.OK, summary="Status: enabled"),
+            Result(state=State.OK, summary="Status: Enabled"),
             Result(state=State.OK, notice="Visible: True"),
             Result(state=State.OK, notice="SSID number: 1"),
         ]
@@ -81,7 +81,7 @@ class TestWirelessDeviceStatusesSSIDs:
         assert section
 
         value = list(check_wireless_device_statuses_ssids("SSID 1", params, section))
-        expected = [Result(state=State.WARN, summary="Status: disabled")]
+        expected = [Result(state=State.WARN, summary="Status: Disabled")]
 
         assert value == expected
 

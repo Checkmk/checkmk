@@ -136,10 +136,12 @@ const getSearchInputPlaceholder = computed(() => {
             class="unified-search-header__input"
             :aria-label="getSearchInputPlaceholder"
             :placeholder="getSearchInputPlaceholder"
-            autocomplete="one-time-code"
+            autocomplete="off"
             @input="onInput"
             @keydown.enter="onInputEnter"
           />
+          <input type="text" class="unified-search-header__input-hide" />
+          <input type="password" class="unified-search-header__input-hide" />
           <UnifiedSearchFilters v-if="isMonitoringSearch()"></UnifiedSearchFilters>
         </div>
 
@@ -175,6 +177,10 @@ const getSearchInputPlaceholder = computed(() => {
   padding: 0 var(--spacing-double);
   border-top: 1px solid var(--default-nav-border-color);
   border-bottom: 1px solid var(--default-nav-border-color);
+}
+
+.unified-search-header__input-hide {
+  display: none;
 }
 
 .unified-search-header__input-panel {

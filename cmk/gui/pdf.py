@@ -689,8 +689,22 @@ class Document:
         # character length average to normalize to font size
         if text.strip() == "":
             return [""]
-        char_avg = self._canvas.stringWidth(text) / len(text)
-        return wrap(text, max(1, int(width / char_avg)), break_long_words=wrap_long_words)
+
+        # Preserve line breaks by splitting on newlines first, then wrapping each line
+        lines = text.split("\n")
+        wrapped_lines: list[str] = []
+        for line in lines:
+            if line.strip() == "":
+                wrapped_lines.append("")
+            else:
+                char_avg_width = self._canvas.stringWidth(line) / len(line)
+                wrapped_lines.extend(
+                    wrap(
+                        line, max(1, int(width / char_avg_width)), break_long_words=wrap_long_words
+                    )
+                )
+
+        return wrapped_lines if wrapped_lines else [""]
 
     def add_table(
         self,

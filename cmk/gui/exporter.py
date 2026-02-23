@@ -248,7 +248,7 @@ def _export_csv(
 
 
 def _format_for_csv(raw_data: str | HTML) -> str:
-    return escaping.strip_tags(unescape(str(raw_data))).replace("\n", "").replace('"', '""')
+    return escaping.strip_tags(unescape(str(raw_data))).replace("\n", " ").replace('"', '""')
 
 
 exporter_registry.register(

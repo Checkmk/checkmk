@@ -176,7 +176,16 @@ def _render_url(token: str, last_char: str) -> Iterator[str]:
         elif token.endswith("):"):
             url, rest = token[:-2], "):"
 
-    yield str(html.render_icon_button(url, url, StaticIcon(IconNames.link), target="_blank"))
+    yield str(
+        html.render_icon_button(
+            url,
+            url,
+            StaticIcon(IconNames.link),
+            target="_blank",
+            # Add identifier class for icon button links to enable easy extraction in exports
+            class_=["cmk-url-icon-link"],
+        )
+    )
     if rest is not None:
         yield escaping.escape_attribute(rest)
 

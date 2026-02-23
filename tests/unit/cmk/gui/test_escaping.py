@@ -120,3 +120,92 @@ def test_escape_text(inp: escaping.EscapableEntity, out: str | None) -> None:
 )
 def test_strip_tags(inp: escaping.EscapableEntity, out: str) -> None:
     assert escaping.strip_tags(inp) == out
+
+
+@pytest.mark.parametrize(
+    "inp,out",
+    [
+        # Icon button links with cmk-url-icon-link class should be replaced
+        pytest.param(
+            '<a href="https://example.com" class="cmk-url-icon-link">icon</a>',
+            "https://example.com",
+            id="icon_button_link_simple",
+        ),
+        pytest.param(
+            'See <a href="https://example.com" class="cmk-url-icon-link" target="_blank">icon</a> for more',
+            "See https://example.com for more",
+            id="icon_button_link_with_surrounding_text",
+        ),
+        pytest.param(
+            '<a href="https://example.com">regular link</a>',
+            '<a href="https://example.com">regular link</a>',
+            id="regular_link_preserved",
+        ),
+        pytest.param(
+            '<a href="https://first.com" class="cmk-url-icon-link">icon1</a> <a href="https://second.com" class="cmk-url-icon-link">icon2</a>',
+            "https://first.com https://second.com",
+            id="multiple_icon_button_links",
+        ),
+        pytest.param(
+            "No links here",
+            "No links here",
+            id="no_links",
+        ),
+        pytest.param(
+            '<a href="https://regular.com">text</a> and <a href="https://icon.com" class="cmk-url-icon-link">icon</a>',
+            '<a href="https://regular.com">text</a> and https://icon.com',
+            id="mixed_regular_and_icon_button_links",
+        ),
+    ],
+)
+def test_replace_anchor_tags_with_urls(inp: str, out: str) -> None:
+    assert escaping.replace_anchor_tags_with_urls(inp) == out
+
+
+@pytest.mark.parametrize(
+    "inp,out",
+    [
+        pytest.param(
+            "Line 1<br>Line 2",
+            "Line 1\nLine 2",
+            id="basic_br_tag",
+        ),
+        pytest.param(
+            "Line 1<br/>Line 2",
+            "Line 1\nLine 2",
+            id="self_closing_br_tag",
+        ),
+        pytest.param(
+            "Line 1<br />Line 2",
+            "Line 1\nLine 2",
+            id="self_closing_br_with_space",
+        ),
+        pytest.param(
+            "Line 1<BR>Line 2",
+            "Line 1\nLine 2",
+            id="uppercase_BR_tag",
+        ),
+        pytest.param(
+            "Line 1<Br/>Line 2",
+            "Line 1\nLine 2",
+            id="mixed_case_Br_self_closing",
+        ),
+        pytest.param(
+            "A<br>B<br>C",
+            "A\nB\nC",
+            id="multiple_line_breaks",
+        ),
+        pytest.param(
+            "No breaks",
+            "No breaks",
+            id="no_line_breaks",
+        ),
+        pytest.param(
+            "Start<br><b>bold</b><br>end",
+            "Start\n<b>bold</b>\nend",
+            id="mixed_with_other_html_tags",
+        ),
+    ],
+)
+def test_replace_br_with_newlines(inp: str, out: str) -> None:
+    assert escaping.replace_br_with_newlines(inp) == out

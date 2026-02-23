@@ -49,6 +49,7 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.utils import escaping
+from cmk.gui.utils.escaping import replace_anchor_tags_with_urls, replace_br_with_newlines
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri
@@ -619,7 +620,10 @@ class Cell:
 
             if not content:
                 if isinstance(txt, HTML):
-                    content = escaping.strip_tags(unescape(str(txt)))
+                    html_str = unescape(str(txt))
+                    html_str = replace_anchor_tags_with_urls(html_str)
+                    html_str = replace_br_with_newlines(html_str)
+                    content = escaping.strip_tags(html_str)
                 elif not isinstance(txt, tuple):
                     content = escaping.strip_tags(unescape(txt))
 
@@ -691,6 +695,10 @@ class Cell:
         # Current limitation: *one* image
         if txt.lower().startswith("<img"):
             txt = re.sub(".*title=[\"']([^'\"]*)[\"'].*", "\\1", str(txt))
+
+        txt = replace_anchor_tags_with_urls(txt)
+        txt = replace_br_with_newlines(txt)
+        txt = escaping.strip_tags(txt)
 
         return txt
 

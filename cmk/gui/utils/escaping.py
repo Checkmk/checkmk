@@ -239,6 +239,55 @@ def strip_tags(ht: EscapableEntity) -> str:
             return string
 
 
+def replace_anchor_tags_with_urls(html_str: str) -> str:
+    """Replace URL icon buttons with their href URLs in place.
+
+    This is the reverse operation of cmk/gui/view_utils._render_icon_button.
+    Only replaces anchor tags marked with the 'cmk-url-icon-link' class.
+
+    Example:
+        >>> replace_anchor_tags_with_urls('<a href="https://example.com" class="cmk-url-icon-link" target="_blank">...</a>')
+        'https://example.com'
+
+        >>> replace_anchor_tags_with_urls('Text <a href="https://example.com" class="cmk-url-icon-link">icon</a> more text')
+        'Text https://example.com more text'
+
+        >>> replace_anchor_tags_with_urls('No links here')
+        'No links here'
+    """
+
+    def replace_anchor_with_url(match: re.Match[str]) -> str:
+        anchor_tag = match.group(0)
+        if "class=" not in anchor_tag or "cmk-url-icon-link" not in anchor_tag:
+            return anchor_tag
+
+        href_match = re.search(r'href=["\']([^"\']+)["\']', anchor_tag)
+        return href_match.group(1) if href_match else anchor_tag
+
+    return re.sub(
+        r"<a\b[^>]*>.*?</a>", replace_anchor_with_url, html_str, flags=re.IGNORECASE | re.DOTALL
+    )
+
+
+def replace_br_with_newlines(html_str: str) -> str:
+    """Replace HTML line breaks with newline characters.
+
+    Replaces <br>, <br/>, <br />, etc. with newline characters to preserve
+    line breaks when exporting to text formats (CSV, PDF, etc.).
+
+    Example:
+        >>> replace_br_with_newlines('Line 1<br>Line 2')
+        'Line 1\\nLine 2'
+
+        >>> replace_br_with_newlines('Line 1<br />Line 2<BR/>Line 3')
+        'Line 1\\nLine 2\\nLine 3'
+
+        >>> replace_br_with_newlines('No line breaks')
+        'No line breaks'
+    """
+    return re.sub(r"<br\s*/?>", "\n", html_str, flags=re.IGNORECASE)
+
+
 def strip_tags_for_tooltip(ht: EscapableEntity) -> str:
     string = str(ht)
     # Some painters render table and cell tags that would be stripped away in the next step and

@@ -311,7 +311,7 @@ snmp_check_interval: list[
 snmp_exclude_sections: list[RuleSpec[Mapping[str, Sequence[str]]]] = []
 # Rulesets for parameters of notification scripts
 notification_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
-use_new_descriptions_for: list[str] = []
+use_new_descriptions_for: dict[str, bool] = {}
 # Custom user icons / actions to be configured
 host_icons_and_actions: list[RuleSpec[str]] = []
 # Custom user icons / actions to be configured

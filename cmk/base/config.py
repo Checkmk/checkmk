@@ -165,7 +165,6 @@ try:
 except ModuleNotFoundError:
     from cmk.utils.labels import get_builtin_host_labels
 
-
 tracer = trace.get_tracer()
 
 _ContactgroupName = str
@@ -1049,6 +1048,30 @@ def _get_old_cmciii_temp_description(item: Item) -> tuple[ServiceName, None]:
     return f"{parts[1]} {parts[0]}.{parts[2]}-Temperature", None
 
 
+def _get_old_netapp_volume_item(item: Item) -> Item:
+    if item is None:
+        raise TypeError()
+
+    # In the old item format svm_name and volume name are separated by dots, now by colons.
+    # This replacement is not correct if the names itself contain colons. According to
+    # https://kb.netapp.com/on-prem/ontap/Ontap_OS/OS-KBs/Can_a_NetApp_volume_name_contain_a_hyphen_or_dash
+    # this shouldn't be the case.
+    # If there is more than one colon, we use the new service name no matter what.
+    # This way we improve the situation for users whose SVM or volume names do not contain colons
+    # and do not make the situation worse than before for those that do.
+    if item.count(":") > 1:
+        return item
+    return item.replace(":", ".")
+
+
+def _get_old_netapp_volume_description(item: Item) -> tuple[ServiceName, Item]:
+    return "Volume %s", _get_old_netapp_volume_item(item)
+
+
+def _get_old_netapp_snapshot_volume_description(item: Item) -> tuple[ServiceName, Item]:
+    return "Snapshots Volume %s", _get_old_netapp_volume_item(item)
+
+
 _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item]]] = {
     "aix_memory": lambda item: ("Memory used", item),
     # While using the old description, don't append the item, even when discovered
@@ -1117,6 +1140,8 @@ _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "mssql_tablespaces": lambda item: ("%s Sizes", item),
     "mssql_transactionlogs": lambda item: ("Transactionlog %s", item),
     "mssql_versions": lambda item: ("%s Version", item),
+    "netapp_ontap_volumes": _get_old_netapp_volume_description,
+    "netapp_ontap_snapshots": _get_old_netapp_snapshot_volume_description,
     "netscaler_mem": lambda item: ("Memory used", item),
     "nullmailer_mailq": lambda item: ("Nullmailer Queue", None),
     "nvidia_temp": lambda item: ("Temperature NVIDIA %s", item),
@@ -1224,7 +1249,7 @@ def _get_service_description_template_and_item(
         return descr_format, item
 
     old_descr = _old_service_descriptions.get(plugin_name_str)
-    if old_descr is None or plugin_name_str in use_new_descriptions_for:
+    if old_descr is None or use_new_descriptions_for.get(plugin_name_str):
         return service_name_template, item
     return old_descr(item)
 
@@ -1391,7 +1416,6 @@ CLUSTER_HOSTS = tuple_rulesets.CLUSTER_HOSTS
 ALL_HOSTS = tuple_rulesets.ALL_HOSTS
 ALL_SERVICES = tuple_rulesets.ALL_SERVICES
 NEGATE = tuple_rulesets.NEGATE
-
 
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
@@ -3896,7 +3920,7 @@ class ConfigCache:
     # TODO: Remove old name one day
     @staticmethod
     def service_discovery_name() -> ServiceName:
-        if "cmk_inventory" in use_new_descriptions_for:
+        if use_new_descriptions_for.get("cmk_inventory", True):
             return "Check_MK Discovery"
         return "Check_MK inventory"
 
@@ -4318,7 +4342,8 @@ class CEEConfigCache(ConfigCache):
         def _impl() -> Sequence[RecurringDowntime]:
             return self.ruleset_matcher.get_host_values(
                 host_name,
-                host_recurring_downtimes,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+                host_recurring_downtimes,
+                # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
             )
 
         with contextlib.suppress(KeyError):
@@ -4330,10 +4355,12 @@ class CEEConfigCache(ConfigCache):
         def _impl() -> tuple[float, float, float]:
             values = self.ruleset_matcher.get_host_values(
                 host_name,
-                cmc_host_flap_settings,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+                cmc_host_flap_settings,
+                # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
             )
             return (
-                values[0] if values else cmc_flap_settings  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+                values[0] if values else cmc_flap_settings
+                # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
             )
 
         with contextlib.suppress(KeyError):
@@ -4345,7 +4372,8 @@ class CEEConfigCache(ConfigCache):
         def _impl() -> bool:
             entries = self.ruleset_matcher.get_host_values(
                 host_name,
-                cmc_host_long_output_in_monitoring_history,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+                cmc_host_long_output_in_monitoring_history,
+                # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
             )
             return entries[0] if entries else False
 
@@ -4358,7 +4386,8 @@ class CEEConfigCache(ConfigCache):
         def _impl() -> dict:
             entries = self.ruleset_matcher.get_host_values(
                 host_name,
-                host_state_translation,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+                host_state_translation,
+                # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
             )
 
             spec: dict[object, object] = {}
@@ -4376,7 +4405,8 @@ class CEEConfigCache(ConfigCache):
             settings = {"timeout": 2.5}
             settings |= self.ruleset_matcher.get_host_merged_dict(
                 host_name,
-                cmc_smartping_settings,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+                cmc_smartping_settings,
+                # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
             )
             return settings
 
@@ -4450,7 +4480,8 @@ class CEEConfigCache(ConfigCache):
         return self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
-            service_recurring_downtimes,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            service_recurring_downtimes,
+            # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
 
     def flap_settings_of_service(
@@ -4459,7 +4490,8 @@ class CEEConfigCache(ConfigCache):
         out = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
-            cmc_service_flap_settings,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            cmc_service_flap_settings,
+            # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else cmc_flap_settings  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
 
@@ -4467,7 +4499,8 @@ class CEEConfigCache(ConfigCache):
         out = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
-            cmc_service_long_output_in_monitoring_history,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            cmc_service_long_output_in_monitoring_history,
+            # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else False
 
@@ -4475,7 +4508,8 @@ class CEEConfigCache(ConfigCache):
         entries = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
-            service_state_translation,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            service_state_translation,
+            # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
 
         spec: dict = {}
@@ -4488,7 +4522,8 @@ class CEEConfigCache(ConfigCache):
         out = self.ruleset_matcher.service_extra_conf(
             hostname,
             description,
-            cmc_service_check_timeout,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            cmc_service_check_timeout,
+            # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else cmc_check_timeout  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
 
@@ -4498,7 +4533,8 @@ class CEEConfigCache(ConfigCache):
     ) -> Sequence[str] | None:
         out = self.ruleset_matcher.get_host_values(
             host_name,
-            cmc_graphite_host_metrics,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            cmc_graphite_host_metrics,
+            # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else None
 
@@ -4510,7 +4546,8 @@ class CEEConfigCache(ConfigCache):
         out = self.ruleset_matcher.service_extra_conf(
             host_name,
             service_name,
-            cmc_graphite_service_metrics,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            cmc_graphite_service_metrics,
+            # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else None
 
@@ -4522,7 +4559,8 @@ class CEEConfigCache(ConfigCache):
         out = self.ruleset_matcher.service_extra_conf(
             hostname,
             service_name,
-            cmc_influxdb_service_metrics,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            cmc_influxdb_service_metrics,
+            # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
         return out[0] if out else None
 

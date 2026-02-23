@@ -9,6 +9,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ResultItem from '@/unified-search/components/result/ResultItem.vue'
@@ -115,46 +116,48 @@ onMounted(() => {
   <UnifiedSearchEmptyStart v-if="recentlySearches.length === 0 && recentlyViewed.length === 0">
   </UnifiedSearchEmptyStart>
 
-  <UnifiedSearchRecentlyViewed
-    :focus="currentlySelected"
-    :history-entries="recentlyViewed"
-  ></UnifiedSearchRecentlyViewed>
+  <CmkScrollContainer max-height="calc(100% - 87px)">
+    <UnifiedSearchRecentlyViewed
+      :focus="currentlySelected"
+      :history-entries="recentlyViewed"
+    ></UnifiedSearchRecentlyViewed>
 
-  <div v-if="recentlySearches.length > 0" class="recent-searches">
-    <CmkHeading type="h4" class="result-heading">
-      {{ _t('Recently searched') }}
-      <button
-        @click.stop="
-          () => {
-            searchUtils.history?.resetQueries()
-            recentlySearches = []
-            recentlyViewed = []
-          }
-        "
-      >
-        {{ _t('Clear all') }}
-      </button>
-    </CmkHeading>
-    <ResultList>
-      <ResultItem
-        v-for="(q, idx) in recentlySearches"
-        ref="recently-searched-item"
-        :key="q.input"
-        :idx="idx"
-        :title="q.input"
-        :breadcrumb="[q.provider]"
-        :html="searchUtils.highlightQuery(q.input)"
-        :focus="isFocused(idx + recentlyViewed.length)"
-        :zebra="true"
-        @click.stop="
-          () => {
-            searchUtils.input.setInputValue(q.input)
-            searchUtils.input.setFilterValue(q.filters)
-          }
-        "
-      ></ResultItem>
-    </ResultList>
-  </div>
+    <div v-if="recentlySearches.length > 0" class="recent-searches">
+      <CmkHeading type="h4" class="result-heading">
+        {{ _t('Recently searched') }}
+        <button
+          @click.stop="
+            () => {
+              searchUtils.history?.resetQueries()
+              recentlySearches = []
+              recentlyViewed = []
+            }
+          "
+        >
+          {{ _t('Clear all') }}
+        </button>
+      </CmkHeading>
+      <ResultList>
+        <ResultItem
+          v-for="(q, idx) in recentlySearches"
+          ref="recently-searched-item"
+          :key="q.input"
+          :idx="idx"
+          :title="q.input"
+          :breadcrumb="[q.provider]"
+          :html="searchUtils.highlightQuery(q.input)"
+          :focus="isFocused(idx + recentlyViewed.length)"
+          :zebra="true"
+          @click.stop="
+            () => {
+              searchUtils.input.setInputValue(q.input)
+              searchUtils.input.setFilterValue(q.filters)
+            }
+          "
+        ></ResultItem>
+      </ResultList>
+    </div>
+  </CmkScrollContainer>
 </template>
 
 <style scoped>

@@ -1284,10 +1284,10 @@ class UserWebAuthnLoginComplete(JsonPage):
                 auth_data=data.authenticator_data,
                 signature=data.signature,
             )
-        except BaseException:
+        except ValueError:
             _log_event_auth("Webauthn")
             _handle_failed_auth(user.id)
-            raise
+            raise MKUserError(None, _("WebAuthn login failed"), HTTPStatus.UNAUTHORIZED)
 
         session.session_info.webauthn_action_state = None
         session.session_info.two_factor_completed = True

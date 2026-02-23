@@ -34,7 +34,8 @@ def host_label_function(section: SectionPodmanContainerInspect) -> HostLabelGene
             The node the container is running on.
     """
     yield HostLabel("cmk/podman/object", "container")
-    yield HostLabel("cmk/podman/user", section.config.user)
+    if section.config.user:
+        yield HostLabel("cmk/podman/user", section.config.user)
     if section.pod:
         yield HostLabel("cmk/podman/pod", section.pod)
     yield HostLabel("cmk/podman/node", section.config.hostname)

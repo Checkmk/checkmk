@@ -118,6 +118,6 @@ class FigureWidgetTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
             data_generator(
                 widget_config,
                 widget.context,
-                widget_config["single_infos"],
+                widget.infos(),
             )
         )

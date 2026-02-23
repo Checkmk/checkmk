@@ -113,13 +113,13 @@ class HTTPSAuthRequester(Requester):
 
 
 class HostnameValidationAdapter(HTTPAdapter):
-    def __init__(self, host_name: str) -> None:
-        self._reference_host_name = host_name
+    def __init__(self, hostname: str) -> None:
+        self._reference_hostname = hostname
         super().__init__()
 
     @override
     def cert_verify(self, conn, url, verify, cert):
-        conn.assert_hostname = self._reference_host_name
+        conn.assert_hostname = self._reference_hostname
         return super().cert_verify(conn, url, verify, cert)
 
     @override
@@ -127,8 +127,8 @@ class HostnameValidationAdapter(HTTPAdapter):
         # Override this method to make sure the connection pools use the assert_hostname and
         # server_hostname argument for SNI as in
         # https://urllib3.readthedocs.io/en/1.26.15/advanced-usage.html#custom-sni-hostname
-        pool_kwargs["assert_hostname"] = self._reference_host_name
-        pool_kwargs["server_hostname"] = self._reference_host_name
+        pool_kwargs["assert_hostname"] = self._reference_hostname
+        pool_kwargs["server_hostname"] = self._reference_hostname
 
         # The rest of the method stays the same as in HTTPAdapter
         self._pool_connections = connections
@@ -147,7 +147,7 @@ class HostnameValidationAdapter(HTTPAdapter):
     def send(self, request, *args, **kwargs):
         # Add Host header for proper SNI implementation as per urllib3 docs
         if "Host" not in request.headers:
-            request.headers["Host"] = self._reference_host_name
+            request.headers["Host"] = self._reference_hostname
 
         return super().send(request, *args, **kwargs)
 

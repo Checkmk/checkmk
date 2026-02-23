@@ -158,14 +158,16 @@ watch(
         @focus="handleInputFocus"
         @focusout="handleFocusOut"
       />
-      <ArrowDown
-        class="db-selector--arrow"
+      <div
+        class="db-selector__arrow-container"
         :class="{
-          'db-selector--rotated': showDashboardDropdown,
-          'db-selector--arrow-disabled': props.disabled
+          'db-selector__arrow-container--rotated': showDashboardDropdown,
+          'db-selector__arrow-container--disabled': props.disabled
         }"
         @click="showDashboardDropdown ? handleCloseDropdown() : handleInputFocus()"
-      />
+      >
+        <ArrowDown class="db-selector__arrow" />
+      </div>
     </div>
     <div v-if="showDashboardDropdown" class="dropdown-menu">
       <CmkScrollContainer max-height="300px">
@@ -185,9 +187,10 @@ watch(
               tabindex="0"
               class="dropdown-item"
               :class="{ active: isActiveDashboard(dashboard) }"
+              :title="dashboard?.display?.title || _t('Unnamed Dashboard')"
               @click="handleDashboardSelect(dashboard)"
             >
-              {{ dashboard?.display?.title || 'Unnamed Dashboard' }}
+              {{ dashboard?.display?.title || _t('Unnamed Dashboard') }}
             </div>
           </div>
 
@@ -202,6 +205,7 @@ watch(
               tabindex="0"
               class="dropdown-item"
               :class="{ active: isActiveDashboard(dashboard) }"
+              :title="dashboard?.display?.title || _t('Unnamed Dashboard')"
               @click="handleDashboardSelect(dashboard)"
             >
               <CmkLabel>{{ dashboard?.display?.title || _t('Unnamed Dashboard') }}</CmkLabel>
@@ -214,24 +218,32 @@ watch(
 </template>
 
 <style scoped>
-.db-selector--arrow {
-  width: 0.7em;
-  height: 0.7em;
+.db-selector__arrow-container {
   position: absolute;
-  top: var(--dimension-5);
+  display: flex;
+  top: var(--dimension-4);
   right: var(--dimension-4);
+  width: var(--dimension-6);
+  height: var(--dimension-6);
+  align-items: center;
+  justify-content: center;
 
-  &.db-selector--rotated {
+  &.db-selector__arrow-container--rotated {
     transform: rotate(180deg);
   }
 
-  &.db-selector--arrow-disabled {
+  &.db-selector__arrow-container--disabled {
     opacity: 0.5;
   }
 
-  &:not(.db-selector--arrow-disabled) {
+  &:not(.db-selector__arrow-container--disabled) {
     cursor: pointer;
   }
+}
+
+.db-selector__arrow {
+  width: var(--dimension-4);
+  height: var(--dimension-3);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -246,7 +258,7 @@ watch(
   justify-content: space-between;
   background-color: var(--ux-theme-5);
   border: var(--dimension-1) solid var(--color-mid-grey-60);
-  padding: var(--dimension-4) var(--dimension-5);
+  padding: var(--dimension-4) var(--dimension-8) var(--dimension-4) var(--dimension-5);
   transition: all 0.2s ease;
   min-width: 250px;
   font-size: var(--font-size-normal);
@@ -254,6 +266,9 @@ watch(
   outline: none;
   border-radius: var(--dimension-3);
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

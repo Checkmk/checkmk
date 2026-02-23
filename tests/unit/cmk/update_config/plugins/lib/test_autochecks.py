@@ -100,7 +100,7 @@ from cmk.update_config.plugins.lib.autochecks import get_fixed_autochecks
                     item="test automation helpers",
                     parameters={
                         "cpu_rescale_max": True,
-                        "process": "~.*cmk-automation-helper.*",
+                        "process": "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
                         "match_groups": (),
                         "user": "test",
                         "cgroup": (None, False),
@@ -116,7 +116,7 @@ from cmk.update_config.plugins.lib.autochecks import get_fixed_autochecks
                     check_plugin_name=CheckPluginName("ps"),
                     item="test automation helpers",
                     parameters={
-                        "process": "~.*cmk-automation-helper.*",
+                        "process": "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
                         "match_groups": (),
                         "user": "test",
                         "cgroup": (None, False),
@@ -130,7 +130,7 @@ from cmk.update_config.plugins.lib.autochecks import get_fixed_autochecks
                     check_plugin_name=CheckPluginName("ps"),
                     item="test automation helpers",
                     parameters={
-                        "process": "~.*cmk-automation-helper.*",
+                        "process": "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
                         "match_groups": (),
                         "user": "test",
                         "cgroup": (None, False),

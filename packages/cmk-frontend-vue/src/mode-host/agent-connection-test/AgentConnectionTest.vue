@@ -166,8 +166,10 @@ onMounted(() => {
   if (sessionStorage.getItem('reopenSlideIn') === 'true') {
     if (!props.setupError) {
       slideInOpen.value = true
+      savedAgentInstalled.value = sessionStorage.getItem('slideInAgentInstalled') === 'true'
     }
     sessionStorage.removeItem('reopenSlideIn')
+    sessionStorage.removeItem('slideInAgentInstalled')
   }
 
   props.formElement.addEventListener('change', (e: Event) => {
@@ -271,6 +273,7 @@ const isLoading = ref(false)
 const isSuccess = ref(false)
 const isError = ref(false)
 const errorDetails = ref('')
+const savedAgentInstalled = ref(false)
 const tooltipText = computed(() => {
   if (isLoading.value) {
     return _t('Agent connection test running')
@@ -289,6 +292,9 @@ const tooltipText = computed(() => {
   return _t('Test Checkmk agent connection')
 })
 const isNotRegistered = computed(() => {
+  if (savedAgentInstalled.value) {
+    return true
+  }
   if (errorDetails.value.includes('controller not registered')) {
     return true
   }
@@ -367,6 +373,7 @@ async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
 const startAjax = (): Promise<void> => {
   isSuccess.value = false
   isError.value = false
+  savedAgentInstalled.value = false
 
   return callAjax('wato_ajax_diag_cmk_agent.py', {
     method: 'POST'

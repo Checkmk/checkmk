@@ -67,6 +67,7 @@ function saveHostAction() {
   sessionStorage.setItem('reopenSlideIn', 'true')
   sessionStorage.setItem('slideInModelState', model.value)
   sessionStorage.setItem('slideInTabState', openedTab.value)
+  sessionStorage.setItem('slideInAgentInstalled', String(props.agentInstalled))
   cmk.page_menu.form_submit('edit_host', 'save_and_edit')
 }
 const currentStep = ref(getInitStep())

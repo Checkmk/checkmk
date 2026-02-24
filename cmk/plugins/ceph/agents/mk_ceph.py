@@ -123,7 +123,7 @@ def _make_osd_section(raw_df, raw_perf, localosds):
 
 
 def main() -> int:
-    ceph_config, ceph_client = _load_plugin_config(os.environ["MK_CONFDIR"])
+    ceph_config, ceph_client = _load_plugin_config(os.getenv("MK_CONFDIR", "/etc/check_mk"))
 
     cluster = RadosCMD(conffile=ceph_config, name=ceph_client)
     cluster.connect()

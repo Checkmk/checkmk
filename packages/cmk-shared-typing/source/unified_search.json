@@ -74,9 +74,13 @@
       "allOf": [{ "$ref": "#/$defs/unified_search_result" }],
       "properties": {
         "url": { "type": "string" },
-        "query": { "type": "string" }
+        "query": { "type": "string" },
+        "messages": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/unified_search_api_response_message" }
+        }
       },
-      "required": ["url", "query", "counts", "results"]
+      "required": ["url", "query", "messages", "counts", "results"]
     },
     "unified_search_result": {
       "type": "object",
@@ -118,6 +122,18 @@
         "icon": { "$ref": "icon.json#/$defs/dynamic_icon" }
       },
       "required": ["title", "target", "topic", "provider"]
+    },
+    "unified_search_api_response_message": {
+      "type": "object",
+      "properties": {
+        "detail": { "type": "string" },
+        "header": { "type": "string" },
+        "message_variant": {
+          "type": "string",
+          "enum": ["success", "warning", "error", "info"]
+        }
+      },
+      "required": ["detail"]
     },
     "unified_search_result_target": {
       "type": "object",

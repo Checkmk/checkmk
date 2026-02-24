@@ -7,10 +7,18 @@ from dataclasses import asdict
 from typing import Final, override
 
 from cmk.gui.http import Request
+from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
-from cmk.shared_typing.unified_search import ProviderName, SortType, UnifiedSearchApiResponse
+from cmk.shared_typing.unified_search import (
+    MessageVariant,
+    ProviderName,
+    SortType,
+    UnifiedSearchApiResponse,
+    UnifiedSearchApiResponseMessage,
+    UnifiedSearchResultCounts,
+)
 
 from .collapsing import get_collapser
 from .engines.customize import CustomizeSearchEngine
@@ -48,6 +56,9 @@ class PageUnifiedSearch(AjaxPage):
 
         collapse = get_collapser(provider=provider, disabled=collapser_disabled)
         search_results, search_count = collapse(result.results, result.counts)
+        # NOTE: checking the original counts instead of the collapsed counts because the result
+        # limiting occurs inside the monitoring engine, not during post-processing.
+        messages = self._collect_api_response_messages(result.counts)
 
         return asdict(
             UnifiedSearchApiResponse(
@@ -55,6 +66,7 @@ class PageUnifiedSearch(AjaxPage):
                 query=query,
                 counts=search_count,
                 results=search_results,
+                messages=messages,
             )
         )
 
@@ -70,3 +82,19 @@ class PageUnifiedSearch(AjaxPage):
 
     def _parse_disabled_collapser(self, request: Request) -> bool:
         return request.get_str_input("collapse") is None
+
+    def _collect_api_response_messages(
+        self,
+        result_counts: UnifiedSearchResultCounts,
+    ) -> list[UnifiedSearchApiResponseMessage]:
+        messages = []
+        if result_counts.monitoring == _MONITORING_ENGINE_ROW_LIMIT:
+            messages.append(
+                UnifiedSearchApiResponseMessage(
+                    header=_("Display limit of %d monitoring results reached.")
+                    % _MONITORING_ENGINE_ROW_LIMIT,
+                    detail=_("Refine your search or press Enter for host/service search."),
+                    message_variant=MessageVariant.info,
+                )
+            )
+        return messages

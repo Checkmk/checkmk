@@ -72,12 +72,6 @@ export class MainMenuService extends ServiceBase {
     return this.currentItem.value?.id === id
   }
 
-  public navigateIfAnyNavItemIsActive(id: NavItemIdEnum) {
-    if (this.isAnyNavItemActive()) {
-      this.navigate(id)
-    }
-  }
-
   public navigate(id: NavItemIdEnum) {
     this.showKeyHints.value = false
     const item = this.getItemById(id)

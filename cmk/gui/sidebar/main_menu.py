@@ -163,8 +163,7 @@ class MainMenuRenderer:
                 ident="main_menu_" + popup_trigger.name,
                 method=MethodInline(self._get_main_menu_content(popup_trigger, user_permissions)),
                 cssclass=[popup_trigger.name],
-                popup_group="popup_menu_handler",
-                hover_switch_delay=150,  # ms
+                popup_group=None,
                 onopen=popup_trigger.onopen,
             )
             html.div(

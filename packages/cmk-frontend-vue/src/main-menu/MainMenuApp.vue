@@ -50,7 +50,6 @@ mainMenu.onUserPopupMessages((msgs) => {
         :item="item"
         :active="mainMenu.isNavItemActive(item.id)"
         @click="mainMenu.navigate(item.id)"
-        @mouseover="mainMenu.navigateIfAnyNavItemIsActive(item.id)"
       />
       <div class="mm-app__key-hint-wrapper">
         <CmkButton
@@ -75,7 +74,6 @@ mainMenu.onUserPopupMessages((msgs) => {
         :item="item"
         :active="mainMenu.isNavItemActive(item.id)"
         @click="mainMenu.navigate(item.id)"
-        @mouseover="mainMenu.navigateIfAnyNavItemIsActive(item.id)"
       />
       <SidebarToggle />
     </ul>

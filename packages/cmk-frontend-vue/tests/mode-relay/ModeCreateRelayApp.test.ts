@@ -24,6 +24,7 @@ const mockProps: CreateRelay = {
   },
   site_name: 'test_site',
   domain: 'localhost',
+  agent_receiver_port: 8000,
   site_version: '2.5.0',
   is_cloud_edition: false,
   user_id: 'cmkadmin',

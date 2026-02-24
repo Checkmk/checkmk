@@ -67,6 +67,7 @@ const openRelayOverviewPage = () => {
         :relay-alias="relayAlias"
         :site-name="props.site_name"
         :domain="props.domain"
+        :agent-receiver-port="props.agent_receiver_port"
         :site-version="props.site_version"
         :url-to-get-an-automation-secret="props.urls.automation_secret"
         :is-cloud-edition="props.is_cloud_edition"

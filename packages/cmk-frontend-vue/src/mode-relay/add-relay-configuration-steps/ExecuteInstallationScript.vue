@@ -31,6 +31,7 @@ const props = defineProps<
     relayAlias: string
     siteName: string
     domain: string
+    agentReceiverPort: number
     siteVersion: string
     urlToGetAnAutomationSecret: string
     isCloudEdition: boolean
@@ -45,7 +46,7 @@ const installCommand = computed(() => {
     'bash install_relay.sh \\',
     `  --relay-name ${escapeShellArg(props.relayAlias)} \\`,
     `  --initial-tag-version ${props.siteVersion} \\`,
-    `  --target-server ${props.domain} \\`,
+    `  --target-server ${props.domain}:${props.agentReceiverPort} \\`,
     `  --target-site-name ${props.siteName} \\`,
     `  --user ${username}`
   ].join('\n')

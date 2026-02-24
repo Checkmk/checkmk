@@ -39,6 +39,9 @@
     "domain": {
       "type": "string"
     },
+    "agent_receiver_port": {
+      "type": "integer"
+    },
     "site_version": {
       "type": "string"
     },
@@ -60,6 +63,7 @@
     "urls",
     "site_name",
     "domain",
+    "agent_receiver_port",
     "site_version",
     "is_cloud_edition",
     "user_id",

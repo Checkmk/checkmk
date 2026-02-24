@@ -559,6 +559,7 @@ def _show_graph_legend(
     legend_titles = list(_compute_legend_titles(graph_artwork, graph_render_config))
     graph_legend_styles = list(_compute_graph_legend_styles(graph_render_config))
 
+    html.open_div(class_=["legend_container"])
     html.open_table(class_="legend", style=graph_legend_styles)
     html.open_thead()
     html.open_tr()
@@ -674,6 +675,7 @@ def _show_graph_legend(
 
     html.close_tbody()
     html.close_table()
+    html.close_div()
 
 
 @dataclass(frozen=True, kw_only=True)

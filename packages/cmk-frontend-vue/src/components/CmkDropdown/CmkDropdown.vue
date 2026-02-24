@@ -202,7 +202,7 @@ const group = computed<ButtonVariants['group']>(() => {
       :class="{ 'cmk-dropdown__validation-error': formValidation }"
       @click="showSuggestions"
     >
-      <span style="display: contents"><TruncateText :text="buttonLabel" /></span
+      <span v-if="buttonLabel" style="display: contents"><TruncateText :text="buttonLabel" /></span
       ><CmkLabelRequired :show="required && selectedOption === null" :space="'before'" />
       <template v-if="!buttonLabel">&nbsp;</template>
       <ArrowDown

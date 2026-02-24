@@ -500,6 +500,7 @@
         "qs-azure",
         "qs-gcp",
         "qs-otel",
+        "qs-prometheus",
         "qs-relay",
         "quicksearch",
         "quicksearch-field-bg",

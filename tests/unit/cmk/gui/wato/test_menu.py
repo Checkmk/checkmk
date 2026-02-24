@@ -83,8 +83,6 @@ def expected_items() -> dict[str, list[str]]:
         cmk_version.Edition.ULTIMATE,
         cmk_version.Edition.ULTIMATEMT,
     ]:
-        hosts_items.append("otel_collectors_receivers")
-        hosts_items.append("otel_collectors_prom_scrapes")
         hosts_items.append("relays")
 
     users_items = []
@@ -146,6 +144,10 @@ def expected_items() -> dict[str, list[str]]:
                     "microsoft_entra_id_connections",
                 ],
                 "synthetic_monitoring": ["robotmk_managed_robots_overview"],
+                "telemetry": [
+                    "otel_collectors_receivers",
+                    "otel_collectors_prom_scrapes",
+                ],
             }
         )
 

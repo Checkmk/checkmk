@@ -30,7 +30,7 @@ class HostLabelValueDict(TypedDict):
     plugin_name: str | None
 
 
-class _Label:
+class BaseLabel:
     """Representing a label in Checkmk"""
 
     __slots__ = "name", "value"
@@ -56,12 +56,17 @@ class _Label:
             raise TypeError(f"cannot compare {type(self)} to {type(other)}")
         return self.name == other.name and self.value == other.value
 
+    @classmethod
+    def from_str(cls, label: str) -> BaseLabel:
+        name, value = label.split(":", 1)
+        return cls(name=name, value=value)
 
-class ServiceLabel(_Label):
+
+class ServiceLabel(BaseLabel):
     __slots__ = ()
 
 
-class HostLabel(_Label):
+class HostLabel(BaseLabel):
     """Representing a host label in Checkmk during runtime
 
     Besides the label itself it keeps the information which plug-in discovered the host label

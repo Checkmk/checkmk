@@ -89,7 +89,11 @@ export const useNotificationTimeline = async (
     }
   }
   const timeResolution = ref<'hour' | 'day'>(initialTimeResolution)
-  const visualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
+  const visualizationType = ref<VisualizationTimelineType>(
+    currentContent?.render_mode?.type === 'simple_number'
+      ? VisualizationTimelineType.METRIC
+      : VisualizationTimelineType.BARPLOT
+  )
 
   const logtarget = ref<'both' | 'host' | 'service'>(currentContent?.log_target ?? 'both')
   const logtargetOptions: Suggestions = {

@@ -57,10 +57,6 @@ export const useAlertTimeline = async (
     titleMacros
   } = useWidgetVisualizationProps('$DEFAULT_TITLE$', currentSpec?.general_settings, CONTENT_TYPE)
 
-  const timeResolution = ref<'hour' | 'day'>('hour')
-  const visualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
-  const widgetProps = ref<WidgetProps>()
-
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec?.content as AlertTimelineContent)
@@ -68,6 +64,23 @@ export const useAlertTimeline = async (
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
     currentContent?.render_mode?.time_range ?? null
   )
+
+  let initialTimeResolution: 'hour' | 'day' = 'hour'
+  if (
+    currentContent?.render_mode &&
+    'time_resolution' in currentContent.render_mode &&
+    (currentContent.render_mode.time_resolution === 'hour' ||
+      currentContent.render_mode.time_resolution === 'day')
+  ) {
+    initialTimeResolution = currentContent.render_mode.time_resolution
+  }
+  const timeResolution = ref<'hour' | 'day'>(initialTimeResolution)
+  const visualizationType = ref<VisualizationTimelineType>(
+    currentContent?.render_mode?.type === 'simple_number'
+      ? VisualizationTimelineType.METRIC
+      : VisualizationTimelineType.BARPLOT
+  )
+  const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()

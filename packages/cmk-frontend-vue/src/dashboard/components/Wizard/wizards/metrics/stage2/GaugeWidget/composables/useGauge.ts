@@ -53,7 +53,9 @@ export const useGauge = async (
   const currentContent =
     currentSpec?.content?.type === CONTENT_TYPE ? (currentSpec?.content as GaugeContent) : null
 
-  const timeRangeType = ref<TimeRangeType>('current')
+  const timeRangeType = ref<TimeRangeType>(
+    !currentContent || currentContent.time_range === 'current' ? 'current' : 'window'
+  )
   const currentTimerange: TimerangeModel | null =
     currentContent?.time_range === 'current' ? null : currentContent?.time_range?.window || null
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(currentTimerange)
@@ -100,11 +102,14 @@ export const useGauge = async (
       type: CONTENT_TYPE,
       metric: metric,
       display_range: fixedDataRangeProps.value,
-      time_range: {
-        type: 'window',
-        window: generateTimeRangeSpec(),
-        consolidation: 'average'
-      }
+      time_range:
+        timeRangeType.value === 'current'
+          ? 'current'
+          : {
+              type: 'window',
+              window: generateTimeRangeSpec(),
+              consolidation: 'average'
+            }
     }
 
     if (showServiceStatus.value !== 'disabled' && showServiceStatusSelection.value) {

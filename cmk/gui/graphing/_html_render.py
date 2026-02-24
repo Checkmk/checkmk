@@ -7,7 +7,7 @@ import copy
 import json
 import time
 import traceback
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Generator, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import auto, Enum
 from typing import Any, assert_never, Literal, override
@@ -421,26 +421,35 @@ def _render_pin_time_label(graph_artwork: GraphArtwork) -> str:
     return cmk.utils.render.date_and_time(timestamp)[:-3]
 
 
-def _get_scalars(
+@dataclass(frozen=True)
+class _LegendTitle:
+    type: Literal["min", "max", "average", "last", "pin"]
+    title: str
+    inactive: bool
+
+
+def _compute_legend_titles(
     graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig
-) -> list[tuple[str, str, bool]]:
-    scalars = []
-    for scalar, title in [
-        ("min", _("Minimum")),
-        ("max", _("Maximum")),
-        ("average", _("Average")),
-    ]:
-        consolidation_function = graph_artwork.definition.consolidation_function
-        inactive = consolidation_function is not None and consolidation_function != scalar
-
-        scalars.append((scalar, title, inactive))
-
-    scalars.append(("last", _("Last"), False))
-
+) -> Generator[_LegendTitle]:
+    consolidation_function = graph_artwork.definition.consolidation_function
+    yield _LegendTitle(
+        "min",
+        _("Minimum"),
+        consolidation_function is not None and consolidation_function != "min",
+    )
+    yield _LegendTitle(
+        "max",
+        _("Maximum"),
+        consolidation_function is not None and consolidation_function != "max",
+    )
+    yield _LegendTitle(
+        "average",
+        _("Average"),
+        consolidation_function is not None and consolidation_function != "average",
+    )
+    yield _LegendTitle("last", _("Last"), False)
     if _show_pin_time(graph_artwork, graph_render_config):
-        scalars.append(("pin", _render_pin_time_label(graph_artwork), False))
-
-    return scalars
+        yield _LegendTitle("pin", _render_pin_time_label(graph_artwork), False)
 
 
 def _compute_graph_legend_styles(graph_render_config: GraphRenderConfig) -> Iterator[str]:
@@ -547,18 +556,16 @@ def _show_graph_legend(
     expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> None:
     font_size_style = "font-size: %dpt;" % graph_render_config.font_size
-    scalars = _get_scalars(graph_artwork, graph_render_config)
-
+    legend_titles = list(_compute_legend_titles(graph_artwork, graph_render_config))
     graph_legend_styles = list(_compute_graph_legend_styles(graph_render_config))
-    html.open_table(class_="legend", style=graph_legend_styles)
 
-    # Render the title row
+    html.open_table(class_="legend", style=graph_legend_styles)
     html.open_thead()
     html.open_tr()
     html.th("")
-    for scalar, title, inactive in scalars:
-        classes = ["scalar", scalar]
-        if inactive and graph_artwork.step != 60:
+    for legend_title in legend_titles:
+        classes = ["scalar", legend_title.type]
+        if legend_title.inactive and graph_artwork.step != 60:
             descr = _(
                 'This graph is based on data consolidated with the function "%s". The '
                 'values in this column are the "%s" values of the "%s" values '
@@ -566,24 +573,25 @@ def _show_graph_legend(
                 "values here are based on the %s value out of %d raw values."
             ) % (
                 graph_artwork.definition.consolidation_function,
-                scalar,
+                legend_title.type,
                 graph_artwork.definition.consolidation_function,
                 get_step_label(graph_artwork.step),
-                scalar,
+                legend_title.type,
                 graph_artwork.definition.consolidation_function,
                 (graph_artwork.step / 60),
             )
 
             descr += (
                 "\n\n"
-                + _('Click here to change the graphs consolidation function to "%s".') % scalar
+                + _('Click here to change the graphs consolidation function to "%s".')
+                % legend_title.type
             )
 
             classes.append("inactive")
         else:
             descr = ""
 
-        html.th(title, class_=classes, style=font_size_style, title=descr)
+        html.th(legend_title.title, class_=classes, style=font_size_style, title=descr)
     html.close_tr()
     html.close_thead()
 
@@ -622,21 +630,23 @@ def _show_graph_legend(
         html.write_text_permissive(curve["title"])
         html.close_td()
 
-        for scalar, title, inactive in scalars:
-            if scalar == "pin" and not _show_pin_time(graph_artwork, graph_render_config):
+        for legend_title in legend_titles:
+            if legend_title.type == "pin" and not _show_pin_time(
+                graph_artwork, graph_render_config
+            ):
                 continue
 
             classes = ["scalar"]
-            if inactive and graph_artwork.step != 60:
+            if legend_title.inactive and graph_artwork.step != 60:
                 classes.append("inactive")
 
-            html.td(curve["scalars"][scalar][1], class_=classes, style=font_size_style)
+            html.td(curve["scalars"][legend_title.type][1], class_=classes, style=font_size_style)
 
         html.close_tr()
 
         if attributes and expandable_legend_appearance is ExpandableLegendAppearance.FOLDABLE:
             html.open_tr()
-            html.open_td(style=font_size_style, colspan=len(scalars) + 1)
+            html.open_td(style=font_size_style, colspan=len(legend_titles) + 1)
             html.write_html(_render_attributes(table_uuid_str, graph_legend_styles, attributes))
             html.close_td()
             html.close_tr()

@@ -27,6 +27,7 @@ const mockProps: CreateRelay = {
   agent_receiver_port: 8000,
   site_version: '2.5.0',
   is_cloud_edition: false,
+  use_token_based_install: false,
   user_id: 'cmkadmin',
   supported_os: ['Ubuntu 22.04 LTS', 'Red Hat Enterprise Linux (RHEL) 10']
 }

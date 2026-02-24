@@ -35,6 +35,7 @@ const props = defineProps<
     siteVersion: string
     urlToGetAnAutomationSecret: string
     isCloudEdition: boolean
+    useTokenBasedInstall: boolean
     userId: string
   }
 >()
@@ -60,32 +61,37 @@ const installCommand = computed(() => {
     </template>
 
     <template #content>
-      <CmkParagraph>
-        {{
-          _t(
-            'On the machine on which the Relay will be running, run the command below to execute ' +
-              'the downloaded installation script with the parameters shown. The script will ' +
-              'automatically download and register the Relay to your Checkmk site and run it afterwards.'
-          )
-        }}
-      </CmkParagraph>
-      <CmkParagraph v-if="!props.isCloudEdition">
-        {{
-          _t(
-            'If you do not want to run the script as the specified user — or 2FA is active for that user —, ' +
-              'change the parameter to another user with sufficient permissions, such as an automation user.'
-          )
-        }}
-      </CmkParagraph>
-      <CmkAlertBox variant="info">
-        {{ _t('You can only execute the following command as rootless.') }}
-        <br />
-        {{ _t('If you are logged in as root make sure to change the user using ') }}
-        <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-        <code>su -l &lt;user&gt;</code>
-      </CmkAlertBox>
+      <template v-if="props.useTokenBasedInstall">
+        <!-- TODO(CMK-30135): alternative installation flow -->
+      </template>
+      <template v-else>
+        <CmkParagraph>
+          {{
+            _t(
+              'On the machine on which the Relay will be running, run the command below to execute ' +
+                'the downloaded installation script with the parameters shown. The script will ' +
+                'automatically download and register the Relay to your Checkmk site and run it afterwards.'
+            )
+          }}
+        </CmkParagraph>
+        <CmkParagraph v-if="!props.isCloudEdition">
+          {{
+            _t(
+              'If you do not want to run the script as the specified user — or 2FA is active for that user —, ' +
+                'change the parameter to another user with sufficient permissions, such as an automation user.'
+            )
+          }}
+        </CmkParagraph>
+        <CmkAlertBox variant="info">
+          {{ _t('You can only execute the following command as rootless.') }}
+          <br />
+          {{ _t('If you are logged in as root make sure to change the user using ') }}
+          <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
+          <code>su -l &lt;user&gt;</code>
+        </CmkAlertBox>
 
-      <CmkCode :code_txt="installCommand" data-testid="run-relay-install-script"></CmkCode>
+        <CmkCode :code_txt="installCommand" data-testid="run-relay-install-script"></CmkCode>
+      </template>
     </template>
 
     <template #actions>

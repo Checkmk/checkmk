@@ -379,10 +379,9 @@ class PushAgentSource(Source[AgentRawData]):
             ),
             simulation=simulation,
             use_only_cache=True,
-            file_cache_mode=(
-                # Careful: at most read-only!
-                FileCacheMode.DISABLED if file_cache_options.disabled else FileCacheMode.READ
-            ),
+            # Push agents have no live fetcher (NoFetcher), so the cache is the only data source.
+            # Disabling the cache would mean no data at all, which breaks CLI discovery (-I/-II).
+            file_cache_mode=FileCacheMode.READ,
         )
 
 

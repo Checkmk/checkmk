@@ -16,7 +16,15 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
-from cmk.gui.type_defs import ColumnName, DynamicIcon, IconNames, Row, StaticIcon
+from cmk.gui.type_defs import (
+    ColumnName,
+    DynamicIcon,
+    DynamicIconName,
+    DynamicIconWithEmblem,
+    IconNames,
+    Row,
+    StaticIcon,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import CellSpec, CSVExportError
@@ -76,11 +84,9 @@ class PainterServiceIcons(Painter):
             ),
         )
 
-    def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser
-    ) -> list[DynamicIcon | StaticIcon]:
+    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[DynamicIcon]:
         return [
-            i.icon_name
+            _handle_icon(i.icon_name)
             for i in _get_row_icons(
                 "service", row, self._user_permissions, IconConfig.from_config(self.config)
             )
@@ -122,11 +128,9 @@ class PainterHostIcons(Painter):
             ),
         )
 
-    def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser
-    ) -> list[StaticIcon | DynamicIcon]:
+    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[DynamicIcon]:
         return [
-            i.icon_name
+            _handle_icon(i.icon_name)
             for i in _get_row_icons(
                 "host", row, self._user_permissions, IconConfig.from_config(self.config)
             )
@@ -135,6 +139,19 @@ class PainterHostIcons(Painter):
 
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
+
+
+def _handle_icon(icon: StaticIcon | DynamicIcon) -> DynamicIcon:
+    if isinstance(icon, (str, dict)):
+        # DynamicIcon
+        return icon
+    elif isinstance(icon, StaticIcon):
+        icon_name = DynamicIconName(str(icon.icon))
+        if icon.emblem:
+            return DynamicIconWithEmblem({"icon": icon_name, "emblem": icon.emblem})
+        return icon_name
+    else:
+        raise RuntimeError(f"Can not handle icon: {icon}")
 
 
 def _paint_icons(

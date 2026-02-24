@@ -40,7 +40,26 @@ function scrollBottom() {
     '.cmk-slide-in-dialog__content'
   ) as HTMLDivElement
   if (scrollContainer) {
-    scrollContainer.scrollTo({ top: scrollContainer.offsetHeight, behavior: 'smooth' })
+    // Check if user is near the bottom (within 150px)
+    // Only auto-scroll if they haven't manually scrolled up
+    const isNearBottom =
+      scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 150
+
+    // Use scrollHeight to get the total content height (visible height)
+    if (isNearBottom) {
+      scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' })
+    }
+  }
+}
+
+function forceScrollBottom() {
+  // Force scroll to bottom regardless of user's scroll position
+  // Used when initially opening dialog
+  const scrollContainer = scrollToRef.value?.closest(
+    '.cmk-slide-in-dialog__content'
+  ) as HTMLDivElement
+  if (scrollContainer) {
+    scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' })
   }
 }
 
@@ -56,12 +75,16 @@ function onAnimationActiveChange(active: boolean) {
 
 if (!showConsent.value) {
   aiTemplate.value?.onAnimationActiveChange(onAnimationActiveChange)
+  // Scroll to bottom immediately when opening with existing content
+  setTimeout(() => forceScrollBottom(), 100)
 }
 
 function onConsent() {
   setTimeout(() => {
     aiTemplate.value?.onAnimationActiveChange(onAnimationActiveChange)
     showConsent.value = false
+    // Scroll to bottom after consent is given and content appears
+    setTimeout(() => forceScrollBottom(), 100)
   }, 500)
 }
 
@@ -78,11 +101,16 @@ onBeforeUnmount(() => {
   <div class="ai-conversation">
     <AiConversationConsent v-if="showConsent" @consent="onConsent" @decline="onDecline" />
     <template v-else>
-      <AiConversationElement v-for="(element, index) in elements" :key="index" v-bind="element" />
+      <AiConversationElement
+        v-for="(element, index) in elements"
+        :key="index"
+        :element-index="index"
+        v-bind="element"
+      />
       <AiUserAction v-if="aiTemplate?.activeRole === AiRole.user" />
     </template>
+    <div ref="automatic-scroll-to" class="ai-conversation__auto-scroll-el"></div>
   </div>
-  <div ref="automatic-scroll-to" class="ai-conversation__auto-scroll-el"></div>
   <AiConversationFooter />
 </template>
 

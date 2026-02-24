@@ -35,12 +35,14 @@ import MarkdownContent from './content/MarkdownContent.vue'
 import TextContent from './content/TextContent.vue'
 
 const { _t } = usei18n()
-const props = defineProps<IAiConversationElement>()
+const props = defineProps<IAiConversationElement & { elementIndex?: number }>()
 
 const aiTemplate = getInjectedAiTemplate()
 
 const contentData = ref<TAiConversationElementContent[] | null>(
-  typeof props.content === 'function' || props.content instanceof Promise ? null : props.content
+  typeof props.content === 'function' || props.content instanceof Promise
+    ? null
+    : [...props.content]
 )
 
 const contentsToDisplay = ref<TAiConversationElementContent[]>([])
@@ -64,6 +66,9 @@ function addNextContent(): boolean {
 function setElementDone() {
   done.value = true
   aiTemplate.value?.setAnimationActiveChange(false)
+  if (props.elementIndex !== undefined) {
+    aiTemplate.value?.markElementDisplayed(props.elementIndex)
+  }
 }
 
 function onContentDone() {
@@ -79,9 +84,9 @@ function onContentDone() {
 
 onMounted(async () => {
   if (typeof props.content === 'function') {
-    contentData.value = await props.content()
+    contentData.value = [...(await props.content())]
   } else if (props.content instanceof Promise) {
-    contentData.value = await props.content
+    contentData.value = [...(await props.content)]
   }
   aiTemplate.value?.setAnimationActiveChange(true)
   awaited.value = true

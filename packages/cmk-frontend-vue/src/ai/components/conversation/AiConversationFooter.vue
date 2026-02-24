@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -18,13 +18,25 @@ const aiTemplate = getInjectedAiTemplate()
 
 const aiInfo = ref<string | null>(null)
 
-aiTemplate.value?.onInfoLoaded(() => {
+function loadAiInfo() {
   if (aiTemplate.value?.info) {
     aiInfo.value = _t(
       `This feature uses ${aiTemplate.value.info.models.join(', ')} by ${aiTemplate.value.info.provider}. ` +
         'The generated output can contain errors or inaccuracies and must be carefully reviewed by a human for factual correctness. '
     )
   }
+}
+
+// Check if info is already loaded
+onMounted(() => {
+  if (aiTemplate.value?.info) {
+    loadAiInfo()
+  }
+})
+
+// Also listen for when info gets loaded
+aiTemplate.value?.onInfoLoaded(() => {
+  loadAiInfo()
 })
 </script>
 

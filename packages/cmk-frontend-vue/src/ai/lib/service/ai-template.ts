@@ -99,6 +99,7 @@ export interface IAiConversationElement {
   hideControls?: boolean | undefined
   loadingText?: string | undefined
   error?: string | undefined
+  displayed?: boolean | undefined
 }
 
 export type OnAnimationActiveChangeCallback = (active: boolean) => void
@@ -159,6 +160,28 @@ export class AiTemplateService extends ServiceBase {
     this.elements.push(element)
   }
 
+  public markElementDisplayed(index: number) {
+    if (this.elements[index]) {
+      this.elements[index]!.displayed = true
+    }
+  }
+
+  public disableAllAnimations() {
+    this.elements.forEach((element) => {
+      if (element.displayed) {
+        element.noAnimation = true
+      }
+    })
+
+    // Ensure active role is set correctly - if the last element is displayed, role should be user
+    if (this.elements.length > 0) {
+      const lastElement = this.elements[this.elements.length - 1]!
+      if (lastElement.displayed) {
+        this.setActiveRole(AiRole.user)
+      }
+    }
+  }
+
   public addContext() {
     const context = this.toSentenceCase(this.templateId.replace(/-/g, ' '))
     const contextData: string[] = []
@@ -178,7 +201,8 @@ export class AiTemplateService extends ServiceBase {
           content: `### Context:  **${context}**\n${contextData.join('\n')}`
         }
       ],
-      noAnimation: true
+      noAnimation: true,
+      displayed: true
     })
 
     this.setActiveRole(AiRole.user)
@@ -213,7 +237,8 @@ export class AiTemplateService extends ServiceBase {
             text: userAction.action_name
           }
         ],
-        noAnimation: true
+        noAnimation: true,
+        displayed: true
       })
     }
 

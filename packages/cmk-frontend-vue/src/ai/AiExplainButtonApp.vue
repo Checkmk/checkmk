@@ -22,15 +22,22 @@ const aiTemplate = ref<AiTemplateService | null>(null)
 
 provide(aiTemplateKey, aiTemplate as Ref<AiTemplateService | null>)
 
-const conversationOpen = ref(true)
+const conversationOpen = ref(false)
 
 function explainThis() {
-  aiTemplate.value = new AiTemplateService(
-    props.template.id,
-    props.user_id,
-    props.template.context_data,
-    props.site_name
-  )
+  // Only create a new service instance if one doesn't exist yet
+  // This ensures conversation data persists when the dialog is closed and reopened
+  if (aiTemplate.value === null) {
+    aiTemplate.value = new AiTemplateService(
+      props.template.id,
+      props.user_id,
+      props.template.context_data,
+      props.site_name
+    )
+  } else {
+    // When reopening, disable animations on all existing elements
+    aiTemplate.value.disableAllAnimations()
+  }
   conversationOpen.value = true
 }
 
@@ -45,7 +52,7 @@ document.addEventListener('cmk-ai-explain-button', () => {
 
 <template>
   <div id="ai-explain-button"></div>
-  <Teleport v-if="props.hide_button !== true" defer :to="teleport ?? '#ai-explain-button'">
+  <Teleport v-if="props.hide_button !== true" defer :to="props.teleport ?? '#ai-explain-button'">
     <CmkButton class="ai-explain-button-app__button" @click="explainThis">
       <div class="ai-explain-button-app__shimmer"></div>
       <CmkIcon name="sparkle" />

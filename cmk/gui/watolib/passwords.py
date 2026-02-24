@@ -7,6 +7,8 @@ from collections.abc import Sequence
 
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
@@ -120,8 +122,17 @@ def remove_password(
     use_git: bool,
 ) -> None:
     password_store = PasswordStore()
-    entries = load_passwords_to_modify()
-    _ = entries.pop(ident)
+    entries = password_store.load_for_modification()
+    editable_entries = password_store.filter_editable_entries(entries)
+    if ident not in editable_entries:
+        raise MKUserError(
+            ident,
+            _(
+                "The password cannot be deleted because the user does not have the permission to edit it."
+            ),
+        )
+
+    _e = entries.pop(ident)
     password_store.save(entries, pprint_value)
     add_change(
         action_name="delete-password",

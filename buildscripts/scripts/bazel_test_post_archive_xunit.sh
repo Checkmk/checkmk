@@ -6,7 +6,7 @@
 # Merges all bazel xunit output files to a single directory hierarchy.
 
 BAZEL_TEST_LOGS_SRC=$(bazel info bazel-testlogs)
-BAZEL_TEST_LOGS_DEST="../results"
+BAZEL_TEST_LOGS_DEST="${BAZEL_TEST_LOGS_DEST:-../results}"
 
 if [ -z "${BAZEL_TEST_LOGS_SRC}" ]; then
     echo BAZEL_TEST_LOGS_SRC is empty!
@@ -29,19 +29,11 @@ if [ -d ${BAZEL_TEST_LOGS_DEST} ]; then
     mkdir --parents ${BAZEL_TEST_LOGS_DEST}
 fi
 
-${RSYNC_PATH} --recursive \
-    --checksum \
-    --copy-links \
-    --perms \
-    --times \
-    --group \
-    --owner \
-    --checksum \
-    --prune-empty-dirs \
-    --include='**/test.xml' \
-    --include='**/' \
-    --exclude='*' \
-    "${BAZEL_TEST_LOGS_SRC}" \
-    "${BAZEL_TEST_LOGS_DEST}"
+find "${BAZEL_TEST_LOGS_SRC}" -name "test.xml" | while IFS= read -r src; do
+    rel="${src#"${BAZEL_TEST_LOGS_SRC}"/}"
+    dst="${BAZEL_TEST_LOGS_DEST}/${rel}"
+    mkdir -p "$(dirname "$dst")"
+    mv "$src" "$dst"
+done
 
 exit $?

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-19 18:34+0000\n"
+"PO-Revision-Date: 2026-02-23 21:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -14901,7 +14901,6 @@ msgstr "Benutzer Speicher auf dem Host"
 msgid "Consumed load balancer capacity units"
 msgstr "Verbrauchte Load Balancer Kapazitätseinheiten"
 
-#, fuzzy
 msgid "Consumer count is the size of connected consumers to a queue"
 msgstr ""
 "Verbraucher-Anzahl ist die Anzahl der an eine Warteschlange angeschlossenen "
@@ -50425,6 +50424,8 @@ msgid ""
 "Queue length refers to the total number of messages that have not been "
 "acknowledged by a consumer."
 msgstr ""
+"Die Warteschlangenlänge bezieht sich auf die Gesamtzahl der Nachrichten, die "
+"noch nicht von einem Verbraucher bestätigt wurden."
 
 msgid "Queue manager name"
 msgstr "Name des Warteschlangenmanagers"
@@ -77144,9 +77145,8 @@ msgstr "Obergrenzen für das Sicherungsalter"
 msgid "Upper levels for the bucket size"
 msgstr "Obergrenzen für die Bucket-Größe"
 
-#, fuzzy
 msgid "Upper levels for the consumer count"
-msgstr "Obergrenzen für die Consumer-Zählung"
+msgstr "Obergrenzen für die Verbraucherzählung"
 
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr "Obergrenzen für die Lüftergeschwindigkeit von Geräten"
@@ -77190,9 +77190,8 @@ msgstr "Obergrenzen für die Anzahl der Sitzungen"
 msgid "Upper levels for the number of table extents"
 msgstr "Obergrenzen für die Anzahl der Tabellen-Extents"
 
-#, fuzzy
 msgid "Upper levels for the queue length"
-msgstr "Obergrenzen für Warteschlangenlänge"
+msgstr "Obergrenzen für die Warteschlangenlänge"
 
 msgid "Upper levels for the time the service is active"
 msgstr "Obergrenzen für die Zeit, in welcher der Service aktiv ist"

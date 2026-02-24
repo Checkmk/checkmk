@@ -16,6 +16,7 @@ from cmk.discover_plugins import (
 from cmk.gui.utils.rule_specs.compatibility import make_rule_spec_backwards_compatible
 from cmk.rulesets.v1 import entry_point_prefixes
 from cmk.rulesets.v1.rule_specs import (
+    AgentConfig,
     CheckParameters,
     EnforcedService,
 )
@@ -50,11 +51,22 @@ def load_discovered_rule_specs(
 
 def load_api_v1_rule_specs(
     raise_errors: bool,
+    edition: Edition,
 ) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
+    used_entry_points = (
+        {
+            type_: prefix
+            for type_, prefix in entry_point_prefixes().items()
+            if type_ is not AgentConfig
+        }
+        if edition is Edition.COMMUNITY
+        else entry_point_prefixes()
+    )
+
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
-        entry_point_prefixes(),
-        skip_wrong_types=False,
+        used_entry_points,
+        skip_wrong_types=True,
         raise_errors=raise_errors,
     )
 

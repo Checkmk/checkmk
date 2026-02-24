@@ -141,7 +141,7 @@ def main() -> int:
     except ImportError:
         return _bail_out_missing_dependency()
 
-    ceph_config, ceph_client = _load_plugin_config(os.environ["MK_CONFDIR"])
+    ceph_config, ceph_client = _load_plugin_config(os.getenv("MK_CONFDIR", "/etc/check_mk"))
 
     cluster = RadosCMD(Rados(conffile=ceph_config, name=ceph_client))
     cluster.client.connect()

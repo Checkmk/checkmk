@@ -802,6 +802,8 @@ def render_ajax_graph(
         assert user.id is not None
         UserGraphDataRangeStore(user.id).save(specification_id, graph_data_range)
 
+    graph_display_id = context.get("display_id", "")
+
     graph_artwork_or_errors = compute_graph_artwork(
         graph_recipe,
         graph_data_range,
@@ -809,6 +811,7 @@ def render_ajax_graph(
         registered_metrics,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
+        graph_display_id=graph_display_id,
     )
 
     if graph_artwork_or_errors.errors:
@@ -841,6 +844,7 @@ def render_ajax_graph(
             "definition": graph_recipe.model_dump(),
             "data_range": graph_data_range.model_dump(),
             "render_config": graph_render_config.model_dump(),
+            "display_id": graph_display_id,
         },
         "error": error_msg,
     }
@@ -1388,6 +1392,7 @@ def host_service_graph_dashlet_cmk(
         registered_metrics,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
+        graph_display_id=graph_display_id,
     )
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to

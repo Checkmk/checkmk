@@ -1472,7 +1472,9 @@ function update_mouse_hovering(event: Event) {
 
   add()
 
-  if (!graph.render_config.interaction) return // don't do anything when this graph is not allowed to set the pin
+  if (!graph.render_config.interaction) {
+    return // don't do anything when this graph is not allowed to set the pin
+  }
 
   const canvas_rect = canvas.getBoundingClientRect()
   update_mouse_indicator(
@@ -1624,17 +1626,22 @@ interface GraphHover {
 }
 
 function update_graph_hover_popup(event: Event, graph: GraphArtwork): boolean | void {
-  if (g_graph_update_in_process || g_graph_in_cooldown_period) return prevent_default_events(event)
+  if (g_graph_update_in_process || g_graph_in_cooldown_period) {
+    return prevent_default_events(event)
+  }
 
   const hover_timestamp = graph_get_click_time(event as MouseEvent, graph)
 
-  if (!hover_timestamp) return prevent_default_events(event)
+  if (!hover_timestamp) {
+    return prevent_default_events(event)
+  }
 
   if (
     hover_timestamp < graph['time_axis']['range'][0] ||
     hover_timestamp > graph['time_axis']['range'][1]
-  )
+  ) {
     return prevent_default_events(event)
+  }
 
   const cmk_token = get_url_param('cmk-token')
   const display_id = graph.display_id || ''

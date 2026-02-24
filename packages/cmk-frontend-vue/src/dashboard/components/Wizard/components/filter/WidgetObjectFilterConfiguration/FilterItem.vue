@@ -4,23 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import FilterDisplayItem from '@/dashboard/components/filter/FilterDisplayItem/FilterDisplayItem.vue'
 import type { ConfiguredValues } from '@/dashboard/components/filter/types'
-import type { FilterOrigin } from '@/dashboard/types/filter'
+import { FilterOrigin } from '@/dashboard/types/filter'
 
 import ContentSpacer from '../../ContentSpacer.vue'
 
 const { _t } = usei18n()
 
 const LABEL_INHERITED = _t('Inherited')
-const LABEL_OVERRIDEN = _t('Overriden')
-
-const LABEL_ORIGIN_DASHBOARD = _t('Default filter')
-const LABEL_ORIGIN_QUICK_FILTER = _t('Runtime filter')
+const LABEL_OVERRIDDEN = _t('Overridden')
 
 interface FilterItemProp {
   overridden?: boolean
@@ -29,8 +29,21 @@ interface FilterItemProp {
   configuredValues: ConfiguredValues
 }
 
-withDefaults(defineProps<FilterItemProp>(), {
+const props = withDefaults(defineProps<FilterItemProp>(), {
   overridden: false
+})
+
+const originLabel = computed<TranslatedString>(() => {
+  switch (props.origin) {
+    case FilterOrigin.DASHBOARD:
+      return _t('Default filter')
+    case FilterOrigin.QUICK_FILTER:
+      return _t('Runtime filter')
+    case FilterOrigin.LINKED_VIEW:
+      return _t('View filter')
+    default:
+      throw new Error(`Unknown filter origin: ${props.origin}`)
+  }
 })
 </script>
 
@@ -50,11 +63,11 @@ withDefaults(defineProps<FilterItemProp>(), {
     </div>
 
     <div class="db-filter-item__component">
-      {{ overridden ? LABEL_OVERRIDEN : LABEL_INHERITED }}
+      {{ overridden ? LABEL_OVERRIDDEN : LABEL_INHERITED }}
     </div>
 
     <div class="db-filter-item__component">
-      {{ origin === 'DASHBOARD' ? LABEL_ORIGIN_DASHBOARD : LABEL_ORIGIN_QUICK_FILTER }}
+      {{ originLabel }}
     </div>
   </div>
   <ContentSpacer :dimension="5" />

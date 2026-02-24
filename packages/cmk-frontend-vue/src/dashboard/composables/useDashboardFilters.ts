@@ -5,14 +5,10 @@
  */
 import { type Ref, computed, ref } from 'vue'
 
-import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard/components/filter/types'
+import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
+import { configuredToContextFilters } from '@/dashboard/components/filter/utils'
 import type { DashboardFilterContextWithSingleInfos } from '@/dashboard/types/dashboard'
-import {
-  type ContextFilter,
-  type ContextFilters,
-  FilterOrigin,
-  RuntimeFilterMode
-} from '@/dashboard/types/filter.ts'
+import { type ContextFilters, FilterOrigin, RuntimeFilterMode } from '@/dashboard/types/filter.ts'
 
 export function useDashboardFilters(
   dashboardFilterContextRef: Ref<DashboardFilterContextWithSingleInfos | undefined>
@@ -45,23 +41,13 @@ export function useDashboardFilters(
     }
   })
 
-  const toContextFilters = (filters: ConfiguredFilters, source: FilterOrigin): ContextFilters => {
-    const entries: [string, ContextFilter][] = Object.entries(filters).map(
-      ([name, configuredValues]) => [
-        name,
-        { configuredValues: configuredValues as ConfiguredValues, source }
-      ]
-    )
-    return Object.fromEntries(entries)
-  }
-
   const contextFilters = computed<ContextFilters>(() => {
     if (runtimeFiltersMode.value === 'override') {
-      return toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
+      return configuredToContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
     }
     return {
-      ...toContextFilters(configuredDashboardFilters.value, FilterOrigin.DASHBOARD),
-      ...toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
+      ...configuredToContextFilters(configuredDashboardFilters.value, FilterOrigin.DASHBOARD),
+      ...configuredToContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
     }
   })
 

@@ -31,34 +31,35 @@ const isOverridden = (name: string): boolean => {
 
 const isPresent = (f: ContextFilterValue | null | undefined): f is ContextFilterValue => f !== null
 
-const dashboardFilters = computed<ContextFilters>(() => {
+function getActiveFiltersFromSource(source: FilterOrigin): ContextFilters {
   const result: ContextFilters = {}
   for (const [name, f] of Object.entries(props.contextFilters) as [
     string,
     ContextFilterValue | null | undefined
   ][]) {
-    if (isPresent(f) && f.source === FilterOrigin.DASHBOARD) {
+    if (isPresent(f) && f.source === source) {
       result[name] = f
     }
   }
   return result
-})
+}
 
-const runtimeFilters = computed<ContextFilters>(() => {
-  const result: ContextFilters = {}
-  for (const [name, f] of Object.entries(props.contextFilters) as [
-    string,
-    ContextFilterValue | null | undefined
-  ][]) {
-    if (isPresent(f) && f.source === FilterOrigin.QUICK_FILTER) {
-      result[name] = f
-    }
-  }
-  return result
-})
+const dashboardFilters = computed<ContextFilters>(() =>
+  getActiveFiltersFromSource(FilterOrigin.DASHBOARD)
+)
+const runtimeFilters = computed<ContextFilters>(() =>
+  getActiveFiltersFromSource(FilterOrigin.QUICK_FILTER)
+)
+const linkedViewFilters = computed<ContextFilters>(() =>
+  getActiveFiltersFromSource(FilterOrigin.LINKED_VIEW)
+)
 
 const countInheritedFilters = computed(() => {
-  return Object.keys(dashboardFilters.value).length + Object.keys(runtimeFilters.value).length
+  return (
+    Object.keys(dashboardFilters.value).length +
+    Object.keys(runtimeFilters.value).length +
+    Object.keys(linkedViewFilters.value).length
+  )
 })
 </script>
 
@@ -76,6 +77,15 @@ const countInheritedFilters = computed(() => {
     <li v-for="(filter, name) in runtimeFilters" :key="name">
       <FilterItem
         :origin="FilterOrigin.QUICK_FILTER"
+        :overridden="isOverridden(name)"
+        :filter-id="name"
+        :configured-values="filter.configuredValues"
+      />
+    </li>
+
+    <li v-for="(filter, name) in linkedViewFilters" :key="name">
+      <FilterItem
+        :origin="FilterOrigin.LINKED_VIEW"
         :overridden="isOverridden(name)"
         :filter-id="name"
         :configured-values="filter.configuredValues"

@@ -16,10 +16,13 @@ import WidgetObjectFilterConfiguration from '@/dashboard/components/Wizard/compo
 import { parseFilters } from '@/dashboard/components/Wizard/components/filter/utils.ts'
 import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard/components/filter/types.ts'
-import { useFilterDefinitions } from '@/dashboard/components/filter/utils.ts'
+import {
+  configuredToContextFilters,
+  useFilterDefinitions
+} from '@/dashboard/components/filter/utils.ts'
 import { useInjectVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
 import type { DataSourceModel } from '@/dashboard/types/api'
-import type { ContextFilters } from '@/dashboard/types/filter.ts'
+import { type ContextFilters, FilterOrigin } from '@/dashboard/types/filter.ts'
 import type { ObjectType } from '@/dashboard/types/shared.ts'
 import type { EmbeddedViewContent, LinkedViewContent } from '@/dashboard/types/widget'
 
@@ -73,6 +76,7 @@ const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
 })
 
 const error = ref<string | null>(null)
+const linkedViewFilters = ref<ContextFilters>({})
 
 function goToNextStage() {
   error.value = null
@@ -182,6 +186,18 @@ const sortedContextInfos = computed(() => {
 
   return infos
 })
+
+const mergedContextFilters = computed<ContextFilters>(() => {
+  // Linked view filters are overridden by everything else.
+  // They should not be added to the widget's filters!
+  if (modeSelection.value === ViewSelectionMode.LINK) {
+    return {
+      ...linkedViewFilters.value,
+      ...props.contextFilters
+    }
+  }
+  return props.contextFilters
+})
 </script>
 
 <template>
@@ -228,7 +244,10 @@ const sortedContextInfos = computed(() => {
             v-model:referenced-view="referencedViewName"
             v-model:context-infos="contextInfos"
             :datasources-by-id="datasourcesById"
-            @overwrite-filters="(filters) => emit('overwrite-filters', filters)"
+            @overwrite-filters="
+              (filters) =>
+                (linkedViewFilters = configuredToContextFilters(filters, FilterOrigin.LINKED_VIEW))
+            "
           />
         </div>
       </template>
@@ -258,8 +277,8 @@ const sortedContextInfos = computed(() => {
             "
             :object-configured-filters="configuredFiltersByObjectType[objectType]!"
             :in-focus="currentFilterSelectionMenuFocus === objectType"
-            :context-filters="contextFilters"
-            :show-context-filters-section="objectType in ['host', 'service']"
+            :context-filters="mergedContextFilters"
+            :in-view-context="true"
             @set-focus="emit('set-focus', $event)"
             @update-filter-values="
               (filterId, values) => emit('update-filter-values', filterId, values)

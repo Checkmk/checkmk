@@ -11,7 +11,8 @@ export type FilterCollection = components['schemas']['FilterCollection']
 
 export enum FilterOrigin {
   DASHBOARD = 'DASHBOARD',
-  QUICK_FILTER = 'QUICK_FILTER'
+  QUICK_FILTER = 'QUICK_FILTER',
+  LINKED_VIEW = 'LINKED_VIEW'
 }
 
 export interface ContextFilter {

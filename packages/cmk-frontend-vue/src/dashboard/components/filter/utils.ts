@@ -5,8 +5,11 @@
  */
 import { type Ref, inject } from 'vue'
 
+import type { ContextFilter, ContextFilters, FilterOrigin } from '@/dashboard/types/filter'
+
 import type {
   ComponentConfig,
+  ConfiguredFilters,
   ConfiguredValues,
   FilterDefinition,
   FilterDefinitions,
@@ -136,4 +139,17 @@ export function isFullyConfiguredFilter(
   }
 
   return check(filterDefinition.extensions.components)
+}
+
+export function configuredToContextFilters(
+  filters: ConfiguredFilters,
+  source: FilterOrigin
+): ContextFilters {
+  const entries: [string, ContextFilter][] = Object.entries(filters).map(
+    ([name, configuredValues]) => [
+      name,
+      { configuredValues: configuredValues as ConfiguredValues, source }
+    ]
+  )
+  return Object.fromEntries(entries)
 }

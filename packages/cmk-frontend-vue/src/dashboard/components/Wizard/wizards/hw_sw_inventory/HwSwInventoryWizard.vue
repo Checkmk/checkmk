@@ -157,7 +157,11 @@ const recapAndNext = () => {
 }
 
 const appliedFilters = computed((): ConfiguredFilters => {
-  return squashFilters(contextConfiguredFilters.value, widgetFilterManager.getConfiguredFilters())
+  return squashFilters(
+    contextConfiguredFilters.value,
+    widgetFilterManager.getConfiguredFilters(),
+    filterDefinitions
+  )
 })
 
 const handleAddWidget = (

@@ -287,7 +287,8 @@ const effectiveFilterContext = computed<EffectiveWidgetFilterContext>(() => {
     uses_infos: contextInfos.value,
     filters: squashFilters(
       parseContextConfiguredFilters(props.contextFilters),
-      widgetFilterManager.getConfiguredFilters()
+      widgetFilterManager.getConfiguredFilters(),
+      filterDefinitions
     ),
     restricted_to_single: restrictedToSingleInfos.value
   } as EffectiveWidgetFilterContext

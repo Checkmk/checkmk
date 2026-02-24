@@ -30,6 +30,7 @@ import { type OAuth2FormData, type Oauth2ConnectionApi } from '../lib/service/oa
 import { submitKey } from '../lib/submitKey'
 import { waitForRedirect } from '../lib/waitForRedirect'
 import {
+  buildAuthorizationUrl,
   buildRedirectUri,
   filteredDataInFilteredDictionary,
   filteredDictionaryByGroupName,
@@ -54,7 +55,11 @@ const props = defineProps<
   }
 >()
 
-const model = defineModel<{ data: OAuth2FormData; validation: ValidationMessages }>({
+const model = defineModel<{
+  data: OAuth2FormData
+  validation: ValidationMessages
+  overrideCode: string
+}>({
   required: true
 })
 
@@ -77,25 +82,18 @@ const resultCode = ref<string | null>(null)
 
 async function authorize(): Promise<string | null> {
   return new Promise((resolve) => {
-    const authorityKey = model.value.data.authority as keyof typeof props.authorityMapping
-    const mappingValue = props.authorityMapping[authorityKey] ?? 'global_'
-    const baseUrl =
-      props.urls[props.connectorType][
-        mappingValue as keyof (typeof props.urls)[typeof props.connectorType]
-      ].base_url
-    if (baseUrl) {
-      const url = new URL(
-        `${baseUrl.replace('###tenant_id###', model.value.data.tenant_id as string)}/authorize`
-      )
-
-      url.searchParams.append('client_id', model.value.data.client_id as string)
-      url.searchParams.append('redirect_uri', buildRedirectUri(props.urls.redirect))
-      url.searchParams.append('response_type', 'code')
-      url.searchParams.append('response_mode', 'query')
-      url.searchParams.append('scope', '.default')
-      url.searchParams.append('state', refId)
-      url.searchParams.append('prompt', 'select_account')
-
+    if (model.value.overrideCode) {
+      resolve(model.value.overrideCode)
+      return
+    }
+    const url = buildAuthorizationUrl(
+      props.urls,
+      props.connectorType,
+      props.authorityMapping,
+      model.value.data,
+      refId
+    )
+    if (url) {
       const authWindow = open(url, '_blank')
       if (authWindow) {
         waitForRedirect<string | null>(
@@ -147,7 +145,11 @@ async function requestAccessToken(): Promise<boolean> {
       const res = await props.api.requestAccessToken({
         type: 'ms_graph_api',
         id: props.ident,
-        redirect_uri: buildRedirectUri(props.urls.redirect),
+        redirect_uri: buildRedirectUri(
+          props.urls.redirect,
+          model.value.data.override_site || null,
+          props.urls.site_redirect_urls
+        ),
         data: model.value.data,
         code: resultCode.value
       })

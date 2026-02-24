@@ -6,9 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
-import { computed } from 'vue'
+import type {
+  FormSpec,
+  TwoColumnDictionary
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { type Ref, computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import { immediateWatch } from '@/lib/watch.ts'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCode from '@/components/CmkCode.vue'
@@ -16,17 +21,38 @@ import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import { buildRedirectUri } from './utils'
+import type { ValidationMessages } from '@/form'
+
+import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
+
+import FormEdit from '../../form/FormEdit.vue'
+import {
+  buildRedirectUri,
+  filteredDataInFilteredDictionary,
+  filteredDictionaryByGroupName,
+  filteredValidationMessagesInFilteredDictionary
+} from './utils'
 
 const { _t } = usei18n()
 
 const props = defineProps<
   CmkWizardStepProps & {
+    formSpec: {
+      id: string
+      spec: FormSpec
+      validation?: ValidationMessages
+      data: unknown
+    }
     urls: Oauth2Urls
   }
 >()
-
-const redirectUri = computed(() => buildRedirectUri(props.urls.redirect))
+const model = defineModel<{ data: OAuth2FormData; validation: ValidationMessages }>({
+  required: true
+})
+const overrideSite: Ref<string | null> = ref(null)
+const redirectUri = computed(() =>
+  buildRedirectUri(props.urls.redirect, overrideSite.value, props.urls.site_redirect_urls)
+)
 const redirectUriValid = computed(() => {
   const url = new URL(redirectUri.value)
   if (url.protocol === 'https:') {
@@ -34,6 +60,26 @@ const redirectUriValid = computed(() => {
   }
   return url.protocol === 'http:' && url.hostname === 'localhost'
 })
+
+const groupName = 'Redirect URI'
+const filteredDictionary = computed(() =>
+  filteredDictionaryByGroupName(props.formSpec.spec as TwoColumnDictionary, groupName)
+)
+const filteredData = ref<Partial<OAuth2FormData>>(
+  filteredDataInFilteredDictionary(model.value.data, filteredDictionary.value)
+)
+const filteredValidation = computed(() =>
+  filteredValidationMessagesInFilteredDictionary(model.value.validation, filteredDictionary.value)
+)
+
+immediateWatch(
+  () => filteredData.value,
+  (newValue) => {
+    overrideSite.value = newValue.override_site ?? null
+    model.value.data = { ...model.value.data, ...newValue }
+  },
+  { deep: true }
+)
 </script>
 
 <template>
@@ -43,6 +89,11 @@ const redirectUriValid = computed(() => {
     </template>
 
     <template #content>
+      <FormEdit
+        v-model:data="filteredData"
+        :backend-validation="filteredValidation"
+        :spec="filteredDictionary"
+      />
       {{
         _t(
           'Open the Redirect URIs or navigate to the Authentication settings and register the following Web redirect URI'
@@ -55,7 +106,12 @@ const redirectUriValid = computed(() => {
           )
         }}
       </CmkAlertBox>
-      <CmkCode :code_txt="buildRedirectUri(props.urls.redirect)" />
+      <CmkCode
+        class="mode-oauth2-connection-redirect-u-r-i__cmk-code"
+        :code_txt="
+          buildRedirectUri(props.urls.redirect, overrideSite, props.urls.site_redirect_urls)
+        "
+      />
     </template>
 
     <template #actions>
@@ -64,3 +120,9 @@ const redirectUriValid = computed(() => {
     </template>
   </CmkWizardStep>
 </template>
+
+<style scoped>
+.mode-oauth2-connection-redirect-u-r-i__cmk-code {
+  line-break: normal;
+}
+</style>

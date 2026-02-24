@@ -9,6 +9,8 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkButton from '@/components/CmkButton.vue'
+import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -16,8 +18,12 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 const { _t } = usei18n()
 
 const successfullyLoggedIn = computed(() => {
+  return !!getCode.value
+})
+
+const getCode = computed(() => {
   const params = new URL(window.location.href).searchParams
-  return !!params.get('code')
+  return params.get('code')
 })
 
 const title = computed(() => {
@@ -41,6 +47,14 @@ const title = computed(() => {
           <CmkHeading type="h1">{{ title }}</CmkHeading>
           <CmkHeading type="h3">{{ _t('You can now close this tab.') }}</CmkHeading>
         </div>
+        <template v-if="successfullyLoggedIn">
+          <CmkCopy :text="getCode || ''">
+            <CmkButton>
+              <CmkIcon name="copied" variant="inline" size="medium" />
+              {{ _t('Copy code to clipboard') }}
+            </CmkButton>
+          </CmkCopy>
+        </template>
       </div>
     </div>
   </Teleport>

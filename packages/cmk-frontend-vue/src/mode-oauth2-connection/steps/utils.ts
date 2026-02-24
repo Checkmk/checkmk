@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Oauth2Urls } from 'cmk-shared-typing/typescript/mode_oauth2_connection'
 import type { TwoColumnDictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import type { ValidationMessages } from '@/form'
@@ -16,7 +17,15 @@ export function isValidUUID(value: string): boolean {
   return UUID_REGEX.test(value)
 }
 
-export function buildRedirectUri(redirectUrl: string): string {
+export function buildRedirectUri(
+  redirectUrl: string,
+  overrideSite: string | null,
+  siteRedirectUrls: Record<string, string>
+): string {
+  if (overrideSite && siteRedirectUrls[overrideSite]) {
+    return siteRedirectUrls[overrideSite]
+  }
+
   const baseUri = (
     location.origin +
     location.pathname.replace('wato.py', '') +
@@ -28,6 +37,35 @@ export function buildRedirectUri(redirectUrl: string): string {
   url.searchParams.delete('clone')
   url.searchParams.delete('ident')
   url.searchParams.delete('entity_type_specifier')
+  return url.toString()
+}
+
+export function buildAuthorizationUrl(
+  urls: Oauth2Urls,
+  connectorType: 'microsoft_entra_id',
+  authorityMapping: Record<string, string>,
+  data: OAuth2FormData,
+  state: string
+): string {
+  const authorityKey = data.authority as keyof typeof authorityMapping
+  const mappingValue = authorityMapping[authorityKey] ?? 'global_'
+  const baseUrl =
+    urls[connectorType][mappingValue as keyof (typeof urls)[typeof connectorType]].base_url
+  if (!baseUrl) {
+    return ''
+  }
+
+  const url = new URL(`${baseUrl.replace('###tenant_id###', data.tenant_id as string)}/authorize`)
+  url.searchParams.append('client_id', data.client_id as string)
+  url.searchParams.append(
+    'redirect_uri',
+    buildRedirectUri(urls.redirect, data.override_site || null, urls.site_redirect_urls)
+  )
+  url.searchParams.append('response_type', 'code')
+  url.searchParams.append('response_mode', 'query')
+  url.searchParams.append('scope', '.default')
+  url.searchParams.append('state', state)
+  url.searchParams.append('prompt', 'select_account')
   return url.toString()
 }
 

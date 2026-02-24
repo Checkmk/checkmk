@@ -14,9 +14,13 @@
         "back": { "type": "string" },
         "microsoft_entra_id": {
           "$ref": "#/$urls/microsoft_entra_id_urls"
+        },
+        "site_redirect_urls": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
         }
       },
-      "required": ["microsoft_entra_id", "redirect", "back"]
+      "required": ["microsoft_entra_id", "redirect", "back", "site_redirect_urls"]
     }
   },
   "$urls": {

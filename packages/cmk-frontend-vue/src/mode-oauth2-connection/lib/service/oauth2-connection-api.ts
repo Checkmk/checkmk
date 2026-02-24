@@ -21,6 +21,7 @@ export interface OAuth2FormData {
   client_secret: string[]
   access_token?: string
   refresh_token?: string
+  override_site?: string
 }
 
 export interface MsGraphApiAccessTokenRequestObject {

@@ -41,9 +41,14 @@ const props = defineProps<{
 
 const dataRef = defineModel<OAuth2FormData>('data', { required: true })
 
-const modelRef = ref<{ data: OAuth2FormData; validation: ValidationMessages }>({
+const modelRef = ref<{
+  data: OAuth2FormData
+  validation: ValidationMessages
+  overrideCode: string
+}>({
   data: props.formSpec.data,
-  validation: props.formSpec.validation ?? []
+  validation: props.formSpec.validation ?? [],
+  overrideCode: ''
 })
 
 immediateWatch(
@@ -60,6 +65,15 @@ immediateWatch(
   }
 )
 
+immediateWatch(
+  () => modelRef.value.data.override_site,
+  (newValue) => {
+    if (!newValue) {
+      modelRef.value.overrideCode = ''
+    }
+  }
+)
+
 const currentStep = ref<number>(1)
 </script>
 
@@ -73,7 +87,13 @@ const currentStep = ref<number>(1)
         :index="2"
         :is-completed="() => currentStep > 2"
       />
-      <RedirectURI :urls="config.urls" :index="3" :is-completed="() => currentStep > 3" />
+      <RedirectURI
+        v-model="modelRef"
+        :form-spec="formSpec"
+        :urls="config.urls"
+        :index="3"
+        :is-completed="() => currentStep > 3"
+      />
       <AppPermissions :index="4" :is-completed="() => currentStep > 4" />
       <ClientSecret
         v-model="modelRef"
@@ -81,7 +101,16 @@ const currentStep = ref<number>(1)
         :index="5"
         :is-completed="() => currentStep > 5"
       />
-      <AuthorizeConnection :index="6" :is-completed="() => currentStep > 6" />
+      <AuthorizeConnection
+        v-model="modelRef"
+        :urls="config.urls"
+        :connector-type="connectorType"
+        :api="api"
+        :authority-mapping="authorityMapping"
+        :ident="formSpec.data.ident"
+        :index="6"
+        :is-completed="() => currentStep > 6"
+      />
       <SaveConnection
         v-model="modelRef"
         :urls="config.urls"

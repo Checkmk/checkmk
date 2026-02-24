@@ -9,9 +9,10 @@ from collections.abc import Collection, Mapping
 from dataclasses import asdict
 from typing import override
 
+from cmk.ccc.site import omd_site
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import RawDiskData, serialize_data_for_frontend
 from cmk.gui.form_specs.unstable import (
@@ -40,6 +41,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.site_config import site_is_local
 from cmk.gui.table import Table
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import get_configured_site_choices
@@ -55,6 +57,7 @@ from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.passwords import load_passwords, remove_password
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.livestatus_client import SiteConfiguration
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -133,6 +136,20 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                     ],
                 ),
                 group=DictGroup(title=Title("Hidden")),
+            ),
+            "override_site": DictElement(
+                required=False,
+                parameter_form=SingleChoiceExtended(
+                    title=Title("Use different site for authentication process"),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name=site_id,
+                            title=Title("%s") % name,
+                        )
+                        for site_id, name in get_configured_site_choices()
+                    ],
+                ),
+                group=DictGroup(title=Title("Redirect URI")),
             ),
             "title": DictElement(
                 required=True,
@@ -327,10 +344,27 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
     )
 
 
+def _site_redirect_url(site_config: SiteConfiguration) -> str | None:
+    redirect_path = "wato.py?mode=redirect_oauth2_connection"
+    if site_is_local(site_config):
+        return f"{request.host_url}{omd_site()}/check_mk/{redirect_path}"
+    multisiteurl = site_config.get("multisiteurl", "")
+    return f"{multisiteurl}{redirect_path}" if multisiteurl else None
+
+
+def _get_site_redirect_urls() -> Mapping[str, str]:
+    return {
+        SingleChoiceVisitor.option_id(site_id): url
+        for site_id, site_config in active_config.sites.items()
+        if (url := _site_redirect_url(site_config)) is not None
+    }
+
+
 def get_oauth2_connection_config() -> Oauth2ConnectionConfig:
     return Oauth2ConnectionConfig(
         urls=Oauth2Urls(
             redirect=makeuri(request, [("mode", "redirect_oauth2_connection")]),
+            site_redirect_urls=dict(_get_site_redirect_urls()),
             back=makeuri(request, [("mode", "oauth2_connections")]),
             microsoft_entra_id=MicrosoftEntraIdUrls(
                 global_=AuthorityUrls(

@@ -296,6 +296,14 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
         yield user
 
 
+@pytest.fixture()
+def with_automation_user_not_admin(
+    request_context: None, load_config: None
+) -> Iterator[tuple[UserId, str]]:
+    with create_and_destroy_user(automation=True, role="user") as user:
+        yield user
+
+
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
 

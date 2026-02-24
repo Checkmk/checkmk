@@ -8,6 +8,9 @@ import pytest
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import password_store, version
+from cmk.utils.password_store import Password
+
+from cmk.gui.watolib.password_store import PasswordStore
 
 managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
 
@@ -268,3 +271,93 @@ def test_openapi_password_response_schema(clients: ClientRegistry) -> None:
         "shared": ["all"],
         "customer": "provider",
     }
+
+
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_delete_own_password_does_not_delete_other_passwords(
+    clients: ClientRegistry,
+    with_automation_user: tuple[str, str],
+    with_automation_user_not_admin: tuple[str, str],
+) -> None:
+    """Regression test: deleting a user's own password must not delete other users' passwords.
+
+    Steps to reproduce the bug:
+    1. Admin creates a password.
+    2. A normal monitoring user (in a contact group) creates their own password.
+    3. The normal user deletes their own password.
+    4. The admin's password was also deleted as a side effect (bug).
+    """
+    # Seed the password store directly to avoid managed-edition customer validation.
+    # The admin's password is owned by "admin" (not editable by normal users).
+    # The user's password is owned by "all" (editable by the non-admin automation user
+    # which has contactgroups=["all"]).
+    PasswordStore().save(
+        {
+            "admin_pw": Password(
+                title="Admin Password",
+                comment="",
+                docu_url="",
+                password="admin_secret",
+                owned_by="admin",
+                shared_with=[],
+            ),
+            "user_pw": Password(
+                title="User Password",
+                comment="",
+                docu_url="",
+                password="user_secret",
+                owned_by="all",
+                shared_with=[],
+            ),
+        },
+        pretty=False,
+    )
+
+    # Switch to the non-admin automation user (role="user", contactgroups=["all"]).
+    # They own "user_pw" (owned_by="all") but not "admin_pw" (owned_by="admin").
+    clients.Password.set_credentials(*with_automation_user_not_admin)
+
+    # Normal user deletes their own password – this must not affect other passwords.
+    clients.Password.delete("user_pw").assert_status_code(204)
+
+    # Switch back to admin and verify the admin password still exists.
+    # Before the fix, the admin's password was deleted as a side effect.
+    clients.Password.set_credentials(*with_automation_user)
+    resp = clients.Password.get_all()
+    password_idents = [entry["id"] for entry in resp.json["value"]]
+    assert (
+        "admin_pw" in password_idents
+    ), "Admin password was unexpectedly deleted when the normal user deleted their own password."
+
+
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_normal_user_cannot_delete_another_users_password(
+    clients: ClientRegistry,
+    with_automation_user_not_admin: tuple[str, str],
+) -> None:
+    """A normal monitoring user must not be able to delete a password they do not own.
+
+    The admin's password is not visible to the normal user (not shared, not owned by their
+    contact group), so the deletion must be rejected.
+    """
+    # Seed the password store directly to avoid managed-edition customer validation.
+    PasswordStore().save(
+        {
+            "admin_pw": Password(
+                title="Admin Password",
+                comment="",
+                docu_url="",
+                password="admin_secret",
+                owned_by="admin",
+                shared_with=[],
+            ),
+        },
+        pretty=False,
+    )
+
+    # Switch to the non-admin automation user (role="user", contactgroups=["all"]).
+    # "admin_pw" is owned_by="admin" which is not in the user's contact groups,
+    # and is not shared with them, so it is not visible and the deletion must be rejected.
+    # The password appears non-existent to this user (404), since visibility is filtered.
+    clients.Password.set_credentials(*with_automation_user_not_admin)
+    clients.Password.delete("admin_pw", expect_ok=False).assert_status_code(404)

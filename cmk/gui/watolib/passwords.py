@@ -2,12 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from cmk.utils.password_store import Password
 
-import cmk.gui.userdb as userdb
+from cmk.gui import userdb
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainCore
@@ -43,8 +44,17 @@ def save_password(ident: str, details: Password, new_password: bool = False) -> 
 
 def remove_password(ident: str) -> None:
     password_store = PasswordStore()
-    entries = load_passwords_to_modify()
-    _ = entries.pop(ident)
+    entries = password_store.load_for_modification()
+    editable_entries = password_store.filter_editable_entries(entries)
+    if ident not in editable_entries:
+        raise MKUserError(
+            ident,
+            _(
+                "The password cannot be deleted because the user does not have the permission to edit it."
+            ),
+        )
+
+    _e = entries.pop(ident)
     password_store.save(entries, active_config.wato_pprint_config)
     _add_change(ident, change_type="delete")
 

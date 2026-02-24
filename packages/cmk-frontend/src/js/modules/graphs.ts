@@ -139,7 +139,7 @@ interface VerticalAxis {
     range: [number, number];
     axis_label: string | null;
     labels: VerticalAxisLabel[];
-    max_label_length: null;
+    max_label_length: number;
     //dynamic
     pixels_per_unit: number;
     pixels_per_second: number;

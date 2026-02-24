@@ -365,8 +365,7 @@ def _tar_add(
     try:
         with rrd_socket.suspend_rrd_update_if_needed(arcname):
             # Create a TarInfo object from the file.
-            tarinfo = tar.gettarinfo(name, arcname)
-
+            tarinfo = _get_tar_info_or_raise(tar, name, arcname)
             # Exclude files.
             if not predicate(tarinfo):
                 return
@@ -376,7 +375,7 @@ def _tar_add(
                 backup_name = f"{name}.backup"
                 try:
                     _backup_sqlite(name, backup_name)
-                    backup_tarinfo = tar.gettarinfo(backup_name, arcname=arcname)
+                    backup_tarinfo = _get_tar_info_or_raise(tar, backup_name, arcname=arcname)
                     with open(backup_name, "rb") as file:
                         tar.addfile(backup_tarinfo, file)
                 finally:
@@ -440,3 +439,18 @@ def _backup_sqlite(src: str | Path, dst: str | Path) -> None:
         contextlib.closing(sqlite3.connect(dst)) as dst_conn,
     ):
         src_conn.backup(dst_conn)
+
+
+def _get_tar_info_or_raise(
+    tar: tarfile.TarFile, name: str, arcname: str | None = None
+) -> tarfile.TarInfo:
+    """Wrapper for tarfile.gettarinfo
+
+    The original implementation is incorrectly typed as to never return None,
+    although in practice this can happen on e. g. unix domain sockets. In this case
+    we want to raise an Exception to make sure we can handle the error gracefully.
+    """
+    tarinfo: tarfile.TarInfo | None = tar.gettarinfo(name, arcname=arcname)
+    if tarinfo is None:
+        raise tarfile.TarError(f"Failed to get tarinfo for file {name!r}")
+    return tarinfo

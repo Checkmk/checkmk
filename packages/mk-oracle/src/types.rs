@@ -117,9 +117,9 @@ impl From<&String> for Sid {
     }
 }
 
-impl<'a> From<&'a Sid> for &'a str {
-    fn from(sid: &'a Sid) -> &'a str {
-        sid.0.as_str()
+impl AsRef<str> for Sid {
+    fn as_ref(&self) -> &str {
+        &self.0
     }
 }
 

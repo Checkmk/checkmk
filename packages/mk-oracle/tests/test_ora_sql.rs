@@ -1843,17 +1843,68 @@ SQLNET.WALLET_OVERRIDE = TRUE
     assert_eq!(content, expected);
 }
 
-#[test]
 #[cfg(unix)]
-fn test_find_sids() {
-    use mk_oracle::ora_sql::detect::find_sids_by_processes;
+mod find_sids {
+    use mk_oracle::ora_sql::detect::{find_oracle_home_from_oratab, find_oratab_file};
+    use mk_oracle::types::Sid;
+    use std::io::Write;
 
-    if std::env::var("TEST_WORKSPACE").is_ok() {
-        eprintln!("Skipping test_find_sids if TEST_WORKSPACE is set(Bazel sandboxing)");
-        return;
+    #[test]
+    fn test_find_sids() {
+        use mk_oracle::ora_sql::detect::find_sids_by_processes;
+
+        if std::env::var("TEST_WORKSPACE").is_ok() {
+            eprintln!("Skipping test_find_sids if TEST_WORKSPACE is set(Bazel sandboxing)");
+            return;
+        }
+        const TEST_MASK: &str = r"^(/usr/lib/systemd/systemd)(.*)$";
+        let sids = find_sids_by_processes(Some(TEST_MASK)).unwrap();
+        assert!(sids.len() > 2);
+        assert!(sids.contains("-logind"));
     }
-    const TEST_MASK: &str = r"^(/usr/lib/systemd/systemd)(.*)$";
-    let sids = find_sids_by_processes(Some(TEST_MASK)).unwrap();
-    assert!(sids.len() > 2);
-    assert!(sids.contains("-logind"));
+
+    #[test]
+    fn test_find_oratab_file_not_found() {
+        let result = find_oratab_file(Some(&["/nonexistent/path/oratab"]));
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("oratab not found"));
+    }
+
+    #[test]
+    fn test_find_oratab_file_found() {
+        let tmp_dir = tempfile::tempdir().expect("create temp dir");
+        let oratab_path = tmp_dir.path().join("oratab");
+        let mut file = std::fs::File::create(&oratab_path).expect("create oratab file");
+        writeln!(file, "XE:/opt/oracle/product/21c/dbhomeXE:N # xxx").expect("write to oratab");
+
+        let oratab_str = oratab_path.to_str().unwrap();
+        let result = find_oratab_file(Some(&["/nonexistent/path/oratab", oratab_str]));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), oratab_path);
+    }
+
+    #[test]
+    fn test_find_oracle_home_from_oratab_sid_found() {
+        let tmp_dir = tempfile::tempdir().expect("create temp dir");
+        let oratab_path = tmp_dir.path().join("oratab");
+        let mut file = std::fs::File::create(&oratab_path).expect("create oratab file");
+        writeln!(file, " # Comment line").expect("write comment");
+        writeln!(file, "INVALID_LINE_NO_COLON").expect("write invalid line");
+        writeln!(file, "XE:/opt/oracle/product/21c/dbhomeXE:N # some comment")
+            .expect("write XE entry");
+        writeln!(file, "ORCL:/opt/oracle/product/19c/dbhome1:Y # nothing")
+            .expect("write ORCL entry");
+
+        let oratab_str = oratab_path.to_str().unwrap();
+        let sid = Sid::from("xE");
+        let result = find_oracle_home_from_oratab(&sid, Some(&[oratab_str]));
+        assert!(result.is_ok());
+        assert_eq!(
+            result.unwrap(),
+            Some(std::path::PathBuf::from("/opt/oracle/product/21c/dbhomeXE"))
+        );
+
+        let result = find_oracle_home_from_oratab(&Sid::from("NONEXISTENT"), Some(&[oratab_str]));
+        assert!(result.unwrap().is_none());
+    }
 }

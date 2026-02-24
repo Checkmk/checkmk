@@ -17,6 +17,7 @@
 use crate::config::{self, OracleConfig};
 use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
+use crate::ora_sql::detect::print_local_sids;
 use crate::ora_sql::section::Section;
 use crate::setup::{detect_runtime, Env};
 use crate::types::{InstanceName, SqlQuery, UseHostClient};
@@ -27,7 +28,6 @@ use crate::config::connection::{add_tns_admin_to_env, setup_wallet_environment};
 use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomInstance;
 use crate::config::section::names;
-use crate::ora_sql::detect::find_sids_by_processes;
 use crate::ora_sql::spots::{make_spot_work_results, SpotWorks};
 use crate::platform::get_local_instances;
 use anyhow::{Context, Result};
@@ -39,16 +39,9 @@ impl OracleConfig {
             if environment.detect_only() {
                 return Ok(dump_local_instances());
             }
+            // call below are for detection purposes and may be called before any other logic
             if environment.detect_sids() {
-                return find_sids_by_processes(None)
-                    .map(|list| {
-                        log::info!("Found SIDs: {:?}", list);
-                        list.iter().cloned().collect::<Vec<_>>().join("\n")
-                    })
-                    .or_else(|e| {
-                        log::info!("No SIDs found");
-                        anyhow::bail!(e)
-                    });
+                return print_local_sids();
             }
             if environment.find_runtime() {
                 let use_host_client: UseHostClient = ora_sql.options().use_host_client().clone();

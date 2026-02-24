@@ -71,7 +71,7 @@ impl TargetId {
 
     pub fn raw_sid(&self) -> Option<&str> {
         match self {
-            TargetId::Sid(sid) => Some(<&str>::from(sid)),
+            TargetId::Sid(sid) => Some(sid.as_ref()),
             TargetId::Descriptor(d) => {
                 let s = &d.sid;
                 s.as_ref().map(<&str>::from)

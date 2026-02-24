@@ -8,6 +8,7 @@ from collections.abc import Iterable
 
 import pytest
 
+from tests.unit.cmk.gui.users import create_and_destroy_user
 from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # noqa: F401
     mock_update_passwords_merged_file,
 )
@@ -22,6 +23,8 @@ from cmk.utils.user import UserId
 from cmk.automations.results import DeleteHostsResult
 
 import cmk.gui.watolib.check_mk_automations
+from cmk.gui import login
+from cmk.gui.config import Config
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
     create_config_bundle,
@@ -33,6 +36,7 @@ from cmk.gui.watolib.configuration_bundles import (
     identify_single_bundle_references,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 
@@ -166,8 +170,102 @@ def test_create_and_delete_config_bundle_passwords() -> None:
     ), "Expected created passwords to be deleted"
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
-def test_create_and_delete_config_bundle_rules(other_folder: str) -> None:
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
+    load_config: Config,
+) -> None:
+    """Regression test: deleting a bundle's passwords must not delete unrelated passwords.
+
+    The bug: remove_password() loaded only the user-editable passwords (a filtered subset)
+    and then saved that subset back, effectively wiping any passwords outside the filter.
+
+    This test runs the full bundle deletion as a non-privileged user so the editable
+    password set is a strict subset of all passwords and the data-loss scenario is triggered
+    by the old code. The standalone password owned by a different group must survive.
+
+    Note: _prepare_create_passwords sets owned_by = user.id.  For filter_editable_entries
+    to consider the bundle password editable by the non-admin user, the user's contact
+    groups must include their own user ID – hence the custom contactgroups below.
+
+    We use PasswordStore().load_for_reading() for assertions because load_passwords()
+    applies user-visibility filtering and would hide the admin-owned standalone password
+    when called from the non-admin login context.
+    """
+    non_admin_username = "bundleuser"
+
+    # Seed a standalone admin password that is NOT editable by the non-admin user.
+    standalone_pw_id = "standalone-admin-pw"
+    PasswordStore().save(
+        {
+            standalone_pw_id: Password(
+                title="Standalone Password",
+                comment="",
+                docu_url="",
+                password="standalone_secret",
+                owned_by="admin",
+                shared_with=[],
+            )
+        },
+    )
+
+    # Create a non-admin user whose contact groups include their own user ID.
+    # _prepare_create_passwords sets owned_by = user.id; for filter_editable_entries
+    # to find the bundle password editable, "bundleuser" must be in the user's groups.
+    with create_and_destroy_user(
+        automation=False,
+        role="user",
+        username=non_admin_username,
+        custom_attrs={"contactgroups": [non_admin_username]},
+    ) as (user_id, _password):
+        # Use a bundle owned by the non-admin user so the deletion permission check passes.
+        bundle_id, bundle = _make_bundle(owned_by=non_admin_username)
+
+        with login.TransactionIdContext(user_id):
+            # Create the bundle – bundle password gets owned_by = user.id = "bundleuser".
+            create_config_bundle(
+                bundle_id,
+                bundle,
+                CreateBundleEntities(
+                    passwords=[
+                        CreatePassword(
+                            id="bundle-pw",
+                            spec=Password(
+                                title="Bundle Password",
+                                comment="",
+                                docu_url="",
+                                password="bundle_secret",
+                                owned_by=None,
+                                shared_with=[],
+                            ),
+                        )
+                    ]
+                ),
+            )
+
+            # Verify the raw store contains both passwords before deletion.
+            # (load_passwords() would filter out the admin-owned standalone password
+            # from the non-admin user's perspective, so we read the store directly.)
+            raw_before = PasswordStore().load_for_reading()
+            assert standalone_pw_id in raw_before
+            assert "bundle-pw" in raw_before
+
+            # Delete the bundle as the non-admin user.
+            # Before the fix, remove_password() saved only the filtered (editable) subset
+            # back to disk, wiping the standalone admin password.
+            delete_config_bundle(bundle_id)
+
+    # Read the raw store to check what actually survived the deletion.
+    raw_after = PasswordStore().load_for_reading()
+    assert (
+        "bundle-pw" not in raw_after
+    ), "Bundle password should have been deleted when the bundle was deleted."
+    assert (
+        standalone_pw_id in raw_after
+    ), "Standalone password was unexpectedly deleted when the bundle password was deleted."
+
+
+@pytest.mark.usefixtures("request_context")
+def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
     ruleset_name = "checkgroup_parameters:local"
     rules = [

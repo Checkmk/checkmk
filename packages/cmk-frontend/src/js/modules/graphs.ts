@@ -601,14 +601,32 @@ function render_graph(graph: GraphArtwork) {
   const font_size = from_display_coord(graph.render_config.font_size)
   ctx.font = font_size + 'pt sans-serif'
 
+  // Expand canvas if vertical axis labels are wider than the configured space
+  const configured_v_axis_width = graph_vertical_axis_width(graph)
+  let v_axis_width = configured_v_axis_width
+  if (graph.render_config.show_vertical_axis) {
+    const labels = graph.vertical_axis.labels
+    if (labels.length > 0) {
+      const max_text_width = Math.max(...labels.map((l) => ctx!.measureText(l.text).width))
+      const needed = Math.ceil(max_text_width) + v_label_margin
+      if (needed > v_axis_width) {
+        const extra = needed - v_axis_width
+        v_axis_width += extra
+        canvas.width += extra
+        canvas.style.width = canvas.width / 2 + 'px'
+        // canvas.width reset the context state; restore font
+        ctx = canvas.getContext('2d')!
+        ctx.font = font_size + 'pt sans-serif'
+      }
+    }
+  }
+
   const width = canvas.width
   const height = canvas.height
 
   const bottom_border = graph_bottom_border(graph)
   let top_border = 0
   if (bottom_border > 0) top_border = (bottom_border - t_label_margin) / 2
-
-  const v_axis_width = graph_vertical_axis_width(graph)
 
   const v_line_color = [graph.render_config.foreground_color, '#8097b19c', '#8097b19c']
 

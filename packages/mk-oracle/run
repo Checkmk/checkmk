@@ -256,6 +256,7 @@ run_test_component_remote_host() {
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
+        mkdir -p "${TEST_BINARY_REMOTE_PATH}"
         cd "${TEST_BINARY_REMOTE_PATH}"
         export ORACLE_HOME="${ORACLE_HOME}"
         export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}"

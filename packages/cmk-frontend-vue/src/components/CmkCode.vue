@@ -8,17 +8,12 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
-import { copyToClipboard as copyToClipboardUtil } from '@/lib/utils'
 
 import CmkButton from '@/components/CmkButton.vue'
+import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
-import CmkTooltip, {
-  CmkTooltipContent,
-  CmkTooltipProvider,
-  CmkTooltipTrigger
-} from '@/components/CmkTooltip'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { _t } = usei18n()
@@ -28,48 +23,9 @@ const props = defineProps<{
   code_txt: string
 }>()
 
-const TOOLTIP_DISPLAY_DURATION = 8000
 const MAX_LINES = 10
 
-const showMessage = ref(false)
-const errorMessage = ref('')
 const isExpanded = ref(false)
-let tooltipTimeoutId: ReturnType<typeof setTimeout> | null = null
-
-async function copyToClipboard() {
-  if (tooltipTimeoutId !== null) {
-    clearTimeout(tooltipTimeoutId)
-  }
-
-  try {
-    await copyToClipboardUtil(props.code_txt)
-    errorMessage.value = ''
-    showMessage.value = true
-    tooltipTimeoutId = setTimeout(() => {
-      showMessage.value = false
-      tooltipTimeoutId = null
-    }, TOOLTIP_DISPLAY_DURATION)
-  } catch (err) {
-    errorMessage.value = err as string
-    showMessage.value = true
-    tooltipTimeoutId = setTimeout(() => {
-      errorMessage.value = ''
-      showMessage.value = false
-      tooltipTimeoutId = null
-    }, TOOLTIP_DISPLAY_DURATION)
-    console.error('Copy failed', err)
-  }
-}
-
-const handlePointerDownOutside = () => {
-  if (showMessage.value) {
-    showMessage.value = false
-    if (tooltipTimeoutId !== null) {
-      clearTimeout(tooltipTimeoutId)
-      tooltipTimeoutId = null
-    }
-  }
-}
 
 const codeLines = computed(() => props.code_txt.split('\n'))
 const displayedCode = computed(() => {
@@ -107,32 +63,9 @@ const toggleExpansion = () => {
           </CmkButton>
         </div>
       </div>
-      <CmkTooltipProvider>
-        <CmkTooltip :open="showMessage">
-          <CmkTooltipTrigger as-child @click="copyToClipboard">
-            <CmkIconButton name="copied" size="medium" class="copy_button" />
-          </CmkTooltipTrigger>
-          <CmkTooltipContent
-            side="top"
-            align="center"
-            as-child
-            @pointer-down-outside="handlePointerDownOutside"
-          >
-            <div v-if="showMessage" class="tooltip-content" :class="{ error: !!errorMessage }">
-              <CmkIcon
-                :name="errorMessage ? 'cross' : 'checkmark'"
-                variant="inline"
-                size="medium"
-              />
-              {{
-                errorMessage
-                  ? _t('Copy to clipboard failed with error: ') + errorMessage
-                  : _t('Copied to clipboard')
-              }}
-            </div>
-          </CmkTooltipContent>
-        </CmkTooltip>
-      </CmkTooltipProvider>
+      <CmkCopy :text="code_txt">
+        <CmkIconButton name="copied" size="medium" class="copy_button" />
+      </CmkCopy>
     </div>
   </div>
 </template>
@@ -260,25 +193,6 @@ const toggleExpansion = () => {
     border: var(--border-width-1, 1px) solid var(--color-corporate-green-50);
     background: var(--color-corporate-green-50);
     cursor: pointer;
-  }
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.tooltip-content {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing);
-  padding: var(--dimension-3) var(--dimension-4);
-  border-radius: var(--border-radius);
-  background-color: var(--code-background-color);
-  color: var(--font-color);
-  white-space: nowrap;
-  position: relative;
-  z-index: var(--z-index-tooltip-offset);
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  &.error {
-    background-color: var(--error-msg-bg-color);
   }
 }
 </style>

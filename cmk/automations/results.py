@@ -687,6 +687,8 @@ class DiagSpecialAgentResult(ABCAutomationResult):
 
     @classmethod
     def deserialize(cls, serialized_result: SerializedResult) -> DiagSpecialAgentResult:
+        if not serialized_result:
+            return cls(results=[])
         raw = json.loads(serialized_result)
         return cls(
             results=[SpecialAgentResult(**r) for r in raw["results"]],

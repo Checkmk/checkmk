@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from cmk.utils.werks import load
-from cmk.werks.models import Class, Compatibility, EditionV2, Level, WerkV2
+from cmk.werks.models import Class, Compatibility, EditionV3, Level, WerkV3
 
 WERK_V1 = {
     "15374": {
@@ -50,15 +50,15 @@ def test_load(tmp_path: Path) -> None:
     )
 
     assert result == {
-        15374: WerkV2(
-            werk_version="2",
+        15374: WerkV3(
+            werk_version="3",
             id=15374,
             class_=Class.FIX,
             component="rest-api",
             level=Level.LEVEL_1,
             date=datetime.datetime(2023, 2, 21, 9, 55, 31, tzinfo=datetime.UTC),
             compatible=Compatibility.NOT_COMPATIBLE,
-            edition=EditionV2.CRE,
+            edition=EditionV3.COMMUNITY,
             description="<p>In the event of a crash when calling the rest-api, having more\n"
             "useful information helps find the root cause which helps\n"
             "fix the issue quicker. This werk introduces the changes to\n"

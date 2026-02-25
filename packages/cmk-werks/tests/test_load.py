@@ -37,6 +37,18 @@ WERK_V2 = {
     "description": "",
 }
 
+WERK_V3 = {
+    "class": "fix",
+    "component": "core",
+    "date": "1970-01-01T00:00:00Z",
+    "level": 1,
+    "title": "Some Title",
+    "version": "42.0.0p7",
+    "compatible": "yes",
+    "edition": "community",
+    "description": "",
+}
+
 
 WERK_V1_MISSING_CLASS = """Title: APT: Fix service discovery when getting unexpected output from apt
 Level: 1
@@ -65,7 +77,7 @@ def get_werk_v1(werk_dict: Mapping[str, object]) -> str:
 def test_werk_loading() -> None:
     loaded_data = load_werk(file_content=get_werk_v1(WERK_V1), file_name="1").to_json_dict()
     # loaded_data contains id, and other default values, WERK_V1 does not have
-    for key, value in WERK_V2.items():
+    for key, value in WERK_V3.items():
         assert loaded_data[key] == value
 
 

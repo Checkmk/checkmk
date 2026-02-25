@@ -18,7 +18,7 @@ import pytest
 import cmk.ccc.version as cmk_version
 import cmk.utils.werks
 import cmk.werks.utils
-from cmk.werks.models import WerkV2, WerkV3
+from cmk.werks.models import WerkV3
 from tests.testlib.common.repo import repo_path
 
 CVSS_REGEX_V31 = re.compile(
@@ -32,7 +32,7 @@ JIRA_ISSUE_REGEX = re.compile(r"(CMK|SUP|KNW|SAASDEV)-\d+")
 
 class WerksLoader(NamedTuple):
     base_dir: Path
-    load: Callable[[], dict[int, WerkV2 | WerkV3]]
+    load: Callable[[], dict[int, WerkV3]]
 
 
 @pytest.fixture(scope="function", name="werks_loader_empty")
@@ -56,7 +56,7 @@ def fixture_werks_loader_empty(tmp_path: Path) -> WerksLoader:
 
 
 @pytest.fixture(scope="function", name="werks_loaded")
-def fixture_werks_loader(tmp_path: Path) -> dict[int, WerkV2 | WerkV3]:
+def fixture_werks_loader(tmp_path: Path) -> dict[int, WerkV3]:
     """
     provide all werks available in the git repository
     """
@@ -123,7 +123,7 @@ def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
         assert werk.description == raw_werk.description
 
 
-def test_werk_versions(werks_loaded: dict[int, WerkV2 | WerkV3]) -> None:
+def test_werk_versions(werks_loaded: dict[int, WerkV3]) -> None:
     parsed_version = cmk_version.Version.from_str(cmk_version.__version__)
 
     for werk_id, werk in werks_loaded.items():
@@ -134,7 +134,7 @@ def test_werk_versions(werks_loaded: dict[int, WerkV2 | WerkV3]) -> None:
         )
 
 
-def test_secwerk_has_cvss(werks_loaded: dict[int, WerkV2 | WerkV3]) -> None:
+def test_secwerk_has_cvss(werks_loaded: dict[int, WerkV3]) -> None:
     # The CVSS in Sec Werks is only mandatory for new Werks, so we start with 14485
     skip_lower = 14485
     for werk_id, werk in werks_loaded.items():
@@ -148,7 +148,7 @@ def test_secwerk_has_cvss(werks_loaded: dict[int, WerkV2 | WerkV3]) -> None:
         ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 
-def test_werk_versions_after_tagged(werks_loaded: dict[int, WerkV2 | WerkV3]) -> None:
+def test_werk_versions_after_tagged(werks_loaded: dict[int, WerkV3]) -> None:
     _assert_git_tags_available()
 
     list_of_offenders = []

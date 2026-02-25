@@ -10,10 +10,9 @@ import argparse
 from pathlib import Path
 
 from cmk.ccc.version import __version__, Version
-from cmk.werks.models import EditionV2, EditionV3, WerkV2, WerkV3
+from cmk.werks.models import EditionV2, EditionV3, WerkV3
 
 from . import (
-    edition_v2_to_v3,
     load_precompiled_werks_file,
     load_raw_files,
     write_as_text,
@@ -34,10 +33,7 @@ def path_dir(value: str) -> Path:
 def _get_filter(filter_by_edition: str | None) -> EditionV3 | None:
     if filter_by_edition is None:
         return None
-    try:
-        return edition_v2_to_v3(EditionV2(filter_by_edition))
-    except ValueError:
-        return EditionV3(filter_by_edition)
+    return EditionV3(filter_by_edition)
 
 
 def main_precompile(args: argparse.Namespace) -> None:
@@ -47,11 +43,8 @@ def main_precompile(args: argparse.Namespace) -> None:
 
     current_version = Version.from_str(__version__)
 
-    def _filter(werk: WerkV2 | WerkV3) -> bool:
-        if isinstance(werk.edition, EditionV2):
-            edition = edition_v2_to_v3(werk.edition)
-        else:
-            edition = werk.edition
+    def _filter(werk: WerkV3) -> bool:
+        edition = werk.edition
 
         if filter_by_edition is not None and edition != filter_by_edition:
             return False
@@ -66,7 +59,7 @@ def main_precompile(args: argparse.Namespace) -> None:
 
 
 def main_changelog(args: argparse.Namespace) -> None:
-    werks: dict[int, WerkV2 | WerkV3] = {}
+    werks: dict[int, WerkV3] = {}
     for path in (Path(p) for p in args.precompiled_werk):
         werks.update(load_precompiled_werks_file(path))
 

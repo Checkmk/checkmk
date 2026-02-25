@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import Literal
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, TypeAdapter
 
@@ -30,6 +30,16 @@ class EditionV3(Enum):
     ULTIMATE = "ultimate"
     ULTIMATEMT = "ultimatemt"
     CLOUD = "cloud"
+
+    @classmethod
+    def from_v2(cls, edition: EditionV2) -> Self:
+        return {
+            EditionV2.CRE: EditionV3.COMMUNITY,
+            EditionV2.CEE: EditionV3.PRO,
+            EditionV2.CCE: EditionV3.ULTIMATE,
+            EditionV2.CME: EditionV3.ULTIMATEMT,
+            EditionV2.CSE: EditionV3.CLOUD,
+        }[edition]
 
 
 class Level(Enum):
@@ -130,6 +140,20 @@ class WerkV2(WerkV2Base):
     def from_json(cls, data: dict[str, object]) -> WerkV2:
         return cls.model_validate(data)
 
+    def to_werk(self) -> WerkV3:
+        return WerkV3(
+            compatible=self.compatible,
+            version=self.version,
+            title=self.title,
+            id=self.id,
+            date=self.date,
+            description=self.description,
+            level=self.level,
+            class_=self.class_,
+            component=self.component,
+            edition=EditionV3.from_v2(self.edition),
+        )
+
 
 class WerkV1(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -157,8 +181,8 @@ class WerkV1(BaseModel):
     targetversion: str | None = None
     description: list[str]
 
-    def to_werk(self) -> WerkV2:
-        return WerkV2(
+    def to_werk(self) -> WerkV3:
+        return WerkV3(
             compatible=(
                 Compatibility.COMPATIBLE
                 if self.compatible == "compat"
@@ -172,7 +196,7 @@ class WerkV1(BaseModel):
             level=Level(self.level),
             class_=Class(self.class_),
             component=self.component,
-            edition=EditionV2(self.edition),
+            edition=EditionV3.from_v2(EditionV2(self.edition)),
         )
 
     def to_json_dict(self) -> dict[str, object]:

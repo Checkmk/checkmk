@@ -13,9 +13,9 @@ from pydantic import RootModel, TypeAdapter
 
 from cmk.ccc.version import parse_check_mk_version
 from cmk.werks import load_werk
-from cmk.werks.models import Class, Compatibility, EditionV2, EditionV3, WerkV1, WerkV2, WerkV3
+from cmk.werks.models import Class, Compatibility, WerkV1, WerkV2, WerkV3
 
-Werks = RootModel[dict[int, WerkV2 | WerkV3]]
+WerksOnDisk = RootModel[dict[int, WerkV2 | WerkV3]]
 
 _CLASS_SORTING_VALUE = {
     Class.FEATURE: 1,
@@ -29,16 +29,18 @@ _COMPATIBLE_SORTING_VALUE = {
 }
 
 
-def load_precompiled_werks_file(path: Path) -> dict[int, WerkV2 | WerkV3]:
+def load_precompiled_werks_file(path: Path) -> dict[int, WerkV3]:
     # ? what is the content of these files, to which the path shows
     # There is no performance issue with this TypeAdapter call
     # nosemgrep: type-adapter-detected
     adapter = TypeAdapter(dict[int, WerkV3 | WerkV2 | WerkV1])
     with path.open("r", encoding="utf-8") as f:
 
-        def generator() -> Iterator[tuple[int, WerkV2 | WerkV3]]:
+        def generator() -> Iterator[tuple[int, WerkV3]]:
             for werk_id, werk in adapter.validate_json(f.read()).items():
                 if isinstance(werk, WerkV1):
+                    yield werk_id, werk.to_werk()
+                elif isinstance(werk, WerkV2):
                     yield werk_id, werk.to_werk()
                 else:
                     yield werk_id, werk
@@ -47,7 +49,7 @@ def load_precompiled_werks_file(path: Path) -> dict[int, WerkV2 | WerkV3]:
 
 
 def get_sort_key_by_version_and_component(
-    translator: "WerkTranslator", werk: WerkV2 | WerkV3
+    translator: "WerkTranslator", werk: WerkV3
 ) -> tuple[str | int, ...]:
     return (
         -parse_check_mk_version(werk.version),
@@ -60,7 +62,7 @@ def get_sort_key_by_version_and_component(
     )
 
 
-def sort_by_version_and_component(werks: Iterable[WerkV2 | WerkV3]) -> list[WerkV2 | WerkV3]:
+def sort_by_version_and_component(werks: Iterable[WerkV3]) -> list[WerkV3]:
     translator = WerkTranslator()
     return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
@@ -116,13 +118,13 @@ class WerkTranslator:
     def classes(self) -> list[tuple[str, str]]:
         return list(self._classes.items())
 
-    def class_of(self, werk: WerkV2 | WerkV3) -> str:
+    def class_of(self, werk: WerkV3) -> str:
         return self._classes[werk.class_.value]  # TODO: remove .value
 
     def components(self) -> list[tuple[str, str]]:
         return list(self._components.items())
 
-    def component_of(self, werk: WerkV2 | WerkV3) -> str:
+    def component_of(self, werk: WerkV3) -> str:
         c = werk.component
         return self._components.get(c, c)
 
@@ -132,23 +134,12 @@ class WerkTranslator:
     def levels(self) -> list[tuple[int, str]]:
         return list(self._levels.items())
 
-    def level_of(self, werk: WerkV2 | WerkV3) -> str:
+    def level_of(self, werk: WerkV3) -> str:
         return self._levels[werk.level.value]  # TODO: remove .value
 
 
-def edition_v2_to_v3(edition: EditionV2) -> EditionV3:
-    mapping = {
-        EditionV2.CRE: EditionV3.COMMUNITY,
-        EditionV2.CEE: EditionV3.PRO,
-        EditionV2.CCE: EditionV3.ULTIMATE,
-        EditionV2.CME: EditionV3.ULTIMATEMT,
-        EditionV2.CSE: EditionV3.CLOUD,
-    }
-    return mapping[edition]
-
-
-def load_raw_files(werks_dir: Path) -> list[WerkV2 | WerkV3]:
-    werks: list[WerkV2 | WerkV3] = []
+def load_raw_files(werks_dir: Path) -> list[WerkV3]:
+    werks: list[WerkV3] = []
     for file_name in werks_dir.glob("[0-9]*"):
         try:
             werks.append(load_werk(file_content=file_name.read_text(), file_name=file_name.name))
@@ -157,9 +148,9 @@ def load_raw_files(werks_dir: Path) -> list[WerkV2 | WerkV3]:
     return werks
 
 
-def write_precompiled_werks(path: Path, werks: dict[int, WerkV2 | WerkV3]) -> None:
+def write_precompiled_werks(path: Path, werks: dict[int, WerkV3]) -> None:
     with path.open("w", encoding="utf-8") as fp:
-        fp.write(Werks.model_validate(werks).model_dump_json(by_alias=True))
+        fp.write(WerksOnDisk.model_validate(werks).model_dump_json(by_alias=True))
 
 
 def has_content(description: str) -> bool:
@@ -168,9 +159,7 @@ def has_content(description: str) -> bool:
 
 # this function is used from the bauwelt repo. TODO: move script from bauwelt into this repo
 # TODO: use a jinja template for this, and move it to .announce
-def write_as_text(
-    werks: dict[int, WerkV2 | WerkV3], f: IO[str], write_version: bool = True
-) -> None:
+def write_as_text(werks: dict[int, WerkV3], f: IO[str], write_version: bool = True) -> None:
     """Write the given werks to a file object
 
     This is used for creating a textual hange log for the released versions.
@@ -193,7 +182,7 @@ def write_as_text(
         f.write("\n")
 
 
-def write_werk_as_text(f: IO[str], werk: WerkV2 | WerkV3) -> None:
+def write_werk_as_text(f: IO[str], werk: WerkV3) -> None:
     # TODO: use jinja templates of .announce
     prefix = ""
     if werk.class_ == Class.FIX:

@@ -7,7 +7,7 @@
 from . import constants
 from .convert import werkv1_to_werkv2
 from .load import load_werk_v2, load_werk_v3
-from .models import WerkV2, WerkV3
+from .models import WerkV3
 from .parse import parse_werk_v2, parse_werk_v3, WerkV2ParseResult, WerkV3ParseResult
 
 
@@ -20,8 +20,8 @@ def parse_werk(file_content: str, file_name: str) -> WerkV2ParseResult | WerkV3P
     return parse_werk_v2(file_content, str(werk_id))  # TODO: str does not make sense!
 
 
-def load_werk(*, file_content: str, file_name: str) -> WerkV2 | WerkV3:
+def load_werk(*, file_content: str, file_name: str) -> WerkV3:
     parsed = parse_werk(file_content, file_name)
     if isinstance(parsed, WerkV2ParseResult):
-        return load_werk_v2(parsed)
+        return load_werk_v2(parsed).to_werk()
     return load_werk_v3(parsed)

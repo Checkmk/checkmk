@@ -73,6 +73,55 @@ class Section:
 
 T = TypeVar("T")
 
+_SUMMARY_TYPE_MAP = {
+    "Images": "images",
+    "Containers": "containers",
+    "Local Volumes": "volumes",
+}
+
+
+def _is_summary_format(string_table: StringTable) -> bool:
+    if not string_table:
+        return False
+    data = json.loads(string_table[0][0])
+    if isinstance(data, list) and data and "Type" in data[0]:
+        return True
+    return False
+
+
+def _aggregate_disk_usage(existing: DiskUsage | None, new: DiskUsage) -> DiskUsage:
+    if existing is None:
+        return new
+
+    return DiskUsage(
+        size=existing.size + new.size,
+        reclaimable_size=(
+            (existing.reclaimable_size or 0) + (new.reclaimable_size or 0)
+            if existing.reclaimable_size is not None or new.reclaimable_size is not None
+            else None
+        ),
+        total_number=existing.total_number + new.total_number,
+        active_number=existing.active_number + new.active_number,
+    )
+
+
+def _parse_summary_format(string_table: StringTable) -> Mapping[str, DiskUsage]:
+    aggregated: dict[str, DiskUsage] = {}
+    for line in string_table:
+        data = json.loads(line[0])
+        entries = data if isinstance(data, list) else [data]
+        for entry in entries:
+            if not (type_key := _SUMMARY_TYPE_MAP.get(entry.get("Type"))):
+                continue
+            usage = DiskUsage(
+                size=float(entry.get("RawSize", 0)),
+                reclaimable_size=float(entry.get("RawReclaimable", 0)),
+                total_number=int(entry.get("Total", 0)),
+                active_number=int(entry.get("Active", 0)),
+            )
+            aggregated[type_key] = _aggregate_disk_usage(aggregated.get(type_key), usage)
+    return aggregated
+
 
 def parse_entities(
     string_table: StringTable,
@@ -127,6 +176,15 @@ def pre_parse_podman_disk_usage(
 
 
 def parse_podman_disk_usage(string_table: StringTable) -> Section:
+    if _is_summary_format(string_table):
+        # If the summary format (CLI command output) is detected, we parse it directly
+        # into DiskUsage objects without trying to extract individual entities.
+        disk_usage = _parse_summary_format(string_table)
+        return Section(
+            images=EntityGroup(items=[]),
+            disk_usage=disk_usage,
+        )
+
     containers, images, volumes = pre_parse_podman_disk_usage(string_table)
     return Section(
         images=images,

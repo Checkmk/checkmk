@@ -21,11 +21,28 @@ STRING_TABLE = [
     ],
 ]
 
+STRING_TABLE_SUMMARY: StringTable = [
+    [
+        '[{"Type": "Images", "Total": 1, "Active": 1, "RawSize": 155542014, "RawReclaimable": 0, "TotalCount": 1, "Size": "155.5MB", "Reclaimable": "0B (0%)"}, {"Type": "Containers", "Total": 2, "Active": 2, "RawSize": 25677, "RawReclaimable": 0, "TotalCount": 2, "Size": "25.68kB", "Reclaimable": "0B (0%)"}, {"Type": "Local Volumes", "Total": 0, "Active": 0, "RawSize": 0, "RawReclaimable": 0, "TotalCount": 0, "Size": "0B", "Reclaimable": "0B (0%)"}]'
+    ],
+    [
+        '[{"Type": "Images", "Total": 1, "Active": 1, "RawSize": 155542014, "RawReclaimable": 0, "TotalCount": 1, "Size": "155.5MB", "Reclaimable": "0B (0%)"}, {"Type": "Containers", "Total": 2, "Active": 1, "RawSize": 42405, "RawReclaimable": 25853, "TotalCount": 2, "Size": "42.41kB", "Reclaimable": "25.85kB (61%)"}, {"Type": "Local Volumes", "Total": 0, "Active": 0, "RawSize": 0, "RawReclaimable": 0, "TotalCount": 0, "Size": "0B", "Reclaimable": "0B (0%)"}]'
+    ],
+]
+
 
 def test_discover_podman_disk_usage() -> None:
     assert list(discover_podman_disk_usage(parse_podman_disk_usage(STRING_TABLE))) == [
         Service(item="containers"),
         Service(item="images"),
+        Service(item="volumes"),
+    ]
+
+
+def test_discover_podman_disk_usage_summary_format() -> None:
+    assert list(discover_podman_disk_usage(parse_podman_disk_usage(STRING_TABLE_SUMMARY))) == [
+        Service(item="images"),
+        Service(item="containers"),
         Service(item="volumes"),
     ]
 
@@ -149,5 +166,91 @@ def test_check_podman_disk_usage(
 ) -> None:
     assert (
         list(check_podman_disk_usage(item, params, parse_podman_disk_usage(string_table)))
+        == expected_result
+    )
+
+
+@pytest.mark.parametrize(
+    "item, params, expected_result",
+    [
+        pytest.param(
+            "images",
+            {},
+            [
+                Result(state=State.OK, summary="Size: 297 MiB"),
+                Metric(
+                    "podman_disk_usage_images_total_size",
+                    311084028.0,
+                    boundaries=(0.0, 311084028.0),
+                ),
+                Result(state=State.OK, summary="Reclaimable: 0 B"),
+                Metric("podman_disk_usage_images_reclaimable_size", 0.0),
+                Result(state=State.OK, notice="Total: 2"),
+                Metric("podman_disk_usage_images_total_number", 2.0),
+                Result(state=State.OK, notice="Active: 2"),
+                Metric("podman_disk_usage_images_active_number", 2.0),
+            ],
+            id="Summary format - images",
+        ),
+        pytest.param(
+            "containers",
+            {},
+            [
+                Result(state=State.OK, summary="Size: 66.5 KiB"),
+                Metric(
+                    "podman_disk_usage_containers_total_size",
+                    68082.0,
+                    boundaries=(0.0, 68082.0),
+                ),
+                Result(state=State.OK, summary="Reclaimable: 25.2 KiB"),
+                Metric("podman_disk_usage_containers_reclaimable_size", 25853.0),
+                Result(state=State.OK, notice="Total: 4"),
+                Metric("podman_disk_usage_containers_total_number", 4.0),
+                Result(state=State.OK, notice="Active: 3"),
+                Metric("podman_disk_usage_containers_active_number", 3.0),
+            ],
+            id="Summary format - containers",
+        ),
+        pytest.param(
+            "volumes",
+            {},
+            [
+                Result(state=State.OK, summary="Size: 0 B"),
+                Metric("podman_disk_usage_volumes_total_size", 0.0, boundaries=(0.0, 0.0)),
+                Result(state=State.OK, summary="Reclaimable: 0 B"),
+                Metric("podman_disk_usage_volumes_reclaimable_size", 0.0),
+                Result(state=State.OK, notice="Total: 0"),
+                Metric("podman_disk_usage_volumes_total_number", 0.0),
+                Result(state=State.OK, notice="Active: 0"),
+                Metric("podman_disk_usage_volumes_active_number", 0.0),
+            ],
+            id="Summary format - volumes",
+        ),
+        pytest.param(
+            "containers",
+            {"containers": {"active": ("fixed", (2, 5))}},
+            [
+                Result(state=State.OK, summary="Size: 66.5 KiB"),
+                Metric(
+                    "podman_disk_usage_containers_total_size",
+                    68082.0,
+                    boundaries=(0.0, 68082.0),
+                ),
+                Result(state=State.OK, summary="Reclaimable: 25.2 KiB"),
+                Metric("podman_disk_usage_containers_reclaimable_size", 25853.0),
+                Result(state=State.OK, notice="Total: 4"),
+                Metric("podman_disk_usage_containers_total_number", 4.0),
+                Result(state=State.WARN, summary="Active: 3 (warn/crit at 2/5)"),
+                Metric("podman_disk_usage_containers_active_number", 3.0, levels=(2.0, 5.0)),
+            ],
+            id="Summary format - containers with active levels -> WARN",
+        ),
+    ],
+)
+def test_check_podman_disk_usage_summary_format(
+    item: str, params: Params, expected_result: CheckResult
+) -> None:
+    assert (
+        list(check_podman_disk_usage(item, params, parse_podman_disk_usage(STRING_TABLE_SUMMARY)))
         == expected_result
     )

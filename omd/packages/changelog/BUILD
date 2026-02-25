@@ -93,7 +93,7 @@ pkg_files(
     name = "werks_pkg_" + edition,
     srcs = [":werks_precompiled_" + edition],
     prefix = "share/check_mk/werks",
-    renames = {":werks_precompiled_" + edition: "werks_" + edition},
+    renames = {":werks_precompiled_" + edition: "werks-" + edition},
     tags = ["manual"],
 ) for edition in [
     "ultimate",

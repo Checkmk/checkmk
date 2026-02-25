@@ -14,42 +14,28 @@ from .types import RuleSpec
 
 
 def make_rule_spec_backwards_compatible(to_convert: RuleSpec) -> RuleSpec:
-    if isinstance(to_convert, rule_specs.AgentConfig):
-        return _make_v1_agent_config_backwards_compatible(to_convert)
-    return to_convert
-
-
-def add_agent_config_match_type_key(value: object) -> object:
-    if isinstance(value, dict):
-        value["cmk-match-type"] = "dict"
-        return value
-
-    raise TypeError(value)
-
-
-def remove_agent_config_match_type_key(value: object) -> object:
-    if isinstance(value, dict):
-        return {k: v for k, v in value.items() if k != "cmk-match-type"}
-
-    raise TypeError(value)
-
-
-def _make_v1_agent_config_backwards_compatible(
-    to_convert: rule_specs.AgentConfig,
-) -> rule_specs.AgentConfig:
-    parameter_form = lambda: cast(
-        Dictionary,
-        TransformDataForLegacyFormatOrRecomposeFunction(
-            wrapped_form_spec=to_convert.parameter_form,
-            from_disk=remove_agent_config_match_type_key,
-            to_disk=add_agent_config_match_type_key,
-        ),
-    )
+    """
+    This function is a relict from when we had to do some back and forth
+    transformation on AgentConfig rule specs. This is not necessary anymore.
+    BUT
+    Removing this function entirely changes the caching behavior of the FormSpec,
+    as can be seen by some _potentially_ breaking tests (depending on test order).
+    CMK-32061
+    """
+    if not isinstance(to_convert, rule_specs.AgentConfig):
+        return to_convert
 
     return rule_specs.AgentConfig(
         title=to_convert.title,
         topic=to_convert.topic,
-        parameter_form=parameter_form,
+        parameter_form=lambda: cast(
+            Dictionary,
+            TransformDataForLegacyFormatOrRecomposeFunction(
+                wrapped_form_spec=to_convert.parameter_form,
+                from_disk=lambda x: x,
+                to_disk=lambda x: x,
+            ),
+        ),
         name=to_convert.name,
         is_deprecated=to_convert.is_deprecated,
         help_text=to_convert.help_text,

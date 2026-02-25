@@ -8,7 +8,7 @@ use check_cert::checker::certificate::{self, Config as CertChecks};
 use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
 use check_cert::checker::info::{self, Config as InfoConfig};
 use check_cert::checker::verification::{self, Config as VerifChecks};
-use check_cert::fetcher::{self, Config as FetcherConfig, ProxyAuth, ProxyConfig};
+use check_cert::fetcher::{self, proxy_from_env, Config as FetcherConfig, ProxyAuth, ProxyConfig};
 use check_cert::pwstore::password_from_store;
 use check_cert::truststore;
 use clap::{Parser, ValueEnum};
@@ -181,6 +181,11 @@ struct Args {
     #[arg(long, default_value_t = false, action = clap::ArgAction::SetTrue)]
     allow_self_signed: bool,
 
+    /// Disable automatic proxy detection from environment variables (http_proxy, https_proxy, etc.).
+    /// Only relevant if no explicit proxy URL is set.
+    #[arg(long, default_value_t = false, action = clap::ArgAction::SetTrue)]
+    pub ignore_proxy_env: bool,
+
     /// Proxy server URL.
     #[arg(long, requires_if("proxy_tls", "connection_type"))]
     pub proxy_url: Option<String>,
@@ -301,7 +306,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         )
                         .build(),
                 ),
-                (_, _) => None,
+                (None, None) if !args.ignore_proxy_env => proxy_from_env(&args.hostname),
+                _ => None,
             })
             .build(),
     ) {

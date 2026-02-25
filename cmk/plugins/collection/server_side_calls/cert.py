@@ -151,7 +151,7 @@ def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str | Secret]:
         case EnvProxy():
             yield from ()
         case NoProxy():
-            yield from ()
+            yield "--ignore-proxy-env"
         case URLProxy(
             scheme=scheme,
             proxy_server_name=proxy_server_name,

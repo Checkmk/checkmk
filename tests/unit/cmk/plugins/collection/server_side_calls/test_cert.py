@@ -13,7 +13,56 @@ from cmk.plugins.collection.server_side_calls.cert import (
     Settings,
     Subject,
 )
-from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
+from cmk.server_side_calls.v1 import ActiveCheckCommand, EnvProxy, HostConfig, IPv4Config, NoProxy
+
+HOST_CONFIG = HostConfig(
+    name="testhost",
+    ipv4_config=IPv4Config(address="0.0.0.1"),
+)
+
+
+def test_env_proxy() -> None:
+    result = list(
+        generate_cert_services(
+            [
+                CertEndpoint(
+                    service_name=ServiceDescription(prefix=ServicePrefix.AUTO, name="my_service"),
+                    address="abc.xyz",
+                    port=443,
+                    individual_settings=Settings(proxy=EnvProxy()),
+                )
+            ],
+            HOST_CONFIG,
+        )
+    )
+    assert result == [
+        ActiveCheckCommand(
+            service_description="CERT my_service",
+            command_arguments=["--hostname", "abc.xyz", "--port", "443"],
+        )
+    ]
+
+
+def test_no_proxy() -> None:
+    result = list(
+        generate_cert_services(
+            [
+                CertEndpoint(
+                    service_name=ServiceDescription(prefix=ServicePrefix.AUTO, name="my_service"),
+                    address="abc.xyz",
+                    port=443,
+                    individual_settings=Settings(proxy=NoProxy()),
+                )
+            ],
+            HOST_CONFIG,
+        )
+    )
+    assert result == [
+        ActiveCheckCommand(
+            service_description="CERT my_service",
+            command_arguments=["--hostname", "abc.xyz", "--port", "443", "--ignore-proxy-env"],
+        )
+    ]
 
 
 def test_generate_cert_services() -> None:
@@ -31,10 +80,7 @@ def test_generate_cert_services() -> None:
                     ),
                 )
             ],
-            HostConfig(
-                name="testhost",
-                ipv4_config=IPv4Config(address="0.0.0.1"),
-            ),
+            HOST_CONFIG,
         )
     ) == [
         ActiveCheckCommand(

@@ -6,6 +6,7 @@ use anyhow::{anyhow, Context, Result};
 use log::{debug, info};
 use openssl::base64::encode_block;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
+use std::env;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
 use std::time::Duration;
@@ -130,12 +131,114 @@ fn build_proxy_stream<T: Read + Write>(
     stream.flush()?;
 
     let mut reader = BufReader::new(stream);
-    let mut response = String::new();
-    reader.read_line(&mut response)?;
-    if !response.starts_with("HTTP/1.1 200") {
-        return Err(anyhow!("Proxy CONNECT failed: {response}"));
+    let mut status_line = String::new();
+    reader.read_line(&mut status_line)?;
+    if !status_line.starts_with("HTTP/1.1 200") {
+        return Err(anyhow!("Proxy CONNECT failed: {status_line}"));
+    }
+    // Drain remaining response headers until the blank line
+    loop {
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        if line == "\r\n" || line == "\n" || line.is_empty() {
+            break;
+        }
     }
     Ok(())
+}
+
+pub fn proxy_from_env(hostname: &str) -> Option<ProxyConfig> {
+    // Respect no_proxy / NO_PROXY before looking up a proxy
+    if let Ok(no_proxy) = env::var("no_proxy").or_else(|_| env::var("NO_PROXY")) {
+        if matches_no_proxy(hostname, &no_proxy) {
+            return None;
+        }
+    }
+
+    // Prefer https_proxy for TLS connections, fall back to http_proxy
+    let proxy_url = env::var("https_proxy")
+        .or_else(|_| env::var("HTTPS_PROXY"))
+        .or_else(|_| env::var("http_proxy"))
+        .or_else(|_| env::var("HTTP_PROXY"))
+        .ok()?;
+
+    if proxy_url.is_empty() {
+        return None;
+    }
+
+    let result = parse_proxy_env_var(&proxy_url);
+    if result.is_none() {
+        log::warn!("Could not parse proxy URL from environment: {proxy_url:?}");
+    }
+    result
+}
+
+fn matches_no_proxy(hostname: &str, no_proxy: &str) -> bool {
+    let hostname_lower = hostname.to_lowercase();
+    for pattern in no_proxy.split(',') {
+        let pattern = pattern.trim();
+        if pattern.is_empty() {
+            continue;
+        }
+        if pattern == "*" {
+            return true;
+        }
+        let pattern_lower = pattern.trim_start_matches('.').to_lowercase();
+        if hostname_lower == pattern_lower || hostname_lower.ends_with(&format!(".{pattern_lower}"))
+        {
+            return true;
+        }
+    }
+    false
+}
+
+fn parse_proxy_env_var(proxy_url: &str) -> Option<ProxyConfig> {
+    // Strip scheme (http://, https://, etc.)
+    let without_scheme = proxy_url
+        .find("://")
+        .map(|pos| &proxy_url[pos + 3..])
+        .unwrap_or(proxy_url);
+
+    // Split auth from host:port at the last '@'
+    let (auth_opt, hostport) = if let Some(at_pos) = without_scheme.rfind('@') {
+        (
+            Some(&without_scheme[..at_pos]),
+            &without_scheme[at_pos + 1..],
+        )
+    } else {
+        (None, without_scheme)
+    };
+
+    // Strip trailing path (e.g. "/" in "http://proxy:8080/")
+    let hostport = hostport.split('/').next().unwrap_or(hostport);
+
+    // Parse host:port - use rfind to correctly handle IPv6 addresses like [::1]:8080
+    let (host, port) = if let Some(colon_pos) = hostport.rfind(':') {
+        let host = &hostport[..colon_pos];
+        let port: u16 = hostport[colon_pos + 1..].parse().ok()?;
+        (host, port)
+    } else {
+        log::warn!("Could not find parse the environment proxy. Port is missing.");
+        return None;
+    };
+
+    let auth = auth_opt.and_then(|auth| {
+        let colon_pos = auth.find(':')?;
+        Some(
+            ProxyAuth::builder()
+                .username(auth[..colon_pos].to_string())
+                .password(auth[colon_pos + 1..].to_string())
+                .build(),
+        )
+    });
+
+    Some(
+        ProxyConfig::builder()
+            .url(host.to_string())
+            .port(port)
+            .auth(auth)
+            .build(),
+    )
 }
 
 #[cfg(test)]
@@ -169,5 +272,63 @@ mod test_strip_url_protocol {
     #[test]
     fn test_no_strip() {
         assert_eq!(strip_url_protocol("example.com/url"), "example.com/url");
+    }
+}
+
+#[cfg(test)]
+mod test_parse_proxy_env_var {
+    use super::parse_proxy_env_var;
+
+    #[test]
+    fn test_proxy_with_port_and_scheme() {
+        let cfg = parse_proxy_env_var("http://proxy.example.com:8080").unwrap();
+        assert_eq!(cfg.url, "proxy.example.com");
+        assert_eq!(cfg.port, 8080);
+        assert!(cfg.auth.is_none());
+    }
+
+    #[test]
+    fn test_proxy_with_credentials() {
+        let cfg = parse_proxy_env_var("http://user:secret@proxy.example.com:8080").unwrap();
+        assert_eq!(cfg.url, "proxy.example.com");
+        assert_eq!(cfg.port, 8080);
+        let auth = cfg.auth.unwrap();
+        assert_eq!(auth.username, "user");
+        assert_eq!(auth.password, "secret");
+    }
+
+    #[test]
+    fn test_proxy_without_port_returns_none() {
+        assert!(parse_proxy_env_var("http://proxy.example.com").is_none());
+    }
+
+    #[test]
+    fn test_empty_proxy_url_returns_none() {
+        assert!(parse_proxy_env_var("").is_none());
+    }
+}
+
+#[cfg(test)]
+mod test_matches_no_proxy {
+    use super::matches_no_proxy;
+
+    #[test]
+    fn test_wildcard_bypasses_all() {
+        assert!(matches_no_proxy("example.com", "*"));
+    }
+
+    #[test]
+    fn test_exact_match() {
+        assert!(matches_no_proxy("example.com", "example.com"));
+    }
+
+    #[test]
+    fn test_subdomain_matches_dot_pattern() {
+        assert!(matches_no_proxy("sub.example.com", ".example.com"));
+    }
+
+    #[test]
+    fn test_no_match() {
+        assert!(!matches_no_proxy("other.com", "example.com"));
     }
 }

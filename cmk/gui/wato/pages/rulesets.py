@@ -2083,6 +2083,8 @@ class ABCEditRuleMode(WatoMode):
         self._form_type = self._init_form_type()
         self._do_validate_on_render = False
         self._failed_frontend_data: RawFrontendData | None = None
+        self._properties_raw_data: RawFrontendData | None = None
+        self._conditions_raw_data: RawFrontendData | None = None
 
     def _init_form_type(self) -> _BackendForm | _FrontendForm:
         try:
@@ -2291,8 +2293,11 @@ class ABCEditRuleMode(WatoMode):
     def _validate_and_get_rule_values_from_vars_backend(
         self, *, properties_catalog: Catalog, conditions_catalog: Catalog
     ) -> _RuleValuesFromVars:
+        self._properties_raw_data = read_data_from_frontend("_vue_edit_rule_properties")
+        self._conditions_raw_data = read_data_from_frontend("_vue_edit_rule_conditions")
         value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
         self._ruleset.rulespec.valuespec.validate_value(value, "ve")
+
         return _RuleValuesFromVars(
             get_rule_options_from_catalog_value(
                 parse_data_from_field_id(properties_catalog, "_vue_edit_rule_properties")
@@ -2454,7 +2459,10 @@ class ABCEditRuleMode(WatoMode):
     def _should_validate_on_render(self) -> bool:
         return self._do_validate_on_render or not isinstance(self, ModeNewRule)
 
-    def _get_rule_properties_from_rule(self) -> RawDiskData:
+    def _get_rule_properties(self) -> RawDiskData | RawFrontendData:
+        if self._properties_raw_data:
+            return self._properties_raw_data
+
         return RawDiskData(
             {
                 "properties": {
@@ -2468,7 +2476,10 @@ class ABCEditRuleMode(WatoMode):
             }
         )
 
-    def _get_rule_conditions_from_rule(self) -> RawDiskData:
+    def _get_rule_conditions(self) -> RawDiskData | RawFrontendData:
+        if self._conditions_raw_data:
+            return self._conditions_raw_data
+
         if self._rule.rule_options.predefined_condition_id:
             return RawDiskData(
                 {
@@ -2507,7 +2518,7 @@ class ABCEditRuleMode(WatoMode):
         render_form_spec(
             properties_catalog,
             "_vue_edit_rule_properties",
-            self._get_rule_properties_from_rule(),
+            self._get_rule_properties(),
             self._should_validate_on_render(),
         )
 
@@ -2538,14 +2549,14 @@ class ABCEditRuleMode(WatoMode):
         render_form_spec(
             conditions_catalog,
             "_vue_edit_rule_conditions",
-            self._get_rule_conditions_from_rule(),
+            self._get_rule_conditions(),
             self._should_validate_on_render(),
         )
 
     def _get_rule_values_from_rule(self) -> RawDiskData:
-        if not isinstance(rule_properties := self._get_rule_properties_from_rule().value, dict):
+        if not isinstance(rule_properties := self._get_rule_properties().value, dict):
             raise TypeError(rule_properties)
-        if not isinstance(rule_conditions := self._get_rule_conditions_from_rule().value, dict):
+        if not isinstance(rule_conditions := self._get_rule_conditions().value, dict):
             raise TypeError(rule_conditions)
         return RawDiskData(
             {**rule_properties, **{"value": {"value": self._rule.value}}, **rule_conditions}

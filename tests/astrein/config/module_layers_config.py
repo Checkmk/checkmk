@@ -1161,6 +1161,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.fetchers",
         "cmk.gui",
         "cmk.helper_interface",
+        "cmk.logwatch.config",
+        "cmk.nonfree.pro.bakery",
         "cmk.piggyback",
         "cmk.server_side_calls_backend",
         "cmk.utils",

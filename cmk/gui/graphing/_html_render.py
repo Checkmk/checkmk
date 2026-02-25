@@ -7,7 +7,7 @@ import copy
 import json
 import time
 import traceback
-from collections.abc import Generator, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import auto, Enum
 from typing import Any, assert_never, Literal, override
@@ -63,6 +63,7 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._from_api import metrics_from_api, RegisteredMetric
+from ._graph_metric_expressions import GraphMetricExpression
 from ._graph_render_config import (
     GraphRenderConfig,
     GraphRenderConfigBase,
@@ -725,6 +726,7 @@ class AjaxGraph(Page):
                     str(edition(paths.omd_root))
                 ].get_time_series_fetcher(),
                 show_titles_if_limit_reached=False,
+                converter=None,
             )
             response.set_data(json.dumps(response_data))
         except Exception as e:
@@ -743,6 +745,7 @@ def render_ajax_graph(
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
     show_titles_if_limit_reached: bool,
+    converter: Callable[[GraphMetricExpression], JsonSerializable] | None,
 ) -> JsonSerializable:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
@@ -870,6 +873,15 @@ def render_ajax_graph(
         },
         "error": error_msg,
         "warning": warning_msg,
+        "queries_reached_limit": (
+            []
+            if converter is None
+            else [
+                c
+                for limit in graph_artwork_or_errors.graph_metric_limits_reached
+                if (c := converter(limit.graph_metric.operation))
+            ]
+        ),
     }
 
 

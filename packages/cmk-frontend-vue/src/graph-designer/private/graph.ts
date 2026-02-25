@@ -3,7 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
+import {
+  type Query as GraphLineQuery,
+  type GraphLines,
+  type GraphOptions
+} from 'cmk-shared-typing/typescript/graph_designer'
 
 import { cmkAjax } from '@/lib/ajax'
 
@@ -190,9 +194,10 @@ export interface AjaxGraph {
   context: AjaxContext
   error?: string
   warning?: string
+  queries_reached_limit?: GraphLineQuery[]
 }
 
-async function fetchAjaxGraph<OutputType>(
+export async function fetchAjaxGraph<OutputType>(
   graphId: string,
   graphLines: GraphLines,
   graphOptions: GraphOptions
@@ -204,20 +209,9 @@ async function fetchAjaxGraph<OutputType>(
   })
 }
 
-export type GraphRenderer = (
-  graphId: string,
-  graphLines: GraphLines,
-  graphOptions: GraphOptions,
-  container: HTMLDivElement
-) => void
+export type GraphRenderer = (ajaxGraph: AjaxGraph, container: HTMLDivElement) => void
 
-export async function graphRenderer(
-  graphId: string,
-  graphLines: GraphLines,
-  graphOptions: GraphOptions,
-  container: HTMLDivElement
-) {
-  const ajaxGraph: AjaxGraph = await fetchAjaxGraph(graphId, graphLines, graphOptions)
+export async function graphRenderer(ajaxGraph: AjaxGraph, container: HTMLDivElement) {
   // @ts-expect-error comes from different javascript file
   window['cmk'].graphs.show_ajax_graph_at_container(ajaxGraph, container)
 }

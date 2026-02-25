@@ -84,6 +84,7 @@ export interface AjaxGraph {
   context: AjaxContext
   error?: string
   warning?: string
+  queries_reached_limit?: Record<string, any>[]
 }
 
 interface LayoutedCurveArea {

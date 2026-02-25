@@ -9,6 +9,7 @@ import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuratio
 import {
   type GraphLine,
   type Query as GraphLineQuery,
+  type GraphLineQueryAttribute,
   type GraphLineQueryAttributes,
   type GraphLines,
   type GraphOptions,
@@ -57,7 +58,7 @@ import {
   convertToUnit
 } from '@/graph-designer/private/converters'
 import { fetchMetricColor } from '@/graph-designer/private/fetch_metric_properties'
-import { type GraphRenderer } from '@/graph-designer/private/graph'
+import { type AjaxGraph, type GraphRenderer, fetchAjaxGraph } from '@/graph-designer/private/graph'
 
 import type { Topic } from './type_defs'
 
@@ -738,14 +739,19 @@ function updateGraphOptionsState(opts: GraphOptions) {
 }
 
 const graphContainerRef = ref()
+const queriesReachedLimitRef: Ref<GraphLineQuery[]> = ref([])
 
-onMounted(() => {
-  props.graph_renderer(
+onMounted(async () => {
+  const ajaxGraph: AjaxGraph = await fetchAjaxGraph(
     props.graph_id,
     graphLines.value,
-    computeGraphOptions(),
-    graphContainerRef.value
+    computeGraphOptions()
   )
+  const queriesReachedLimit = ajaxGraph['queries_reached_limit']
+  if (queriesReachedLimit !== undefined) {
+    queriesReachedLimitRef.value = queriesReachedLimit
+  }
+  props.graph_renderer(ajaxGraph, graphContainerRef.value)
 })
 
 watch(
@@ -755,17 +761,44 @@ watch(
     dataExplicitVerticalRange.value,
     dataOmitZeroMetrics.value
   ],
-  () => {
+  async () => {
     handlePreventLeaving(true)
-    props.graph_renderer(
+    const ajaxGraph: AjaxGraph = await fetchAjaxGraph(
       props.graph_id,
       graphLines.value,
-      computeGraphOptions(),
-      graphContainerRef.value
+      computeGraphOptions()
     )
+    const queriesReachedLimit = ajaxGraph['queries_reached_limit']
+    if (queriesReachedLimit !== undefined) {
+      queriesReachedLimitRef.value = queriesReachedLimit
+    }
+    props.graph_renderer(ajaxGraph, graphContainerRef.value)
   },
   { deep: true }
 )
+
+function compareQueryAttributes(a: GraphLineQueryAttribute[], b: GraphLineQueryAttribute[]) {
+  return a.length === b.length && a.every((element, index) => element === b[index])
+}
+
+function hasLimitedReached(graphLine: GraphLine) {
+  if (graphLine.type !== 'query') {
+    return false
+  }
+  for (const element of queriesReachedLimitRef.value) {
+    if (
+      element.metric_name === graphLine.metric_name &&
+      compareQueryAttributes(element.resource_attributes, graphLine.resource_attributes) &&
+      compareQueryAttributes(element.scope_attributes, graphLine.scope_attributes) &&
+      compareQueryAttributes(element.data_point_attributes, graphLine.data_point_attributes) &&
+      element.aggregation_lookback === graphLine.aggregation_lookback &&
+      element.aggregation_histogram_percentile === graphLine.aggregation_histogram_percentile
+    ) {
+      return true
+    }
+  }
+  return false
+}
 
 // SlideIn/Out
 
@@ -1041,6 +1074,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:aggregation-lookback="graphLine.aggregation_lookback"
               v-model:aggregation-histogram-percentile="graphLine.aggregation_histogram_percentile"
               :backend-validation="validateFormMetricBackendCustomQuery(undefined, graphLine)"
+              :class="{ 'gd__yellow-border': hasLimitedReached(graphLine) }"
               @update:metric-name="updateGraphLineAutoTitle(graphLine)"
             />
           </div>
@@ -1295,5 +1329,10 @@ const graphDesignerContentAsJson = computed(() => {
 <style scoped>
 .gd__thead {
   z-index: unset;
+}
+
+.gd__yellow-border {
+  border: 1px solid var(--color-warning);
+  padding: 5px;
 }
 </style>

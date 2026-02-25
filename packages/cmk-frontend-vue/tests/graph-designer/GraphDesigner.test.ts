@@ -4,16 +4,22 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
-import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
+import { HttpResponse, http } from 'msw'
+import { setupServer } from 'msw/node'
 
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
+import { type AjaxGraph } from '@/graph-designer/private/graph.ts'
 
-async function fakeGraphRenderer(
-  _graphId: string,
-  _graphLines: GraphLines,
-  _graphOptions: GraphOptions,
-  _container: HTMLDivElement
-) {
+const server = setupServer(
+  http.post('ajax_fetch_ajax_graph.py', () => {
+    return HttpResponse.json({ result_code: 0, result: {} })
+  })
+)
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }))
+afterAll(() => server.close())
+
+async function fakeGraphRenderer(_ajaxGraph: AjaxGraph, _container: HTMLDivElement) {
   return
 }
 

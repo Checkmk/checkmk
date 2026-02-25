@@ -56,9 +56,13 @@ def test_basic_commands(site: Site) -> None:
     ids=lambda cmd: cmd[0],
 )
 def test_additional_os_command_availability(site: Site, command: list[str]) -> None:
-    # 'zypper' is only available in SLES-based images, so we skip the test if it's not present.
+    # 'zypper' is only available in SLES-based images, so we skip the test if it's not present
     if command[0] == "zypper" and not os.environ.get("DISTRO", "").startswith("sles"):
         pytest.skip("'zypper' is not available in this image")
+
+    # 'resolvectl' is not available in SLES- and Debian-based images
+    if command[0] == "resolvectl" and os.environ.get("DISTRO", "").startswith(("debian", "sles")):
+        pytest.skip("'resolvectl' is not available in this image")
 
     # Commands executed here should return with exit code 0
     site.check_output(command)

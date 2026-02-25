@@ -590,7 +590,11 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                         "The ID must be unique. It acts as internal key when objects reference it."
                     ),
                     prefill=form_specs.DefaultValue(self._default_id()),
-                    custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                    custom_validate=(
+                        form_specs.validators.LengthInRange(
+                            min_value=1, error_msg=Message("Unique ID should not be empty.")
+                        ),
+                    ),
                     field_size=FieldSize.LARGE,
                 ),
             )
@@ -622,7 +626,11 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                 title=Title("Title"),
                 help_text=Help("Name your %s for easy recognition.")
                 % self._mode_type.name_singular(),
-                custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                custom_validate=(
+                    form_specs.validators.LengthInRange(
+                        min_value=1, error_msg=Message("Title should not be empty.")
+                    ),
+                ),
                 field_size=FieldSize.LARGE,
             ),
         )

@@ -22972,6 +22972,11 @@ msgstr ""
 "Păstrați gazdele în timp ce sursa de piggyback trimite date de piggyback "
 "numai pentru alte gazde pentru"
 
+msgid ""
+"Enable this flag only when Active Domain Controller forbids to connect to "
+"itself via network."
+msgstr ""
+
 msgid "Enable this ntopng instance"
 msgstr "Activați această instanță ntopng"
 
@@ -34199,6 +34204,25 @@ msgstr ""
 "Asigurați-vă că ați <i>Activate Changes</i> înainte de acel moment."
 
 msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Pentru a face Checkmk mai coerent, descrierile mai multor servicii au fost "
+"redenumite în versiunile mai noi ale Checkmk. Un exemplu sunt serviciile de "
+"sistem de fișiere care au fost redenumite din <tt>fs_</tt> în "
+"<tt>Filesystem</tt>. Dar, deoarece redenumirea serviciilor existente are "
+"multe implicații - inclusiv regulile existente, datele de performanță și "
+"istoricul disponibilității - aceste redenumiri sunt dezactivate în mod "
+"implicit pentru instalațiile existente. Aici puteți trece la noile descrieri "
+"pentru tipurile de verificări selectate"
+
+msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
 "latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. This "
@@ -43611,10 +43635,6 @@ msgid "NetApp Qtree discovery"
 msgstr "Descoperirea Qtree de la NetApp"
 
 msgid "NetApp Snapshot Reserve"
-msgstr "Rezerva de instantanee NetApp"
-
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
 msgstr "Rezerva de instantanee NetApp"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -59541,6 +59561,10 @@ msgstr "Arată obiectul"
 msgid "Show object type"
 msgstr "Arată tipul de obiect"
 
+#, fuzzy
+msgid "Show only aggregation differences"
+msgstr "Afișați numai această agregare"
+
 msgid "Show only modified settings"
 msgstr "Afișați numai setările modificate"
 
@@ -71459,6 +71483,10 @@ msgstr ""
 msgid "This name will be used in the description of the service"
 msgstr "Acest nume va fi utilizat în descrierea serviciului."
 
+#, fuzzy
+msgid "This node has nested aggregation differences."
+msgstr "Agregarea BI solicitată nu există."
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Acest nod nu se află în agregarea înghețată"
 
@@ -80565,6 +80593,10 @@ msgstr "Utilizați tema implicită"
 msgid "Use description"
 msgstr "Descrierea utilizării"
 
+#, fuzzy
+msgid "Use detected IP address"
+msgstr "Adresa IP la distanță"
+
 msgid "Use device and sensor name"
 msgstr "Utilizați numele dispozitivului și al senzorului"
 
@@ -80647,6 +80679,13 @@ msgstr "Utilizați cel mai puțin critic al dvs. și al dispozitivului's nivelur
 
 msgid "Use local FQDN"
 msgstr "Utilizați FQDN local"
+
+#, fuzzy
+msgid "Use local host"
+msgstr "Utilizați FQDN local"
+
+msgid "Use localhost for locally detected instances"
+msgstr ""
 
 #, fuzzy
 msgid "Use macro to determine port number"
@@ -80870,15 +80909,6 @@ msgstr "Utilizați aliasul multipath ca nume de serviciu, dacă este setat unul.
 
 msgid "Use the name specified in the ESX system"
 msgstr "Utilizați numele specificat în sistemul ESX"
-
-#, fuzzy
-msgid "Use the new service name"
-msgstr "Denumirea serviciului"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
 
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
@@ -89761,9 +89791,6 @@ msgstr "arată mai puțin"
 msgid "show more"
 msgstr "arată mai mult"
 
-msgid "show only problems"
-msgstr "afiseaza numai probleme"
-
 msgid "signing"
 msgstr "semnarea"
 
@@ -90173,31 +90200,23 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#, fuzzy
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "Rezerva de instantanee NetApp"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "Denumirea serviciului"
+
+#~ msgid "show only problems"
+#~ msgstr "afiseaza numai probleme"
+
 #~ msgid "Levels for the queue length"
 #~ msgstr "Niveluri pentru lungimea cozii de așteptare"
 
 #~ msgid "Set the maximum and minimum length for the queue size"
 #~ msgstr ""
 #~ "Stabiliți lungimea maximă și minimă pentru dimensiunea cozii de așteptare"
-
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Pentru a face Checkmk mai coerent, descrierile mai multor servicii au "
-#~ "fost redenumite în versiunile mai noi ale Checkmk. Un exemplu sunt "
-#~ "serviciile de sistem de fișiere care au fost redenumite din <tt>fs_</tt> "
-#~ "în <tt>Filesystem</tt>. Dar, deoarece redenumirea serviciilor existente "
-#~ "are multe implicații - inclusiv regulile existente, datele de performanță "
-#~ "și istoricul disponibilității - aceste redenumiri sunt dezactivate în mod "
-#~ "implicit pentru instalațiile existente. Aici puteți trece la noile "
-#~ "descrieri pentru tipurile de verificări selectate"
 
 #~ msgid "Absolute commitable memory"
 #~ msgstr "Memorie comutabilă absolută"

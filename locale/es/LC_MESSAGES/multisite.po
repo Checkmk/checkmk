@@ -23095,6 +23095,11 @@ msgstr ""
 "Mantener los hosts mientras la fuente de piggyback envía datos de piggyback "
 "sólo para otros hosts para"
 
+msgid ""
+"Enable this flag only when Active Domain Controller forbids to connect to "
+"itself via network."
+msgstr ""
+
 msgid "Enable this ntopng instance"
 msgstr "Habilitar esta instancia de ntopng"
 
@@ -34383,6 +34388,27 @@ msgstr ""
 "precalculo. Después de ese tiempo todos los periodos permanecen en su último "
 "estado. Asegúrese de <i>Activar Cambios</i> antes de ese tiempo."
 
+#, fuzzy
+msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Para que Checkmk sea más coherente, las descripciones de varios servicios "
+"han cambiado de nombre en las versiones más recientes de Checkmk. Un ejemplo "
+"son los servicios del sistema de archivos, que han pasado de llamarse "
+"<tt>fs_</tt> a <tt>Filesystem</tt>. Pero como el cambio de nombre de los "
+"servicios existentes tiene muchas implicaciones -incluidas las reglas "
+"existentes, los datos de rendimiento y el historial de disponibilidad-, "
+"estos cambios de nombre están desactivados por defecto para las "
+"instalaciones existentes. Aquí puede cambiar a las nuevas descripciones para "
+"los tipos de comprobación seleccionados"
+
 msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
@@ -43862,10 +43888,6 @@ msgid "NetApp Qtree discovery"
 msgstr "Descubrimiento de Qtree de NetApp"
 
 msgid "NetApp Snapshot Reserve"
-msgstr "Reserva de instantáneas de NetApp"
-
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
 msgstr "Reserva de instantáneas de NetApp"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -59903,6 +59925,10 @@ msgstr "Mostrar más"
 msgid "Show object type"
 msgstr "Ningún tipo de objeto"
 
+#, fuzzy
+msgid "Show only aggregation differences"
+msgstr "Mostrar sólo esta agregación"
+
 msgid "Show only modified settings"
 msgstr "Mostrar sólo los ajustes modificados"
 
@@ -71845,6 +71871,10 @@ msgstr ""
 msgid "This name will be used in the description of the service"
 msgstr "Este nombre se utilizará en la descripción del servicio"
 
+#, fuzzy
+msgid "This node has nested aggregation differences."
+msgstr "La agregación de BI solicitada no existe."
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Este nodo no está en la agregación congelada"
 
@@ -81038,6 +81068,10 @@ msgstr "Utilizar el tema por defecto"
 msgid "Use description"
 msgstr "Descripción del uso"
 
+#, fuzzy
+msgid "Use detected IP address"
+msgstr "Dirección IP remota"
+
 msgid "Use device and sensor name"
 msgstr "Utilizar el nombre del dispositivo y del sensor"
 
@@ -81122,6 +81156,13 @@ msgstr "Utiliza los niveles menos críticos de tu y del dispositivo"
 
 msgid "Use local FQDN"
 msgstr "Utilizar el FQDN local"
+
+#, fuzzy
+msgid "Use local host"
+msgstr "Utilizar el FQDN local"
+
+msgid "Use localhost for locally detected instances"
+msgstr ""
 
 #, fuzzy
 msgid "Use macro to determine port number"
@@ -81344,15 +81385,6 @@ msgstr ""
 
 msgid "Use the name specified in the ESX system"
 msgstr "Utilice el nombre especificado en el sistema ESX"
-
-#, fuzzy
-msgid "Use the new service name"
-msgstr "Nombre del servicio"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
 
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
@@ -90264,9 +90296,6 @@ msgstr "mostrar menos"
 msgid "show more"
 msgstr "ver más"
 
-msgid "show only problems"
-msgstr "mostrar sólo los problemas"
-
 msgid "signing"
 msgstr "firmando"
 
@@ -90675,32 +90704,22 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
 
+#, fuzzy
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "Reserva de instantáneas de NetApp"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "Nombre del servicio"
+
+#~ msgid "show only problems"
+#~ msgstr "mostrar sólo los problemas"
+
 #~ msgid "Levels for the queue length"
 #~ msgstr "Niveles para la longitud de la cola"
 
 #~ msgid "Set the maximum and minimum length for the queue size"
 #~ msgstr "Establezca la longitud máxima y mínima del tamaño de la cola"
-
-#, fuzzy
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Para que Checkmk sea más coherente, las descripciones de varios servicios "
-#~ "han cambiado de nombre en las versiones más recientes de Checkmk. Un "
-#~ "ejemplo son los servicios del sistema de archivos, que han pasado de "
-#~ "llamarse <tt>fs_</tt> a <tt>Filesystem</tt>. Pero como el cambio de "
-#~ "nombre de los servicios existentes tiene muchas implicaciones -incluidas "
-#~ "las reglas existentes, los datos de rendimiento y el historial de "
-#~ "disponibilidad-, estos cambios de nombre están desactivados por defecto "
-#~ "para las instalaciones existentes. Aquí puede cambiar a las nuevas "
-#~ "descripciones para los tipos de comprobación seleccionados"
 
 #~ msgid "Absolute commitable memory"
 #~ msgstr "Memoria comprometedora absoluta"

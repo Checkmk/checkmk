@@ -22928,6 +22928,11 @@ msgstr ""
 "Houdt hosts terwijl piggyback bron stuurt piggyback gegevens alleen voor "
 "andere hosts voor"
 
+msgid ""
+"Enable this flag only when Active Domain Controller forbids to connect to "
+"itself via network."
+msgstr ""
+
 msgid "Enable this ntopng instance"
 msgstr "Activeer deze ntopng instantie"
 
@@ -34132,6 +34137,26 @@ msgstr ""
 "perioden in hun laatste toestand. Zorg ervoor dat u voor die tijd "
 "<i>Wijzigingen activeren</i>."
 
+#, fuzzy
+msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Om Checkmk consistenter te maken, zijn de beschrijvingen van verschillende "
+"diensten hernoemd in nieuwere Checkmk-versies. Een voorbeeld zijn de "
+"bestandssysteemdiensten die hernoemd zijn van <tt>fs_</tt> naar "
+"<tt>Filesystem</tt>. Maar omdat het hernoemen van bestaande diensten veel "
+"implicaties heeft - inclusief bestaande regels, prestatiegegevens en "
+"beschikbaarheidsgeschiedenis - zijn deze hernoemingen standaard "
+"uitgeschakeld voor bestaande installaties. Hier kunt u overschakelen naar de "
+"nieuwe beschrijvingen voor geselecteerde controletypes"
+
 msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
@@ -43529,10 +43554,6 @@ msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtree ontdekking"
 
 msgid "NetApp Snapshot Reserve"
-msgstr "NetApp Snapshot Reserve"
-
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
 msgstr "NetApp Snapshot Reserve"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -59408,6 +59429,10 @@ msgstr "Toon meer"
 msgid "Show object type"
 msgstr "Geen objecttype"
 
+#, fuzzy
+msgid "Show only aggregation differences"
+msgstr "Toon alleen deze aggregatie"
+
 msgid "Show only modified settings"
 msgstr "Toon alleen gewijzigde instellingen"
 
@@ -71262,6 +71287,10 @@ msgstr ""
 msgid "This name will be used in the description of the service"
 msgstr "Deze naam zal worden gebruikt in de beschrijving van de dienst"
 
+#, fuzzy
+msgid "This node has nested aggregation differences."
+msgstr "De gevraagde BI-aggregatie bestaat niet."
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Dit knooppunt zit niet in de bevroren aggregatie"
 
@@ -80392,6 +80421,10 @@ msgstr "Gebruik standaard onderwerp"
 msgid "Use description"
 msgstr "Beschrijving van het gebruik"
 
+#, fuzzy
+msgid "Use detected IP address"
+msgstr "IP-adres op afstand"
+
 msgid "Use device and sensor name"
 msgstr "Gebruik apparaat- en sensornaam"
 
@@ -80473,6 +80506,13 @@ msgstr "Gebruik het minst kritische van uw en apparaat niveaus"
 
 msgid "Use local FQDN"
 msgstr "Gebruik lokale FQDN"
+
+#, fuzzy
+msgid "Use local host"
+msgstr "Gebruik lokale FQDN"
+
+msgid "Use localhost for locally detected instances"
+msgstr ""
 
 #, fuzzy
 msgid "Use macro to determine port number"
@@ -80691,15 +80731,6 @@ msgstr "Gebruik de multipath alias als dienstnaam, als er een is ingesteld"
 
 msgid "Use the name specified in the ESX system"
 msgstr "Gebruik de naam die in het ESX-systeem is opgegeven"
-
-#, fuzzy
-msgid "Use the new service name"
-msgstr "Naam van de dienst"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
 
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
@@ -89558,9 +89589,6 @@ msgstr "minder tonen"
 msgid "show more"
 msgstr "meer laten zien"
 
-msgid "show only problems"
-msgstr "laat alleen problemen zien"
-
 msgid "signing"
 msgstr "ondertekening"
 
@@ -89969,32 +89997,22 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
+#, fuzzy
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "NetApp Snapshot Reserve"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "Naam van de dienst"
+
+#~ msgid "show only problems"
+#~ msgstr "laat alleen problemen zien"
+
 #~ msgid "Levels for the queue length"
 #~ msgstr "Niveaus voor de lengte van de wachtrij"
 
 #~ msgid "Set the maximum and minimum length for the queue size"
 #~ msgstr "Stel de maximale en minimale lengte voor de wachtrijgrootte in"
-
-#, fuzzy
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Om Checkmk consistenter te maken, zijn de beschrijvingen van "
-#~ "verschillende diensten hernoemd in nieuwere Checkmk-versies. Een "
-#~ "voorbeeld zijn de bestandssysteemdiensten die hernoemd zijn van <tt>fs_</"
-#~ "tt> naar <tt>Filesystem</tt>. Maar omdat het hernoemen van bestaande "
-#~ "diensten veel implicaties heeft - inclusief bestaande regels, "
-#~ "prestatiegegevens en beschikbaarheidsgeschiedenis - zijn deze "
-#~ "hernoemingen standaard uitgeschakeld voor bestaande installaties. Hier "
-#~ "kunt u overschakelen naar de nieuwe beschrijvingen voor geselecteerde "
-#~ "controletypes"
 
 #~ msgid "Absolute commitable memory"
 #~ msgstr "Absoluut beschikbaar geheugen"

@@ -22734,6 +22734,11 @@ msgstr ""
 "Abilita lo aggregatore piggyback a inviare/ricevere dati piggyback da/verso "
 "altri siti."
 
+msgid ""
+"Enable this flag only when Active Domain Controller forbids to connect to "
+"itself via network."
+msgstr ""
+
 msgid "Enable this ntopng instance"
 msgstr "Abilita questa istanza di ntopng"
 
@@ -33905,6 +33910,26 @@ msgstr ""
 "stato. Assicurarsi di <i>Attivare le modifiche</i> prima di questo periodo."
 
 msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Per rendere Checkmk più coerente, le descrizioni di alcuni servizi sono "
+"state rinominate nelle nuove versioni di Checkmk. Un esempio è rappresentato "
+"dai servizi del filesystem che sono stati rinominati da <tt>fs_</tt> in "
+"<tt>Filesystem</tt>. Tuttavia, poiché la ridenominazione dei servizi "
+"esistenti ha molte implicazioni, tra cui le regole esistenti, i dati sulle "
+"prestazioni e la cronologia della disponibilità, queste ridenominazioni sono "
+"disabilitate per impostazione predefinita per le installazioni esistenti. "
+"Qui è possibile passare alle nuove descrizioni per i tipi di controllo "
+"selezionati"
+
+msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
 "latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. This "
@@ -43285,10 +43310,6 @@ msgid "NetApp Qtree discovery"
 msgstr "Scoperta di NetApp Qtree"
 
 msgid "NetApp Snapshot Reserve"
-msgstr "Riserva di snapshot di NetApp"
-
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
 msgstr "Riserva di snapshot di NetApp"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -59114,6 +59135,10 @@ msgstr "Mostra oggetto"
 msgid "Show object type"
 msgstr "Mostra il tipo di oggetto"
 
+#, fuzzy
+msgid "Show only aggregation differences"
+msgstr "Mostra solo questa aggregazione"
+
 msgid "Show only modified settings"
 msgstr "Mostra solo le impostazioni modificate"
 
@@ -71012,6 +71037,10 @@ msgstr ""
 msgid "This name will be used in the description of the service"
 msgstr "Questo nome sarà usato nella descrizione del servizio"
 
+#, fuzzy
+msgid "This node has nested aggregation differences."
+msgstr "L'aggregazione BI richiesta non esiste."
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Questo nodo non fa parte dell'aggregazione congelata"
 
@@ -80089,6 +80118,10 @@ msgstr "Utilizzare l'argomento predefinito"
 msgid "Use description"
 msgstr "Descrizione dell'uso"
 
+#, fuzzy
+msgid "Use detected IP address"
+msgstr "Indirizzo IP remoto"
+
 msgid "Use device and sensor name"
 msgstr "Usa il nome del dispositivo e del sensore"
 
@@ -80171,6 +80204,13 @@ msgstr "Usa il meno critico dei livelli del tuo e del dispositivo"
 
 msgid "Use local FQDN"
 msgstr "Usa FQDN locale"
+
+#, fuzzy
+msgid "Use local host"
+msgstr "Usa FQDN locale"
+
+msgid "Use localhost for locally detected instances"
+msgstr ""
 
 #, fuzzy
 msgid "Use macro to determine port number"
@@ -80387,15 +80427,6 @@ msgstr "Usa l'alias multipath come nome del servizio, se ne è impostato uno"
 
 msgid "Use the name specified in the ESX system"
 msgstr "Usa il nome specificato nel sistema ESX"
-
-#, fuzzy
-msgid "Use the new service name"
-msgstr "nome del servizio"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
 
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
@@ -89260,9 +89291,6 @@ msgstr "mostra meno"
 msgid "show more"
 msgstr "mostra di più"
 
-msgid "show only problems"
-msgstr "mostra solo i problemi"
-
 msgid "signing"
 msgstr "firma"
 
@@ -89672,32 +89700,23 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>non disponibile</b> perché Robotmk Core MKP è stato installato"
 
+#, fuzzy
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "Riserva di snapshot di NetApp"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "nome del servizio"
+
+#~ msgid "show only problems"
+#~ msgstr "mostra solo i problemi"
+
 #~ msgid "Levels for the queue length"
 #~ msgstr "Livelli per la lunghezza della coda"
 
 #~ msgid "Set the maximum and minimum length for the queue size"
 #~ msgstr ""
 #~ "Impostare la lunghezza massima e minima per la dimensione della coda"
-
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Per rendere Checkmk più coerente, le descrizioni di alcuni servizi sono "
-#~ "state rinominate nelle nuove versioni di Checkmk. Un esempio è "
-#~ "rappresentato dai servizi del filesystem che sono stati rinominati da "
-#~ "<tt>fs_</tt> in <tt>Filesystem</tt>. Tuttavia, poiché la ridenominazione "
-#~ "dei servizi esistenti ha molte implicazioni, tra cui le regole esistenti, "
-#~ "i dati sulle prestazioni e la cronologia della disponibilità, queste "
-#~ "ridenominazioni sono disabilitate per impostazione predefinita per le "
-#~ "installazioni esistenti. Qui è possibile passare alle nuove descrizioni "
-#~ "per i tipi di controllo selezionati"
 
 #~ msgid "Absolute commitable memory"
 #~ msgstr "Memoria commutabile assoluta"

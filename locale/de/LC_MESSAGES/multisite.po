@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-23 21:34+0000\n"
+"PO-Revision-Date: 2026-02-24 18:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -22191,6 +22191,11 @@ msgstr ""
 "Aktivieren Sie den Piggyback-Hub für das Senden/Empfangen von Piggyback-"
 "Daten an/von anderen Instanzen."
 
+msgid ""
+"Enable this flag only when Active Domain Controller forbids to connect to "
+"itself via network."
+msgstr ""
+
 msgid "Enable this ntopng instance"
 msgstr "Aktiviere diese ntopng-Instanz"
 
@@ -32914,6 +32919,25 @@ msgstr ""
 "sicher, dass Sie vor diesem Zeitpunkt die <i>Änderungen aktivieren</i>."
 
 msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Um Checkmk einheitlicher zu machen, wurden die Namen von etlichen Services "
+"in neueren Checkmk-Versionen umbenannt. Ein Beispiel sind die Dateisystem-"
+"Dienste, die von <tt>fs_</tt> nach <tt>Dateisystem</tt> umbenannt wurden. Da "
+"aber die Umbenennung von Services zahlreiche Folgen hat - einschließlich "
+"existierender Regeln, Metriken und Verfügbarkeitshistorie - sind diese "
+"Umbenennungen für existierende Installationen standardmäßig deaktiviert. "
+"Hier können Sie auf die neuen Beschreibungen für ausgewählte Check-Typen "
+"umschalten."
+
+msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
 "latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. This "
@@ -42012,9 +42036,6 @@ msgstr "NetApp Qtree Erkennung"
 
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot-Reserve"
-
-msgid "NetApp Snapshot Volumes"
-msgstr "NetApp Snapshot Volumes"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
 msgstr "NetApp Snapvaults / Snapmirror Lag-Zeit"
@@ -57140,6 +57161,9 @@ msgstr "Objekt anzeigen"
 msgid "Show object type"
 msgstr "Objekttyp anzeigen"
 
+msgid "Show only aggregation differences"
+msgstr "Nur Aggregationsunterschiede anzeigen"
+
 msgid "Show only modified settings"
 msgstr "Nur geänderte Einstellungen zeigen"
 
@@ -69092,6 +69116,9 @@ msgstr ""
 msgid "This name will be used in the description of the service"
 msgstr "Dieser Name wird in der Beschreibung des Services verwendet"
 
+msgid "This node has nested aggregation differences."
+msgstr "Dieser Knoten hat verschachtelte Aggregationsunterschiede."
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Dieser Knoten befindet sich nicht in der eingefrorenen Aggregation"
 
@@ -77637,6 +77664,10 @@ msgstr "Standardthema verwenden"
 msgid "Use description"
 msgstr "Beschreibung verwenden"
 
+#, fuzzy
+msgid "Use detected IP address"
+msgstr "Remote IP-Adresse"
+
 msgid "Use device and sensor name"
 msgstr "Gerät und Sensorname verwenden"
 
@@ -77721,6 +77752,13 @@ msgstr ""
 
 msgid "Use local FQDN"
 msgstr "Lokalen FQDN benutzen"
+
+#, fuzzy
+msgid "Use local host"
+msgstr "Lokalen FQDN benutzen"
+
+msgid "Use localhost for locally detected instances"
+msgstr ""
 
 msgid "Use macro to determine port number"
 msgstr "Makro zur Ermittlung der Portnummer verwenden"
@@ -77932,17 +77970,6 @@ msgstr "Alias des Multipathgeräts als Service-Namen verwenden, falls vorhanden"
 
 msgid "Use the name specified in the ESX system"
 msgstr "Benutze den Namen, der im ESX System festgelegt ist"
-
-msgid "Use the new service name"
-msgstr "Den neuen Service-Namen verwenden"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
-"Verwenden Sie den neuen Service-Namen. Das Deaktivieren dieser Option "
-"funktioniert nicht für Services, bei denen die überwachten SVM- oder Volume-"
-"Namen Doppelpunkte enthalten"
 
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
@@ -86618,9 +86645,6 @@ msgstr "weniger anzeigen"
 msgid "show more"
 msgstr "mehr anzeigen"
 
-msgid "show only problems"
-msgstr "Nur Probleme anzeigen"
-
 msgid "signing"
 msgstr "signieren"
 
@@ -87025,30 +87049,28 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "NetApp Snapshot Volumes"
+
+#~ msgid "Use the new service name"
+#~ msgstr "Den neuen Service-Namen verwenden"
+
+#~ msgid ""
+#~ "Use the new service name. Disabling this option does not work for "
+#~ "services where the monitored SVM or volume names contain colons"
+#~ msgstr ""
+#~ "Verwenden Sie den neuen Service-Namen. Das Deaktivieren dieser Option "
+#~ "funktioniert nicht für Services, bei denen die überwachten SVM- oder "
+#~ "Volume-Namen Doppelpunkte enthalten"
+
+#~ msgid "show only problems"
+#~ msgstr "Nur Probleme anzeigen"
+
 #~ msgid "Levels for the queue length"
 #~ msgstr "Levels für die Längen der Schlange"
 
 #~ msgid "Set the maximum and minimum length for the queue size"
 #~ msgstr "Die maximale und minimale Länge der Schlangengröße festlegen"
-
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Um Checkmk einheitlicher zu machen, wurden die Namen von etlichen "
-#~ "Services in neueren Checkmk-Versionen umbenannt. Ein Beispiel sind die "
-#~ "Dateisystem-Dienste, die von <tt>fs_</tt> nach <tt>Dateisystem</tt> "
-#~ "umbenannt wurden. Da aber die Umbenennung von Services zahlreiche Folgen "
-#~ "hat - einschließlich existierender Regeln, Metriken und "
-#~ "Verfügbarkeitshistorie - sind diese Umbenennungen für existierende "
-#~ "Installationen standardmäßig deaktiviert. Hier können Sie auf die neuen "
-#~ "Beschreibungen für ausgewählte Check-Typen umschalten."
 
 #~ msgid "Absolute commitable memory"
 #~ msgstr "Absoluter commitbarer Speicherplatz"

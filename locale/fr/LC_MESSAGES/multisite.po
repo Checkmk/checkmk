@@ -23127,6 +23127,11 @@ msgstr ""
 "Garder les hôtes pendant que la source de ferroutage envoie des données de "
 "ferroutage seulement pour les autres hôtes pour"
 
+msgid ""
+"Enable this flag only when Active Domain Controller forbids to connect to "
+"itself via network."
+msgstr ""
+
 msgid "Enable this ntopng instance"
 msgstr "Activez cette instance de ntopng"
 
@@ -34440,6 +34445,27 @@ msgstr ""
 "Après ce délai, toutes les périodes restent dans leur dernier état. Assurez-"
 "vous que vous <i>Activer les changements</i> avant cette date."
 
+#, fuzzy
+msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Afin de rendre Checkmk plus cohérent, les descriptions de plusieurs services "
+"ont été renommées dans les nouvelles versions de Checkmk. Un exemple est "
+"celui des services de système de fichiers qui ont été renommés de <tt>fs_</"
+"tt> en <tt>Filesystem</tt>. Mais comme le renommage de services existants a "
+"de nombreuses implications - y compris les règles existantes, les données de "
+"performance et l'historique de la disponibilité - ces renommages sont "
+"désactivés par défaut pour les installations existantes. Ici, vous pouvez "
+"basculer vers les nouvelles descriptions pour les types de contrôle "
+"sélectionnés"
+
 msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
@@ -43896,10 +43922,6 @@ msgid "NetApp Qtree discovery"
 msgstr "Découverte de NetApp Qtree"
 
 msgid "NetApp Snapshot Reserve"
-msgstr "Réserve d'instantanés NetApp"
-
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
 msgstr "Réserve d'instantanés NetApp"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -59946,6 +59968,10 @@ msgstr "Afficher plus"
 msgid "Show object type"
 msgstr "Aucun type d'objet"
 
+#, fuzzy
+msgid "Show only aggregation differences"
+msgstr "Afficher uniquement cette agrégation"
+
 msgid "Show only modified settings"
 msgstr "Afficher uniquement les paramètres modifiés"
 
@@ -71913,6 +71939,10 @@ msgstr ""
 msgid "This name will be used in the description of the service"
 msgstr "Ce nom sera utilisé dans la description du service"
 
+#, fuzzy
+msgid "This node has nested aggregation differences."
+msgstr "L'agrégation BI demandée n'existe pas."
+
 msgid "This node is not in the frozen aggregation"
 msgstr "Ce nœud ne fait pas partie de l'agrégation gelée"
 
@@ -81138,6 +81168,10 @@ msgstr "Utiliser le sujet par défaut"
 msgid "Use description"
 msgstr "Description de l'utilisation"
 
+#, fuzzy
+msgid "Use detected IP address"
+msgstr "Adresse IP distante"
+
 msgid "Use device and sensor name"
 msgstr "Utiliser le nom du dispositif et du capteur"
 
@@ -81223,6 +81257,13 @@ msgstr "Utiliser les niveaux les moins critiques pour vous et pour l'appareil"
 
 msgid "Use local FQDN"
 msgstr "Utiliser le FQDN local"
+
+#, fuzzy
+msgid "Use local host"
+msgstr "Utiliser le FQDN local"
+
+msgid "Use localhost for locally detected instances"
+msgstr ""
 
 #, fuzzy
 msgid "Use macro to determine port number"
@@ -81447,15 +81488,6 @@ msgstr ""
 
 msgid "Use the name specified in the ESX system"
 msgstr "Utiliser le nom spécifié dans le système ESX"
-
-#, fuzzy
-msgid "Use the new service name"
-msgstr "Nom du service"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
 
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
@@ -90430,9 +90462,6 @@ msgstr "montrer moins"
 msgid "show more"
 msgstr "afficher plus"
 
-msgid "show only problems"
-msgstr "ne montrer que les problèmes"
-
 msgid "signing"
 msgstr "signature"
 
@@ -90839,6 +90868,17 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
+#, fuzzy
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "Réserve d'instantanés NetApp"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "Nom du service"
+
+#~ msgid "show only problems"
+#~ msgstr "ne montrer que les problèmes"
+
 #~ msgid "Levels for the queue length"
 #~ msgstr "Niveaux pour la longueur de la file d'attente"
 
@@ -90846,27 +90886,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 #~ msgstr ""
 #~ "Définir la longueur maximale et minimale pour la taille de la file "
 #~ "d'attente"
-
-#, fuzzy
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Afin de rendre Checkmk plus cohérent, les descriptions de plusieurs "
-#~ "services ont été renommées dans les nouvelles versions de Checkmk. Un "
-#~ "exemple est celui des services de système de fichiers qui ont été "
-#~ "renommés de <tt>fs_</tt> en <tt>Filesystem</tt>. Mais comme le renommage "
-#~ "de services existants a de nombreuses implications - y compris les règles "
-#~ "existantes, les données de performance et l'historique de la "
-#~ "disponibilité - ces renommages sont désactivés par défaut pour les "
-#~ "installations existantes. Ici, vous pouvez basculer vers les nouvelles "
-#~ "descriptions pour les types de contrôle sélectionnés"
 
 #~ msgid "Absolute commitable memory"
 #~ msgstr "Mémoire commutable absolue"

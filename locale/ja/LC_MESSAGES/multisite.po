@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-17 18:34+0000\n"
+"PO-Revision-Date: 2026-02-24 06:05+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.15.2\n"
+"X-Generator: Weblate 5.16\n"
 
 msgid " "
 msgstr " "
@@ -21580,6 +21580,11 @@ msgid ""
 msgstr ""
 "ピギーバック-ハブが他のサイトとピギーバックデータを送受信できるようにします。"
 
+msgid ""
+"Enable this flag only when Active Domain Controller forbids to connect to "
+"itself via network."
+msgstr ""
+
 msgid "Enable this ntopng instance"
 msgstr "このntopngインスタンスを有効にします"
 
@@ -31995,6 +32000,24 @@ msgstr ""
 "変更をアクティブ化</i> してください。"
 
 msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Checkmkの一貫性を高めるために、いくつかのサービスの説明は、新しいCheck_MKバー"
+"ジョンで名前が変更されました。一例として、<tt>fs_</tt>から<tt>Filesystem</tt>"
+"に名前が変更されたファイルシステムサービスがあります。ただし、既存のサービス"
+"の名前変更には、既存のルール、パフォーマンスデータ、可用性履歴など、多くの影"
+"響があるため、これらの名前変更は、既存のインストールではデフォルトで無効に"
+"なっています。ここで、選択したチェックタイプの新しい説明に切り替えることがで"
+"きます"
+
+msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
 "latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. This "
@@ -40926,10 +40949,6 @@ msgstr "NetApp Qtreeの検出"
 msgid "NetApp Snapshot Reserve"
 msgstr "NetAppスナップショットリザーブ"
 
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
-msgstr "NetAppスナップショットリザーブ"
-
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
 msgstr "NetApp Snapvaults / Snapmirrorのラグタイム"
 
@@ -45263,7 +45282,7 @@ msgstr ""
 "来に反映すると、不確実性区間が広くなります。"
 
 msgid "Out"
-msgstr "出る"
+msgstr "アウト"
 
 msgid "Out of Notification Period"
 msgstr "通知期間外"
@@ -55746,6 +55765,10 @@ msgstr "オブジェクトを表示する"
 
 msgid "Show object type"
 msgstr "オブジェクトタイプを表示"
+
+#, fuzzy
+msgid "Show only aggregation differences"
+msgstr "この集計のみを表示"
 
 msgid "Show only modified settings"
 msgstr "変更した設定のみを表示する"
@@ -67097,6 +67120,10 @@ msgstr ""
 msgid "This name will be used in the description of the service"
 msgstr "この名前は、サービスの説明で使用されます"
 
+#, fuzzy
+msgid "This node has nested aggregation differences."
+msgstr "要求されたBIアグリゲーションは存在しません。"
+
 msgid "This node is not in the frozen aggregation"
 msgstr "このノードは凍結したアグリゲーションに含まれない"
 
@@ -70573,15 +70600,13 @@ msgid "Time until alert, if READY condition is false"
 msgstr "READYがfalseの場合の、警告までの許容期間"
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
-msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの時間"
+msgstr "REPLICAFAILURE がtrueの場合の、アラートまでの時間"
 
-#, fuzzy
 msgid "Time until alert, if RESIZEINPROGRESS condition is true"
-msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの時間"
+msgstr "RESIZEINPROGRESSがtrueの場合の、アラートまでの時間"
 
-#, fuzzy
 msgid "Time until alert, if RESIZEPENDING condition is true"
-msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの時間"
+msgstr "RESIZEPENDING がtrueの場合の、アラートまでの時間"
 
 msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr "最新のCronJobジョブが保留状態である場合、アラートまでの時間"
@@ -75384,6 +75409,10 @@ msgstr "デフォルトのトピックを使用する"
 msgid "Use description"
 msgstr "説明を使用する"
 
+#, fuzzy
+msgid "Use detected IP address"
+msgstr "リモートIPアドレス"
+
 msgid "Use device and sensor name"
 msgstr "デバイス名とセンサー名を使用する"
 
@@ -75463,6 +75492,13 @@ msgstr "ユーザーやデバイスレベルの最も重要度の低いものを
 
 msgid "Use local FQDN"
 msgstr "ローカルFQDNを使用する"
+
+#, fuzzy
+msgid "Use local host"
+msgstr "ローカルFQDNを使用する"
+
+msgid "Use localhost for locally detected instances"
+msgstr ""
 
 msgid "Use macro to determine port number"
 msgstr "マクロを使用してポート番号を決定する"
@@ -75664,15 +75700,6 @@ msgstr "マルチパスエイリアスが設定されている場合は、サー
 
 msgid "Use the name specified in the ESX system"
 msgstr "ESXシステムで指定された名前を使用します"
-
-#, fuzzy
-msgid "Use the new service name"
-msgstr "新しいサービス名を使用する"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
 
 msgid "Use the ntopng username as configured in the User settings"
 msgstr "ユーザー設定で設定したntopngユーザー名を使用"
@@ -83107,7 +83134,7 @@ msgid "immediate stop"
 msgstr "即時停止"
 
 msgid "in"
-msgstr "に"
+msgstr "イン"
 
 #, python-format
 msgid "in %d days"
@@ -83998,9 +84025,6 @@ msgstr "少なく表示"
 msgid "show more"
 msgstr "もっと表示"
 
-msgid "show only problems"
-msgstr "問題のみを表示"
-
 msgid "signing"
 msgstr "署名"
 
@@ -84401,29 +84425,22 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
 
+#, fuzzy
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "NetAppスナップショットリザーブ"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "新しいサービス名を使用する"
+
+#~ msgid "show only problems"
+#~ msgstr "問題のみを表示"
+
 #~ msgid "Levels for the queue length"
 #~ msgstr "キューの長さのレベル"
 
 #~ msgid "Set the maximum and minimum length for the queue size"
 #~ msgstr "キューサイズの最大長と最小長を設定します"
-
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Checkmkの一貫性を高めるために、いくつかのサービスの説明は、新しいCheck_MK"
-#~ "バージョンで名前が変更されました。一例として、<tt>fs_</tt>から"
-#~ "<tt>Filesystem</tt>に名前が変更されたファイルシステムサービスがあります。"
-#~ "ただし、既存のサービスの名前変更には、既存のルール、パフォーマンスデータ、"
-#~ "可用性履歴など、多くの影響があるため、これらの名前変更は、既存のインストー"
-#~ "ルではデフォルトで無効になっています。ここで、選択したチェックタイプの新し"
-#~ "い説明に切り替えることができます"
 
 #~ msgid "Absolute commitable memory"
 #~ msgstr "絶対コミット可能メモリ"

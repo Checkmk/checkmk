@@ -16,7 +16,7 @@ test -d "${ROOT}" || exit 1
 mkdir -p "$ROOT/share/check_mk/notifications"
 for f in ./*; do
     base=$(basename "$f")
-    [ "$base" = "BUILD" ] || [ "$base" = "OWNERS" ] && continue
+    { [ "$base" = "BUILD" ] || [ "$base" = "OWNERS" ]; } && continue
     echo "Copying $f to $ROOT/share/check_mk/notifications"
     if [ -d "$f" ]; then
         cp -r "$f" "$ROOT/share/check_mk/notifications"

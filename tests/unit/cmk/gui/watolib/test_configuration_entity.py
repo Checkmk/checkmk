@@ -12,11 +12,11 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 @pytest.mark.parametrize(
     "specifier, expected",
     [
-        ("asciimail", "ASCII Email parameter"),
+        ("asciimail", "Legacy email (ASCII) parameter"),
         ("cisco_webex_teams", "Cisco Webex Teams parameter"),
         ("ilert", "iLert parameter"),
         ("jira_issues", "JIRA (Commercial editions only) parameter"),
-        ("mail", "HTML Email parameter"),
+        ("mail", "Email (HTML) parameter"),
         ("mkeventd", "Forward Notification to Event Console parameter"),
         ("msteams", "Microsoft Teams parameter"),
         ("opsgenie_issues", "Opsgenie parameter"),

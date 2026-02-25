@@ -101,8 +101,17 @@ def declare_notification_plugin_permissions() -> None:
 
 def user_script_choices(what: str) -> list[tuple[str, str]]:
     scripts = load_user_scripts(what)
-    choices = [(name, info["title"]) for (name, info) in scripts.items()]
+    choices = [
+        (name, info["title"])
+        for (name, info) in scripts.items()
+        if name not in ("asciimail", "mail")
+    ]
     choices = [(k, _u(v)) for k, v in sorted(choices, key=lambda x: x[1])]
+    # The "mail" and "asciimail" scripts should be shown at the top and bottom of the list respectively.
+    if "mail" in scripts:
+        choices.insert(0, ("mail", _u(scripts["mail"]["title"])))
+    if "asciimail" in scripts:
+        choices.append(("asciimail", _u(scripts["asciimail"]["title"])))
     return choices
 
 

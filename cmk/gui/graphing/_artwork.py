@@ -72,7 +72,7 @@ class TimeAxisLabel(BaseModel, frozen=True):
 class _LayoutedCurveBase(TypedDict):
     color: str
     title: str
-    scalars: dict[str, tuple[TimeSeriesValue, str]]
+    scalars: Mapping[str, tuple[TimeSeriesValue, str]]
     attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
 
 
@@ -191,8 +191,8 @@ def compute_graph_artwork(
             errors.append(result.error)
 
     pin_time = _load_graph_pin()
-    _compute_scalars(unit_spec.formatter.render, curves, pin_time)
-    layouted_curves, mirrored = _layout_graph_curves(curves)  # do stacking, mirroring
+    # do stacking, mirroring
+    layouted_curves, mirrored = _layout_graph_curves(unit_spec.formatter.render, pin_time, curves)
     width, height = size
 
     try:
@@ -261,13 +261,15 @@ class Curve(TypedDict):
     attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
     rrddata: TimeSeries
     # Added during runtime by _compute_scalars
-    scalars: NotRequired[dict[str, tuple[TimeSeriesValue, str]]]
+    scalars: NotRequired[Mapping[str, tuple[TimeSeriesValue, str]]]
 
 
 # Compute the location of the curves of the graph, implement
 # stacking and mirroring (displaying positive values in negative
 # direction).
-def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], bool]:
+def _layout_graph_curves(
+    unit_renderer: Callable[[float], str], pin_time: int | None, curves: Sequence[Curve]
+) -> tuple[list[LayoutedCurve], bool]:
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
@@ -299,7 +301,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
                 layouted_curve: LayoutedCurve = LayoutedCurveLine(
                     color=curve["color"],
                     title=curve["title"],
-                    scalars=curve["scalars"],
+                    scalars=_compute_scalars(unit_renderer, pin_time, curve["rrddata"]),
                     attributes=curve["attributes"],
                     line_type=line_type,
                     points=raw_points,
@@ -308,7 +310,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
                 layouted_curve = LayoutedCurveArea(
                     color=curve["color"],
                     title=curve["title"],
-                    scalars=curve["scalars"],
+                    scalars=_compute_scalars(unit_renderer, pin_time, curve["rrddata"]),
                     attributes=curve["attributes"],
                     line_type=line_type,
                     points=_areastack(raw_points, []),
@@ -318,7 +320,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
                 layouted_curve = LayoutedCurveStack(
                     color=curve["color"],
                     title=curve["title"],
-                    scalars=curve["scalars"],
+                    scalars=_compute_scalars(unit_renderer, pin_time, curve["rrddata"]),
                     attributes=curve["attributes"],
                     line_type=line_type,
                     points=_areastack(raw_points, stacks[stack_nr] or []),
@@ -517,31 +519,26 @@ def order_graph_curves_for_legend_and_mouse_hover(
 
 
 def _compute_scalars(
-    unit_renderer: Callable[[float], str], curves: Iterable[Curve], pin_time: int | None
-) -> None:
-    for curve in curves:
-        rrddata = curve["rrddata"]
+    unit_renderer: Callable[[float], str], pin_time: int | None, rrddata: TimeSeries
+) -> Mapping[str, tuple[TimeSeriesValue, str]]:
+    pin = None
+    if pin_time is not None:
+        pin = _get_value_at_timestamp(pin_time, rrddata)
 
-        pin = None
-        if pin_time is not None:
-            pin = _get_value_at_timestamp(pin_time, rrddata)
+    clean_rrddata = clean_time_series_point(rrddata)
+    if clean_rrddata:
+        scalars = {
+            "pin": pin,
+            "first": clean_rrddata[0],
+            "last": clean_rrddata[-1],
+            "max": max(clean_rrddata),
+            "min": min(clean_rrddata),
+            "average": sum(clean_rrddata) / float(len(clean_rrddata)),
+        }
+    else:
+        scalars = {x: None for x in ["pin", "first", "last", "max", "min", "average"]}
 
-        clean_rrddata = clean_time_series_point(rrddata)
-        if clean_rrddata:
-            scalars = {
-                "pin": pin,
-                "first": clean_rrddata[0],
-                "last": clean_rrddata[-1],
-                "max": max(clean_rrddata),
-                "min": min(clean_rrddata),
-                "average": sum(clean_rrddata) / float(len(clean_rrddata)),
-            }
-        else:
-            scalars = {x: None for x in ["pin", "first", "last", "max", "min", "average"]}
-
-        curve["scalars"] = {}
-        for key, value in scalars.items():
-            curve["scalars"][key] = _render_scalar_value(value, unit_renderer)
+    return {k: _render_scalar_value(v, unit_renderer) for k, v in scalars.items()}
 
 
 def compute_curve_values_at_timestamp(

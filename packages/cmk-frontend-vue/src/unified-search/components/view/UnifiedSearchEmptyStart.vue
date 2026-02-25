@@ -27,9 +27,9 @@ const findText = computed(() => {
     case 'monitoring':
       return _t('Find services, hosts, dashboards, ...')
     case 'customize':
-      return _t('Find customization options"')
+      return _t('Find customization options')
     case 'setup':
-      return _t('ind rules, hosts, settings ...')
+      return _t('Find rules, hosts, settings ...')
     default:
       return _t('Find rules, hosts, dashboards, settings ...')
   }

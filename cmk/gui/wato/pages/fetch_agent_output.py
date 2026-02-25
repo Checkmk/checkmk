@@ -178,6 +178,14 @@ class PageFetchAgentOutput(AgentOutputPage):
     def page(self, ctx: PageContext) -> None:
         self._handle_http_request()
 
+        if (
+            self._request.agent_type == "walk"
+            and "cmk/relay_monitored" in self._request.host.labels()
+        ):
+            raise MKGeneralException(
+                _("SNMP walks are not supported for hosts monitored through a relay yet. ")
+            )
+
         title = self._title()
         make_header(
             html,

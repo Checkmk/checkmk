@@ -91,6 +91,7 @@ py_library(
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:tty",
+        "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
         "//packages/cmk-plugin-apis:password_store",
     ] + select({

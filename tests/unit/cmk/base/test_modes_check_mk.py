@@ -8,6 +8,7 @@
 # mypy: disable-error-code="type-arg"
 
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -31,7 +32,7 @@ from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
 
 class _MockFetcherTrigger(PlainFetcherTrigger):
     def __init__(self, payload: bytes) -> None:
-        super().__init__()
+        super().__init__(omd_root=Path("/"))
         self._payload = payload
 
     def _trigger(self, fetcher: Fetcher, mode: Mode, secret: FetcherSecrets) -> result.Result:

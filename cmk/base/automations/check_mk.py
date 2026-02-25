@@ -3198,7 +3198,7 @@ def automation_diag_cmk_agent(
     )
 
     state, output = 0, ""
-    raw_data = PlainFetcherTrigger().get_raw_data(
+    raw_data = PlainFetcherTrigger(omd_root=omd_root).get_raw_data(
         file_cache=NoCache(
             path_template="/dev/null",
             max_age=MaxAge(checking=0.0, discovery=0.0, inventory=0.0),

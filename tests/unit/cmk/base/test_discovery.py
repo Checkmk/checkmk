@@ -1526,7 +1526,7 @@ def test_commandline_discovery(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: None,
-        make_trigger=lambda hn: PlainFetcherTrigger(),
+        make_trigger=lambda hn: PlainFetcherTrigger(Path("/")),
         factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),

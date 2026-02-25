@@ -7,11 +7,14 @@ import abc
 from collections.abc import Mapping, Sized
 from functools import partial
 from pathlib import Path
-from typing import final, Protocol, Self, TypeVar
+from typing import Final, final, Protocol, Self, TypeVar
 
 import cmk.ccc.resulttype as result
+from cmk.ccc import debug
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.exceptions import MKTimeout
-from cmk.helper_interface import FetcherError
+from cmk.ccc.version import general_version_infos_from_env
+from cmk.helper_interface import create_fetcher_crash_dump, FetcherError
 
 from ._abstract import Fetcher, Mode
 from ._secrets import FetcherSecrets
@@ -26,6 +29,9 @@ _TRawData = TypeVar("_TRawData", bound=Sized)
 
 
 class FetcherTrigger(abc.ABC):
+    def __init__(self, omd_root: Path) -> None:
+        self.omd_root: Final = omd_root
+
     @final
     def get_raw_data(
         self,
@@ -51,9 +57,23 @@ class FetcherTrigger(abc.ABC):
 
         except MKTimeout:
             raise
-
-        except Exception as exc:
+        except FetcherError as exc:
+            # These are intentionally raised exceptions for which we don't need crash reports
             return result.Error(exc)
+        except Exception as exc:
+            if debug.enabled():
+                raise
+            self._on_error()
+            return result.Error(exc)
+
+    def _on_error(self) -> None:
+        create_fetcher_crash_dump(
+            serial=None,
+            host=None,
+            crash_report_base_path=make_crash_report_base_path(self.omd_root),
+            get_general_version_infos=general_version_infos_from_env,
+            debug=False,
+        )
 
     @abc.abstractmethod
     def _trigger(
@@ -91,9 +111,9 @@ class PlainFetcherTrigger(FetcherTrigger):
 
     def serialized_params(self) -> Mapping[str, str]:
         """Return an empty mapping as there are no parameters to serialize."""
-        return {}
+        return {"omd_root": str(self.omd_root)}
 
     @classmethod
     def from_params(cls, params: Mapping[str, str]) -> Self:
         """Create a PlainFetcherTrigger from serialized parameters."""
-        return cls(**params)
+        return cls(omd_root=Path(params["omd_root"]))

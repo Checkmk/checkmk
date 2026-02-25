@@ -9,6 +9,7 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -51,8 +52,8 @@ _TEST_LOCATION = PluginLocation(
 
 
 class _MockFetcherTrigger(PlainFetcherTrigger):
-    def __init__(self, payload: bytes) -> None:
-        super().__init__()
+    def __init__(self, payload: bytes, omd_root: Path) -> None:
+        super().__init__(omd_root)
         self._payload = payload
 
     def _trigger(self, fetcher: Fetcher, mode: Mode, secret: FetcherSecrets) -> result.Result:
@@ -107,7 +108,9 @@ class TestAutomationDiagHost:
                 edition=(app := make_app(edition(paths.omd_root))).edition,
                 make_bake_on_restart=app.make_bake_on_restart,
                 create_core=app.create_core,
-                make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode("utf-8")),
+                make_fetcher_trigger=lambda *args: _MockFetcherTrigger(
+                    raw_data.encode("utf-8"), Path("/")
+                ),
                 make_metric_backend_fetcher=app.make_metric_backend_fetcher,
                 get_builtin_host_labels=app.get_builtin_host_labels,
             ),

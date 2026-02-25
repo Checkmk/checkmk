@@ -158,12 +158,13 @@ export class GaugeFigure extends FigureBase<SingleMetricData, GaugeContent> {
     const display_range = this._widget_content.display_range
     const domain: Domain = [display_range.minimum, display_range.maximum]
 
-    domain.sort() // Safeguards against negative number ordering or bad order. Display and clamp need good order
+    if (domain[0] >= domain[1]) {
+      throw new Error(`Display range minimum (${domain[0]}) must not exceed maximum (${domain[1]})`)
+    }
     const formatter = plot_render_function(plot)
 
     this._render_gauge_range_labels(domain, formatter)
 
-    if (domain[0] === domain[1]) return
     const limit = (7 * Math.PI) / 12
     const scale_x = scaleLinear().domain(domain).range([-limit, limit])
     // this.metric_thresholds_stripe(plot, domain, scale_x);

@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
@@ -19,6 +21,14 @@ const { _t } = usei18n()
 const dataRangeSymbol = defineModel<string>('dataRangeSymbol', { required: true })
 const dataRangeMin = defineModel<number>('dataRangeMin', { required: true })
 const dataRangeMax = defineModel<number>('dataRangeMax', { required: true })
+
+const rangeErrors = computed(() =>
+  dataRangeMin.value !== undefined &&
+  dataRangeMax.value !== undefined &&
+  dataRangeMin.value >= dataRangeMax.value
+    ? [_t('Minimum must be less than maximum')]
+    : []
+)
 </script>
 
 <template>
@@ -41,6 +51,7 @@ const dataRangeMax = defineModel<number>('dataRangeMax', { required: true })
         <CmkInput
           :model-value="dataRangeMin"
           type="number"
+          :external-errors="rangeErrors"
           @update:model-value="(value) => (dataRangeMin = value ?? dataRangeMin)"
         />
       </FieldComponent>
@@ -52,6 +63,7 @@ const dataRangeMax = defineModel<number>('dataRangeMax', { required: true })
         <CmkInput
           :model-value="dataRangeMax"
           type="number"
+          :external-errors="rangeErrors"
           @update:model-value="(value) => (dataRangeMax = value ?? dataRangeMax)"
         />
       </FieldComponent>

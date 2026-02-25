@@ -353,36 +353,38 @@ can't be promised for all cases (security, etc.) though.
 
 ### Definition
 
-The REST API is versioned by a *major* and *minor* version number.
+The REST API is versioned by a **major** version number, following a simplified Semantic Versioning
+approach. Rather than the traditional `x.x.x` SemVer format, only the major version is used
+(e.g., `1` instead of `1.0.0`), since minor and patch versions represent compatible changes and
+do not require a version distinction.
 
 The *major* number is incremented when backwards incompatible changes to the API have been made.
-This will reset the *minor* number to *0*. A *werk* which contains the details of the change and
-marking the change as incompatible will be released when this happens.
+A *werk* which contains the details of the change will be released when this happens. Compatible
+changes are introduced within the current version without incrementing it.
 
-The *minor* number will be increased when backwards compatible changes are added to the API. A
-*werk* detailing the additions will be released when this happens.
+Versioning applies to the entire API, not to individual endpoints or endpoint families.
 
-**Note:** Despite the noted backward compatibility, API consumers are best to ensure that their
-implementation does not disrupt use-case requirements.
+A dedicated *unstable* API version is available for experimental features and backports. Endpoints
+in this version may be removed or modified at any time without prior notice and should only be
+used for testing and development purposes.
+
+**Note:** All published REST API major versions are continuously supported within a Checkmk major
+version. This guarantees that existing API scripts continue to work without modification during
+routine Checkmk patch updates.
 
 ### Usage
 
-The *major* version is part of the URL of each endpoint, while the whole version (in the form
-*major*.*minor*) can be sent via the HTTP header `X-API-Version`. If the header is not sent,
-the most recent *minor* version of the through the URL selected *major* version is used.
-The header will also be present in the accompanying HTTP response.
+The *major* version is part of the URL of each endpoint (e.g., `/api/v1/...`).
 
 ### Format
 
- * URL: *v1*, *v2*, etc.
- * X-API-Version HTTP header: *major.minor*
+ * URL: *v1*, *v2*, *unstable*, etc.
 
 ### Notes
 
  * In the first release, the version part in the URL has been documented as `1.0`. These
-   URLs will continue to work in the future, although using the `X-API-Version` header will not be
-   possible with this version identifier. You have to use the above documented format (v1, v2, ...)
-   in the URL to be able to use the `X-API-Version` header.
+   URLs will continue to work in the future. You have to use the above documented format (v1, v2, ...)
+   in the URL going forward.
 
 ## Undocumented behaviour
 

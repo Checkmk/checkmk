@@ -189,6 +189,16 @@ function showTabResults(): boolean {
   )
 }
 
+function showEmptyStart(): boolean {
+  return (
+    !waitForSearchResults.value &&
+    !showTabResults() &&
+    !(search.get('unified') as UnifiedSearchProvider).shouldExecuteSearch(
+      searchUtils.query.toQueryLike()
+    )
+  )
+}
+
 onMounted(() => {
   searchUtils.shortCuts.enable()
 })
@@ -197,10 +207,7 @@ onMounted(() => {
 <template>
   <DefaultPopup class="unified-search-app">
     <UnifiedSearchHeader> </UnifiedSearchHeader>
-    <UnifiedSearchStart
-      v-if="!waitForSearchResults && !showTabResults()"
-      :history-result="historyResult"
-    >
+    <UnifiedSearchStart v-if="showEmptyStart()" :history-result="historyResult">
     </UnifiedSearchStart>
     <UnifiedSearchWaitForResults v-if="waitForSearchResults"> </UnifiedSearchWaitForResults>
     <UnifiedSearchTabResults

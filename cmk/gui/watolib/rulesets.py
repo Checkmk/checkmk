@@ -2252,7 +2252,7 @@ def _create_explicit_rule_conditions_dict(
         "folder_path": DictElementAPI(
             parameter_form=SingleChoiceExtendedAPI[str](
                 title=Title("Folder"),
-                help_text=Help("Create the rule in the configured folder"),
+                help_text=Help("Rule only applies to hosts directly in or below this folder."),
                 elements=[
                     SingleChoiceElementExtendedAPI(name=n, title=Title("%s") % t)
                     for n, t in tree.folder_choices()
@@ -2267,6 +2267,9 @@ def _create_explicit_rule_conditions_dict(
                 add_condition_group_label=Label("Add tag condition"),
                 select_condition_group_to_add=Label("Select tag to add"),
                 no_more_condition_groups_to_add=Label("No more tags to add"),
+                help_text=Help(
+                    "Rule only applies to hosts that meet all of the host tag conditions listed here."
+                ),
                 get_conditions=_get_host_tags_condition_choices,
                 custom_validate=[
                     not_empty(error_msg=Message("Please add at least one tag condition."))
@@ -2276,9 +2279,7 @@ def _create_explicit_rule_conditions_dict(
         "host_label_groups": DictElementAPI(
             parameter_form=BinaryConditionChoices(
                 title=Title("Host labels"),
-                help_text=Help(
-                    "Use this condition to select hosts based on the configured host labels."
-                ),
+                help_text=Help("Rule only applies to hosts matching the label conditions."),
                 label=Label("Label"),
                 get_conditions=(
                     lambda: _get_host_label_groups_condition_choices()
@@ -2301,6 +2302,15 @@ def _create_explicit_rule_conditions_dict(
                                 not_empty(error_msg=Message("Please add at least one host.")),
                                 HostAddressList(),
                             ],
+                            help_text=Help(
+                                "Here you can enter a list of explicit host names that the rule should or should "
+                                "not apply to. Leave this option disabled if you want the rule to "
+                                "apply for all hosts specified by the given tags. The names that you "
+                                "enter here are compared with case sensitive exact matching. Alternatively "
+                                "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
+                                "character. That regular expression must match the <i>beginning</i> of "
+                                "the host names in question."
+                            ),
                         ),
                         required=True,
                     ),

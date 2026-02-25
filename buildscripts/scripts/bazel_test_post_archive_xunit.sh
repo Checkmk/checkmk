@@ -24,9 +24,9 @@ if [ -z "${RSYNC_PATH}" ]; then
     exit 3
 fi
 
-if [ -d ${BAZEL_TEST_LOGS_DEST} ]; then
+if [ -d "${BAZEL_TEST_LOGS_DEST}" ]; then
     echo "Making destination directory ${BAZEL_TEST_LOGS_DEST}."
-    mkdir --parents ${BAZEL_TEST_LOGS_DEST}
+    mkdir --parents "${BAZEL_TEST_LOGS_DEST}"
 fi
 
 find "${BAZEL_TEST_LOGS_SRC}" -name "test.xml" | while IFS= read -r src; do

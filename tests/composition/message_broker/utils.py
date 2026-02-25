@@ -218,6 +218,7 @@ def p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -
     finally:
         central_site.openapi.broker_connections.delete(connection_id)
         central_site.openapi.changes.activate_and_wait_for_completion()
+        await_broker_ready(central_site, remote_site, remote_site_2)
 
 
 def _rabbitmq_status_vhost(site: Site, vhost: str) -> str:

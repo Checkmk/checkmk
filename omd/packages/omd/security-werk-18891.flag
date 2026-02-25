@@ -1,0 +1,2 @@
+The presence of this file signals to other omd versions that the security vulnerabilities within this release have been successfully patched. For detailed documentation regarding these specific vulnerabilities, please refer to Werk #18891, i.e., https://checkmk.com/werk/18891 .
+

@@ -110,6 +110,12 @@ pkg_files(
 )
 
 pkg_files(
+    name = "omd_security_werk_18891_flag",
+    srcs = ["security-werk-18891.flag"],
+    prefix = "share/omd",
+)
+
+pkg_files(
     name = "doc",
     srcs = [
         "COPYING",
@@ -347,6 +353,7 @@ pkg_tar(
         ":man",
         ":omd_init_pkg",
         ":omd_main_pkg",
+        ":omd_security_werk_18891_flag",
         ":omd_service",
         ":omdlib_pkg",
         ":skel",

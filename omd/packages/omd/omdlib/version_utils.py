@@ -33,12 +33,23 @@ def version_from_site_dir(site_dir: Path) -> str | None:
         return None
 
 
+def werk_18891_error(version: str) -> str:
+    return (
+        f"ERROR: Refusing to execute vulnerable omd version {version}.\n"
+        f"For your security, automatic version switching to older version is blocked.\n"
+        f"For more details on this vulnerability and the required updates, see:\n"
+        f"https://checkmk.com/werk/18891"
+    )
+
+
 def exec_other_omd(version: str) -> NoReturn:
     """Rerun current omd command with other version"""
     omd_path = "/omd/versions/%s/bin/omd" % version
     if not version_exists(version):
         available_versions = ", ".join(omd_versions())
         sys.exit(f"Version {version} is not installed, available versions: {available_versions}")
+    if not verify_security(version) and os.getuid() == 0:
+        sys.exit(werk_18891_error(version))
 
     # Prevent inheriting environment variables from this versions/site environment
     # into the executed omd call. The omd call must import the python version related
@@ -49,3 +60,7 @@ def exec_other_omd(version: str) -> NoReturn:
 
     os.execv(omd_path, sys.argv)
     sys.exit("Cannot run bin/omd of version %s." % version)
+
+
+def verify_security(version: str) -> bool:
+    return Path(f"/omd/versions/{version}/share/omd/security-werk-18891.flag").exists()

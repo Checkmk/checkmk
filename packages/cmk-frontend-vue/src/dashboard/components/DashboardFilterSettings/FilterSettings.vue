@@ -63,6 +63,17 @@ const nonMandatoryApplied = appliedRuntimeFilterIds.filter(
 const mergedRuntimeFilterIds = [...props.configuredMandatoryRuntimeFilters, ...nonMandatoryApplied]
 
 const runtimeFilters = useFilters(props.appliedRuntimeFilters, mergedRuntimeFilterIds)
+
+const seedRuntimeFiltersWithDashboardDefaults = (): void => {
+  for (const filterId of props.configuredMandatoryRuntimeFilters) {
+    if (!runtimeFilters.getFilterValues(filterId) && props.configuredDashboardFilters[filterId]) {
+      runtimeFilters.updateFilterValues(filterId, props.configuredDashboardFilters[filterId]!)
+    }
+  }
+}
+
+seedRuntimeFiltersWithDashboardDefaults()
+
 const initialRuntimeFilters = ref<ConfiguredFilters>(
   JSON.parse(JSON.stringify(runtimeFilters.getFilters()))
 )
@@ -121,6 +132,7 @@ const handleResetRuntimeFilters = () => {
       runtimeFilters.clearFilter(filterId)
     }
   })
+  seedRuntimeFiltersWithDashboardDefaults()
   resetCounter.value++
 }
 

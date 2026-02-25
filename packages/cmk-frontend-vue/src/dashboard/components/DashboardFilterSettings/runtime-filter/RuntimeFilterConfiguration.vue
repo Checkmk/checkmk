@@ -194,11 +194,7 @@ const handleRemoveFilter = (filterId: string) => {
       <FilterCollectionInputItem
         :key="`${filterId}-${props.resetKey}`"
         :filter-id="filterId"
-        :configured-filter-values="
-          configuredFilterValues !== null
-            ? configuredFilterValues
-            : dashboardFilters[filterId] || null
-        "
+        :configured-filter-values="configuredFilterValues"
         :filter-definitions="filterDefinitions"
         :allow-remove="!mandatoryFilters.has(filterId)"
         :show-required-label="mandatoryFilters.has(filterId)"
@@ -222,11 +218,7 @@ const handleRemoveFilter = (filterId: string) => {
       <FilterCollectionInputItem
         :key="`${filterId}-${props.resetKey}`"
         :filter-id="filterId"
-        :configured-filter-values="
-          configuredFilterValues !== null
-            ? configuredFilterValues
-            : dashboardFilters[filterId] || null
-        "
+        :configured-filter-values="configuredFilterValues"
         :filter-definitions="filterDefinitions"
         :allow-remove="!mandatoryFilters.has(filterId)"
         :show-required-label="mandatoryFilters.has(filterId)"

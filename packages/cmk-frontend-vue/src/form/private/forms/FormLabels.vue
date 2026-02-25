@@ -19,12 +19,18 @@ import FormLabelsLabel from './FormLabelsLabel.vue'
 
 type StringMapping = Record<string, string>
 
+const splitLabel = (label: string): string[] => {
+  const la = label.split(':')
+  const key = la.shift()
+  return [key || '', la.join(':')]
+}
+
 const stringMappingToArray = (mapping: StringMapping): string[] =>
   Object.entries(mapping).map(([key, value]) => `${key}:${value}`)
 
 const arrayToStringMapping = (array: string[]): StringMapping =>
   array.reduce((acc, curr) => {
-    const [key, value] = curr.split(':')
+    const [key, value] = splitLabel(curr)
     if (key && value) {
       acc[key] = value
     }
@@ -66,7 +72,7 @@ watch(keyValuePairs, (newValue) => {
 })
 
 const validate = (value: string): string | null => {
-  const keyValuePair = value.trim().split(':')
+  const keyValuePair = splitLabel(value.trim())
   if (keyValuePair.length !== 2 || !keyValuePair[0] || !keyValuePair[1]) {
     error.value = props.spec.i18n.key_value_format_error
     return null
@@ -102,7 +108,7 @@ function filterKeyValuePairs(element: Suggestion) {
   if (element.name === null) {
     return false
   }
-  const key = element.name.split(':')[0]
+  const key = splitLabel(element.name)[0]
   if (key === undefined) {
     return true
   }

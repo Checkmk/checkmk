@@ -25,7 +25,6 @@ from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
     inventory_win_ip_address,
     inventory_win_networkadapter,
     parse_win_networkadapter,
-    Section,
 )
 
 
@@ -59,9 +58,7 @@ from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
             [
                 TableRow(
                     path=["hardware", "nwadapter"],
-                    key_columns={
-                        "name": "Intel(R) PRO/1000 MT-Desktopadapter 1",
-                    },
+                    key_columns={"name": "Intel(R) PRO/1000 MT-Desktopadapter 1"},
                     inventory_columns={
                         "type": "Ethernet 802.3",
                         "macaddress": "08:00:27:9C:F8:39",
@@ -76,9 +73,7 @@ from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
                 ),
                 TableRow(
                     path=["hardware", "nwadapter"],
-                    key_columns={
-                        "name": "Intel(R) PRO/1000 MT-Desktopadapter 2",
-                    },
+                    key_columns={"name": "Intel(R) PRO/1000 MT-Desktopadapter 2"},
                     inventory_columns={
                         "type": "Ethernet 802.3",
                         "macaddress": "08:00:27:9C:F8:39",
@@ -105,42 +100,29 @@ def test_inventory_win_networkadapter(
 
 
 __section = [
-    {
-        "type": " Ethernet 802.3",
-        "macaddress": " 3C:7C:3F:49:7C:22",
-        "name": " ASUS USB-AC68 USB Wireless adapter",
-        "speed": 1300000000,
-        "ipv4_address": ", 192.168.10.11",
-        "ipv6_subnet": "",
-        "ipv4_subnet": "255.255.255.0",
-    },
-    {
-        "type": " Ethernet 802.3",
-        "name": " VMware Virtual Ethernet Adapter for VMnet1",
-        "macaddress": " 00:50:56:C0:00:01",
-        "speed": 100000000,
-        "ipv4_address": ", 169.254.0.1, 192.168.1.100",
-        "ipv4_subnet": "255.255.0.0, 255.255.255.0",
-        "ipv6_address": "fe80::5669:a1eb:3add:e9b2, 2c::1",
-        "ipv6_subnet": ", 64, 127",
-    },
-    {
-        "type": " Ethernet 802.3",
-        "macaddress": " 00:1A:7D:DA:71:06",
-        "name": " Bluetooth Device (Personal Area Network)",
-    },
-    {
-        "type": " Ethernet 802.3",
-        "macaddress": " 3E:7C:3F:49:7C:22",
-        "name": " Microsoft Wi-Fi Direct Virtual Adapter",
-        "speed": 9223372036854775807,
-    },
-    {
-        "type": " Ethernet 802.3",
-        "macaddress": " 3C:7C:3F:49:7C:22",
-        "name": " Microsoft Wi-Fi Direct Virtual Adapter #2",
-        "speed": 9223372036854775807,
-    },
+    ["AdapterType", " Ethernet 802.3"],
+    ["MACAddress", " AA", "BB", "CC", "DD", "7C", "22"],
+    ["Name", " ASUS USB-AC68 USB Wireless adapter"],
+    ["Speed", " 1300000000"],
+    ["Address", " 192.168.10.11"],
+    ["Subnet", " 255.255.255.0"],
+    ["AdapterType", " Ethernet 802.3"],
+    ["Name", " VMware Virtual Ethernet Adapter for VMnet1"],
+    ["MACAddress", " AA", "BB", "CC", "DD", "00", "01"],
+    ["Speed", " 100000000"],
+    ["Address", " 169.254.0.1 192.168.1.100 fe80::5669:a1eb:3add:e9b2 2c::1"],
+    ["Subnet", " 255.255.0.0 255.255.255.0 64 127"],
+    ["AdapterType", " Ethernet 802.3"],
+    ["MACAddress", " AA", "BB", "CC", "DD", "71", "06"],
+    ["Name", " Bluetooth Device (Personal Area Network)"],
+    ["AdapterType", " Ethernet 802.3"],
+    ["MACAddress", " AA", "BB", "CC", "DD", "7C", "22"],
+    ["Name", " Microsoft Wi-Fi Direct Virtual Adapter"],
+    ["Speed", " 9223372036854775807"],
+    ["AdapterType", " Ethernet 802.3"],
+    ["MACAddress", " AA", "BB", "CC", "DD", "7C", "22"],
+    ["Name", " Microsoft Wi-Fi Direct Virtual Adapter #2"],
+    ["Speed", " 9223372036854775807"],
 ]
 
 
@@ -160,9 +142,9 @@ __adapter = Adapter(  # type: ignore[call-arg] # ip_data not known by Adapter
 
 
 @pytest.mark.parametrize(
-    "section, expected_result",
+    ("string_table", "expected_result"),
     [
-        (
+        pytest.param(
             __section,
             [
                 TableRow(
@@ -226,26 +208,42 @@ __adapter = Adapter(  # type: ignore[call-arg] # ip_data not known by Adapter
                     status_columns={},
                 ),
             ],
+            id="inventory_win_ip_address_01",
         ),
     ],
 )
-def test_inventory_win_ip_address(section: Section, expected_result: InventoryResult) -> None:
-    assert list(inventory_win_ip_address(section)) == expected_result
+def test_inventory_win_ip_address(
+    string_table: StringTable,
+    expected_result: InventoryResult,
+    request: pytest.FixtureRequest,
+) -> None:
+    section = parse_win_networkadapter(string_table)
+    assert list(inventory_win_ip_address(section)) == expected_result, (
+        f"in param {request.node.callspec.id}"
+    )
 
 
 @pytest.mark.parametrize(
-    "section, expected_result",
+    ("string_table", "expected_result"),
     [
-        (
+        pytest.param(
             __section,
             [
                 HostLabel("cmk/l3v4_topology", "multihomed"),
             ],
+            id="host_label_win_ip_address_01",
         ),
     ],
 )
-def test_host_label_win_ip_address(section: Section, expected_result: HostLabelGenerator) -> None:
-    assert list(host_label_win_ip_address(section)) == list(expected_result)
+def test_host_label_win_ip_address(
+    string_table: StringTable,
+    expected_result: HostLabelGenerator,
+    request: pytest.FixtureRequest,
+) -> None:
+    section = parse_win_networkadapter(string_table)
+    assert list(host_label_win_ip_address(section)) == list(expected_result), (
+        f"in param {request.node.callspec.id}"
+    )
 
 
 if __name__ == "__main__":
@@ -254,7 +252,7 @@ if __name__ == "__main__":
     source_file_path = (
         (base := (test_file := Path(__file__)).parents[6])
         / test_file.parent.relative_to(base / "tests/unit")
-        / test_file.name.lstrip("test_")
+        / test_file.name[5:]
     ).as_posix()
     assert pytest.main(["--doctest-modules", source_file_path]) in {0, 5}
     pytest.main(["-vvsx", __file__])

@@ -36,6 +36,95 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.parametrize(
+    ("string_table", "result"),
+    [
+        pytest.param(
+            [
+                [
+                    "2:",
+                    "wlp114s0f0:",
+                    "not-parsed-data",
+                ],
+                ["link/ether", "80:c0:1e:42:d4:25", "brd", "ff:ff:ff:ff:ff:ff"],
+                [
+                    "inet",
+                    "192.168.178.160/24",
+                    "brd",
+                    "192.168.178.255",
+                    "scope",
+                    "global",
+                    "dynamic",
+                    "noprefixroute",
+                    "wlp114s0f0",
+                ],
+                [
+                    "inet6",
+                    "2a00:1e:e005:6801:4035:b9ef:14a1:67ca/64",
+                    "scope",
+                    "global",
+                    "temporary",
+                    "dynamic",
+                ],
+                [
+                    "inet6",
+                    "2a00:1e:e005:6801:af01:3a1a:6be:76a7/64",
+                    "scope",
+                    "global",
+                    "dynamic",
+                    "mngtmpaddr",
+                    "noprefixroute",
+                ],
+                [
+                    "inet6",
+                    "fd65:2511:c73a:0:ca9d:1b05:90f5:774/64",
+                    "scope",
+                    "global",
+                    "temporary",
+                    "dynamic",
+                ],
+                [
+                    "inet6",
+                    "fd65:2511:c73a:0:a386:2d17:e849:8df9/64",
+                    "scope",
+                    "global",
+                    "dynamic",
+                    "mngtmpaddr",
+                    "noprefixroute",
+                ],
+                ["inet6", "fe80::b2f6:a3ab:5de5:12f3/64", "scope", "link", "noprefixroute"],
+                ["[end_iplink]"],
+            ],
+            {
+                "wlp114s0f0": lnx_if.IPLinkInterface(
+                    state_infos=[
+                        "ot-parsed-dat",
+                    ],
+                    link_ether="\x80À\x1eBÔ%",
+                    inet=[
+                        "192.168.178.160/24",
+                    ],
+                    inet6=[
+                        "2a00:1e:e005:6801:af01:3a1a:6be:76a7/64",
+                        "fd65:2511:c73a:0:a386:2d17:e849:8df9/64",
+                        "fe80::b2f6:a3ab:5de5:12f3/64",
+                    ],
+                ),
+            },
+            id="parse_lnx_if_ipaddress_01",
+        ),
+    ],
+)
+def test_parse_lnx_if_ipaddress(
+    string_table: StringTable,
+    result: lnx_if.SectionInventory,
+    request: pytest.FixtureRequest,
+) -> None:
+    assert lnx_if._parse_lnx_if_ipaddress(string_table) == result, (
+        f"in param {request.node.callspec.id}"
+    )
+
+
+@pytest.mark.parametrize(
     "string_table, timestamp, result",
     [
         (
@@ -1323,26 +1412,31 @@ __section_inventory = {
 
 
 @pytest.mark.parametrize(
-    "section, expected_result",
+    ("section", "expected_result"),
     [
-        (
+        pytest.param(
             (None, __section_inventory),
             [
                 HostLabel("cmk/l3v4_topology", "singlehomed"),
             ],
+            id="host_label_lnx_ip_address_01",
         ),
     ],
 )
 def test_host_label_lnx_ip_address(
-    section: lnx_if.Section, expected_result: HostLabelGenerator
+    section: lnx_if.Section,
+    expected_result: HostLabelGenerator,
+    request: pytest.FixtureRequest,
 ) -> None:
-    assert list(lnx_if.host_label_lnx_ip_address(section)) == list(expected_result)
+    assert list(lnx_if.host_label_lnx_ip_address(section)) == list(expected_result), (
+        f"in param {request.node.callspec.id}"
+    )
 
 
 @pytest.mark.parametrize(
-    "section, expected_result",
+    ("section", "expected_result"),
     [
-        (
+        pytest.param(
             ([], __section_inventory),
             [
                 Attributes(
@@ -1387,11 +1481,16 @@ def test_host_label_lnx_ip_address(
                     status_columns={},
                 ),
             ],
+            id="inventory_lnx_if_ip_01",
         ),
     ],
 )
-def test_inventory_lnx_if_ip(section: lnx_if.Section, expected_result: InventoryResult) -> None:
-    assert list(lnx_if.inventory_lnx_if(section, None)) == list(expected_result)
+def test_inventory_lnx_if_ip(
+    section: lnx_if.Section, expected_result: InventoryResult, request: pytest.FixtureRequest
+) -> None:
+    assert list(lnx_if.inventory_lnx_if(section, None)) == list(expected_result), (
+        f"in param {request.node.callspec.id}"
+    )
 
 
 if __name__ == "__main__":
@@ -1400,7 +1499,7 @@ if __name__ == "__main__":
     source_file_path = (
         (base := (test_file := Path(__file__)).parents[6])
         / test_file.parent.relative_to(base / "tests/unit")
-        / test_file.name.lstrip("test_")
+        / test_file.name[5:]
     ).as_posix()
     assert pytest.main(["--doctest-modules", source_file_path]) in {0, 5}
     pytest.main(["-vvsx", __file__])

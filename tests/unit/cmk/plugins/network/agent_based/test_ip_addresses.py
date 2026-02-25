@@ -193,7 +193,7 @@ def test_parse_ip_addresses(
 
 
 @pytest.mark.parametrize(
-    "section, expected_result",
+    ("section", "expected_result"),
     [
         (None, []),
         (

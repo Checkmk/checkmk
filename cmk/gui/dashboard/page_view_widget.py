@@ -11,6 +11,7 @@ from pydantic import BaseModel, Json, model_validator, ValidationError
 
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, get_all_dashboards
+from cmk.gui.dashboard.dashlet.dashlets.view import EmbeddedViewDashlet, LinkedViewDashlet
 from cmk.gui.dashboard.page_show_shared_dashboard import SharedDashboardPageComponents
 from cmk.gui.dashboard.store import get_permitted_dashboards_by_owners, save_all_dashboards
 from cmk.gui.dashboard.token_util import (
@@ -46,7 +47,7 @@ from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view_config
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 from cmk.gui.views.store import get_permitted_views, get_view_by_name
-from cmk.gui.visuals import get_only_sites_from_context
+from cmk.gui.visuals import get_merged_context, get_only_sites_from_context
 from cmk.gui.visuals.info import visual_info_registry
 
 __all__ = [
@@ -160,6 +161,8 @@ class ViewWidgetIFramePageHelper:
         is_preview: bool = False,
         is_public: bool = False,
     ) -> None:
+        # include the views context, but override it with the provided widget context
+        context = get_merged_context(view_spec.get("context", {}), context)
         view = View(
             widget_name,
             view_spec,
@@ -415,17 +418,15 @@ class ViewWidgetIFramePage(Page):
 
 
 class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
-    def _get_view_spec_by_widget_id(
+    def _get_view_spec_and_widget_by_widget_id(
         self,
         issuer: ImpersonatedDashboardTokenIssuer,
         token_details: DashboardToken,
         dashboard: DashboardConfig,
         widget_id: str,
         unique_widget_name: str,
-    ) -> ViewSpec:
+    ) -> tuple[ViewSpec, LinkedViewDashlet | EmbeddedViewDashlet]:
         widget_config = get_dashboard_widget_by_id(dashboard, widget_id)
-        widget_type = dashlet_registry[widget_config["type"]]
-        widget = widget_type(widget_config, dashboard.get("context"))
         if widget_config["type"] == "linked_view":
             view_spec = self._get_linked_view_spec(
                 token_details, widget_id, cast(LinkedViewDashletConfig, widget_config), issuer
@@ -437,9 +438,9 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
         else:
             raise InvalidWidgetError()
 
-        view_spec = view_spec.copy()
-        view_spec["context"] = widget.context
-        return view_spec
+        widget_type = dashlet_registry[widget_config["type"]]
+        widget = widget_type(widget_config, dashboard.get("context"))
+        return view_spec, cast(LinkedViewDashlet | EmbeddedViewDashlet, widget)
 
     @staticmethod
     def _get_linked_view_spec(
@@ -492,7 +493,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
         ) as issuer:
             dashboard = issuer.load_dashboard()
             unique_widget_name = f"{dashboard['name']}_{parameters.widget_id}"
-            view_spec = self._get_view_spec_by_widget_id(
+            view_spec, widget = self._get_view_spec_and_widget_by_widget_id(
                 issuer, token_details, dashboard, parameters.widget_id, unique_widget_name
             )
             ViewWidgetIFramePageHelper.setup_display_and_painter_options(
@@ -506,7 +507,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
                 view_spec,
                 row_limit=ctx.config.soft_query_limit,
                 # includes dashboard context via _get_view_spec_by_widget_id
-                context=view_spec.get("context", {}),
+                context=widget.context,
                 user_permissions=user_permissions,
                 is_reload=parameters.is_reload(),
                 is_debug=False,

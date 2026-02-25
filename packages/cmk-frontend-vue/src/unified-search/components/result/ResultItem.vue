@@ -229,7 +229,7 @@ onBeforeUnmount(() => {
     box-sizing: border-box;
 
     &.indented {
-      padding: var(--dimension-3) var(--dimension-8);
+      padding-left: var(--dimension-8);
     }
 
     &:hover {

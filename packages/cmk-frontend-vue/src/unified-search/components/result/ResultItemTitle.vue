@@ -32,7 +32,7 @@ export default defineComponent({
 /* stylelint-disable checkmk/vue-bem-naming-convention */
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 :deep(.highlight-query) {
-  display: inline-block;
+  display: inline;
   background: transparent;
   color: var(--success);
   line-height: 14px;
@@ -40,7 +40,7 @@ export default defineComponent({
 
 div {
   --gap: var(--dimension-3);
-  --context-width: 100px;
+  --context-min-width: 100px;
 
   width: 100%;
   display: flex;
@@ -57,14 +57,12 @@ span {
 }
 
 .title {
-  overflow-wrap: break-word;
   text-align: left;
-  min-width: 0;
-  max-width: calc(100% - var(--context-width) - var(--gap));
+  max-width: calc(100% - var(--context-min-width) - var(--gap));
 }
 
 .context {
-  min-width: var(--context-width);
+  min-width: var(--context-min-width);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
   white-space: nowrap;

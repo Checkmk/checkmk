@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from dataclasses import dataclass
 
 from cmk.gui import site_config
@@ -19,13 +18,11 @@ from cmk.gui.main_menu_types import (
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import makeuri
+from cmk.shared_typing.changes import ChangesProps
 
 
 @dataclass
-class ChangesMenuItem(MainMenuData):
-    activate_changes_url: str
-    user_has_activate_foreign: bool
-    user_name: str
+class ActivateChangesData(ChangesProps, MainMenuData): ...
 
 
 def _hide_menu() -> bool:
@@ -37,8 +34,8 @@ def _hide_menu() -> bool:
     )
 
 
-def _data(request: Request) -> ChangesMenuItem:
-    return ChangesMenuItem(
+def _data(request: Request) -> ActivateChangesData:
+    return ActivateChangesData(
         activate_changes_url=makeuri(
             request,
             addvars=[("mode", "changelog")],

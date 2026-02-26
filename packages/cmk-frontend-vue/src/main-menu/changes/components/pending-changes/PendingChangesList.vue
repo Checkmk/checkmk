@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { PendingChanges } from 'cmk-shared-typing/typescript/changes'
 import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -14,7 +15,6 @@ import CmkIndent from '@/components/CmkIndent.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 
-import type { PendingChanges } from '../../ChangesInterfaces'
 import PendingChangeItemText from './PendingChangeItemText.vue'
 
 const { _t } = usei18n()

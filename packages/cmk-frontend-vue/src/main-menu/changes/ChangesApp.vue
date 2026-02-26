@@ -5,6 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type {
+  ActivatePendingChangesResponse,
+  ActivationStatusResponse,
+  ChangesProps,
+  PendingChanges,
+  Site,
+  SitesAndChanges
+} from 'cmk-shared-typing/typescript/changes'
 import { computed, onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
@@ -23,13 +31,6 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import { showLoadingTransition } from '@/loading-transition/loadingTransition'
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
-import type {
-  ActivatePendingChangesResponse,
-  ActivationStatusResponse,
-  PendingChanges,
-  Site,
-  SitesAndChanges
-} from './ChangesInterfaces'
 import ChangesStatusBar from './components/ChangesStatusBar.vue'
 import DefaultPopup from './components/DefaultPopup.vue'
 import ChangesActivating from './components/activation/ChangesActivating.vue'
@@ -38,11 +39,7 @@ import PendingChangesList from './components/pending-changes/PendingChangesList.
 import SiteStatusList from './components/sites/SiteStatusList.vue'
 
 const { _t } = usei18n()
-const props = defineProps<{
-  activate_changes_url: string
-  user_has_activate_foreign: boolean
-  user_name: string
-}>()
+const props = defineProps<ChangesProps>()
 
 const numberOfChangesLastActivation = ref<number>(0)
 const selectedSites = ref<string[]>([])

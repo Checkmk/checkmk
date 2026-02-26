@@ -43,7 +43,7 @@ from html import unescape
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
-from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypedDict
+from typing import Any, assert_never, Literal, NamedTuple, TypedDict
 from urllib.parse import urlparse
 
 from pydantic import BaseModel
@@ -148,6 +148,19 @@ from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 from cmk.messaging import rabbitmq
+from cmk.shared_typing.changes import (
+    OnlineStatus,
+    StatusPerSiteResponse,
+)
+from cmk.shared_typing.changes import (
+    PendingChanges as PendingChangesSummary,
+)
+from cmk.shared_typing.changes import (
+    Site as ActivationSitesSummary,
+)
+from cmk.shared_typing.changes import (
+    SitesAndChanges as ActivationChangesSummary,
+)
 from cmk.utils import agent_registration, paths, render, setup_search_index
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.licensing.export import LicenseUsageExtensions
@@ -1084,46 +1097,6 @@ def activate_site_changes(
             return None
 
 
-class ActivationSitesSummary(TypedDict):
-    siteId: str
-    siteName: str
-    version: str
-    changes: int
-    onlineStatus: Literal[
-        "online",
-        "disabled",
-        "down",
-        "unreach",
-        "dead",
-        "waiting",
-        "missing",
-        "unknown",
-    ]
-    loggedIn: bool
-    # We can't easily use the StatusPerSite dataclass instead of dict[str, Any] as the type for
-    # lastActivationStatus because that causes a serialization error when converting to JSON
-    # in the ajax_sidebar_get_sites_and_changes call.
-    # TODO: Use either TypedDict or dataclass types all over to easily combine them, and
-    #   share these types with the frontend with cmk-shared-typing: CMK-28459
-    lastActivationStatus: NotRequired[dict[str, Any]]
-
-
-class PendingChangesSummary(TypedDict):
-    changeId: str
-    changeText: str
-    user: str
-    time: float
-    foreignChange: bool
-    whichSites: list[str]
-
-
-class ActivationChangesSummary(TypedDict):
-    sites: list[ActivationSitesSummary]
-    pendingChanges: list[PendingChangesSummary]
-    licenseMessage: str | None
-    licenseIsBlocking: bool
-
-
 class ActivateChanges:
     def __init__(self) -> None:
         # Changes grouped by site
@@ -1379,19 +1352,22 @@ class ActivateChanges:
             return None
 
         def _build_site_summary(site_id: SiteId, site: SiteConfiguration) -> ActivationSitesSummary:
-            base_summary = ActivationSitesSummary(
+            last_status = _get_last_activation_status(site_id)
+            return ActivationSitesSummary(
                 siteId=site["id"],
                 siteName=site["alias"],
                 version=_get_site_version(site_id),
                 changes=0
                 if site["id"] not in site_change_counter
                 else site_change_counter[site["id"]],
-                onlineStatus=get_status_for_site(site_id, site).get("state", "unknown"),
+                onlineStatus=OnlineStatus(
+                    get_status_for_site(site_id, site).get("state", "unknown")
+                ),
                 loggedIn=self.site_is_logged_in(site_id, site),
+                lastActivationStatus=StatusPerSiteResponse(**asdict(last_status))
+                if last_status
+                else None,
             )
-            if last_status := _get_last_activation_status(site_id):
-                base_summary["lastActivationStatus"] = asdict(last_status)
-            return base_summary
 
         def _get_license_message() -> str | None:
             if (

@@ -286,7 +286,9 @@ class PageAjaxSidebarChangesMenu(AjaxPage):
 class PageAjaxSitesAndChanges(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        return ActivateChanges().get_all_data_required_for_activation_popout(ctx.config.sites)
+        return asdict(
+            ActivateChanges().get_all_data_required_for_activation_popout(ctx.config.sites)
+        )
 
 
 class PopUpMessage(TypedDict):

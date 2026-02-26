@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "changes",
+  "properties": {
+    "props": { "$ref": "#/$defs/changes_props" },
+    "rest_api": {
+      "type": "object",
+      "properties": {
+        "activation_status_response": {
+          "$ref": "#/$defs/activation_status_response"
+        },
+        "activate_pending_changes_response": {
+          "$ref": "#/$defs/activate_pending_changes_response"
+        }
+      }
+    },
+    "ajax_api": {
+      "type": "object",
+      "properties": {
+        "ajax_sidebar_get_sites_and_changes_response": {
+          "$ref": "#/$defs/sites_and_changes"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "changes_props": {
+      "type": "object",
+      "properties": {
+        "activate_changes_url": { "type": "string" },
+        "user_has_activate_foreign": { "type": "boolean" },
+        "user_name": { "type": "string" }
+      },
+      "required": ["activate_changes_url", "user_has_activate_foreign", "user_name"]
+    },
+    "activation_phase": {
+      "type": "string",
+      "enum": ["initialized", "queued", "started", "sync", "activate", "finishing", "done"]
+    },
+    "activation_state": {
+      "type": "string",
+      "enum": ["warning", "success", "error"]
+    },
+    "status_per_site_response": {
+      "type": "object",
+      "properties": {
+        "site": { "type": "string" },
+        "phase": { "$ref": "#/$defs/activation_phase" },
+        "state": { "$ref": "#/$defs/activation_state" },
+        "status_text": { "type": "string" },
+        "status_details": { "type": "string" },
+        "start_time": { "type": "number" },
+        "end_time": { "type": "number" }
+      },
+      "required": [
+        "site",
+        "phase",
+        "state",
+        "status_text",
+        "status_details",
+        "start_time",
+        "end_time"
+      ]
+    },
+    "activation_extensions_response": {
+      "type": "object",
+      "properties": {
+        "sites": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "is_running": { "type": "boolean" },
+        "force_foreign_changes": { "type": "boolean" },
+        "time_started": { "type": "number" },
+        "changes": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "status_per_site": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/status_per_site_response" }
+        }
+      },
+      "required": [
+        "sites",
+        "is_running",
+        "force_foreign_changes",
+        "time_started",
+        "changes",
+        "status_per_site"
+      ]
+    },
+    "activation_status_response": {
+      "type": "object",
+      "properties": {
+        "links": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "domainType": { "type": "string" },
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "members": { "type": "object" },
+        "extensions": {
+          "$ref": "#/$defs/activation_extensions_response"
+        }
+      },
+      "required": ["links", "domainType", "id", "title", "members", "extensions"]
+    },
+    "activate_pending_changes_response": {
+      "type": "object",
+      "properties": {
+        "links": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "domainType": { "type": "string" },
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "members": { "type": "object" },
+        "extensions": { "type": "object" }
+      },
+      "required": ["links", "domainType", "id", "title", "members", "extensions"]
+    },
+    "online_status": {
+      "type": "string",
+      "enum": ["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"]
+    },
+    "site": {
+      "type": "object",
+      "properties": {
+        "siteId": { "type": "string" },
+        "siteName": { "type": "string" },
+        "onlineStatus": { "$ref": "#/$defs/online_status" },
+        "changes": { "type": "integer" },
+        "version": { "type": "string" },
+        "loggedIn": { "type": "boolean" },
+        "lastActivationStatus": {
+          "anyOf": [{ "$ref": "#/$defs/status_per_site_response" }, { "type": "null" }]
+        }
+      },
+      "required": ["siteId", "siteName", "onlineStatus", "changes", "version", "loggedIn"]
+    },
+    "pending_changes": {
+      "type": "object",
+      "properties": {
+        "changeId": { "type": "string" },
+        "changeText": { "type": "string" },
+        "user": { "type": "string" },
+        "time": { "type": "number" },
+        "foreignChange": { "type": "boolean" },
+        "whichSites": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "timestring": { "type": "string" }
+      },
+      "required": ["changeId", "changeText", "user", "time", "foreignChange", "whichSites"]
+    },
+    "sites_and_changes": {
+      "type": "object",
+      "properties": {
+        "sites": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/site" }
+        },
+        "pendingChanges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/pending_changes" }
+        },
+        "licenseMessage": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }]
+        },
+        "licenseIsBlocking": { "type": "boolean" }
+      },
+      "required": ["sites", "pendingChanges", "licenseMessage", "licenseIsBlocking"]
+    }
+  }
+}

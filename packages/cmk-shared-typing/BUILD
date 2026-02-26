@@ -20,6 +20,7 @@ npm_link_all_packages(name = "node_modules")
 
 SOURCES_COMMON = [
     "ai_button.json",
+    "changes.json",
     "configuration_entity.json",
     "create_relay.json",
     "dialog.json",

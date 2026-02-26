@@ -5,11 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { Site } from 'cmk-shared-typing/typescript/changes'
+
 import CmkBadge from '@/components/CmkBadge.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import type { Site } from '../../ChangesInterfaces'
 import SiteStatusIcons from './SiteStatusIcons.vue'
 
 const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'default' => {
@@ -76,7 +77,11 @@ const emit = defineEmits<{
         <CmkBadge color="default" size="small">{{ site.changes }}</CmkBadge>
       </div>
       <div
-        v-if="isRecentlyActivated && site.lastActivationStatus !== undefined"
+        v-if="
+          isRecentlyActivated &&
+          site.lastActivationStatus !== undefined &&
+          site.lastActivationStatus !== null
+        "
         class="cmk-changes-sites-item-end"
       >
         <div>

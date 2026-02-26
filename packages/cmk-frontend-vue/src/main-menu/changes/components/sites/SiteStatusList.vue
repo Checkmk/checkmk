@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { PendingChanges, Site } from 'cmk-shared-typing/typescript/changes'
 import { toRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -13,7 +14,6 @@ import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
-import type { PendingChanges, Site } from '../../ChangesInterfaces'
 import SiteStatusItem from './SiteStatusItem.vue'
 
 const { _t } = usei18n()

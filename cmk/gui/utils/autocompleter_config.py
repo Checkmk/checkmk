@@ -115,6 +115,7 @@ class GroupAutocompleterConfig(AutocompleterConfig):
             "statefulset",
             # azure:
             "subscription",
+            "subscription_name",
             "resource_group",
         ],
         strict: bool = True,

@@ -7,6 +7,7 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.composition.utils import enable_rabbitmq_tracing
 from tests.testlib.site import Site
 
 
@@ -23,4 +24,5 @@ def message_broker_running(
         remote_site.omd_config("PIGGYBACK_HUB", "on"),
         remote_site_2.omd_config("PIGGYBACK_HUB", "on"),
     ):
+        enable_rabbitmq_tracing(central_site, remote_site, remote_site_2)
         yield

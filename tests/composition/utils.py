@@ -63,3 +63,20 @@ def get_cre_agent_path(site: Site) -> Path:
             f"Can't find '{package_extension}' agent to install in folder '{agent_folder}'"
         )
     return Path(agent_results[0])
+
+
+def enable_rabbitmq_tracing(*sites: Site) -> None:
+    """
+    - cmk-monitor-broker --enable_tracing does two things:
+        (a) runs rabbitmq-plugins enable rabbitmq_tracing which persists to the enabled_plugins file, and
+        (b) binds the trace log via the management API (which does not persist across RabbitMQ restarts)
+    - RabbitMQ only starts once PIGGYBACK_HUB is turned on, so tracing can only be enabled after that
+    - trace log binding won't survive a site restart (e.g., during _turn_off_piggyback_hub).
+      The plugin itself will, because rabbitmq-plugins enable modifies enabled_plugins.
+    - therefore:
+        1. This should be called, if needed, after every RabbitMQ restart
+        2. there should be NO NEED to disable tracing; it's basically disabled automatically
+           when RAbbitMQ is restarted; disabling it only adds incerased risk of flakes.
+    """
+    for site in sites:
+        site.run(["cmk-monitor-broker", "--enable_tracing"])

@@ -21,6 +21,7 @@ from typing import IO
 
 import pytest
 
+from tests.composition.utils import enable_rabbitmq_tracing
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -166,6 +167,8 @@ def broker_stopped(site: Site) -> Iterator[None]:
 
 
 def await_broker_ready(*sites: Site) -> None:
+    # restart of rabbitmq needs re-enabling of tracing
+    enable_rabbitmq_tracing(*sites)
     for site in sites:
         _await_port_ready(site)
         _await_shovels_ready(site)

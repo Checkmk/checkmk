@@ -18,7 +18,7 @@
 # Subnet: 255.255.255.0
 # DefaultGateway: 192.168.178.1
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from ipaddress import (
     AddressValueError,
@@ -44,7 +44,7 @@ from cmk.plugins.lib.interfaces import (
 )
 from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
 
-Section = Sequence[Mapping[str, str]]
+Section = Iterable[Mapping[str, str]]
 
 
 class Adapter(BaseModel):
@@ -108,7 +108,6 @@ def host_label_win_ip_address(section: Section) -> HostLabelGenerator:
 
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
-
     yield from host_labels_if(
         IPNetworkAdapter(
             name=adapter.name,
@@ -120,65 +119,80 @@ def host_label_win_ip_address(section: Section) -> HostLabelGenerator:
     )
 
 
-def parse_win_networkadapter(
-    string_table: StringTable,
-) -> Section:
-    adapters: list[Mapping] = []
-    first_varname = None
-    array: dict = {}
-    addrtypes: dict = {}
+def parse_win_networkadapter(string_table: StringTable) -> Section:
+    """
+    >>> for parsed_adapter in parse_win_networkadapter([
+    ...     ['AdapterType', 'T1'],
+    ...     ['MACAddress', 'DE:AD'],
+    ...     ['Name', 'Name1'],
+    ...     ['Speed', '100'],
+    ...     ['Address', '10.11.12.13 10.11.12.14 fe80::89d8:dead:beef:4223'],
+    ...     ['Subnet', '255.255.255.0 255.255.255.0 64'],
+    ...     ['DefaultGateway', '10.11.12.1'],
+    ...     ['AdapterType', 'T2'],
+    ...     ['MACAddress', 'BE:EF'],
+    ...     ['Name', 'Name2'],
+    ...     ['Speed', '200'],
+    ...     ['Address', '169.178.23.42 fe80::c118:dead:beef:2342'],
+    ...     ['Subnet', '255.255.0.0 64'],
+    ... ]): print(parsed_adapter)
+    {'name': 'Name1', 'type': 'T1', 'macaddress': 'DE:AD', 'speed': 100, 'gateway': '10.11.12.1', 'ipv4_address': '10.11.12.13, 10.11.12.14', 'ipv6_address': 'fe80::89d8:dead:beef:4223', 'ipv4_subnet': '255.255.255.0, 255.255.255.0', 'ipv6_subnet': '64'}
+    {'name': 'Name2', 'type': 'T2', 'macaddress': 'BE:EF', 'speed': 200, 'ipv4_address': '169.178.23.42', 'ipv6_address': 'fe80::c118:dead:beef:2342', 'ipv4_subnet': '255.255.0.0', 'ipv6_subnet': '64'}
+    """
 
-    for line in string_table:
-        # return 'lost' double-colons back
-        if len(line) < 2:
-            continue
+    def group_adapters(split_lines: StringTable) -> Iterable[dict]:
+        first_varname = None
+        result: dict = {"addrv4": [], "addrv6": [], "subnv4": [], "subnv6": []}
 
-        stripped_line = [w.strip() for w in line]
-        varname = stripped_line[0]
-        value = ":".join(line[1:]).strip()
+        for varname, value in (
+            (element[0].strip(), value)
+            for element in split_lines
+            if len(element) >= 2
+            # glue `value` together again (has been split by `sep(58)`)
+            if (value := ":".join(element[1:]).strip())
+        ):
+            # Check whether we have a new instance
+            # if we meet varname again, then we assume that this
+            # is new instance
+            if first_varname and varname == first_varname:
+                yield result
+                result = {"addrv4": [], "addrv6": [], "subnv4": [], "subnv6": []}
 
-        # empty? skip!
-        if not value:
-            continue
+            if not first_varname:
+                first_varname = varname
 
-        # Check whether we have a new instance
-        # if we meet varname again, then we assume that this
-        # is new instance
-        if first_varname and varname == first_varname:
-            adapters.append(array)
-            array = {}
-            addrtypes = {}
+            if varname in ("Name", "AdapterType", "MACAddress", "Speed", "DefaultGateway"):
+                result[varname] = value
+            elif varname == "Address":
+                for address in value.split(" "):
+                    result.setdefault("addrv6" if ":" in address else "addrv4", []).append(address)
+            elif varname == "Subnet":
+                for address in value.split(" "):
+                    result.setdefault("subnv4" if "." in address else "subnv6", []).append(address)
+        if result.get("Name"):
+            yield result
 
-        if not first_varname:
-            first_varname = varname
+    for adapter in group_adapters(string_table):
+        result = {
+            "name": adapter["Name"],
+            "type": adapter["AdapterType"],
+        }
+        if "MACAddress" in adapter:
+            result["macaddress"] = adapter["MACAddress"]
+        if "Speed" in adapter:
+            result["speed"] = int(adapter["Speed"])
+        if "DefaultGateway" in adapter:
+            result["gateway"] = adapter["DefaultGateway"]
+        if "addrv4" in adapter:
+            result["ipv4_address"] = ", ".join(adapter["addrv4"])
+        if "addrv6" in adapter:
+            result["ipv6_address"] = ", ".join(adapter["addrv6"])
+        if "subnv4" in adapter:
+            result["ipv4_subnet"] = ", ".join(adapter["subnv4"])
+        if "subnv6" in adapter:
+            result["ipv6_subnet"] = ", ".join(adapter["subnv6"])
 
-        if varname == "Name":
-            array["name"] = value
-        elif varname == "AdapterType":
-            array["type"] = value
-        elif varname == "MACAddress":
-            array["macaddress"] = value
-        elif varname == "Speed":
-            array["speed"] = int(value)
-        elif varname == "Address":
-            for address in value.split(" "):
-                addrtype = "ipv6" if ":" in address else "ipv4"
-                addrtypes.setdefault(addrtype + "_address", []).append(address)
-        elif varname == "Subnet":
-            for address in value.split(" "):
-                addrtype = "ipv4" if "." in address else "ipv6"
-                addrtypes.setdefault(addrtype + "_subnet", []).append(address)
-        elif varname == "DefaultGateway":
-            array["gateway"] = value
-
-        # address string array in comma-separated string packing: ['a1','a2',...] -> 'a1,a2...'
-        for addrtype, values in addrtypes.items():
-            array[addrtype] = ", ".join(values)
-
-    # Append last array
-    if array:
-        adapters.append(array)
-    return adapters
+        yield result
 
 
 agent_section_win_networkadapter = AgentSection(

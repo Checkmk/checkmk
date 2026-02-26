@@ -22,12 +22,12 @@ from cmk.agent_based.v2 import (
     SNMPSection,
     SNMPTree,
     StringByteTable,
-    TableRow,
 )
 from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 from cmk.plugins.lib.interfaces import (
     IPNetworkAdapter,
 )
+from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
 
 NamedInterface = Mapping[str, IPv4Interface | IPv6Interface]
 Section = Sequence[NamedInterface]
@@ -201,33 +201,14 @@ def host_label_ip_addresses(section: Section) -> HostLabelGenerator:
 
 
 def inventory_ip_addresses(section: Section) -> InventoryResult:
-    address_type = {
-        4: "ipv4",
-        6: "ipv6",
-    }
-    yield from (
-        TableRow(
-            path=["networking", "addresses"],
-            key_columns={
-                "address": str(ip_data.ip.compressed),
-                "device": if_name,
-            },
-            inventory_columns={
-                "type": address_type.get(ip_data.version, ""),
-                "network": str(ip_data.network.network_address),
-                "netmask": str(ip_data.network.netmask),
-                "prefixlength": ip_data.network.prefixlen,
-                "broadcast": str(ip_data.network.broadcast_address),
-                **(
-                    {"scope_id": str(scope_id)}
-                    # ipv4 has no scope_id, and we also drop empty scope_id
-                    if (scope_id := getattr(ip_data, "scope_id", None))
-                    else {}
-                ),
-            },
+    yield from inventorize_ip_addresses(
+        IPNetworkAdapter(
+            name=name,
+            inet4=[interface] if isinstance(interface, IPv4Interface) else [],
+            inet6=[interface] if isinstance(interface, IPv6Interface) else [],
         )
-        for entry in section or []
-        for if_name, ip_data in entry.items()
+        for named_interface in section or []
+        for name, interface in named_interface.items()
     )
 
 

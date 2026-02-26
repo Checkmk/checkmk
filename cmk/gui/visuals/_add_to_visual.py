@@ -239,11 +239,11 @@ def get_visual_choices(
 ) -> Choices:
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
-    matching_visuals = []
+    matching_visuals: Choices = []
     visual_type = visual_type_registry[visual_type_name]()
-    for name, title in sorted(visual_type.choices(visual_type.visuals(), user_permissions)):
-        if match_pattern.search(title) is not None:
-            matching_visuals.append((name, f"{title} ({name})"))
+    for entry in visual_type.page_menu_add_to_entries("unknown", user_permissions):
+        if entry.name is not None and match_pattern.search(entry.title) is not None:
+            matching_visuals.append((entry.name, f"{entry.title} ({entry.name})"))
     return matching_visuals
 
 

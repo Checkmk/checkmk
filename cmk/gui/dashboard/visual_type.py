@@ -36,6 +36,7 @@ from .store import (
     add_dashlet,
     get_all_dashboards,
     get_permitted_dashboards,
+    get_permitted_dashboards_to_edit,
     load_dashboard,
 )
 from .type_defs import (
@@ -88,14 +89,19 @@ class VisualTypeDashboards(VisualType):
         if add_type in ["availability", "graph_collection"]:
             return
 
-        for name, board in get_permitted_dashboards().items():
-            yield PageMenuEntry(
-                title=str(board["title"]),
-                icon_name=StaticIcon(IconNames.dashboard),
-                item=make_javascript_link(
-                    "cmk.popup_menu.add_to_visual('dashboards', %s)" % json.dumps(name)
-                ),
-            )
+        if (user_id := user.id) is None:
+            return
+
+        for name, dashboards in get_permitted_dashboards_to_edit().items():
+            if dashboard := dashboards.get(user_id):
+                yield PageMenuEntry(
+                    title=str(dashboard["title"]),
+                    icon_name=StaticIcon(IconNames.dashboard),
+                    item=make_javascript_link(
+                        "cmk.popup_menu.add_to_visual('dashboards', %s)" % json.dumps(name)
+                    ),
+                    name=name,
+                )
 
     @override
     def add_visual_handler(

@@ -56,6 +56,7 @@ class DashboardStore:
         self.all = self._load_all()
         self.permitted = self._load_permitted(self.all, user_permissions)
         self.permitted_by_owner = self._load_permitted_by_owner(self.all, user_permissions)
+        self.permitted_to_edit = self._load_permitted_to_edit(self.all, user_permissions)
 
     def _load_all(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
@@ -101,9 +102,26 @@ class DashboardStore:
         # Load dashboards based on standard visibility rules (own, public, etc.)
         return visuals.available_by_owner("dashboards", all_dashboards, user_permissions)
 
+    def _load_permitted_to_edit(
+        self,
+        all_dashboards: dict[tuple[UserId, DashboardName], DashboardConfig],
+        user_permissions: UserPermissions,
+    ) -> dict[DashboardName, dict[UserId, DashboardConfig]]:
+        """Returns all definitions that a user is allowed to edit"""
+        may_edit_foreign = user.may("general.edit_foreign_dashboards")
+        result: dict[DashboardName, dict[UserId, DashboardConfig]] = {}
+        for (owner_id, dashboard_name), board in all_dashboards.items():
+            if (
+                (owner_id == user.id or may_edit_foreign)
+                and owner_id != UserId.builtin()
+                and not board.get("packaged", False)
+            ):
+                result.setdefault(dashboard_name, {})[owner_id] = board
+        return result
+
 
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
-    raw_dashboard["packaged"] = False
+    raw_dashboard.setdefault("packaged", False)
     raw_dashboard.setdefault("main_menu_search_terms", [])
     dashboard: DashboardConfig = {
         # Need to assume that we are right for now. We will have to introduce parsing there to do a
@@ -158,6 +176,10 @@ def get_permitted_dashboards() -> dict[DashboardName, DashboardConfig]:
 
 def get_permitted_dashboards_by_owners() -> dict[DashboardName, dict[UserId, DashboardConfig]]:
     return DashboardStore.get_instance().permitted_by_owner
+
+
+def get_permitted_dashboards_to_edit() -> dict[DashboardName, dict[UserId, DashboardConfig]]:
+    return DashboardStore.get_instance().permitted_to_edit
 
 
 def load_dashboard(

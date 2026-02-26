@@ -82,10 +82,6 @@ function checkRelay(): boolean {
 
 const switchVisibility = () => {
   showTest.value = true
-  if (isPushMode.value) {
-    showTest.value = false
-    return
-  }
 
   if (
     props.ipAddressFamilyInputElement.checked &&
@@ -151,9 +147,27 @@ const targetElement = ref<HTMLElement>(
 )
 const setupErrorActive = ref(props.setupError)
 
+function updateTargetElement() {
+  if (isPushMode.value) {
+    if (
+      props.cmkAgentConnectionModeInputButtonElement?.checked &&
+      props.cmkAgentConnectionModeSelectElement
+    ) {
+      targetElement.value = props.cmkAgentConnectionModeSelectElement.parentNode as HTMLElement
+    } else if (props.cmkAgentConnectionModeDefaultElement) {
+      targetElement.value = props.cmkAgentConnectionModeDefaultElement.parentNode as HTMLElement
+    }
+  } else {
+    targetElement.value = props.changeTagAgent.checked
+      ? (props.tagAgent.parentNode as HTMLElement)
+      : props.tagAgentDefault
+  }
+}
+
 onMounted(() => {
   checkPushMode()
   switchVisibility()
+  updateTargetElement()
   ipV4Selected.value = props.ipv4InputButtonElement.checked
   ipV6Selected.value = props.ipv6InputButtonElement.checked
   ipV4.value = props.ipv4InputElement.value || ''
@@ -178,10 +192,7 @@ onMounted(() => {
       case props.changeTagAgent: {
         checkPushMode()
         switchVisibility()
-
-        targetElement.value = props.changeTagAgent.checked
-          ? (props.tagAgent.parentNode as HTMLElement)
-          : props.tagAgentDefault
+        updateTargetElement()
 
         selectedSiteIdHash.value = props.siteSelectElement.value
         siteId.value =
@@ -194,6 +205,7 @@ onMounted(() => {
       case props.cmkAgentConnectionModeInputButtonElement: {
         checkPushMode()
         switchVisibility()
+        updateTargetElement()
         break
       }
       case props.ipAddressFamilyInputElement:
@@ -302,6 +314,9 @@ const isNotRegistered = computed(() => {
 })
 
 const slideOutTitle = computed(() => {
+  if (isPushMode.value) {
+    return _t('Install Checkmk agent (Push Mode)')
+  }
   if (isNotRegistered.value) {
     return _t('Register agent')
   }
@@ -472,64 +487,83 @@ const agentPort: Ref<number> = ref(6556)
 <template>
   <Teleport v-if="showTest" :to="targetElement" defer>
     <CmkButton
-      v-if="!isLoading && !isSuccess && !isError"
+      v-if="isPushMode"
       type="button"
-      :title="tooltipText"
+      :title="_t('Install & register agent')"
       class="agent-test-button"
       :disabled="!hostname"
-      @click="startAjax"
+      @click="openSlideoutClick"
     >
-      <CmkIcon name="connection-tests" size="small" :title="tooltipText" class="button-icon" />
-      {{ _t('Test agent connection') }}
+      <CmkIcon
+        name="agents"
+        size="small"
+        :title="_t('Install & register agent')"
+        class="button-icon"
+      />
+      {{ _t('Install & register agent') }}
     </CmkButton>
 
-    <CmkAlertBox v-if="isLoading" variant="loading" size="small" class="loading-container">
-      {{ _t('Testing agent connection ...') }}
-    </CmkAlertBox>
+    <template v-if="!isPushMode">
+      <CmkButton
+        v-if="!isLoading && !isSuccess && !isError"
+        type="button"
+        :title="tooltipText"
+        class="agent-test-button"
+        :disabled="!hostname"
+        @click="startAjax"
+      >
+        <CmkIcon name="connection-tests" size="small" :title="tooltipText" class="button-icon" />
+        {{ _t('Test agent connection') }}
+      </CmkButton>
 
-    <CmkAlertBox v-if="isSuccess" variant="success" size="small" class="success-container">
-      {{ _t('Successfully connected to agent.') }}
-      <a href="#" @click.prevent="startAjax">{{ _t('Re-test agent connection') }}</a>
-    </CmkAlertBox>
+      <CmkAlertBox v-if="isLoading" variant="loading" size="small" class="loading-container">
+        {{ _t('Testing agent connection ...') }}
+      </CmkAlertBox>
 
-    <CmkAlertBox v-if="isError" variant="warning" size="small" class="warn-container">
-      <template #heading>{{ warnContainerValues.header }}</template>
-      <div class="warn-txt-container">
-        <CmkParagraph v-if="warnContainerValues.error">
-          {{ _t('Error: ') }} {{ warnContainerValues.error }}<br /><br />
-        </CmkParagraph>
-        <CmkParagraph>
-          {{ warnContainerValues.txt }}
-        </CmkParagraph>
-        <div class="warn-button-container">
-          <CmkButton
-            type="button"
-            :title="warnContainerValues.buttonOneTitle"
-            class="agent-test-button alert-box-button"
-            @click="warnContainerValues.buttonOneClick"
-          >
-            {{ warnContainerValues.buttonOneButton }}
-          </CmkButton>
-          <CmkButton
-            v-if="warnContainerValues.buttonTwoTitle"
-            type="button"
-            :title="warnContainerValues.buttonTwoTitle"
-            class="agent-test-button alert-box-button"
-            @click="warnContainerValues.buttonTwoClick"
-          >
-            {{ warnContainerValues.buttonTwoButton }}
-          </CmkButton>
+      <CmkAlertBox v-if="isSuccess" variant="success" size="small" class="success-container">
+        {{ _t('Successfully connected to agent.') }}
+        <a href="#" @click.prevent="startAjax">{{ _t('Re-test agent connection') }}</a>
+      </CmkAlertBox>
+
+      <CmkAlertBox v-if="isError" variant="warning" size="small" class="warn-container">
+        <template #heading>{{ warnContainerValues.header }}</template>
+        <div class="warn-txt-container">
+          <CmkParagraph v-if="warnContainerValues.error">
+            {{ _t('Error: ') }} {{ warnContainerValues.error }}<br /><br />
+          </CmkParagraph>
+          <CmkParagraph>
+            {{ warnContainerValues.txt }}
+          </CmkParagraph>
+          <div class="warn-button-container">
+            <CmkButton
+              type="button"
+              :title="warnContainerValues.buttonOneTitle"
+              class="agent-test-button alert-box-button"
+              @click="warnContainerValues.buttonOneClick"
+            >
+              {{ warnContainerValues.buttonOneButton }}
+            </CmkButton>
+            <CmkButton
+              v-if="warnContainerValues.buttonTwoTitle"
+              type="button"
+              :title="warnContainerValues.buttonTwoTitle"
+              class="agent-test-button alert-box-button"
+              @click="warnContainerValues.buttonTwoClick"
+            >
+              {{ warnContainerValues.buttonTwoButton }}
+            </CmkButton>
+          </div>
         </div>
+      </CmkAlertBox>
+      <div v-if="!hostname" class="label-container disabled">
+        <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+        <CmkInput v-model="agentPort" :disabled="true" type="number" />
       </div>
-    </CmkAlertBox>
-    <div v-if="!hostname" class="label-container disabled">
-      <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
-      <CmkInput v-model="agentPort" :disabled="true" type="number" />
-    </div>
-    <div v-else-if="!isLoading && hostname" class="label-container enabled">
-      <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
-      <CmkInput v-model="agentPort" type="number" />
-    </div>
+      <div v-else-if="!isLoading && hostname" class="label-container enabled">
+        <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+        <CmkInput v-model="agentPort" type="number" />
+      </div>
+    </template>
 
     <CmkSlideInDialog
       :header="{

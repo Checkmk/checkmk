@@ -51,7 +51,7 @@ const isError = computed(() => props.linkValidation.length > 0)
     <CmkDropdown
       v-model:selected-option="linkTarget"
       :label="_t('Select a target')"
-      :options="{ type: 'fixed', suggestions: targetOptions || [] }"
+      :options="{ type: 'filtered', suggestions: targetOptions || [] }"
     />
     <div v-if="isError">
       <CmkInlineValidation :validation="linkValidation" />

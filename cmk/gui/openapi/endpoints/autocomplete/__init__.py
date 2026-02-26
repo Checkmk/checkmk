@@ -42,7 +42,13 @@ AUTOCOMPLETE_ID = {
     request_schema=RequestSchema,
     response_schema=ResponseSchema,
     update_config_generation=False,
-    supported_editions={Edition.COMMUNITY, Edition.PRO, Edition.ULTIMATE, Edition.ULTIMATEMT},
+    supported_editions={
+        Edition.COMMUNITY,
+        Edition.PRO,
+        Edition.ULTIMATE,
+        Edition.ULTIMATEMT,
+        Edition.CLOUD,
+    },
 )
 def show(params: Mapping[str, Any]) -> Response:
     """

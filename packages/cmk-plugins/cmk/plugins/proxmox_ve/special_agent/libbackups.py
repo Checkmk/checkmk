@@ -304,7 +304,7 @@ class BackupTask:
                             f"End of VM {current_vmid!r} while still information is missing (we have: {set(current_dataset.keys())!r})",
                         )
                     result[current_vmid] = current_dataset
-                    current_vmid = ""
+                    current_vmid, current_dataset = "", {}
 
                 elif error_vm := extract_tuple(line, "error_vm", 2):
                     error_vmid, error_msg = error_vm
@@ -316,7 +316,7 @@ class BackupTask:
                         )
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
                     result[error_vmid] = {**current_dataset, **{"error": error_msg}}
-                    current_vmid = ""
+                    current_vmid, current_dataset = "", {}
 
                 elif started_time := extract_single_value(line, "started_time"):
                     if not current_vmid:

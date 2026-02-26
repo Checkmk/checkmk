@@ -103,7 +103,10 @@ def find_storage_for_vmid(
 ) -> MutableMapping[str, MutableSequence[StorageLink]]:
     storage_links: MutableMapping[str, MutableSequence[StorageLink]] = {}
 
-    vm_type = all_vms[vmid].get("type")
+    vm_info = all_vms.get(vmid)
+    if vm_info is None:
+        return storage_links
+    vm_type = vm_info.get("type")
     pattern = ("ide", "scsi", "sata", "virtio") if vm_type == "qemu" else ("mp", "rootfs")
 
     for key, value in config.items():

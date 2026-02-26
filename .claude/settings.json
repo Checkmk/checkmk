@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Skill(bazel)",
+      "Skill(gerrit)",
+      "Skill(jenkins)",
+      "Skill(owners)",
+      "Skill(jira-plan-ticket)",
+
+      "Bash(bazel:*)",
+      "Bash(make:*)",
+
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+
+      "Bash(pytest:*)",
+      "Bash(mypy:*)",
+      "Bash(ruff:*)",
+      "Bash(buildifier:*)",
+
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(ls:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(cat:*)",
+      "Bash(jq:*)",
+
+      "Bash(gerrit-change-log:*)",
+      "Bash(jenkins_build_data.py:*)",
+      "Bash(.venv/bin/python3 .claude/skills/jira-plan-ticket/fetch_jira_context.py:*)"
+    ],
+    "deny": ["Bash(git remote:*)", "Bash(git config:*)"],
+    "ask": ["Bash(find *--exec*)"]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  }
+}

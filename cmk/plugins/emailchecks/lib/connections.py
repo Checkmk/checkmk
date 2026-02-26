@@ -302,6 +302,7 @@ class GraphApi(_Connection):
         self.auth = auth
         self.storage_id = storage_id
         self._base_folder_uri = "me/messages"
+        self._connect()
 
     def _build_api_client(self) -> GraphApiClient:
         if (store_secret := _read_store_secret()) is None:
@@ -320,7 +321,8 @@ class GraphApi(_Connection):
         )
 
     def _connect(self) -> None:
-        pass
+        with self._build_api_client() as _client:
+            pass
 
     def _disconnect(self) -> None:
         pass

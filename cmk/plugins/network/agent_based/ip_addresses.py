@@ -82,13 +82,11 @@ def address_str_from(adr_type: int, adr_length: int, raw_address: Sequence[int])
 
 def ip_info_34_from(
     entry: Sequence[str | Sequence[int]],
-    interface_by_index: Mapping[str, str],
-) -> None | NamedInterface:
+) -> None | tuple[str, IPv4Interface | IPv6Interface]:
     """
     >>> ip_info_34_from(
-    ...     ['1.4.10.86.60.1.16', [], '23', '.1.3.6.1.2.1.4.32.1.5.16.1.10.86.60.0.27'],
-    ...     {'23': "twenty three"})
-    {'twenty three': IPv4Interface('10.86.60.1/27')}
+    ...     ['1.4.10.86.60.1.16', [], '23', '.1.3.6.1.2.1.4.32.1.5.16.1.10.86.60.0.27'])
+    ('23', IPv4Interface('10.86.60.1/27'))
     """
     match entry:
         # this checks the input against our expectation regarding types and structure
@@ -126,16 +124,15 @@ def ip_info_34_from(
     if interface_ip.ip.exploded == "0.0.0.0":
         return None  # drop this host address
 
-    return {(str(interface_by_index.get(if_index, if_index))): interface_ip}
+    return if_index, interface_ip
 
 
 def ip_info_20_from(
     entry: Sequence[str | Sequence[int]],
-    interface_by_index: Mapping[str, str],
-) -> None | NamedInterface:
+) -> None | tuple[str, IPv4Interface | IPv6Interface]:
     """
-    >>> ip_info_20_from(('12.12.12.1', '23', '3'), {'23': "twenty three"})
-    {'twenty three': IPv4Interface('12.12.12.1/3')}
+    >>> ip_info_20_from(('12.12.12.1', '23', '3'))
+    ('23', IPv4Interface('12.12.12.1/3'))
     """
     match entry:
         # this checks the input against our expectation regarding types and structure
@@ -154,7 +151,7 @@ def ip_info_20_from(
     if interface_ip.ip.exploded == "0.0.0.0":
         return None  # drop this host address
 
-    return {str(interface_by_index.get(if_index, if_index)): interface_ip}
+    return if_index, interface_ip
 
 
 def parse_ip_addresses(string_table: Sequence[StringByteTable]) -> Section:
@@ -162,17 +159,18 @@ def parse_ip_addresses(string_table: Sequence[StringByteTable]) -> Section:
 
     interface_by_index = {str(if_index): str(if_name) for if_index, if_name in if_info}
 
-    ip_infos = [
-        ip_info for entry in ip_info_34 if (ip_info := ip_info_34_from(entry, interface_by_index))
+    return [
+        {interface_by_index.get(if_index, if_index): interface_ip}
+        for if_index, interface_ip in (
+            entry
+            for entries in (
+                map(ip_info_34_from, ip_info_34),
+                map(ip_info_20_from, ip_info_20),
+            )
+            for entry in entries
+            if entry
+        )
     ]
-
-    for ip_info in (
-        _info for entry in ip_info_20 if (_info := ip_info_20_from(entry, interface_by_index))
-    ):
-        if ip_info not in ip_infos:
-            ip_infos.append(ip_info)
-
-    return ip_infos
 
 
 def host_label_ip_addresses(section: Section) -> HostLabelGenerator:

@@ -14,7 +14,7 @@ from pydantic import RootModel, TypeAdapter
 from cmk.ccc.i18n import _
 from cmk.ccc.version import parse_check_mk_version
 from cmk.werks import load_werk
-from cmk.werks.models import Class, Compatibility, Werk, WerkV1, Edition, EditionV3
+from cmk.werks.models import Class, Compatibility, Edition, EditionV3, Werk, WerkV1
 
 Werks = RootModel[dict[int, Werk]]
 

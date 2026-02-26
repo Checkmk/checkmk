@@ -21,11 +21,6 @@ ENTERPRISE = r"""# Copyright \(C\) \d{4} Checkmk GmbH - License: Checkmk Enterpr
 # conditions defined in the file COPYING, which is part of this source code package."""
 
 ENTERPRISE_HEADER = re.compile(rf"#!/usr/bin/env python3\n{ENTERPRISE}")
-ENTERPRISE_HEADER_CODING = re.compile(
-    rf"""#!/usr/bin/env python3
-# -\*- coding: utf-8 -\*-
-{ENTERPRISE}"""
-)
 
 ENTERPRISE_HEADER_ALERT_HANDLERS = re.compile(
     rf"""#!/usr/bin/env python3
@@ -100,10 +95,7 @@ def get_file_header(path: str, length: int = 30) -> str:
 
 
 def check_for_license_header_violation(rel_path, abs_path):  # pylint: disable=too-many-branches
-    if rel_path.startswith("non-free/cmk-update-agent/"):
-        if not ENTERPRISE_HEADER_CODING.match(get_file_header(abs_path, length=5)):
-            yield "enterprise header with coding not matching", rel_path
-    elif rel_path.startswith("omd/packages/enterprise/alert_handlers/"):
+    if rel_path.startswith("omd/packages/enterprise/alert_handlers/"):
         if not ENTERPRISE_HEADER_ALERT_HANDLERS.match(get_file_header(abs_path, length=8)):
             yield "enterprise header with alert handler not matching", rel_path
     elif needs_enterprise_license(rel_path):

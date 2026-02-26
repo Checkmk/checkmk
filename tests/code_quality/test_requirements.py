@@ -81,7 +81,7 @@ class Import(NamedTuple):
 def parse_requirements_file(file_path: Path) -> dict[str, str]:
     """Parse a requirements file and return a dictionary of package names and their versions."""
     requirements_dict: dict[str, str] = {}
-    with open(file_path, "r") as fd:
+    with open(file_path) as fd:
         req = requirements.parse(fd)
         for r in req:
             if len(r.specs) != 0:
@@ -124,7 +124,7 @@ def is_python_file(file_path: Path) -> bool:
     shebang_pattern = re.compile(r"^#!.*python3$")
     if file_path.suffix == ".py":
         return True
-    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+    with open(file_path, encoding="utf-8", errors="replace") as f:
         first_line = f.readline().rstrip("\n")
     return bool(shebang_pattern.match(first_line))
 

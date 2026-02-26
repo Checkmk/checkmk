@@ -1733,9 +1733,7 @@ def _dynamic_network_data_id(layer_id: str) -> str:
 def _get_dynamic_layer_ids(
     topology_configuration: TopologyConfiguration | None = None,
 ) -> list[str]:
-    check_folders = set(
-        str(path) for path in Path(topology_data_dir).glob("*") if Path(path).is_dir()
-    )
+    check_folders = {str(path) for path in Path(topology_data_dir).glob("*") if Path(path).is_dir()}
     if topology_configuration:
         check_folders.add(topology_configuration.frontend.datasource_configuration.reference)
         check_folders.add(topology_configuration.frontend.datasource_configuration.compare_to)

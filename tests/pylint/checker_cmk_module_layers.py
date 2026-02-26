@@ -860,7 +860,7 @@ class CMKModuleLayerChecker(BaseChecker):
         return (
             (
                 component == Component("cmk.notification_plugins")
-                and importing_path.is_below(("notifications"))
+                and importing_path.is_below("notifications")
             )
             or (
                 component == Component("agents.special")

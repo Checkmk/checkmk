@@ -102,9 +102,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         """
         if not self._sources:
             return b""
-        return f"<<<piggyback_source_summary:sep(0)>>>\n{'\n'.join(s.meta.serialize() for s in self._sources)}\n".encode(
-            "utf-8"
-        )
+        return f"<<<piggyback_source_summary:sep(0)>>>\n{'\n'.join(s.meta.serialize() for s in self._sources)}\n".encode()
 
     def _get_source_labels_section(self) -> bytearray | bytes:
         """Return a <<<labels>>> agent section which adds the piggyback sources

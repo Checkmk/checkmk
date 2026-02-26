@@ -29,7 +29,8 @@ def parse(raw_data: Sequence[str]) -> SarifFileSet:
         if not line.strip():
             continue
         if line and not header:
-            assert line.startswith("Lint results for"), line
+            if not line.startswith("Lint results for"):
+                continue
             header = line
             continue
         if line and header:

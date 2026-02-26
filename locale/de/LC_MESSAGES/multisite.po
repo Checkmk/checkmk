@@ -14901,7 +14901,8 @@ msgstr "Benutzer Speicher auf dem Host"
 msgid "Consumed load balancer capacity units"
 msgstr "Verbrauchte Load Balancer Kapazitätseinheiten"
 
-msgid "Consumer count is the size of connected consumers to a queue"
+#, fuzzy
+msgid "Consumer count is the number of connected consumers to a queue"
 msgstr ""
 "Verbraucher-Anzahl ist die Anzahl der an eine Warteschlange angeschlossenen "
 "Verbraucher"
@@ -80469,6 +80470,10 @@ msgstr "sonstige Webgateway-Statistiken"
 
 msgid "Web gateway statistics"
 msgstr "Webgateway-Statistiken"
+
+#, fuzzy
+msgid "WebAuthn login failed"
+msgstr "Authentifizierung fehlgeschlagen"
 
 msgid "Webhook URL"
 msgstr "Webhook-URL"

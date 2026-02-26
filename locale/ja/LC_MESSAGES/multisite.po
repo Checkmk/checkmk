@@ -14441,7 +14441,7 @@ msgid "Consumed load balancer capacity units"
 msgstr "消費されたロードバランサー容量ユニット"
 
 #, fuzzy
-msgid "Consumer count is the size of connected consumers to a queue"
+msgid "Consumer count is the number of connected consumers to a queue"
 msgstr ""
 "コンシューマーカウントは、キューに接続されているコンシューマーのサイズです"
 
@@ -78145,6 +78145,10 @@ msgstr "Webゲートウェイのその他の統計"
 
 msgid "Web gateway statistics"
 msgstr "Webゲートウェイ統計"
+
+#, fuzzy
+msgid "WebAuthn login failed"
+msgstr "認証失敗"
 
 msgid "Webhook URL"
 msgstr "WebhookのURL"

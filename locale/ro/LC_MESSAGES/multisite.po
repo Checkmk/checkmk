@@ -15369,7 +15369,7 @@ msgid "Consumed load balancer capacity units"
 msgstr "Unități de capacitate de echilibrare a încărcăturii consumate"
 
 #, fuzzy
-msgid "Consumer count is the size of connected consumers to a queue"
+msgid "Consumer count is the number of connected consumers to a queue"
 msgstr ""
 "Numărul de consumatori este dimensiunea consumatorilor conectați la o coadă "
 "de așteptare"
@@ -83605,6 +83605,10 @@ msgstr "Statistici diverse ale gateway-ului web"
 
 msgid "Web gateway statistics"
 msgstr "Statisticile gateway-ului web"
+
+#, fuzzy
+msgid "WebAuthn login failed"
+msgstr "Autentificarea a eșuat"
 
 msgid "Webhook URL"
 msgstr "URL-ul Webhook"

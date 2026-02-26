@@ -15358,7 +15358,7 @@ msgid "Consumed load balancer capacity units"
 msgstr "Verbruikte Load Balancer-capaciteitseenheden"
 
 #, fuzzy
-msgid "Consumer count is the size of connected consumers to a queue"
+msgid "Consumer count is the number of connected consumers to a queue"
 msgstr ""
 "Consumententelling is de grootte van het aantal aangesloten consumenten op "
 "een wachtrij"
@@ -83424,6 +83424,10 @@ msgstr "Web gateway diverse statistieken"
 
 msgid "Web gateway statistics"
 msgstr "Web gateway statistieken"
+
+#, fuzzy
+msgid "WebAuthn login failed"
+msgstr "Authenticatie mislukt"
 
 msgid "Webhook URL"
 msgstr "Webhook URL"

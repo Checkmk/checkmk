@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-24 18:34+0000\n"
+"PO-Revision-Date: 2026-02-25 18:34+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -15350,7 +15350,7 @@ msgid "Consumed load balancer capacity units"
 msgstr "Unidades de Capacidade do Balanceador de Carga Consumida"
 
 #, fuzzy
-msgid "Consumer count is the size of connected consumers to a queue"
+msgid "Consumer count is the number of connected consumers to a queue"
 msgstr ""
 "A Contagem de Consumidores é o tamanho de consumidores conectados a uma fila"
 
@@ -83350,6 +83350,10 @@ msgstr "Estatísticas diversas da Web gateway"
 
 msgid "Web gateway statistics"
 msgstr "Estatísticas da Web gateway"
+
+#, fuzzy
+msgid "WebAuthn login failed"
+msgstr "A autenticação falhou"
 
 msgid "Webhook URL"
 msgstr "URL do Gancho da Web"

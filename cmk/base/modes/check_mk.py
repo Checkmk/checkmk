@@ -1167,10 +1167,18 @@ def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPB
 def _execute_walks_for_dump(
     oids: list[OID], *, backend: SNMPBackend
 ) -> Iterable[list[tuple[OID, str]]]:
+    context_config = backend.config.snmpv3_contexts_of(None)
     for oid in oids:
         try:
             console.verbose(f'Walk on "{oid}"...')
-            yield walk_for_export(backend.walk(oid, context=""))
+            added_oids: set[OID] = set()
+            rows: list[tuple[OID, str]] = []
+            for context in context_config.contexts:
+                for row_oid, value in walk_for_export(backend.walk(oid, context=context)):
+                    if row_oid not in added_oids:
+                        added_oids.add(row_oid)
+                        rows.append((row_oid, value))
+            yield rows
         except Exception as e:
             console.error(f"Error: {e}", file=sys.stderr)
             if cmk.ccc.debug.enabled():

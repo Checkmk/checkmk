@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """server side component to create the special agent call"""
 
-from collections.abc import Iterator, Mapping
-from typing import Iterable, Literal
+from collections.abc import Iterable, Iterator, Mapping
+from typing import Literal
 
 from pydantic import BaseModel
 

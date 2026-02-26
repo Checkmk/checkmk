@@ -8,12 +8,12 @@ import os
 import re
 import sys
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Container, Iterable
 from dataclasses import dataclass
 from email.utils import formataddr
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Any, Container, NamedTuple, NoReturn
+from typing import Any, NamedTuple, NoReturn
 
 import requests
 from requests import JSONDecodeError

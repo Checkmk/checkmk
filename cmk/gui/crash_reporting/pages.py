@@ -11,8 +11,8 @@ import pprint
 import tarfile
 import time
 import traceback
-from collections.abc import Iterator, Mapping
-from typing import Final, Sequence, TypedDict
+from collections.abc import Iterator, Mapping, Sequence
+from typing import Final, TypedDict
 
 import livestatus
 from livestatus import SiteId

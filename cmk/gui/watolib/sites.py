@@ -8,9 +8,10 @@ import os
 import queue
 import re
 import time
+from collections.abc import Collection, Mapping
 from multiprocessing import JoinableQueue, Process
 from pathlib import Path
-from typing import Any, cast, Collection, Mapping, NamedTuple
+from typing import Any, cast, NamedTuple
 
 from livestatus import (
     BrokerConnection,

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable
-from typing import Literal, Sequence
+from collections.abc import Iterable, Sequence
+from typing import Literal
 
 from pydantic import BaseModel
 

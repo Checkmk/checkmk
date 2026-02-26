@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 import traceback
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import override, Sequence
+from typing import override
 
 from pydantic import BaseModel, ValidationError
 

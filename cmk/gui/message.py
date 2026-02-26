@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import MutableSequence
+from collections.abc import Iterable, MutableSequence
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Iterable, Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.ccc import store
 

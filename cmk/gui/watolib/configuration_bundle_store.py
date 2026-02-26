@@ -2,8 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping, NewType, NotRequired, TypedDict, TypeGuard
+from typing import NewType, NotRequired, TypedDict, TypeGuard
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 

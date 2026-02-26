@@ -15,6 +15,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
@@ -288,6 +289,14 @@ function isMonitoringSearch(): boolean {
         ></CmkCheckbox>
       </CmkHeading>
     </div>
+    <CmkAlertBox
+      v-for="message in result?.messages"
+      :key="`${message.header || ''}-${message.detail}`"
+      :type="message.message_variant"
+      :heading="message.header"
+    >
+      {{ message.detail }}
+    </CmkAlertBox>
     <CmkScrollContainer max-height="calc(100vh - 210px)">
       <template v-if="searchUtils.result.grouping.value">
         <template v-for="(group, gdx) of groupedResults" :key="group.id">

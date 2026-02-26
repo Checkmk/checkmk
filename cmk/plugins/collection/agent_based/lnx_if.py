@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
-from dataclasses import dataclass, field, replace
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from dataclasses import dataclass, replace
 from ipaddress import (
     AddressValueError,
     ip_interface,
@@ -30,7 +30,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.host_labels_interfaces import host_labels_if
-from cmk.plugins.lib.interfaces import InterfaceWithCounters
+from cmk.plugins.lib.interfaces import InterfaceWithCounters, IPNetworkAdapter
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
 from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
 
@@ -85,16 +85,8 @@ class EthtoolInterface:
     link_detected: str | None = None
 
 
-@dataclass
-class IPLinkInterface:
-    state_infos: Sequence[str] | None = None
-    link_ether: str = ""
-    inet: MutableSequence[str] = field(default_factory=list)
-    inet6: MutableSequence[str] = field(default_factory=list)
-
-
 EthtoolSection = Mapping[str, EthtoolInterface]
-SectionInventory = MutableMapping[str, IPLinkInterface]
+SectionInventory = MutableMapping[str, IPNetworkAdapter]
 Section = tuple[Sequence[InterfaceWithCounters], SectionInventory]
 
 
@@ -110,7 +102,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default ...
             # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
             iface = ip_stats.setdefault(
-                line[1][:-1].split("@")[0], IPLinkInterface(state_infos=line[2][1:-1].split(","))
+                line[1][:-1].split("@")[0], IPNetworkAdapter(state_infos=line[2][1:-1].split(","))
             )
             # The interface flags are summarized in the angle brackets.
             continue
@@ -137,7 +129,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
 def _parse_lnx_if_sections(
     string_table: StringTable,
 ) -> tuple[SectionInventory, EthtoolSection]:
-    ip_stats: dict[str, IPLinkInterface] = {}
+    ip_stats: dict[str, IPNetworkAdapter] = {}
     ethtool_stats: dict[str, EthtoolInterface] = {}
     iface = None
     lines = iter(string_table)
@@ -225,7 +217,7 @@ def parse_lnx_if_pure(string_table: StringTable, timestamp: float) -> Section:
     if_table = []
     for index, (nic, ethtool_interface) in enumerate(sorted(ethtool_stats.items())):
         ifInOctets = ethtool_interface.counters[0]
-        iplink_interface = ip_stats.get(nic, IPLinkInterface())
+        iplink_interface = ip_stats.get(nic, IPNetworkAdapter())
         if_table.append(
             interfaces.InterfaceWithCounters(
                 interfaces.Attributes(

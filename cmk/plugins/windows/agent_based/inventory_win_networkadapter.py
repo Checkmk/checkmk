@@ -42,6 +42,7 @@ from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 from cmk.plugins.lib.interfaces import (
     IPNetworkAdapter,
 )
+from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
 
 Section = Sequence[Mapping[str, str]]
 
@@ -224,34 +225,14 @@ def inventory_win_ip_address(section: Section) -> InventoryResult:
     ... }]))
     [TableRow(path=['networking', 'addresses'], key_columns={'address': '1.2.3.4', 'device': 'Adaptor'}, inventory_columns={'type': 'ipv4', 'network': '1.2.3.0', 'netmask': '255.255.255.0', 'prefixlength': 24, 'broadcast': '1.2.3.255'}, status_columns={})]
     """
-    # Original author: thl-cmk[at]outlook[dot]com
-    #
-    # refactor-me: this should go to cmk.plugins.network.agent_based.ip_addresses.host_label_ip_addresses
-    #              but callers first have to use Adapter
-    address_type = {
-        4: "ipv4",
-        6: "ipv6",
-    }
-
-    yield from (
-        TableRow(
-            path=["networking", "addresses"],
-            key_columns={
-                "address": str(interface.ip.compressed),
-                "device": adapter.name,
-            },
-            inventory_columns={
-                "type": address_type.get(interface.version, "").lower(),
-                "network": str(interface.network.network_address),
-                "netmask": str(interface.network.netmask),
-                "prefixlength": interface.network.prefixlen,
-                "broadcast": str(interface.network.broadcast_address),
-            },
-            status_columns={},
+    yield from inventorize_ip_addresses(
+        IPNetworkAdapter(
+            name=adapter.name,
+            inet4=[ip_if for ip_if in interfaces if isinstance(ip_if, IPv4Interface)],
+            inet6=[ip_if for ip_if in interfaces if isinstance(ip_if, IPv6Interface)],
         )
         for adapter in map(Adapter.model_validate, section)
-        if adapter.name
-        for interface in adapter.interface_ips()
+        if (interfaces := adapter.interface_ips())
     )
 
 

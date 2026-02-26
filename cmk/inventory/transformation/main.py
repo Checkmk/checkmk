@@ -15,9 +15,8 @@ from typing import TypedDict
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
-
-from .paths import Paths, TreePath, TreePathGz
-from .structured_data import transform
+from cmk.inventory.paths import Paths, TreePath, TreePathGz
+from cmk.inventory.structured_data import transform
 
 
 @dataclass(frozen=True)

@@ -384,7 +384,7 @@ class GraphApi(_Connection):
 
     def fetch_mails(self, subject_filter: Callable[[str | None], bool]) -> GraphApiMailMessages:
         with self._build_api_client() as client:
-            response = client.get("me/messages")
+            response = client.get("me/mailFolders/inbox/messages")
         assert isinstance(response, dict)
         return {
             num: GraphApiMessage.model_validate(msg)
@@ -418,7 +418,7 @@ class GraphApi(_Connection):
                 with self._build_api_client() as client:
                     client.request(
                         "POST",
-                        f"me/messages/{mail.id}/move",
+                        f"me/messages/{mail.id}/copy",
                         json={"destinationId": folder_id},
                     )
         except Exception as exc:

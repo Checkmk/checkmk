@@ -119,8 +119,8 @@ export abstract class FigureBase<
     }
     this.figure_size = new_size as ElementSize
     this.plot_size = {
-      width: Math.max(0, this.figure_size.width - this.margin.left - this.margin.right),
-      height: Math.max(0, this.figure_size.height - this.margin.top - this.margin.bottom)
+      width: this.figure_size.width - this.margin.left - this.margin.right,
+      height: this.figure_size.height - this.margin.top - this.margin.bottom
     }
   }
 

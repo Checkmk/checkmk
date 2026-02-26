@@ -15,8 +15,6 @@ import {
   watch
 } from 'vue'
 
-import CmkIcon from '@/components/CmkIcon'
-
 import DashboardContentContainer from '@/dashboard/components/DashboardContent/DashboardContentContainer.vue'
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
@@ -34,17 +32,13 @@ const dataEndpointUrl: Ref<string> = computed(() => {
 const emit = defineEmits(['vue:mounted', 'vue:updated'])
 
 const wrapperDiv = useTemplateRef<HTMLDivElement>('wrapperDiv')
-const figureDiv = ref<HTMLDivElement | null>(null)
-const figureId = computed(() => `db-content-figure-${props.widget_id}`)
 
 const currentDimensions = ref({ width: 0, height: 0 })
-const isLoading = ref(true)
 
 let figure: FigureBase | null = null
-let mutationObserver: MutationObserver | null = null
 
 watch(
-  () => wrapperDiv.value,
+  wrapperDiv,
   (newValue, _oldValue, onCleanup) => {
     if (!newValue) {
       return
@@ -142,48 +136,15 @@ const sizeSvg = computed(() =>
 
 const updateInterval = 60
 
-function setupMutationObserver(targetElement: HTMLElement) {
-  if (mutationObserver) {
-    mutationObserver.disconnect()
-  }
-  mutationObserver = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      // Check for loading_img removal
-      for (const node of mutation.removedNodes) {
-        if (node instanceof HTMLElement && node.classList.contains('loading_img')) {
-          isLoading.value = false
-          return
-        }
-      }
-      // Check for error element addition
-      for (const node of mutation.addedNodes) {
-        if (node instanceof HTMLElement && node.id === 'figure_error') {
-          isLoading.value = false
-          return
-        }
-      }
-    }
-  })
-  mutationObserver.observe(targetElement, { childList: true })
-}
-
 const initializeFigure = () => {
-  if (figureDiv.value) {
-    setupMutationObserver(figureDiv.value)
-  }
-
   figure = new FigureBase(
     legacyFigureType.value,
-    `#${figureId.value}`,
+    `#db-content-figure-${props.widget_id}`,
     dataEndpointUrl.value,
     new URLSearchParams(httpVars.value).toString(),
     props.content,
     updateInterval
   )
-
-  figure.subscribe_post_render_hook(() => {
-    isLoading.value = false
-  })
 }
 
 onMounted(async () => {
@@ -192,17 +153,14 @@ onMounted(async () => {
   emit('vue:mounted')
 })
 
-watch(httpVars, (newHttpVars: FilterHTTPVars) => {
+watch(httpVars, (newHttpVars) => {
   if (figure) {
-    isLoading.value = true
     figure.update(dataEndpointUrl.value, new URLSearchParams(newHttpVars).toString(), props.content)
   }
 })
 
 onBeforeUnmount(() => {
   figure?.disable()
-  mutationObserver?.disconnect()
-  mutationObserver = null
 })
 </script>
 
@@ -212,16 +170,9 @@ onBeforeUnmount(() => {
     :general_settings="general_settings"
     content-overflow="hidden"
   >
-    <CmkIcon
-      v-show="isLoading"
-      name="load-graph"
-      size="xlarge"
-      class="db-content-figure__loading-icon"
-    />
-    <div v-show="!isLoading" ref="wrapperDiv" class="db-content-figure__wrapper">
+    <div ref="wrapperDiv" class="db-content-figure__wrapper">
       <div
-        :id="figureId"
-        ref="figureDiv"
+        :id="`db-content-figure-${widget_id}`"
         class="db-content-figure cmk_figure"
         :class="[
           {
@@ -241,10 +192,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.db-content-figure__loading-icon {
-  margin: auto;
-}
-
 .db-content-figure__wrapper {
   display: flex;
   width: 100%;

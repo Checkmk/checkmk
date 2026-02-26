@@ -46,7 +46,6 @@ export class BarplotFigure extends FigureBase<SingleMetricData, BarplotContent> 
   }
 
   override initialize() {
-    super.initialize()
     this.svg = this._div_selection.append('svg').classed('renderer', true)
     this.plot = this.svg.append('g')
     this.bars = this.plot.append('g').classed('bars', true)

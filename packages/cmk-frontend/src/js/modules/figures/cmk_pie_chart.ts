@@ -6,6 +6,7 @@
 import { PieArcDatum, arc, pie, scaleOrdinal, schemeCategory10 } from 'd3'
 
 import { FigureBase } from '@/modules/figures/cmk_figures'
+import { add_scheduler_debugging } from '@/modules/figures/cmk_figures_utils'
 import { FigureData } from '@/modules/figures/figure_types'
 
 export interface PieChartData {
@@ -44,7 +45,7 @@ export class PieChartFigure extends FigureBase<PieChartConfig> {
   }
 
   override initialize(debug?: boolean) {
-    super.initialize(debug)
+    if (debug) add_scheduler_debugging(this._div_selection, this.scheduler)
     this.svg = this._div_selection.append('svg')
     this.plot = this.svg.append('g')
   }

@@ -59,10 +59,9 @@ export class FigureBase {
 
   public update(dataEndpointUrl: string, postBody: string, widgetContent: WidgetContent) {
     this.instance.set_post_url_and_body(dataEndpointUrl, postBody)
-    this.instance.set_widget_content(widgetContent)
-    this.instance.update_data(this.instance.getEmptyData()) // clear stale data
-    this.instance.update_gui()
     this.forceUpdate() // running the scheduler and fetching data
+    this.instance.set_widget_content(widgetContent)
+    this.instance.update_gui()
   }
 
   public disable() {
@@ -80,12 +79,6 @@ export class FigureBase {
   public update_gui() {
     if (this.instance && this.instance.update_gui) {
       this.instance.update_gui()
-    }
-  }
-
-  public subscribe_post_render_hook(fn: () => void) {
-    if (this.instance?.subscribe_post_render_hook) {
-      this.instance.subscribe_post_render_hook(fn)
     }
   }
 }

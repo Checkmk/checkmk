@@ -9,6 +9,7 @@ import { arc, histogram, max, range, scaleLinear } from 'd3'
 
 import { FigureBase } from '@/modules/figures/cmk_figures'
 import {
+  add_scheduler_debugging,
   background_status_component,
   clamp,
   getIn,
@@ -56,7 +57,7 @@ export class GaugeFigure extends FigureBase<SingleMetricData, GaugeContent> {
   }
 
   override initialize(debug?: boolean) {
-    super.initialize(debug)
+    if (debug) add_scheduler_debugging(this._div_selection, this.scheduler)
     this.svg = this._div_selection.append('svg')
     this.plot = this.svg.append('g')
   }

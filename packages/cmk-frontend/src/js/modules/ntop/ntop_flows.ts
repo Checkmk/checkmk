@@ -79,7 +79,6 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
   }
 
   override initialize() {
-    super.initialize()
     this._div_selection.classed('ntop_flows', true)
     this._crossfilter = crossfilter()
     this._dimension = this._crossfilter.dimension((d) => d)

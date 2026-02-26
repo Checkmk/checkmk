@@ -11,14 +11,8 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
 from cmk.plugins.azure_v2.agent_based import azure_firewall
-from cmk.plugins.azure_v2.agent_based.azure_firewall import (
-    discover_azure_firewall_health,
-    discover_azure_firewall_latency,
-    discover_azure_firewall_snat,
-    discover_azure_firewall_throughput,
-)
 from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
 
 AZURE_FIREWALL_RESOURCE = Resource(
@@ -76,19 +70,6 @@ AZURE_FIREWALL_NO_METRICS = Resource(
     group="test-rg",
     metrics={},
 )
-
-
-@pytest.mark.parametrize(
-    "resource, expected_services",
-    [
-        pytest.param(AZURE_FIREWALL_RESOURCE, [Service()], id="resource with metrics"),
-        pytest.param(AZURE_FIREWALL_NO_METRICS, [Service()], id="resource without metrics"),
-    ],
-)
-def test_discover_azure_firewall_health(
-    resource: Resource, expected_services: Sequence[Service]
-) -> None:
-    assert list(discover_azure_firewall_health(resource)) == expected_services
 
 
 @pytest.mark.parametrize(
@@ -161,10 +142,6 @@ def test_check_azure_firewall_health_no_metrics() -> None:
         list(check_function({}, AZURE_FIREWALL_NO_METRICS))
 
 
-def test_discover_azure_firewall_snat() -> None:
-    assert list(discover_azure_firewall_snat(AZURE_FIREWALL_RESOURCE)) == [Service()]
-
-
 @pytest.mark.parametrize(
     "resource, params, expected_results",
     [
@@ -204,10 +181,6 @@ def test_check_azure_firewall_snat(
     assert results == expected_results
 
 
-def test_discover_azure_firewall_throughput() -> None:
-    assert list(discover_azure_firewall_throughput(AZURE_FIREWALL_RESOURCE)) == [Service()]
-
-
 @pytest.mark.parametrize(
     "resource, params, expected_results",
     [
@@ -245,10 +218,6 @@ def test_check_azure_firewall_throughput(
     check_function = azure_firewall.check_plugin_azure_firewall_throughput.check_function
     results = list(check_function(params, resource))
     assert results == expected_results
-
-
-def test_discover_azure_firewall_latency() -> None:
-    assert list(discover_azure_firewall_latency(AZURE_FIREWALL_RESOURCE)) == [Service()]
 
 
 @pytest.mark.parametrize(

@@ -7,18 +7,16 @@
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
-    DiscoveryResult,
     InventoryPlugin,
     render,
-    Service,
 )
 from cmk.agent_based.v2 import check_levels as check_levels_v2
 from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function_single,
+    create_discover_by_metrics_function_single,
     create_inventory_function,
     MetricData,
     parse_resource,
-    Resource,
 )
 
 agent_section_azure_firewall = AgentSection(
@@ -32,15 +30,11 @@ inventory_plugin_azure_firewall = InventoryPlugin(
 )
 
 
-def discover_azure_firewall_health(section: Resource) -> DiscoveryResult:
-    yield Service()
-
-
 check_plugin_azure_firewall_health = CheckPlugin(
     name="azure_v2_firewall_health",
     sections=["azure_v2_azurefirewalls"],
     service_name="Azure/Firewall Health",
-    discovery_function=discover_azure_firewall_health,
+    discovery_function=create_discover_by_metrics_function_single("average_FirewallHealth"),
     check_function=create_check_metrics_function_single(
         [
             MetricData(
@@ -60,15 +54,11 @@ check_plugin_azure_firewall_health = CheckPlugin(
 )
 
 
-def discover_azure_firewall_snat(section: Resource) -> DiscoveryResult:
-    yield Service()
-
-
 check_plugin_azure_firewall_snat = CheckPlugin(
     name="azure_v2_firewall_snat",
     sections=["azure_v2_azurefirewalls"],
     service_name="Azure/Firewall SNAT Utilization",
-    discovery_function=discover_azure_firewall_snat,
+    discovery_function=create_discover_by_metrics_function_single("maximum_SNATPortUtilization"),
     check_function=create_check_metrics_function_single(
         [
             MetricData(
@@ -88,15 +78,11 @@ check_plugin_azure_firewall_snat = CheckPlugin(
 )
 
 
-def discover_azure_firewall_throughput(section: Resource) -> DiscoveryResult:
-    yield Service()
-
-
 check_plugin_azure_firewall_throughput = CheckPlugin(
     name="azure_v2_firewall_throughput",
     sections=["azure_v2_azurefirewalls"],
     service_name="Azure/Firewall Throughput",
-    discovery_function=discover_azure_firewall_throughput,
+    discovery_function=create_discover_by_metrics_function_single("average_Throughput"),
     check_function=create_check_metrics_function_single(
         [
             MetricData(
@@ -117,15 +103,11 @@ check_plugin_azure_firewall_throughput = CheckPlugin(
 )
 
 
-def discover_azure_firewall_latency(section: Resource) -> DiscoveryResult:
-    yield Service()
-
-
 check_plugin_azure_firewall_latency = CheckPlugin(
     name="azure_v2_firewall_latency",
     sections=["azure_v2_azurefirewalls"],
     service_name="Azure/Firewall Latency",
-    discovery_function=discover_azure_firewall_latency,
+    discovery_function=create_discover_by_metrics_function_single("average_FirewallLatencyPng"),
     check_function=create_check_metrics_function_single(
         [
             MetricData(

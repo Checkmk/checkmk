@@ -220,6 +220,33 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         TagConfigFile().save(tag_config.get_dict_format())
 
 
+class ConfigGeneratorLocalSiteConnection(SampleConfigGenerator):
+    """Create a default site connection configuration for new sites.
+
+    This ensures that sites.mk is always present, even if the user never
+    explicitly configures site connections. Without this file, upgrades to 2.5
+    will fail because 2.5 removed the in-memory fallback for site configs.
+    """
+
+    @classmethod
+    def ident(cls) -> str:
+        return "local_site_connection"
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 10
+
+    def generate(self) -> None:
+        # Local import to avoid import cycles
+        from cmk.gui.watolib.sites import SitesConfigFile
+
+        store = SitesConfigFile()
+        if store._config_file_path.exists():
+            return
+        connection_configs = store.load_for_reading()
+        store.save(connection_configs)
+
+
 class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
     """This is not really the correct place for such kind of action, but the best place we could
     find to execute it only for new created sites."""

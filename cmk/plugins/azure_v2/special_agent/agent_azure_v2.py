@@ -79,39 +79,73 @@ NOW = datetime.datetime.now(tz=datetime.UTC)
 
 SECRET_OPTION = "secret"
 
-SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES = frozenset(
-    {
-        "Microsoft.DBforMySQL/flexibleServers",
-        "Microsoft.DBforPostgreSQL/flexibleServers",
-    }
-)
+
+class ResourceTypeNotKnownError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True, kw_only=True)
+class UniqueHostnamesConfig:
+    enabled: Literal["short"] | Literal["long"] | Literal[False] = False
+    exclude_vms: bool = False
+
+    def __bool__(self):
+        return bool(self.enabled)
+
+    def enabled_for_resource_type(self, type: str):
+        if type.lower() == "microsoft.compute/virtualmachines" and self.exclude_vms:
+            return False
+        return bool(self.enabled)
 
 
 class FetchedResource(Enum):
-    """Available Azure resources, with section name, for API fetching"""
+    """Available Azure resources, with section name and abbreviation.
+    Abbreviations follow https://github.com/MicrosoftDocs/cloud-adoption-framework/blob/main/docs/ready/azure-best-practices/resource-abbreviations.md where possible.
+    """
 
-    virtual_machines = ("Microsoft.Compute/virtualMachines", "virtualmachines")
-    vaults = ("Microsoft.RecoveryServices/vaults", "vaults")
-    app_gateways = ("Microsoft.Network/applicationGateways", "applicationgateways")
-    load_balancers = ("Microsoft.Network/loadBalancers", "loadbalancers")
-    virtual_network_gateways = (
-        "Microsoft.Network/virtualNetworkGateways",
-        "virtualnetworkgateways",
-    )
-    redis = ("Microsoft.Cache/Redis", "redis")
-    cosmosdb = ("Microsoft.DocumentDB/databaseAccounts", "databaseaccounts")
-    firewalls = ("Microsoft.Network/azureFirewalls", "azurefirewalls")
+    # fmt: off
+    virtual_machines            = ("Microsoft.Compute/virtualMachines",            "virtualmachines",          "vm")
+    vaults                      = ("Microsoft.RecoveryServices/vaults",            "vaults",                   "rsv")
+    app_gateways                = ("Microsoft.Network/applicationGateways",        "applicationgateways",      "agw")
+    load_balancers              = ("Microsoft.Network/loadBalancers",              "loadbalancers",            "lb")
+    virtual_network_gateways    = ("Microsoft.Network/virtualNetworkGateways",     "virtualnetworkgateways",   "vgw")
+    redis                       = ("Microsoft.Cache/Redis",                        "redis",                    "redis")
+    cosmosdb                    = ("Microsoft.DocumentDB/databaseAccounts",        "databaseaccounts",         "cosmos")
+    # made-up resource type for cosmosdb databases:
+    cosmosdb_database           = ("Microsoft.DocumentDB/databaseAccounts/cosmos_database", "databaseaccounts","cosmosdb")
+    firewalls                   = ("Microsoft.Network/azureFirewalls",             "azurefirewalls",           "afw")
+    mysql_flexible_servers      = ("Microsoft.DBforMySQL/flexibleServers",         "flexibleservers",          "mysql")
+    postgresql_flexible_servers = ("Microsoft.DBforPostgreSQL/flexibleServers",    "flexibleservers",          "psql")
+    virtual_networks            = ("Microsoft.Network/virtualNetworks",            "virtualnetworks",          "vnet")
+    nat_gateways                = ("Microsoft.Network/natGateways",                "natgateways",              "ng")
+    sql_databases               = ("Microsoft.Sql/servers/databases",              "databases",                "sqldb")
+    storage_accounts            = ("Microsoft.Storage/storageAccounts",            "storageaccounts",          "st")
+    web_sites                   = ("Microsoft.Web/sites",                          "sites",                    "app")
+    mysql_servers               = ("Microsoft.DBforMySQL/servers",                 "servers",                  "mysql")
+    postgresql_servers          = ("Microsoft.DBforPostgreSQL/servers",            "servers",                  "psql")
+    traffic_manager             = ("Microsoft.Network/trafficManagerProfiles",     "trafficmanagerprofiles",   "traf")
+    # fmt: on
 
-    def __init__(self, resource_type, section_name):
+    def __init__(self, resource_type: str, section_name: str, abbreviation: str) -> None:
         self.resource_type = resource_type
         self.section_name = section_name
+        self.abbreviation = abbreviation
+
+    @classmethod
+    def from_type(cls, resource_type: str) -> FetchedResource | None:
+        for member in cls:
+            # lower, because we've seen
+            # e.g. "Microsoft.DocumentDB/databaseAccounts" and "Microsoft.DocumentDb/databaseAccounts"
+            if member.resource_type.lower() == resource_type.lower():
+                return member
+        return None
 
     @property
-    def section(self):
+    def section(self) -> str:
         return self.section_name
 
     @property
-    def type(self):
+    def type(self) -> str:
         return self.resource_type
 
 
@@ -122,30 +156,35 @@ BULK_QUERIED_RESOURCES = {
     FetchedResource.firewalls.type,
 }
 
+SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES = frozenset(
+    {
+        FetchedResource.mysql_flexible_servers.type,
+        FetchedResource.postgresql_flexible_servers.type,
+    }
+)
+
 
 class _AzureEntity(ABC):
-    def __init__(self, entity_name: str, section: str, use_unique_names: bool) -> None:
+    def __init__(
+        self, entity_name: str, section: str, unique_hostnames_config: UniqueHostnamesConfig
+    ) -> None:
         self.info: dict[str, Any]
 
         self.section = section
         self._entity_name = entity_name
-        self._use_unique_names = use_unique_names
+        self.unique_hostnames_config = unique_hostnames_config
 
     @property
     def piggytarget(self) -> str:
-        return self._entity_name if not self._use_unique_names else self._unique_name()
+        if (type := self.info.get("type")) is not None:
+            use_unique_hostnames = self.unique_hostnames_config.enabled_for_resource_type(type)
+        else:
+            use_unique_hostnames = bool(self.unique_hostnames_config)
+        return self._unique_name() if use_unique_hostnames else self._entity_name
 
-    def _compute_unique_name(self, uniqueness_keys: Sequence[str]) -> str:
+    def _compute_unique_name_hash(self, uniqueness_keys: Sequence[str]) -> str:
         """
-        The concept of "unique name" should be only known and used by a resource object.
-        The rest of the code must trust the piggytarget property.
-
-        We compute unique names to avoid conflicts in host names in Azure,
-        since we can have the same resource-type with the same name in different
-        resource-groups or subscriptions. We can also have the same subscription-name
-        in the same tenant.
-
-        Keys for uniqueness:
+        Keys for the hash:
         Tenant: no need to add anything, since the tenant should be unique (and the tenant is
         the "main" host in checkmk, so the user-defined-name)
 
@@ -155,15 +194,33 @@ class _AzureEntity(ABC):
         Resource:   subscription-id,
                     resource-group (lower, because azure do not ensure returning a consistent casing),
                     resource-type (not lower, wecause we have seen types with different casing)
-
         """
         HASH_CHARS_TO_KEEP = 8
-
         unique_string = f"azure{''.join(uniqueness_keys)}"
         hashed = hashlib.sha256(unique_string.encode("utf-8"), usedforsecurity=False).hexdigest()[
             -HASH_CHARS_TO_KEEP:
         ]
-        return f"{self._entity_name}_{hashed}"
+        return hashed
+
+    def _compute_unique_name(self, uniqueness_keys: Sequence[str], prefix: str) -> str:
+        """
+        The concept of "unique name" should be only known and used by a resource object.
+        The rest of the code must trust the piggytarget property.
+
+        We compute unique names to avoid conflicts in host names in Azure,
+        since we can have the same resource-type with the same name in different
+        resource-groups or subscriptions. We can also have the same subscription-name
+        in the same tenant.
+        """
+        hashed = self._compute_unique_name_hash(uniqueness_keys)
+
+        if self.unique_hostnames_config.enabled == "long":
+            return f"azr_{prefix}_{self._entity_name}_{hashed}"
+        elif self.unique_hostnames_config.enabled == "short":
+            return f"{self._entity_name}_{hashed}"
+        else:
+            # Should hopefully never happen.
+            raise RuntimeError("_compute_unique_name() called, but safe hostnames were disabled")
 
     @abstractmethod
     def _unique_name(self) -> str:
@@ -181,12 +238,14 @@ class AzureSubscription(_AzureEntity):
         id: str,
         name: str,
         tags: Mapping[str, str],
-        use_unique_names: bool,
+        unique_hostnames_config: UniqueHostnamesConfig,
         tenant_id: str,
         tenant_name: str | None = None,
     ) -> None:
         super().__init__(
-            entity_name=name, section="subscription", use_unique_names=use_unique_names
+            entity_name=name,
+            section="subscription",
+            unique_hostnames_config=unique_hostnames_config,
         )
         self.id: Final[str] = id
         self.tags: Final[Mapping[str, str]] = tags
@@ -206,7 +265,7 @@ class AzureSubscription(_AzureEntity):
         }
 
     def _unique_name(self) -> str:
-        return self._compute_unique_name((self.id,))
+        return self._compute_unique_name((self.id,), "subscription")
 
 
 class AzureResourceGroup(_AzureEntity):
@@ -215,11 +274,13 @@ class AzureResourceGroup(_AzureEntity):
         info: Mapping[str, Any],
         tag_key_pattern: TagsOption,
         subscription: AzureSubscription,
-        use_unique_names: bool,
+        unique_hostnames_config: UniqueHostnamesConfig,
     ) -> None:
         section = info["type"].split("/")[-1].lower()
         super().__init__(
-            entity_name=info["name"].lower(), section=section, use_unique_names=use_unique_names
+            entity_name=info["name"].lower(),
+            section=section,
+            unique_hostnames_config=unique_hostnames_config,
         )
         self.tags = filter_tags(info.get("tags", {}), tag_key_pattern)
         self.info = {
@@ -239,7 +300,8 @@ class AzureResourceGroup(_AzureEntity):
             (
                 self.subscription.id,
                 self.info["type"],  # "Microsoft.Resources/resourceGroups"
-            )
+            ),
+            "rg",
         )
 
 
@@ -394,8 +456,10 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--unique-hostnames",
-        default=False,
-        action="store_true",
+        default=None,
+        choices=["short", "long"],
+        required=False,
+        # TODO: Update help text for short/long
         help="Create unique host names for piggyback hosts to avoid conflicts in entity names in Azure. "
         "This option will append the last part of the subscription ID to host names. Example: 'my-vm-1a2b3c4d'",
     )
@@ -813,11 +877,14 @@ class AzureResource(_AzureEntity):
         info: dict[str, Any],
         tag_key_pattern: TagsOption,
         subscription: AzureSubscription,
-        use_unique_names: bool,
+        unique_hostnames_config: UniqueHostnamesConfig,
     ) -> None:
         self.name = info["name"]
         section = info["type"].split("/")[-1].lower()
-        super().__init__(entity_name=self.name, section=section, use_unique_names=use_unique_names)
+
+        super().__init__(
+            entity_name=self.name, section=section, unique_hostnames_config=unique_hostnames_config
+        )
         self.tags = filter_tags(info.get("tags", {}), tag_key_pattern)
         self.info = {
             **info,
@@ -838,12 +905,21 @@ class AzureResource(_AzureEntity):
             self.labels["region"] = region
 
     def _unique_name(self) -> str:
+        resource_type = self.info.get("type", "")
+        fetched = FetchedResource.from_type(resource_type)
+
+        if fetched is None:
+            raise ResourceTypeNotKnownError(
+                f"Unsupported resource type for unique name generation: {resource_type}"
+            )
+
         return self._compute_unique_name(
             (
                 self.subscription.id,
                 self.group,
                 self.info["type"],
             ),
+            fetched.abbreviation,
         )
 
     def dumpinfo(self) -> Sequence[tuple]:
@@ -1422,7 +1498,7 @@ async def process_cosmosdb(
                     db_resource_info,
                     TagsImportPatternOption.import_all,
                     resource.subscription,
-                    args.unique_hostnames,
+                    args.unique_hostnames_config,
                 )
                 db_resource.metrics.append(metric)
                 db_resource.labels["cosmosdb_account"] = resource.name
@@ -1953,7 +2029,7 @@ async def get_resource_groups(
                 group,
                 args.tag_key_pattern,
                 subscription,
-                args.unique_hostnames,
+                args.unique_hostnames_config,
             )
 
     return groups
@@ -2149,7 +2225,7 @@ def write_usage_section(
     monitored_groups: Mapping[str, AzureResourceGroup],
     subscription: AzureSubscription,
     tag_key_pattern: TagsOption,
-    unique_hostnames: bool,
+    unique_hostnames_config: UniqueHostnamesConfig,
 ) -> None:
     """
     Usage (Cost) services go under the resource group AND the related subscription
@@ -2166,7 +2242,9 @@ def write_usage_section(
         usage["type"] = "Microsoft.Consumption/usageDetails"
         usage["group"] = usage["properties"]["ResourceGroupName"]
 
-        usage_resource = AzureResource(usage, tag_key_pattern, subscription, unique_hostnames)
+        usage_resource = AzureResource(
+            usage, tag_key_pattern, subscription, unique_hostnames_config
+        )
 
         # usage data end up in both the resource group host and the subscription host
         piggytargets = [subscription.piggytarget]
@@ -2200,7 +2278,7 @@ async def process_usage_details(
             monitored_groups,
             subscription,
             args.tag_key_pattern,
-            args.unique_hostnames,
+            args.unique_hostnames_config,
         )
 
     except NoConsumptionAPIError:
@@ -2215,7 +2293,11 @@ async def process_usage_details(
         #     raise
         write_exception_to_agent_info_section(exc, "Usage client")
         write_usage_section(
-            [], monitored_groups, subscription, args.tag_key_pattern, args.unique_hostnames
+            [],
+            monitored_groups,
+            subscription,
+            args.tag_key_pattern,
+            args.unique_hostnames_config,
         )
 
 
@@ -2582,12 +2664,6 @@ async def process_resources(
             )
 
 
-def _should_use_unique_hostname(unique_hostnames: bool, exclude_vms: bool, r: dict) -> bool:
-    if r.get("type") == "Microsoft.Compute/virtualMachines" and exclude_vms:
-        return False
-    return unique_hostnames
-
-
 async def _collect_resources(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
@@ -2603,9 +2679,7 @@ async def _collect_resources(
             r,
             args.tag_key_pattern,
             subscription,
-            _should_use_unique_hostname(
-                args.unique_hostnames, args.unique_hostnames_exclude_vms, r
-            ),
+            args.unique_hostnames_config,
         )
         for r in resources
     )
@@ -2706,7 +2780,7 @@ async def _get_subscriptions(args: argparse.Namespace) -> set[AzureSubscription]
                     id=item["subscriptionId"],
                     name=item["displayName"],
                     tags=item.get("tags", {}),
-                    use_unique_names=args.unique_hostnames,
+                    unique_hostnames_config=args.unique_hostnames_config,
                     tenant_id=args.tenant,
                     tenant_name=args.tenant_name,
                 )
@@ -2771,6 +2845,13 @@ async def collect_info(
 async def main_async(args: argparse.Namespace, selector: Selector) -> int:
     if args.connection_test:
         return await _test_connection(args)
+
+    # slight hack, piggyback on args to avoid having to thread this around everywhere
+    assert args.unique_hostnames in ("short", "long", None)
+    args.unique_hostnames_config = UniqueHostnamesConfig(
+        enabled=args.unique_hostnames or False,
+        exclude_vms=args.unique_hostnames_exclude_vms,
+    )
 
     subscriptions = await _get_subscriptions(args)
     await collect_info(args, selector, subscriptions)

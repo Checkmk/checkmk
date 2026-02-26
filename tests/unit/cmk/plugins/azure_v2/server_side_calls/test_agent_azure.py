@@ -30,6 +30,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "secret": Secret(0),
                 "config": {},
                 "services": ["users_count", "Microsoft_DBforMySQL_slash_servers"],
+                "unique_hostnames": ("disabled", None),
             },
             HostConfig(
                 name="testhost",
@@ -72,6 +73,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                     "tag_based": [{"tag": "my_tag", "condition": ("exists", None)}],
                 },
                 "services": [],
+                "unique_hostnames": ("disabled", None),
             },
             HostConfig(name="testhost"),
             [
@@ -112,6 +114,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 },
                 "proxy": EnvProxy(),
                 "services": [],
+                "unique_hostnames": ("disabled", None),
             },
             HostConfig(name="testhost"),
             [
@@ -157,6 +160,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                     ],
                 },
                 "services": [],
+                "unique_hostnames": ("disabled", None),
             },
             HostConfig(name="testhost"),
             [
@@ -194,7 +198,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "secret": Secret(0),
                 "config": {},
                 "services": [],
-                "unique_hostnames": ("enabled", {"exclude_vms": False}),
+                "unique_hostnames": ("enabled", {"template": "short", "exclude_vms": False}),
             },
             HostConfig(name="testhost"),
             [
@@ -207,7 +211,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "--authority",
                 "global",
                 "--no-subscriptions",
-                "--unique-hostnames",
+                "--unique-hostnames=short",
                 "--cache-id",
                 "testhost",
                 "--tenant-name",
@@ -225,7 +229,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "secret": Secret(0),
                 "config": {},
                 "services": [],
-                "unique_hostnames": ("enabled", {"exclude_vms": True}),
+                "unique_hostnames": ("enabled", {"template": "short", "exclude_vms": True}),
             },
             HostConfig(name="testhost"),
             [
@@ -238,7 +242,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "--authority",
                 "global",
                 "--no-subscriptions",
-                "--unique-hostnames",
+                "--unique-hostnames=short",
                 "--unique-hostnames-exclude-vms",
                 "--cache-id",
                 "testhost",

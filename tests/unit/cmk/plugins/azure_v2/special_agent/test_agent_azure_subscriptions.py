@@ -20,6 +20,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     AzureResourceGroup,
     AzureSubscription,
     TagsImportPatternOption,
+    UniqueHostnamesConfig,
 )
 from cmk.plugins.azure_v2.special_agent.azure_api_client import ApiError
 
@@ -34,7 +35,7 @@ Args = argparse.Namespace
                 id="subscription_id_12345678",
                 name="subscription name",
                 tags={},
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "subscription name",
@@ -45,7 +46,7 @@ Args = argparse.Namespace
                 id="subscription_id_12345678",
                 name="subscription:name",
                 tags={},
-                use_unique_names=True,
+                unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "subscription:name_2a0cae26",
@@ -56,7 +57,7 @@ Args = argparse.Namespace
                 id="subscription_id_abcdefgh",
                 name="My Subscription",
                 tags={},
-                use_unique_names=True,
+                unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "My Subscription_560cb603",
@@ -67,7 +68,7 @@ Args = argparse.Namespace
                 id="subscription_id_xyz12345",
                 name="My Subscription",
                 tags={},
-                use_unique_names=True,
+                unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "My Subscription_6ab7efb2",
@@ -85,18 +86,18 @@ RESOURCE_SUBSCRIPTION = AzureSubscription(
     id="subscription_id",
     name="My Subscription",
     tags={},
-    # this should not affect resource groups, although use_unique_name
+    # this should not affect resource groups, although unique_hostnames_config
     # must always be valid for the entire run, and be identical for every object
-    use_unique_names=False,
+    unique_hostnames_config=UniqueHostnamesConfig(),
     tenant_id="tenant_id_123",
 )
 RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
     id="different_subscription_id",
     name="My Subscription 2",
     tags={},
-    # this should not affect resource groups, although use_unique_name
+    # this should not affect resource groups, although unique_hostnames_config
     # must always be valid for the entire run, and be identical for every object
-    use_unique_names=False,
+    unique_hostnames_config=UniqueHostnamesConfig(),
     tenant_id="tenant_id_123",
 )
 
@@ -168,18 +169,23 @@ def test_azureresourcegroup_piggytarget(
         info=resource_group_info,
         tag_key_pattern=TagsImportPatternOption.import_all,
         subscription=subscription,
-        use_unique_names=use_unique_names,
+        unique_hostnames_config=UniqueHostnamesConfig(
+            enabled="short" if use_unique_names else False
+        ),
     )
     assert resource_group.piggytarget == expected_piggytarget
 
 
 def test_ensure_different_hashes_subscription_resourcegroups() -> None:
     for use_unique_names in (True, False):
+        unique_hostnames_config = UniqueHostnamesConfig(
+            enabled="short" if use_unique_names else False
+        )
         subscription = AzureSubscription(
             id="subscription_id",
             name="my_subscription",
             tags={},
-            use_unique_names=use_unique_names,
+            unique_hostnames_config=unique_hostnames_config,
             tenant_id="tenant_id_123",
         )
 
@@ -193,7 +199,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
             },
             tag_key_pattern=TagsImportPatternOption.import_all,
             subscription=subscription,
-            use_unique_names=use_unique_names,
+            unique_hostnames_config=unique_hostnames_config,
         )
         # with unique names, the hashes must be different because of different types
         # without unique names, the piggytarget are identical because names are identical
@@ -288,7 +294,9 @@ def test_azureresource_piggytarget(
         info=resource_info,
         tag_key_pattern=TagsImportPatternOption.import_all,
         subscription=subscription,
-        use_unique_names=use_unique_names,
+        unique_hostnames_config=UniqueHostnamesConfig(
+            enabled="short" if use_unique_names else False
+        ),
     )
     assert resource.piggytarget == expected_piggytarget
 
@@ -330,6 +338,7 @@ RESOURCE_GROUPS_RESPONSE = {
                 all_subscriptions=False,
                 subscriptions=None,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 subscriptions_require_tag=[],
                 subscriptions_require_tag_value=[],
             ),
@@ -348,6 +357,7 @@ RESOURCE_GROUPS_RESPONSE = {
                 all_subscriptions=True,
                 subscriptions=None,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 subscriptions_require_tag=[],
                 subscriptions_require_tag_value=[],
             ),
@@ -373,6 +383,7 @@ RESOURCE_GROUPS_RESPONSE = {
                     "subscription_id_abcdefgh",
                 ],
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 subscriptions_require_tag=[],
                 subscriptions_require_tag_value=[],
             ),
@@ -394,6 +405,7 @@ RESOURCE_GROUPS_RESPONSE = {
                 all_subscriptions=False,
                 subscriptions=None,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 subscriptions_require_tag=[("key2")],
                 subscriptions_require_tag_value=[("key1", "value1")],
             ),
@@ -414,6 +426,7 @@ RESOURCE_GROUPS_RESPONSE = {
                 all_subscriptions=False,
                 subscriptions=None,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 subscriptions_require_tag=[("key_non_existent")],
                 subscriptions_require_tag_value=[("key1", "value1")],
             ),
@@ -456,6 +469,7 @@ async def test_get_subscriptions_wrong_subscription(mock_api_client: AsyncMock) 
             "non_existent_subscription_id",
         ],
         unique_hostnames=False,
+        unique_hostnames_config=UniqueHostnamesConfig(),
         subscriptions_require_tag=[],
         subscriptions_require_tag_value=[],
     )

@@ -17,6 +17,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     Selector,
     TagBasedConfig,
     TagsImportPatternOption,
+    UniqueHostnamesConfig,
 )
 
 from .lib import fake_azure_subscription
@@ -50,6 +51,7 @@ ARGV = [
     "--cache-id",
     "testhost",
     "--unique-hostnames",
+    "short",
 ]
 
 
@@ -84,6 +86,7 @@ ARGV_MULTI_CONFIG = [
     "--cache-id",
     "testhost",
     "--unique-hostnames",
+    "short",
 ]
 
 
@@ -112,7 +115,7 @@ ARGS = Args(
     services=["Microsoft.Compute/virtualMachines", "Microsoft.Storage/storageAccounts"],
     tag_key_pattern=TagsImportPatternOption.import_all,
     connection_test=False,
-    unique_hostnames=True,
+    unique_hostnames="short",
     unique_hostnames_exclude_vms=False,
 )
 
@@ -147,7 +150,7 @@ ARGS_MULTI_CONFIG = Args(
     services=["Microsoft.Compute/virtualMachines", "Microsoft.Storage/storageAccounts"],
     tag_key_pattern=TagsImportPatternOption.import_all,
     connection_test=False,
-    unique_hostnames=True,
+    unique_hostnames="short",
     unique_hostnames_exclude_vms=False,
 )
 
@@ -183,7 +186,7 @@ ARGS_MULTI_CONFIG = Args(
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
                 "argparse: connection_test = False",
-                "argparse: unique_hostnames = True",
+                "argparse: unique_hostnames = 'short'",
                 "argparse: unique_hostnames_exclude_vms = False",
             ],
         ),
@@ -215,7 +218,7 @@ ARGS_MULTI_CONFIG = Args(
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
                 "argparse: connection_test = False",
-                "argparse: unique_hostnames = True",
+                "argparse: unique_hostnames = 'short'",
                 "argparse: unique_hostnames_exclude_vms = False",
             ],
         ),
@@ -302,7 +305,7 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             False,
             id="resource not in config",
@@ -320,7 +323,7 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             True,
             id="no explicit config",
@@ -338,7 +341,7 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             True,
             id="no resources in explicit config",
@@ -369,7 +372,7 @@ def test_explicit_config_is_configured(
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             False,
             id="no required tag",
@@ -388,7 +391,7 @@ def test_explicit_config_is_configured(
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             False,
             id="tag value doesn't match",
@@ -446,7 +449,7 @@ def test_selector() -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             True,
             id="both explicit config and tag match",
@@ -469,7 +472,7 @@ def test_selector() -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             False,
             id="tag doesn't match",
@@ -492,7 +495,7 @@ def test_selector() -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             False,
             id="explicit config doesn't match, unknown resource",
@@ -515,7 +518,7 @@ def test_selector() -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             True,
             id="explicit config match for group and tag",
@@ -538,7 +541,7 @@ def test_selector() -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             False,
             id="explicit config match for group but not tag",
@@ -561,7 +564,7 @@ def test_selector() -> None:
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             True,
             id="case-insensitive group match",

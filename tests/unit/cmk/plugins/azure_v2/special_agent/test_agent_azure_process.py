@@ -33,6 +33,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     Selector,
     TagsImportPatternOption,
     TagsOption,
+    UniqueHostnamesConfig,
     write_group_info,
     write_remaining_reads,
     write_resource_groups_sections,
@@ -60,7 +61,7 @@ Args = argparse.Namespace
                 },
                 TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             {
                 "burningman": AzureResourceGroup(
@@ -74,7 +75,7 @@ Args = argparse.Namespace
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 )
             },
             (
@@ -99,7 +100,7 @@ Args = argparse.Namespace
                 },
                 TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             {
                 "resource_group_name": AzureResourceGroup(
@@ -113,7 +114,7 @@ Args = argparse.Namespace
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 )
             },
             (
@@ -138,7 +139,7 @@ Args = argparse.Namespace
                 },
                 TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
-                use_unique_names=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             {
                 "resource_group_name": AzureResourceGroup(
@@ -149,7 +150,7 @@ Args = argparse.Namespace
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 )
             },
             (
@@ -174,7 +175,7 @@ Args = argparse.Namespace
                 },
                 TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(use_unique_names=True),
-                use_unique_names=True,
+                unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
             ),
             {
                 "resource_group_name": AzureResourceGroup(
@@ -188,7 +189,7 @@ Args = argparse.Namespace
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(use_unique_names=True),
-                    use_unique_names=True,
+                    unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
                 )
             },
             (
@@ -236,7 +237,7 @@ def test_get_resource_host_labels_section(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 )
             },
             '{"cloud": "azure", "name": "my_cosmos_db", "resource_group": "cosmos_group", "resource": "databaseaccounts", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "eastus", "cosmosdb_account": "my_cosmos_db", "tenant_name": "mock_tenant_name"}\n',
@@ -261,7 +262,7 @@ def test_get_resource_host_labels_section(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 )
             },
             '{"cloud": "azure", "name": "my_vm", "resource_group": "vm_group", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true, "tenant_name": "mock_tenant_name"}\n',
@@ -279,7 +280,7 @@ def test_resource_with_custom_labels(
         dict(resource_info),
         TagsImportPatternOption.import_all,
         subscription=fake_azure_subscription(),
-        use_unique_names=False,
+        unique_hostnames_config=UniqueHostnamesConfig(),
     )
     resource.labels.update(custom_labels)
 
@@ -317,6 +318,7 @@ RESOURCE_GROUPS_RESPONSE = [
             Args(
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             {},
             id="No labels monitored",
@@ -326,6 +328,7 @@ RESOURCE_GROUPS_RESPONSE = [
             Args(
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             {"resource_group_1": {"group_tag_key_1": "group_tag_value_1"}},
             id="Labels monitored, import all tags",
@@ -335,6 +338,7 @@ RESOURCE_GROUPS_RESPONSE = [
             Args(
                 tag_key_pattern=TagsImportPatternOption.ignore_all,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             {"resource_group_1": {}, "resource_group_2": {}},
             id="Labels monitored, ignore tags",
@@ -344,6 +348,7 @@ RESOURCE_GROUPS_RESPONSE = [
             Args(
                 tag_key_pattern="group_tag",
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             {
                 "resource_group_1": {"group_tag_key_1": "group_tag_value_1"},
@@ -356,6 +361,7 @@ RESOURCE_GROUPS_RESPONSE = [
             Args(
                 tag_key_pattern="groups_tag",
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
             ),
             {"resource_group_1": {}, "resource_group_2": {}},
             id="Labels monitored with not matching pattern for tags",
@@ -365,6 +371,7 @@ RESOURCE_GROUPS_RESPONSE = [
             Args(
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 unique_hostnames=True,
+                unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
             ),
             {"resource_group_1": {"group_tag_key_1": "group_tag_value_1"}},
             id="Labels monitored, import all tags, unique names",
@@ -417,7 +424,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 ),
             },
             id="One group monitored",
@@ -441,7 +448,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 ),
                 "resource_group_2": AzureResourceGroup(
                     info={
@@ -458,7 +465,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 ),
             },
             id="Multiple groups monitored",
@@ -480,6 +487,7 @@ async def test_get_resource_groups(
         Args(
             tag_key_pattern=TagsImportPatternOption.import_all,
             unique_hostnames=False,
+            unique_hostnames_config=UniqueHostnamesConfig(),
         ),
     )
     assert len(groups) == len(expected_result)
@@ -504,6 +512,7 @@ async def test_write_resource_groups_sections(
         Args(
             tag_key_pattern=TagsImportPatternOption.import_all,
             unique_hostnames=False,
+            unique_hostnames_config=UniqueHostnamesConfig(),
         ),
     )
     write_resource_groups_sections(groups)
@@ -579,7 +588,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 )
             },
             [
@@ -594,7 +603,7 @@ async def test_filter_tags(
                     },
                     TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 ),
             ],
             "<<<<burningman>>>>\n"
@@ -620,7 +629,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 ),
                 "resource_group_name": AzureResourceGroup(
                     info={
@@ -630,7 +639,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 ),
             },
             [
@@ -645,7 +654,7 @@ async def test_filter_tags(
                     },
                     TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
-                    use_unique_names=False,
+                    unique_hostnames_config=UniqueHostnamesConfig(),
                 ),
             ],
             "<<<<burningman>>>>\n"
@@ -676,7 +685,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(use_unique_names=True),
-                    use_unique_names=True,
+                    unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
                 )
             },
             [
@@ -691,7 +700,7 @@ async def test_filter_tags(
                     },
                     TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(use_unique_names=True),
-                    use_unique_names=True,
+                    unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
                 ),
             ],
             "<<<<burningman_cb8bc18c>>>>\n"
@@ -717,7 +726,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(use_unique_names=True),
-                    use_unique_names=True,
+                    unique_hostnames_config=UniqueHostnamesConfig(enabled="short"),
                 )
             },
             [],
@@ -778,10 +787,10 @@ _monitored_vm_resource = lambda tag_pattern_option: {
             id="mock_subscription_id",
             name="mock_subscription_name",
             tags={},
-            use_unique_names=False,
+            unique_hostnames_config=UniqueHostnamesConfig(),
             tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
         ),
-        use_unique_names=False,
+        unique_hostnames_config=UniqueHostnamesConfig(),
     )
 }
 
@@ -812,7 +821,7 @@ RESOURCE_GROUPS = {
         },
         tag_key_pattern=TagsImportPatternOption.import_all,
         subscription=fake_azure_subscription(use_unique_names=False),
-        use_unique_names=False,
+        unique_hostnames_config=UniqueHostnamesConfig(),
     )
 }
 
@@ -1142,6 +1151,7 @@ RESOURCES_API_RESPONSE = [
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 unique_hostnames_exclude_vms=False,
             ),
             [
@@ -1192,6 +1202,7 @@ RESOURCES_API_RESPONSE = [
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.ignore_all,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 unique_hostnames_exclude_vms=False,
             ),
             [
@@ -1242,6 +1253,7 @@ RESOURCES_API_RESPONSE = [
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 unique_hostnames=False,
+                unique_hostnames_config=UniqueHostnamesConfig(),
                 unique_hostnames_exclude_vms=False,
             ),
             [
@@ -1276,6 +1288,7 @@ RESOURCES_API_RESPONSE = [
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
                 unique_hostnames=True,
+                unique_hostnames_config=UniqueHostnamesConfig(enabled="short", exclude_vms=True),
                 unique_hostnames_exclude_vms=True,
             ),
             [
@@ -1459,7 +1472,10 @@ def test_azure_resource(
     mock_azure_subscription: AzureSubscription,
 ) -> None:
     resource = AzureResource(
-        dict(resource_data), tags_pattern, mock_azure_subscription, unique_hostname
+        dict(resource_data),
+        tags_pattern,
+        mock_azure_subscription,
+        UniqueHostnamesConfig(enabled="short" if unique_hostname else False),
     )
 
     assert resource.section == expected_resource.section, "Section mismatch"

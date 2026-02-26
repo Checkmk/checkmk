@@ -39,6 +39,7 @@ class Config(BaseModel):
 
 
 class UniqueHostnamesConfig(BaseModel):
+    template: Literal["short", "long"]
     exclude_vms: bool = False
 
 
@@ -144,8 +145,9 @@ def agent_azure_arguments(
         args.extend(["--service", p.replace("Microsoft_", "Microsoft.").replace("_slash_", "/")])
 
     if params.unique_hostnames[0] == "enabled":
-        args += ["--unique-hostnames"]
-        if params.unique_hostnames[1].exclude_vms:
+        opt = params.unique_hostnames[1]
+        args += [f"--unique-hostnames={opt.template}"]
+        if opt.exclude_vms:
             args += ["--unique-hostnames-exclude-vms"]
 
     config = params.config

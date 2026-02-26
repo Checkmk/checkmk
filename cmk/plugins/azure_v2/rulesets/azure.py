@@ -339,45 +339,82 @@ def configuration_services() -> Mapping[str, DictElement]:
 def configuration_advanced() -> Mapping[str, DictElement]:
     return {
         "unique_hostnames": DictElement(
+            required=True,
             parameter_form=CascadingSingleChoice(
-                title=Title("Make piggyback host names globally unique"),
-                help_text=Help(
-                    "Enabling this option lets Checkmk create unique host names for piggyback hosts. "
-                    "This avoids conflicts caused by entities having the same name in Azure, which could lead to monitoring data "
-                    "being overwritten or lost. The option works by appending a unique hash to the Checkmk piggyback host names "
-                    "(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, resources, or resource groups "
-                    "with the same name across multiple Azure tenants or subscriptions."
-                ),
+                title=Title("Piggyback host names"),
+                prefill=DefaultValue("enabled"),
                 elements=[
                     CascadingSingleChoiceElement(
                         name="disabled",
-                        title=Title("Disable unique piggyback host names"),
+                        title=Title("Disable unique piggyback host name computation"),
                         parameter_form=FixedValue(value=None),
                     ),
                     CascadingSingleChoiceElement(
                         name="enabled",
-                        title=Title("Enable unique piggyback host names"),
+                        title=Title("Enable unique piggyback host name computation"),
                         parameter_form=Dictionary(
                             elements={
+                                "template": DictElement(
+                                    required=True,
+                                    parameter_form=SingleChoice(
+                                        prefill=DefaultValue("long"),
+                                        help_text=Help(
+                                            "Enabling unique host name computation lets Checkmk create unique host names for piggyback hosts. "
+                                            "This avoids conflicts caused by entities having the same name in Azure, which could lead to monitoring data "
+                                            "being overwritten or lost. Enable this if you have subscriptions, resources, or resource groups "
+                                            "with the same name across multiple Azure tenants or subscriptions. "
+                                            "<b>Changing this option later after saving it will cause all piggyback hosts to be renamed.</b>"
+                                            "<hr>"
+                                            "When enabling unique host name computation, you can select "
+                                            "between two templates: <b>Short</b> or <b>Long</b>. This controls the "
+                                            "information that is contained in the host name."
+                                            "<ul>"
+                                            "  <li>"
+                                            "    <b>Short:</b> <tt>[object name from Azure]_[unique id]</tt>"
+                                            "    <ul>"
+                                            "      <li>example: <b><tt>myresourcegroup_3f40ba0d</tt></b>, <b><tt>myvm1_86824be2</tt></b>"
+                                            "    </ul>"
+                                            "  </li>"
+                                            "  <li>"
+                                            "    <b>Long:</b> <tt>azr_[object type]_[object name from Azure]_[unique id]</tt>"
+                                            "    <ul>"
+                                            "      <li>example: <b><tt>azr_rg_myresourcegroup_3f40ba0d</tt></b>, <b><tt>azr_vm_myvm1_86824be2</tt></b>"
+                                            "    </ul>"
+                                            "  </li>"
+                                            "</ul>"
+                                        ),
+                                        title=Title("Unique host name template"),
+                                        elements=[
+                                            SingleChoiceElement(
+                                                name="short",
+                                                title=Title("Short"),
+                                            ),
+                                            SingleChoiceElement(
+                                                name="long",
+                                                title=Title("Long"),
+                                            ),
+                                        ],
+                                    ),
+                                ),
                                 "exclude_vms": DictElement(
+                                    required=True,
                                     parameter_form=BooleanChoice(
                                         label=Label("Exclude VMs from unique piggyback host names"),
                                         help_text=Help(
-                                            "When enabled, virtual machines will keep their original "
-                                            "name without the appended unique hash. All other resource "
-                                            "types will still use unique piggyback host names."
+                                            "Enabling this option excludes VMs from the host name computation and lets "
+                                            "VM piggyback hosts keep their original Azure name. This is needed when "
+                                            "using Automated host creation in order to monitor VMs by installing the "
+                                            "agent, performing TLS registration on the agent, or wanting to ping VMs "
+                                            "by their DNS name."
                                         ),
                                         prefill=DefaultValue(True),
                                     ),
-                                    required=True,
                                 ),
                             },
                         ),
                     ),
                 ],
-                prefill=DefaultValue("disabled"),
             ),
-            required=True,
         ),
         "config": DictElement(
             parameter_form=Dictionary(

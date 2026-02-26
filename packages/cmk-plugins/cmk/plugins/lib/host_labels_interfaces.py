@@ -29,7 +29,8 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
     networks of the remaining addresses.
     """
     # Original author: thl-cmk[at]outlook[dot]com
-
+    if adapters is None:  # type: ignore[comparison-overlap]
+        return  # type: ignore[unreachable]
     for version in (4, 6):
         valid_networks = [
             interface_ip.network

@@ -5,7 +5,7 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from ipaddress import (
     ip_interface,
     IPv4Interface,
@@ -29,8 +29,7 @@ from cmk.plugins.lib.interfaces import (
 )
 from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
 
-NamedInterface = Mapping[str, IPv4Interface | IPv6Interface]
-Section = Sequence[NamedInterface]
+Section = Sequence[IPNetworkAdapter]
 
 
 def address_str_from(adr_type: int, adr_length: int, raw_address: Sequence[int]) -> None | str:
@@ -160,7 +159,11 @@ def parse_ip_addresses(string_table: Sequence[StringByteTable]) -> Section:
     interface_by_index = {str(if_index): str(if_name) for if_index, if_name in if_info}
 
     return [
-        {interface_by_index.get(if_index, if_index): interface_ip}
+        IPNetworkAdapter(
+            name=interface_by_index.get(if_index, if_index),
+            inet4=[interface_ip] if isinstance(interface_ip, IPv4Interface) else [],
+            inet6=[interface_ip] if isinstance(interface_ip, IPv6Interface) else [],
+        )
         for if_index, interface_ip in (
             entry
             for entries in (
@@ -186,27 +189,7 @@ def host_label_ip_addresses(section: Section) -> HostLabelGenerator:
 
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
-    yield from host_labels_if(
-        IPNetworkAdapter(
-            name=name,
-            inet4=[interface] if isinstance(interface, IPv4Interface) else [],
-            inet6=[interface] if isinstance(interface, IPv6Interface) else [],
-        )
-        for named_interface in section or []
-        for name, interface in named_interface.items()
-    )
-
-
-def inventory_ip_addresses(section: Section) -> InventoryResult:
-    yield from inventorize_ip_addresses(
-        IPNetworkAdapter(
-            name=name,
-            inet4=[interface] if isinstance(interface, IPv4Interface) else [],
-            inet6=[interface] if isinstance(interface, IPv6Interface) else [],
-        )
-        for named_interface in section or []
-        for name, interface in named_interface.items()
-    )
+    yield from host_labels_if(section)
 
 
 snmp_section_ip_address = SNMPSection(
@@ -241,6 +224,11 @@ snmp_section_ip_address = SNMPSection(
     ],
     detect=exists(".1.3.6.1.2.1.4.20.1.1.*"),
 )
+
+
+def inventory_ip_addresses(section: Section) -> InventoryResult:
+    yield from inventorize_ip_addresses(section)
+
 
 inventory_plugin_ip_address = InventoryPlugin(
     name="ip_addresses",

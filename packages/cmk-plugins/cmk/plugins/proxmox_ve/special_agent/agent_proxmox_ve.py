@@ -366,7 +366,7 @@ def _create_node_sections(
                     id=repl["id"],
                     source=repl["source"],
                     target=repl["target"],
-                    schedule=repl["schedule"],
+                    schedule=repl.get("schedule"),
                     last_sync=repl["last_sync"],
                     last_try=repl["last_try"],
                     next_sync=repl["next_sync"],

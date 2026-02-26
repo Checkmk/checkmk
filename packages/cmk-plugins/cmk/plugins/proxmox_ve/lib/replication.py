@@ -12,7 +12,7 @@ class Replication(BaseModel, frozen=True):
     id: str
     source: str
     target: str
-    schedule: str
+    schedule: str | None = Field(default=None)
     last_sync: int
     last_try: int
     next_sync: int

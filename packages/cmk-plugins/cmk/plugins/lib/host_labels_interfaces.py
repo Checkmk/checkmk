@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from ipaddress import (
     collapse_addresses,
     IPv4Interface,
@@ -13,6 +13,9 @@ from ipaddress import (
 )
 
 from cmk.agent_based.v2 import HostLabel, HostLabelGenerator
+from cmk.plugins.lib.interfaces import (
+    IPNetworkAdapter,
+)
 
 TEMP_DEVICES = (
     "docker",
@@ -32,9 +35,7 @@ TEMP_DEVICES = (
 IPV6_ULA_NETWORK = IPv6Network("fc00::/7")  # fc.. and fd.. => ULA
 
 
-def host_labels_if(
-    interfaces: Mapping[str, Iterable[IPv4Interface | IPv6Interface]],
-) -> HostLabelGenerator:
+def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
     """Return host labels describing the host's network 'single-/multihomed' property based on
     the IP addresses of its interfaces.
     Filters away temporary interfaces and local IP addresses (based on interface name and IP's
@@ -46,9 +47,10 @@ def host_labels_if(
     for version in (4, 6):
         valid_networks = [
             interface_ip.network
-            for name, interface_ips in interfaces.items()
-            if not any(name.startswith(prefix) for prefix in TEMP_DEVICES)
-            for interface_ip in interface_ips
+            for adapter in adapters
+            if not any(adapter.name.startswith(prefix) for prefix in TEMP_DEVICES)
+            for interface_ip in (*adapter.inet4, *adapter.inet6)
+            if isinstance(interface_ip, (IPv4Interface, IPv6Interface))
             if not any(
                 (
                     interface_ip.is_loopback,

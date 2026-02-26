@@ -103,6 +103,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
             ],
             {
                 "wlp114s0f0": IPNetworkAdapter(
+                    name="wlp114s0f0",
                     state_infos=[
                         "ot-parsed-dat",
                     ],
@@ -1404,12 +1405,14 @@ def test_inventory_lnx_if_with_bonding() -> None:
 
 __section_inventory = {
     "lo": IPNetworkAdapter(
+        name="lo",
         state_infos=["LOOPBACK", "UP", "LOWER_UP"],
         link_ether="",
         inet4=[IPv4Interface("127.0.0.1/8")],
         inet6=[IPv6Interface("::1/128")],
     ),
     "ens32": IPNetworkAdapter(
+        name="ens32",
         state_infos=["BROADCAST", "MULTICAST", "UP", "LOWER_UP"],
         link_ether="\x00\x0c)\x82ýr",
         inet4=[IPv4Interface("192.168.10.144/24")],

@@ -121,6 +121,7 @@ CHECK_DEFAULT_PARAMETERS = {
 
 @dataclass
 class IPNetworkAdapter:
+    name: str
     state_infos: Sequence[str] | None = None
     link_ether: str = ""
     inet4: MutableSequence[IPv4Interface] = field(default_factory=list)

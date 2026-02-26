@@ -39,6 +39,9 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.lib.host_labels_interfaces import host_labels_if
+from cmk.plugins.lib.interfaces import (
+    IPNetworkAdapter,
+)
 
 Section = Sequence[Mapping[str, str]]
 
@@ -104,8 +107,15 @@ def host_label_win_ip_address(section: Section) -> HostLabelGenerator:
 
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
+
     yield from host_labels_if(
-        {adapter.name: adapter.interface_ips() for adapter in map(Adapter.model_validate, section)}
+        IPNetworkAdapter(
+            name=adapter.name,
+            inet4=[ip_if for ip_if in interfaces if isinstance(ip_if, IPv4Interface)],
+            inet6=[ip_if for ip_if in interfaces if isinstance(ip_if, IPv6Interface)],
+        )
+        for adapter in map(Adapter.model_validate, section)
+        if (interfaces := adapter.interface_ips())
     )
 
 

@@ -98,8 +98,9 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             # Some (docker) interfaces have suffix "@..." but ethtool does not show this suffix.
             # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default ...
             # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
+            name = line[1][:-1].split("@")[0]
             iface = ip_stats.setdefault(
-                line[1][:-1].split("@")[0], IPNetworkAdapter(state_infos=line[2][1:-1].split(","))
+                name, IPNetworkAdapter(name=name, state_infos=line[2][1:-1].split(","))
             )
             # The interface flags are summarized in the angle brackets.
             continue
@@ -214,7 +215,7 @@ def parse_lnx_if_pure(string_table: StringTable, timestamp: float) -> Section:
     if_table = []
     for index, (nic, ethtool_interface) in enumerate(sorted(ethtool_stats.items())):
         ifInOctets = ethtool_interface.counters[0]
-        iplink_interface = ip_stats.get(nic, IPNetworkAdapter())
+        iplink_interface = ip_stats.get(nic, IPNetworkAdapter(name=nic))
         if_table.append(
             interfaces.InterfaceWithCounters(
                 interfaces.Attributes(
@@ -272,16 +273,7 @@ def host_label_lnx_ip_address(section: Section) -> HostLabelGenerator:
 
     _interfaces_with_counters, ip_stats = section
 
-    yield from host_labels_if(
-        {
-            name: [
-                interface
-                for interface in (*adapter.inet4, *adapter.inet6)
-                if isinstance(interface, (IPv4Interface, IPv6Interface))
-            ]
-            for name, adapter in ip_stats.items()
-        }
-    )
+    yield from host_labels_if(ip_stats.values())
 
 
 agent_section_lnx_if = AgentSection(

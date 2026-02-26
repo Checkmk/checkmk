@@ -84,6 +84,17 @@ py_library(
     ],
 )
 
+# __main__.py imports from livestatus (not declared as dep of the standalone package).
+# Keep it in a separate target to avoid mypy errors on the standalone package.
+py_library(
+    name = "cmk-livestatus-client-main",
+    srcs = ["cmk/livestatus_client/__main__.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+    visibility = ["//cmk:__pkg__"],
+    deps = [":py_livestatus"],
+)
+
 py_doc_test(
     name = "doctest",
     size = "small",
@@ -118,6 +129,7 @@ py_wheel(
     version = "1.0.0",
     deps = [
         ":cmk-livestatus-client",
+        ":cmk-livestatus-client-main",
         ":cmk_livestatus_client_py_typed",
         ":livestatus-api",
         ":livestatus-connection",

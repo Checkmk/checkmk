@@ -59,7 +59,6 @@ pkg_files(
         ":cmk-cert",
         ":cmk-config-anonymizer",
         ":cmk-convert-rrds",
-        ":cmk-create-rrd",
         ":cmk-general-version-infos",
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets",
@@ -87,7 +86,6 @@ pkg_files(
         ":message-broker-certs",
         ":mkbackup",
         ":mkevent",
-        ":mkeventd",
         ":mkp",
         ":post-rename-site.py",
     ],
@@ -102,14 +100,36 @@ pkg_files(
     },
 )
 
+pkg_files(
+    name = "mkeventd",
+    srcs = ["mkeventd.py"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+    renames = {"mkeventd.py": "mkeventd"},
+)
+
+pkg_files(
+    name = "cmk-create-rrd",
+    srcs = ["cmk-create-rrd.py"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+    renames = {"cmk-create-rrd.py": "cmk-create-rrd"},
+)
+
 pkg_tar(
     name = "pkg_tar",
     srcs = [
         ":bin_750",
         ":bin_755",
+        ":cmk-create-rrd",
         ":cmk-product-usage",
         ":cmk-pwstore",
         ":cmk_link",
+        ":mkeventd",
     ],
     stamp = 1,
     visibility = ["//visibility:public"],
@@ -152,6 +172,20 @@ py_library(
 py_library(
     name = "post_rename_site_py",
     srcs = ["post-rename-site.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "mkeventd_main",
+    srcs = ["mkeventd.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "cmk-create-rrd_main",
+    srcs = ["cmk-create-rrd.py"],
     imports = ["."],
     tags = ["no-mypy"],
 )

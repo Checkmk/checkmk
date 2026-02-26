@@ -1,0 +1,328 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="possibly-undefined"
+
+import sys
+import time
+from argparse import ArgumentParser
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from os import getenv
+from typing import NoReturn
+
+from livestatus import SingleSiteConnection
+
+# This will be substituted at 'make dist' time.
+__version__ = "2.6.0b1"
+
+
+@dataclass(slots=True)
+class Arguments:
+    config: bool = False
+    dump_templates: bool = False
+    mark_mode: bool = False
+    prefix: str = ""
+    socket: str | None = None
+    host_only_header: list[str] = field(default_factory=list)
+    host_header: list[str] = field(default_factory=list)
+    service_header: list[str] = field(default_factory=list)
+    interval: int | None = None
+    include_groups: bool = False
+    include_host_icon: bool = False
+    debug: bool = False
+
+
+def parse_arguments(argv: Sequence[str]) -> Arguments:
+    parser = ArgumentParser(prog="livedump")
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"This is livedump version {__version__}\n",
+    )
+    parser.add_argument(
+        "-C",
+        "--config",
+        help="dump configuration instead of state",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-T",
+        "--dump-templates",
+        help="dump host and service templates, too",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-M",
+        "--mark-mode",
+        help="emit the mode as the first line, for use with e.g. livedump-ssh-recv",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-p",
+        "--prefix",
+        help="add PREFIX to host names, useful for disambiguation in a multi-site setup",
+    )
+    parser.add_argument(
+        "-s",
+        "--socket",
+        help="connect to Livestatus at SOCKET, e.g. 'tcp:10.11.0.55:6557' or 'unix:/var/run/nagios/rw/live'",
+    )
+    parser.add_argument(
+        "-O",
+        "--host-only-header",
+        metavar="HEADER",
+        help="add HEADER to host queries only, usually 'Filter: ...'",
+        action="append",
+    )
+    parser.add_argument(
+        "-H",
+        "--host-header",
+        metavar="HEADER",
+        help="add HEADER to host and service queries only, usually 'Filter: ...'",
+        action="append",
+    )
+    parser.add_argument(
+        "-S",
+        "--service-header",
+        metavar="HEADER",
+        help="add HEADER to service queries only, usually 'Filter: ...'",
+        action="append",
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        help="dump the given check INTERVAL for hosts/services into the template",
+        type=int,
+    )
+    parser.add_argument(
+        "-G",
+        "--include-groups",
+        help="dump contact groups instead of contacts into config",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--include-host-icon",
+        help="add host icon_image to config",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--debug",
+        help="do not catch Python exceptions",
+        action="store_true",
+    )
+    return parser.parse_args(args=argv[1:], namespace=Arguments())
+
+
+def dump_templates(args: Arguments) -> None:
+    check_interval = (
+        "" if args.interval is None else f"\n    check_interval          {args.interval}"
+    )
+    sys.stdout.write(
+        f"""define host {{
+    name                    livedump-host
+    use                     check_mk_default
+    register                0
+    active_checks_enabled   0
+    passive_checks_enabled  1{check_interval}
+}}
+
+define service {{
+    name                    livedump-service
+    register                0
+    active_checks_enabled   0
+    passive_checks_enabled  1
+    check_period            0x0{check_interval}
+}}
+
+define command {{
+    command_name            check-livedump
+    command_line            echo "WARN - You did an active check, but this check is passive" ; exit 1
+}}
+
+define timeperiod {{
+    timeperiod_name         0x0
+    alias                   Never ever
+}}
+
+"""
+    )
+
+
+#   .-Livedump-------------------------------------------------------------.
+#   |            _     _               _                                   |
+#   |           | |   (_)_   _____  __| |_   _ _ __ ___  _ __              |
+#   |           | |   | \ \ / / _ \/ _` | | | | '_ ` _ \| '_ \             |
+#   |           | |___| |\ V /  __/ (_| | |_| | | | | | | |_) |            |
+#   |           |_____|_| \_/ \___|\__,_|\__,_|_| |_| |_| .__/             |
+#   |                                                   |_|                |
+#   +----------------------------------------------------------------------+
+#   | The actual livedump                                                  |
+#   '----------------------------------------------------------------------'
+
+
+def bail_out(message: object) -> NoReturn:
+    sys.stderr.write(f"{message}\n")
+    sys.exit(1)
+
+
+def connect(socket_path: str | None) -> SingleSiteConnection:
+    if socket_path is not None:
+        return SingleSiteConnection(socket_path)
+    if omd_root := getenv("OMD_ROOT"):
+        return SingleSiteConnection(f"unix:{omd_root}/tmp/run/live")  # nosec # BNS:13b2c8
+    bail_out("specify Livestatus socket or set OMD_ROOT")
+
+
+def prepare_row(row: dict[str, object]) -> None:
+    contacts = row["contacts"]
+    assert isinstance(contacts, list)
+    row["contactsstring"] = ",".join(contacts)
+    contact_groups = row.get("contact_groups")
+    if isinstance(contact_groups, list):
+        row["contact_groups"] = ",".join(contact_groups)
+
+
+def livedump_config(args: Arguments) -> None:
+    connection = connect(args.socket)
+    if args.mark_mode:
+        sys.stdout.write(f"config {getenv('OMD_SITE')}\n")
+    if args.dump_templates:
+        dump_templates(args)
+
+    # Dump host config
+    query = "\n".join(
+        [
+            "GET hosts",
+            "Columns: name alias address groups check_command icon_image max_check_attempts contacts contact_groups",
+        ]
+        + args.host_header
+        + args.host_only_header
+    )
+    for row in connection.query_table_assoc(query):
+        prepare_row(row)
+        row["groupstring"] = ",".join(row["groups"])
+        sys.stdout.write(
+            "define host {\n"
+            "  use                livedump-host\n"
+            f"  host_name          {args.prefix}{row['name']}\n"
+        )
+        sys.stdout.write(
+            f"  alias              {row['alias']}\n"
+            f"  address            {row['address']}\n"
+            f"  host_groups        {row['groupstring']}\n"
+            f"  check_command      {row['check_command']}\n"
+            f"  max_check_attempts {row['max_check_attempts']}\n"
+        )
+        if args.include_groups:
+            sys.stdout.write(f"  contacts           {row['contactsstring']}\n")
+        else:
+            sys.stdout.write(f"  contact_groups     {row['contact_groups']}\n")
+        if args.include_host_icon:
+            if row.get("icon_image"):
+                sys.stdout.write(f"  icon_image         {row['icon_image']}\n")
+        sys.stdout.write("}\n\n")
+
+    # Dump service config
+    query = "\n".join(
+        [
+            "GET services",
+            "Columns: host_name description groups check_command max_check_attempts contacts",
+        ]
+        + args.host_header
+        + args.service_header
+    )
+    for row in connection.query_table_assoc(query):
+        prepare_row(row)
+        if row["groups"]:
+            row["groupstring"] = "service_groups " + ",".join(row["groups"])
+        else:
+            row["groupstring"] = ""
+        row["contactsstring"] = ",".join(row["contacts"])
+        sys.stdout.write(
+            "define service {\n"
+            "  use                livedump-service\n"
+            f"  host_name          {args.prefix}{row['host_name']}\n"
+        )
+        sys.stdout.write(
+            f"  description        {row['description']}\n"
+            f"  {row['groupstring']}\n"
+            f"  check_command      check-livedump\n"
+            f"  contacts           {row['contactsstring']}\n"
+            f"  max_check_attempts {row['max_check_attempts']}\n"
+            "}\n\n"
+        )
+
+
+def livedump_state(args: Arguments) -> None:
+    connection = connect(args.socket)
+    if args.mark_mode:
+        sys.stdout.write("status\n")
+    now = time.time()
+    query = "\n".join(
+        [
+            "GET hosts",
+            "Columns: name state plugin_output perf_data latency",
+        ]
+        + args.host_header
+        + args.host_only_header
+    )
+    for row in connection.query_table_assoc(query):
+        row["now"] = now
+        sys.stdout.write(f"host_name={args.prefix}{row['name']}")
+        sys.stdout.write(
+            f"""
+check_type=1
+check_options=0
+reschedule_check
+latency={row["latency"]:.2f}
+start_time={row["now"]:.1f}
+finish_time={row["now"]:.1f}
+return_code={row["state"]}
+output={row["plugin_output"]}|{row["perf_data"]}
+
+"""
+        )
+
+    query = "\n".join(
+        [
+            "GET services",
+            "Columns: host_name description state plugin_output perf_data latency",
+        ]
+        + args.host_header
+        + args.service_header
+    )
+    for row in connection.query_table_assoc(query):
+        row["now"] = now
+        sys.stdout.write(f"host_name={args.prefix}{row['host_name']}")
+        sys.stdout.write(
+            f"""
+service_description={row["description"]}
+check_type=1
+check_options=0
+reschedule_check
+latency={row["latency"]:.2f}
+start_time={row["now"]:.1f}
+finish_time={row["now"]:.1f}
+return_code={row["state"]}
+output={row["plugin_output"]}|{row["perf_data"]}
+
+"""
+        )
+
+
+def main() -> None:
+    try:
+        args = parse_arguments(sys.argv)
+        (livedump_config if args.config else livedump_state)(args)
+    except Exception as e:
+        if args.debug:
+            raise
+        bail_out(e)
+
+
+if __name__ == "__main__":
+    main()

@@ -10,10 +10,9 @@ from types import FrameType
 from typing import NoReturn
 
 from cmk.ccc.exceptions import MKTerminate
-
-from .config import RRDConfig
-from .interface import RRDInterface
-from .rrd import RRDCreator
+from cmk.rrd.config import RRDConfig
+from cmk.rrd.interface import RRDInterface
+from cmk.rrd.rrd import RRDCreator
 
 
 # register SIGINT handler for consistent CTRL+C handling

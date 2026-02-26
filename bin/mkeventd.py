@@ -6,7 +6,7 @@
 if __name__ == "__main__":
     import sys
 
-    import cmk.ec.main
-    import cmk.utils.paths
+    import cmk.ec.main  # astrein: disable=cmk-module-layer-violation
+    import cmk.utils.paths  # astrein: disable=cmk-module-layer-violation
 
     cmk.ec.main.main(cmk.utils.paths.omd_root, sys.argv)

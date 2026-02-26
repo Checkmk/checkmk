@@ -433,8 +433,8 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("non-free/packages/cmk-core-helpers/cmk/inline_snmp/inline.py")
     },
     ImportName("rrdtool"): {  # is built as part of the project
-        Path("bin/cmk-convert-rrds"),
-        Path("bin/cmk-create-rrd"),
+        Path("bin/cmk-create-rrd.py"),
+        Path("cmk/rrd/convert_rrds/__main__.py"),
     },
     ImportName("docker"): (
         Path("buildscripts/docker_image_aliases/register.py"),

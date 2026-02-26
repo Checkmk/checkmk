@@ -7,10 +7,9 @@
 from collections.abc import Sequence
 
 from cmk.ccc.hostaddress import HostName
-
-from .config import read_hostnames, RRDConfig
-from .interface import RRDInterface
-from .rrd import RRDConverter
+from cmk.rrd.config import read_hostnames, RRDConfig
+from cmk.rrd.interface import RRDInterface
+from cmk.rrd.rrd import RRDConverter
 
 
 def convert_rrds(

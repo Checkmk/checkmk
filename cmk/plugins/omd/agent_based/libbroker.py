@@ -5,10 +5,10 @@
 #
 import json
 from collections import defaultdict
-from collections.abc import Generator, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import groupby
-from typing import Any, Callable, cast, Generic, TypeVar
+from typing import Any, cast, Generic, TypeVar
 
 from cmk.agent_based.v2 import StringTable
 

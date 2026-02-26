@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable, Mapping, Sequence
-from typing import cast, Literal, Union
+from typing import cast, Literal
 
 from pydantic import BaseModel
 
@@ -47,13 +47,13 @@ ServiceConfig = Mapping[str, LimitsActivated | HostAssignment | Selection | None
 
 
 class AwsParams(BaseModel):
-    auth: Union[
-        tuple[Literal["access_key_sts"], AuthAccessKeySts],
-        tuple[Literal["access_key"], AuthAccessKey],
-        tuple[Literal["sts"], AuthSts],
-        Literal["none"],
-        None,
-    ] = None
+    auth: (
+        tuple[Literal["access_key_sts"], AuthAccessKeySts]
+        | tuple[Literal["access_key"], AuthAccessKey]
+        | tuple[Literal["sts"], AuthSts]
+        | Literal["none"]
+        | None
+    ) = None
     proxy_details: ProxyDetails | None = None
     access: APIAccess | None = None
     global_services: Mapping[str, ServiceConfig] | None = None

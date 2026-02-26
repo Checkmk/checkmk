@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import MutableMapping
+from collections.abc import Callable, MutableMapping
 from dataclasses import dataclass
-from typing import Callable, NoReturn, Self
+from typing import NoReturn, Self
 
 import requests
 

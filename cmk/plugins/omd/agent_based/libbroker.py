@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import StringTable
 
 @dataclass(frozen=True)
 class BrokerStatus:
-    memory: int
+    memory: int | None
 
 
 @dataclass(frozen=True)

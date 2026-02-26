@@ -27,6 +27,34 @@ from cmk.plugins.tcp.lib.models import Connection, ConnectionState, Section, Spl
                 )
             ],
         ),
+        # ss command has slightly different connection states.
+        (
+            [
+                [
+                    "tcp",
+                    "FIN-WAIT-2",
+                    "0",
+                    "0",
+                    "[::ffff:11.111.0.11]:443",
+                    "[::ffff:11.111.0.11]:11111",
+                ],
+                ["tcp", "ESTAB", "0", "0", "[::ffff:127.0.0.1]:8888", "[::ffff:127.0.0.1]:55555"],
+            ],
+            [
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP(ip_address="[::ffff:11.111.0.11]", port="443"),
+                    remote_address=SplitIP(ip_address="[::ffff:11.111.0.11]", port="11111"),
+                    state=ConnectionState.FIN_WAIT2,
+                ),
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP(ip_address="[::ffff:127.0.0.1]", port="8888"),
+                    remote_address=SplitIP(ip_address="[::ffff:127.0.0.1]", port="55555"),
+                    state=ConnectionState.ESTABLISHED,
+                ),
+            ],
+        ),
         # Some AIX systems separate the port with a dot (.) instead of a colon (:)
         (
             [["tcp4", "0", "0", "127.0.0.1.1234", "127.0.0.1.5678", "ESTABLISHED"]],

@@ -53,6 +53,8 @@ from cmk.plugins.tcp.lib.netstat import (
 STATE_TRANSLATIONS: dict[str, str] = {
     "LISTEN": "LISTENING",  # for Ubuntu
     "ESTAB": "ESTABLISHED",  # for Ubuntu
+    "FIN-WAIT-1": "FIN-WAIT1",  # for ss
+    "FIN-WAIT-2": "FIN-WAIT2",  # for ss
 }
 
 

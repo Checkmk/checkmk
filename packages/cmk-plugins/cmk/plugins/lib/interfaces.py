@@ -118,6 +118,22 @@ CHECK_DEFAULT_PARAMETERS = {
     },
 }
 
+TEMP_DEVICE_PREFIXES = (
+    "docker",
+    "br-",
+    "veth",
+    "podman",
+    "cni",
+    "flannel",
+    "calico",
+    "weave",
+    "vti",
+    "virbr",
+    "vnet",
+    "vEthernet",
+    "vmnet",
+)
+
 
 @dataclass
 class IPNetworkAdapter:

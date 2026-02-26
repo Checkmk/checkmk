@@ -22,14 +22,13 @@ from cmk.agent_based.v2 import (
     InventoryResult,
     RuleSetType,
     StringTable,
-    TableRow,
 )
 from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 from cmk.plugins.lib.interfaces import InterfaceWithCounters, IPNetworkAdapter
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
-from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
+from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces, inventorize_ip_addresses
 
 # Example output from agent:
 
@@ -442,34 +441,7 @@ def inventory_lnx_if(
         len(ifaces),
     )
 
-    yield from _inventorize_addresses(ip_stats)
-
-
-def _inventorize_addresses(ip_stats: SectionInventory) -> InventoryResult:
-    for if_name, interface in ip_stats.items():
-        for interface_ip in (
-            *interface.inet4,
-            *interface.inet6,
-        ):
-            if not isinstance(interface_ip, (IPv4Interface, IPv6Interface)):
-                continue
-            if interface_ip.ip.compressed == interface_ip.network.broadcast_address.compressed:
-                continue  # drop broadcast IPs
-
-            yield TableRow(
-                path=["networking", "addresses"],
-                key_columns={
-                    "address": str(interface_ip.ip.compressed),
-                    "device": if_name,
-                },
-                inventory_columns={
-                    "broadcast": str(interface_ip.network.broadcast_address),
-                    "prefixlength": interface_ip.network.prefixlen,
-                    "netmask": str(interface_ip.network.netmask),
-                    "network": str(interface_ip.network.network_address),
-                    "type": f"ipv{interface_ip.version}",
-                },
-            )
+    yield from inventorize_ip_addresses(ip_stats.values())
 
 
 inventory_plugin_lnx_if = InventoryPlugin(

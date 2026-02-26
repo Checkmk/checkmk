@@ -6,9 +6,17 @@
 import time
 from collections.abc import Container, Iterable
 from dataclasses import dataclass
+from ipaddress import IPv4Interface, IPv6Interface
 from typing import TypedDict
 
-from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
+from cmk.agent_based.v2 import (
+    Attributes,
+    InventoryResult,
+    TableRow,
+)
+from cmk.plugins.lib.interfaces import (
+    IPNetworkAdapter,
+)
 
 
 @dataclass
@@ -145,4 +153,40 @@ def inventorize_interfaces(
             "total_ethernet_ports": total_ethernet_ports,
             "total_interfaces": n_total,
         },
+    )
+
+
+def inventorize_ip_addresses(adapters: Iterable[IPNetworkAdapter]) -> InventoryResult:
+    # Original author: thl-cmk[at]outlook[dot]com
+    if adapters is None:  # type: ignore[comparison-overlap]
+        return  # type: ignore[unreachable]
+
+    yield from (
+        TableRow(
+            path=["networking", "addresses"],
+            key_columns={
+                "address": str(interface_ip.ip.compressed),
+                "device": adapter.name,
+            },
+            # only put details in inventory columns for non-temporary addresses,
+            # to status-columns otherwise in order to avoid noise
+            inventory_columns={
+                "type": f"ipv{interface_ip.version}",
+                "network": str(interface_ip.network.network_address),
+                "netmask": str(interface_ip.network.netmask),
+                "prefixlength": interface_ip.network.prefixlen,
+                "broadcast": str(interface_ip.network.broadcast_address),
+                # IPv4 has no scope_id, and we also drop empty scope_id
+                **(
+                    {"scope_id": str(scope_id)}
+                    if (scope_id := getattr(interface_ip, "scope_id", None))
+                    else {}
+                ),
+            },
+            status_columns={},
+        )
+        for adapter in adapters
+        for interface_ip in (*adapter.inet4, *adapter.inet6)
+        if isinstance(interface_ip, (IPv4Interface, IPv6Interface))
+        if interface_ip.ip.compressed != interface_ip.network.broadcast_address.compressed
     )

@@ -15,23 +15,9 @@ from ipaddress import (
 from cmk.agent_based.v2 import HostLabel, HostLabelGenerator
 from cmk.plugins.lib.interfaces import (
     IPNetworkAdapter,
+    TEMP_DEVICE_PREFIXES,
 )
 
-TEMP_DEVICES = (
-    "docker",
-    "br-",
-    "veth",
-    "podman",
-    "cni",
-    "flannel",
-    "calico",
-    "weave",
-    "vti",
-    "virbr",
-    "vnet",
-    "vEthernet",
-    "vmnet",
-)
 IPV6_ULA_NETWORK = IPv6Network("fc00::/7")  # fc.. and fd.. => ULA
 
 
@@ -48,7 +34,7 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
         valid_networks = [
             interface_ip.network
             for adapter in adapters
-            if not any(adapter.name.startswith(prefix) for prefix in TEMP_DEVICES)
+            if not any(adapter.name.startswith(prefix) for prefix in TEMP_DEVICE_PREFIXES)
             for interface_ip in (*adapter.inet4, *adapter.inet6)
             if isinstance(interface_ip, (IPv4Interface, IPv6Interface))
             if not any(

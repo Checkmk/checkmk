@@ -462,6 +462,11 @@ async function checkTokenValidity(token: string): Promise<boolean> {
       window.location.reload()
       return false
     }
+    const data = await response.json()
+    if (data.result_code !== 0) {
+      window.location.reload()
+      return false
+    }
     return true
   } catch {
     window.location.reload()

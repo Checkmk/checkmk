@@ -25,5 +25,4 @@ class CheckTokenValidityPage(DashboardTokenAuthenticatedJsonPage):
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> None:
         if isinstance(exception, MKUserError):
             http.response.status_code = 403
-            return
         super()._handle_exception(exception, ctx)

@@ -182,6 +182,11 @@ def _directory_form() -> Dictionary:
 
 
 def _agent_controller_arch_form() -> SingleChoice:
+    # The element names here describe WHERE THE PACKAGE WILL RUN (user-facing), but they
+    # determine WHICH CONTROLLER BINARIES ARE SHIPPED in the package (internal consequence):
+    #   "x86"         → ships cmk-agent-ctl (x86-64 binary only)
+    #   "arm"         → ships cmk-agent-ctl-aarch64 (ARM64 binary only)
+    #   "x86_and_arm" → ships both binaries, installation scripts pick the right one at runtime
     return SingleChoice(
         title=Title("Architecture of the systems where the agent will be deployed"),
         help_text=Help(
@@ -192,18 +197,18 @@ def _agent_controller_arch_form() -> SingleChoice:
             "The agent package installation scripts will automatically select the correct binary,"
             " depending on the target system's architecture and the available binaries."
         ),
-        prefill=DefaultValue("x86_64"),
+        prefill=DefaultValue("x86"),
         elements=[
             SingleChoiceElement(
-                name="x86_64",
+                name="x86",
                 title=Title("x86 64-bit only"),
             ),
             SingleChoiceElement(
-                name="aarch64",
+                name="arm",
                 title=Title("ARM 64-bit only"),
             ),
             SingleChoiceElement(
-                name="all",
+                name="x86_and_arm",
                 title=Title("x86 64-bit or ARM 64-bit"),
             ),
         ],
@@ -229,13 +234,13 @@ def _parameter_form() -> Dictionary:
 
 
 def _migrate(obj: object) -> Mapping[str, object]:
-    if not isinstance(obj, Mapping):  # hidden `Any`s in here
-        raise ValueError("Expected a mapping object")
+    if isinstance(obj, Mapping):
+        return {
+            "agent_controller_arch": "x86",
+            **{str(k): v for k, v in obj.items()},
+        }
 
-    if "agent_controller_arch" in obj:
-        return obj
-
-    return {**obj, "agent_controller_arch": "x86_64"}  # returns Mapping[Any, Any]
+    raise ValueError(obj)
 
 
 rule_spec_customize_agent_package = AgentConfig(

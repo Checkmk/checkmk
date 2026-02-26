@@ -452,6 +452,7 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "subscription_name",
         "region",
         "tenant_id",
+        "tenant_name",
     ],
 }
 

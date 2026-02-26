@@ -357,6 +357,7 @@ def test_registered_painters() -> None:
         "inv_software_applications_azure_metadata_subscription_id",
         "inv_software_applications_azure_metadata_subscription_name",
         "inv_software_applications_azure_metadata_tenant_id",
+        "inv_software_applications_azure_metadata_tenant_name",
         "inv_software_applications_check_mk",
         "inv_software_applications_check_mk_cluster",
         "inv_software_applications_check_mk_cluster_is_cluster",

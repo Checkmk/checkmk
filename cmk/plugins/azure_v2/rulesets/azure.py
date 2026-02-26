@@ -259,6 +259,13 @@ def configuration_authentication() -> Mapping[str, DictElement]:
             ),
             required=True,
         ),
+        "tenant_name": DictElement(
+            parameter_form=String(
+                title=Title("Tenant Name"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
         "tenant": DictElement(
             parameter_form=String(
                 title=Title("Tenant ID / Directory ID"),

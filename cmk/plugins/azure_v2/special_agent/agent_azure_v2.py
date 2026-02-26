@@ -183,6 +183,7 @@ class AzureSubscription(_AzureEntity):
         tags: Mapping[str, str],
         use_unique_names: bool,
         tenant_id: str,
+        tenant_name: str | None = None,
     ) -> None:
         super().__init__(
             entity_name=name, section="subscription", use_unique_names=use_unique_names
@@ -191,6 +192,7 @@ class AzureSubscription(_AzureEntity):
         self.tags: Final[Mapping[str, str]] = tags
         self.name: Final[str] = name
         self.tenant_id: Final[str] = tenant_id
+        self.tenant_name: Final[str | None] = tenant_name
 
         self.info = {
             "name": name,
@@ -199,6 +201,7 @@ class AzureSubscription(_AzureEntity):
             "type": "subscription",  # This doesn't exist, but sure.
             "group": "",
             "tenant_id": tenant_id,
+            "tenant_name": tenant_name,
             "subscription_name": name,
         }
 
@@ -222,6 +225,7 @@ class AzureResourceGroup(_AzureEntity):
         self.info = {
             **info,
             "tenant_id": subscription.tenant_id,
+            "tenant_name": subscription.tenant_name,
             "subscription_name": subscription.name,
             "subscription": subscription.id,
             "group": info["name"].lower(),
@@ -332,6 +336,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--cache-id",
         required="--connection-test" not in sys.argv,
         help="Unique id for this special agent configuration",
+    )
+
+    parser.add_argument(
+        "--tenant-name",
+        type=str,
+        default=None,
+        metavar="TENANT_NAME",
+        help="Azure tenant name to add to inventory and labels of created resources",
     )
 
     parser.add_argument(
@@ -811,6 +823,7 @@ class AzureResource(_AzureEntity):
             **info,
             "tags": self.tags,
             "tenant_id": subscription.tenant_id,
+            "tenant_name": subscription.tenant_name,
             "subscription_name": subscription.name,
             "subscription": subscription.id,
         }
@@ -1888,7 +1901,8 @@ async def _gather_metrics(
 
 
 def get_resource_host_labels_section(
-    resource: AzureResource, monitored_groups: Mapping[str, AzureResourceGroup]
+    resource: AzureResource,
+    monitored_groups: Mapping[str, AzureResourceGroup],
 ) -> AzureLabelsSection:
     subscription = resource.subscription
     labels = {
@@ -1907,6 +1921,9 @@ def get_resource_host_labels_section(
         for tag_name, tag_value in group.tags.items():
             if tag_name not in resource.tags:
                 resource_tags[tag_name] = tag_value
+
+    if (tenant_name := resource.subscription.tenant_name) is not None:
+        labels["tenant_name"] = tenant_name
 
     return AzureLabelsSection(resource.piggytarget, labels=labels, tags=resource_tags)
 
@@ -1947,16 +1964,29 @@ def write_group_info(
     monitored_resources: Sequence[AzureResource],
     subscription: AzureSubscription,
 ) -> None:
+    labels = {
+        "subscription_name": subscription.name,
+        "subscription": subscription.id,
+        "entity": "resource_group",
+    }
+
+    if subscription.tenant_name is not None:
+        labels["tenant_name"] = subscription.tenant_name
+
     for group_name, group in monitored_groups.items():
+        labels["resource_group"] = group_name
+
+        if (region := group.info.get("location")) is not None:
+            labels["region"] = region
+        else:
+            # Since we're mutating per loop, if this doesn't exist in an iteration,
+            # we need to remember to nix it, otherwise we might wrongly show the region
+            # of the previous group.
+            labels.pop("region", None)
+
         AzureLabelsSection(
             group.piggytarget,
-            labels={
-                "resource_group": group_name,
-                "subscription_name": subscription.name,
-                "subscription": subscription.id,
-                "entity": "resource_group",
-                **({"region": region} if (region := group.info.get("location")) else {}),
-            },
+            labels=labels,
             tags=group.tags,
         ).write()
 
@@ -1976,13 +2006,18 @@ def write_group_info(
 
 
 def write_subscription_info(subscription: AzureSubscription) -> None:
+    labels = {
+        "subscription_name": subscription.name,
+        "subscription": subscription.id,
+        "entity": "subscription",
+    }
+
+    if subscription.tenant_name:
+        labels["tenant_name"] = subscription.tenant_name
+
     AzureLabelsSection(
         subscription.piggytarget,
-        labels={
-            "subscription_name": subscription.name,
-            "subscription": subscription.id,
-            "entity": "subscription",
-        },
+        labels=labels,
         tags=subscription.tags,
     ).write()
 
@@ -2675,6 +2710,7 @@ async def _get_subscriptions(args: argparse.Namespace) -> set[AzureSubscription]
                     tags=item.get("tags", {}),
                     use_unique_names=args.unique_hostnames,
                     tenant_id=args.tenant,
+                    tenant_name=args.tenant_name,
                 )
                 for item in response.get("value", [])
             }

@@ -50,7 +50,8 @@ class AzureParams(BaseModel):
         | tuple[Literal["all_subscriptions"], None]
         | tuple[Literal["tag_matching_subscriptions"], list[TagBased]]
     )
-    tenant: str
+    tenant_name: str
+    tenant: str  # tenant id
     client: str
     secret: Secret
     proxy: URLProxy | NoProxy | EnvProxy | None = None
@@ -165,6 +166,9 @@ def agent_azure_arguments(
                 args += ["--import-matching-tags-as-labels", tag_key_pattern]
             case None:
                 args += ["--ignore-all-tags"]
+
+    if params.tenant_name:
+        args.extend(["--tenant-name", params.tenant_name])
 
     yield SpecialAgentCommand(command_arguments=args)
 

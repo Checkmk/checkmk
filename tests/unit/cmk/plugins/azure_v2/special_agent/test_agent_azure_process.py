@@ -36,6 +36,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     write_group_info,
     write_remaining_reads,
     write_resource_groups_sections,
+    write_subscription_info,
     write_subscription_section,
 )
 
@@ -79,7 +80,7 @@ Args = argparse.Namespace
             (
                 [
                     '{"cloud": "azure", "name": "MyVM", "resource_group": "burningman", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
+                    ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                 ],
                 ["MyVM"],
@@ -118,7 +119,7 @@ Args = argparse.Namespace
             (
                 [
                     '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
+                    ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
                 ["my_resource"],
@@ -154,7 +155,7 @@ Args = argparse.Namespace
             (
                 [
                     '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
+                    ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n',
                     "{}\n",
                 ],
                 ["my_resource"],
@@ -193,7 +194,7 @@ Args = argparse.Namespace
             (
                 [
                     '{"cloud": "azure", "name": "my_resource", "resource_group": "resource_group_name", "resource": "loadbalancers", "entity": "resource", "subscription_name": "mock_subscription_name",'
-                    ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
+                    ' "subscription": "mock_subscription_id", "region": "westeurope", "tenant_name": "mock_tenant_name"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
                 ["my_resource_6c554708"],
@@ -238,7 +239,7 @@ def test_get_resource_host_labels_section(
                     use_unique_names=False,
                 )
             },
-            '{"cloud": "azure", "name": "my_cosmos_db", "resource_group": "cosmos_group", "resource": "databaseaccounts", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "eastus", "cosmosdb_account": "my_cosmos_db"}\n',
+            '{"cloud": "azure", "name": "my_cosmos_db", "resource_group": "cosmos_group", "resource": "databaseaccounts", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "eastus", "cosmosdb_account": "my_cosmos_db", "tenant_name": "mock_tenant_name"}\n',
             id="CosmosDB account with cosmosdb_account label",
         ),
         pytest.param(
@@ -263,7 +264,7 @@ def test_get_resource_host_labels_section(
                     use_unique_names=False,
                 )
             },
-            '{"cloud": "azure", "name": "my_vm", "resource_group": "vm_group", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true}\n',
+            '{"cloud": "azure", "name": "my_vm", "resource_group": "vm_group", "resource": "virtualmachines", "entity": "resource", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true, "tenant_name": "mock_tenant_name"}\n',
             id="Virtual machine with vm_instance label",
         ),
     ],
@@ -512,12 +513,12 @@ async def test_write_resource_groups_sections(
         == """<<<<resource_group_1>>>>
 <<<azure_v2_resourcegroups:sep(124)>>>
 Resource
-{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1", "name": "resource_group_1", "type": "Microsoft.Resources/resourceGroups", "location": "eastus", "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_1": "group_tag_value_1"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "group": "resource_group_1"}
+{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1", "name": "resource_group_1", "type": "Microsoft.Resources/resourceGroups", "location": "eastus", "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_1": "group_tag_value_1"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "tenant_name": "mock_tenant_name", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "group": "resource_group_1"}
 <<<<>>>>
 <<<<resource_group_2>>>>
 <<<azure_v2_resourcegroups:sep(124)>>>
 Resource
-{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2", "name": "resource_group_2", "type": "Microsoft.Resources/resourceGroups", "location": "westeurope", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_2": "group_tag_value_2"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "group": "resource_group_2"}
+{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2", "name": "resource_group_2", "type": "Microsoft.Resources/resourceGroups", "location": "westeurope", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_2": "group_tag_value_2"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "tenant_name": "mock_tenant_name", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "group": "resource_group_2"}
 <<<<>>>>
 """
     )
@@ -598,7 +599,7 @@ async def test_filter_tags(
             ],
             "<<<<burningman>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "burningman"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<mock_subscription_name>>>>\n"
@@ -649,12 +650,12 @@ async def test_filter_tags(
             ],
             "<<<<burningman>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "burningman"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<resource_group_name>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "resource_group_name", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "resource_group_name"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<mock_subscription_name>>>>\n"
@@ -695,7 +696,7 @@ async def test_filter_tags(
             ],
             "<<<<burningman_cb8bc18c>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "burningman"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<mock_subscription_name_9bb22fdd>>>>\n"
@@ -722,7 +723,7 @@ async def test_filter_tags(
             [],
             "<<<<burningman_cb8bc18c>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "burningman"}\n'
             "{}\n"
             "<<<<>>>>\n"
             "<<<<mock_subscription_name_9bb22fdd>>>>\n"
@@ -748,6 +749,15 @@ def test_write_group_info(
     )
     captured = capsys.readouterr()
     assert captured.out == expected_result
+
+
+def test_write_subscription_info(capsys: pytest.CaptureFixture[str]) -> None:
+    write_subscription_info(fake_azure_subscription())
+    captured = capsys.readouterr()
+    assert captured.out.splitlines()[2] == (
+        '{"cloud": "azure", "subscription_name": "mock_subscription_name",'
+        ' "subscription": "mock_subscription_id", "entity": "subscription", "tenant_name": "mock_tenant_name"}'
+    )
 
 
 _monitored_vm_resource = lambda tag_pattern_option: {
@@ -1470,7 +1480,7 @@ async def test_write_subscription_section(
         == """<<<<mock_subscription_name>>>>
 <<<azure_v2_subscription:sep(124)>>>
 Resource
-{"name": "mock_subscription_name", "tags": {}, "id": "mock_subscription_id", "type": "subscription", "group": "", "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name"}
+{"name": "mock_subscription_name", "tags": {}, "id": "mock_subscription_id", "type": "subscription", "group": "", "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "tenant_name": "mock_tenant_name", "subscription_name": "mock_subscription_name"}
 <<<<>>>>
 """
     )
@@ -1488,7 +1498,7 @@ async def test_write_subscription_section_unique_hostname(
         == """<<<<mock_subscription_name_9bb22fdd>>>>
 <<<azure_v2_subscription:sep(124)>>>
 Resource
-{"name": "mock_subscription_name", "tags": {}, "id": "mock_subscription_id", "type": "subscription", "group": "", "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name"}
+{"name": "mock_subscription_name", "tags": {}, "id": "mock_subscription_id", "type": "subscription", "group": "", "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "tenant_name": "mock_tenant_name", "subscription_name": "mock_subscription_name"}
 <<<<>>>>
 """
     )

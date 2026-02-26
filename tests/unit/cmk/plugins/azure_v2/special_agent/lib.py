@@ -27,4 +27,5 @@ def fake_azure_subscription(use_unique_names: bool = False) -> AzureSubscription
         tags={},
         use_unique_names=use_unique_names,
         tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
+        tenant_name="mock_tenant_name",
     )

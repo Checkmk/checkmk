@@ -34,6 +34,7 @@ interface Props {
   agentSlideout: AgentSlideout
   isNotRegistered: boolean
   noTlsProvided: boolean
+  isPushMode: boolean
   siteId: string
   siteServer: string
 }
@@ -124,7 +125,7 @@ const triggerRescan = () => {
       :host-exists="agentSlideout.host_exists ?? false"
       :setup-error="false"
       :agent-installed="isNotRegistered"
-      :is-push-mode="false"
+      :is-push-mode="isPushMode"
       @close="((slideInOpen = false), (tooltipHidden = true), triggerRescan())"
     />
   </CmkSlideInDialog>

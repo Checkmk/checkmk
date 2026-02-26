@@ -124,6 +124,14 @@ from cmk.utils.statename import short_service_state_name
 
 from ._status_links import make_host_status_link
 
+# These must match the error message constants defined in cmk.fetchers:
+# - cmk.fetchers.filecache._cache.NO_CACHED_DATA_MSG
+# - cmk.fetchers._program.AGENT_EXITED_WITH_CODE_PREFIX
+# - cmk.fetchers._program.PROGRAM_NOT_FOUND_SUFFIX
+_NO_CACHED_DATA_MSG = "No cached data available"
+_AGENT_EXITED_WITH_CODE_PREFIX = "Agent exited with code"
+_PROGRAM_NOT_FOUND_SUFFIX = "not found (exit code 127)"
+
 
 class AjaxDiscoveryRequest(BaseModel):
     host_name: AnnotatedHostName
@@ -785,6 +793,7 @@ class DiscoveryPageRenderer:
     def _render_agent_download_tooltip(self, output: str) -> None:
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         hostname = self._host.name()
+        is_push_mode = self._host.effective_attributes().get("cmk_agent_connection") == "push-agent"
         html.vue_component(
             component_name="cmk-agent-download",
             data=asdict(
@@ -792,6 +801,7 @@ class DiscoveryPageRenderer:
                     user_id=str(user.id),
                     output=output,
                     site=self._host.site_id(),
+                    is_push_mode=is_push_mode,
                     server_per_site=get_server_per_site(active_config, AgentDownloadServerPerSite),
                     agent_slideout=get_agent_slideout(
                         hostname=hostname,
@@ -850,23 +860,23 @@ class DiscoveryPageRenderer:
                     % num_problem_states
                 )
 
+            is_push_mode = (
+                self._host.effective_attributes().get("cmk_agent_connection") == "push-agent"
+            )
             html.open_table()
             for state, output in sources.values():
-                outputMessagePartials = [
-                    "No cached data available",
-                    "This data source is not supported for relay hosts",
+                show_agent_tooltip = (
+                    ("[agent]" in output or "[push-agent]" in output)
+                    and state == 2
+                    # Relay hosts and program fetcher failures are not agent issues
+                    and "This data source is not supported for relay hosts" not in output
                     # We have no information about the rule matching here
                     # (Individual program call instead of agent access).
                     # As we don't want to slow down all discoveries with
                     # rulematching, use the ProgramFetcher output instead
-                    "Agent exited with code",
-                    "not found (exit code 127)",
-                ]
-
-                show_agent_tooltip = (
-                    "[agent]" in output
-                    and state == 2
-                    and not any(msg in output for msg in outputMessagePartials)
+                    and _AGENT_EXITED_WITH_CODE_PREFIX not in output
+                    and _PROGRAM_NOT_FOUND_SUFFIX not in output
+                    and (is_push_mode or _NO_CACHED_DATA_MSG not in output)
                 )
 
                 html.open_tr()

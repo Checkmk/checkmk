@@ -156,6 +156,8 @@ function updateTargetElement() {
       targetElement.value = props.cmkAgentConnectionModeSelectElement.parentNode as HTMLElement
     } else if (props.cmkAgentConnectionModeDefaultElement) {
       targetElement.value = props.cmkAgentConnectionModeDefaultElement.parentNode as HTMLElement
+    } else if (props.cmkAgentConnectionModeSelectElement) {
+      targetElement.value = props.cmkAgentConnectionModeSelectElement.parentNode as HTMLElement
     }
   } else {
     targetElement.value = props.changeTagAgent.checked
@@ -503,7 +505,7 @@ const agentPort: Ref<number> = ref(6556)
       {{ _t('Install & register agent') }}
     </CmkButton>
 
-    <template v-if="!isPushMode">
+    <template v-else>
       <CmkButton
         v-if="!isLoading && !isSuccess && !isError"
         type="button"

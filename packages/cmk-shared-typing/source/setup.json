@@ -30,7 +30,8 @@
             "$ref": "#/$defs/agent_download_server_per_site"
           }
         },
-        "agent_slideout": { "$ref": "agent_slideout.json" }
+        "agent_slideout": { "$ref": "agent_slideout.json" },
+        "is_push_mode": { "type": "boolean" }
       },
       "required": ["user_id", "site", "server_per_site", "agent_slideout"]
     }

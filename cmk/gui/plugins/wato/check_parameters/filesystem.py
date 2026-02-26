@@ -123,7 +123,7 @@ def _valuespec_inventory_df_rules() -> Dictionary:
                     ),
                 ),
             ),
-            _list_of_filesystem_groups_specs_elements(),
+            _list_of_filesystem_groups_specs_elements(show_df_help=True),
         ],
         validate=_validate_discovery_filesystem_params,
     )
@@ -149,7 +149,18 @@ def _valuespec_filesystem_groups() -> Dictionary:
     )
 
 
-def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
+def _list_of_filesystem_groups_specs_elements(*, show_df_help: bool = False) -> DictionaryEntry:
+    df_help = ""
+    if show_df_help:
+        df_help = _(
+            "Note that specifically for "
+            "the check <tt>df</tt>, the pattern matches either the mount "
+            "point or the combination of volume and mount point, "
+            "depending on the configuration in "
+            "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
+            "File system discovery</a>."
+        )
+
     return FILESYSTEM_GROUPS_WRAPPER_KEY, ListOf(
         valuespec=Dictionary(
             optional_keys=False,
@@ -172,13 +183,9 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                             "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "
                             "<tt>/spool/tmpspace*</tt>. The file systems matching the "
                             "patterns will be grouped together and monitored as one big "
-                            "file system in a single service. Note that specifically for "
-                            "the check <tt>df</tt>, the pattern matches either the mount "
-                            "point or the combination of volume and mount point, "
-                            "depending on the configuration in "
-                            "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
-                            "File system discovery</a>."
-                        ),
+                            "file system in a single service. "
+                        )
+                        + df_help,
                     ),
                 ),
                 (
@@ -192,13 +199,9 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                             "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "
                             "<tt>/spool/tmpspace*</tt>. The filesystems matching the "
                             "patterns will excluded from grouping and monitored "
-                            "individually. Note that specifically for the check "
-                            "<tt>df</tt>, the pattern matches either the mount point or "
-                            "the combination of volume and mount point, depending on the "
-                            "configuration in "
-                            "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
-                            "Filesystem discovery</a>."
-                        ),
+                            "individually."
+                        )
+                        + df_help,
                     ),
                 ),
             ],
@@ -206,7 +209,7 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
         add_label=_("Add group"),
         title=_("File system grouping patterns"),
         help=_(
-            "By default, the file system checks (<tt>df</tt>, <tt>hr_fs</tt> and others) will "
+            "By default, the file system checks will "
             "create a single service for each file system. By defining grouping patterns, you "
             "can handle groups of file systems like one file system. For each group, you can "
             "define one or several include and exclude patterns. The file systems matching one "

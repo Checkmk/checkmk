@@ -167,9 +167,9 @@ attrs==25.4.0 \
     #   aiohttp
     #   jsonschema
     #   referencing
-azure-core==1.38.1 \
-    --hash=sha256:69f08ee3d55136071b7100de5b198994fc1c5f89d2b91f2f43156d20fcf200a4 \
-    --hash=sha256:9317db1d838e39877eb94a2240ce92fa607db68adf821817b723f0d679facbf6
+azure-core==1.38.2 \
+    --hash=sha256:074806c75cf239ea284a33a66827695ef7aeddac0b4e19dda266a93e4665ead9 \
+    --hash=sha256:67562857cb979217e48dc60980243b61ea115b77326fa93d83b729e7ff0482e7
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -233,9 +233,9 @@ cachetools==5.5.2 \
     --hash=sha256:1a661caa9175d26759571b2e19580f9d6393969e5dfca11fdb1f947a23e640d4 \
     --hash=sha256:d26a22bcc62eb95c3beabd9f1ee5e820d3d2704fe2967cbe350e20c8ffcd3f0a
     # via google-auth
-certifi==2026.1.4 \
-    --hash=sha256:9943707519e4add1115f44c2bc244f782c0249876bf51b6599fee1ffbedd685c \
-    --hash=sha256:ac726dd470482006e014ad384921ed6438c457018f4b3d204aea4281258b2120
+certifi==2026.2.25 \
+    --hash=sha256:027692e4402ad994f1c42e52a4997a9763c646b73e4096e4d5d6db8af1d6f0fa \
+    --hash=sha256:e887ab5cee78ea814d3472169153c2d12cd43b14bd03329a39a9c6e2e80bfba7
     # via
     #   httpcore
     #   httpx
@@ -331,9 +331,9 @@ cffi==2.0.0 \
     # via
     #   cryptography
     #   pynacl
-chardet==5.2.0 \
-    --hash=sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7 \
-    --hash=sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970
+chardet==6.0.0.post1 \
+    --hash=sha256:6b78048c3c97c7b2ed1fbad7a18f76f5a6547f7d34dbab536cc13887c9a92fa4 \
+    --hash=sha256:c894a36800549adf7bb5f2af47033281b75fdfcd2aa0f0243be0ad22a52e2dcb
     # via reportlab
 charset-normalizer==3.4.4 \
     --hash=sha256:027f6de494925c0ab2a55eab46ae5129951638a49a34d87f4c3eda90f696b4ad \
@@ -768,9 +768,9 @@ gitpython==3.1.43 \
     # via
     #   -r _requirements_runtime.txt
     #   -r packages/cmk-werks/requirements.txt
-google-api-core[grpc]==2.29.0 \
-    --hash=sha256:84181be0f8e6b04006df75ddfe728f24489f0af57c96a529ff7cf45bc28797f7 \
-    --hash=sha256:d30bc60980daa36e314b5d5a3e5958b0200cb44ca8fa1be2b614e932b75a3ea9
+google-api-core[grpc]==2.30.0 \
+    --hash=sha256:02edfa9fab31e17fc0befb5f161b3bf93c9096d99aed584625f38065c511ad9b \
+    --hash=sha256:80be49ee937ff9aba0fd79a6eddfde35fe658b9953ab9b79c57dd7061afa8df5
     # via
     #   google-api-python-client
     #   google-cloud-access-context-manager

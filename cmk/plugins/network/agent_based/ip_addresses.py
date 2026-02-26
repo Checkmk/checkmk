@@ -5,7 +5,7 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from ipaddress import (
     ip_interface,
     IPv4Interface,
@@ -29,7 +29,7 @@ from cmk.plugins.lib.interfaces import (
 )
 from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
 
-Section = Sequence[IPNetworkAdapter]
+Section = Iterable[IPNetworkAdapter]
 
 
 def address_str_from(adr_type: int, adr_length: int, raw_address: Sequence[int]) -> None | str:

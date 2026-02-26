@@ -18,17 +18,11 @@
 # Subnet: 255.255.255.0
 # DefaultGateway: 192.168.178.1
 
-from collections.abc import Iterable, Mapping, Sequence
-from contextlib import suppress
+from collections.abc import Iterable
 from ipaddress import (
-    AddressValueError,
-    ip_interface,
     IPv4Interface,
     IPv6Interface,
-    NetmaskValueError,
 )
-
-from pydantic import BaseModel, field_validator
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -44,55 +38,7 @@ from cmk.plugins.lib.interfaces import (
 )
 from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
 
-Section = Iterable[Mapping[str, str]]
-
-
-class Adapter(BaseModel):
-    # Original author: thl-cmk[at]outlook[dot]com
-    #
-    # refactor-me: this model should be moved to cmk.plugins.lib and used for other plugins, too,
-    #              e.g. lnx_if and ip_addresses
-    name: str
-    ipv4_address: str | None = None
-    ipv4_subnet: str | None = None
-    ipv6_address: str | None = None
-    ipv6_subnet: str | None = None
-
-    @staticmethod
-    def is_broadcast(interface: IPv4Interface | IPv6Interface) -> bool:
-        """
-        >>> Adapter.is_broadcast(IPv4Interface("1.2.3.4/24"))
-        False
-        """
-        return (
-            (interface.version == 4 and interface.network.prefixlen != 32)
-            or (interface.version == 6 and interface.network.prefixlen != 128)
-        ) and (interface.ip.compressed == interface.network.broadcast_address.compressed)
-
-    def interface_ips(self) -> Sequence[IPv4Interface | IPv6Interface]:
-        def interface_from(address: str, subnet: str) -> None | IPv4Interface | IPv6Interface:
-            """Returns an interface instance from valid non-broadcast input"""
-            with suppress(AddressValueError, NetmaskValueError, ValueError):
-                # drop broadcast IPs
-                if not Adapter.is_broadcast(ip_if := ip_interface(f"{address}/{subnet}")):
-                    return ip_if
-            return None
-
-        return [
-            interface
-            for addresses, subnets in (
-                (self.ipv4_address, self.ipv4_subnet),
-                (self.ipv6_address, self.ipv6_subnet),
-            )
-            if addresses and subnets
-            for raw_address, raw_subnet in zip(addresses.split(", "), subnets.split(", "))
-            if (interface := interface_from(raw_address, raw_subnet))
-        ]
-
-    @field_validator("*", mode="after")
-    @classmethod
-    def validate_name(cls, value: str) -> str:
-        return value.strip().strip(",").strip()
+Section = Iterable[IPNetworkAdapter]
 
 
 def host_label_win_ip_address(section: Section) -> HostLabelGenerator:
@@ -108,15 +54,7 @@ def host_label_win_ip_address(section: Section) -> HostLabelGenerator:
 
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
-    yield from host_labels_if(
-        IPNetworkAdapter(
-            name=adapter.name,
-            inet4=[ip_if for ip_if in interfaces if isinstance(ip_if, IPv4Interface)],
-            inet6=[ip_if for ip_if in interfaces if isinstance(ip_if, IPv6Interface)],
-        )
-        for adapter in map(Adapter.model_validate, section)
-        if (interfaces := adapter.interface_ips())
-    )
+    yield from host_labels_if(section)
 
 
 def parse_win_networkadapter(string_table: StringTable) -> Section:
@@ -136,8 +74,8 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
     ...     ['Address', '169.178.23.42 fe80::c118:dead:beef:2342'],
     ...     ['Subnet', '255.255.0.0 64'],
     ... ]): print(parsed_adapter)
-    {'name': 'Name1', 'type': 'T1', 'macaddress': 'DE:AD', 'speed': 100, 'gateway': '10.11.12.1', 'ipv4_address': '10.11.12.13, 10.11.12.14', 'ipv6_address': 'fe80::89d8:dead:beef:4223', 'ipv4_subnet': '255.255.255.0, 255.255.255.0', 'ipv6_subnet': '64'}
-    {'name': 'Name2', 'type': 'T2', 'macaddress': 'BE:EF', 'speed': 200, 'ipv4_address': '169.178.23.42', 'ipv6_address': 'fe80::c118:dead:beef:2342', 'ipv4_subnet': '255.255.0.0', 'ipv6_subnet': '64'}
+    IPNetworkAdapter(name='Name1', type='T1', state_infos=None, link_ether='', macaddress='DE:AD', gateway='10.11.12.1', speed=100, inet4=[IPv4Interface('10.11.12.13/24'), IPv4Interface('10.11.12.14/24')], inet6=[IPv6Interface('fe80::89d8:dead:beef:4223/64')])
+    IPNetworkAdapter(name='Name2', type='T2', state_infos=None, link_ether='', macaddress='BE:EF', gateway='', speed=200, inet4=[IPv4Interface('169.178.23.42/16')], inet6=[IPv6Interface('fe80::c118:dead:beef:2342/64')])
     """
 
     def group_adapters(split_lines: StringTable) -> Iterable[dict]:
@@ -173,26 +111,21 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
             yield result
 
     for adapter in group_adapters(string_table):
-        result = {
-            "name": adapter["Name"],
-            "type": adapter["AdapterType"],
-        }
-        if "MACAddress" in adapter:
-            result["macaddress"] = adapter["MACAddress"]
-        if "Speed" in adapter:
-            result["speed"] = int(adapter["Speed"])
-        if "DefaultGateway" in adapter:
-            result["gateway"] = adapter["DefaultGateway"]
-        if "addrv4" in adapter:
-            result["ipv4_address"] = ", ".join(adapter["addrv4"])
-        if "addrv6" in adapter:
-            result["ipv6_address"] = ", ".join(adapter["addrv6"])
-        if "subnv4" in adapter:
-            result["ipv4_subnet"] = ", ".join(adapter["subnv4"])
-        if "subnv6" in adapter:
-            result["ipv6_subnet"] = ", ".join(adapter["subnv6"])
-
-        yield result
+        yield IPNetworkAdapter(
+            type=adapter.get("AdapterType", ""),
+            macaddress=adapter.get("MACAddress", ""),
+            name=adapter["Name"],
+            speed=int(adapter["Speed"]) if "Speed" in adapter else 0,
+            gateway=adapter.get("DefaultGateway", ""),
+            inet4=[
+                IPv4Interface(f"{address}/{subnet}")
+                for address, subnet in zip(adapter["addrv4"], adapter["subnv4"])
+            ],
+            inet6=[
+                IPv6Interface(f"{address}/{subnet}")
+                for address, subnet in zip(adapter["addrv6"], adapter["subnv6"])
+            ],
+        )
 
 
 agent_section_win_networkadapter = AgentSection(
@@ -205,49 +138,28 @@ agent_section_win_networkadapter = AgentSection(
 
 
 def inventory_win_networkadapter(section: Section) -> InventoryResult:
-    for adapter in sorted(section, key=lambda a: a.get("name", "")):
-        if "name" in adapter:
-            yield TableRow(
-                path=["hardware", "nwadapter"],
-                key_columns={
-                    "name": adapter["name"],
-                },
-                inventory_columns={
-                    "type": adapter.get("type"),
-                    "macaddress": adapter.get("macaddress"),
-                    "speed": adapter.get("speed"),
-                    "gateway": adapter.get("gateway"),
-                    "ipv4_address": adapter.get("ipv4_address"),
-                    "ipv6_address": adapter.get("ipv6address"),
-                    "ipv4_subnet": adapter.get("ipv4_subnet"),
-                    "ipv6_subnet": adapter.get("ipv6subnet"),
-                },
-                status_columns={},
-            )
+    for adapter in sorted(section, key=lambda a: a.name):
+        yield TableRow(
+            path=["hardware", "nwadapter"],
+            key_columns={
+                "name": adapter.name,
+            },
+            inventory_columns={
+                "type": adapter.type,
+                "macaddress": adapter.macaddress,
+                "speed": adapter.speed,
+                "gateway": adapter.gateway,
+                "ipv4_address": ", ".join(str(if_ip.ip) for if_ip in adapter.inet4) or None,
+                "ipv6_address": ", ".join(str(if_ip.ip) for if_ip in adapter.inet6) or None,
+                "ipv4_subnet": ", ".join(str(if_ip.netmask) for if_ip in adapter.inet4) or None,
+                "ipv6_subnet": ", ".join(str(if_ip.netmask) for if_ip in adapter.inet6) or None,
+            },
+            status_columns={},
+        )
 
 
 def inventory_win_ip_address(section: Section) -> InventoryResult:
-    """
-    >>> list(inventory_win_ip_address([{
-    ...    "type": "ETH 802.3",
-    ...    "macaddress": " 3C:7C:3F:49:7C:22",
-    ...    "name": "Adaptor",
-    ...    "speed": 23,
-    ...    "ipv4_address": ", 1.2.3.4",
-    ...    "ipv6_subnet": "",
-    ...    "ipv4_subnet": "255.255.255.0",
-    ... }]))
-    [TableRow(path=['networking', 'addresses'], key_columns={'address': '1.2.3.4', 'device': 'Adaptor'}, inventory_columns={'type': 'ipv4', 'network': '1.2.3.0', 'netmask': '255.255.255.0', 'prefixlength': 24, 'broadcast': '1.2.3.255'}, status_columns={})]
-    """
-    yield from inventorize_ip_addresses(
-        IPNetworkAdapter(
-            name=adapter.name,
-            inet4=[ip_if for ip_if in interfaces if isinstance(ip_if, IPv4Interface)],
-            inet6=[ip_if for ip_if in interfaces if isinstance(ip_if, IPv6Interface)],
-        )
-        for adapter in map(Adapter.model_validate, section)
-        if (interfaces := adapter.interface_ips())
-    )
+    yield from inventorize_ip_addresses(section)
 
 
 inventory_plugin_win_networkadapter = InventoryPlugin(

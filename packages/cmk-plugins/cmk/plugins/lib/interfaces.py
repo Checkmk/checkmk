@@ -138,8 +138,12 @@ TEMP_DEVICE_PREFIXES = (
 @dataclass
 class IPNetworkAdapter:
     name: str
+    type: None | str = None
     state_infos: Sequence[str] | None = None
     link_ether: str = ""
+    macaddress: None | str = None
+    gateway: None | str = None
+    speed: None | int = None
     inet4: MutableSequence[IPv4Interface] = field(default_factory=list)
     inet6: MutableSequence[IPv6Interface] = field(default_factory=list)
 

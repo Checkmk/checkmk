@@ -19,8 +19,10 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
+from cmk.plugins.lib.interfaces import (
+    IPNetworkAdapter,
+)
 from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
-    Adapter,
     host_label_win_ip_address,
     inventory_win_ip_address,
     inventory_win_networkadapter,
@@ -126,15 +128,13 @@ __section = [
 ]
 
 
-__adapter = Adapter(  # type: ignore[call-arg] # ip_data not known by Adapter
+__adapter = IPNetworkAdapter(
     name="VMware Virtual Ethernet Adapter for VMnet1",
-    ipv4_address="169.254.0.1, 192.168.1.100",
-    ipv4_subnet="255.255.0.0, 255.255.255.0",
-    ipv6_address="fe80::5669:a1eb:3add:e9b2, 2c::1",
-    ipv6_subnet="64, 127",
-    ip_data=[
-        IPv4Interface("169.254.0.1/16"),
-        IPv4Interface("192.168.1.100/24"),
+    inet4=[
+        IPv4Interface("169.254.0.1/255.255.0.0"),
+        IPv4Interface("192.168.1.100/255.255.255.0"),
+    ],
+    inet6=[
         IPv6Interface("fe80::5669:a1eb:3add:e9b2/64"),
         IPv6Interface("2c::1/127"),
     ],

@@ -348,7 +348,7 @@ class GraphApi(_Connection):
     ) -> Iterable[float]:
         with self._build_api_client() as client:
             response = client.get(
-                f"{self._base_folder_uri}/messages?$filter=receivedDateTime ge "
+                f"{self._base_folder_uri}?$filter=receivedDateTime ge "
                 f"{datetime.fromtimestamp(after).isoformat() if after else datetime.fromtimestamp(0).isoformat()}Z"
                 " and receivedDateTime le "
                 f"{datetime.fromtimestamp(before).isoformat() if before else datetime.now().isoformat()}Z"

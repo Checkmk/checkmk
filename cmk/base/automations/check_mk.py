@@ -121,6 +121,7 @@ from cmk.snmplib import (
     BackendSNMPTree,
     get_snmp_table,
     oids_to_walk,
+    SNMPBackend,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPVersion,
@@ -2807,6 +2808,33 @@ class AutomationUpdatePasswordsMergedFile(Automation):
 automations.register(AutomationUpdatePasswordsMergedFile())
 
 
+def _execute_snmp_walk(snmp_config: SNMPHostConfig, backend: SNMPBackend) -> tuple[bytes, str]:
+    """Walk all OIDs for all configured SNMPv3 contexts.
+
+    Returns (raw_data, error_output). OIDs seen in multiple contexts are deduplicated.
+    """
+    lines = []
+    error_output = ""
+    context_config = snmp_config.snmpv3_contexts_of(None)
+    for walk_oid in oids_to_walk():
+        added_oids: set[str] = set()
+        for context in context_config.contexts:
+            try:
+                for oid, value in walk_for_export(backend.walk(walk_oid, context=context)):
+                    if oid not in added_oids:
+                        added_oids.add(oid)
+                        lines.append(f"{oid} {value}\n".encode())
+            except Exception as e:
+                if cmk.ccc.debug.enabled():
+                    raise
+                try:
+                    error_output += f"OID '{oid}': {e}\n"
+                except UnboundLocalError:
+                    # Surprise, the exception was raised before the `oid` is assigned.
+                    error_output += f"{e}\n"
+    return b"".join(lines), error_output
+
+
 class AutomationUpdateDNSCache(Automation):
     cmd = "update-dns-cache"
     needs_config = True
@@ -2981,19 +3009,10 @@ class AutomationGetAgentOutput(Automation):
                     snmp_config, log.logger, use_cache=False, stored_walk_path=stored_walk_path
                 )
 
-                lines = []
-                for walk_oid in oids_to_walk():
-                    try:
-                        for oid, value in walk_for_export(backend.walk(walk_oid, context="")):
-                            raw_oid_value = f"{oid} {value}\n"
-                            lines.append(raw_oid_value.encode())
-                    except Exception as e:
-                        if cmk.ccc.debug.enabled():
-                            raise
-                        success = False
-                        output += f"OID '{oid}': {e}\n"
-
-                info = b"".join(lines)
+                info, walk_errors = _execute_snmp_walk(snmp_config, backend)
+                if walk_errors:
+                    success = False
+                    output += walk_errors
         except Exception as e:
             success = False
             output = f"Failed to fetch data from {hostname}: {e}\n"

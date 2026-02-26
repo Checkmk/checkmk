@@ -3799,6 +3799,17 @@ class RelayClient(RestApiClient):
             api_version=APIVersion.UNSTABLE,
         )
 
+    def create_registration_token(
+        self, body: dict[str, Any] | None = None, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/relay_registration_token/collections/all",
+            body=body or {},
+            expect_ok=expect_ok,
+            api_version=APIVersion.UNSTABLE,
+        )
+
 
 class MetricBackendClient(RestApiClient):
     domain: DomainType = "metric_backend"

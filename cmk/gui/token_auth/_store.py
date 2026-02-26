@@ -20,7 +20,7 @@ from cmk.gui.type_defs import AnnotatedUserId
 from cmk.utils import paths
 
 # NOTE: must be kept in sync with the `type_` fields in the token models below
-TokenType = Literal["dashboard", "agent_registration", "agent_download"]
+TokenType = Literal["dashboard", "agent_registration", "agent_download", "relay_registration"]
 
 
 class InvalidToken(ValueError):
@@ -66,6 +66,10 @@ class AgentRegistrationToken(BaseModel):
     comment: str = ""
 
 
+class RelayRegistrationToken(BaseModel):
+    type_: Literal["relay_registration"] = "relay_registration"
+
+
 class AgentDownloadToken(BaseModel):
     type_: Literal["agent_download"] = "agent_download"
 
@@ -73,7 +77,8 @@ class AgentDownloadToken(BaseModel):
 TokenId = NewType("TokenId", str)
 
 type TokenDetails = Annotated[
-    DashboardToken | AgentRegistrationToken | AgentDownloadToken, Discriminator("type_")
+    DashboardToken | AgentRegistrationToken | AgentDownloadToken | RelayRegistrationToken,
+    Discriminator("type_"),
 ]
 
 

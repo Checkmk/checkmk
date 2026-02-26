@@ -91,13 +91,13 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
-    _Icon,
     ChoiceGroup,
     ChoiceId,
     Choices,
     ChoiceText,
     DynamicIcon,
     DynamicIconName,
+    DynamicIconWithEmblem,
     GroupedChoices,
     IconNames,
     StaticIcon,
@@ -7779,7 +7779,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
         return icon_tag
 
-    def _transform_icon_str(self, value: IconSelectorModel) -> _Icon:
+    def _transform_icon_str(self, value: IconSelectorModel) -> DynamicIconWithEmblem:
         if isinstance(value, dict):
             return value
         return {"icon": DynamicIconName("empty") if value is None else value, "emblem": None}

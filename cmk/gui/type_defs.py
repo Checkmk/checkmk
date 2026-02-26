@@ -697,12 +697,12 @@ class SetOnceDict(dict[K, V]):
 DynamicIconName = NewType("DynamicIconName", str)
 
 
-class _Icon(TypedDict):
+class DynamicIconWithEmblem(TypedDict):
     icon: DynamicIconName
     emblem: str | None
 
 
-DynamicIcon = DynamicIconName | _Icon
+DynamicIcon = DynamicIconName | DynamicIconWithEmblem
 
 
 @dataclass(frozen=True)

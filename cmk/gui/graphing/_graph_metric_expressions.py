@@ -13,7 +13,6 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
-from itertools import chain
 from typing import Annotated, assert_never, final, Literal, TypeVar
 
 from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
@@ -113,15 +112,27 @@ class QueryDataKey:
 
 
 @dataclass(frozen=True)
-class QueryDataValue:
+class QueryDataTimeSeries:
     metric_type: Literal["gauge", "sum", "histogram", "exponential_histogram", "summary"]
     time_series: TimeSeries
     id: str
     attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
 
 
+@dataclass(frozen=True, kw_only=True)
+class QueryDataLimit:
+    max_series_per_query: int
+    num_series_per_query: int
+
+
+@dataclass(frozen=True)
+class QueryDataValue:
+    time_series: Sequence[QueryDataTimeSeries]
+    limit: QueryDataLimit
+
+
 type RRDData = Mapping[RRDDataKey, TimeSeries]
-type QueryData = Mapping[QueryDataKey, Sequence[QueryDataValue]]
+type QueryData = Mapping[QueryDataKey, QueryDataValue]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -147,7 +158,7 @@ def _derive_num_points(
         return len(sample_data), sample_data.start, sample_data.end, sample_data.step
     if query_data:
         with suppress(StopIteration):
-            sample_data = next(iter(chain.from_iterable(query_data.values()))).time_series
+            sample_data = next(ts for v in query_data.values() for ts in v.time_series).time_series
             return len(sample_data), sample_data.start, sample_data.end, sample_data.step
     return (
         (fallback_time_range.end - fallback_time_range.start) // fallback_time_range.step + 1,
@@ -245,6 +256,12 @@ class AugmentedTimeSeries:
     metric_name: str | None = None
 
 
+@dataclass(frozen=True, kw_only=True)
+class AugmentedTimeSeriesOfKeys:
+    time_series: Sequence[AugmentedTimeSeries]
+    limit: QueryDataLimit | None
+
+
 class GraphMetricExpression(BaseModel, ABC, frozen=True):
     @staticmethod
     @abstractmethod
@@ -263,7 +280,7 @@ class GraphMetricExpression(BaseModel, ABC, frozen=True):
         rrd_data: RRDData,
         query_data: QueryData,
         fallback_time_range: FallbackTimeRange,
-    ) -> Sequence[AugmentedTimeSeries]: ...
+    ) -> Sequence[AugmentedTimeSeriesOfKeys]: ...
 
     def fade_odd_color(self) -> bool:
         return True
@@ -316,20 +333,25 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
         rrd_data: RRDData,
         query_data: QueryData,
         fallback_time_range: FallbackTimeRange,
-    ) -> Sequence[AugmentedTimeSeries]:
+    ) -> Sequence[AugmentedTimeSeriesOfKeys]:
         num_points, start, end, step = _derive_num_points(
             rrd_data,
             query_data,
             fallback_time_range,
         )
         return [
-            AugmentedTimeSeries(
-                time_series=TimeSeries(
-                    start=start,
-                    end=end,
-                    step=step,
-                    values=[self.value] * num_points,
-                )
+            AugmentedTimeSeriesOfKeys(
+                time_series=[
+                    AugmentedTimeSeries(
+                        time_series=TimeSeries(
+                            start=start,
+                            end=end,
+                            step=step,
+                            values=[self.value] * num_points,
+                        )
+                    )
+                ],
+                limit=None,
             )
         ]
 
@@ -351,20 +373,25 @@ class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
         rrd_data: RRDData,
         query_data: QueryData,
         fallback_time_range: FallbackTimeRange,
-    ) -> Sequence[AugmentedTimeSeries]:
+    ) -> Sequence[AugmentedTimeSeriesOfKeys]:
         num_points, start, end, step = _derive_num_points(
             rrd_data,
             query_data,
             fallback_time_range,
         )
         return [
-            AugmentedTimeSeries(
-                time_series=TimeSeries(
-                    start=start,
-                    end=end,
-                    step=step,
-                    values=[None] * num_points,
-                )
+            AugmentedTimeSeriesOfKeys(
+                time_series=[
+                    AugmentedTimeSeries(
+                        time_series=TimeSeries(
+                            start=start,
+                            end=end,
+                            step=step,
+                            values=[None] * num_points,
+                        )
+                    )
+                ],
+                limit=None,
             )
         ]
 
@@ -424,23 +451,24 @@ class GraphMetricOperation(GraphMetricExpression, frozen=True):
         rrd_data: RRDData,
         query_data: QueryData,
         fallback_time_range: FallbackTimeRange,
-    ) -> Sequence[AugmentedTimeSeries]:
+    ) -> Sequence[AugmentedTimeSeriesOfKeys]:
         if result := _time_series_math(
             self.operator_name,
             [
-                operand_evaluated.time_series
-                for operand_evaluated in chain.from_iterable(
-                    operand.compute_augmented_time_series(
-                        registered_metrics,
-                        rrd_data,
-                        query_data,
-                        fallback_time_range,
-                    )
-                    for operand in self.operands
+                ats.time_series
+                for operand in self.operands
+                for evaluated in operand.compute_augmented_time_series(
+                    registered_metrics, rrd_data, query_data, fallback_time_range
                 )
+                for ats in evaluated.time_series
             ],
         ):
-            return [AugmentedTimeSeries(time_series=result)]
+            return [
+                AugmentedTimeSeriesOfKeys(
+                    time_series=[AugmentedTimeSeries(time_series=result)],
+                    limit=None,
+                )
+            ]
         return []
 
 
@@ -481,7 +509,7 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
         rrd_data: RRDData,
         query_data: QueryData,
         fallback_time_range: FallbackTimeRange,
-    ) -> Sequence[AugmentedTimeSeries]:
+    ) -> Sequence[AugmentedTimeSeriesOfKeys]:
         if (
             key := RRDDataKey(
                 self.site_id,
@@ -492,7 +520,12 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
                 self.scale,
             )
         ) in rrd_data:
-            return [AugmentedTimeSeries(time_series=rrd_data[key])]
+            return [
+                AugmentedTimeSeriesOfKeys(
+                    time_series=[AugmentedTimeSeries(time_series=rrd_data[key])],
+                    limit=None,
+                )
+            ]
 
         num_points, start, end, step = _derive_num_points(
             rrd_data,
@@ -500,12 +533,17 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
             fallback_time_range,
         )
         return [
-            AugmentedTimeSeries(
-                time_series=TimeSeries(
-                    start=start,
-                    end=end,
-                    step=step,
-                    values=[None] * num_points,
-                ),
+            AugmentedTimeSeriesOfKeys(
+                time_series=[
+                    AugmentedTimeSeries(
+                        time_series=TimeSeries(
+                            start=start,
+                            end=end,
+                            step=step,
+                            values=[None] * num_points,
+                        ),
+                    )
+                ],
+                limit=None,
             )
         ]

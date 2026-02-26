@@ -724,6 +724,7 @@ class AjaxGraph(Page):
                 backend_time_series_fetcher=metric_backend_registry[
                     str(edition(paths.omd_root))
                 ].get_time_series_fetcher(),
+                show_titles_if_limit_reached=False,
             )
             response.set_data(json.dumps(response_data))
         except Exception as e:
@@ -741,6 +742,7 @@ def render_ajax_graph(
     *,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
+    show_titles_if_limit_reached: bool,
 ) -> JsonSerializable:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
@@ -820,6 +822,32 @@ def render_ajax_graph(
     else:
         error_msg = ""
 
+    if graph_artwork_or_errors.graph_metric_limits_reached:
+        if show_titles_if_limit_reached:
+            warning_msg = _(
+                "The result of your query hit the maximum number of %s time series."
+                " Please narrow down your queries for the following metrics: %s"
+            ) % (
+                max(
+                    limit.max_series_per_query
+                    for limit in graph_artwork_or_errors.graph_metric_limits_reached
+                ),
+                ", ".join(
+                    f"{limit.graph_metric.title!r}"
+                    for limit in graph_artwork_or_errors.graph_metric_limits_reached
+                ),
+            )
+        else:
+            warning_msg = _(
+                "The result of your query hit the maximum number of %s time series."
+                " Please narrow down your query."
+            ) % max(
+                limit.max_series_per_query
+                for limit in graph_artwork_or_errors.graph_metric_limits_reached
+            )
+    else:
+        warning_msg = ""
+
     with output_funnel.plugged():
         _show_graph_html_content(
             request,
@@ -841,6 +869,7 @@ def render_ajax_graph(
             "display_id": graph_display_id,
         },
         "error": error_msg,
+        "warning": warning_msg,
     }
 
 
@@ -957,6 +986,7 @@ def render_graphs_from_specification_html(
                 backend_time_series_fetcher=backend_time_series_fetcher,
                 graph_display_id=graph_display_id,
                 expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
+                show_limits_if_reached=False,
             )
     return output
 
@@ -1035,6 +1065,7 @@ class AjaxRenderGraphContent(AjaxPage):
             backend_time_series_fetcher=backend_time_series_fetcher,
             graph_display_id=graph_display_id,
             expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
+            show_limits_if_reached=False,
         )
 
 
@@ -1052,6 +1083,7 @@ def _render_graph_content_html(
     backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str = "",
     expandable_legend_appearance: ExpandableLegendAppearance,
+    show_limits_if_reached: bool,
 ) -> HTML:
     if graph_artwork_or_errors.errors:
         if url := graph_recipe.specification.url():
@@ -1068,6 +1100,40 @@ def _render_graph_content_html(
                 class_="error",
             )
         graph_render_config.size = (graph_render_config.size[0], graph_render_config.size[1] - 6)
+    else:
+        output = HTML.empty()
+
+    if show_limits_if_reached and graph_artwork_or_errors.graph_metric_limits_reached:
+        if url := graph_recipe.specification.url():
+            output = HTMLWriter.render_div(
+                _(
+                    "The result of your query hit the maximum number of %s time series."
+                    " Please narrow down your query."
+                    " See graph '<a href='%s'>%s</a>' for further details."
+                )
+                % (
+                    max(
+                        limit.max_series_per_query
+                        for limit in graph_artwork_or_errors.graph_metric_limits_reached
+                    ),
+                    url,
+                    graph_recipe.title,
+                ),
+                class_="warning",
+            )
+        else:
+            output = HTMLWriter.render_div(
+                _(
+                    "The result of your query hit the maximum number of %s time series."
+                    " Please narrow down your query."
+                )
+                % max(
+                    limit.max_series_per_query
+                    for limit in graph_artwork_or_errors.graph_metric_limits_reached
+                ),
+                class_="warning",
+            )
+        graph_render_config.size = (graph_render_config.size[0], graph_render_config.size[1] - 8)
     else:
         output = HTML.empty()
 
@@ -1266,7 +1332,7 @@ def _render_ajax_graph_hover(
     backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> dict[str, object]:
     curves = [
-        r.ok
+        c
         for r in compute_graph_artwork_curves(
             graph_recipe,
             graph_data_range,
@@ -1275,6 +1341,7 @@ def _render_ajax_graph_hover(
             backend_time_series_fetcher=backend_time_series_fetcher,
         )
         if r.is_ok()
+        for c in r.ok.curves
     ]
 
     return {
@@ -1431,4 +1498,5 @@ def host_service_graph_dashlet_cmk(
         backend_time_series_fetcher=backend_time_series_fetcher,
         graph_display_id=graph_display_id,
         expandable_legend_appearance=ExpandableLegendAppearance.POP_UP,
+        show_limits_if_reached=True,
     )

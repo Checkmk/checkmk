@@ -114,7 +114,7 @@ def test_fetch_augmented_time_series(
 ) -> None:
     with _setup_livestatus(mock_livestatus):
         assert [
-            r.ok
+            ats
             for r in fetch_augmented_time_series(
                 {},
                 _GRAPH_RECIPE,
@@ -123,6 +123,7 @@ def test_fetch_augmented_time_series(
                 backend_time_series_fetcher=lambda *args, **kwargs: _fetch(),
             )
             if r.is_ok()
+            for ats in r.ok.time_series
         ] == [
             AugmentedTimeSeries(
                 time_series=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
@@ -138,7 +139,7 @@ def test_fetch_augmented_time_series_with_conversion(
 ) -> None:
     with _setup_livestatus(mock_livestatus):
         assert [
-            r.ok
+            ats
             for r in fetch_augmented_time_series(
                 {},
                 _GRAPH_RECIPE,
@@ -147,6 +148,7 @@ def test_fetch_augmented_time_series_with_conversion(
                 backend_time_series_fetcher=lambda *args, **kwargs: _fetch(),
             )
             if r.is_ok()
+            for ats in r.ok.time_series
         ] == [
             AugmentedTimeSeries(
                 time_series=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),

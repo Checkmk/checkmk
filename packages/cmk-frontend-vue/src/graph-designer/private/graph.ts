@@ -189,6 +189,7 @@ export interface AjaxGraph {
   graph: GraphArtwork
   context: AjaxContext
   error?: string
+  warning?: string
 }
 
 async function fetchAjaxGraph<OutputType>(

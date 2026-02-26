@@ -83,6 +83,7 @@ export interface AjaxGraph {
   graph: GraphArtwork
   context: AjaxContext
   error?: string
+  warning?: string
 }
 
 interface LayoutedCurveArea {
@@ -308,6 +309,17 @@ function show_error(container: HTMLDivElement, msg: string) {
   element.innerHTML = msg
 }
 
+function show_warning(container: HTMLDivElement, msg: string) {
+  let element = document.getElementById('warning_container')
+  if (element === null) {
+    element = document.createElement('div')
+    element.id = 'warning_container'
+    element.className = 'warning'
+    container.parentNode!.insertBefore(element, container)
+  }
+  element.innerHTML = msg
+}
+
 export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: HTMLDivElement) {
   // Detect whether or not a new graph_id has to be calculated. During the view
   // data reload create_graph() is called again for all already existing graphs.
@@ -318,6 +330,13 @@ export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: H
     show_error(container, error)
   } else {
     document.getElementById('error_container')?.remove()
+  }
+
+  const warning = ajax_graph['warning']
+  if (warning) {
+    show_warning(container, warning)
+  } else {
+    document.getElementById('warning_container')?.remove()
   }
 
   const ajax_context = ajax_graph['context']

@@ -45,6 +45,7 @@ from ._graph_metric_expressions import (
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
+    GraphMetricLimit,
     GraphRecipe,
     HorizontalRule,
     MinimalVerticalRange,
@@ -162,6 +163,7 @@ class GraphArtwork(BaseModel):
 class GraphArtworkOrErrors:
     artwork: GraphArtwork
     errors: Sequence[QueryDataError]
+    graph_metric_limits_reached: Sequence[GraphMetricLimit]
 
 
 def compute_graph_artwork(
@@ -176,7 +178,8 @@ def compute_graph_artwork(
 ) -> GraphArtworkOrErrors:
     unit_spec = user_specific_unit(graph_recipe.unit_spec, temperature_unit)
 
-    curves = []
+    curves: list[Curve] = []
+    graph_metric_limits_reached: list[GraphMetricLimit] = []
     errors: list[QueryDataError] = []
     for result in compute_graph_artwork_curves(
         graph_recipe,
@@ -186,7 +189,9 @@ def compute_graph_artwork(
         backend_time_series_fetcher=backend_time_series_fetcher,
     ):
         if result.is_ok():
-            curves.append(result.ok)
+            curves.extend(result.ok.curves)
+            if result.ok.limit and result.ok.limit.reached():
+                graph_metric_limits_reached.append(result.ok.limit)
         else:
             errors.append(result.error)
 
@@ -238,6 +243,7 @@ def compute_graph_artwork(
             display_id=graph_display_id,
         ),
         errors,
+        graph_metric_limits_reached,
     )
 
 
@@ -361,6 +367,12 @@ def _areastack(
     return list(map(fix_swap, zip_longest(base, edge)))
 
 
+@dataclass(frozen=True)
+class CurvesOfGraphMetric:
+    curves: Sequence[Curve]
+    limit: GraphMetricLimit | None
+
+
 def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
@@ -368,8 +380,8 @@ def compute_graph_artwork_curves(
     *,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
-) -> Iterator[Result[Curve, QueryDataError]]:
-    curves = []
+) -> Iterator[Result[CurvesOfGraphMetric, QueryDataError]]:
+    curves_of_graph_metrics = []
     for result in fetch_augmented_time_series(
         registered_metrics,
         graph_recipe,
@@ -381,26 +393,39 @@ def compute_graph_artwork_curves(
             yield Error(result.error)
             continue
 
-        augmented_time_series = result.ok
-        if (
-            augmented_time_series.line_type is not None
-            and augmented_time_series.color is not None
-            and augmented_time_series.title is not None
-        ):
-            curves.append(
-                Curve(
-                    line_type=augmented_time_series.line_type,
-                    color=augmented_time_series.color,
-                    title=augmented_time_series.title,
-                    attributes=augmented_time_series.attributes,
-                    rrddata=augmented_time_series.time_series,
-                )
+        curves_of_graph_metrics.append(
+            CurvesOfGraphMetric(
+                [
+                    Curve(
+                        line_type=augmented_time_series.line_type,
+                        color=augmented_time_series.color,
+                        title=augmented_time_series.title,
+                        attributes=augmented_time_series.attributes,
+                        rrddata=augmented_time_series.time_series,
+                        scalars={},
+                    )
+                    for augmented_time_series in result.ok.time_series
+                    if (
+                        augmented_time_series.line_type is not None
+                        and augmented_time_series.color is not None
+                        and augmented_time_series.title is not None
+                    )
+                ],
+                result.ok.limit,
             )
-    if graph_recipe.omit_zero_metrics:
-        curves = [curve for curve in curves if any(curve["rrddata"])]
+        )
 
-    for curve in curves:
-        yield OK(curve)
+    if graph_recipe.omit_zero_metrics:
+        curves_of_graph_metrics = [
+            CurvesOfGraphMetric(
+                [c for c in cogm.curves if any(c["rrddata"])],
+                cogm.limit,
+            )
+            for cogm in curves_of_graph_metrics
+        ]
+
+    for curves_of_graph_metric in curves_of_graph_metrics:
+        yield OK(curves_of_graph_metric)
 
 
 def _halfstep_interpolation(rrddata: TimeSeries) -> Iterator[TimeSeriesValue]:

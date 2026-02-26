@@ -21,7 +21,12 @@ from ._graph_metric_expressions import (
     QueryDataValue,
     RRDDataKey,
 )
-from ._graph_specification import GraphDataRange, GraphRecipe
+from ._graph_specification import (
+    AugmentedTimeSeriesOfGraphMetrics,
+    GraphDataRange,
+    GraphMetricLimit,
+    GraphRecipe,
+)
 from ._metric_backend_registry import FetchTimeSeries
 from ._rrd import fetch_time_series_rrd
 from ._unit import user_specific_unit
@@ -34,7 +39,7 @@ def fetch_augmented_time_series(
     *,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
-) -> Iterator[Result[AugmentedTimeSeries, QueryDataError]]:
+) -> Iterator[Result[AugmentedTimeSeriesOfGraphMetrics, QueryDataError]]:
     consolidation_function = graph_recipe.consolidation_function
     conversion = user_specific_unit(graph_recipe.unit_spec, temperature_unit).conversion
     start_time = graph_data_range.time_range[0]
@@ -62,7 +67,7 @@ def fetch_augmented_time_series(
         step=step,
     )
 
-    query_data: dict[QueryDataKey, Sequence[QueryDataValue]] = {}
+    query_data: dict[QueryDataKey, QueryDataValue] = {}
     if backend_time_series_fetcher and query_keys:
         # Align grid (start, end, step) to RRD data if available. We need this because our graph
         # rendering code assumes a fixed grid for all time series in a graph. The RRDs are already
@@ -99,21 +104,32 @@ def fetch_augmented_time_series(
     )
 
     for graph_metric in graph_recipe.metrics:
-        if augmented_time_series := graph_metric.operation.compute_augmented_time_series(
-            registered_metrics,
-            rrd_data,
-            query_data,
-            fallback_time_range,
+        for augmented_time_series in graph_metric.operation.compute_augmented_time_series(
+            registered_metrics, rrd_data, query_data, fallback_time_range
         ):
-            for refined_augmented_time_series in _refine_augmented_time_series(
-                augmented_time_series,
-                graph_metric_title=graph_metric.title,
-                graph_metric_line_type=graph_metric.line_type,
-                graph_metric_color=graph_metric.color,
-                graph_metric_expression_name=graph_metric.operation.expression_name(),
-                fade_odd_color=graph_metric.operation.fade_odd_color(),
-            ):
-                yield OK(refined_augmented_time_series)
+            yield OK(
+                AugmentedTimeSeriesOfGraphMetrics(
+                    time_series=list(
+                        _refine_augmented_time_series(
+                            augmented_time_series.time_series,
+                            graph_metric_title=graph_metric.title,
+                            graph_metric_line_type=graph_metric.line_type,
+                            graph_metric_color=graph_metric.color,
+                            graph_metric_expression_name=graph_metric.operation.expression_name(),
+                            fade_odd_color=graph_metric.operation.fade_odd_color(),
+                        )
+                    ),
+                    limit=(
+                        GraphMetricLimit(
+                            graph_metric,
+                            augmented_time_series.limit.max_series_per_query,
+                            augmented_time_series.limit.num_series_per_query,
+                        )
+                        if augmented_time_series.limit
+                        else None
+                    ),
+                )
+            )
 
 
 def _refine_augmented_time_series(

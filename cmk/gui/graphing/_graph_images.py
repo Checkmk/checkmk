@@ -337,7 +337,7 @@ def graph_spec_from_request(
         raise MKUserError(None, _("The requested graph does not exist"))
 
     curves = [
-        r.ok
+        c
         for r in compute_graph_artwork_curves(
             graph_recipe,
             graph_data_range,
@@ -346,6 +346,7 @@ def graph_spec_from_request(
             backend_time_series_fetcher=backend_time_series_fetcher,
         )
         if r.is_ok()
+        for c in r.ok.curves
     ]
 
     api_curves = []

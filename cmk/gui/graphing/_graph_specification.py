@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Annotated, final, Literal
 
 from pydantic import (
@@ -29,6 +30,7 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
+    AugmentedTimeSeries,
     GraphConsolidationFunction,
     GraphMetricExpression,
     line_type_mirror,
@@ -42,6 +44,22 @@ from ._unit import (
     NonConvertibleUnitSpecification,
     UserSpecificUnit,
 )
+
+
+@dataclass(frozen=True)
+class GraphMetricLimit:
+    graph_metric: GraphMetric
+    max_series_per_query: int
+    num_series_per_query: int
+
+    def reached(self) -> bool:
+        return self.max_series_per_query <= self.num_series_per_query
+
+
+@dataclass(frozen=True)
+class AugmentedTimeSeriesOfGraphMetrics:
+    time_series: Sequence[AugmentedTimeSeries]
+    limit: GraphMetricLimit | None
 
 
 class HorizontalRule(BaseModel, frozen=True):

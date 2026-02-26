@@ -86,15 +86,6 @@ def _setup_piggyback_host_and_check(
         yield
 
 
-@contextmanager
-def _trace_broker_messages(site: Site) -> Iterator[None]:
-    try:
-        site.run(["cmk-monitor-broker", "--enable_tracing"])
-        yield
-    finally:
-        site.run(["cmk-monitor-broker", "--disable_tracing"])
-
-
 @pytest.fixture(name="piggyback_env_two_site_setup", scope="module")
 def _piggyback_env_two_site_setup(
     central_site: Site,
@@ -106,10 +97,9 @@ def _piggyback_env_two_site_setup(
             _setup_source_host(central_site, remote_site.id, _HOSTNAME_SOURCE_REMOTE),
             set_omd_config_piggyback_hub(central_site, "on"),
             set_omd_config_piggyback_hub(remote_site, "on"),
-            # _trace_broker_messages(central_site),
-            # _trace_broker_messages(remote_site),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
+            await_broker_ready(central_site, remote_site)
             yield central_site, remote_site
     finally:
         central_site.openapi.changes.activate_and_wait_for_completion()
@@ -121,11 +111,9 @@ def _piggyback_env_three_site_setup(
 ) -> Iterator[tuple[Site, Site, Site]]:
     central_site, remote_site = piggyback_env_two_site_setup
     try:
-        with (
-            set_omd_config_piggyback_hub(remote_site_2, "on"),
-            # _trace_broker_messages(remote_site_2),
-        ):
+        with set_omd_config_piggyback_hub(remote_site_2, "on"):
             central_site.openapi.changes.activate_and_wait_for_completion()
+            await_broker_ready(remote_site_2)
             yield central_site, remote_site, remote_site_2
     finally:
         central_site.openapi.changes.activate_and_wait_for_completion()
@@ -320,6 +308,7 @@ def test_piggyback_hub_disabled_globally(piggyback_env_two_site_setup: tuple[Sit
                 central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
             )
 
+        # how is the piggyback hub restarted here?! Should we wait for the broker ready?
         assert _piggybacked_service_gets_updated(
             central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
@@ -355,6 +344,7 @@ def test_piggyback_hub_disabled_remote_site(
                 central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
             )
 
+        # how is the piggyback hub restarted here?! Should we wait for the broker ready?
         assert _piggybacked_service_gets_updated(
             central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )

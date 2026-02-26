@@ -32,7 +32,9 @@ from .libbroker import (
 
 
 def parse_omd_broker_status(node: dict[str, Any]) -> tuple[str, BrokerStatus]:
-    return node_to_site(str(node["name"])), BrokerStatus(memory=int(node["mem_used"]))
+    if (mem_used := node.get("mem_used", None)) is not None:
+        return node_to_site(str(node["name"])), BrokerStatus(memory=int(mem_used))
+    return node_to_site(str(node["name"])), BrokerStatus(memory=None)
 
 
 agent_section_omd_broker_status = AgentSection(
@@ -104,12 +106,13 @@ def check_omd_broker_status(
     if not section_omd_broker_status or (status := section_omd_broker_status.get(item)) is None:
         return
 
-    yield from check_levels(
-        status.memory,
-        metric_name="mem_used",
-        label="Memory",
-        render_func=render.bytes,
-    )
+    if status.memory:
+        yield from check_levels(
+            status.memory,
+            metric_name="mem_used",
+            label="Memory",
+            render_func=render.bytes,
+        )
 
     if section_omd_broker_queues:
         yield from _check_queues(item, section_omd_broker_queues)

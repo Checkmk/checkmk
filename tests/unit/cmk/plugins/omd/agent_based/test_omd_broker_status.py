@@ -43,6 +43,11 @@ from cmk.plugins.omd.agent_based.omd_broker_status import (
             None,
             id="error from broker (e.g. mgmt plugin disabled)",
         ),
+        pytest.param(
+            [['[{"name": "rabbit-heute@localhost"}]']],
+            {"heute": BrokerStatus(memory=None)},
+            id="partially present data",
+        ),
         pytest.param([], {}, id="empty list (e.g. broker not running)"),
     ],
 )
@@ -194,6 +199,13 @@ def test_discover_omd_broker_status(
                 Result(state=State.OK, summary="Queued broker messages: 5"),
                 Metric("omd_broker_messages", 5.0),
             ],
+        ),
+        (
+            "heute",
+            {"heute": BrokerStatus(memory=None)},
+            None,
+            None,
+            [],
         ),
     ],
 )

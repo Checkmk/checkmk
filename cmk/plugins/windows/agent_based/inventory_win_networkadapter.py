@@ -148,10 +148,6 @@ def inventory_win_networkadapter(section: Section) -> InventoryResult:
                 "macaddress": adapter.macaddress,
                 "speed": adapter.speed,
                 "gateway": adapter.gateway,
-                "ipv4_address": ", ".join(str(if_ip.ip) for if_ip in adapter.inet4) or None,
-                "ipv6_address": ", ".join(str(if_ip.ip) for if_ip in adapter.inet6) or None,
-                "ipv4_subnet": ", ".join(str(if_ip.netmask) for if_ip in adapter.inet4) or None,
-                "ipv6_subnet": ", ".join(str(if_ip.netmask) for if_ip in adapter.inet6) or None,
             },
             status_columns={},
         )

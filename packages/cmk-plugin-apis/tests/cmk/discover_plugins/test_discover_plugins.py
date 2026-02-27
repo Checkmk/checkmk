@@ -144,7 +144,7 @@ class TestCollector:
 
     def test_sipmle_ok_case(self) -> None:
         """Load a plugin"""
-        collector = Collector({MyTestPlugin: "my_"}, raise_errors=False)
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=False)
         collector.add_from_module("my_module", self._importer)
         assert not collector.errors
         assert collector.plugins == {
@@ -153,7 +153,7 @@ class TestCollector:
 
     def test_mising_ok(self) -> None:
         """Ignore missing modules"""
-        collector = Collector({MyTestPlugin: "my_"}, raise_errors=True)
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=True)
         # missing is ok, even if raise_errors is true.
         collector.add_from_module("nonexistant", self._importer)
         assert not collector.errors
@@ -161,7 +161,7 @@ class TestCollector:
 
     def test_subclass_ok_case(self) -> None:
         """Load a plugin"""
-        collector = Collector({MyTestPlugin: "my_"}, raise_errors=False)
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=False)
         collector.add_from_module("my_subclassed_type", self._importer)
         assert not collector.errors
         assert collector.plugins == {
@@ -170,28 +170,39 @@ class TestCollector:
 
     def test_unknown_name_ignored(self) -> None:
         """Do not load a plug-in with name prefix missmatch"""
-        collector = Collector({MyTestPlugin: "your_"}, raise_errors=False)
+        collector = Collector({MyTestPlugin: "your_"}, skip_wrong_types=False, raise_errors=False)
         collector.add_from_module("my_module", self._importer)
         assert not collector.errors
         assert not collector.plugins
 
     def test_wrong_type_raise(self) -> None:
         """Raise if a plug-in has the wrong type"""
-        collector = Collector({MyTestPlugin: "my_"}, raise_errors=True)
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=True)
 
         with pytest.raises(TypeError):
             collector.add_from_module("my_other_type", self._importer)
 
+    @pytest.mark.parametrize("raise_errors", [True, False])
+    def test_wrong_type_filtered(self, raise_errors: bool) -> None:
+        """Silently skip plug-in if it has the wrong type"""
+        collector = Collector(
+            {MyTestPlugin: "my_"}, skip_wrong_types=True, raise_errors=raise_errors
+        )
+        collector.add_from_module("my_other_type", self._importer)
+        assert not collector.errors
+        assert not collector.plugins
+
     def test_wrong_type_recorded(self) -> None:
         """Record the error if a plug-in has the wrong type"""
-        collector = Collector({MyTestPlugin: "my_"}, raise_errors=False)
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=False)
         collector.add_from_module("my_other_type", self._importer)
+
         assert len(collector.errors) == 1
         assert isinstance(collector.errors[0], TypeError)
         assert not collector.plugins
 
     def test_name_collision_same_type(self) -> None:
-        collector = Collector({MyTestPlugin: "my_"}, raise_errors=True)
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=True)
         collector.add_from_module("my_module", self._importer)
 
         with pytest.raises(ValueError, match="already defined"):
@@ -206,7 +217,7 @@ class TestCollector:
     def test_name_collision_different_type(self) -> None:
         """Plugins with same name but different type is ok"""
         collector = Collector[MyOtherPlugin | MyTestPlugin](
-            {MyTestPlugin: "my_", MyOtherPlugin: "my_"}, raise_errors=False
+            {MyTestPlugin: "my_", MyOtherPlugin: "my_"}, skip_wrong_types=False, raise_errors=False
         )
         collector.add_from_module("my_module", self._importer)
         collector.add_from_module("my_other_type", self._importer)
@@ -219,7 +230,9 @@ class TestCollector:
 
     def test_different_prefixes(self) -> None:
         collector = Collector[MyTestPlugin | MyOtherPlugin](
-            {MyTestPlugin: "my_", MyOtherPlugin: "your_"}, raise_errors=False
+            {MyTestPlugin: "my_", MyOtherPlugin: "your_"},
+            skip_wrong_types=False,
+            raise_errors=False,
         )
         collector.add_from_module("my_module", self._importer)
         collector.add_from_module("your_module", self._importer)

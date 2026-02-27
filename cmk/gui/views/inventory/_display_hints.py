@@ -106,6 +106,7 @@ def load_inventory_ui_plugins() -> DiscoveredPlugins[NodeFromAPI]:
     discovered_plugins: DiscoveredPlugins[NodeFromAPI] = discover_all_plugins(
         PluginGroup.INVENTORY_UI,
         entry_point_prefixes(),
+        skip_wrong_types=False,
         raise_errors=cmk.ccc.debug.enabled(),
     )
     for exc in discovered_plugins.errors:

@@ -46,12 +46,24 @@ class DiscoveredPlugins[PluginType]:
 def discover_all_plugins[PluginType: _PluginProtocol](
     plugin_group: PluginGroup,
     plugin_prefixes: Mapping[type[PluginType], str],
+    *,
+    skip_wrong_types: bool,
     raise_errors: bool,
 ) -> DiscoveredPlugins[PluginType]:
-    """Collect all plugins from well-known locations"""
+    """Collect all plugins from well-known locations
+
+    Args:
+        plugin_group: The plug-in group to discover. The namespaces to search will be based on this group.
+        plugin_prefixes: Mapping of plug-in types to their name prefixes.
+            E.g. `{CheckPlugin: "check_"}`.
+        skip_wrong_types: If True, ignore objects with wrong type instead of reporting them as errors.
+        raise_errors: If True, raise exceptions instead of collecting them in the result.
+
+    """
     return discover_plugins_from_modules(
         plugin_prefixes,
         discover_modules(plugin_group, raise_errors=raise_errors),
+        skip_wrong_types=skip_wrong_types,
         raise_errors=raise_errors,
     )
 
@@ -59,10 +71,14 @@ def discover_all_plugins[PluginType: _PluginProtocol](
 def discover_plugins_from_modules[PluginType: _PluginProtocol](
     plugin_prefixes: Mapping[type[PluginType], str],
     module_names_by_priority: Iterable[str],
+    *,
+    skip_wrong_types: bool,
     raise_errors: bool,
 ) -> DiscoveredPlugins[PluginType]:
     """Collect all plugins from the provided modules"""
-    collector = Collector(plugin_prefixes, raise_errors=raise_errors)
+    collector = Collector(
+        plugin_prefixes, skip_wrong_types=skip_wrong_types, raise_errors=raise_errors
+    )
     for mod_name in module_names_by_priority:
         collector.add_from_module(mod_name, _import_optionally)
 
@@ -184,6 +200,7 @@ class Collector[PluginType: _PluginProtocol]:
     def __init__(
         self,
         plugin_prefixes: Mapping[type[PluginType], str],
+        skip_wrong_types: bool,
         raise_errors: bool,
     ) -> None:
         # Transform plug-in types / prefixes to the data structure we
@@ -195,6 +212,7 @@ class Collector[PluginType: _PluginProtocol]:
             (prefix, tuple(t for t, p in plugin_prefixes.items() if p == prefix))
             for prefix in set(plugin_prefixes.values())
         )
+        self.skip_wrong_types: Final = skip_wrong_types
         self.raise_errors: Final = raise_errors
 
         self.errors: list[Exception] = []
@@ -235,7 +253,8 @@ class Collector[PluginType: _PluginProtocol]:
 
             location = PluginLocation(module_name, name)
             if not isinstance(value, plugin_types):
-                self._handle_error(TypeError(f"{location}: {value!r}"))
+                if not self.skip_wrong_types:
+                    self._handle_error(TypeError(f"{location}: {value!r}"))
                 continue
 
             key = (value.__class__, value.name)

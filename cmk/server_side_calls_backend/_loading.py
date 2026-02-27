@@ -19,7 +19,10 @@ def load_active_checks(
         v1.ActiveCheckConfig: v1.entry_point_prefixes()[v1.ActiveCheckConfig],
     }
     return discover_all_plugins(
-        PluginGroup.SERVER_SIDE_CALLS, entry_points, raise_errors=raise_errors
+        PluginGroup.SERVER_SIDE_CALLS,
+        entry_points,
+        skip_wrong_types=False,
+        raise_errors=raise_errors,
     ).plugins
 
 
@@ -31,5 +34,8 @@ def load_special_agents(
         v1.SpecialAgentConfig: v1.entry_point_prefixes()[v1.SpecialAgentConfig],
     }
     return discover_all_plugins(
-        PluginGroup.SERVER_SIDE_CALLS, entry_points, raise_errors=raise_errors
+        PluginGroup.SERVER_SIDE_CALLS,
+        entry_points,
+        skip_wrong_types=False,
+        raise_errors=raise_errors,
     ).plugins

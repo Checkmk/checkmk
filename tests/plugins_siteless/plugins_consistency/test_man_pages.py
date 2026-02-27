@@ -159,7 +159,10 @@ def test_cmk_plugins_families_manpages() -> None:
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
     check_plugins = discover_all_plugins(
-        PluginGroup.AGENT_BASED, {CheckPlugin: "check_plugin_"}, raise_errors=True
+        PluginGroup.AGENT_BASED,
+        {CheckPlugin: "check_plugin_"},
+        skip_wrong_types=False,
+        raise_errors=True,
     )
     assert not {
         (location, plugin.name, expected, actual)

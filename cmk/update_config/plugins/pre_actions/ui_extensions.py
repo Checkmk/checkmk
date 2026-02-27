@@ -89,6 +89,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
             discovered_plugins_errors := discover_all_plugins(
                 PluginGroup.GRAPHING,
                 entry_point_prefixes(),
+                skip_wrong_types=False,
                 raise_errors=debug.enabled(),
             ).errors
         ):

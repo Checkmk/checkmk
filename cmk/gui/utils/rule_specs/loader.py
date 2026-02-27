@@ -52,7 +52,10 @@ def load_api_v1_rule_specs(
     raise_errors: bool,
 ) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
-        PluginGroup.RULESETS, entry_point_prefixes(), raise_errors=raise_errors
+        PluginGroup.RULESETS,
+        entry_point_prefixes(),
+        skip_wrong_types=False,
+        raise_errors=raise_errors,
     )
 
     # HACK for migrating plugins: also search in certain modules that are not yet moved.
@@ -104,6 +107,7 @@ def load_api_v1_rule_specs(
         more_discovered_plugins = discover_plugins_from_modules(
             entry_point_prefixes(),
             not_yet_moved_plugins,
+            skip_wrong_types=False,
             raise_errors=raise_errors,
         )
         discovered_plugins = DiscoveredPlugins(

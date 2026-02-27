@@ -133,6 +133,7 @@ def _discover_load_plugins(modules: set[str]) -> set[str]:
     discovered = discover_plugins_from_modules(
         entry_point_prefixes(),
         modules,
+        skip_wrong_types=False,
         raise_errors=True,
     )
 

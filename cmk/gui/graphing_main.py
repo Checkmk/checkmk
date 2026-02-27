@@ -78,6 +78,7 @@ def _load_graphing_plugins() -> DiscoveredPlugins[
     ] = discover_all_plugins(
         PluginGroup.GRAPHING,
         entry_point_prefixes(),
+        skip_wrong_types=False,
         raise_errors=cmk.ccc.debug.enabled(),
     )
     for exc in discovered_plugins.errors:

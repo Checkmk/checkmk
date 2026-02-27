@@ -213,6 +213,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
     discovered_plugins: DiscoveredPlugins[_AgentBasedPlugins] = discover_all_plugins(
         PluginGroup.AGENT_BASED,
         agent_based_v2.entry_point_prefixes(),
+        skip_wrong_types=False,
         raise_errors=False,  # already raised during loading validation if enabled
     )
 
@@ -292,6 +293,7 @@ def _validate_check_parameters_usage(check_plugins: Iterable[CheckPlugin]) -> Se
     discovered_check_parameters: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {CheckParameters: entry_point_prefixes()[CheckParameters]},
+        skip_wrong_types=False,
         raise_errors=False,
     )
 
@@ -309,6 +311,7 @@ def _validate_discovery_parameters_usage(
     discovered_discovery_parameters: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {DiscoveryParameters: entry_point_prefixes()[DiscoveryParameters]},
+        skip_wrong_types=False,
         raise_errors=False,
     )
     referenced_ruleset_names = {
@@ -323,6 +326,7 @@ def _validate_inventory_parameters_usage(
     discovered_inventory_parameters: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {InventoryParameters: entry_point_prefixes()[InventoryParameters]},
+        skip_wrong_types=False,
         raise_errors=False,
     )
     referenced_ruleset_names = {
@@ -337,6 +341,7 @@ def _validate_active_check_usage() -> Sequence[str]:
     discovered_active_checks: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {ActiveCheck: entry_point_prefixes()[ActiveCheck]},
+        skip_wrong_types=False,
         raise_errors=False,
     )
     referenced_ruleset_names = {
@@ -349,6 +354,7 @@ def _validate_special_agent_usage() -> Sequence[str]:
     discovered_special_agents: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {SpecialAgent: entry_point_prefixes()[SpecialAgent]},
+        skip_wrong_types=False,
         raise_errors=False,
     )
     referenced_ruleset_names = {

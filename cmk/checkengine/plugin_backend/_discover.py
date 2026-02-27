@@ -55,12 +55,16 @@ def load_all_plugins(
 ) -> plugins.AgentBasedPlugins:
     with tracer.span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_all_plugins(
-            PluginGroup.AGENT_BASED, v2.entry_point_prefixes(), raise_errors=raise_errors
+            PluginGroup.AGENT_BASED,
+            v2.entry_point_prefixes(),
+            skip_wrong_types=False,
+            raise_errors=raise_errors,
         )
         if _NOT_YET_MOVED_PLUGINS:
             more_discovered_plugins = discover_plugins_from_modules(
                 v2.entry_point_prefixes(),
                 _NOT_YET_MOVED_PLUGINS,
+                skip_wrong_types=False,
                 raise_errors=raise_errors,
             )
             discovered_plugins = DiscoveredPlugins(

@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     DefaultValue,
@@ -21,6 +21,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
     validators,
 )
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 from . import options
@@ -45,6 +46,16 @@ def _migrate(value: object) -> Mapping[str, object]:
     }
 
 
+def _mail_to_required_if_graph_api(value: Mapping[str, object]) -> None:
+    match value:
+        case {"send": ("GRAPHAPI", _), **rest} if "mail_to" not in rest:
+            raise ValidationError(
+                Message(
+                    "With mail sending set to 'Microsoft Exchange Online' the option 'Destination email address' must be specified."
+                )
+            )
+
+
 def _valuespec_active_checks_mail_loop() -> Dictionary:
     return Dictionary(
         help_text=Help(
@@ -53,6 +64,7 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
             "by querying the inbox of an IMAP, POP3 or EWS mailbox. With this check you can "
             "verify that your whole mail delivery progress is working."
         ),
+        custom_validate=[_mail_to_required_if_graph_api],
         elements={
             "item": DictElement(
                 required=True,

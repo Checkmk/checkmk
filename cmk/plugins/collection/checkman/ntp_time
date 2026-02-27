@@ -24,4 +24,5 @@ description:
 
 discovery:
  One service is created if at least one peer is present
- and the mode in the rule {NTP Discovery} is set to {"summary"} or {"both"}.
+ and the mode in the rule {NTP Discovery} is set to
+ {"Discover a single summary service"} or {"Discover both of the above"}.

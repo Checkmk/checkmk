@@ -3197,7 +3197,6 @@ def _run_command(
     global_opts: GlobalOptions,
     args: Arguments,
     command_options: CommandOptions,
-    orig_working_directory: str,
 ) -> None:
     try:
         match command.command:
@@ -3271,9 +3270,7 @@ def _run_command(
                 main_umount(object(), site, global_opts, object(), command_options)
             case "backup":
                 assert command.needs_site == 1 and isinstance(site, str)
-                omdlib.backup.main_backup(
-                    object(), site, global_opts, args, command_options, orig_working_directory
-                )
+                omdlib.backup.main_backup(object(), site, global_opts, args, command_options)
             case "restore":
                 main_restore(version_info, object(), global_opts, args, command_options)
             case "cleanup":
@@ -3290,11 +3287,6 @@ def main() -> None:
     omdlib.backup.ensure_mkbackup_lock_dir_rights()
 
     version_info = VersionInfo()
-
-    try:
-        orig_working_directory = os.getcwd()
-    except FileNotFoundError:
-        orig_working_directory = "/"
 
     site_name, global_opts, command, command_options, args = parse_args_or_exec_other_omd(
         sys.argv[1:]
@@ -3317,9 +3309,7 @@ def main() -> None:
     else:
         site = site_name
 
-    _run_command(
-        command, version_info, site, global_opts, args, command_options, orig_working_directory
-    )
+    _run_command(command, version_info, site, global_opts, args, command_options)
 
 
 def main_finalize_restore(args: Restore) -> int:

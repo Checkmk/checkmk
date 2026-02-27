@@ -75,8 +75,12 @@ def main_backup(
     global_opts: GlobalOptions,
     args: Sequence[str],
     options: CommandOptions,
-    orig_working_directory: str,
 ) -> None:
+    try:
+        orig_working_directory = os.getcwd()
+    except FileNotFoundError:
+        orig_working_directory = "/"
+
     if len(args) == 0:
         sys.exit(
             'You need to provide either a path to the destination file or "-" for backup to stdout.'

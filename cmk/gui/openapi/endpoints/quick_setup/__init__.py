@@ -62,6 +62,7 @@ from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.predefined._common import find_id_in_form_data
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    get_all_permissions,
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
@@ -153,6 +154,7 @@ JOB_ID = {
     query_params=[QUICKSETUP_MODE, QUICKSETUP_OBJECT_ID],
     path_params=[QUICKSETUP_ID],
     response_schema=QuickSetupResponse,
+    additional_status_codes=[403],
 )
 def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
     """Get guided stages or overview stages"""
@@ -166,6 +168,15 @@ def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
         return _serve_error(
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
+        )
+
+    permissions = get_all_permissions(quick_setup)
+
+    if permissions is not None and not all(user.may(perm) for perm in permissions):
+        return _serve_error(
+            title="Action not allowed",
+            detail=f"Requires {', '.join(f"'{p}'" for p in permissions)} permissions.",
+            status_code=403,
         )
 
     mode: QuickSetupMode = params["mode"]
@@ -207,6 +218,7 @@ def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
     path_params=[QUICKSETUP_ID, STAGE_INDEX],
     query_params=[QUICKSETUP_OBJECT_ID],
     response_schema=QuickSetupStageStructure,
+    additional_status_codes=[403],
 )
 def quick_setup_get_stage_structure(params: Mapping[str, Any]) -> Response:
     """Get a Quick setup stage structure"""
@@ -220,6 +232,15 @@ def quick_setup_get_stage_structure(params: Mapping[str, Any]) -> Response:
         return _serve_error(
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
+        )
+
+    permissions = get_all_permissions(quick_setup)
+
+    if permissions is not None and not all(user.may(perm) for perm in permissions):
+        return _serve_error(
+            title="Action not allowed",
+            detail=f"Requires {', '.join(f"'{p}'" for p in permissions)} permissions.",
+            status_code=403,
         )
 
     prefill_data: ParsedFormData | None = None

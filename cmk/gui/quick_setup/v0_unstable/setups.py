@@ -236,3 +236,17 @@ class QuickSetup:
     stages: Sequence[Callable[[], QuickSetupStage]]
     actions: Sequence[QuickSetupAction]
     load_data: Callable[[str], ParsedFormData | None] = lambda _: None
+
+
+def get_all_permissions(quick_setup: QuickSetup) -> list[str] | None:
+    action_sources = [stage() for stage in quick_setup.stages] + [quick_setup]
+    permissions = list(
+        {
+            perm
+            for source in action_sources
+            for action in source.actions
+            if action.permissions
+            for perm in action.permissions
+        }
+    )
+    return permissions or None

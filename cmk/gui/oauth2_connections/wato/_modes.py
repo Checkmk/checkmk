@@ -688,7 +688,7 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
                 % self._mode_type.name_singular(),
             )
 
-        if self._new:
+        if self._new and not self._clone:
             html.vue_component(
                 "cmk-mode-create-oauth2-connection",
                 data={

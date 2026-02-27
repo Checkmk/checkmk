@@ -174,7 +174,7 @@ def parse_ip_addresses(string_table: Sequence[StringByteTable]) -> Section:
     ]
 
 
-def host_label_ip_addresses(section: Section) -> HostLabelGenerator:
+def host_labels_if_snmp(section: Section) -> HostLabelGenerator:
     """
     Host label function
     Labels:
@@ -193,7 +193,7 @@ def host_label_ip_addresses(section: Section) -> HostLabelGenerator:
 snmp_section_ip_address = SNMPSection(
     name="ip_addresses",
     parse_function=parse_ip_addresses,
-    host_label_function=host_label_ip_addresses,
+    host_label_function=host_labels_if_snmp,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.4.20.1",  #  IP-MIB::ipAddrEntry
@@ -224,11 +224,11 @@ snmp_section_ip_address = SNMPSection(
 )
 
 
-def inventory_ip_addresses(section: Section) -> InventoryResult:
+def inventorize_ip_addresses_snmp(section: Section) -> InventoryResult:
     yield from inventorize_ip_addresses(section)
 
 
 inventory_plugin_ip_address = InventoryPlugin(
     name="ip_addresses",
-    inventory_function=inventory_ip_addresses,
+    inventory_function=inventorize_ip_addresses_snmp,
 )

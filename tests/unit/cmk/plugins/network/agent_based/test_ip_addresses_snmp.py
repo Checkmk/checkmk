@@ -21,9 +21,9 @@ from cmk.plugins.lib.interfaces import (
     AugmentedIPv6Interface,
     IPNetworkAdapter,
 )
-from cmk.plugins.network.agent_based.ip_addresses import (
-    host_label_ip_addresses,
-    inventory_ip_addresses,
+from cmk.plugins.network.agent_based.ip_addresses_snmp import (
+    host_labels_if_snmp,
+    inventorize_ip_addresses_snmp,
     parse_ip_addresses,
     Section,
 )
@@ -262,7 +262,7 @@ def test_parse_ip_addresses(
     ],
 )
 def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGenerator) -> None:
-    assert list(host_label_ip_addresses(section)) == list(expected_result)
+    assert list(host_labels_if_snmp(section)) == list(expected_result)
 
 
 @pytest.mark.parametrize(
@@ -325,5 +325,5 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
         ),
     ],
 )
-def test_inventory_ip_addresses(section: Section, expected_result: InventoryResult) -> None:
-    assert list(inventory_ip_addresses(section)) == expected_result
+def test_inventorize_ip_addresses_snmp(section: Section, expected_result: InventoryResult) -> None:
+    assert list(inventorize_ip_addresses_snmp(section)) == expected_result

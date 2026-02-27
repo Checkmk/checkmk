@@ -90,9 +90,14 @@ class MultipleOptionsQuery(Query):
             # jump directly because selection is empty filter
             return self.livestatus_query(value)
 
-        if all(value.values()):  # everything on, skip filter
+        # Normalize: fill in missing option keys with "" so partial contexts (e.g. from URL
+        # variables or builtin view definitions that only store the active/checked values) behave
+        # in the same way as full contexts.
+        normalized = {var: value.get(var, "") for var, _ in self.options}
+        # nothing or everything selected -> no filter
+        if not any(normalized.values()) or all(normalized.values()):
             return ""
-        return self.livestatus_query(value)
+        return self.livestatus_query(normalized)
 
 
 # Tri State filter

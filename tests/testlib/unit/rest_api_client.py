@@ -3799,6 +3799,18 @@ class RelayClient(RestApiClient):
             api_version=APIVersion.UNSTABLE,
         )
 
+    def create_with_token(
+        self, token: str, relay_data: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=relay_data,
+            headers={"Authorization": f"CMK-TOKEN {token}"},
+            expect_ok=expect_ok,
+            api_version=APIVersion.UNSTABLE,
+        )
+
     def create_registration_token(
         self, body: dict[str, Any] | None = None, expect_ok: bool = True
     ) -> Response:

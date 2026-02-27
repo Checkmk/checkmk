@@ -40,9 +40,9 @@
 # Reachability: 3
 
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Self, TypedDict
+from typing import Literal, NotRequired, Self, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -61,10 +61,20 @@ from cmk.agent_based.v2 import (
 from .w32time_lib import before_parens, in_parens, parse_float, parse_hex, parse_int
 
 
+class DiscoveryParams(TypedDict):
+    mode: Literal["summary", "single", "both", "neither"]
+
+
+DEFAULT_DISCOVERY_PARAMS = DiscoveryParams(
+    mode="summary",
+)
+
+
 class Params(TypedDict):
     reachability_consecutive_failures: LevelsT[int]
     reachability_total_failures: LevelsT[int]
     stratum: LevelsT[int]
+    universal: NotRequired[bool]
 
 
 DEFAULT_PARAMS = Params(
@@ -72,6 +82,12 @@ DEFAULT_PARAMS = Params(
     reachability_total_failures=("no_levels", None),
     stratum=("fixed", (5, 5)),
 )
+
+
+DEFAULT_SUMMARY_PARAMS: Params = {
+    "universal": False,
+    **DEFAULT_PARAMS,
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -226,11 +242,113 @@ agent_section_w32time_peers = AgentSection(
 )
 
 
-def discover_w32time_peers(section: dict[str, QueryPeers]) -> DiscoveryResult:
+def discover_w32time_peers(
+    params: DiscoveryParams,
+    section: dict[str, QueryPeers],
+) -> DiscoveryResult:
+    if params["mode"] in ("neither", "summary"):
+        return
+
     for peer, data in section.items():
         # Really hoping this string stays consistent across languages
         if data.last_successful_sync_time != "(null)":
             yield Service(item=peer)
+
+
+def discover_w32time_peers_summary(
+    params: DiscoveryParams,
+    section: dict[str, QueryPeers],
+) -> DiscoveryResult:
+    if params["mode"] in ("neither", "single") or not section:
+        return
+
+    yield Service()
+
+
+def _last_successful_sync_time(peer: QueryPeers, notice_only: bool = False) -> Iterable[Result]:
+    text = f"Last successful sync time: {peer.last_successful_sync_time}"
+    if notice_only:
+        yield Result(state=State.OK, notice=text)
+    else:
+        yield Result(state=State.OK, summary=text)
+
+
+def _reachability_summary(peer: QueryPeers) -> str:
+    # If there are 8 here, we probably cut off earlier attempts since the reachability
+    # is a bit-shift register. So add the word "last" to indicate that.
+    # If raw_reachability is 0, we fell back to Resolve Attempts.
+    return (
+        f"({peer.reachability.total_attempts} attempts)"
+        if peer.raw_reachability == 0 or peer.reachability.total_attempts < 8
+        else f"(last {peer.reachability.total_attempts} attempts)"
+    )
+
+
+def _reachability_total_failures(peer: QueryPeers, levels: LevelsT[int] | None) -> Iterable[Result]:
+    result = check_levels(
+        value=peer.reachability.total_failures,
+        render_func=str,
+        notice_only=True,
+        label=f"Total failures {_reachability_summary(peer)}",
+        levels_upper=levels,
+    )
+    yield from (r for r in result if isinstance(r, Result))  # for mypy's sake
+
+
+def _reachability_consecutive_failures(
+    peer: QueryPeers, levels: LevelsT[int] | None
+) -> Iterable[Result]:
+    result = check_levels(
+        value=peer.reachability.consecutive_failures,
+        render_func=str,
+        notice_only=True,
+        label=f"Consecutive failures {_reachability_summary(peer)}",
+        levels_upper=levels,
+    )
+    yield from (r for r in result if isinstance(r, Result))  # for mypy's sake
+
+
+def _last_sync_failure(peer: QueryPeers, notice_only: bool = False) -> Iterable[Result]:
+    # These error codes seem to be for the last sync attempt (only)
+    # https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-w32t/28e3c644-cb9d-4925-8c80-288f6339d9e0
+    if peer.reachability.consecutive_failures != 0:
+        if peer.last_sync_error_msg is not None:
+            summary = f"Last sync error: {peer.last_sync_error_msg}"
+            # We use state OK here because we're just doing this to display more information
+            # in the summary, *not* for alerting which is handled above.
+            if notice_only:
+                yield Result(state=State.OK, notice=summary)
+            else:
+                yield Result(state=State.OK, summary=summary)
+
+        # This seems separate and maybe more general than the one above?
+        # This is not very well documented and we're just relying on the w32tm representation
+        # of the error code, here. It's likely localized, too, which is non-ideal. :(
+        notice = f"Details from w32tm: {peer.last_sync_error_str}"
+        yield Result(state=State.OK, notice=notice)
+
+
+def _stratum(
+    peer: QueryPeers, levels: LevelsT[int] | None, notice_only: bool = False
+) -> Iterable[Result]:
+    result = check_levels(
+        value=peer.stratum,
+        render_func=str,
+        label="Stratum",
+        levels_upper=levels,
+        notice_only=notice_only,
+    )
+    yield from (r for r in result if isinstance(r, Result))  # for mypy's sake
+
+
+def _next_poll(peer: QueryPeers, notice_only: bool = False) -> Iterable[Result]:
+    result = check_levels(
+        value=peer.time_remaining,
+        render_func=render.timespan,
+        label="Next poll in",
+        notice_only=notice_only,
+    )
+    yield from (r for r in result if isinstance(r, Result))  # for mypy's sake
 
 
 def check_w32time_peers(item: str, params: Params, section: dict[str, QueryPeers]) -> CheckResult:
@@ -239,68 +357,138 @@ def check_w32time_peers(item: str, params: Params, section: dict[str, QueryPeers
 
     peer = section[item]
 
-    yield Result(
-        state=State.OK, summary=f"Last successful sync time: {peer.last_successful_sync_time}"
+    yield from _last_successful_sync_time(peer)
+    yield from _reachability_total_failures(peer, params.get("reachability_total_failures"))
+    yield from _reachability_consecutive_failures(
+        peer, params.get("reachability_consecutive_failures")
     )
+    yield from _last_sync_failure(peer)
+    yield from _stratum(peer, params.get("stratum"))
+    yield from _next_poll(peer)
 
-    # If there are 8 here, we probably cut off earlier attempts since the reachability
-    # is a bit-shift register. So add the word "last" to indicate that.
-    # If raw_reachability is 0, we fell back to Resolve Attempts.
-    total_attempts_label = (
-        f"({peer.reachability.total_attempts} attempts)"
-        if peer.raw_reachability == 0 or peer.reachability.total_attempts < 8
-        else f"(last {peer.reachability.total_attempts} attempts)"
-    )
 
-    yield from check_levels(
-        value=peer.reachability.total_failures,
-        render_func=str,
-        notice_only=True,
-        label=f"Total failures {total_attempts_label}",
-        levels_upper=params.get("reachability_total_failures"),
-    )
-    yield from check_levels(
-        value=peer.reachability.consecutive_failures,
-        render_func=str,
-        notice_only=True,
-        label=f"Consecutive failures {total_attempts_label}",
-        levels_upper=params.get("reachability_consecutive_failures"),
-    )
+def check_w32time_peers_summary(
+    params: Params,
+    section: dict[str, QueryPeers],
+) -> CheckResult:
+    """
+    A singular summary check service which encapsulates all Windows Time Service
+    peers into one service.
 
-    # These error codes seem to be for the last sync attempt (only)
-    # https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-w32t/28e3c644-cb9d-4925-8c80-288f6339d9e0
-    if peer.reachability.consecutive_failures != 0:
-        if peer.last_sync_error_msg is not None:
-            summary = f"Last sync error: {peer.last_sync_error_msg}"
-            # We use state OK here because we're just doing this to display more information
-            # in the summary, *not* for alerting which is handled above.
-            yield Result(state=State.OK, summary=summary)
+    The levels for reachability (total), reachability (consecutive), and stratum
+    are applied to all peers.
 
-        # This seems separate and maybe more general than the one above?
-        # This is not very well documented and we're just relying on the w32tm representation
-        # of the error code, here. It's likely localized, too, which is non-ideal. :(
-        notice = f"Details from w32tm: {peer.last_sync_error_str}"
-        yield Result(state=State.OK, notice=notice)
+    The check can be configured to alert if ALL peers are non-OK (i.e. they go
+    WARN or CRIT), or to alert if ANY peer is non-OK.
 
-    yield from check_levels(
-        value=peer.stratum,
-        render_func=str,
-        label="Stratum",
-        levels_upper=params.get("stratum"),
-    )
+    In the code, we call the "ALL peers must be non-OK to alert" mode
+    "universal" mode since (∀peer. peer is failed) vs "existential mode" where
+    (∃peer. peer is failed).
+    """
 
-    yield from check_levels(
-        value=peer.time_remaining,
-        render_func=render.timespan,
-        label="Next poll in",
-    )
+    peer_count = len(section)
+
+    def emit_possibly_suppressed(
+        peername: str,
+        results: list[Result],
+        suppressing: bool,
+    ) -> Iterable[Result]:
+        for result in results:
+            # Prefix with hostname so the summary line identifies the peer when this result is
+            # non-OK. For OK results, details takes precedence and the hostname is intentionally
+            # omitted; the preceding "\nPeer: {name}" line provides the grouping context.
+            notice = f"{peername}: {result.details}"
+            details = result.details
+            if result.state in (State.WARN, State.CRIT) and suppressing:
+                details += " (alerts suppressed)"
+
+            state = State.OK if suppressing else result.state
+            yield Result(state=state, notice=notice, details=details)
+
+    # Keyed on peer name
+    reachability_total_failures_results: dict[str, list[Result]] = {}
+    reachability_consecutive_failures_results: dict[str, list[Result]] = {}
+    stratum_results: dict[str, list[Result]] = {}
+
+    # So we can count how many peers have at least one non-ok result.
+    non_ok_peers: set[str] = set()
+
+    # We need to calculate the results of these checks before we yield any
+    # Results because this is the only way we know if we need to suppress alerts
+    # or not.
+    #
+    # We store the results keyed on host so we can yield them for the correct
+    # host later, and if there are any failures, we note that, so we can track
+    # how many peers have failed in total.
+    alertable_checks = [
+        (
+            _reachability_total_failures,
+            "reachability_total_failures",
+            reachability_total_failures_results,
+        ),
+        (
+            _reachability_consecutive_failures,
+            "reachability_consecutive_failures",
+            reachability_consecutive_failures_results,
+        ),
+        (
+            lambda peers, levels: _stratum(peers, levels, True),
+            "stratum",
+            stratum_results,
+        ),
+    ]
+    for name, peer in section.items():
+        for check_fn, param, results_dict in alertable_checks:
+            results = list(check_fn(peer, params.get(param)))
+            results_dict[name] = results
+            if any(result.state is not State.OK for result in results):
+                non_ok_peers.add(name)
+
+    yield Result(state=State.OK, summary=f"Found {peer_count} peers")
+
+    # If we're in "universal" mode, but not every peer has failed, then by
+    # by definition, we are suppressing alerts.
+    suppressing = params.get("universal", False) and len(non_ok_peers) != peer_count
+
+    failed_summary = f"Failed: {len(non_ok_peers)}"
+    if suppressing and non_ok_peers:
+        failed_summary += " (alerts suppressed)"
+    yield Result(state=State.OK, summary=failed_summary)
+
+    for name, peer in section.items():
+        yield Result(state=State.OK, notice=f"\nPeer: {name}")
+        yield from _last_successful_sync_time(peer, notice_only=True)
+        yield from emit_possibly_suppressed(
+            name, reachability_total_failures_results[name], suppressing
+        )
+        yield from emit_possibly_suppressed(
+            name, reachability_consecutive_failures_results[name], suppressing
+        )
+        yield from _last_sync_failure(peer, notice_only=True)
+        yield from emit_possibly_suppressed(name, stratum_results[name], suppressing)
+        yield from _next_poll(peer, notice_only=True)
 
 
 check_plugin_w32time_peers = CheckPlugin(
     name="w32time_peers",
     service_name="Windows time service peer %s",
     discovery_function=discover_w32time_peers,
+    discovery_default_parameters=DEFAULT_DISCOVERY_PARAMS,
+    discovery_ruleset_name="ntp_discovery",
     check_ruleset_name="w32time_peers",
     check_default_parameters=DEFAULT_PARAMS,
     check_function=check_w32time_peers,
+)
+
+
+check_plugin_w32time_peers_summary = CheckPlugin(
+    name="w32time_peers_summary",
+    service_name="Windows time service peers",
+    sections=["w32time_peers"],
+    discovery_function=discover_w32time_peers_summary,
+    discovery_default_parameters=DEFAULT_DISCOVERY_PARAMS,
+    discovery_ruleset_name="ntp_discovery",
+    check_ruleset_name="w32time_peers_summary",
+    check_default_parameters=DEFAULT_SUMMARY_PARAMS,
+    check_function=check_w32time_peers_summary,
 )

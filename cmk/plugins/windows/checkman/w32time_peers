@@ -24,3 +24,5 @@ description:
 
 discovery:
  One service is created for each configured w32time peer on the monitored host.
+ If you wish to have one service per peer, use the {NTP Discovery} ruleset on
+ this host to configure that.

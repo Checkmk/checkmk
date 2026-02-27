@@ -410,6 +410,118 @@ EN_PEERS = [
     ["Reachability:", "0"],
 ]
 
+EN_PEERS_STRATUM_1_TO_3 = [
+    ["#Peers:", "3"],
+    ["---"],
+    ["Peer:", "time.facebook.com"],
+    ["State:", "Active"],
+    ["Time", "Remaining:", "1754.9964697s"],
+    ["Mode:", "3", "(Client)"],
+    ["Stratum:", "1", "(primary", "reference", "-", "syncd", "by", "radio", "clock)"],
+    ["PeerPoll", "Interval:", "12", "(4096s)"],
+    ["HostPoll", "Interval:", "12", "(4096s)"],
+    ["Last", "Successful", "Sync", "Time:", "9/18/2025", "7:00:50", "PM"],
+    ["LastSyncError:", "0x00000000", "(Succeeded)"],
+    ["LastSyncErrorMsgId:", "0x00000000", "(Succeeded)"],
+    ["AuthTypeMsgId:", "0x0000005A", "(NoAuth", ")"],
+    ["Resolve", "Attempts:", "0"],
+    ["ValidDataCounter:", "8"],
+    ["Reachability:", "255"],
+    ["---"],
+    ["Peer:", "time.cloudflare.com"],
+    ["State:", "Active"],
+    ["Time", "Remaining:", "618.9722708s"],
+    ["Mode:", "3", "(Client)"],
+    ["Stratum:", "3", "(secondary", "reference", "-", "syncd", "by", "(S)NTP)"],
+    ["PeerPoll", "Interval:", "12", "(4096s)"],
+    ["HostPoll", "Interval:", "12", "(4096s)"],
+    ["Last", "Successful", "Sync", "Time:", "9/18/2025", "6:41:54", "PM"],
+    ["LastSyncError:", "0x00000000", "(Succeeded)"],
+    ["LastSyncErrorMsgId:", "0x00000000", "(Succeeded)"],
+    ["AuthTypeMsgId:", "0x0000005A", "(NoAuth", ")"],
+    ["Resolve", "Attempts:", "0"],
+    ["ValidDataCounter:", "8"],
+    ["Reachability:", "255"],
+    ["---"],
+    ["Peer:", "de.pool.ntp.org"],
+    ["State:", "Active"],
+    ["Time", "Remaining:", "612.9102195s"],
+    ["Mode:", "3", "(Client)"],
+    ["Stratum:", "2", "(secondary", "reference", "-", "syncd", "by", "(S)NTP)"],
+    ["PeerPoll", "Interval:", "12", "(4096s)"],
+    ["HostPoll", "Interval:", "12", "(4096s)"],
+    ["Last", "Successful", "Sync", "Time:", "9/18/2025", "6:41:48", "PM"],
+    ["LastSyncError:", "0x00000000", "(Succeeded)"],
+    ["LastSyncErrorMsgId:", "0x00000000", "(Succeeded)"],
+    ["AuthTypeMsgId:", "0x0000005A", "(NoAuth", ")"],
+    ["Resolve", "Attempts:", "0"],
+    ["ValidDataCounter:", "8"],
+    ["Reachability:", "255"],
+]
+
+# One peer fails on stratum, another on reachability — tests that universal
+# suppression works the same regardless of which check type triggers the failure.
+EN_MIXED_FAILURES = [
+    ["#Peers:", "3"],
+    ["---"],
+    ["Peer:", "stratum-bad.example.com"],
+    ["State:", "Active"],
+    ["Time", "Remaining:", "100.0s"],
+    ["Mode:", "3", "(Client)"],
+    ["Stratum:", "4", "(secondary", "reference", "-", "syncd", "by", "(S)NTP)"],
+    ["PeerPoll", "Interval:", "12", "(4096s)"],
+    ["HostPoll", "Interval:", "12", "(4096s)"],
+    ["Last", "Successful", "Sync", "Time:", "9/18/2025", "7:00:00", "PM"],
+    ["LastSyncError:", "0x00000000", "(Succeeded)"],
+    ["LastSyncErrorMsgId:", "0x00000000", "(Succeeded)"],
+    ["AuthTypeMsgId:", "0x0000005A", "(NoAuth", ")"],
+    ["Resolve", "Attempts:", "0"],
+    ["ValidDataCounter:", "8"],
+    ["Reachability:", "255"],
+    ["---"],
+    ["Peer:", "reachability-bad.example.com"],
+    ["State:", "Active"],
+    ["Time", "Remaining:", "200.0s"],
+    ["Mode:", "3", "(Client)"],
+    ["Stratum:", "1", "(primary", "reference", "-", "syncd", "by", "radio", "clock)"],
+    ["PeerPoll", "Interval:", "12", "(4096s)"],
+    ["HostPoll", "Interval:", "12", "(4096s)"],
+    ["Last", "Successful", "Sync", "Time:", "(null)"],
+    [
+        "LastSyncError:",
+        "0x800705B4",
+        "(This",
+        "operation",
+        "returned",
+        "because",
+        "the",
+        "timeout",
+        "period",
+        "expired.",
+        ")",
+    ],
+    ["LastSyncErrorMsgId:", "0x0000005C", "(The", "peer", "is", "unreachable.", ")"],
+    ["AuthTypeMsgId:", "0x0000005A", "(NoAuth", ")"],
+    ["Resolve", "Attempts:", "0"],
+    ["ValidDataCounter:", "4"],
+    ["Reachability:", "168"],  # 0b10101000: 5 total failures, 3 consecutive
+    ["---"],
+    ["Peer:", "good.example.com"],
+    ["State:", "Active"],
+    ["Time", "Remaining:", "300.0s"],
+    ["Mode:", "3", "(Client)"],
+    ["Stratum:", "2", "(secondary", "reference", "-", "syncd", "by", "(S)NTP)"],
+    ["PeerPoll", "Interval:", "12", "(4096s)"],
+    ["HostPoll", "Interval:", "12", "(4096s)"],
+    ["Last", "Successful", "Sync", "Time:", "9/18/2025", "6:00:00", "PM"],
+    ["LastSyncError:", "0x00000000", "(Succeeded)"],
+    ["LastSyncErrorMsgId:", "0x00000000", "(Succeeded)"],
+    ["AuthTypeMsgId:", "0x0000005A", "(NoAuth", ")"],
+    ["Resolve", "Attempts:", "0"],
+    ["ValidDataCounter:", "8"],
+    ["Reachability:", "255"],
+]
+
 EN_WITH_EXTRA_LINE = [
     ["#Peers:", "2"],
     ["---"],
@@ -780,12 +892,353 @@ def test_check_w32time_peers(
             ],
         ),
         (DE_PEERS_EXAMPLE_COM, []),
+        (NO_PEERS, []),
     ],
 )
 def test_discover_w32time_peers(string_table: StringTable, expected: DiscoveryResult) -> None:
     parsed = w32time_peers.parse_w32time_peers(string_table)
-    result = list(w32time_peers.discover_w32time_peers(parsed))
+
+    result = list(w32time_peers.discover_w32time_peers({"mode": "single"}, parsed))
     assert result == expected
+
+    result = list(w32time_peers.discover_w32time_peers({"mode": "both"}, parsed))
+    assert result == expected
+
+    result = list(w32time_peers.discover_w32time_peers({"mode": "summary"}, parsed))
+    assert result == []
+
+    result = list(w32time_peers.discover_w32time_peers({"mode": "neither"}, parsed))
+    assert result == []
+
+
+@pytest.mark.parametrize(
+    "string_table, expected",
+    [
+        (
+            EN_PEERS,
+            [Service()],
+        ),
+        (DE_PEERS_EXAMPLE_COM, [Service()]),
+        (NO_PEERS, []),
+    ],
+)
+def test_discover_w32time_peers_summary(
+    string_table: StringTable, expected: DiscoveryResult
+) -> None:
+    parsed = w32time_peers.parse_w32time_peers(string_table)
+
+    result = list(w32time_peers.discover_w32time_peers_summary({"mode": "single"}, parsed))
+    assert result == []
+
+    result = list(w32time_peers.discover_w32time_peers_summary({"mode": "neither"}, parsed))
+    assert result == []
+
+    result = list(w32time_peers.discover_w32time_peers_summary({"mode": "summary"}, parsed))
+    assert result == expected
+
+    result = list(w32time_peers.discover_w32time_peers_summary({"mode": "both"}, parsed))
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "stratum_levels, universal, expected",
+    [
+        pytest.param(
+            (1, 20),
+            True,
+            [
+                Result(state=State.OK, summary="Found 3 peers"),
+                Result(state=State.OK, summary="Failed: 3"),
+                Result(state=State.OK, notice="\nPeer: time.facebook.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 7:00:50 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.WARN,
+                    summary="time.facebook.com: Stratum: 1 (warn/crit at 1/20)",
+                    details="Stratum: 1 (warn/crit at 1/20)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 29 minutes 15 seconds"),
+                Result(state=State.OK, notice="\nPeer: time.cloudflare.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:54 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.WARN,
+                    summary="time.cloudflare.com: Stratum: 3 (warn/crit at 1/20)",
+                    details="Stratum: 3 (warn/crit at 1/20)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 19 seconds"),
+                Result(state=State.OK, notice="\nPeer: de.pool.ntp.org"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:48 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.WARN,
+                    summary="de.pool.ntp.org: Stratum: 2 (warn/crit at 1/20)",
+                    details="Stratum: 2 (warn/crit at 1/20)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 13 seconds"),
+            ],
+            id="all peers warn => overall warn",
+        ),
+        pytest.param(
+            (3, 4),
+            True,
+            [
+                Result(state=State.OK, summary="Found 3 peers"),
+                Result(state=State.OK, summary="Failed: 1 (alerts suppressed)"),
+                Result(state=State.OK, notice="\nPeer: time.facebook.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 7:00:50 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 1"),
+                Result(state=State.OK, notice="Next poll in: 29 minutes 15 seconds"),
+                Result(state=State.OK, notice="\nPeer: time.cloudflare.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:54 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.OK,
+                    notice="Stratum: 3 (warn/crit at 3/4) (alerts suppressed)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 19 seconds"),
+                Result(state=State.OK, notice="\nPeer: de.pool.ntp.org"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:48 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 2"),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 13 seconds"),
+            ],
+            id="levels set to 3/4, all must fail => overall ok",
+        ),
+        pytest.param(
+            (3, 4),
+            False,
+            [
+                Result(state=State.OK, summary="Found 3 peers"),
+                Result(state=State.OK, summary="Failed: 1"),
+                Result(state=State.OK, notice="\nPeer: time.facebook.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 7:00:50 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 1"),
+                Result(state=State.OK, notice="Next poll in: 29 minutes 15 seconds"),
+                Result(state=State.OK, notice="\nPeer: time.cloudflare.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:54 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.WARN,
+                    summary="time.cloudflare.com: Stratum: 3 (warn/crit at 3/4)",
+                    details="Stratum: 3 (warn/crit at 3/4)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 19 seconds"),
+                Result(state=State.OK, notice="\nPeer: de.pool.ntp.org"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:48 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 2"),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 13 seconds"),
+            ],
+            id="levels set to 3/4, one must fail => overall warn",
+        ),
+        pytest.param(
+            (1, 2),
+            True,
+            [
+                Result(state=State.OK, summary="Found 3 peers"),
+                Result(state=State.OK, summary="Failed: 3"),
+                Result(state=State.OK, notice="\nPeer: time.facebook.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 7:00:50 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.WARN,
+                    summary="time.facebook.com: Stratum: 1 (warn/crit at 1/2)",
+                    details="Stratum: 1 (warn/crit at 1/2)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 29 minutes 15 seconds"),
+                Result(state=State.OK, notice="\nPeer: time.cloudflare.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:54 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.CRIT,
+                    summary="time.cloudflare.com: Stratum: 3 (warn/crit at 1/2)",
+                    details="Stratum: 3 (warn/crit at 1/2)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 19 seconds"),
+                Result(state=State.OK, notice="\nPeer: de.pool.ntp.org"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:48 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.CRIT,
+                    summary="de.pool.ntp.org: Stratum: 2 (warn/crit at 1/2)",
+                    details="Stratum: 2 (warn/crit at 1/2)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 13 seconds"),
+            ],
+            id="all peers fail, worst state wins => overall crit",
+        ),
+        pytest.param(
+            (6, 7),
+            True,
+            [
+                Result(state=State.OK, summary="Found 3 peers"),
+                Result(state=State.OK, summary="Failed: 0"),
+                Result(state=State.OK, notice="\nPeer: time.facebook.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 7:00:50 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 1"),
+                Result(state=State.OK, notice="Next poll in: 29 minutes 15 seconds"),
+                Result(state=State.OK, notice="\nPeer: time.cloudflare.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:54 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 3"),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 19 seconds"),
+                Result(state=State.OK, notice="\nPeer: de.pool.ntp.org"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:41:48 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 2"),
+                Result(state=State.OK, notice="Next poll in: 10 minutes 13 seconds"),
+            ],
+            id="no peers fail => overall ok",
+        ),
+    ],
+)
+def test_check_w32time_peers_summary(
+    stratum_levels: tuple[int, int],
+    universal: bool,
+    expected: list[Result],
+) -> None:
+    parsed = w32time_peers.parse_w32time_peers(EN_PEERS_STRATUM_1_TO_3)
+    params: w32time_peers.Params = {
+        "reachability_consecutive_failures": ("no_levels", None),
+        "reachability_total_failures": ("no_levels", None),
+        "stratum": ("fixed", stratum_levels),
+        "universal": universal,
+    }
+    result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "universal, expected",
+    [
+        pytest.param(
+            True,
+            [
+                Result(state=State.OK, summary="Found 3 peers"),
+                Result(state=State.OK, summary="Failed: 2 (alerts suppressed)"),
+                Result(state=State.OK, notice="\nPeer: stratum-bad.example.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 7:00:00 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.OK,
+                    notice="Stratum: 4 (warn/crit at 3/5) (alerts suppressed)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 1 minute 40 seconds"),
+                Result(state=State.OK, notice="\nPeer: reachability-bad.example.com"),
+                Result(state=State.OK, notice="Last successful sync time: (null)"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 5"),
+                Result(
+                    state=State.OK,
+                    notice="Consecutive failures (last 8 attempts): 3 (warn/crit at 2/3) (alerts suppressed)",
+                ),
+                Result(state=State.OK, notice="Last sync error: The peer is unreachable."),
+                Result(
+                    state=State.OK,
+                    notice="Details from w32tm: This operation returned because the timeout period expired.",
+                ),
+                Result(state=State.OK, notice="Stratum: 1"),
+                Result(state=State.OK, notice="Next poll in: 3 minutes 20 seconds"),
+                Result(state=State.OK, notice="\nPeer: good.example.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:00:00 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 2"),
+                Result(state=State.OK, notice="Next poll in: 5 minutes 0 seconds"),
+            ],
+            id="2/3 peers fail on different checks, universal=True => suppressed",
+        ),
+        pytest.param(
+            False,
+            [
+                Result(state=State.OK, summary="Found 3 peers"),
+                Result(state=State.OK, summary="Failed: 2"),
+                Result(state=State.OK, notice="\nPeer: stratum-bad.example.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 7:00:00 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(
+                    state=State.WARN,
+                    summary="stratum-bad.example.com: Stratum: 4 (warn/crit at 3/5)",
+                    details="Stratum: 4 (warn/crit at 3/5)",
+                ),
+                Result(state=State.OK, notice="Next poll in: 1 minute 40 seconds"),
+                Result(state=State.OK, notice="\nPeer: reachability-bad.example.com"),
+                Result(state=State.OK, notice="Last successful sync time: (null)"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 5"),
+                Result(
+                    state=State.CRIT,
+                    summary="reachability-bad.example.com: Consecutive failures (last 8 attempts): 3 (warn/crit at 2/3)",
+                    details="Consecutive failures (last 8 attempts): 3 (warn/crit at 2/3)",
+                ),
+                Result(state=State.OK, notice="Last sync error: The peer is unreachable."),
+                Result(
+                    state=State.OK,
+                    notice="Details from w32tm: This operation returned because the timeout period expired.",
+                ),
+                Result(state=State.OK, notice="Stratum: 1"),
+                Result(state=State.OK, notice="Next poll in: 3 minutes 20 seconds"),
+                Result(state=State.OK, notice="\nPeer: good.example.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 6:00:00 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 2"),
+                Result(state=State.OK, notice="Next poll in: 5 minutes 0 seconds"),
+            ],
+            id="2/3 peers fail on different checks, universal=False => worst state (crit)",
+        ),
+    ],
+)
+def test_check_w32time_peers_summary_mixed_failures(
+    universal: bool,
+    expected: list[Result],
+) -> None:
+    parsed = w32time_peers.parse_w32time_peers(EN_MIXED_FAILURES)
+    params: w32time_peers.Params = {
+        "reachability_consecutive_failures": ("fixed", (2, 3)),
+        "reachability_total_failures": ("no_levels", None),
+        "stratum": ("fixed", (3, 5)),
+        "universal": universal,
+    }
+    result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
+    assert result == expected
+
+
+def test_check_w32time_peers_summary_empty_section() -> None:
+    """
+    We should not crash when the section is empty, just report 0 peers.
+    """
+    parsed = w32time_peers.parse_w32time_peers(NO_PEERS)
+    params: w32time_peers.Params = {
+        "reachability_consecutive_failures": ("no_levels", None),
+        "reachability_total_failures": ("no_levels", None),
+        "stratum": ("no_levels", None),
+        "universal": False,
+    }
+    result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
+    assert result == [
+        Result(state=State.OK, summary="Found 0 peers"),
+        Result(state=State.OK, summary="Failed: 0"),
+    ]
 
 
 @pytest.mark.parametrize(

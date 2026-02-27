@@ -1,0 +1,24 @@
+title: Windows: Time service (w32time) peer summary status
+agents: windows
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the configured time synchronization peers in the Windows
+ time service (w32time) as a singular summary service.
+
+ A ruleset, "Windows time service peers summary" exists where alerting can be
+ configured in multiple ways, e.g., reporting on when a peer's stratum changes,
+ when the last several consecutive attempts to communicate with the peer have
+ failed, or  when some number of attempts out of the last (not necessarily
+ consecutive) tries to contact the server have failed. See the help text in the
+ ruleset for more information.
+
+ If the service is configured to only alert if all hosts cross the defined
+ thresholds, then the service status will only change if every peer would
+ otherwise be in WARN or CRIT state, and the worst state will be reflected
+ as the service state.
+
+discovery:
+ One summary service is created. If you wish to have one service per peer, use
+ the {NTP Discovery} ruleset on this host to configure that.

@@ -55,7 +55,7 @@ class FetcherTrigger(abc.ABC):
             fetched.map(partial(file_cache.write, mode=mode))
             return fetched
 
-        except MKTimeout:
+        except (MKTimeout, TimeoutError):
             raise
         except FetcherError as exc:
             # These are intentionally raised exceptions for which we don't need crash reports

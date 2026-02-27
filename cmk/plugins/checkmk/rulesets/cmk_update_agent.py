@@ -424,6 +424,65 @@ def _valuespec_interval() -> TimeSpan:
     )
 
 
+def _valuespec_updater_registration() -> CascadingSingleChoice:
+    return CascadingSingleChoice(
+        title=Title("Registration"),
+        help_text=Help(
+            "To start updating the agent package, the agent updater must register at a monitoring "
+            "site. "
+            "Additional to the classic <tt>cmk-update-agent register</tt> call, you can also "
+            "decide to auto-register for agent updates after succeeded agent controller "
+            "registration. "
+            "However, consider the differences between agent controller and agent updater "
+            "registrations: "
+            "The agent controller can register at multiple sites, or overwrite existing "
+            "registrations when registering for the same site again. "
+            "The agent updater can only hold one registration at a time. Every new registration "
+            "will overwrite the previous one, regardless of the connection details. "
+            "Choose a registration strategy here."
+        ),
+        elements=[
+            CascadingSingleChoiceElement(
+                name="keep",
+                title=Title("On first agent controller registration"),
+                parameter_form=FixedValue(
+                    value=None,
+                    help_text=Help(
+                        "E.g., if you register the agent controller at multiple sites, "
+                        "only the first site will be used for agent updates."
+                    ),
+                ),
+            ),
+            CascadingSingleChoiceElement(
+                name="overwrite",
+                title=Title("On every agent controller registration"),
+                parameter_form=FixedValue(
+                    value=None,
+                    help_text=Help(
+                        "E.g., if you register the agent controller at multiple sites, "
+                        "only the last site will be used for agent updates."
+                    ),
+                ),
+            ),
+            CascadingSingleChoiceElement(
+                name="manual",
+                title=Title("Manual"),
+                parameter_form=FixedValue(
+                    value=None,
+                    help_text=Help(
+                        "Manually register the agent updater either on agent controller "
+                        "registration with <tt>cmk-agent-ctl register [args] --automatic-updates</tt>, "
+                        "or with <tt>cmk-update-agent register</tt>. "
+                        "Since the registration is handled manually by the user, any existing "
+                        "agent updater registration will be overwritten."
+                    ),
+                ),
+            ),
+        ],
+        prefill=DefaultValue("keep"),
+    )
+
+
 def _valuespec_signature_keys() -> MultipleChoiceExtended:
     return MultipleChoiceExtended(
         title=Title("Signature keys the agent will accept"),
@@ -493,6 +552,10 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
             "signature_keys": DictElement(
                 required=False,
                 parameter_form=_valuespec_signature_keys(),
+            ),
+            "updater_registration": DictElement(
+                required=False,
+                parameter_form=_valuespec_updater_registration(),
             ),
         },
     )

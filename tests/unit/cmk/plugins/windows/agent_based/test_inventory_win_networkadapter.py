@@ -22,7 +22,7 @@ from cmk.plugins.lib.interfaces import (
 )
 from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
     host_label_win_ip_address,
-    inventory_win_ip_address,
+    inventorize_ip_addresses_windows,
     inventory_win_networkadapter,
     parse_win_networkadapter,
 )
@@ -208,7 +208,7 @@ def test_inventory_win_ip_address(
     request: pytest.FixtureRequest,
 ) -> None:
     section = parse_win_networkadapter(string_table)
-    assert list(inventory_win_ip_address(section)) == expected_result, (
+    assert list(inventorize_ip_addresses_windows(section)) == expected_result, (
         f"in param {request.node.callspec.id}"
     )
 

@@ -153,17 +153,18 @@ def inventory_win_networkadapter(section: Section) -> InventoryResult:
         )
 
 
-def inventory_win_ip_address(section: Section) -> InventoryResult:
-    yield from inventorize_ip_addresses(section)
-
-
 inventory_plugin_win_networkadapter = InventoryPlugin(
     name="win_networkadapter",
     inventory_function=inventory_win_networkadapter,
 )
 
+
+def inventorize_ip_addresses_windows(section: Section) -> InventoryResult:
+    yield from inventorize_ip_addresses(section)
+
+
 inventory_plugin_win_ip_address = InventoryPlugin(
     name="win_ip_address",
     sections=["win_networkadapter"],
-    inventory_function=inventory_win_ip_address,
+    inventory_function=inventorize_ip_addresses_windows,
 )

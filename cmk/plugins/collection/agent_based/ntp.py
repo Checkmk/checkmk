@@ -134,10 +134,10 @@ def discover_ntp(
     >>> list(discover_ntp({}, {}))
     []
     >>> section = {'42.202.62.100': Peer(statecode='*', name='42.202.62.100', refid='.PPS.', stratum=1, when=143, reach='377', offset=-1.424, jitter=0.404), None: Peer(statecode='*', name='42.202.62.100', refid='.PPS.', stratum=1, when=143, reach='377', offset=-1.424, jitter=0.404)}
-    >>> list(discover_ntp({"mode": "detailed"}, section))
+    >>> list(discover_ntp({"mode": "single"}, section))
     [Service(item='42.202.62.100'), Service(item='42.202.62.100')]
     """
-    if params.get("mode", "summary") not in ("detailed", "both"):
+    if params.get("mode", "summary") not in ("single", "both"):
         return
 
     for peer in section.values():

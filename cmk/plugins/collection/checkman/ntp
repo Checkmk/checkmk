@@ -12,13 +12,14 @@ description:
 
  Note: This check creates one individual service for each peer. It is useful
  for monitoring the health of the peers. If you want to monitor only the
- time of the NTP client, you might rather use {ntp.time}.
+ time of the NTP client, you might rather use {ntp_time}.
 
 item:
- The name or IP address of the peer (first column in output of {ntpq -p}.
+ The name or IP address of the peer (first column in output of {ntpq -p}).
 
 discovery:
  One service is created for each peer which has been contacted at least once
- if in the rule {NTP Discovery} the mode is set to {"detailed"} or {"both"}.
- One summary service of type {ntp.time} is created if the mode is
- set to {"summary"}.
+ if in the rule {NTP Discovery} the mode is set to
+ {"Discover one service for every peer"} or {"Discover both of the above"}.
+ One summary service of type {ntp_time} is created if the mode is
+ set to {"Discover a single summary service"}.

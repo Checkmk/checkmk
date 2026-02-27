@@ -93,36 +93,40 @@ pub fn find_oracle_home_from_oratab(
     Ok(None)
 }
 
-/// Displays detected running sids, their corresponding paths and statuses
-/// For example:
-/// XE /opt/oracle/product/18c/dbhomeXE OK
-/// WORK1 N/A Absent
-pub fn print_local_sids() -> Result<String> {
-    find_sids_by_processes(None)
+#[cfg(windows)]
+fn dump_local_instances() -> String {
+    use crate::platform::get_local_instances;
+
+    let instances = get_local_instances().unwrap_or_else(|e| {
+        log::error!("{:?}", e);
+        vec![]
+    });
+    let rows = instances
+        .iter()
+        .map(|i| {
+            format!(
+                "'{:16}': home={:60} base={:60}",
+                i.name,
+                i.home.display().to_string(),
+                i.base.display().to_string()
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    format!("{}\nTotal instances found: {}\n", rows, instances.len())
+}
+
+pub fn dump_detected_sids() -> Result<String> {
+    #[cfg(windows)]
+    return Ok(dump_local_instances());
+    #[cfg(not(windows))]
+    return find_sids_by_processes(None)
         .map(|list| {
             log::info!("Found SIDs: {:?}", list);
-            let mut sids: Vec<_> = list.iter().collect();
-            sids.sort();
-            sids.iter()
-                .map(|sid| {
-                    let (name, home, status) = find_oracle_home_from_oratab(&Sid::from(*sid), None)
-                        .map(|home| {
-                            let status = if home.is_some() { "OK" } else { "Absent" }.to_string();
-                            (*sid, home, status)
-                        })
-                        .unwrap_or_else(|e| (*sid, None, e.to_string()));
-                    format!(
-                        "'{:16}': home={:60} status={:60}",
-                        name,
-                        home.map(|p| p.display().to_string())
-                            .unwrap_or("N/A".to_string()),
-                        status
-                    )
-                })
-                .collect::<Vec<_>>()
-                .join("\n")
+            list.iter().cloned().collect::<Vec<_>>().join("\n")
         })
-        .inspect_err(|e| {
-            log::info!("No SIDs found {e}"); // no SIDs is OK, it's normal for remote monitoring
-        })
+        .or_else(|e| {
+            log::info!("Error while detecting SIDs: {:?}", e);
+            anyhow::bail!(e)
+        });
 }

@@ -54,9 +54,6 @@ pub struct Args {
     #[arg(short, long)]
     pub config_file: Option<PathBuf>,
 
-    #[arg(long)]
-    pub detect_only: bool,
-
     /// Detect Oracle SIDs on the local machine
     #[arg(long)]
     pub detect_sids: bool,

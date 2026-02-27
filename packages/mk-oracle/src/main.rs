@@ -42,7 +42,7 @@ async fn main() {
 }
 
 fn need_execution(args: &[String]) -> bool {
-    ["--detect-only", "--find-runtime", "--runtime-ready"]
+    ["--detect-sids", "--find-runtime", "--runtime-ready"]
         .into_iter()
         .map(String::from)
         .any(|c| args.contains(&c))

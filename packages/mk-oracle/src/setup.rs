@@ -43,16 +43,13 @@ pub struct Env {
     /// disable caching
     disable_caching: bool,
 
-    /// detect instances and stop
-    detect_only: bool,
-
     /// detect sids on local machine and stop
     detect_sids: bool,
 
     /// detect runtime and stop
     find_runtime: bool,
 
-    /// detect instances and stop
+    /// filtering sections for sync/async, possible values are "sync", "async", "all"
     execution: SectionFilter,
 
     /// generate plugins and stop
@@ -72,7 +69,6 @@ impl Env {
             log_dir,
             state_dir,
             disable_caching: args.no_spool,
-            detect_only: args.detect_only,
             detect_sids: args.detect_sids,
             find_runtime: args.find_runtime,
             execution: args.filter.clone().unwrap_or_default(),
@@ -94,10 +90,6 @@ impl Env {
 
     pub fn disable_caching(&self) -> bool {
         self.disable_caching
-    }
-
-    pub fn detect_only(&self) -> bool {
-        self.detect_only
     }
 
     pub fn detect_sids(&self) -> bool {

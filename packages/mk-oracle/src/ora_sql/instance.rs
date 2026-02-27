@@ -17,7 +17,6 @@
 use crate::config::{self, OracleConfig};
 use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
-use crate::ora_sql::detect::print_local_sids;
 use crate::ora_sql::section::Section;
 use crate::setup::{detect_runtime, Env};
 use crate::types::{InstanceName, SqlQuery, UseHostClient};
@@ -28,20 +27,16 @@ use crate::config::connection::{add_tns_admin_to_env, setup_wallet_environment};
 use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomInstance;
 use crate::config::section::names;
+use crate::ora_sql::detect::dump_detected_sids;
 use crate::ora_sql::spots::{make_spot_work_results, SpotWorks};
-use crate::platform::get_local_instances;
 use anyhow::{Context, Result};
 use std::sync::{Arc, Mutex};
 
 impl OracleConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ora_sql) = self.ora_sql() {
-            if environment.detect_only() {
-                return Ok(dump_local_instances());
-            }
-            // call below are for detection purposes and may be called before any other logic
             if environment.detect_sids() {
-                return print_local_sids();
+                return dump_detected_sids();
             }
             if environment.find_runtime() {
                 let use_host_client: UseHostClient = ora_sql.options().use_host_client().clone();
@@ -83,26 +78,6 @@ impl OracleConfig {
             anyhow::bail!("No Config")
         }
     }
-}
-
-fn dump_local_instances() -> String {
-    let instances = get_local_instances().unwrap_or_else(|e| {
-        log::error!("{:?}", e);
-        vec![]
-    });
-    let rows = instances
-        .iter()
-        .map(|i| {
-            format!(
-                "'{:16}': home={:60} base={:60}",
-                i.name,
-                i.home.display().to_string(),
-                i.base.display().to_string()
-            )
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
-    format!("{}\nTotal instances found: {}\n", rows, instances.len())
 }
 
 /// Generate data as defined by config

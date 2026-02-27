@@ -6,7 +6,6 @@
 import time
 from collections.abc import Container, Iterable
 from dataclasses import dataclass
-from ipaddress import IPv4Interface, IPv6Interface
 from typing import TypedDict
 
 from cmk.agent_based.v2 import (
@@ -15,6 +14,8 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
 )
 
@@ -187,6 +188,6 @@ def inventorize_ip_addresses(adapters: Iterable[IPNetworkAdapter]) -> InventoryR
         )
         for adapter in adapters
         for interface_ip in (*adapter.inet4, *adapter.inet6)
-        if isinstance(interface_ip, (IPv4Interface, IPv6Interface))
+        if isinstance(interface_ip, (AugmentedIPv4Interface, AugmentedIPv6Interface))
         if interface_ip.ip.compressed != interface_ip.network.broadcast_address.compressed
     )

@@ -6,14 +6,14 @@
 from collections.abc import Iterable
 from ipaddress import (
     collapse_addresses,
-    IPv4Interface,
     IPv4Network,
-    IPv6Interface,
     IPv6Network,
 )
 
 from cmk.agent_based.v2 import HostLabel, HostLabelGenerator
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
     TEMP_DEVICE_PREFIXES,
 )
@@ -37,7 +37,7 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
             for adapter in adapters
             if not any(adapter.name.startswith(prefix) for prefix in TEMP_DEVICE_PREFIXES)
             for interface_ip in (*adapter.inet4, *adapter.inet6)
-            if isinstance(interface_ip, (IPv4Interface, IPv6Interface))
+            if isinstance(interface_ip, (AugmentedIPv4Interface, AugmentedIPv6Interface))
             if not any(
                 (
                     interface_ip.is_loopback,

@@ -8,10 +8,6 @@
 
 import copy
 from collections.abc import Mapping
-from ipaddress import (
-    IPv4Interface,
-    IPv6Interface,
-)
 from pathlib import Path
 
 import pytest
@@ -32,6 +28,8 @@ from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.collection.agent_based import lnx_if
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
 )
 
@@ -109,12 +107,12 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                     ],
                     link_ether="\x80À\x1eBÔ%",
                     inet4=[
-                        IPv4Interface("192.168.178.160/24"),
+                        AugmentedIPv4Interface("192.168.178.160/24"),
                     ],
                     inet6=[
-                        IPv6Interface("2a00:1e:e005:6801:af01:3a1a:6be:76a7/64"),
-                        IPv6Interface("fd65:2511:c73a:0:a386:2d17:e849:8df9/64"),
-                        IPv6Interface("fe80::b2f6:a3ab:5de5:12f3/64"),
+                        AugmentedIPv6Interface("2a00:1e:e005:6801:af01:3a1a:6be:76a7/64"),
+                        AugmentedIPv6Interface("fd65:2511:c73a:0:a386:2d17:e849:8df9/64"),
+                        AugmentedIPv6Interface("fe80::b2f6:a3ab:5de5:12f3/64"),
                     ],
                 ),
             },
@@ -1408,15 +1406,15 @@ __section_inventory = {
         name="lo",
         state_infos=["LOOPBACK", "UP", "LOWER_UP"],
         link_ether="",
-        inet4=[IPv4Interface("127.0.0.1/8")],
-        inet6=[IPv6Interface("::1/128")],
+        inet4=[AugmentedIPv4Interface("127.0.0.1/8")],
+        inet6=[AugmentedIPv6Interface("::1/128")],
     ),
     "ens32": IPNetworkAdapter(
         name="ens32",
         state_infos=["BROADCAST", "MULTICAST", "UP", "LOWER_UP"],
         link_ether="\x00\x0c)\x82ýr",
-        inet4=[IPv4Interface("192.168.10.144/24")],
-        inet6=[IPv6Interface("fe80::20c:29ff:fe82:fd72/64")],
+        inet4=[AugmentedIPv4Interface("192.168.10.144/24")],
+        inet6=[AugmentedIPv6Interface("fe80::20c:29ff:fe82:fd72/64")],
     ),
 }
 

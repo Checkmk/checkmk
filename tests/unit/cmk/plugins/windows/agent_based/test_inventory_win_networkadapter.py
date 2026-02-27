@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from ipaddress import (
-    IPv4Interface,
-    IPv6Interface,
-)
 from pathlib import Path
 
 import pytest
@@ -20,6 +16,8 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
 )
 from cmk.plugins.windows.agent_based.inventory_win_networkadapter import (
@@ -131,12 +129,12 @@ __section = [
 __adapter = IPNetworkAdapter(
     name="VMware Virtual Ethernet Adapter for VMnet1",
     inet4=[
-        IPv4Interface("169.254.0.1/255.255.0.0"),
-        IPv4Interface("192.168.1.100/255.255.255.0"),
+        AugmentedIPv4Interface("169.254.0.1/255.255.0.0"),
+        AugmentedIPv4Interface("192.168.1.100/255.255.255.0"),
     ],
     inet6=[
-        IPv6Interface("fe80::5669:a1eb:3add:e9b2/64"),
-        IPv6Interface("2c::1/127"),
+        AugmentedIPv6Interface("fe80::5669:a1eb:3add:e9b2/64"),
+        AugmentedIPv6Interface("2c::1/127"),
     ],
 )
 

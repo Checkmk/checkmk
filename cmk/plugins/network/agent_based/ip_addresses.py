@@ -6,11 +6,6 @@
 # Original author: thl-cmk[at]outlook[dot]com
 
 from collections.abc import Iterable, Sequence
-from ipaddress import (
-    ip_interface,
-    IPv4Interface,
-    IPv6Interface,
-)
 
 from cmk.agent_based.v2 import (
     exists,
@@ -25,6 +20,9 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPInterface,
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
 )
 from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
@@ -81,11 +79,11 @@ def address_str_from(adr_type: int, adr_length: int, raw_address: Sequence[int])
 
 def ip_info_34_from(
     entry: Sequence[str | Sequence[int]],
-) -> None | tuple[str, IPv4Interface | IPv6Interface]:
+) -> None | tuple[str, AugmentedIPv4Interface | AugmentedIPv6Interface]:
     """
     >>> ip_info_34_from(
     ...     ['1.4.10.86.60.1.16', [], '23', '.1.3.6.1.2.1.4.32.1.5.16.1.10.86.60.0.27'])
-    ('23', IPv4Interface('10.86.60.1/27'))
+    ('23', AugmentedIPv4Interface('10.86.60.1/27'))
     """
     match entry:
         # this checks the input against our expectation regarding types and structure
@@ -112,7 +110,7 @@ def ip_info_34_from(
     if not (address_str := address_str_from(adr_type, adr_length, raw_address)):
         return None
 
-    interface_ip = ip_interface(f"{address_str}/{prefix}")
+    interface_ip = AugmentedIPInterface.from_ip_address(f"{address_str}/{prefix}")
 
     if interface_ip.ip.compressed == interface_ip.network.broadcast_address.compressed:
         return None  # drop broadcast IPs
@@ -128,10 +126,10 @@ def ip_info_34_from(
 
 def ip_info_20_from(
     entry: Sequence[str | Sequence[int]],
-) -> None | tuple[str, IPv4Interface | IPv6Interface]:
+) -> None | tuple[str, AugmentedIPv4Interface | AugmentedIPv6Interface]:
     """
     >>> ip_info_20_from(('12.12.12.1', '23', '3'))
-    ('23', IPv4Interface('12.12.12.1/3'))
+    ('23', AugmentedIPv4Interface('12.12.12.1/3'))
     """
     match entry:
         # this checks the input against our expectation regarding types and structure
@@ -140,7 +138,7 @@ def ip_info_20_from(
                 return None
             if _raw_address == "0.0.0.0":  # storage-isilon-onefs
                 return None
-            interface_ip = ip_interface(f"{_raw_address}/{_raw_netmask}")
+            interface_ip = AugmentedIPInterface.from_ip_address(f"{_raw_address}/{_raw_netmask}")
         case _:
             return None
 
@@ -161,8 +159,8 @@ def parse_ip_addresses(string_table: Sequence[StringByteTable]) -> Section:
     return [
         IPNetworkAdapter(
             name=interface_by_index.get(if_index, if_index),
-            inet4=[interface_ip] if isinstance(interface_ip, IPv4Interface) else [],
-            inet6=[interface_ip] if isinstance(interface_ip, IPv6Interface) else [],
+            inet4=[interface_ip] if isinstance(interface_ip, AugmentedIPv4Interface) else [],
+            inet6=[interface_ip] if isinstance(interface_ip, AugmentedIPv6Interface) else [],
         )
         for if_index, interface_ip in (
             entry

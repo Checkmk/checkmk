@@ -27,6 +27,7 @@ from collections.abc import (
 from dataclasses import dataclass, field, fields, replace
 from functools import partial
 from ipaddress import (
+    ip_interface,
     IPv4Interface,
     IPv6Interface,
 )
@@ -136,6 +137,45 @@ TEMP_DEVICE_PREFIXES = (
 
 
 @dataclass
+class AugmentedIPInterface:
+    """Adds some extra properties to IP interface classes"""
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({super().__str__()!r})"
+
+    @staticmethod
+    def from_ip_address(address: str) -> "AugmentedIPv4Interface | AugmentedIPv6Interface":
+        """Same as `ipaddress.ip_address()
+        >>> AugmentedIPInterface.from_ip_address("12.13.14.15/16")
+        AugmentedIPv4Interface('12.13.14.15/16')
+        """
+        if isinstance(ip_if := ip_interface(address), IPv4Interface):
+            return AugmentedIPv4Interface(ip_if)
+        elif isinstance(ip_if, IPv6Interface):
+            return AugmentedIPv6Interface(ip_if)
+
+
+class AugmentedIPv4Interface(AugmentedIPInterface, IPv4Interface):
+    def __init__(self, interface: str | IPv4Interface) -> None:
+        AugmentedIPInterface.__init__(self)
+        IPv4Interface.__init__(self, interface)
+
+    @staticmethod
+    def from_ip_addr_line(line: Sequence[str]) -> "AugmentedIPv4Interface":
+        return AugmentedIPv4Interface(line[0])
+
+
+class AugmentedIPv6Interface(AugmentedIPInterface, IPv6Interface):
+    def __init__(self, interface: str | IPv6Interface, is_temporary: None | bool = None) -> None:
+        AugmentedIPInterface.__init__(self)
+        IPv6Interface.__init__(self, interface)
+
+    @staticmethod
+    def from_ip_addr_line(line: Sequence[str]) -> "AugmentedIPv6Interface":
+        return AugmentedIPv6Interface(line[0])
+
+
+@dataclass
 class IPNetworkAdapter:
     name: str
     type: None | str = None
@@ -144,8 +184,8 @@ class IPNetworkAdapter:
     macaddress: None | str = None
     gateway: None | str = None
     speed: None | int = None
-    inet4: MutableSequence[IPv4Interface] = field(default_factory=list)
-    inet6: MutableSequence[IPv6Interface] = field(default_factory=list)
+    inet4: MutableSequence[AugmentedIPv4Interface] = field(default_factory=list)
+    inet6: MutableSequence[AugmentedIPv6Interface] = field(default_factory=list)
 
 
 def _to_item_appearance(value: str) -> _ItemAppearance:

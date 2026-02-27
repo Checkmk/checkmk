@@ -6,10 +6,6 @@
 import time
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, replace
-from ipaddress import (
-    IPv4Interface,
-    IPv6Interface,
-)
 from typing import Any, Literal
 
 from cmk.agent_based.v2 import (
@@ -26,7 +22,12 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.host_labels_interfaces import host_labels_if
-from cmk.plugins.lib.interfaces import InterfaceWithCounters, IPNetworkAdapter
+from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
+    InterfaceWithCounters,
+    IPNetworkAdapter,
+)
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
 from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces, inventorize_ip_addresses
 
@@ -116,10 +117,10 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             continue
         if line[0] == "inet":
             # inet 127.0.0.1/8 scope host lo
-            iface.inet4.append(IPv4Interface(line[1]))
+            iface.inet4.append(AugmentedIPv4Interface.from_ip_addr_line(line[1:]))
         elif line[0] == "inet6":
             # inet6 ::1/128 scope host
-            iface.inet6.append(IPv6Interface(line[1]))
+            iface.inet6.append(AugmentedIPv6Interface.from_ip_addr_line(line[1:]))
     return ip_stats
 
 

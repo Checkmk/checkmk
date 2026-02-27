@@ -7,7 +7,6 @@
 
 import sys
 from collections.abc import Iterable
-from ipaddress import IPv4Interface, IPv6Interface
 from pathlib import Path
 
 import pytest
@@ -17,6 +16,8 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
 )
 from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
@@ -29,13 +30,13 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
             [
                 IPNetworkAdapter(
                     name="ens32",
-                    inet4=[IPv4Interface("192.168.10.144/24")],
-                    inet6=[IPv6Interface("fe80::20c:29ff:fe82:fd72/64")],
+                    inet4=[AugmentedIPv4Interface("192.168.10.144/24")],
+                    inet6=[AugmentedIPv6Interface("fe80::20c:29ff:fe82:fd72/64")],
                 ),
                 IPNetworkAdapter(
                     name="lo",
-                    inet4=[IPv4Interface("127.0.0.1/8")],
-                    inet6=[IPv6Interface("::1/128")],
+                    inet4=[AugmentedIPv4Interface("127.0.0.1/8")],
+                    inet6=[AugmentedIPv6Interface("::1/128")],
                 ),
             ],
             [
@@ -82,16 +83,16 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
             [
                 IPNetworkAdapter(
                     name="16",
-                    inet4=[IPv4Interface("10.86.60.1/24")],
-                    inet6=[IPv6Interface("fe80::200:5efe:515c:6232/64")],
+                    inet4=[AugmentedIPv4Interface("10.86.60.1/24")],
+                    inet6=[AugmentedIPv6Interface("fe80::200:5efe:515c:6232/64")],
                 ),
                 IPNetworkAdapter(
                     name="20",
-                    inet6=[IPv6Interface("fe80::200:5efe:515c:6232/64")],
+                    inet6=[AugmentedIPv6Interface("fe80::200:5efe:515c:6232/64")],
                 ),
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[IPv4Interface("12.12.12.1/24")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/24")],
                 ),
             ],
             [
@@ -150,11 +151,11 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
             [
                 IPNetworkAdapter(
                     name="ASUS USB-AC68 USB Wireless adapter",
-                    inet4=[IPv4Interface("192.168.10.11/24")],
+                    inet4=[AugmentedIPv4Interface("192.168.10.11/24")],
                 ),
                 IPNetworkAdapter(
                     name="ASUS USB-AC68 USB Wireless adapter",
-                    inet4=[IPv4Interface("192.168.10.11/24")],
+                    inet4=[AugmentedIPv4Interface("192.168.10.11/24")],
                 ),
                 IPNetworkAdapter(
                     name="Bluetooth Device (Personal Area Network)",
@@ -168,10 +169,10 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                 IPNetworkAdapter(
                     name="VMware Virtual Ethernet Adapter for VMnet1",
                     inet4=[
-                        IPv4Interface("169.254.0.1/16"),
-                        IPv4Interface("192.168.1.100/24"),
+                        AugmentedIPv4Interface("169.254.0.1/16"),
+                        AugmentedIPv4Interface("192.168.1.100/24"),
                     ],
-                    inet6=[IPv6Interface("fe80::5669:a1eb:3add:e9b2/64")],
+                    inet6=[AugmentedIPv6Interface("fe80::5669:a1eb:3add:e9b2/64")],
                 ),
             ],
             [
@@ -258,12 +259,12 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                 IPNetworkAdapter(
                     name="wlp9s0",
                     inet4=[
-                        IPv4Interface("192.168.1.189/24"),
+                        AugmentedIPv4Interface("192.168.1.189/24"),
                     ],
                     inet6=[
-                        IPv6Interface("2a00:6020:4083:f400:91db:40b7:c583:4591/64"),
-                        IPv6Interface("2a00:6020:4083:f400:7f25:1049:d74b:39e/64"),
-                        IPv6Interface("fe80::99d8:98c7:1073:f235/64"),
+                        AugmentedIPv6Interface("2a00:6020:4083:f400:91db:40b7:c583:4591/64"),
+                        AugmentedIPv6Interface("2a00:6020:4083:f400:7f25:1049:d74b:39e/64"),
+                        AugmentedIPv6Interface("fe80::99d8:98c7:1073:f235/64"),
                     ],
                 ),
             ],

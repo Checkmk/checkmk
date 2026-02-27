@@ -6,7 +6,6 @@
 # Original author: thl-cmk[at]outlook[dot]com
 
 from collections.abc import Sequence
-from ipaddress import IPv4Interface, IPv6Interface
 
 import pytest
 
@@ -18,6 +17,8 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
 )
 from cmk.plugins.network.agent_based.ip_addresses import (
@@ -130,19 +131,19 @@ __ip_info_34_fortinet_2 = [
             [
                 IPNetworkAdapter(
                     name="3",
-                    inet4=[IPv4Interface("10.10.10.230/30")],
+                    inet4=[AugmentedIPv4Interface("10.10.10.230/30")],
                 ),
                 IPNetworkAdapter(
                     name="3",
-                    inet6=[IPv6Interface("2a00:1ca0:1000:135::2/64")],
+                    inet6=[AugmentedIPv6Interface("2a00:1ca0:1000:135::2/64")],
                 ),
                 IPNetworkAdapter(
                     name="3",
-                    inet6=[IPv6Interface("fe80::72db:98ff:fe9f:2902%12.00.00.08/64")],
+                    inet6=[AugmentedIPv6Interface("fe80::72db:98ff:fe9f:2902%12.00.00.08/64")],
                 ),
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[IPv4Interface("12.12.12.1/3")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/3")],
                 ),
             ],
         ),
@@ -155,7 +156,7 @@ __ip_info_34_fortinet_2 = [
             [
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[IPv4Interface("12.12.12.1/3")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/3")],
                 )
             ],
         ),
@@ -168,15 +169,15 @@ __ip_info_34_fortinet_2 = [
             [
                 IPNetworkAdapter(
                     name="18",
-                    inet4=[IPv4Interface("10.1.1.2/24")],
+                    inet4=[AugmentedIPv4Interface("10.1.1.2/24")],
                 ),
                 IPNetworkAdapter(
                     name="4",
-                    inet6=[IPv6Interface("fd00:0:0:1::1/64")],
+                    inet6=[AugmentedIPv6Interface("fd00:0:0:1::1/64")],
                 ),
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[IPv4Interface("12.12.12.1/3")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/3")],
                 ),
             ],
         ),
@@ -189,7 +190,7 @@ __ip_info_34_fortinet_2 = [
             [
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[IPv4Interface("12.12.12.1/3")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/3")],
                 )
             ],
         ),
@@ -202,15 +203,15 @@ __ip_info_34_fortinet_2 = [
             [
                 IPNetworkAdapter(
                     name="16",
-                    inet4=[IPv4Interface("10.86.60.1/27")],
+                    inet4=[AugmentedIPv4Interface("10.86.60.1/27")],
                 ),
                 IPNetworkAdapter(
                     name="20",
-                    inet6=[IPv6Interface("fe80::200:5efe:515c:6232/64")],
+                    inet6=[AugmentedIPv6Interface("fe80::200:5efe:515c:6232/64")],
                 ),
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[IPv4Interface("12.12.12.1/3")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/3")],
                 ),
             ],
         ),
@@ -223,7 +224,7 @@ __ip_info_34_fortinet_2 = [
             [
                 IPNetworkAdapter(
                     name="1",
-                    inet4=[IPv4Interface("87.65.43.210/24")],
+                    inet4=[AugmentedIPv4Interface("87.65.43.210/24")],
                 )
             ],
         ),
@@ -243,15 +244,15 @@ def test_parse_ip_addresses(
             [
                 IPNetworkAdapter(
                     name="16",
-                    inet4=[IPv4Interface("10.86.60.1/24")],
+                    inet4=[AugmentedIPv4Interface("10.86.60.1/24")],
                 ),
                 IPNetworkAdapter(
                     name="20",
-                    inet6=[IPv6Interface("fe80::200:5efe:515c:6232/64")],
+                    inet6=[AugmentedIPv6Interface("fe80::200:5efe:515c:6232/64")],
                 ),
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[IPv4Interface("12.12.12.1/24")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/24")],
                 ),
             ],
             [
@@ -272,15 +273,15 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
             [
                 IPNetworkAdapter(
                     name="16",
-                    inet4=[IPv4Interface("10.86.60.1/27")],
+                    inet4=[AugmentedIPv4Interface("10.86.60.1/27")],
                 ),
                 IPNetworkAdapter(
                     name="20",
-                    inet6=[IPv6Interface("fe80::200:5efe:515c:6232/64")],
+                    inet6=[AugmentedIPv6Interface("fe80::200:5efe:515c:6232/64")],
                 ),
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[IPv4Interface("12.12.12.1/3")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/3")],
                 ),
             ],
             [

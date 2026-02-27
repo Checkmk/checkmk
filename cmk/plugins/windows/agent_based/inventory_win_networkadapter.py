@@ -19,10 +19,6 @@
 # DefaultGateway: 192.168.178.1
 
 from collections.abc import Iterable
-from ipaddress import (
-    IPv4Interface,
-    IPv6Interface,
-)
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -34,6 +30,8 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.host_labels_interfaces import host_labels_if
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
 )
 from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
@@ -74,8 +72,8 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
     ...     ['Address', '169.178.23.42 fe80::c118:dead:beef:2342'],
     ...     ['Subnet', '255.255.0.0 64'],
     ... ]): print(parsed_adapter)
-    IPNetworkAdapter(name='Name1', type='T1', state_infos=None, link_ether='', macaddress='DE:AD', gateway='10.11.12.1', speed=100, inet4=[IPv4Interface('10.11.12.13/24'), IPv4Interface('10.11.12.14/24')], inet6=[IPv6Interface('fe80::89d8:dead:beef:4223/64')])
-    IPNetworkAdapter(name='Name2', type='T2', state_infos=None, link_ether='', macaddress='BE:EF', gateway='', speed=200, inet4=[IPv4Interface('169.178.23.42/16')], inet6=[IPv6Interface('fe80::c118:dead:beef:2342/64')])
+    IPNetworkAdapter(name='Name1', type='T1', state_infos=None, link_ether='', macaddress='DE:AD', gateway='10.11.12.1', speed=100, inet4=[AugmentedIPv4Interface('10.11.12.13/24'), AugmentedIPv4Interface('10.11.12.14/24')], inet6=[AugmentedIPv6Interface('fe80::89d8:dead:beef:4223/64')])
+    IPNetworkAdapter(name='Name2', type='T2', state_infos=None, link_ether='', macaddress='BE:EF', gateway='', speed=200, inet4=[AugmentedIPv4Interface('169.178.23.42/16')], inet6=[AugmentedIPv6Interface('fe80::c118:dead:beef:2342/64')])
     """
 
     def group_adapters(split_lines: StringTable) -> Iterable[dict]:
@@ -118,11 +116,11 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
             speed=int(adapter["Speed"]) if "Speed" in adapter else 0,
             gateway=adapter.get("DefaultGateway", ""),
             inet4=[
-                IPv4Interface(f"{address}/{subnet}")
+                AugmentedIPv4Interface(f"{address}/{subnet}")
                 for address, subnet in zip(adapter["addrv4"], adapter["subnv4"])
             ],
             inet6=[
-                IPv6Interface(f"{address}/{subnet}")
+                AugmentedIPv6Interface(f"{address}/{subnet}")
                 for address, subnet in zip(adapter["addrv6"], adapter["subnv6"])
             ],
         )
@@ -131,6 +129,7 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
 agent_section_win_networkadapter = AgentSection(
     name="win_networkadapter",
     parse_function=parse_win_networkadapter,
+    # fixme
     # refactor-me: should use cmk.plugins.network.agent_based.ip_addresses.host_label_ip_addresses
     #              but that has to be refactored first to use Adapter
     host_label_function=host_label_win_ip_address,

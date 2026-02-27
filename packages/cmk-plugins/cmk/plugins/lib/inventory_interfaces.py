@@ -17,6 +17,7 @@ from cmk.plugins.lib.interfaces import (
     AugmentedIPv4Interface,
     AugmentedIPv6Interface,
     IPNetworkAdapter,
+    TEMP_DEVICE_PREFIXES,
 )
 
 
@@ -198,6 +199,10 @@ def inventorize_ip_addresses(adapters: Iterable[IPNetworkAdapter]) -> InventoryR
         for to_status_column in (
             any(
                 (
+                    any(adapter.name.startswith(prefix) for prefix in TEMP_DEVICE_PREFIXES),
+                    interface_ip.is_loopback,
+                    interface_ip.is_link_local,
+                    interface_ip.is_unspecified,
                     interface_ip.is_ula,
                     interface_ip.is_temporary,
                 )

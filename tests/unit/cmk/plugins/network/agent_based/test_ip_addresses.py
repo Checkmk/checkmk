@@ -273,7 +273,7 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
             [
                 IPNetworkAdapter(
                     name="16",
-                    inet4=[AugmentedIPv4Interface("10.86.60.1/27")],
+                    inet4=[AugmentedIPv4Interface("10.86.60.1/24")],
                 ),
                 IPNetworkAdapter(
                     name="20",
@@ -281,7 +281,7 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
                 ),
                 IPNetworkAdapter(
                     name="if_index1",
-                    inet4=[AugmentedIPv4Interface("12.12.12.1/3")],
+                    inet4=[AugmentedIPv4Interface("12.12.12.1/24")],
                 ),
             ],
             [
@@ -289,35 +289,35 @@ def test_host_label_ip_addresses(section: Section, expected_result: HostLabelGen
                     path=["networking", "addresses"],
                     key_columns={"address": "10.86.60.1", "device": "16"},
                     inventory_columns={
-                        "broadcast": "10.86.60.31",
-                        "prefixlength": 27,
-                        "netmask": "255.255.255.224",
-                        "network": "10.86.60.0",
                         "type": "ipv4",
+                        "network": "10.86.60.0",
+                        "netmask": "255.255.255.0",
+                        "prefixlength": 24,
+                        "broadcast": "10.86.60.255",
                     },
                     status_columns={},
                 ),
                 TableRow(
                     path=["networking", "addresses"],
                     key_columns={"address": "fe80::200:5efe:515c:6232", "device": "20"},
-                    inventory_columns={
-                        "broadcast": "fe80::ffff:ffff:ffff:ffff",
-                        "prefixlength": 64,
-                        "netmask": "ffff:ffff:ffff:ffff::",
-                        "network": "fe80::",
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv6",
+                        "network": "fe80::",
+                        "netmask": "ffff:ffff:ffff:ffff::",
+                        "prefixlength": 64,
+                        "broadcast": "fe80::ffff:ffff:ffff:ffff",
                     },
-                    status_columns={},
                 ),
                 TableRow(
                     path=["networking", "addresses"],
                     key_columns={"address": "12.12.12.1", "device": "if_index1"},
                     inventory_columns={
-                        "broadcast": "31.255.255.255",
-                        "prefixlength": 3,
-                        "netmask": "224.0.0.0",
-                        "network": "0.0.0.0",
                         "type": "ipv4",
+                        "network": "12.12.12.0",
+                        "netmask": "255.255.255.0",
+                        "prefixlength": 24,
+                        "broadcast": "12.12.12.255",
                     },
                     status_columns={},
                 ),

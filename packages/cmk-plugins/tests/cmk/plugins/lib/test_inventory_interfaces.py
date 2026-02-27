@@ -55,19 +55,20 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                 TableRow(
                     path=["networking", "addresses"],
                     key_columns={"address": "fe80::20c:29ff:fe82:fd72", "device": "ens32"},
-                    inventory_columns={
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv6",
                         "network": "fe80::",
                         "netmask": "ffff:ffff:ffff:ffff::",
                         "prefixlength": 64,
                         "broadcast": "fe80::ffff:ffff:ffff:ffff",
                     },
-                    status_columns={},
                 ),
                 TableRow(
                     path=["networking", "addresses"],
                     key_columns={"address": "127.0.0.1", "device": "lo"},
-                    inventory_columns={
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv4",
                         "network": "127.0.0.0",
                         "netmask": "255.0.0.0",
@@ -78,14 +79,14 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                 TableRow(
                     path=["networking", "addresses"],
                     key_columns={"address": "::1", "device": "lo"},
-                    inventory_columns={
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv6",
                         "network": "::1",
                         "netmask": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
                         "prefixlength": 128,
                         "broadcast": "::1",
                     },
-                    status_columns={},
                 ),
             ],
             id="inventory_ip_addresses_01",
@@ -122,26 +123,26 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                 TableRow(  # duplicate?
                     path=["networking", "addresses"],
                     key_columns={"address": "fe80::200:5efe:515c:6232", "device": "16"},
-                    inventory_columns={
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv6",
                         "network": "fe80::",
                         "netmask": "ffff:ffff:ffff:ffff::",
                         "prefixlength": 64,
                         "broadcast": "fe80::ffff:ffff:ffff:ffff",
                     },
-                    status_columns={},
                 ),
                 TableRow(
                     path=["networking", "addresses"],
                     key_columns={"address": "fe80::200:5efe:515c:6232", "device": "20"},
-                    inventory_columns={
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv6",
                         "network": "fe80::",
                         "netmask": "ffff:ffff:ffff:ffff::",
                         "prefixlength": 64,
                         "broadcast": "fe80::ffff:ffff:ffff:ffff",
                     },
-                    status_columns={},
                 ),
                 TableRow(
                     path=["networking", "addresses"],
@@ -223,14 +224,14 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                         "address": "169.254.0.1",
                         "device": "VMware Virtual Ethernet Adapter for VMnet1",
                     },
-                    inventory_columns={
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv4",
                         "network": "169.254.0.0",
                         "netmask": "255.255.0.0",
                         "prefixlength": 16,
                         "broadcast": "169.254.255.255",
                     },
-                    status_columns={},
                 ),
                 TableRow(
                     path=["networking", "addresses"],
@@ -253,14 +254,14 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                         "address": "fe80::5669:a1eb:3add:e9b2",
                         "device": "VMware Virtual Ethernet Adapter for VMnet1",
                     },
-                    inventory_columns={
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv6",
                         "network": "fe80::",
                         "netmask": "ffff:ffff:ffff:ffff::",
                         "prefixlength": 64,
                         "broadcast": "fe80::ffff:ffff:ffff:ffff",
                     },
-                    status_columns={},
                 ),
             ],
             id="inventory_ip_addresses_03",
@@ -325,14 +326,14 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                 TableRow(
                     path=["networking", "addresses"],
                     key_columns={"address": "fe80::99d8:98c7:1073:f235", "device": "wlp9s0"},
-                    inventory_columns={
+                    inventory_columns={},
+                    status_columns={
                         "type": "ipv6",
                         "network": "fe80::",
                         "netmask": "ffff:ffff:ffff:ffff::",
                         "prefixlength": 64,
                         "broadcast": "fe80::ffff:ffff:ffff:ffff",
                     },
-                    status_columns={},
                 ),
             ],
             id="inventory_ip_addresses_04",

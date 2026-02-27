@@ -119,6 +119,41 @@ def _custom_validate_editable_by(value: tuple[str, object]) -> None:
 
 
 def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
+    editable_by_elements: list[
+        CascadingSingleChoiceElement[str] | CascadingSingleChoiceElement[None]
+    ] = []
+    editable_by_default_value: DefaultValue[str] | None = None
+    if user.may("wato.edit_all_passwords"):
+        editable_by_elements.append(
+            CascadingSingleChoiceElement(
+                name="administrators",
+                title=Title("Administrators"),
+                parameter_form=FixedValue(value=None),
+            )
+        )
+        editable_by_default_value = DefaultValue("administrators")
+    user_contact_groups = userdb.contactgroups_of_user(user.id) if user.id else []
+    if user_contact_groups:
+        editable_by_elements.append(
+            CascadingSingleChoiceElement(
+                name="contact_group",
+                title=Title("Members of the contact group"),
+                parameter_form=SingleChoiceExtended(
+                    title=Title("Select contact group"),
+                    help_text=Help(
+                        "Select the contact group that can edit this OAuth2 connection."
+                    ),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name=name,
+                            title=Title("%s") % title,
+                        )
+                        for name, title in sorted_contact_group_choices()
+                        if name in user_contact_groups
+                    ],
+                ),
+            ),
+        )
     return TwoColumnDictionary(
         title=Title("Define OAuth parameters"),
         elements={
@@ -168,31 +203,8 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 required=True,
                 parameter_form=CascadingSingleChoice(
                     title=Title("Editable by"),
-                    prefill=DefaultValue("administrators"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="administrators",
-                            title=Title("Administrators"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="contact_group",
-                            title=Title("Members of the contact group"),
-                            parameter_form=SingleChoiceExtended(
-                                title=Title("Select contact group"),
-                                help_text=Help(
-                                    "Select the contact group that can edit this OAuth2 connection."
-                                ),
-                                elements=[
-                                    SingleChoiceElementExtended(
-                                        name=name,
-                                        title=Title("%s") % title,
-                                    )
-                                    for name, title in sorted_contact_group_choices()
-                                ],
-                            ),
-                        ),
-                    ],
+                    prefill=editable_by_default_value or DefaultValue("contact_group"),
+                    elements=editable_by_elements,
                     custom_validate=[_custom_validate_editable_by],
                 ),
                 group=DictGroup(title=Title("General properties")),

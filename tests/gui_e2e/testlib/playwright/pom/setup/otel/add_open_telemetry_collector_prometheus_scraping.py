@@ -110,7 +110,7 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
 
     @property
     def ip_address_or_hostname_textfield(self) -> Locator:
-        return self.main_area.locator().get_by_role("textbox", name="IP address or hostname")
+        return self.main_area.locator().get_by_role("textbox", name="IP address or host name")
 
     @property
     def port_textfield(self) -> Locator:

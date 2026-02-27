@@ -14,7 +14,6 @@ import { randomId } from '@/lib/randomId.ts'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIcon from '@/components/CmkIcon'
-import CmkLabel from '@/components/CmkLabel.vue'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -89,7 +88,8 @@ const authorizationUrl = computed(() =>
         <p>
           {{
             _t(
-              'Since you have configured a distributed site for the redirect, the authorization process cannot be started automatically. Open the following URL in your browser to start the authorization:'
+              `Since you have configured a distributed site for the redirect, the authorization process cannot be started automatically.
+              Click "Copy authorization URL to clipboard" and open the copied URL into a browser on the remote site to start the authorization`
             )
           }}
         </p>
@@ -100,7 +100,13 @@ const authorizationUrl = computed(() =>
           </CmkButton>
         </CmkCopy>
         <div class="mode-oauth2-connection-authorize-connection">
-          <CmkLabel>{{ _t('Authorization code') }}</CmkLabel>
+          <p>
+            {{
+              _t(
+                'Authorization code: To be copied from the redirect authorization URL page by clicking "Copy code to clipboard" button'
+              )
+            }}
+          </p>
           <CmkInput
             v-model="model.overrideCode"
             field-size="FILL"

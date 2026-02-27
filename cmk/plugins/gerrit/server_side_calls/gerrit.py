@@ -29,7 +29,12 @@ class GerritParams(BaseModel):
 def agent_gerrit_config(
     params: GerritParams, host_config: HostConfig
 ) -> Iterator[SpecialAgentCommand]:
-    args: list[str | Secret] = ["--user", params.user, "--password-ref", params.password]
+    args: list[str | Secret] = [
+        "--user",
+        params.user,
+        "--password-id",
+        params.password,
+    ]
 
     if params.protocol:
         args.extend(["--proto", params.protocol])

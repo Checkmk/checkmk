@@ -48,6 +48,37 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
 # Matches Jira wiki image syntax: !filename.png! or !filename.png|options!
 IMAGE_REFERENCE_RE = re.compile(r"!([^|!\n]+?)(?:\|[^!\n]*)?!")
 
+# Name anonymization: maps real display names to "User 1", "User 2", etc.
+_name_map: dict[str, str] = {}
+_name_counter = 0
+
+
+def anonymize_name(display_name: str) -> str:
+    """Replace a person's display name with a consistent pseudonym."""
+    global _name_counter
+    if not display_name or display_name == "None":
+        return display_name
+    if display_name not in _name_map:
+        _name_counter += 1
+        _name_map[display_name] = f"User {_name_counter}"
+    return _name_map[display_name]
+
+
+# Matches Jira user mentions: [~username] or [~accountId:xxx]
+_USER_MENTION_RE = re.compile(r"\[~([^\]]+)\]")
+
+
+def anonymize_user_mentions(text: str) -> str:
+    """Replace [~username] Jira mentions with anonymized names."""
+    if not text:
+        return text
+
+    def _replace_mention(match: re.Match[str]) -> str:
+        username = match.group(1)
+        return anonymize_name(username)
+
+    return _USER_MENTION_RE.sub(_replace_mention, text)
+
 
 _CODE_BLOCK_RE = re.compile(r"\{code(?::([^}]*))?\}(.*?)\{code\}", re.DOTALL)
 _NOFORMAT_RE = re.compile(r"\{noformat\}(.*?)\{noformat\}", re.DOTALL)
@@ -203,7 +234,7 @@ def format_issue_header(issue: Issue) -> str:
         f"| Status | {format_field(f.status)} |",
         f"| Type | {format_field(f.issuetype)} |",
         f"| Priority | {format_field(f.priority)} |",
-        f"| Assignee | {format_field(f.assignee)} |",
+        f"| Assignee | {anonymize_name(format_field(f.assignee))} |",
         f"| Labels | {format_field(f.labels)} |",
         f"| Affects Versions | {format_field(affects_versions)} |",
         f"| Fix Versions | {format_field(f.fixVersions)} |",
@@ -225,10 +256,11 @@ def format_comments(
         parts.append(f"*Showing {max_comments} of {len(comments)} comments (most recent)*\n")
 
     for c in shown:
-        author = format_field(c.author)
+        author = anonymize_name(format_field(c.author))
         body: str = c.body or ""
         if image_map:
             body = replace_image_refs(body, image_map)
+        body = anonymize_user_mentions(body)
         body = jira_wiki_to_markdown(body)
         parts.append(f"**{author}** ({c.created[:10]}):\n{truncate(body, MAX_COMMENT_CHARS)}\n")
     return "\n".join(parts)
@@ -278,7 +310,8 @@ def format_linked_issue(client: JIRA, key: str, link_desc: str) -> str:
     except JIRAError as e:
         return f"### [{link_desc}] {key}\n\n*Failed to fetch: {e.status_code}*\n"
 
-    linked_desc = jira_wiki_to_markdown(issue.fields.description or "")
+    linked_desc = anonymize_user_mentions(issue.fields.description or "")
+    linked_desc = jira_wiki_to_markdown(linked_desc)
     parts = [
         f"### [{link_desc}] {format_issue_header(issue)}",
         "",
@@ -329,9 +362,10 @@ def main() -> None:
     attachment_dir = Path(tempfile.mkdtemp(prefix=f"jira_{key}_"))
     image_map, other_files_map = download_attachments(issue, attachment_dir)
 
-    # Apply image replacements and wiki-to-markdown conversion to description
+    # Apply image replacements, name anonymization, and wiki-to-markdown conversion
     description: str = issue.fields.description or ""
     description = replace_image_refs(description, image_map)
+    description = anonymize_user_mentions(description)
     description = jira_wiki_to_markdown(description)
 
     # Build output

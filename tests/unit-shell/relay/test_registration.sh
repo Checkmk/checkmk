@@ -208,6 +208,102 @@ test_registration_ipv6_localhost_uses_host_containers_internal() {
     assertTrue "podman run should use host.containers.internal instead of ::1" $?
 }
 
+# Test: Registration with localhost:port uses host.containers.internal
+test_registration_localhost_with_port_uses_host_containers_internal() {
+    # Mock podman to succeed and track all calls
+    # shellcheck disable=SC2317
+    podman() {
+        echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        return 0
+    }
+    export -f podman
+
+    # Run main in a subshell to capture output and exit code
+    set +e
+    output=$(
+        set -euo pipefail
+        printf '%s' "testpass" | main --relay-name "test-relay" \
+            --initial-tag-version "1.0.0" \
+            --target-server "localhost:8000" \
+            --target-site-name "mysite" \
+            --user "testuser" \
+            2>&1
+    )
+    local exit_code=$?
+    set -e
+
+    # Assert that main succeeded
+    assertEquals "main should succeed" 0 "$exit_code"
+
+    # Verify that localhost:8000 was replaced with host.containers.internal:8000
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal:8000 --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
+    assertTrue "podman run should use host.containers.internal:8000 instead of localhost:8000" $?
+}
+
+# Test: Registration with 127.0.0.1:port uses host.containers.internal
+test_registration_loopback_ip_with_port_uses_host_containers_internal() {
+    # Mock podman to succeed and track all calls
+    # shellcheck disable=SC2317
+    podman() {
+        echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        return 0
+    }
+    export -f podman
+
+    # Run main in a subshell to capture output and exit code
+    set +e
+    output=$(
+        set -euo pipefail
+        printf '%s' "testpass" | main --relay-name "test-relay" \
+            --initial-tag-version "1.0.0" \
+            --target-server "127.0.0.1:8000" \
+            --target-site-name "mysite" \
+            --user "testuser" \
+            2>&1
+    )
+    local exit_code=$?
+    set -e
+
+    # Assert that main succeeded
+    assertEquals "main should succeed" 0 "$exit_code"
+
+    # Verify that 127.0.0.1:8000 was replaced with host.containers.internal:8000
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server host.containers.internal:8000 --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
+    assertTrue "podman run should use host.containers.internal:8000 instead of 127.0.0.1:8000" $?
+}
+
+# Test: Registration with remote host:port passes host:port through unchanged
+test_registration_remote_host_with_port_passes_through() {
+    # Mock podman to succeed and track all calls
+    # shellcheck disable=SC2317
+    podman() {
+        echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        return 0
+    }
+    export -f podman
+
+    # Run main in a subshell to capture output and exit code
+    set +e
+    output=$(
+        set -euo pipefail
+        printf '%s' "testpass" | main --relay-name "test-relay" \
+            --initial-tag-version "1.0.0" \
+            --target-server "192.168.122.1:8000" \
+            --target-site-name "mysite" \
+            --user "testuser" \
+            2>&1
+    )
+    local exit_code=$?
+    set -e
+
+    # Assert that main succeeded
+    assertEquals "main should succeed" 0 "$exit_code"
+
+    # Verify that 192.168.122.1:8000 is passed through unchanged
+    grep -q "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server 192.168.122.1:8000 --site mysite --relay-alias test-relay --trust-cert --force --user testuser --password testpass" "$PODMAN_CALLS_FILE"
+    assertTrue "podman run should use 192.168.122.1:8000 unchanged for non-loopback host" $?
+}
+
 # Test: Registration with unresolvable address should fail
 test_registration_unresolvable_address_fails() {
     # Override getent to simulate resolution failure

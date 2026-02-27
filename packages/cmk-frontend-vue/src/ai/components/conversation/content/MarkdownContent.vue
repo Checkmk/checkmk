@@ -20,7 +20,7 @@ const typedText = ref<string>('')
 const emit = defineEmits<TBaseConversationElementEmits>()
 
 onMounted(async () => {
-  parsedMarkdown.value = await marked.parse(props.content)
+  parsedMarkdown.value = await marked.parse(props.content, { breaks: true })
 
   if (props.noAnimation) {
     typedText.value = parsedMarkdown.value

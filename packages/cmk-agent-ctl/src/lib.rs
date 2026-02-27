@@ -57,16 +57,23 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
             &config::RegisterExistingConfig::new(runtime_config, reg_opts)?,
             &mut registry,
         ),
-        cli::Mode::RegisterNew(reg_new_opts) => registration::register_new(
-            &config::RegisterNewConfig::new(
-                config::RegistrationConnectionConfig::from_register_new_opts(
-                    runtime_config,
-                    reg_new_opts.connection_opts,
+        cli::Mode::RegisterNew(reg_new_opts) => {
+            let updater_registration = runtime_config
+                .updater_registration
+                .clone()
+                .unwrap_or_default();
+            registration::register_new(
+                &config::RegisterNewConfig::new(
+                    config::RegistrationConnectionConfig::from_register_new_opts(
+                        runtime_config,
+                        reg_new_opts.connection_opts,
+                    )?,
+                    reg_new_opts.agent_labels_raw.into_iter().collect(),
+                    updater_registration,
                 )?,
-                reg_new_opts.agent_labels_raw.into_iter().collect(),
-            )?,
-            &mut registry,
-        ),
+                &mut registry,
+            )
+        }
         cli::Mode::ProxyRegister(reg_opts) => registration::proxy_register(
             &config::RegisterExistingConfig::new(runtime_config, reg_opts)?,
         ),
@@ -81,16 +88,23 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
             pull_opts,
             registry,
         )?),
-        cli::Mode::Daemon(daemon_opts) => daemon(
-            &paths.pre_configured_connections_path,
-            registry.clone(),
-            config::PullConfig::new(runtime_config.clone(), daemon_opts.pull_opts, registry)?,
-            config::ClientConfig::new(
-                runtime_config,
-                daemon_opts.client_opts,
-                Some(daemon_opts.reg_client_opts),
-            ),
-        ),
+        cli::Mode::Daemon(daemon_opts) => {
+            let updater_registration = runtime_config
+                .updater_registration
+                .clone()
+                .unwrap_or_default();
+            daemon(
+                &paths.pre_configured_connections_path,
+                registry.clone(),
+                config::PullConfig::new(runtime_config.clone(), daemon_opts.pull_opts, registry)?,
+                config::ClientConfig::new(
+                    runtime_config,
+                    daemon_opts.client_opts,
+                    Some(daemon_opts.reg_client_opts),
+                ),
+                updater_registration,
+            )
+        }
         cli::Mode::Dump => dump(),
         cli::Mode::Status(status_opts) => status(
             &registry,

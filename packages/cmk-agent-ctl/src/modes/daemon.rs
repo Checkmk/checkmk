@@ -28,12 +28,14 @@ pub fn daemon(
     mut registry: config::Registry,
     pull_config: config::PullConfig,
     client_config: config::ClientConfig,
+    updater_registration: config::UpdaterRegistration,
 ) -> AnyhowResult<()> {
     register_panic_handler();
     process_pre_configured_connections(
         path_pre_configured_connections,
         &mut registry,
         &client_config,
+        updater_registration,
     );
 
     // create channels, 3x TX + 1x RX to "synchronize" thread stops on failure
@@ -72,12 +74,16 @@ fn process_pre_configured_connections(
     path_pre_configured_connections: &std::path::Path,
     registry: &mut config::Registry,
     client_config: &config::ClientConfig,
+    updater_registration: config::UpdaterRegistration,
 ) {
     match config::PreConfiguredConnections::load(path_pre_configured_connections) {
         Ok(pre_configured) => {
-            if let Err(err) =
-                registration::register_pre_configured(&pre_configured, client_config, registry)
-            {
+            if let Err(err) = registration::register_pre_configured(
+                &pre_configured,
+                client_config,
+                registry,
+                updater_registration,
+            ) {
                 error!(
                     "Error while processing pre-configured connections: {}",
                     misc::anyhow_error_to_human_readable(&err)

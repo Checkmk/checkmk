@@ -51,7 +51,7 @@ pub trait TOMLLoaderMissingSafe: TOMLLoader + Default {
 pub struct RegisterExistingConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub host_name: String,
-    pub automatic_updates: bool,
+    pub updater_registration: UpdaterRegistration,
 }
 
 impl RegisterExistingConfig {
@@ -59,13 +59,22 @@ impl RegisterExistingConfig {
         runtime_config: RuntimeConfig,
         register_opts: cli::RegisterOpts,
     ) -> AnyhowResult<Self> {
+        // CLI --automatic-updates flag uses "overwrite" semantics (explicit user intent).
+        let updater_registration = if register_opts.automatic_updates {
+            UpdaterRegistration::Overwrite
+        } else {
+            runtime_config
+                .updater_registration
+                .clone()
+                .unwrap_or_default()
+        };
         Ok(Self {
             connection_config: RegistrationConnectionConfig::from_register_opts(
                 runtime_config,
                 register_opts.connection_opts,
             )?,
             host_name: register_opts.hostname,
-            automatic_updates: register_opts.automatic_updates,
+            updater_registration,
         })
     }
 }
@@ -73,16 +82,19 @@ impl RegisterExistingConfig {
 pub struct RegisterNewConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub agent_labels: types::AgentLabels,
+    pub updater_registration: UpdaterRegistration,
 }
 
 impl RegisterNewConfig {
     pub fn new(
         connection_config: RegistrationConnectionConfig,
         agent_labels: types::AgentLabels,
+        updater_registration: UpdaterRegistration,
     ) -> AnyhowResult<Self> {
         Ok(Self {
             connection_config,
             agent_labels: Self::enrich_with_automatic_agent_labels(agent_labels)?,
+            updater_registration,
         })
     }
 
@@ -202,7 +214,19 @@ pub struct PreConfiguredConnection {
     pub port: Option<u16>,
     pub credentials: types::Credentials,
     pub root_cert: String,
-    pub enable_auto_update: Option<bool>,
+}
+
+/// Controls how the agent updater registers during agent controller registration.
+#[derive(Deserialize, Clone, Debug, PartialEq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum UpdaterRegistration {
+    /// Register the updater only if it is not yet registered (check status first).
+    Keep,
+    /// Always register the updater, overwriting any existing registration.
+    Overwrite,
+    /// Do not register the updater automatically.
+    #[default]
+    Manual,
 }
 
 #[derive(Deserialize, Clone, Default)]
@@ -218,6 +242,9 @@ pub struct RuntimeConfig {
 
     #[serde(default)]
     validate_api_cert: Option<bool>,
+
+    #[serde(default)]
+    pub updater_registration: Option<UpdaterRegistration>,
 }
 
 impl TOMLLoader for RuntimeConfig {}
@@ -861,6 +888,7 @@ mod test_registration_config {
             pull_port: None,
             detect_proxy: None,
             validate_api_cert: None,
+            updater_registration: None,
         }
     }
 
@@ -905,6 +933,7 @@ mod test_registration_config {
             )
             .unwrap(),
             types::AgentLabels::new(),
+            UpdaterRegistration::Manual,
         )
         .unwrap()
         .agent_labels;
@@ -929,6 +958,7 @@ mod test_registration_config {
                 ),
                 (String::from("a"), String::from("b")),
             ]),
+            UpdaterRegistration::Manual,
         )
         .unwrap()
         .agent_labels;
@@ -989,6 +1019,7 @@ mod test_client_config {
                 pull_port: None,
                 detect_proxy: None,
                 validate_api_cert: None,
+                updater_registration: None,
             },
             cli::ClientOpts {
                 detect_proxy: false,
@@ -1007,6 +1038,7 @@ mod test_client_config {
                 pull_port: None,
                 detect_proxy: Some(true),
                 validate_api_cert: Some(true),
+                updater_registration: None,
             },
             cli::ClientOpts {
                 detect_proxy: false,
@@ -1027,6 +1059,7 @@ mod test_client_config {
                 pull_port: None,
                 detect_proxy: None,
                 validate_api_cert: None,
+                updater_registration: None,
             },
             cli::ClientOpts { detect_proxy: true },
             Some(cli::RegistrationClientOpts {

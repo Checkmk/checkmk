@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::config::UpdaterRegistration;
 use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::site_spec::Protocol;
 use crate::types::Credentials;
@@ -359,28 +360,13 @@ pub fn register_existing(
     )?;
     println!("Registration complete.");
 
-    if config.automatic_updates {
-        let protocol = site_spec::discover_protocol(
-            &config.connection_config.site_id,
-            &config.connection_config.client_config,
-        )?;
-        let Credentials::UsernamePassword { username, password } = registration_input.credentials
-        else {
-            bail!(
-                    "Automatic updates require username/password credentials. Please omit --automatic-updates when using --ott."
-                );
-        };
-        register_updater_subprocess(
-            &UpdaterRegistrationInput {
-                site_id: config.connection_config.site_id.clone(),
-                username,
-                password,
-                hostname: config.host_name.clone(),
-                protocol,
-            },
-            registry,
-        )?;
-    }
+    maybe_register_updater(
+        &config.updater_registration,
+        &registration_input.credentials,
+        &config.connection_config,
+        &config.host_name,
+        registry,
+    )?;
     Ok(())
 }
 
@@ -389,13 +375,14 @@ pub fn register_new(
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
     let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
+    let agent_rec_api = &agent_receiver_api::Api {
+        use_proxy: config.connection_config.client_config.use_proxy,
+    };
     direct_registration(
         &config.connection_config,
         &registration_input,
         registry,
-        &agent_receiver_api::Api {
-            use_proxy: config.connection_config.client_config.use_proxy,
-        },
+        agent_rec_api,
         &RegistrationCallNew {
             agent_labels: &config.agent_labels,
         },
@@ -403,19 +390,35 @@ pub fn register_new(
     println!(
         "Registration complete. It may take few minutes until the newly created host and its services are visible in the site."
     );
-    Ok(())
+
+    if matches!(config.updater_registration, UpdaterRegistration::Manual) {
+        return Ok(());
+    }
+
+    // Look up the assigned hostname from the site after registration
+    let hostname = get_registered_hostname(registry, agent_rec_api, &config.connection_config)?;
+
+    maybe_register_updater(
+        &config.updater_registration,
+        &registration_input.credentials,
+        &config.connection_config,
+        &hostname,
+        registry,
+    )
 }
 
 pub fn register_pre_configured(
     pre_configured_connections: &config::PreConfiguredConnections,
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
+    updater_registration: UpdaterRegistration,
 ) -> AnyhowResult<()> {
     _register_pre_configured(
         pre_configured_connections,
         client_config,
         registry,
         &RegistrationPreConfiguredImpl {},
+        updater_registration,
     )
 }
 
@@ -424,6 +427,7 @@ fn _register_pre_configured(
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
     registration_pre_configured: &impl RegistrationPreConfigured,
+    updater_registration: UpdaterRegistration,
 ) -> AnyhowResult<()> {
     for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
         if let Err(error) = process_pre_configured_connection(
@@ -433,6 +437,7 @@ fn _register_pre_configured(
             client_config,
             registry,
             registration_pre_configured,
+            &updater_registration,
         ) {
             error!(
                 "Error while processing connection {}: {}",
@@ -508,6 +513,7 @@ fn process_pre_configured_connection(
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
     registration_pre_configured: &impl RegistrationPreConfigured,
+    updater_registration: &UpdaterRegistration,
 ) -> AnyhowResult<()> {
     let receiver_port = match pre_configured.port {
         Some(receiver_port) => receiver_port,
@@ -551,47 +557,11 @@ fn process_pre_configured_connection(
             client_config: client_config.clone(),
         },
         agent_labels.clone(),
+        updater_registration.clone(),
     )?;
 
     registration_pre_configured.register(&registration_config, registry)?;
     info!("Registered new connection {}", site_id);
-
-    if pre_configured.enable_auto_update.unwrap_or(false) {
-        let protocol = site_spec::discover_protocol(site_id, client_config)?;
-
-        let response = registration_pre_configured.registration_status_v2(
-            site_id,
-            registry.get_connection_as_mut(site_id).unwrap(),
-            client_config,
-        )?;
-
-        let hostname = match response {
-            agent_receiver_api::RegistrationStatusV2Response::Registered(registered_response) => {
-                registered_response.hostname
-            }
-            _ => {
-                error!("Cannot get hostname from registration status response for site {}. Skipping updater registration.", site_id);
-                return Ok(());
-            }
-        };
-
-        if username.is_none() || password.is_none() {
-            bail!(
-                "Automatic updates for pre-configured connections require username/password credentials"
-            );
-        };
-
-        register_updater_subprocess(
-            &UpdaterRegistrationInput {
-                site_id: site_id.clone(),
-                username: username.unwrap(),
-                password: password.unwrap(),
-                hostname,
-                protocol,
-            },
-            registry,
-        )?;
-    }
 
     Ok(())
 }
@@ -621,6 +591,147 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
         },
         &InteractiveTrust {},
     )
+}
+
+/// Retrieve the hostname for the already-registered connection.
+/// Used to supply the hostname to the updater registration.
+fn get_registered_hostname(
+    registry: &mut config::Registry,
+    agent_rec_api: &impl agent_receiver_api::RegistrationStatusV2,
+    connection_config: &config::RegistrationConnectionConfig,
+) -> AnyhowResult<String> {
+    let site_url =
+        site_spec::make_site_url(&connection_config.site_id, &connection_config.receiver_port)?;
+
+    let connection = match registry.get_connection_as_mut(&connection_config.site_id) {
+        Some(conn) => conn,
+        None => {
+            bail!(
+                "Cannot get registered connection for site {}. Skipping updater registration.",
+                connection_config.site_id
+            );
+        }
+    };
+
+    let response = agent_rec_api.registration_status_v2(&site_url, &connection.trust)?;
+
+    match response {
+        agent_receiver_api::RegistrationStatusV2Response::Registered(r) => Ok(r.hostname),
+        _ => bail!(
+            "Cannot get hostname from registration status response for site {}. Skipping updater registration.",
+            connection_config.site_id
+        ),
+    }
+}
+
+/// Check whether the agent updater is already registered by calling
+/// `cmk-update-agent show-config --json` and looking for a non-null `host_secret`
+/// in the state file section of the output.
+///
+/// Returns `true` if the updater appears to be already registered (host_secret is present and
+/// non-null), `false` if it is not yet registered (registration can proceed).
+/// On any unexpected output, logs a warning and returns `true` to skip registration safely.
+fn is_updater_registered(cmk_update_agent_path: &str) -> bool {
+    let mut cmd = Command::new(cmk_update_agent_path);
+    if cfg!(windows) {
+        cmd.arg("updater");
+    }
+    cmd.arg("show-config")
+        .arg("--json")
+        .stdin(std::process::Stdio::null());
+
+    let output = match cmd.output() {
+        Ok(o) => o,
+        Err(e) => {
+            warn!(
+                "Failed to execute '{} show-config --json': {}. Skipping updater registration.",
+                CMK_UPDATE_AGENT_CMD, e
+            );
+            return true;
+        }
+    };
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    let config: serde_json::Value = match serde_json::from_str(stdout.trim()) {
+        Ok(v) => v,
+        Err(e) => {
+            warn!(
+                "Failed to parse JSON from '{} show-config --json': {}. Skipping updater registration.",
+                CMK_UPDATE_AGENT_CMD, e
+            );
+            return true;
+        }
+    };
+
+    // host_secret absent or null in state file → not registered
+    !matches!(
+        config
+            .get("cmk-update-agent.state")
+            .and_then(|s| s.get("config"))
+            .and_then(|c| c.get("host_secret")),
+        None | Some(serde_json::Value::Null)
+    )
+}
+
+/// Perform updater registration according to the configured `UpdaterRegistration` mode.
+///
+/// - `Keep`: only register if the updater is not yet registered (check status first).
+/// - `Overwrite`: always register.
+/// - `Manual`: do nothing.
+fn maybe_register_updater(
+    updater_registration: &UpdaterRegistration,
+    credentials: &Credentials,
+    connection_config: &config::RegistrationConnectionConfig,
+    hostname: &str,
+    registry: &mut config::Registry,
+) -> AnyhowResult<()> {
+    if matches!(updater_registration, UpdaterRegistration::Manual) {
+        return Ok(());
+    }
+
+    let protocol =
+        site_spec::discover_protocol(&connection_config.site_id, &connection_config.client_config)?;
+
+    let Credentials::UsernamePassword { username, password } = credentials else {
+        bail!(
+            "Automatic updates require username/password credentials. \
+            Please omit --automatic-updates when using --ott."
+        );
+    };
+
+    let updater_input = UpdaterRegistrationInput {
+        site_id: connection_config.site_id.clone(),
+        username: username.clone(),
+        password: password.clone(),
+        hostname: hostname.to_string(),
+        protocol,
+    };
+
+    if matches!(updater_registration, UpdaterRegistration::Keep) {
+        let cmk_update_agent_path = match _get_cmk_update_agent_path(CMK_UPDATE_AGENT_CMD) {
+            Ok(path) => path,
+            Err(e) => {
+                warn!(
+                    "You requested to register for automatic updates, \
+                    but the agent updater is not found. \
+                    Skipping agent updater registration. ({})",
+                    e
+                );
+                return Ok(());
+            }
+        };
+
+        if is_updater_registered(&cmk_update_agent_path) {
+            info!(
+                "Agent updater already registered for site {}. Skipping re-registration.",
+                connection_config.site_id
+            );
+            return Ok(());
+        }
+    }
+
+    register_updater_subprocess(&updater_input, registry)
 }
 
 fn _prepare_register_updater_cmd(
@@ -1065,7 +1176,7 @@ mod tests {
                 &config::RegisterExistingConfig {
                     connection_config: registration_connection_config(None, None, true),
                     host_name: String::from(HOST_NAME),
-                    automatic_updates: false
+                    updater_registration: UpdaterRegistration::Manual,
                 },
                 &MockApi {
                     expect_root_cert: false,
@@ -1119,7 +1230,6 @@ mod tests {
                             port: Some(1001),
                             credentials: types::Credentials::username_password("user", "password"),
                             root_cert: String::from("root_cert"),
-                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -1128,7 +1238,6 @@ mod tests {
                             port: Some(1002),
                             credentials: types::Credentials::username_password("user", "password"),
                             root_cert: String::from("root_cert"),
-                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -1137,7 +1246,6 @@ mod tests {
                             port: Some(1003),
                             credentials: types::Credentials::username_password("user", "password"),
                             root_cert: String::from("root_cert"),
-                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -1146,7 +1254,6 @@ mod tests {
                             port: Some(1004),
                             credentials: types::Credentials::username_password("user", "password"),
                             root_cert: String::from("root_cert"),
-                            enable_auto_update: Some(false),
                         },
                     ),
                 ]),
@@ -1297,6 +1404,7 @@ mod tests {
                 &MockRegistrationPreConfiguredImpl {
                     is_registered_at_remote: true
                 },
+                UpdaterRegistration::Manual,
             )
             .is_ok());
             test_registry_after_registration(true, &mut r.registry)
@@ -1315,6 +1423,7 @@ mod tests {
                 &MockRegistrationPreConfiguredImpl {
                     is_registered_at_remote: true
                 },
+                UpdaterRegistration::Manual,
             )
             .is_ok());
             test_registry_after_registration(false, &mut r.registry)
@@ -1336,7 +1445,6 @@ mod tests {
                         port: Some(1001),
                         credentials: types::Credentials::username_password("user", "password"),
                         root_cert: String::from("root_cert"),
-                        enable_auto_update: Some(false),
                     },
                 )]),
                 agent_labels: types::AgentLabels::from([(
@@ -1355,6 +1463,7 @@ mod tests {
                 &MockRegistrationPreConfiguredImpl {
                     is_registered_at_remote: true
                 },
+                UpdaterRegistration::Manual,
             )
             .is_ok());
 
@@ -1386,6 +1495,7 @@ mod tests {
                 &MockRegistrationPreConfiguredImpl {
                     is_registered_at_remote: false
                 },
+                UpdaterRegistration::Manual,
             )
             .is_ok());
 

@@ -10,7 +10,7 @@ from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Final, Generic, Protocol, Self, TypeVar
+from typing import Final, Protocol, Self
 
 from ._wellknown import CMK_ADDONS_PLUGINS, CMK_PLUGINS, PluginGroup
 
@@ -18,9 +18,6 @@ from ._wellknown import CMK_ADDONS_PLUGINS, CMK_PLUGINS, PluginGroup
 class _PluginProtocol(Protocol):
     @property
     def name(self) -> Hashable: ...
-
-
-_PluginType = TypeVar("_PluginType", bound=_PluginProtocol)
 
 
 class _ImporterProtocol(Protocol):
@@ -41,16 +38,16 @@ class PluginLocation:
 
 
 @dataclass(frozen=True)
-class DiscoveredPlugins(Generic[_PluginType]):
+class DiscoveredPlugins[PluginType]:
     errors: Sequence[Exception]
-    plugins: Mapping[PluginLocation, _PluginType]
+    plugins: Mapping[PluginLocation, PluginType]
 
 
-def discover_all_plugins(
+def discover_all_plugins[PluginType: _PluginProtocol](
     plugin_group: PluginGroup,
-    plugin_prefixes: Mapping[type[_PluginType], str],
+    plugin_prefixes: Mapping[type[PluginType], str],
     raise_errors: bool,
-) -> DiscoveredPlugins[_PluginType]:
+) -> DiscoveredPlugins[PluginType]:
     """Collect all plugins from well-known locations"""
     return discover_plugins_from_modules(
         plugin_prefixes,
@@ -59,11 +56,11 @@ def discover_all_plugins(
     )
 
 
-def discover_plugins_from_modules(
-    plugin_prefixes: Mapping[type[_PluginType], str],
+def discover_plugins_from_modules[PluginType: _PluginProtocol](
+    plugin_prefixes: Mapping[type[PluginType], str],
     module_names_by_priority: Iterable[str],
     raise_errors: bool,
-) -> DiscoveredPlugins[_PluginType]:
+) -> DiscoveredPlugins[PluginType]:
     """Collect all plugins from the provided modules"""
     collector = Collector(plugin_prefixes, raise_errors=raise_errors)
     for mod_name in module_names_by_priority:
@@ -161,10 +158,7 @@ def _first_writable_safe_python_path() -> str | None:
     return next((p for p in sys.path if p and os.access(p, os.W_OK)), None)
 
 
-_T = TypeVar("_T")
-
-
-def _deduplicate(iterable: Iterable[_T]) -> Iterable[_T]:
+def _deduplicate[T](iterable: Iterable[T]) -> Iterable[T]:
     """Deduplicate preserving order
 
     >>> list(_deduplicate([2, 1, 2, 3, 3, 1]))
@@ -186,10 +180,10 @@ def _import_optionally(module_name: str, raise_errors: bool) -> ModuleType | Non
         return None
 
 
-class Collector(Generic[_PluginType]):
+class Collector[PluginType: _PluginProtocol]:
     def __init__(
         self,
-        plugin_prefixes: Mapping[type[_PluginType], str],
+        plugin_prefixes: Mapping[type[PluginType], str],
         raise_errors: bool,
     ) -> None:
         # Transform plug-in types / prefixes to the data structure we
@@ -205,11 +199,11 @@ class Collector(Generic[_PluginType]):
 
         self.errors: list[Exception] = []
         self._unique_plugins: dict[
-            tuple[type[_PluginType], Hashable], tuple[PluginLocation, _PluginType]
+            tuple[type[PluginType], Hashable], tuple[PluginLocation, PluginType]
         ] = {}
 
     @property
-    def plugins(self) -> Mapping[PluginLocation, _PluginType]:
+    def plugins(self) -> Mapping[PluginLocation, PluginType]:
         return dict(self._unique_plugins.values())
 
     def add_from_module(self, mod_name: str, importer: _ImporterProtocol) -> None:

@@ -44,6 +44,7 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
                     interface_ip.is_link_local,
                     interface_ip.is_unspecified,
                     interface_ip in IPV6_ULA_NETWORK,
+                    interface_ip.is_temporary,
                 )
             )
         ]

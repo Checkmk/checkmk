@@ -110,9 +110,26 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         AugmentedIPv4Interface("192.168.178.160/24"),
                     ],
                     inet6=[
-                        AugmentedIPv6Interface("2a00:1e:e005:6801:af01:3a1a:6be:76a7/64"),
-                        AugmentedIPv6Interface("fd65:2511:c73a:0:a386:2d17:e849:8df9/64"),
-                        AugmentedIPv6Interface("fe80::b2f6:a3ab:5de5:12f3/64"),
+                        AugmentedIPv6Interface(
+                            "2a00:1e:e005:6801:4035:b9ef:14a1:67ca/64",
+                            is_temporary=True,
+                        ),
+                        AugmentedIPv6Interface(
+                            "2a00:1e:e005:6801:af01:3a1a:6be:76a7/64",
+                            is_temporary=False,
+                        ),
+                        AugmentedIPv6Interface(
+                            "fd65:2511:c73a:0:ca9d:1b05:90f5:774/64",
+                            is_temporary=True,
+                        ),
+                        AugmentedIPv6Interface(
+                            "fd65:2511:c73a:0:a386:2d17:e849:8df9/64",
+                            is_temporary=False,
+                        ),
+                        AugmentedIPv6Interface(
+                            "fe80::b2f6:a3ab:5de5:12f3/64",
+                            is_temporary=False,
+                        ),
                     ],
                 ),
             },

@@ -113,8 +113,6 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             # link/none
             iface.link_ether = _get_physical_address(line[1])
 
-        if "temporary" in line and "dynamic" in line:
-            continue
         if line[0] == "inet":
             # inet 127.0.0.1/8 scope host lo
             iface.inet4.append(AugmentedIPv4Interface.from_ip_addr_line(line[1:]))

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Container, Iterable
+from collections.abc import Container, Iterable, Mapping
 from dataclasses import dataclass
 from typing import TypedDict
 
@@ -159,6 +159,23 @@ def inventorize_interfaces(
 
 def inventorize_ip_addresses(adapters: Iterable[IPNetworkAdapter]) -> InventoryResult:
     # Original author: thl-cmk[at]outlook[dot]com
+    def details_from(
+        interface_ip: AugmentedIPv4Interface | AugmentedIPv6Interface,
+    ) -> Mapping[str, str | int]:
+        return {
+            "type": f"ipv{interface_ip.version}",
+            "network": str(interface_ip.network.network_address),
+            "netmask": str(interface_ip.network.netmask),
+            "prefixlength": interface_ip.network.prefixlen,
+            "broadcast": str(interface_ip.network.broadcast_address),
+            # IPv4 has no scope_id, and we also drop empty scope_id
+            **(
+                {"scope_id": str(scope_id)}
+                if (scope_id := getattr(interface_ip, "scope_id", None))
+                else {}
+            ),
+        }
+
     if adapters is None:  # type: ignore[comparison-overlap]
         return  # type: ignore[unreachable]
 
@@ -171,23 +188,12 @@ def inventorize_ip_addresses(adapters: Iterable[IPNetworkAdapter]) -> InventoryR
             },
             # only put details in inventory columns for non-temporary addresses,
             # to status-columns otherwise in order to avoid noise
-            inventory_columns={
-                "type": f"ipv{interface_ip.version}",
-                "network": str(interface_ip.network.network_address),
-                "netmask": str(interface_ip.network.netmask),
-                "prefixlength": interface_ip.network.prefixlen,
-                "broadcast": str(interface_ip.network.broadcast_address),
-                # IPv4 has no scope_id, and we also drop empty scope_id
-                **(
-                    {"scope_id": str(scope_id)}
-                    if (scope_id := getattr(interface_ip, "scope_id", None))
-                    else {}
-                ),
-            },
-            status_columns={},
+            inventory_columns={} if to_status_column else details_from(interface_ip),
+            status_columns=details_from(interface_ip) if to_status_column else {},
         )
         for adapter in adapters
         for interface_ip in (*adapter.inet4, *adapter.inet6)
         if isinstance(interface_ip, (AugmentedIPv4Interface, AugmentedIPv6Interface))
         if interface_ip.ip.compressed != interface_ip.network.broadcast_address.compressed
+        for to_status_column in (any((interface_ip.is_temporary,)),)
     )

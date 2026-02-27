@@ -140,8 +140,16 @@ TEMP_DEVICE_PREFIXES = (
 class AugmentedIPInterface:
     """Adds some extra properties to IP interface classes"""
 
+    # Specifies if an IPv6 address is temporary (RFC 4941)
+    # This is only relevant for IPv6 addresses, and it can't be derived from the address itself,
+    # so we need the agent to provide this information.
+    is_temporary: None | bool = None
+
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({super().__str__()!r})"
+        return (
+            f"{self.__class__.__name__}({super().__str__()!r}"
+            f"{f', is_temporary={self.is_temporary}' if self.is_temporary is not None else ''})"
+        )
 
     @staticmethod
     def from_ip_address(address: str) -> "AugmentedIPv4Interface | AugmentedIPv6Interface":
@@ -167,12 +175,14 @@ class AugmentedIPv4Interface(AugmentedIPInterface, IPv4Interface):
 
 class AugmentedIPv6Interface(AugmentedIPInterface, IPv6Interface):
     def __init__(self, interface: str | IPv6Interface, is_temporary: None | bool = None) -> None:
-        AugmentedIPInterface.__init__(self)
+        AugmentedIPInterface.__init__(self, is_temporary=is_temporary)
         IPv6Interface.__init__(self, interface)
 
     @staticmethod
     def from_ip_addr_line(line: Sequence[str]) -> "AugmentedIPv6Interface":
-        return AugmentedIPv6Interface(line[0])
+        return AugmentedIPv6Interface(
+            line[0], is_temporary="temporary" in line and "dynamic" in line
+        )
 
 
 @dataclass

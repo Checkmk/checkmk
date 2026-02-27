@@ -20,6 +20,10 @@ from cmk.utils.unixsocket_http import make_session as make_unixsocket_session
 from .automation_executor import arguments_with_timeout, AutomationExecutor, LocalAutomationResult
 
 
+class AutomationHelperUnavailable(MKGeneralException):
+    """Raised when the automation helper service cannot be reached."""
+
+
 class HelperExecutor(AutomationExecutor):
     _SOCKET_PATH = paths.omd_root.joinpath("tmp/run/automation-helper.sock")
     _BASE_URL: Final = "http://local-automation"
@@ -47,7 +51,7 @@ class HelperExecutor(AutomationExecutor):
         try:
             response = session.post(f"{self._BASE_URL}/automation", json=payload)
         except requests.ConnectionError as e:
-            raise MKGeneralException(
+            raise AutomationHelperUnavailable(
                 _(
                     "Could not connect to automation helper. "
                     "Possibly the service <tt>automation-helper</tt> is not started, "

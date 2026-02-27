@@ -46,7 +46,7 @@ from livestatus import MKLivestatusException
 import cmk.ccc.debug
 import cmk.utils.paths
 import cmk.utils.timeperiod
-from cmk.automations.automation_helper import HelperExecutor
+from cmk.automations.automation_helper import AutomationHelperUnavailable, HelperExecutor
 from cmk.automations.results import (
     NotificationAnalyseResult,
     NotificationGetBulksResult,
@@ -338,6 +338,12 @@ def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
             logger=logger,
             timeout=None,
         )
+    except AutomationHelperUnavailable:
+        logger.error(
+            "The automation-helper service is required for the notification spooler. "
+            "Please make sure all site services are started."
+        )
+        return 1
     except Exception as e:
         logger.error("Error running automation call 'notify': %s", e)
         return 1

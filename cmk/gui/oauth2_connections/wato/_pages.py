@@ -10,7 +10,6 @@ import requests
 from cmk.gui import userdb
 from cmk.gui.form_specs import (
     get_visitor,
-    parse_and_validate_frontend_data,
     RawDiskData,
     RawFrontendData,
     VisitorOptions,
@@ -40,20 +39,26 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
         else:
             assert user.id
             editable_by = ("contact_group", option_id(userdb.contactgroups_of_user(user.id)[0]))
-        data = parse_and_validate_frontend_data(
-            form_spec,
-            RawFrontendData(
-                value=result["data"]
-                | {
-                    "title": "dummy",
-                    "editable_by": editable_by,
-                    "shared_with": [],
-                    "access_token": ("explicit_password", "", "dummy", False),
-                    "refresh_token": ("explicit_password", "", "dummy", False),
-                    "sites": ("all", None),
-                }
-            ),
+        frontend_data = RawFrontendData(
+            value=result["data"]
+            | {
+                "title": "dummy",
+                "editable_by": editable_by,
+                "shared_with": [],
+                "access_token": ("explicit_password", "", "dummy", False),
+                "refresh_token": ("explicit_password", "", "dummy", False),
+                "sites": ("all", None),
+            }
         )
+
+        data = visitor.to_disk(frontend_data)
+        if validation_errors := visitor.validate(frontend_data):
+            return {
+                "status": "error",
+                "message": "Form validation failed",
+                "validation_errors": validation_errors,
+            }
+
         assert isinstance(data, dict)
         if not (client_secret_raw := data.get("client_secret")):
             return {"status": "error", "message": f"Client secret missing in request data: {data}"}

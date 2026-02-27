@@ -26,8 +26,7 @@ defineProps<CmkWizardStepProps>()
       {{ _t('Navigate to API permissions and add the following Microsoft Graph permissions.') }}
       <ul>
         <li>{{ 'Mail.Read' }}</li>
-        <li>{{ 'Mail.Send' }}</li>
-        <li>{{ 'offline_access' }}</li>
+        <li>{{ `Mail.Send ${_t('(only required if used for Check email delivery)')}` }}</li>
       </ul>
     </template>
 

@@ -2712,7 +2712,7 @@ def main_init_action(
         bare_arg = ["--bare"] if bare else []
         p = popen_as_site_user(
             site.name,
-            ["omd", command] + bare_arg + args,
+            ["omd", command, *bare_arg, *args],
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=stdout,

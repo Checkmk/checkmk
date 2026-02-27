@@ -14,7 +14,7 @@ import socket
 import sqlite3
 import sys
 import tarfile
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
@@ -73,7 +73,7 @@ def main_backup(
     _version_info: object,
     site_name: str,
     global_opts: GlobalOptions,
-    args: list[str],
+    args: Sequence[str],
     options: CommandOptions,
     orig_working_directory: str,
 ) -> None:

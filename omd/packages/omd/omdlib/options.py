@@ -5,6 +5,7 @@
 
 import os
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Final, NamedTuple
 
@@ -17,7 +18,7 @@ from omdlib.utils import site_exists
 from omdlib.version_utils import exec_other_omd, version_from_site_dir
 
 CommandOptions = dict[str, str | None]
-Arguments = list[str]
+Arguments = Sequence[str]
 
 
 class Option(NamedTuple):
@@ -574,36 +575,44 @@ def _parse_command_options(
         opt = args[0]
         args = args[1:]
 
-        found_options: list[Option] = []
         if opt.startswith("--"):
             # Handle --foo=bar
             if "=" in opt:
                 opt, optarg = opt.split("=", 1)
-                args = [optarg] + args
-                for option in options:
-                    if option.long_opt == opt[2:] and not option.needs_arg:
-                        sys.exit("The option %s does not take an argument" % opt)
+                found_option = next((o for o in options if o.long_opt == opt[2:]), None)
+                if found_option is None:
+                    sys.exit("Invalid option '%s'" % opt)
+                if not found_option.needs_arg:
+                    sys.exit("The option %s does not take an argument" % opt)
+                set_options[found_option.long_opt] = optarg
+            else:
+                found_option = next((o for o in options if o.long_opt == opt[2:]), None)
+                if found_option is None:
+                    sys.exit("Invalid option '%s'" % opt)
 
-            for option in options:
-                if option.long_opt == opt[2:]:
-                    found_options = [option]
+                optarg = None
+                if found_option.needs_arg:
+                    if not args:
+                        sys.exit("Option '%s' needs an argument." % opt)
+                    optarg, args = args[0], args[1:]
+                set_options[found_option.long_opt] = optarg
         else:
+            found_options: list[Option] = []
             for char in opt:
                 for option in options:
                     if option.short_opt == char:
                         found_options.append(option)
 
-        if not found_options:
-            sys.exit("Invalid option '%s'" % opt)
+            if not found_options:
+                sys.exit("Invalid option '%s'" % opt)
 
-        for option in found_options:
-            arg = None
-            if option.needs_arg:
-                if not args:
-                    sys.exit("Option '%s' needs an argument." % opt)
-                arg = args[0]
-                args = args[1:]
-            set_options[option.long_opt] = arg
+            for option in found_options:
+                optarg = None
+                if option.needs_arg:
+                    if not args:
+                        sys.exit("Option '%s' needs an argument." % opt)
+                    optarg, args = args[0], args[1:]
+                set_options[option.long_opt] = optarg
     return (args, set_options)
 
 

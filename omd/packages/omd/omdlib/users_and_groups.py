@@ -323,7 +323,7 @@ def popen_as_site_user(
 
 def popen_as_site_user(
     user: str,
-    command: list[str],
+    command: Sequence[str],
     encoding: Literal["utf-8", None],
     stdin: int | IO[str] | None,
     stdout: int | IO[str] | None,

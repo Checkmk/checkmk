@@ -18,8 +18,6 @@ from cmk.plugins.lib.interfaces import (
     TEMP_DEVICE_PREFIXES,
 )
 
-IPV6_ULA_NETWORK = IPv6Network("fc00::/7")  # fc.. and fd.. => ULA
-
 
 def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
     """Return host labels describing the host's network 'single-/multihomed' property based on
@@ -43,7 +41,7 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
                     interface_ip.is_loopback,
                     interface_ip.is_link_local,
                     interface_ip.is_unspecified,
-                    interface_ip in IPV6_ULA_NETWORK,
+                    interface_ip.is_ula,
                     interface_ip.is_temporary,
                 )
             )

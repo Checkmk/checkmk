@@ -30,6 +30,7 @@ from ipaddress import (
     ip_interface,
     IPv4Interface,
     IPv6Interface,
+    IPv6Network,
 )
 from typing import Any, assert_never, Final, Literal, ParamSpec, TypedDict, TypeVar
 
@@ -161,6 +162,16 @@ class AugmentedIPInterface:
             return AugmentedIPv4Interface(ip_if)
         elif isinstance(ip_if, IPv6Interface):
             return AugmentedIPv6Interface(ip_if)
+
+    @property
+    def is_ula(self) -> bool:
+        """Returns whether address is inside the unique local address (ULA) network
+        >>> AugmentedIPv6Interface("fddf:d584:190e:49b5:0:ff:fe00:fc10/64").is_ula
+        True
+        >>> AugmentedIPv6Interface("fe80::8005:a23c:7a6f:4c3a/64").is_ula
+        False
+        """
+        return self in IPv6Network("fc00::/7")  # fc.. and fd.. => ULA
 
 
 class AugmentedIPv4Interface(AugmentedIPInterface, IPv4Interface):

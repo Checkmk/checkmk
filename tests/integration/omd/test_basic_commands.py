@@ -66,12 +66,13 @@ def test_additional_os_command_availability(site: Site, command: list[str]) -> N
     ):
         pytest.skip("'resolvectl' is not available in this image")
 
-    # 'nc' is available in some specific distros only
+    # 'nc' is available in some specific distros only. Those distros are defined below.
+    # All others are skipped.
     if command[0] == "nc" and not os.environ.get("DISTRO", "").startswith(
         (
             "sles-15sp6",
             "sles-15sp7",
-            "almalinux-",
+            "almalinux-10",
         )
     ):
         pytest.skip("'nc' is not available in this image")

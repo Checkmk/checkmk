@@ -247,14 +247,20 @@ oracle_config_full: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            oracle_id=GuiOracleIdentificationConf(
-                service_name="Service_Name_1",
+            oracle_id=(
+                "descriptor",
+                GuiOracleIdentificationConf(
+                    service_name="Service_Name_1",
+                ),
             ),
         ),
         GuiInstanceConf(
-            oracle_id=GuiOracleIdentificationConf(
-                service_name="Service_Name_2",
-                instance_name="Instance_Name_2",
+            oracle_id=(
+                "descriptor",
+                GuiOracleIdentificationConf(
+                    service_name="Service_Name_2",
+                    instance_name="Instance_Name_2",
+                ),
             ),
             auth=GuiAuthConf(
                 auth_type=(
@@ -274,7 +280,7 @@ oracle_config_full: GuiConfig = GuiConfig(
             ),
         ),
         GuiInstanceConf(
-            oracle_id=GuiOracleIdentificationConf(),
+            oracle_id=("sid", GuiOracleIdentificationConf()),
         ),
     ],
 )
@@ -420,8 +426,11 @@ oracle_config_instance_sid: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            oracle_id=GuiOracleIdentificationConf(
-                service_name="SIDONLY",
+            oracle_id=(
+                "descriptor",
+                GuiOracleIdentificationConf(
+                    service_name="SIDONLY",
+                ),
             ),
         ),
     ],
@@ -473,13 +482,19 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
     ),
     instances=[
         GuiInstanceConf(
-            oracle_id=GuiOracleIdentificationConf(
-                instance_name="SID_A",
+            oracle_id=(
+                "descriptor",
+                GuiOracleIdentificationConf(
+                    instance_name="SID_A",
+                ),
             ),
         ),
         GuiInstanceConf(
-            oracle_id=GuiOracleIdentificationConf(
-                instance_name="SID_B",
+            oracle_id=(
+                "descriptor",
+                GuiOracleIdentificationConf(
+                    instance_name="SID_B",
+                ),
             ),
             auth=GuiAuthConf(
                 auth_type=(

@@ -189,7 +189,7 @@ class GuiInstanceAdditionalOptionsConf(BaseModel):
 
 
 class GuiInstanceConf(BaseModel):
-    oracle_id: GuiOracleIdentificationConf
+    oracle_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
     auth: GuiAuthConf | None = None
     connection: GuiConnectionConf | None = None
 
@@ -409,7 +409,7 @@ def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[Oracl
 
     result: list[OracleInstance] = []
     for instance in instances:
-        oracle_id = instance.oracle_id
+        (_name, oracle_id) = instance.oracle_id
         if (
             oracle_id.service_name is None
             and oracle_id.instance_name is None

@@ -194,7 +194,7 @@ def inventorize_ip_addresses(adapters: Iterable[IPNetworkAdapter]) -> InventoryR
         for adapter in adapters
         for interface_ip in (*adapter.inet4, *adapter.inet6)
         if isinstance(interface_ip, (AugmentedIPv4Interface, AugmentedIPv6Interface))
-        if interface_ip.ip.compressed != interface_ip.network.broadcast_address.compressed
+        if not interface_ip.is_broadcast
         for to_status_column in (
             any(
                 (

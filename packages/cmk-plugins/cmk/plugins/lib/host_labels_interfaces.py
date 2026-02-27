@@ -38,6 +38,7 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
             if isinstance(interface_ip, (AugmentedIPv4Interface, AugmentedIPv6Interface))
             if not any(
                 (
+                    interface_ip.is_broadcast,
                     interface_ip.is_loopback,
                     interface_ip.is_link_local,
                     interface_ip.is_unspecified,

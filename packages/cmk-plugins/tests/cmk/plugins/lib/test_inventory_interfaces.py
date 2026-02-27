@@ -74,6 +74,17 @@ from cmk.plugins.lib.inventory_interfaces import inventorize_ip_addresses
                         "prefixlength": 8,
                         "broadcast": "127.255.255.255",
                     },
+                ),
+                TableRow(
+                    path=["networking", "addresses"],
+                    key_columns={"address": "::1", "device": "lo"},
+                    inventory_columns={
+                        "type": "ipv6",
+                        "network": "::1",
+                        "netmask": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+                        "prefixlength": 128,
+                        "broadcast": "::1",
+                    },
                     status_columns={},
                 ),
             ],

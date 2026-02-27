@@ -28,11 +28,14 @@ from dataclasses import dataclass, field, fields, replace
 from functools import partial
 from ipaddress import (
     ip_interface,
+    IPv4Address,
     IPv4Interface,
+    IPv4Network,
+    IPv6Address,
     IPv6Interface,
     IPv6Network,
 )
-from typing import Any, assert_never, Final, Literal, ParamSpec, TypedDict, TypeVar
+from typing import Any, assert_never, Final, Literal, ParamSpec, Protocol, TypedDict, TypeVar
 
 import pydantic
 
@@ -141,6 +144,14 @@ TEMP_DEVICE_PREFIXES = (
 class AugmentedIPInterface:
     """Adds some extra properties to IP interface classes"""
 
+    class IPInterfaceLike(Protocol):
+        @property
+        def version(self) -> int: ...
+        @property
+        def ip(self) -> IPv4Address | IPv6Address: ...
+        @property
+        def network(self) -> IPv4Network | IPv6Network: ...
+
     # Specifies if an IPv6 address is temporary (RFC 4941)
     # This is only relevant for IPv6 addresses, and it can't be derived from the address itself,
     # so we need the agent to provide this information.
@@ -164,7 +175,20 @@ class AugmentedIPInterface:
             return AugmentedIPv6Interface(ip_if)
 
     @property
-    def is_ula(self) -> bool:
+    def is_broadcast(self: "AugmentedIPInterface.IPInterfaceLike") -> bool:
+        """
+        >>> AugmentedIPv4Interface("1.2.3.255/24").is_broadcast
+        True
+        >>> AugmentedIPv4Interface("1.2.3.4/24").is_broadcast
+        False
+        """
+        return (
+            (self.version == 4 and self.network.prefixlen != 32)
+            or (self.version == 6 and self.network.prefixlen != 128)
+        ) and (self.ip.compressed == self.network.broadcast_address.compressed)
+
+    @property
+    def is_ula(self: "AugmentedIPInterface.IPInterfaceLike") -> bool:
         """Returns whether address is inside the unique local address (ULA) network
         >>> AugmentedIPv6Interface("fddf:d584:190e:49b5:0:ff:fe00:fc10/64").is_ula
         True

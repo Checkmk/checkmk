@@ -1483,6 +1483,18 @@ def test_host_label_lnx_ip_address(
                 ),
                 TableRow(
                     path=["networking", "addresses"],
+                    key_columns={"address": "::1", "device": "lo"},
+                    inventory_columns={
+                        "type": "ipv6",
+                        "network": "::1",
+                        "netmask": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+                        "prefixlength": 128,
+                        "broadcast": "::1",
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["networking", "addresses"],
                     key_columns={"address": "192.168.10.144", "device": "ens32"},
                     inventory_columns={
                         "type": "ipv4",

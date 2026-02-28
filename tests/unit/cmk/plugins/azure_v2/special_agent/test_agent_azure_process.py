@@ -1484,6 +1484,40 @@ def test_azure_resource(
     assert resource.tags == expected_resource.tags, "Tags mismatch"
 
 
+@pytest.mark.parametrize(
+    "resource_data, expected_piggytarget",
+    [
+        pytest.param(
+            RESOURCE_DATA,
+            "azr_st_storage_account_1_01b48bd7",
+            id="long hostname for storage account in group 1",
+        ),
+        pytest.param(
+            RESOURCE_DATA_DIFFERENT_GROUP,
+            "azr_st_storage_account_1_cc6ac70f",
+            id="long hostname for storage account in group 2 (different hash)",
+        ),
+        pytest.param(
+            RESOURCE_DATA_DIFFERENT_TYPE,
+            "azr_vm_storage_account_1_6bba70d5",
+            id="long hostname for virtual machine (different abbreviation and hash)",
+        ),
+    ],
+)
+def test_azure_resource_long_hostname(
+    resource_data: Mapping,
+    expected_piggytarget: str,
+    mock_azure_subscription: AzureSubscription,
+) -> None:
+    resource = AzureResource(
+        dict(resource_data),
+        TagsImportPatternOption.import_all,
+        mock_azure_subscription,
+        UniqueHostnamesConfig(enabled="long"),
+    )
+    assert resource.piggytarget == expected_piggytarget, "Piggy target mismatch"
+
+
 @pytest.mark.asyncio
 async def test_write_subscription_section(
     mock_azure_subscription: AzureSubscription,

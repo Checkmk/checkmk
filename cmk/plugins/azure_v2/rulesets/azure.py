@@ -255,7 +255,7 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         parameter_form=_special_agents_azure_tag_based_config_subscriptions(),
                     ),
                 ],
-                prefill=DefaultValue("no_subscriptions"),
+                prefill=DefaultValue("all_subscriptions"),
             ),
             required=True,
         ),

@@ -3192,12 +3192,12 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 
 def _run_command(
     command: Command,
-    version_info: VersionInfo,
     site: SiteContext | RootContext | str,
     global_opts: GlobalOptions,
     args: Arguments,
     command_options: CommandOptions,
 ) -> None:
+    version_info = VersionInfo()
     try:
         match command.command:
             case "help":
@@ -3286,8 +3286,6 @@ def _run_command(
 def main() -> None:
     omdlib.backup.ensure_mkbackup_lock_dir_rights()
 
-    version_info = VersionInfo()
-
     site_name, global_opts, command, command_options, args = parse_args_or_exec_other_omd(
         sys.argv[1:]
     )
@@ -3309,7 +3307,7 @@ def main() -> None:
     else:
         site = site_name
 
-    _run_command(command, version_info, site, global_opts, args, command_options)
+    _run_command(command, site, global_opts, args, command_options)
 
 
 def main_finalize_restore(args: Restore) -> int:

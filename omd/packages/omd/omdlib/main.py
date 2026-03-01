@@ -68,9 +68,13 @@ from omdlib.options import (
     Arguments,
     Command,
     CommandOptions,
+    ExecOtherOmd,
+    get_identity,
     is_root,
     main_help,
     parse_args_or_exec_other_omd,
+    Root,
+    Run,
 )
 from omdlib.package_manager import PackageManager
 from omdlib.restore import prepare_restore_as_site_user
@@ -3286,28 +3290,29 @@ def _run_command(
 def main() -> None:
     omdlib.backup.ensure_mkbackup_lock_dir_rights()
 
-    site_name, global_opts, command, command_options, args = parse_args_or_exec_other_omd(
-        sys.argv[1:]
-    )
+    user = get_identity()
+    match parse_args_or_exec_other_omd(user, sys.argv[1:]):
+        case ExecOtherOmd(version):
+            exec_other_omd(version)
+        case Run(site_name, global_opts, command, options, args):
+            if not isinstance(user, Root) and command.only_root:
+                sys.exit("omd: root permissions are needed for this command.")
 
-    if not is_root() and command.only_root:
-        sys.exit("omd: root permissions are needed for this command.")
+            # Commands which affect a site and can be called as root *or* as
+            # site user should always run with site user privileges. That way
+            # we are sure that new files and processes are created under the
+            # site user and never as root.
+            if site_name is None:
+                site: SiteContext | RootContext | str = RootContext()
+            elif not command.no_suid and not command.only_root:
+                if isinstance(user, Root):
+                    site = site_environment(site_name, global_opts.verbose)
+                else:
+                    site = site_environment_as_root(site_name, global_opts.verbose)
+            else:
+                site = site_name
 
-    # Commands which affect a site and can be called as root *or* as
-    # site user should always run with site user privileges. That way
-    # we are sure that new files and processes are created under the
-    # site user and never as root.
-    if site_name is None:
-        site: SiteContext | RootContext | str = RootContext()
-    elif not command.no_suid and not command.only_root:
-        if is_root():
-            site = site_environment(site_name, global_opts.verbose)
-        else:
-            site = site_environment_as_root(site_name, global_opts.verbose)
-    else:
-        site = site_name
-
-    _run_command(command, site, global_opts, args, command_options)
+            _run_command(command, site, global_opts, args, options)
 
 
 def main_finalize_restore(args: Restore) -> int:

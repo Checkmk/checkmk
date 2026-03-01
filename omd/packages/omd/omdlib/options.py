@@ -6,6 +6,7 @@
 import os
 import sys
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NamedTuple
 
@@ -15,7 +16,7 @@ from omdlib.site_name import site_name_from_uid
 from omdlib.site_paths import SitePaths
 from omdlib.update_check import OptionName as UpdateOption
 from omdlib.utils import site_exists
-from omdlib.version_utils import exec_other_omd, version_from_site_dir
+from omdlib.version_utils import version_from_site_dir
 
 CommandOptions = dict[str, str | None]
 Arguments = Sequence[str]
@@ -659,7 +660,14 @@ def main_help() -> None:
     )
 
 
-def _exec_omd_version_of_site(site_name: str, site_home: str, command: Command) -> None:
+@dataclass(frozen=True)
+class ExecOtherOmd:
+    version: str
+
+
+def _exec_omd_version_of_site(
+    site_name: str, site_home: str, command: Command
+) -> ExecOtherOmd | None:
     if command.site_must_exist and not site_exists(Path(site_home)):
         sys.exit(
             "omd: The site '%s' does not exist. You need to execute "
@@ -684,12 +692,31 @@ def _exec_omd_version_of_site(site_name: str, site_home: str, command: Command) 
                     "then please first do an 'omd init %s'." % (3 * (site_name,))
                 )
         elif omdlib.__version__ != v:
-            exec_other_omd(v)
+            return ExecOtherOmd(version=v)
+    return None
+
+
+class Root: ...
+
+
+@dataclass(frozen=True)
+class Run:
+    site_name: str | None
+    global_opts: GlobalOptions
+    command: Command
+    options: CommandOptions
+    args: Arguments
+
+
+def get_identity() -> str | Root:
+    if is_root():
+        return Root()
+    return site_name_from_uid()
 
 
 def parse_args_or_exec_other_omd(
-    main_args: list[str],
-) -> tuple[str | None, GlobalOptions, Command, CommandOptions, Arguments]:
+    user: str | Root, main_args: list[str], omd_path: Path = Path("/omd/")
+) -> Run | ExecOtherOmd:
     # Why not argparse: We only want to parse the arguments until the first command is encountered.
     # However, we also allow *any* command while parsing global options.
     # E.g., running `omd -V XY abc` should raise an error if and only if Version `XY` does not
@@ -699,7 +726,7 @@ def parse_args_or_exec_other_omd(
     global_opts, main_args = parse_global_opts(main_args)
     if global_opts.version is not None and global_opts.version != omdlib.__version__:
         # Switch to other version of bin/omd
-        exec_other_omd(global_opts.version)
+        return ExecOtherOmd(version=global_opts.version)
 
     if len(main_args) < 1:
         main_help()
@@ -709,15 +736,13 @@ def parse_args_or_exec_other_omd(
 
     # Parse command options. We need to do this now in order to know
     # if a site name has been specified or not.
-    args, command_options = _parse_command_options(
-        command.description, main_args[1:], command.options
-    )
+    args, options = _parse_command_options(command.description, main_args[1:], command.options)
 
     # Some commands need a site to be specified. If we are
     # called as root, this must be done explicitly. If we
     # are site user, the site name is our user name
     if command.needs_site > 0:
-        if is_root():
+        if isinstance(user, Root):
             if len(args) >= 1:
                 site_name = args[0]
                 args = args[1:]
@@ -726,10 +751,13 @@ def parse_args_or_exec_other_omd(
             else:
                 site_name = None
         else:
-            site_name = site_name_from_uid()
+            site_name = user
     else:
         site_name = None
 
     if site_name is not None:
-        _exec_omd_version_of_site(site_name, SitePaths.from_site_name(site_name).home, command)
-    return site_name, global_opts, command, command_options, args
+        site_home = SitePaths.from_site_name(site_name, omd_path=omd_path).home
+        exec_version = _exec_omd_version_of_site(site_name, site_home, command)
+        if exec_version is not None:
+            return exec_version
+    return Run(site_name, global_opts, command, options, args)

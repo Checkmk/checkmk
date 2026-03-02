@@ -5,16 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCode from '@/components/CmkCode.vue'
-import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
+import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
+import GenerateToken from '@/mode-host/agent-connection-test/components/GenerateToken.vue'
 
 const { _t } = usei18n()
 
@@ -40,8 +42,14 @@ const props = defineProps<
   }
 >()
 
+const ott = ref<string | null | Error>(null)
+
 const installCommand = computed(() => {
   const username = props.isCloudEdition ? 'api_user' : props.userId
+  let auth = `  --user ${username}`
+  if (ott.value && !(ott.value instanceof Error)) {
+    auth = `  --token ${ott.value}`
+  }
 
   return [
     'sudo bash install_relay.sh \\',
@@ -49,7 +57,7 @@ const installCommand = computed(() => {
     `  --initial-tag-version ${props.siteVersion} \\`,
     `  --target-server ${props.domain}:${props.agentReceiverPort} \\`,
     `  --target-site-name ${props.siteName} \\`,
-    `  --user ${username}`
+    auth
   ].join('\n')
 })
 </script>
@@ -91,7 +99,19 @@ const installCommand = computed(() => {
           <code>su -l &lt;user&gt;</code>
         </CmkAlertBox>
 
-        <CmkCode :code_txt="installCommand" data-testid="run-relay-install-script"></CmkCode>
+        <GenerateToken
+          v-model="ott"
+          token-generation-endpoint-uri="domain-types/relay_registration_token/collections/all"
+          :expires-in-days="7"
+          :token-generation-body="{}"
+          :description="_t('This requires the generation of a registration token.')"
+        />
+
+        <CmkCode
+          v-if="ott"
+          :code_txt="installCommand"
+          data-testid="run-relay-install-script"
+        ></CmkCode>
       </template>
     </template>
 

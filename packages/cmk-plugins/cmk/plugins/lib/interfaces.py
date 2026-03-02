@@ -119,7 +119,7 @@ CHECK_DEFAULT_PARAMETERS = {
 class IPNetworkAdapter:
     state_infos: Sequence[str] | None = None
     link_ether: str = ""
-    inet: MutableSequence[str] = field(default_factory=list)
+    inet4: MutableSequence[str] = field(default_factory=list)
     inet6: MutableSequence[str] = field(default_factory=list)
 
 

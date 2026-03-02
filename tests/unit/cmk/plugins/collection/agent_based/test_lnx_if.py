@@ -103,7 +103,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                         "ot-parsed-dat",
                     ],
                     link_ether="\x80À\x1eBÔ%",
-                    inet=[
+                    inet4=[
                         "192.168.178.160/24",
                     ],
                     inet6=[
@@ -1402,13 +1402,13 @@ __section_inventory = {
     "lo": IPNetworkAdapter(
         state_infos=["LOOPBACK", "UP", "LOWER_UP"],
         link_ether="",
-        inet=["127.0.0.1/8"],
+        inet4=["127.0.0.1/8"],
         inet6=["::1/128"],
     ),
     "ens32": IPNetworkAdapter(
         state_infos=["BROADCAST", "MULTICAST", "UP", "LOWER_UP"],
         link_ether="\x00\x0c)\x82ýr",
-        inet=["192.168.10.144/24"],
+        inet4=["192.168.10.144/24"],
         inet6=["fe80::20c:29ff:fe82:fd72/64"],
     ),
 }

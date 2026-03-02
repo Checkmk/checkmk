@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@gazelle//:def.bzl", "gazelle")
@@ -9,7 +10,6 @@ load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//:bazel_variables.bzl", "RUFF_VERSION")
-load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
 load("//bazel/rules:proto.bzl", "proto_library_as")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
 
@@ -30,7 +30,8 @@ npm_link_all_packages(name = "node_modules")
 copy_to_directory(
     name = "werks_group",
     srcs = glob([".werks/*"]),
-    out_dir = "werks_dir",
+    out = "werks_dir",
+    root_paths = [".werks"],
     visibility = ["//:__subpackages__"],
 )
 

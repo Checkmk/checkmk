@@ -256,13 +256,6 @@ void set_unknown_to_unmonitored(
     }
 }
 
-void reset_downtime_depths(const TableStateHistory::state_info_t &state_info) {
-    for (const auto &[_, hss] : state_info) {
-        hss->_downtime_depth = 0;
-        hss->_host_downtime_depth = 0;
-    }
-}
-
 void handle_log_initial_states(
     const TableStateHistory::state_info_t &state_info,
     std::chrono::system_clock::time_point entry_time) {
@@ -377,7 +370,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 // or rotating the logfile. As a safeguard, we reset all
                 // downtime depths to zero. If there are already active
                 // downtimes, we will see downtime alert lines soon.
-                reset_downtime_depths(state_info);
+                reset_downtime_depths(processor, only_update, state_info);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::none:
@@ -441,6 +434,21 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
     if (!abort_query_) {
         final_reports(processor, state_info);
+    }
+}
+
+void TableStateHistory::reset_downtime_depths(Processor &processor,
+                                              bool only_update,
+                                              const state_info_t &state_info) {
+    for (const auto &[_, hss] : state_info) {
+        if (hss->_downtime_depth != 0 || hss->_host_downtime_depth != 0) {
+            if (!only_update) {
+                abort_query_ = processor.process(*hss);
+            }
+            hss->_debug_info = "RESET DOWNTIME DEPTHS";
+            hss->_downtime_depth = 0;
+            hss->_host_downtime_depth = 0;
+        }
     }
 }
 

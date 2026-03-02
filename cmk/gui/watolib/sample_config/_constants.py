@@ -23,10 +23,6 @@ _SHIPPED_RULE_OPTIONS = RuleOptionsSpec(
 _PS_COMMON_OPTS = {"user": False, "default_params": {"cpu_rescale_max": True}}
 
 
-_PROXMOX_CONDITION = RuleConditionsSpec(
-    host_label_groups=[("and", [("and", "cmk/os_platform:debian"), ("and", "cmk/pve/entity:node")])]
-)
-
 PROXMOX_RULES: list[RuleSpec[Mapping[str, object]]] = [
     {
         "id": id_,
@@ -35,35 +31,39 @@ PROXMOX_RULES: list[RuleSpec[Mapping[str, object]]] = [
             "match": match,
             "default_params": {"cpu_rescale_max": True, "levels": levels},
         },
-        "condition": _PROXMOX_CONDITION,
+        "condition": condition,
         "options": {
             "description": description,
             **_SHIPPED_RULE_OPTIONS,
         },
     }
-    for id_, match, levels, description in [
+    for id_, match, levels, condition, description in [
         (
             "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e",
             "~^([0-9a-z\\/_-]*)\\/?(pve-firewall|pvestatd|pve-ha-crm|pve-ha-lrm|pvescheduler|pvefw-logger|proxmox-firewall|pve-lxc-syscalld).*$",
             (1, 1, 1, 1),
+            RuleConditionsSpec(),
             "Shipped rule to monitor basic Proxmox processes",
         ),
         (
             "bed89ece-0997-4052-ac1e-9a0ce369dd8a",
             "~^([0-9a-z\\/_-]*)\\/?(lxcfs|lxc-monitord).*$",
             (0, 0, 1, 1),
+            RuleConditionsSpec(),
             "Shipped rule to monitor basic Proxmox processes for LXC",
         ),
         (
             "e041c6f5-3b62-4de0-b4da-6e031c820c7c",
             "~^([0-9a-z\\/_-]*)\\/?(kvm|lxc-start).*$",
             (0, 0, 100, 200),
+            RuleConditionsSpec(host_label_groups=[("and", [("and", "cmk/pve/entity:node")])]),
             "Shipped rule to monitor Proxmox processes for VMs and Containers",
         ),
         (
             "23bd2fc2-a834-421c-8b7f-c790377f9d59",
             "~^([0-9a-z\\/_-]*)\\/?(pvedaemon|pveproxy).*$",
             (1, 1, 50, 100),
+            RuleConditionsSpec(),
             "Shipped rule to monitor scablable Proxmox processes",
         ),
     ]

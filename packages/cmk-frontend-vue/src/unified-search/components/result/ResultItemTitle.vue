@@ -59,6 +59,7 @@ span {
 .title {
   text-align: left;
   max-width: calc(100% - var(--context-min-width) - var(--gap));
+  overflow-wrap: break-word;
 }
 
 .context {

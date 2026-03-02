@@ -92,7 +92,11 @@ const contextInfos = ref<string[]>([])
 const restrictedToSingleInfos = ref<string[]>(getDefaultRestrictedToSingle())
 const originalViewName = ref<string | null>(null)
 const referencedViewName = ref<string | null>(getDefaultReferencedViewName())
-const modeSelection = ref<ViewSelectionMode>(ViewSelectionMode.NEW)
+const modeSelection = ref<ViewSelectionMode>(
+  props.editWidgetSpec?.content.type === 'linked_view'
+    ? ViewSelectionMode.LINK
+    : ViewSelectionMode.NEW
+)
 
 watchEffect(() => {
   if (props.editWidgetSpec) {

@@ -20,6 +20,7 @@ import {
   configuredToContextFilters,
   useFilterDefinitions
 } from '@/dashboard/components/filter/utils.ts'
+import { useInjectViews } from '@/dashboard/composables/useProvideViews'
 import { useInjectVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
 import type { DataSourceModel } from '@/dashboard/types/api'
 import { type ContextFilters, FilterOrigin } from '@/dashboard/types/filter.ts'
@@ -65,6 +66,7 @@ const emit = defineEmits<{
 
 const visualInfosById = useInjectVisualInfos()
 const filterDefinitions = useFilterDefinitions()
+const viewsById = useInjectViews()
 
 const selectedDatasource = defineModel<string | null>('selectedDatasource', { default: '' })
 const contextInfos = defineModel<string[]>('contextInfos', { default: [] })
@@ -77,6 +79,23 @@ const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
 
 const error = ref<string | null>(null)
 const linkedViewFilters = ref<ContextFilters>({})
+watch(
+  () => props.content,
+  (newContent) => {
+    if (props.isEditMode && newContent?.type === 'linked_view' && viewsById.value) {
+      const view = viewsById.value[newContent.view_name]
+      if (view) {
+        linkedViewFilters.value = configuredToContextFilters(
+          view.extensions.filters,
+          FilterOrigin.LINKED_VIEW
+        )
+        return
+      }
+    }
+    linkedViewFilters.value = {}
+  },
+  { immediate: true }
+)
 
 function goToNextStage() {
   error.value = null

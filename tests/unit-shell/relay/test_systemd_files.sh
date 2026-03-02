@@ -179,20 +179,22 @@ test_path_unit_no_binds_to() {
     assertEquals "Path unit must not use BindsTo= (breaks across container restarts)" 1 $?
 }
 
-test_path_unit_after_relay_service() {
+test_path_unit_no_after_relay_service() {
     local file_path="${SYSTEMD_USER_DIR}/checkmk_relay-update-manager.path"
-    # After= ensures the path unit starts only once the relay is up on boot,
-    # preventing updates from being triggered before the relay is running.
-    grep -q "^After=checkmk_relay.service" "$file_path"
-    assertEquals "Path unit should start after checkmk_relay.service" 0 $?
+    # After=checkmk_relay.service must NOT be present: it creates a systemd
+    # ordering cycle (relay → network-online → basic → paths → this path unit → relay).
+    # shellcheck disable=SC2251
+    ! grep -q "^After=checkmk_relay.service" "$file_path"
+    assertEquals "Path unit must not have After=checkmk_relay.service (causes ordering cycle)" 0 $?
 }
 
-test_path_unit_wants_relay_service() {
+test_path_unit_no_wants_relay_service() {
     local file_path="${SYSTEMD_USER_DIR}/checkmk_relay-update-manager.path"
-    # Wants= is a soft dependency: the relay is preferred to be running, but the
-    # path unit stays alive if the relay restarts (unlike BindsTo=).
-    grep -q "^Wants=checkmk_relay.service" "$file_path"
-    assertEquals "Path unit should declare Wants=checkmk_relay.service" 0 $?
+    # Wants=checkmk_relay.service is unnecessary: both units start independently
+    # via default.target. Removing it together with After= avoids the ordering cycle.
+    # shellcheck disable=SC2251
+    ! grep -q "^Wants=checkmk_relay.service" "$file_path"
+    assertEquals "Path unit must not have Wants=checkmk_relay.service" 0 $?
 }
 
 test_path_unit_path_modified() {
@@ -207,10 +209,13 @@ test_path_unit_triggers_service() {
     assertEquals "Path unit should trigger update manager service" 0 $?
 }
 
-test_path_unit_make_directory() {
+test_path_unit_no_make_directory() {
     local file_path="${SYSTEMD_USER_DIR}/checkmk_relay-update-manager.path"
-    grep -q "^MakeDirectory=yes" "$file_path"
-    assertEquals "Path unit should have MakeDirectory=yes" 0 $?
+    # MakeDirectory=yes is wrong: the watched path is a file, not a directory.
+    # systemd would try to mkdir the file path and log an error.
+    # shellcheck disable=SC2251
+    ! grep -q "^MakeDirectory=yes" "$file_path"
+    assertEquals "Path unit must not have MakeDirectory=yes (watched path is a file)" 0 $?
 }
 
 test_path_unit_wanted_by() {
@@ -238,10 +243,13 @@ test_service_unit_has_service_section() {
     assertEquals "Service unit should have [Service] section" 0 $?
 }
 
-test_service_unit_has_install_section() {
+test_service_unit_no_install_section() {
     local file_path="${SYSTEMD_USER_DIR}/checkmk_relay-update-manager.service"
-    grep -q "^\[Install\]" "$file_path"
-    assertEquals "Service unit should have [Install] section" 0 $?
+    # The update-manager service is a oneshot triggered only by the path unit.
+    # It must not have an [Install] section (no WantedBy=default.target).
+    # shellcheck disable=SC2251
+    ! grep -q "^\[Install\]" "$file_path"
+    assertEquals "Service unit must not have [Install] section (only triggered by path unit)" 0 $?
 }
 
 test_service_unit_description() {
@@ -286,10 +294,12 @@ test_service_unit_syslog_identifier() {
     assertEquals "Service unit should have correct syslog identifier" 0 $?
 }
 
-test_service_unit_wanted_by() {
+test_service_unit_no_wanted_by() {
     local file_path="${SYSTEMD_USER_DIR}/checkmk_relay-update-manager.service"
-    grep -q "^WantedBy=default.target" "$file_path"
-    assertEquals "Service unit should be wanted by default.target" 0 $?
+    # Without an [Install] section, WantedBy must not be present.
+    # shellcheck disable=SC2251
+    ! grep -q "^WantedBy=default.target" "$file_path"
+    assertEquals "Service unit must not have WantedBy=default.target" 0 $?
 }
 
 # === Integration Tests ===

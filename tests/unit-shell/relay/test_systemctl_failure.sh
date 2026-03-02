@@ -122,58 +122,6 @@ test_systemctl_enable_path_failure() {
     grep -q "systemctl --user enable --now checkmk_relay-update-manager.path" "$SYSTEMCTL_CALLS_FILE"
     assertTrue "systemctl enable path should have been called" $?
 
-    # Assert that subsequent systemctl enable service command was NOT called
-    grep -q "systemctl --user enable --now checkmk_relay-update-manager.service" "$SYSTEMCTL_CALLS_FILE" && fail="true" || fail="false"
-    assertEquals "systemctl enable service should not have been called" "false" "$fail"
-}
-
-# Test: systemctl enable update service fails.
-# If systemctl enable update service fails, main should exit with error and display the error message
-test_systemctl_enable_update_service_failure() {
-    # Mock systemctl to fail on enable update service but track all calls
-    # shellcheck disable=SC2317
-    systemctl() {
-        echo "systemctl $*" >>"$SYSTEMCTL_CALLS_FILE"
-        if [[ "$*" == *"enable"* ]] && [[ "$*" == *"checkmk_relay-update-manager.service"* ]]; then
-            return 1 # Simulate enable update service failure
-        else
-            return 0 # Other systemctl commands succeed
-        fi
-    }
-    export -f systemctl
-
-    # Run main in a subshell to capture output and exit code
-    set +e
-    output=$(
-        set -euo pipefail
-        printf '%s' "testpass" | main --relay-name "test-relay" \
-            --initial-tag-version "1.0.0" \
-            --target-server "server.example.com" \
-            --target-site-name "mysite" \
-            --user "testuser" 2>&1
-    )
-    local exit_code=$?
-    set -e
-
-    # Assert that main exited with error
-    assertNotEquals "main should exit with error" 0 "$exit_code"
-
-    # Assert that the error message contains the expected text
-    echo "$output" | grep -q "Call to systemctl enable update service failed"
-    assertTrue "Error message should mention systemctl enable update service failed" $?
-
-    # Assert that systemctl daemon-reload was called
-    grep -q "systemctl --user daemon-reload" "$SYSTEMCTL_CALLS_FILE"
-    assertTrue "systemctl daemon-reload should have been called" $?
-
-    # Assert that systemctl enable path was called
-    grep -q "systemctl --user enable --now checkmk_relay-update-manager.path" "$SYSTEMCTL_CALLS_FILE"
-    assertTrue "systemctl enable path should have been called" $?
-
-    # Assert that systemctl enable service was called
-    grep -q "systemctl --user enable --now checkmk_relay-update-manager.service" "$SYSTEMCTL_CALLS_FILE"
-    assertTrue "systemctl enable service should have been called" $?
-
     # Assert that subsequent systemctl start command was NOT called
     grep -q "systemctl --user start checkmk_relay.service" "$SYSTEMCTL_CALLS_FILE" && fail="true" || fail="false"
     assertEquals "systemctl start relay service should not have been called" "false" "$fail"
@@ -221,10 +169,6 @@ test_systemctl_start_relay_service_failure() {
     # Assert that systemctl enable path was called
     grep -q "systemctl --user enable --now checkmk_relay-update-manager.path" "$SYSTEMCTL_CALLS_FILE"
     assertTrue "systemctl enable path should have been called" $?
-
-    # Assert that systemctl enable service was called
-    grep -q "systemctl --user enable --now checkmk_relay-update-manager.service" "$SYSTEMCTL_CALLS_FILE"
-    assertTrue "systemctl enable service should have been called" $?
 
     # Assert that systemctl start relay service was called
     grep -q "systemctl --user start checkmk_relay.service" "$SYSTEMCTL_CALLS_FILE"

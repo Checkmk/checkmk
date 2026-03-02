@@ -100,7 +100,6 @@ test_main_successful_call_order() {
         "systemctl --user daemon-reload"
         "sleep 2"
         "systemctl --user enable --now checkmk_relay-update-manager.path"
-        "systemctl --user enable --now checkmk_relay-update-manager.service"
         "systemctl --user start checkmk_relay.service"
         "systemctl --user status checkmk_relay-update-manager.path --no-pager"
         "systemctl --user status checkmk_relay.service --no-pager"

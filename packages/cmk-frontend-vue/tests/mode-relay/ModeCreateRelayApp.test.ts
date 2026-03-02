@@ -190,6 +190,10 @@ describe('ModeCreateRelayApp', () => {
     render(ModeCreateRelayApp, { props: mockProps })
 
     await navigateToExecuteScriptStep('test-relay-foo')
+
+    await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
+    await screen.findByText(/error on generating token/i) // token cannot be generated as API needs to be available => scriptElement falls back to user auth
+
     const scriptElement = screen.getByTestId('run-relay-install-script')
     expect(scriptElement).toBeInTheDocument()
 
@@ -350,6 +354,9 @@ describe('ModeCreateRelayApp', () => {
 
     // Step 4: Verify Execute Installation Script
     await screen.findByText('Run the installation script')
+    await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
+    await screen.findByText(/error on generating token/i) // token cannot be generated as API needs to be available => scriptElement falls back to user auth
+
     const scriptElement = screen.getByTestId('run-relay-install-script')
     expect(scriptElement.textContent).toContain('complete-flow-test')
     await fireEvent.click(screen.getByRole('button', { name: /next step/i }))

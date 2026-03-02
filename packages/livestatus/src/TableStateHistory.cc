@@ -839,10 +839,9 @@ void TableStateHistory::process(
     hss->_duration = hss->_until - hss->_from;
     hss->computePerStateDurations(query_timeframe);
 
-    // if (hss->_duration > 0)
     abort_query_ =
         user.is_authorized_for_object(hss->_host, hss->_service, false) &&
-        !query.processDataset(Row{hss});
+        hss->_duration != 0s && !query.processDataset(Row{hss});
 
     hss->_from = hss->_until;
 }

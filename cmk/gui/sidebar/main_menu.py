@@ -37,6 +37,7 @@ from cmk.gui.product_usage_analytics_popup import render_product_usage_analytics
 from cmk.gui.search_menu import UnifiedSearchMainMenuData
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import loading_transition
 from cmk.gui.utils.output_funnel import output_funnel
@@ -276,7 +277,7 @@ class PageAjaxSidebarChangesMenu(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         return {
             "number_of_pending_changes": ActivateChanges.get_number_of_pending_changes(
-                sites=list(ctx.config.sites),
+                sites=list(activation_sites(ctx.config.sites)),
                 count_limit=10,
             )
         }

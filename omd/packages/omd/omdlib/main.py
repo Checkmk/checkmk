@@ -75,6 +75,7 @@ from omdlib.options import (
     parse_args_or_exec_other_omd,
     Root,
     Run,
+    SuCommand,
 )
 from omdlib.package_manager import PackageManager
 from omdlib.restore import prepare_restore_as_site_user
@@ -3266,9 +3267,6 @@ def _run_command(
             case "diff":
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_diff(object(), site, global_opts, args, command_options)
-            case "su":
-                assert command.needs_site == 1 and isinstance(site, str)
-                main_su(object(), site, global_opts, object(), object())
             case "umount":
                 assert isinstance(site, SiteContext | RootContext)
                 main_umount(object(), site, global_opts, object(), command_options)
@@ -3310,6 +3308,8 @@ def main() -> None:
                 site = site_name
 
             _run_command(command, site, global_opts, args, options)
+        case SuCommand(target_site):
+            main_su(object(), target_site, object(), object(), object())
 
 
 def main_finalize_restore(args: Restore) -> int:

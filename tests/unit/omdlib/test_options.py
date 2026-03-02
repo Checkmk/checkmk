@@ -16,6 +16,7 @@ from omdlib.options import (
     parse_args_or_exec_other_omd,
     Root,
     Run,
+    SuCommand,
 )
 from omdlib.update_check import prepare_conflict_resolution
 
@@ -375,13 +376,7 @@ def test_parse_command_options_update_default() -> None:
         (
             Root(),
             ["su", "monitoring_prod"],
-            Run(
-                "monitoring_prod",
-                GlobalOptions(version=None, verbose=False, force=False),
-                _get_command("su"),
-                {},
-                [],
-            ),
+            SuCommand(target_site="monitoring_prod"),
         ),
         (
             Root(),

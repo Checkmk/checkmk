@@ -708,6 +708,11 @@ class Run:
     args: Arguments
 
 
+@dataclass(frozen=True)
+class SuCommand:
+    target_site: str
+
+
 def get_identity() -> str | Root:
     if is_root():
         return Root()
@@ -719,9 +724,15 @@ def _require_root(user: str | Root) -> None:
         sys.exit("omd: root permissions are needed for this command.")
 
 
+def _require_site_name(args: Sequence[str]) -> tuple[str, Sequence[str]]:
+    if len(args) >= 1:
+        return args[0], args[1:]
+    sys.exit("omd: please specify site.")
+
+
 def parse_args_or_exec_other_omd(
     user: str | Root, main_args: list[str], omd_path: Path = Path("/omd/")
-) -> Run | ExecOtherOmd:
+) -> Run | ExecOtherOmd | SuCommand:
     # Why not argparse: We only want to parse the arguments until the first command is encountered.
     # However, we also allow *any* command while parsing global options.
     # E.g., running `omd -V XY abc` should raise an error if and only if Version `XY` does not
@@ -743,28 +754,39 @@ def parse_args_or_exec_other_omd(
     # if a site name has been specified or not.
     args, options = _parse_command_options(command.description, main_args[1:], command.options)
 
-    # Some commands need a site to be specified. If we are
-    # called as root, this must be done explicitly. If we
-    # are site user, the site name is our user name
-    if command.needs_site > 0:
-        if isinstance(user, Root):
-            if len(args) >= 1:
-                site_name = args[0]
-                args = args[1:]
-            elif command.needs_site == 1:
-                sys.exit("omd: please specify site.")
+    site_name: str | None
+    match command.command:
+        case "su":
+            _require_root(user)
+            site_name, args = _require_site_name(args)
+            site_home = SitePaths.from_site_name(site_name, omd_path=omd_path).home
+            exec_version = _exec_omd_version_of_site(site_name, site_home, command)
+            if exec_version is not None:
+                return exec_version
+            return SuCommand(target_site=site_name)
+        case _:
+            # Some commands need a site to be specified. If we are
+            # called as root, this must be done explicitly. If we
+            # are site user, the site name is our user name
+            if command.needs_site > 0:
+                if isinstance(user, Root):
+                    if len(args) >= 1:
+                        site_name = args[0]
+                        args = args[1:]
+                    elif command.needs_site == 1:
+                        site_name, args = _require_site_name(args)
+                    else:
+                        site_name = None
+                else:
+                    site_name = user
             else:
                 site_name = None
-        else:
-            site_name = user
-    else:
-        site_name = None
 
-    if site_name is not None:
-        site_home = SitePaths.from_site_name(site_name, omd_path=omd_path).home
-        exec_version = _exec_omd_version_of_site(site_name, site_home, command)
-        if exec_version is not None:
-            return exec_version
-    if command.only_root:
-        _require_root(user)
-    return Run(site_name, global_opts, command, options, args)
+            if site_name is not None:
+                site_home = SitePaths.from_site_name(site_name, omd_path=omd_path).home
+                exec_version = _exec_omd_version_of_site(site_name, site_home, command)
+                if exec_version is not None:
+                    return exec_version
+            if command.only_root:
+                _require_root(user)
+            return Run(site_name, global_opts, command, options, args)

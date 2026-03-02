@@ -168,6 +168,7 @@ const handleUpdate = async () => {
         <li>
           {{ _t("Runtime filtering isn't available. Set default filter values before sharing.") }}
         </li>
+        <li>{{ _t('Sidebar widgets are not available on shared dashboards.') }}</li>
       </ul>
     </CmkAlertBox>
 

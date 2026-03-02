@@ -322,7 +322,7 @@ def page_list(
 
 
 def _internal_access_state_text(visual_public: VisualPublic) -> str:
-    result: str = _("Only me")
+    result: str = _("Owner")
     if isinstance(visual_public, tuple):
         if visual_public[0] == "contact_groups":
             result = _("Contact groups")

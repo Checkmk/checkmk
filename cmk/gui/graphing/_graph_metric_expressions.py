@@ -140,7 +140,7 @@ class QueryDataError:
 def _derive_num_points(
     rrd_data: RRDData,
     query_data: QueryData,
-    fallback_timerange: FallbackTimeRange,
+    fallback_time_range: FallbackTimeRange,
 ) -> tuple[int, int, int, int]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
@@ -150,10 +150,10 @@ def _derive_num_points(
             sample_data = next(iter(chain.from_iterable(query_data.values()))).time_series
             return len(sample_data), sample_data.start, sample_data.end, sample_data.step
     return (
-        (fallback_timerange.end - fallback_timerange.start) // fallback_timerange.step + 1,
-        fallback_timerange.start,
-        fallback_timerange.end,
-        fallback_timerange.step,
+        (fallback_time_range.end - fallback_time_range.start) // fallback_time_range.step + 1,
+        fallback_time_range.start,
+        fallback_time_range.end,
+        fallback_time_range.step,
     )
 
 

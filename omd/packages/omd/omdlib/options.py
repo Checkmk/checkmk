@@ -714,6 +714,11 @@ def get_identity() -> str | Root:
     return site_name_from_uid()
 
 
+def _require_root(user: str | Root) -> None:
+    if not isinstance(user, Root):
+        sys.exit("omd: root permissions are needed for this command.")
+
+
 def parse_args_or_exec_other_omd(
     user: str | Root, main_args: list[str], omd_path: Path = Path("/omd/")
 ) -> Run | ExecOtherOmd:
@@ -760,4 +765,6 @@ def parse_args_or_exec_other_omd(
         exec_version = _exec_omd_version_of_site(site_name, site_home, command)
         if exec_version is not None:
             return exec_version
+    if command.only_root:
+        _require_root(user)
     return Run(site_name, global_opts, command, options, args)

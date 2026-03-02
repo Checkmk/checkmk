@@ -395,17 +395,6 @@ def test_parse_command_options_update_default() -> None:
             ),
         ),
         (
-            "v250",
-            ["cleanup"],
-            Run(
-                None,
-                GlobalOptions(version=None, verbose=False, force=False),
-                _get_command("cleanup"),
-                {},
-                [],
-            ),
-        ),
-        (
             Root(),
             ["cleanup"],
             Run(
@@ -659,17 +648,6 @@ def test_parse_command_options_update_default() -> None:
         ),
         (
             "v250",
-            ["--force", "rm", "broken_site"],
-            Run(
-                "v250",
-                GlobalOptions(version=None, verbose=False, force=True),
-                _get_command("rm"),
-                {},
-                ["broken_site"],
-            ),
-        ),
-        (
-            "v250",
             ["-f", "update"],
             Run(
                 "v250",
@@ -774,6 +752,25 @@ def test_parse_args_or_exec_other_omd(
             "If you have created that site with 'omd create --no-init broken_site'\n"
             "then please first do an 'omd init broken_site'.",
         ),
+        # 10. Command requires root permission
+        (
+            "v250",
+            ["--force", "rm", "broken_site"],
+            "",
+            "omd: root permissions are needed for this command.",
+        ),
+        (
+            "v250",
+            ["cleanup"],
+            "",
+            "omd: root permissions are needed for this command.",
+        ),
+        (
+            "v250",
+            ["su", "abc"],
+            "",
+            "omd: root permissions are needed for this command.",
+        ),
     ],
 )
 def test_parse_args_or_exec_other_omd_error(
@@ -786,6 +783,9 @@ def test_parse_args_or_exec_other_omd_error(
 ) -> None:
     site_dir = tmp_path / "sites" / "broken_site"
     site_dir.mkdir(parents=True)  # No 'version' symlink created
+    site_dir = tmp_path / "sites" / "v250"
+    site_dir.mkdir(parents=True, exist_ok=True)
+    (site_dir / "version").symlink_to(omdlib.__version__)
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         parse_args_or_exec_other_omd(user, args, tmp_path)
     stdout = capsys.readouterr()[0]

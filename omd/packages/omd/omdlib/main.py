@@ -3295,9 +3295,6 @@ def main() -> None:
         case ExecOtherOmd(version):
             exec_other_omd(version)
         case Run(site_name, global_opts, command, options, args):
-            if not isinstance(user, Root) and command.only_root:
-                sys.exit("omd: root permissions are needed for this command.")
-
             # Commands which affect a site and can be called as root *or* as
             # site user should always run with site user privileges. That way
             # we are sure that new files and processes are created under the

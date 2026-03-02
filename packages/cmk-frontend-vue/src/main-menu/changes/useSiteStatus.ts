@@ -65,10 +65,6 @@ export function useSiteStatus(
 
   const sitesWithErrors = computed(() => sites.value.filter(siteHasErrors))
 
-  const sitesWithStatusProblems = computed(() => sites.value.filter(siteHasStatusProblems))
-
-  const sitesWithActivationIssues = computed(() => sites.value.filter(siteHasActivationIssues))
-
   const loggedOutSites = computed(() => sites.value.filter(siteIsLoggedOut))
 
   const hasSitesWithChanges = computed(() => sitesWithChanges.value.length > 0)
@@ -93,8 +89,6 @@ export function useSiteStatus(
 
     sitesWithChanges,
     sitesWithErrors,
-    sitesWithStatusProblems,
-    sitesWithActivationIssues,
     loggedOutSites,
 
     hasSitesWithChanges,

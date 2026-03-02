@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-27 18:36+0000\n"
+"PO-Revision-Date: 2026-03-02 17:36+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -7032,9 +7032,8 @@ msgstr "正規表現で割り当てる"
 msgid "Assignee"
 msgstr "受任者"
 
-#, fuzzy
 msgid "Assignment of hosts to contact groups"
-msgstr "ホストグループへのホストの割り当て"
+msgstr "連絡先グループへのホストの割り当て"
 
 msgid "Assignment of hosts to host groups"
 msgstr "ホストグループへのホストの割り当て"
@@ -7367,7 +7366,6 @@ msgstr "承認設定"
 msgid "Authorizations per DB security group"
 msgstr "DBセキュリティグループごとの承認"
 
-#, fuzzy
 msgid "Authorized user"
 msgstr "認証ユーザー"
 
@@ -7395,9 +7393,8 @@ msgstr "自動シュリンクオフ"
 msgid "Auto shrink on"
 msgstr "自動縮小オン"
 
-#, fuzzy
 msgid "Auto-detect proxy settings for this network"
-msgstr "ホストのフラップ検出設定"
+msgstr "このネットワークのプロキシ設定を自動検出します"
 
 msgid "Auto-disconnect time"
 msgstr "自動切断時間"

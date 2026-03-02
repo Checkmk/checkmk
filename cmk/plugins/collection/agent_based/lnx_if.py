@@ -119,7 +119,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             continue
         if line[0] == "inet":
             # inet 127.0.0.1/8 scope host lo
-            iface.inet4.append(line[1])
+            iface.inet.append(line[1])
         elif line[0] == "inet6":
             # inet6 ::1/128 scope host
             iface.inet6.append(line[1])
@@ -285,7 +285,7 @@ def host_label_lnx_ip_address(section: Section) -> HostLabelGenerator:
         {
             name: [
                 interface
-                for raw_if in (*adapter.inet4, *adapter.inet6)
+                for raw_if in (*adapter.inet, *adapter.inet6)
                 if (interface := maybe_interface(raw_if))
             ]
             for name, adapter in ip_stats.items()
@@ -465,7 +465,7 @@ def inventory_lnx_if(
 def _inventorize_addresses(ip_stats: SectionInventory) -> InventoryResult:
     for if_name, interface in ip_stats.items():
         for networks, ty in [
-            (interface.inet4, "ipv4"),
+            (interface.inet, "ipv4"),
             (interface.inet6, "ipv6"),
         ]:
             for network in networks:

@@ -6,14 +6,7 @@
 
 from typing import Literal, TypedDict
 
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    Result,
-    Service,
-    State,
-)
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
 
 from .lib import SectionPodmanContainerInspect
 
@@ -39,6 +32,13 @@ def check_podman_container_health(
         yield Result(
             state=State.OK,
             summary="No health information available",
+        )
+        return
+
+    if not section.state.health.status:
+        yield Result(
+            state=State(params["no_healthcheck"]),
+            summary="No health check configured or no health status available",
         )
         return
 

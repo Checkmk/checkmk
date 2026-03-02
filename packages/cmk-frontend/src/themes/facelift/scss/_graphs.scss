@@ -3,22 +3,22 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-/* Styleshees for graphs */
+/* Stylesheets for graphs */
 
 div.graph_hover_popup {
-  width: intrinsic; /* Safari/WebKit */
-  width: -moz-max-content; /* Firefox/Gecko */
-  width: -webkit-max-content; /* Chrome */
+  width: max-content;
   padding: 10px;
   border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
 }
 
 div#hover_menu div.graph {
   float: left;
   margin-right: 2px;
   margin-bottom: 2px;
+}
+
+div.graph_container {
+  --graph-bg: #{$bg-color-secondary};
 }
 
 tr.data > td > div.graph_container {
@@ -30,7 +30,9 @@ div.graph {
   display: inline-block;
   padding: 0;
   margin-bottom: 5px;
-  border-spacing: 0;
+  &.with_margin {
+    padding: 1ex;
+  }
 
   a {
     text-decoration: none;
@@ -90,21 +92,45 @@ div.graph {
     cursor: crosshair;
   }
 
+  div.legend_container {
+    margin-top: 8px;
+    max-height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: $simplebar-scrollbar-color transparent;
+
+    &::-webkit-scrollbar {
+      width: $simplebar-track-width;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: $simplebar-scrollbar-color;
+      border: 3px solid transparent;
+      border-radius: 2px;
+      background-clip: padding-box;
+    }
+  }
+
   table.legend {
     border-collapse: collapse;
 
     .scalar {
       width: 80px;
-      padding: 1px 10px;
     }
 
-    th,
-    th.scalar {
-      padding-bottom: 3px;
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding: 3px 8px;
       font-weight: $font-weight-bold;
       text-align: right;
-      background-color: transparent;
-      border-style: none;
+      background-color: var(--graph-bg);
+      border-bottom: 1px solid $font-color;
     }
 
     th.scalar.inactive {
@@ -115,29 +141,21 @@ div.graph {
       }
     }
 
-    > tbody > tr:nth-child(2) td {
-      padding-top: 4px;
-    }
-
     td {
       text-align: left;
 
       &.scalar {
+        padding: 1px 10px;
         text-align: right;
       }
     }
 
     > tbody > tr.scalar.first {
       border-top: 1px solid $font-color;
-
-      td {
-        padding-top: 4px;
-      }
     }
 
     div {
       display: inline-block;
-      float: none;
 
       &.entry {
         margin-right: 20px;
@@ -240,14 +258,6 @@ div.graph_with_timeranges {
       display: block;
     }
 
-    canvas {
-      margin-bottom: 8px;
-    }
-
-    &.preview canvas {
-      margin-bottom: 0;
-    }
-
     &.preview .title {
       top: 12px;
       width: calc(100% - 16px);
@@ -258,16 +268,8 @@ div.graph_with_timeranges {
       box-sizing: border-box;
     }
 
-    table.legend {
-      margin-top: 32px;
-
-      th.scalar {
-        text-align: right;
-      }
-
-      td {
-        background: transparent;
-      }
+    table.legend td {
+      background: transparent;
     }
   }
 

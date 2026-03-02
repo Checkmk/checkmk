@@ -333,11 +333,10 @@ def _show_graph_html_content(
     etc.
     """
     html.open_div(
-        class_=["graph"] + (["preview"] if graph_render_config.preview else []),
-        style=(
-            f"font-size: {graph_render_config.font_size:.1f}pt;"
-            f"{_graph_padding_styles(graph_render_config.show_margin)}"
-        ),
+        class_=["graph"]
+        + (["preview"] if graph_render_config.preview else [])
+        + (["with_margin"] if graph_render_config.show_margin else []),
+        style=f"font-size: {graph_render_config.font_size:.1f}pt;",
     )
 
     if graph_render_config.show_controls:
@@ -462,12 +461,6 @@ def _compute_graph_legend_styles(graph_render_config: GraphRenderConfig) -> Iter
         legend_margin_left = 0
 
     legend_width = graph_width - legend_margin_left
-
-    # In case there is no margin show: Add some to the legend since it looks
-    # ugly when there is no space between the outer graph border and the legend
-    if not graph_render_config.show_margin:
-        legend_width -= 5 * 2
-        yield "margin: 8px 5px 5px 5px"
 
     yield "width:%dpx" % legend_width
 
@@ -686,23 +679,12 @@ class Bounds:
     left: int
 
 
-def _graph_padding_styles(show_margin: bool) -> str:
-    bounds = _graph_margin_ex(show_margin)
-    return (
-        "padding: "
-        f"{bounds.top:.2f}ex "
-        f"{bounds.right:.2f}ex "
-        f"{bounds.bottom:.2f}ex "
-        f"{bounds.left:.2f}ex;"
-    )
-
-
 def _graph_margin_ex(
     show_margin: bool,
     *,
     top: int = 8,
-    right: int = 16,
-    bottom: int = 4,
+    right: int = 8,
+    bottom: int = 8,
     left: int = 8,
 ) -> Bounds:
     return (

@@ -590,7 +590,7 @@ function render_graph(graph: GraphArtwork) {
   const canvas = (container.childNodes[0] as HTMLElement).getElementsByTagName('canvas')[0]
   if (!canvas) return
 
-  const legendContainer = container.querySelector('.legend_container') as HTMLElement | null
+  const legendContainer = container.querySelector('table.legend') as HTMLElement | null
   if (legendContainer !== null && legendContainer.scrollWidth > canvas.clientWidth) {
     const newWidth = legendContainer.scrollWidth
     canvas.style.width = newWidth + 'px'

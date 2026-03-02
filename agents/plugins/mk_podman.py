@@ -34,6 +34,7 @@ DEFAULT_CFG_FILE = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman.cfg"
 DEFAULT_CFG_SECTION = {
     "socket_detection_method": "auto",
     "socket_paths": "",
+    "piggyback_name_method": "nodename_name",
 }
 
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
@@ -62,8 +63,30 @@ class AutomaticSocketDetectionMethod(Enum):
     ONLY_USER_SOCKETS = "only_user_sockets"
 
 
+class PiggybackNameMethod(Enum):
+    NAME = "name"
+    NODENAME_NAME = "nodename_name"
+    NAME_ID = "name_id"
+
+
 class PodmanConfig(TypedDict):
     socket_detection: Union[AutomaticSocketDetectionMethod, tuple[Literal["manual"], Sequence[str]]]
+    piggyback_name_method: PiggybackNameMethod
+
+
+def _parse_piggyback_name_method(value: str, cfg_file: Path) -> PiggybackNameMethod:
+    try:
+        return PiggybackNameMethod(value)
+    except ValueError:
+        write_section(
+            Error(
+                "config",
+                f"Invalid piggyback_name_method '{value}' in {cfg_file}. "
+                f"Valid options are: {', '.join(m.value for m in PiggybackNameMethod)}. "
+                "Using default 'nodename_name'.",
+            )
+        )
+        return PiggybackNameMethod.NODENAME_NAME
 
 
 def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
@@ -79,11 +102,20 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
 
         method = conf_dict["socket_detection_method"]
         socket_paths_str = conf_dict["socket_paths"]
+        piggyback_name_method = _parse_piggyback_name_method(
+            conf_dict.get("piggyback_name_method", "name"), cfg_file
+        )
 
         if method == "manual" and socket_paths_str:
             socket_paths = [p.strip() for p in socket_paths_str.split(",") if p.strip()]
-            return PodmanConfig(socket_detection=("manual", socket_paths))
-        return PodmanConfig(socket_detection=AutomaticSocketDetectionMethod(method))
+            return PodmanConfig(
+                socket_detection=("manual", socket_paths),
+                piggyback_name_method=piggyback_name_method,
+            )
+        return PodmanConfig(
+            socket_detection=AutomaticSocketDetectionMethod(method),
+            piggyback_name_method=piggyback_name_method,
+        )
 
     except Exception as e:
         write_section(
@@ -404,14 +436,20 @@ def query_raw_stats_cli(
 def handle_containers_stats_cli(
     containers: Sequence[Mapping[str, object]],
     container_stats: Mapping[str, object],
+    piggyback_name_method: PiggybackNameMethod,
+    nodename: Union[str, None] = None,
     run_as_user: Union[str, None] = None,
 ) -> None:
     for container in containers:
-        if not (container_id := str(container.get("Id", ""))):
+        container_id = str(container.get("Id", ""))
+        target_host = get_piggyback_host(
+            container_id,
+            get_container_name(container.get("Names")),
+            piggyback_name_method,
+            nodename,
+        )
+        if not target_host:
             continue
-
-        container_name = get_container_name(container.get("Names"))
-        target_host = f"{container_name}_{container_id[:12]}"
 
         write_piggyback_section(
             target_host=target_host,
@@ -425,17 +463,23 @@ def handle_containers_stats_cli(
             )
 
 
-def run_cli_queries_for_user(run_as_user: Union[str, None] = None) -> None:
+def run_cli_queries_for_user(
+    piggyback_name_method: PiggybackNameMethod,
+    run_as_user: Union[str, None] = None,
+) -> None:
     containers_section = query_containers_cli(run_as_user)
+    engine_section = query_engine_cli(run_as_user)
 
     write_sections(
         [
             containers_section,
             query_disk_usage_cli(run_as_user),
-            query_engine_cli(run_as_user),
+            engine_section,
             query_pods_cli(run_as_user),
         ]
     )
+
+    nodename = extract_nodename_from_engine(engine_section)
 
     raw_container_stats = query_raw_stats_cli(run_as_user)
     container_stats = (
@@ -448,17 +492,19 @@ def run_cli_queries_for_user(run_as_user: Union[str, None] = None) -> None:
         handle_containers_stats_cli(
             containers=json.loads(containers_section.content),
             container_stats=container_stats,
+            piggyback_name_method=piggyback_name_method,
+            nodename=nodename,
             run_as_user=run_as_user,
         )
     else:
         write_section(containers_section)
 
 
-def run_cli_queries() -> None:
+def run_cli_queries(piggyback_name_method: PiggybackNameMethod) -> None:
     podman_users = find_podman_users_from_conmon()
 
     for user in podman_users:
-        run_cli_queries_for_user(user)
+        run_cli_queries_for_user(piggyback_name_method, user)
 
 
 # =============================================================================
@@ -565,6 +611,37 @@ def get_container_name(names: object) -> str:
     return "unnamed"
 
 
+def extract_nodename_from_engine(engine_section: Union[JSONSection, Error]) -> Union[str, None]:
+    if isinstance(engine_section, Error):
+        return None
+    try:
+        data = json.loads(engine_section.content)
+        return str(data["host"]["hostname"])
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return None
+
+
+def get_piggyback_host(
+    container_id: str,
+    container_name: str,
+    piggyback_name_method: PiggybackNameMethod,
+    nodename: Union[str, None] = None,
+) -> Union[str, None]:
+    if not container_id:
+        return None
+
+    if piggyback_name_method is PiggybackNameMethod.NODENAME_NAME:
+        if nodename is None:
+            nodename = os.uname()[1]
+        return f"{nodename}_{container_name}"
+
+    if piggyback_name_method is PiggybackNameMethod.NAME_ID:
+        return f"{container_name}_{container_id[:12]}"
+
+    # Default: PiggybackNameMethod.NAME (fallback when no specific method matches)
+    return container_name
+
+
 def should_use_cli(config: Union[PodmanConfig, None]) -> bool:
     socket_paths = get_socket_paths(config)
     for socket_path in socket_paths:
@@ -582,13 +659,19 @@ def handle_containers_stats(
     container_stats: Mapping[str, object],
     socket_path: str,
     session: Session,
+    piggyback_name_method: PiggybackNameMethod = PiggybackNameMethod.NODENAME_NAME,
+    nodename: Union[str, None] = None,
 ) -> None:
     for container in containers:
-        if not (container_id := str(container.get("Id", ""))):
+        container_id = str(container.get("Id", ""))
+        target_host = get_piggyback_host(
+            container_id,
+            get_container_name(container.get("Names")),
+            piggyback_name_method,
+            nodename,
+        )
+        if not target_host or not container_id:
             continue
-
-        container_name = get_container_name(container.get("Names"))
-        target_host = f"{container_name}_{container_id[:12]}"
 
         write_piggyback_section(
             target_host=target_host,
@@ -602,14 +685,21 @@ def handle_containers_stats(
             )
 
 
+def _get_piggyback_name_method(config: Union[PodmanConfig, None]) -> PiggybackNameMethod:
+    if config is None:
+        return PiggybackNameMethod.NODENAME_NAME
+    return config["piggyback_name_method"]
+
+
 def main() -> None:
     config = load_cfg()
+    piggyback_name_method = _get_piggyback_name_method(config)
 
     # Write empty errors section to indicate successful start
     write_serialized_section("errors", json.dumps({}))
 
     if should_use_cli(config):
-        run_cli_queries()
+        run_cli_queries(piggyback_name_method)
         return
 
     # Socket-based queries
@@ -622,15 +712,18 @@ def main() -> None:
             target_base_url=DEFAULT_SCHEME,
         ) as session:
             containers_section = query_containers(session, socket_path_str)
+            engine_section = query_engine(session, socket_path_str)
 
             write_sections(
                 [
                     containers_section,
                     query_disk_usage(session, socket_path_str),
-                    query_engine(session, socket_path_str),
+                    engine_section,
                     query_pods(session, socket_path_str),
                 ]
             )
+
+            nodename = extract_nodename_from_engine(engine_section)
 
             raw_container_stats = query_raw_stats(session, socket_path_str)
             container_stats = (
@@ -645,6 +738,8 @@ def main() -> None:
                     container_stats=container_stats,
                     socket_path=socket_path_str,
                     session=session,
+                    piggyback_name_method=piggyback_name_method,
+                    nodename=nodename,
                 )
             else:
                 write_section(containers_section)

@@ -18,6 +18,8 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     InputHint,
     List,
+    SingleChoice,
+    SingleChoiceElement,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -86,6 +88,35 @@ def _agent_config_mk_podman() -> Dictionary:
                                     custom_validate=(_validate_absolute_posix_path,),
                                     field_size=FieldSize.LARGE,
                                 ),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            "piggyback_name_method": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Host name used for containers"),
+                    help_text=Help(
+                        "Choose which identifier is used for the piggybacked host name of monitored containers."
+                    ),
+                    prefill=DefaultValue("name"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="name",
+                            title=Title("Name - Use the name of the container"),
+                        ),
+                        SingleChoiceElement(
+                            name="nodename_name",
+                            title=Title(
+                                "Node name + Name - Combine the Podman node name and the container name. "
+                                "If the Podman node name cannot be determined, it will use the name of the host instead"
+                            ),
+                        ),
+                        SingleChoiceElement(
+                            name="name_id",
+                            title=Title(
+                                "Name + ID - Use the name of the container plus the container ID"
                             ),
                         ),
                     ],

@@ -135,6 +135,7 @@ This allows monitoring to start with minimal configuration effort.`
               :open-in-new-tab="false"
             />
             <CmkLinkCard
+              v-if="cards.relays"
               icon-name="relay-menu"
               :title="_t('Checkmk Relay (objects behind a firewall)')"
               :url="cards.relays"

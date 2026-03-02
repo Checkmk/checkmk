@@ -58,11 +58,11 @@ test_missing_systemd() {
     set +e
     output=$(
         set -euo pipefail
-        printf '%s' "testpass" | main --relay-name "test-relay" \
+        main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --user "testuser" 2>&1
+            --token "testtoken" 2>&1
     )
     local exit_code=$?
     set -e
@@ -84,11 +84,11 @@ test_missing_podman() {
     set +e
     output=$(
         set -euo pipefail
-        printf '%s' "testpass" | main --relay-name "test-relay" \
+        main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --user "testuser" 2>&1
+            --token "testtoken" 2>&1
     )
     local exit_code=$?
     set -e
@@ -113,11 +113,11 @@ test_runs_as_root() {
     set +e
     output=$(
         set -euo pipefail
-        printf '%s' "testpass" | main --relay-name "test-relay" \
+        main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --user "testuser" 2>&1
+            --token "testtoken" 2>&1
     )
     local exit_code=$?
     set -e

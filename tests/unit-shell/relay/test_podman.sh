@@ -54,11 +54,11 @@ test_registry_not_accessible() {
     set +e
     output=$(
         set -euo pipefail
-        printf '%s' "testpass" | main --relay-name "test-relay" \
+        main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --user "testuser" 2>&1
+            --token "testtoken" 2>&1
     )
     local exit_code=$?
     set -e

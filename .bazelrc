@@ -2,7 +2,7 @@
 common --registry="file:///%workspace%/bazel/thirdparty"
 common --registry=https://bcr.bazel.build
 
-# Add git hash to workspace status 
+# Add git hash to workspace status
 build --workspace_status_command=bazel/tools/workspace_status.sh
 
 # Add mirrors for certain download URLs
@@ -41,8 +41,6 @@ common --grpc_keepalive_time=10s
 common --experimental_remote_cache_compression_threshold=1048576
 common --remote_local_fallback
 common --cycles
-common --local_resources=cpu=HOST_CPUS-2
-common --local_resources=memory=HOST_RAM*.5
 common --@cmk//distro="ubuntu-24.04"
 # Enable Bzlmod for every Bazel command
 common --enable_bzlmod
@@ -86,8 +84,12 @@ common:ci --memory_profile=bazel-memory.profile
 common:ci --generate_json_trace_profile
 common:ci --profile=trace_profile.json
 common:ci --//bazel/toolchains/cc/gcc/local:gcc_path=opt
+# the onwards set jobs and CPU limits shall be aligned with the k8s pod limits
 common:ci --jobs=6
+# setting local_test_jobs to a value higher than specified at job has no effect
+common:ci --local_test_jobs=6
 common:ci --local_resources=cpu=6
+common:ci --worker_max_instances=6
 common:ci --local_resources=memory=HOST_RAM*.67
 # the later flags will override the previous flags
 # upload artifacts only from CI, CMK-18656

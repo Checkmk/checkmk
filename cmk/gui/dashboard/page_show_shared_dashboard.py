@@ -39,7 +39,7 @@ class SharedDashboardPage(DashboardTokenAuthenticatedPage):
 
     @override
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
-        return page_dashboard_token_invalid(_("Token invalid"))
+        return page_dashboard_token_invalid()
 
 
 class SharedDashboardPageComponents:
@@ -132,7 +132,7 @@ def page_shared_dashboard(
     SharedDashboardPageComponents.html_section(title, page_properties)
 
 
-def page_dashboard_token_invalid(title: str) -> Response:
+def page_dashboard_token_invalid() -> Response:
     def _render_main_logo() -> None:
         html.open_div(class_="cmk_main_logo")
         html.open_a(href="https://checkmk.com", class_="logo_link")
@@ -162,11 +162,11 @@ def page_dashboard_token_invalid(title: str) -> Response:
         html.h1(_("Dashboard not available"))
         html.open_div()
         html.p(_("This shared link is not valid."))
-        html.p(_("The access token is invalid, revoked or expired."))
+        html.p(_("Contact the dashboard owner if you need access."))
         html.close_div()
         html.close_div()  # message_text_container
 
-    html.body_start(title=title, main_javascript="side")
+    html.body_start(title=_("Token invalid"), main_javascript="side")
     html.begin_page_content(enable_scrollbar=False)
 
     html.open_div(id_="cmk_shared_dashboard_error_page")

@@ -9,6 +9,7 @@
 #include <chrono>
 #include <compare>
 #include <cstdlib>
+#include <ratio>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -809,10 +810,9 @@ LogPeriod TableStateHistory::Processor::period() const { return period_; }
 bool TableStateHistory::Processor::process(HostServiceState &hss) const {
     hss.computePerStateDurations(period_.duration());
 
-    // if (hss._duration > 0)
     auto abort_query =
         user_->is_authorized_for_object(hss._host, hss._service, false) &&
-        !query_->processDataset(Row{&hss});
+        hss._duration != 0s && !query_->processDataset(Row{&hss});
 
     hss._from = hss._until;
     return abort_query;

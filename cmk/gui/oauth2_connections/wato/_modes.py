@@ -67,6 +67,7 @@ from cmk.rulesets.v1.form_specs import (
     DictGroup,
     Dictionary,
     FixedValue,
+    InputHint,
     Password,
     String,
     validators,
@@ -154,6 +155,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 ),
             ),
         )
+    configured_site_choices = get_configured_site_choices()
     return TwoColumnDictionary(
         title=Title("Define OAuth parameters"),
         elements={
@@ -181,8 +183,11 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                             name=site_id,
                             title=Title("%s") % name,
                         )
-                        for site_id, name in get_configured_site_choices()
+                        for site_id, name in configured_site_choices
                     ],
+                    prefill=DefaultValue(configured_site_choices[0][0])
+                    if configured_site_choices
+                    else InputHint(Title("Please choose")),
                 ),
                 group=DictGroup(title=Title("Redirect URI")),
             ),

@@ -73,6 +73,7 @@ from omdlib.options import (
     is_root,
     main_help,
     parse_args_or_exec_other_omd,
+    RmCommand,
     Root,
     Run,
     SuCommand,
@@ -3221,9 +3222,6 @@ def _run_command(
             case "init":
                 assert command.needs_site == 1 and isinstance(site, str)
                 main_init(version_info, site, global_opts, object(), command_options)
-            case "rm":
-                assert command.needs_site == 1 and isinstance(site, str)
-                main_rm(version_info, site, global_opts, object(), command_options)
             case "disable":
                 assert command.needs_site == 1 and isinstance(site, str)
                 main_disable(version_info, site, global_opts, object(), command_options)
@@ -3310,6 +3308,8 @@ def main() -> None:
             _run_command(command, site, global_opts, args, options)
         case SuCommand(target_site):
             main_su(object(), target_site, object(), object(), object())
+        case RmCommand(target_site, global_opts, command_options):
+            main_rm(VersionInfo(), target_site, global_opts, object(), command_options)
 
 
 def main_finalize_restore(args: Restore) -> int:

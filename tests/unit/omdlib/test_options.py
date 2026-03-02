@@ -14,6 +14,7 @@ from omdlib.options import (
     _parse_command_options,
     ExecOtherOmd,
     parse_args_or_exec_other_omd,
+    RmCommand,
     Root,
     Run,
     SuCommand,
@@ -321,12 +322,10 @@ def test_parse_command_options_update_default() -> None:
         (
             Root(),
             ["rm", "monitoring_test"],
-            Run(
-                "monitoring_test",
-                GlobalOptions(version=None, verbose=False, force=False),
-                _get_command("rm"),
-                {},
-                [],
+            RmCommand(
+                target_site="monitoring_test",
+                global_opts=GlobalOptions(version=None, verbose=False, force=False),
+                options={},
             ),
         ),
         (
@@ -796,8 +795,11 @@ def test_parse_args_or_exec_other_omd_no_version_link_rm_warns(
     site_dir.mkdir(parents=True)  # No 'version' symlink created
 
     result = parse_args_or_exec_other_omd(Root(), ["rm", "broken_site"], tmp_path)
-    assert isinstance(result, Run)
-    assert result.site_name == "broken_site"
+    assert result == RmCommand(
+        target_site="broken_site",
+        global_opts=GlobalOptions(version=None, verbose=False, force=False),
+        options={},
+    )
     assert "WARNING: This site has an empty home directory" in capsys.readouterr().out
 
 

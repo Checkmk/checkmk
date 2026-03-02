@@ -713,6 +713,13 @@ class SuCommand:
     target_site: str
 
 
+@dataclass(frozen=True)
+class RmCommand:
+    target_site: str
+    global_opts: GlobalOptions
+    options: CommandOptions
+
+
 def get_identity() -> str | Root:
     if is_root():
         return Root()
@@ -732,7 +739,7 @@ def _require_site_name(args: Sequence[str]) -> tuple[str, Sequence[str]]:
 
 def parse_args_or_exec_other_omd(
     user: str | Root, main_args: list[str], omd_path: Path = Path("/omd/")
-) -> Run | ExecOtherOmd | SuCommand:
+) -> Run | ExecOtherOmd | SuCommand | RmCommand:
     # Why not argparse: We only want to parse the arguments until the first command is encountered.
     # However, we also allow *any* command while parsing global options.
     # E.g., running `omd -V XY abc` should raise an error if and only if Version `XY` does not
@@ -754,16 +761,23 @@ def parse_args_or_exec_other_omd(
     # if a site name has been specified or not.
     args, options = _parse_command_options(command.description, main_args[1:], command.options)
 
-    site_name: str | None
     match command.command:
         case "su":
             _require_root(user)
-            site_name, args = _require_site_name(args)
-            site_home = SitePaths.from_site_name(site_name, omd_path=omd_path).home
-            exec_version = _exec_omd_version_of_site(site_name, site_home, command)
+            target_site, args = _require_site_name(args)
+            site_home = SitePaths.from_site_name(target_site, omd_path=omd_path).home
+            exec_version = _exec_omd_version_of_site(target_site, site_home, command)
             if exec_version is not None:
                 return exec_version
-            return SuCommand(target_site=site_name)
+            return SuCommand(target_site=target_site)
+        case "rm":
+            _require_root(user)
+            target_site, args = _require_site_name(args)
+            site_home = SitePaths.from_site_name(target_site, omd_path=omd_path).home
+            exec_version = _exec_omd_version_of_site(target_site, site_home, command)
+            if exec_version is not None:
+                return exec_version
+            return RmCommand(target_site=target_site, global_opts=global_opts, options=options)
         case _:
             # Some commands need a site to be specified. If we are
             # called as root, this must be done explicitly. If we

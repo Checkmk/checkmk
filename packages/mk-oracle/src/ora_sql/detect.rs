@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::platform::registry::get_instances;
 use crate::types::Sid;
 use anyhow::Result;
 use regex::Regex;
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use sysinfo::System;
 
 /// Regex pattern to match Oracle SID prefixes for PMON processes.
@@ -52,41 +53,22 @@ pub fn find_sids_by_processes(match_string: Option<&str>) -> Result<HashSet<Stri
     Ok(result)
 }
 
-/// Finds the oratab file in standard locations.
-/// Returns the Result with path to oratab file or error if not found.
-pub fn find_oratab_file(oratab_paths: Option<&[&str]>) -> Result<PathBuf> {
-    oratab_paths
-        .unwrap_or(&["/etc/oratab", "/var/opt/oracle/oratab"])
-        .iter()
-        .find(|p| Path::new(p).is_file())
-        .map(PathBuf::from)
-        .ok_or(anyhow::anyhow!("ORA-99999 oratab not found in local mode")) // ORA-99999 is a code from legacy plugin, we keep it for backward compatibility of error handling
-}
-
-/// Finds ORACLE_HOME for a given SID by parsing oratab file.
-/// Searches for oratab in standard locations (/etc/oratab, /var/opt/oracle/oratab).
+/// Finds ORACLE_HOME for a given SID using the platform's instance registry.
+/// On Unix: parses oratab (standard locations: /etc/oratab, /var/opt/oracle/oratab).
+/// On Windows: queries the Windows registry under SOFTWARE\Oracle.
 /// Comparison of SID is case-insensitive.
 /// Returns the Result with optional ORACLE_HOME.
-/// None means "SID is not found in oratab", it's not an error, rather misconfiguration.
-/// Error means a problem with reading oratab file: lack of Oracle, permissions problem, etc.
-pub fn find_oracle_home_from_oratab(
+/// None means "SID is not found in registry | oratab". It's not an error, rather misconfiguration.
+/// Error means a problem with reading registry | oratab file: lack of Oracle, bad permissions, etc.
+pub fn find_oracle_home(
     sid: &Sid,
-    oratab_paths: Option<&[&str]>,
+    custom_path: Option<String>, // can be a registry branch for Windows or a path for Linux
 ) -> Result<Option<PathBuf>> {
-    let oratab_path = find_oratab_file(oratab_paths)?;
+    let locals = get_instances(custom_path)?;
 
-    let content = std::fs::read_to_string(oratab_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read oratab: {}", e))?;
-
-    for l in content.lines() {
-        let line = l.split('#').next().unwrap_or("").trim();
-        if line.is_empty() {
-            continue;
-        }
-
-        let parts: Vec<&str> = line.split(':').collect();
-        if parts.len() >= 2 && parts[0].eq_ignore_ascii_case(sid.as_ref()) {
-            return Ok(Some(PathBuf::from(parts[1])));
+    for local in locals {
+        if local.name.to_string().eq_ignore_ascii_case(sid.as_ref()) {
+            return Ok(Some(local.home));
         }
     }
 
@@ -108,7 +90,10 @@ fn dump_local_instances() -> String {
                 "'{:16}': home={:60} base={:60}",
                 i.name,
                 i.home.display().to_string(),
-                i.base.display().to_string()
+                i.base
+                    .as_deref()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|| "N/A".to_string())
             )
         })
         .collect::<Vec<String>>()

@@ -15,6 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use derive_more::{Display, From, Into};
+use std::path::PathBuf;
+
+#[derive(Debug, Clone)]
+pub struct LocalInstance {
+    pub name: InstanceName,
+    pub home: PathBuf,
+    pub base: Option<PathBuf>,
+}
 
 #[derive(PartialEq, PartialOrd, Debug, Clone, From, Into)]
 pub struct Port(pub u16);

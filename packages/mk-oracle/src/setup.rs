@@ -278,19 +278,19 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
             );
             try_find_instance_runtime()
         }
-        Ok(instances) => {
-            for instance in &instances {
+        Ok(locals) => {
+            for local in &locals {
                 log::info!(
                     "Try to find runtime using local Oracle instance: name={}, home={:?}, base={:?}",
-                    instance.name,
-                    instance.home,
-                    instance.base
+                    local.name,
+                    local.home,
+                    local.base
                 );
-                let candidate = instance.home.join("bin");
+                let candidate = local.home.join("bin");
                 if candidate.is_dir() && validate_permissions(&candidate) {
-                    return Some(instance.home.join("bin"));
+                    return Some(local.home.join("bin"));
                 } else {
-                    log::warn!("Oracle home {:?} is not suitable", instance.home);
+                    log::warn!("Oracle home {:?} is not suitable", local.home);
                 }
             }
             None

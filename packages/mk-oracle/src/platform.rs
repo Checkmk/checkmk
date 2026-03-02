@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::types::InstanceName;
+use crate::types::LocalInstance;
 use anyhow::Result;
-use std::path::PathBuf;
 
 pub struct Block {
     pub headline: Vec<String>,
@@ -60,34 +59,28 @@ pub fn get_row_value_by_idx(row: &[String], idx: usize) -> String {
     row.get(idx).cloned().unwrap_or_default()
 }
 
-#[derive(Debug, Clone)]
-pub struct InstanceInfo {
-    pub name: InstanceName,
-    pub home: PathBuf,
-    pub base: PathBuf,
-}
-
-pub fn get_local_instances() -> Result<Vec<InstanceInfo>> {
+pub fn get_local_instances() -> Result<Vec<LocalInstance>> {
     registry::get_instances(None)
 }
 
 pub mod registry {
-    #[cfg(windows)]
-    use winreg::{enums::*, RegKey};
+    use std::path::PathBuf;
 
-    use super::InstanceInfo;
-    #[cfg(windows)]
-    use super::InstanceName;
+    use super::LocalInstance;
+    use crate::types::InstanceName;
     use anyhow::Result;
+
     #[cfg(windows)]
-    pub fn get_instances(_custom_branch: Option<String>) -> Result<Vec<InstanceInfo>> {
-        use std::path::PathBuf;
+    pub fn get_instances(custom_branch: Option<String>) -> Result<Vec<LocalInstance>> {
+        use winreg::{enums::*, RegKey};
+
+        let custom_branch = custom_branch.unwrap_or_else(|| "SOFTWARE\\Oracle".to_string());
 
         // Open the branch, e.g. HKEY_LOCAL_MACHINE\SOFTWARE
         let handle = RegKey::predef(HKEY_LOCAL_MACHINE);
-        let oracle = handle.open_subkey("SOFTWARE\\Oracle")?;
+        let oracle = handle.open_subkey(custom_branch)?;
 
-        let instances: Vec<InstanceInfo> = oracle
+        let instances: Vec<LocalInstance> = oracle
             .enum_keys()
             .filter_map(|k| k.ok())
             .filter_map(|k| {
@@ -98,10 +91,10 @@ pub mod registry {
                         .collect::<Vec<String>>();
 
                     if values.iter().all(|v| !v.is_empty()) {
-                        Some(InstanceInfo {
+                        Some(LocalInstance {
                             name: InstanceName::from(values[2].as_str()),
                             home: PathBuf::from(values[0].as_str()),
-                            base: PathBuf::from(values[1].as_str()),
+                            base: Some(PathBuf::from(values[1].as_str())),
                         })
                     } else {
                         None
@@ -110,13 +103,53 @@ pub mod registry {
                     None
                 }
             })
-            .collect::<Vec<InstanceInfo>>();
+            .collect::<Vec<LocalInstance>>();
         Ok(instances)
     }
 
+    /// Finds the oratab file in standard locations.
+    /// Returns the Result with path to oratab file or error if not found.
     #[cfg(unix)]
-    pub fn get_instances(_custom_branch: Option<String>) -> Result<Vec<InstanceInfo>> {
-        Ok(vec![])
+    pub fn find_oratab_file(oratab_paths: Option<&[&str]>) -> Result<PathBuf> {
+        use std::path::Path;
+
+        oratab_paths
+            .unwrap_or(&["/etc/oratab", "/var/opt/oracle/oratab"])
+            .iter()
+            .find(|p| Path::new(p).is_file())
+            .map(PathBuf::from)
+            .ok_or(anyhow::anyhow!("ORA-99999 oratab not found in local mode")) // ORA-99999 is a code from legacy plugin, we keep it for backward compatibility of error handling
+    }
+
+    #[cfg(unix)]
+    pub fn get_instances(custom_path: Option<String>) -> Result<Vec<LocalInstance>> {
+        let maybe_path = custom_path.as_deref().map(|p| vec![p]);
+        let oratab_path = find_oratab_file(maybe_path.as_deref())?;
+
+        let content = std::fs::read_to_string(oratab_path)
+            .map_err(|e| anyhow::anyhow!("Failed to read oratab: {}", e))?;
+
+        let all = content
+            .lines()
+            .filter_map(|l| {
+                let line = l.split('#').next().unwrap_or("").trim();
+                if line.is_empty() {
+                    return None;
+                }
+
+                let parts: Vec<&str> = line.split(':').collect();
+                if parts.len() >= 3 {
+                    Some(LocalInstance {
+                        name: InstanceName::from(parts[0].trim()),
+                        home: PathBuf::from(parts[1].trim()),
+                        base: None, // oratab does not contain base information, we set it to None
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<LocalInstance>>();
+        Ok(all)
     }
 }
 

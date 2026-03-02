@@ -1386,8 +1386,9 @@ fn test_detection_registry() {
         assert!(i.name == InstanceName::from("XE") || i.name == InstanceName::from("FREE"));
         assert!(std::path::PathBuf::from(&i.home).is_dir());
         assert!(std::path::PathBuf::from(&i.home).exists());
-        assert!(std::path::PathBuf::from(&i.base).is_dir());
-        assert!(std::path::PathBuf::from(&i.base).exists());
+        let base = i.base.unwrap();
+        assert!(std::path::PathBuf::from(&base).is_dir());
+        assert!(std::path::PathBuf::from(&base).exists());
     }
 }
 
@@ -1845,7 +1846,8 @@ SQLNET.WALLET_OVERRIDE = TRUE
 
 #[cfg(unix)]
 mod find_sids {
-    use mk_oracle::ora_sql::detect::{find_oracle_home_from_oratab, find_oratab_file};
+    use mk_oracle::ora_sql::detect::find_oracle_home;
+    use mk_oracle::platform::registry::find_oratab_file;
     use mk_oracle::types::Sid;
     use std::io::Write;
 
@@ -1895,16 +1897,17 @@ mod find_sids {
         writeln!(file, "ORCL:/opt/oracle/product/19c/dbhome1:Y # nothing")
             .expect("write ORCL entry");
 
-        let oratab_str = oratab_path.to_str().unwrap();
+        let oratab_str = oratab_path.to_str().unwrap().to_string();
         let sid = Sid::from("xE");
-        let result = find_oracle_home_from_oratab(&sid, Some(&[oratab_str]));
+        let result = find_oracle_home(&sid, Some(oratab_str));
         assert!(result.is_ok());
         assert_eq!(
             result.unwrap(),
             Some(std::path::PathBuf::from("/opt/oracle/product/21c/dbhomeXE"))
         );
 
-        let result = find_oracle_home_from_oratab(&Sid::from("NONEXISTENT"), Some(&[oratab_str]));
+        let oratab_str = oratab_path.to_str().unwrap();
+        let result = find_oracle_home(&Sid::from("NONEXISTENT"), Some(oratab_str.to_string()));
         assert!(result.unwrap().is_none());
     }
 }

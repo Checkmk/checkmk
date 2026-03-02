@@ -346,7 +346,7 @@ fn connect_spots(
     let connected = spots
         .into_iter()
         .map(|t| {
-            let x = t.target().display_name();
+            let name = t.target().display_name();
             match t.connect(instance_name) {
                 Ok(opened) => {
                     log::info!("Connected to instance: {:?}", &opened.target());
@@ -356,7 +356,7 @@ fn connect_spots(
                     log::error!("Error connecting to instance: {}", e);
                     anyhow::bail!(
                         "REMOTE_INSTANCE_{}|FAILURE|ERROR: {} ",
-                        x,
+                        name,
                         e.to_string().replace("OCI Error: ", "")
                     )
                 }

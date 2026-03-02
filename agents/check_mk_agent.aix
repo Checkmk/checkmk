@@ -335,6 +335,9 @@ optionally_encrypt() { cat; }
 # commands. This version does not conserve the original exit code
 # of the command. It is successfull if the command terminated
 # in time.
+#
+# SIGTERM is sent first, then if the PID is still around after a second,
+# we send SIGKILL.
 waitmax() {
     TIMEOUT=${1}0
     shift
@@ -343,7 +346,7 @@ waitmax() {
     ksh93 -c "$*" &
     PID=$!
 
-    # Wait for termination within TIMOUT seconds
+    # Wait for termination within TIMEOUT seconds
     while [ "${TIMEOUT}" -gt 0 ]; do
         TIMEOUT=$((TIMEOUT - 1))
         if [ ! -e /proc/${PID} ]; then
@@ -352,8 +355,20 @@ waitmax() {
         perl -e "select(undef, undef, undef, 0.1);"
     done
 
-    # Process did not terminate in time. Kill and
-    # return with an error
+    # Process did not terminate in time. First try a graceful kill to give
+    # sudo a chance to propagate the signal to child processes.
+    kill ${PID}
+    # Wait for up to 1 second
+    WAIT=10
+    while [ "${WAIT}" -gt 0 ]; do
+        WAIT=$((WAIT - 1))
+        if [ ! -e /proc/${PID} ]; then
+            return 255
+        fi
+        perl -e "select(undef, undef, undef, 0.1);"
+    done
+
+    # Process still alive after graceful kill, force kill it
     kill -9 ${PID}
     return 255
 }

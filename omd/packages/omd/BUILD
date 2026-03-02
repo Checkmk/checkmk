@@ -233,6 +233,7 @@ py_library(
         "omdlib/main.py",
         "omdlib/main_site_user.py",
         "omdlib/options.py",
+        "omdlib/options_legacy.py",
         "omdlib/package_manager.py",
         "omdlib/restore.py",
         "omdlib/scripts.py",

@@ -48,8 +48,6 @@ def exec_other_omd(version: str) -> NoReturn:
     if not version_exists(version):
         available_versions = ", ".join(omd_versions())
         sys.exit(f"Version {version} is not installed, available versions: {available_versions}")
-    if not verify_security(version) and os.getuid() == 0:
-        sys.exit(werk_18891_error(version))
 
     # Prevent inheriting environment variables from this versions/site environment
     # into the executed omd call. The omd call must import the python version related

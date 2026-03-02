@@ -20,7 +20,7 @@ import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import (
     assert_never,
@@ -28,6 +28,7 @@ from typing import (
     Final,
     IO,
     Literal,
+    NoReturn,
     override,
     TextIO,
 )
@@ -78,6 +79,7 @@ from omdlib.options import (
     Run,
     SuCommand,
 )
+from omdlib.options_legacy import ArgsToDispatch, DispatcherError, parse_arguments_dispatcher
 from omdlib.package_manager import PackageManager
 from omdlib.restore import prepare_restore_as_site_user
 from omdlib.scripts import _call_script, call_scripts
@@ -138,8 +140,10 @@ from omdlib.version_utils import (
     default_version,
     exec_other_omd,
     omd_versions,
+    verify_security,
     version_exists,
     version_from_site_dir,
+    werk_18891_error,
 )
 
 from cmk.ccc import tty
@@ -2853,7 +2857,7 @@ def main_su(
     _global_opts: object,
     _args: object,
     _options: object,
-) -> None:
+) -> NoReturn:
     try:
         os.execl("/bin/su", "su", "-", "%s" % site_name)
     except OSError:
@@ -2926,7 +2930,9 @@ def _restore_backup_from_tar_root(
         old_site_name, version = omdlib.backup.get_site_and_version_from_backup(tar)
     # Ensure the restore is done with the sites version
     if version != omdlib.__version__:
-        exec_other_omd(version)
+        if verify_security(version) or not is_root():
+            exec_other_omd(version)
+        sys.exit(werk_18891_error(version))
 
     if not version_exists(version, Path("/omd/versions/")):
         sys.exit(
@@ -3289,7 +3295,9 @@ def main() -> None:
     user = get_identity()
     match parse_args_or_exec_other_omd(user, sys.argv[1:]):
         case ExecOtherOmd(version):
-            exec_other_omd(version)
+            if verify_security(version) or not is_root():
+                exec_other_omd(version)
+            _escape_to_site_context(version, sys.argv[1:])
         case Run(site_name, global_opts, command, options, args):
             # Commands which affect a site and can be called as root *or* as
             # site user should always run with site user privileges. That way
@@ -3310,6 +3318,26 @@ def main() -> None:
             main_su(object(), target_site, object(), object(), object())
         case RmCommand(target_site, global_opts, command_options):
             main_rm(VersionInfo(), target_site, global_opts, object(), command_options)
+
+
+def _escape_to_site_context(version: str, args: Sequence[str]) -> NoReturn:
+    match parse_arguments_dispatcher(version, args):
+        case ArgsToDispatch(version, target_site, command):
+            returncode = run_as_site_user(
+                target_site,
+                [f"/omd/versions/{version}/bin/omd", *command],
+                capture_output=False,
+            ).returncode
+            sys.exit(returncode)
+        case ExecOtherOmd(version):
+            exec_other_omd(version)
+        case SuCommand(target_site):
+            main_su(object(), target_site, object(), object(), object())
+        case RmCommand(target_site, global_opts, command_options):
+            main_rm(VersionInfo(), target_site, global_opts, object(), command_options)
+            sys.exit(0)
+        case DispatcherError(message):
+            sys.exit(message)
 
 
 def main_finalize_restore(args: Restore) -> int:

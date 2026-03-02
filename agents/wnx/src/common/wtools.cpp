@@ -3840,9 +3840,13 @@ namespace {
 std::vector<std::wstring> GetOsRawInfo() {
     wtools::WmiWrapper wmi;
     wmi.open();
-    wmi.connect(L"ROOT\\CIMV2");
+    if (!wmi.connect(L"ROOT\\CIMV2")) {
+        XLOG::l("Can't get raw WMI information");
+        return {};
+    }
     if (!wmi.impersonate()) {
         XLOG::l("Failed to impersonate");
+        return {};
     }
     auto [result, status] = wmi.queryTable({L"Name", L"Version"},
                                            L"Win32_OperatingSystem", L"\t", 5);

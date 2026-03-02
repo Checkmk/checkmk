@@ -80,12 +80,20 @@ const countDownValue = ref<number>(TIMEOUT)
 
 const resultCode = ref<string | null>(null)
 
+let activeAuthWindow: WindowProxy | null = null
+const currentGeneration = ref(0)
+
 async function authorize(): Promise<string | null> {
   return new Promise((resolve) => {
     if (model.value.overrideCode) {
       resolve(model.value.overrideCode)
       return
     }
+    if (activeAuthWindow && !activeAuthWindow.closed) {
+      activeAuthWindow.close()
+    }
+    activeAuthWindow = null
+
     const url = buildAuthorizationUrl(
       props.urls,
       props.connectorType,
@@ -93,19 +101,24 @@ async function authorize(): Promise<string | null> {
       model.value.data,
       refId
     )
-    if (url) {
-      const authWindow = open(url, '_blank')
-      if (authWindow) {
-        waitForRedirect<string | null>(
-          authWindow,
-          {
-            host: location.host
-          },
-          resolve,
-          verifyAuthorization,
-          TIMEOUT
-        )
-      }
+    if (!url) {
+      resolve(null)
+      return
+    }
+    const authWindow = open(url, '_blank')
+    if (authWindow) {
+      activeAuthWindow = authWindow
+      waitForRedirect<string | null>(
+        authWindow,
+        {
+          host: location.host
+        },
+        resolve,
+        verifyAuthorization,
+        TIMEOUT
+      )
+    } else {
+      resolve(null)
     }
   })
 }
@@ -115,10 +128,17 @@ function verifyAuthorization(
   resolve: (value: string | null | PromiseLike<string | null>) => void,
   error?: string
 ) {
+  if (authWindow !== activeAuthWindow) {
+    resolve(null)
+    return
+  }
+  activeAuthWindow = null
+
   if (error) {
     loading.value = false
     errorTitle.value = error as TranslatedString
     authWindow.close()
+    resolve(null)
     return
   }
 
@@ -209,24 +229,40 @@ immediateWatch(
   () => context.isSelected(props.index),
   async (isSelected) => {
     if (isSelected) {
+      const myGeneration = ++currentGeneration.value
       authSucceeded.value = false
       loading.value = true
       try {
         countDown()
         const code = await authorize()
 
+        if (myGeneration !== currentGeneration.value) {
+          return
+        }
+
         if (code) {
           resultCode.value = code
           authSucceeded.value = await requestAccessToken()
+          if (myGeneration !== currentGeneration.value) {
+            return
+          }
           loading.value = false
         } else {
           loading.value = false
           errorTitle.value = _t('Authorization was not completed. Please try again.')
         }
       } catch (e) {
+        if (myGeneration !== currentGeneration.value) {
+          return
+        }
         loading.value = false
         errorTitle.value = (e as Error).message as TranslatedString
       }
+    } else {
+      if (activeAuthWindow && !activeAuthWindow.closed) {
+        activeAuthWindow.close()
+      }
+      activeAuthWindow = null
     }
   }
 )

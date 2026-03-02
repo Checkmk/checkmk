@@ -44,7 +44,9 @@ permission_registry.register(
         section=PERMISSION_SECTION_AGENT_REGISTRATION,
         name="register_any_existing_host",
         title=_l("Register any existing host"),
-        description=_l("This permission allows the registration of any existing host."),
+        description=_l(
+            "This permission allows to register the Agent Controller for any existing host."
+        ),
         defaults=["admin", "agent_registration"],
     )
 )
@@ -56,7 +58,8 @@ permission_registry.register(
         name="register_managed_existing_host",
         title=_l("Register managed existing host"),
         description=_l(
-            "This permission allows the registration of any existing host the user is a contact of."
+            "This permission allows to register the Agent Controller for any existing host"
+            " the user is a contact of."
         ),
         defaults=["admin", "agent_registration"],
     )

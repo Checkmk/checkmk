@@ -336,9 +336,9 @@ class GraphApi(_Connection):
     def select_folder(self, folder_name: str) -> int:
         self._base_folder_uri = f"me/mailFolders/{folder_name}/messages"
         with self._build_api_client() as client:
-            response = client.get(self._base_folder_uri)
+            response = client.get(f"me/mailFolders/{folder_name}")
         assert isinstance(response, dict)
-        return len(response.get("value", []))
+        return int(response.get("totalItemCount", 0))
 
     def mails_by_date(
         self,

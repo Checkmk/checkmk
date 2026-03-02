@@ -43,10 +43,22 @@ const percentage: Ref<number> = computed(() =>
   width: 150px;
   height: 22px;
   filter: saturate(50%);
+  background-color: var(--perf-o-meter-bg-color);
+  border: 1px solid var(--perf-o-meter-border-color);
 
   > div {
     height: 100%;
   }
+}
+
+body[data-theme='facelift'] .cmk-perfometer {
+  --perf-o-meter-bg-color: var(--color-white-100);
+  --perf-o-meter-border-color: var(--color-mid-grey-10);
+}
+
+body[data-theme='modern-dark'] .cmk-perfometer {
+  --perf-o-meter-bg-color: var(--color-mist-grey-20);
+  --perf-o-meter-border-color: var(--color-midnight-grey-90);
 }
 
 .cmk-perfometer__bar {
@@ -63,7 +75,7 @@ const percentage: Ref<number> = computed(() =>
   overflow: hidden;
   font-weight: var(--font-weight-bold);
   line-height: 22px;
-  color: var(--font-perfometer-color);
+  color: var(--color-conference-grey-100);
   text-align: center;
   white-space: nowrap;
 }

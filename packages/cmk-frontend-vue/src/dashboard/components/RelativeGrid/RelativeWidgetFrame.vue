@@ -430,7 +430,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   left: 50%;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   transform: translate(-50%, -50%);
   z-index: 1200;
 }
@@ -439,7 +439,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 .db-sizing-controls {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
   align-items: center;
 }
 
@@ -471,6 +471,10 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .sizing-button {
   border: 1px solid var(--ux-theme-10);
+  height: var(--dimension-8);
+  min-width: 96px;
+  padding: 0 var(--dimension-3);
+  font-size: 11px;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

@@ -675,6 +675,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
             Version.from_str("2.4.0p3"),  # inventory tree transformation: repr -> json
             Version.from_str("2.4.0p13"),  # make sure that rules.mk exists
             Version.from_str("2.4.0p16"),  # the-great-renaming: edition compatibility
+            Version.from_str("2.4.0p23"),  # CMK-27827: ensure sites.mk exists
         ),
     ),
 }

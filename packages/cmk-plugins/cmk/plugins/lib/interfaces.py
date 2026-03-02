@@ -26,10 +26,6 @@ from collections.abc import (
 )
 from dataclasses import dataclass, field, fields, replace
 from functools import partial
-from ipaddress import (
-    IPv4Interface,
-    IPv6Interface,
-)
 from typing import Any, assert_never, Final, Literal, ParamSpec, TypedDict, TypeVar
 
 import pydantic
@@ -123,8 +119,8 @@ CHECK_DEFAULT_PARAMETERS = {
 class IPNetworkAdapter:
     state_infos: Sequence[str] | None = None
     link_ether: str = ""
-    inet4: MutableSequence[IPv4Interface] = field(default_factory=list)
-    inet6: MutableSequence[IPv6Interface] = field(default_factory=list)
+    inet4: MutableSequence[str] = field(default_factory=list)
+    inet6: MutableSequence[str] = field(default_factory=list)
 
 
 def _to_item_appearance(value: str) -> _ItemAppearance:

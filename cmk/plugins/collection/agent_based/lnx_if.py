@@ -7,8 +7,11 @@ import time
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, replace
 from ipaddress import (
+    AddressValueError,
+    ip_interface,
     IPv4Interface,
     IPv6Interface,
+    NetmaskValueError,
 )
 from typing import Any, Literal
 
@@ -116,10 +119,10 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             continue
         if line[0] == "inet":
             # inet 127.0.0.1/8 scope host lo
-            iface.inet4.append(IPv4Interface(line[1]))
+            iface.inet4.append(line[1])
         elif line[0] == "inet6":
             # inet6 ::1/128 scope host
-            iface.inet6.append(IPv6Interface(line[1]))
+            iface.inet6.append(line[1])
     return ip_stats
 
 
@@ -270,14 +273,20 @@ def host_label_lnx_ip_address(section: Section) -> HostLabelGenerator:
         Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
     """
 
+    def maybe_interface(interface_str: str) -> IPv4Interface | IPv6Interface | None:
+        try:
+            return ip_interface(interface_str)
+        except (AddressValueError, NetmaskValueError, ValueError):
+            return None
+
     _interfaces_with_counters, ip_stats = section
 
     yield from host_labels_if(
         {
             name: [
                 interface
-                for interface in (*adapter.inet4, *adapter.inet6)
-                if isinstance(interface, (IPv4Interface, IPv6Interface))
+                for raw_if in (*adapter.inet4, *adapter.inet6)
+                if (interface := maybe_interface(raw_if))
             ]
             for name, adapter in ip_stats.items()
         }
@@ -455,29 +464,37 @@ def inventory_lnx_if(
 
 def _inventorize_addresses(ip_stats: SectionInventory) -> InventoryResult:
     for if_name, interface in ip_stats.items():
-        for interface_ip in (
-            *interface.inet4,
-            *interface.inet6,
-        ):
-            if not isinstance(interface_ip, (IPv4Interface, IPv6Interface)):
-                continue
-            if interface_ip.ip.compressed == interface_ip.network.broadcast_address.compressed:
-                continue  # drop broadcast IPs
+        for networks, ty in [
+            (interface.inet4, "ipv4"),
+            (interface.inet6, "ipv6"),
+        ]:
+            for network in networks:
+                try:
+                    interface_ip = ip_interface(network)
+                except (AddressValueError, NetmaskValueError):
+                    continue
 
-            yield TableRow(
-                path=["networking", "addresses"],
-                key_columns={
-                    "address": str(interface_ip.ip.compressed),
-                    "device": if_name,
-                },
-                inventory_columns={
-                    "broadcast": str(interface_ip.network.broadcast_address),
-                    "prefixlength": interface_ip.network.prefixlen,
-                    "netmask": str(interface_ip.network.netmask),
-                    "network": str(interface_ip.network.network_address),
-                    "type": f"ipv{interface_ip.version}",
-                },
-            )
+                if interface_ip.ip.compressed == interface_ip.network.broadcast_address.compressed:
+                    continue  # drop broadcast IPs
+
+                yield TableRow(
+                    path=["networking", "addresses"],
+                    key_columns={
+                        "address": str(interface_ip.ip.compressed),
+                        "device": if_name,
+                    },
+                    inventory_columns={
+                        "broadcast": str(interface_ip.network.broadcast_address),
+                        "prefixlength": interface_ip.network.prefixlen,
+                        "netmask": str(interface_ip.network.netmask),
+                        "network": str(interface_ip.network.network_address),
+                        "type": ty,
+                    },
+                )
+
+
+def _get_address(network: str) -> str:
+    return network.split("/")[0]
 
 
 inventory_plugin_lnx_if = InventoryPlugin(

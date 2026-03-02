@@ -5,6 +5,7 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
+import itertools
 import json
 from collections.abc import Sequence
 
@@ -31,15 +32,16 @@ class Network(BaseModel, frozen=True):
     tags: list[str]
     enrollment_string: str | None = Field(alias="enrollmentString")
     url: str
-    notes: str
+    notes: str | None
     is_bound_to_config_template: bool = Field(alias="isBoundToConfigTemplate")
 
 
 def parse_meraki_networks(string_table: StringTable) -> Section:
     match string_table:
         case [[payload]] if payload:
-            network_map = json.loads(payload)[0]
-            return [Network.model_validate(data) for data in network_map.values()]
+            nested_org_networks = (org_networks.values() for org_networks in json.loads(payload))
+            flattened_networks = itertools.chain.from_iterable(nested_org_networks)
+            return [Network.model_validate(data) for data in flattened_networks]
         case _:
             return []
 

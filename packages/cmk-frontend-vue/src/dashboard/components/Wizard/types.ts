@@ -133,3 +133,4 @@ export type CombinedGraphContentPresentation =
   components['schemas']['CombinedGraphContent']['presentation']
 export type ForStates = components['schemas']['ForStates']
 export type InventoryLinkType = components['schemas']['ApiVisualLink']['type']
+export type LinkContentType = components['schemas']['ApiVisualLink']

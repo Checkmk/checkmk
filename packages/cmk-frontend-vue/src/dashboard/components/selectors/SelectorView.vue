@@ -10,12 +10,18 @@ import usei18n, { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDropdown from '@/components/CmkDropdown'
+import type { ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
 
 import { useDataSourcesCollection } from '@/dashboard/composables/api/useDataSourcesCollection'
 import { useViewsCollection } from '@/dashboard/composables/api/useViewsCollection'
 
-defineProps<{ readOnly: boolean }>()
+type Width = ButtonVariants['width']
+
+const { readOnly, width = 'wide' } = defineProps<{
+  readOnly: boolean
+  width?: Width
+}>()
 const selectedView = defineModel<string | null>('selectedView', { required: true })
 
 const { _t } = usei18n()
@@ -107,7 +113,7 @@ const formatViewTitle = (
       :label="_t('Select view')"
       :input-hint="_t('Choose from available views')"
       :disabled="readOnly"
-      width="wide"
+      :width="width"
     />
   </div>
 </template>

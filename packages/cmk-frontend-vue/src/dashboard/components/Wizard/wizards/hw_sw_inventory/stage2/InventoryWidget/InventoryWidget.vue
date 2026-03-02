@@ -39,7 +39,6 @@ function validate(): boolean {
         { name: 'dashboards', title: _t('Dashboards') },
         { name: 'views', title: _t('Views') }
       ]"
-      :target-options="handler.linkTargetSuggestions.value"
       :title-macros="handler.titleMacros.value"
     />
   </CmkCatalogPanel>

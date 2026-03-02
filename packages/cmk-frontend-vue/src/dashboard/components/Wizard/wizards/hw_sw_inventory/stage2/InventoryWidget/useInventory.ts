@@ -15,7 +15,6 @@ import {
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type {
   InventoryContent,
-  InventoryLinkType,
   UseValidate,
   UseWidgetHandler,
   WidgetProps
@@ -61,13 +60,16 @@ export const useInventory = async (
     titleMacros
   } = useWidgetVisualizationProps('$DEFAULT_TITLE$', editWidget?.general_settings, CONTENT_TYPE)
 
+  const currentLinkSpec =
+    editWidget?.content?.type === 'inventory' ? editWidget.content?.link_spec : undefined
+
   const {
     linkType,
     linkTarget,
     linkValidationError,
-    linkTargetSuggestions,
-    validate: validateLinkContent
-  } = useLinkContent()
+    validate: validateLinkContent,
+    linkSpec
+  } = useLinkContent(currentLinkSpec)
 
   const widgetProps = ref<WidgetProps>()
 
@@ -84,11 +86,8 @@ export const useInventory = async (
       path: inventoryPath.value ?? ''
     }
 
-    if (linkType.value && linkTarget.value) {
-      content.link_spec = {
-        type: linkType.value as InventoryLinkType,
-        name: linkTarget.value
-      }
+    if (linkSpec.value) {
+      content.link_spec = linkSpec.value
     }
 
     return content
@@ -142,7 +141,6 @@ export const useInventory = async (
     linkType,
     linkTarget,
     linkValidationError,
-    linkTargetSuggestions,
 
     titleUrlValidationErrors,
     validate,

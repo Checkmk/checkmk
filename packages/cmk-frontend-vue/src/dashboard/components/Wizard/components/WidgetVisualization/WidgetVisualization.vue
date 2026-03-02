@@ -97,8 +97,6 @@ const displayLinkContent = computed(
             v-model:link-type="linkType"
             v-model:link-target="linkTarget"
             :link-validation="linkValidation || []"
-            :link-options="linkOptions || []"
-            :target-options="targetOptions || []"
           />
         </div>
       </FieldComponent>

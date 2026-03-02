@@ -9,9 +9,10 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCode from '@/components/CmkCode.vue'
-import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
+import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
@@ -23,6 +24,16 @@ const installScriptUrl = computed(
   () =>
     `${window.location.protocol}//${props.domain}/${props.siteName}/check_mk/relays/install_relay.sh`
 )
+
+const insecureProtocolWarning = computed(() => {
+  if (window.location.protocol !== 'https:') {
+    return _t(
+      'Insecure connection detected (HTTP). For better security, we recommend switching this Checkmk site to HTTPS. '
+    )
+  } else {
+    return false
+  }
+})
 
 const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)
 </script>
@@ -41,6 +52,7 @@ const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)
           )
         }}
       </CmkParagraph>
+      <CmkAlertBox v-if="insecureProtocolWarning">{{ insecureProtocolWarning }}</CmkAlertBox>
       <CmkCode :code_txt="downloadCommand" data-testid="download-relay-install-script"></CmkCode>
     </template>
 

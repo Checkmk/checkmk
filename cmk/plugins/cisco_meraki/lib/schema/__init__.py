@@ -12,7 +12,7 @@ from ._licenses_overview import LicensesOverview, RawLicensesOverview
 from ._networks import Network, RawNetwork
 from ._organizations import RawOrganisation
 from ._sensor_readings import RawSensorReadings
-from ._switch_port_statuses import RawSwitchPortStatus
+from ._switch_ports_statuses import RawSwitchPortsStatus
 from ._uplink_statuses import RawUplinkStatuses, UplinkStatuses, UplinkUsageByInterface
 from ._uplink_usage import RawUplinkUsage
 from ._uplink_vpn_statuses import RawUplinkVpnStatuses
@@ -33,7 +33,7 @@ __all__ = [
     "RawNetwork",
     "RawOrganisation",
     "RawSensorReadings",
-    "RawSwitchPortStatus",
+    "RawSwitchPortsStatus",
     "RawUplinkStatuses",
     "RawUplinkUsage",
     "RawUplinkVpnStatuses",

@@ -197,12 +197,12 @@ class _FakeSensorSDK:
 class _FakeSwitchSDK:
     def getDeviceSwitchPortsStatuses(
         self, serial: str, timespan: int
-    ) -> Sequence[schema.RawSwitchPortStatus]:
-        switch_port_statuses = {
-            "S123-sw": [factories.RawSwitchPortStatusFactory.build()],
-            "S456-sw": [factories.RawSwitchPortStatusFactory.build()],
+    ) -> Sequence[schema.RawSwitchPortsStatus]:
+        switch_ports_statuses = {
+            "S123-sw": [factories.RawSwitchPortsStatusFactory.build()],
+            "S456-sw": [factories.RawSwitchPortsStatusFactory.build()],
         }
-        return switch_port_statuses.get(serial, [])
+        return switch_ports_statuses.get(serial, [])
 
 
 class _FakeWirelessSDK:

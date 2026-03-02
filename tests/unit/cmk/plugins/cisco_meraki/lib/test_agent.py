@@ -65,7 +65,7 @@ class TestMerakiAgentOutput:
     def test_non_default_sections(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
         non_default_sections = {
             "appliance-performance",
-            "switch-port-statuses",
+            "switch-ports-statuses",
             "wireless-device-statuses",
         }
         updated_ctx = self._update_section_names(ctx, sections=non_default_sections)
@@ -78,7 +78,7 @@ class TestMerakiAgentOutput:
             "device_info",
             "networks",
             "organisations",
-            "switch_port_statuses",
+            "switch_ports_statuses",
             "wireless_device_statuses",
         }
 

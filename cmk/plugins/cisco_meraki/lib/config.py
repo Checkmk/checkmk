@@ -131,7 +131,7 @@ class _RequiredSections:
     device_uplinks_info: bool
     licenses_overview: bool
     sensor_readings: bool
-    switch_port_statuses: bool
+    switch_ports_statuses: bool
     wireless_device_statuses: bool
     wireless_ethernet_statuses: bool
 
@@ -146,7 +146,7 @@ class _RequiredSections:
             device_uplinks_info=constants.SEC_NAME_DEVICE_UPLINKS_INFO in sections,
             licenses_overview=constants.SEC_NAME_LICENSES_OVERVIEW in sections,
             sensor_readings=constants.SEC_NAME_SENSOR_READINGS in sections,
-            switch_port_statuses=constants.SEC_NAME_SWITCH_PORT_STATUSES in sections,
+            switch_ports_statuses=constants.SEC_NAME_SWITCH_PORTS_STATUSES in sections,
             wireless_device_statuses=constants.SEC_NAME_WIRELESS_DEVICE_STATUSES in sections,
             wireless_ethernet_statuses=constants.SEC_NAME_WIRELESS_ETHERNET_STATUSES in sections,
         )
@@ -160,7 +160,7 @@ class _RequiredSections:
             or self.appliance_uplinks
             or self.appliance_vpns
             or self.appliance_performance
-            or self.switch_port_statuses
+            or self.switch_ports_statuses
             or self.wireless_device_statuses
             or self.wireless_ethernet_statuses
         )

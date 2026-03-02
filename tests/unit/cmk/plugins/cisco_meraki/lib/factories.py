@@ -44,7 +44,7 @@ class RawSensorReadingsFactory(TypedDictFactory[schema.RawSensorReadings]):
     __check_model__ = False
 
 
-class RawSwitchPortStatusFactory(TypedDictFactory[schema.RawSwitchPortStatus]):
+class RawSwitchPortsStatusFactory(TypedDictFactory[schema.RawSwitchPortsStatus]):
     __check_model__ = False
 
 

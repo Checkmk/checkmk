@@ -113,7 +113,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                             name="sensor_readings", title=Title("Sensor readings")
                         ),
                         MultipleChoiceElement(
-                            name="switch_port_statuses", title=Title("Switch port statuses")
+                            name="switch_ports_statuses", title=Title("Switch ports statuses")
                         ),
                         MultipleChoiceElement(
                             name="wireless_device_statuses",

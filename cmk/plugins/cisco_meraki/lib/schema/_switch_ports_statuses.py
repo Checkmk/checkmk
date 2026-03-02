@@ -8,9 +8,9 @@ from __future__ import annotations
 from typing import TypedDict
 
 
-class RawSwitchPortStatus(TypedDict):
+class RawSwitchPortsStatus(TypedDict):
     """
-    Device Switch Port Status Resource
+    Device Switch Ports Status Resource
     <https://developer.cisco.com/meraki/api-v1/get-device-switch-ports-statuses/>
     """
 

@@ -243,14 +243,14 @@ class MerakiOrganisation:
                         )
 
         if devices_by_type.get("switch"):
-            if self.config.required.switch_port_statuses:
+            if self.config.required.switch_ports_statuses:
                 for switch in devices_by_type["switch"]:
                     serial = switch["serial"]
                     if piggyback := self._get_device_piggyback(serial, devices_by_serial):
-                        for switch_port_status in self.client.get_switch_port_statuses(serial):
+                        for switch_ports_status in self.client.get_switch_ports_statuses(serial):
                             yield Section(
-                                name="cisco_meraki_org_switch_port_statuses",
-                                data=switch_port_status,
+                                name="cisco_meraki_org_switch_ports_statuses",
+                                data=switch_ports_status,
                                 piggyback=piggyback,
                             )
 

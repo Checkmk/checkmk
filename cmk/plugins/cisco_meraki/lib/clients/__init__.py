@@ -87,8 +87,8 @@ class MerakiClient:
     def get_sensor_readings(self, id: str) -> Sequence[schema.RawSensorReadings]:
         return self._sensor_client.get_sensor_readings(id)
 
-    def get_switch_port_statuses(self, serial: str) -> Sequence[schema.RawSwitchPortStatus]:
-        return self._switch_client.get_switch_port_statuses(serial)
+    def get_switch_ports_statuses(self, serial: str) -> Sequence[schema.RawSwitchPortsStatus]:
+        return self._switch_client.get_switch_ports_statuses(serial)
 
     def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:
         fn = self._appliance_client.get_uplink_statuses

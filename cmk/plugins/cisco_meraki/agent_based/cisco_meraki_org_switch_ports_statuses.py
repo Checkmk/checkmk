@@ -35,12 +35,10 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.cisco_meraki.lib.type_defs import PossiblyMissing
 
-# NOTE: this was hardcoded in the original implementation.
-# TODO: find out why this is required.
-_PORT_TYPE: Final = 6
+_ETHERNET_INTERFACE_PORT_TYPE: Final = 6
 
 
-type Section = Mapping[str, SwitchPortStatus]
+type Section = Mapping[str, SwitchPortsStatus]
 
 Status = Literal["up", "down", "unknown"]
 
@@ -81,7 +79,7 @@ class UsageInKbps(BaseModel, frozen=True):
     total: float
 
 
-class SwitchPortStatus(BaseModel, frozen=True):
+class SwitchPortsStatus(BaseModel, frozen=True):
     client_count: int = Field(alias="clientCount")
     duplex: str
     enabled: bool
@@ -99,10 +97,6 @@ class SwitchPortStatus(BaseModel, frozen=True):
     secure_port: PossiblyMissing[SecurePort] = Field(default=None, alias="securePort")
     spanning_tree: PossiblyMissing[SpanningTree] = Field(default=None, alias="spanningTree")
     traffic_in_kbps: PossiblyMissing[UsageInKbps] = Field(default=None, alias="trafficInKbps")
-
-    @property
-    def port_type(self) -> int:
-        return _PORT_TYPE
 
     @computed_field
     @property
@@ -138,9 +132,18 @@ class SwitchPortStatus(BaseModel, frozen=True):
 
     @computed_field
     @property
+    def speed_summary(self) -> str:
+        return self.speed if self.speed else "unknown"
+
+    @computed_field
+    @property
     def speed_as_int(self) -> int | None:
+        if not self.speed:
+            return None
+
         raw_value, unit = self.speed.split()  # "10 Gbps" => ("10", "Gbps")
         value = float(raw_value.replace(",", "."))  # handle comma decimal point
+
         match unit.lower()[0]:
             case "k":  # kilobit per second
                 return int(value + 1e3)
@@ -167,7 +170,7 @@ def parse_switch_ports_statuses(string_table: StringTable) -> Section:
     # https://developer.cisco.com/meraki/api-v1/get-organization-switch-ports-statuses-by-switch/
     match string_table:
         case [[payload]] if payload:
-            statuses = (SwitchPortStatus.model_validate(data) for data in json.loads(payload))
+            statuses = (SwitchPortsStatus.model_validate(data) for data in json.loads(payload))
             return {str(switch_port.port_id): switch_port for switch_port in statuses}
         case _:
             return {}
@@ -209,7 +212,7 @@ def discover_switch_ports_statuses(params: DiscoveryParams, section: Section) ->
                 parameters={
                     "admin_state": port.admin_state,
                     "operational_state": port.oper_state,
-                    "speed": port.speed,
+                    "speed": port.speed_summary,
                 },
             )
 
@@ -248,7 +251,7 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
 
     prior_admin_state = params.get("admin_state", "unknown")
     prior_oper_state = params.get("operational_state", "unknown")
-    prior_speed = params.get("speed")
+    prior_speed = params.get("speed", "unknown")
 
     if port.admin_state == "down":
         yield Result(
@@ -293,12 +296,15 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
     if port.oper_state in {"down", "unknown"}:
         return
 
-    yield Result(state=State.OK, summary=f"Speed: {port.speed}")
+    yield Result(
+        state=State.OK if port.speed else State.UNKNOWN,
+        summary=f"Speed: {port.speed_summary}",
+    )
 
-    if _state_has_changed(port.speed, prior_speed):
+    if _state_has_changed(port.speed_summary, prior_speed):
         yield Result(
             state=State(params["state_speed_change"]),
-            summary=f"changed {prior_speed} -> {port.speed}",
+            summary=f"changed {prior_speed} -> {port.speed_summary}",
         )
 
     if port.traffic_in_kbps:
@@ -341,9 +347,8 @@ def check_switch_ports_statuses(item: str, params: CheckParams, section: Section
         if error not in {"Port disconnected", "Port disabled"}:
             yield Result(state=State.CRIT, notice=f"{error}")
 
-    # TODO: find out why this was set to unknown.
     if port.secure_port and port.secure_port.enabled:
-        yield Result(state=State.UNKNOWN, summary="Secure port: enabled")
+        yield Result(state=State.OK, summary="Secure port: enabled")
 
 
 check_plugin_cisco_meraki_org_switch_ports_statuses = CheckPlugin(
@@ -352,12 +357,12 @@ check_plugin_cisco_meraki_org_switch_ports_statuses = CheckPlugin(
     discovery_function=discover_switch_ports_statuses,
     check_function=check_switch_ports_statuses,
     check_default_parameters=CheckParams(
-        state_admin_change=1,
-        state_disabled=0,
-        state_not_connected=0,
-        state_not_full_duplex=1,
-        state_op_change=1,
-        state_speed_change=1,
+        state_admin_change=State.WARN.value,
+        state_disabled=State.OK.value,
+        state_not_connected=State.OK.value,
+        state_not_full_duplex=State.WARN.value,
+        state_op_change=State.WARN.value,
+        state_speed_change=State.WARN.value,
     ),
     check_ruleset_name="cisco_meraki_switch_ports_statuses",
     discovery_ruleset_name="discovery_cisco_meraki_switch_ports_statuses",
@@ -378,7 +383,7 @@ def inventory_meraki_interfaces(section: Section) -> InventoryResult:
                 "admin_status": port.admin_status,
                 **({"oper_status": port.oper_status} if port.oper_status else {}),
                 **({"speed": port.speed_as_int} if port.speed_as_int else {}),
-                "port_type": port.port_type,
+                "port_type": _ETHERNET_INTERFACE_PORT_TYPE,
             },
         )
 

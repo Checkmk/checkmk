@@ -166,7 +166,7 @@ class ModeRevertChanges(WatoMode):
     def __init__(self) -> None:
         super().__init__()
         self._changes = activate_changes.ActivateChanges()
-        self._changes.load(list(active_config.sites))
+        self._changes.load(list(activation_sites(active_config.sites)))
 
     def title(self) -> str:
         return _("Revert changes")
@@ -387,7 +387,7 @@ class ModeActivateChanges(WatoMode):
     def __init__(self) -> None:
         super().__init__()
         self._changes = activate_changes.ActivateChanges()
-        self._changes.load(list(active_config.sites))
+        self._changes.load(list(activation_sites(active_config.sites)))
         self._license_usage_report_validity = get_license_usage_report_validity()
         self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 

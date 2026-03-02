@@ -117,7 +117,7 @@ def _make_form() -> Dictionary:
                             TimeMagnitude.SECOND,
                         ]
                     ),
-                    prefill_fixed_levels=DefaultValue(value=(30.0 * 60, 60.0 * 60)),
+                    prefill_fixed_levels=DefaultValue(value=(0.0, 0.0)),
                 ),
             ),
         },

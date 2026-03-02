@@ -114,6 +114,9 @@ private:
     void answerQueryInternal(Query &query, const User &user, const ICore &core,
                              LogEntryForwardIterator &it);
 
+    void reset_downtime_depths(Processor &processor, bool only_update,
+                               const state_info_t &state_info);
+
     void handle_state_entry(Processor &processor, const ICore &core,
                             const LogEntry *entry, bool only_update,
                             const TimePeriods &time_periods,

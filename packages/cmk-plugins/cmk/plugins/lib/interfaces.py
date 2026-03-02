@@ -21,10 +21,9 @@ from collections.abc import (
     Iterator,
     Mapping,
     MutableMapping,
-    MutableSequence,
     Sequence,
 )
-from dataclasses import dataclass, field, fields, replace
+from dataclasses import dataclass, fields, replace
 from functools import partial
 from typing import Any, assert_never, Final, Literal, ParamSpec, TypedDict, TypeVar
 
@@ -113,14 +112,6 @@ CHECK_DEFAULT_PARAMETERS = {
         "both": ("perc", (0.01, 0.1)),
     },
 }
-
-
-@dataclass
-class IPNetworkAdapter:
-    state_infos: Sequence[str] | None = None
-    link_ether: str = ""
-    inet: MutableSequence[str] = field(default_factory=list)
-    inet6: MutableSequence[str] = field(default_factory=list)
 
 
 def _to_item_appearance(value: str) -> _ItemAppearance:

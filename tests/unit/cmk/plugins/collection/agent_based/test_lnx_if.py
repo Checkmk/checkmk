@@ -27,6 +27,9 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.collection.agent_based import lnx_if
 from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.interfaces import (
+    IPNetworkAdapter,
+)
 
 
 @pytest.fixture
@@ -95,7 +98,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 ["[end_iplink]"],
             ],
             {
-                "wlp114s0f0": lnx_if.IPLinkInterface(
+                "wlp114s0f0": IPNetworkAdapter(
                     state_infos=[
                         "ot-parsed-dat",
                     ],
@@ -1396,13 +1399,13 @@ def test_inventory_lnx_if_with_bonding() -> None:
 
 
 __section_inventory = {
-    "lo": lnx_if.IPLinkInterface(
+    "lo": IPNetworkAdapter(
         state_infos=["LOOPBACK", "UP", "LOWER_UP"],
         link_ether="",
         inet=["127.0.0.1/8"],
         inet6=["::1/128"],
     ),
-    "ens32": lnx_if.IPLinkInterface(
+    "ens32": IPNetworkAdapter(
         state_infos=["BROADCAST", "MULTICAST", "UP", "LOWER_UP"],
         link_ether="\x00\x0c)\x82ýr",
         inet=["192.168.10.144/24"],

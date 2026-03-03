@@ -2208,8 +2208,11 @@ async def process_usage_details(
         return
 
     except Exception as exc:
-        if args.debug:
-            raise
+        # here we do not raise the exception in debug mode because, like we do in other spots,
+        # because the Rate Api Error can be expected for this API in big setups,
+        # and we don't want to create crash reports for this
+        # if args.debug:
+        #     raise
         write_exception_to_agent_info_section(exc, "Usage client")
         write_usage_section(
             [], monitored_groups, subscription, args.tag_key_pattern, args.unique_hostnames

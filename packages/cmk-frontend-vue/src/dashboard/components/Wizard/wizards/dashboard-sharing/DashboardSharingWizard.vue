@@ -28,11 +28,13 @@ interface ShareDashboardSettingsProps {
   dashboardKey: DashboardKey
   publicToken: DashboardTokenModel | null
   availableFeatures: DashboardFeatures
+  hasRuntimeFilters: boolean
 }
 
 interface ShareDashboardSettingsEmits {
   close: []
   refreshDashboardSettings: []
+  reviewFilters: []
 }
 
 const props = defineProps<ShareDashboardSettingsProps>()
@@ -64,6 +66,8 @@ const clonedToken = computed(() => (props.publicToken ? structuredClone(props.pu
         :dashboard-key="dashboardKey"
         :public-token="clonedToken"
         :available-features="availableFeatures"
+        :has-runtime-filters="hasRuntimeFilters"
+        @review-filters="$emit('reviewFilters')"
         @refresh-dashboard-settings="$emit('refreshDashboardSettings')"
       />
     </WizardStageContainer>

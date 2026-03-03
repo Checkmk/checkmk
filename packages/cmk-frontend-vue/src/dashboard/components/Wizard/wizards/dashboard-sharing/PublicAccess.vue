@@ -21,6 +21,7 @@ import { urlHandler } from '@/dashboard/utils'
 
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import PublicAccessSettings from './PublicAccessSettings.vue'
+import RuntimeFiltersWarning from './RuntimeFiltersWarning.vue'
 import { type DashboardTokenModel } from './api'
 import { usePublicAccess } from './composables/usePublicAccess'
 
@@ -30,10 +31,12 @@ interface PublicAccessLinkProps {
   dashboardKey: DashboardKey
   publicToken: DashboardTokenModel | null
   availableFeatures: DashboardFeatures
+  hasRuntimeFilters: boolean
 }
 
 interface PublicAccessEmits {
   refreshDashboardSettings: []
+  reviewFilters: []
 }
 const props = defineProps<PublicAccessLinkProps>()
 const emit = defineEmits<PublicAccessEmits>()
@@ -55,6 +58,7 @@ const handler = usePublicAccess(
 
 const activeAction = ref<'create' | 'update' | 'delete' | null>(null)
 const actionInProgress = computed(() => activeAction.value !== null)
+const displayReviewFilterDialog = ref<boolean>(false)
 
 watch(
   () => props.publicToken,
@@ -67,6 +71,12 @@ const handleEnableAccess = async () => {
   if (actionInProgress.value || !handler.validate()) {
     return
   }
+
+  if (props.hasRuntimeFilters) {
+    displayReviewFilterDialog.value = true
+    return
+  }
+
   dialogData.title = _t('Enable public link?')
   dialogData.message = [_t('Anyone with the link can view this dashboard.')]
 
@@ -122,6 +132,12 @@ const handleCreate = async () => {
   if (actionInProgress.value) {
     return
   }
+
+  if (props.hasRuntimeFilters) {
+    displayReviewFilterDialog.value = true
+    return
+  }
+
   activeAction.value = 'create'
   await handler.createToken()
   emit('refreshDashboardSettings')
@@ -171,6 +187,11 @@ const handleUpdate = async () => {
         <li>{{ _t('Sidebar widgets are not available on shared dashboards.') }}</li>
       </ul>
     </CmkAlertBox>
+
+    <div v-if="displayReviewFilterDialog">
+      <ContentSpacer :dimension="4" />
+      <RuntimeFiltersWarning @review-filters="emit('reviewFilters')" />
+    </div>
 
     <ContentSpacer :dimension="5" />
 

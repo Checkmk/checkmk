@@ -493,6 +493,10 @@ const dashboardHasFilters = computed(
       .length > 0
 )
 
+const dashboardHasRuntimeFilters = computed(
+  () => Object.keys(dashboardFilters.appliedRuntimeFilters.value).length > 0
+)
+
 const redirectToListDashboardsPage = () => {
   window.location.href = props.links.list_dashboards
 }
@@ -555,6 +559,11 @@ const updateDashboardSettings = async (
 
 function deepClone<T>(obj: T): T {
   return structuredClone(obj)
+}
+
+const reviewFilters = () => {
+  openDashboardShareDialog.value = false
+  openDashboardFilterSettings.value = true
 }
 </script>
 
@@ -625,6 +634,8 @@ function deepClone<T>(obj: T): T {
         :dashboard-key="dashboardsManager.activeDashboardKey.value!"
         :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
         :available-features="available_features"
+        :has-runtime-filters="dashboardHasRuntimeFilters"
+        @review-filters="reviewFilters"
         @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
         @close="openDashboardShareDialog = false"
       />

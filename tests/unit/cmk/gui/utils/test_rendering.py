@@ -41,6 +41,18 @@ from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
                 '<a href="link1" title="element1">element1</a> / element2 / <a href="link3" title="element3">element3</a>'
             ),
         ),
+        # CMK-31914: javascript: URLs must not render as clickable links
+        (
+            [("element", "javascript:alert(1)")],
+            "",
+            HTML("element"),
+        ),
+        # CMK-31914: data: URLs must not render as clickable links
+        (
+            [("element", "data:text/html,<script>alert(1)</script>")],
+            "",
+            HTML("element"),
+        ),
     ],
 )
 def test_text_with_links_to_user_translated_html(

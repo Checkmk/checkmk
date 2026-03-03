@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -43,6 +43,16 @@ const handleSelectIcon = (selectedIcon: DynamicIcon | null) => {
 
 const iconTitle = computed((): string => {
   return icon.value ? getIconId(icon.value)! : _t('No icon selected')
+})
+
+const closeGallery = () => (displayGallery.value = false)
+
+onMounted(() => {
+  window.addEventListener('resize', closeGallery)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', closeGallery)
 })
 </script>
 

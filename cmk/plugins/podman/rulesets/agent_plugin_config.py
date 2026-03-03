@@ -100,7 +100,7 @@ def _agent_config_mk_podman() -> Dictionary:
                     help_text=Help(
                         "Choose which identifier is used for the piggybacked host name of monitored containers."
                     ),
-                    prefill=DefaultValue("name"),
+                    prefill=DefaultValue("nodename_name"),
                     elements=[
                         SingleChoiceElement(
                             name="name",

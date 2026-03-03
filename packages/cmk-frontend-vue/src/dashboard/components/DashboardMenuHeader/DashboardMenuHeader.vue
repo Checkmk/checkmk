@@ -263,11 +263,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             {{ _t('Cancel') }}
           </MenuButton>
 
-          <MenuButton
-            variant="secondary"
-            :disabled="isInteractionDisabled"
-            @click="handleAddWidget"
-          >
+          <MenuButton :disabled="isInteractionDisabled" @click="handleAddWidget">
             <CmkIcon name="plus" />
             {{ _t('Add widget') }}
           </MenuButton>

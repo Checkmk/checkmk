@@ -105,7 +105,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [
             "automation helpers",
             # In Checkmk 2.4, the automation helper still ran with gunicorn and wasn't called "cmk-automation-helper".
             # We want to discover 2.4 automation helper processes also in newer Checkmk versions, so we add both patterns here.
-            "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
+            "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
         ),
         (
             "8b5616fb-a457-404e-a136-24065da7f170",

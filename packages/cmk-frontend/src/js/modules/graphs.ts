@@ -614,8 +614,16 @@ function render_graph(graph: GraphArtwork) {
   if (!canvas) return
 
   const legendContainer = container.querySelector('table.legend') as HTMLElement | null
-  if (legendContainer !== null && legendContainer.scrollWidth > canvas.clientWidth) {
-    const newWidth = legendContainer.scrollWidth
+  const legendMarginLeft =
+    legendContainer !== null ? parseInt(legendContainer.style.marginLeft || '0', 10) : 0
+
+  // Expand canvas if the legend content is wider than the canvas. The legend has a margin-left
+  // which must be included: total legend span = marginLeft + scrollWidth.
+  if (
+    legendContainer !== null &&
+    legendContainer.scrollWidth + legendMarginLeft > canvas.clientWidth
+  ) {
+    const newWidth = legendContainer.scrollWidth + legendMarginLeft
     canvas.style.width = newWidth + 'px'
     canvas.width = newWidth * 2
   }
@@ -649,6 +657,11 @@ function render_graph(graph: GraphArtwork) {
         ctx.font = font_size + 'pt sans-serif'
       }
     }
+  }
+
+  // Sync legend width to the final canvas display width so both always have the same width
+  if (legendContainer !== null) {
+    legendContainer.style.width = canvas.width / 2 - legendMarginLeft + 'px'
   }
 
   const width = canvas.width

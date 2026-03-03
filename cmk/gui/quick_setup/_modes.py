@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import re
 from abc import ABC, abstractmethod
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import override, Protocol
@@ -312,7 +313,8 @@ class ModeEditConfigurationBundles(WatoMode):
 
     def _no_bundles(self) -> None:
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
-            subtype = self._name.split(":", maxsplit=1)[1]
+            subtype = re.sub(r"_v\d+$", "", self._name.split(":", maxsplit=1)[1])
+
             html.div(
                 html.render_dynamic_icon(DynamicIconName(f"qs_{subtype}"))
                 + html.render_b(_("No %s configuration yet") % self.title())

@@ -316,7 +316,10 @@ export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: H
   const error = ajax_graph['error']
   if (error) {
     show_error(container, error)
+  } else {
+    document.getElementById('error_container')?.remove()
   }
+
   const ajax_context = ajax_graph['context']
   const graph_id = get_id_of_graph(ajax_context)
 

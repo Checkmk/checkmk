@@ -449,6 +449,28 @@ def test_convert_esx_counters_if() -> None:
     ]
 
 
+def test_check_counters_if_negative_values() -> None:
+    """Regression test: when all net counter samples are -1, they should be treated as 0."""
+    result = esx_vsphere_counters.convert_esx_counters_if(
+        OrderedDict(
+            {
+                "net.bytesRx": {"vmnic0": [(["-1", "-1"], "kiloBytesPerSecond")]},
+                "net.bytesTx": {"vmnic0": [(["-1", "-1"], "kiloBytesPerSecond")]},
+                "net.packetsRx": {"vmnic0": [(["-1", "-1"], "number")]},
+                "net.packetsTx": {"vmnic0": [(["-1", "-1"], "number")]},
+            }
+        ),
+        1.0,
+    )
+    assert len(result) == 1
+    iface = result[0]
+    # All counters absent means iface_rates.get(ctr_name, 0) returns 0 for everything
+    assert iface.rates.in_octets == 0
+    assert iface.rates.out_octets == 0
+    assert iface.rates.in_ucast == 0
+    assert iface.rates.out_ucast == 0
+
+
 def test_discovery_counters_diskio() -> None:
     assert list(
         esx_vsphere_counters.discover_esx_vsphere_counters_diskio(
@@ -463,6 +485,35 @@ def test_discovery_counters_diskio() -> None:
             )
         )
     ) == [Service(item="SUMMARY")]
+
+
+def test_check_counters_diskio_negative_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression test: VMware reports -1 for unavailable metrics; must not crash.
+
+    When disk.deviceLatency (or other metrics) contain only -1 values, the check
+    previously crashed with ValueError("Cannot render negative timespan").
+    """
+    monkeypatch.setattr(esx_vsphere_counters, "get_value_store", dict)
+    assert list(
+        esx_vsphere_counters.check_esx_vsphere_counters_diskio(
+            "SUMMARY",
+            {},
+            OrderedDict(
+                {
+                    "disk.read": {"": [(["11", "12", "13"], "kiloBytesPerSecond")]},
+                    "disk.write": {"": [(["51", "49", "53"], "kiloBytesPerSecond")]},
+                    "disk.deviceLatency": {"instance1": [(["-1"], "millisecond")]},
+                }
+            ),
+        )
+    ) == [
+        Result(state=State.OK, summary="Read: 12.3 kB/s"),
+        Metric("disk_read_throughput", 12288.0),
+        Result(state=State.OK, summary="Write: 52.2 kB/s"),
+        Metric("disk_write_throughput", 52224.0),
+    ]
 
 
 def test_check_counters_diskio(

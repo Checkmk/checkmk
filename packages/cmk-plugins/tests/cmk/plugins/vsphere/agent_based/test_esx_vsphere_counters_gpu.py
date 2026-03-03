@@ -44,6 +44,18 @@ def test_check_counters_gpu_utilization() -> None:
     assert value == expected
 
 
+def test_check_counters_gpu_utilization_negative_values() -> None:
+    """Regression: all-(-1) GPU samples should yield State.UNKNOWN rather than -1%."""
+    value = list(
+        plugin.check_esx_vsphere_counters_gpu_utilization(
+            item="gpu1",
+            params=plugin.GpuUtilizationParams(levels_upper=("fixed", (80.0, 90.0))),
+            section=OrderedDict({"gpu.utilization": {"gpu1": [(["-1", "-1"], "percent")]}}),
+        )
+    )
+    assert value == [Result(state=State.UNKNOWN, summary="Utilization is unknown.")]
+
+
 def test_check_counters_gpu_utilization_missing() -> None:
     value = list(
         plugin.check_esx_vsphere_counters_gpu_utilization(

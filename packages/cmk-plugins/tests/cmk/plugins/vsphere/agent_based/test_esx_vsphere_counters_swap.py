@@ -93,3 +93,19 @@ def test_check_esx_vsphere_counters_swap_missing_data() -> None:
 def test_check_esx_vsphere_counters_swap_no_counters() -> None:
     """Test check function with no counter data at all."""
     assert not list(check_esx_vsphere_counters_swap(parse_esx_vsphere_counters([])))
+
+
+def test_check_esx_vsphere_counters_swap_all_negative_one() -> None:
+    """Regression: all-(-1) swap samples must not produce '-1 B' results."""
+    result = list(
+        check_esx_vsphere_counters_swap(
+            parse_esx_vsphere_counters(
+                [
+                    ["mem.swapin", "", "-1", "kiloBytes"],
+                    ["mem.swapout", "", "-1", "kiloBytes"],
+                    ["mem.swapused", "", "-1", "kiloBytes"],
+                ]
+            )
+        )
+    )
+    assert result == []

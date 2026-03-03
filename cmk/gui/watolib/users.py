@@ -21,6 +21,7 @@ from cmk.utils.user import UserId
 from cmk.gui import hooks, site_config, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, UserObject, Users, UserSpec
@@ -322,6 +323,7 @@ def notification_script_title(name):
     return user_script_title("notifications", name)
 
 
+@request_memoize()
 def notification_script_choices() -> list[tuple[str, str]]:
     # Ensure the required dynamic permissions are registered
     declare_notification_plugin_permissions()

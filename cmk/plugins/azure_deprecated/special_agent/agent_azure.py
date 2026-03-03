@@ -795,7 +795,7 @@ class MgmtApiClient(BaseApiClient):
         url = (
             "resourceGroups/{}/providers/Microsoft.RecoveryServices/vaults/{}/backupProtectedItems"
         )
-        return self._get(url.format(group, name), params={"api-version": "2022-05-01"})
+        return self._get(url.format(group, name), params={"api-version": "2025-02-01"})
 
     def vnet_peering_view(self, group, providers, vnet_id, vnet_peering_id):
         url = "resourceGroups/{}/providers/{}/virtualNetworks/{}/virtualNetworkPeerings/{}"
@@ -815,7 +815,7 @@ class MgmtApiClient(BaseApiClient):
 
     def resource_health_view(self):
         path = "providers/Microsoft.ResourceHealth/availabilityStatuses"
-        return self._get(path, key="value", params={"api-version": "2022-05-01"})
+        return self._get(path, key="value", params={"api-version": "2025-05-01"})
 
     def usagedetails(self):
         yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")

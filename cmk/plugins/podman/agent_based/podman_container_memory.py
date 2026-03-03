@@ -21,7 +21,8 @@ from .lib import SectionPodmanContainerStats
 def discover_podman_container_memory(
     section: SectionPodmanContainerStats,
 ) -> DiscoveryResult:
-    yield Service()
+    if section.mem_total > 0:
+        yield Service()
 
 
 def check_podman_container_memory(

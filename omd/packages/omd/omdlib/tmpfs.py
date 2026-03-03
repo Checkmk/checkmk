@@ -18,12 +18,8 @@ from pathlib import Path
 from omdlib.console import ok
 from omdlib.skel_permissions import Permissions
 from omdlib.type_defs import Config, Replacements
-from omdlib.utils import (
-    chown_tree,
-    create_skeleton_files,
-    delete_directory_contents,
-    is_containerized,
-)
+from omdlib.users_and_groups import run_as_site_user
+from omdlib.utils import create_skeleton_files, delete_directory_contents, is_containerized
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc import tty
@@ -107,6 +103,15 @@ def mark_tmpfs_initialized(site_tmp_dir: str) -> None:
     structure was initialized."""
     with Path(site_tmp_dir, "initialized").open("w", encoding="utf-8") as f:
         f.write("")
+
+
+def unmount_tmpfs_as_root(site_name: str, kill: bool, capture_output: bool) -> int:
+    args = ["--kill"] if kill else []
+    return run_as_site_user(
+        site_name,
+        ["omd", "umount"] + args,
+        capture_output=capture_output,
+    ).returncode
 
 
 def unmount_tmpfs(
@@ -295,7 +300,6 @@ def prepare_and_populate_tmpfs(
 
     if not os.listdir(site_tmp_dir):
         create_skeleton_files(site_home, replacements, skelroot, skel_permissions, "tmp")
-        chown_tree(site_tmp_dir, site_name)
         mark_tmpfs_initialized(site_tmp_dir)
         _restore_tmpfs_dump(site_home, site_tmp_dir)
 

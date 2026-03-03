@@ -25,7 +25,7 @@ case "$1" in
         echo "$PORT"
         ;;
     choices)
-        echo "[1-9][0-9]{0,4}"
+        echo "@{APACHE_NETWORK_PORT}"
         ;;
     set)
         PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT $2)

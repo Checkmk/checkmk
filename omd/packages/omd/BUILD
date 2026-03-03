@@ -23,8 +23,8 @@ file_from_flag(
     src = "omd_main_in",
     out = "bin/omd",
     replace_labels = {
-        "CMK_VERSION": "@cmk//version",
         "CMK_EDITION": "@cmk//edition",
+        "CMK_VERSION": "@cmk//version",
     },
 )
 
@@ -104,6 +104,12 @@ pkg_files(
 )
 
 pkg_files(
+    name = "omd_security_werk_18891_flag",
+    srcs = ["security-werk-18891.flag"],
+    prefix = "share/omd",
+)
+
+pkg_files(
     name = "doc",
     srcs = [
         "COPYING",
@@ -136,8 +142,28 @@ file_from_flag(
     src = ":restart_site_apache_in",
     out = "lib/omd/restart_site_apache",
     replace_labels = {
-        "CMK_VERSION": "@cmk//version",
         "CMK_EDITION": "@cmk//edition",
+        "CMK_VERSION": "@cmk//version",
+    },
+)
+
+# Make it possible to replace OMD_VERSION by labels
+replace_string_in_file(
+    name = "omd_site_user_py_in",
+    src = "omd_site_user.py",
+    out = "lib/omd/omd_site_user_in",
+    replace_dict = {
+        "###OMD_VERSION###": "{CMK_VERSION}.{CMK_EDITION}",
+    },
+)
+
+file_from_flag(
+    name = "omd_site_user_py_omd_version",
+    src = ":omd_site_user_py_in",
+    out = "lib/omd/omd_site_user",
+    replace_labels = {
+        "CMK_EDITION": "@cmk//edition",
+        "CMK_VERSION": "@cmk//version",
     },
 )
 
@@ -145,6 +171,7 @@ pkg_files(
     name = "lib_755",
     srcs = [
         "next_free_port",
+        ":omd_site_user_py_omd_version",
         ":restart_site_apache_omd_version",
     ],
     attributes = pkg_attributes(mode = "0755"),
@@ -166,47 +193,54 @@ pkg_files(
 
 file_from_flag(
     name = "omdlib_init",
-    src = "omdlib/__init__.py",
-    out = "__init__.py",
+    src = "omdlib/__template_init__.py",
+    out = "omdlib/__init__.py",
     replace_labels = {
-        "CMK_VERSION": "@cmk//version",
         "CMK_EDITION": "@cmk//edition",
+        "CMK_VERSION": "@cmk//version",
     },
 )
 
 pkg_files(
     name = "omdlib",
     srcs = [
-        ":omdlib/backup.py",
-        ":omdlib/config_hooks.py",
-        ":omdlib/console.py",
-        ":omdlib/contexts.py",
-        ":omdlib/crash_reporting.py",
-        ":omdlib/dialog.py",
-        ":omdlib/finalize.py",
-        ":omdlib/global_options.py",
-        ":omdlib/init_scripts.py",
-        ":omdlib/instance_id.py",
-        ":omdlib/main.py",
-        ":omdlib/options.py",
-        ":omdlib/package_manager.py",
-        ":omdlib/restore.py",
-        ":omdlib/scripts.py",
-        ":omdlib/site_name.py",
-        ":omdlib/site_paths.py",
-        ":omdlib/sites.py",
-        ":omdlib/skel_permissions.py",
-        ":omdlib/system_apache.py",
-        ":omdlib/tmpfs.py",
-        ":omdlib/type_defs.py",
-        ":omdlib/update.py",
-        ":omdlib/update_check.py",
-        ":omdlib/user_processes.py",
-        ":omdlib/users_and_groups.py",
-        ":omdlib/utils.py",
-        ":omdlib/version.py",
-        ":omdlib/version_info.py",
-        ":omdlib_init",
+        "omdlib/args_site_user.py",
+        "omdlib/backup.py",
+        "omdlib/buffer.py",
+        "omdlib/config_choices.py",
+        "omdlib/config_hooks.py",
+        "omdlib/console.py",
+        "omdlib/contexts.py",
+        "omdlib/crash_reporting.py",
+        "omdlib/dialog.py",
+        "omdlib/finalize.py",
+        "omdlib/global_options.py",
+        "omdlib/init_scripts.py",
+        "omdlib/instance_id.py",
+        "omdlib/main.py",
+        "omdlib/main_site_user.py",
+        "omdlib/options.py",
+        "omdlib/options_legacy.py",
+        "omdlib/package_manager.py",
+        "omdlib/restore.py",
+        "omdlib/scripts.py",
+        "omdlib/site_name.py",
+        "omdlib/site_paths.py",
+        "omdlib/site_user.py",
+        "omdlib/sites.py",
+        "omdlib/skel_permissions.py",
+        "omdlib/system_apache.py",
+        "omdlib/tmpfs.py",
+        "omdlib/type_defs.py",
+        "omdlib/update.py",
+        "omdlib/update_check.py",
+        "omdlib/user_processes.py",
+        "omdlib/users_and_groups.py",
+        "omdlib/utils.py",
+        "omdlib/version.py",
+        "omdlib/version_info.py",
+        "omdlib/version_utils.py",
+        "omdlib_init",
     ],
     prefix = "lib/python3/omdlib",
 )
@@ -276,6 +310,7 @@ pkg_tar(
         ":man",
         ":omd_init_pkg",
         ":omd_main_pkg",
+        ":omd_security_werk_18891_flag",
         ":omd_service",
         ":omdlib",
         ":skel",

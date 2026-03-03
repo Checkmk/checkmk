@@ -21,16 +21,20 @@ import re
 import subprocess
 import sys
 from collections.abc import Iterable, Sequence
-from ipaddress import ip_network, IPv4Address, IPv6Address
 from pathlib import Path
 from re import Pattern
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-import pydantic
+from omdlib.config_choices import (
+    ApacheNetworkPortHasError,
+    ApacheTCPAddrHasError,
+    ConfigChoiceHasError,
+    IpAddressListHasError,
+    IpListenAddressHasError,
+    NetworkPortHasError,
+)
+from omdlib.type_defs import Config
 
-from omdlib.type_defs import Config, ConfigChoiceHasError
-
-import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
 
@@ -54,70 +58,6 @@ class ConfigHook:
 
 
 ConfigHooks = dict[str, ConfigHook]
-
-
-class IpAddressListHasError(ConfigChoiceHasError):
-    @override
-    def __call__(self, value: str) -> result.Result[None, str]:
-        ip_addresses = value.split()
-        if not ip_addresses:
-            return result.Error("Specify at least one IP address.")
-        for ip_address in ip_addresses:
-            try:
-                ip_network(ip_address)
-            except ValueError:
-                return result.Error(f"The IP address {ip_address} does match the expected format.")
-        return result.OK(None)
-
-
-class IpListenAddressHasError(ConfigChoiceHasError):
-    @override
-    def __call__(self, value: str) -> result.Result[None, str]:
-        if not value:
-            return result.Error("Empty address")
-
-        if value.startswith("[") and value.endswith("]"):
-            try:
-                IPv6Address(value[1:-1])
-                return result.OK(None)
-            except ValueError:
-                return result.Error("Invalid IPv6 address")
-
-        try:
-            IPv4Address(value)
-        except ValueError:
-            return result.Error("Invalid IPv4 address")
-
-        return result.OK(None)
-
-
-class NetworkPortHasError(ConfigChoiceHasError):
-    @override
-    def __call__(self, value: str) -> result.Result[None, str]:
-        try:
-            port = int(value)
-        except ValueError:
-            return result.Error("Invalid port number")
-
-        if port < 1024 or port > 65535:
-            return result.Error("Invalid port number")
-
-        return result.OK(None)
-
-
-class ApacheTCPAddrHasError(ConfigChoiceHasError):
-    @override
-    def __call__(self, value: str) -> result.Result[None, str]:
-        url = f"http://{value}:80"
-        try:
-            pydantic.TypeAdapter(pydantic.HttpUrl).validate_python(url)
-            return result.OK(None)
-        except pydantic.ValidationError as e:
-            message = f"""OMD uses APACHE_TCP_ADDR and APACHE_TCP_PORT to construct an Apache
-Listen directive. For example, setting APACHE_TCP_PORT to 80 results in: {url}.
-This is invalid because of: """
-            message += ", ".join([error["ctx"]["error"] for error in e.errors()])
-            return result.Error(message)
 
 
 # Put all site configuration (explicit and defaults) into environment
@@ -215,6 +155,8 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             return IpListenAddressHasError()
         case ["@{NETWORK_PORT}"]:
             return NetworkPortHasError()
+        case ["@{APACHE_NETWORK_PORT}"]:
+            return ApacheNetworkPortHasError()
         case ["@{IP_ADDRESS_LIST}"]:
             return IpAddressListHasError()
         case ["@{APACHE_TCP_ADDR}"]:
@@ -312,7 +254,7 @@ def _call_hook(
     )
 
     if verbose:
-        sys.stdout.write("Calling hook: " + subprocess.list2cmdline(cmd))
+        sys.stdout.write("Calling hook: " + subprocess.list2cmdline(cmd) + "\n")
 
     completed_process = subprocess.run(
         cmd,

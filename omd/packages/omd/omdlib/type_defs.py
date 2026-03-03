@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from abc import ABC, abstractmethod
-
-import cmk.ccc.resulttype as result
 
 Config = dict[str, str]
 Replacements = dict[str, str]
@@ -17,9 +14,3 @@ class Skeleton(enum.Enum):
     KEEPOLD = "keepold"
     ABORT = "abort"
     ASK = "ask"
-
-
-class ConfigChoiceHasError(ABC):
-    @abstractmethod
-    def __call__(self, value: str) -> result.Result[None, str]:
-        raise NotImplementedError

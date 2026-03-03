@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import omdlib
 from omdlib.site_paths import SitePaths
 from omdlib.utils import site_exists
+from omdlib.version_utils import default_version, omd_versions, version_from_site_dir
 
 
 def main_version(
@@ -51,27 +52,3 @@ def main_versions(
             sys.stdout.write("%s (default)\n" % v)
         else:
             sys.stdout.write("%s\n" % v)
-
-
-def default_version(versions_path: Path) -> str:
-    return (versions_path / "default").resolve().name
-
-
-def omd_versions(versions_path: Path) -> Collection[str]:
-    try:
-        return sorted(d.name for d in versions_path.iterdir() if d.name != "default")
-    except FileNotFoundError:
-        return []
-
-
-def version_exists(v: str, versions_path: Path) -> bool:
-    return v in omd_versions(versions_path)
-
-
-def version_from_site_dir(site_dir: Path) -> str | None:
-    """The version of a site is solely determined by the link ~SITE/version
-    In case the version of a site can not be determined, it reports None."""
-    try:
-        return (site_dir / "version").readlink().name
-    except Exception:
-        return None

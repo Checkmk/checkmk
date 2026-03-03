@@ -6,21 +6,27 @@ import enum
 import os
 import subprocess
 import sys
-from collections.abc import Sequence
 from enum import auto, Enum
 from pathlib import Path
 from uuid import uuid4
 
 import omdlib
-from omdlib.config_hooks import config_set_all, load_config, save_site_conf, update_cmk_core_config
+from omdlib.config_hooks import (
+    config_set_all,
+    create_config_environment,
+    load_config,
+    read_site_config,
+    save_site_conf,
+    update_cmk_core_config,
+)
 from omdlib.contexts import SiteContext
 from omdlib.instance_id import create_instance_id
 from omdlib.scripts import call_scripts
 from omdlib.site_paths import SitePaths
+from omdlib.site_user import site_environment
 from omdlib.system_apache import register_with_system_apache
 from omdlib.tmpfs import prepare_and_populate_tmpfs
 from omdlib.type_defs import Config
-from omdlib.users_and_groups import switch_to_site_user
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.site import SiteId
@@ -108,7 +114,6 @@ def finalize_site_as_user(
     config: Config,
     command_type: CommandType,
     verbose: bool,
-    ignored_hooks: Sequence[str],
 ) -> FinalizeOutcome:
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -129,7 +134,9 @@ def finalize_site_as_user(
 
     # Run all hooks in order to setup things according to the
     # configuration settings
-    config_set_all(site, config, verbose, ignored_hooks)
+    # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
+    # see CMK-3067
+    config_set_all(site, config, verbose, ["TMPFS"])
     initialize_site_ca(site)
     initialize_agent_ca(site)
     initialize_relay_ca(site)
@@ -164,12 +171,14 @@ def _crontab_access() -> bool:
 # running the appropriate hooks.
 def finalize_site(
     version_info: VersionInfo,
+    old_site_name: str,
     site: SiteContext,
-    config: Config,
+    config_settings: Config,
     command_type: CommandType,
     apache_reload: bool,
     verbose: bool,
 ) -> FinalizeOutcome:
+    site_home = SitePaths.from_site_name(site.name).home
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
     # - We cannot use seteuid() here, since the id command call will then still
@@ -181,13 +190,14 @@ def finalize_site(
     if pid == 0:
         try:
             # From now on we run as normal site user!
-            switch_to_site_user(site.name)
+            site = site_environment(site.name, verbose)
+            os.chdir(site_home)
+            site.set_config(load_config(site, verbose) | config_settings)
+            create_config_environment(site.conf)
+            # Needed by the post-rename-site script
+            os.environ["OLD_OMD_SITE"] = old_site_name
 
-            # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
-            # see CMK-3067
-            outcome = finalize_site_as_user(
-                version_info, site, config, command_type, verbose, ignored_hooks=["TMPFS"]
-            )
+            outcome = finalize_site_as_user(version_info, site, site.conf, command_type, verbose)
             sys.exit(outcome.value)
         except Exception as e:
             sys.stderr.write(f"Failed to finalize site: {e}\n")
@@ -198,18 +208,16 @@ def finalize_site(
             not os.WIFEXITED(status)
             or (outcome := FinalizeOutcome(os.WEXITSTATUS(status))) is FinalizeOutcome.ABORTED
         ):
-            sys.exit("Error in non-priviledged sub-process.")
+            sys.exit("Error in non-privileged sub-process.")
 
     # The config changes above, made with the site user, have to be also available for
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
-    config = load_config(site, verbose)
-    site_home = SitePaths.from_site_name(site.name).home
+    config = read_site_config(site_home)
     register_with_system_apache(
         version_info,
         SitePaths.from_site_name(site.name).apache_conf,
         site.name,
-        site_home,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
         apache_reload,

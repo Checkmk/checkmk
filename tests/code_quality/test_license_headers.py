@@ -100,7 +100,7 @@ def check_for_license_header_violation(rel_path, abs_path):
         header = get_file_header(abs_path, length=4)
         if not (ENTERPRISE_HEADER.match(header) or ENTERPRISE_HEADER_NO_SHEBANG.match(header)):
             yield "enterprise header not matching", rel_path
-    elif rel_path == "omd/packages/omd/omd.bin":
+    elif rel_path in ("omd/packages/omd/omd.bin", "omd/packages/omd/omd_site_user.py"):
         if not OMD_HEADER.match(get_file_header(abs_path, length=23)):
             yield "omd gpl license header not matching", rel_path
     elif rel_path.startswith("notifications/"):

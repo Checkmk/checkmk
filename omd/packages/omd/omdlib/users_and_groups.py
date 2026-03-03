@@ -8,7 +8,8 @@ import os
 import pwd
 import shlex
 import subprocess
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
+from typing import IO, Literal, overload, TYPE_CHECKING
 
 import psutil
 
@@ -32,6 +33,10 @@ from cmk.ccc.exceptions import MKTerminate
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with Linux users and groups            |
 #   '----------------------------------------------------------------------'
+
+# TERM: Tells command line tools (ls, grep, vim, etc.) how to use colors, move cursors, etc...
+# CMK_CONTAINERIZED: Detect when running inside container (e.g. used for omd update)
+KEEP = ["TERM", "CMK_CONTAINERIZED"]
 
 
 def find_processes_of_user(username: str) -> list[str]:
@@ -265,6 +270,84 @@ def switch_to_site_user(site_name: str) -> None:
     os.setgroups(_groups_of(site_name))
     os.setuid(uid)
     os.umask(0o077)
+
+
+def run_as_site_user(
+    user: str,
+    command: list[str],
+    capture_output: bool,
+    stdin: int | IO[bytes] | None = None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.CompletedProcess[str]:
+    passwd = pwd.getpwnam(user)
+    return subprocess.run(
+        command,
+        capture_output=capture_output,
+        check=False,
+        close_fds=True,
+        cwd=passwd.pw_dir,
+        encoding="utf-8",
+        env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
+        extra_groups=os.getgrouplist(user, passwd.pw_gid),
+        group=passwd.pw_gid,
+        pass_fds=pass_fds,
+        stdin=stdin,
+        umask=0o077,
+        user=user,
+    )
+
+
+@overload
+def popen_as_site_user(
+    user: str,
+    command: list[str],
+    encoding: Literal["utf-8"],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[str]: ...
+
+
+@overload
+def popen_as_site_user(
+    user: str,
+    command: list[str],
+    encoding: Literal[None],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[bytes]: ...
+
+
+def popen_as_site_user(
+    user: str,
+    command: Sequence[str],
+    encoding: Literal["utf-8", None],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[str] | subprocess.Popen[bytes]:
+    # This function should really have a context manager. We don't touch this functionality here for
+    # stability of the 2.4., but please don't add new call sites.
+    passwd = pwd.getpwnam(user)
+    return subprocess.Popen(
+        command,
+        close_fds=True,
+        cwd=passwd.pw_dir,
+        encoding=encoding,
+        env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
+        extra_groups=os.getgrouplist(user, passwd.pw_gid),
+        group=passwd.pw_gid,
+        pass_fds=pass_fds,
+        stdin=stdin,
+        stdout=stdout,
+        stderr=stderr,
+        umask=0o077,
+        user=user,
+    )
 
 
 def _groups_of(username: str) -> list[int]:

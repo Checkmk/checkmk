@@ -94,7 +94,7 @@ def _descriptions_of_remaining_processes(
     remaining_processes: Iterable[psutil.Process],
 ) -> Generator[str]:
     for process in remaining_processes:
-        with suppress(psutil.NoSuchProcess):
+        with suppress(psutil.NoSuchProcess, psutil.ZombieProcess):
             yield f"{process.pid}, command line: `{' '.join(process.cmdline()).strip()}`, status: {process.status()}"
 
 
@@ -115,7 +115,7 @@ def _site_user_processes(username: str) -> list[psutil.Process]:
     for process in psutil.process_iter():
         try:
             process_owner = process.username()
-        except psutil.NoSuchProcess:
+        except (psutil.NoSuchProcess, psutil.ZombieProcess):
             continue
         if process_owner == username:
             processes_of_site_user.add(process)

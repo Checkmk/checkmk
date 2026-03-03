@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from omdlib.restore import _clear_site_home
+from omdlib.restore import clear_site_home
 
 
 @dataclass(frozen=True)
@@ -217,6 +217,6 @@ def test_clear_site_home(directories: Dirs, files: Files, untouched: Dirs, tmp_p
         RootDir(path=tmp_path, directories=_merge_directories(directories, untouched), files=files)
     )
     # Act
-    _clear_site_home(tmp_path)
+    clear_site_home(tmp_path)
     # Assert
     assert _from_disk(tmp_path) == RootDir(path=tmp_path, directories=untouched)

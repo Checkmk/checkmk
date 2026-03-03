@@ -3,29 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
+# NOTE: DO NOT MODIFY THIS FILE. This file is only for backwards compatibility with older omd
+# versions, which are affected by a security vulnerability, see https://checkmk.com/werk/18891
+# Unless you work on extending the backwards compatibility, you are looking at the wrong file.
+
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Final, NamedTuple
 
-import omdlib
-from omdlib.global_options import GlobalOptions, parse_global_opts
-from omdlib.site_name import site_name_from_uid
-from omdlib.site_paths import SitePaths
-from omdlib.update_check import OptionName as UpdateOption
-from omdlib.utils import site_exists
-from omdlib.version_utils import version_from_site_dir
-
-CommandOptions = dict[str, str | None]
-Arguments = Sequence[str]
+from omdlib.global_options import GlobalOptions
+from omdlib.options import ExecOtherOmd, RmCommand, SuCommand
+from omdlib.version_utils import werk_18891_error
 
 
 class Option(NamedTuple):
     long_opt: str
     short_opt: str | None
     needs_arg: bool
+    description: str
+
+
+class Command(NamedTuple):
+    command: str
+    needs_site: int
+    args_text: str
+    options: list[Option]
     description: str
 
 
@@ -46,59 +49,24 @@ exclude_options = [
     ),
 ]
 
-
-#  command       The id of the command
-#  only_root     This option is only available when omd command is run as root
-#  no_suid       The command is available for root and site-user, but no switch
-#                to the site user is performed before execution the mode function
-#  needs_site    When run as root:
-#                0: No site must be specified
-#                1: A site must be specified
-#                2: A site is optional
-#  must_exist    Site must be existant for this command
-#  args          Help text for command individual arguments
-#  function      Handler function for this command
-#  options_spec  List of individual arguments for this command
-#  description   Text for the help of omd
-class Command(NamedTuple):
-    command: str
-    only_root: bool
-    no_suid: bool
-    needs_site: int
-    # TODO: Refactor to bool
-    site_must_exist: int
-    args_text: str
-    options: list[Option]
-    description: str
-
-
 COMMANDS: Final = [
     Command(
         command="help",
-        only_root=False,
-        no_suid=False,
         needs_site=0,
-        site_must_exist=0,
         args_text="",
         options=[],
         description="Show general help",
     ),
     Command(
         command="setversion",
-        only_root=True,
-        no_suid=False,
         needs_site=0,
-        site_must_exist=0,
         args_text="VERSION",
         options=[],
         description="Sets the default version of OMD which will be used by new sites",
     ),
     Command(
         command="version",
-        only_root=False,
-        no_suid=False,
         needs_site=0,
-        site_must_exist=0,
         args_text="[SITE]",
         options=[
             Option("bare", "b", False, "output plain text optimized for parsing"),
@@ -107,10 +75,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="versions",
-        only_root=False,
-        no_suid=False,
         needs_site=0,
-        site_must_exist=0,
         args_text="",
         options=[
             Option("bare", "b", False, "output plain text optimized for parsing"),
@@ -119,10 +84,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="sites",
-        only_root=False,
-        no_suid=False,
         needs_site=0,
-        site_must_exist=0,
         args_text="",
         options=[
             Option("bare", "b", False, "output plain text for easy parsing"),
@@ -131,10 +93,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="create",
-        only_root=True,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=0,
         args_text="",
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -169,10 +128,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="init",
-        only_root=True,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="",
         options=[
             Option(
@@ -186,10 +142,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="rm",
-        only_root=True,
-        no_suid=True,
         needs_site=1,
-        site_must_exist=1,
         args_text="",
         options=[
             Option("reuse", None, False, "assume --reuse on create, do not delete site user/group"),
@@ -205,10 +158,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="disable",
-        only_root=True,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="",
         options=[
             Option("kill", None, False, "kill processes using tmpfs before unmounting it"),
@@ -217,30 +167,21 @@ COMMANDS: Final = [
     ),
     Command(
         command="enable",
-        only_root=True,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="",
         options=[],
         description="Enable a site (reenable a formerly disabled site)",
     ),
     Command(
         command="update-apache-config",
-        only_root=True,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="",
         options=[],
         description="Update the system apache config of a site (and reload apache)",
     ),
     Command(
         command="mv",
-        only_root=True,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="NEWNAME",
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -269,10 +210,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="cp",
-        only_root=True,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="NEWNAME",
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -304,10 +242,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="update",
-        only_root=False,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="",
         options=[
             Option(
@@ -329,25 +264,25 @@ COMMANDS: Final = [
                 "(deprecated - please use --pre-flight and --skeleton instead) non-interactive conflict resolution. ARG is install, keepold, abort, ignore or ask",
             ),
             Option(
-                UpdateOption.confirm_version,
+                "confirm-version",
                 None,
                 False,
                 "suppress the confirmation dialog, which displays information about the target version",
             ),
             Option(
-                UpdateOption.confirm_edition,
+                "confirm-edition",
                 None,
                 False,
                 "suppress the confirmation dialog, which displays information about the target edition",
             ),
             Option(
-                UpdateOption.ignore_editions_incompatible,
+                "ignore-editions-incompatible",
                 None,
                 False,
                 "force OMD to update despite the target edition being incompatible. These types are of updates are not supported and may leave the site in an irreparable state",
             ),
             Option(
-                UpdateOption.ignore_versions_incompatible,
+                "ignore-versions-incompatible",
                 None,
                 False,
                 "force OMD to update despite the target version being incompatible. These types are of updates are not supported and may leave the site in an irreparable state",
@@ -357,10 +292,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="start",
-        only_root=False,
-        no_suid=False,
         needs_site=2,
-        site_must_exist=1,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "only start services having version ARG"),
@@ -376,10 +308,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="stop",
-        only_root=False,
-        no_suid=False,
         needs_site=2,
-        site_must_exist=1,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "only stop sites having version ARG"),
@@ -389,10 +318,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="restart",
-        only_root=False,
-        no_suid=False,
         needs_site=2,
-        site_must_exist=1,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "only restart sites having version ARG"),
@@ -401,10 +327,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="reload",
-        only_root=False,
-        no_suid=False,
         needs_site=2,
-        site_must_exist=1,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "only reload sites having version ARG"),
@@ -413,10 +336,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="status",
-        only_root=False,
-        no_suid=False,
         needs_site=2,
-        site_must_exist=1,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "show only sites having version ARG"),
@@ -427,10 +347,7 @@ COMMANDS: Final = [
     ),
     Command(
         command="config",
-        only_root=False,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="...",
         options=[],
         description="Show and set site configuration parameters.\n\n\
@@ -441,10 +358,7 @@ Usage:\n\
     ),
     Command(
         command="diff",
-        only_root=False,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="([RELBASE])",
         options=[
             Option("bare", "b", False, "output plain diff format, no beautifying"),
@@ -453,20 +367,14 @@ Usage:\n\
     ),
     Command(
         command="su",
-        only_root=True,
-        no_suid=False,
         needs_site=1,
-        site_must_exist=1,
         args_text="",
         options=[],
         description="Run a shell as a site-user",
     ),
     Command(
         command="umount",
-        only_root=False,
-        no_suid=False,
         needs_site=2,
-        site_must_exist=1,
         args_text="",
         options=[
             Option("version", "V", True, "unmount only sites with version ARG"),
@@ -476,10 +384,7 @@ Usage:\n\
     ),
     Command(
         command="backup",
-        only_root=False,
-        no_suid=True,
         needs_site=1,
-        site_must_exist=1,
         args_text="[SITE] [-|ARCHIVE_PATH]",
         options=exclude_options
         + [
@@ -489,10 +394,7 @@ Usage:\n\
     ),
     Command(
         command="restore",
-        only_root=False,
-        no_suid=False,
         needs_site=0,
-        site_must_exist=0,
         args_text="[SITE] handler=[-|ARCHIVE_PATH]",
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -527,10 +429,7 @@ Usage:\n\
     ),
     Command(
         command="cleanup",
-        only_root=True,
-        no_suid=False,
         needs_site=0,
-        site_must_exist=0,
         args_text="",
         options=[],
         description="Uninstall all Check_MK versions that are not used by any site.",
@@ -538,19 +437,56 @@ Usage:\n\
 ]
 
 
-def _get_command(command_arg: str) -> Command:
-    for command in COMMANDS:
-        if command.command == command_arg:
-            return command
+def _parse_global_arguments_dispatcher(args: Sequence[str]) -> tuple[GlobalOptions, int]:
+    global_args_count = 0
+    version: str | None = None
+    force = False
+    verbose = False
+    while (global_args_count < len(args)) and (token := args[global_args_count]).startswith("-"):
+        flags = [token[2:]] if token.startswith("--") else list(token[1:])
+        for flag in flags:
+            match flag:
+                case "V" | "version":
+                    if global_args_count >= len(args):
+                        sys.exit(f"Option {flag} needs an argument.")
+                    global_args_count += 1
+                    version = args[global_args_count]
+                case "f" | "force":
+                    force = True
+                case "v" | "verbose":
+                    verbose = True
+                case _:
+                    sys.exit(
+                        f"Invalid global option {token}.\nCall omd help for available options."
+                    )
+        global_args_count += 1
+    return GlobalOptions(version=version, verbose=verbose, force=force), global_args_count
 
-    sys.stderr.write("omd: no such command: %s\n" % command_arg)
-    main_help()
-    sys.exit(1)
+
+def _to_args(global_opts: GlobalOptions) -> list[str]:
+    args = []
+    if global_opts.force:
+        args.append("--force")
+    if global_opts.verbose:
+        args.append("--verbose")
+    return args
+
+
+@dataclass(frozen=True)
+class DispatcherError:
+    message: str
+
+
+@dataclass(frozen=True)
+class ArgsToDispatch:
+    version: str
+    target_site: str
+    command: list[str]
 
 
 def _parse_command_options(
-    description: str, args: Arguments, options: list[Option]
-) -> tuple[Arguments, CommandOptions]:
+    description: str, args: Sequence[str], options: list[Option]
+) -> tuple[Sequence[str], dict[str, str | None]]:
     # Give a short overview over the command specific options
     # when the user specifies --help or -h:
     if any(arg in ["-h", "--help"] for arg in args):
@@ -570,7 +506,7 @@ def _parse_command_options(
             )
         sys.exit(0)
 
-    set_options: CommandOptions = {}
+    set_options: dict[str, str | None] = {}
 
     while len(args) >= 1 and args[0][0] == "-" and len(args[0]) > 1:
         opt = args[0]
@@ -617,40 +553,26 @@ def _parse_command_options(
     return (args, set_options)
 
 
-def is_root() -> bool:
-    return os.getuid() == 0
-
-
 def main_help() -> None:
     sys.stdout.write(
         "Manage multiple monitoring sites comfortably with OMD. The Open Monitoring Distribution.\n"
     )
 
-    if is_root():
-        sys.stdout.write("Usage (called as root):\n\n")
-    else:
-        sys.stdout.write("Usage (called as site user):\n\n")
+    sys.stdout.write("Usage (called as root):\n\n")
 
     for (
         command,
-        only_root,
-        _no_suid,
         needs_site,
-        _site_must_exist,
         synopsis,
-        _command_options,
+        _options,
         descr,
     ) in COMMANDS:
-        if only_root and not is_root():
-            continue
+        if needs_site == 2:
+            synopsis = "[SITE] " + synopsis
+        elif needs_site == 1:
+            synopsis = "SITE " + synopsis
 
-        if is_root():
-            if needs_site == 2:
-                synopsis = "[SITE] " + synopsis
-            elif needs_site == 1:
-                synopsis = "SITE " + synopsis
-
-        synopsis_width = "23" if is_root() else "16"
+        synopsis_width = "23"
         sys.stdout.write((" omd %-10s %-" + synopsis_width + "s %s\n") % (command, synopsis, descr))
     sys.stdout.write(
         "\nGeneral Options:\n"
@@ -660,147 +582,92 @@ def main_help() -> None:
     )
 
 
-@dataclass(frozen=True)
-class ExecOtherOmd:
-    version: str
+def _get_command(command_arg: str) -> Command:
+    for command in COMMANDS:
+        if command.command == command_arg:
+            return command
+
+    sys.stderr.write("omd: no such command: %s\n" % command_arg)
+    main_help()
+    sys.exit(1)
 
 
-def _exec_omd_version_of_site(
-    site_name: str, site_home: str, command: Command
-) -> ExecOtherOmd | None:
-    if command.site_must_exist and not site_exists(Path(site_home)):
-        sys.exit(
-            "omd: The site '%s' does not exist. You need to execute "
-            "omd as root or site user." % site_name
-        )
-    # Commands operating on an existing site *must* run omd in
-    # the same version as the site has! Sole exception: update.
-    # That command must be run in the target version
-    if command.site_must_exist and command.command != "update":
-        v = version_from_site_dir(Path(site_home))
-        if v is None:  # Site has no home directory or version link
-            if command.command == "rm":
-                sys.stdout.write(
-                    "WARNING: This site has an empty home directory and is not\n"
-                    "assigned to any OMD version. You are running version %s.\n"
-                    % omdlib.__version__
-                )
-            elif command.command != "init":
-                sys.exit(
-                    "This site has an empty home directory /omd/sites/%s.\n"
-                    "If you have created that site with 'omd create --no-init %s'\n"
-                    "then please first do an 'omd init %s'." % (3 * (site_name,))
-                )
-        elif omdlib.__version__ != v:
-            return ExecOtherOmd(version=v)
-    return None
-
-
-class Root: ...
-
-
-@dataclass(frozen=True)
-class Run:
-    site_name: str | None
-    global_opts: GlobalOptions
-    command: Command
-    options: CommandOptions
-    args: Arguments
-
-
-@dataclass(frozen=True)
-class SuCommand:
-    target_site: str
-
-
-@dataclass(frozen=True)
-class RmCommand:
-    target_site: str
-    global_opts: GlobalOptions
-    options: CommandOptions
-
-
-def get_identity() -> str | Root:
-    if is_root():
-        return Root()
-    return site_name_from_uid()
-
-
-def _require_root(user: str | Root) -> None:
-    if not isinstance(user, Root):
-        sys.exit("omd: root permissions are needed for this command.")
-
-
-def _require_site_name(args: Sequence[str]) -> tuple[str, Sequence[str]]:
-    if len(args) >= 1:
-        return args[0], args[1:]
-    sys.exit("omd: please specify site.")
-
-
-def parse_args_or_exec_other_omd(
-    user: str | Root, main_args: list[str], omd_path: Path = Path("/omd/")
-) -> Run | ExecOtherOmd | SuCommand | RmCommand:
-    # Why not argparse: We only want to parse the arguments until the first command is encountered.
-    # However, we also allow *any* command while parsing global options.
-    # E.g., running `omd -V XY abc` should raise an error if and only if Version `XY` does not
-    # support `abc`.
-    # Note, that `XY` might be different from the `omd` version currently executing.
-    # Iterative parsing is painful with `argparse`, I couldn't even get it to work.
-    global_opts, main_args = parse_global_opts(main_args)
-    if global_opts.version is not None and global_opts.version != omdlib.__version__:
-        # Switch to other version of bin/omd
-        return ExecOtherOmd(version=global_opts.version)
-
-    if len(main_args) < 1:
+def parse_arguments_dispatcher(
+    target_version: str, args: Sequence[str]
+) -> ArgsToDispatch | DispatcherError | ExecOtherOmd | SuCommand | RmCommand:
+    # Function is only valid in root context.
+    global_opts, global_args_count = _parse_global_arguments_dispatcher(args)
+    if global_args_count == len(args):
         main_help()
         sys.exit(1)
-
-    command = _get_command(main_args[0])
-
-    # Parse command options. We need to do this now in order to know
-    # if a site name has been specified or not.
-    args, options = _parse_command_options(command.description, main_args[1:], command.options)
-
+    command = _get_command(args[global_args_count])
+    remaining_arguments, options = _parse_command_options(
+        command.description, args[global_args_count + 1 :], command.options
+    )
+    args_before_site_name_count = len(args) - len(remaining_arguments)
     match command.command:
-        case "su":
-            _require_root(user)
-            target_site, args = _require_site_name(args)
-            site_home = SitePaths.from_site_name(target_site, omd_path=omd_path).home
-            exec_version = _exec_omd_version_of_site(target_site, site_home, command)
-            if exec_version is not None:
-                return exec_version
-            return SuCommand(target_site=target_site)
+        case "help" | "version" | "versions" | "sites" | "cleanup":
+            # These commands are safe to execute unconditionally.
+            return ExecOtherOmd(version=target_version)
+        case "setversion":
+            # No vulnerability, but allows changing to vulnerable version.
+            return DispatcherError(message=werk_18891_error(target_version, False))
+        case "restore":
+            return DispatcherError(message=werk_18891_error(target_version, True))
+        case (
+            "create"
+            | "init"
+            | "disable"
+            | "enable"
+            | "update-apache-config"
+            | "mv"
+            | "cp"
+            | "backup"
+        ):
+            # These commands cannot be correctly executed after root privileges are dropped.
+            # And we can't use the vulnerable versions omd these commands without dropping the
+            # privileges first.
+            return DispatcherError(message=werk_18891_error(target_version, False))
         case "rm":
-            _require_root(user)
-            target_site, args = _require_site_name(args)
-            site_home = SitePaths.from_site_name(target_site, omd_path=omd_path).home
-            exec_version = _exec_omd_version_of_site(target_site, site_home, command)
-            if exec_version is not None:
-                return exec_version
-            return RmCommand(target_site=target_site, global_opts=global_opts, options=options)
+            if args_before_site_name_count >= len(args):
+                sys.exit("omd: please specify site.")
+            target_site = args[args_before_site_name_count]
+            # Allow `omd rm` with the wrong version. This behaviour is already happening,
+            # if your site is missing the version indicator, thus is probably acceptable. All
+            # supported sites have the correct behaviour anyway.
+            return RmCommand(target_site, global_opts, options)
+        case "su":
+            if args_before_site_name_count >= len(args):
+                sys.exit("omd: please specify site.")
+            target_site = args[args_before_site_name_count]
+            # Allow running with the wrong version. This is the only option for a user with a
+            # vulnerable version anyway. Might as well automated it.
+            return SuCommand(target_site)
+        case (
+            "start"
+            | "stop"
+            | "restart"
+            | "reload"
+            | "status"
+            | "umount"
+            | "update"
+            | "config"
+            | "diff"
+        ):
+            if args_before_site_name_count >= len(args):
+                if command.needs_site == 2:
+                    # Invoking `omd -V 2.3.0p24 start` as root is not allowed.
+                    return DispatcherError(message=werk_18891_error(target_version, False))
+                sys.exit("omd: please specify site.")
+            target_site = args[args_before_site_name_count]
+            return ArgsToDispatch(
+                version=target_version,
+                target_site=target_site,
+                command=[
+                    *_to_args(global_opts),
+                    *args[global_args_count:args_before_site_name_count],
+                    *args[args_before_site_name_count + 1 :],
+                ],
+            )
         case _:
-            # Some commands need a site to be specified. If we are
-            # called as root, this must be done explicitly. If we
-            # are site user, the site name is our user name
-            if command.needs_site > 0:
-                if isinstance(user, Root):
-                    if len(args) >= 1:
-                        site_name = args[0]
-                        args = args[1:]
-                    elif command.needs_site == 1:
-                        site_name, args = _require_site_name(args)
-                    else:
-                        site_name = None
-                else:
-                    site_name = user
-            else:
-                site_name = None
-
-            if site_name is not None:
-                site_home = SitePaths.from_site_name(site_name, omd_path=omd_path).home
-                exec_version = _exec_omd_version_of_site(site_name, site_home, command)
-                if exec_version is not None:
-                    return exec_version
-            if command.only_root:
-                _require_root(user)
-            return Run(site_name, global_opts, command, options, args)
+            raise NotImplementedError()

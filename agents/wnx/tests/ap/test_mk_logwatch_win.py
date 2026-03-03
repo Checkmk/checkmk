@@ -17,8 +17,9 @@ import re
 import sys
 from collections.abc import Mapping, Sequence
 
-import agents.plugins.mk_logwatch as lw
 import pytest
+
+import agents.plugins.mk_logwatch as lw
 
 try:
     from collections.abc import Sequence

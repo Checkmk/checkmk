@@ -240,6 +240,7 @@ def _get_distributed_monitoring_compatibility(
     central_edition: Edition,
     central_license_state: LicenseState,
     remote_edition: Edition | None,
+    is_replication_enabled: bool,
 ) -> LicensingCompatibility | VersionsIncompatible:
     if site_id == omd_site():
         return LicensingCompatible()
@@ -258,6 +259,7 @@ def _get_distributed_monitoring_compatibility(
         central_edition=central_edition,
         central_license_state=central_license_state,
         remote_edition=remote_edition,
+        is_replication_enabled=is_replication_enabled,
     )
 
 
@@ -349,7 +351,12 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
         central_license_state = get_license_state()
 
         compatibility = _get_distributed_monitoring_compatibility(
-            site_id, central_version, central_edition, central_license_state, remote_edition
+            site_id,
+            central_version,
+            central_edition,
+            central_license_state,
+            remote_edition,
+            site_config.is_replication_enabled(enabled_sites[site_id]),
         )
 
         if not isinstance(compatibility, LicensingCompatible):

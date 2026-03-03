@@ -494,6 +494,7 @@ def _verify_compatibility(response: requests.Response) -> None:
             remote_version,
             remote_edition_short,
             remote_license_state,
+            is_replication_enabled=True,
         ),
         cmk_version.VersionsCompatible,
     ):
@@ -536,6 +537,7 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
         remote_version,
         remote_edition_short,
         remote_license_state,
+        is_replication_enabled=True,
     )
 
     if ignore_license_compatibility and isinstance(compatibility, LicenseStateIncompatible):
@@ -733,6 +735,7 @@ def _compatible_with_central_site(
     remote_version: str,
     remote_edition_short: str,
     remote_license_state: LicenseState | None,
+    is_replication_enabled: bool,
 ) -> (
     cmk_version.VersionsCompatible
     | cmk_version.VersionsIncompatible
@@ -787,6 +790,7 @@ def _compatible_with_central_site(
             central_license_state=central_license_state,
             remote_edition=_edition_from_short(remote_edition_short),
             remote_license_state=remote_license_state,
+            is_replication_enabled=is_replication_enabled,
         ),
         LicensingCompatible,
     ):

@@ -19,13 +19,14 @@ from cmk.utils.licensing.handler import LicenseState
 
 
 @pytest.mark.parametrize(
-    "central_edition, central_license_state, remote_edition, remote_license_state, expected_compatibility",
+    "central_edition, central_license_state, remote_edition, remote_license_state, is_replication_enabled, expected_compatibility",
     [
         pytest.param(
             Edition.COMMUNITY,
             LicenseState.LICENSED,
             Edition.COMMUNITY,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="community-community",
         ),
@@ -34,6 +35,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.PRO,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="community-pro",
         ),
@@ -42,6 +44,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="community-ultimate",
         ),
@@ -50,6 +53,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             LicenseState.FREE,
+            True,
             LicenseStateIncompatible("Remote site in license state free is not allowed"),
             id="community-ultimate-free",
         ),
@@ -58,6 +62,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
                 "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
@@ -68,6 +73,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.COMMUNITY,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="pro-community",
         ),
@@ -76,6 +82,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.PRO,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="pro-pro",
         ),
@@ -84,6 +91,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="pro-ultimate",
         ),
@@ -92,6 +100,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             LicenseState.FREE,
+            True,
             LicenseStateIncompatible("Remote site in license state free is not allowed"),
             id="pro-ultimate-free",
         ),
@@ -100,6 +109,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
                 "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
@@ -110,8 +120,10 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.TRIAL,
             Edition.COMMUNITY,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-trial-community",
         ),
@@ -120,8 +132,10 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.TRIAL,
             Edition.PRO,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-trial-pro",
         ),
@@ -130,6 +144,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.TRIAL,
             Edition.ULTIMATE,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="ultimate-trial-ultimate",
         ),
@@ -138,6 +153,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             LicenseState.FREE,
+            True,
             LicenseStateIncompatible("Remote site in license state free is not allowed"),
             id="ultimate-ultimate-free",
         ),
@@ -146,8 +162,10 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.TRIAL,
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-trial-ultimatemt",
         ),
@@ -156,8 +174,10 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.COMMUNITY,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-licensed-community",
         ),
@@ -166,8 +186,10 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.PRO,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-licensed-pro",
         ),
@@ -176,6 +198,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="ultimate-licensed-ultimate",
         ),
@@ -184,8 +207,10 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-licensed-ultimatemt",
         ),
@@ -194,6 +219,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.UNLICENSED,
             Edition.COMMUNITY,
             LicenseState.LICENSED,
+            True,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
@@ -204,6 +230,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.UNLICENSED,
             Edition.PRO,
             LicenseState.LICENSED,
+            True,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
@@ -214,6 +241,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.UNLICENSED,
             Edition.ULTIMATE,
             LicenseState.LICENSED,
+            True,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
@@ -224,6 +252,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.UNLICENSED,
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
+            True,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
@@ -234,6 +263,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.FREE,
             Edition.COMMUNITY,
             LicenseState.LICENSED,
+            True,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
@@ -244,6 +274,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.FREE,
             Edition.PRO,
             LicenseState.LICENSED,
+            True,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
@@ -254,6 +285,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.FREE,
             Edition.ULTIMATE,
             LicenseState.LICENSED,
+            True,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
@@ -264,6 +296,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.FREE,
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
+            True,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
@@ -274,6 +307,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.COMMUNITY,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
                 "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
@@ -284,6 +318,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.PRO,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
                 "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
@@ -294,6 +329,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             LicenseState.LICENSED,
+            True,
             EditionsIncompatible(
                 "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
@@ -304,6 +340,7 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             LicenseState.FREE,
+            True,
             LicenseStateIncompatible("Remote site in license state free is not allowed"),
             id="ultimatemt-ultimate-free",
         ),
@@ -312,8 +349,27 @@ from cmk.utils.licensing.handler import LicenseState
             LicenseState.LICENSED,
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
+            True,
             LicensingCompatible(),
             id="ultimatemt-ultimatemt",
+        ),
+        pytest.param(
+            Edition.ULTIMATE,
+            LicenseState.LICENSED,
+            Edition.COMMUNITY,
+            LicenseState.LICENSED,
+            False,
+            LicensingCompatible(),
+            id="ultimate-community",
+        ),
+        pytest.param(
+            Edition.ULTIMATE,
+            LicenseState.LICENSED,
+            Edition.PRO,
+            LicenseState.LICENSED,
+            False,
+            LicensingCompatible(),
+            id="ultimate-pro",
         ),
     ],
 )
@@ -322,10 +378,15 @@ def test_license_compatibility_distributed_setup(
     central_license_state: LicenseState,
     remote_edition: Edition,
     remote_license_state: LicenseState,
+    is_replication_enabled: bool,
     expected_compatibility: LicensingCompatibility,
 ) -> None:
     actual_compatibility = is_distributed_setup_compatible_for_licensing(
-        central_edition, central_license_state, remote_edition, remote_license_state
+        central_edition,
+        central_license_state,
+        remote_edition,
+        remote_license_state,
+        is_replication_enabled,
     )
     assert isinstance(actual_compatibility, type(expected_compatibility))
     if not isinstance(expected_compatibility, LicensingCompatible) and not isinstance(
@@ -335,12 +396,13 @@ def test_license_compatibility_distributed_setup(
 
 
 @pytest.mark.parametrize(
-    "central_edition, central_license_state, remote_edition, expected_compatibility",
+    "central_edition, central_license_state, remote_edition, is_replication_enabled, expected_compatibility",
     [
         pytest.param(
             Edition.COMMUNITY,
             LicenseState.LICENSED,
             Edition.COMMUNITY,
+            False,
             LicensingCompatible(),
             id="community-community",
         ),
@@ -348,6 +410,7 @@ def test_license_compatibility_distributed_setup(
             Edition.COMMUNITY,
             LicenseState.LICENSED,
             Edition.PRO,
+            False,
             LicensingCompatible(),
             id="community-pro",
         ),
@@ -355,6 +418,7 @@ def test_license_compatibility_distributed_setup(
             Edition.COMMUNITY,
             LicenseState.LICENSED,
             Edition.ULTIMATE,
+            False,
             LicensingCompatible(),
             id="community-ultimate",
         ),
@@ -362,6 +426,7 @@ def test_license_compatibility_distributed_setup(
             Edition.COMMUNITY,
             LicenseState.LICENSED,
             Edition.ULTIMATEMT,
+            False,
             LicensingCompatible(),
             id="community-ultimatemt",
         ),
@@ -369,16 +434,23 @@ def test_license_compatibility_distributed_setup(
             Edition.PRO,
             LicenseState.LICENSED,
             Edition.COMMUNITY,
+            False,
             LicensingCompatible(),
             id="pro-community",
         ),
         pytest.param(
-            Edition.PRO, LicenseState.LICENSED, Edition.PRO, LicensingCompatible(), id="pro-pro"
+            Edition.PRO,
+            LicenseState.LICENSED,
+            Edition.PRO,
+            False,
+            LicensingCompatible(),
+            id="pro-pro",
         ),
         pytest.param(
             Edition.PRO,
             LicenseState.LICENSED,
             Edition.ULTIMATE,
+            False,
             LicensingCompatible(),
             id="pro-ultimate",
         ),
@@ -386,15 +458,34 @@ def test_license_compatibility_distributed_setup(
             Edition.PRO,
             LicenseState.LICENSED,
             Edition.ULTIMATEMT,
+            False,
             LicensingCompatible(),
             id="pro-ultimatemt",
         ),
         pytest.param(
             Edition.ULTIMATE,
+            LicenseState.LICENSED,
+            Edition.COMMUNITY,
+            False,
+            LicensingCompatible(),
+            id="ultimate-community",
+        ),
+        pytest.param(
+            Edition.ULTIMATE,
+            LicenseState.LICENSED,
+            Edition.PRO,
+            False,
+            LicensingCompatible(),
+            id="ultimate-pro",
+        ),
+        pytest.param(
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
             Edition.COMMUNITY,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-trial-community",
         ),
@@ -402,8 +493,10 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.TRIAL,
             Edition.PRO,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-trial-pro",
         ),
@@ -411,6 +504,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.TRIAL,
             Edition.ULTIMATE,
+            False,
             LicensingCompatible(),
             id="ultimate-trial-ultimate",
         ),
@@ -418,8 +512,10 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.TRIAL,
             Edition.ULTIMATEMT,
+            False,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-trial-ultimatemt",
         ),
@@ -427,8 +523,10 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.LICENSED,
             Edition.COMMUNITY,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-licensed-community",
         ),
@@ -436,8 +534,10 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.LICENSED,
             Edition.PRO,
+            True,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-licensed-pro",
         ),
@@ -445,6 +545,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.LICENSED,
             Edition.ULTIMATE,
+            False,
             LicensingCompatible(),
             id="ultimate-licensed-ultimate",
         ),
@@ -452,8 +553,10 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.LICENSED,
             Edition.ULTIMATEMT,
+            False,
             EditionsIncompatible(
-                "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                "or Checkmk Pro/Community remote sites without configuration replication."
             ),
             id="ultimate-licensed-ultimatemt",
         ),
@@ -461,6 +564,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.UNLICENSED,
             Edition.COMMUNITY,
+            False,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
@@ -470,6 +574,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.UNLICENSED,
             Edition.PRO,
+            False,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
@@ -479,6 +584,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.UNLICENSED,
             Edition.ULTIMATE,
+            False,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
@@ -488,6 +594,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.UNLICENSED,
             Edition.ULTIMATEMT,
+            False,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
@@ -497,6 +604,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.FREE,
             Edition.COMMUNITY,
+            False,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
@@ -506,6 +614,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.FREE,
             Edition.PRO,
+            False,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
@@ -515,6 +624,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.FREE,
             Edition.ULTIMATE,
+            False,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
@@ -524,6 +634,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATE,
             LicenseState.FREE,
             Edition.ULTIMATEMT,
+            False,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
@@ -533,6 +644,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             Edition.COMMUNITY,
+            False,
             LicensingCompatible(),
             id="ultimatemt-community",
         ),
@@ -540,6 +652,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             Edition.PRO,
+            False,
             LicensingCompatible(),
             id="ultimatemt-pro",
         ),
@@ -547,6 +660,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             Edition.ULTIMATE,
+            False,
             EditionsIncompatible(
                 "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
@@ -556,6 +670,7 @@ def test_license_compatibility_distributed_setup(
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             Edition.ULTIMATEMT,
+            False,
             LicensingCompatible(),
             id="ultimatemt-ultimatemt",
         ),
@@ -565,12 +680,14 @@ def test_license_compatibility_distributed_monitoring(
     central_edition: Edition,
     central_license_state: LicenseState,
     remote_edition: Edition,
+    is_replication_enabled: bool,
     expected_compatibility: LicensingCompatibility,
 ) -> None:
     actual_compatibility = is_distributed_monitoring_compatible_for_licensing(
         central_edition,
         central_license_state,
         remote_edition,
+        is_replication_enabled,
     )
 
     assert isinstance(actual_compatibility, type(expected_compatibility))

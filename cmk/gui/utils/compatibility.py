@@ -70,6 +70,7 @@ def is_distributed_setup_compatible_for_licensing(
     central_license_state: LicenseState | None,
     remote_edition: cmk_version.Edition,
     remote_license_state: LicenseState | None,
+    is_replication_enabled: bool,
 ) -> LicensingCompatibility:
     if central_edition is cmk_version.Edition.CLOUD or remote_edition is cmk_version.Edition.CLOUD:
         return EditionsIncompatible(_("Checkmk Cloud is not allowed in distributed monitoring."))
@@ -84,6 +85,7 @@ def is_distributed_setup_compatible_for_licensing(
             central_edition,
             central_license_state,
             remote_edition,
+            is_replication_enabled=is_replication_enabled,
         ),
         LicensingCompatible,
     ):
@@ -102,6 +104,7 @@ def is_distributed_monitoring_compatible_for_licensing(
     central_edition: cmk_version.Edition,
     central_license_state: LicenseState | None,
     remote_edition: cmk_version.Edition,
+    is_replication_enabled: bool,
 ) -> LicensingCompatibility:
     if central_edition is cmk_version.Edition.CLOUD:
         return EditionsIncompatible(_("Checkmk Cloud is not allowed in distributed monitoring."))
@@ -110,6 +113,7 @@ def is_distributed_monitoring_compatible_for_licensing(
             central_edition,
             central_license_state,
             remote_edition,
+            is_replication_enabled=is_replication_enabled,
         ),
         LicensingCompatible,
     ):
@@ -129,6 +133,7 @@ def _common_is_compatible_for_licensing(
     central_edition: cmk_version.Edition,
     central_license_state: LicenseState | None,
     remote_edition: cmk_version.Edition,
+    is_replication_enabled: bool,
 ) -> LicensingCompatibility:
     if central_edition in [
         cmk_version.Edition.COMMUNITY,
@@ -146,10 +151,22 @@ def _common_is_compatible_for_licensing(
                 _("Remote sites are not allowed when central site in license state %s")
                 % central_license_state.readable
             )
+
+        if (
+            remote_edition
+            in [
+                cmk_version.Edition.COMMUNITY,
+                cmk_version.Edition.PRO,
+            ]
+            and not is_replication_enabled
+        ):
+            return LicensingCompatible()
+
         if remote_edition is not cmk_version.Edition.ULTIMATE:
             return EditionsIncompatible(
                 _(
-                    "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                    "A Checkmk Ultimate central site can only have remote sites with Checkmk Ultimate "
+                    "or Checkmk Pro/Community remote sites without configuration replication."
                 )
             )
         return LicensingCompatible()

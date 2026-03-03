@@ -12,7 +12,12 @@ import pytest
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.config import Config
-from cmk.agent_receiver.relay.lib.site_auth import InternalAuth, SecretAuth
+from cmk.agent_receiver.relay.lib.site_auth import (
+    InternalAuth,
+    parse_authorization,
+    SecretAuth,
+    UnsupportedAuthFormatError,
+)
 
 
 def test_secret_auth_flow_sets_authorization_header() -> None:
@@ -165,3 +170,23 @@ def test_no_retry_on_success() -> None:
 
     with pytest.raises(StopIteration):
         flow.send(mock_response)
+
+
+def test_parse_authorization_bearer() -> None:
+    secret = SecretStr("Bearer testuser testpassword")
+    auth = parse_authorization(secret)
+    assert isinstance(auth, SecretAuth)
+    assert auth.secret.get_secret_value() == "Bearer testuser testpassword"
+
+
+def test_parse_authorization_cmk_token() -> None:
+    secret = SecretStr("CMK-TOKEN 0:550e8400-e29b-41d4-a716-446655440000")
+    auth = parse_authorization(secret)
+    assert isinstance(auth, SecretAuth)
+    assert auth.secret.get_secret_value() == "CMK-TOKEN 0:550e8400-e29b-41d4-a716-446655440000"
+
+
+def test_parse_authorization_rejects_unknown_format() -> None:
+    secret = SecretStr("Basic dXNlcjpwYXNz")
+    with pytest.raises(UnsupportedAuthFormatError):
+        parse_authorization(secret)

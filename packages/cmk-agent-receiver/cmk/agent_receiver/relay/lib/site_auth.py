@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import AsyncGenerator, Generator
-from typing import final, override
+from typing import Final, final, override
 
 import httpx
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.auth import async_internal_credentials, internal_credentials
+
+SUPPORTED_AUTH_PREFIXES: Final = ("Bearer ", "CMK-TOKEN ")
 
 
 @final
@@ -67,3 +69,14 @@ class SecretAuth(httpx.Auth):
 
 
 SiteAuth = InternalAuth | SecretAuth
+
+
+class UnsupportedAuthFormatError(ValueError):
+    pass
+
+
+def parse_authorization(secret: SecretStr) -> SecretAuth:
+    value = secret.get_secret_value()
+    if value.startswith(SUPPORTED_AUTH_PREFIXES):
+        return SecretAuth(secret)
+    raise UnsupportedAuthFormatError(value)

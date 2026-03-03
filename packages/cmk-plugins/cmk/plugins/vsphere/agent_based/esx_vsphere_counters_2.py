@@ -18,7 +18,11 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.lib import uptime
-from cmk.plugins.vsphere.lib.esx_vsphere import SectionCounter
+from cmk.plugins.vsphere.lib.esx_vsphere import (
+    ESX_COUNTER_UNAVAILABLE,
+    last_valid_sample,
+    SectionCounter,
+)
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -68,7 +72,12 @@ def check_esx_vsphere_counters_uptime(
 ) -> CheckResult:
     if "sys.uptime" not in section:
         raise IgnoreResultsError("Counter data is missing")
-    uptime_sec = int(section["sys.uptime"][""][0][0][-1])
+    # last_valid_sample skips -1 entries; None means every sample was unavailable,
+    # which is equivalent to the existing "corrupt data" path.
+    raw = last_valid_sample(section["sys.uptime"][""][0][0])
+    if raw is None:
+        raise IgnoreResultsError("Counter data is missing or unavailable")
+    uptime_sec = int(raw)
     if uptime_sec < 0:
         raise IgnoreResultsError("Counter data is corrupt")
     yield from uptime.check(params, uptime.Section(uptime_sec=uptime_sec, message=None))
@@ -100,7 +109,12 @@ def _parse_esx_vsphere_counters_swap(parsed: SectionCounter) -> Mapping[str, str
 
     for agent_key, key in (("mem.swapin", "in"), ("mem.swapout", "out"), ("mem.swapused", "used")):
         try:
-            swap_values[key] = parsed[agent_key][""][0][0][0]
+            samples = parsed[agent_key][""][0][0]
+            # skip the key entirely when all samples are unavailable so the check
+            # output is simply absent rather than showing "-1 B".
+            valid = [v for v in samples if v != ESX_COUNTER_UNAVAILABLE]
+            if valid:
+                swap_values[key] = valid[0]
         except (KeyError, IndexError, TypeError, ValueError):
             continue
 

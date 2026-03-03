@@ -91,6 +91,8 @@ common:ci --local_test_jobs=6
 common:ci --local_resources=cpu=6
 common:ci --worker_max_instances=6
 common:ci --local_resources=memory=HOST_RAM*.67
+# Enables the experimental local execution scheduling based on CPU load, not estimation of actions one by one.
+common:ci --experimental_cpu_load_scheduling
 # the later flags will override the previous flags
 # upload artifacts only from CI, CMK-18656
 common:ci --remote_upload_local_results=true

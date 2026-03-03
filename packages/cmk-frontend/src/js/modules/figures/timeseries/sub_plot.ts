@@ -382,12 +382,13 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
       .merge(bars)
       // Update new and existing bars
       .attr('x', (d) => this._renderer!.scale_x(d.date))
-      .attr(
-        'width',
-        (d: TransformedData) =>
+      .attr('width', (d: TransformedData) =>
+        Math.max(
+          0,
           this._renderer!.scale_x(new Date(d.ending_timestamp! * 1000)) -
-          this._renderer!.scale_x(d.date) -
-          bar_spacing
+            this._renderer!.scale_x(d.date) -
+            bar_spacing
+        )
       )
       .attr('class', css_classes)
 
@@ -399,7 +400,7 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
       .attr('height', (d: TimeseriesFigureDataData) => {
         let y_base = 0
         if (this.stack_values != null) y_base = this.stack_values[d.timestamp] || 0
-        return plot_size.height - this._renderer!.scale_y(d.value - y_base) + 1
+        return Math.max(0, plot_size.height - this._renderer!.scale_y(d.value - y_base) + 1)
       })
   }
 

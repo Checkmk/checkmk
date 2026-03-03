@@ -204,7 +204,7 @@ export class BarplotFigure extends FigureBase<SingleMetricData, BarplotContent> 
       .classed('bar', true)
       .attr('y', (d) => (this.scale_y(d.label) ?? 0) + 6) // 6 is half the default font size. Thus bar stays bellow text
       .attr('height', Math.max(Math.min(24, this.scale_y.bandwidth() - 12), 4))
-      .attr('width', (d) => this.scale_x(d.value))
+      .attr('width', (d) => Math.max(0, this.scale_x(d.value)))
       .attr('rx', 2)
       // @ts-ignore
       .classed((d) => d.level_style)

@@ -357,7 +357,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
       .transition()
       .attr('y', (d) => this._scaleDate_y(0) - this._scaleDate_y(max_y_date - d.value))
       .attr('height', (d) => {
-        return this._scaleDate_y(max_y_date - d.value)
+        return Math.max(0, this._scaleDate_y(max_y_date - d.value))
       })
 
     // Update hours
@@ -386,7 +386,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
       })
       .transition()
       .attr('height', (d) => {
-        return this._scaleHour_y(max_y_hour - d.value)
+        return Math.max(0, this._scaleHour_y(max_y_hour - d.value))
       })
       .attr('y', (d) => this._scaleHour_y(0) - this._scaleHour_y(max_y_hour - d.value))
   }

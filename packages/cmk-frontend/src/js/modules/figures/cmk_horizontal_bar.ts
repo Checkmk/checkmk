@@ -216,7 +216,7 @@ export class HorizontalBarFigure extends FigureBase<BarplotFigureData> {
       .classed('bar', true)
       .attr('height', element_height)
       .transition()
-      .attr('width', (d) => this.scale_x(d.value))
+      .attr('width', (d) => Math.max(0, this.scale_x(d.value)))
       .attr('rx', 2)
 
     const text_y_shift = element_height / 2 + 3

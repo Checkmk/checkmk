@@ -2034,21 +2034,14 @@ def write_remaining_reads(rate_limit: int | None, subscription: AzureSubscriptio
     agent_info_section.write()
 
 
-def write_to_agent_info_section(
-    message: str, subscription: AzureSubscription | None, component: str, status: int
-) -> None:
+def write_to_agent_info_section(message: str, component: str, status: int) -> None:
     value = json.dumps((status, f"{component}: {message}"))
-    section = AzureSection("agent_info", [subscription.piggytarget] if subscription else None)
+    section = AzureSection("agent_info")
     section.add(("agent-bailout", value))
     section.write()
 
 
-def write_exception_to_agent_info_section(
-    exception: BaseException,
-    component: str,
-    subscription: AzureSubscription
-    | None = None,  # empty subscription writes to "main host" section
-) -> None:
+def write_exception_to_agent_info_section(exception: BaseException, component: str) -> None:
     LOGGER.warning("Writing exception for component %s:\n %s", component, exception)
 
     # those exceptions are quite noisy. try to make them more concise:
@@ -2058,7 +2051,7 @@ def write_exception_to_agent_info_section(
     if "does not have authorization to perform action" in msg:
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
-    write_to_agent_info_section(msg, subscription, component, 2)
+    write_to_agent_info_section(msg, component, 2)
 
 
 async def main_graph_client(args: argparse.Namespace, monitored_services: set[str]) -> None:
@@ -2197,7 +2190,6 @@ async def process_usage_details(
         if not usage_data:
             write_to_agent_info_section(
                 "Azure API did not return any usage details",
-                subscription,
                 "Usage client",
                 0,
             )
@@ -2218,7 +2210,7 @@ async def process_usage_details(
     except Exception as exc:
         if args.debug:
             raise
-        write_exception_to_agent_info_section(exc, "Usage client", subscription)
+        write_exception_to_agent_info_section(exc, "Usage client")
         write_usage_section(
             [], monitored_groups, subscription, args.tag_key_pattern, args.unique_hostnames
         )
@@ -2333,7 +2325,10 @@ async def process_vault(
         )
     except KeyError:
         write_exception_to_agent_info_section(
-            ApiErrorMissingData("Vault properties must be present"), "Vaults", resource.subscription
+            ApiErrorMissingData(
+                f"Vault properties must be present, subscription: {resource.subscription}"
+            ),
+            "Vaults",
         )
         raise ApiErrorMissingData("Vault properties must be present")
 

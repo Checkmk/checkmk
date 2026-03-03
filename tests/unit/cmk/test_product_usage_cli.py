@@ -8,8 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import cmk.product_usage.config
-import cmk.product_usage_cli
+import cmk.product_usage.cli as product_usage_cli
 from cmk.product_usage.config import ProductUsageAnalyticsSettings
 from cmk.product_usage.exceptions import ConfigError
 from cmk.utils import http_proxy_config
@@ -23,8 +22,8 @@ def test_load_product_usage_config_with_missing_http_proxies(
     mock_config.loaded_config.http_proxies = {}
 
     mock_load = MagicMock(return_value=mock_config)
-    monkeypatch.setattr("cmk.product_usage_cli.load", mock_load)
-    monkeypatch.setattr("cmk.product_usage_cli.make_app", MagicMock())
+    monkeypatch.setattr("cmk.product_usage.cli.load", mock_load)
+    monkeypatch.setattr("cmk.product_usage.cli.make_app", MagicMock())
 
     # Mock the config read from file variable directly
     config_from_file = ProductUsageAnalyticsSettings(
@@ -37,7 +36,7 @@ def test_load_product_usage_config_with_missing_http_proxies(
     monkeypatch.setattr("cmk.product_usage.config.read_config_file", mock_read_config)
 
     # Should not raise KeyError
-    config = cmk.product_usage_cli.load_config(logger=mock.Mock())
+    config = product_usage_cli.load_config(logger=mock.Mock())
 
     # Should respect the provided value and use default for missing
     assert config.enabled is True
@@ -53,11 +52,11 @@ def test_load_config_with_missing_config_file(monkeypatch: pytest.MonkeyPatch) -
     mock_config.loaded_config.http_proxies = {}
 
     mock_load = MagicMock(return_value=mock_config)
-    monkeypatch.setattr("cmk.product_usage_cli.load", mock_load)
-    monkeypatch.setattr("cmk.product_usage_cli.make_app", MagicMock())
+    monkeypatch.setattr("cmk.product_usage.cli.load", mock_load)
+    monkeypatch.setattr("cmk.product_usage.cli.make_app", MagicMock())
 
     with mock.patch("cmk.product_usage.config.read_config_file", side_effect=ConfigError):
-        config = cmk.product_usage_cli.load_config(logger=mock.Mock())
+        config = product_usage_cli.load_config(logger=mock.Mock())
 
         # Should have default values
         assert config.enabled is False

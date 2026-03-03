@@ -297,7 +297,7 @@ function isMonitoringSearch(): boolean {
     >
       {{ message.detail }}
     </CmkAlertBox>
-    <CmkScrollContainer max-height="calc(100vh - 210px)">
+    <CmkScrollContainer>
       <template v-if="searchUtils.result.grouping.value">
         <template v-for="(group, gdx) of groupedResults" :key="group.id">
           <CmkHeading type="h4" class="result-group-heading">
@@ -464,7 +464,11 @@ function isMonitoringSearch(): boolean {
 
 .cmk-unified-search-result-tabs {
   margin: var(--spacing-double);
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .result-group-heading {

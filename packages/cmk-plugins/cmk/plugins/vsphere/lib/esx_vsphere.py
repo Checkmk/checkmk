@@ -5,7 +5,7 @@
 import enum
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict
 
@@ -110,3 +110,42 @@ def average_parsed_data(values: CounterValues) -> float:
     0
     """
     return sum(map(int, values)) / len(values) if values else 0
+
+
+# VMware vSphere reports -1 when a metric could not be collected for a given sample interval.
+# See: https://github.com/vmware/pyvmomi/issues/191#issuecomment-72217028
+ESX_COUNTER_UNAVAILABLE: Final = "-1"
+
+
+def average_valid_samples(values: CounterValues) -> float | None:
+    """Average counter samples, excluding unavailable (-1) values.
+
+    Returns None when every sample in the window is unavailable, so callers
+    can omit the metric entirely rather than reporting a misleading zero.
+    Use for rate metrics (throughput, IOPS).
+    """
+    valid = [v for v in values if v != ESX_COUNTER_UNAVAILABLE]
+    return average_parsed_data(valid) if valid else None
+
+
+def max_valid_sample(values: CounterValues) -> int | None:
+    """Return the maximum counter sample, excluding unavailable (-1) values.
+
+    Returns None when every sample is unavailable.
+    Use for latency metrics where the worst-case observed value is reported.
+    """
+    valid = [int(v) for v in values if v != ESX_COUNTER_UNAVAILABLE]
+    return max(valid) if valid else None
+
+
+def last_valid_sample(values: CounterValues) -> str | None:
+    """Return the most-recent valid counter sample, excluding unavailable (-1) values.
+
+    Returns None when every sample is unavailable.
+    Use for monotonic counters (uptime) and current-state metrics (memory usage)
+    where only the most recent reading is meaningful.
+    """
+    for v in reversed(values):
+        if v != ESX_COUNTER_UNAVAILABLE:
+            return v
+    return None

@@ -18,6 +18,7 @@ from cmk.agent_receiver.relay.lib.relays_repository import (
     RelayNotFoundError,
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
+from cmk.agent_receiver.relay.lib.site_auth import UnsupportedAuthFormatError
 from cmk.relay_protocols import relays as relay_protocols
 from cmk.relay_protocols.monitoring_data import MonitoringData
 
@@ -49,6 +50,11 @@ async def register_relay(
     """
     try:
         return handler.process(authorization, request=payload)
+    except UnsupportedAuthFormatError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
+            detail="Unsupported authorization format. Use 'Bearer <user> <password>' or 'CMK-TOKEN <token>'.",
+        )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -14,6 +14,8 @@ import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+
+import { OAUTH2_REDIRECT_MESSAGE_TYPE } from '@/mode-oauth2-connection/lib/waitForRedirect'
 
 const { _t } = usei18n()
 
@@ -24,6 +26,14 @@ const successfullyLoggedIn = computed(() => {
 const getCode = computed(() => {
   const params = new URL(window.location.href).searchParams
   return params.get('code')
+})
+
+onMounted(() => {
+  // targetOrigin matches the opener's origin since the redirect URL is same-site
+  window.opener?.postMessage(
+    { type: OAUTH2_REDIRECT_MESSAGE_TYPE, href: window.location.href },
+    window.location.origin
+  )
 })
 
 const title = computed(() => {

@@ -85,6 +85,7 @@ const currentGeneration = ref(0)
 
 async function authorize(): Promise<string | null> {
   return new Promise((resolve) => {
+    loadingTitle.value = _t('Verifying the authorization...')
     if (model.value.overrideCode) {
       resolve(model.value.overrideCode)
       return
@@ -108,15 +109,7 @@ async function authorize(): Promise<string | null> {
     const authWindow = open(url, '_blank')
     if (authWindow) {
       activeAuthWindow = authWindow
-      waitForRedirect<string | null>(
-        authWindow,
-        {
-          host: location.host
-        },
-        resolve,
-        verifyAuthorization,
-        TIMEOUT
-      )
+      waitForRedirect<string | null>(authWindow, resolve, verifyAuthorization, TIMEOUT)
     } else {
       resolve(null)
     }
@@ -126,7 +119,8 @@ async function authorize(): Promise<string | null> {
 function verifyAuthorization(
   authWindow: WindowProxy,
   resolve: (value: string | null | PromiseLike<string | null>) => void,
-  error?: string
+  error?: string,
+  redirectHref?: string
 ) {
   if (authWindow !== activeAuthWindow) {
     resolve(null)
@@ -142,7 +136,13 @@ function verifyAuthorization(
     return
   }
 
-  const params = new URL(authWindow.location.href).searchParams
+  if (!redirectHref) {
+    loading.value = false
+    resolve(null)
+    return
+  }
+
+  const params = new URL(redirectHref).searchParams
 
   if (params.get('state') === refId) {
     const code = params.get('code')

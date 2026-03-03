@@ -4,51 +4,63 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-export interface IRedirectValidateObject {
-  host?: string
-  href?: string
-  hostname?: string
-}
+export const OAUTH2_REDIRECT_MESSAGE_TYPE = 'oauth2-redirect'
 
 export function waitForRedirect<T>(
   win: WindowProxy,
-  validate: IRedirectValidateObject,
   resolve: (value: T | PromiseLike<T>) => void,
   callback: (
     win: WindowProxy,
     resolve: (value: T | PromiseLike<T>) => void,
-    error?: string
+    error?: string,
+    redirectHref?: string
   ) => void,
   timeout?: number
 ) {
-  let valid = false
-  try {
-    for (const key of Object.keys(validate)) {
-      switch (key) {
-        case 'host':
-          valid = win.location.host === validate.host
-          break
-        case 'hostname':
-          valid = win.location.hostname === validate.hostname
-          break
-        case 'href':
-          valid = win.location.href === validate.href
-          break
-      }
+  function onMessage(event: MessageEvent) {
+    if (event.source !== win) {
+      return
     }
-  } catch {
-    // not allowed to access the location, so no redirect happend
+    if (event.origin !== location.origin) {
+      return
+    }
+    if (event.data?.type !== OAUTH2_REDIRECT_MESSAGE_TYPE) {
+      return
+    }
+    cleanup(timeoutHandle, closedPollHandle, onMessage)
+    callback(win, resolve, undefined, event.data.href)
   }
 
-  if (valid) {
-    callback(win, resolve)
-  } else if (win.closed) {
-    callback(win, resolve, 'Window was closed before redirect.')
-  } else if (timeout !== undefined && timeout <= 0) {
-    callback(win, resolve, 'Authorization timed out. Please try again.')
-  } else {
-    setTimeout(() => {
-      waitForRedirect(win, validate, resolve, callback, timeout ? timeout - 1000 : timeout)
-    }, 1000)
+  let timeoutHandle: ReturnType<typeof setTimeout> | null = null
+  window.addEventListener('message', onMessage)
+
+  const closedPollHandle = setInterval(() => {
+    try {
+      if (win.closed) {
+        cleanup(timeoutHandle, closedPollHandle, onMessage)
+        callback(win, resolve, 'Window was closed before redirect.')
+      }
+    } catch {
+      // COOP policy may block win.closed on cross-origin windows
+    }
+  }, 500)
+
+  if (timeout !== undefined) {
+    timeoutHandle = setTimeout(() => {
+      cleanup(timeoutHandle, closedPollHandle, onMessage)
+      callback(win, resolve, 'Authorization timed out. Please try again.')
+    }, timeout)
   }
+}
+
+function cleanup(
+  timeoutHandle: ReturnType<typeof setTimeout> | null,
+  closedPollHandle: ReturnType<typeof setInterval>,
+  onMessage: (event: MessageEvent) => void
+) {
+  if (timeoutHandle) {
+    clearTimeout(timeoutHandle)
+  }
+  clearInterval(closedPollHandle)
+  window.removeEventListener('message', onMessage)
 }

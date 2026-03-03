@@ -168,7 +168,10 @@ export abstract class FigureBase<
   _fetch_data() {
     const post_settings = this.get_post_settings()
 
-    if (!post_settings.url) return
+    if (!post_settings.url) {
+      this.remove_loading_image()
+      return
+    }
 
     this._fetch_start = Math.floor(new Date().getTime() / 1000)
     json(encodeURI(post_settings.url), {

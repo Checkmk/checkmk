@@ -233,6 +233,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex: 1;
   position: relative;
+  min-height: 0;
 }
 
 .db-content-figure__loading-icon {
@@ -245,8 +246,9 @@ onBeforeUnmount(() => {
 
 .db-content-figure__wrapper {
   display: flex;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  height: 100%;
 }
 
 .db-content-figure__wrapper--loading {

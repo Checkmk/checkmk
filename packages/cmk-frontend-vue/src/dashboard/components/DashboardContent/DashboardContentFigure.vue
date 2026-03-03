@@ -221,7 +221,6 @@ onBeforeUnmount(() => {
           @auxclick.capture="suppressEventOnPublicDashboard"
           @mousedown.capture="suppressEventOnPublicDashboard"
           @keydown.capture="suppressEventOnPublicDashboard"
-          @wheel.capture="suppressEventOnPublicDashboard"
         ></div>
       </div>
     </div>

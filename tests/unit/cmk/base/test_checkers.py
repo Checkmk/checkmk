@@ -202,6 +202,15 @@ def test_prediction_injection_legacy() -> None:
     }
 
 
+def test_cmk_summarizer_no_data_sources() -> None:
+    summarizer = checkers.CMKSummarizer(
+        HostName("test-host"),
+        lambda _hn, _ident: None,  # type: ignore[return-value,arg-type]
+    )
+    (result,) = summarizer([])
+    assert result.state == 3
+
+
 def _make_hash(params: PredictionParameters, direction: Literal["upper"], metric: str) -> int:
     # particular values of prediction parameters are irrelevant for this test.
     return hash(PredictionInfo.make(metric, direction, params, time.time()))

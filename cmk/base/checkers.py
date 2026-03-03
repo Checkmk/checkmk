@@ -256,15 +256,21 @@ class CMKSummarizer:
         self,
         host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
     ) -> Iterable[ActiveCheckResult]:
-        return [
-            _summarize_host_sections(
-                host_sections,
-                source,
-                self.summary_config(source.hostname, source.ident),
-                override_non_ok_state=self.override_non_ok_state,
+        return (
+            results
+            if (
+                results := [
+                    _summarize_host_sections(
+                        host_sections,
+                        source,
+                        self.summary_config(source.hostname, source.ident),
+                        override_non_ok_state=self.override_non_ok_state,
+                    )
+                    for source, host_sections in host_sections
+                ]
             )
-            for source, host_sections in host_sections
-        ]
+            else [ActiveCheckResult(state=3, summary="No data source configured")]
+        )
 
 
 def _summarize_host_sections(

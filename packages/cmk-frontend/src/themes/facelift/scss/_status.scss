@@ -33,9 +33,12 @@ td.state {
   text-align: center;
 }
 
-table.data tr.data td.stale,
-table.data td.perfometer.stale div.title {
+table.data tr.data td.stale {
   color: $font-color-dimmed;
+}
+
+table.data td.perfometer.stale div.title {
+  color: $font-color-light-bg;
 }
 
 tr.groupheader .state span {

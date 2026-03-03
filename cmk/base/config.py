@@ -2730,8 +2730,11 @@ class ConfigCache:
 
         return self.__snmp_fetch_interval.setdefault(host_name, snmp_fetch_interval_impl())
 
-    def checkmk_check_parameters(self, host_name: HostName) -> CheckmkCheckParameters:
-        return CheckmkCheckParameters(enabled=not self.is_ping_host(host_name))
+    def checkmk_check_parameters(
+        self, host_name: HostName, *, for_relay: bool
+    ) -> CheckmkCheckParameters:
+        # 'for_relay' only passed into this function to ensure consistency between callsites
+        return CheckmkCheckParameters(enabled=not self.is_ping_host(host_name) or for_relay)
 
     @staticmethod
     def notification_logging_level() -> int:

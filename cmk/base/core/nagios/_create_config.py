@@ -714,7 +714,7 @@ def create_nagios_servicedefs(
     )
 
     # Active check for Check_MK
-    if config_cache.checkmk_check_parameters(hostname).enabled:
+    if config_cache.checkmk_check_parameters(hostname, for_relay=for_relay).enabled:
         service_spec = (
             {
                 "use": config.active_service_template,

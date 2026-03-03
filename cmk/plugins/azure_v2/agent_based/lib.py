@@ -519,6 +519,9 @@ def create_inventory_function() -> Callable[[Resource], InventoryResult]:
             case "subscription":
                 entity = "Subscription"
                 mapping["id"] = "id"
+            case "tenant":
+                entity = "Tenant"
+                mapping["id"] = "id"
             case _:
                 entity = "Resource"
 

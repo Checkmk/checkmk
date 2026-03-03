@@ -268,6 +268,38 @@ class AzureSubscription(_AzureEntity):
         return self._compute_unique_name((self.id,), "subscription")
 
 
+class AzureTenant(_AzureEntity):
+    def __init__(self, id: str, name: str) -> None:
+        super().__init__(
+            entity_name=name or id,
+            section="tenant",
+            unique_hostnames_config=UniqueHostnamesConfig(enabled=False),
+        )
+        self.id: Final[str] = id
+        self.name: Final[str] = name
+        self.info = {
+            "id": id,
+            "name": name,
+            "type": "tenant",
+            "group": "",
+            "tenant_id": id,
+            "tenant_name": name,
+        }
+
+    @property
+    def piggytarget(self) -> str:
+        raise NotImplementedError(
+            "The tenant host is the source host in CheckMk, it is not a piggyback host "
+            "therefore this method should not be called for the AzureTenant object"
+        )
+
+    def _unique_name(self) -> str:
+        raise NotImplementedError(
+            "The tenant host is the source host in CheckMk, it is not a piggyback host "
+            "therefore this method should not be called for the AzureTenant object"
+        )
+
+
 class AzureResourceGroup(_AzureEntity):
     def __init__(
         self,
@@ -2077,7 +2109,7 @@ def write_group_info(
     section.write()
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
-    # ! TODO: Shoud this be .write(write_empty=True)?
+    # ! TODO: Should this be .write(write_empty=True)?
     AzureSection("agent_info", [*monitored_groups, subscription.piggytarget]).write()
 
 
@@ -2695,8 +2727,15 @@ async def _collect_resources(
     return selected_resources, monitored_groups
 
 
-def write_tenant_info() -> None:
-    AzureTenantLabelsSection().write()
+def write_tenant_info(tenant: AzureTenant) -> None:
+    labels: dict[str, str] = {"tenant_name": tenant.name}
+    AzureTenantLabelsSection(labels=labels).write()
+
+
+def write_tenant_section(tenant: AzureTenant) -> None:
+    section = AzureSection("tenant")
+    section.add(tenant.dumpinfo())
+    section.write()
 
 
 async def main_subscription(
@@ -2832,7 +2871,9 @@ async def collect_info(
     args: argparse.Namespace, selector: Selector, subscriptions: set[AzureSubscription]
 ) -> None:
     monitored_services = set(args.services)
-    write_tenant_info()
+    tenant = AzureTenant(args.tenant, args.tenant_name)
+    write_tenant_info(tenant)
+    write_tenant_section(tenant)
     await asyncio.gather(
         main_graph_client(args, monitored_services),
         *{

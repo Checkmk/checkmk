@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.vsphere.lib.esx_vsphere import Section
+from cmk.plugins.vsphere.lib.esx_vsphere import average_valid_samples, Section
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -42,12 +42,17 @@ class GpuUtilizationParams(TypedDict):
 def check_esx_vsphere_counters_gpu_utilization(
     item: str, params: GpuUtilizationParams, section: Section
 ) -> CheckResult:
-    match section.get("gpu.utilization", {}).get(item):
-        case [([raw_utilization, _], "percent")]:
-            utilization = float(raw_utilization)
-        case _:
-            yield Result(state=State.UNKNOWN, summary="Utilization is unknown.")
-            return
+    gpu_data = section.get("gpu.utilization", {}).get(item)
+    if not gpu_data or gpu_data[0][1] != "percent":
+        yield Result(state=State.UNKNOWN, summary="Utilization is unknown.")
+        return
+
+    # average_valid_samples returns None when all samples for the interval are
+    # unavailable (-1); treat that as unknown rather than reporting -1%.
+    utilization = average_valid_samples(gpu_data[0][0])
+    if utilization is None:
+        yield Result(state=State.UNKNOWN, summary="Utilization is unknown.")
+        return
 
     yield from check_levels(
         utilization,

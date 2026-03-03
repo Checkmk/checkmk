@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.lib.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.vsphere.lib.esx_vsphere import SectionCounter
+from cmk.plugins.vsphere.lib.esx_vsphere import last_valid_sample, SectionCounter
 
 # We assume that all ramdisks have the same size (in mb) on all hosts
 # -> To get size infos about unknown ramdisks, connect to the ESX host via
@@ -73,7 +73,12 @@ def check_esx_vsphere_counters_ramdisk(
                 return
             continue
 
-        used_mb = float(counter[0][0][-1]) / 1000.0
+        # skip this ramdisk instance when all samples are unavailable; it will
+        # simply be absent from the df list rather than contributing a nonsense value.
+        raw = last_valid_sample(counter[0][0])
+        if raw is None:
+            continue
+        used_mb = float(raw) / 1000.0
         avail_mb = size_mb - used_mb
         ramdisks.append((name, size_mb, avail_mb, 0))
 

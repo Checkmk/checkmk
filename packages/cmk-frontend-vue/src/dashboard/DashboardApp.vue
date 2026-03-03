@@ -171,7 +171,6 @@ useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApp
 })
 
 watch(dashboardsManager.activeDashboard, (value) => {
-  selectedDashboardBreadcrumb.value = value?.metadata?.display?.topic?.breadcrumb ?? null
   if (!value) {
     isDashboardEditingMode.value = false
   }
@@ -224,6 +223,8 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
     owner: dashboard.owner || '' // built-in conversion: null -> ""
   }
   await setAsActiveDashboard(key, dashboard.layout_type as DashboardLayout)
+  selectedDashboardBreadcrumb.value =
+    dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
   urlHandler.pushCurrentUrl(urlHandler.getDashboardUrl(key, {}))
 
   if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
@@ -427,6 +428,8 @@ const createDashboard = async (
 
   isDashboardEditingMode.value = false
   openDashboardFilterSettings.value = false
+  selectedDashboardBreadcrumb.value =
+    dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
   const updatedDashboardUrl = urlHandler.getDashboardUrl(key, {})
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
   isDashboardLoading.value = false
@@ -477,6 +480,8 @@ const cloneDashboard = async (
   }
 
   await setAsActiveDashboard(newKey, layout)
+  selectedDashboardBreadcrumb.value =
+    dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
   urlHandler.pushCurrentUrl(
     urlHandler.getDashboardUrl(newKey, dashboardFilters.runtimeFiltersSearchParams.value)
   )

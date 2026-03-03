@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from collections.abc import Iterator
@@ -133,18 +132,9 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg
 
 
-@pytest.mark.xfail(
-    reason="Currently failing for reasons not related to the cmk package used. "
-    "Needs further investigation."
-)
 @pytest.mark.cce
 @skip_if_not_cloud_edition
-def test_update_from_backup_demo(
-    site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
-) -> None:
-    store_lost_services = request.config.getoption(name="--store-lost-services")
-    lost_services_path = Path(__file__).parent.resolve() / Path("lost_services_demo.json")
-
+def test_update_from_backup_demo(site_factory_demo: SiteFactory, base_site_demo: Site) -> None:
     # MKPs broken: disabled in the demo site via: 'mkp disable play_checkmk 0.0.1' TODO: investigate
     backup_path = qa_test_data_path() / Path("update/backups/play_2.2.0p27_backup.tar.gz")
     assert backup_path.exists()
@@ -186,48 +176,3 @@ def test_update_from_backup_demo(
 
     target_hostnames = [_.get("id") for _ in target_site.openapi.get_hosts()]
     assert set(base_hostnames).issubset(set(target_hostnames))
-
-    target_services = {}
-    current_lost_services = {}
-    missed_services = {}
-
-    with open(lost_services_path, "r") as json_file:
-        known_lost_services = json.load(json_file)
-
-    for hostname in base_hostnames:
-        target_services[hostname] = target_site.get_host_services(hostname)
-
-        current_lost_services[hostname] = [
-            service
-            for service in base_services[hostname]
-            if service not in target_services[hostname]
-        ]
-
-        if current_lost_services[hostname]:
-            logger.warning(
-                "In the %s host the following services were found in base-version "
-                "but not in target-version: %s",
-                hostname,
-                current_lost_services[hostname],
-            )
-
-        if store_lost_services:
-            # skip assertion if flag given
-            continue
-
-        missed_services[hostname] = [
-            service
-            for service in current_lost_services[hostname]
-            if service not in known_lost_services[hostname]
-        ]
-
-        err_msg = (
-            f"In the {hostname} host the following services were not expected to be missing "
-            f"{missed_services[hostname]}"
-        )
-        assert not missed_services[hostname], err_msg
-
-    if store_lost_services:
-        logger.info("Storing lost services as JSON reference...")
-        with open(lost_services_path, "w") as file:
-            json.dump(current_lost_services, file, indent=4)

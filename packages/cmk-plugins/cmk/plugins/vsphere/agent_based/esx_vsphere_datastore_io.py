@@ -6,7 +6,7 @@
 import time
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
-from typing import Any, ClassVar
+from typing import Any
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -21,7 +21,12 @@ from cmk.plugins.lib.diskstat import (
     discovery_diskstat_generic,
     DISKSTAT_DEFAULT_PARAMS,
 )
-from cmk.plugins.vsphere.lib.esx_vsphere import average_parsed_data, CounterValues, SectionCounter
+from cmk.plugins.vsphere.lib.esx_vsphere import (
+    average_parsed_data,
+    CounterValues,
+    ESX_COUNTER_UNAVAILABLE,
+    SectionCounter,
+)
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -35,18 +40,12 @@ from cmk.plugins.vsphere.lib.esx_vsphere import average_parsed_data, CounterValu
 
 @dataclass(frozen=True)
 class PostParser:
-    # Based on a chat with ChatGPT and a search on Perplexity.ai:
-    # In VMware vSphere metrics, a value of -1 typically indicates that the metric data is unavailable,
-    # not applicable, or not collected for that particular interval or object.
-
-    _RAW_INVALID_VALUE: ClassVar[str] = "-1"
-
     key: str
     evaluate: Callable[[CounterValues], float]
     counter: str
 
     def __call__(self, values: CounterValues) -> float | None:
-        valid_values = [value for value in values if value != self._RAW_INVALID_VALUE]
+        valid_values = [value for value in values if value != ESX_COUNTER_UNAVAILABLE]
         return self.evaluate(valid_values) if any(valid_values) else None
 
 

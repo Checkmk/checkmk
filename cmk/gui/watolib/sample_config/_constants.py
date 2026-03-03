@@ -49,7 +49,7 @@ PROXMOX_RULES: list[RuleSpec[Mapping[str, object]]] = [
             "bed89ece-0997-4052-ac1e-9a0ce369dd8a",
             "~^([0-9a-z\\/_-]*)\\/?(lxcfs|lxc-monitord).*$",
             (0, 0, 1, 1),
-            RuleConditionsSpec(),
+            RuleConditionsSpec(host_label_groups=[("and", [("and", "cmk/pve/entity:node")])]),
             "Shipped rule to monitor basic Proxmox processes for LXC",
         ),
         (

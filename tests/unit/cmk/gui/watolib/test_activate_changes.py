@@ -59,7 +59,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ReplicationPath("dir", "check_mk", "etc/check_mk/conf.d/wato/", []),
         ReplicationPath("dir", "multisite", "etc/check_mk/multisite.d/wato/", []),
         ReplicationPath("file", "htpasswd", "etc/htpasswd", []),
-        ReplicationPath("file", "auth.secret", "etc/auth.secret", []),
         ReplicationPath("file", "password_store.secret", "etc/password_store.secret", []),
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
         ReplicationPath("file", "stored_passwords", "var/check_mk/stored_passwords", []),

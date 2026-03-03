@@ -84,6 +84,10 @@ class SiteMock:
     def base_route(self) -> str:
         return f"/{self.site_name}/check_mk/api/unstable"
 
+    @property
+    def _auth_regex(self) -> str:
+        return f"^(?:{self.user.bearer}|{self.internal_secret}|CMK-TOKEN .+)$"
+
     def set_scenario(
         self, relays: Sequence[Relay] | Relay, changes: Sequence[Change] | None = None
     ) -> None:
@@ -137,9 +141,7 @@ class SiteMock:
                 method="DELETE",
                 url=f"{self.base_route}/objects/relay/{relayid}",
                 headers={
-                    "Authorization": {
-                        "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
-                    },
+                    "Authorization": {"matches": self._auth_regex},
                 },
             ),
             response=Response(
@@ -158,9 +160,7 @@ class SiteMock:
                 url=f"{self.base_route}/domain-types/relay/collections/all",
                 headers={
                     "Content-Type": {"matches": "application/json"},
-                    "Authorization": {
-                        "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
-                    },
+                    "Authorization": {"matches": self._auth_regex},
                 },
                 bodyPatterns=[
                     {
@@ -185,9 +185,7 @@ class SiteMock:
                 method="GET",
                 url=f"{self.base_route}/domain-types/relay/collections/all",
                 headers={
-                    "Authorization": {
-                        "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
-                    },
+                    "Authorization": {"matches": self._auth_regex},
                 },
             ),
             response=Response(
@@ -210,9 +208,7 @@ class SiteMock:
                     method="GET",
                     url=f"{self.base_route}/objects/relay/{r}",
                     headers={
-                        "Authorization": {
-                            "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
-                        },
+                        "Authorization": {"matches": self._auth_regex},
                     },
                 ),
                 response=Response(
@@ -238,9 +234,7 @@ class SiteMock:
                 method="GET",
                 url=f"{self.base_route}/objects/relay/{relay_id}",
                 headers={
-                    "Authorization": {
-                        "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
-                    },
+                    "Authorization": {"matches": self._auth_regex},
                 },
             ),
             response=Response(

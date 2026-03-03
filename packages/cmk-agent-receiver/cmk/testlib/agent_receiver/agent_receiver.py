@@ -96,6 +96,18 @@ class AgentReceiverClient:
             },
         )
 
+    def register_relay_with_token(self, relay_id: str, name: str, token: str) -> httpx.Response:
+        csr_pair = generate_csr_pair(cn=relay_id)
+        return self.client.post(
+            f"/{self.site_name}/relays/",
+            headers={"Authorization": f"CMK-TOKEN {token}"},
+            json={
+                "relay_id": relay_id,
+                "alias": name,
+                "csr": serialize_to_pem(csr_pair[1]),
+            },
+        )
+
     def refresh_cert(self, relay_id: str) -> httpx.Response:
         """Refresh the certificate for a relay.
 

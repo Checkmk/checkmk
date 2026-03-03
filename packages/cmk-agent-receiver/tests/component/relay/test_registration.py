@@ -123,6 +123,25 @@ def test_relay_registration_allowed_on_central_site_in_distributed_setup(
     assert resp.status_code == HTTPStatus.OK
 
 
+def test_a_relay_can_be_registered_with_token_auth(
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+) -> None:
+    """Verify that a relay can be registered using CMK-TOKEN authentication.
+
+    Test steps:
+    1. Register a relay using a CMK-TOKEN authorization header
+    2. Verify registration succeeds with 200
+    """
+    relay_id = random_relay_id()
+    site.set_scenario([], [(relay_id, OP.ADD)])
+    resp = agent_receiver.register_relay_with_token(
+        relay_id, "token-relay", token="0:550e8400-e29b-41d4-a716-446655440000"
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json()["relay_id"] == relay_id
+
+
 def test_certificate_validity_period(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,

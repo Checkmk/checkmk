@@ -12,7 +12,7 @@ from cmk.agent_receiver.relay.lib.relays_repository import (
     RelaysRepository,
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RemoteSiteError
-from cmk.agent_receiver.relay.lib.site_auth import InternalAuth, UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import InternalAuth, SecretAuth
 from cmk.relay_protocols import relays as relay_protocols
 
 
@@ -27,7 +27,7 @@ class RegisterRelayHandler:
             raise RemoteSiteError()
         relay_id = RelayID(request.relay_id)
         # Important: First authenticate
-        auth = UserAuth(authorization)
+        auth = SecretAuth(authorization)
 
         certificates = get_certificates(request.csr, relay_id)
 

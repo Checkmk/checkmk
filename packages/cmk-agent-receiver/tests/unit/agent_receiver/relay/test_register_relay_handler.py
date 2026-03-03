@@ -12,7 +12,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import 
     RegisterRelayHandler,
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import SecretAuth
 from cmk.relay_protocols.relays import RelayRegistrationRequest
 from cmk.testlib.agent_receiver.certs import (
     generate_csr_pair,
@@ -22,7 +22,7 @@ from cmk.testlib.agent_receiver.relay import site_has_relay
 
 def test_process_adds_new_relay_id_to_registry(
     register_relay_handler: RegisterRelayHandler,
-    test_user: UserAuth,
+    test_user: SecretAuth,
     site_api_client: httpx.Client,
 ) -> None:
     relay_id = RelayID(str(uuid4()))
@@ -40,7 +40,7 @@ def test_process_adds_new_relay_id_to_registry(
 
 def test_process_creates_multiple_relays(
     register_relay_handler: RegisterRelayHandler,
-    test_user: UserAuth,
+    test_user: SecretAuth,
     site_api_client: httpx.Client,
 ) -> None:
     aliases = ["relay1", "relay2", "relay3"]

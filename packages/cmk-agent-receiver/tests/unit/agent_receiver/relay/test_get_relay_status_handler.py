@@ -21,7 +21,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import 
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelayNotFoundError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import SecretAuth
 from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayState
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
 
@@ -29,7 +29,7 @@ from cmk.testlib.agent_receiver.certs import generate_csr_pair
 def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
     get_relay_status_handler: GetRelayStatusHandler,
     register_relay_handler: RegisterRelayHandler,
-    test_user: UserAuth,
+    test_user: SecretAuth,
     site_context: Config,
 ) -> None:
     """Test that get_relay_status returns CONFIGURED when relay exists in both API and local config."""
@@ -71,7 +71,7 @@ def test_get_relay_status_raises_not_found_when_relay_not_in_api_nor_config(
 def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_local_config(
     get_relay_status_handler: GetRelayStatusHandler,
     register_relay_handler: RegisterRelayHandler,
-    test_user: UserAuth,
+    test_user: SecretAuth,
 ) -> None:
     """Test that get_relay_status returns PENDING_ACTIVATION when relay exists in API but not in local config.
 

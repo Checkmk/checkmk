@@ -56,7 +56,7 @@ class InternalAuth(httpx.Auth):
 
 
 @final
-class UserAuth(httpx.Auth):
+class SecretAuth(httpx.Auth):
     def __init__(self, secret: SecretStr) -> None:
         self.secret = secret
 
@@ -66,4 +66,4 @@ class UserAuth(httpx.Auth):
         yield request
 
 
-SiteAuth = InternalAuth | UserAuth
+SiteAuth = InternalAuth | SecretAuth

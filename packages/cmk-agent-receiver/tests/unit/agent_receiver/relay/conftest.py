@@ -35,7 +35,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
-from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import SecretAuth
 from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
@@ -87,8 +87,8 @@ def site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Config:
 
 
 @pytest.fixture()
-def test_user() -> UserAuth:
-    return UserAuth(SecretStr("Bearer test-token"))
+def test_user() -> SecretAuth:
+    return SecretAuth(SecretStr("Bearer test-token"))
 
 
 @pytest.fixture()
@@ -180,7 +180,7 @@ def config_task_factory(
 def populated_repos(
     relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
-    test_user: UserAuth,
+    test_user: SecretAuth,
 ) -> tuple[RelayID, RelayTask, RelaysRepository, TasksRepository]:
     # arrange
     # register a relay in the repository

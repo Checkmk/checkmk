@@ -12,12 +12,12 @@ import pytest
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.config import Config
-from cmk.agent_receiver.relay.lib.site_auth import InternalAuth, UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import InternalAuth, SecretAuth
 
 
-def test_user_auth_flow_sets_authorization_header() -> None:
+def test_secret_auth_flow_sets_authorization_header() -> None:
     secret = SecretStr("Bearer test-token")
-    auth = UserAuth(secret)
+    auth = SecretAuth(secret)
     request = httpx.Request("GET", "https://example.com")
 
     # Execute auth flow

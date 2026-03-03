@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
@@ -42,6 +42,10 @@ provide(urlParamsKey, props.url_params)
 const cmkToken = `0:${props.token_value}`
 useProvideCmkToken(cmkToken)
 useProvideIsPublicDashboard()
+// DashboardComponent injects these to merge context/widget filters (CMK-31671).
+// Shared dashboards have pre-baked filter contexts, so empty values are sufficient.
+provide('filterCollection', ref({}))
+provide('filterGroups', ref({}))
 useProvideDashboardConstants(props.dashboard_constants)
 
 onMounted(() => {

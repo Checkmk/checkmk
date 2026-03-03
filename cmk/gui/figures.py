@@ -10,6 +10,8 @@
 
 from typing import Any
 
+from cmk.utils.urls import is_allowed_url
+
 FigureResponse = dict[str, Any]
 
 FigureResponseData = dict[str, Any]
@@ -19,6 +21,12 @@ def create_figures_response(data: object) -> FigureResponse:
     """Any data for a figure is always wrapped into a dictionary
     This makes future extensions (meta_data, etc.) easier, preventing
     intermingling of dictionary keys"""
+    if isinstance(data, dict) and "title_url" in data:
+        title_url = data["title_url"]
+        if title_url is not None and not is_allowed_url(
+            title_url, cross_domain=True, schemes=["http", "https"]
+        ):
+            data["title_url"] = None
     return {"figure_response": data}
 
 

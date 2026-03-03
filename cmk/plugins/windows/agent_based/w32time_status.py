@@ -260,7 +260,6 @@ def check_w32time_status(params: Params, section: QueryStatus | ErrorStatus) -> 
     yield from check_levels(
         value=section.stratum,
         levels_upper=params["stratum"],
-        notice_only=True,
         label="Stratum",
         render_func=str,
     )

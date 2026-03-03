@@ -122,6 +122,12 @@ body:has(.cmk-slide-in__container) {
   border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);
 
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
   &.cmk-slide-in--size-small {
     max-width: 768px;
   }

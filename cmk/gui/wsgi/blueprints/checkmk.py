@@ -38,7 +38,7 @@ def before_app_request() -> None:
 
 @checkmk.before_request
 def before_request() -> None:
-    if not current_app.debug:
+    if not (current_app.debug or current_app.testing):
         # We're running in production. In the development server, we can't set any
         # signals, because then "serve_simple" will refuse to run the app.
         timeout_manager.enable_timeout(request.request_timeout)
@@ -50,7 +50,7 @@ def after_request(response: Response) -> Response:
     store.release_all_locks()
     sites.disconnect()
     hooks.call("request-end")
-    if not current_app.debug:
+    if not (current_app.debug or current_app.testing):
         timeout_manager.disable_timeout()
 
     return response

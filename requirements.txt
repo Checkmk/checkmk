@@ -1638,9 +1638,9 @@ idna==3.11 \
     #   httpx
     #   requests
     #   yarl
-imagesize==1.5.0 \
-    --hash=sha256:32677681b3f434c2cb496f00e89c5a291247b35b1f527589909e008057da5899 \
-    --hash=sha256:8bfc5363a7f2133a89f0098451e0bcb1cd71aba4dc02bbcecb39d99d40e1b94f
+imagesize==2.0.0 \
+    --hash=sha256:5667c5bbb57ab3f1fa4bc366f4fbc971db3d5ed011fd2715fd8001f782718d96 \
+    --hash=sha256:8e8358c4a05c304f1fccf7ff96f036e7243a189e9e42e90851993c558cfe9ee3
     # via sphinx
 importlib-metadata==8.7.1 \
     --hash=sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb \
@@ -2569,9 +2569,9 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-meraki==2.0.3 \
-    --hash=sha256:91909fb24fe4659495c2d42342c6b6c5d201179f7eec8246d7e8d6fa49a9bfaf \
-    --hash=sha256:f2990c6f9d894f0a6990aefd6dc9df385647477c44b5c33a17518347e0a093fd
+meraki==2.1.2 \
+    --hash=sha256:6091a0aab8ee349ed34e98aad9fb7dc926479837aefefb4ce43caab95b6a9db7 \
+    --hash=sha256:f391d4990c11ac842afe65cd0c9ce05ce28de780374e0cbbef4656cfc3031106
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
@@ -3156,6 +3156,7 @@ packaging==26.0 \
     #   setuptools-scm
     #   sphinx
     #   twine
+    #   wheel
 paho-mqtt==2.1.0 \
     --hash=sha256:12d6e7511d4137555a3f6ea167ae846af2c7357b10bc6fa4f7c3968fc1723834 \
     --hash=sha256:6db9ba9b34ed5bc6b6e3812718c7e06e2fd7444540df2455d2c51bd58808feee
@@ -5724,9 +5725,9 @@ werkzeug==3.1.6 \
     #   -c constraints.txt
     #   -r cmk/requirements.in
     #   flask
-wheel==0.45.1 \
-    --hash=sha256:661e1abd9198507b1409a20c02106d9670b2576e916d58f520316666abca6729 \
-    --hash=sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248
+wheel==0.46.3 \
+    --hash=sha256:4b399d56c9d9338230118d705d9737a2a468ccca63d5e813e2a4fc7815d8bc4d \
+    --hash=sha256:e3e79874b07d776c40bd6033f8ddf76a7dad46a7b8aa1b2787a83083519a1803
     # via meraki
 wrapt==1.17.3 \
     --hash=sha256:02b551d101f31694fc785e58e0720ef7d9a10c4e62c1c9358ce6f63f23e30a56 \

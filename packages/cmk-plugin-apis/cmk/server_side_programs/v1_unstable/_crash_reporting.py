@@ -96,6 +96,10 @@ def _report_crashes(
                 return func(*args, **kwargs)
             except Exception as outer_exception:
                 sys.stderr.write(traceback.format_exc() + "\n")
+                if isinstance(outer_exception, BrokenPipeError):
+                    # It's very unlikely that a crash report would contain any
+                    # usefull information in this case. Avoid the noise.
+                    return 1
                 try:
                     crash = _CrashReport.from_current_exception(type_, name, version)
                 except Exception as inner_exception:

@@ -19,6 +19,14 @@ import {
 import type { ElementMargin, ElementSize, FigureData, FigureWidgetContent } from './figure_types'
 import { Scheduler } from './multi_data_fetcher'
 
+// Allow only http(s) URLs and relative URLs (no colon means no scheme),
+// no 'javascript:' or 'data:' URLs.
+// Note: this is just an additional safeguard, the backend still must ensure
+// that links are safe with `is_allowed_url`.
+function is_safe_url(url: string): boolean {
+  return /^(https?:|[^:]*$)/.test(url)
+}
+
 // Base class for all cmk_figure based figures
 // Introduces
 //  - Figure sizing
@@ -288,7 +296,7 @@ export abstract class FigureBase<
       .attr('width', this.figure_size.width)
       .attr('height', 22)
 
-    if (title_url) {
+    if (title_url && is_safe_url(title_url)) {
       //@ts-ignore
       title_component = title_component
         .selectAll<HTMLAnchorElement, unknown>('a')

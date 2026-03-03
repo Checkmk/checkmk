@@ -11,6 +11,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
+from cmk.utils.urls import is_allowed_url
 
 
 def text_with_links_to_user_translated_html(
@@ -23,7 +24,7 @@ def text_with_links_to_user_translated_html(
     return separator.join(
         (
             HTMLWriter.render_a(user_translation, href=url, title=user_translation)
-            if url
+            if url and is_allowed_url(url, cross_domain=True, schemes=["http", "https"])
             else escape_to_html_permissive(user_translation, escape_links=False)
         )
         for txt, url in elements

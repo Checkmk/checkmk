@@ -3573,7 +3573,7 @@ class ConfigCache:
     # TODO: Remove old name one day
     @staticmethod
     def service_discovery_name() -> ServiceName:
-        if "cmk_inventory" in use_new_descriptions_for:
+        if use_new_descriptions_for.get("cmk_inventory", False):
             return "Check_MK Discovery"
         return "Check_MK inventory"
 

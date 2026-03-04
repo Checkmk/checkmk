@@ -5,7 +5,11 @@
 """Create an initial Checkmk configuration for new sites"""
 
 from ._abc import SampleConfigGeneratorABCGroups
-from ._constants import CMK_INV_RULES, INVENTORY_PROCESS_DISCOVERY_RULES
+from ._constants import (
+    CMK_INV_RULES,
+    INVENTORY_PROCESS_DISCOVERY_RULES,
+    USE_NEW_DESCRIPTIONS_FOR_SETTING,
+)
 from ._impl import (
     ConfigGeneratorAcknowledgeInitialWerks,
     ConfigGeneratorBasicWATOConfig,
@@ -33,4 +37,5 @@ __all__ = [
     "get_default_notification_rule",
     "init_wato_datastructures",
     "INVENTORY_PROCESS_DISCOVERY_RULES",
+    "USE_NEW_DESCRIPTIONS_FOR_SETTING",
 ]

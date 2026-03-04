@@ -258,7 +258,7 @@ def _schedule_discovery_check(
     now = int(time.time())
     service = (
         "Check_MK Discovery"
-        if "cmk_inventory" in config.use_new_descriptions_for
+        if config.use_new_descriptions_for.get("cmk_inventory", False)
         else "Check_MK inventory"
     )
     # Ignore missing check and avoid warning in cmc.log

@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-any-return"
 
 import contextlib
-from collections.abc import Callable, Container, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Final
 
 from cmk.ccc.hostaddress import HostName
@@ -114,7 +114,7 @@ class PassiveServiceNameConfig:
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
         user_defined_service_names: Mapping[str, str],
-        use_new_names_for: Container[str],
+        use_new_names_for: Mapping[str, bool],
         labels_of_host: Callable[[HostName], Labels],
     ):
         self._final_service_name_config: Final = final_service_name_config
@@ -155,7 +155,7 @@ class PassiveServiceNameConfig:
             return descr_format, item
 
         old_descr = _OLD_SERVICE_DESCRIPTIONS.get(plugin_name_str)
-        if old_descr is None or plugin_name_str in self._use_new_names_for:
+        if old_descr is None or self._use_new_names_for.get(plugin_name_str, False):
             return service_name_template, item
         return old_descr(item)
 

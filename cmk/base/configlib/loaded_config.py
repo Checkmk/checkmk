@@ -7,7 +7,7 @@
 
 
 import dataclasses
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import (
     Any,
     Literal,
@@ -49,7 +49,7 @@ class LoadedConfigFragment:
     service_rule_groups: set[str]
     service_descriptions: Mapping[str, str]
     service_description_translation: Sequence[RuleSpec[Mapping[str, object]]]
-    use_new_descriptions_for: Container[str]
+    use_new_descriptions_for: Mapping[str, bool]
     monitoring_core: Literal["nagios", "cmc"]
     nagios_illegal_chars: str
     cmc_illegal_chars: str

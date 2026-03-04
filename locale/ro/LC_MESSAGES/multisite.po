@@ -12866,7 +12866,7 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk cu date de performanță ori"
 
-msgid "Checkmk: Agent bakery signing keys expire soon"
+msgid "Checkmk: Agent Bakery signing keys expire soon"
 msgstr ""
 
 #, fuzzy
@@ -68227,6 +68227,14 @@ msgstr ""
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "Parola nu poate fi schimbată (este blocată de conectorul de utilizator)."
+
+#, fuzzy
+msgid ""
+"The password cannot be deleted because the user does not have the permission "
+"to edit it."
+msgstr ""
+"%s este vizibil doar pentru dvs. deoarece nu aveți permisiunea de a-l "
+"partaja."
 
 #, python-format
 msgid ""

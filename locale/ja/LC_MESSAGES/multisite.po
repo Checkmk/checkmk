@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-02 17:36+0000\n"
+"PO-Revision-Date: 2026-03-03 18:36+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -4623,7 +4623,7 @@ msgid ""
 msgstr "管理者（「すべての定義済み条件への書き込みアクセス」権限を持つ者）"
 
 msgid "Adva Optical Transport Laser Power"
-msgstr "Adva Optical Transport Laser Power"
+msgstr "Adva Optical Transportレーザーパワー"
 
 msgid "Advanced condition simulation"
 msgstr "高度な条件シミュレーション"
@@ -8297,7 +8297,7 @@ msgid "Azure Databases"
 msgstr "Azureデータベース"
 
 msgid "Azure Load Balancer Health"
-msgstr "Azureロードバランサーヘルス"
+msgstr "Load Balancerの健全性"
 
 msgid "Azure SQL database CPU usage"
 msgstr "AzureSQLデータベースCPU使用量"
@@ -8348,7 +8348,7 @@ msgid "Azure storage accounts"
 msgstr "Azureストレージアカウント"
 
 msgid "Azure virtual machines"
-msgstr "Azure仮想マシン"
+msgstr "Azure 仮想マシン"
 
 msgid "Azure virtual machines summary"
 msgstr "Azure仮想マシンの概要"
@@ -9110,7 +9110,7 @@ msgid "Buffered memory"
 msgstr "バッファメモリ"
 
 msgid "Bufferpool Hitratios"
-msgstr "Bufferpool Hitratios"
+msgstr "Bufferpool ヒットレート"
 
 msgid "Bug fix"
 msgstr "バグ修正"
@@ -9904,7 +9904,6 @@ msgstr ""
 "を無視し、直接接続します (例 Checkmk REST API からエージェント受信ポートを問"
 "い合わせる場合など)。"
 
-#, fuzzy
 msgid ""
 "By default, the file system checks will create a single service for each "
 "file system. By defining grouping patterns, you can handle groups of file "
@@ -9914,13 +9913,13 @@ msgid ""
 "file systems matching one of the exclude patterns will be excluded from the "
 "group and monitored individually."
 msgstr ""
-"デフォルトでは、ファイルシステムチェック(<tt>df</tt>, <tt>hr_fs</tt> , その"
-"他)は各ファイルシステムごとに1つのサービスを作成します。グループ化パターンを"
-"定義することで、ファイルシステムのグループを1つのファイルシステムのように扱う"
-"ことができます。各グループ対し、1つまたは複数の包含・除外パターンを定義するこ"
-"とができます。包含パターンの1つに一致するファイルシステムは、1つのサービスで1"
-"つの大きなファイルシステムのように監視されます。除外パターンのいずれかに一致"
-"するファイルシステムは、グループから除外され、個別に監視されます。"
+"デフォルトでは、ファイルシステムチェックは各ファイルシステムごとに1つの"
+"サービスを作成します。グループ化パターンを定義することで、複数の"
+"ファイルシステムのグループを1つのファイルシステムのように扱うことができます。"
+"各グループ対し、1つまたは複数の包含・除外パターンを定義することができます。包"
+"含パターンの1つに一致するファイルシステムは、1つのサービスで1つの大きな"
+"ファイルシステムのように監視されます。除外パターンのいずれかに一致する"
+"ファイルシステムは、グループから除外され、個別に監視されます。"
 
 msgid ""
 "By default, the ntopng host filter is enabled, however, disabling this can "
@@ -10368,7 +10367,7 @@ msgid "CPU usage: Namespace"
 msgstr "CPU usage: 名前空間"
 
 msgid "CPU usage: Pods"
-msgstr "CPU usage: Pods"
+msgstr "CPU 利用量: Pods"
 
 msgid "CPU used"
 msgstr "CPU使用率"
@@ -10441,7 +10440,7 @@ msgid "CPU utilization: Cluster"
 msgstr "CPU utilitzation: クラスター"
 
 msgid "CPUs"
-msgstr "CPUs"
+msgstr "CPU"
 
 msgid "CPUs physical name"
 msgstr "物理ボリューム名"
@@ -12074,7 +12073,8 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "タイムパフォーマンスデータとCheckmk"
 
-msgid "Checkmk: Agent bakery signing keys expire soon"
+#, fuzzy
+msgid "Checkmk: Agent Bakery signing keys expire soon"
 msgstr "Checkmk: エージェントベーカリーの署名キーの期限"
 
 msgid "Checkmk: BI: Bytes"
@@ -12865,7 +12865,7 @@ msgstr "クローンホスト"
 
 #, python-format
 msgid "Clone managed robot %s"
-msgstr "クローン管理ロボット %s"
+msgstr "クローン管理robot %s"
 
 #, python-format
 msgid "Clone report schedule entry %s"
@@ -12896,7 +12896,7 @@ msgid "Clone this entry"
 msgstr "このエントリのクローンを作成する"
 
 msgid "Clone this managed robot"
-msgstr "この管理ロボットのクローンを作成する"
+msgstr "この管理robot のクローンを作成する"
 
 msgid "Clone this metric"
 msgstr "このメトリックのクローンを作成します"
@@ -13630,7 +13630,7 @@ msgid "Configuration of individual Eventlogs"
 msgstr "個々のイベントログの構成"
 
 msgid "Configuration of managed robots for Synthetic Monitoring."
-msgstr "合成モニタリングのための管理ロボットの設定。"
+msgstr "外形監視のための管理robot の設定。"
 
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Linux、Windows、およびUnix用の監視エージェントの構成"
@@ -17638,7 +17638,7 @@ msgid "Delete last alert handler rule"
 msgstr "最後のアラートハンドラルールを削除する"
 
 msgid "Delete managed robot"
-msgstr "管理ロボットを削除する"
+msgstr "管理robot を削除する"
 
 #, python-format
 msgid "Delete notification parameter #%d"
@@ -17805,7 +17805,7 @@ msgid "Delete this logo"
 msgstr "ロゴを削除します"
 
 msgid "Delete this managed robot"
-msgstr "この管理ロボットを削除します"
+msgstr "この管理robot を削除します"
 
 msgid "Delete this metric"
 msgstr "このメトリックを削除します"
@@ -20921,10 +20921,10 @@ msgstr "ヘッダーが有効な場合のみ、レイアウトの編集が可能
 
 #, python-format
 msgid "Edit managed robot %s"
-msgstr "管理ロボットの編集%s"
+msgstr "管理robot の編集%s"
 
 msgid "Edit managed robots"
-msgstr "管理ロボットを修正する"
+msgstr "管理robot を修正する"
 
 #, python-format
 msgid "Edit message broker connection %s"
@@ -21084,7 +21084,7 @@ msgid "Edit this host"
 msgstr "このホストを編集する"
 
 msgid "Edit this managed robot"
-msgstr "この管理ロボットを編集する"
+msgstr "この管理robot を編集する"
 
 msgid "Edit this notification parameter"
 msgstr "この通知パラメータを編集する"
@@ -21583,6 +21583,8 @@ msgid ""
 "Enable this flag only when Active Domain Controller forbids to connect to "
 "itself via network."
 msgstr ""
+"このフラグは、アクティブなドメインコントローラがネットワーク経由での自身への"
+"接続を禁止している場合のみ有効にしてください。"
 
 msgid "Enable this ntopng instance"
 msgstr "このntopngインスタンスを有効にします"
@@ -21594,6 +21596,11 @@ msgid ""
 "standards. Enabling compatibility mode switches to a less restrictive TLS "
 "backend (native-tls) that behaves similarly to cURL and other common tools."
 msgstr ""
+"このチェックでTLS接続エラーが発生する場合に限り、このオプションを有効にしてく"
+"ださい。cURLや従来のcheck_httpなどのツールが正常に動作する場合は必要ありませ"
+"ん。デフォルトのTLSバックエンド（rustls）はより厳格で、TLS規格に厳密に準拠し"
+"ます。互換性モードを有効にすると、cURLやその他の一般的なツールと同様の動作を"
+"する、制限の少ないTLSバックエンド（native-tls）に切り替わります。"
 
 msgid ""
 "Enable this option if you want to uninstall the legacy agent after the new "
@@ -21837,6 +21844,8 @@ msgid ""
 "Enforce TLS 1.3 is not supported in compatibility mode. Please select a "
 "lower minimum TLS version or disable compatibility mode."
 msgstr ""
+"互換性モードでは TLS 1.3 の強制はサポートされていません。最低限の TLS バー"
+"ジョンを低く設定するか、互換性モードを無効にしてください。"
 
 msgid "Enforce TLS v1.2"
 msgstr "TLS v1.2の施行"
@@ -22194,6 +22203,8 @@ msgid ""
 "Error reading parent scan settings. Please delete the file ''%s' and try "
 "again."
 msgstr ""
+"親スキャン設定の読み取り中にエラーが発生しました。ファイル「%s」を削除して再"
+"度お試しください。"
 
 #, python-format
 msgid "Error showing view: %s"
@@ -25369,7 +25380,7 @@ msgid "GPU utilization"
 msgstr "GPU使用率"
 
 msgid "GRPC-based receiver"
-msgstr ""
+msgstr "GRPCベースの受信機"
 
 msgid "GUI"
 msgstr "GUI"
@@ -26271,7 +26282,7 @@ msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, Eメール, ..."
 
 msgid "HTTP-based receiver"
-msgstr ""
+msgstr "HTTPベースの受信機"
 
 msgid "HTTP: Active Requests"
 msgstr "HTTP: アクティブリクエスト"
@@ -30312,6 +30323,9 @@ msgid ""
 "state by default. Here you can choose an alternative state that will apply "
 "to all configured string/regex searches when failing their condition."
 msgstr ""
+"設定された文字列/正規表現検索が失敗した場合、デフォルトではCRIT状態となりま"
+"す。ここでは、条件を満たさなかった場合にすべての設定済文字列/正規表現検索に適"
+"用される代替状態を選択できます。"
 
 msgid ""
 "If the flag is set, then the Windows agent may use unencrypted communication "
@@ -37588,16 +37602,16 @@ msgid "Manage users of the monitoring system."
 msgstr "監視システムのユーザーを管理します。"
 
 msgid "Managed Robot"
-msgstr "管理ロボット"
+msgstr "管理Robot"
 
 msgid "Managed Robots"
-msgstr "管理ロボット"
+msgstr "管理Robot"
 
 msgid "Managed objects"
 msgstr "管理オブジェクト"
 
 msgid "Managed robot deleted."
-msgstr "管理ロボットが削除されました。"
+msgstr "管理robot が削除されました。"
 
 msgid ""
 "Managed robot names are restricted to the following characters: a-z, A-Z, "
@@ -37610,7 +37624,7 @@ msgid "Managed robot not found while attempting to delete it."
 msgstr "管理対象のロボットが削除を試行中に見つかりませんでした。"
 
 msgid "Managed robots"
-msgstr "管理ロボット"
+msgstr "管理robot"
 
 msgid "Management board"
 msgstr "管理ボード"
@@ -38270,17 +38284,24 @@ msgid ""
 "that typically the total memory usage of process will be about 50MiB higher "
 "than this value. This defines the hard limit."
 msgstr ""
+"プロセスヒープによって割り当てられるメモリの最大目標量。通常、プロセスの総メ"
+"モリ使用量はこの値より50MiB大きくなることに注意してください。ハードリミットを"
+"定義します。"
 
 msgid "Maximum amount of non-operational access points"
 msgstr "動作していないアクセスポイントの最大数"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Maximum amount of total memory targeted to be allocated by the process heap. "
 "This option is used to calculate the hard memory limit from the total "
 "available memory. For instance, setting the limit to 75% on a machine with "
 "1000 MiB total memory available will result in a 750 MiB hard limit."
 msgstr ""
+"プロセスヒープが割り当てようとする総メモリの最大量。このオプションは、利用可"
+"能な総メモリからハードメモリ制限を計算するために使用されます。例えば、利用可"
+"能な総メモリが1000 MiBのリミット75%でマシンで制限を75%のすると、750 MiBの"
+"ハード制限が適用されます。"
 
 msgid "Maximum bulk size"
 msgstr "最大バルクサイズ"
@@ -38378,14 +38399,23 @@ msgid ""
 "memory available will result in a 600 MiB hard limit and a 350 MiB soft "
 "limit (the spike limit being equal to 250MiB)"
 msgstr ""
+"メモリ使用量の測定間における許容される最大メモリスパイク。この値は制限値未満"
+"でなければなりません。このオプションは、利用可能な総メモリから最大スパイク値"
+"を計算するために使用されます。例えば、利用可能な総メモリが1000MiBのマシンで、"
+"制限を60%、スパイク制限を25%に設定した場合、ハード制限は600MiB、ソフト制限は"
+"350MiB（スパイク制限は250MiBに相当）となります"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
 "maximum spike value. The soft limit value will be equal to (limit - spike "
 "limit). The recommended value for spike limit is about 20% limit."
 msgstr ""
+"メモリ使用量の測定間における許容される最大メモリスパイク値。この値は制限値未"
+"満でなければなりません。このオプションは最大スパイク値を算出するために使用さ"
+"れます。ソフト制限値は（制限値 - スパイク制限値）に等しくなります。スパイク制"
+"限値の推奨値は約制限値の20%です。"
 
 msgid "Maximum messages per save interval"
 msgstr "保存間隔あたりの最大メッセージ数"
@@ -43719,7 +43749,7 @@ msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "ホスト/サービスごとに1つのRRD(CMCでのみディスクIOを節約)"
 
 msgid "One condition needs to match (offensive)"
-msgstr ""
+msgstr "ひとつの条件が一致する必要があります"
 
 msgid "One heartbeat every"
 msgstr "ハートビートごとに1つ"
@@ -43957,7 +43987,7 @@ msgstr "1つのサーバーに複数のMySQLインスタンスがある場合に
 
 #, python-format
 msgid "Only one %s per site is supported currently."
-msgstr ""
+msgstr "現在、１サイトにつき１つの%sのみがサポートされています。"
 
 msgid "Only one tag may be empty."
 msgstr "空にすることができるタグは1つだけです。"
@@ -44143,6 +44173,13 @@ msgid ""
 "windows/ohm/OpenHardwareMonitorLib.dll -P local/share/check_mk/agents/"
 "windows/"
 msgstr ""
+"セキュリティ上の理由により、OpenHardwareMonitorのファイルは削除されました。"
+"OpenHardwareMonitorを使用するには、当サイトから以下のコマンドでダウンロードし"
+"てください。サイトユーザー:wget https://github.com/Checkmk/checkmk/blob/"
+"master/doc/treasures/windows/ohm/OpenHardwareMonitorCLI.exe -P local/share/"
+"check_mk/agents/windows/wget https://github.com/Checkmk/checkmk/blob/master/"
+"doc/treasures/windows/ohm/OpenHardwareMonitorLib.dll -P local/share/check_mk/"
+"agents/windows/"
 
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
@@ -47025,7 +47062,7 @@ msgid "Permitted contact groups"
 msgstr "許可された連絡先グループ"
 
 msgid "Persistence period for node disk usage fallback"
-msgstr ""
+msgstr "ノードディスク使用量のフォールバック持続期間"
 
 msgid "Persistent (long)"
 msgstr "永続的(長い)"
@@ -48834,6 +48871,9 @@ msgid ""
 "If the response fails the condition (E.g., expected string not found in "
 "body), this will result in a CRITICAL state."
 msgstr ""
+"HTTPレスポンスに対して固定文字列または正規表現による条件を設定します。レスポ"
+"ンスが条件を満たさない場合（例：ボディ内に期待される文字列が見つからない）、"
+"CRITICAL 状態となります。"
 
 msgid "Provide levels"
 msgstr "レベルを提供する"
@@ -49165,6 +49205,8 @@ msgid ""
 "Queue length refers to the total number of messages that have not been "
 "acknowledged by a consumer."
 msgstr ""
+"キュー長とは、コンシューマーによってまだ確認されていないメッセージの総数を指"
+"します。"
 
 msgid "Queue manager name"
 msgstr "キューマネージャー名"
@@ -50585,7 +50627,7 @@ msgid "Remove history entries older than"
 msgstr "設定期間経過したファイルを削除する"
 
 msgid "Remove history entries right after"
-msgstr ""
+msgstr "履歴のエントリを直ちに削除する"
 
 #, fuzzy
 msgid "Remove history entries which meet the following conditions"
@@ -51783,6 +51825,8 @@ msgid ""
 "Returns the current state of DCD cycles and batches. Executes the commands "
 "cmk-dcd -Bv and cmk-dcd -Cv."
 msgstr ""
+"DCDサイクルとバッチの現在の状態を返します。cmk-dcd -Bv および cmk-dcd -Cv コ"
+"マンドを実行します。"
 
 msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
@@ -51862,8 +51906,8 @@ msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
 msgstr ""
-"Robotmkは（Checkmk Synthetic Monitoringの一部として）Robot Frameworkのテスト"
-"結果をCheckmkサービスとして統合します。"
+"Robotmkは（Checkmk 外形監視の一部として）Robot Frameworkのテスト結果をCheckmk"
+"サービスとして統合します。"
 
 msgid "Robotmk Enterprise features are hidden."
 msgstr "Robotmk Enterpriseの機能は非表示です。"
@@ -53095,7 +53139,7 @@ msgid "Scrape interval"
 msgstr "スクレイピング間隔"
 
 msgid "Scratch Pool"
-msgstr ""
+msgstr "Scratch Pool"
 
 msgid "Script (Limited support, see inline help)"
 msgstr "スクリプト(限定的なサポート、インラインヘルプを参照)"
@@ -53837,6 +53881,8 @@ msgid ""
 "Select the site to create a dump for. The actual contents of the dump can be "
 "selected in the next screen."
 msgstr ""
+"ダンプを作成するサイトを選択してください。ダンプの実際の内容は次の画面で選択"
+"できます。"
 
 msgid ""
 "Select the software the LDAP directory is based on. Depending on the "
@@ -56598,7 +56644,7 @@ msgstr ""
 "ンをオフにし、100%はそれを可能な限り強くします。"
 
 msgid "Slot"
-msgstr ""
+msgstr "Slot"
 
 msgid "Slow views"
 msgstr "スロービュー"
@@ -57476,7 +57522,7 @@ msgid "Specify storage account names that the rule should apply to"
 msgstr "ルールを適用するストレージアカウント名を指定します"
 
 msgid "Specify the IPMI 2.0 cipher suite ID to use. Default is 17."
-msgstr ""
+msgstr "使用するIPMI 2.0暗号スイートIDを指定します。デフォルトは17です。"
 
 msgid "Specify the LED, for example 'Rack Unit 1 0'."
 msgstr "LEDを指定します(例: \"ラックユニット 1 0\")。"
@@ -59672,10 +59718,10 @@ msgstr "外形監視"
 
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
-msgstr "合成モニタリング (ライセンスされたテスト: %s)"
+msgstr "外形監視(承認済テスト: %s)"
 
 msgid "Synthetic monitoring is an add-on."
-msgstr "Synthetic monitoringはアドオンです。"
+msgstr "外形監視はアドオンです。"
 
 msgid "Synthetic tests"
 msgstr "Synthetic テスト"
@@ -63986,6 +64032,12 @@ msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "パスワードは変更できません(ユーザーコネクタによってロックされています)。"
 
+#, fuzzy
+msgid ""
+"The password cannot be deleted because the user does not have the permission "
+"to edit it."
+msgstr "%sはあなただけに表示されます。共有する権限はありません。"
+
 #, python-format
 msgid ""
 "The password does not use enough character groups. You need to set a "
@@ -67120,9 +67172,8 @@ msgstr ""
 msgid "This name will be used in the description of the service"
 msgstr "この名前は、サービスの説明で使用されます"
 
-#, fuzzy
 msgid "This node has nested aggregation differences."
-msgstr "要求されたBIアグリゲーションは存在しません。"
+msgstr "このノードにはネストされた集計の差分が存在します。"
 
 msgid "This node is not in the frozen aggregation"
 msgstr "このノードは凍結したアグリゲーションに含まれない"
@@ -75493,9 +75544,8 @@ msgstr "ユーザーやデバイスレベルの最も重要度の低いものを
 msgid "Use local FQDN"
 msgstr "ローカルFQDNを使用する"
 
-#, fuzzy
 msgid "Use local host"
-msgstr "ローカルFQDNを使用する"
+msgstr "ローカルホストを使用する"
 
 msgid "Use localhost for locally detected instances"
 msgstr ""
@@ -80932,22 +80982,17 @@ msgstr ""
 "とができます。正規表現で一致グループを使用し、置換文字列で<tt>\\1</tt>、"
 "<tt>\\2</tt>、...などを使用してそれらを参照できます。"
 
-#, fuzzy
 msgid ""
 "You can specify one or several globbing patterns containing <tt>*</tt>, <tt>?"
 "</tt> and <tt>[...]</tt>, for example <tt>/spool/tmpspace*</tt>. The "
 "filesystems matching the patterns will be grouped together and monitored as "
 "one big filesystem in a single service. "
 msgstr ""
-"<tt>*</tt>、<tt>?</tt>、<tt> [...] </tt>を含む1つまたは複数のグロブパターンを"
-"指定できます(例:<tt>/pool/tmpspace *)。 </tt>。パターンに一致するファイルシス"
-"テムはグループ化され、単一のサービスで1つの大きなファイルシステムとして監視さ"
-"れます。特にチェック<tt> df </tt>の場合、パターンは、<a href='wato.py?mode = "
-"edit_ruleset＆varname = inventory_df_rulesの構成に応じて、マウントポイントま"
-"たはボリュームとマウントポイントの組み合わせのいずれかに一致することに注意し"
-"てください。 '>ファイルシステムの検出</a>。"
+"<tt>*</tt>、<tt>?</tt>、<tt> [...] </tt>　を含む1つまたは複数のグロブパターン"
+"を指定できます(例:<tt>/pool/tmpspace *)。 </tt>。 パターンに一致するファイル"
+"システムはグループ化され、単一のサービス内で1つの大きなファイルシステムとして"
+"監視されます。 "
 
-#, fuzzy
 msgid ""
 "You can specify one or several globbing patterns containing <tt>*</tt>, <tt>?"
 "</tt> and <tt>[...]</tt>, for example <tt>/spool/tmpspace*</tt>. The "
@@ -80956,11 +81001,7 @@ msgid ""
 msgstr ""
 "<tt>*</tt>、 <tt>?</tt> と <tt>[...]</tt> を含む1つまたは複数のグロブパターン"
 "を指定できます(例:<tt>/spool/tmpspace*</tt>)。パターンに一致するファイルシス"
-"テムはグループ化から除外され、個別に監視されます。特にチェック <tt>df</tt>の"
-"場合、パターンは、<a href='wato.py?"
-"mode=edit_ruleset&varname=inventory_df_rules'>ファイルシステムの検出</a> の構"
-"成に応じて、マウントポイントまたはボリュームとマウントポイントの組み合わせの"
-"いずれかに一致することに注意してください。"
+"テムはグループ化から除外され、個別に監視されます。"
 
 msgid "You can specify the NetBIOS server name."
 msgstr "NetBIOSサーバー名を指定できます。"

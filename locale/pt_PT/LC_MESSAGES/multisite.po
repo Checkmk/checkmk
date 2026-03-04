@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-27 18:36+0000\n"
+"PO-Revision-Date: 2026-03-03 18:36+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -12853,7 +12853,7 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk com dados de desempenho temporal"
 
-msgid "Checkmk: Agent bakery signing keys expire soon"
+msgid "Checkmk: Agent Bakery signing keys expire soon"
 msgstr ""
 
 #, fuzzy
@@ -68019,6 +68019,12 @@ msgstr "O nome da vista só pode conter letras, dígitos e sublinhados."
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "A senha não pode ser alterada (Ela é bloqueada pelo conector do usuário)."
+
+#, fuzzy
+msgid ""
+"The password cannot be deleted because the user does not have the permission "
+"to edit it."
+msgstr "O %s só é visível para si porque não tem autorização para o partilhar."
 
 #, python-format
 msgid ""

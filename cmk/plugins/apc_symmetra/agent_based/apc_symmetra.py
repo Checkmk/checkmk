@@ -322,7 +322,7 @@ def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> Check
         yield from check_levels(
             value=battery_time_remain,
             metric_name="runtime",
-            levels_upper=params["battime"] if "battime" in params else ("no_levels", None),
+            levels_lower=params["battime"] if "battime" in params else ("no_levels", None),
             render_func=render.timespan,
             label="Time remaining",
         )

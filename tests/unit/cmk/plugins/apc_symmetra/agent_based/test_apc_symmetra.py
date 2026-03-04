@@ -153,6 +153,28 @@ STRING_TABLE_3 = [
                 Result(state=State.OK, summary="Battery pack cartridge 1: OK"),
             ],
         ),
+        pytest.param(
+            STRING_TABLE_2,
+            {
+                "capacity": ("fixed", (95, 80)),
+                "calibration_state": 0,
+                "battery_replace_state": 0,
+                "battime": ("fixed", (7200.0, 1800.0)),
+            },
+            [
+                Result(state=State.OK, summary="Battery status: normal"),
+                Result(state=State.OK, summary="No battery needs replacing"),
+                Result(state=State.OK, summary="Output status: on line (calibration invalid)"),
+                Result(state=State.OK, summary="Capacity: 100.00%"),
+                Metric("capacity", value=100.0, boundaries=(0, 100)),
+                Result(
+                    state=State.WARN,
+                    summary="Time remaining: 1 hour 1 minute (warn/crit below 2 hours 0 minutes/30 minutes 0 seconds)",
+                ),
+                Metric(name="runtime", value=3660.0, levels=(None, None)),
+            ],
+            id="battime_levels_lower_triggers_warn",
+        ),
     ],
 )
 def test_check(

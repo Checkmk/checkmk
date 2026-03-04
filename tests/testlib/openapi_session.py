@@ -35,6 +35,7 @@ import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import datetime, timedelta, UTC
 from typing import Any, NamedTuple
 
 import requests
@@ -156,6 +157,7 @@ class CMKOpenApiSession(requests.Session):
         self.event_console = EventConsoleAPI(self)
         self.saml2 = Saml2API(self)
         self.relays = RelayAPI(self)
+        self.relay_registration_tokens = RelayRegistrationTokenAPI(self)
         self.metric_backend = MetricBackendAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
@@ -1971,6 +1973,28 @@ class RelayAPI(BaseAPI):
         )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+
+class RelayRegistrationTokenAPI(BaseAPI):
+    """
+    API for managing relay authentication tokens (for registration).
+    """
+
+    _domain_url = "/domain-types/relay_registration_token/collections/all"
+    _headers = {"Content-Type": "application/json"}
+
+    def create(self, expires_at: datetime = datetime.now(UTC) + timedelta(hours=1)) -> str:
+        response = self.session.post(
+            url=self._domain_url,
+            headers=self._headers,
+            json={
+                "expires_at": expires_at.isoformat(),
+            },
+        )
+        if response.status_code != 201:
+            raise UnexpectedResponse.from_response(response)
+
+        return str(response.json()["id"])  # Explicit type case to make mypy happy
 
 
 class MetricBackendAPI(BaseAPI):

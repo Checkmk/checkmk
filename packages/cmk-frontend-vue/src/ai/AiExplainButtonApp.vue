@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { type AiButton } from 'cmk-shared-typing/typescript/ai_button'
+import { type AiButton, type ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
 import { type Ref, computed, provide, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
@@ -45,8 +45,40 @@ const templateLoaded = computed(() => {
   return aiTemplate.value !== null
 })
 
-document.addEventListener('cmk-ai-explain-button', () => {
-  explainThis()
+function isSameContext(a: ExplainThisIssueData, b: ExplainThisIssueData): boolean {
+  return (
+    a.host_name === b.host_name &&
+    a.service_name === b.service_name &&
+    a.service_state === b.service_state &&
+    a.host_state === b.host_state
+  )
+}
+
+// Listen for events from both icon clicks and button clicks
+// Icon clicks (from explain_with_ai.py) include context data in event.detail
+// Button clicks trigger without detail, using the component's props instead
+document.addEventListener('cmk-ai-explain-button', (event: Event) => {
+  const customEvent = event as CustomEvent<ExplainThisIssueData | undefined>
+  if (customEvent.detail) {
+    // Event from icon: use the provided context data
+    const incoming = customEvent.detail
+    if (aiTemplate.value !== null && isSameContext(aiTemplate.value.context_data, incoming)) {
+      // same context: reopen the existing conversation
+      aiTemplate.value.disableAllAnimations()
+    } else {
+      // different context: start fresh
+      aiTemplate.value = new AiTemplateService(
+        props.template.id,
+        props.user_id,
+        incoming,
+        props.site_name
+      )
+    }
+    conversationOpen.value = true
+  } else {
+    // Event from button: use component props
+    explainThis()
+  }
 })
 </script>
 

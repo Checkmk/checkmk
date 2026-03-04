@@ -42,7 +42,7 @@ export function waitForRedirect<T>(
 
   if (valid) {
     callback(win, resolve)
-  } else if (win.window === null) {
+  } else if (win.closed) {
     callback(win, resolve, 'Window was closed before redirect.')
   } else if (timeout !== undefined && timeout <= 0) {
     callback(win, resolve, 'Authorization timed out. Please try again.')

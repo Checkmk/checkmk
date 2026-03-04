@@ -830,7 +830,7 @@ def _compute_graph_v_axis(
             VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
             for label in labels
         ]
-        max_label_length = max(len(l.text) for l in rendered_labels)
+        max_label_length = max(len(l.text) for l in rendered_labels) if rendered_labels else 0
         graph_unit = None
     else:
         rendered_labels, max_label_length, graph_unit = _render_legacy_labels(

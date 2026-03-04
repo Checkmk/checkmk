@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+OMD_SITE="$(whoami)"
 MANAGEMENT_API_PORT="$(grep "^CONFIG_RABBITMQ_MANAGEMENT_PORT=" ~/etc/omd/site.conf | cut -d"'" -f2)"
+CA_CERT=~/etc/ssl/ca.pem
 MONITORING_USER="cmk-internal-monitoring"
 MONITORING_ROLE="monitoring"
 ADMIN_ROLE="administrator"
@@ -66,8 +68,10 @@ _bind_tracing_vhost() {
         _get_user_config
         _get_tracing_config
     } | curl -i --config - \
+        --cacert "${CA_CERT}" \
+        --connect-to "${OMD_SITE}::localhost:" \
         -H "content-type:application/json" \
-        -XPUT "http://localhost:${MANAGEMENT_API_PORT}/api/traces/${vhost}/${TRACING_LOG_FILE_NAME}" 2>&1)
+        -XPUT "https://${OMD_SITE}:${MANAGEMENT_API_PORT}/api/traces/${vhost}/${TRACING_LOG_FILE_NAME}" 2>&1)
 
     bad_request_unknown_cause='{"error":"bad_request","reason":"Something went wrong trying to start the trace - check the logs."}'
     if echo "${response}" | grep -q "HTTP/1.1 201 Created"; then
@@ -90,12 +94,14 @@ _delete_tracing() {
         "${RABBITMQCTL:-rabbitmqctl}" trace_off -p "${vhost}"
         api_vhost="$(_format_vhost "${vhost}")"
         _get_user_config | curl --config - \
-            -DELETE "http://localhost:${MANAGEMENT_API_PORT}/api/traces/${api_vhost}/${TRACING_LOG_FILE_NAME}"
+            --cacert "${CA_CERT}" \
+            --connect-to "${OMD_SITE}::localhost:" \
+            -DELETE "https://${OMD_SITE}:${MANAGEMENT_API_PORT}/api/traces/${api_vhost}/${TRACING_LOG_FILE_NAME}"
     done
 }
 
 query() {
-    _get_user_config | curl --config - "http://localhost:${MANAGEMENT_API_PORT}/${1}"
+    _get_user_config | curl --config - --cacert "${CA_CERT}" --connect-to "${OMD_SITE}::localhost:" "https://${OMD_SITE}:${MANAGEMENT_API_PORT}/${1}"
 }
 
 enable_tracing() {

@@ -265,13 +265,25 @@ def sending() -> CascadingSingleChoice:
                 parameter_form=Dictionary(
                     title=Title("Microsoft Exchange Online"),
                     elements={
+                        "server": DictElement(
+                            parameter_form=String(
+                                title=Title("Microsoft Graph API endpoint"),
+                                macro_support=True,
+                                help_text=Help(
+                                    "Emails are sent via the Microsoft Graph API. The endpoint "
+                                    "(graph.microsoft.com) will appear as the sending host in "
+                                    "the message headers of forwarded emails."
+                                ),
+                                prefill=DefaultValue("graph.microsoft.com"),
+                            )
+                        ),
                         "auth": DictElement(
                             required=True,
                             parameter_form=OAuth2Connection(
                                 title=Title("Microsoft Entra ID connection"),
                                 connector_type="microsoft_entra_id",
                             ),
-                        )
+                        ),
                     },
                 ),
             ),
@@ -304,13 +316,25 @@ def fetching(
                     parameter_form=Dictionary(
                         title=Title("Microsoft Exchange Online"),
                         elements={
+                            "server": DictElement(
+                                parameter_form=String(
+                                    title=Title("Microsoft Graph API endpoint"),
+                                    macro_support=True,
+                                    help_text=Help(
+                                        "Emails are sent via the Microsoft Graph API. The endpoint "
+                                        "(graph.microsoft.com) will appear as the sending host in "
+                                        "the message headers of forwarded emails."
+                                    ),
+                                    prefill=DefaultValue("graph.microsoft.com"),
+                                )
+                            ),
                             "auth": DictElement(
                                 required=True,
                                 parameter_form=OAuth2Connection(
                                     title=Title("Microsoft Entra ID connection"),
                                     connector_type="microsoft_entra_id",
                                 ),
-                            )
+                            ),
                         },
                     ),
                 ),

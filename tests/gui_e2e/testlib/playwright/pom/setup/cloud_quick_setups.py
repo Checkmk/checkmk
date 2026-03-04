@@ -501,7 +501,7 @@ class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
             service_checkbox.click()
 
     def specify_stage_one_details(
-        self, subscription_id: str, tenant_id: str, client_id: str, secret: str
+        self, subscription_id: str, tenant_name: str, tenant_id: str, client_id: str, secret: str
     ) -> None:
         logger.info("Initialize stage-1 details.")
         main_area = self.main_area.locator()
@@ -512,6 +512,7 @@ class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
         )
         subscription_area.get_by_role("button", name="Add new entry").click()
         subscription_area.locator("input").fill(subscription_id)
+        main_area.get_by_role("textbox", name="Tenant Name").fill(tenant_name)
         main_area.get_by_role("textbox", name="Tenant ID / Directory ID").fill(tenant_id)
         main_area.get_by_role("textbox", name="Client ID / Application ID").fill(client_id)
 

@@ -81,7 +81,6 @@ def fixture_azure_qs_config_page(
         list_hosts_page.activate_changes(test_site)
 
 
-@pytest.mark.skip(reason="CMK-32111")
 def test_minimal_configuration(
     azure_qs_config_page: AzureAddNewConfiguration, test_site: Site
 ) -> None:
@@ -94,6 +93,7 @@ def test_minimal_configuration(
     # Stage 1
     azure_qs_config_page.specify_stage_one_details(
         subscription_id="my_subscription_id",
+        tenant_name="My Tenant",
         tenant_id="my_tenant_id",
         client_id="my_client_id",
         secret="my_secret",

@@ -240,3 +240,11 @@ sort() {
     /usr/bin/sort "$@"
 }
 export -f sort
+
+# Mock: rm - Remove files and directories
+# shellcheck disable=SC2317
+rm() {
+    _record_call "rm $*"
+    /bin/rm "$@"
+}
+export -f rm

@@ -176,7 +176,7 @@ class SNMPv3AuthPrivacyModel:
         )
 
 
-SNMPCredentialsModel = (
+type SNMPCredentialsModel = (
     SNMPCommunityModel
     | SNMPv3NoAuthNoPrivacyModel
     | SNMPv3AuthNoPrivacyModel
@@ -196,7 +196,7 @@ class SNMPCredentialsConverter:
         match value[0]:
             case "noAuthNoPriv":
                 return SNMPv3NoAuthNoPrivacyModel.from_internal(value)
-            case "authPriv":
+            case "authNoPriv":
                 return SNMPv3AuthNoPrivacyModel.from_internal(value)
             case "authPriv":
                 return SNMPv3AuthPrivacyModel.from_internal(value)

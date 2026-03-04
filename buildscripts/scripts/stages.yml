@@ -330,7 +330,7 @@ STAGES:
           exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/testlogs/**/test.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/**/*/test.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/"
 
     - NAME: "Python License Headers Test"

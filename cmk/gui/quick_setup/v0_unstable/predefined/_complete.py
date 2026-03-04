@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import time
 from collections.abc import Callable, Mapping, Sequence
 from uuid import uuid4
 
@@ -63,8 +64,10 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.services import (
     DiscoveryAction,
+    DiscoveryResult,
     get_check_table,
     perform_fix_all,
+    ServiceDiscoveryBackgroundJob,
 )
 from cmk.gui.watolib.sites import ReplicationStatusFetcher
 from cmk.password_store.v1_unstable import Secret
@@ -423,6 +426,46 @@ def _service_discovery_possible(
     return True
 
 
+def _get_service_discovery_result(
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    debug: bool,
+    host: Host,
+    host_name: str,
+    site_id: SiteId,
+    use_git: bool,
+    user_permission_config: UserPermissionSerializableConfig,
+) -> DiscoveryResult:
+    if isinstance(automation_config, LocalAutomationConfig):
+        job = ServiceDiscoveryBackgroundJob(HostName(host_name))
+        job.wait_for_completion()
+        return job.get_result(debug=debug)
+
+    snapshot = fetch_service_discovery_background_job_status(
+        automation_config, host_name, debug=debug
+    )
+    if not snapshot.exists:
+        raise Exception(
+            _("Could not find a running service discovery for host %s on remote site %s")
+            % (host_name, site_id)
+        )
+    while snapshot.is_active:
+        time.sleep(0.5)
+        snapshot = fetch_service_discovery_background_job_status(
+            automation_config, host_name, debug=debug
+        )
+    # We need an extra round-trip to retrieve the check table from the remote site.
+    # The job status polling above only returns metadata, not the discovery result.
+    return get_check_table(
+        host,
+        DiscoveryAction.NONE,
+        automation_config=automation_config,
+        user_permission_config=user_permission_config,
+        raise_errors=False,
+        debug=debug,
+        use_git=use_git,
+    )
+
+
 def _run_service_discovery(
     host_name: str,
     site_id: SiteId,
@@ -434,34 +477,10 @@ def _run_service_discovery(
     use_git: bool,
 ) -> None:
     host: Host = Host.load_host(HostName(host_name))
-    if isinstance(automation_config, RemoteAutomationConfig):
-        # this also implicitly syncs the pending changes to the remote site to run the discovery
-        get_check_table(
-            host,
-            DiscoveryAction.REFRESH,
-            automation_config=automation_config,
-            user_permission_config=user_permission_config,
-            raise_errors=False,
-            debug=debug,
-            use_git=use_git,
-        )
-
-        snapshot = fetch_service_discovery_background_job_status(
-            automation_config, host_name, debug=debug
-        )
-        if not snapshot.exists:
-            raise Exception(
-                _("Could not find a running service discovery for host %s on remote site %s")
-                % (host_name, site_id)
-            )
-        while snapshot.is_active:
-            snapshot = fetch_service_discovery_background_job_status(
-                automation_config, host_name, debug=debug
-            )
-
-    check_table = get_check_table(
+    # For remote sites this also implicitly syncs the pending changes to run the discovery
+    get_check_table(
         host,
-        DiscoveryAction.FIX_ALL,
+        DiscoveryAction.REFRESH,
         automation_config=automation_config,
         user_permission_config=user_permission_config,
         raise_errors=False,
@@ -469,7 +488,9 @@ def _run_service_discovery(
         use_git=use_git,
     )
     perform_fix_all(
-        discovery_result=check_table,
+        discovery_result=_get_service_discovery_result(
+            automation_config, debug, host, host_name, site_id, use_git, user_permission_config
+        ),
         host=host,
         raise_errors=False,
         automation_config=LocalAutomationConfig(),

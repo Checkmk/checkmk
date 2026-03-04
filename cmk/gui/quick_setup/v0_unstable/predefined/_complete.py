@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Callable, Mapping, Sequence
 from uuid import uuid4
 
@@ -63,8 +64,10 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.services import (
     DiscoveryAction,
+    DiscoveryResult,
     get_check_table,
     perform_fix_all,
+    ServiceDiscoveryBackgroundJob,
 )
 from cmk.gui.watolib.sites import ReplicationStatusFetcher, site_management_registry
 
@@ -388,23 +391,37 @@ def _service_discovery_possible(site_id: SiteId, is_local: bool) -> bool:
     return True
 
 
+def _get_service_discovery_result(
+    is_local: bool,
+    host: Host,
+    host_name: str,
+    site_id: SiteId,
+) -> DiscoveryResult:
+    if is_local:
+        job = ServiceDiscoveryBackgroundJob(HostName(host_name))
+        job.wait_for_completion()
+        return job.get_result()
+
+    snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
+    if not snapshot.exists:
+        raise Exception(
+            _("Could not find a running service discovery for host %s on remote site %s")
+            % (host_name, site_id)
+        )
+    while snapshot.is_active:
+        time.sleep(0.5)
+        snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
+    # We need an extra round-trip to retrieve the check table from the remote site.
+    # The job status polling above only returns metadata, not the discovery result.
+    return get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
+
+
 def _run_service_discovery(host_name: str, site_id: SiteId, is_local: bool) -> None:
     host: Host = Host.load_host(HostName(host_name))
-    if not is_local:
-        # this also implicitly syncs the pending changes to the remote site to run the discovery
-        get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
-        snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
-        if not snapshot.exists:
-            raise Exception(
-                _("Could not find a running service discovery for host %s on remote site %s")
-                % (host_name, site_id)
-            )
-        while snapshot.is_active:
-            snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
-
-    check_table = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=False)
+    # For remote sites this also implicitly syncs the pending changes to run the discovery
+    get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
     perform_fix_all(
-        discovery_result=check_table,
+        discovery_result=_get_service_discovery_result(is_local, host, host_name, site_id),
         host=host,
         raise_errors=False,
     )

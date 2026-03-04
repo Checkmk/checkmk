@@ -3,16 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from abc import ABC, abstractmethod
-
-import cmk.utils.resulttype as result
+import enum
 
 Config = dict[str, str]
 Replacements = dict[str, str]
-CommandOptions = dict[str, str | None]
 
 
-class ConfigChoiceHasError(ABC):
-    @abstractmethod
-    def __call__(self, value: str) -> result.Result[None, str]:
-        raise NotImplementedError
+class Skeleton(enum.Enum):
+    INSTALL = "install"
+    KEEPOLD = "keepold"
+    ABORT = "abort"
+    ASK = "ask"

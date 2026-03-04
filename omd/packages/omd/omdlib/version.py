@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import omdlib
+from omdlib.site_paths import SitePaths
 from omdlib.utils import site_exists
+from omdlib.version_utils import default_version, omd_versions, version_from_site_dir
 
 
 def main_version(
@@ -21,10 +23,10 @@ def main_version(
 ) -> None:
     if len(args) > 0:
         site_name = args[0]
-        site_dir = omd_path / f"sites/{site_name}"
-        if not site_exists(site_dir):
+        site_home = SitePaths.from_site_name(site_name, omd_path).home
+        if not site_exists(Path(site_home)):
             sys.exit("No such site: %s" % site_name)
-        version = version_from_site_dir(site_dir)
+        version = version_from_site_dir(Path(site_home))
     else:
         version = omdlib.__version__
 
@@ -50,27 +52,3 @@ def main_versions(
             sys.stdout.write("%s (default)\n" % v)
         else:
             sys.stdout.write("%s\n" % v)
-
-
-def default_version(versions_path: Path) -> str:
-    return (versions_path / "default").resolve().name
-
-
-def omd_versions(versions_path: Path) -> Collection[str]:
-    try:
-        return sorted(d.name for d in versions_path.iterdir() if d.name != "default")
-    except FileNotFoundError:
-        return []
-
-
-def version_exists(v: str, versions_path: Path) -> bool:
-    return v in omd_versions(versions_path)
-
-
-def version_from_site_dir(site_dir: Path) -> str | None:
-    """The version of a site is solely determined by the link ~SITE/version
-    In case the version of a site can not be determined, it reports None."""
-    try:
-        return (site_dir / "version").readlink().name
-    except Exception:
-        return None

@@ -51,7 +51,7 @@ class SiteDistributedSetup(str, enum.Enum):
 
 
 def get_site_distributed_setup() -> SiteDistributedSetup:
-    file_vars: dict = {}
+    file_vars: dict[str, object] = {}
     if (distr_wato_filepath := Path("~/etc/omd/distributed.mk").expanduser()).exists():
         exec(  # nosec B102 # BNS:aee528
             distr_wato_filepath.read_text(),
@@ -68,10 +68,10 @@ def get_site_distributed_setup() -> SiteDistributedSetup:
 def chown_tree(directory: str, user: str) -> None:
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
-    os.chown(directory, uid, gid)
-    for dirpath, dirnames, filenames in os.walk(directory):
+    os.lchown(directory, uid, gid)
+    for _, dirnames, filenames, dir_fd in os.fwalk(directory):
         for entry in dirnames + filenames:
-            os.lchown(dirpath + "/" + entry, uid, gid)
+            os.chown(entry, uid, gid, dir_fd=dir_fd, follow_symlinks=False)
 
 
 def create_skeleton_file(

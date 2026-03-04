@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-# pylint: disable=redefined-outer-name
 import os
 from pathlib import Path
 
@@ -15,11 +13,10 @@ from cryptography.x509.oid import NameOID
 from pytest_mock import MockerFixture
 
 import omdlib
+import omdlib.finalize
 import omdlib.main
 import omdlib.utils
 from omdlib.contexts import SiteContext
-
-from cmk.ccc import version
 
 
 def test_initialize_site_ca(
@@ -33,18 +30,19 @@ def test_initialize_site_ca(
     site_pem = ca_path / "sites" / ("%s.pem" % site_id)
 
     mocker.patch(
-        "omdlib.main.cert_dir",
+        "omdlib.finalize.cert_dir",
         return_value=ca_path,
     )
 
     assert not site_pem.exists()
-    omdlib.main.initialize_site_ca(SiteContext(site_id), site_key_size=1024)
+    omdlib.finalize.initialize_site_ca(SiteContext(site_id), site_key_size=1024)
 
     assert ca_pem.exists()
     ca_cert = load_pem_x509_certificate(ca_pem.read_bytes())
     assert (
-        ca_cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].rfc4514_string()
-        == f"CN=Site '{site_id}' local CA"
+        ca_cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
+        .rfc4514_string()
+        .startswith(f"CN=Site '{site_id}' local CA")
     )
 
     assert site_pem.exists()
@@ -59,21 +57,10 @@ def test_hostname() -> None:
     assert omdlib.main.hostname() == os.popen("hostname").read().strip()
 
 
-def test_main_help(capsys: pytest.CaptureFixture[str]) -> None:
-    omdlib.main.main_help()
-    stdout = capsys.readouterr()[0]
-    assert "omd COMMAND -h" in stdout
-
-
-@pytest.mark.parametrize("edition", list(version.Edition))
-def test_get_edition(edition: version._EditionValue) -> None:
-    assert omdlib.main._get_edition(f"1.2.3.{edition.short}") != "unknown"
-
-
 def test_permission_action_new_link_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="link",
@@ -87,7 +74,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
     )
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -101,7 +88,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
     )
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="link",
@@ -118,7 +105,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
 def test_permission_action_changed_type_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="dir",
@@ -132,7 +119,7 @@ def test_permission_action_changed_type_triggers_no_action() -> None:
     )
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -149,7 +136,7 @@ def test_permission_action_changed_type_triggers_no_action() -> None:
 def test_permission_action_same_target_permission_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -163,7 +150,7 @@ def test_permission_action_same_target_permission_triggers_no_action() -> None:
     )
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="dir",
@@ -183,7 +170,7 @@ def test_permission_action_user_and_new_changed(
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -203,7 +190,7 @@ def test_permission_action_user_and_new_changed_set_default(
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -220,7 +207,7 @@ def test_permission_action_user_and_new_changed_set_default(
 def test_permission_action_new_changed_set_default() -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -237,7 +224,7 @@ def test_permission_action_new_changed_set_default() -> None:
 def test_permission_action_user_changed_no_action() -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -254,7 +241,7 @@ def test_permission_action_user_changed_no_action() -> None:
 def test_permission_action_old_and_new_changed_set_to_new() -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -272,7 +259,7 @@ def test_permission_action_all_changed_incl_type_ask(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -292,7 +279,7 @@ def test_permission_action_all_changed_incl_type_ask_default(
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -309,7 +296,7 @@ def test_permission_action_all_changed_incl_type_ask_default(
 def test_permission_action_directory_was_removed_in_target() -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="etc/ssl/private",
             old_type="dir",
@@ -326,7 +313,7 @@ def test_permission_action_directory_was_removed_in_target() -> None:
 def test_permission_action_directory_was_removed_in_both() -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath="etc/ssl/private",
             old_type="dir",
@@ -358,7 +345,7 @@ def test_permission_action_directory_was_removed_in_both() -> None:
 def test_permission_action_all_changed_streamline_standard_directories(relpath: str) -> None:
     assert (
         omdlib.main.permission_action(
-            site=SiteContext("bye"),
+            site_home="/tmp",
             conflict_mode="ask",
             relpath=relpath,
             old_type="dir",

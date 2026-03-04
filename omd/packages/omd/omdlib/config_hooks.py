@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 """Site configuration and config hooks
 
 Hooks are scripts in lib/omd/hooks that are being called with one
@@ -15,35 +16,34 @@ depends - exits with 1, if this hook misses its dependent hook settings
 """
 
 import dataclasses
-import logging
 import os
 import re
 import subprocess
 import sys
-from collections.abc import Iterable
-from ipaddress import ip_network, IPv4Address, IPv6Address
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
 
-import pydantic
-
-from omdlib.type_defs import Config, ConfigChoiceHasError
+from omdlib.config_choices import (
+    ApacheNetworkPortHasError,
+    ApacheTCPAddrHasError,
+    ConfigChoiceHasError,
+    IpAddressListHasError,
+    IpListenAddressHasError,
+    NetworkPortHasError,
+)
+from omdlib.type_defs import Config
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
 
-import cmk.utils.resulttype as result
-from cmk.utils import paths
-from cmk.utils.log import VERBOSE
-
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
-
-logger = logging.getLogger("cmk.omd")
+from omdlib.site_paths import SitePaths
 
 ConfigHookChoiceItem = tuple[str, str]
-ConfigHookChoices = Pattern | list[ConfigHookChoiceItem] | ConfigChoiceHasError
+ConfigHookChoices = Pattern[str] | list[ConfigHookChoiceItem] | ConfigChoiceHasError
 ConfigHookResult = tuple[int, str]
 
 
@@ -60,89 +60,26 @@ class ConfigHook:
 ConfigHooks = dict[str, ConfigHook]
 
 
-class IpAddressListHasError(ConfigChoiceHasError):
-    def __call__(self, value: str) -> result.Result[None, str]:
-        ip_addresses = value.split()
-        if not ip_addresses:
-            return result.Error("Specify at least one IP address.")
-        for ip_address in ip_addresses:
-            try:
-                ip_network(ip_address)
-            except ValueError:
-                return result.Error(f"The IP address {ip_address} does match the expected format.")
-        return result.OK(None)
-
-
-class IpListenAddressHasError(ConfigChoiceHasError):
-    def __call__(self, value: str) -> result.Result[None, str]:
-        if not value:
-            return result.Error("Empty address")
-
-        if value.startswith("[") and value.endswith("]"):
-            try:
-                IPv6Address(value[1:-1])
-                return result.OK(None)
-            except ValueError:
-                return result.Error("Invalid IPv6 address")
-
-        try:
-            IPv4Address(value)
-        except ValueError:
-            return result.Error("Invalid IPv4 address")
-
-        return result.OK(None)
-
-
-class NetworkPortHasError(ConfigChoiceHasError):
-    def __call__(self, value: str) -> result.Result[None, str]:
-        try:
-            port = int(value)
-        except ValueError:
-            return result.Error("Invalid port number")
-
-        if port < 1024 or port > 65535:
-            return result.Error("Invalid port number")
-
-        return result.OK(None)
-
-
-class ApacheTCPAddrHasError(ConfigChoiceHasError):
-    def __call__(self, value: str) -> result.Result[None, str]:
-        class _Parser(pydantic.RootModel):
-            root: pydantic.HttpUrl
-
-        url = f"http://{value}:80"
-        try:
-            _Parser.model_validate(url)
-            return result.OK(None)
-        except pydantic.ValidationError as e:
-            message = f"""OMD uses APACHE_TCP_ADDR and APACHE_TCP_PORT to construct an Apache
-Listen directive. For example, setting APACHE_TCP_PORT to 80 results in: {url}.
-This is invalid because of: """
-            message += ", ".join([error["ctx"]["error"] for error in e.errors()])
-            return result.Error(message)
-
-
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
-def create_config_environment(site: "SiteContext") -> None:
-    for varname, value in site.conf.items():
+def create_config_environment(config: Config) -> None:
+    for varname, value in config.items():
         os.environ["CONFIG_" + varname] = value
 
 
 # TODO: RENAME
-def save_site_conf(site: "SiteContext") -> None:
-    confdir = Path(site.dir, "etc/omd")
+def save_site_conf(site_home: str, config: Config) -> None:
+    confdir = Path(site_home, "etc/omd")
     confdir.mkdir(exist_ok=True)
     with (confdir / "site.conf").open(mode="w") as f:
-        for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
+        for hook_name, value in sorted(config.items(), key=lambda x: x[0]):
             f.write(f"CONFIG_{hook_name}='{value}'\n")
     (confdir / "site.conf").chmod(0o644)
 
 
 # Get information about all hooks. Just needed for
 # the "omd config" command.
-def load_config_hooks(site: "SiteContext") -> ConfigHooks:
+def load_config_hooks(site: "SiteContext", verbose: bool) -> ConfigHooks:
     config_hooks: ConfigHooks = {}
 
     hook_files = []
@@ -152,21 +89,20 @@ def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     for hook_name in hook_files:
         try:
             if hook_name[0] != ".":
-                hook = _config_load_hook(site, hook_name)
-                # only load configuration hooks
-                if hook.choices is not None:
-                    config_hooks[hook_name] = hook
+                hook = _config_load_hook(site, hook_name, verbose)
+                config_hooks[hook_name] = hook
         except MKTerminate:
             raise
         except Exception:
             pass
-    config_hooks = load_hook_dependencies(site, config_hooks)
+    config_hooks = load_hook_dependencies(site, config_hooks, verbose)
     return config_hooks
 
 
-def _config_load_hook(  # pylint: disable=too-many-branches
+def _config_load_hook(
     site: "SiteContext",
     hook_name: str,
+    verbose: bool,
 ) -> ConfigHook:
     unstructured = {"deprecated": False}
 
@@ -174,6 +110,7 @@ def _config_load_hook(  # pylint: disable=too-many-branches
         # IMHO this should be unreachable...
         raise MKTerminate("Site has no version and therefore no hooks")
 
+    alias = None
     description = ""
     menu = "Other"
     description_active = False
@@ -192,7 +129,8 @@ def _config_load_hook(  # pylint: disable=too-many-branches
             else:
                 description_active = False
 
-    hook_info = call_hook(site, hook_name, ["choices"])[1]
+    hook_info = _call_hook(site, hook_name, ["choices"], verbose)[1]
+    assert alias is not None, "Implementation error, please contact support"
     return ConfigHook(
         choices=_parse_hook_choices(hook_info),
         name=hook_name,
@@ -217,6 +155,8 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             return IpListenAddressHasError()
         case ["@{NETWORK_PORT}"]:
             return NetworkPortHasError()
+        case ["@{APACHE_NETWORK_PORT}"]:
+            return ApacheNetworkPortHasError()
         case ["@{IP_ADDRESS_LIST}"]:
             return IpAddressListHasError()
         case ["@{APACHE_TCP_ADDR}"]:
@@ -234,10 +174,12 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             return choices
 
 
-def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> ConfigHooks:
-    for hook_name in sort_hooks(list(config_hooks.keys())):
+def load_hook_dependencies(
+    site: "SiteContext", config_hooks: ConfigHooks, verbose: bool
+) -> ConfigHooks:
+    for hook_name in _sort_hooks(list(config_hooks.keys())):
         hook = config_hooks[hook_name]
-        exitcode, _content = call_hook(site, hook_name, ["depends"])
+        exitcode, _content = _call_hook(site, hook_name, ["depends"], verbose)
         if exitcode:
             hook.unstructured["active"] = False
         else:
@@ -245,26 +187,27 @@ def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> Co
     return config_hooks
 
 
-def load_config(site: "SiteContext") -> Config:
+def load_config(site: "SiteContext", verbose: bool) -> Config:
     """Load all variables from omd/sites.conf. These variables always begin with
     CONFIG_. The reason is that this file can be sources with the shell.
 
     Puts these variables into the config dict without the CONFIG_. Also
     puts the variables into the process environment."""
-    config = read_site_config(site)
+    site_home = SitePaths.from_site_name(site.name).home
+    config = read_site_config(site_home)
     if site.hook_dir and os.path.exists(site.hook_dir):
-        for hook_name in sort_hooks(os.listdir(site.hook_dir)):
+        for hook_name in _sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
-                config[hook_name] = call_hook(
-                    site, hook_name, ["default", edition(paths.omd_root).short]
+                config[hook_name] = _call_hook(
+                    site, hook_name, ["default", edition(Path(site_home)).long], verbose
                 )[1]
     return config
 
 
-def read_site_config(site: "SiteContext") -> Config:
+def read_site_config(site_home: str) -> Config:
     """Read and parse the file site.conf of a site into a dictionary and returns it"""
     config: Config = {}
-    if not (confpath := Path(site.dir, "etc/omd/site.conf")).exists():
+    if not (confpath := Path(site_home, "etc/omd/site.conf")).exists():
         return {}
 
     with confpath.open() as conf_file:
@@ -283,18 +226,20 @@ def read_site_config(site: "SiteContext") -> Config:
 
 # Always sort CORE hook to the end because it runs "cmk -U" which
 # relies on files created by other hooks.
-def sort_hooks(hook_names: list[str]) -> Iterable[str]:
+def _sort_hooks(hook_names: list[str]) -> Iterable[str]:
     return sorted(hook_names, key=lambda n: (n == "CORE", n))
 
 
-def hook_exists(site: "SiteContext", hook_name: str) -> bool:
+def _hook_exists(site: "SiteContext", hook_name: str) -> bool:
     if not site.hook_dir:
         return False
     hook_file = site.hook_dir + hook_name
     return os.path.exists(hook_file)
 
 
-def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHookResult:
+def _call_hook(
+    site: "SiteContext", hook_name: str, args: list[str], verbose: bool
+) -> ConfigHookResult:
     if not site.hook_dir:
         # IMHO this should be unreachable...
         raise MKTerminate("Site has no version and therefore no hooks")
@@ -303,12 +248,13 @@ def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHoo
     hook_env = os.environ.copy()
     hook_env.update(
         {
-            "OMD_ROOT": site.dir,
+            "OMD_ROOT": SitePaths.from_site_name(site.name).home,
             "OMD_SITE": site.name,
         }
     )
 
-    logger.log(VERBOSE, "Calling hook: %s", subprocess.list2cmdline(cmd))
+    if verbose:
+        sys.stdout.write("Calling hook: " + subprocess.list2cmdline(cmd) + "\n")
 
     completed_process = subprocess.run(
         cmd,
@@ -328,3 +274,60 @@ def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHoo
         sys.stderr.write(f"Error running {subprocess.list2cmdline(cmd)}: {content}\n")
 
     return completed_process.returncode, content
+
+
+def config_set_all(
+    site: "SiteContext", config: Config, verbose: bool, ignored_hooks: Sequence[str]
+) -> None:
+    for hook_name in _sort_hooks(list(config.keys())):
+        # Hooks may vanish after and up- or downdate
+        if not _hook_exists(site, hook_name):
+            continue
+
+        if hook_name in ignored_hooks:
+            continue
+
+        _config_set(site, config, hook_name, verbose)
+
+
+def _config_set(site: "SiteContext", config: Config, hook_name: str, verbose: bool) -> None:
+    value = config[hook_name]
+
+    exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
+    if exitcode:
+        return
+
+    if output and output != value:
+        config[hook_name] = output
+
+    os.environ["CONFIG_" + hook_name] = config[hook_name]
+
+
+def config_set_value(
+    site: "SiteContext",
+    site_home: str,
+    config: Config,
+    hook_name: str,
+    value: str,
+    verbose: bool,
+    save: bool = True,
+) -> None:
+    config[hook_name] = value
+    _config_set(site, config, hook_name, verbose)
+
+    if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
+        update_cmk_core_config(config)
+
+    if save:
+        save_site_conf(site_home, config)
+
+
+def update_cmk_core_config(config: Config) -> None:
+    if config["CORE"] == "none":
+        return  # No core config is needed in this case
+
+    sys.stdout.write("Updating core configuration...\n")
+    try:
+        subprocess.check_call(["cmk", "-U"], shell=False)
+    except subprocess.SubprocessError:
+        sys.exit("Could not update core configuration. Aborting.")

@@ -17,8 +17,8 @@ from typing import Literal, Self
 
 from omdlib.contexts import SiteContext
 from omdlib.crash_reporting import report_crash
+from omdlib.options import CommandOptions
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
-from omdlib.type_defs import CommandOptions
 from omdlib.version_info import VersionInfo
 
 from cmk.utils.paths import crash_dir

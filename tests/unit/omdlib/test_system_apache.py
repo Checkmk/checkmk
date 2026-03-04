@@ -12,7 +12,6 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-import omdlib
 from omdlib.system_apache import (
     apache_hook_version,
     create_apache_hook,
@@ -25,14 +24,14 @@ from omdlib.version_info import VersionInfo
 
 
 def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
-    version_info = VersionInfo(omdlib.__version__)
+    version_info = VersionInfo(tmp_path)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     reload_apache = mocker.patch("subprocess.call", return_value=0)
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
 
     register_with_system_apache(
-        version_info, apache_config, "unit", str(tmp_path), "127.0.0.1", "5000", True, False
+        version_info, apache_config, "unit", "127.0.0.1", "5000", True, False
     )
 
     content = apache_config.read_bytes()
@@ -48,13 +47,13 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
 
 
 def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
-    version_info = VersionInfo(omdlib.__version__)
+    version_info = VersionInfo(tmp_path)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     reload_apache = mocker.patch("subprocess.call", return_value=0)
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
     register_with_system_apache(
-        version_info, apache_config, "unit", str(tmp_path), "127.0.0.1", "5000", True, False
+        version_info, apache_config, "unit", "127.0.0.1", "5000", True, False
     )
     assert apache_config.exists()
     reload_apache.reset_mock()
@@ -65,12 +64,12 @@ def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) ->
 
 
 def test_delete_apache_hook(tmp_path: Path) -> None:
-    version_info = VersionInfo(omdlib.__version__)
+    version_info = VersionInfo(tmp_path)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
     register_with_system_apache(
-        version_info, apache_config, "unit", str(tmp_path), "127.0.0.1", "5000", True, verbose=False
+        version_info, apache_config, "unit", "127.0.0.1", "5000", True, verbose=False
     )
     assert apache_config.exists()
 
@@ -79,7 +78,7 @@ def test_delete_apache_hook(tmp_path: Path) -> None:
 
 
 def test_delete_apache_hook_not_existing(tmp_path: Path) -> None:
-    version_info = VersionInfo(omdlib.__version__)
+    version_info = VersionInfo(tmp_path)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     apache_config = tmp_path / "omd/apache/unit.conf"
     delete_apache_hook(apache_config)
@@ -89,9 +88,7 @@ def test_delete_apache_hook_not_existing(tmp_path: Path) -> None:
 def test_is_apache_hook_up_to_date(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(
-        apache_config, "unit", str(tmp_path), "127.0.0.1", "5000", apache_hook_version()
-    )
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
     assert apache_config.exists()
 
     assert is_apache_hook_up_to_date(apache_config) is True
@@ -100,9 +97,7 @@ def test_is_apache_hook_up_to_date(tmp_path: Path) -> None:
 def test_is_apache_hook_up_to_date_not_readable(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(
-        apache_config, "unit", str(tmp_path), "127.0.0.1", "5000", apache_hook_version()
-    )
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
     assert apache_config.exists()
     apache_config.chmod(0o200)
 
@@ -113,7 +108,7 @@ def test_is_apache_hook_up_to_date_not_readable(tmp_path: Path) -> None:
 def test_is_apache_hook_up_to_date_outdated(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", str(tmp_path), "127.0.0.1", "5000", 0)
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", 0)
     assert apache_config.exists()
 
     assert is_apache_hook_up_to_date(apache_config) is False
@@ -141,5 +136,5 @@ def test_has_apache_hook_in_site(tmp_path: Path) -> None:
 def test_create_apache_hook_world_readable(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", str(tmp_path), "127.0.0.1", "5000", 0)
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", 0)
     assert apache_config.stat().st_mode & stat.S_IROTH

@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import pytest
 
-from omdlib import config_hooks, main
+from omdlib import config_choices, main
 
 
 @pytest.mark.parametrize(
@@ -32,7 +31,7 @@ from omdlib import config_hooks, main
     ],
 )
 def test__error_from_config_choice_accept_value(value: str) -> None:
-    assert main._error_from_config_choice(config_hooks.IpAddressListHasError(), value).is_ok()
+    assert main._error_from_config_choice(config_choices.IpAddressListHasError(), value).is_ok()
 
 
 @pytest.mark.parametrize(
@@ -65,7 +64,7 @@ def test__error_from_config_choice_accept_value(value: str) -> None:
     ],
 )
 def test__error_from_config_choice_reject_value(value: str) -> None:
-    assert main._error_from_config_choice(config_hooks.IpAddressListHasError(), value).is_error()
+    assert main._error_from_config_choice(config_choices.IpAddressListHasError(), value).is_error()
 
 
 @pytest.mark.parametrize(
@@ -80,7 +79,7 @@ def test__error_from_config_choice_reject_value(value: str) -> None:
     ],
 )
 def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
-    assert main._error_from_config_choice(config_hooks.ApacheTCPAddrHasError(), value).is_ok()
+    assert main._error_from_config_choice(config_choices.ApacheTCPAddrHasError(), value).is_ok()
 
 
 @pytest.mark.parametrize(
@@ -105,7 +104,7 @@ def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
     ],
 )
 def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None:
-    result = main._error_from_config_choice(config_hooks.ApacheTCPAddrHasError(), value)
+    result = main._error_from_config_choice(config_choices.ApacheTCPAddrHasError(), value)
     assert result.error.endswith(message)
 
 
@@ -131,7 +130,7 @@ def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None
     ],
 )
 def test__error_from_config_choice_listen_address_accept_value(value: str) -> None:
-    assert main._error_from_config_choice(config_hooks.IpListenAddressHasError(), value).is_ok()
+    assert main._error_from_config_choice(config_choices.IpListenAddressHasError(), value).is_ok()
 
 
 @pytest.mark.parametrize(
@@ -156,12 +155,12 @@ def test__error_from_config_choice_listen_address_accept_value(value: str) -> No
     ],
 )
 def test__error_from_config_choice_listen_address_has_error(value: str, message: str) -> None:
-    result = main._error_from_config_choice(config_hooks.IpListenAddressHasError(), value)
+    result = main._error_from_config_choice(config_choices.IpListenAddressHasError(), value)
     assert result.error.endswith(message)
 
 
 def test__error_from_config_choice_network_port() -> None:
-    choices = config_hooks.NetworkPortHasError()
+    choices = config_choices.NetworkPortHasError()
     assert main._error_from_config_choice(choices, "1024").is_ok()
     assert main._error_from_config_choice(choices, "65535").is_ok()
     assert main._error_from_config_choice(choices, "22").error == "Invalid port number"

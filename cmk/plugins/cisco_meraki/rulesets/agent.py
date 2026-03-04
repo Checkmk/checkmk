@@ -78,10 +78,6 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     title=Title("Sections"),
                     help_text=Help(
                         "Select the sections that you want to include in the agent output."
-                        "<p>"
-                        "<b>Note:</b> some Meraki resources are marked as deprecated, which"
-                        "means that they could be removed at some point in the future."
-                        "</p>"
                     ),
                     elements=[
                         MultipleChoiceElement(
@@ -90,30 +86,35 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                         ),
                         MultipleChoiceElement(
                             name="appliance_performance",
-                            title=Title("Appliance uplink performance"),
+                            title=Title("Appliance performance"),
                         ),
                         MultipleChoiceElement(
-                            name="appliance_uplinks", title=Title("Appliance uplink statuses")
+                            name="appliance_uplinks",
+                            title=Title("Appliance uplink statuses"),
                         ),
                         MultipleChoiceElement(
-                            name="appliance_vpns", title=Title("Appliance uplink VPN statuses")
+                            name="appliance_vpns",
+                            title=Title("Appliance VPN statuses"),
                         ),
                         MultipleChoiceElement(
                             name="device_statuses",
-                            title=Title("Device statuses <b>[deprecated]</b>"),
+                            title=Title("Device statuses"),
                         ),
                         MultipleChoiceElement(
                             name="device_uplinks_info",
-                            title=Title("Device uplinks"),
+                            title=Title("Device uplinks (HW/SW Inventory only)"),
                         ),
                         MultipleChoiceElement(
-                            name="licenses_overview", title=Title("Licenses overview")
+                            name="licenses_overview",
+                            title=Title("Licenses overview"),
                         ),
                         MultipleChoiceElement(
-                            name="sensor_readings", title=Title("Sensor readings")
+                            name="sensor_readings",
+                            title=Title("Sensor readings"),
                         ),
                         MultipleChoiceElement(
-                            name="switch_ports_statuses", title=Title("Switch ports statuses")
+                            name="switch_ports_statuses",
+                            title=Title("Switch ports statuses"),
                         ),
                         MultipleChoiceElement(
                             name="wireless_device_statuses",
@@ -142,8 +143,8 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
             "orgs": DictElement(
                 parameter_form=List(
                     element_template=String(macro_support=True),
-                    title=Title("Organizations"),
-                    help_text=Help("Specify which organizations to fetch data from."),
+                    title=Title("Organizations IDs"),
+                    help_text=Help("Specify by ID which organizations to fetch data from."),
                     custom_validate=[_check_for_duplicates],
                 )
             ),
@@ -205,7 +206,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                                     "The following sections utilize this setting:"
                                     "<ul>"
                                     "<li>Appliance uplink statuses</li>"
-                                    "<li>Appliance uplink VPN statuses</li>"
+                                    "<li>Appliance VPN statuses</li>"
                                     "</ul>"
                                 ),
                             )

@@ -102,25 +102,7 @@ export function useRelativeGridLayout(
     return record
   })
 
-  watch(
-    () => relativeGridContent.value.widgets,
-    (newWidgets) => {
-      const widgetIds = Object.keys(newWidgets)
-      widgetIds.forEach((id) => {
-        if (zIndexes[id] === undefined) {
-          zIndexes[id] = 1
-        }
-      })
-
-      // cleanup removed widgets
-      Object.keys(zIndexes).forEach((id) => {
-        if (!newWidgets[id]) {
-          delete zIndexes[id]
-        }
-      })
-    },
-    { immediate: true, deep: true }
-  )
+  let isInitialized = false
 
   const bringToFront = (widgetId: string) => {
     if (!zIndexes[widgetId]) {
@@ -135,6 +117,33 @@ export function useRelativeGridLayout(
     // Bring the specified dashlet to front
     zIndexes[widgetId] = 80
   }
+
+  watch(
+    () => relativeGridContent.value.widgets,
+    (newWidgets) => {
+      const widgetIds = Object.keys(newWidgets)
+      let newWidgetId: string | null = null
+      widgetIds.forEach((id) => {
+        if (zIndexes[id] === undefined) {
+          zIndexes[id] = 1
+          newWidgetId = id
+        }
+      })
+
+      if (isInitialized && newWidgetId !== null) {
+        bringToFront(newWidgetId)
+      }
+      isInitialized = true
+
+      // cleanup removed widgets
+      Object.keys(zIndexes).forEach((id) => {
+        if (!newWidgets[id]) {
+          delete zIndexes[id]
+        }
+      })
+    },
+    { immediate: true, deep: true }
+  )
 
   const getDimensionModes = (widgetId: string): DimensionModes => {
     return getWidgetAbsoluteLayout(widgetId).dimensionModes

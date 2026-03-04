@@ -46,7 +46,8 @@ const containerStyle = computed(() => ({
   top: `${props.position?.top || 0}px`,
   left: `${props.position?.left || 0}px`,
   width: `${props.dimensions?.width || 100}px`,
-  height: `${props.dimensions?.height || 100}px`
+  height: `${props.dimensions?.height || 100}px`,
+  zIndex: props.zIndex
 }))
 
 const anchorBackgroundColorClass = (pos: string) =>
@@ -87,7 +88,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
     :aria-label="_t('Widget')"
   >
     <MissingFiltersMsg :effective-filter-context="contentProps.effective_filter_context">
-      <div :style="{ position: 'relative', height: '100%', width: '100%', zIndex: zIndex }">
+      <div :style="{ position: 'relative', height: '100%', width: '100%' }">
         <DashboardContent v-bind="contentProps" />
 
         <div

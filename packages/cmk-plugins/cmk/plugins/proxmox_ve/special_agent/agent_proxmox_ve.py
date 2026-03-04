@@ -127,6 +127,40 @@ def find_storage_for_vmid(
     return storage_links
 
 
+def hostname_matches_node(hostname: str, node_name: str) -> bool:
+    """Check if the given hostname refers to the given Proxmox node.
+
+    Matches if the hostname equals the node name exactly or is
+    an FQDN starting with the node name (e.g. ``pve1.example.com`` for node ``pve1``).
+    """
+    return hostname == node_name or hostname.startswith(node_name + ".")
+
+
+def node_piggyback_host(hostname: str, node_name: str, all_node_names: Sequence[str]) -> str:
+    """Determine the piggyback header for a Proxmox node.
+
+    Returns ``""`` (empty string = assign to the queried host) when the node
+    is identified as the host that was queried.  Otherwise returns the Proxmox
+    node name so the data is piggybacked to that host.
+
+    Identification works as follows:
+
+    * If *hostname* (the connection target passed to the agent) matches
+      *node_name* exactly or as an FQDN prefix the node is "self".
+    * If *hostname* does not match **any** node name (e.g. because an IP
+      address or a Checkmk alias was used) **and** there is only a single
+      node in the cluster, that node is assumed to be "self".
+    """
+    if hostname_matches_node(hostname, node_name):
+        return ""
+
+    hostname_matches_any = any(hostname_matches_node(hostname, name) for name in all_node_names)
+    if not hostname_matches_any and len(all_node_names) == 1:
+        return ""
+
+    return node_name
+
+
 def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
     """Fetches and writes selected information formatted as agent output to stdout"""
     with ProxmoxVeAPI(
@@ -287,7 +321,9 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
     LOGGER.info("Write agent output..")
     for node in data["nodes"]:
         assert node["type"] == "node"
-        piggyback_host = "" if args.hostname.startswith(node["node"] + ".") else node["node"]
+        piggyback_host = node_piggyback_host(
+            args.hostname, node["node"], [n["node"] for n in data["nodes"]]
+        )
         sys.stdout.write(f"<<<<{piggyback_host}>>>>\n")
         for name, content in _create_node_sections(
             node,

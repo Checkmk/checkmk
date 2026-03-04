@@ -10,6 +10,10 @@ from pathlib import Path
 
 import pytest
 
+from cmk.plugins.proxmox_ve.special_agent.agent_proxmox_ve import (
+    hostname_matches_node,
+    node_piggyback_host,
+)
 from cmk.plugins.proxmox_ve.special_agent.libbackups import (
     BackupInfo,
     BackupTask,
@@ -530,3 +534,57 @@ def test_parsing_backuped_log_formats(
     assert backup_task.backup_data["1"]["backup_amount"] == expected_backup_amount
     assert backup_task.backup_data["1"]["backup_total"] == expected_backup_total
     assert backup_task.backup_data["1"]["backup_time"] == expected_backup_time
+
+
+@pytest.mark.parametrize(
+    "hostname, node, expected",
+    [
+        pytest.param("pve1", "pve1", True, id="exact_match"),
+        pytest.param("pve1.example.com", "pve1", True, id="fqdn_match"),
+        pytest.param("dummypve", "pve1", False, id="no_match"),
+        pytest.param("192.168.1.1", "pve1", False, id="ip_no_match"),
+        pytest.param("pve10", "pve1", False, id="partial_no_match"),
+    ],
+)
+def test_hostname_matches_node(hostname: str, node: str, expected: bool) -> None:
+    assert hostname_matches_node(hostname, node) is expected
+
+
+@pytest.mark.parametrize(
+    "hostname, node, nodes, expected",
+    [
+        pytest.param("pve1", "pve1", ["pve1"], "", id="exact_match_returns_empty"),
+        pytest.param("pve1.example.com", "pve1", ["pve1"], "", id="fqdn_match_returns_empty"),
+        pytest.param("192.168.1.1", "pve1", ["pve1"], "", id="single_node_ip_returns_empty"),
+        pytest.param(
+            "dummypve", "pve1", ["pve1"], "", id="single_node_custom_hostname_returns_empty"
+        ),
+        pytest.param(
+            "pve1.example.com", "pve1", ["pve1", "pve2", "pve3"], "", id="multi_node_matching_self"
+        ),
+        pytest.param(
+            "pve1.example.com",
+            "pve2",
+            ["pve1", "pve2", "pve3"],
+            "pve2",
+            id="multi_node_matching_other_pve2",
+        ),
+        pytest.param(
+            "pve1.example.com",
+            "pve3",
+            ["pve1", "pve2", "pve3"],
+            "pve3",
+            id="multi_node_matching_other_pve3",
+        ),
+        pytest.param(
+            "192.168.1.1", "pve1", ["pve1", "pve2"], "pve1", id="multi_node_ip_piggyback_pve1"
+        ),
+        pytest.param(
+            "192.168.1.1", "pve2", ["pve1", "pve2"], "pve2", id="multi_node_ip_piggyback_pve2"
+        ),
+        pytest.param("pve1", "pve1", ["pve1", "pve2"], "", id="multi_node_exact_match_self"),
+        pytest.param("pve1", "pve2", ["pve1", "pve2"], "pve2", id="multi_node_exact_match_other"),
+    ],
+)
+def test_node_piggyback_host(hostname: str, node: str, nodes: list[str], expected: str) -> None:
+    assert node_piggyback_host(hostname, node, nodes) == expected

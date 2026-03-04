@@ -97,7 +97,7 @@ class TasksRepository:
             # _TimedTaskStore automatically handles expiration when calling values()
             return tasks.values()
         except KeyError:
-            logger.warning("Relay with ID %s not found", relay_id)
+            logger.debug("No tasks for relay with ID %s found", relay_id)
             return []
 
     def get_task(self, relay_id: RelayID, task_id: TaskID) -> RelayTask:

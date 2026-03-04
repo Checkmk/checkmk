@@ -37,13 +37,6 @@ class Serial:
         return cls(0)
 
 
-class RelayNotFoundError(HTTPException):
-    def __init__(self, relay_id: RelayID):
-        super().__init__(
-            status_code=HTTPStatus.NOT_FOUND, detail=f"Relay with ID '{relay_id}' not found"
-        )
-
-
 class TaskNotFoundError(HTTPException):
     def __init__(self, task_id: TaskID):
         super().__init__(

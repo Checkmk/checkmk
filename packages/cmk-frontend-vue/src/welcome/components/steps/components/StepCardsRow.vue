@@ -17,6 +17,6 @@ conditions defined in the file COPYING, which is part of this source code packag
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing);
-  margin-bottom: var(--spacing);
+  margin-bottom: var(--dimension-4);
 }
 </style>

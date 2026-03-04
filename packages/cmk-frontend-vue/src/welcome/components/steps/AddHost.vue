@@ -110,64 +110,68 @@ This allows monitoring to start with minimal configuration effort.`
           <CmkHeading type="h3">{{ _t('Add your first host') }}</CmkHeading>
         </template>
         <template #content>
-          <StepHeading>
-            {{ _t('On-premises hosts') }}
-          </StepHeading>
-          <StepCardsRow>
-            <CmkLinkCard
-              icon-name="folder"
-              :url="useCseSlideout ? undefined : cards.add_host"
-              :title="_t('Server (Linux, Windows, Solaris, ...)')"
-              :open-in-new-tab="false"
-              :callback="
-                () => {
-                  if (useCseSlideout) {
-                    cseSlideoutOpen = true
+          <div>
+            <StepHeading>
+              {{ _t('On-premises hosts') }}
+            </StepHeading>
+            <StepCardsRow>
+              <CmkLinkCard
+                icon-name="folder"
+                :url="useCseSlideout ? undefined : cards.add_host"
+                :title="_t('Server (Linux, Windows, Solaris, ...)')"
+                :open-in-new-tab="false"
+                :callback="
+                  () => {
+                    if (useCseSlideout) {
+                      cseSlideoutOpen = true
+                    }
                   }
-                }
-              "
-            />
-            <CmkLinkCard
-              v-if="cards.network_devices"
-              icon-name="networking"
-              :title="_t('Network devices and SNMP')"
-              :url="cards.network_devices"
-              :open-in-new-tab="false"
-            />
-            <CmkLinkCard
-              v-if="cards.relays"
-              icon-name="relay-menu"
-              :title="_t('Checkmk Relay (objects behind a firewall)')"
-              :url="cards.relays"
-              :open-in-new-tab="false"
-            />
-          </StepCardsRow>
+                "
+              />
+              <CmkLinkCard
+                v-if="cards.network_devices"
+                icon-name="networking"
+                :title="_t('Network devices and SNMP')"
+                :url="cards.network_devices"
+                :open-in-new-tab="false"
+              />
+              <CmkLinkCard
+                v-if="cards.relays"
+                icon-name="relay-menu"
+                :title="_t('Checkmk Relay (objects behind a firewall)')"
+                :url="cards.relays"
+                :open-in-new-tab="false"
+              />
+            </StepCardsRow>
+          </div>
 
-          <StepHeading>
-            {{ _t('Cloud platforms') }}
-          </StepHeading>
-          <StepCardsRow>
-            <CmkLinkCard
-              icon-name="aws-logo"
-              :title="_t('Amazon Web Services (AWS)')"
-              :url="cards.aws_quick_setup"
-              :open-in-new-tab="false"
-            />
-            <CmkLinkCard
-              icon-name="azure-vms"
-              :title="_t('Microsoft Azure')"
-              :url="cards.azure_quick_setup"
-              :open-in-new-tab="false"
-            />
-            <CmkLinkCard
-              icon-name="gcp"
-              :title="_t('Google Cloud Platform (GCP)')"
-              :url="cards.gcp_quick_setup"
-              :open-in-new-tab="false"
-            />
-          </StepCardsRow>
+          <div>
+            <StepHeading>
+              {{ _t('Cloud platforms') }}
+            </StepHeading>
+            <StepCardsRow>
+              <CmkLinkCard
+                icon-name="aws-logo"
+                :title="_t('Amazon Web Services (AWS)')"
+                :url="cards.aws_quick_setup"
+                :open-in-new-tab="false"
+              />
+              <CmkLinkCard
+                icon-name="azure-vms"
+                :title="_t('Microsoft Azure')"
+                :url="cards.azure_quick_setup"
+                :open-in-new-tab="false"
+              />
+              <CmkLinkCard
+                icon-name="gcp"
+                :title="_t('Google Cloud Platform (GCP)')"
+                :url="cards.gcp_quick_setup"
+                :open-in-new-tab="false"
+              />
+            </StepCardsRow>
+          </div>
 
-          <template v-if="cards.synthetic_monitoring || cards.opentelemetry">
+          <div v-if="cards.synthetic_monitoring || cards.opentelemetry">
             <StepHeading>
               {{ _t('Application monitoring') }}
             </StepHeading>
@@ -187,7 +191,7 @@ This allows monitoring to start with minimal configuration effort.`
                 :open-in-new-tab="false"
               />
             </StepCardsRow>
-          </template>
+          </div>
         </template>
         <template #actions>
           <CmkWizardButton

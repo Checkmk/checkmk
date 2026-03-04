@@ -153,7 +153,7 @@ if (shareMode.value === 'with_contact_groups' || shareMode.value === 'with_sites
   <CmkToggleButtonGroup
     v-model="shareMode"
     :options="[
-      { label: _t('Only me (private)'), value: 'no' },
+      { label: _t('Owner (private)'), value: 'no' },
       { label: _t('All users'), value: 'with_all_users' },
       {
         label: _t('Members of contact groups'),

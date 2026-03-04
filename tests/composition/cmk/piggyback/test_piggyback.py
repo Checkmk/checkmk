@@ -148,7 +148,6 @@ def test_piggyback_services_source_remote(piggyback_env_two_site_setup: tuple[Si
         )
 
 
-@pytest.mark.xfail(strict=False)  # flaky test; investigated in CMK-31265
 def test_piggyback_services_remote_remote(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:

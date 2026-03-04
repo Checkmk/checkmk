@@ -62,7 +62,7 @@ def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory)
         yield from site_factory.get_test_site(name="central")
 
 
-@pytest.fixture(name="remote_site_wato_disabled", scope="module")
+@pytest.fixture(name="remote_site_wato_disabled")
 def fixture_remote_site_wato_disabled(
     test_site: Site, request: pytest.FixtureRequest, site_factory: SiteFactory
 ) -> Iterator[Site]:

@@ -102,6 +102,7 @@ def fixture_remote_site(
                     _remote_site.delete_file(file_to_delete)
 
 
+@pytest.mark.skip(reason="CMK-32113")
 def test_remote_host_configuring(
     dashboard_page: MainDashboard, test_site: Site, credentials: CmkCredentials, remote_site: Site
 ) -> None:

@@ -5,31 +5,87 @@
 
 from collections.abc import Mapping, Sequence
 from logging import Logger
+from pathlib import Path
+
+from cmk.utils.hostaddress import HostName
+from cmk.utils.paths import autochecks_dir
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
 
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
+# See SUP-27073 for context: these NetApp plugins have been renamed and their service description
+# changed, which causes customers to lose the service history. In order to mitigate this, we
+# introduced the option to return to the old service descriptions.
+# If services with the new description are already discovered, the new description will
+# automatically be kept, the customer has to manually return to the old one if needed
+# Otherwise if there are old services already discovered, the old description will be kept
+# automatically
+_RENAMED_PLUGINS: Mapping[str, str] = {
+    "netapp_ontap_volumes": "netapp_api_volumes",
+    "netapp_ontap_snapshots": "netapp_api_snapshots",
+}
+
+
+def _read_autocheck_entries() -> Sequence[AutocheckEntry]:
+    return [
+        autocheck
+        for autocheck_file in Path(autochecks_dir).glob("*.mk")
+        for autocheck in AutochecksStore(HostName(autocheck_file.stem)).read()
+    ]
+
+
+def _plugin_has_discovered_services(
+    autocheck_entries: Sequence[AutocheckEntry], plugin_name: CheckPluginName
+) -> bool:
+    for autocheck in autocheck_entries:
+        if autocheck.check_plugin_name == plugin_name:
+            return True
+    return False
+
+
+def _is_renamed_plugin_enabled(
+    autocheck_entries: Sequence[AutocheckEntry], old_plugin_name: str, new_plugin_name: str
+) -> bool:
+    has_old_services = _plugin_has_discovered_services(
+        autocheck_entries, CheckPluginName(old_plugin_name)
+    )
+    has_new_services = _plugin_has_discovered_services(
+        autocheck_entries, CheckPluginName(new_plugin_name)
+    )
+    return not has_old_services or has_new_services
+
 
 def _migrate_from_old_format(
     logger: Logger,
     use_new_descriptions_sample_config: Mapping[str, bool],
     use_new_descriptions_selected_plugins: Sequence[str],
+    autocheck_entries: Sequence[AutocheckEntry],
 ) -> Mapping[str, bool]:
     logger.debug(
         "Migrating 'use_new_descriptions_for' from old format (list of enabled plugins) to new format (enabled state per plugin)"
     )
-    return {
-        plugin: plugin in use_new_descriptions_selected_plugins
-        for plugin in use_new_descriptions_sample_config
-    }
+
+    results = {}
+    for plugin in use_new_descriptions_sample_config:
+        if plugin in _RENAMED_PLUGINS:
+            results[plugin] = _is_renamed_plugin_enabled(
+                autocheck_entries, _RENAMED_PLUGINS[plugin], plugin
+            )
+        else:
+            results[plugin] = plugin in use_new_descriptions_selected_plugins
+    return results
 
 
 def _update_new_format(
     logger: Logger,
     use_new_descriptions_sample_config: Mapping[str, bool],
     use_new_descriptions_for_current: Mapping[str, bool],
+    autocheck_entries: Sequence[AutocheckEntry],
 ) -> Mapping[str, bool]:
     logger.debug(
         "Disable 'use_new_descriptions_for' for plugins where the setting has been added in the new version to keep the old descriptions active"
@@ -48,10 +104,15 @@ def _update_new_format(
             f"configurable in the new Checkmk version: {removed_plugins}."
         )
 
-    return {
-        k: use_new_descriptions_for_current.get(k, False)
-        for k in use_new_descriptions_sample_config
-    }
+    results = {}
+    for plugin in use_new_descriptions_sample_config:
+        if plugin in _RENAMED_PLUGINS:
+            results[plugin] = _is_renamed_plugin_enabled(
+                autocheck_entries, _RENAMED_PLUGINS[plugin], plugin
+            )
+        else:
+            results[plugin] = use_new_descriptions_for_current.get(plugin, False)
+    return results
 
 
 class UpdateUseNewServiceDescription(UpdateAction):
@@ -67,12 +128,14 @@ class UpdateUseNewServiceDescription(UpdateAction):
                     logger,
                     USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"],
                     use_new_descriptions_for_mapping,
+                    _read_autocheck_entries(),
                 )
             case list(use_new_descriptions_selected_plugins):
                 updated_global_settings["use_new_descriptions_for"] = _migrate_from_old_format(
                     logger,
                     USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"],
                     use_new_descriptions_selected_plugins,
+                    _read_autocheck_entries(),
                 )
             case _:
                 raise ValueError(

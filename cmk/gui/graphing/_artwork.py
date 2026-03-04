@@ -727,7 +727,7 @@ def _compute_graph_v_axis(
         min_y=v_axis_min,
         max_y=v_axis_max,
     )
-    label_positions = [l.position for l in labels]
+    label_positions = [label.position for label in labels]
     label_range = (
         min([v_axis_min, *label_positions]),
         max([v_axis_max, *label_positions]),
@@ -740,7 +740,7 @@ def _compute_graph_v_axis(
         range=label_range,
         axis_label=None,
         labels=rendered_labels,
-        max_label_length=max(len(l.text) for l in rendered_labels),
+        max_label_length=max(len(label.text) for label in rendered_labels),
     )
 
 

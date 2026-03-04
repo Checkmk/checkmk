@@ -41,6 +41,7 @@ export interface UseCustomGraph
   timeRange: Ref<GraphTimerange>
 
   widgetProps: Ref<WidgetProps | null>
+  getSubmitProps: () => Promise<WidgetProps>
 }
 
 export const useCustomGraph = async (
@@ -115,14 +116,8 @@ export const useCustomGraph = async (
     }
   }
 
-  const _updateWidgetProps = async () => {
+  const _computeWidgetProps = async (): Promise<WidgetProps> => {
     const content = _generateContent()
-
-    if (!customGraph.value) {
-      widgetProps.value = null
-      return
-    }
-
     const [effectiveTitle, effectiveFilterContext] = await Promise.all([
       computePreviewWidgetTitle({
         generalSettings: widgetGeneralSettings.value,
@@ -132,12 +127,20 @@ export const useCustomGraph = async (
       determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
-    widgetProps.value = {
+    return {
       general_settings: widgetGeneralSettings.value,
       content,
       effectiveTitle,
       effective_filter_context: effectiveFilterContext
     }
+  }
+
+  const _updateWidgetProps = async () => {
+    if (!customGraph.value) {
+      widgetProps.value = null
+      return
+    }
+    widgetProps.value = await _computeWidgetProps()
   }
 
   watch([customGraph], (selectedGraph) => {
@@ -184,6 +187,7 @@ export const useCustomGraph = async (
     showBurgerMenu,
     dontFollowTimerange,
 
-    widgetProps: widgetProps as Ref<WidgetProps>
+    widgetProps: widgetProps as Ref<WidgetProps>,
+    getSubmitProps: _computeWidgetProps
   }
 }

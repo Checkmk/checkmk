@@ -84,6 +84,7 @@ export function useEmbeddedURL(currentSpec: WidgetSpec | null): UseEmbeddedURL {
 
     url,
 
-    widgetProps
+    widgetProps,
+    getSubmitProps: async () => widgetProps.value
   }
 }

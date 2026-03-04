@@ -45,6 +45,7 @@ export interface UseValidate {
 
 export interface UseWidgetHandler extends UseValidate {
   widgetProps: Ref<WidgetProps>
+  getSubmitProps: () => Promise<WidgetProps>
 }
 export interface WidgetProps {
   general_settings: WidgetGeneralSettings

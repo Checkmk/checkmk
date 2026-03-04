@@ -82,6 +82,7 @@ export function useUserMessages(currentSpec: WidgetSpec | null): UseUserMessages
     titleUrlValidationErrors,
     titleMacros,
     validate,
-    widgetProps
+    widgetProps,
+    getSubmitProps: async () => widgetProps.value
   }
 }

@@ -86,6 +86,7 @@ export function useStaticText(currentSpec: WidgetSpec | null): UseStaticText {
 
     text,
 
-    widgetProps
+    widgetProps,
+    getSubmitProps: async () => widgetProps.value
   }
 }

@@ -80,7 +80,7 @@ export const useHostState = async (
     return content
   }
 
-  const _updateWidgetProps = async () => {
+  const _computeWidgetProps = async (): Promise<WidgetProps> => {
     const content = _generateContent()
     const [effectiveTitle, effectiveFilterContext] = await Promise.all([
       computePreviewWidgetTitle({
@@ -91,12 +91,16 @@ export const useHostState = async (
       determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
-    widgetProps.value = {
+    return {
       general_settings: widgetGeneralSettings.value,
       content,
       effectiveTitle,
       effective_filter_context: effectiveFilterContext
     }
+  }
+
+  const _updateWidgetProps = async () => {
+    widgetProps.value = await _computeWidgetProps()
   }
 
   watch(
@@ -130,6 +134,7 @@ export const useHostState = async (
     titleUrlValidationErrors,
     validate,
 
-    widgetProps: widgetProps as Ref<WidgetProps>
+    widgetProps: widgetProps as Ref<WidgetProps>,
+    getSubmitProps: _computeWidgetProps
   }
 }

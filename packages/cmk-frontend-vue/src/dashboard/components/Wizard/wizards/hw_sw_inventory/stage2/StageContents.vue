@@ -36,20 +36,12 @@ const emit = defineEmits<{
   ]
 }>()
 
-const gotoNextStage = () => {
-  if (!inventoryHandler) {
+const gotoNextStage = async () => {
+  if (!inventoryHandler?.validate()) {
     return
   }
-
-  const isValid = inventoryHandler?.validate()
-
-  if (isValid) {
-    const content: WidgetContent = inventoryHandler.widgetProps.value!.content
-    const generalSettings: WidgetGeneralSettings =
-      inventoryHandler.widgetProps.value!.general_settings
-
-    emit('addWidget', content, generalSettings, props.widgetFilters)
-  }
+  const submitProps = await inventoryHandler.getSubmitProps()
+  emit('addWidget', submitProps.content, submitProps.general_settings, props.widgetFilters)
 }
 
 const gotoPrevStage = () => {

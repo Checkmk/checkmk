@@ -59,21 +59,20 @@ const emit = defineEmits<{
   ]
 }>()
 
-const addWidget = () => {
+const addWidget = async () => {
   if (!selectedWidget.value) {
     return
   }
 
   const activeHandler = handler[selectedWidget.value]
-  const isValid = activeHandler?.validate()
-
-  if (isValid) {
-    const widgetPops = activeHandler!.widgetProps.value
-    emit('addWidget', toValue(widgetPops.content), toValue(widgetPops.general_settings), {
-      uses_infos: toValue(widgetPops.effective_filter_context.uses_infos),
-      filters: props.widgetFilters
-    } as WidgetFilterContext)
+  if (!activeHandler?.validate()) {
+    return
   }
+  const submitProps = await activeHandler.getSubmitProps()
+  emit('addWidget', toValue(submitProps.content), toValue(submitProps.general_settings), {
+    uses_infos: toValue(submitProps.effective_filter_context.uses_infos),
+    filters: props.widgetFilters
+  } as WidgetFilterContext)
 }
 
 const gotoPrevStage = () => {

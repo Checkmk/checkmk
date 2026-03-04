@@ -45,16 +45,17 @@ const emit = defineEmits<{
   ]
 }>()
 
-const addWidget = () => {
-  const isValid = handler.validate()
-  if (isValid) {
-    emit(
-      'addWidget',
-      toValue(handler.widgetProps.value!.content),
-      toValue(handler.widgetProps.value!.general_settings),
-      toValue(handler.widgetProps.value!.effective_filter_context)
-    )
+const addWidget = async () => {
+  if (!handler.validate()) {
+    return
   }
+  const submitProps = await handler.getSubmitProps()
+  emit(
+    'addWidget',
+    toValue(submitProps.content),
+    toValue(submitProps.general_settings),
+    toValue(submitProps.effective_filter_context)
+  )
 }
 
 const isUpdate = computed(() => props.editWidgetSpec !== null)

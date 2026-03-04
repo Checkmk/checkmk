@@ -108,8 +108,7 @@ export const useAlertTimeline = async (
     }
   }
 
-  const _updateWidgetProps = async () => {
-    isUpdating.value = true
+  const _computeWidgetProps = async (): Promise<WidgetProps> => {
     const content = _generateContent()
 
     const [effectiveTitle, effectiveFilterContext] = await Promise.all([
@@ -121,12 +120,17 @@ export const useAlertTimeline = async (
       determineWidgetEffectiveFilterContext(content, filters, constants)
     ])
 
-    widgetProps.value = {
+    return {
       general_settings: widgetGeneralSettings.value,
       content,
       effectiveTitle,
       effective_filter_context: effectiveFilterContext
     }
+  }
+
+  const _updateWidgetProps = async () => {
+    isUpdating.value = true
+    widgetProps.value = await _computeWidgetProps()
     isUpdating.value = false
   }
 
@@ -158,6 +162,7 @@ export const useAlertTimeline = async (
     validate,
 
     widgetProps: widgetProps as Ref<WidgetProps>,
+    getSubmitProps: _computeWidgetProps,
     isUpdating
   }
 }

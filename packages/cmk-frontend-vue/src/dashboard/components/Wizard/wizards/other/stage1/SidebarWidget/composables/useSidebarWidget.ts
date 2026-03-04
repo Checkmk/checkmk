@@ -112,6 +112,7 @@ export function useSidebarWidget(
 
     sidebarElementName: elementName,
 
-    widgetProps
+    widgetProps,
+    getSubmitProps: async () => widgetProps.value
   }
 }

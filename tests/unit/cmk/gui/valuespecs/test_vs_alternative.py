@@ -92,6 +92,16 @@ class TestValuespecAlternative:
         with pytest.raises(ValueError, match=r"^Invalid value: \('a', 'b'\)"):
             assert get_alternative().value_to_json(("a", "b"))
 
+    def test_render_input_type_mismatch_uses_default(self, request_context: None) -> None:
+        alternative = vs.Alternative(
+            [
+                vs.FixedValue(value="global", title="global", totext=""),
+                vs.Age(title="maximum age", default_value=3600),
+            ]
+        )
+        with request_var(prefix_use="1"):
+            alternative.render_input("prefix", "global")
+
     def test_value_from_json(self) -> None:
         # TODO: this is wrong! should be transformed into a tuple,
         # see comment on Value_from_json

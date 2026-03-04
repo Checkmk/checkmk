@@ -168,6 +168,9 @@ const initializeFigure = () => {
     props.content,
     updateInterval
   )
+  figure.instance.subscribe_post_render_hook(() => {
+    isLoading.value = false
+  })
 }
 
 onMounted(() => {

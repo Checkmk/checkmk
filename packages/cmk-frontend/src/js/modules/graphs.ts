@@ -238,7 +238,19 @@ interface DelayedGraph {
 //#   | called by web/plugins/graphs.py:render_graphs_htmls()              |
 //#   '--------------------------------------------------------------------'
 
+// Remove entries whose DOM container has been removed from the document.
+// This prevents g_graphs from growing indefinitely across view/dashboard reloads
+// and releases references to stale canvas DOM nodes so they can be GC'd.
+function purge_stale_graphs() {
+    for (const graph_id in g_graphs) {
+        if (!document.getElementById(graph_id)) {
+            delete g_graphs[graph_id];
+        }
+    }
+}
+
 function get_id_of_graph(ajax_context: AjaxContext) {
+    purge_stale_graphs();
     // Return the graph_id for and eventual existing graph
     for (const graph_id in g_graphs) {
         // JSON.stringify seems to be the easiest way to compare the both dicts
@@ -2200,6 +2212,7 @@ function set_graph_timerange(
     end_time: number,
 ) {
     const graph = g_graphs[graph_id];
+    if (!graph) return;
     const canvas = graph["canvas_obj"];
     if (canvas) {
         const step = (end_time - start_time) / canvas.width / 2;

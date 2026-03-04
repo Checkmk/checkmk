@@ -740,7 +740,9 @@ def _compute_graph_v_axis(
         range=label_range,
         axis_label=None,
         labels=rendered_labels,
-        max_label_length=max(len(label.text) for label in rendered_labels),
+        max_label_length=(
+            max(len(label.text) for label in rendered_labels) if rendered_labels else 0
+        ),
     )
 
 

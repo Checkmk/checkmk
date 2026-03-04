@@ -2852,6 +2852,26 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
             Checkbox(title=_("MSSQL Version"), label=_("Use the new service name")),
         ),
         (
+            "netapp_ontap_volumes",
+            Checkbox(
+                title=_("NetApp Volumes"),
+                label=_(
+                    "Use the new service name. "
+                    "Disabling this option does not work for services where the monitored SVM or volume names contain colons"
+                ),
+            ),
+        ),
+        (
+            "netapp_ontap_snapshots",
+            Checkbox(
+                title=_("NetApp Snapshot Volumes"),
+                label=_(
+                    "Use the new service name. "
+                    "Disabling this option does not work for services where the monitored SVM or volume names contain colons"
+                ),
+            ),
+        ),
+        (
             "netscaler_mem",
             Checkbox(title=_("Netscaler memory Usage"), label=_("Use the new service name")),
         ),

@@ -462,6 +462,8 @@ USE_NEW_DESCRIPTIONS_FOR_SETTING = {
         "mssql_tablespaces": True,
         "mssql_transactionlogs": True,
         "mssql_versions": True,
+        "netapp_ontap_volumes": True,
+        "netapp_ontap_snapshots": True,
         "netscaler_mem": True,
         "nullmailer_mailq": True,
         "prism_alerts": True,

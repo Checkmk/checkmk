@@ -223,6 +223,30 @@ def _get_old_cmciii_temp_description(item: Item) -> tuple[ServiceName, None]:
     return f"{parts[1]} {parts[0]}.{parts[2]}-Temperature", None
 
 
+def _get_old_netapp_volume_item(item: Item) -> Item:
+    if item is None:
+        raise TypeError()
+
+    # In the old item format svm_name and volume name are separated by dots, now by colons.
+    # This replacement is not correct if the names itself contain colons. According to
+    # https://kb.netapp.com/on-prem/ontap/Ontap_OS/OS-KBs/Can_a_NetApp_volume_name_contain_a_hyphen_or_dash
+    # this shouldn't be the case.
+    # If there is more than one colon, we use the new service name no matter what.
+    # This way we improve the situation for users whose SVM or volume names do not contain colons
+    # and do not make the situation worse than before for those that do.
+    if item.count(":") > 1:
+        return item
+    return item.replace(":", ".")
+
+
+def _get_old_netapp_volume_description(item: Item) -> tuple[ServiceName, Item]:
+    return "Volume %s", _get_old_netapp_volume_item(item)
+
+
+def _get_old_netapp_snapshot_volume_description(item: Item) -> tuple[ServiceName, Item]:
+    return "Snapshots Volume %s", _get_old_netapp_volume_item(item)
+
+
 _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item]]] = {
     "aix_memory": lambda item: ("Memory used", item),
     # While using the old description, don't append the item, even when discovered
@@ -291,6 +315,8 @@ _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "mssql_tablespaces": lambda item: ("%s Sizes", item),
     "mssql_transactionlogs": lambda item: ("Transactionlog %s", item),
     "mssql_versions": lambda item: ("%s Version", item),
+    "netapp_ontap_volumes": _get_old_netapp_volume_description,
+    "netapp_ontap_snapshots": _get_old_netapp_snapshot_volume_description,
     "netscaler_mem": lambda item: ("Memory used", item),
     "nullmailer_mailq": lambda item: ("Nullmailer Queue", None),
     "nvidia_temp": lambda item: ("Temperature NVIDIA %s", item),

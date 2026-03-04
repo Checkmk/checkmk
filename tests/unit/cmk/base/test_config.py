@@ -3353,6 +3353,8 @@ _EXPECTED_OLD_DESCRIPTIONS = {
     "mssql_tablespaces": TestServiceDescription("test_item", "test_item Sizes"),
     "mssql_transactionlogs": TestServiceDescription("test_item", "Transactionlog test_item"),
     "mssql_versions": TestServiceDescription("test_item", "test_item Version"),
+    "netapp_ontap_volumes": TestServiceDescription("svm:vol", "Volume svm.vol"),
+    "netapp_ontap_snapshots": TestServiceDescription("svm:vol", "Snapshots Volume svm.vol"),
     "netscaler_mem": TestServiceDescription("test_item", "Memory used test_item"),
     "nullmailer_mailq": TestServiceDescription("test_item", "Nullmailer Queue"),
     "nvidia_temp": TestServiceDescription("test_item", "Temperature NVIDIA test_item"),

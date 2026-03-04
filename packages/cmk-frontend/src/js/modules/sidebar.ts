@@ -45,6 +45,7 @@ export function initialize_sidebar(
   static_snapins = static_
 
   execute_sidebar_scheduler()
+  update_pending_changes()
 
   g_scrollbar = add_simplebar_scrollbar('side_content')
   g_scrollbar?.getScrollElement()?.addEventListener(
@@ -613,8 +614,6 @@ export function reset_sidebar_scheduler() {
   execute_sidebar_scheduler()
 }
 
-let pending_changes_counter = 0
-
 export function execute_sidebar_scheduler() {
   g_seconds_to_update =
     g_seconds_to_update !== null ? g_seconds_to_update - 1 : sidebar_update_interval
@@ -626,11 +625,6 @@ export function execute_sidebar_scheduler() {
       execute_sidebar_scheduler()
     }, 250)
     return
-  }
-
-  pending_changes_counter = (pending_changes_counter + 1) % 3
-  if (pending_changes_counter === 0) {
-    update_pending_changes()
   }
 
   const to_be_updated: string[] = []
@@ -1090,8 +1084,6 @@ export function init_messages_and_werks(interval: null | number, may_ack: boolea
   create_initial_ids('user', 'messages', 'user_message.py')
   create_initial_ids('changes', 'changes', 'wato.py?mode=changelog')
 
-  update_pending_changes()
-
   // Are there pending messages? Render the initial state of
   // trigger button
   update_messages()
@@ -1177,21 +1169,27 @@ interface AjaxSidebarGetPendingChanges {
 }
 
 function handle_pending_changes(_data: any, response_text: string) {
-  const response: CMKAjaxReponse<AjaxSidebarGetPendingChanges> = JSON.parse(response_text)
-  if (response.result_code != 0) {
-    return
-  }
-  const l = document.getElementById('changes_label')
-  if (l) {
-    if (response.result.number_of_pending_changes === 0) {
-      l.style.display = 'none'
+  try {
+    const response: CMKAjaxReponse<AjaxSidebarGetPendingChanges> = JSON.parse(response_text)
+    if (response.result_code != 0) {
+      setTimeout(update_pending_changes, 30000)
       return
     }
-    l.innerText =
-      response.result.number_of_pending_changes > 10
-        ? '10+'
-        : response.result.number_of_pending_changes.toString()
-    l.style.display = 'inline'
+    setTimeout(update_pending_changes, 3000)
+    const l = document.getElementById('changes_label')
+    if (l) {
+      if (response.result.number_of_pending_changes === 0) {
+        l.style.display = 'none'
+        return
+      }
+      l.innerText =
+        response.result.number_of_pending_changes > 10
+          ? '10+'
+          : response.result.number_of_pending_changes.toString()
+      l.style.display = 'inline'
+    }
+  } catch {
+    setTimeout(update_pending_changes, 30000)
   }
 }
 

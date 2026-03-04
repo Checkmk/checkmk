@@ -182,6 +182,7 @@ void main() {
                         duration: groovy.time.TimeCategory.minus(new Date(), time_stage_started),
                         status: "ongoing",
                     ];
+                    update_result_table(current_description, analyse_mapping);
 
                     try {
                         build_instance = smart_build(
@@ -202,6 +203,10 @@ void main() {
                             // do not look into Jenkins build queue for a matching job:
                             // there is no workflow which would justify this lookup
                             ignore_build_queue: true,
+                            on_build_url: { url ->
+                                analyse_mapping["${item.NAME}"].triggered_build_url = url;
+                                update_result_table(current_description, analyse_mapping);
+                            },
                         );
                     } finally {
                         analyse_mapping["${item.NAME}"] = [

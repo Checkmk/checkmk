@@ -953,7 +953,7 @@ export interface FunctionSpec {
   arguments: any[]
 }
 
-function getContentBody(): HTMLElement {
+function getContentBody(): HTMLElement | null {
   const contentArea = document.getElementById('content_area')
   return contentArea !== null
     ? (contentArea.firstElementChild! as unknown as HTMLIFrameElement).contentWindow!.document.body
@@ -966,6 +966,9 @@ export function makeLoadingTransition(
   title?: string
 ): void {
   const contentBody = getContentBody()
+  if (!contentBody) {
+    return
+  }
   contentBody.setAttribute('data-prepare-loading-transition', 'true')
   contentBody.style.cursor = 'wait'
 
@@ -975,7 +978,7 @@ export function makeLoadingTransition(
 
   setTimeout(() => {
     const body = getContentBody()
-    if (!body.hasAttribute('data-prepare-loading-transition')) {
+    if (!body || !body.hasAttribute('data-prepare-loading-transition')) {
       return
     }
 

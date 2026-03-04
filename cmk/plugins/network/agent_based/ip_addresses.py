@@ -74,11 +74,10 @@ def address_str_from(adr_type: int, adr_length: int, raw_address: Sequence[int])
             ipv4_adr = ":".join(hex_str[i : i + 4] for i in range(0, 32, 4))
             scope_id = ".".join(hex_str[i : i + 2] for i in range(32, len(hex_str), 2))
             return f"{ipv4_adr}%{scope_id}"
-        # not supported
-        case (1, 10) | (1, 151) | (1, 192) | (3, 8) | (2, 110):
-            return None
+        # cases (1, 10) | (1, 151) | (1, 192) | (3, 8) | (2, 110) | (4, 16) are not supported
+        # yet but might be in the future
         case _:
-            raise ValueError(f"{adr_type} {adr_length} {raw_address}")
+            return None
 
 
 def ip_info_34_from(

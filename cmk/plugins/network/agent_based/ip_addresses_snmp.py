@@ -156,22 +156,25 @@ def parse_ip_addresses(string_table: Sequence[StringByteTable]) -> Section:
 
     interface_by_index = {str(if_index): str(if_name) for if_index, if_name in if_info}
 
-    return [
-        IPNetworkAdapter(
-            name=interface_by_index.get(if_index, if_index),
-            inet4=[interface_ip] if isinstance(interface_ip, AugmentedIPv4Interface) else [],
-            inet6=[interface_ip] if isinstance(interface_ip, AugmentedIPv6Interface) else [],
+    result: dict[str, IPNetworkAdapter] = {}
+
+    for if_index, interface_ip in (
+        entry
+        for entries in (
+            map(ip_info_34_from, ip_info_34),
+            map(ip_info_20_from, ip_info_20),
         )
-        for if_index, interface_ip in (
-            entry
-            for entries in (
-                map(ip_info_34_from, ip_info_34),
-                map(ip_info_20_from, ip_info_20),
-            )
-            for entry in entries
-            if entry
-        )
-    ]
+        for entry in entries
+        if entry
+    ):
+        name = interface_by_index.get(if_index, if_index)
+        adapter = result.setdefault(name, IPNetworkAdapter(name=name, inet4=[], inet6=[]))
+        if interface_ip.version == 4:
+            adapter.inet4.append(interface_ip)
+        elif interface_ip.version == 6:
+            adapter.inet6.append(interface_ip)
+
+    yield from result.values()
 
 
 def host_labels_if_snmp(section: Section) -> HostLabelGenerator:

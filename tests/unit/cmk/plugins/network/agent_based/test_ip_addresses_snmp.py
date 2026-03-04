@@ -132,14 +132,10 @@ __ip_info_34_fortinet_2 = [
                 IPNetworkAdapter(
                     name="3",
                     inet4=[AugmentedIPv4Interface("10.10.10.230/30")],
-                ),
-                IPNetworkAdapter(
-                    name="3",
-                    inet6=[AugmentedIPv6Interface("2a00:1ca0:1000:135::2/64")],
-                ),
-                IPNetworkAdapter(
-                    name="3",
-                    inet6=[AugmentedIPv6Interface("fe80::72db:98ff:fe9f:2902%12.00.00.08/64")],
+                    inet6=[
+                        AugmentedIPv6Interface("2a00:1ca0:1000:135::2/64"),
+                        AugmentedIPv6Interface("fe80::72db:98ff:fe9f:2902%12.00.00.08/64"),
+                    ],
                 ),
                 IPNetworkAdapter(
                     name="if_index1",
@@ -233,7 +229,7 @@ __ip_info_34_fortinet_2 = [
 def test_parse_ip_addresses(
     string_table: Sequence[StringByteTable], expected_result: Section
 ) -> None:
-    assert parse_ip_addresses(string_table) == expected_result
+    assert list(parse_ip_addresses(string_table)) == expected_result
 
 
 @pytest.mark.parametrize(

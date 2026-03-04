@@ -183,7 +183,10 @@ class PageFetchAgentOutput(AgentOutputPage):
             and "cmk/relay_monitored" in self._request.host.labels()
         ):
             raise MKGeneralException(
-                _("SNMP walks are not supported for hosts monitored through a relay yet. ")
+                _(
+                    "The download of SNMP walks is not yet supported for hosts monitored "
+                    "via a Checkmk Relay."
+                )
             )
 
         title = self._title()

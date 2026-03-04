@@ -45,7 +45,7 @@ class CombinedGraphsServiceSearch(CmkPage):
     def graph(self, graph_title: str) -> Locator:
         container = self._graph_with_timeranges_container(graph_title)
         expect(container).to_be_attached()
-        return container.locator("div[class='graph'] >> canvas")
+        return container.locator("div.graph:not(.preview) >> canvas")
 
     def timerange_graph(self, graph_title: str, timerange_name: str) -> Locator:
         return self._graph_with_timeranges_container(graph_title).locator(

@@ -95,7 +95,6 @@ immediateWatch(
 <style scoped>
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .result-heading {
-  margin-bottom: var(--spacing);
   display: flex;
   flex-direction: row;
   align-items: center;

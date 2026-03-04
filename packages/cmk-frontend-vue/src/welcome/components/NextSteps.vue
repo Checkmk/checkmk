@@ -25,7 +25,7 @@ defineProps<{
     {{ _t('Further topics') }}
   </CmkHeading>
   <CmkSpace />
-  <CmkLinkCardContainer class="next-link-card-container">
+  <CmkLinkCardContainer class="welcome-next-steps">
     <CmkLinkCard
       :title="
         _t('Structure hosts with folders, labels, tags, parent relationships, and host groups')
@@ -34,8 +34,9 @@ defineProps<{
         _t('Organize your hosts to enable clear, scalable, and easy to manage monitoring.')
       "
       icon-name="hostgroups"
+      borders="borderless"
+      contrast="high"
       :url="cards.setup_folder_structure"
-      variant="borderless"
       :open-in-new-tab="true"
     />
 
@@ -46,7 +47,8 @@ defineProps<{
       "
       icon-name="backup"
       :url="cards.setup_backup"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="false"
     />
     <CmkLinkCard
@@ -54,7 +56,8 @@ defineProps<{
       :subtitle="_t('Add more hosts, sites, or distributed setups as your environment grows.')"
       icon-name="sites"
       :url="cards.scale_monitoring"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="true"
     />
     <CmkLinkCard
@@ -66,7 +69,8 @@ defineProps<{
       "
       icon-name="rulesets"
       :url="cards.fine_tune_monitoring"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="true"
     />
     <CmkLinkCard
@@ -79,7 +83,8 @@ defineProps<{
       "
       icon-name="licensing"
       :url="cards.license_site"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="false"
     />
     <CmkLinkCard
@@ -91,15 +96,15 @@ defineProps<{
       "
       icon-name="users"
       :url="cards.start_page"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="false"
     />
   </CmkLinkCardContainer>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.next-link-card-container {
+.welcome-next-steps {
   margin-bottom: 56px;
 }
 </style>

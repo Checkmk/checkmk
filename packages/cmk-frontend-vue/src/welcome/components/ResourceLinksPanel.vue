@@ -29,7 +29,8 @@ defineProps<{
       :title="_t('Read the Beginner’s Guide')"
       :subtitle="_t('A step-by-step introduction to help you get started quickly and confidently.')"
       :url="cards.checkmk_docs"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="true"
     />
     <CmkLinkCard
@@ -40,7 +41,8 @@ defineProps<{
         )
       "
       :url="cards.checkmk_best_practices"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="true"
     />
     <CmkLinkCard
@@ -51,7 +53,8 @@ defineProps<{
         )
       "
       :url="cards.checkmk_trainings"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="true"
     />
     <CmkLinkCard
@@ -60,21 +63,24 @@ defineProps<{
         _t('Watch our on-demand or live webinars to master the configuration and use of Checkmk.')
       "
       :url="cards.checkmk_webinars"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="true"
     />
     <CmkLinkCard
       :title="_t('Join the community')"
       :subtitle="_t('Connect with other users and ask questions in our active forum.')"
       :url="cards.checkmk_forum"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="true"
     />
     <CmkLinkCard
       :title="_t('Ask Checkmk AI')"
       :subtitle="_t('Your assistant for Checkmk - ask anything from setup to troubleshooting.')"
       :url="cards.checkmk_ai"
-      variant="borderless"
+      borders="borderless"
+      contrast="high"
       :open-in-new-tab="true"
     />
   </CmkLinkCardContainer>

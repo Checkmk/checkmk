@@ -9,24 +9,30 @@ import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkIcon from '@/components/CmkIcon'
 import type { SimpleIcons } from '@/components/CmkIcon'
+import CmkIcon from '@/components/CmkIcon'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const cmkLinkCardVariants = cva('', {
   variants: {
-    variant: {
+    borders: {
       standard: 'cmk-link-card--standard',
       borderless: 'cmk-link-card--borderless'
+    },
+    contrast: {
+      standard: 'cmk-link-card--standard-contrast',
+      high: 'cmk-link-card--high-contrast'
     }
   },
   defaultVariants: {
-    variant: 'standard'
+    borders: 'standard',
+    contrast: 'standard'
   }
 })
 
-export type CmkLinkCardVariants = VariantProps<typeof cmkLinkCardVariants>
+export type CmkLinkCardBorders = VariantProps<typeof cmkLinkCardVariants>['borders']
+export type CmkLinkCardContrast = VariantProps<typeof cmkLinkCardVariants>['contrast']
 interface CmkLinkCardProps {
   iconName?: SimpleIcons | undefined
   title: TranslatedString
@@ -35,11 +41,12 @@ interface CmkLinkCardProps {
   callback?: () => void
   openInNewTab: boolean
   disabled?: boolean
-  variant?: CmkLinkCardVariants['variant']
+  borders?: CmkLinkCardBorders
+  contrast?: CmkLinkCardContrast
 }
 const props = defineProps<CmkLinkCardProps>()
 const classes = computed(() => [
-  cmkLinkCardVariants({ variant: props.variant }),
+  cmkLinkCardVariants({ borders: props.borders, contrast: props.contrast }),
   { disabled: props.disabled }
 ])
 </script>
@@ -69,12 +76,25 @@ const classes = computed(() => [
 
 <style scoped>
 .cmk-link-card--standard {
-  background-color: var(--ux-theme-1);
   border: var(--dimension-1) solid var(--ux-theme-6);
+
+  --background-color: var(--ux-theme-1);
+
+  &.cmk-link-card--high-contrast {
+    --background-color: var(--ux-theme-3);
+
+    border: var(--dimension-1) solid var(--ux-theme-8);
+  }
 }
 
 .cmk-link-card--borderless {
-  background-color: var(--ux-theme-2);
+  border: var(--dimension-1) solid transparent;
+
+  --background-color: var(--ux-theme-1);
+
+  &.cmk-link-card--high-contrast {
+    --background-color: var(--ux-theme-3);
+  }
 }
 
 .cmk-link-card {
@@ -82,10 +102,15 @@ const classes = computed(() => [
   align-items: center;
   text-decoration: none;
   border-radius: 4px;
+  background-color: var(--background-color);
   padding: var(--dimension-4) var(--dimension-5);
 
   &:hover {
-    background-color: var(--ux-theme-5);
+    background-color: color-mix(
+      in srgb,
+      var(--background-color),
+      var(--background-hover-color) 10%
+    );
   }
 
   &:focus,
@@ -98,6 +123,18 @@ const classes = computed(() => [
     opacity: 0.5;
     pointer-events: none;
     cursor: default;
+  }
+}
+
+body[data-theme='facelift'] {
+  .cmk-link-card {
+    --background-hover-color: var(--black);
+  }
+}
+
+body[data-theme='modern-dark'] {
+  .cmk-link-card {
+    --background-hover-color: var(--white);
   }
 }
 

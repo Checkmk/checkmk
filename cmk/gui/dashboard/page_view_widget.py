@@ -29,7 +29,7 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
@@ -41,6 +41,7 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
+from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
@@ -178,6 +179,9 @@ class ViewWidgetIFramePageHelper:
                     view,
                     show_buttons=False,
                     page_menu_dropdowns_callback=lambda x, y, z: None,
+                    render_row_limit_warning=(
+                        cls._public_dashboard_row_limit_warning if is_public else None
+                    ),
                 ),
                 user_permissions=user_permissions,
                 debug=is_debug,
@@ -244,6 +248,18 @@ class ViewWidgetIFramePageHelper:
             html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
             if is_public:
                 html.javascript("cmk.dashboard.ignore_public_dashboard_clicks();")
+
+    @staticmethod
+    def _public_dashboard_row_limit_warning(limit: int | None, _user_config: LoggedInUser) -> None:
+        """Compare query reply against limits, warn in the GUI about incompleteness"""
+        text = escape_to_html_permissive(
+            _(
+                "<b>Display limit reached:</b> This table shows only %s entries. "
+                "Additional records are not included in this view. Sort order may not be correct."
+            )
+            % limit
+        )
+        html.show_warning(text)
 
 
 class _ViewWidgetIFrameAuthTokenRequestParameters(BaseModel):

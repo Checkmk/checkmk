@@ -25,7 +25,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_display_options_dropdown,
@@ -108,10 +108,16 @@ class GUIViewRenderer(ABCViewRenderer):
         view: View,
         show_buttons: bool,
         page_menu_dropdowns_callback: Callable[[View, Rows, list[PageMenuDropdown]], None],
+        render_row_limit_warning: Callable[[int, LoggedInUser], None] | None = None,
     ) -> None:
         super().__init__(view)
         self._show_buttons = show_buttons
         self._page_menu_dropdowns_callback = page_menu_dropdowns_callback
+        self._render_row_limit_warning = (
+            cmk.gui.view_utils.query_limit_exceeded_warn
+            if render_row_limit_warning is None
+            else render_row_limit_warning
+        )
 
     @override
     def render(
@@ -264,14 +270,11 @@ class GUIViewRenderer(ABCViewRenderer):
             html.div("", id_="row_info")
             if display_options.enabled(display_options.W):
                 row_limit = None if self.view.datasource.ignore_limit else self.view.row_limit
-                if cmk.gui.view_utils.row_limit_exceeded(
-                    unfiltered_amount_of_rows,
-                    row_limit,
-                ) or cmk.gui.view_utils.row_limit_exceeded(
-                    len(rows),
-                    row_limit,
+                if row_limit and (
+                    cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows, row_limit)
+                    or cmk.gui.view_utils.row_limit_exceeded(len(rows), row_limit)
                 ):
-                    cmk.gui.view_utils.query_limit_exceeded_warn(row_limit, user)
+                    self._render_row_limit_warning(row_limit, user)
                     del rows[row_limit:]
                     self.view.process_tracking.amount_rows_after_limit = len(rows)
 

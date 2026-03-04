@@ -37,7 +37,7 @@ def report_agent_crashes(
     name: str,
     version: str,
 ) -> Callable[[Callable[_P, int]], Callable[_P, int]]:
-    """ "Decorator factory to report crashes from agents
+    """Decorator factory to report crashes from agents
 
     Wrapping a function with the returned decorator will catch all exceptions raised by the function
     and create a crash report.

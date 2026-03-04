@@ -8,68 +8,179 @@
 import contextlib
 import errno
 import fnmatch
-import io
 import os
+import shutil
 import socket
 import sqlite3
 import sys
 import tarfile
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import BinaryIO
+from typing import IO, override
 
+from omdlib.args_site_user import args_to_command_line, Backup
 from omdlib.contexts import SiteContext
-from omdlib.type_defs import CommandOptions
+from omdlib.global_options import GlobalOptions
+from omdlib.options import CommandOptions
+from omdlib.site_paths import SitePaths
+from omdlib.site_user import site_environment_as_root
+from omdlib.users_and_groups import run_as_site_user
 
 
-def backup_site_to_tarfile(
+@dataclass(frozen=True)
+class BackupExclusions:
+    rrds: bool
+    agents: bool
+    logs: bool
+
+    @classmethod
+    def from_options(cls, options: CommandOptions) -> "BackupExclusions":
+        if "no-past" in options:
+            return cls(rrds=False, agents=False, logs=False)
+        return cls(
+            rrds="no-rrds" not in options,
+            agents="no-agents" not in options,
+            logs="no-logs" not in options,
+        )
+
+    @classmethod
+    def from_args(cls, args: Backup) -> "BackupExclusions":
+        return cls(rrds=args.rrds, agents=args.agents, logs=args.logs)
+
+
+def _try_backup_site_to_tarfile(
+    tar: tarfile.TarFile,
+    exclusions: BackupExclusions,
     site: SiteContext,
-    fh: BinaryIO | io.BufferedWriter,
-    mode: str,
-    options: CommandOptions,
     verbose: bool,
 ) -> None:
-    if not os.path.isdir(site.dir):
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), site.dir)
+    try:
+        _backup_site_to_tarfile(
+            site.name,
+            SitePaths.from_site_name(site.name).home,
+            site.is_stopped(verbose),
+            tar,
+            exclusions,
+            verbose,
+        )
+    except OSError as e:
+        sys.exit("Failed to perform backup: %s" % e)
 
-    excludes = get_exclude_patterns(options)
+
+def main_backup(
+    _version_info: object,
+    site_name: str,
+    global_opts: GlobalOptions,
+    args: Sequence[str],
+    options: CommandOptions,
+) -> None:
+    try:
+        orig_working_directory = os.getcwd()
+    except FileNotFoundError:
+        orig_working_directory = "/"
+
+    if len(args) == 0:
+        sys.exit(
+            'You need to provide either a path to the destination file or "-" for backup to stdout.'
+        )
+    dest = args[0]
+
+    if dest == "-":
+        context: contextlib.AbstractContextManager[IO[bytes]] = contextlib.nullcontext(
+            sys.stdout.buffer
+        )
+    else:
+        if not (dest_path := Path(dest)).is_absolute():
+            dest_path = orig_working_directory / dest_path
+        context = contextlib.closing(dest_path.open("wb"))
+    with context as buffer:
+        backup_args = Backup(
+            verbose=global_opts.verbose,
+            descriptor=buffer.fileno(),
+            site=site_name,
+            compression="no-compression" not in options,
+            rrds=not ("no-rrds" in options or "no-past" in options),
+            agents=not ("no-agents" in options or "no-past" in options),
+            logs=not ("no-logs" in options or "no-past" in options),
+        )
+        if os.getuid() == 0:
+            returncode = run_as_site_user(
+                site_name,
+                args_to_command_line(backup_args),
+                capture_output=False,
+                pass_fds=[buffer.fileno()],
+            ).returncode
+        else:
+            returncode = main_site_backup(backup_args)
+    sys.exit(returncode)
+
+
+def main_site_backup(args: Backup) -> int:
+    site = site_environment_as_root(args.site, args.verbose)
+    with (
+        open(args.descriptor, mode="wb", closefd=False) as fileobj,
+        tarfile.open(fileobj=fileobj, mode="w|gz" if args.compression else "w|") as tar,
+    ):
+        _try_backup_site_to_tarfile(tar, BackupExclusions.from_args(args), site, args.verbose)
+    return 0
+
+
+def ensure_mkbackup_lock_dir_rights() -> None:
+    mkbackup_lock_dir = Path("/run/lock/mkbackup")
+    try:
+        mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
+        shutil.chown(mkbackup_lock_dir, group="omd")
+        mkbackup_lock_dir.chmod(0o0770)
+    except PermissionError:
+        pass
+
+
+def _backup_site_to_tarfile(
+    site_name: str,
+    site_home: str,
+    site_is_stopped: bool,
+    tar: tarfile.TarFile,
+    exclusions: BackupExclusions,
+    verbose: bool,
+) -> None:
+    if not os.path.isdir(site_home):
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), site_home)
+
+    excludes = get_exclude_patterns(exclusions)
 
     def accepted_files(tarinfo: tarfile.TarInfo) -> bool:
         # patterns are relative to site directory, tarinfo.name includes site name.
         return not any(
-            fnmatch.fnmatch(tarinfo.name[len(site.name) + 1 :], glob_pattern)
+            fnmatch.fnmatch(tarinfo.name[len(site_name) + 1 :], glob_pattern)
             for glob_pattern in excludes
         )
 
-    with RRDSocket(site.is_stopped(), site.name, verbose) as rrd_socket:
-        with tarfile.TarFile.open(
-            fileobj=fh,
-            mode=mode,
-        ) as tar:
-            # Add the version symlink as first file to be able to
-            # check a) the sitename and b) the version before reading
-            # the whole tar archive. Important for streaming.
-            # The file is added twice to get the first for validation
-            # and the second for excration during restore.
-            tar_add(
-                rrd_socket,
-                tar,
-                site.dir + "/version",
-                site.name + "/version",
-                verbose=verbose,
-            )
-            tar_add(
-                rrd_socket,
-                tar,
-                site.dir,
-                site.name,
-                predicate=accepted_files,
-                verbose=verbose,
-            )
+    with _RRDSocket(site_is_stopped, site_name, verbose) as rrd_socket:
+        # Add the version symlink as first file to be able to
+        # check a) the sitename and b) the version before reading
+        # the whole tar archive. Important for streaming.
+        # The file is added twice to get the first for validation
+        # and the second for extraction during restore.
+        _tar_add(
+            rrd_socket,
+            tar,
+            site_home + "/version",
+            site_name + "/version",
+            verbose=verbose,
+        )
+        _tar_add(
+            rrd_socket,
+            tar,
+            site_home,
+            site_name,
+            predicate=accepted_files,
+            verbose=verbose,
+        )
 
 
-def get_exclude_patterns(options: CommandOptions) -> list[str]:
+def get_exclude_patterns(options: BackupExclusions) -> list[str]:
     excludes = []
     excludes.append("tmp/*")  # Exclude all tmpfs files
 
@@ -87,17 +198,17 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     excludes.append("var/check_mk/persisted/*")
     excludes.append("var/check_mk/persisted_sections/*")
 
-    if "no-rrds" in options or "no-past" in options:
+    if not options.rrds:
         excludes.append("var/pnp4nagios/perfdata/*")
         excludes.append("var/pnp4nagios/spool/*")
         excludes.append("var/rrdcached/*")
         excludes.append("var/pnp4nagios/states/*")
         excludes.append("var/check_mk/rrd/*")
 
-    if "no-agents" in options or "no-past" in options:
+    if not options.agents:
         excludes.append("var/check_mk/agents/*")
 
-    if "no-logs" in options or "no-past" in options:
+    if not options.logs:
         # Logs of different components
         excludes.append("var/log/*.log*")
         excludes.append("var/log/*/*")
@@ -119,7 +230,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     return excludes
 
 
-class RRDSocket(contextlib.AbstractContextManager):
+class _RRDSocket(contextlib.AbstractContextManager["_RRDSocket"]):
     def __init__(self, site_stopped: bool, site_name: str, verbose: bool) -> None:
         self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(
@@ -214,6 +325,7 @@ class RRDSocket(contextlib.AbstractContextManager):
         ):
             raise Exception(f"Error while processing rrdcached command ({cmd}): {msg}")
 
+    @override
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
@@ -225,8 +337,8 @@ class RRDSocket(contextlib.AbstractContextManager):
             self._sock.close()
 
 
-def tar_add(
-    rrd_socket: RRDSocket,
+def _tar_add(
+    rrd_socket: _RRDSocket,
     tar: tarfile.TarFile,
     name: str,
     arcname: str,
@@ -259,7 +371,7 @@ def tar_add(
             if name.endswith("var/mkeventd/history/history.sqlite"):
                 backup_name = f"{name}.backup"
                 try:
-                    backup_sqlite(name, backup_name)
+                    _backup_sqlite(name, backup_name)
                     backup_tarinfo = tar.gettarinfo(backup_name, arcname=arcname)
                     with open(backup_name, "rb") as file:
                         tar.addfile(backup_tarinfo, file)
@@ -281,7 +393,7 @@ def tar_add(
             sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 
     for filename in directory_files:
-        tar_add(  # recursive call
+        _tar_add(  # recursive call
             rrd_socket,
             tar,
             os.path.join(name, filename),
@@ -314,7 +426,7 @@ def get_site_and_version_from_backup(tar: tarfile.TarFile) -> tuple[str, str]:
     return sitename, version
 
 
-def backup_sqlite(src: str | Path, dst: str | Path) -> None:
+def _backup_sqlite(src: str | Path, dst: str | Path) -> None:
     """Backup sqlite database file.
 
     Uses sqlite3 backup API to create a backup of the database file.

@@ -17,8 +17,9 @@ from pathlib import Path
 
 from omdlib.console import ok
 from omdlib.contexts import SiteContext
+from omdlib.site_paths import SitePaths
+from omdlib.users_and_groups import run_as_site_user
 from omdlib.utils import (
-    chown_tree,
     create_skeleton_files,
     delete_directory_contents,
     is_containerized,
@@ -107,7 +108,17 @@ def mark_tmpfs_initialized(site: SiteContext) -> None:
         f.write("")
 
 
+def unmount_tmpfs_as_root(site_name: str, kill: bool, capture_output: bool) -> int:
+    args = ["--kill"] if kill else []
+    return run_as_site_user(
+        site_name,
+        ["omd", "umount"] + args,
+        capture_output=capture_output,
+    ).returncode
+
+
 def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
+    site_home = SitePaths.from_site_name(site.name).home
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
@@ -118,7 +129,7 @@ def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) ->
     if tmpfs_mounted(site.name):
         if output:
             sys.stdout.write("Saving temporary filesystem contents...")
-        save_tmpfs_dump(site.dir, site.tmp_dir)
+        save_tmpfs_dump(site_home, site.tmp_dir)
         if output:
             ok()
     return unmount_tmpfs_without_save(site.name, site.tmp_dir, output, kill)
@@ -276,13 +287,15 @@ def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
 
 
 def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, skelroot: str) -> None:
+    site_home = SitePaths.from_site_name(site.name).home
     prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
 
     if not os.listdir(site.tmp_dir):
-        create_skeleton_files(site.dir, site.replacements(), skelroot, site.skel_permissions, "tmp")
-        chown_tree(site.tmp_dir, site.name)
+        create_skeleton_files(
+            site_home, site.replacements(), skelroot, site.skel_permissions, "tmp"
+        )
         mark_tmpfs_initialized(site)
-        _restore_tmpfs_dump(site.dir, site.tmp_dir)
+        _restore_tmpfs_dump(site_home, site.tmp_dir)
 
     _create_livestatus_tcp_socket_link(site)
 

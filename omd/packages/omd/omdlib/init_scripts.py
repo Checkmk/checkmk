@@ -6,7 +6,6 @@
 """Handling of site-internal init scripts"""
 
 import contextlib
-import logging
 import os
 import subprocess
 import sys
@@ -14,10 +13,7 @@ from typing import Literal
 
 from cmk.utils import tty
 from cmk.utils.local_secrets import SiteInternalSecret
-from cmk.utils.log import VERBOSE
 from cmk.utils.log.security_event import log_security_event, SiteStartStoppedEvent
-
-logger = logging.getLogger("cmk.omd")
 
 
 def call_init_scripts(
@@ -64,8 +60,12 @@ def call_init_scripts(
     return 0 if success else 2
 
 
-def check_status(  # pylint: disable=too-many-branches
-    site_dir: str, display: bool = True, daemon: str | None = None, bare: bool = False
+def check_status(
+    site_dir: str,
+    verbose: bool,
+    display: bool = True,
+    daemon: str | None = None,
+    bare: bool = False,
 ) -> int:
     num_running = 0
     num_unused = 0
@@ -76,7 +76,6 @@ def check_status(  # pylint: disable=too-many-branches
         if not bare:
             sys.stderr.write("ERROR: This daemon does not exist.\n")
         return 3
-    is_verbose = logger.isEnabledFor(VERBOSE)
     for script in scripts:
         komponent = script.split("/")[-1].split("-", 1)[-1]
         if daemon and komponent != daemon:
@@ -88,7 +87,7 @@ def check_status(  # pylint: disable=too-many-branches
             stderr=subprocess.DEVNULL,
         )
 
-        if display and (state != 5 or is_verbose):
+        if display and (state != 5 or verbose):
             if bare:
                 sys.stdout.write(komponent + " ")
             else:
@@ -96,7 +95,7 @@ def check_status(  # pylint: disable=too-many-branches
                 sys.stdout.write(tty.bold)
 
         if bare:
-            if state != 5 or is_verbose:
+            if state != 5 or verbose:
                 sys.stdout.write("%d\n" % state)
 
         if state == 0:
@@ -104,7 +103,7 @@ def check_status(  # pylint: disable=too-many-branches
                 sys.stdout.write(tty.green + "running\n")
             num_running += 1
         elif state == 5:
-            if display and is_verbose and not bare:
+            if display and verbose and not bare:
                 sys.stdout.write(tty.blue + "unused\n")
             num_unused += 1
         else:

@@ -5752,7 +5752,7 @@ class Alternative(ValueSpec[AlternativeModel]):
         for nr, vs in enumerate(self._elements):
             if str(nr) == sel_option:
                 disp = ""
-                cur_val = value
+                cur_val = value if vs == mvs else vs.default_value()
             else:
                 disp = "none"
                 cur_val = vs.default_value()

@@ -94,6 +94,25 @@ class TestValuespecAlternative:
         with pytest.raises(ValueError, match=r"^Invalid value: \('a', 'b'\)"):
             assert get_alternative().value_to_json(("a", "b"))
 
+    def test_render_input_type_mismatch_uses_default(self, request_context: None) -> None:
+        """When the user switches alternatives, the old value may not match the new type.
+
+        Regression test for CMK-31604: cloning an SNMP host and switching from SNMPv3
+        (tuple) to SNMPv2c (string/Password) crashed with
+        AttributeError: 'tuple' object has no attribute 'encode'.
+        """
+        alternative = vs.Alternative(
+            [
+                vs.Password(title="community"),
+                vs.Tuple(title="credentials", elements=[vs.TextInput(), vs.Password()]),
+            ]
+        )
+        # User selected the Password alternative (index 0), but the stored value
+        # is a tuple from the Tuple alternative (index 1).
+        with request_var(prefix_use="0"):
+            # This must not crash — it should fall back to Password's default value.
+            alternative.render_input("prefix", ("authproto", "secret"))
+
     def test_value_from_json(self) -> None:
         # TODO: this is wrong! should be transformed into a tuple,
         # see comment on Value_from_json

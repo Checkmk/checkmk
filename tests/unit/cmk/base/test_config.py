@@ -10,6 +10,7 @@ import re
 import shutil
 import socket
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Literal, NoReturn
 
@@ -25,7 +26,7 @@ from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
@@ -54,7 +55,10 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import convert_leg
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.default_config.base import _PeriodicDiscovery
 
+from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v2 import (
     CheckPlugin,
     exists,
@@ -3249,3 +3253,204 @@ def test_get_active_service_data_crash(
         captured.err
         == "\nWARNING: Config creation for active check my_active_check failed on test_host: division by zero\n"
     )
+
+
+_KNOWN_EXCEPTIONS = frozenset(
+    [  # handled in ConfigCache.service_discovery_name()
+        "cmk_inventory",
+        # handled in cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
+        "http",
+        # TODO investigate if bug, cmk.base.config._old_service_descriptions uses key "hyperv_vm",
+        #  but cmk.gui.watolib.sample_config.USE_NEW_DESCRIPTIONS_FOR_SETTING uses "hyperv_vms"
+        "hyperv_vms",
+        # TODO investigate if bug, missing in cmk.base.config._old_service_descriptions
+        "megaraid_vdisks",
+    ]
+)
+
+
+@dataclass(frozen=True)
+class TestServiceDescription:
+    item: str
+    service_description: str
+
+
+_EXPECTED_OLD_DESCRIPTIONS = {
+    "aix_memory": TestServiceDescription("test_item", "Memory used test_item"),
+    "barracuda_mailqueues": TestServiceDescription("test_item", "Mail Queue"),
+    "brocade_sys_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "casa_cpu_temp": TestServiceDescription("test_item", "Temperature test_item"),
+    "cisco_mem": TestServiceDescription("test_item", "Mem used test_item"),
+    "cisco_mem_asa": TestServiceDescription("test_item", "Mem used test_item"),
+    "cisco_mem_asa64": TestServiceDescription("test_item", "Mem used test_item"),
+    "cmciii_psm_current": TestServiceDescription("test_item", "test_item"),
+    "cmciii_temp": TestServiceDescription("Ambient Foo", "Foo Temperature"),
+    "cmciii_lcp_airin": TestServiceDescription("test_item", "LCP Fanunit Air IN test_item"),
+    "cmciii_lcp_airout": TestServiceDescription("test_item", "LCP Fanunit Air OUT test_item"),
+    "cmciii_lcp_water": TestServiceDescription("test_item", "LCP Fanunit Water test_item"),
+    "db2_mem": TestServiceDescription("test_item", "Mem of test_item"),
+    "df": TestServiceDescription("test_item", "fs_test_item"),
+    "df_netapp": TestServiceDescription("test_item", "fs_test_item"),
+    "df_netapp32": TestServiceDescription("test_item", "fs_test_item"),
+    "docker_container_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "enterasys_temp": TestServiceDescription("test_item", "Temperature"),
+    "esx_vsphere_datastores": TestServiceDescription("test_item", "fs_test_item"),
+    "esx_vsphere_hostsystem_mem_usage": TestServiceDescription(
+        "test_item", "Memory used test_item"
+    ),
+    "esx_vsphere_hostsystem_mem_usage_cluster": TestServiceDescription(
+        "test_item", "Memory usage test_item"
+    ),
+    "etherbox_temp": TestServiceDescription("test_item", "Sensor test_item"),
+    "fortigate_memory": TestServiceDescription("test_item", "Memory usage test_item"),
+    "fortigate_memory_base": TestServiceDescription("test_item", "Memory usage test_item"),
+    "fortigate_node_memory": TestServiceDescription("test_item", "Memory usage test_item"),
+    "hr_fs": TestServiceDescription("test_item", "fs_test_item"),
+    "hr_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "huawei_switch_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "ibm_svc_mdiskgrp": TestServiceDescription("test_item", "MDiskGrp test_item"),
+    "ibm_svc_system": TestServiceDescription("test_item", "IBM SVC Info test_item"),
+    "ibm_svc_systemstats_cache": TestServiceDescription(
+        "test_item", "IBM SVC Cache Total test_item"
+    ),
+    "ibm_svc_systemstats_disk_latency": TestServiceDescription(
+        "test_item", "IBM SVC Latency test_item Total"
+    ),
+    "ibm_svc_systemstats_diskio": TestServiceDescription(
+        "test_item", "IBM SVC Throughput test_item Total"
+    ),
+    "ibm_svc_systemstats_iops": TestServiceDescription("test_item", "IBM SVC IOPS test_item Total"),
+    "innovaphone_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "innovaphone_temp": TestServiceDescription("test_item", "Temperature"),
+    "juniper_mem": TestServiceDescription("test_item", "Memory Utilization test_item"),
+    "juniper_screenos_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "juniper_trpz_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "liebert_bat_temp": TestServiceDescription("test_item", "Battery Temp"),
+    "logwatch": TestServiceDescription("test_item", "LOG test_item"),
+    "logwatch_groups": TestServiceDescription("test_item", "LOG test_item"),
+    "mem_used": TestServiceDescription("test_item", "Memory used test_item"),
+    "mem_win": TestServiceDescription("test_item", "Memory and pagefile test_item"),
+    "megaraid_bbu": TestServiceDescription("test_item", "RAID Adapter/BBU test_item"),
+    "megaraid_pdisks": TestServiceDescription("test_item", "RAID PDisk Adapt/Enc/Sl test_item"),
+    "megaraid_ldisks": TestServiceDescription("test_item", "RAID Adapter/LDisk test_item"),
+    "mknotifyd": TestServiceDescription("test_item", "Notification Spooler test_item"),
+    "mknotifyd_connection": TestServiceDescription(
+        "test_item", "Notification Connection test_item"
+    ),
+    "mssql_backup": TestServiceDescription("test_item", "test_item Backup"),
+    "mssql_blocked_sessions": TestServiceDescription("test_item", "MSSQL Blocked Sessions"),
+    "mssql_counters_cache_hits": TestServiceDescription("test_item", "test_item"),
+    "mssql_counters_file_sizes": TestServiceDescription("test_item", "test_item File Sizes"),
+    "mssql_counters_locks": TestServiceDescription("test_item", "test_item Locks"),
+    "mssql_counters_locks_per_batch": TestServiceDescription(
+        "test_item", "test_item Locks per Batch"
+    ),
+    "mssql_counters_pageactivity": TestServiceDescription("test_item", "test_item Page Activity"),
+    "mssql_counters_sqlstats": TestServiceDescription("test_item", "test_item"),
+    "mssql_counters_transactions": TestServiceDescription("test_item", "test_item Transactions"),
+    "mssql_databases": TestServiceDescription("test_item", "test_item Database"),
+    "mssql_datafiles": TestServiceDescription("test_item", "Datafile test_item"),
+    "mssql_tablespaces": TestServiceDescription("test_item", "test_item Sizes"),
+    "mssql_transactionlogs": TestServiceDescription("test_item", "Transactionlog test_item"),
+    "mssql_versions": TestServiceDescription("test_item", "test_item Version"),
+    "netscaler_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "nullmailer_mailq": TestServiceDescription("test_item", "Nullmailer Queue"),
+    "nvidia_temp": TestServiceDescription("test_item", "Temperature NVIDIA test_item"),
+    "postfix_mailq": TestServiceDescription("test_item", "Postfix Queue test_item"),
+    "ps": TestServiceDescription("test_item", "proc_test_item"),
+    "qmail_stats": TestServiceDescription("test_item", "Qmail Queue"),
+    "raritan_emx": TestServiceDescription("test_item", "Rack test_item"),
+    "raritan_pdu_inlet": TestServiceDescription("test_item", "Input Phase test_item"),
+    "services": TestServiceDescription("test_item", "service_test_item"),
+    "solaris_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "sophos_memory": TestServiceDescription("test_item", "Memory usage test_item"),
+    "statgrab_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "tplink_mem": TestServiceDescription("test_item", "Memory used test_item"),
+    "ups_bat_temp": TestServiceDescription("test_item", "Temperature Battery test_item"),
+    "vms_diskstat_df": TestServiceDescription("test_item", "fs_test_item"),
+    "wmic_process": TestServiceDescription("test_item", "proc_test_item"),
+    "zfsget": TestServiceDescription("test_item", "fs_test_item"),
+    "prism_alerts": TestServiceDescription("test_item", "Prism Alerts"),
+    "prism_containers": TestServiceDescription("test_item", "Containers test_item"),
+    "prism_info": TestServiceDescription("test_item", "Prism Cluster"),
+    "prism_storage_pools": TestServiceDescription("test_item", "Storage Pool test_item"),
+}
+
+
+def _setup_use_new_descriptions_for(
+    monkeypatch: MonkeyPatch, use_new_descriptions_for_all: bool, test_host: HostAddress
+) -> tuple[Mapping[str, bool], ConfigCache]:
+    adapted_sample_config = {
+        k: use_new_descriptions_for_all
+        for k in USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"]
+        if k not in _KNOWN_EXCEPTIONS
+    }
+
+    plugins = {
+        CheckPluginName(name): _make_check_plugin(name, "Service %s")
+        for name in adapted_sample_config
+    }
+    monkeypatch.setattr(agent_based_register._config, "registered_check_plugins", plugins)
+
+    ts = Scenario()
+    ts.add_host(test_host)
+    ts.set_option(
+        "use_new_descriptions_for",
+        adapted_sample_config,
+    )
+    config_cache = ts.apply(monkeypatch)
+    return adapted_sample_config, config_cache
+
+
+def _make_check_plugin(name: str, service_name_template: str) -> CheckPlugin:
+    return CheckPlugin(
+        name=name,
+        sections=[],
+        service_name=service_name_template,
+        discovery_function=lambda: [],
+        discovery_default_parameters=None,
+        discovery_ruleset_name=None,
+        discovery_ruleset_type=RuleSetType.MERGED,
+        check_function=lambda: [],
+        check_default_parameters=None,
+        check_ruleset_name=None,
+        cluster_check_function=None,
+    )
+
+
+def test_new_service_description_when_use_new_descriptions_enabled(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    test_host = HostAddress("test_host")
+    adapted_sample_config, config_cache = _setup_use_new_descriptions_for(
+        monkeypatch=monkeypatch, use_new_descriptions_for_all=True, test_host=test_host
+    )
+
+    for plugin_name in adapted_sample_config:
+        item = "test_item"
+        actual_descr = config.service_description(
+            config_cache.ruleset_matcher,
+            test_host,
+            CheckPluginName(plugin_name),
+            item,
+        )
+        assert actual_descr == f"Service {item}"
+
+
+def test_old_service_description_when_use_new_descriptions_disabled(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    test_host = HostAddress("test_host")
+    adapted_sample_config, config_cache = _setup_use_new_descriptions_for(
+        monkeypatch=monkeypatch, use_new_descriptions_for_all=False, test_host=test_host
+    )
+
+    for plugin_name in adapted_sample_config:
+        expected = _EXPECTED_OLD_DESCRIPTIONS[plugin_name]
+        actual_descr = config.service_description(
+            config_cache.ruleset_matcher,
+            test_host,
+            CheckPluginName(plugin_name),
+            expected.item,
+        )
+        assert actual_descr == expected.service_description

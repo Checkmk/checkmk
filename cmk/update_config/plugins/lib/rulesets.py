@@ -62,7 +62,7 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
 def load_and_transform(logger: Logger) -> AllRulesets:
     all_rulesets = AllRulesets.load_all_rulesets()
 
-    if "http" not in config.use_new_descriptions_for:
+    if not config.use_new_descriptions_for.get("http", False):
         _force_old_http_service_description(all_rulesets)
 
     _delete_deprecated_wato_rulesets(

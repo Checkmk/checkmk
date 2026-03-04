@@ -2890,143 +2890,506 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
         return "use_new_descriptions_for"
 
     def valuespec(self) -> ValueSpec:
-        return ListChoice(
-            title=_("Use new service names"),
-            help=_(
-                "In order to make Checkmk more consistent, "
-                "the descriptions of several services have been renamed in newer "
-                "Checkmk versions. One example is the filesystem services that have "
-                "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
-                "of existing services has many implications - including existing rules, performance "
-                "data and availability history - these renamings are disabled per default for "
-                "existing installations. Here you can switch to the new descriptions for "
-                "selected check types"
+        available_selection = [
+            (
+                "aix_memory",
+                Checkbox(
+                    title=_("Memory usage for %s hosts") % "AIX",
+                    label=_("Use the new service name"),
+                ),
             ),
-            choices=[
-                ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
-                ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
-                ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
-                ("casa_cpu_temp", _("Casa module: CPU temperature")),
-                ("cisco_mem", _("Cisco memory usage (%s)") % "cisco_mem"),
-                ("cisco_mem_asa", _("Cisco memory usage (%s)") % "cisco_mem_asa"),
-                ("cisco_mem_asa64", _("Cisco memory usage (%s)") % "cisco_mem_asa64"),
-                ("cmciii_psm_current", _("Rittal CMC-III Units: Current")),
-                ("cmciii_temp", _("Rittal CMC-III Units: Temperatures")),
-                ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
-                ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
-                ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
-                (
-                    "cmk_inventory",
-                    _("Monitor hosts for unchecked services (Checkmk Discovery)"),
+            (
+                "barracuda_mailqueues",
+                Checkbox(title=_("Barracuda: Mail Queue"), label=_("Use the new service name")),
+            ),
+            (
+                "brocade_sys_mem",
+                Checkbox(
+                    title=_("Main memory usage for Brocade fibre channel switches"),
+                    label=_("Use the new service name"),
                 ),
-                ("db2_mem", _("DB2 memory usage")),
-                ("df", _("Used space in filesystems")),
-                ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
-                (
-                    "df_netapp32",
-                    _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters"),
+            ),
+            (
+                "casa_cpu_temp",
+                Checkbox(
+                    title=_("Casa module: CPU temperature"), label=_("Use the new service name")
                 ),
-                ("docker_container_mem", _("Memory usage of Docker containers")),
-                ("enterasys_temp", _("Enterasys Switch: Temperature")),
-                ("esx_vsphere_datastores", _("VMware ESX host systems: Used space")),
-                ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
-                ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory usage of ESX Clusters")),
-                ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),
-                ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
-                (
-                    "fortigate_memory_base",
-                    _("Memory usage of Fortigate devices (fortigate_memory_base)"),
+            ),
+            (
+                "cisco_mem",
+                Checkbox(
+                    title=_("Cisco memory usage (%s)") % "cisco_mem",
+                    label=_("Use the new service name"),
                 ),
-                ("fortigate_node_memory", _("Fortigate node memory")),
-                ("hr_fs", _("Used space in filesystems via SNMP")),
-                ("hr_mem", _("HR: Used memory via SNMP")),
-                # TODO: can be removed when
-                #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
-                #  can be removed
-                (
-                    "http",
-                    _(
+            ),
+            (
+                "cisco_mem_asa",
+                Checkbox(
+                    title=_("Cisco memory usage (%s)") % "cisco_mem_asa",
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "cisco_mem_asa64",
+                Checkbox(
+                    title=_("Cisco memory usage (%s)") % "cisco_mem_asa64",
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "cmciii_psm_current",
+                Checkbox(
+                    title=_("Rittal CMC-III Units: Current"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "cmciii_temp",
+                Checkbox(
+                    title=_("Rittal CMC-III Units: Temperatures"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "cmciii_lcp_airin",
+                Checkbox(
+                    title=_("Rittal CMC-III LCP: Air In and Temperature"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "cmciii_lcp_airout",
+                Checkbox(
+                    title=_("Rittal CMC-III LCP: Air Out Temperature"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "cmciii_lcp_water",
+                Checkbox(
+                    title=_("Rittal CMC-III LCP: Water In/Out Temperature"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "cmk_inventory",
+                Checkbox(
+                    title=_("Monitor hosts for unchecked services (Checkmk Discovery)"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            ("db2_mem", Checkbox(title=_("DB2 memory usage"), label=_("Use the new service name"))),
+            (
+                "df",
+                Checkbox(title=_("Used space in filesystems"), label=_("Use the new service name")),
+            ),
+            (
+                "df_netapp",
+                Checkbox(
+                    title=_("NetApp Filers: Used Space in Filesystems"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "df_netapp32",
+                Checkbox(
+                    title=_("NetApp Filers: Used space in Filesystem Using 32-Bit Counters"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "docker_container_mem",
+                Checkbox(
+                    title=_("Memory usage of Docker containers"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "enterasys_temp",
+                Checkbox(
+                    title=_("Enterasys Switch: Temperature"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "esx_vsphere_datastores",
+                Checkbox(
+                    title=_("VMware ESX host systems: Used space"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "esx_vsphere_hostsystem_mem_usage",
+                Checkbox(
+                    title=_("Main memory usage of ESX host system"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "esx_vsphere_hostsystem_mem_usage_cluster",
+                Checkbox(
+                    title=_("Memory usage of ESX Clusters"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "etherbox_temp",
+                Checkbox(
+                    title=_("Etherbox / MessPC: Sensor Temperature"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "fortigate_memory",
+                Checkbox(
+                    title=_("Memory usage of Fortigate devices (fortigate_memory)"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "fortigate_memory_base",
+                Checkbox(
+                    title=_("Memory usage of Fortigate devices (fortigate_memory_base)"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "fortigate_node_memory",
+                Checkbox(title=_("Fortigate node memory"), label=_("Use the new service name")),
+            ),
+            (
+                "hr_fs",
+                Checkbox(
+                    title=_("Used space in filesystems via SNMP"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "hr_mem",
+                Checkbox(title=_("HR: Used memory via SNMP"), label=_("Use the new service name")),
+            ),
+            # TODO: can be removed when
+            #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
+            #  can be removed
+            (
+                "http",
+                Checkbox(
+                    title=_(
                         "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/ineffective)"
                     ),
+                    label=_("Use the new service name"),
                 ),
-                (
-                    "huawei_switch_mem",
-                    _("Memory percentage used of devices with modules (Huawei)"),
+            ),
+            (
+                "huawei_switch_mem",
+                Checkbox(
+                    title=_("Memory percentage used of devices with modules (Huawei)"),
+                    label=_("Use the new service name"),
                 ),
-                ("hyperv_vms", _("Hyper-V Server: State of VMs")),
-                (
-                    "ibm_svc_mdiskgrp",
-                    _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"),
+            ),
+            (
+                "hyperv_vms",
+                Checkbox(
+                    title=_("Hyper-V Server: State of VMs"), label=_("Use the new service name")
                 ),
-                ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
-                ("ibm_svc_systemstats_cache", _("IBM SVC / V7000: Cache Usage in Total")),
-                (
-                    "ibm_svc_systemstats_disk_latency",
-                    _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"),
+            ),
+            (
+                "ibm_svc_mdiskgrp",
+                Checkbox(
+                    title=_("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"),
+                    label=_("Use the new service name"),
                 ),
-                (
-                    "ibm_svc_systemstats_diskio",
-                    _("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"),
+            ),
+            (
+                "ibm_svc_system",
+                Checkbox(
+                    title=_("IBM SVC / V7000: System Info"), label=_("Use the new service name")
                 ),
-                (
-                    "ibm_svc_systemstats_iops",
-                    _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"),
+            ),
+            (
+                "ibm_svc_systemstats_cache",
+                Checkbox(
+                    title=_("IBM SVC / V7000: Cache Usage in Total"),
+                    label=_("Use the new service name"),
                 ),
-                ("innovaphone_mem", _("Innovaphone memory usage")),
-                ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
-                ("juniper_mem", _("Juniper memory usage (%s)") % "juniper_mem"),
-                (
-                    "juniper_screenos_mem",
-                    _("Juniper memory usage (%s)") % "juniper_screenos_mem",
+            ),
+            (
+                "ibm_svc_systemstats_disk_latency",
+                Checkbox(
+                    title=_("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"),
+                    label=_("Use the new service name"),
                 ),
-                ("juniper_trpz_mem", _("Juniper memory usage (%s)") % "juniper_trpz_mem"),
-                ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
-                ("logwatch", _("Check logfiles for relevant new messages")),
-                ("logwatch_groups", _("Check logfile groups")),
-                ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
-                ("megaraid_ldisks", _("LSI MegaRAID: Logical Disks")),
-                ("megaraid_bbu", _("LSI MegaRAID: Battery Backup Unit")),
-                ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
-                ("mem_win", _("Memory usage for %s hosts") % "Windows"),
-                ("mknotifyd", _("Notification Spooler")),
-                ("mknotifyd_connection", _("Notification Spooler Connection")),
-                ("mssql_backup", _("MSSQL Backup")),
-                ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
-                ("mssql_counters_cache_hits", _("MSSQL Cache Hits")),
-                ("mssql_counters_file_sizes", _("MSSQL File Sizes")),
-                ("mssql_counters_locks", _("MSSQL Locks")),
-                ("mssql_counters_locks_per_batch", _("MSSQL Locks per Batch")),
-                ("mssql_counters_pageactivity", _("MSSQL Page Activity")),
-                ("mssql_counters_sqlstats", _("MSSQL SQL Stats")),
-                ("mssql_counters_transactions", _("MSSQL Transactions")),
-                ("mssql_databases", _("MSSQL Database")),
-                ("mssql_datafiles", _("MSSQL Datafile")),
-                ("mssql_tablespaces", _("MSSQL Tablespace")),
-                ("mssql_transactionlogs", _("MSSQL Transactionlog")),
-                ("mssql_versions", _("MSSQL Version")),
-                ("netscaler_mem", _("Netscaler memory Usage")),
-                ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
-                ("prism_alerts", _("Nutanix: Prism Alerts")),
-                ("prism_containers", _("Nutanix: Containers")),
-                ("prism_info", _("Nutanix: Prism Cluster")),
-                ("prism_storage_pools", _("Nutanix: Storage Pools")),
-                ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
-                ("postfix_mailq", _("Postfix: Mail Queue")),
-                ("ps", _("State and Count of Processes")),
-                ("qmail_stats", _("Qmail: Mail Queue")),
-                ("raritan_emx", _("Raritan EMX Rack: Temperature")),
-                ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
-                ("services", _("Windows Services")),
-                ("solaris_mem", _("Memory usage for %s hosts") % "Solaris"),
-                ("sophos_memory", _("Sophos Memory utilization")),
-                ("statgrab_mem", _("Statgrab memory usage")),
-                ("tplink_mem", _("TP Link: Used memory via SNMP")),
-                ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
-                ("vms_diskstat_df", _("Disk space on OpenVMS")),
-                ("wmic_process", _("Resource consumption of Windows processes")),
-                ("zfsget", _("Used space in ZFS pools and filesystems")),
-            ],
-            render_orientation="vertical",
+            ),
+            (
+                "ibm_svc_systemstats_diskio",
+                Checkbox(
+                    title=_("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "ibm_svc_systemstats_iops",
+                Checkbox(
+                    title=_("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "innovaphone_mem",
+                Checkbox(title=_("Innovaphone memory usage"), label=_("Use the new service name")),
+            ),
+            (
+                "innovaphone_temp",
+                Checkbox(
+                    title=_("Innovaphone Gateway: Current Temperature"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "juniper_mem",
+                Checkbox(
+                    title=_("Juniper memory usage (%s)") % "juniper_mem",
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "juniper_screenos_mem",
+                Checkbox(
+                    title=_("Juniper memory usage (%s)") % "juniper_screenos_mem",
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "juniper_trpz_mem",
+                Checkbox(
+                    title=_("Juniper memory usage (%s)") % "juniper_trpz_mem",
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "liebert_bat_temp",
+                Checkbox(
+                    title=_("Liebert UPS Device: Temperature sensor"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "logwatch",
+                Checkbox(
+                    title=_("Check logfiles for relevant new messages"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "logwatch_groups",
+                Checkbox(title=_("Check logfile groups"), label=_("Use the new service name")),
+            ),
+            (
+                "megaraid_pdisks",
+                Checkbox(
+                    title=_("LSI MegaRAID: Physical Disks"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "megaraid_ldisks",
+                Checkbox(
+                    title=_("LSI MegaRAID: Logical Disks"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "megaraid_bbu",
+                Checkbox(
+                    title=_("LSI MegaRAID: Battery Backup Unit"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "mem_used",
+                Checkbox(
+                    title=_("Main memory usage (UNIX / Other Devices)"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "mem_win",
+                Checkbox(
+                    title=_("Memory usage for %s hosts") % "Windows",
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "mknotifyd",
+                Checkbox(title=_("Notification Spooler"), label=_("Use the new service name")),
+            ),
+            (
+                "mknotifyd_connection",
+                Checkbox(
+                    title=_("Notification Spooler Connection"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "mssql_backup",
+                Checkbox(title=_("MSSQL Backup"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_blocked_sessions",
+                Checkbox(title=_("MSSQL Blocked Sessions"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_counters_cache_hits",
+                Checkbox(title=_("MSSQL Cache Hits"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_counters_file_sizes",
+                Checkbox(title=_("MSSQL File Sizes"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_counters_locks",
+                Checkbox(title=_("MSSQL Locks"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_counters_locks_per_batch",
+                Checkbox(title=_("MSSQL Locks per Batch"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_counters_pageactivity",
+                Checkbox(title=_("MSSQL Page Activity"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_counters_sqlstats",
+                Checkbox(title=_("MSSQL SQL Stats"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_counters_transactions",
+                Checkbox(title=_("MSSQL Transactions"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_databases",
+                Checkbox(title=_("MSSQL Database"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_datafiles",
+                Checkbox(title=_("MSSQL Datafile"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_tablespaces",
+                Checkbox(title=_("MSSQL Tablespace"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_transactionlogs",
+                Checkbox(title=_("MSSQL Transactionlog"), label=_("Use the new service name")),
+            ),
+            (
+                "mssql_versions",
+                Checkbox(title=_("MSSQL Version"), label=_("Use the new service name")),
+            ),
+            (
+                "netscaler_mem",
+                Checkbox(title=_("Netscaler memory Usage"), label=_("Use the new service name")),
+            ),
+            (
+                "nullmailer_mailq",
+                Checkbox(title=_("Nullmailer: Mail Queue"), label=_("Use the new service name")),
+            ),
+            (
+                "prism_alerts",
+                Checkbox(title=_("Nutanix: Prism Alerts"), label=_("Use the new service name")),
+            ),
+            (
+                "prism_containers",
+                Checkbox(title=_("Nutanix: Containers"), label=_("Use the new service name")),
+            ),
+            (
+                "prism_info",
+                Checkbox(title=_("Nutanix: Prism Cluster"), label=_("Use the new service name")),
+            ),
+            (
+                "prism_storage_pools",
+                Checkbox(title=_("Nutanix: Storage Pools"), label=_("Use the new service name")),
+            ),
+            (
+                "nvidia_temp",
+                Checkbox(
+                    title=_("Temperatures of NVIDIA graphics card"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "postfix_mailq",
+                Checkbox(title=_("Postfix: Mail Queue"), label=_("Use the new service name")),
+            ),
+            (
+                "ps",
+                Checkbox(
+                    title=_("State and Count of Processes"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "qmail_stats",
+                Checkbox(title=_("Qmail: Mail Queue"), label=_("Use the new service name")),
+            ),
+            (
+                "raritan_emx",
+                Checkbox(
+                    title=_("Raritan EMX Rack: Temperature"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "raritan_pdu_inlet",
+                Checkbox(title=_("Raritan PDU: Input Phases"), label=_("Use the new service name")),
+            ),
+            (
+                "services",
+                Checkbox(title=_("Windows Services"), label=_("Use the new service name")),
+            ),
+            (
+                "solaris_mem",
+                Checkbox(
+                    title=_("Memory usage for %s hosts") % "Solaris",
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "sophos_memory",
+                Checkbox(title=_("Sophos Memory utilization"), label=_("Use the new service name")),
+            ),
+            (
+                "statgrab_mem",
+                Checkbox(title=_("Statgrab memory usage"), label=_("Use the new service name")),
+            ),
+            (
+                "tplink_mem",
+                Checkbox(
+                    title=_("TP Link: Used memory via SNMP"), label=_("Use the new service name")
+                ),
+            ),
+            (
+                "ups_bat_temp",
+                Checkbox(
+                    title=_("Generic UPS Device: Temperature sensor"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "vms_diskstat_df",
+                Checkbox(title=_("Disk space on OpenVMS"), label=_("Use the new service name")),
+            ),
+            (
+                "wmic_process",
+                Checkbox(
+                    title=_("Resource consumption of Windows processes"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+            (
+                "zfsget",
+                Checkbox(
+                    title=_("Used space in ZFS pools and filesystems"),
+                    label=_("Use the new service name"),
+                ),
+            ),
+        ]
+        return Dictionary(
+            title=_("Use new service names"),
+            elements=available_selection,
+            optional_keys=[],
         )
 
 
@@ -5265,6 +5628,7 @@ AutomaticHostRemoval = HostRulespec(
     valuespec=_valuespec_automatic_host_removal,
 )
 
+
 # .
 #   .--User interface------------------------------------------------------.
 #   |   _   _                 ___       _             __                   |
@@ -5580,7 +5944,6 @@ BulkwalkHosts = BinaryHostRulespec(
     name="bulkwalk_hosts",
     title=lambda: _("Enable SNMPv2c for hosts"),
 )
-
 
 ManagementBulkwalkHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
@@ -6358,7 +6721,6 @@ SnmpExcludeSections = HostRulespec(
     name="snmp_exclude_sections",
     valuespec=_valuespec_snmp_config_agent_sections,
 )
-
 
 prev_snmpv3_values = tuple[
     str | None,

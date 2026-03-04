@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, computed, onBeforeMount, ref, watch } from 'vue'
 
-import { cmkAjax } from '@/lib/ajax'
+import { type AjaxResponseError, cmkAjax } from '@/lib/ajax'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -49,7 +49,7 @@ const fetchData = async () => {
       data.value = await cmkAjax(`compute_top_list_data_token_auth.py?${httpVarsString}`, {})
     } catch (error) {
       console.error('Error initializing top list content:', error)
-      fetchingErrorMessage.value = (error as Error).message
+      fetchingErrorMessage.value = `${_t('Failed to fetch top list data:')} ${(error as AjaxResponseError).response?.result ?? (error as Error).message}`
     }
   }
 }

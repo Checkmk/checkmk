@@ -70,5 +70,6 @@ span {
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
+  flex: 1 0 100px;
 }
 </style>

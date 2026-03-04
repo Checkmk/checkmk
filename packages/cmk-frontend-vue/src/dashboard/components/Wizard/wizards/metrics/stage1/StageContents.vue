@@ -71,8 +71,8 @@ const metricHandler = defineModel<UseMetric>('metricHandler', { required: true }
 const enabledWidgets = useSelectGraphTypes(hostFilterType, serviceFilterType, metricType)
 const availableWidgets: WidgetItemList = [
   { id: Graph.ANY_GRAPH, label: _t('Graph'), icon: 'graph' },
+  { id: Graph.SINGLE_METRIC, label: _t('Metric'), icon: 'single-metric' },
   { id: Graph.GAUGE, label: _t('Gauge'), icon: 'gauge' },
-  { id: Graph.SINGLE_METRIC, label: _t('Single'), icon: 'single-metric' },
   { id: Graph.BARPLOT, label: _t('Barplot'), icon: 'barplot' },
   { id: Graph.SCATTERPLOT, label: _t('Scatterplot'), icon: 'scatterplot' },
   { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' }

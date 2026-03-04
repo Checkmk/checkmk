@@ -338,7 +338,7 @@ class ConfigVariable:
         allow_reset: bool = True,
         in_global_settings: bool = True,
         hint: Callable[[], HTML] = lambda: HTML.empty(),
-        domain_hint: HTML = HTML.empty(),
+        domain_hint: HTML | None = None,
     ) -> None:
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
@@ -400,7 +400,7 @@ class ConfigVariable:
         return self._hint_func()
 
     def domain_hint(self) -> HTML:
-        return self._domain_hint
+        return self._domain_hint or self.primary_domain().hint() or HTML.empty()
 
     def add_config_domain_affected_by_change(
         self,

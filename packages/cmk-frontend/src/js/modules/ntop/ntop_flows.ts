@@ -112,7 +112,7 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
   _update_css_classes() {
     // Update CSS classes for the table
     // Reason: The backend provides some prerendered HTML and we need to modify it further
-    this._div_selection.selectAll('a').classed('ntop_link', true)
+    this._div_selection.selectAll('a').classed('ntop_link', true).attr('target', '_blank')
     const progress_bar = this._div_selection
       .selectAll('tr')
       .selectAll('div.progress')

@@ -24,7 +24,6 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="CMK-32112")
 def test_activate_changes_slideout_one_change(
     dashboard_page: MainDashboard, test_site: Site
 ) -> None:

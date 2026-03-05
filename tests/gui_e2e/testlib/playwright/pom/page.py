@@ -213,10 +213,7 @@ class MainMenu(LocatorHelper):
         """
         _loc = self.locator().get_by_role(role="link", name=menu)
         if sub_menu:
-            if self._active_side_menu_popup_locator.count():
-                _loc.hover()
-            else:
-                _loc.click()
+            _loc.click()
 
             if show_more:
                 self.locator().get_by_role(role="link", name="show more", exact=True)

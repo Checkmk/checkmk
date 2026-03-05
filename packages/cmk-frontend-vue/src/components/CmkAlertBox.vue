@@ -44,6 +44,7 @@ export interface CmkAlertBoxProps {
   size?: Sizes
   heading?: string | undefined
   autoDismiss?: boolean | undefined
+  dismissible?: boolean | undefined
 }
 
 const props = defineProps<CmkAlertBoxProps>()
@@ -72,15 +73,6 @@ onUnmounted(() => {
   if (timeoutId !== null) {
     clearTimeout(timeoutId)
     timeoutId = null
-  }
-})
-
-const dismissible = computed(() => {
-  switch (props.variant) {
-    case 'success':
-      return true
-    default:
-      return false
   }
 })
 
@@ -126,13 +118,13 @@ const alertIconColor = computed(() => {
       </div>
     </div>
     <button
-      v-if="dismissible"
+      v-if="props.dismissible"
       class="cmk-alert-box__close"
       type="button"
       :aria-label="_t('Close')"
       @click="open = false"
     >
-      <CmkIcon name="close" size="medium" />
+      <CmkIcon name="close" :size="size ? size : 'medium'" />
     </button>
   </div>
 </template>

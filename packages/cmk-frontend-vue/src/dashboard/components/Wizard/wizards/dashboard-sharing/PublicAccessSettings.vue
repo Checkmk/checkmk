@@ -79,7 +79,7 @@ const handleSave = () => {
 
   <ContentSpacer />
 
-  <CmkAlertBox v-if="displaySuccessMessage" variant="success">{{
+  <CmkAlertBox v-if="displaySuccessMessage" :dismissible="true" variant="success">{{
     _t('Link settings saved.')
   }}</CmkAlertBox>
 

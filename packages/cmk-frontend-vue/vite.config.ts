@@ -99,6 +99,9 @@ export default defineConfig(({ command }) => {
         environment: 'jsdom',
         setupFiles: ['tests/setup-tests.ts']
       },
+      optimizeDeps: {
+        include: ['@/components/CmkIcon/icons.constants']
+      },
       server: {
         strictPort: true,
         fs: {

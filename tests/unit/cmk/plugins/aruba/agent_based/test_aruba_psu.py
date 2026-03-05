@@ -221,6 +221,18 @@ def test_check_aruba_psu_temp(
                 Result(state=State.OK, notice="Voltage Info: AC 120V/240V"),
             ],
         ),
+        (
+            DATA,
+            "JL086A 7",
+            # PSU was discovered previously, but is not powered anymore,
+            # so wattage is 0W and percentage is 0%
+            [
+                Result(state=State.OK, summary="Wattage: 0.00W"),
+                Metric("power", 0.0, levels=(500.0, 600.0)),
+                Result(state=State.OK, summary="Maximum Wattage: 0.00W"),
+                Result(state=State.OK, notice="Voltage Info: AC 120V/240V"),
+            ],
+        ),
     ],
 )
 def test_check_aruba_psu_wattage(

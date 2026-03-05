@@ -252,13 +252,40 @@ from cmk.plugins.lib.interfaces import (
             ],
             id="host_labels_07_regression_only",
         ),
+        pytest.param(
+            [
+                IPNetworkAdapter(
+                    name="one",
+                    inet6=[AugmentedIPv6Interface("2a00:6020:4083:1100:333:1111:2222:3333/64")],
+                ),
+                IPNetworkAdapter(
+                    name="two",
+                    inet6=[AugmentedIPv6Interface("2a00:6020:4083:1101:333:1111:2222:3333/64")],
+                ),
+                IPNetworkAdapter(
+                    name="three",
+                    inet6=[AugmentedIPv6Interface("2a00:6020:4083:1102:333:1111:2222:3333/64")],
+                ),
+                IPNetworkAdapter(
+                    name="four",
+                    inet6=[AugmentedIPv6Interface("2a00:6020:4083:1103:333:1111:2222:3333/64")],
+                ),
+            ],
+            [
+                HostLabel("cmk/l3v6_topology", "multihomed"),
+            ],
+            id="host_labels_08_ipv6_subnets",
+        ),
     ],
 )
 def test_host_labels_if(
     section: Iterable[IPNetworkAdapter],
     expected_result: HostLabelGenerator,
+    request: pytest.FixtureRequest,
 ) -> None:
-    assert list(host_labels_if(section)) == list(expected_result)
+    assert list(host_labels_if(section)) == list(expected_result), (
+        f"in param {request.node.callspec.id}"
+    )
 
 
 if __name__ == "__main__":

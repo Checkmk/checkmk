@@ -5,15 +5,12 @@
 
 from collections.abc import Iterable
 from ipaddress import (
-    collapse_addresses,
     IPv4Network,
     IPv6Network,
 )
 
 from cmk.agent_based.v2 import HostLabel, HostLabelGenerator
 from cmk.plugins.lib.interfaces import (
-    AugmentedIPv4Interface,
-    AugmentedIPv6Interface,
     IPNetworkAdapter,
     TEMP_DEVICE_PREFIXES,
 )
@@ -30,12 +27,11 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
     if adapters is None:  # type: ignore[comparison-overlap]
         return  # type: ignore[unreachable]
     for version in (4, 6):
-        valid_networks = [
+        valid_networks = {
             interface_ip.network
             for adapter in adapters
             if not any(adapter.name.startswith(prefix) for prefix in TEMP_DEVICE_PREFIXES)
-            for interface_ip in (*adapter.inet4, *adapter.inet6)
-            if isinstance(interface_ip, (AugmentedIPv4Interface, AugmentedIPv6Interface))
+            for interface_ip in (adapter.inet4 if version == 4 else adapter.inet6)
             if not any(
                 (
                     interface_ip.is_broadcast,
@@ -46,22 +42,37 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
                     interface_ip.is_temporary,
                 )
             )
-        ]
-
+        }
+        # left as homework: turn these two semantically identical blocks into
+        # one (I gave up after a while trying to come up with a generic)
         if (
-            network_count := len(
-                list(
-                    collapse_addresses([ip for ip in valid_networks if isinstance(ip, IPv4Network)])
-                )
+            independent_network_count := len(
+                {
+                    net
+                    for net in valid_networks
+                    if isinstance(net, IPv4Network)
+                    if not any(
+                        net != other and net.subnet_of(other)
+                        for other in valid_networks
+                        if isinstance(other, IPv4Network)
+                    )
+                }
             )
             if version == 4
             else len(
-                list(
-                    collapse_addresses([ip for ip in valid_networks if isinstance(ip, IPv6Network)])
-                )
+                {
+                    net
+                    for net in valid_networks
+                    if isinstance(net, IPv6Network)
+                    if not any(
+                        net != other and net.subnet_of(other)
+                        for other in valid_networks
+                        if isinstance(other, IPv6Network)
+                    )
+                }
             )
         ):
             yield HostLabel(
                 name=f"cmk/l3v{version}_topology",
-                value="singlehomed" if network_count == 1 else "multihomed",
+                value="singlehomed" if independent_network_count == 1 else "multihomed",
             )

@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import aruba_fans
+from cmk.plugins.aruba.agent_based import aruba_fans
 
 DATA = [
     ["1", "0", "0", "0", "3"],

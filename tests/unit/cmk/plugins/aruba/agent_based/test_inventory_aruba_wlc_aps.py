@@ -7,12 +7,11 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.aruba_wlc_aps import (
+from cmk.plugins.aruba.agent_based.aruba_wlc_aps import (
     inventory_aruba_wlc_aps,
     parse_aruba_wlc_aps,
 )
-
-from .utils_inventory import sort_inventory_result
+from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_inventory_result
 
 
 @pytest.mark.parametrize(

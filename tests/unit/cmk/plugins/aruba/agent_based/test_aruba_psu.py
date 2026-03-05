@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import aruba_psu
+from cmk.plugins.aruba.agent_based import aruba_psu
 
 DATA = [
     ["1", "3", "0", "24", "AC 120V/240V", "16", "680", "744952", "JL086A"],

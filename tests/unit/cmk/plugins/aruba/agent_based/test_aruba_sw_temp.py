@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import aruba_sw_temp
+from cmk.plugins.aruba.agent_based import aruba_sw_temp
 
 DATA = [
     [
@@ -141,7 +141,7 @@ def test_discover_aruba_sw_temp_status(
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.aruba_sw_temp.get_value_store",
+        "cmk.plugins.aruba.agent_based.aruba_sw_temp.get_value_store",
         lambda: {},
     )
 

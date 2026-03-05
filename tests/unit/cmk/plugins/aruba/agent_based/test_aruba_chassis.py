@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import aruba_chassis
+from cmk.plugins.aruba.agent_based import aruba_chassis
 
 DATA = [
     ["0", "Chassis", "22C", "26C", "22C", "55C", ""],
@@ -52,7 +52,7 @@ def test_discover_aruba_chassis_temp(
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.aruba_chassis.get_value_store",
+        "cmk.plugins.aruba.agent_based.aruba_chassis.get_value_store",
         lambda: {},
     )
 

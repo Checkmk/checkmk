@@ -166,7 +166,6 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
           :label="_t('Cancel')"
           :icon="{ name: 'cancel', side: 'left' }"
           :action="cancel"
-          variant="secondary"
         />
       </ActionBar>
 

@@ -10,9 +10,9 @@ import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
-import CmkSpace from '@/components/CmkSpace.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
+import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 import { useDebounceFn } from '@/dashboard/composables/useDebounce'
 
@@ -90,11 +90,7 @@ watch(
   <div>
     <TableForm>
       <TableFormRow>
-        <FieldDescription>
-          {{ _t('Name') }}<CmkSpace /><span class="db-general-properties--required">{{
-            _t('required')
-          }}</span>
-        </FieldDescription>
+        <FieldDescription> {{ _t('Name') }}<CmkLabelRequired space="before" /></FieldDescription>
         <FieldComponent>
           <div class="db-general-properties__item">
             <CmkInput
@@ -119,9 +115,7 @@ watch(
 
       <TableFormRow>
         <FieldDescription>
-          {{ _t('Unique ID') }}<CmkSpace /><span class="db-general-properties--required">{{
-            _t('required')
-          }}</span>
+          {{ _t('Unique ID') }}<CmkLabelRequired space="before" />
         </FieldDescription>
         <FieldComponent>
           <div class="db-general-properties__item">
@@ -172,18 +166,6 @@ watch(
 </template>
 
 <style scoped>
-.db-general-properties--required {
-  color: var(--form-element-required-color);
-}
-
-.db-general-properties--required::before {
-  content: '(';
-}
-
-.db-general-properties--required::after {
-  content: ')';
-}
-
 .db-general-properties__item {
   display: block;
   padding-bottom: var(--spacing-half);

@@ -19,7 +19,7 @@ interface ActionButtonIcon {
 
 interface ActionButtonProps {
   label: TranslatedString
-  variant: ButtonVariants['variant']
+  variant?: ButtonVariants['variant']
   icon?: ActionButtonIcon
   action: () => void
 }

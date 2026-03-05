@@ -29,7 +29,7 @@ const save = (dashboardId: string, generalSettings: DashboardGeneralSettings) =>
 </script>
 
 <template>
-  <CmkSlideIn :open="true">
+  <CmkSlideIn :open="true" size="small">
     <Suspense>
       <DashboardSettingsWizard
         :active-dashboard-id="activeDashboardId"

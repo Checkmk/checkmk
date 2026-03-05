@@ -15,9 +15,11 @@ from cmk.gui.graphing._fetch_time_series import fetch_augmented_time_series
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     AugmentedTimeSeries,
+    GraphConsolidationFunction,
     GraphMetricRRDSource,
     QueryData,
     QueryDataError,
+    RRDDataKey,
 )
 from cmk.gui.graphing._graph_specification import (
     GraphDataRange,
@@ -27,7 +29,10 @@ from cmk.gui.graphing._graph_specification import (
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
 from cmk.gui.graphing._rrd import (
+    _metric_props_by_service,
     _reverse_translate_into_all_potentially_relevant_metrics,
+    _rrd_columns,
+    MetricProperties,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
@@ -37,6 +42,7 @@ from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.metrics import MetricName
+from cmk.utils.servicename import ServiceName
 
 
 @contextmanager
@@ -336,6 +342,77 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
         step=600,
         values=expected_data_points,
     )
+
+
+@pytest.mark.parametrize(
+    ["key_cf", "graph_cf", "expected_effective_cf", "expected_key_cf"],
+    [
+        pytest.param(
+            "min",
+            "average",
+            "average",
+            "min",
+            id="graph CF takes precedence over key CF",
+        ),
+        pytest.param(
+            "min",
+            None,
+            "min",
+            "min",
+            id="key CF is used when graph CF is None",
+        ),
+        pytest.param(
+            None,
+            "average",
+            "average",
+            None,
+            id="graph CF is used when key CF is None",
+        ),
+        pytest.param(
+            None,
+            None,
+            "max",
+            None,
+            id="defaults to max when both are None",
+        ),
+    ],
+)
+def test_metric_props_by_service_consolidation_function_priority(
+    key_cf: GraphConsolidationFunction | None,
+    graph_cf: GraphConsolidationFunction | None,
+    expected_effective_cf: GraphConsolidationFunction,
+    expected_key_cf: GraphConsolidationFunction | None,
+) -> None:
+    key = RRDDataKey(
+        SiteId("NO_SITE"),
+        HostName("my-host"),
+        ServiceName("my-service"),
+        "my_metric",
+        key_cf,
+        1.0,
+    )
+    by_service = _metric_props_by_service([key], graph_cf)
+    props = next(iter(by_service.values()))
+    assert len(props) == 1
+    prop = next(iter(props))
+    assert prop.consolidation_function == expected_effective_cf
+    assert prop.key_consolidation_function == expected_key_cf
+
+
+def test_rrd_columns_uses_effective_consolidation_function_in_rpn() -> None:
+    """The RPN query must use the effective (graph-level) consolidation function,
+    not the original key consolidation function."""
+    prop = MetricProperties(
+        metric_name="my_metric",
+        consolidation_function="average",
+        key_consolidation_function="min",
+        scale=1.0,
+    )
+    columns = list(_rrd_columns([prop], start_time=0, end_time=3600, step=60))
+    assert len(columns) == 1
+    # The RPN part must reference the effective CF ("average"), not the key CF ("min")
+    assert "my_metric.average" in columns[0]
+    assert "my_metric.min" not in columns[0]
 
 
 @pytest.mark.parametrize(

@@ -68,7 +68,10 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description): 
 @dataclass(frozen=True, kw_only=True)
 class MetricProperties:
     metric_name: str
-    consolidation_function: GraphConsolidationFunction | None
+    consolidation_function: GraphConsolidationFunction | None  # effective, used for RPN query
+    key_consolidation_function: GraphConsolidationFunction | None = (
+        None  # original, used for rrd_data key
+    )
     scale: float
 
 
@@ -84,8 +87,9 @@ def _metric_props_by_service(
             MetricProperties(
                 metric_name=key.metric_name,
                 consolidation_function=(
-                    key.consolidation_function or consolidation_function or "max"
+                    consolidation_function or key.consolidation_function or "max"
                 ),
+                key_consolidation_function=key.consolidation_function,
                 scale=key.scale,
             )
         )
@@ -241,7 +245,7 @@ def fetch_time_series_rrd(
                         host_name,
                         service_description,
                         metric_props.metric_name,
-                        metric_props.consolidation_function,
+                        metric_props.key_consolidation_function,
                         metric_props.scale,
                     )
                 ] = time_series

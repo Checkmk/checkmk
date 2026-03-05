@@ -321,6 +321,13 @@ class IDStore(Generic[_TID]):
         )
 
 
+def _check_for_server_error(response: requests.Response) -> None:
+    if HTTPStatus(response.status_code).is_server_error:
+        sys.exit(
+            f"Datadog server responded with an error: {response.status_code!r} {response.reason!r}"
+        )
+
+
 class MonitorsQuerier:
     def __init__(
         self,
@@ -377,7 +384,9 @@ class MonitorsQuerier:
             "monitor",
             params,
         )
+        _check_for_server_error(resp)
         resp.raise_for_status()
+
         return resp.json()
 
 
@@ -466,7 +475,9 @@ class EventsQuerier:
             "events",
             params,
         )
+        _check_for_server_error(resp)
         resp.raise_for_status()
+
         return resp.json()["events"]
 
 
@@ -627,7 +638,10 @@ class LogsQuerier:
             )
             time.sleep(self.cooldown_too_many_requests)
             resp = self.datadog_api.post_request("logs/events/search", body, version="v2")
+
+        _check_for_server_error(resp)
         resp.raise_for_status()
+
         return resp.json()
 
     @staticmethod

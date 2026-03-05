@@ -40,17 +40,19 @@ def main(raw_args):
 
     distro_name = _os_environ_get("DISTRO", "ubuntu-22.04")
     docker_tag = _os_environ_get("DOCKER_TAG", f"{current_base_branch_name()}-latest")
+    test_filter = _os_environ_get("TEST_FILTER", "")
     version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,
         fallback_branch=current_base_branch_name,
     )
     logger.info(
-        "Version: %s (%s), Edition: %s, Branch: %s",
+        "Version: %s (%s), Edition: %s, Branch: %s, Test filter: %s",
         version.version,
         version.version_spec,
         version.edition.long,
         version.branch,
+        test_filter,
     )
 
     result_path_str = _os_environ_get("RESULT_PATH", "")

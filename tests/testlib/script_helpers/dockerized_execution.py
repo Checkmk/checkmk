@@ -524,6 +524,7 @@ def _container_env(version: CMKVersion) -> Mapping[str, str]:
         "VERSION": version.version_spec,
         "EDITION": version.edition.short,
         "BRANCH": version.branch,
+        "TEST_FILTER": os.environ.get("TEST_FILTER", ""),
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),
         "CI_NODE_NAME": os.environ.get("CI_NODE_NAME", ""),

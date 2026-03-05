@@ -90,6 +90,7 @@ def run_make_target(Map args) {
             VERSION='${args.version}' \
             DISTRO='${args.distro}' \
             BRANCH='${args.branch_name}' \
+            TEST_FILTER='${args.test_filter}' \
             CI_NODE_NAME='${env.NODE_NAME}' \
             CI_WORKSPACE='${env.WORKSPACE}' \
             CI_JOB_NAME='${env.JOB_NAME}' \

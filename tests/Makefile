@@ -54,7 +54,10 @@ SYSTEM_TESTS := \
     test-gui-e2e-cme \
     test-gui-e2e-cse \
     test-extension-compatibility
-PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
+PYTEST_SYSTEM_TEST_ARGS := \
+    $(TEST_FILTER) \
+    -p "no:cov" \
+    --log-cli-level=INFO
 DOCKERABLE_TESTS := \
 	test-bandit \
 	test-code-quality \

@@ -2335,7 +2335,6 @@ async def process_usage_details(
 
 async def process_resource_health(
     mgmt_client: BaseAsyncApiClient,
-    subscription: AzureSubscription,
     monitored_resources: Mapping[ResourceId, AzureResource],
     groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     debug: bool,
@@ -2364,9 +2363,7 @@ async def process_resource_health(
             continue
         health_values.extend(response)
 
-    return _get_resource_health_sections(
-        health_values, monitored_resources, groups_with_monitored_resources
-    )
+    return _get_resource_health_sections(health_values, monitored_resources)
 
 
 # TODO: test
@@ -2460,18 +2457,17 @@ class ResourceHealth(TypedDict, total=False):
 def _get_resource_health_sections(
     resource_health_view: Sequence[ResourceHealth],
     resources: Mapping[ResourceId, AzureResource],
-    monitored_groups: Mapping[str, AzureResourceGroup],
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
     for health in resource_health_view:
         health_id = health["id"]
-        _, group = get_params_from_azure_id(health_id)
         resource_id = "/".join(health_id.split("/")[:-4])
 
         try:
             resource = resources[resource_id.lower()]
         except KeyError:
+            # resource not monitored
             continue
 
         health_data = {
@@ -2484,18 +2480,13 @@ def _get_resource_health_sections(
             "tags": resource.tags,
         }
 
-        health_section[group.lower()].append(json.dumps(health_data))
+        health_section[resource.piggytarget].append(json.dumps(health_data))
 
     sections = []
-    for group_name, values in health_section.items():
-        if not (group_obj := monitored_groups.get(group_name)):
-            LOGGER.warning(
-                "Resource health data for resource group %s, which is not monitored", group_name
-            )
-            continue
+    for resource_piggytarget, values in health_section.items():
         section = AzureSection(
             "resource_health",
-            piggytargets=[group_obj.piggytarget],
+            piggytargets=[resource_piggytarget],
             separator=0,
         )
         for value in values:
@@ -2662,7 +2653,6 @@ async def process_resources(
     tasks = {
         process_resource_health(
             mgmt_client,
-            subscription,
             monitored_resources_by_id,
             groups_with_monitored_resources,
             args.debug,

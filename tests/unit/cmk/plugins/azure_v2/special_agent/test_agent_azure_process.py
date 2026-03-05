@@ -827,16 +827,15 @@ RESOURCE_GROUPS = {
 
 
 @pytest.mark.parametrize(
-    "monitored_resources, resource_health, resource_groups, expected_sections",
+    "monitored_resources, resource_health, expected_sections",
     [
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.ignore_all),
             [RESOURCE_HEALTH_ENTRY, RESOURCE_HEALTH_ENTRY],
-            RESOURCE_GROUPS,
             [
                 MockAzureSection(
                     name="resource_health",
-                    piggytargets=["resource_group_1"],
+                    piggytargets=["VM-test-1"],
                     content=[
                         '{"id": "/subscriptions/subscription_id/resourcegroups/resource_group_1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", \
 "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", \
@@ -853,11 +852,10 @@ RESOURCE_GROUPS = {
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.import_all),
             [RESOURCE_HEALTH_ENTRY],
-            RESOURCE_GROUPS,
             [
                 MockAzureSection(
                     name="resource_health",
-                    piggytargets=["resource_group_1"],
+                    piggytargets=["VM-test-1"],
                     content=[
                         '{"id": "/subscriptions/subscription_id/resourcegroups/resource_group_1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", \
 "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", \
@@ -871,7 +869,6 @@ RESOURCE_GROUPS = {
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.import_all),
             [],
-            RESOURCE_GROUPS,
             [],
             id="Empty resource health entries",
         ),
@@ -882,11 +879,8 @@ async def test_get_resource_health_sections(
     monitored_resources: Mapping[str, AzureResource],
     resource_health: Sequence[ResourceHealth],
     expected_sections: Sequence[MockAzureSection],
-    resource_groups: Mapping[str, AzureResourceGroup],
 ) -> None:
-    sections = list(
-        _get_resource_health_sections(resource_health, monitored_resources, resource_groups)
-    )
+    sections = list(_get_resource_health_sections(resource_health, monitored_resources))
 
     assert sections == expected_sections, "Sections not as expected"
 

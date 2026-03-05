@@ -112,6 +112,7 @@ class ActivePlugins(TypedDict, total=True):
     pager: NotRequired[SyncAttribute]
     show_mode: NotRequired[SyncAttribute]
     ui_sidebar_position: NotRequired[SyncAttribute]
+    navbar_changes_action: NotRequired[SyncAttribute]
     start_url: NotRequired[SyncAttribute]
     temperature_unit: NotRequired[SyncAttribute]
     ui_theme: NotRequired[SyncAttribute]

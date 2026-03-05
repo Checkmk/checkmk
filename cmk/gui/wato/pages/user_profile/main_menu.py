@@ -10,7 +10,7 @@ from typing import override
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicEntries
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
@@ -18,7 +18,7 @@ from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
-from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
+from cmk.gui.userdb.store import load_cached_profile, load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -32,6 +32,9 @@ def register(
     page_registry.register(PageEndpoint("ajax_ui_theme", ModeAjaxCycleThemes()))
     page_registry.register(PageEndpoint("ajax_sidebar_position", ModeAjaxCycleSidebarPosition()))
     page_registry.register(PageEndpoint("ajax_set_dashboard_start_url", ModeAjaxSetStartURL()))
+    page_registry.register(
+        PageEndpoint("ajax_set_change_action_full_page", ModeAjaxChangesActionFullPage())
+    )
 
     main_menu_registry.register(
         MainMenu(
@@ -206,6 +209,17 @@ class ModeAjaxCycleThemes(AjaxPage):
         return {}
 
 
+class ModeAjaxChangesActionFullPage(AjaxPage):
+    """AJAX handler for quick access option 'Changes Action" in changes menu"""
+
+    @override
+    def page(self, ctx: PageContext) -> PageResult:
+        check_csrf_token(ctx.request.get_json()["_csrf_token"])
+
+        set_user_attribute("navbar_changes_action", "full_page")
+        return {}
+
+
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
@@ -250,5 +264,17 @@ def set_user_attribute(key: str, value: str | None) -> None:
 
     if value is None:
         remove_custom_attr(user_id, key)
+        user._unset_attribute(key)
     else:
         save_custom_attr(user_id, key, value)
+        user._set_attribute(key, value)
+
+    # Keep the cached profile in sync so that _load_attributes picks up the
+    # change on the next page load.
+    cached = load_cached_profile(user_id)
+    if cached is not None:
+        if value is None:
+            cached.pop(key, None)  # type: ignore[misc]
+        else:
+            cached[key] = value  # type: ignore[literal-required]
+        save_user_file("cached_profile", cached, user_id)

@@ -17,7 +17,7 @@ from cmk.gui.main_menu_types import (
     MainMenuVueApp,
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.activate_changes import get_last_wato_snapshot_file
 from cmk.shared_typing.changes import ChangesProps
 
@@ -37,9 +37,9 @@ def _hide_menu() -> bool:
 
 def _data(request: Request) -> ActivateChangesData:
     return ActivateChangesData(
-        activate_changes_url=makeuri(
+        activate_changes_url=makeuri_contextless(
             request,
-            addvars=[("mode", "changelog")],
+            vars_=[("mode", "changelog")],
             filename="wato.py",
         ),
         user_has_activate_foreign=user.may("wato.activateforeign"),

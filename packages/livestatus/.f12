@@ -14,9 +14,10 @@ ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
 TARGET=":livestatus_shared_runpath"
-bazel build "${TARGET}"
+VERSION=$(make --quiet --directory="$(bazel info workspace)" print-VERSION)
+bazel build --cmk_version="${VERSION}" "${TARGET}"
 EXECUTION_ROOT=$(bazel info execution_root)
-for FILE in $(bazel cquery --output=files "${TARGET}"); do
+for FILE in $(bazel --cmk_version="${VERSION}" cquery --output=files "${TARGET}"); do
     FULL_PATH=${EXECUTION_ROOT}/${FILE}
     BASENAME=${FILE##*/}
     case "${BASENAME}" in

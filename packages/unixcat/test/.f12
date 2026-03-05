@@ -13,4 +13,8 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-exec ../run --unit-test
+VERSION=$(make --quiet --directory="$(bazel info workspace)" print-VERSION)
+if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
+    VALGRIND="$(which valgrind) --quiet --num-callers=30 --error-exitcode=42"
+fi
+bazel test --cmk_version="${VERSION}" ${VALGRIND:+--run_under="${VALGRIND}"} //packages/unixcat:all

@@ -86,6 +86,7 @@ common:ci --profile=trace_profile.json
 common:ci --//bazel/toolchains/cc/gcc/local:gcc_path=opt
 # the onwards set jobs and CPU limits shall be aligned with the k8s pod limits
 common:ci --jobs=6
+common:ci --loading_phase_threads=4
 # setting local_test_jobs to a value higher than specified at job has no effect
 common:ci --local_test_jobs=6
 common:ci --local_resources=cpu=6

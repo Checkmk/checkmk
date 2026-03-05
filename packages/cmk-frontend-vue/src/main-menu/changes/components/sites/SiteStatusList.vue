@@ -10,7 +10,6 @@ import { toRef } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
-import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
@@ -54,34 +53,31 @@ function toggleSelectedSite(siteId: string, value: boolean) {
   <div class="cmk-changes-sites" :class="{ 'add-flex': props.sites.length === 1 }">
     <div
       v-if="
-        props.sites.length === 1 &&
-        typeof props.sites[0] !== 'undefined' &&
-        !activating &&
-        props.sites[0].changes > 0
+        sitesWithChanges.length > 0 && !activating && typeof sitesWithChanges[0] !== 'undefined'
       "
       class="cmk-changes-site-single"
     >
       <div class="cmk-changes-site-single-title">{{ _t('Site(s) with changes') }}</div>
       <CmkScrollContainer max-height="30vh">
         <SiteStatusItem
-          :idx="0"
-          :site="props.sites[0]"
+          v-for="(site, idx) in sitesWithChanges"
+          :key="site.siteId"
+          :idx="idx"
+          :site="site"
           :activating="activating"
-          :checked="selectedSites.includes(props.sites[0].siteId)"
-          :is-recently-activated="recentlyActivatedSites.includes(props.sites[0].siteId)"
-          :hide-checkbox="true"
-          :has-activation-issues="siteHasActivationIssues(props.sites[0])"
-          :has-status-problems="siteHasStatusProblems(props.sites[0])"
-          :has-foreign-changes-without-permission="
-            siteHasForeignChangesWithoutPermission(props.sites[0])
-          "
-          :selection-disabled="siteSelectionIsDisabled(props.sites[0])"
+          :checked="selectedSites.includes(site.siteId)"
+          :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
+          :hide-checkbox="props.sites.length === 1"
+          :has-activation-issues="siteHasActivationIssues(site)"
+          :has-status-problems="siteHasStatusProblems(site)"
+          :has-foreign-changes-without-permission="siteHasForeignChangesWithoutPermission(site)"
+          :selection-disabled="siteSelectionIsDisabled(site)"
           @update-checked="toggleSelectedSite"
         ></SiteStatusItem>
       </CmkScrollContainer>
     </div>
 
-    <CmkTabs v-if="props.sites.length > 1" model-value="sites-with-changes">
+    <!-- <CmkTabs v-if="props.sites.length > 1" model-value="sites-with-changes">
       <template #tabs>
         <CmkTab v-if="sitesWithChanges.length > 0" id="sites-with-changes">{{
           _t('Sites with changes: %{n}', { n: sitesWithChanges.length })
@@ -107,7 +103,7 @@ function toggleSelectedSite(siteId: string, value: boolean) {
           </CmkScrollContainer>
         </CmkTabContent>
       </template>
-    </CmkTabs>
+    </CmkTabs> -->
   </div>
 </template>
 

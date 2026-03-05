@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkBadge from '@/components/CmkBadge.vue'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
-import CmkZebra from '@/components/CmkZebra.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import type { Site } from '../../ChangesInterfaces'
@@ -46,7 +45,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <CmkZebra
+  <div
     :num="idx"
     class="cmk-changes-sites-item-wrapper"
     :class="{ 'cmk-changes-site-status-item-disabled': selectionDisabled }"
@@ -90,13 +89,13 @@ const emit = defineEmits<{
         </div>
       </div>
     </div>
-  </CmkZebra>
+  </div>
 </template>
 
 <style scoped>
 /* stylelint-disable checkmk/vue-bem-naming-convention */
 .cmk-changes-sites-item-wrapper {
-  background: var(--default-bg-color);
+  background: var(--even-tr-bg-color);
   padding: var(--dimension-3);
   box-sizing: border-box;
 }

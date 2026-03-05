@@ -162,6 +162,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
                 class="db-centered-edit-controls-button control-button-color"
                 name="widget-delete"
                 size="xlarge"
+                :title="_t('Delete widget')"
                 :aria-label="_t('Delete widget')"
                 @click="emit('click:delete')"
               />
@@ -169,6 +170,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
                 class="db-centered-edit-controls-button control-button-color"
                 name="widget-clone"
                 size="xlarge"
+                :title="_t('Clone widget')"
                 :aria-label="_t('Clone widget')"
                 @click="emit('click:clone')"
               />
@@ -176,6 +178,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
                 class="db-centered-edit-controls-button control-button-color"
                 name="widget-edit"
                 size="xlarge"
+                :title="_t('Edit widget')"
                 :aria-label="_t('Edit widget')"
                 @click="emit('click:edit')"
               />

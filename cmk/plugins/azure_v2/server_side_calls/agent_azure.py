@@ -169,9 +169,7 @@ def agent_azure_arguments(
             case None:
                 args += ["--ignore-all-tags"]
 
-    if params.tenant_name:
-        args.extend(["--tenant-name", params.tenant_name])
-
+    args.extend(["--tenant-name", params.tenant_name])
     yield SpecialAgentCommand(command_arguments=args)
 
 

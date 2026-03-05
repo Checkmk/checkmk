@@ -161,6 +161,8 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "SECRET",
         "--cache-id",
         "HOSTNAME",
+        "--tenant-name",
+        "TENANTNAME",
     ],
     "bi": [],
     "couchbase": ["HOSTNAME"],

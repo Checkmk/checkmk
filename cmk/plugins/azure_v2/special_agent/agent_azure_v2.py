@@ -403,7 +403,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--tenant-name",
         type=str,
-        default=None,
+        required=True,
         metavar="TENANT_NAME",
         help="Azure tenant name to add to inventory and labels of created resources",
     )

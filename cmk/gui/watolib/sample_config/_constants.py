@@ -288,6 +288,14 @@ SHIPPED_RULES = {
                 "description": 'Make all docker container host states base on the "Docker container status" service',
             },
         },
+        {
+            "id": "1c07de55-49b2-4ceb-839f-9afa81bf1d03",
+            "condition": {"host_label_groups": [("and", [("and", "cmk/podman/object:container")])]},
+            "value": ("service", "Status"),
+            "options": {
+                "description": 'Make all podman container host states be based on the "Status" service',
+            },
+        },
     ],
     # Enable HW/SW Inventory + status data inventory for docker
     # containers, kubernetes objects, robotmk, azure and Check-MK servers by default to

@@ -68,8 +68,10 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         socket,
         "getaddrinfo",
         lambda host, port, family=None, *args, **kwargs: {
-            (localhost, socket.AF_INET): [(family, None, None, None, ("127.0.0.1", 0))],
-            (localhost, socket.AF_INET6): [(family, None, None, None, ("::1", 0))],
+            (localhost, socket.AddressFamily.AF_INET): [
+                (family, None, None, None, ("127.0.0.1", 0))
+            ],
+            (localhost, socket.AddressFamily.AF_INET6): [(family, None, None, None, ("::1", 0))],
         }[(host, family)],
     )
 
@@ -177,23 +179,26 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
 
 def test_cached_dns_lookup_is_config_cached_ok(monkeypatch: MonkeyPatch) -> None:
     patch_config_cache(
-        monkeypatch, {(HostName("config_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")}
+        monkeypatch,
+        {(HostName("config_cached_host"), socket.AddressFamily.AF_INET): HostAddress("1.2.3.4")},
     )
     patch_persisted_cache(
-        monkeypatch, {(HostName("config_cached_host"), socket.AF_INET): HostAddress("6.6.6.6")}
+        monkeypatch,
+        {(HostName("config_cached_host"), socket.AddressFamily.AF_INET): HostAddress("6.6.6.6")},
     )
     patch_actual_lookup(
-        monkeypatch, {(HostName("config_cached_host"), socket.AF_INET): HostAddress("7.7.7.7")}
+        monkeypatch,
+        {(HostName("config_cached_host"), socket.AddressFamily.AF_INET): HostAddress("7.7.7.7")},
     )
 
     assert ip_lookup.cached_dns_lookup(
         HostName("config_cached_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=False,
     ) == HostAddress("1.2.3.4")
     assert ip_lookup.cached_dns_lookup(
         HostName("config_cached_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
     ) == HostAddress("1.2.3.4")
 
@@ -202,7 +207,10 @@ def test_cached_dns_lookup_reraises(monkeypatch: MonkeyPatch) -> None:
     patch_config_cache(
         monkeypatch,
         {
-            (HostName("the_host_that_raised"), socket.AF_INET6): MKIPAddressLookupError(),
+            (
+                HostName("the_host_that_raised"),
+                socket.AddressFamily.AF_INET6,
+            ): MKIPAddressLookupError(),
         },
     )
     patch_persisted_cache(monkeypatch, {})
@@ -211,14 +219,14 @@ def test_cached_dns_lookup_reraises(monkeypatch: MonkeyPatch) -> None:
     with pytest.raises(MKIPAddressLookupError):
         _ = ip_lookup.cached_dns_lookup(
             HostName("the_host_that_raised"),
-            family=socket.AF_INET6,
+            family=socket.AddressFamily.AF_INET6,
             force_file_cache_renewal=False,
         )
 
     with pytest.raises(MKIPAddressLookupError):
         _ = ip_lookup.cached_dns_lookup(
             HostName("the_host_that_raised"),
-            family=socket.AF_INET6,
+            family=socket.AddressFamily.AF_INET6,
             force_file_cache_renewal=True,
         )
 
@@ -226,75 +234,77 @@ def test_cached_dns_lookup_reraises(monkeypatch: MonkeyPatch) -> None:
 def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> None:
     config_ipcache: _IPLookupCacheMapping = {}
     persisted_cache: _PersistedCache = {
-        (HostName("persisted_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET): HostAddress("1.2.3.4")
     }
 
     patch_config_cache(monkeypatch, config_ipcache)
     patch_persisted_cache(monkeypatch, persisted_cache)
     patch_actual_lookup(
-        monkeypatch, {(HostName("persisted_cached_host"), socket.AF_INET): HostAddress("6.6.6.6")}
+        monkeypatch,
+        {(HostName("persisted_cached_host"), socket.AddressFamily.AF_INET): HostAddress("6.6.6.6")},
     )
 
     assert ip_lookup.cached_dns_lookup(
         HostName("persisted_cached_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=False,
     ) == HostAddress("1.2.3.4")
-    assert config_ipcache.pop((HostName("persisted_cached_host"), socket.AF_INET)) == HostAddress(
-        "1.2.3.4"
-    )
-    assert persisted_cache[(HostName("persisted_cached_host"), socket.AF_INET)] == HostAddress(
-        "1.2.3.4"
-    )
+    assert config_ipcache.pop(
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
+    ) == HostAddress("1.2.3.4")
+    assert persisted_cache[
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
+    ] == HostAddress("1.2.3.4")
 
     assert ip_lookup.cached_dns_lookup(
         HostName("persisted_cached_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
     ) == HostAddress("6.6.6.6")
-    assert config_ipcache[(HostName("persisted_cached_host"), socket.AF_INET)] == HostAddress(
-        "6.6.6.6"
-    )
-    assert persisted_cache[(HostName("persisted_cached_host"), socket.AF_INET)] == HostAddress(
-        "6.6.6.6"
-    )
+    assert config_ipcache[
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
+    ] == HostAddress("6.6.6.6")
+    assert persisted_cache[
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
+    ] == HostAddress("6.6.6.6")
 
 
 def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch: MonkeyPatch) -> None:
     config_ipcache: _IPLookupCacheMapping = {}
     persisted_cache: _PersistedCache = {
-        (HostName("persisted_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET): HostAddress("1.2.3.4")
     }
 
     patch_config_cache(monkeypatch, config_ipcache)
     patch_persisted_cache(monkeypatch, persisted_cache)
     patch_actual_lookup(
-        monkeypatch, {(HostName("persisted_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")}
+        monkeypatch,
+        {(HostName("persisted_cached_host"), socket.AddressFamily.AF_INET): HostAddress("1.2.3.4")},
     )
 
     assert ip_lookup.cached_dns_lookup(
         HostName("persisted_cached_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=False,
     ) == HostAddress("1.2.3.4")
-    assert config_ipcache.pop((HostName("persisted_cached_host"), socket.AF_INET)) == HostAddress(
-        "1.2.3.4"
-    )
-    assert persisted_cache[(HostName("persisted_cached_host"), socket.AF_INET)] == HostAddress(
-        "1.2.3.4"
-    )
+    assert config_ipcache.pop(
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
+    ) == HostAddress("1.2.3.4")
+    assert persisted_cache[
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
+    ] == HostAddress("1.2.3.4")
 
     assert ip_lookup.cached_dns_lookup(
         HostName("persisted_cached_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
     ) == HostAddress("1.2.3.4")
-    assert config_ipcache.pop((HostName("persisted_cached_host"), socket.AF_INET)) == HostAddress(
-        "1.2.3.4"
-    )
-    assert persisted_cache[(HostName("persisted_cached_host"), socket.AF_INET)] == HostAddress(
-        "1.2.3.4"
-    )
+    assert config_ipcache.pop(
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
+    ) == HostAddress("1.2.3.4")
+    assert persisted_cache[
+        (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
+    ] == HostAddress("1.2.3.4")
 
 
 def test_cached_dns_lookup_uncached(monkeypatch: MonkeyPatch) -> None:
@@ -304,24 +314,32 @@ def test_cached_dns_lookup_uncached(monkeypatch: MonkeyPatch) -> None:
     patch_config_cache(monkeypatch, config_ipcache)
     patch_persisted_cache(monkeypatch, persisted_cache)
     patch_actual_lookup(
-        monkeypatch, {(HostName("test_host"), socket.AF_INET): HostAddress("3.1.4.1")}
+        monkeypatch, {(HostName("test_host"), socket.AddressFamily.AF_INET): HostAddress("3.1.4.1")}
     )
 
     assert ip_lookup.cached_dns_lookup(
         HostName("test_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=False,
     ) == HostAddress("3.1.4.1")
-    assert config_ipcache.pop((HostName("test_host"), socket.AF_INET)) == HostAddress("3.1.4.1")
-    assert persisted_cache.pop((HostName("test_host"), socket.AF_INET)) == HostAddress("3.1.4.1")
+    assert config_ipcache.pop((HostName("test_host"), socket.AddressFamily.AF_INET)) == HostAddress(
+        "3.1.4.1"
+    )
+    assert persisted_cache.pop(
+        (HostName("test_host"), socket.AddressFamily.AF_INET)
+    ) == HostAddress("3.1.4.1")
 
     assert ip_lookup.cached_dns_lookup(
         HostName("test_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
     ) == HostAddress("3.1.4.1")
-    assert config_ipcache[(HostName("test_host"), socket.AF_INET)] == HostAddress("3.1.4.1")
-    assert persisted_cache[(HostName("test_host"), socket.AF_INET)] == HostAddress("3.1.4.1")
+    assert config_ipcache[(HostName("test_host"), socket.AddressFamily.AF_INET)] == HostAddress(
+        "3.1.4.1"
+    )
+    assert persisted_cache[(HostName("test_host"), socket.AddressFamily.AF_INET)] == HostAddress(
+        "3.1.4.1"
+    )
 
 
 def test_cached_dns_lookup_raises_every_time(monkeypatch: MonkeyPatch) -> None:
@@ -335,14 +353,14 @@ def test_cached_dns_lookup_raises_every_time(monkeypatch: MonkeyPatch) -> None:
     with pytest.raises(MKIPAddressLookupError):
         _ = ip_lookup.cached_dns_lookup(
             HostName("test_host"),
-            family=socket.AF_INET,
+            family=socket.AddressFamily.AF_INET,
             force_file_cache_renewal=False,
         )
 
     with pytest.raises(MKIPAddressLookupError):
         _ = ip_lookup.cached_dns_lookup(
             HostName("test_host"),
-            family=socket.AF_INET,
+            family=socket.AddressFamily.AF_INET,
             force_file_cache_renewal=False,
         )
 
@@ -350,7 +368,7 @@ def test_cached_dns_lookup_raises_every_time(monkeypatch: MonkeyPatch) -> None:
 def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
     config_ipcache: _IPLookupCacheMapping = {}
     persisted_cache: _PersistedCache = {
-        (HostName("test_host"), socket.AF_INET): HostAddress("3.1.4.1")
+        (HostName("test_host"), socket.AddressFamily.AF_INET): HostAddress("3.1.4.1")
     }
 
     patch_config_cache(monkeypatch, config_ipcache)
@@ -359,18 +377,18 @@ def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
 
     assert ip_lookup.cached_dns_lookup(
         HostName("test_host"),
-        family=socket.AF_INET,
+        family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
     ) == HostAddress("3.1.4.1")
-    assert persisted_cache[(HostName("test_host"), socket.AF_INET)]
+    assert persisted_cache[(HostName("test_host"), socket.AddressFamily.AF_INET)]
 
 
 class TestIPLookupCacheSerialzer:
     def test_simple_cache(self) -> None:
         s = ip_lookup.IPLookupCacheSerializer()
-        cache_data: Mapping[tuple[HostName | HostAddress, socket.AddressFamily], HostAddress] = {
-            (HostName("host1"), socket.AF_INET): HostAddress("1")
-        }
+        cache_data: Mapping[
+            tuple[HostName | HostAddress, ip_lookup.SupportedAddressFamily], HostAddress
+        ] = {(HostName("host1"), socket.AddressFamily.AF_INET): HostAddress("1")}
         assert s.deserialize(s.serialize(cache_data)) == cache_data
 
 
@@ -388,7 +406,7 @@ class TestIPLookupCache:
         assert not cache
 
     def test_update_empty_file(self, tmp_path: Path) -> None:
-        cache_id = HostName("host1"), socket.AF_INET
+        cache_id: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
         ip_lookup_cache = ip_lookup.IPLookupCache({})
         ip_lookup_cache[cache_id] = HostAddress("127.0.0.1")
 
@@ -397,8 +415,8 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id] == HostAddress("127.0.0.1")
 
     def test_update_existing_file(self, tmp_path: Path) -> None:
-        cache_id1 = HostName("host1"), socket.AF_INET
-        cache_id2 = HostName("host2"), socket.AF_INET
+        cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
+        cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
         ip_lookup_cache[cache_id1] = HostAddress("127.0.0.1")
@@ -410,8 +428,8 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id2] == HostAddress("127.0.0.2")
 
     def test_update_existing_entry(self, tmp_path: Path) -> None:
-        cache_id1 = HostName("host1"), socket.AF_INET
-        cache_id2 = HostName("host2"), socket.AF_INET
+        cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
+        cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
         ip_lookup_cache = ip_lookup.IPLookupCache(
             {
@@ -429,7 +447,7 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id2] == HostAddress("2")
 
     def test_update_without_persistence(self, tmp_path: Path) -> None:
-        cache_id1 = HostName("host1"), socket.AF_INET
+        cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
         ip_lookup_cache[cache_id1] = HostAddress("0.0.0.0")
@@ -444,8 +462,8 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id1] == HostAddress("0.0.0.0")
 
     def test_load_legacy(self, tmp_path: Path) -> None:
-        cache_id1 = HostName("host1"), socket.AF_INET
-        cache_id2 = HostName("host2"), socket.AF_INET
+        cache_id1: ip_lookup.IPLookupCacheId = HostName("host1"), socket.AddressFamily.AF_INET
+        cache_id2: ip_lookup.IPLookupCacheId = HostName("host2"), socket.AddressFamily.AF_INET
 
         with ip_lookup.IPLookupCache.PATH.open("w", encoding="utf-8") as f:
             # Using `repr()` to serialize is a **bad** idea.
@@ -458,12 +476,14 @@ class TestIPLookupCache:
 
     def test_clear(self, tmp_path: Path) -> None:
         ip_lookup.IPLookupCache(
-            {(HostName("host1"), socket.AF_INET): HostAddress("127.0.0.1")}
+            {(HostName("host1"), socket.AddressFamily.AF_INET): HostAddress("127.0.0.1")}
         ).save_persisted()
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
         ip_lookup_cache.load_persisted()
-        assert ip_lookup_cache[(HostName("host1"), socket.AF_INET)] == HostAddress("127.0.0.1")
+        assert ip_lookup_cache[(HostName("host1"), socket.AddressFamily.AF_INET)] == HostAddress(
+            "127.0.0.1"
+        )
 
         ip_lookup_cache.clear()
 
@@ -484,13 +504,13 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
         socket,
         "getaddrinfo",
         lambda host, port, family=None, socktype=None, proto=None, flags=None: {
-            ("blub", socket.AF_INET): [
+            ("blub", socket.AddressFamily.AF_INET): [
                 (family, None, None, None, (HostAddress("127.0.0.13"), 1337))
             ],
-            ("bla", socket.AF_INET): [
+            ("bla", socket.AddressFamily.AF_INET): [
                 (family, None, None, None, (HostAddress("127.0.0.37"), 1337))
             ],
-            ("dual", socket.AF_INET): [
+            ("dual", socket.AddressFamily.AF_INET): [
                 (family, None, None, None, (HostAddress("127.0.0.42"), 1337))
             ],
         }[(host, family)],
@@ -516,9 +536,9 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
         lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
     )
     assert ip_lookup_cache() == {
-        ("blub", socket.AF_INET): HostAddress("127.0.0.13"),
-        ("bla", socket.AF_INET): HostAddress("127.0.0.37"),
-        ("dual", socket.AF_INET): HostAddress("127.0.0.42"),
+        ("blub", socket.AddressFamily.AF_INET): HostAddress("127.0.0.13"),
+        ("bla", socket.AddressFamily.AF_INET): HostAddress("127.0.0.37"),
+        ("dual", socket.AddressFamily.AF_INET): HostAddress("127.0.0.42"),
     }
     # Actual failure is:
     # MKIPAddressLookupError("Failed to lookup IPv6 address of dual via DNS: ('dual', <AddressFamily.AF_INET6: 10>)")
@@ -526,12 +546,12 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
 
     # Check persisted data
     cache = ip_lookup_cache()
-    assert cache.get((HostName("blub"), socket.AF_INET)) == HostAddress("127.0.0.13")
-    assert cache.get((HostName("blub"), socket.AF_INET6)) is None
-    assert cache.get((HostName("bla"), socket.AF_INET)) == HostAddress("127.0.0.37")
-    assert cache.get((HostName("bla"), socket.AF_INET6)) is None
-    assert cache.get((HostName("dual"), socket.AF_INET)) == HostAddress("127.0.0.42")
-    assert cache.get((HostName("dual"), socket.AF_INET6)) is None
+    assert cache.get((HostName("blub"), socket.AddressFamily.AF_INET)) == HostAddress("127.0.0.13")
+    assert cache.get((HostName("blub"), socket.AddressFamily.AF_INET6)) is None
+    assert cache.get((HostName("bla"), socket.AddressFamily.AF_INET)) == HostAddress("127.0.0.37")
+    assert cache.get((HostName("bla"), socket.AddressFamily.AF_INET6)) is None
+    assert cache.get((HostName("dual"), socket.AddressFamily.AF_INET)) == HostAddress("127.0.0.42")
+    assert cache.get((HostName("dual"), socket.AddressFamily.AF_INET6)) is None
 
 
 @pytest.mark.parametrize(
@@ -592,10 +612,10 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
         "getaddrinfo",
         lambda host, port, family=None, socktype=None, proto=None, flags=None: {
             # That looks like a tautological tests.  It's most likely useless.
-            (HostName("localhost"), socket.AF_INET6): [
+            (HostName("localhost"), socket.AddressFamily.AF_INET6): [
                 (family, None, None, None, (result_address, 0))
             ],
-            (HostAddress("::1"), socket.AF_INET6): [
+            (HostAddress("::1"), socket.AddressFamily.AF_INET6): [
                 (family, None, None, None, (result_address, 0))
             ],
         }[(host, family)],

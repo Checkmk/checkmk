@@ -31,7 +31,8 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.utils.caching import cache_manager
 from cmk.utils.log import console
 
-IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
+SupportedAddressFamily = Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+IPLookupCacheId = tuple[HostName | HostAddress, SupportedAddressFamily]
 
 
 _FALLBACK_V4 = HostAddress("0.0.0.0")
@@ -44,7 +45,7 @@ class IPLookup(Protocol):
     def __call__(
         self,
         host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+        family: SupportedAddressFamily,
     ) -> HostAddress: ...
 
 
@@ -52,7 +53,7 @@ class IPLookupOptional(Protocol):
     def __call__(
         self,
         host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+        family: SupportedAddressFamily,
     ) -> HostAddress | None: ...
 
 
@@ -73,11 +74,9 @@ class IPLookupConfig:
     is_snmp_host: Callable[[HostName], bool]
     is_snmp_management: Callable[[HostName], bool]
     is_use_walk_host: Callable[[HostName], bool]
-    default_address_family: Callable[
-        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-    ]
+    default_address_family: Callable[[HostName], SupportedAddressFamily]
     management_address: Callable[
-        [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
+        [HostName, SupportedAddressFamily],
         HostAddress | None,
     ]
     is_dyndns_host: Callable[[HostName], bool]
@@ -98,7 +97,7 @@ def make_lookup_mgmt_board_ip_address(
 
     def lookup_mgmt_board_ip_address(
         host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+        family: SupportedAddressFamily,
     ) -> HostAddress | None:
         mgmt_address: Final = ip_config.management_address(host_name, family)
         try:
@@ -137,18 +136,25 @@ def make_lookup_ip_address(
     if ip_config.simulation_mode:
         return local_ip_for
 
+    def _get_configured_ip_address(
+        family: SupportedAddressFamily, host_name: HostName
+    ) -> HostAddress | None:
+        match family:
+            case socket.AddressFamily.AF_INET:
+                return ip_config.ipv4_addresses.get(host_name)
+            case socket.AddressFamily.AF_INET6:
+                return ip_config.ipv6_addresses.get(host_name)
+            case _:
+                assert_never(family)
+
     def _wrapped_lookup(
         host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+        family: SupportedAddressFamily,
     ) -> HostAddress:
         return _lookup_ip_address(
             host_name=host_name,
             family=family,
-            configured_ip_address=(
-                ip_config.ipv4_addresses
-                if family is socket.AddressFamily.AF_INET
-                else ip_config.ipv6_addresses
-            ).get(host_name),
+            configured_ip_address=_get_configured_ip_address(family, host_name),
             is_snmp_usewalk_host=(
                 ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_host(host_name)
             ),
@@ -163,7 +169,7 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
     def __init__(
         self,
         lookup: Callable[
-            [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
+            [HostName, SupportedAddressFamily],
             HostAddress,
         ],
         *,
@@ -177,7 +183,7 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
     def __call__(
         self,
         host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+        family: SupportedAddressFamily,
     ) -> HostAddress:
         try:
             return self._lookup(host_name, family)
@@ -190,7 +196,7 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
 
 
 def fallback_ip_for(
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    family: SupportedAddressFamily,
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:
@@ -207,7 +213,7 @@ def is_fallback_ip(ip: HostAddress | str) -> bool:
 
 def local_ip_for(
     host_name: HostName,
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    family: SupportedAddressFamily,
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:
@@ -224,7 +230,7 @@ def local_ip_for(
 def _lookup_ip_address(
     *,
     host_name: HostName | HostAddress,
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    family: SupportedAddressFamily,
     configured_ip_address: HostAddress | None,
     is_snmp_usewalk_host: bool,
     is_dyndns_host: bool,
@@ -255,7 +261,7 @@ def _lookup_ip_address(
 def cached_dns_lookup(
     hostname: HostName | HostAddress,
     *,
-    family: socket.AddressFamily,
+    family: SupportedAddressFamily,
     force_file_cache_renewal: bool,
 ) -> HostAddress:
     """Cached DNS lookup in *two* caching layers
@@ -268,7 +274,7 @@ def cached_dns_lookup(
     2) inner layer: see _file_cached_dns_lookup
     """
     cache: dict[
-        tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | MKIPAddressLookupError
+        tuple[HostName | HostAddress, SupportedAddressFamily], HostAddress | MKIPAddressLookupError
     ] = cache_manager.obtain_cache("cached_dns_lookup")
     cache_id = hostname, family
 
@@ -294,9 +300,15 @@ def cached_dns_lookup(
     return ip_address
 
 
+FAMILY_NAMES = {
+    socket.AddressFamily.AF_INET: "IPv4",
+    socket.AddressFamily.AF_INET6: "IPv6",
+}
+
+
 def _file_cached_dns_lookup(
     hostname: HostName | HostAddress,
-    family: socket.AddressFamily,
+    family: SupportedAddressFamily,
     *,
     force_file_cache_renewal: bool,
 ) -> HostAddress:
@@ -323,7 +335,7 @@ def _file_cached_dns_lookup(
     ipa = _actual_dns_lookup(host_name=hostname, family=family, fallback=cached_ip)
 
     if ipa != cached_ip:
-        family_str = {socket.AF_INET: "IPv4", socket.AF_INET6: "IPv6"}[family]
+        family_str = FAMILY_NAMES[family]
         console.verbose(f"Updating {family_str} DNS cache for {hostname}: {ipa}")
         ip_lookup_cache[cache_id] = ipa
 
@@ -333,7 +345,7 @@ def _file_cached_dns_lookup(
 def _actual_dns_lookup(
     *,
     host_name: HostName | HostAddress,
-    family: socket.AddressFamily,
+    family: SupportedAddressFamily,
     fallback: HostAddress | None = None,
 ) -> HostAddress:
     try:
@@ -370,11 +382,20 @@ class IPLookupCacheSerializer:
         loaded_object = self._dim_serializer.deserialize(raw)
         assert isinstance(loaded_object, dict)
 
+        def _get_family(value: int) -> SupportedAddressFamily:
+            match value:
+                case 4:
+                    return socket.AddressFamily.AF_INET
+                case 6:
+                    return socket.AddressFamily.AF_INET6
+                case other:
+                    raise ValueError(f"Invalid address family value: {other}")
+
         return {
             (
-                (HostName(k), socket.AF_INET)  # old pre IPv6 style
+                (HostName(k), socket.AddressFamily.AF_INET)  # old pre IPv6 style
                 if isinstance(k, str)
-                else (HostName(k[0]), {4: socket.AF_INET, 6: socket.AF_INET6}[k[1]])
+                else (HostName(k[0]), _get_family(k[1]))
             ): HostAddress(v)
             for k, v in loaded_object.items()
         }
@@ -521,7 +542,7 @@ def _annotate_family(
 ) -> Iterable[
     tuple[
         HostName,
-        Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+        SupportedAddressFamily,
     ]
 ]:
     for host_name in hosts:

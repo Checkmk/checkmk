@@ -33,6 +33,7 @@ import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
 import ChangesStatusBar from './components/ChangesStatusBar.vue'
 import DefaultPopup from './components/DefaultPopup.vue'
+import UserSettingDialog from './components/UserSettingDialog.vue'
 import ChangesActivating from './components/activation/ChangesActivating.vue'
 import ChangesActivationResult from './components/activation/ChangesActivationResult.vue'
 import PendingChangesList from './components/pending-changes/PendingChangesList.vue'
@@ -379,7 +380,9 @@ onMounted(async () => {
           {{ _t('Open full view') }}
         </CmkButton>
       </div>
+      <UserSettingDialog v-if="!new_installation" :activate-changes-url="activate_changes_url" />
       <CmkDialog
+        v-else
         :message="
           _t(`Changes are saved without affecting live monitoring, allowing you to review and adjust them safely.
               Click 'Activate pending changes' to apply them.`)

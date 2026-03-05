@@ -18,6 +18,7 @@ from cmk.gui.main_menu_types import (
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.wato.pages.activate_changes import get_last_wato_snapshot_file
 from cmk.shared_typing.changes import ChangesProps
 
 
@@ -42,6 +43,7 @@ def _data(request: Request) -> ActivateChangesData:
             filename="wato.py",
         ),
         user_has_activate_foreign=user.may("wato.activateforeign"),
+        new_installation=get_last_wato_snapshot_file(debug=False) is None,
         user_name=user.ident,
     )
 

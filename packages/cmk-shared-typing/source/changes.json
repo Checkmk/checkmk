@@ -30,9 +30,15 @@
       "properties": {
         "activate_changes_url": { "type": "string" },
         "user_has_activate_foreign": { "type": "boolean" },
-        "user_name": { "type": "string" }
+        "user_name": { "type": "string" },
+        "new_installation": { "type": "boolean" }
       },
-      "required": ["activate_changes_url", "user_has_activate_foreign", "user_name"]
+      "required": [
+        "activate_changes_url",
+        "user_has_activate_foreign",
+        "user_name",
+        "new_installation"
+      ]
     },
     "activation_phase": {
       "type": "string",

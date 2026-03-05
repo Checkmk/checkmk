@@ -148,6 +148,7 @@ def test_openapi_user_minimal_settings(
             "ui_theme": None,
             "ui_sidebar_position": None,
             "nav_hide_icons_title": None,
+            "navbar_changes_action": None,
             "icons_per_item": None,
             "show_mode": None,
             "start_url": None,
@@ -309,6 +310,7 @@ def test_openapi_user_internal_with_notifications(
         "ui_theme": None,
         "ui_sidebar_position": None,
         "nav_hide_icons_title": None,
+        "navbar_changes_action": None,
         "icons_per_item": None,
         "show_mode": None,
         "start_url": None,
@@ -988,6 +990,7 @@ def _load_internal_attributes(username: UserId) -> dict[str, Any]:
             "show_mode",
             "ui_theme",
             "ui_sidebar_position",
+            "navbar_changes_action",
             "start_url",
             "force_authuser",
         )

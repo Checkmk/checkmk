@@ -1793,10 +1793,18 @@ class ActivateChangesManager(ActivateChanges):
 
     def _log_activation(self):
         log_msg = "Starting activation (Sites: %s)" % ",".join(self._sites)
-        log_audit("activate-changes", log_msg)
+        log_audit(
+            "activate-changes",
+            log_msg,
+            user_id=user.id,
+        )
 
         if self._comment:
-            log_audit("activate-changes", "Comment: %s" % self._comment)
+            log_audit(
+                "activate-changes",
+                "Comment: %s" % self._comment,
+                user_id=user.id,
+            )
 
         # Baking will happen on core config generation
         # Since we don't have access to the GUI there, we log the call here.
@@ -1805,6 +1813,7 @@ class ActivateChangesManager(ActivateChanges):
                 action="bake-agents",
                 message="Bake agents (triggered by: Activate Changes)",
                 diff_text="Hosts: All hosts",
+                user_id=user.id,
             )
 
     def get_state(self) -> ActivationState:

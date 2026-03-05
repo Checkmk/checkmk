@@ -10,6 +10,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDropdown from '@/components/CmkDropdown'
+import CmkLabel from '@/components/CmkLabel.vue'
 
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import SelectorSingleInfo from '@/dashboard/components/selectors/SelectorSingleInfo.vue'
@@ -32,14 +33,20 @@ const props = withDefaults(
   defineProps<{
     contextInfos: string[]
     readOnly?: boolean // TODO: needs to be included once component has been adapted
+    isNewView?: boolean
   }>(),
   {
-    readOnly: false
+    readOnly: false,
+    isNewView: true
   }
 )
 
 const mode = defineModel<RestrictedToSingle>('mode', { default: RestrictedToSingle.NO })
 const restrictedIds = defineModel<string[]>('restrictedIds', { default: [] })
+
+const selectedModeTitle = computed(
+  () => SPECIFIC_OBJECT_OPTIONS.find((o) => o.name === mode.value)?.title ?? null
+)
 
 const dropdownOptions = computed(() => ({
   type: 'fixed' as const,
@@ -66,11 +73,13 @@ watch(
     <h2>{{ _t('Specific object type') }}</h2>
     <ContentSpacer :dimension="5" />
     <CmkDropdown
+      v-if="isNewView"
       v-model:selected-option="mode"
       :options="dropdownOptions"
       :disabled="props.readOnly"
       :label="_t('Select specific object type')"
     />
+    <CmkLabel v-else>{{ selectedModeTitle }}</CmkLabel>
     <template v-if="mode === RestrictedToSingle.CUSTOM">
       <ContentSpacer :dimension="5" />
       <SelectorSingleInfo v-model:selected-ids="restrictedIds" :only-ids="props.contextInfos" />

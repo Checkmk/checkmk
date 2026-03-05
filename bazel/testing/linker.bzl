@@ -11,6 +11,7 @@ def test_has_dynamic_library(name, src, pattern):
     )
     native.sh_test(
         name = name,
+        size = "small",
         srcs = [name_sh],
         args = ["$(location %s)" % src, pattern],
         data = [src],
@@ -27,6 +28,7 @@ def test_no_dynamic_library(name, src, pattern):
     )
     native.sh_test(
         name = name,
+        size = "small",
         srcs = [name_sh],
         args = ["$(location %s)" % src, pattern],
         data = [src],

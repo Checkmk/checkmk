@@ -40,6 +40,7 @@ void main() {
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         "FAKE_WINDOWS_ARTIFACTS",
+        "TEST_FILTER",  // a filter string to select which tests to run
         "VERSION",
     ]);
 
@@ -110,6 +111,7 @@ void main() {
                             distro: distro,
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
+                            test_filter: params.TEST_FILTER,
                         );
                     }
                 }

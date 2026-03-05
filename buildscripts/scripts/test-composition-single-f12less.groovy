@@ -8,6 +8,7 @@ void main() {
         "DISTRO",
         "USE_CASE",
         "FAKE_WINDOWS_ARTIFACTS",
+        "TEST_FILTER",  // a filter string to select which tests to run
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testsed, forwarded to packages build job
     ]);
 
@@ -76,6 +77,7 @@ void main() {
                             distro: distro,
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
+                            test_filter: params.TEST_FILTER,
                         );
                     }
                 }

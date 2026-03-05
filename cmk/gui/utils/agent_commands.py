@@ -29,12 +29,14 @@ from cmk.shared_typing.setup import AgentInstallCmds as SetupAgentInstallCmds
 from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrationCmds
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 
-WINDOWS_AGENT_INSTALL_CMD = """curl.exe -o check-mk-agent_{version}.msi \\
-    {{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke \\
-    --header 'Accept: application/octet-stream' \\
-    --header 'Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]' \\
-    --data-urlencode 'os_type=windows_msi' ^ \\
-msiexec /i check_mk_agent_{version}.msi"""
+WINDOWS_AGENT_INSTALL_CMD = (
+    "curl.exe -o check-mk-agent_{version}.msi"
+    ' "{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke"'
+    ' --header "Accept: application/octet-stream"'
+    ' --header "Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]"'
+    ' --data-urlencode "os_type=windows_msi"'
+    " && msiexec /i check-mk-agent_{version}.msi"
+)
 
 LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1_all.deb -fJG \\
     '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\

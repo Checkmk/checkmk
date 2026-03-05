@@ -120,6 +120,10 @@ class ExpandableLegendAppearance(Enum):
 # chaning of the graph rendering options won't work as expected.
 html_size_per_ex = 11.0
 min_resize_width = 50
+
+# Minimum graph canvas height (in ex units) below which a widget is too small
+# to render anything meaningful.
+min_graph_height_ex = 4
 min_resize_height = 6
 
 
@@ -553,7 +557,11 @@ def _show_graph_legend(
     legend_titles = list(_compute_legend_titles(graph_artwork, graph_render_config))
     graph_legend_styles = list(_compute_graph_legend_styles(graph_render_config))
 
-    html.open_div(class_=["legend_container"])
+    legend_container_styles: list[str] = []
+    if graph_render_config.legend_max_height_px is not None:
+        legend_container_styles.append("max-height:%dpx" % graph_render_config.legend_max_height_px)
+        legend_container_styles.append("overflow-y:auto")
+    html.open_div(class_=["legend_container"], style=legend_container_styles or None)
     html.open_table(class_="legend", style=graph_legend_styles)
     html.open_thead()
     html.open_tr()
@@ -1477,12 +1485,17 @@ def host_service_graph_dashlet_cmk(
         and graph_artwork_or_errors.artwork.curves
         and not is_preview
     ):
-        # Estimates the height of the graph legend in pixels TODO: This is not
-        # acurate! Especially when the font size is changed this does not lead
-        # to correct results. But this is a more generic problem of the
+        if height <= min_graph_height_ex:
+            raise MKGraphWidgetTooSmallError(
+                _("Either increase the widget height or disable the graph legend.")
+            )
+
+        # Estimates the height of the graph legend in ex units. TODO: This is
+        # not accurate! Especially when the font size is changed this does not
+        # lead to correct results. But this is a more generic problem of the
         # html_size_per_ex which is hard coded instead of relying on the font
         # as it should.
-        height -= int(
+        estimated_legend_height_ex = int(
             3.0
             + (
                 len(list(graph_artwork_or_errors.artwork.curves))
@@ -1490,12 +1503,14 @@ def host_service_graph_dashlet_cmk(
             )
             * 1.5
         )
-        if height <= 0:
-            raise MKGraphWidgetTooSmallError(
-                _("Either increase the widget height or disable the graph legend.")
-            )
-
+        # Cap the legend so the graph always keeps at least min_graph_height_ex.
+        # When the legend exceeds the available budget, the legend container is
+        # made scrollable via max-height + overflow-y.
+        max_legend_height_ex = max(height - min_graph_height_ex, 0)
+        legend_height_ex = min(estimated_legend_height_ex, max_legend_height_ex)
+        height -= legend_height_ex
         graph_render_config.size = (width, height)
+        graph_render_config.legend_max_height_px = int(legend_height_ex * html_size_per_ex)
 
     return _render_graph_content_html(
         request,

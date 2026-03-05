@@ -96,6 +96,7 @@ class GraphRenderConfigBase(BaseModel):
         add_service_description=False,
     )
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
+    legend_max_height_px: int | None = None
 
     def update_from_options(self, options: GraphRenderOptions) -> Self:
         return self.model_copy(

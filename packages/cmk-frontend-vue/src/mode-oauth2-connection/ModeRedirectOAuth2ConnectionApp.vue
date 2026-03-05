@@ -19,13 +19,18 @@ import { OAUTH2_REDIRECT_MESSAGE_TYPE } from '@/mode-oauth2-connection/lib/waitF
 
 const { _t } = usei18n()
 
+const queryParams = new URL(window.location.href).searchParams
+
+const getCode = computed(() => {
+  return queryParams.get('code')
+})
+
 const successfullyLoggedIn = computed(() => {
   return !!getCode.value
 })
 
-const getCode = computed(() => {
-  const params = new URL(window.location.href).searchParams
-  return params.get('code')
+const showCopy = computed(() => {
+  return queryParams.get('showcopy') === '1'
 })
 
 onMounted(() => {
@@ -55,9 +60,12 @@ const title = computed(() => {
         <CmkMultitoneIcon v-else name="error" primary-color="danger" size="xxxlarge" />
         <div>
           <CmkHeading type="h1">{{ title }}</CmkHeading>
-          <CmkHeading type="h3">{{ _t('You can now close this tab.') }}</CmkHeading>
+          <CmkHeading v-if="showCopy && successfullyLoggedIn" type="h3">
+            {{ _t('Please copy the code, then you can close this tab.') }}
+          </CmkHeading>
+          <CmkHeading v-else type="h3">{{ _t('You can now close this tab.') }}</CmkHeading>
         </div>
-        <template v-if="successfullyLoggedIn">
+        <template v-if="successfullyLoggedIn && showCopy">
           <CmkCopy :text="getCode || ''">
             <CmkButton>
               <CmkIcon name="copied" variant="inline" size="medium" />

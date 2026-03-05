@@ -23,7 +23,9 @@ export function buildRedirectUri(
   siteRedirectUrls: Record<string, string>
 ): string {
   if (overrideSite && siteRedirectUrls[overrideSite]) {
-    return siteRedirectUrls[overrideSite]
+    const url = new URL(siteRedirectUrls[overrideSite])
+    url.searchParams.set('showcopy', '1')
+    return url.toString()
   }
 
   const baseUri = (

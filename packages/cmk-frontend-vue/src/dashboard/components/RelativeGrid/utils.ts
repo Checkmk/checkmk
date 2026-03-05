@@ -24,6 +24,8 @@
  *      are static
  *
  */
+import type { WidgetSizeValue } from '@/dashboard/types/widget'
+
 import {
   ANCHOR_POSITION,
   type AbsoluteDimensions,
@@ -405,4 +407,64 @@ export const convertAbsoluteToRelativePosition = (
     x: x + 1,
     y: y + 1
   }
+}
+
+/**
+ * Offset the initial position for new or cloned widgets.
+ * The offset will be away from the anchor point.
+ * @param initialPosition The original position of the widget.
+ * @param options Options to specify which axes to offset (default is both horizontal and vertical).
+ */
+export const offsetInitialPosition = (
+  initialPosition: Position,
+  {
+    horizontal = true,
+    vertical = true
+  }: {
+    horizontal?: boolean
+    vertical?: boolean
+  } = {}
+): Position => {
+  const OFFSET_IN_GRID_UNITS = 5
+  const xOffset = horizontal ? OFFSET_IN_GRID_UNITS * (initialPosition.x >= 0 ? 1 : -1) : 0
+  const yOffset = vertical ? OFFSET_IN_GRID_UNITS * (initialPosition.y >= 0 ? 1 : -1) : 0
+  return {
+    x: initialPosition.x + xOffset,
+    y: initialPosition.y + yOffset
+  }
+}
+
+/**
+ * Ensure that the widget's position does not exceed the dashboard bounds.
+ * @param position The relative position of the widget.
+ * @param dimensions The relative dimensions of the widget.
+ * @param dashboardDimensions The absolute dimensions of the dashboard.
+ */
+export const moveToDashboardBounds = (
+  position: Position,
+  dimensions: { width: WidgetSizeValue; height: WidgetSizeValue },
+  dashboardDimensions: AbsoluteDimensions
+): Position => {
+  const screenSize = new Vec(dashboardDimensions.width, dashboardDimensions.height)
+  const rasterSize = screenSize.divide(GRID_SIZE)
+
+  const width = typeof dimensions.width === 'number' ? dimensions.width : 0
+  const height = typeof dimensions.height === 'number' ? dimensions.height : 0
+
+  let x = position.x
+  let y = position.y
+
+  if (x > 0) {
+    x = Math.min(x, rasterSize.x - width + 1)
+  } else {
+    x = Math.max(x, -rasterSize.x + width - 1)
+  }
+
+  if (y > 0) {
+    y = Math.min(y, rasterSize.y - height + 1)
+  } else {
+    y = Math.max(y, -rasterSize.y + height - 1)
+  }
+
+  return { x, y }
 }

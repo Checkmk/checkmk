@@ -24,7 +24,11 @@ import type { WidgetLayout } from '@/dashboard/types/widget'
 import { useRelativeGridLayout } from './composables/useRelativeGridLayout'
 import { createDragHelper } from './helpers/dragHelper.ts'
 import { type ANCHOR_POSITION, type Dimensions, type Position, WIDGET_MIN_SIZE } from './types.ts'
-import { calculateDashboardDimensions } from './utils.ts'
+import {
+  calculateDashboardDimensions,
+  moveToDashboardBounds,
+  offsetInitialPosition
+} from './utils.ts'
 
 /*
 This component provides the anchored grid layout for dashboard widgets.
@@ -168,10 +172,15 @@ function handleResizeForWidget(widgetId: string) {
 const cloneRelativeGridWidget = (oldWidgetId: string) => {
   const widgetType = props.contentProps[oldWidgetId]!.content.type
   const layoutConstant = dashboardConstants.widgets[widgetType]!.layout.relative
+  const widgetPosition = content.value.widgets[oldWidgetId]!.layout.position
 
   emit('widget:clone', oldWidgetId, {
     type: 'relative_grid',
-    position: layoutConstant.initial_position,
+    position: moveToDashboardBounds(
+      offsetInitialPosition(widgetPosition),
+      layoutConstant.initial_size,
+      dashboardState.dimensions
+    ),
     size: layoutConstant.initial_size
   })
 }

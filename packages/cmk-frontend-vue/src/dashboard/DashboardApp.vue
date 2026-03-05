@@ -26,6 +26,7 @@ import DashboardComponent from '@/dashboard/components/DashboardComponent.vue'
 import DashboardFilterSettings from '@/dashboard/components/DashboardFilterSettings/DashboardFilterSettings.vue'
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
+import { offsetInitialPosition } from '@/dashboard/components/RelativeGrid/utils'
 import { createWidgetLayout } from '@/dashboard/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import AddWidgetPage from '@/dashboard/components/WidgetWorkflow/StarterPage/AddWidgetPage.vue'
@@ -331,15 +332,14 @@ function addWidget(
     )
   } else if (activeDashboard.content.layout.type === 'relative_grid') {
     const widgetConstants = dashboardsManager.constants.value!.widgets[content.type]!
-    // Add a static vertical offset to reduce the chance of placing the new widget in a way where it covers existing
-    // widgets
-    const yOffset = Object.keys(dashboardWidgets.widgetCores.value).length > 0 ? 5 : 0
     layout = {
       type: 'relative_grid',
-      position: {
-        x: widgetConstants.layout.relative.initial_position.x,
-        y: widgetConstants.layout.relative.initial_position.y + yOffset
-      },
+      // Add a static vertical offset to reduce the chance of placing
+      // the new widget in a way where it covers existing widgets
+      position: offsetInitialPosition(widgetConstants.layout.relative.initial_position, {
+        horizontal: false,
+        vertical: Object.keys(dashboardWidgets.widgetCores.value).length > 0
+      }),
       size: widgetConstants.layout.relative.initial_size
     }
   } else {

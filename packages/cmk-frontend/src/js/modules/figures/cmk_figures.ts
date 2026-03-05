@@ -188,6 +188,7 @@ export abstract class FigureBase<
       .catch(() => {
         this._show_error_info('Error fetching data', 'error')
         this.remove_loading_image()
+        this.scheduler.report_failure()
       })
   }
 
@@ -202,8 +203,10 @@ export abstract class FigureBase<
     if (api_response.result_code != 0) {
       this._show_error_info(String(api_response.result), api_response.severity)
       this.remove_loading_image()
+      this.scheduler.report_failure()
       return
     }
+    this.scheduler.report_success()
     this.clear_error_info()
     this.process_data(api_response.result.figure_response)
     this._fetch_data_latency = +(new Date().getDate() - this._fetch_start) / 1000

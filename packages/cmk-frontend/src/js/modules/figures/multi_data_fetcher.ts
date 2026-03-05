@@ -16,12 +16,16 @@ import { json } from 'd3'
 import type { CMKAjaxReponse } from '@/modules/types'
 import { is_window_active } from '@/modules/utils'
 
+const BACKOFF_BASE_SECONDS = 10
+const BACKOFF_MAX_SECONDS = 120
+
 export class Scheduler {
   _scheduled_function: () => void
   _update_interval: number
   _enabled: boolean
   _last_update: number
   _suspend_updates_until: number
+  _consecutive_failures: number
 
   constructor(scheduled_function: () => void, update_interval: number) {
     this._scheduled_function = scheduled_function
@@ -29,6 +33,7 @@ export class Scheduler {
     this._enabled = false
     this._last_update = 0
     this._suspend_updates_until = 0
+    this._consecutive_failures = 0
     setInterval(() => this._schedule(), 1000)
   }
 
@@ -59,6 +64,20 @@ export class Scheduler {
       const now = Math.floor(new Date().getTime() / 1000)
       this._last_update = now
     }
+  }
+
+  report_failure() {
+    const backoff = Math.min(
+      BACKOFF_BASE_SECONDS * Math.pow(2, this._consecutive_failures),
+      BACKOFF_MAX_SECONDS
+    )
+    this._consecutive_failures++
+    this.suspend_for(this._update_interval + backoff)
+  }
+
+  report_success() {
+    this._consecutive_failures = 0
+    this._suspend_updates_until = 0
   }
 
   force_update() {
@@ -142,6 +161,13 @@ export class MultiDataFetcher {
     }
   }
 
+  _mark_operation_done(post_url: string, post_body: string) {
+    const operation = this._fetch_operations[post_url]?.[post_body]
+    if (!operation) return
+    operation.last_update = Math.floor(new Date().getTime() / 1000)
+    operation.fetch_in_progress = false
+  }
+
   _schedule_operations() {
     if (!is_window_active()) return
     for (const url_id in this._fetch_operations) {
@@ -173,13 +199,17 @@ export class MultiDataFetcher {
       headers: {
         'Content-type': 'application/x-www-form-urlencoded'
       }
-    }).then((response) => {
-      this._fetch_callback(
-        post_url,
-        post_body,
-        response as CMKAjaxReponse<{ figure_response: any }>
-      )
     })
+      .then((response) => {
+        this._fetch_callback(
+          post_url,
+          post_body,
+          response as CMKAjaxReponse<{ figure_response: any }>
+        )
+      })
+      .catch(() => {
+        this._mark_operation_done(post_url, post_body)
+      })
   }
 
   _fetch_callback(
@@ -190,16 +220,7 @@ export class MultiDataFetcher {
     const response = api_response.result
     const data = response.figure_response
 
-    const now = Math.floor(new Date().getTime() / 1000)
-
-    if (
-      this._fetch_operations[post_url] == undefined ||
-      this._fetch_operations[post_url][post_body] == undefined
-    )
-      return
-
-    this._fetch_operations[post_url][post_body].last_update = now
-    this._fetch_operations[post_url][post_body].fetch_in_progress = false
+    this._mark_operation_done(post_url, post_body)
 
     // Inform subscribers
     this._fetch_hooks[post_url][post_body].forEach((subscriber_func: (data: any) => void) => {

@@ -68,13 +68,19 @@ const handleRefreshData = (_handlerData: null, body: string) => {
     cmkToolkit.utils.execute_javascript_by_object(contentDiv.value)
   }
   isLoading.value = false
+  timer.reportSuccess()
+}
+
+const handleRefreshError = () => {
+  timer.reportFailure()
 }
 
 const updateGraph = () => {
   cmkToolkit.ajax.call_ajax(dataEndpointUrl.value, {
     post_data: new URLSearchParams({ ...httpVars.value, ...sizeVars.value }).toString(),
     method: 'POST',
-    response_handler: handleRefreshData
+    response_handler: handleRefreshData,
+    error_handler: handleRefreshError
   })
 }
 const debouncedUpdateGraph = useDebounceFn(updateGraph, 300)

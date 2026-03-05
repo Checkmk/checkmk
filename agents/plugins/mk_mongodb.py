@@ -39,7 +39,7 @@ from urllib.parse import quote_plus
 
 try:
     from collections.abc import Iterable  # noqa: F401
-    from typing import Any  # noqa: F401
+    from typing import Any, DefaultDict  # noqa: F401
 except ImportError:
     pass
 
@@ -296,7 +296,13 @@ def section_cluster(client, databases):
         databases, chunks_dict, shards_dict, collections_dict, balancer_dict, chunk_size_info
     )
 
-    sys.stdout.write("%s\n" % json.dumps(all_informations_dict, separators=(",", ":")))
+    sys.stdout.write(
+        "%s\n"
+        % json.dumps(
+            json.loads(dumps(all_informations_dict)),
+            separators=(",", ":"),
+        )
+    )
 
 
 def _get_balancer_info(client):
@@ -486,7 +492,7 @@ def _get_shards_information(client):
     return shard_dict
 
 
-def _count_chunks_per_shard(client, databases):
+def _count_chunks_per_shard(client, databases):  # pylint: disable=too-many-branches
     """
     count all chunks and jumbo chunks per shards
     :param client: mongodb client
@@ -521,32 +527,70 @@ def _count_chunks_per_shard(client, databases):
                     )
                 chunks_dict[database_name][collection_name][shard_name]["numberOfJumbos"] = 0
 
-    chunks = client.config.chunks
-    chunks_list = chunks.find({}, set(["ns", "shard", "jumbo"]))
-    database_set = set()
-    for chunk in chunks_list:
-        # get database, collection and shard names
-        shard_name = chunk.get("shard", None)
-        database_name, collection_name = _split_namespace(chunk.get("ns"))
+    mongodb_version = client.config.command({"buildInfo": 1})["version"]
 
-        # if there are no chunk information for this database, continue
-        if database_name not in chunks_dict:
-            continue
+    if int(mongodb_version.split(".", 1)[0]) <= 4:
+        chunks = client.config.chunks
+        chunks_list = chunks.find({}, set(["ns", "shard", "jumbo"]))
+        database_set = set()
+        for chunk in chunks_list:
+            # get database, collection and shard names
+            shard_name = chunk.get("shard", None)
+            database_name, collection_name = _split_namespace(chunk.get("ns"))
 
-        # for later user
-        database_set.add(database_name)
+            # if there are no chunk information for this database, continue
+            if database_name not in chunks_dict:
+                continue
 
-        # count number of chunks per shard
-        if chunks_dict:
-            chunks_dict.get(database_name).get(collection_name).get(shard_name)[
-                "numberOfChunks"
-            ] += 1
+            # for later user
+            database_set.add(database_name)
 
-        # count number of jumbo chunks per shard
-        if "jumbo" in chunk:
-            chunks_dict.get(database_name).get(collection_name).get(shard_name)[
-                "numberOfJumbos"
-            ] += 1
+            # count number of chunks per shard
+            if chunks_dict:
+                chunks_dict.get(database_name).get(collection_name).get(shard_name)[
+                    "numberOfChunks"
+                ] += 1
+
+            # count number of jumbo chunks per shard
+            if "jumbo" in chunk:
+                chunks_dict.get(database_name).get(collection_name).get(shard_name)[
+                    "numberOfJumbos"
+                ] += 1
+
+    else:
+        # this got a bit more complicate with mongodb 5:
+        # the information we need is divided into two collections: "collections" and "chunks"
+        # "collections" is a pointer from human readable ids to an uuid
+        # "chunks" maps those uuids to actual chunks of the cluster
+        # https://www.mongodb.com/docs/manual/reference/config-database/#mongodb-data-config.chunks
+        # https://www.mongodb.com/docs/manual/reference/config-database/#mongodb-data-config.collections
+        jumbo_count_by_uuid = defaultdict(dict)  # type: DefaultDict[str, dict[str, int]]
+        chunk_count_by_uuid = defaultdict(dict)  # type: DefaultDict[str, dict[str, int]]
+        count_uuids = {
+            "$group": {"_id": {"uuid": "$uuid", "shard": "$shard"}, "count": {"$sum": 1}}
+        }
+
+        for aggregated in client.config.chunks.aggregate([count_uuids]):
+            uuid = aggregated["_id"]["uuid"]
+            shard = aggregated["_id"]["shard"]
+            chunk_count_by_uuid[uuid][shard] = aggregated["count"]
+
+        for aggregated in client.config.chunks.aggregate(
+            [{"$match": {"jumbo": {"$exists": True}}}, count_uuids]
+        ):
+            uuid = aggregated["_id"]["uuid"]
+            shard = aggregated["_id"]["shard"]
+            jumbo_count_by_uuid[uuid][shard] = aggregated["count"]
+
+        for collection in client.config.collections.find({}, {"_id", "uuid"}):
+            uuid = collection["uuid"]
+            database_name, collection_name = _split_namespace(collection["_id"])
+
+            for shard_name, count in chunk_count_by_uuid[uuid].items():
+                chunks_dict[database_name][collection_name][shard_name]["numberOfChunks"] = count
+
+            for shard_name, count in jumbo_count_by_uuid[uuid].items():
+                chunks_dict[database_name][collection_name][shard_name]["numberOfJumbos"] = count
 
     return chunks_dict
 

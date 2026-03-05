@@ -10,6 +10,7 @@ import { computed, onMounted, ref } from 'vue'
 import { Api } from '@/lib/api-client'
 import { CmkFetchError } from '@/lib/cmkFetch'
 import usei18n from '@/lib/i18n'
+import { untranslated } from '@/lib/i18n/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
@@ -51,7 +52,34 @@ const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
 const activateChangesInProgress = ref<boolean>(false)
 const alreadyMadeAjaxCall = ref<boolean>(false)
-const activationError = ref<boolean>(false)
+const defaultActivationError = {
+  title: _t('Activation of changes failed'),
+  detail: _t('Open the full activation page for more details.')
+}
+const activationError = ref<{
+  title: ReturnType<typeof _t>
+  detail: ReturnType<typeof _t>
+} | null>(null)
+
+function getActivationErrorFromFetchError(error: CmkFetchError): {
+  title: ReturnType<typeof _t>
+  detail: ReturnType<typeof _t>
+} {
+  const splitToken = ': '
+  const splitIndex = error.message.indexOf(splitToken)
+  if (splitIndex > 0) {
+    const title = error.message.slice(0, splitIndex).trim()
+    const detail = error.message.slice(splitIndex + splitToken.length).trim()
+    if (title && detail) {
+      return {
+        title: untranslated(title),
+        detail: untranslated(detail)
+      }
+    }
+  }
+
+  return defaultActivationError
+}
 
 const sitesAndChanges = ref<SitesAndChanges>({
   sites: [],
@@ -164,10 +192,20 @@ async function activateAllChanges() {
     activationPollStartTime.value = Date.now()
     void pollActivationStatusUntilComplete(activateChangesResponse.id)
     return
-  } catch {
+  } catch (error) {
+    if (error instanceof CmkFetchError) {
+      const cmkError = error as CmkFetchError
+      const statusCode = cmkError.getStatusCode()
+
+      if ([401, 403, 409, 422, 423, 503].includes(statusCode)) {
+        activationError.value = getActivationErrorFromFetchError(cmkError)
+        activateChangesInProgress.value = false
+        return
+      }
+    }
     await fetchPendingChangesAjax()
     activateChangesInProgress.value = false
-    activationError.value = true
+    activationError.value = defaultActivationError
   }
 }
 
@@ -217,7 +255,7 @@ async function checkIfMenuActive(): Promise<void> {
   if (cmk.popup_menu.is_open('main_menu_changes')) {
     if (!alreadyMadeAjaxCall.value) {
       recentlyActivatedSites.value = []
-      activationError.value = false
+      activationError.value = null
       await fetchPendingChangesAjax()
       alreadyMadeAjaxCall.value = true
     }
@@ -354,19 +392,14 @@ onMounted(async () => {
         {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
       </CmkAlertBox>
 
-      <CmkDialog
+      <CmkAlertBox
         v-if="activationError"
-        :title="_t('Activation of changes failed')"
-        :message="_t(`Open the full activation page for more details.`)"
-        :buttons="[
-          {
-            title: _t('Open full view'),
-            variant: 'danger',
-            onclick: () => openActivateChangesPage()
-          }
-        ]"
         variant="error"
-      />
+        class="cmk-alert-box"
+        :heading="activationError.title"
+      >
+        {{ activationError.detail }}
+      </CmkAlertBox>
 
       <CmkAlertBox
         v-if="sitesAndChanges.licenseMessage !== null"

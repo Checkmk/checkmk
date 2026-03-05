@@ -58,7 +58,8 @@ _OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 
 _DEVICE_OIDS = (
     *CISCO_WLC_OIDS,
-    # Not sure if cisco_wlc_clients also supports these oids
+    # If you add a line here, you probably also want to add it to
+    # snmp_section_cisco_wlc_9800_clients in cisco_wlc_clients.py, too.
     ".1.3.6.1.4.1.9.1.2171",
     ".1.3.6.1.4.1.9.1.2391",
     ".1.3.6.1.4.1.9.1.2530",  # cisco WLC 9800

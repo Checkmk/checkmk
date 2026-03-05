@@ -62,11 +62,14 @@ snmp_section_cisco_wlc_9800_clients = SNMPSection(
     name="cisco_wlc_9800_clients",
     parsed_section_name="wlc_clients",
     detect=any_of(
+        # If you add a line here, you probably also want to add it to
+        # _DEVICE_OIDS in cisco_wlc.py
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2391"),
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2530"),
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2669"),
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2860"),
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2861"),
+        equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.3323"),
     ),
     parse_function=parse_cisco_wlc_9800_clients,
     fetch=[

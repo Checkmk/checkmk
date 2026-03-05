@@ -6,6 +6,7 @@
 oneTimeSetUp() {
     # Source the script under test
     set +euo pipefail
+    # shellcheck disable=SC1091
     MK_SOURCE_ONLY="true" source "${UNIT_SH_REPO_PATH}/omd/non-free/relay/install_relay.sh"
     set -euo pipefail
 }
@@ -17,15 +18,20 @@ setUp() {
 
     # Create temporary directory for test files
     TEST_DIR=$(mktemp -d)
-    export XDG_CONFIG_HOME="${TEST_DIR}/.config"
-    export XDG_DATA_HOME="${TEST_DIR}/.local/share"
-    export HOME="${TEST_DIR}"
-    export USER="testuser"
+    export CHECKMK_RELAY_DATA_DIR="${TEST_DIR}/opt/checkmk_relay"
+    export CHECKMK_RELAY_BIN_DIR="${TEST_DIR}/usr/local/bin"
+    export CHECKMK_RELAY_SYSTEMD_DIR="${TEST_DIR}/etc/systemd/system"
+    export CHECKMK_RELAY_QUADLET_DIR="${TEST_DIR}/etc/containers/systemd"
 
     # Create a file to track systemctl calls
     SYSTEMCTL_CALLS_FILE="${TEST_DIR}/systemctl_calls.log"
     export SYSTEMCTL_CALLS_FILE
     touch "$SYSTEMCTL_CALLS_FILE"
+
+    # System mode requires root
+    # shellcheck disable=SC2317
+    get_euid() { echo 0; }
+    export -f get_euid
 }
 
 tearDown() {
@@ -71,11 +77,11 @@ test_systemctl_daemon_reload_failure() {
     assertTrue "Error message should mention systemctl daemon-reload failed" $?
 
     # Assert that systemctl daemon-reload was called
-    grep -q "systemctl --user daemon-reload" "$SYSTEMCTL_CALLS_FILE"
+    grep -q "systemctl daemon-reload" "$SYSTEMCTL_CALLS_FILE"
     assertTrue "systemctl daemon-reload should have been called" $?
 
     # Assert that subsequent systemctl enable commands were NOT called
-    grep -q "systemctl --user enable" "$SYSTEMCTL_CALLS_FILE" && fail="true" || fail="false"
+    grep -q "systemctl enable" "$SYSTEMCTL_CALLS_FILE" && fail="true" || fail="false"
     assertEquals "systemctl enable should not have been called" "false" "$fail"
 }
 
@@ -115,15 +121,15 @@ test_systemctl_enable_path_failure() {
     assertTrue "Error message should mention systemctl enable path unit failed" $?
 
     # Assert that systemctl daemon-reload was called
-    grep -q "systemctl --user daemon-reload" "$SYSTEMCTL_CALLS_FILE"
+    grep -q "systemctl daemon-reload" "$SYSTEMCTL_CALLS_FILE"
     assertTrue "systemctl daemon-reload should have been called" $?
 
     # Assert that systemctl enable path was called
-    grep -q "systemctl --user enable --now checkmk_relay-update-manager.path" "$SYSTEMCTL_CALLS_FILE"
+    grep -q "systemctl enable --now checkmk_relay-update-manager.path" "$SYSTEMCTL_CALLS_FILE"
     assertTrue "systemctl enable path should have been called" $?
 
     # Assert that subsequent systemctl start command was NOT called
-    grep -q "systemctl --user start checkmk_relay.service" "$SYSTEMCTL_CALLS_FILE" && fail="true" || fail="false"
+    grep -q "systemctl start checkmk_relay.service" "$SYSTEMCTL_CALLS_FILE" && fail="true" || fail="false"
     assertEquals "systemctl start relay service should not have been called" "false" "$fail"
 }
 
@@ -163,15 +169,15 @@ test_systemctl_start_relay_service_failure() {
     assertTrue "Error message should mention systemctl start relay service failed" $?
 
     # Assert that systemctl daemon-reload was called
-    grep -q "systemctl --user daemon-reload" "$SYSTEMCTL_CALLS_FILE"
+    grep -q "systemctl daemon-reload" "$SYSTEMCTL_CALLS_FILE"
     assertTrue "systemctl daemon-reload should have been called" $?
 
     # Assert that systemctl enable path was called
-    grep -q "systemctl --user enable --now checkmk_relay-update-manager.path" "$SYSTEMCTL_CALLS_FILE"
+    grep -q "systemctl enable --now checkmk_relay-update-manager.path" "$SYSTEMCTL_CALLS_FILE"
     assertTrue "systemctl enable path should have been called" $?
 
     # Assert that systemctl start relay service was called
-    grep -q "systemctl --user start checkmk_relay.service" "$SYSTEMCTL_CALLS_FILE"
+    grep -q "systemctl start checkmk_relay.service" "$SYSTEMCTL_CALLS_FILE"
     assertTrue "systemctl start relay service should have been called" $?
 }
 

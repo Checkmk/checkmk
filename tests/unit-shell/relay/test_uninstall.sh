@@ -21,15 +21,20 @@ setUp() {
 
     # Create temporary directory for test files
     TEST_DIR=$(mktemp -d)
-    export XDG_CONFIG_HOME="${TEST_DIR}/.config"
-    export XDG_DATA_HOME="${TEST_DIR}/.local/share"
-    export HOME="${TEST_DIR}"
-    export USER="testuser"
+    export CHECKMK_RELAY_DATA_DIR="${TEST_DIR}/opt/checkmk_relay"
+    export CHECKMK_RELAY_BIN_DIR="${TEST_DIR}/usr/local/bin"
+    export CHECKMK_RELAY_SYSTEMD_DIR="${TEST_DIR}/etc/systemd/system"
+    export CHECKMK_RELAY_QUADLET_DIR="${TEST_DIR}/etc/containers/systemd"
 
     # Track calls across subshells
     MOCK_CALLS_FILE="${TEST_DIR}/mock_calls.log"
     export MOCK_CALLS_FILE
     touch "$MOCK_CALLS_FILE"
+
+    # System mode requires root for uninstall
+    # shellcheck disable=SC2317
+    get_euid() { echo 0; }
+    export -f get_euid
 
     # Suppress logging output
     # shellcheck disable=SC2317
@@ -101,9 +106,9 @@ test_uninstall_stops_services() {
 
     local found_relay=false found_path=false found_service=false
     for call in "${MOCK_CALLS[@]}"; do
-        [[ "$call" == "systemctl --user stop checkmk_relay.service" ]] && found_relay=true
-        [[ "$call" == "systemctl --user stop checkmk_relay-update-manager.path" ]] && found_path=true
-        [[ "$call" == "systemctl --user stop checkmk_relay-update-manager.service" ]] && found_service=true
+        [[ "$call" == "systemctl stop checkmk_relay.service" ]] && found_relay=true
+        [[ "$call" == "systemctl stop checkmk_relay-update-manager.path" ]] && found_path=true
+        [[ "$call" == "systemctl stop checkmk_relay-update-manager.service" ]] && found_service=true
     done
 
     assertTrue "Should stop checkmk_relay.service" "$found_relay"
@@ -131,8 +136,8 @@ test_uninstall_disables_services() {
 
     local found_path=false found_service=false
     for call in "${MOCK_CALLS[@]}"; do
-        [[ "$call" == "systemctl --user disable checkmk_relay-update-manager.path" ]] && found_path=true
-        [[ "$call" == "systemctl --user disable checkmk_relay-update-manager.service" ]] && found_service=true
+        [[ "$call" == "systemctl disable checkmk_relay-update-manager.path" ]] && found_path=true
+        [[ "$call" == "systemctl disable checkmk_relay-update-manager.service" ]] && found_service=true
     done
 
     assertTrue "Should disable checkmk_relay-update-manager.path" "$found_path"
@@ -228,10 +233,10 @@ test_uninstall_reloads_systemd() {
 
     local found_reload=false
     for call in "${MOCK_CALLS[@]}"; do
-        [[ "$call" == "systemctl --user daemon-reload" ]] && found_reload=true
+        [[ "$call" == "systemctl daemon-reload" ]] && found_reload=true
     done
 
-    assertTrue "Should call systemctl --user daemon-reload" "$found_reload"
+    assertTrue "Should call systemctl daemon-reload" "$found_reload"
 }
 
 # =============================================================================
@@ -355,18 +360,18 @@ test_uninstall_full_call_order() {
     # Expected calls in order (with glob patterns for dynamic path values)
     local expected_calls=(
         "basename *"
-        "systemctl --user stop checkmk_relay.service"
-        "systemctl --user stop checkmk_relay-update-manager.path"
-        "systemctl --user stop checkmk_relay-update-manager.service"
-        "systemctl --user disable checkmk_relay.service"
-        "systemctl --user disable checkmk_relay-update-manager.path"
-        "systemctl --user disable checkmk_relay-update-manager.service"
+        "systemctl stop checkmk_relay.service"
+        "systemctl stop checkmk_relay-update-manager.path"
+        "systemctl stop checkmk_relay-update-manager.service"
+        "systemctl disable checkmk_relay.service"
+        "systemctl disable checkmk_relay-update-manager.path"
+        "systemctl disable checkmk_relay-update-manager.service"
         "rm -f *checkmk_relay-update-manager.sh"
         "rm -f *checkmk_relay.container"
         "rm -f *checkmk_relay-update-manager.path"
         "rm -f *checkmk_relay-update-manager.service"
         "rm -rf *checkmk_relay"
-        "systemctl --user daemon-reload"
+        "systemctl daemon-reload"
         "podman volume rm relay"
     )
 

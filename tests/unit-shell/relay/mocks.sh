@@ -121,6 +121,14 @@ chmod() {
 }
 export -f chmod
 
+# Mock: chown - Change file ownership (no-op in tests; requires root in production)
+# shellcheck disable=SC2317
+chown() {
+    _record_call "chown $*"
+    return 0
+}
+export -f chown
+
 # Mock: cat - Write files (usually via heredocs)
 # shellcheck disable=SC2317
 cat() {
@@ -138,10 +146,15 @@ echo() {
 export -f echo
 
 # Mock: date - Format timestamps
+# For +%s / +%s.%N formats, delegate to the real date so shunit2 gets a valid
+# Unix timestamp for its internal timing calculations (passed to bc).
 # shellcheck disable=SC2317
 date() {
     _record_call "date $*"
-    builtin echo "2025-01-01 12:00:00"
+    case "$*" in
+        *+%s*) /bin/date "$@" ;;
+        *) builtin echo "2025-01-01 12:00:00" ;;
+    esac
 }
 export -f date
 
@@ -182,7 +195,8 @@ get_euid() {
 export -f get_euid
 
 # Mock: getent - Get entries from Name Service Switch libraries
-# Used by is_loopback to resolve hostnames
+# Used by is_loopback to resolve hostnames and by check_uid_gid_conflict to
+# look up UID/GID 100000.
 # Note: Not recorded to avoid non-deterministic ordering in tests
 # shellcheck disable=SC2317
 getent() {
@@ -214,8 +228,11 @@ getent() {
                 builtin echo "192.168.1.1     RAW"
                 ;;
         esac
+        return 0
     fi
-    return 0
+    # Default: passwd/group lookups for UID/GID 100000 return not-found (1)
+    # so check_uid_gid_conflict is a no-op unless overridden in a specific test.
+    return 1
 }
 export -f getent
 

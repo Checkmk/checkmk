@@ -6,6 +6,7 @@
 oneTimeSetUp() {
     # Source the script under test
     set +euo pipefail
+    # shellcheck disable=SC1091
     MK_SOURCE_ONLY="true" source "${UNIT_SH_REPO_PATH}/omd/non-free/relay/install_relay.sh"
     set -euo pipefail
 }
@@ -17,10 +18,15 @@ setUp() {
 
     # Create temporary directory for test files
     TEST_DIR=$(mktemp -d)
-    export XDG_CONFIG_HOME="${TEST_DIR}/.config"
-    export XDG_DATA_HOME="${TEST_DIR}/.local/share"
-    export HOME="${TEST_DIR}"
-    export USER="testuser"
+    export CHECKMK_RELAY_DATA_DIR="${TEST_DIR}/opt/checkmk_relay"
+    export CHECKMK_RELAY_BIN_DIR="${TEST_DIR}/usr/local/bin"
+    export CHECKMK_RELAY_SYSTEMD_DIR="${TEST_DIR}/etc/systemd/system"
+    export CHECKMK_RELAY_QUADLET_DIR="${TEST_DIR}/etc/containers/systemd"
+
+    # System mode requires root
+    # shellcheck disable=SC2317
+    get_euid() { echo 0; }
+    export -f get_euid
 
     # Create a file to track podman calls
     PODMAN_CALLS_FILE="${TEST_DIR}/podman_calls.log"

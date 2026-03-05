@@ -6,6 +6,7 @@
 oneTimeSetUp() {
     # Source the script under test
     set +euo pipefail
+    # shellcheck disable=SC1091
     MK_SOURCE_ONLY="true" source "${UNIT_SH_REPO_PATH}/omd/non-free/relay/install_relay.sh"
     set -euo pipefail
 }
@@ -20,15 +21,14 @@ setUp() {
 
     # Create temporary directory for test files
     TEST_DIR=$(mktemp -d)
-    export XDG_CONFIG_HOME="${TEST_DIR}/.config"
-    export XDG_DATA_HOME="${TEST_DIR}/.local/share"
-    export HOME="${TEST_DIR}"
-    export USER="testuser"
+    export CHECKMK_RELAY_DATA_DIR="${TEST_DIR}/opt/checkmk_relay"
+    export CHECKMK_RELAY_BIN_DIR="${TEST_DIR}/usr/local/bin"
+    export CHECKMK_RELAY_SYSTEMD_DIR="${TEST_DIR}/etc/systemd/system"
+    export CHECKMK_RELAY_QUADLET_DIR="${TEST_DIR}/etc/containers/systemd"
 
     # Create file to track calls across subshells
     MOCK_CALLS_FILE="${TEST_DIR}/mock_calls.log"
     export MOCK_CALLS_FILE
-    # Make sure parent dir exists (it should since TEST_DIR was just created)
     touch "$MOCK_CALLS_FILE"
 
     # Mock logging functions to suppress output
@@ -48,10 +48,13 @@ tearDown() {
 }
 
 test_main_successful_call_order() {
-    # Run main in a subshell
+    # Run main in a subshell as root
     set +e
     (
         set -euo pipefail
+        # shellcheck disable=SC2317  # called indirectly via export -f
+        get_euid() { echo 0; }
+        export -f get_euid
         main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
@@ -81,29 +84,29 @@ test_main_successful_call_order() {
         "basename *" # Script name varies
         "command -v podman"
         "command -v systemctl"
-        "loginctl enable-linger *" # Username varies
-        "mkdir -p */checkmk_relay" # Temp dir varies
-        "mkdir -p */.local/bin"
-        "mkdir -p */.config/systemd/user"
-        "mkdir -p */.config/containers/systemd"
-        "chmod 644 */checkmk_relay/update-trigger.conf"
+        "mkdir -p */opt/checkmk_relay" # Temp dir varies
+        "mkdir -p */usr/local/bin"
+        "mkdir -p */etc/systemd/system"
+        "mkdir -p */etc/containers/systemd"
+        "chown 99000:99000 */opt/checkmk_relay/update-trigger.conf"
+        "chmod 644 */opt/checkmk_relay/update-trigger.conf"
         "podman volume exists relay"
         "podman volume create relay"
         "podman pull docker.io/checkmk/check-mk-relay:1.0.0"
         "podman tag docker.io/checkmk/check-mk-relay:1.0.0 localhost/checkmk_relay:checkmk_sync"
-        "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync test -f /opt/check-mk-relay/workdir/site_config.json"
-        "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --token testtoken"
+        "podman run --rm --uidmap=0:99000:65536 --gidmap=0:99000:65536 -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync test -f /opt/check-mk-relay/workdir/site_config.json"
+        "podman run --rm --uidmap=0:99000:65536 --gidmap=0:99000:65536 --network=bridge -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --token testtoken"
         "cat *" # Heredoc writes, path varies
         "chmod 755 *checkmk_relay-update-manager.sh"
-        "cat *" # More heredoc writes
-        "cat *"
-        "cat *"
-        "systemctl --user daemon-reload"
+        "cat *" # write_container_unit
+        "cat *" # write_path_unit
+        "cat *" # write_update_service_unit
+        "systemctl daemon-reload"
         "sleep 2"
-        "systemctl --user enable --now checkmk_relay-update-manager.path"
-        "systemctl --user start checkmk_relay.service"
-        "systemctl --user status checkmk_relay-update-manager.path --no-pager"
-        "systemctl --user status checkmk_relay.service --no-pager"
+        "systemctl enable --now checkmk_relay-update-manager.path"
+        "systemctl start checkmk_relay.service"
+        "systemctl status checkmk_relay-update-manager.path --no-pager"
+        "systemctl status checkmk_relay.service --no-pager"
     )
 
     # Verify we have the expected number of calls

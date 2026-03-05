@@ -6,6 +6,7 @@
 oneTimeSetUp() {
     # Source the script under test
     set +euo pipefail
+    # shellcheck disable=SC1091
     MK_SOURCE_ONLY="true" source "${UNIT_SH_REPO_PATH}/omd/non-free/relay/install_relay.sh"
     set -euo pipefail
 }
@@ -17,10 +18,15 @@ setUp() {
 
     # Create temporary directory for test files
     TEST_DIR=$(mktemp -d)
-    export XDG_CONFIG_HOME="${TEST_DIR}/.config"
-    export XDG_DATA_HOME="${TEST_DIR}/.local/share"
-    export HOME="${TEST_DIR}"
-    export USER="testuser"
+    export CHECKMK_RELAY_DATA_DIR="${TEST_DIR}/opt/checkmk_relay"
+    export CHECKMK_RELAY_BIN_DIR="${TEST_DIR}/usr/local/bin"
+    export CHECKMK_RELAY_SYSTEMD_DIR="${TEST_DIR}/etc/systemd/system"
+    export CHECKMK_RELAY_QUADLET_DIR="${TEST_DIR}/etc/containers/systemd"
+
+    # System mode requires root — mock as root by default
+    # shellcheck disable=SC2317
+    get_euid() { echo 0; }
+    export -f get_euid
 }
 
 tearDown() {
@@ -101,12 +107,12 @@ test_missing_podman() {
     assertTrue "Error message should mention podman not installed" $?
 }
 
-# Test: script runs as root
-# If script is run as root (EUID=0), main should fail with appropriate error message
-test_runs_as_root() {
-    # Mock get_euid to return 0 (root)
+# Test: script runs as non-root
+# System mode requires root; if run as a regular user it should fail
+test_runs_as_non_root() {
+    # Mock get_euid to return 1000 (non-root)
     # shellcheck disable=SC2317
-    get_euid() { echo 0; }
+    get_euid() { echo 1000; }
     export -f get_euid
 
     # Run main in a subshell to capture output and exit code
@@ -126,8 +132,8 @@ test_runs_as_root() {
     assertNotEquals "main should exit with error" 0 "$exit_code"
 
     # Assert that the error message contains the expected text
-    echo "$output" | grep -q "This script must run as a regular user, not root."
-    assertTrue "Error message should mention running as root" $?
+    echo "$output" | grep -q "This script must run as root."
+    assertTrue "Error message should mention running as root required" $?
 }
 
 # shellcheck disable=SC1090

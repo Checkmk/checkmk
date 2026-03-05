@@ -37,12 +37,14 @@ setUp() {
         find "${TEST_HOME}" -mindepth 1 -delete 2>/dev/null || true
     fi
 
-    # Create directory structure
-    mkdir -p "${TEST_HOME}/.local/share/checkmk_relay"
-    mkdir -p "${TEST_HOME}/.local/bin"
+    # Create directory structure mirroring the system trigger file path
+    mkdir -p "${TEST_HOME}/opt/checkmk_relay"
 
     # Set paths
-    TEST_TRIGGER_FILE="${TEST_HOME}/.local/share/checkmk_relay/update-trigger.conf"
+    # CHECKMK_RELAY_TRIGGER_FILE overrides the hardcoded system path inside the script
+    TEST_TRIGGER_FILE="${TEST_HOME}/opt/checkmk_relay/update-trigger.conf"
+    export CHECKMK_RELAY_TRIGGER_FILE="${TEST_TRIGGER_FILE}"
+
     UPDATE_MANAGER_SCRIPT="${SHUNIT_TMPDIR}/checkmk_relay-update-manager.sh"
 
     # Extract update manager script from install_relay.sh
@@ -131,8 +133,8 @@ fi
 
     # Mock systemctl with success
     create_mock_command "systemctl" '
-if [ "$1" = "--user" ] && [ "$2" = "start" ]; then
-    echo "Started $3" >&2
+if [ "$1" = "start" ]; then
+    echo "Started $2" >&2
     exit 0
 fi
 exit 0
@@ -149,7 +151,7 @@ test_UMS_UP_01_script_executes_successfully_with_valid_trigger() {
     # Create trigger file with valid version
     echo "${TEST_VERSION}" >"${TEST_TRIGGER_FILE}"
 
-    # Run update manager script
+    # Run update manager script (CHECKMK_RELAY_TRIGGER_FILE is exported in setUp)
     local exit_code=0
     bash "${UPDATE_MANAGER_SCRIPT}" >/dev/null 2>&1 || exit_code=$?
 
@@ -187,7 +189,7 @@ exit 0
         "grep -q \"podman tag ${EXPECTED_FULL_IMAGE} ${EXPECTED_LOCAL_TAG}\" '${cmd_log}'"
 
     assertTrue "systemctl start should be executed" \
-        "grep -q 'systemctl --user start podman-auto-update.service' '${cmd_log}'"
+        "grep -q 'systemctl start podman-auto-update.service' '${cmd_log}'"
 
     # Verify order: podman pull comes before podman tag
     local pull_line tag_line systemctl_line
@@ -433,7 +435,7 @@ exit 0
 test_UMS_ER_05_systemctl_failure_produces_error() {
     # Mock systemctl to fail
     create_mock_command "systemctl" '
-if [ "$1" = "--user" ] && [ "$2" = "start" ]; then
+if [ "$1" = "start" ]; then
     echo "Failed to start podman-auto-update.service: Unit not found" >&2
     exit 1
 fi

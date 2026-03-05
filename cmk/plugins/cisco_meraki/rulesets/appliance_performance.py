@@ -10,8 +10,8 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
-    Integer,
     LevelDirection,
+    Percentage,
     SimpleLevels,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
@@ -22,9 +22,9 @@ def _parameter_form() -> Dictionary:
         elements={
             "levels_upper": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Performance utilization"),
+                    title=Title("Appliance utilization"),
                     level_direction=LevelDirection.UPPER,
-                    form_spec_template=Integer(),
+                    form_spec_template=Percentage(),
                     prefill_fixed_levels=DefaultValue(value=(60, 80)),
                     help_text=Help(
                         # xgettext: no-python-format

@@ -5,18 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
-
 import CmkBadge from '@/components/CmkBadge.vue'
-import CmkIcon from '@/components/CmkIcon'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import type { Site } from '../../ChangesInterfaces'
 import SiteStatusIcons from './SiteStatusIcons.vue'
-
-const { _t } = usei18n()
 
 const statusColor = (status: string): 'success' | 'warning' | 'danger' | 'default' => {
   const mapping: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
@@ -93,26 +88,6 @@ const emit = defineEmits<{
         <div class="cmk-progress-bar-site-activation-in-progress">
           <CmkProgressbar max="unknown"></CmkProgressbar>
         </div>
-      </div>
-    </div>
-    <div
-      v-if="hideCheckbox && site.lastActivationStatus?.state === 'warning'"
-      class="cmk-div-site-activate-warning"
-    >
-      <CmkIcon variant="inline" name="validation-error" />
-      <div class="cmk-div-warning-or-error-message">
-        <span v-if="site.lastActivationStatus?.state === 'warning'">{{ _t('Warning') }}</span>
-        <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
-      </div>
-    </div>
-    <div
-      v-if="hideCheckbox && site.lastActivationStatus?.state === 'error'"
-      class="cmk-div-site-activate-error"
-    >
-      <CmkIcon variant="inline" name="alert-crit" />
-      <div class="cmk-div-warning-or-error-message">
-        <span v-if="site.lastActivationStatus.state === 'error'">{{ _t('Error') }}</span>
-        <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>
       </div>
     </div>
   </CmkZebra>

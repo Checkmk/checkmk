@@ -118,7 +118,11 @@ pkg_tar(
     ] + select({
         "@cmk//edition:cloud": [
             "changelog_pkg_cloud",
+            "changelog_pkg_pro",
+            "changelog_pkg_ultimate",
             "werks_pkg_cloud",
+            "werks_pkg_pro",
+            "werks_pkg_ultimate",
         ],
         "@cmk//edition:community": [],
         "@cmk//edition:pro": [
@@ -126,11 +130,17 @@ pkg_tar(
             "werks_pkg_pro",
         ],
         "@cmk//edition:ultimate": [
+            "changelog_pkg_pro",
             "changelog_pkg_ultimate",
+            "werks_pkg_pro",
             "werks_pkg_ultimate",
         ],
         "@cmk//edition:ultimatemt": [
+            "changelog_pkg_pro",
+            "changelog_pkg_ultimate",
             "changelog_pkg_ultimatemt",
+            "werks_pkg_pro",
+            "werks_pkg_ultimate",
             "werks_pkg_ultimatemt",
         ],
     }),

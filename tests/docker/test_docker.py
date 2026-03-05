@@ -23,7 +23,7 @@ from tests.testlib.docker import (
     package_name,
     prepare_package,
 )
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.ccc.version import Edition, Version, versions_compatible
 
@@ -327,7 +327,10 @@ def test_container_agent(checkmk: CheckmkApp) -> None:
 
 def test_update(client: docker.DockerClient) -> None:
     base_version = CMKVersion(
-        version_spec="2.3.0p26", edition=Edition.CRE, branch="2.3.0", branch_version="2.3.0"
+        version_spec=get_min_version().version,
+        edition=Edition.CRE,
+        branch="2.3.0",
+        branch_version="2.3.0",
     )
     update_version = version_from_env()
     container_name = f"checkmk-{update_version.branch}_{randint(10000000, 99999999)}"

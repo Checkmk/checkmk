@@ -86,7 +86,7 @@ def check_appliance_vpns(item: str, params: CheckParams, section: Section) -> Ch
     match peer:
         case MerakiVpnPeer():
             yield Result(state=State.OK, summary="Type: Meraki VPN peer")
-            yield Result(state=State.OK, notice=f"Network ID: {peer.network_id}")
+            yield Result(state=State.OK, notice=f"Network name: {peer.network_name}")
         case ThirdPartyVpnPeer():
             yield Result(state=State.OK, summary="Type: Third party VPN peer")
             yield Result(state=State.OK, notice=f"Public IP: {peer.public_ip}")

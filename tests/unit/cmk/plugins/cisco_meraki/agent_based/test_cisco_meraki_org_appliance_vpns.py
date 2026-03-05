@@ -74,7 +74,7 @@ def test_check_appliance_vpns_meraki(params: CheckParams) -> None:
     expected = [
         Result(state=State.OK, summary="Reachability: reachable"),
         Result(state=State.OK, summary="Type: Meraki VPN peer"),
-        Result(state=State.OK, notice="Network ID: L_123"),
+        Result(state=State.OK, notice="Network name: main"),
     ]
 
     assert value == expected

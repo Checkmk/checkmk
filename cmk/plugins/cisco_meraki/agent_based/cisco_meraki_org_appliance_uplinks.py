@@ -120,7 +120,7 @@ def check_appliance_uplinks(item: str, params: CheckParams, section: Section) ->
 
     if (
         params["show_traffic"]
-        and uplink.status == "active"
+        and uplink.status in {"active", "ready"}
         and section.usage_by_interface
         and (usage := section.usage_by_interface.get(uplink.interface))
     ):

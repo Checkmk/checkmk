@@ -234,15 +234,16 @@ def check_aruba_psu_wattage(
         render_func=lambda x: f"{x:.2f}W",
     )
 
-    yield from check_levels_v1(
-        value=psu.wattage_curr / psu.wattage_max * 100.0,
-        levels_upper=params.get("levels_perc_upper"),
-        levels_lower=params.get("levels_perc_lower"),
-        metric_name=None,
-        label="Wattage",
-        render_func=render.percent,
-        notice_only=True,
-    )
+    if psu.wattage_max > 0:
+        yield from check_levels_v1(
+            value=psu.wattage_curr / psu.wattage_max * 100.0,
+            levels_upper=params.get("levels_perc_upper"),
+            levels_lower=params.get("levels_perc_lower"),
+            metric_name=None,
+            label="Wattage",
+            render_func=render.percent,
+            notice_only=True,
+        )
 
     yield Result(state=State.OK, summary=f"Maximum Wattage: {psu.wattage_max:.2f}W")
     yield Result(state=State.OK, notice=f"Voltage Info: {psu.voltage_info}")

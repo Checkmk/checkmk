@@ -424,6 +424,26 @@ export function reload_whole_page(url: string | null = null) {
   }
 }
 
+export function navigate_to_page(url: string) {
+  let in_iframe = false
+  try {
+    in_iframe =
+      window.parent !== window &&
+      window.parent.location.origin === window.location.origin &&
+      window.parent.location.pathname.endsWith('/index.py')
+  } catch (e) {
+    /* cross-origin, ignore */
+  }
+
+  if (in_iframe) {
+    const parent_url = new URL(window.parent.location.href)
+    parent_url.searchParams.set('start_url', url)
+    window.parent.location.assign(parent_url.toString())
+  } else {
+    window.location.assign(url)
+  }
+}
+
 export function delete_user_message(msg_id: string, btn: HTMLButtonElement) {
   call_ajax('ajax_delete_user_message.py', {
     method: 'POST',

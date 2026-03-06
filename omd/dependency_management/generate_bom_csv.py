@@ -11,7 +11,12 @@ import logging
 import sys
 from collections.abc import Iterator
 from pathlib import Path
-from typing import IO, NamedTuple
+from typing import Any, IO, NamedTuple, TypedDict
+
+
+class Bom(TypedDict):
+    components: list[dict[str, Any]]
+
 
 LINKS = {
     "0BSD": "http://landley.net/toybox/license.html",
@@ -73,7 +78,7 @@ class CsvRow(NamedTuple):
     license: str
     path: str
 
-    def to_csv_row(self) -> tuple:
+    def to_csv_row(self) -> tuple[str, str, str, str, str, str]:
         return (
             self.name,
             self.version,
@@ -116,7 +121,7 @@ def _get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _license_from_bom(component_info: dict) -> str | None:
+def _license_from_bom(component_info: dict[str, Any]) -> str | None:
     """extract the license or expression from the BOM"""
 
     if "licenses" not in component_info:
@@ -127,13 +132,13 @@ def _license_from_bom(component_info: dict) -> str | None:
         raise NotImplementedError(f"{license_info!r}")
     i = license_info[0]
     if "license" in i:
-        return i["license"]["id"]
+        return str(i["license"]["id"])
     if "expression" in i:
-        return i["expression"]
+        return str(i["expression"])
     raise NotImplementedError(f"{license_info!r}")
 
 
-def _path_from_bom(component_info: dict) -> str:
+def _path_from_bom(component_info: dict[str, Any]) -> str:
     """extract and concat paths from the bom"""
 
     paths = []
@@ -143,7 +148,7 @@ def _path_from_bom(component_info: dict) -> str:
     return "\n".join(paths)
 
 
-def _get_csv_sections(bom_info: dict) -> dict[str, list[CsvRow]]:
+def _get_csv_sections(bom_info: Bom) -> dict[str, list[CsvRow]]:
     """convert the bom_info to csv rows and add them to the correct section
 
     This aims mostly to be as close as possible/reasonable to the previous structure of the
@@ -232,7 +237,7 @@ def _get_csv_sections(bom_info: dict) -> dict[str, list[CsvRow]]:
     return csv_sections
 
 
-def _check_links(bom_info: dict) -> None:
+def _check_links(bom_info: Bom) -> None:
     """make sure all licenses in the BOM have a link in the global LINKS"""
 
     licenses: set[str] = set()

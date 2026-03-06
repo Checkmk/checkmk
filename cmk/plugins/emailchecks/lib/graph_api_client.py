@@ -22,6 +22,20 @@ class AuthorityURLs(NamedTuple):
     base: str
 
 
+class GraphApiRuntimeError(RuntimeError):
+    def __init__(self, raw_error: dict[str, object] | str) -> None:
+        match raw_error:
+            case {"code": "UnknownError"}:
+                detail = "UnknownError - This may indicate a temporary issue on Microsoft's side."
+            case {"code": code, "message": message} if message:
+                detail = f"{code} - {message}"
+            case {"code": code}:
+                detail = str(code)
+            case _:
+                detail = str(raw_error)
+        super().__init__(f"Microsoft Graph API error: {detail}")
+
+
 ONE_DAY_IN_SECONDS = 24 * 60 * 60
 
 
@@ -149,7 +163,7 @@ class GraphApiClient:
                 json_data = {}
 
         if (error := json_data.get("error")) is not None:
-            raise RuntimeError(error)
+            raise GraphApiRuntimeError(error)
 
         return json_data
 
@@ -218,7 +232,7 @@ class GraphApiClient:
         if error := token.get("error"):
             if error_description := token.get("error_description"):
                 error = f"{error}. {error_description}"
-            raise RuntimeError(error)
+            raise GraphApiRuntimeError(error)
         self._update_tokens_after_refresh(
             access_token=token["access_token"],
             refresh_token=token["refresh_token"],

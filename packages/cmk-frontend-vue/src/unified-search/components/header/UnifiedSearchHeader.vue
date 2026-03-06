@@ -128,20 +128,33 @@ const getSearchInputPlaceholder = computed(() => {
     <div class="unified-search-header__input-panel">
       <div class="unified-search-header__input-wrapper" @click="searchUtils.input.setFocus">
         <div class="unified-search-header__input-tag-root">
-          <input
-            id="unified-search-input"
-            ref="unified-search-input"
-            v-model="searchUtils.query.input.value"
-            role="search"
-            class="unified-search-header__input"
-            :aria-label="getSearchInputPlaceholder"
-            :placeholder="getSearchInputPlaceholder"
-            autocomplete="off"
-            @input="onInput"
-            @keydown.enter="onInputEnter"
-          />
-          <input type="text" class="unified-search-header__input-hide" />
-          <input type="password" class="unified-search-header__input-hide" />
+          <form>
+            <input
+              id="search-username"
+              type="text"
+              name="username"
+              autocomplete="username"
+              class="unified-search-header__input-hide"
+            />
+            <input
+              id="search-password"
+              type="password"
+              autocomplete="current-password"
+              class="unified-search-header__input-hide"
+            />
+            <input
+              id="unified-search-input"
+              ref="unified-search-input"
+              v-model="searchUtils.query.input.value"
+              role="search"
+              class="unified-search-header__input"
+              :aria-label="getSearchInputPlaceholder"
+              :placeholder="getSearchInputPlaceholder"
+              autocomplete="off"
+              @input="onInput"
+              @keydown.enter="onInputEnter"
+            />
+          </form>
           <UnifiedSearchFilters v-if="isMonitoringSearch()"></UnifiedSearchFilters>
         </div>
 

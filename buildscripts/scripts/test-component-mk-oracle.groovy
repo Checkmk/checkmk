@@ -53,7 +53,7 @@ void main() {
             ]) {
                 sh("""
                     CI_ORA2_DB_TEST="ora-rocktest.dev.checkmk.net:system:$CI_ORA2_DB_TEST_PASSWORD:1521:TEST23::TEST23:_:_:" \
-                    ORACLE_HOME=/opt/oracle/product/23ai/dbhomeFree \
+                    ORACLE_HOME=/opt/oracle23/u01/app/oracle/dbhome1 \
                     HOST_ADDRESS="$USER@$SERVER" \
                     TEST_BINARY_LOCAL_PATH=test_ora_sql_test \
                     TEST_BINARY_REMOTE_PATH=/home/rocky/test_ora_${safe_branch_name} \

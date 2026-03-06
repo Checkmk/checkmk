@@ -150,6 +150,7 @@ rust_test_suite(
         "LD_LIBRARY_PATH",
         "MK_CONFDIR",
         "MK_LIBDIR",
+        "ORACLE_HOME",
     ],
     deps = all_crate_deps() + [
         ":mk-oracle",

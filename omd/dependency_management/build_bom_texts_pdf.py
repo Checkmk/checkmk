@@ -14,6 +14,7 @@ import re
 from dataclasses import dataclass
 from hashlib import sha1
 from pathlib import Path
+from typing import Any
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle as PS
@@ -109,13 +110,13 @@ def test_license_str_to_html() -> None:
 class MyDocTemplate(SimpleDocTemplate):
     """Custom DocTemplate configured for handling of table of contents"""
 
-    def __init__(self, filename, **kw) -> None:
+    def __init__(self, filename: str, **kw: object) -> None:
         self.allowSplitting = 0
         SimpleDocTemplate.__init__(self, filename, **kw)
         template = PageTemplate("normal", [Frame(2.5 * cm, 2.5 * cm, 15 * cm, 25 * cm, id="F1")])
         self.addPageTemplates(template)
 
-    def afterFlowable(self, flowable):
+    def afterFlowable(self, flowable: Any) -> None:
         # Registers TOC entries
         if flowable.__class__.__name__ == "Paragraph":
             text = flowable.getPlainText()
@@ -146,7 +147,7 @@ def heading(text: str, link: str, sty: PS) -> Paragraph:
     return h
 
 
-def add_page_number(canvas, _doc) -> None:
+def add_page_number(canvas: Any, _doc: object) -> None:
     page_num = canvas.getPageNumber()
     if page_num < 1:
         return
@@ -240,7 +241,7 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     args = _parse_args()
 
     path_omd = Path(__file__).resolve().parent.parent

@@ -41,84 +41,32 @@ void main() {
         }
     }
 
-    dir("${WORKSPACE}/dependencyscanner") {
-        def scanner_image;
-        def sha1 = { String input ->
-            java.security.MessageDigest.getInstance("SHA-1")
-                .digest(input.bytes)
-                .encodeHex()
-                .toString()
-        };
-        def scanner_image_tag = "dependencyscanner:${sha1(env.BUILD_URL)}";
-        def relative_bom_path = "omd/bill-of-materials.json";
-        def bom_path = "${checkout_dir}/${relative_bom_path}";
-
-        try {
-            stage("Prepare Dependencyscanner") {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: 'refs/heads/master']],
-                    browser: [
-                        $class: 'GitWeb',
-                        repoUrl: 'https://review.lan.tribe29.com/git/?p=dependencyscanner.git'
-                    ],
-                    userRemoteConfigs: [
-                        [
-                            credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
-                            url: 'ssh://jenkins@review.lan.tribe29.com:29418/dependencyscanner'
-                        ]
-                    ],
-                ]);
-                scanner_image = docker.build(scanner_image_tag, "--tag ${scanner_image_tag} .");
-            }
-
-            stage('Create BOM') {
-                // Further: the BOM image does not yet have a DISTRO label...
-                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    scanner_image.inside(
-                        "${mount_reference_repo_dir}" +
-                        " -v ${checkout_dir}:${checkout_dir}" +
-                        " --ulimit nofile=1024:1024" +
-                        " --group-add=${docker_group_id}" +
-                        " -v /var/run/docker.sock:/var/run/docker.sock"
-                    ) {
-                        sh("""
-                        python3 -m dependencyscanner \
-                            --stage prod \
-                            --outfile '${bom_path}' \
-                            --research_file researched_master.yml \
-                            --license_cache license_cache_master.json \
-                            --version '${cmk_version}' \
-                            --type jsscanner --type bazel_files --type cargo --type omd --type package-lock \
-                            --type pnpm-lock --type cmk_runtime_lock --type cmk_module_bazel --type go\
-                            '${checkout_dir}'
-                        """);
-                    }
-                }
-            }
-        } finally {
-            sh("docker image rm --force ${scanner_image_tag} || true");
-        }
-
-        dir("${checkout_dir}") {
-            stage("Create bill-of-materials.csv") {
-                inside_container() {
-                    sh("""
-                        bazel build //omd/dependency_management:generate_bom_csv
-                        cp bazel-bin/omd//dependency_management/bill-of-materials.csv omd/
-                    """);
-                }
+    dir("${checkout_dir}") {
+        stage("Create bill-of-materials.csv") {
+            inside_container() {
+                sh("""
+                    bazel build //omd/dependency_management:bill_of_materials_renamed
+                    cp bazel-bin/omd/dependency_management/bill-of-materials.json omd/
+                """);
             }
         }
-
-        // remember: only one archiveArtifacts step per job allowed
-        dir("${checkout_dir}") {
-            show_duration("archiveArtifacts") {
-                archiveArtifacts(
-                    artifacts: "${relative_bom_path}, omd/bill-of-materials.csv",
-                    fingerprint: true,
-                );
+        stage("Create bill-of-materials.csv") {
+            inside_container() {
+                sh("""
+                    bazel build //omd/dependency_management:generate_bom_csv
+                    cp bazel-bin/omd/dependency_management/bill-of-materials.csv omd/
+                """);
             }
+        }
+    }
+
+    // remember: only one archiveArtifacts step per job allowed
+    dir("${checkout_dir}") {
+        show_duration("archiveArtifacts") {
+            archiveArtifacts(
+                artifacts: "omd/bill-of-materials.json, omd/bill-of-materials.csv",
+                fingerprint: true,
+            );
         }
     }
 }

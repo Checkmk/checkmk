@@ -14,7 +14,7 @@ def main() {
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
         // TODO: Rename to FAKE_AGENT_ARTIFACTS -> we're also faking the linux updaters now
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -143,7 +143,7 @@ def main() {
         },
     ];
 
-    if (!params.FAKE_WINDOWS_ARTIFACTS) {
+    if (!params.FAKE_ARTIFACTS) {
         stages += package_helper.provide_agent_binaries(
             version: version,
             edition: edition,
@@ -153,7 +153,7 @@ def main() {
         );
     }
     else {
-        smart_stage(name: 'Fake agent binaries', condition: params.FAKE_WINDOWS_ARTIFACTS) {
+        smart_stage(name: 'Fake agent binaries', condition: params.FAKE_ARTIFACTS) {
             dir("${checkout_dir}") {
                 sh("scripts/fake-artifacts");
             }

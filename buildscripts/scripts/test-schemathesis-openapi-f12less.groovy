@@ -8,7 +8,7 @@ def main() {
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
         // "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", // test base image tag (todo)
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -27,7 +27,7 @@ def main() {
     )
     def distro = params.DISTRO;
     def edition = params.EDITION;
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
 
     def make_target = "test-schemathesis-openapi-docker";
     def download_dir = "package_download";
@@ -71,7 +71,7 @@ def main() {
                 docker_tag: setup_values.docker_tag,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                fake_windows_artifacts: fake_windows_artifacts,
+                fake_artifacts: fake_artifacts,
                 safe_branch_name: setup_values.safe_branch_name,
             );
         }

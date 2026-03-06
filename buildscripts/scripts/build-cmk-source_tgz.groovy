@@ -12,7 +12,7 @@ def main() {
         ["EDITION", true],
         ["VERSION", true],
         ["DISABLE_CACHE", true],
-        ["FAKE_WINDOWS_ARTIFACTS", false],
+        ["FAKE_ARTIFACTS", false],
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -81,7 +81,7 @@ def main() {
         },
     ];
 
-    if (!params.FAKE_WINDOWS_ARTIFACTS) {
+    if (!params.FAKE_ARTIFACTS) {
         stages += package_helper.provide_agent_binaries(
             version: version,
             edition: edition,

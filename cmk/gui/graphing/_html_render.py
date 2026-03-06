@@ -120,11 +120,10 @@ class ExpandableLegendAppearance(Enum):
 # chaning of the graph rendering options won't work as expected.
 html_size_per_ex = 11.0
 min_resize_width = 50
-
-# Minimum graph canvas height (in ex units) below which a widget is too small
-# to render anything meaningful.
-min_graph_height_ex = 4
 min_resize_height = 6
+
+# Minimum canvas height below which a widget is too small to render a graph with legend.
+min_widget_height_ex = 11
 
 
 def host_service_graph_popup_cmk(
@@ -1485,7 +1484,7 @@ def host_service_graph_dashlet_cmk(
         and graph_artwork_or_errors.artwork.curves
         and not is_preview
     ):
-        if height <= min_graph_height_ex:
+        if height <= min_widget_height_ex:
             raise MKGraphWidgetTooSmallError(
                 _("Either increase the widget height or disable the graph legend.")
             )
@@ -1503,10 +1502,10 @@ def host_service_graph_dashlet_cmk(
             )
             * 1.5
         )
-        # Cap the legend so the graph always keeps at least min_graph_height_ex.
-        # When the legend exceeds the available budget, the legend container is
-        # made scrollable via max-height + overflow-y.
-        max_legend_height_ex = max(height - min_graph_height_ex, 0)
+        # Give the legend at most a third of the available height and ensure
+        # the graph keeps at least min_widget_height_ex. When the legend
+        # exceeds the budget, its container becomes scrollable.
+        max_legend_height_ex = min(height // 3, max(height - min_widget_height_ex, 0))
         legend_height_ex = min(estimated_legend_height_ex, max_legend_height_ex)
         height -= legend_height_ex
         graph_render_config.size = (width, height)

@@ -104,26 +104,26 @@ class FetchedResource(Enum):
     """
 
     # fmt: off
-    virtual_machines            = ("Microsoft.Compute/virtualMachines",            "virtualmachines",          "vm")
-    vaults                      = ("Microsoft.RecoveryServices/vaults",            "vaults",                   "rsv")
-    app_gateways                = ("Microsoft.Network/applicationGateways",        "applicationgateways",      "agw")
-    load_balancers              = ("Microsoft.Network/loadBalancers",              "loadbalancers",            "lb")
-    virtual_network_gateways    = ("Microsoft.Network/virtualNetworkGateways",     "virtualnetworkgateways",   "vgw")
-    redis                       = ("Microsoft.Cache/Redis",                        "redis",                    "redis")
-    cosmosdb                    = ("Microsoft.DocumentDB/databaseAccounts",        "databaseaccounts",         "cosmos")
+    VIRTUAL_MACHINES            = ("Microsoft.Compute/virtualMachines",            "virtualmachines",          "vm")
+    VAULTS                      = ("Microsoft.RecoveryServices/vaults",            "vaults",                   "rsv")
+    APP_GATEWAYS                = ("Microsoft.Network/applicationGateways",        "applicationgateways",      "agw")
+    LOAD_BALANCERS              = ("Microsoft.Network/loadBalancers",              "loadbalancers",            "lb")
+    VIRTUAL_NETWORK_GATEWAYS    = ("Microsoft.Network/virtualNetworkGateways",     "virtualnetworkgateways",   "vgw")
+    REDIS                       = ("Microsoft.Cache/Redis",                        "redis",                    "redis")
+    COSMOSDB                    = ("Microsoft.DocumentDB/databaseAccounts",        "databaseaccounts",         "cosmos")
     # made-up resource type for cosmosdb databases:
-    cosmosdb_database           = ("Microsoft.DocumentDB/databaseAccounts/cosmos_database", "databaseaccounts","cosmosdb")
-    firewalls                   = ("Microsoft.Network/azureFirewalls",             "azurefirewalls",           "afw")
-    mysql_flexible_servers      = ("Microsoft.DBforMySQL/flexibleServers",         "flexibleservers",          "mysql")
-    postgresql_flexible_servers = ("Microsoft.DBforPostgreSQL/flexibleServers",    "flexibleservers",          "psql")
-    virtual_networks            = ("Microsoft.Network/virtualNetworks",            "virtualnetworks",          "vnet")
-    nat_gateways                = ("Microsoft.Network/natGateways",                "natgateways",              "ng")
-    sql_databases               = ("Microsoft.Sql/servers/databases",              "databases",                "sqldb")
-    storage_accounts            = ("Microsoft.Storage/storageAccounts",            "storageaccounts",          "st")
-    web_sites                   = ("Microsoft.Web/sites",                          "sites",                    "app")
-    mysql_servers               = ("Microsoft.DBforMySQL/servers",                 "servers",                  "mysql")
-    postgresql_servers          = ("Microsoft.DBforPostgreSQL/servers",            "servers",                  "psql")
-    traffic_manager             = ("Microsoft.Network/trafficManagerProfiles",     "trafficmanagerprofiles",   "traf")
+    COSMOSDB_DATABASE           = ("Microsoft.DocumentDB/databaseAccounts/cosmos_database", "databaseaccounts","cosmosdb")
+    FIREWALLS                   = ("Microsoft.Network/azureFirewalls",             "azurefirewalls",           "afw")
+    MYSQL_FLEXIBLE_SERVERS      = ("Microsoft.DBforMySQL/flexibleServers",         "flexibleservers",          "mysql")
+    POSTGRESQL_FLEXIBLE_SERVERS = ("Microsoft.DBforPostgreSQL/flexibleServers",    "flexibleservers",          "psql")
+    VIRTUAL_NETWORKS            = ("Microsoft.Network/virtualNetworks",            "virtualnetworks",          "vnet")
+    NAT_GATEWAYS                = ("Microsoft.Network/natGateways",                "natgateways",              "ng")
+    SQL_DATABASES               = ("Microsoft.Sql/servers/databases",              "databases",                "sqldb")
+    STORAGE_ACCOUNTS            = ("Microsoft.Storage/storageAccounts",            "storageaccounts",          "st")
+    WEB_SITES                   = ("Microsoft.Web/sites",                          "sites",                    "app")
+    MYSQL_SERVERS               = ("Microsoft.DBforMySQL/servers",                 "servers",                  "mysql")
+    POSTGRESQL_SERVERS          = ("Microsoft.DBforPostgreSQL/servers",            "servers",                  "psql")
+    TRAFFIC_MANAGER             = ("Microsoft.Network/trafficManagerProfiles",     "trafficmanagerprofiles",   "traf")
     # fmt: on
 
     def __init__(self, resource_type: str, section_name: str, abbreviation: str) -> None:
@@ -150,16 +150,16 @@ class FetchedResource(Enum):
 
 
 BULK_QUERIED_RESOURCES = {
-    FetchedResource.virtual_machines.type,
-    FetchedResource.app_gateways.type,
-    FetchedResource.load_balancers.type,
-    FetchedResource.firewalls.type,
+    FetchedResource.VIRTUAL_MACHINES.type,
+    FetchedResource.APP_GATEWAYS.type,
+    FetchedResource.LOAD_BALANCERS.type,
+    FetchedResource.FIREWALLS.type,
 }
 
 SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES = frozenset(
     {
-        FetchedResource.mysql_flexible_servers.type,
-        FetchedResource.postgresql_flexible_servers.type,
+        FetchedResource.MYSQL_FLEXIBLE_SERVERS.type,
+        FetchedResource.POSTGRESQL_FLEXIBLE_SERVERS.type,
     }
 )
 
@@ -2525,13 +2525,13 @@ async def process_bulk_resources(
     subscription: AzureSubscription,
 ) -> Sequence[AzureSection]:
     tasks = set()
-    if FetchedResource.virtual_machines.type in monitored_services:
+    if FetchedResource.VIRTUAL_MACHINES.type in monitored_services:
         tasks.add(_collect_virtual_machines_resources(mgmt_client, monitored_resources))
-    if FetchedResource.app_gateways.type in monitored_services:
+    if FetchedResource.APP_GATEWAYS.type in monitored_services:
         tasks.add(_collect_app_gateways_resources(mgmt_client, monitored_resources))
-    if FetchedResource.load_balancers.type in monitored_services:
+    if FetchedResource.LOAD_BALANCERS.type in monitored_services:
         tasks.add(_collect_load_balancers_resources(mgmt_client, monitored_resources))
-    if FetchedResource.firewalls.type in monitored_services:
+    if FetchedResource.FIREWALLS.type in monitored_services:
         tasks.add(_collect_firewalls_resources(mgmt_client, monitored_resources))
 
     processed_resources: list[AzureResource] = []
@@ -2566,11 +2566,11 @@ async def process_single_resources(
         if resource_type in BULK_QUERIED_RESOURCES:
             continue
 
-        if resource_type == FetchedResource.vaults.type:
+        if resource_type == FetchedResource.VAULTS.type:
             tasks.add(process_vault(mgmt_client, resource))
-        elif resource_type == FetchedResource.virtual_network_gateways.type:
+        elif resource_type == FetchedResource.VIRTUAL_NETWORK_GATEWAYS.type:
             tasks.add(process_virtual_net_gw(mgmt_client, resource))
-        elif resource_type.lower() == FetchedResource.cosmosdb.type.lower():
+        elif resource_type.lower() == FetchedResource.COSMOSDB.type.lower():
             tasks.add(process_cosmosdb(mgmt_client, resource, subscription, args))
         else:
             # simple resource without further processing

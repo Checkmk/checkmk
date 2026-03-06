@@ -9,6 +9,7 @@ use_repo(
     "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_fileexporter",
     "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_syslogexporter",
     "com_github_open_telemetry_opentelemetry_collector_contrib_extension_basicauthextension",
+    "com_github_open_telemetry_opentelemetry_collector_contrib_processor_deltatocumulativeprocessor",
     "com_github_open_telemetry_opentelemetry_collector_contrib_processor_resourceprocessor",
     "com_github_open_telemetry_opentelemetry_collector_contrib_processor_transformprocessor",
     "com_github_open_telemetry_opentelemetry_collector_contrib_receiver_prometheusreceiver",

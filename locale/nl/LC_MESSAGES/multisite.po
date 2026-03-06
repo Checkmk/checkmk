@@ -12236,6 +12236,10 @@ msgstr "Checkpoint VSID pakketsnelheid"
 msgid "Check Point VSID traffic rate"
 msgstr "Checkpoint VSID verkeerssnelheid"
 
+#, fuzzy
+msgid "Check Point powersupply"
+msgstr "Cisco Meraki"
+
 msgid "Check SFTP Service"
 msgstr "Controleer SFTP Service"
 
@@ -34137,6 +34141,26 @@ msgstr ""
 "perioden in hun laatste toestand. Zorg ervoor dat u voor die tijd "
 "<i>Wijzigingen activeren</i>."
 
+#, fuzzy
+msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Om Checkmk consistenter te maken, zijn de beschrijvingen van verschillende "
+"diensten hernoemd in nieuwere Checkmk-versies. Een voorbeeld zijn de "
+"bestandssysteemdiensten die hernoemd zijn van <tt>fs_</tt> naar "
+"<tt>Filesystem</tt>. Maar omdat het hernoemen van bestaande diensten veel "
+"implicaties heeft - inclusief bestaande regels, prestatiegegevens en "
+"beschikbaarheidsgeschiedenis - zijn deze hernoemingen standaard "
+"uitgeschakeld voor bestaande installaties. Hier kunt u overschakelen naar de "
+"nieuwe beschrijvingen voor geselecteerde controletypes"
+
 msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
@@ -43536,10 +43560,6 @@ msgstr "NetApp Qtree ontdekking"
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot Reserve"
 
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
-msgstr "NetApp Snapshot Reserve"
-
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
 msgstr "NetApp Snapvaults / Snapmirror Vertragingstijd"
 
@@ -51483,6 +51503,10 @@ msgstr "Stroom Aanwezigheid Sensoren"
 #, fuzzy
 msgid "Power Supplies"
 msgstr "Stroomvoorziening"
+
+#, fuzzy
+msgid "Power Supply Name"
+msgstr "Naam stroomvoorziening"
 
 msgid "Power Usage"
 msgstr "Stroomverbruik"
@@ -62608,6 +62632,14 @@ msgstr "Staat wanneer replicatietoestand aan het synchroniseren is"
 
 msgid "State when replication state is unknown"
 msgstr "Staat wanneer replicatietoestand onbekend is"
+
+#, fuzzy
+msgid "State when reported device status is Present"
+msgstr "Toestand wanneer VPN-status Fase 1 is"
+
+#, fuzzy
+msgid "State when reported device status is Up"
+msgstr "Toestand wanneer replicatietoestand fout is"
 
 msgid "State when security updates are pending"
 msgstr "Staat wanneer beveiligingsupdates in afwachting zijn"
@@ -80740,15 +80772,6 @@ msgstr "Gebruik de multipath alias als dienstnaam, als er een is ingesteld"
 msgid "Use the name specified in the ESX system"
 msgstr "Gebruik de naam die in het ESX-systeem is opgegeven"
 
-#, fuzzy
-msgid "Use the new service name"
-msgstr "Naam van de dienst"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
-
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
 "Gebruik de ntopng gebruikersnaam zoals geconfigureerd in de "
@@ -90014,25 +90037,12 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
 #, fuzzy
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Om Checkmk consistenter te maken, zijn de beschrijvingen van "
-#~ "verschillende diensten hernoemd in nieuwere Checkmk-versies. Een "
-#~ "voorbeeld zijn de bestandssysteemdiensten die hernoemd zijn van <tt>fs_</"
-#~ "tt> naar <tt>Filesystem</tt>. Maar omdat het hernoemen van bestaande "
-#~ "diensten veel implicaties heeft - inclusief bestaande regels, "
-#~ "prestatiegegevens en beschikbaarheidsgeschiedenis - zijn deze "
-#~ "hernoemingen standaard uitgeschakeld voor bestaande installaties. Hier "
-#~ "kunt u overschakelen naar de nieuwe beschrijvingen voor geselecteerde "
-#~ "controletypes"
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "NetApp Snapshot Reserve"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "Naam van de dienst"
 
 #~ msgid "show only problems"
 #~ msgstr "laat alleen problemen zien"

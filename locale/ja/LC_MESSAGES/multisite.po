@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-03 18:36+0000\n"
+"PO-Revision-Date: 2026-03-05 18:36+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -9913,13 +9913,13 @@ msgid ""
 "file systems matching one of the exclude patterns will be excluded from the "
 "group and monitored individually."
 msgstr ""
-"デフォルトでは、ファイルシステムチェックは各ファイルシステムごとに1つの"
-"サービスを作成します。グループ化パターンを定義することで、複数の"
-"ファイルシステムのグループを1つのファイルシステムのように扱うことができます。"
-"各グループ対し、1つまたは複数の包含・除外パターンを定義することができます。包"
-"含パターンの1つに一致するファイルシステムは、1つのサービスで1つの大きな"
-"ファイルシステムのように監視されます。除外パターンのいずれかに一致する"
-"ファイルシステムは、グループから除外され、個別に監視されます。"
+"デフォルトでは、ファイルシステムチェックは各ファイルシステムごとに1つのサービ"
+"スを作成します。グループ化パターンを定義することで、複数のファイルシステムの"
+"グループを1つのファイルシステムのように扱うことができます。各グループ対し、1"
+"つまたは複数の包含・除外パターンを定義することができます。包含パターンの1つに"
+"一致するファイルシステムは、1つのサービスで1つの大きなファイルシステムのよう"
+"に監視されます。除外パターンのいずれかに一致するファイルシステムは、グループ"
+"から除外され、個別に監視されます。"
 
 msgid ""
 "By default, the ntopng host filter is enabled, however, disabling this can "
@@ -11458,9 +11458,8 @@ msgstr ""
 msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAP/EWSメールボックスを確認する"
 
-#, fuzzy
 msgid "Check Interval"
-msgstr "キャッシュ間隔"
+msgstr "チェック間隔"
 
 msgid "Check LDAP service access"
 msgstr "LDAPサービスへのアクセスを確認する"
@@ -11485,6 +11484,9 @@ msgstr "チェックポイントVSIDパケットレート"
 
 msgid "Check Point VSID traffic rate"
 msgstr "チェックポイントVSIDトラフィックレート"
+
+msgid "Check Point powersupply"
+msgstr "Check Point powersupply"
 
 msgid "Check SFTP Service"
 msgstr "SFTPサービスを確認する"
@@ -11978,11 +11980,8 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
-#, fuzzy
 msgid "Checkmk metrics are created from OpenTelemetry datapoints."
-msgstr ""
-"CheckmkメトリクスはOtel(Open Telemetry)データポイントから作成されます。ここで"
-"設定してください。"
+msgstr "CheckmkメトリクスはOpenTelemetryデータポイントから作成されます。"
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmkパートナーまたはリセラー"
@@ -12073,9 +12072,8 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "タイムパフォーマンスデータとCheckmk"
 
-#, fuzzy
 msgid "Checkmk: Agent Bakery signing keys expire soon"
-msgstr "Checkmk: エージェントベーカリーの署名キーの期限"
+msgstr "Checkmk: エージェント・ベーカリーの署名鍵がまもなく期限切れになります"
 
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI: Bytes"
@@ -12208,9 +12206,8 @@ msgstr ""
 msgid "Checks via SSH. "
 msgstr "SSH経由でチェックします。 "
 
-#, fuzzy
 msgid "Checks' man pages (outdated, ignored)"
-msgstr "チェックのmanページ(廃止予定)"
+msgstr "Checksのmanページ（古い情報、無視される）"
 
 msgid "Child Node Generation"
 msgstr "子ノードの生成"
@@ -12507,9 +12504,8 @@ msgstr "選ばれたファイル：%s"
 msgid "Chrony timesynchronisation"
 msgstr "慢性的な時間同期"
 
-#, fuzzy
 msgid "Cipher suite ID"
-msgstr "サイトIDを使用する"
+msgstr "暗号スイートID"
 
 msgid "Cisco ASA Firewall Connections"
 msgstr "Cisco ASAファイアウォール接続"
@@ -12658,9 +12654,8 @@ msgstr "クリーンアップメッセージ"
 msgid "Cleanup of working directory"
 msgstr "ワーキングディレクトリのクリーンアップ"
 
-#, fuzzy
 msgid "Cleanup parameters"
-msgstr "デフォルトパラメータ"
+msgstr "クリーンアップパラメータ"
 
 msgid "Cleanup strategy"
 msgstr "クリーンアップストラテジー"
@@ -13325,13 +13320,11 @@ msgstr "コミット"
 msgid "Committed memory"
 msgstr "コミットされたメモリ"
 
-#, fuzzy
 msgid "Common Name (Issuer)"
-msgstr "コモンネーム (CN)"
+msgstr "コモンネーム (Issuer)"
 
-#, fuzzy
 msgid "Common Name (Subject)"
-msgstr "コモンネーム (CN)"
+msgstr "コモンネーム (Subject)"
 
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr "共通のプロビジョニンググループ：仮想プールの構成"
@@ -13477,9 +13470,8 @@ msgstr "計算結果: %s - %s"
 msgid "Compute REST API specification"
 msgstr "REST APIの仕様"
 
-#, fuzzy
 msgid "Compute a rate"
-msgstr "レートを計算しないでください"
+msgstr "レートを計算する"
 
 msgid "Compute average over last "
 msgstr "最後の平均を計算する "
@@ -13547,9 +13539,8 @@ msgstr "コンフィギュレーション"
 msgid "Configuration Error"
 msgstr "構成エラー"
 
-#, fuzzy
 msgid "Configuration activation"
-msgstr "設定接続"
+msgstr "設定の有効化"
 
 msgid "Configuration bundle ID"
 msgstr "設定バンドルID"
@@ -13736,13 +13727,11 @@ msgstr "サービスディスカバリを使用せずに強制チェックを構
 msgid "Configure fallback email address"
 msgstr "フォールバックメールアドレスの設定"
 
-#, fuzzy
 msgid "Configure for all metrics"
-msgstr "すべてのユーザーに適用"
+msgstr "すべてのメトリクスに対して設定する"
 
-#, fuzzy
 msgid "Configure for specific metrics"
-msgstr "特定のメトリクス"
+msgstr "特定のメトリクス用に設定する"
 
 msgid "Configure grouping of interfaces"
 msgstr "インターフェイスのグループ化を構成します"
@@ -14159,9 +14148,8 @@ msgstr "直接接続します(CREでは使用できません)"
 msgid "Connect directly to the destination instead of using a proxy."
 msgstr "プロキシを使用せずに、宛先に直接接続します。"
 
-#, fuzzy
 msgid "Connect directly to the license server instead of using a proxy."
-msgstr "プロキシを使用せずに、宛先に直接接続します。"
+msgstr "プロキシを使用せずに、ライセンスサーバーに直接接続してください。"
 
 msgid "Connect directly, without Livestatus Proxy"
 msgstr "Livestatusプロキシなしで直接接続する"
@@ -14439,10 +14427,8 @@ msgstr "消費されたホストメモリ"
 msgid "Consumed load balancer capacity units"
 msgstr "消費されたロードバランサー容量ユニット"
 
-#, fuzzy
 msgid "Consumer count is the number of connected consumers to a queue"
-msgstr ""
-"コンシューマーカウントは、キューに接続されているコンシューマーのサイズです"
+msgstr "コンシューマーカウントは、キューに接続されているコンシューマーの数です"
 
 msgid "Consumers"
 msgstr "消費者"
@@ -32013,6 +31999,24 @@ msgstr ""
 "変更をアクティブ化</i> してください。"
 
 msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"Checkmkの一貫性を高めるために、いくつかのサービスの説明は、新しいCheck_MKバー"
+"ジョンで名前が変更されました。一例として、<tt>fs_</tt>から<tt>Filesystem</tt>"
+"に名前が変更されたファイルシステムサービスがあります。ただし、既存のサービス"
+"の名前変更には、既存のルール、パフォーマンスデータ、可用性履歴など、多くの影"
+"響があるため、これらの名前変更は、既存のインストールではデフォルトで無効に"
+"なっています。ここで、選択したチェックタイプの新しい説明に切り替えることがで"
+"きます"
+
+msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
 "latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. This "
@@ -38300,8 +38304,8 @@ msgid ""
 msgstr ""
 "プロセスヒープが割り当てようとする総メモリの最大量。このオプションは、利用可"
 "能な総メモリからハードメモリ制限を計算するために使用されます。例えば、利用可"
-"能な総メモリが1000 MiBのリミット75%でマシンで制限を75%のすると、750 MiBの"
-"ハード制限が適用されます。"
+"能な総メモリが1000 MiBのリミット75%でマシンで制限を75%のすると、750 MiBのハー"
+"ド制限が適用されます。"
 
 msgid "Maximum bulk size"
 msgstr "最大バルクサイズ"
@@ -40958,10 +40962,6 @@ msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtreeの検出"
 
 msgid "NetApp Snapshot Reserve"
-msgstr "NetAppスナップショットリザーブ"
-
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
 msgstr "NetAppスナップショットリザーブ"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -48273,6 +48273,10 @@ msgstr "パワープレゼンスセンサー"
 
 msgid "Power Supplies"
 msgstr "電源装置"
+
+#, fuzzy
+msgid "Power Supply Name"
+msgstr "電源名"
 
 msgid "Power Usage"
 msgstr "電力使用量"
@@ -58830,6 +58834,14 @@ msgstr "レプリケーション状態が同期しているときの状態"
 
 msgid "State when replication state is unknown"
 msgstr "レプリケーション状態が不明な場合の状態"
+
+#, fuzzy
+msgid "State when reported device status is Present"
+msgstr "VPNステータスがフェーズ1のときの状態"
+
+#, fuzzy
+msgid "State when reported device status is Up"
+msgstr "レプリケーション状態がエラーの場合の状態"
 
 msgid "State when security updates are pending"
 msgstr "セキュリティ更新が保留中の状態"
@@ -75751,15 +75763,6 @@ msgstr "マルチパスエイリアスが設定されている場合は、サー
 msgid "Use the name specified in the ESX system"
 msgstr "ESXシステムで指定された名前を使用します"
 
-#, fuzzy
-msgid "Use the new service name"
-msgstr "新しいサービス名を使用する"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
-
 msgid "Use the ntopng username as configured in the User settings"
 msgstr "ユーザー設定で設定したntopngユーザー名を使用"
 
@@ -84474,23 +84477,13 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
 
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "Checkmkの一貫性を高めるために、いくつかのサービスの説明は、新しいCheck_MK"
-#~ "バージョンで名前が変更されました。一例として、<tt>fs_</tt>から"
-#~ "<tt>Filesystem</tt>に名前が変更されたファイルシステムサービスがあります。"
-#~ "ただし、既存のサービスの名前変更には、既存のルール、パフォーマンスデータ、"
-#~ "可用性履歴など、多くの影響があるため、これらの名前変更は、既存のインストー"
-#~ "ルではデフォルトで無効になっています。ここで、選択したチェックタイプの新し"
-#~ "い説明に切り替えることができます"
+#, fuzzy
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "NetAppスナップショットリザーブ"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "新しいサービス名を使用する"
 
 #~ msgid "show only problems"
 #~ msgstr "問題のみを表示"

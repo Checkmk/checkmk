@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-03 18:36+0000\n"
+"PO-Revision-Date: 2026-03-05 18:36+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -12235,6 +12235,10 @@ msgstr "Taxa de pacotes VSID da Check Point"
 
 msgid "Check Point VSID traffic rate"
 msgstr "Taxa de tráfego VSID da Check Point"
+
+#, fuzzy
+msgid "Check Point powersupply"
+msgstr "Cisco Meraki"
 
 msgid "Check SFTP Service"
 msgstr "Verificar serviço SFTP"
@@ -34121,6 +34125,26 @@ msgstr ""
 "Após esse tempo, todos os períodos permanecem no seu último estado. "
 "Certifique-se de que <i>Activa as alterações</i> antes desse período."
 
+#, fuzzy
+msgid ""
+"In order to make Checkmk more consistent, the descriptions of several "
+"services have been renamed in newer Checkmk versions. One example is the "
+"filesystem services that have been renamed from <tt>fs_</tt> into "
+"<tt>Filesystem</tt>. But since renaming of existing services has many "
+"implications - including existing rules, performance data and availability "
+"history - these renamings are disabled per default for existing "
+"installations. Here you can switch to the new descriptions for selected "
+"check types"
+msgstr ""
+"A fim de tornar o Checkmk mais consistente, as descrições de vários serviços "
+"foram renomeadas nas versões mais recentes do Check_MK. Um exemplo são os "
+"serviços do sistema de ficheiros que foram renomeados de <tt>fs_</tt> para "
+"<tt>Filesystem</tt>. Mas uma vez que a renomeação de serviços existentes tem "
+"muitas implicações - incluindo regras existentes, dados de desempenho e "
+"histórico de disponibilidade - estas renomeações são desactivadas por "
+"defeito para as instalações existentes. Aqui pode mudar para as novas "
+"descrições dos tipos de verificação seleccionados"
+
 msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
@@ -43526,10 +43550,6 @@ msgstr "Descoberta do NetApp Qtree"
 msgid "NetApp Snapshot Reserve"
 msgstr "Reserva de Instantâneos da NetApp"
 
-#, fuzzy
-msgid "NetApp Snapshot Volumes"
-msgstr "Reserva de Instantâneos da NetApp"
-
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
 msgstr "NetApp Snapvaults / Tempo de atraso do Snapmirror"
 
@@ -51449,6 +51469,10 @@ msgstr "Sensores de presença de energia"
 #, fuzzy
 msgid "Power Supplies"
 msgstr "Fontes de alimentação"
+
+#, fuzzy
+msgid "Power Supply Name"
+msgstr "Nome da fonte de alimentação"
 
 msgid "Power Usage"
 msgstr "Uso de energia"
@@ -62599,6 +62623,14 @@ msgstr "Estado quando o estado de replicação está em sincronia"
 
 msgid "State when replication state is unknown"
 msgstr "Estado quando o estado de replicação é desconhecido"
+
+#, fuzzy
+msgid "State when reported device status is Present"
+msgstr "Indique quando o estado da VPN é Fase1"
+
+#, fuzzy
+msgid "State when reported device status is Up"
+msgstr "Estado quando o estado de replicação é erro"
 
 msgid "State when security updates are pending"
 msgstr "Indique quando atualizações de segurança estão pendentes"
@@ -80671,15 +80703,6 @@ msgstr "Use o nome multi-caminho como nome de serviço, se um estiver definido"
 msgid "Use the name specified in the ESX system"
 msgstr "Use o nome especificado no sistema ESX"
 
-#, fuzzy
-msgid "Use the new service name"
-msgstr "Nome do serviço"
-
-msgid ""
-"Use the new service name. Disabling this option does not work for services "
-"where the monitored SVM or volume names contain colons"
-msgstr ""
-
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
 "Utilizar o nome de utilizador ntopng conforme configurado nas definições do "
@@ -89902,24 +89925,12 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
 
 #, fuzzy
-#~ msgid ""
-#~ "In order to make Checkmk more consistent, the descriptions of several "
-#~ "services have been renamed in newer Checkmk versions. One example is the "
-#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
-#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
-#~ "implications - including existing rules, performance data and "
-#~ "availability history - these renamings are disabled per default for "
-#~ "existing installations. Here you can switch to the new descriptions for "
-#~ "selected check types"
-#~ msgstr ""
-#~ "A fim de tornar o Checkmk mais consistente, as descrições de vários "
-#~ "serviços foram renomeadas nas versões mais recentes do Check_MK. Um "
-#~ "exemplo são os serviços do sistema de ficheiros que foram renomeados de "
-#~ "<tt>fs_</tt> para <tt>Filesystem</tt>. Mas uma vez que a renomeação de "
-#~ "serviços existentes tem muitas implicações - incluindo regras existentes, "
-#~ "dados de desempenho e histórico de disponibilidade - estas renomeações "
-#~ "são desactivadas por defeito para as instalações existentes. Aqui pode "
-#~ "mudar para as novas descrições dos tipos de verificação seleccionados"
+#~ msgid "NetApp Snapshot Volumes"
+#~ msgstr "Reserva de Instantâneos da NetApp"
+
+#, fuzzy
+#~ msgid "Use the new service name"
+#~ msgstr "Nome do serviço"
 
 #~ msgid "show only problems"
 #~ msgstr "mostrar apenas problemas"

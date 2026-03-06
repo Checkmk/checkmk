@@ -318,6 +318,12 @@ const sitesWithWarningsOrErrors = computed((): boolean => {
   )
 })
 
+const sitesWithErrors = computed((): boolean => {
+  return sitesAndChanges.value.sites.some(
+    (site) => site.lastActivationStatus && site.lastActivationStatus.state === 'error'
+  )
+})
+
 const noPendingChangesOrWarningsOrErrors = computed((): boolean => {
   return sitesAndChanges.value.sites.every(
     (site) =>
@@ -449,14 +455,19 @@ onMounted(async () => {
       >
       </ChangesActivationResult>
 
-      <ChangesActivationResult
+      <CmkDialog
         v-if="sitesWithWarningsOrErrors && !activateChangesInProgress"
-        class="cmk-div-activation-result-container"
-        type="warning"
         :title="_t('Problems detected during activation')"
-        :info="_t('Some things may not be monitored properly.')"
-      >
-      </ChangesActivationResult>
+        :message="_t('Some things may not be monitored properly.')"
+        :buttons="[
+          {
+            title: _t('Open full view'),
+            variant: sitesWithErrors ? 'danger' : 'warning',
+            onclick: () => openActivateChangesPage()
+          }
+        ]"
+        :variant="sitesWithErrors ? 'error' : 'warning'"
+      />
 
       <ChangesStatusBar
         v-if="!activateChangesInProgress"
@@ -497,6 +508,10 @@ onMounted(async () => {
 
 <style scoped>
 /* stylelint-disable checkmk/vue-bem-naming-convention */
+div.cmk-dialog {
+  width: 100%;
+}
+
 .cmk-default-popup-mainmenu {
   display: flex;
   width: 500px;

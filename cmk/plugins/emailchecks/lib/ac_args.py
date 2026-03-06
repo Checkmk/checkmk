@@ -187,71 +187,71 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
 
 
 def _parse_auth(raw: Mapping[str, object]) -> MailboxAuth:
-    match raw:
+    args_related_to_auth = {
+        "client_id": raw.get("client_id"),
+        "client_secret": _parse_secret(raw, "client_secret"),
+        "initial_access_token": _parse_secret(raw, "initial_access_token"),
+        "initial_refresh_token": _parse_secret(raw, "initial_refresh_token"),
+        "password": _parse_secret(raw, "password"),
+        "protocol": raw.get("protocol"),
+        "storage_id": _parse_storage_id(raw),
+        "tenant_id": raw.get("tenant_id"),
+        "username": raw.get("username"),
+    }
+
+    match args_related_to_auth:
         case {
             "client_id": str(client_id),
-            "client_secret": str() | None as client_secret,
-            "client_secret_reference": str() | None as client_secret_reference,
+            "client_secret": str(client_secret),
             "tenant_id": str(tenant_id),
-            "initial_access_token": str() | None as initial_access_token,
-            "initial_access_token_reference": str() | None as initial_access_token_reference,
-            "initial_refresh_token": str() | None as initial_refresh_token,
-            "initial_refresh_token_reference": str() | None as initial_refresh_token_reference,
-            "storage_id": str() | None as storage_id,
+            "initial_access_token": str(initial_access_token),
+            "initial_refresh_token": str(initial_refresh_token),
+            "storage_id": str(storage_id),
         }:
             return OAuth2WithTokens(
                 client_id=client_id,
-                client_secret=_parse_secret(client_secret, client_secret_reference),
+                client_secret=client_secret,
                 tenant_id=tenant_id,
-                initial_access_token=_parse_secret(
-                    initial_access_token, initial_access_token_reference
-                ),
-                initial_refresh_token=_parse_secret(
-                    initial_refresh_token, initial_refresh_token_reference
-                ),
-                storage_id=_build_storage_id(storage_id, initial_access_token_reference),
+                initial_access_token=initial_access_token,
+                initial_refresh_token=initial_refresh_token,
+                storage_id=storage_id,
             )
         case {
             "client_id": str(client_id),
-            "client_secret": str() | None as client_secret,
-            "client_secret_reference": str() | None as client_secret_reference,
+            "client_secret": str(client_secret),
             "tenant_id": str(tenant_id),
         }:
             return OAuth2(
                 client_id=client_id,
-                client_secret=_parse_secret(client_secret, client_secret_reference),
+                client_secret=client_secret,
                 tenant_id=tenant_id,
             )
-        case {
-            "username": str(username),
-            "password": str() | None as password,
-            "password_reference": str() | None as password_reference,
-        }:
-            return BasicAuth(
-                username=username, password=_parse_secret(password, password_reference)
-            )
+        case {"username": str(username), "password": str(password)}:
+            return BasicAuth(username=username, password=password)
         case {"protocol": "SMTP"}:
             return None
         case _:
-            raise RuntimeError(
-                "Either Username/Passwort or ClientID/ClientSecret/TenantID have to be set"
-            )
+            raise RuntimeError(f"Incomplete auth credentials for {raw['protocol']} protocol.")
 
 
-def _parse_secret(secret: str | None, reference: str | None) -> str:
-    if secret is not None:
-        return secret
-    if reference is None:
-        raise ValueError("Either secret or secret reference must be set")
-    return dereference_secret(reference).reveal()
+def _parse_secret(raw: Mapping[str, object], ident: str) -> str | None:
+    match raw.get(ident), raw.get(f"{ident}_reference"):
+        case str(secret), None:
+            return secret
+        case None, str(reference):
+            return dereference_secret(reference).reveal()
+        case _:
+            return None
 
 
-def _build_storage_id(storage_id: str | None, secret_reference: str | None) -> str:
-    if storage_id:
-        return f"emailchecks-{storage_id}"
-    if secret_reference:
-        return f"emailchecks-{secret_reference.split(':')[0].split('_')[0]}"
-    raise ValueError("Either storage_id or secret_reference must be set")
+def _parse_storage_id(raw: Mapping[str, object]) -> str | None:
+    match raw.get("storage_id"), raw.get("initial_access_token_reference"):
+        case str(storage_id), None:
+            return f"emailchecks-{storage_id}"
+        case None, str(reference):
+            return f"emailchecks-{reference.split(':')[0].split('_')[0]}"
+        case _:
+            return None
 
 
 def _parse_port(raw: Mapping[str, object]) -> int:

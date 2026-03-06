@@ -128,23 +128,62 @@ def test_migration_forward_method(old: str, new: object, request_context: None) 
     assert migrate({"forward": {"method": old}}) == {"forward": {"method": new}}
 
 
-def test_migration_forward(request_context: None) -> None:
-    assert migrate(
-        {
-            "forward": {
+@pytest.mark.parametrize(
+    "old, new",
+    [
+        pytest.param(
+            {
                 "facility": 2,
                 "application": None,
                 "host": "me.too@checkmk.com",
                 "body_limit": 1000,
                 "cleanup": True,
             },
-        }
-    ) == {
-        "forward": {
-            "facility": ("mail", 2),
-            "application": ("subject", None),
-            "host": "me.too@checkmk.com",
-            "body_limit": 1000,
-            "cleanup": ("delete", "delete"),
-        },
-    }
+            {
+                "facility": ("mail", 2),
+                "application": ("subject", None),
+                "host": "me.too@checkmk.com",
+                "body_limit": 1000,
+                "cleanup": ("delete", None),
+            },
+            id="cleanup_true_becomes_delete",
+        ),
+        pytest.param(
+            {"cleanup": "INBOX"},
+            {"cleanup": ("move", "INBOX")},
+            id="cleanup_string_becomes_move_folder",
+        ),
+        pytest.param(
+            {"cleanup": ("delete", None)},
+            {"cleanup": ("delete", None)},
+            id="cleanup_delete_already_migrated",
+        ),
+        pytest.param(
+            {"cleanup": ("move", "Archive")},
+            {"cleanup": ("move", "Archive")},
+            id="cleanup_move_already_migrated",
+        ),
+        pytest.param(
+            {"application": "my_app"},
+            {"application": ("spec", "my_app")},
+            id="application_string_becomes_spec",
+        ),
+        pytest.param(
+            {"application": None},
+            {"application": ("subject", None)},
+            id="application_none_becomes_subject",
+        ),
+        pytest.param(
+            {"facility": 2},
+            {"facility": ("mail", 2)},
+            id="facility_int_becomes_named_tuple",
+        ),
+        pytest.param(
+            {"facility": ("kern", 0)},
+            {"facility": ("kern", 0)},
+            id="facility_already_migrated",
+        ),
+    ],
+)
+def test_migration_forward(old: dict, new: dict, request_context: None) -> None:
+    assert migrate({"forward": old}) == {"forward": new}

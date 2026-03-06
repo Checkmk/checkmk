@@ -183,6 +183,19 @@ def _migrate_application(
     return ("subject", None) if value is None else ("spec", str(value))
 
 
+def _migrate_cleanup(value: object) -> tuple[Literal["delete"], None] | tuple[Literal["move"], str]:
+    match value:
+        case True:
+            return "delete", None
+        case str(s):
+            return "move", s
+        case tuple(("delete", None)):
+            return "delete", None
+        case tuple(("move", str() as folder)):
+            return "move", folder
+    raise ValueError(f"Invalid cleanup value: {value!r}")
+
+
 def _forward_to_ec_form() -> Dictionary:
     return Dictionary(
         title=Title("Forward mails as events to Event Console"),
@@ -309,9 +322,7 @@ def _forward_to_ec_form() -> Dictionary:
                             ),
                         ),
                     ),
-                    migrate=lambda value: (
-                        ("delete", "delete") if value is True else ("move", str(value))
-                    ),
+                    migrate=_migrate_cleanup,
                 ),
             ),
         },

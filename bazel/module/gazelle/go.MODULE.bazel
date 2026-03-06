@@ -21,6 +21,7 @@ use_repo(
     "io_opentelemetry_go_collector_confmap_provider_yamlprovider",
     "io_opentelemetry_go_collector_connector",
     "io_opentelemetry_go_collector_exporter",
+    "io_opentelemetry_go_collector_exporter_debugexporter",
     "io_opentelemetry_go_collector_extension",
     "io_opentelemetry_go_collector_otelcol",
     "io_opentelemetry_go_collector_processor",

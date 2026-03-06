@@ -1,4 +1,16 @@
+load("@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "pnp4nagios",
+    cpe_format_str = "cpe:2.3:a:pnp4nagios:pnp4nagios:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:GPL-2.0-only",
+    license_text = "COPYING",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = "0.6.26",
+)
 
 filegroup(
     name = "all_srcs",
@@ -9,6 +21,7 @@ filegroup(
             "BUILD",
         ],
     ),
+    package_metadata = [":dependency_info"],
 )
 
 configure_make(

@@ -1,4 +1,16 @@
+load("@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "mod_fcgid",
+    cpe_format_str = "cpe:2.3:a:apache:mod_fcgid:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:Apache-2.0",
+    license_text = "LICENSE-FCGID",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = "2.3.9",
+)
 
 filegroup(
     name = "all_srcs",
@@ -6,6 +18,7 @@ filegroup(
         ["**/*"],
         exclude = ["bazel-*"],
     ),
+    package_metadata = [":dependency_info"],
 )
 
 configure_make(

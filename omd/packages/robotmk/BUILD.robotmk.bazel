@@ -1,3 +1,15 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "robotmk",
+    license_kind = "@package_metadata//licenses/spdx:GPL-2.0-only",
+    license_text = "LICENSE",
+    purl_namespace = "elabit",
+    purl_type = "github",
+    version = "5.0.0-alpha",
+)
+
 ROBOTMK_FILES = [
     "artifact/rcc/linux64/rcc",
     "artifact/rcc/windows64/rcc.exe",
@@ -12,6 +24,7 @@ ROBOTMK_FILES = [
 filegroup(
     name = "package_source_files",
     srcs = ROBOTMK_FILES,
+    package_metadata = [":dependency_info"],
 )
 
 exports_files(

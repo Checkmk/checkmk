@@ -1,6 +1,6 @@
 module(
     name = "msitools",
-    version = "0.94.cmk.2",
+    version = "0.94.cmk.3",
     bazel_compatibility = [">=7.2.1"],
     compatibility_level = 1,
 )
@@ -8,3 +8,4 @@ module(
 bazel_dep(name = "cmk", version = "1.0.0")
 bazel_dep(name = "libgsf", version = "1.14.44.cmk.1")
 bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
+bazel_dep(name = "package_metadata", version = "0.0.7")

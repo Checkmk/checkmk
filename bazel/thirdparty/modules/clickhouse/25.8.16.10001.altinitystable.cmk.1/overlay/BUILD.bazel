@@ -1,0 +1,23 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+
+package(
+    default_package_metadata = [":dependency_info"],
+    default_visibility = ["//visibility:public"],
+)
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "clickhouse",
+    license_kind = "@package_metadata//licenses/spdx:Apache-2.0",
+    license_text = "usr/share/doc/clickhouse-common-static/LICENSE",
+    purl_namespace = "ClickHouse",
+    purl_type = "github",
+    version = module_version().removesuffix(".altinitystable"),
+)
+
+native_binary(
+    name = "clickhouse",
+    src = "usr/bin/clickhouse",
+    out = "clickhouse",
+)

@@ -12,15 +12,17 @@ import {
   configEntityAPI
 } from '@/form/private/forms/FormSingleChoiceEditable/configuration_entity'
 
+export type PasswordValue = [string, string, string, boolean]
+
 export interface OAuth2FormData {
   ident: string
   title: string
   authority: string
   tenant_id: string
   client_id: string
-  client_secret: string[]
-  access_token?: string
-  refresh_token?: string
+  client_secret: PasswordValue
+  access_token?: PasswordValue
+  refresh_token?: PasswordValue
   override_site?: string
 }
 
@@ -39,8 +41,8 @@ export interface MsGraphAjaxResponse {
     error: string
   }
   data?: {
-    access_token: string
-    refresh_token: string
+    access_token: PasswordValue
+    refresh_token: PasswordValue
   }
 }
 

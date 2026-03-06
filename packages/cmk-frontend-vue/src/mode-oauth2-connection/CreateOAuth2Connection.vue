@@ -37,6 +37,7 @@ const props = defineProps<{
   authorityMapping: Record<string, string>
   api: Oauth2ConnectionApi
   connectorType: 'microsoft_entra_id'
+  isNew?: boolean
 }>()
 
 const dataRef = defineModel<OAuth2FormData>('data', { required: true })
@@ -74,7 +75,7 @@ immediateWatch(
   }
 )
 
-const currentStep = ref<number>(1)
+const currentStep = ref<number>(props.isNew !== false ? 1 : 7)
 </script>
 
 <template>
@@ -119,6 +120,7 @@ const currentStep = ref<number>(1)
         :authority-mapping="authorityMapping"
         :ident="formSpec.data.ident"
         :form-spec="formSpec"
+        :is-new="isNew"
         :index="7"
         :is-completed="() => currentStep > 7"
       />

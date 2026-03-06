@@ -44,6 +44,16 @@ const modeCreateOAuth2ConnectionFormSpec = computed(() => {
     data: initialData
   }
 })
+const isNew = computed(() => {
+  const token = initialData.access_token
+  return (
+    Array.isArray(token) &&
+    token[0] === 'explicit_password' &&
+    token[1] === '' &&
+    token[2] === '' &&
+    token[3] === false
+  )
+})
 const api = new Oauth2ConnectionApi()
 </script>
 
@@ -55,5 +65,6 @@ const api = new Oauth2ConnectionApi()
     :authority-mapping="authorityMapping"
     :api="api"
     :connector-type="spec.connector_type"
+    :is-new="isNew"
   />
 </template>

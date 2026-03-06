@@ -80,6 +80,7 @@ const formSpecRef = computed(() => ({
     :authority-mapping="authority_mapping"
     :api="api"
     :connector-type="connector_type"
+    :is-new="props.new"
     @submitted="submit"
   />
 </template>

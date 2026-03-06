@@ -52,6 +52,7 @@ const props = defineProps<
     connectorType: 'microsoft_entra_id'
     ident: string
     api: Oauth2ConnectionApi
+    isNew?: boolean
   }
 >()
 
@@ -69,12 +70,14 @@ const TIMEOUT = 5 * 60000
 
 const context = getWizardContext()
 
-const loading = ref(true)
+const isEditMode = props.isNew === false
+const isInitialEditLoad = ref(isEditMode)
+const loading = ref(!isEditMode)
 const saving = ref(false)
 const loadingTitle = ref(_t('Verifying the authorization...'))
 const errorTitle = ref(_t('Authorization failed.'))
 const errorDetails = ref<TranslatedString | null>(null)
-const authSucceeded = ref(false)
+const authSucceeded = ref(isEditMode)
 const refId = randomId()
 const countDownValue = ref<number>(TIMEOUT)
 
@@ -229,6 +232,10 @@ immediateWatch(
   () => context.isSelected(props.index),
   async (isSelected) => {
     if (isSelected) {
+      if (isInitialEditLoad.value) {
+        isInitialEditLoad.value = false
+        return
+      }
       const myGeneration = ++currentGeneration.value
       authSucceeded.value = false
       loading.value = true
@@ -317,7 +324,11 @@ immediateWatch(
 
       <template v-else-if="authSucceeded">
         <CmkAlertBox variant="success">
-          {{ _t('OAuth2 connection parameters requested successfully!') }}
+          {{
+            isEditMode
+              ? _t('You can save the connection as is, or go back to reauthenticate.')
+              : _t('OAuth2 connection parameters requested successfully!')
+          }}
         </CmkAlertBox>
         <FormEdit
           v-model:data="filteredData"

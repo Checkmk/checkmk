@@ -40,10 +40,11 @@ def vcrtrace(
 
         parser.add_argument("--vcrtrace", action=vcrtrace())
 
-    If this flag is set to a TRACEFILE that does not exist yet, it will be created and
-    all requests the program sends and their corresponding answers will be recorded in said file.
-    If the file already exists, no requests are sent to the server, but the responses will be
-    replayed from the tracefile.
+    If this flag is set to a TRACEFILE, the file will be created and all requests the program
+    sends and their corresponding answers will be recorded in said file.
+    If the file already exists, responses will be replayed from the tracefile. Note that if the
+    program makes requests not covered by the tracefile, those requests will be sent to the server
+    and appended to the tracefile.
     TRACEFILE must be a file path within the directory `~/tmp/check_mk/debug`.
     Note that this feature is for debugging purposes only and might change in the future.
 
@@ -99,6 +100,12 @@ def vcrtrace(
             except ValueError as exc:
                 raise argparse.ArgumentError(self, str(exc)) from exc
 
+            replay_mode = Path(filename).exists()
+            if replay_mode:
+                sys.stderr.write(
+                    f"WARNING: VCR trace file '{filename}' present. Entering replay mode.\n"
+                )
+
             import vcr
             from vcr.request import Request
 
@@ -113,7 +120,10 @@ def vcrtrace(
                 filter_headers=filter_headers,
                 filter_post_data_parameters=filter_post_data_parameters,
             ).use_cassette
-            global_context = use_cassette(filename)  # type: ignore[no-untyped-call]
+            global_context = use_cassette(  # type: ignore[no-untyped-call]
+                filename,
+                record_mode="new_episodes" if replay_mode else "once",
+            )
             atexit.register(global_context.__exit__)
             global_context.__enter__()
 

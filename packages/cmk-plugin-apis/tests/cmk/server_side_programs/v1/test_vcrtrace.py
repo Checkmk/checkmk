@@ -58,3 +58,11 @@ def test_check_path_absolute_invalid(mocked_home: Path) -> None:
     (mocked_home / ALLOWDIR).mkdir(parents=True, exist_ok=True)
     with chdir(mocked_home / "tmp"), pytest.raises(ValueError):
         _check_path(str(mocked_home / "something/else/foo"))
+
+
+def test_check_path_existing_file_allowed(mocked_home: Path) -> None:
+    """Existing trace files are allowed for replay mode."""
+    trace_file = mocked_home / ALLOWDIR / "trace.txt"
+    trace_file.parent.mkdir(parents=True, exist_ok=True)
+    trace_file.touch()
+    _check_path(str(trace_file))  # should not raise

@@ -114,7 +114,21 @@ class AjaxPage(Page, abc.ABC):
             )
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
-        response.set_data(json.dumps(resp, cls=CustomObjectJSONEncoder))
+        try:
+            response.set_data(json.dumps(resp, cls=CustomObjectJSONEncoder))
+        except Exception:
+            if ctx.config.debug:
+                raise
+            logger.exception("error serializing AJAX response")
+            response.set_data(
+                json.dumps(
+                    {
+                        "result_code": 1,
+                        "result": "Internal error: failed to serialize response",
+                        "severity": "error",
+                    }
+                )
+            )
 
 
 @dataclass(frozen=True)

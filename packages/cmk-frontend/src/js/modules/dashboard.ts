@@ -79,7 +79,13 @@ export let dashboard_properties = {} as DashboardPropertiesGlobal
 export function set_start_url(dashboard_name: string) {
   call_ajax('ajax_set_dashboard_start_url.py?name=' + encodeURIComponent(dashboard_name), {
     response_handler: (_handler_data: any, response_body: string) => {
-      const response = JSON.parse(response_body)
+      let response
+      try {
+        response = JSON.parse(response_body)
+      } catch (e) {
+        console.error('Failed to parse dashboard start URL response: ' + response_body)
+        return
+      }
       if (response.result_code === 0) {
         reload_whole_page()
       } else {

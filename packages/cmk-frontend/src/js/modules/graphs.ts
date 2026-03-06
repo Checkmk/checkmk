@@ -527,7 +527,14 @@ function do_load_graph_content(
 }
 
 function handle_load_graph_content(script_object: HTMLOrSVGScriptElement, ajax_response: string) {
-  const response = JSON.parse(ajax_response)
+  let response
+  try {
+    response = JSON.parse(ajax_response)
+  } catch (e) {
+    console.error('Failed to parse graph content response: ' + ajax_response)
+    handle_load_graph_content_error(script_object, 1, 'Failed to parse server response')
+    return
+  }
 
   if (response.result_code != 0) {
     handle_load_graph_content_error(script_object, response.result_code, response.result)

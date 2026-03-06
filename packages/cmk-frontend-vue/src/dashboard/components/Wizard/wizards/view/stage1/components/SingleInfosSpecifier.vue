@@ -33,11 +33,9 @@ const props = withDefaults(
   defineProps<{
     contextInfos: string[]
     readOnly?: boolean // TODO: needs to be included once component has been adapted
-    isNewView?: boolean
   }>(),
   {
-    readOnly: false,
-    isNewView: true
+    readOnly: false
   }
 )
 
@@ -72,14 +70,13 @@ watch(
   <div>
     <h2>{{ _t('Specific object type') }}</h2>
     <ContentSpacer :dimension="5" />
+    <CmkLabel v-if="props.readOnly">{{ selectedModeTitle }}</CmkLabel>
     <CmkDropdown
-      v-if="isNewView"
+      v-else
       v-model:selected-option="mode"
       :options="dropdownOptions"
-      :disabled="props.readOnly"
       :label="_t('Select specific object type')"
     />
-    <CmkLabel v-else>{{ selectedModeTitle }}</CmkLabel>
     <template v-if="mode === RestrictedToSingle.CUSTOM">
       <ContentSpacer :dimension="5" />
       <SelectorSingleInfo v-model:selected-ids="restrictedIds" :only-ids="props.contextInfos" />

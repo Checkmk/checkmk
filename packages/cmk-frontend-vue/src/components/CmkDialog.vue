@@ -4,9 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { cva } from 'class-variance-authority'
+import { type VariantProps, cva } from 'class-variance-authority'
+import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 import { persistWarningDismissal } from '@/lib/rest-api-client/userConfig'
@@ -22,7 +23,7 @@ export interface CmkDialogProps {
   message: TranslatedString
   buttons?: { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
   dismissal_button?: { title: TranslatedString; key: DismissalButtonKey }
-  variant?: 'info' | 'error'
+  variant?: Variants
 }
 
 export type DismissalButtonKey = components['schemas']['UserDismissWarning']['warning']
@@ -33,6 +34,8 @@ const propsCva = cva('', {
   variants: {
     variant: {
       error: 'cmk-dialog__icon-box--error',
+      warning: 'cmk-dialog__icon-box--warning',
+      success: 'cmk-dialog__icon-box--success',
       info: 'cmk-dialog__icon-box--info'
     }
   },
@@ -40,6 +43,8 @@ const propsCva = cva('', {
     variant: 'info'
   }
 })
+
+export type Variants = VariantProps<typeof propsCva>['variant']
 
 const dialogHidden = props.dismissal_button
   ? usePersistentRef(props.dismissal_button.key, false, (v) => v as boolean, 'session')
@@ -56,6 +61,18 @@ async function hideContent(event?: Event) {
   }
 }
 
+const iconName = computed<IconNames>(() => {
+  switch (props.variant) {
+    case 'error':
+    case 'warning':
+      return 'host-svc-problems'
+    case 'success':
+      return 'check'
+    default:
+      return 'info'
+  }
+})
+
 onMounted(() => {
   if (props.dismissal_button) {
     dialogHidden.value = isWarningDismissed(props.dismissal_button.key, dialogHidden.value)
@@ -66,11 +83,7 @@ onMounted(() => {
 <template>
   <div v-if="!dialogHidden" class="cmk-dialog help">
     <div :class="['cmk-dialog__icon-box', propsCva({ variant: props.variant })]">
-      <CmkIcon
-        :class="'cmk-dialog__icon'"
-        :name="props.variant === 'error' ? 'host-svc-problems' : 'info'"
-        :size="'small'"
-      />
+      <CmkIcon :class="'cmk-dialog__icon'" :name="iconName" :size="'small'" />
     </div>
     <div class="cmk-dialog__content">
       <span v-if="props.title" class="cmk-dialog__title">{{ props.title }}<br /></span>
@@ -118,6 +131,11 @@ div.cmk-dialog {
     border-radius: var(--dimension-3) 0 0 var(--dimension-3);
   }
 
+  .cmk-dialog__icon {
+    filter: brightness(0) invert(1);
+    padding: var(--dimension-4);
+  }
+
   .cmk-dialog__icon-box--info {
     background-color: var(--color-dark-blue-50);
   }
@@ -126,9 +144,20 @@ div.cmk-dialog {
     background-color: var(--color-dark-red-50);
   }
 
-  .cmk-dialog__icon {
-    filter: brightness(0) invert(1);
-    padding: var(--dimension-4);
+  .cmk-dialog__icon-box--warning {
+    background-color: var(--color-warning);
+
+    .cmk-dialog__icon {
+      filter: brightness(0);
+    }
+  }
+
+  .cmk-dialog__icon-box--success {
+    background-color: var(--color-corporate-green-50);
+
+    .cmk-dialog__icon {
+      filter: none;
+    }
   }
 }
 </style>

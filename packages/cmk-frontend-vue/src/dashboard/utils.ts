@@ -408,6 +408,20 @@ export const urlHandler = {
     window.history.pushState({}, '', url.toString())
   },
 
+  /** Navigate to a new URL. Adds a proper history entry and loads the page.
+   * If on the index page, navigates the parent window instead.
+   * @param url - The dashboard URL to navigate to.
+   */
+  navigateTo(url: URL): void {
+    if (urlHandler.isOnIndexPage()) {
+      const parentUrl = new URL(window.parent.location.href)
+      parentUrl.searchParams.set('start_url', toPathAndSearch(url))
+      window.parent.location.assign(parentUrl.toString())
+    } else {
+      window.location.assign(url.toString())
+    }
+  },
+
   /** Generate a shared dashboard link using the provided public token.
    * @param publicToken - The public token for the shared dashboard.
    * @returns A string representing the shared dashboard URL.

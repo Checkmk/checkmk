@@ -4,16 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeMount,
-  onBeforeUnmount,
-  onMounted,
-  provide,
-  ref,
-  watch
-} from 'vue'
+import { computed, onBeforeMount, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 
 import { randomId } from '@/lib/randomId'
 
@@ -152,6 +143,14 @@ onBeforeMount(async () => {
     dashboardFilters.handleApplyRuntimeFilters(dashboard.filter_context.context)
     if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
       openDashboardFilterSettings.value = true
+    }
+
+    const cloneSuccess = new URLSearchParams(window.location.search).get('clone_success')
+    if (cloneSuccess === '1') {
+      showCloneSuccessAlert.value = true
+      const cleanUrl = new URL(window.location.href)
+      cleanUrl.searchParams.delete('clone_success')
+      urlHandler.updateCurrentUrl(cleanUrl)
     }
   }
 })
@@ -426,13 +425,8 @@ const createDashboard = async (
     return
   }
 
-  isDashboardEditingMode.value = false
-  openDashboardFilterSettings.value = false
-  selectedDashboardBreadcrumb.value =
-    dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
   const updatedDashboardUrl = urlHandler.getDashboardUrl(key, {})
-  urlHandler.updateCurrentUrl(updatedDashboardUrl)
-  isDashboardLoading.value = false
+  urlHandler.navigateTo(updatedDashboardUrl)
 }
 
 const cloneDashboard = async (
@@ -479,17 +473,12 @@ const cloneDashboard = async (
     return
   }
 
-  await setAsActiveDashboard(newKey, layout)
-  selectedDashboardBreadcrumb.value =
-    dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
-  urlHandler.pushCurrentUrl(
-    urlHandler.getDashboardUrl(newKey, dashboardFilters.runtimeFiltersSearchParams.value)
+  const cloneUrl = urlHandler.getDashboardUrl(
+    newKey,
+    dashboardFilters.runtimeFiltersSearchParams.value
   )
-  showCloneSuccessAlert.value = false
-  await nextTick()
-
-  showCloneSuccessAlert.value = true
-  isCloning.value = false
+  cloneUrl.searchParams.set('clone_success', '1')
+  urlHandler.navigateTo(cloneUrl)
 }
 
 const dashboardHasFilters = computed(

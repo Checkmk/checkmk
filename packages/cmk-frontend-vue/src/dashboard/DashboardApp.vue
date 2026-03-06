@@ -549,6 +549,9 @@ const updateDashboardSettings = async (
     dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
+  if (urlHandler.isOnIndexPage()) {
+    urlHandler.reloadPage()
+  }
 }
 
 function deepClone<T>(obj: T): T {

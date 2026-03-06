@@ -441,6 +441,15 @@ export const urlHandler = {
   isOnIndexPage(): boolean {
     const parent = window.parent.location
     return parent.origin === window.location.origin && parent.pathname.endsWith(FILE_INDEX)
+  },
+
+  /** Reload the page. This will reload the parent page, if it's the index page. */
+  reloadPage(): void {
+    if (urlHandler.isOnIndexPage()) {
+      window.parent.location.reload()
+    } else {
+      window.location.reload()
+    }
   }
 }
 

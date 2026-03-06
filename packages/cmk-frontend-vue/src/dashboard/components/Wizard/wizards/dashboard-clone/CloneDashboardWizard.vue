@@ -133,7 +133,6 @@ const cancel = () => {
         <ActionButton variant="primary" :label="_t('Clone')" :action="clone" />
 
         <ActionButton
-          variant="secondary"
           :label="_t('Cancel')"
           :icon="{
             name: 'cancel',

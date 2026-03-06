@@ -20,13 +20,21 @@ const id = useId()
 </script>
 
 <template>
-  <input
-    :id="id"
-    v-model="model"
-    type="radio"
-    :value="value"
-    :disabled="!!disabled"
-    :name="name || ''"
-  />
-  <label v-if="label" :for="id">{{ label }}</label>
+  <div class="db-radio-button__container">
+    <input
+      :id="id"
+      v-model="model"
+      type="radio"
+      :value="value"
+      :disabled="!!disabled"
+      :name="name || ''"
+    />
+    <label v-if="label" :for="id">{{ label }}</label>
+  </div>
 </template>
+<style scoped>
+.db-radio-button__container {
+  display: flex;
+  align-items: center;
+}
+</style>

@@ -38,6 +38,15 @@ def test_registered_snapins() -> None:
             "reports",
         ]
 
+    if cmk_version.edition(paths.omd_root) in (
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
+        cmk_version.Edition.CLOUD,
+    ):
+        expected_snapins += [
+            "metric_backend",
+        ]
+
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         expected_snapins += [
             "customers",
@@ -61,6 +70,15 @@ def test_refresh_snapins() -> None:
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_refresh_snapins += [
             "cmc_stats",
+        ]
+
+    if cmk_version.edition(paths.omd_root) in (
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
+        cmk_version.Edition.CLOUD,
+    ):
+        expected_refresh_snapins += [
+            "metric_backend",
         ]
 
     refresh_snapins = [s.type_name() for s in snapin_registry.values() if s.refresh_regularly()]

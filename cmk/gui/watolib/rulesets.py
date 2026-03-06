@@ -13,15 +13,7 @@ import itertools
 import os
 import pprint
 import re
-from collections.abc import (
-    Callable,
-    Container,
-    Generator,
-    Iterable,
-    Iterator,
-    Mapping,
-    Sequence,
-)
+from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final, Literal, override, TypedDict
@@ -55,12 +47,14 @@ from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.form_specs.unstable.validators import HostAddressList
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import get_labels_from_core, LabelType
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoiceEntries
 from cmk.gui.watolib.check_mk_automations import (
     analyze_host_rule_effectiveness,
@@ -70,57 +64,29 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.rulesets.v1 import Help, Label, Message, Title
-from cmk.rulesets.v1.form_specs import (
-    BooleanChoice as BooleanChoiceAPI,
-)
-from cmk.rulesets.v1.form_specs import (
-    CascadingSingleChoice as CascadingSingleChoiceAPI,
-)
+from cmk.rulesets.v1.form_specs import BooleanChoice as BooleanChoiceAPI
+from cmk.rulesets.v1.form_specs import CascadingSingleChoice as CascadingSingleChoiceAPI
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement as CascadingSingleChoiceElementAPI,
 )
-from cmk.rulesets.v1.form_specs import (
-    DefaultValue as DefaultValueAPI,
-)
-from cmk.rulesets.v1.form_specs import (
-    DictElement as DictElementAPI,
-)
-from cmk.rulesets.v1.form_specs import (
-    Dictionary as DictionaryAPI,
-)
-from cmk.rulesets.v1.form_specs import (
-    FieldSize as FieldSizeAPI,
-)
-from cmk.rulesets.v1.form_specs import (
-    FixedValue as FixedValueAPI,
-)
+from cmk.rulesets.v1.form_specs import DefaultValue as DefaultValueAPI
+from cmk.rulesets.v1.form_specs import DictElement as DictElementAPI
+from cmk.rulesets.v1.form_specs import Dictionary as DictionaryAPI
+from cmk.rulesets.v1.form_specs import FieldSize as FieldSizeAPI
+from cmk.rulesets.v1.form_specs import FixedValue as FixedValueAPI
 from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope
-from cmk.rulesets.v1.form_specs import (
-    MultipleChoice as MultipleChoiceAPI,
-)
-from cmk.rulesets.v1.form_specs import (
-    MultipleChoiceElement as MultipleChoiceElementAPI,
-)
+from cmk.rulesets.v1.form_specs import MultipleChoice as MultipleChoiceAPI
+from cmk.rulesets.v1.form_specs import MultipleChoiceElement as MultipleChoiceElementAPI
 from cmk.rulesets.v1.form_specs import RegularExpression as RegularExpressionAPI
-from cmk.rulesets.v1.form_specs import (
-    SingleChoice as SingleChoiceAPI,
-)
-from cmk.rulesets.v1.form_specs import (
-    SingleChoiceElement as SingleChoiceElementAPI,
-)
-from cmk.rulesets.v1.form_specs import (
-    String as StringAPI,
-)
+from cmk.rulesets.v1.form_specs import SingleChoice as SingleChoiceAPI
+from cmk.rulesets.v1.form_specs import SingleChoiceElement as SingleChoiceElementAPI
+from cmk.rulesets.v1.form_specs import String as StringAPI
 from cmk.server_side_calls_backend.config_processing import (
     GlobalProxiesWithLookup,
     OAuth2Connection,
     process_configuration_to_parameters,
 )
-from cmk.shared_typing.vue_formspec_components import (
-    BinaryCondition,
-    Condition,
-    ConditionGroup,
-)
+from cmk.shared_typing.vue_formspec_components import BinaryCondition, Condition, ConditionGroup
 from cmk.utils import paths
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.global_ident_type import GlobalIdent
@@ -1525,24 +1491,69 @@ class Rule:
         ):
             return False
 
-        if self.conditions.item_list and not _match_one_of_search_expression(
-            search_options, "rule_item_list", self.conditions.item_list[0]
-        ):
-            return False
+        try:
+            if self.conditions.item_list and not _match_one_of_search_expression(
+                search_options, "rule_item_list", self.conditions.item_list[0]
+            ):
+                return False
 
-        to_search = (
-            [
-                self.comment(),
-                self.description(),
-            ]
-            + (self.conditions.host_list[0] if self.conditions.host_list else [])
-            + (self.conditions.item_list[0] if self.conditions.item_list else [])
-        )
+            to_search = (
+                [
+                    self.comment(),
+                    self.description(),
+                ]
+                + (self.conditions.host_list[0] if self.conditions.host_list else [])
+                + (self.conditions.item_list[0] if self.conditions.item_list else [])
+            )
 
-        if value_text is not None:
-            to_search.append(value_text)
+            if value_text is not None:
+                to_search.append(value_text)
 
-        if not _match_one_of_search_expression(search_options, "fulltext", to_search):
+            if not _match_one_of_search_expression(search_options, "fulltext", to_search):
+                return False
+        except re.error as e:
+            logger.warning(
+                "Rule '%s' of rule set '%s' in folder '%s' contains an invalid regular "
+                "expression (%r): %s",
+                self.id,
+                self.ruleset.title(),
+                self.folder.title(),
+                self.to_config(),
+                e,
+            )
+            ruleset_url = makeuri_contextless(
+                request,
+                [
+                    ("mode", "edit_ruleset"),
+                    ("varname", self.ruleset.name),
+                    ("folder", self.folder.path()),
+                ],
+                filename="wato.py",
+            )
+            rule_url = makeuri_contextless(
+                request,
+                [
+                    ("mode", "edit_rule"),
+                    ("varname", self.ruleset.name),
+                    ("rule_id", self.id),
+                    ("rule_folder", self.folder.path()),
+                ],
+                filename="wato.py",
+            )
+            html.show_warning(
+                _(
+                    'Rule <a href="%s"><tt>%s</tt></a> of rule set <a href="%s">%s</a> in folder "%s" '
+                    "contains an invalid regular expression: %s"
+                )
+                % (
+                    rule_url,
+                    self.id,
+                    ruleset_url,
+                    self.ruleset.title(),
+                    self.folder.title(),
+                    e,
+                )
+            )
             return False
 
         if (searching_host_tags := search_options.get("rule_hosttags")) is not None:

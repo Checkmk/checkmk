@@ -287,11 +287,11 @@ class Discovery:
         pprint_value: bool,
         debug: bool,
         use_git: bool,
-    ) -> None:
+    ) -> DiscoveryResult:
         if (
             transition := self.compute_discovery_transition(discovery_result, target_host_name)
         ) is None:
-            return
+            return discovery_result
 
         if transition.need_sync:
             self._save_host_service_enable_disable_rules(
@@ -311,6 +311,52 @@ class Discovery:
             automation_config=automation_config,
             debug=debug,
             use_git=use_git,
+        )
+
+        return self._apply_transitions(discovery_result)
+
+    def _apply_transitions(self, discovery_result: DiscoveryResult) -> DiscoveryResult:
+        """Return a modified copy of discovery_result reflecting the applied transitions.
+
+        Services moved to REMOVED are dropped. For all other state changes, check_source
+        is updated to the target state, and old_discovered_parameters/old_labels are set
+        to the values that were just saved — avoiding a re-run of the discovery preview,
+        which uses cached agent data and could re-introduce just-removed services as new.
+        """
+
+        def transform_table(check_table: Sequence[CheckPreviewEntry]) -> list[CheckPreviewEntry]:
+            result: list[CheckPreviewEntry] = []
+            for entry in check_table:
+                table_target = self._get_table_target(entry)
+                if table_target == DiscoveryState.REMOVED:
+                    continue
+                if table_target != entry.check_source:
+                    _, saved = self._get_autochecks_values(table_target, entry)
+                    entry = dataclasses.replace(
+                        entry,
+                        check_source=table_target,
+                        old_discovered_parameters=saved.parameters,
+                        old_labels=saved.service_labels,
+                    )
+                result.append(entry)
+            return result
+
+        def transform_labels(
+            labels: Mapping[str, HostLabelValueDict],
+        ) -> Mapping[str, HostLabelValueDict]:
+            if self._action in (DiscoveryAction.FIX_ALL, DiscoveryAction.UPDATE_HOST_LABELS):
+                return {}
+            return labels
+
+        return discovery_result._replace(
+            check_table=transform_table(discovery_result.check_table),
+            nodes_check_table={
+                host_name: transform_table(entries)
+                for host_name, entries in discovery_result.nodes_check_table.items()
+            },
+            new_labels=transform_labels(discovery_result.new_labels),
+            vanished_labels=transform_labels(discovery_result.vanished_labels),
+            changed_labels=transform_labels(discovery_result.changed_labels),
         )
 
     def compute_discovery_transition(
@@ -529,6 +575,9 @@ class Discovery:
             self._action == DiscoveryAction.UPDATE_SERVICES
             and (entry.check_plugin_name, entry.item) in self._selected_services
         ):
+            if not DiscoveryState.is_discovered(entry.check_source):
+                # These cannot be changed.
+                return entry.check_source
             if entry.check_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
             if entry.check_source == DiscoveryState.IGNORED:
@@ -624,9 +673,7 @@ def perform_fix_all(
     discovery_result: DiscoveryResult,
     *,
     host: Host,
-    raise_errors: bool,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
-    user_permission_config: UserPermissionSerializableConfig,
     pprint_value: bool,
     debug: bool,
     use_git: bool,
@@ -641,7 +688,7 @@ def perform_fix_all(
             debug=debug,
             use_git=use_git,
         )
-        Discovery(
+        return Discovery(
             host,
             DiscoveryAction.FIX_ALL,
             update_target=None,
@@ -656,16 +703,6 @@ def perform_fix_all(
             debug=debug,
             use_git=use_git,
         )
-        discovery_result = get_check_table(
-            host,
-            DiscoveryAction.FIX_ALL,
-            automation_config=automation_config,
-            user_permission_config=user_permission_config,
-            raise_errors=raise_errors,
-            debug=debug,
-            use_git=use_git,
-        )
-    return discovery_result
 
 
 def perform_host_label_discovery(
@@ -688,7 +725,7 @@ def perform_host_label_discovery(
             debug=debug,
             use_git=use_git,
         )
-        discovery_result = get_check_table(
+        return get_check_table(
             host,
             action,
             automation_config=automation_config,
@@ -697,7 +734,6 @@ def perform_host_label_discovery(
             debug=debug,
             use_git=use_git,
         )
-    return discovery_result
 
 
 def perform_service_discovery(
@@ -708,9 +744,7 @@ def perform_service_discovery(
     *,
     host: Host,
     selected_services: Container[tuple[str, Item]],
-    raise_errors: bool,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
-    user_permission_config: UserPermissionSerializableConfig,
     pprint_value: bool,
     debug: bool,
     use_git: bool,
@@ -719,7 +753,7 @@ def perform_service_discovery(
     Handle discovery action for Update Services, Single Update & Bulk Update
     """
     with _service_discovery_context(host, pprint_value=pprint_value):
-        Discovery(
+        return Discovery(
             host,
             action,
             update_target=update_target,
@@ -734,16 +768,6 @@ def perform_service_discovery(
             debug=debug,
             use_git=use_git,
         )
-        discovery_result = get_check_table(
-            host,
-            action,
-            automation_config=automation_config,
-            user_permission_config=user_permission_config,
-            raise_errors=raise_errors,
-            debug=debug,
-            use_git=use_git,
-        )
-    return discovery_result
 
 
 def has_discovery_action_specific_permissions(

@@ -492,9 +492,7 @@ def _run_service_discovery(
             automation_config, debug, host, host_name, site_id, use_git, user_permission_config
         ),
         host=host,
-        raise_errors=False,
         automation_config=LocalAutomationConfig(),
-        user_permission_config=user_permission_config,
         pprint_value=pprint_value,
         debug=debug,
         use_git=use_git,

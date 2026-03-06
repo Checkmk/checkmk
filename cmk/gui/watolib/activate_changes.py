@@ -1798,6 +1798,15 @@ class ActivateChangesManager(ActivateChanges):
         if self._comment:
             log_audit("activate-changes", "Comment: %s" % self._comment)
 
+        # Baking will happen on core config generation
+        # Since we don't have access to the GUI there, we log the call here.
+        if load_configuration_settings().get("bake_agents_on_restart"):
+            log_audit(
+                action="bake-agents",
+                message="Bake agents (triggered by: Activate Changes)",
+                diff_text="Hosts: All hosts",
+            )
+
     def get_state(self) -> ActivationState:
         return {"sites": {site_id: self.get_site_state(site_id) for site_id in self._sites}}  #
 

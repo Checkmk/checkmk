@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# Builds mk-oracle for Linux and uploads it to a remote host.
+#
+# Usage: ./build-and-upload <remote_host> [remote_dir] [glibc_version]
+#
+#   remote_host    – SSH destination, e.g. some-name@some.host.com (required)
+#   remote_dir     – Target directory on the remote host (default: /tmp)
+#   glibc_version  – Minimum glibc version to target (default: 2.17)
+#
+# Prerequisites: cargo-zigbuild
+#   Install: cargo install cargo-zigbuild
+#   Requires zig in PATH: https://ziglang.org/download/
+#     Linux:   snap install zig --classic --beta
+#              OR download from https://ziglang.org/download/ and add to PATH
+#     macOS:   brew install zig
+
+set -e
+
+REMOTE_HOST="${1}"
+REMOTE_DIR="${2:-/tmp}"
+GLIBC_VERSION="${3:-2.17}"
+
+if [[ -z "${REMOTE_HOST}" ]]; then
+    echo "Usage: $0 <remote_host> [remote_dir] [glibc_version]" >&2
+    echo "  Example: $0 rocky@ora-rocktest.dev.checkmk.net /tmp 2.17" >&2
+    exit 1
+fi
+
+if ! command -v cargo-zigbuild &>/dev/null; then
+    echo "cargo-zigbuild is not installed. Run: cargo install cargo-zigbuild" >&2
+    exit 1
+fi
+
+if ! ./cargo_run zigbuild --release --target "x86_64-unknown-linux-gnu.${GLIBC_VERSION}"; then
+    echo "Build failed, aborting." >&2
+    exit 1
+fi
+
+BINARY="$(git rev-parse --show-toplevel)/requirements/rust/host/target/x86_64-unknown-linux-gnu/release/mk-oracle"
+
+if ! scp "${BINARY}" "${REMOTE_HOST}:${REMOTE_DIR}"; then
+    echo "Copy to ${REMOTE_HOST}:${REMOTE_DIR} failed, aborting." >&2
+    exit 1
+fi

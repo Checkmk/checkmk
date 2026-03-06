@@ -9,7 +9,7 @@ void main() {
         "VERSION",
         "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -93,7 +93,7 @@ void main() {
                         VERSION: version,
                         CROSS_EDITION_TARGET: cross_edition_target,
                         CUSTOM_GIT_REF: effective_git_ref,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

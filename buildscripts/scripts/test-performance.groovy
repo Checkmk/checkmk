@@ -6,7 +6,7 @@ void main() {
     check_job_parameters([
         "EDITION",
         "DISTRO",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
@@ -14,7 +14,7 @@ void main() {
     def result_dir = "${checkout_dir}/results";
     def distro = params.DISTRO;
     def edition = params.EDITION;
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
@@ -41,7 +41,7 @@ void main() {
                 distro: distro,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                fake_windows_artifacts: fake_windows_artifacts,
+                fake_artifacts: fake_artifacts,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
             );

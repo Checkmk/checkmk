@@ -16,7 +16,7 @@ void main() {
         "BUILD_IMAGE_WITHOUT_CACHE",
         "CUSTOM_CMK_BASE_IMAGE",
         "DISABLE_CACHE",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -97,7 +97,7 @@ void main() {
                         VERSION: params.VERSION,
                         EDITION: params.EDITION,
                         DISABLE_CACHE: params.DISABLE_CACHE,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                     ],
 
                     build_params_no_check: [
@@ -142,7 +142,7 @@ void main() {
                         EDITION: params.EDITION,
                         DISTRO: "ubuntu-22.04",
                         DISABLE_CACHE: params.DISABLE_CACHE,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

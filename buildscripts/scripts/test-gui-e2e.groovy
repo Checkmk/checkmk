@@ -91,7 +91,7 @@ void main() {
                         VERSION: VERSION,
                         DOCKER_TAG: docker_tag,
                         CUSTOM_GIT_REF: effective_git_ref,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                         // FIPS node specifier has to be respected
                         CIPARAM_OVERRIDE_BUILD_NODE: (USE_CASE == "fips") ? "fips" : CIPARAM_OVERRIDE_BUILD_NODE,
                     ],

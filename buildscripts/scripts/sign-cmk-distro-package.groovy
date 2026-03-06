@@ -12,7 +12,7 @@ void main() {
         ["VERSION", true],
         "DISABLE_CACHE",
         // TODO: Rename to FAKE_AGENT_ARTIFACTS -> we're also faking the linux updaters now
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     def distro = params.DISTRO;
@@ -84,7 +84,7 @@ void main() {
                     download_dir: checkout_dir,
                     disable_cache: params.DISABLE_CACHE,
                     bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                    fake_windows_artifacts: params.FAKE_WINDOWS_ARTIFACTS,
+                    fake_artifacts: params.FAKE_ARTIFACTS,
                     docker_tag: docker_tag,
                     safe_branch_name: safe_branch_name,
                     no_remove_others: true,
@@ -97,7 +97,7 @@ void main() {
                     edition: "",
                     distro: "",
                     download_dir: checkout_dir,
-                    fake_windows_artifacts: "",
+                    fake_artifacts: "",
                     no_remove_others: true,
                     dependency_paths: package_helper.dependency_paths_hashes()["winagt-build"],
                 );

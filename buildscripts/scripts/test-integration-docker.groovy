@@ -7,7 +7,7 @@ void main() {
         "EDITION",
         "VERSION",
         "DISABLE_CACHE",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
     ]);
 
@@ -71,7 +71,7 @@ void main() {
                         VERSION: params.VERSION,
                         EDITION: params.EDITION,
                         DISABLE_CACHE: params.DISABLE_CACHE,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
@@ -113,7 +113,7 @@ void main() {
                         EDITION: params.EDITION,
                         DISTRO: distro,
                         DISABLE_CACHE: params.DISABLE_CACHE,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

@@ -14,7 +14,7 @@ void main() {
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
         // TODO: Rename to FAKE_AGENT_ARTIFACTS -> we're also faking the linux updaters now
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -150,7 +150,7 @@ void main() {
         },
     ];
 
-    if (!params.FAKE_WINDOWS_ARTIFACTS) {
+    if (!params.FAKE_ARTIFACTS) {
         stages += package_helper.provide_agent_binaries(
             version: version,
             cmk_version: cmk_version,

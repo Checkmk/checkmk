@@ -11,12 +11,14 @@ from ipaddress import (
 
 from cmk.agent_based.v2 import HostLabel, HostLabelGenerator
 from cmk.plugins.lib.interfaces import (
+    AugmentedIPv4Interface,
+    AugmentedIPv6Interface,
     IPNetworkAdapter,
     TEMP_DEVICE_PREFIXES,
 )
 
 
-def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
+def host_labels_if(adapters: None | Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
     """Return host labels describing the host's network 'single-/multihomed' property based on
     the IP addresses of its interfaces.
     Filters away temporary interfaces and local IP addresses (based on interface name and IP's
@@ -24,55 +26,44 @@ def host_labels_if(adapters: Iterable[IPNetworkAdapter]) -> HostLabelGenerator:
     networks of the remaining addresses.
     """
     # Original author: thl-cmk[at]outlook[dot]com
-    if adapters is None:  # type: ignore[comparison-overlap]
-        return  # type: ignore[unreachable]
-    for version in (4, 6):
-        valid_networks = {
-            interface_ip.network
-            for adapter in adapters
-            if not any(adapter.name.startswith(prefix) for prefix in TEMP_DEVICE_PREFIXES)
-            for interface_ip in (adapter.inet4 if version == 4 else adapter.inet6)
-            if not any(
-                (
-                    interface_ip.is_broadcast,
-                    interface_ip.is_loopback,
-                    interface_ip.is_link_local,
-                    interface_ip.is_unspecified,
-                    interface_ip.is_ula,
-                    interface_ip.is_temporary,
-                )
+
+    if adapters is None:
+        return
+
+    valid_networks_v4: set[IPv4Network] = set()
+    valid_networks_v6: set[IPv6Network] = set()
+
+    for network in (
+        interface_ip.network
+        for adapter in adapters
+        if not any(adapter.name.startswith(prefix) for prefix in TEMP_DEVICE_PREFIXES)
+        for interface_ip in (*adapter.inet4, *adapter.inet6)
+        if isinstance(interface_ip, (AugmentedIPv4Interface, AugmentedIPv6Interface))
+        if not any(
+            (
+                interface_ip.is_broadcast,
+                interface_ip.is_loopback,
+                interface_ip.is_link_local,
+                interface_ip.is_unspecified,
+                interface_ip.is_ula,
+                interface_ip.is_temporary,
             )
-        }
-        # left as homework: turn these two semantically identical blocks into
-        # one (I gave up after a while trying to come up with a generic)
-        if (
-            independent_network_count := len(
-                {
-                    net
-                    for net in valid_networks
-                    if isinstance(net, IPv4Network)
-                    if not any(
-                        net != other and net.subnet_of(other)
-                        for other in valid_networks
-                        if isinstance(other, IPv4Network)
-                    )
-                }
-            )
-            if version == 4
-            else len(
-                {
-                    net
-                    for net in valid_networks
-                    if isinstance(net, IPv6Network)
-                    if not any(
-                        net != other and net.subnet_of(other)
-                        for other in valid_networks
-                        if isinstance(other, IPv6Network)
-                    )
-                }
-            )
-        ):
+        )
+    ):
+        if isinstance(network, IPv4Network):
+            valid_networks_v4.add(network)
+        elif isinstance(network, IPv6Network):
+            valid_networks_v6.add(network)
+
+    for version, valid_networks in ((4, valid_networks_v4), (6, valid_networks_v6)):
+        if independent_networks := {
+            net
+            for net in valid_networks
+            # we need to ignore arg-type here, because mypy doesn't interfere `valid_networks` to be either
+            # all IPv4Network or IPv6Network, making `other` `IPv4Network | IPv6Network`
+            if not any(net != other and net.subnet_of(other) for other in valid_networks)  # type: ignore[arg-type]
+        }:
             yield HostLabel(
                 name=f"cmk/l3v{version}_topology",
-                value="singlehomed" if independent_network_count == 1 else "multihomed",
+                value="singlehomed" if len(independent_networks) == 1 else "multihomed",
             )

@@ -59,6 +59,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 
 from cmk.server_side_calls_backend.config_processing import (
@@ -1440,24 +1441,69 @@ class Rule:
         ):
             return False
 
-        if self.conditions.item_list and not _match_one_of_search_expression(
-            search_options, "rule_item_list", self.conditions.item_list[0]
-        ):
-            return False
+        try:
+            if self.conditions.item_list and not _match_one_of_search_expression(
+                search_options, "rule_item_list", self.conditions.item_list[0]
+            ):
+                return False
 
-        to_search = (
-            [
-                self.comment(),
-                self.description(),
-            ]
-            + (self.conditions.host_list[0] if self.conditions.host_list else [])
-            + (self.conditions.item_list[0] if self.conditions.item_list else [])
-        )
+            to_search = (
+                [
+                    self.comment(),
+                    self.description(),
+                ]
+                + (self.conditions.host_list[0] if self.conditions.host_list else [])
+                + (self.conditions.item_list[0] if self.conditions.item_list else [])
+            )
 
-        if value_text is not None:
-            to_search.append(value_text)
+            if value_text is not None:
+                to_search.append(value_text)
 
-        if not _match_one_of_search_expression(search_options, "fulltext", to_search):
+            if not _match_one_of_search_expression(search_options, "fulltext", to_search):
+                return False
+        except re.error as e:
+            logger.warning(
+                "Rule '%s' of rule set '%s' in folder '%s' contains an invalid regular "
+                "expression (%r): %s",
+                self.id,
+                self.ruleset.title(),
+                self.folder.title(),
+                self.to_config(),
+                e,
+            )
+            ruleset_url = makeuri_contextless(
+                request,
+                [
+                    ("mode", "edit_ruleset"),
+                    ("varname", self.ruleset.name),
+                    ("folder", self.folder.path()),
+                ],
+                filename="wato.py",
+            )
+            rule_url = makeuri_contextless(
+                request,
+                [
+                    ("mode", "edit_rule"),
+                    ("varname", self.ruleset.name),
+                    ("rule_id", self.id),
+                    ("rule_folder", self.folder.path()),
+                ],
+                filename="wato.py",
+            )
+            html.show_warning(
+                _(
+                    'Rule <a href="%s"><tt>%s</tt></a> of rule set <a href="%s">%s</a> in folder "%s" '
+                    "contains an invalid regular expression: %s"
+                )
+                % (
+                    rule_url,
+                    self.id,
+                    ruleset_url,
+                    self.ruleset.title(),
+                    self.folder.title(),
+                    e,
+                )
+            )
             return False
 
         if (searching_host_tags := search_options.get("rule_hosttags")) is not None:

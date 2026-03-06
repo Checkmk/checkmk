@@ -10,7 +10,7 @@ def main() {
         "EDITION",
         "DISTRO",
         "VERSION",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
         "TRIGGER_POST_SUBMIT_HEAVY_CHAIN",
     ]);
 
@@ -22,7 +22,7 @@ def main() {
 
     def docker_args = "${mount_reference_repo_dir}";
     def distro = params.DISTRO;
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
     def trigger_post_submit_heavy_chain = params.TRIGGER_POST_SUBMIT_HEAVY_CHAIN;
     def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
 
@@ -82,7 +82,7 @@ def main() {
                         DISTRO: distro,
                         DISABLE_CACHE: params.DISABLE_CACHE,
                         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
-                        FAKE_WINDOWS_ARTIFACTS: fake_windows_artifacts,
+                        FAKE_ARTIFACTS: fake_artifacts,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: build_node,

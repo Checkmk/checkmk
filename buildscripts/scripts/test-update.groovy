@@ -22,7 +22,7 @@ def main() {
         "VERSION",
         "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -99,7 +99,7 @@ def main() {
                         EDITION: edition,
                         VERSION: version,
                         CUSTOM_GIT_REF: CUSTOM_GIT_REF,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

@@ -7,7 +7,7 @@ def main() {
         "EDITION",
         "DISTRO",
         "USE_CASE",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -31,7 +31,7 @@ def main() {
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
@@ -52,7 +52,7 @@ def main() {
                 docker_tag: setup_values.docker_tag,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                fake_windows_artifacts: fake_windows_artifacts,
+                fake_artifacts: fake_artifacts,
                 safe_branch_name: setup_values.safe_branch_name,
             );
         }

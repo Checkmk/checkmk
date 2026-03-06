@@ -494,8 +494,8 @@ export class ScatterPlot extends SubPlot<ScatterPlotPlotDefinition> {
       .join('foreignObject')
       .style('pointer-events', 'none')
       .classed('canvas_object', true)
-      .attr('width', (d) => d.width)
-      .attr('height', (d) => d.height)
+      .attr('width', (d) => Math.max(0, d.width))
+      .attr('height', (d) => Math.max(0, d.height))
 
     const body = fo.selectAll('xhtml').data([null]).join('xhtml').style('margin', '0px')
 
@@ -506,8 +506,8 @@ export class ScatterPlot extends SubPlot<ScatterPlotPlotDefinition> {
       .classed('subplot', true)
       .attr('x', 0)
       .attr('y', 0)
-      .attr('width', (d) => d.width)
-      .attr('height', (d) => d.height)
+      .attr('width', (d) => Math.max(0, d.width))
+      .attr('height', (d) => Math.max(0, d.height))
   }
 
   render() {
@@ -531,7 +531,12 @@ export class ScatterPlot extends SubPlot<ScatterPlotPlotDefinition> {
     if (!this._last_canvas_size) this._last_canvas_size = plot_size
 
     ctx!.clearRect(-1, -1, this._last_canvas_size.width + 2, this._last_canvas_size.height + 2)
-    const canvas_data = ctx!.getImageData(0, 0, plot_size.width, plot_size.height)
+    const canvas_data = ctx!.getImageData(
+      0,
+      0,
+      Math.max(0, plot_size.width),
+      Math.max(0, plot_size.height)
+    )
 
     const color = this.get_color()
     // @ts-ignore

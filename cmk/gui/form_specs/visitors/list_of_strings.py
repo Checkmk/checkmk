@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 from collections.abc import Sequence
 from typing import override
 
@@ -51,6 +52,16 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, _ParsedValueModel, _Fa
 
         element_visitor = get_visitor(self.form_spec.string_spec, self.visitor_options)
         string_spec, string_default_value = element_visitor.to_vue(DEFAULT_VALUE)
+
+        # Note: We do not modify the help field of the original string spec, as it might be used in other places.
+        string_spec_help = string_spec.help
+        string_spec = dataclasses.replace(string_spec, help="")
+        if string_spec_help:
+            help_text = (
+                help_text + " " + string_spec_help.strip()
+                if help_text
+                else string_spec_help.strip()
+            )
 
         assert isinstance(string_default_value, str)
 

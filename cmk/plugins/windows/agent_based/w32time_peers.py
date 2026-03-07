@@ -42,6 +42,7 @@
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from itertools import count
 from typing import Literal, NotRequired, Self, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -130,7 +131,7 @@ class Reachability:
 
 @dataclass(frozen=True, kw_only=True)
 class QueryPeers:
-    # peer: str
+    peer: str  # peer name *as reported by Windows* (can be empty!)
     # state: str  # i18n, useless
     time_remaining: float
     stratum: int
@@ -148,6 +149,7 @@ class QueryPeers:
         raw_reachability = parse_int(peer_lines[13])
         reachability = Reachability.from_raw(raw_reachability, resolve_attempts)
         return cls(
+            peer=peer_lines[0],
             time_remaining=parse_float(peer_lines[2]),
             stratum=parse_int(before_parens(peer_lines[4])),
             last_successful_sync_time=peer_lines[7],
@@ -207,19 +209,29 @@ def _validate_peer_parse(peer_lines: Sequence[str]) -> None:
 def parse_w32time_peers(string_table: StringTable) -> dict[str, QueryPeers]:
     peers = {}
 
+    # In some (broken?) setups, the peer name can be empty!
+    # In this case, we itemize it as something like "(unnamed peer 1)"
+    # We store the (empty) peer name in the QueryPeers object so we can later
+    # check that field (in the check functions) and act on it.
+    nameless_peers_counter = count(1)
+
+    def save_peer(peer_lines: list[str]) -> None:
+        query_peers = QueryPeers.from_peer_lines(peer_lines)
+        itemized_name = peer_lines[0] or f"(unnamed peer {next(nameless_peers_counter)})"
+
+        # NOTE: We drop duplicate peer entries even though they can appear in
+        # the output. Normally, a duplicate will appear in the situation where a
+        # peer is configured by hostname, it has multiple DNS records which are
+        # *not* NTP servers. In this case, a record exists for each DNS entry.
+        # In properly configured pools and servers, only one entry will appear
+        # for each, so we assume this green path here, for better or worse.
+        peers[itemized_name] = query_peers
+
     peer_lines: list[str] = []
     for row in string_table[2:]:  # Skip the peer count line, and the first separator
         line = " ".join(row)
         if line == "---":  # If we get this, it means a new peer is starting - save the previous one
-            query_peers = QueryPeers.from_peer_lines(peer_lines)
-
-            # NOTE: We drop duplicate peer entries even though they can appear in
-            # the output. Normally, a duplicate will appear in the situation where a
-            # peer is configured by hostname, it has multiple DNS records which are
-            # *not* NTP servers. In this case, a record exists for each DNS entry.
-            # In properly configured pools and servers, only one entry will appear
-            # for each, so we assume this green path here, for better or worse.
-            peers[peer_lines[0]] = query_peers
+            save_peer(peer_lines)
             peer_lines = []
         elif ":" not in line:
             continue
@@ -230,8 +242,7 @@ def parse_w32time_peers(string_table: StringTable) -> dict[str, QueryPeers]:
     # At the very end, we don't get a final "---" so we have to add the last peer
     # explicitly, if there are any lines left over
     if peer_lines:
-        query_peers = QueryPeers.from_peer_lines(peer_lines)
-        peers[peer_lines[0]] = query_peers
+        save_peer(peer_lines)
 
     return peers
 

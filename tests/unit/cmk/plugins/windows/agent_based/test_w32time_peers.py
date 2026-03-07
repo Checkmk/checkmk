@@ -641,7 +641,6 @@ EN_WITH_ERROR = [
     ["Reachability:", "168"],
 ]
 
-
 EN_WITH_0_REACHABILITY_AND_HIGH_RESOLVE_ATTEMPTS = [
     ["#Peers:", "16"],
     ["---"],
@@ -673,6 +672,97 @@ EN_WITH_0_REACHABILITY_AND_HIGH_RESOLVE_ATTEMPTS = [
     ["Reachability:", "0"],
 ]
 
+DE_MISSING_PEER_NAME = [
+    ["Anzahl", "Peers:", "1"],
+    ["---"],
+    ["Peer:", ""],
+    ["Status:", "Ausstehend"],
+    ["Verbleibende", "Zeit:", "660.8019897s"],
+    ["Modus:", "0", "(Reserviert)"],
+    ["Stratum:", "0", "(nicht", "angegeben)"],
+    ["PeerAbrufintervall:", "0", "(nicht", "angegeben)"],
+    ["HostAbrufintervall:", "0", "(nicht", "angegeben)"],
+    ["Letzte", "erfolgr.", "Synchronisierungszeit:", "04.03.2026", "14:12:09"],
+    ["Letzter", "Synchronisierungsfehler:", "0x00000000", "(Erfolgreich)"],
+    ["Letzte", "Synchronisierungsfehlermeldungs-ID:", "0x00000000", "(Erfolgreich)"],
+    ["Auth-Typnachricht-ID:", "0x0000005A", "(NoAuth", ")"],
+    ["Auflâsungsversuche:", "0"],
+    ["GÂltiger", "Datenzâhler:", "0"],
+    ["Erreichbarkeit:", "0"],
+]
+
+# We have never seen this in practice, we don't know if it's possible
+# but we handle it, in case.
+DE_MULTIPLE_MISSING_PEER_NAMES = [
+    ["Anzahl", "Peers:", "2"],
+    ["---"],
+    ["Peer:", ""],
+    ["Status:", "Ausstehend"],
+    ["Verbleibende", "Zeit:", "660.8019897s"],
+    ["Modus:", "0", "(Reserviert)"],
+    ["Stratum:", "0", "(nicht", "angegeben)"],
+    ["PeerAbrufintervall:", "0", "(nicht", "angegeben)"],
+    ["HostAbrufintervall:", "0", "(nicht", "angegeben)"],
+    ["Letzte", "erfolgr.", "Synchronisierungszeit:", "04.03.2026", "14:12:09"],
+    ["Letzter", "Synchronisierungsfehler:", "0x00000000", "(Erfolgreich)"],
+    ["Letzte", "Synchronisierungsfehlermeldungs-ID:", "0x00000000", "(Erfolgreich)"],
+    ["Auth-Typnachricht-ID:", "0x0000005A", "(NoAuth", ")"],
+    ["Auflâsungsversuche:", "0"],
+    ["GÂltiger", "Datenzâhler:", "0"],
+    ["Erreichbarkeit:", "0"],
+    ["---"],
+    ["Peer:", ""],
+    ["Status:", "Ausstehend"],
+    ["Verbleibende", "Zeit:", "658.8019897s"],
+    ["Modus:", "0", "(Reserviert)"],
+    ["Stratum:", "0", "(nicht", "angegeben)"],
+    ["PeerAbrufintervall:", "0", "(nicht", "angegeben)"],
+    ["HostAbrufintervall:", "0", "(nicht", "angegeben)"],
+    ["Letzte", "erfolgr.", "Synchronisierungszeit:", "04.03.2026", "14:11:11"],
+    ["Letzter", "Synchronisierungsfehler:", "0x00000000", "(Erfolgreich)"],
+    ["Letzte", "Synchronisierungsfehlermeldungs-ID:", "0x00000000", "(Erfolgreich)"],
+    ["Auth-Typnachricht-ID:", "0x0000005A", "(NoAuth", ")"],
+    ["Auflâsungsversuche:", "0"],
+    ["GÂltiger", "Datenzâhler:", "0"],
+    ["Erreichbarkeit:", "0"],
+]
+
+# We have never seen this in practice, we don't know if it's possible
+# but we handle it, in case.
+# Missing name + Normal peer
+DE_MIXED_MISSING_PEER_NAME = [
+    ["Anzahl", "Peers:", "2"],
+    ["---"],
+    ["Peer:", ""],
+    ["Status:", "Ausstehend"],
+    ["Verbleibende", "Zeit:", "660.8019897s"],
+    ["Modus:", "0", "(Reserviert)"],
+    ["Stratum:", "0", "(nicht", "angegeben)"],
+    ["PeerAbrufintervall:", "0", "(nicht", "angegeben)"],
+    ["HostAbrufintervall:", "0", "(nicht", "angegeben)"],
+    ["Letzte", "erfolgr.", "Synchronisierungszeit:", "04.03.2026", "14:12:09"],
+    ["Letzter", "Synchronisierungsfehler:", "0x00000000", "(Erfolgreich)"],
+    ["Letzte", "Synchronisierungsfehlermeldungs-ID:", "0x00000000", "(Erfolgreich)"],
+    ["Auth-Typnachricht-ID:", "0x0000005A", "(NoAuth", ")"],
+    ["Auflâsungsversuche:", "0"],
+    ["GÂltiger", "Datenzâhler:", "0"],
+    ["Erreichbarkeit:", "0"],
+    ["---"],
+    ["Peer:", "time.cloudflare.com"],
+    ["Status:", "Aktiv"],
+    ["Verbleibende", "Zeit:", "3017.0667103s"],
+    ["Modus:", "3", "(Client)"],
+    ["Stratum:", "3", "(Sekundärreferenz", "-", "synchr.", "über", "(S)NTP)"],
+    ["PeerAbrufintervall:", "13", "(8192s)"],
+    ["HostAbrufintervall:", "13", "(8192s)"],
+    ["Letzte", "erfolgr.", "Synchronisierungszeit:", "07.03.2026", "04:17:06"],
+    ["Letzter", "Synchronisierungsfehler:", "0x00000000", "(Erfolgreich)"],
+    ["Letzte", "Synchronisierungsfehlermeldungs-ID:", "0x00000000", "(Erfolgreich)"],
+    ["Auth-Typnachricht-ID:", "0x0000005A", "(NoAuth", ")"],
+    ["Auflösungsversuche:", "0"],
+    ["Gültiger", "Datenzähler:", "8"],
+    ["Erreichbarkeit:", "255"],
+]
 
 NO_PEERS = [["#Peers:", "0"]]
 
@@ -684,6 +774,7 @@ NO_PEERS = [["#Peers:", "0"]]
             DE_PEERS_EXAMPLE_COM,
             {
                 "example.com": w32time_peers.QueryPeers(
+                    peer="example.com",
                     time_remaining=30984.9169029,
                     stratum=0,
                     last_successful_sync_time="(null)",
@@ -700,6 +791,7 @@ NO_PEERS = [["#Peers:", "0"]]
             EN_PEERS,
             {
                 "de.pool.ntp.org": w32time_peers.QueryPeers(
+                    peer="de.pool.ntp.org",
                     time_remaining=612.9102195,
                     stratum=2,
                     last_successful_sync_time="9/18/2025 6:41:48 PM",
@@ -711,6 +803,7 @@ NO_PEERS = [["#Peers:", "0"]]
                     ),
                 ),
                 "example.com": w32time_peers.QueryPeers(
+                    peer="example.com",
                     time_remaining=5817.0042395,
                     stratum=0,
                     last_successful_sync_time="(null)",
@@ -722,6 +815,7 @@ NO_PEERS = [["#Peers:", "0"]]
                     ),
                 ),
                 "time.cloudflare.com": w32time_peers.QueryPeers(
+                    peer="time.cloudflare.com",
                     time_remaining=618.9722708,
                     stratum=3,
                     last_successful_sync_time="9/18/2025 6:41:54 PM",
@@ -733,6 +827,7 @@ NO_PEERS = [["#Peers:", "0"]]
                     ),
                 ),
                 "time.facebook.com": w32time_peers.QueryPeers(
+                    peer="time.facebook.com",
                     time_remaining=1754.9964697,
                     stratum=1,
                     last_successful_sync_time="9/18/2025 7:00:50 PM",
@@ -744,10 +839,86 @@ NO_PEERS = [["#Peers:", "0"]]
                     ),
                 ),
                 "time.google.com": w32time_peers.QueryPeers(
+                    peer="time.google.com",
                     time_remaining=1755.0132055,
                     stratum=1,
                     last_successful_sync_time="9/18/2025 7:00:50 PM",
                     last_sync_error_str="Succeeded",
+                    last_sync_error_msg=None,
+                    raw_reachability=255,
+                    reachability=w32time_peers.Reachability(
+                        total_failures=0, consecutive_failures=0, total_attempts=8
+                    ),
+                ),
+            },
+        ),
+        (
+            DE_MISSING_PEER_NAME,
+            {
+                "(unnamed peer 1)": w32time_peers.QueryPeers(
+                    peer="",
+                    time_remaining=660.8019897,
+                    stratum=0,
+                    last_successful_sync_time="04.03.2026 14:12:09",
+                    last_sync_error_str="Erfolgreich",
+                    last_sync_error_msg=None,
+                    raw_reachability=0,
+                    reachability=w32time_peers.Reachability(
+                        total_failures=0, consecutive_failures=0, total_attempts=0
+                    ),
+                )
+            },
+        ),
+        (
+            DE_MULTIPLE_MISSING_PEER_NAMES,
+            {
+                "(unnamed peer 1)": w32time_peers.QueryPeers(
+                    peer="",
+                    time_remaining=660.8019897,
+                    stratum=0,
+                    last_successful_sync_time="04.03.2026 14:12:09",
+                    last_sync_error_str="Erfolgreich",
+                    last_sync_error_msg=None,
+                    raw_reachability=0,
+                    reachability=w32time_peers.Reachability(
+                        total_failures=0, consecutive_failures=0, total_attempts=0
+                    ),
+                ),
+                "(unnamed peer 2)": w32time_peers.QueryPeers(
+                    peer="",
+                    time_remaining=658.8019897,
+                    stratum=0,
+                    last_successful_sync_time="04.03.2026 14:11:11",
+                    last_sync_error_str="Erfolgreich",
+                    last_sync_error_msg=None,
+                    raw_reachability=0,
+                    reachability=w32time_peers.Reachability(
+                        total_failures=0, consecutive_failures=0, total_attempts=0
+                    ),
+                ),
+            },
+        ),
+        (
+            DE_MIXED_MISSING_PEER_NAME,
+            {
+                "(unnamed peer 1)": w32time_peers.QueryPeers(
+                    peer="",
+                    time_remaining=660.8019897,
+                    stratum=0,
+                    last_successful_sync_time="04.03.2026 14:12:09",
+                    last_sync_error_str="Erfolgreich",
+                    last_sync_error_msg=None,
+                    raw_reachability=0,
+                    reachability=w32time_peers.Reachability(
+                        total_failures=0, consecutive_failures=0, total_attempts=0
+                    ),
+                ),
+                "time.cloudflare.com": w32time_peers.QueryPeers(
+                    peer="time.cloudflare.com",
+                    time_remaining=3017.0667103,
+                    stratum=3,
+                    last_successful_sync_time="07.03.2026 04:17:06",
+                    last_sync_error_str="Erfolgreich",
                     last_sync_error_msg=None,
                     raw_reachability=255,
                     reachability=w32time_peers.Reachability(

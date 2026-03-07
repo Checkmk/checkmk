@@ -68220,6 +68220,9 @@ msgstr "Parametrul \"%s\" nu este un URL valid."
 msgid "The parameter \"%s\" is not an integer."
 msgstr "Parametrul \"%s\" nu este un număr întreg."
 
+msgid "The parameters that were provided to create the Diagnostics dump."
+msgstr ""
+
 #, python-format
 msgid ""
 "The parent '%s' is monitored on site '%s' while the host itself is monitored "

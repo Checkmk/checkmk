@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-05 18:36+0000\n"
+"PO-Revision-Date: 2026-03-06 18:36+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -17084,9 +17084,8 @@ msgstr "デフォルト(%s)"
 msgid "Default BI visualization settings"
 msgstr "デフォルトのBI視覚化設定"
 
-#, fuzzy
 msgid "Default cleanup parameters"
-msgstr "デフォルトパラメータ"
+msgstr "デフォルトクリーンアップパラメータ"
 
 msgid "Default color"
 msgstr "デフォルトの色"
@@ -19471,9 +19470,8 @@ msgstr "列ヘッダーを追加しないでください"
 msgid "Do not add text"
 msgstr "テキストを追加しない"
 
-#, fuzzy
 msgid "Do not apply this configuration"
-msgstr "この接続を削除します"
+msgstr "この構成を適用しないでください"
 
 msgid "Do not ask for a comment"
 msgstr "コメントを求めないでください"
@@ -20027,7 +20025,6 @@ msgstr "一致するサービスのパラメーターを変更しない"
 msgid "Don't change state"
 msgstr "状態を変更しないでください"
 
-#, fuzzy
 msgid "Don't compute a rate"
 msgstr "レートを計算しないでください"
 
@@ -20443,14 +20440,14 @@ msgid ""
 "host deletion. They are only deleted automatically when you enable this "
 "option and after the configured period."
 msgstr ""
-"監視中に、ホストごとにいくつかの専用ファイルが作成されます。たとえば、検出さ"
-"れたサービス、パフォーマンスデータ、およびさまざまな一時ファイルなどが作成さ"
-"れます。ホストの削除時には、これらのファイルは通常削除されます。しかし、ホス"
-"トをあるサイトから別のサイトに移動したり、構成からホストを手動で削除したりす"
-"る場合など、手動で削除するまでファイルがディスクに残る場合もあります。<br>パ"
-"フォーマンスデータ(RRD)とHW/SWインベントリアーカイブは、ホストの削除中に削除"
-"されることはありません。これらは、このオプションを有効にした場合、および構成"
-"された期間が経過した後にのみ自動的に削除されます。"
+"監視中に、ホストごとに複数の専用ファイルが作成されます。例えば、検出された"
+"サービス、パフォーマンスデータ、およびさまざまな一時ファイルなどです。ホスト"
+"の削除時には、通常はこれらのファイルも削除されます。ただし、ホストをあるサイ"
+"トから別のサイトに移動したり、構成からホストを手動で削除したりする場合など、"
+"手動で削除するまでファイルがディスクに残るケースがあります。<br>パフォーマン"
+"スデータ(RRD)およびHW/SWインベントリアーカイブは、ホストの削除時に削除される"
+"ことはありません。これらは、このオプションを有効化し設定された期間が経過した"
+"場合にのみ自動的に削除されます。"
 
 msgid "During this time period no monitoring data is available"
 msgstr "この期間中、監視データは利用できません"
@@ -21407,9 +21404,8 @@ msgstr "キャッシュを有効にする"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にする"
 
-#, fuzzy
 msgid "Enable OpenTelemetry collector (experimental)"
-msgstr "OpenTelemetryコレクター（実験的）"
+msgstr "OpenTelemetryコレクターの有効化（実験的）"
 
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH(LOGIN)を有効にする"
@@ -21450,9 +21446,8 @@ msgstr "自動ホストキー受け入れを有効にする (OpenSSH version >= 
 msgid "Enable automatic host removal"
 msgstr "ホストの自動削除を有効化"
 
-#, fuzzy
 msgid "Enable compatibility mode"
-msgstr "互換性"
+msgstr "互換モードを有効にする"
 
 msgid "Enable controller"
 msgstr "コントローラを有効化"
@@ -21616,9 +21611,8 @@ msgstr "アクティブチェックを有効/無効にする"
 msgid "Enable/Disable passive checks"
 msgstr "パッシブチェックを有効/無効にする"
 
-#, fuzzy
 msgid "Enable/disable active checks for services (Nagios core)"
-msgstr "サービスのアクティブチェックを有効/無効にする"
+msgstr "サービスのアクティブチェックを有効/無効にする(Nagios core)"
 
 msgid "Enable/disable checks"
 msgstr "チェックを有効/無効にする"
@@ -37371,7 +37365,7 @@ msgid "Main dashboard"
 msgstr "メインダッシュボード"
 
 msgid "Main folder"
-msgstr "メインフォルダー"
+msgstr "メインフォルダ"
 
 msgid "Main memory usage (UNIX / Other Devices)"
 msgstr "メインメモリ使用量(UNIX /その他のデバイス)"
@@ -63163,7 +63157,7 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "<tt>v$dataguard_stats </tt>でのトランスポートラグの制限"
 
 msgid "The limit has to be bigger than the spike limit."
-msgstr ""
+msgstr "限界値はスパイク限界値よりも大きくならなければなりません。"
 
 msgid "The list needs to have at least one element"
 msgstr "クラスターには少なくとも1つの要素が必要です"
@@ -63419,6 +63413,10 @@ msgid ""
 "is also dependent on the configured processors, it is important to put "
 "checks in place regarding memory usage."
 msgstr ""
+"メモリリミッタープロセッサは、コレクタにおけるメモリ不足状態を防ぐために使用"
+"されます。コレクタが処理するデータ量と種類は環境固有であり、コレクタのリソー"
+"ス使用率も設定されたプロセッサに依存するため、メモリ使用量に関するチェックを"
+"適切に実施することが重要です。"
 
 #, no-python-format
 msgid ""
@@ -64005,6 +64003,9 @@ msgstr "パラメータ \"%s\" は有効なURLではありません。"
 #, python-format
 msgid "The parameter \"%s\" is not an integer."
 msgstr "パラメータ \"%s\" は整数ではありません。"
+
+msgid "The parameters that were provided to create the Diagnostics dump."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -64674,6 +64675,7 @@ msgstr "選択したアイコンは存在しません。"
 
 msgid "The selected options do not match any hosts, nothing to do."
 msgstr ""
+"選択されたオプションはどのホストにも一致しません。実行する操作はありません。"
 
 msgid "The sensor name"
 msgstr "センサー名"
@@ -69518,6 +69520,9 @@ msgid ""
 "The rule only works when the Nagios core is used. If the Checkmk Micro Core "
 "is used, this rule has no effect at all."
 msgstr ""
+"この設定により、サービスのアクティブチェックを無効化または有効化できます。こ"
+"のルールはNagiosコアが使用されている場合にのみ機能します。Checkmk Micro Core"
+"が使用されている場合、このルールはまったく効果を持ちません。"
 
 msgid ""
 "This setting allows you to disable the flapping detection for a host "
@@ -70285,6 +70290,9 @@ msgid ""
 "the check interval or increase spike limit to avoid memory usage going over "
 "the hard limit."
 msgstr ""
+"メモリ使用量の測定間隔。推奨値は1秒です。コレクターへの予想トラフィックが非常"
+"にスパイクする場合、メモリ使用量がハードリミットを超えないように、チェック間"
+"隔を短縮するかスパイク制限値を増加させてください。"
 
 msgid "Time between new checks of type Check_MK"
 msgstr "Checkmkタイプの新しいチェック間の時間"
@@ -70882,6 +70890,8 @@ msgid ""
 "To configure a proxy, go to <a href='{}'>Global Settings</a> and define your "
 "proxy settings there."
 msgstr ""
+"プロキシを設定するには、<a href='{}'>グローバル設定</a> に移動し、そこでプロ"
+"キシ設定を定義してください。"
 
 msgid ""
 "To configure a rule for overall FlashArray capacity use 'Overall' as an item."
@@ -70935,6 +70945,8 @@ msgid ""
 "To get access, ensure your user is in a contact group specified in the "
 "host's permissions: <b>%s</b>."
 msgstr ""
+"アクセスするには、ホストの権限で指定された連絡先グループにユーザーが含まれて"
+"いることを確認してください：<b>%s</b>。"
 
 msgid ""
 "To make the querying source transparent for the requested web server, the "

@@ -67758,6 +67758,9 @@ msgstr "Il parametro \"%s\" non è un URL valido."
 msgid "The parameter \"%s\" is not an integer."
 msgstr "Il parametro \"%s\" non è un intero."
 
+msgid "The parameters that were provided to create the Diagnostics dump."
+msgstr ""
+
 #, python-format
 msgid ""
 "The parent '%s' is monitored on site '%s' while the host itself is monitored "

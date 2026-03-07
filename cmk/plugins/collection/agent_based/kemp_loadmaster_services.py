@@ -11,6 +11,8 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     Metric,
     OIDEnd,
+    any_of,
+    equals,
     Result,
     Service,
     SimpleSNMPSection,
@@ -20,6 +22,24 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.kemp_loadmaster.lib import DETECT_KEMP_LOADMASTER, VirtualService
 from cmk.plugins.kemp_loadmaster.lib import VSSection as Section
+
+class VirtualService(NamedTuple):
+    name: str
+    connections: Optional[int]
+    state: State
+    state_txt: str
+    oid_end: str
+
+
+ServiceSection = Mapping[str, VirtualService]
+HaSection = Sequence[Sequence]
+ClusterServiceSection = Mapping[str, Optional[ServiceSection]]
+ClusterHaSection = Mapping[str, Optional[HaSection]]
+
+DETECT_KEMP_LOADMASTER = any_of(
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12196.250.10"),
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2021.250.10"),
+)
 
 _VS_STATE_MAP: Final = {
     "1": (State.OK, "in service"),
@@ -76,6 +96,40 @@ def check_kemp_loadmaster_services(item: str, section: Section) -> CheckResult:
         yield Result(state=State.OK, summary=f"Active connections: {virtual_service.connections}")
         yield Metric("conns", virtual_service.connections)
 
+def cluster_check_kemp_loadmaster_services(item: str,
+                                           section_kemp_loadmaster_services: ClusterServiceSection,
+                                           section_kemp_loadmaster_ha: ClusterHaSection) -> CheckResult:
+    """Check state of a pair of Kemp load masters in HA mode. This check does not support Clusters,
+    with 4 and more nodes. The better of both states is reported.
+    """
+
+    if len(section_kemp_loadmaster_services) != 2:
+        yield from _unsupported_node_count(section_kemp_loadmaster_services)
+        return
+
+    host = _get_primary_node(section_kemp_loadmaster_ha)
+
+    if host is not None:
+        yield Result(state=State.OK, summary=f"Active node: {host}")
+        yield from check_kemp_loadmaster_services(item, section_kemp_loadmaster_services[host], section_kemp_loadmaster_ha)
+
+
+def _get_primary_node(section_kemp_loadmaster_ha: ClusterServiceSection) -> Optional[str]:
+    host_selector: Optional[str] = None
+
+    for host, ha in section_kemp_loadmaster_ha.items():
+        if ha[0][0] == '1':
+            host_selector = host
+            break
+
+    return host_selector
+
+def _unsupported_node_count(section: ClusterServiceSection):
+    yield Result(
+        state=State.UNKNOWN,
+        summary=f'Cluster check for this service only supports one pair of Loadbalancers in HA-Mode. Got {len(section)} '
+                f'{"node" if len(section) == 1 else "nodes"}'
+    )
 
 check_plugin_kemp_loadmaster_services = CheckPlugin(
     name="kemp_loadmaster_services",

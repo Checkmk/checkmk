@@ -261,8 +261,9 @@ def discover_w32time_peers(
         return
 
     for peer, data in section.items():
-        # Really hoping this string stays consistent across languages
-        if data.last_successful_sync_time != "(null)":
+        # Really hoping "(null)" stays consistent across languages
+        # Also if a peer has no name, we want to discover it, to warn on it.
+        if data.last_successful_sync_time != "(null)" or data.peer == "":
             yield Service(item=peer)
 
 
@@ -368,6 +369,13 @@ def check_w32time_peers(item: str, params: Params, section: dict[str, QueryPeers
 
     peer = section[item]
 
+    if peer.peer == "":
+        # Windows reported a peer with no name, likely due to a bad
+        # configuration w.r.t NT5DS. In this case, the metrics are always all
+        # 0, so there is nothing useful to report.
+        yield Result(state=State.WARN, summary="Peer with no name found!")
+        return
+
     yield from _last_successful_sync_time(peer)
     yield from _reachability_total_failures(peer, params.get("reachability_total_failures"))
     yield from _reachability_consecutive_failures(
@@ -423,6 +431,9 @@ def check_w32time_peers_summary(
 
     # So we can count how many peers have at least one non-ok result.
     non_ok_peers: set[str] = set()
+    # We do not suppress alerts in this case, we need to know if we should hide
+    # that message or not, so track missing-name peers.
+    missing_name_peers = 0
 
     # We need to calculate the results of these checks before we yield any
     # Results because this is the only way we know if we need to suppress alerts
@@ -449,6 +460,13 @@ def check_w32time_peers_summary(
         ),
     ]
     for name, peer in section.items():
+        if peer.peer == "":
+            # We handle this separately when yielding, so skip checks
+            # but add it to the list of non-ok peers so the failed count shows it
+            non_ok_peers.add(name)
+            missing_name_peers += 1
+            continue
+
         for check_fn, param, results_dict in alertable_checks:
             results = list(check_fn(peer, params.get(param)))
             results_dict[name] = results
@@ -460,7 +478,15 @@ def check_w32time_peers_summary(
 
     # If we're in "universal" mode, but not every peer has failed, then by
     # by definition, we are suppressing alerts.
-    suppressing = params.get("universal", False) and len(non_ok_peers) != peer_count
+    #
+    # missing_name_peers is counted separately from non_ok_peers because we want
+    # to alert on it independently of non_ok_peers. It effectively overrides
+    # the suppression logic; if a peer has no name, we always alert on it.
+    suppressing = (
+        params.get("universal", False)
+        and len(non_ok_peers) != peer_count
+        and missing_name_peers == 0
+    )
 
     failed_summary = f"Failed: {len(non_ok_peers)}"
     if suppressing and non_ok_peers:
@@ -469,6 +495,12 @@ def check_w32time_peers_summary(
 
     for name, peer in section.items():
         yield Result(state=State.OK, notice=f"\nPeer: {name}")
+        if peer.peer == "":
+            # Windows reported a peer with no name, likely due to a bad
+            # configuration w.r.t NT5DS.
+            yield Result(state=State.WARN, summary="Peer with no name found!")
+            continue  # Skip metrics, everything is 0 in this case anyway
+
         yield from _last_successful_sync_time(peer, notice_only=True)
         yield from emit_possibly_suppressed(
             name, reachability_total_failures_results[name], suppressing

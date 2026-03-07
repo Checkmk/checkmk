@@ -691,6 +691,7 @@ DE_MISSING_PEER_NAME = [
     ["Erreichbarkeit:", "0"],
 ]
 
+
 # We have never seen this in practice, we don't know if it's possible
 # but we handle it, in case.
 DE_MULTIPLE_MISSING_PEER_NAMES = [
@@ -726,6 +727,7 @@ DE_MULTIPLE_MISSING_PEER_NAMES = [
     ["GÂltiger", "Datenzâhler:", "0"],
     ["Erreichbarkeit:", "0"],
 ]
+
 
 # We have never seen this in practice, we don't know if it's possible
 # but we handle it, in case.
@@ -763,6 +765,7 @@ DE_MIXED_MISSING_PEER_NAME = [
     ["Gültiger", "Datenzähler:", "8"],
     ["Erreichbarkeit:", "255"],
 ]
+
 
 NO_PEERS = [["#Peers:", "0"]]
 
@@ -1059,6 +1062,33 @@ def test_parse_w32time_peers_parse_fail(string_table: StringTable, substr: str) 
             ],
             id="0 reachability, use resolve attempts instead",
         ),
+        pytest.param(
+            DE_MISSING_PEER_NAME,
+            "(unnamed peer 1)",
+            w32time_peers.DEFAULT_PARAMS,
+            [Result(state=State.WARN, summary="Peer with no name found!")],
+            id="1 peer, missing name",
+        ),
+        pytest.param(
+            DE_MIXED_MISSING_PEER_NAME,
+            "(unnamed peer 1)",
+            w32time_peers.DEFAULT_PARAMS,
+            [Result(state=State.WARN, summary="Peer with no name found!")],
+            id="2 peers, 1 is missing name and warns",
+        ),
+        pytest.param(
+            DE_MIXED_MISSING_PEER_NAME,
+            "time.cloudflare.com",
+            w32time_peers.DEFAULT_PARAMS,
+            [
+                Result(state=State.OK, summary="Last successful sync time: 07.03.2026 04:17:06"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, summary="Stratum: 3"),
+                Result(state=State.OK, summary="Next poll in: 50 minutes 17 seconds"),
+            ],
+            id="2 peers, 1 is missing name, other is OK",
+        ),
     ],
 )
 def test_check_w32time_peers(
@@ -1082,6 +1112,21 @@ def test_check_w32time_peers(
             ],
         ),
         (DE_PEERS_EXAMPLE_COM, []),
+        (DE_MISSING_PEER_NAME, [Service(item="(unnamed peer 1)")]),
+        (
+            DE_MULTIPLE_MISSING_PEER_NAMES,
+            [
+                Service(item="(unnamed peer 1)"),
+                Service(item="(unnamed peer 2)"),
+            ],
+        ),
+        (
+            DE_MIXED_MISSING_PEER_NAME,
+            [
+                Service(item="(unnamed peer 1)"),
+                Service(item="time.cloudflare.com"),
+            ],
+        ),
         (NO_PEERS, []),
     ],
 )
@@ -1447,6 +1492,63 @@ def test_check_w32time_peers_summary_edge_cases(
     We should not crash in edge cases like no peers or a single peer.
     """
     parsed = w32time_peers.parse_w32time_peers(fixture)
+    params: w32time_peers.Params = {
+        "reachability_consecutive_failures": ("no_levels", None),
+        "reachability_total_failures": ("no_levels", None),
+        "stratum": ("no_levels", None),
+        "universal": False,
+    }
+    result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "string_table, expected",
+    [
+        (
+            DE_MISSING_PEER_NAME,
+            [
+                Result(state=State.OK, summary="Found 1 peer"),
+                Result(state=State.OK, summary="Failed: 1"),
+                Result(state=State.OK, notice="\nPeer: (unnamed peer 1)"),
+                Result(state=State.WARN, summary="Peer with no name found!"),
+            ],
+        ),
+        (
+            DE_MULTIPLE_MISSING_PEER_NAMES,
+            [
+                Result(state=State.OK, summary="Found 2 peers"),
+                Result(state=State.OK, summary="Failed: 2"),
+                Result(state=State.OK, notice="\nPeer: (unnamed peer 1)"),
+                Result(state=State.WARN, summary="Peer with no name found!"),
+                Result(state=State.OK, notice="\nPeer: (unnamed peer 2)"),
+                Result(state=State.WARN, summary="Peer with no name found!"),
+            ],
+        ),
+        (
+            DE_MIXED_MISSING_PEER_NAME,
+            [
+                Result(state=State.OK, summary="Found 2 peers"),
+                Result(state=State.OK, summary="Failed: 1"),
+                Result(state=State.OK, notice="\nPeer: (unnamed peer 1)"),
+                Result(state=State.WARN, summary="Peer with no name found!"),
+                Result(state=State.OK, notice="\nPeer: time.cloudflare.com"),
+                Result(state=State.OK, notice="Last successful sync time: 07.03.2026 04:17:06"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 3"),
+                Result(state=State.OK, notice="Next poll in: 50 minutes 17 seconds"),
+            ],
+        ),
+    ],
+)
+def test_check_w32time_peers_summary_missing_peer_name(
+    string_table: StringTable, expected: CheckResult
+) -> None:
+    """
+    Handle missing peer names correctly.
+    """
+    parsed = w32time_peers.parse_w32time_peers(string_table)
     params: w32time_peers.Params = {
         "reachability_consecutive_failures": ("no_levels", None),
         "reachability_total_failures": ("no_levels", None),

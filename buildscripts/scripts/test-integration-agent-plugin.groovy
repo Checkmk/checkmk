@@ -85,7 +85,7 @@ void main() {
                         result_path: "${checkout_dir}/test-results",
                         edition: edition,
                         docker_tag: setup_values.docker_tag,
-                        version: VERSION == "daily" ? version : cmk_version,
+                        version: setup_values.cmk_version,
                         distro: distro,
                         branch_name: setup_values.safe_branch_name,
                         make_target: make_target,

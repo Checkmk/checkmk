@@ -43,7 +43,7 @@ Map common_prepare(Map args) {
         """.stripMargin());
 
     // use a map as return value to easily extend it later
-    return [safe_branch_name: safe_branch_name, docker_tag: docker_tag];
+    return [safe_branch_name: safe_branch_name, docker_tag: docker_tag, cmk_version: cmk_version];
 }
 
 void fetch_package(Map args) {

@@ -640,6 +640,7 @@ function render_graph(graph: GraphArtwork) {
   // which must be included: total legend span = marginLeft + scrollWidth.
   if (
     legendContainer !== null &&
+    canvas.clientWidth > 0 &&
     legendContainer.scrollWidth + legendMarginLeft > canvas.clientWidth
   ) {
     const newWidth = legendContainer.scrollWidth + legendMarginLeft

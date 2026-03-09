@@ -178,8 +178,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             { label: _t('Copy internal link'), action: copyInternalDashboardLink },
             {
               label: _t('Copy public link'),
-              hidden: isBuiltInDashboard || !canEditDashboard,
-              disabled: !publicToken,
+              hidden: isBuiltInDashboard || !canEditDashboard || !publicToken,
               action: () => {
                 copyToClipboard(urlHandler.getSharedDashboardLink(publicToken!.token_id))
               }

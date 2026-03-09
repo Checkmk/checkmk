@@ -115,7 +115,7 @@ def test_discover_netapp_ontap_snapshots(
             {},
             [
                 Result(state=State.OK, summary="Used snapshot space: 4.88 KiB"),
-                Metric("bytes", 5000.0),
+                Metric("snapshot_reserve_used", 5000.0),
                 Result(state=State.WARN, summary="No snapshot reserve configured"),
             ],
             id="volume without snapshot reserve size warning",
@@ -132,7 +132,7 @@ def test_discover_netapp_ontap_snapshots(
             {"state_noreserve": State.OK},
             [
                 Result(state=State.OK, summary="Used snapshot space: 4.88 KiB"),
-                Metric("bytes", 5000.0),
+                Metric("snapshot_reserve_used", 5000.0),
                 Result(state=State.OK, summary="No snapshot reserve configured"),
             ],
             id="volume without snapshot reserve size status ok",
@@ -166,6 +166,8 @@ def test_check_netapp_ontap_snapshots_with_metrics() -> None:
 
     assert result == [
         Result(state=State.OK, summary="Reserve used: 50.0% (2.44 KiB)"),
+        Metric("snapshot_reserve_used_percent", 50.0),
         Result(state=State.OK, summary="Total Reserve: 50% (4.88 KiB) of 14.6 KiB"),
-        Metric("bytes", 2500.0, boundaries=(0.0, 5000.0)),
+        Metric("snapshot_reserve_used", 2500.0, boundaries=(0.0, 5000.0)),
+        Metric("snapshot_reserve_size", 5000.0),
     ]

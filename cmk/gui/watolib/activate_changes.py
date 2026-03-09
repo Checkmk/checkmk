@@ -153,7 +153,7 @@ from cmk.shared_typing.changes import (
     StatusPerSiteResponse,
 )
 from cmk.shared_typing.changes import (
-    PendingChanges as PendingChangesSummary,
+    PendingChange as PendingChangeSummary,
 )
 from cmk.shared_typing.changes import (
     Site as ActivationSitesSummary,
@@ -1384,14 +1384,14 @@ class ActivateChanges:
             return _get_license_block_effect() is not None
 
         site_change_counter: Counter = Counter()
-        pending_changes: list[PendingChangesSummary] = []
+        pending_changes: list[PendingChangeSummary] = []
         for _changeid, change in self._all_changes:
             if not has_been_activated(change):
                 for site in change["affected_sites"]:
                     site_change_counter[site] += 1
 
                 pending_changes.append(
-                    PendingChangesSummary(
+                    PendingChangeSummary(
                         changeId=change["id"],
                         changeText=unescape(change["text"]),
                         user=change["user_id"],

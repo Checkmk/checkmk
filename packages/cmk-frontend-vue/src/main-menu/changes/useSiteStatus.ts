@@ -3,12 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { PendingChanges, Site } from 'cmk-shared-typing/typescript/changes'
+import type { PendingChange, Site } from 'cmk-shared-typing/typescript/changes'
 import { type Ref, computed } from 'vue'
 
 export function useSiteStatus(
   sites: Ref<Site[]>,
-  pendingChanges: Ref<PendingChanges[]>,
+  pendingChanges: Ref<PendingChange[]>,
   userCanActivateForeign: Ref<boolean>
 ) {
   function siteHasChanges(site: Site): boolean {

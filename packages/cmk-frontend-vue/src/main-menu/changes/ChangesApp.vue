@@ -9,7 +9,7 @@ import type {
   ActivatePendingChangesResponse,
   ActivationStatusResponse,
   ChangesProps,
-  PendingChanges,
+  PendingChange,
   Site,
   SitesAndChanges
 } from 'cmk-shared-typing/typescript/changes'
@@ -228,7 +228,7 @@ async function fetchPendingChangesAjax(): Promise<void> {
     if (Array.isArray(dataAsJson.pendingChanges)) {
       dataAsJson.pendingChanges = dataAsJson.pendingChanges
         .sort((a, b) => b.time - a.time)
-        .map((change: PendingChanges) => ({
+        .map((change: PendingChange) => ({
           ...change,
           timestring: new Date(change.time * 1000).toLocaleString()
         }))

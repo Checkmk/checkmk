@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { PendingChanges, Site } from 'cmk-shared-typing/typescript/changes'
+import type { PendingChange, Site } from 'cmk-shared-typing/typescript/changes'
 import { toRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -23,7 +23,7 @@ const props = defineProps<{
   open: boolean
   activating: boolean
   recentlyActivatedSites: string[]
-  pendingChanges: PendingChanges[]
+  pendingChanges: PendingChange[]
   userHasActivateForeign: boolean
 }>()
 

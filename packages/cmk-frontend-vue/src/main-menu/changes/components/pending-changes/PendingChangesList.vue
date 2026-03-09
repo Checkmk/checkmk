@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { PendingChanges } from 'cmk-shared-typing/typescript/changes'
+import type { PendingChange } from 'cmk-shared-typing/typescript/changes'
 import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -20,7 +20,7 @@ import PendingChangeItemText from './PendingChangeItemText.vue'
 const { _t } = usei18n()
 
 const props = defineProps<{
-  pendingChanges: PendingChanges[]
+  pendingChanges: PendingChange[]
   selectedSites: string[]
   numberOfForeignChanges: number
   userName: string
@@ -28,7 +28,7 @@ const props = defineProps<{
 
 const pendingChangesCollapsible = ref<boolean>(true)
 
-function filterPendingChanges(change: PendingChanges): boolean {
+function filterPendingChanges(change: PendingChange): boolean {
   return (
     (change.whichSites.includes('All sites') && props.selectedSites.length > 0) ||
     change.whichSites.some((site: string) => props.selectedSites.includes(site))

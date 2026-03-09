@@ -142,7 +142,7 @@
       },
       "required": ["siteId", "siteName", "onlineStatus", "changes", "version", "loggedIn"]
     },
-    "pending_changes": {
+    "pending_change": {
       "type": "object",
       "properties": {
         "changeId": { "type": "string" },
@@ -167,7 +167,7 @@
         },
         "pendingChanges": {
           "type": "array",
-          "items": { "$ref": "#/$defs/pending_changes" }
+          "items": { "$ref": "#/$defs/pending_change" }
         },
         "licenseMessage": {
           "anyOf": [{ "type": "string" }, { "type": "null" }]

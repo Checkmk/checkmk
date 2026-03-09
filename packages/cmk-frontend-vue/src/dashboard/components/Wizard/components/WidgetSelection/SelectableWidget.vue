@@ -73,6 +73,7 @@ const modifierClass = computed(() => {
   border-radius: var(--border-radius);
   box-sizing: border-box;
   text-align: center;
+  height: 100%;
 }
 
 .db-selectable-widget__item-label {

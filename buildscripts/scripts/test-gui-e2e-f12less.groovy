@@ -6,7 +6,7 @@ def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
-        ["FAKE_WINDOWS_ARTIFACTS", true],  // forwarded to package build job
+        ["FAKE_ARTIFACTS", true],  // forwarded to package build job
         "TEST_FILTER",  // a filter string to select which tests to run
         ["USE_CASE", false],
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
@@ -23,7 +23,7 @@ def main() {
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
 
     // TODO: we should always use USE_CASE directly from the job parameters
     def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
@@ -52,7 +52,7 @@ def main() {
                 distro: distro,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                fake_windows_artifacts: fake_windows_artifacts,
+                fake_artifacts: fake_artifacts,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
             );

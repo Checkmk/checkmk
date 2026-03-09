@@ -135,7 +135,7 @@ watch(modelValue, (newValue) => {
 .slider-container {
   display: flex;
   align-items: center;
-  gap: var(--dimension-5);
+  gap: var(--dimension-7);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -191,8 +191,7 @@ watch(modelValue, (newValue) => {
 .slider-value {
   font-size: var(--dimension-5);
   color: var(--font-color);
-  min-width: var(--dimension-9);
-  width: var(--dimension-11);
+  width: 7ch;
   text-align: right;
   border: var(--font-color);
   outline: none;

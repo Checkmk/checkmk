@@ -90,22 +90,41 @@ async function loadApiDurationGraphTimeranges(): Promise<GraphTimerangeApiResult
 }
 
 const dropdownOptions = computed<Suggestion[]>(() => {
-  const mappedApiDurationRanges = apiDurationTimeranges.value.map((range) => ({
-    name: `duration_${range.extensions.total_seconds?.toString() ?? '0'}`,
-    title: untranslated(range.title)
-  }))
+  const apiByTitle = new Map(
+    apiDurationTimeranges.value.map((range) => [
+      range.title,
+      {
+        name: `duration_${range.extensions.total_seconds?.toString() ?? '0'}`,
+        title: untranslated(range.title)
+      }
+    ])
+  )
 
-  const mappedPredefinedRanges = Object.entries(predefinedTimeranges).map(([apiKey, title]) => ({
-    name: apiKey,
-    title: title
-  }))
+  // Use predefined order; substitute the API version when titles match
+  const matchedApiTitles = new Set<string>()
+  const mergedRanges: Suggestion[] = Object.entries(predefinedTimeranges).map(([apiKey, title]) => {
+    const apiEntry = apiByTitle.get(title.toString())
+    if (apiEntry) {
+      matchedApiTitles.add(title.toString())
+      return apiEntry
+    }
+    return { name: apiKey, title: title }
+  })
+
+  // Prepend API duration entries that have no predefined counterpart
+  const extraApiRanges = apiDurationTimeranges.value
+    .filter((range) => !matchedApiTitles.has(range.title))
+    .map((range) => ({
+      name: `duration_${range.extensions.total_seconds?.toString() ?? '0'}`,
+      title: untranslated(range.title)
+    }))
 
   const customOptions = [
     { name: customTimeOptionName, title: customTimeOptionTitle },
     { name: customDateOptionName, title: customDateOptionTitle }
   ]
 
-  return [...mappedApiDurationRanges, ...mappedPredefinedRanges, ...customOptions]
+  return [...extraApiRanges, ...mergedRanges, ...customOptions]
 })
 
 const customDuration: Ref<Age> = ref({
@@ -145,6 +164,20 @@ onMounted(async () => {
   apiDurationTimeranges.value = await loadApiDurationGraphTimeranges()
 
   if (selectedTimerange.value) {
+    // If the initial timerange is predefined but has been replaced by an API duration entry,
+    // resolve it to the matching API duration option instead.
+    if (selectedTimerange.value.type === 'predefined' && selectedTimerange.value.predefined) {
+      const predefinedTitle = predefinedTimeranges[selectedTimerange.value.predefined]
+      if (predefinedTitle) {
+        const matchingApi = apiDurationTimeranges.value.find(
+          (r) => r.title === predefinedTitle.toString()
+        )
+        if (matchingApi) {
+          selectedTimerange.value = toPublicTimerange(matchingApi)
+        }
+      }
+    }
+
     selectedDropdownOption.value = getDropdownOptionFromTimerange(selectedTimerange.value)
     if (selectedTimerange.value.type === 'age' && selectedTimerange.value.age) {
       customDuration.value = { ...selectedTimerange.value.age }

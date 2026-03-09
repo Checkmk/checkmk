@@ -2616,7 +2616,7 @@ def main_umount(
                 continue
 
             # Skip the site even when it is partly running
-            if is_stopped(site_id):
+            if not is_stopped(site_id):
                 sys.stderr.write(
                     "Cannot unmount tmpfs of site '%s' while it is running.\n" % site.name
                 )

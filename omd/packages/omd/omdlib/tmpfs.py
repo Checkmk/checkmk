@@ -18,6 +18,7 @@ from pathlib import Path
 from omdlib.console import ok
 from omdlib.skel_permissions import Permissions
 from omdlib.type_defs import Config, Replacements
+from omdlib.users_and_groups import run_as_site_user
 from omdlib.utils import create_skeleton_files, delete_directory_contents, is_containerized
 from omdlib.version_info import VersionInfo
 
@@ -105,11 +106,11 @@ def mark_tmpfs_initialized(site_tmp_dir: str) -> None:
 
 
 def unmount_tmpfs_as_root(site_name: str, kill: bool, capture_output: bool) -> int:
-    args = ["--kill", site_name] if kill else [site_name]
-    return subprocess.run(
+    args = ["--kill"] if kill else []
+    return run_as_site_user(
+        site_name,
         ["omd", "umount"] + args,
         capture_output=capture_output,
-        check=False,
     ).returncode
 
 

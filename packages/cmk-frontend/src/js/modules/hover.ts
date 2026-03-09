@@ -14,6 +14,7 @@ import {
 //#   '--------------------------------------------------------------------'
 
 type ContainerSize = { height: number | null; width: number | null }
+const HOVER_PORTAL_CLASS = 'cmk-hover-popup-portal'
 let g_hover_menu: HTMLDivElement | null
 
 export function hide() {
@@ -61,6 +62,12 @@ export function update_position(event_: MouseEvent) {
   }
 
   const hoverSpacer = 8
+
+  // When inside the fixed portal, use viewport-relative clientX/clientY directly.
+  if (g_hover_menu.closest(`.${HOVER_PORTAL_CLASS}`)) {
+    update_position_fixed(event_, hoverSpacer)
+    return
+  }
 
   // document.body.scrollTop does not work in IE
   let scrollTop = document.body.scrollTop
@@ -130,6 +137,35 @@ export function update_position(event_: MouseEvent) {
   g_hover_menu.style.visibility = 'visible'
 }
 
+function update_position_fixed(event_: MouseEvent, hoverSpacer: number) {
+  const menu = g_hover_menu!
+  const vw = document.documentElement.clientWidth
+  const vh = document.documentElement.clientHeight
+
+  menu.style.visibility = 'hidden'
+  menu.style.left = event_.clientX + hoverSpacer + 'px'
+  menu.style.top = event_.clientY + hoverSpacer + 'px'
+
+  if (event_.clientX + hoverSpacer + menu.clientWidth > vw) {
+    if (menu.clientWidth + hoverSpacer <= event_.clientX) {
+      menu.style.left = event_.clientX - menu.clientWidth - hoverSpacer + 'px'
+    } else {
+      menu.style.left = hoverSpacer + 'px'
+      menu.style.width = vw - 2 * hoverSpacer + 'px'
+    }
+  }
+
+  if (event_.clientY + hoverSpacer + menu.clientHeight > vh) {
+    if (menu.clientHeight + hoverSpacer <= event_.clientY) {
+      menu.style.top = event_.clientY - menu.clientHeight - hoverSpacer + 'px'
+    } else {
+      menu.style.top = hoverSpacer + 'px'
+    }
+  }
+
+  menu.style.visibility = 'visible'
+}
+
 function stretch_to_full_width(
   _hover_menu: HTMLDivElement,
   container_size: ContainerSize,
@@ -141,6 +177,12 @@ function stretch_to_full_width(
 }
 
 function hover_container() {
+  // On dashboard pages, use a fixed portal on document.body to escape
+  // stacking contexts and overflow containers that hide the tooltip.
+  if (document.body.classList.contains('dashboard')) {
+    return ensure_hover_portal()
+  }
+
   // Return the simplebar wrapper div (if it exists) to avoid the default browser scrollbar for
   // long hover menu contents. If it doesn't exist try the content wrapper div. If that doesn't
   // exist either, fall back to the document body.
@@ -154,4 +196,13 @@ function hover_container() {
     return container
   }
   return simplebar_wrapper[0]
+}
+
+function ensure_hover_portal(): HTMLDivElement {
+  const existing = document.body.querySelector(`.${HOVER_PORTAL_CLASS}`)
+  if (existing instanceof HTMLDivElement) return existing
+  const portal = document.createElement('div')
+  portal.className = HOVER_PORTAL_CLASS
+  document.body.appendChild(portal)
+  return portal
 }

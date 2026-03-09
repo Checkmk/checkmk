@@ -909,6 +909,13 @@ div.popup_container {
   position: relative;
 }
 
+.cmk-hover-popup-portal {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: $z-index-popup-offset + 1;
+}
+
 div#hover_menu {
   position: absolute;
   /* The hover menu needs to have a higher z-index than the highest element

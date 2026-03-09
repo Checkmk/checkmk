@@ -72,4 +72,9 @@ const filterCategory = computed(() => {
   padding: 0 var(--dimension-7) calc(var(--dimension-7) - var(--spacing))
     calc(var(--dimension-7) - var(--spacing));
 }
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown,checkmk/vue-bem-naming-convention */
+.db-add-filters__selection :deep(.db-filter-selection__scroll-container) {
+  border-bottom: none;
+}
 </style>

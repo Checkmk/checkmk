@@ -4,7 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onBeforeMount, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
+import {
+  computed,
+  onBeforeMount,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  toRaw,
+  watch
+} from 'vue'
 
 import { randomId } from '@/lib/randomId'
 
@@ -487,9 +496,9 @@ const dashboardHasFilters = computed(
       .length > 0
 )
 
-const dashboardHasRuntimeFilters = computed(
-  () => Object.keys(dashboardFilters.appliedRuntimeFilters.value).length > 0
-)
+const dashboardHasRuntimeFilters = computed(() => {
+  return Object.keys(toRaw(dashboardFilters.appliedRuntimeFilters.value) || {}).length > 0
+})
 
 const redirectToListDashboardsPage = () => {
   window.location.href = props.links.list_dashboards

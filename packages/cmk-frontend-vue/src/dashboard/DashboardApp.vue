@@ -488,10 +488,7 @@ const cloneDashboard = async (
     return
   }
 
-  const cloneUrl = urlHandler.getDashboardUrl(
-    newKey,
-    dashboardFilters.runtimeFiltersSearchParams.value
-  )
+  const cloneUrl = urlHandler.getDashboardUrl(newKey, {})
   cloneUrl.searchParams.set('clone_success', '1')
   urlHandler.navigateTo(cloneUrl)
 }

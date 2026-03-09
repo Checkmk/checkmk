@@ -479,9 +479,12 @@ def check_w32time_peers_summary(
     # If we're in "universal" mode, but not every peer has failed, then by
     # by definition, we are suppressing alerts.
     #
-    # missing_name_peers is counted separately from non_ok_peers because we want
-    # to alert on it independently of non_ok_peers. It effectively overrides
-    # the suppression logic; if a peer has no name, we always alert on it.
+    # missing_name_peers is counted separately from non_ok_peers for 2 reasons:
+    #   1. Because we want to be able to aggregate it and say "N peers with
+    #      no name found!"
+    #   2. Because we want to alert on it independently of non_ok_peers. It
+    #      effectively overrides the suppression logic; if a peer has no name,
+    #      we always alert on it.
     suppressing = (
         params.get("universal", False)
         and len(non_ok_peers) != peer_count
@@ -493,14 +496,20 @@ def check_w32time_peers_summary(
         failed_summary += " (alerts suppressed)"
     yield Result(state=State.OK, summary=failed_summary)
 
-    for name, peer in section.items():
-        yield Result(state=State.OK, notice=f"\nPeer: {name}")
-        if peer.peer == "":
-            # Windows reported a peer with no name, likely due to a bad
-            # configuration w.r.t NT5DS.
-            yield Result(state=State.WARN, summary="Peer with no name found!")
-            continue  # Skip metrics, everything is 0 in this case anyway
+    if missing_name_peers:
+        # Windows reported a peer with no name, likely due to a bad
+        # configuration w.r.t NT5DS.
+        peer_or_peers = "peer" if missing_name_peers == 1 else "peers"
+        yield Result(
+            state=State.WARN, summary=f"{missing_name_peers} {peer_or_peers} with no name found!"
+        )
 
+    for name, peer in section.items():
+        if peer.peer == "":
+            # Handled above. Skip metrics, everything is 0 in this case anyway
+            continue
+
+        yield Result(state=State.OK, notice=f"\nPeer: {name}")
         yield from _last_successful_sync_time(peer, notice_only=True)
         yield from emit_possibly_suppressed(
             name, reachability_total_failures_results[name], suppressing

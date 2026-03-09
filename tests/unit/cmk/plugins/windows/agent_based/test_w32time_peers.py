@@ -1510,8 +1510,7 @@ def test_check_w32time_peers_summary_edge_cases(
             [
                 Result(state=State.OK, summary="Found 1 peer"),
                 Result(state=State.OK, summary="Failed: 1"),
-                Result(state=State.OK, notice="\nPeer: (unnamed peer 1)"),
-                Result(state=State.WARN, summary="Peer with no name found!"),
+                Result(state=State.WARN, summary="1 peer with no name found!"),
             ],
         ),
         (
@@ -1519,10 +1518,7 @@ def test_check_w32time_peers_summary_edge_cases(
             [
                 Result(state=State.OK, summary="Found 2 peers"),
                 Result(state=State.OK, summary="Failed: 2"),
-                Result(state=State.OK, notice="\nPeer: (unnamed peer 1)"),
-                Result(state=State.WARN, summary="Peer with no name found!"),
-                Result(state=State.OK, notice="\nPeer: (unnamed peer 2)"),
-                Result(state=State.WARN, summary="Peer with no name found!"),
+                Result(state=State.WARN, summary="2 peers with no name found!"),
             ],
         ),
         (
@@ -1530,8 +1526,7 @@ def test_check_w32time_peers_summary_edge_cases(
             [
                 Result(state=State.OK, summary="Found 2 peers"),
                 Result(state=State.OK, summary="Failed: 1"),
-                Result(state=State.OK, notice="\nPeer: (unnamed peer 1)"),
-                Result(state=State.WARN, summary="Peer with no name found!"),
+                Result(state=State.WARN, summary="1 peer with no name found!"),
                 Result(state=State.OK, notice="\nPeer: time.cloudflare.com"),
                 Result(state=State.OK, notice="Last successful sync time: 07.03.2026 04:17:06"),
                 Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),

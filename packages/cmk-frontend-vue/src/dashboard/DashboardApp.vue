@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import {
   computed,
+  nextTick,
   onBeforeMount,
   onBeforeUnmount,
   onMounted,
@@ -93,6 +94,11 @@ const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 const showCloneSuccessAlert = ref(false)
+
+watch(showCloneSuccessAlert, async () => {
+  await nextTick()
+  window.dispatchEvent(new Event('resize'))
+})
 
 const dashboardFilterSettingsStartingWindow = ref<'runtime-filters' | 'filter-settings'>(
   'runtime-filters'

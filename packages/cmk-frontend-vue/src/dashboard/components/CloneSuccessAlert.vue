@@ -39,8 +39,8 @@ watch(
 <template>
   <div v-if="open" class="db-clone-success-alert">
     <CmkAlertBox
+      v-model:open="open"
       variant="success"
-      :open="open"
       :dismissible="true"
       :auto-dismiss="props?.hasFilters ? false : true"
     >

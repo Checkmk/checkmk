@@ -8,7 +8,7 @@ def main() {
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
         "TEST_FILTER",  // a filter string to select which tests to run
     ]);
 
@@ -24,7 +24,7 @@ def main() {
     def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
     def distro = params.DISTRO;
     def edition = params.EDITION;
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
 
     def make_target = "test-gui-crawl-docker";
     def download_dir = "package_download";
@@ -66,7 +66,7 @@ def main() {
                 distro: distro,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                fake_windows_artifacts: fake_windows_artifacts,
+                fake_artifacts: fake_artifacts,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
             );

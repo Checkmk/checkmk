@@ -7,7 +7,7 @@ def main() {
         "EDITION",
         "VERSION",
         "DISABLE_CACHE",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
     ]);
 
@@ -37,7 +37,7 @@ def main() {
 
     def edition = params.EDITION;
     def distro = "ubuntu-22.04";
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
 
     def relative_job_name = "${branch_base_folder}/builders/build-cmk-distro-package";
     def setup_values = single_tests.common_prepare(version: VERSION, make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
@@ -68,7 +68,7 @@ def main() {
                         VERSION: params.VERSION,
                         EDITION: params.EDITION,
                         DISABLE_CACHE: params.DISABLE_CACHE,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
@@ -109,7 +109,7 @@ def main() {
                         EDITION: params.EDITION,
                         DISTRO: distro,
                         DISABLE_CACHE: params.DISABLE_CACHE,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

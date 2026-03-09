@@ -11,7 +11,7 @@ def main() {
         "VERSION",
         "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
@@ -26,7 +26,7 @@ def main() {
         EDITION: params.EDITION,
         VERSION: params.VERSION,
         OVERRIDE_DISTROS: params.OVERRIDE_DISTROS,
-        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
         CUSTOM_GIT_REF: effective_git_ref,
 
         /// Hardcode the USE_CASE to fips, because this is our only use case here
@@ -45,7 +45,7 @@ def main() {
         |edition:............... │${params.EDITION}│
         |version:............... │${params.VERSION}│
         |override_distros:...... │${params.OVERRIDE_DISTROS}│
-        |fake_windows_artifacts: │${params.FAKE_WINDOWS_ARTIFACTS}│
+        |fake_artifacts: │${params.FAKE_ARTIFACTS}│
         |custom_git_ref:........ │${effective_git_ref}│
         |safe_branch_name:...... │${safe_branch_name}│
         |===================================================

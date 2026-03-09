@@ -11,7 +11,7 @@ def main() {
         "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "USE_CASE",
-        "FAKE_WINDOWS_ARTIFACTS",
+        "FAKE_ARTIFACTS",
     ]);
 
     check_environment_variables([
@@ -95,7 +95,7 @@ def main() {
                         DISTRO: distro,
                         EDITION: EDITION,
                         CUSTOM_GIT_REF: effective_git_ref,
-                        FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                         // FIPS node specifier has to be respected
                         CIPARAM_OVERRIDE_BUILD_NODE: (USE_CASE == "fips") ? "fips" : CIPARAM_OVERRIDE_BUILD_NODE,
                     ],

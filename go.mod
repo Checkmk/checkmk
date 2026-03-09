@@ -9,15 +9,16 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/fileexporter v0.143.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/syslogexporter v0.143.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/basicauthextension v0.143.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.143.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor v0.143.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v0.143.0
 	go.opentelemetry.io/collector/component v1.49.0
 	go.opentelemetry.io/collector/confmap v1.49.0
-	go.opentelemetry.io/collector/confmap/provider/envprovider v1.48.0
+	go.opentelemetry.io/collector/confmap/provider/envprovider v1.49.0
 	go.opentelemetry.io/collector/confmap/provider/fileprovider v1.49.0
-	go.opentelemetry.io/collector/confmap/provider/httpprovider v1.48.0
-	go.opentelemetry.io/collector/confmap/provider/httpsprovider v1.48.0
-	go.opentelemetry.io/collector/confmap/provider/yamlprovider v1.48.0
+	go.opentelemetry.io/collector/confmap/provider/httpprovider v1.49.0
+	go.opentelemetry.io/collector/confmap/provider/httpsprovider v1.49.0
+	go.opentelemetry.io/collector/confmap/provider/yamlprovider v1.49.0
 	go.opentelemetry.io/collector/connector v0.143.0
 	go.opentelemetry.io/collector/exporter v1.49.0
 	go.opentelemetry.io/collector/extension v1.49.0

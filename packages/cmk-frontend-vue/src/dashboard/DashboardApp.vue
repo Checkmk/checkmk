@@ -558,6 +558,7 @@ const updateDashboardSettings = async (
   dashboardsManager.activeDashboard.value!.model.general_settings = generalSettings
   await dashboardsManager.persistDashboard(dashboardName)
   openDashboardSettings.value = false
+  showCloneSuccessAlert.value = false
 
   const updatedDashboardUrl = urlHandler.getDashboardUrl(
     newKey,

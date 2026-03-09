@@ -850,7 +850,7 @@ class NotificationOption(Enum):
     DEFAULT = 0
     BROADCAST = 1
     FORCED = 2
-    INCREMENT = 4
+    BROADCAST_FORCED = 3
 
 
 @dataclass(frozen=True)

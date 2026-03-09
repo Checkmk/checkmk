@@ -38,8 +38,8 @@ class BasicServiceSet(BaseModel, frozen=True):
     enabled: bool
     band: str
     channel: int
-    channel_width: str | None = Field(alias="channelWidth")
-    power: str | None
+    channel_width: str | None = Field(default=None, alias="channelWidth")
+    power: str | None = None
     visible: bool
     broadcasting: bool
 

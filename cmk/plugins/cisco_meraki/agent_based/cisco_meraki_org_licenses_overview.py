@@ -58,7 +58,7 @@ class LicensesOverview(BaseModel, frozen=True):
     organisation_id: str
     organisation_name: str
     status: str
-    raw_expiration_date: str | None = Field(alias="expirationDate")
+    raw_expiration_date: str | None = Field(default=None, alias="expirationDate")
     licensed_device_counts: dict[str, int] = Field(alias="licensedDeviceCounts")
 
     @computed_field

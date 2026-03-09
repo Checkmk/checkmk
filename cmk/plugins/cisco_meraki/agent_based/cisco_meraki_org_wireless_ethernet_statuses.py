@@ -35,7 +35,7 @@ type Section = Mapping[str, WirelessEthernetPort]
 
 
 class PoeOrAC(BaseModel, frozen=True):
-    is_connected: bool = Field(alias="isConnected")
+    is_connected: bool | None = Field(default=None, alias="isConnected")
 
 
 class Power(BaseModel, frozen=True):
@@ -45,12 +45,12 @@ class Power(BaseModel, frozen=True):
 
 
 class Poe(BaseModel, frozen=True):
-    standard: str
+    standard: str | None = None
 
 
 class LinkNegotiation(BaseModel, frozen=True):
-    duplex: str
-    raw_speed: int | None = Field(alias="speed")
+    duplex: str | None = None
+    raw_speed: int | None = Field(default=None, alias="speed")
 
     @property
     def speed(self) -> int | None:
@@ -72,8 +72,8 @@ class WirelessEthernetStatus(BaseModel, frozen=True):
 class WirelessEthernetPort(BaseModel, frozen=True):
     index: int
     name: str
-    poe: str
-    duplex: str
+    poe: str | None
+    duplex: str | None
     speed: int | None
     power: Power
 

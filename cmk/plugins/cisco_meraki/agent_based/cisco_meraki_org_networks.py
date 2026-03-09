@@ -30,9 +30,9 @@ class Network(BaseModel, frozen=True):
     product_types: list[str] = Field(alias="productTypes")
     time_zone: str = Field(alias="timeZone")
     tags: list[str]
-    enrollment_string: str | None = Field(alias="enrollmentString")
+    enrollment_string: str | None = Field(default=None, alias="enrollmentString")
     url: str
-    notes: str | None
+    notes: str | None = None
     is_bound_to_config_template: bool = Field(alias="isBoundToConfigTemplate")
 
 

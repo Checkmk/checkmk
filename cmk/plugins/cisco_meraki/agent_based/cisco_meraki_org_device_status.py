@@ -46,7 +46,7 @@ class Components(BaseModel, frozen=True):
 
 class DeviceStatus(BaseModel, frozen=True):
     status: str
-    last_reported: datetime = Field(alias="lastReportedAt")
+    last_reported: datetime | None = Field(default=None, alias="lastReportedAt")
     components: PossiblyMissing[Components] = None
 
     @computed_field
@@ -88,11 +88,12 @@ def check_device_status(params: CheckParamsDeviceStatus, section: Section) -> Ch
 
     _, levels_upper = params["last_reported_upper_levels"]
 
-    yield from check_last_reported_ts(
-        last_reported_ts=section.last_reported.timestamp(),
-        levels_upper=levels_upper,
-        as_metric=True,
-    )
+    if section.last_reported:
+        yield from check_last_reported_ts(
+            last_reported_ts=section.last_reported.timestamp(),
+            levels_upper=levels_upper,
+            as_metric=True,
+        )
 
 
 check_plugin_cisco_meraki_org_device_status = CheckPlugin(

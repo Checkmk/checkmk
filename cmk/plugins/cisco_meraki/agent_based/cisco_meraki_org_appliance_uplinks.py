@@ -9,7 +9,6 @@
 # mypy: disable-error-code="prop-decorator"
 
 import json
-from datetime import datetime
 from typing import TypedDict
 
 from pydantic import BaseModel, computed_field, Field
@@ -34,13 +33,13 @@ type Section = ApplianceStatus
 
 
 class Uplink(BaseModel, frozen=True):
-    gateway: str | None
+    gateway: str | None = None
     interface: str
-    ip: str | None
-    ip_assigned_by: str | None = Field(alias="ipAssignedBy")
-    primary_dns: str | None = Field(alias="primaryDns")
-    public_ip: str | None = Field(alias="publicIp")
-    secondary_dns: str | None = Field(alias="secondaryDns")
+    ip: str | None = None
+    ip_assigned_by: str | None = Field(default=None, alias="ipAssignedBy")
+    primary_dns: str | None = Field(default=None, alias="primaryDns")
+    public_ip: str | None = Field(default=None, alias="publicIp")
+    secondary_dns: str | None = Field(default=None, alias="secondaryDns")
     status: str
 
 
@@ -51,10 +50,7 @@ class HighAvailability(BaseModel, frozen=True):
 
 class ApplianceStatus(BaseModel, frozen=True):
     high_availability: HighAvailability = Field(alias="highAvailability")
-    last_reported_at: datetime = Field(alias="lastReportedAt")
-    model: str
     network_name: str = Field(alias="networkName")
-    serial: str
     uplinks_list: list[Uplink] = Field(alias="uplinks")
     usage_by_interface: PossiblyMissing[UplinkUsageByInterface] = Field(
         None, alias="usageByInterface"

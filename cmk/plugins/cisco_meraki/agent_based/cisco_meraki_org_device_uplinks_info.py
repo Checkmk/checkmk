@@ -22,7 +22,7 @@ type Section = Sequence[Uplink]
 
 
 class Public(BaseModel, frozen=True):
-    address: str | None
+    address: str | None = None
 
 
 class Address(BaseModel, frozen=True):

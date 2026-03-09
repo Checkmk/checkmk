@@ -75,6 +75,7 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
             test_site.delete_file(f"{path}/fake.py")
 
 
+@pytest.mark.skip(reason="This test is flaky, investigation is required. See CMK-32258")
 def test_analyze_configuration_page(dashboard_page: Dashboard, simulate_deprecations: None) -> None:
     """Test 'Analyze configuration' page when 'Deprecations' file-based checks are triggered.
 

@@ -588,6 +588,7 @@ const reviewFilters = () => {
         :selected-dashboard="selectedDashboard ?? null"
         :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
         :initial-breadcrumb="initial_breadcrumb"
+        :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
       />
       <DashboardMenuHeader
         v-model:is-edit-mode="isDashboardEditingMode"

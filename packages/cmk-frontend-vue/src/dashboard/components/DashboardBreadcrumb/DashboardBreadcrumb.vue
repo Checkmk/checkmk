@@ -9,12 +9,14 @@ import { computed } from 'vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { BreadcrumbItem } from '@/dashboard/types/page'
+import type { FilterHTTPVars } from '@/dashboard/types/widget'
 import { urlHandler } from '@/dashboard/utils'
 
 interface Props {
   selectedDashboard: SelectedDashboard | null
   selectedDashboardBreadcrumb: BreadcrumbItem[] | null
   initialBreadcrumb: BreadcrumbItem[]
+  runtimeFilters: FilterHTTPVars
 }
 
 const props = defineProps<Props>()
@@ -24,7 +26,7 @@ const activeBreadcrumb = computed<BreadcrumbItem[]>(() => {
       name: props.selectedDashboard?.name ?? '',
       owner: props.selectedDashboard?.owner ?? ''
     }
-    const link = urlHandler.getDashboardUrl(key, {})
+    const link = urlHandler.getDashboardUrl(key, props.runtimeFilters)
     return [
       ...props.selectedDashboardBreadcrumb,
       {

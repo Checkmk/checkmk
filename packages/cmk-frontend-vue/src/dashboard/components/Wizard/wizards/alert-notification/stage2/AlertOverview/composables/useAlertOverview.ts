@@ -63,8 +63,8 @@ export const useAlertOverview = async (
     currentContent?.time_range ?? null
   )
 
-  const objectsLimit = ref<number>(currentContent?.limit_objects ?? 0)
-  const objectsEnabled = ref<boolean>(objectsLimit.value !== undefined)
+  const objectsEnabled = ref<boolean>(!!currentContent?.limit_objects)
+  const objectsLimit = ref<number>(currentContent?.limit_objects ?? 100)
 
   const widgetProps = ref<WidgetProps>()
 
@@ -76,7 +76,7 @@ export const useAlertOverview = async (
     return {
       type: CONTENT_TYPE,
       time_range: generateTimeRangeProps(),
-      ...(objectsLimit.value !== undefined ? { limit_objects: objectsLimit.value } : {})
+      ...(objectsEnabled.value ? { limit_objects: objectsLimit.value } : {})
     }
   }
 

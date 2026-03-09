@@ -444,7 +444,8 @@ def check_w32time_peers_summary(
             if any(result.state is not State.OK for result in results):
                 non_ok_peers.add(name)
 
-    yield Result(state=State.OK, summary=f"Found {peer_count} peers")
+    peer_or_peers = "peer" if peer_count == 1 else "peers"
+    yield Result(state=State.OK, summary=f"Found {peer_count} {peer_or_peers}")
 
     # If we're in "universal" mode, but not every peer has failed, then by
     # by definition, we are suppressing alerts.

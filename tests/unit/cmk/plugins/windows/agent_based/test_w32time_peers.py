@@ -459,6 +459,25 @@ EN_PEERS_STRATUM_1_TO_3 = [
     ["Reachability:", "255"],
 ]
 
+EN_SINGLE_PEER = [
+    ["#Peers:", "1"],
+    ["---"],
+    ["Peer:", "time.facebook.com"],
+    ["State:", "Active"],
+    ["Time", "Remaining:", "1754.9964697s"],
+    ["Mode:", "3", "(Client)"],
+    ["Stratum:", "1", "(primary", "reference", "-", "syncd", "by", "radio", "clock)"],
+    ["PeerPoll", "Interval:", "12", "(4096s)"],
+    ["HostPoll", "Interval:", "12", "(4096s)"],
+    ["Last", "Successful", "Sync", "Time:", "9/18/2025", "7:00:50", "PM"],
+    ["LastSyncError:", "0x00000000", "(Succeeded)"],
+    ["LastSyncErrorMsgId:", "0x00000000", "(Succeeded)"],
+    ["AuthTypeMsgId:", "0x0000005A", "(NoAuth", ")"],
+    ["Resolve", "Attempts:", "0"],
+    ["ValidDataCounter:", "8"],
+    ["Reachability:", "255"],
+]
+
 # One peer fails on stratum, another on reachability — tests that universal
 # suppression works the same regardless of which check type triggers the failure.
 EN_MIXED_FAILURES = [
@@ -1223,11 +1242,40 @@ def test_check_w32time_peers_summary_mixed_failures(
     assert result == expected
 
 
-def test_check_w32time_peers_summary_empty_section() -> None:
+@pytest.mark.parametrize(
+    "fixture, expected",
+    [
+        pytest.param(
+            NO_PEERS,
+            [
+                Result(state=State.OK, summary="Found 0 peers"),
+                Result(state=State.OK, summary="Failed: 0"),
+            ],
+            id="no peers",
+        ),
+        pytest.param(
+            EN_SINGLE_PEER,
+            [
+                Result(state=State.OK, summary="Found 1 peer"),
+                Result(state=State.OK, summary="Failed: 0"),
+                Result(state=State.OK, notice="\nPeer: time.facebook.com"),
+                Result(state=State.OK, notice="Last successful sync time: 9/18/2025 7:00:50 PM"),
+                Result(state=State.OK, notice="Total failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Consecutive failures (last 8 attempts): 0"),
+                Result(state=State.OK, notice="Stratum: 1"),
+                Result(state=State.OK, notice="Next poll in: 29 minutes 15 seconds"),
+            ],
+            id="single peer",
+        ),
+    ],
+)
+def test_check_w32time_peers_summary_edge_cases(
+    fixture: StringTable, expected: CheckResult
+) -> None:
     """
-    We should not crash when the section is empty, just report 0 peers.
+    We should not crash in edge cases like no peers or a single peer.
     """
-    parsed = w32time_peers.parse_w32time_peers(NO_PEERS)
+    parsed = w32time_peers.parse_w32time_peers(fixture)
     params: w32time_peers.Params = {
         "reachability_consecutive_failures": ("no_levels", None),
         "reachability_total_failures": ("no_levels", None),
@@ -1235,10 +1283,7 @@ def test_check_w32time_peers_summary_empty_section() -> None:
         "universal": False,
     }
     result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
-    assert result == [
-        Result(state=State.OK, summary="Found 0 peers"),
-        Result(state=State.OK, summary="Failed: 0"),
-    ]
+    assert result == expected
 
 
 @pytest.mark.parametrize(

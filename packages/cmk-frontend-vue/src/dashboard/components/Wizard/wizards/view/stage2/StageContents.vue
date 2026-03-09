@@ -182,8 +182,8 @@ onUnmounted(() => {
   border: none;
   width: 100%;
 
-  /* should be more than 95px = height of heading + action bar + spacers
+  /* should be more than 109px = height of heading + action bar + spacers
    we're adding a bit more because otherwise a simple scroll bar might pop up */
-  height: calc(100% - 100px);
+  height: calc(100% - 110px);
 }
 </style>

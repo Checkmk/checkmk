@@ -315,6 +315,7 @@ def test_registered_configvars() -> None:
             "metric_backend",
             "site_opentelemetry_collector",
             "site_opentelemetry_collector_memory_limit",
+            "site_opentelemetry_collector_delta_to_cumulative_processor",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:

@@ -138,6 +138,7 @@ from omdlib.version import main_version, main_versions
 from omdlib.version_info import VersionInfo
 from omdlib.version_utils import (
     default_version,
+    ensure_version_exists,
     exec_other_omd,
     omd_versions,
     verify_security,
@@ -1765,6 +1766,8 @@ def main_setversion(
         sys.exit("The given version does not exist.")
     if version == default_version(versions_path):
         sys.exit("The given version is already default.")
+    if not verify_security(version):
+        sys.exit(werk_18891_error(version))
 
     # Special handling for debian based distros which use update-alternatives
     # to control the path to the omd binary, manpage and so on
@@ -3297,6 +3300,7 @@ def main() -> None:
         case ExecOtherOmd(version):
             if verify_security(version) or not is_root():
                 exec_other_omd(version)
+            ensure_version_exists(version)
             _escape_to_site_context(version, sys.argv[1:])
         case Run(site_name, global_opts, command, options, args):
             # Commands which affect a site and can be called as root *or* as

@@ -125,20 +125,13 @@ class CMKWebSession:
 
         # There might be other resources like iframe, audio, ... but we don't care about them
         self._check_resources(soup, base_url, "img", "src", ["image/png", "image/svg+xml"])
-        # Checkmk Cloud includes a new onboarding feature. This is loaded from an external source hosted
-        # by checkmk. We do not want to check it in the integration tests
-        script_filters = (
-            [("src", "https://static.saas-dev.cloudsandbox.checkmk.cloud")]
-            if edition_from_env().is_cloud_edition()
-            else None
-        )
         self._check_resources(
             soup,
             base_url,
             "script",
             "src",
             ["application/javascript", "text/javascript"],
-            filters=script_filters,
+            filters=None,
         )
         self._check_resources(
             soup, base_url, "link", "href", ["text/css"], filters=[("rel", "stylesheet")]

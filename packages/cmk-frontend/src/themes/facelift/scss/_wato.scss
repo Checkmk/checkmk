@@ -1470,6 +1470,7 @@ div.user_messages {
 #form_edit_host table#monitoring_agents {
   div#attr_default_tag_agent,
   div#attr_entry_tag_agent {
+    display: flex;
     div.cmk-vue-app {
       display: contents;
     }

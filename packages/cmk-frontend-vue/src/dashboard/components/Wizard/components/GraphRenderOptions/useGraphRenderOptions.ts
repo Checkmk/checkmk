@@ -52,7 +52,7 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
   const clickToPlacePin = ref<boolean>(data?.show_pin ?? true)
   const showBurgerMenu = ref<boolean>(data?.show_controls ?? false)
 
-  const dontFollowTimerange = ref<boolean>(data?.fixed_timerange ? !data.fixed_timerange : false)
+  const dontFollowTimerange = ref<boolean>(data?.fixed_timerange ?? false)
 
   const graphRenderOptions = computed<GraphRenderOptions>(() => {
     return {
@@ -67,7 +67,7 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
       show_legend: graphLegend.value,
       show_pin: clickToPlacePin.value,
       show_controls: showBurgerMenu.value,
-      fixed_timerange: !dontFollowTimerange.value
+      fixed_timerange: dontFollowTimerange.value
     }
   })
 

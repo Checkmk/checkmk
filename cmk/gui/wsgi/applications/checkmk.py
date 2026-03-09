@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import functools
 import http.client as http_client
+import json
 import traceback
 from collections.abc import Callable
 from wsgiref.types import StartResponse, WSGIEnvironment
@@ -116,6 +117,9 @@ def _page_not_found(ctx: pages.PageContext) -> Response:
 
 
 def _render_exception(e: Exception, title: str) -> Response:
+    if _is_ajax_request():
+        return _json_error_response(f"{title}: {e}" if title else str(e))
+
     if plain_error():
         return Response(
             response=[
@@ -196,6 +200,21 @@ class CheckmkApp(AbstractWSGIApp):
             )
 
 
+def _is_ajax_request() -> bool:
+    """Check if the current request is an AJAX request"""
+    return request.has_var("_ajaxid")
+
+
+def _json_error_response(error_message: str, status_code: int = 200) -> Response:
+    """Return a JSON error response for AJAX endpoints"""
+    resp = Response(
+        response=json.dumps({"result_code": 1, "result": error_message, "severity": "error"}),
+        mimetype="application/json",
+    )
+    resp.status_code = status_code
+    return resp
+
+
 def _process_request(
     ctx: pages.PageContext,
     environ: WSGIEnvironment,
@@ -258,7 +277,8 @@ def _process_request(
 
     except livestatus.MKLivestatusException as e:
         resp = _render_exception(e, title=_("Livestatus problem"))
-        resp.status_code = http_client.BAD_GATEWAY
+        if not _is_ajax_request():
+            resp.status_code = http_client.BAD_GATEWAY
 
     except MKConfigError as e:
         resp = _render_exception(e, title=_("Configuration error"))
@@ -272,10 +292,13 @@ def _process_request(
     except RequestEntityTooLarge as e:
         resp = _render_exception(e, title=_("Request too large"))
 
-    except Exception:
+    except Exception as e:
         if debug or testing:
             raise
-        resp = handle_unhandled_exception()
+        if _is_ajax_request():
+            resp = _json_error_response(f"{_('Internal error')}: {e}")
+        else:
+            resp = handle_unhandled_exception()
 
     resp.set_caching_headers()
     return resp(environ, start_response)

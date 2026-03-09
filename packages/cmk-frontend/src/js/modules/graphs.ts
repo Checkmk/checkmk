@@ -56,7 +56,7 @@ interface GraphRenderConfig {
   show_time_range_previews: boolean
   show_title: boolean | 'inline'
   show_vertical_axis: boolean
-  size: [bigint, bigint]
+  size: [number, number]
   title_format: GraphTitleFormat
   vertical_axis_width: 'fixed' | ['explicit', SizePT]
 }
@@ -531,7 +531,11 @@ function handle_load_graph_content(script_object: HTMLOrSVGScriptElement, ajax_r
   try {
     response = JSON.parse(ajax_response)
   } catch (e) {
-    console.error('Failed to parse graph content response: ' + ajax_response)
+    const truncated =
+      ajax_response.length > 500 ? ajax_response.substring(0, 500) + '...' : ajax_response
+    console.error(
+      `Failed to parse graph content response (length=${ajax_response.length}): ${truncated}`
+    )
     handle_load_graph_content_error(script_object, 1, 'Failed to parse server response')
     return
   }

@@ -43,7 +43,7 @@ interface GraphRenderConfig {
   show_time_range_previews: boolean
   show_title: boolean | 'inline'
   show_vertical_axis: boolean
-  size: [bigint, bigint]
+  size: [number, number]
   title_format: GraphTitleFormat
   vertical_axis_width: 'fixed' | ['explicit', SizePT]
 }

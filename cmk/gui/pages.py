@@ -94,7 +94,6 @@ class AjaxPage(Page, abc.ABC):
     @override
     def handle_page(self, ctx: PageContext) -> None:
         """The page handler, called by the page registry"""
-        response.set_content_type("application/json")
         try:
             action_response = self.page(ctx)
             resp = {"result_code": 0, "result": action_response, "severity": "success"}
@@ -114,6 +113,7 @@ class AjaxPage(Page, abc.ABC):
             )
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
+        response.set_content_type("application/json")
         try:
             response.set_data(json.dumps(resp, cls=CustomObjectJSONEncoder))
         except Exception:

@@ -18,9 +18,9 @@ from cmk.gui.form_specs import (
     VisitorOptions,
 )
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
+from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
 from cmk.utils.notify_types import (
     NotificationParameterGeneralInfos,
     NotificationParameterID,
@@ -74,7 +74,7 @@ def save_notification_parameter(
     Raises:
         FormSpecValidationError: if the data does not match the form spec
     """
-    load_dynamic_permissions()
+    declare_notification_plugin_permissions()
     user.need_permission(f"notification_plugin.{parameter_method}")
 
     form_spec = registry.form_spec(parameter_method)
@@ -103,7 +103,7 @@ def get_list_of_notification_parameter(
     parameter_method: NotificationParameterMethod,
     user: LoggedInUser,
 ) -> Sequence[NotificationParameterDescription]:
-    load_dynamic_permissions()
+    declare_notification_plugin_permissions()
     user.need_permission(f"notification_plugin.{parameter_method}")
 
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
@@ -140,7 +140,7 @@ def get_notification_parameter(
     if item is None or method is None:
         raise KeyError(parameter_id)
 
-    load_dynamic_permissions()
+    declare_notification_plugin_permissions()
     user.need_permission(f"notification_plugin.{method}")
 
     form_spec = registry.form_spec(method)

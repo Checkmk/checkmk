@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import functools
 from collections.abc import Callable
 from typing import Any
 
 from cmk.ccc.user import UserId
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     DEF_VALUE,
@@ -76,17 +78,21 @@ def generate_wato_users_elements_function(
     only_contacts: bool = False,
     only_automation: bool = False,
 ) -> Callable[[], list[tuple[UserId | None, str]]]:
-    def get_wato_users() -> list[tuple[UserId | None, str]]:
-        users = load_users()
-        elements: list[tuple[UserId | None, str]] = sorted(
-            (name, "{} - {}".format(name, us.get("alias", name)))
-            for (name, us) in users.items()
-            if (not only_contacts or us.get("contactgroups"))
-            and (
-                not only_automation
-                or (us.get("store_automation_secret") and us.get("is_automation_user"))
-            )
-        )
-        return elements
+    return functools.partial(_get_wato_users_cached, only_contacts, only_automation)
 
-    return get_wato_users
+
+@request_memoize()
+def _get_wato_users_cached(
+    only_contacts: bool,
+    only_automation: bool,
+) -> list[tuple[UserId | None, str]]:
+    users = load_users()
+    return sorted(
+        (name, "{} - {}".format(name, us.get("alias", name)))
+        for (name, us) in users.items()
+        if (not only_contacts or us.get("contactgroups"))
+        and (
+            not only_automation
+            or (us.get("store_automation_secret") and us.get("is_automation_user"))
+        )
+    )

@@ -10,6 +10,7 @@ from typing import Literal, override
 from urllib.parse import quote_plus, urljoin
 
 from playwright.sync_api import expect, Locator, Page, Response
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
 from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES_MS
@@ -512,9 +513,21 @@ class MainArea(LocatorHelper):
     def click_item_in_dropdown_list(
         self, dropdown_button: str, item: str, exact: bool = False
     ) -> None:
-        self.dropdown_button(dropdown_button).click()
-        expect(self.dropdown_list(dropdown_button)).to_be_visible()
-        self.get_item_in_dropdown_list(dropdown_button, item, exact=exact).click()
+        # Try 2 times to find and click the enabled item
+        for attempt in range(attempts := 2):
+            try:
+                self.dropdown_button(dropdown_button).click()
+                self.get_item_in_dropdown_list(dropdown_button, item, exact=exact).click()
+                return
+            except PWTimeoutError as e:
+                if attempt == attempts - 1:
+                    # If all retries failed, raise the exception
+                    note = f"Failed to click '{dropdown_button}'>'{item}' after {attempts} attempts"
+                    e.add_note(note)
+                    raise e
+                logger.warning(
+                    "Attempt %d: Item '%s' not enabled yet, retrying...", attempt + 1, item
+                )
 
 
 class Sidebar(LocatorHelper):

@@ -39,8 +39,7 @@ export class SingleMetricFigure extends TimeseriesFigure<SingleMetricContent> {
   override update_domains() {
     TimeseriesFigure.prototype.update_domains.call(this)
     const display_range = this._widget_content.display_range
-    // display_range could be null, or [str, [int, int]]
-    if (display_range !== 'automatic') {
+    if (display_range && display_range !== 'automatic') {
       this._y_domain = [display_range.minimum, display_range.maximum]
       this.orig_scale_y.domain(this._y_domain)
     }

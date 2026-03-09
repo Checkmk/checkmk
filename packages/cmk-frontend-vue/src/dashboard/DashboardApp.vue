@@ -202,17 +202,21 @@ onBeforeUnmount(() => {
 })
 
 /* Set/Remove the page's background gradient when there are no/any widgets */
-watch(dashboardWidgets.widgetCores, (newWidgetCores, oldWidgetCores) => {
-  if (Object.entries(newWidgetCores).length === 0) {
-    document.body.style.backgroundImage =
-      'linear-gradient(to bottom, var(--ux-theme-1), var(--ux-theme-8))'
-  } else if (
-    Object.entries(oldWidgetCores).length === 0 &&
-    Object.entries(newWidgetCores).length > 0
-  ) {
-    document.body.style.backgroundImage = 'none'
-  }
-})
+watch(
+  dashboardWidgets.widgetCores,
+  (newWidgetCores, oldWidgetCores) => {
+    if (Object.entries(newWidgetCores).length === 0) {
+      document.body.style.backgroundImage =
+        'linear-gradient(to bottom, var(--ux-theme-1), var(--ux-theme-8))'
+    } else if (
+      (!oldWidgetCores || Object.entries(oldWidgetCores).length === 0) &&
+      Object.entries(newWidgetCores).length > 0
+    ) {
+      document.body.style.backgroundImage = 'none'
+    }
+  },
+  { immediate: true }
+)
 
 const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: DashboardLayout) => {
   isDashboardLoading.value = true

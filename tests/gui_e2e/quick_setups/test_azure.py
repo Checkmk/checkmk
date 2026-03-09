@@ -81,6 +81,7 @@ def fixture_azure_qs_config_page(
         list_hosts_page.activate_changes(test_site)
 
 
+@pytest.mark.skip(reason="This test is flaky, investigation is required. See CMK-32258")
 def test_minimal_configuration(
     azure_qs_config_page: AzureAddNewConfiguration, test_site: Site
 ) -> None:

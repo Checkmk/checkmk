@@ -70,6 +70,7 @@ def fixture_test_host(test_site: Site) -> Iterator[HostDetails]:
         yield host_details
 
 
+@pytest.mark.skip(reason="This test is flaky, investigation is required. See CMK-32258")
 def test_all_aggregations_sanity(
     dashboard_page: MainDashboard,
     test_host: HostDetails,

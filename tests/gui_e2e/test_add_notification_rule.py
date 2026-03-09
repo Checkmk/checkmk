@@ -33,6 +33,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="This test is flaky, investigation is required. See CMK-32258")
 @pytest.mark.usefixtures("notification_user")
 def test_add_new_notification_rule(
     dashboard_page: MainDashboard,

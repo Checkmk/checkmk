@@ -266,16 +266,16 @@ def sending() -> CascadingSingleChoice:
                     title=Title("Microsoft Exchange Online"),
                     elements={
                         "server": DictElement(
-                            parameter_form=String(
+                            required=True,
+                            parameter_form=FixedValue(
                                 title=Title("Microsoft Graph API endpoint"),
-                                macro_support=True,
                                 help_text=Help(
                                     "Emails are sent via the Microsoft Graph API. The endpoint "
                                     "(graph.microsoft.com) will appear as the sending host in "
-                                    "the message headers of forwarded emails."
+                                    "the message headers of forwarded emails by default."
                                 ),
-                                prefill=DefaultValue("graph.microsoft.com"),
-                            )
+                                value="graph.microsoft.com",
+                            ),
                         ),
                         "auth": DictElement(
                             required=True,
@@ -317,16 +317,16 @@ def fetching(
                         title=Title("Microsoft Exchange Online"),
                         elements={
                             "server": DictElement(
-                                parameter_form=String(
+                                required=True,
+                                parameter_form=FixedValue(
                                     title=Title("Microsoft Graph API endpoint"),
-                                    macro_support=True,
                                     help_text=Help(
                                         "Emails are sent via the Microsoft Graph API. The endpoint "
                                         "(graph.microsoft.com) will appear as the sending host in "
-                                        "the message headers of forwarded emails."
+                                        "the message headers of forwarded emails by default."
                                     ),
-                                    prefill=DefaultValue("graph.microsoft.com"),
-                                )
+                                    value="graph.microsoft.com",
+                                ),
                             ),
                             "auth": DictElement(
                                 required=True,

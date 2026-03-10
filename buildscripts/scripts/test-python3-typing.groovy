@@ -9,6 +9,7 @@ void main() {
         test_jenkins_helper.execute_test([
             name: "test-mypy-docker",
             cmd: "MYPY_ADDOPTS='--no-color-output --junit-xml mypy.xml' make -C tests test-mypy",
+            disable_hot_cache: true,
         ]);
 
         test_jenkins_helper.analyse_issues("MYPY", "mypy.xml");

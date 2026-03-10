@@ -39,37 +39,27 @@ export default defineComponent({
 }
 
 div {
-  --gap: var(--dimension-3);
-  --context-min-width: 100px;
-
   width: 100%;
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
   position: relative;
-  gap: var(--gap);
+  gap: var(--dimension-2);
 }
 
 span {
-  position: relative;
-  display: inline-block;
   padding: 0;
 }
 
 .title {
+  width: 100%;
   text-align: left;
-  max-width: calc(100% - var(--context-min-width) - var(--gap));
   overflow-wrap: break-word;
 }
 
 .context {
-  min-width: var(--context-min-width);
+  width: 100%;
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
-  flex: 1 0 100px;
+  overflow-wrap: break-word;
 }
 </style>

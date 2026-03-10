@@ -16,12 +16,14 @@ from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.livestatus_client import (
     Command,
     LivestatusClient,
+    MKLivestatusNotFoundError,
     ScheduleForcedHostCheck,
     ScheduleForcedServiceCheck,
 )
@@ -46,25 +48,29 @@ class PageRescheduleCheck(AjaxPage):
         reschedule_timeout: float,
     ) -> livestatus.LivestatusRow:
         with sites.only_sites(site):
-            return sites.live().query_row(
-                (
-                    "GET %ss\n"
-                    "WaitObject: %s\n"
-                    "WaitCondition: last_check >= %d\n"
-                    "WaitTimeout: %d\n"
-                    "WaitTrigger: check\n"
-                    "Columns: last_check state plugin_output\n"
-                    "Filter: host_name = %s\n%s"
+            try:
+                return sites.live().query_row(
+                    (
+                        "GET %ss\n"
+                        "WaitObject: %s\n"
+                        "WaitCondition: last_check >= %d\n"
+                        "WaitTimeout: %d\n"
+                        "WaitTrigger: check\n"
+                        "Columns: last_check state plugin_output\n"
+                        "Filter: host_name = %s\n%s"
+                    )
+                    % (
+                        what,
+                        livestatus.lqencode(wait_spec),
+                        int(now.timestamp()),
+                        reschedule_timeout * 1000,
+                        livestatus.lqencode(host),
+                        add_filter,
+                    )
                 )
-                % (
-                    what,
-                    livestatus.lqencode(wait_spec),
-                    int(now.timestamp()),
-                    reschedule_timeout * 1000,
-                    livestatus.lqencode(host),
-                    add_filter,
-                )
-            )
+            except MKLivestatusNotFoundError as err:
+                logger.error(err)
+                raise MKGeneralException("The check to reschedule was not found.")
 
     def _do_reschedule(self, api_request: dict[str, Any], reschedule_timeout: float) -> PageResult:
         if not user.may("action.reschedule"):

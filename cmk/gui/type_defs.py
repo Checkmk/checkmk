@@ -328,6 +328,7 @@ class UserSpec(TypedDict, total=False):
     start_url: str | None
     two_factor_credentials: TwoFactorCredentials
     ui_sidebar_position: Literal["left"] | None
+    ui_saas_onboarding_button_toggle: Literal["invisible"] | None
     ui_theme: Literal["modern-dark", "facelift"] | None
     user_id: AnnotatedUserId
     user_scheme_serial: int

@@ -238,6 +238,7 @@ def test_registered_pages() -> None:
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:
         expected_pages += [
+            "ajax_saas_onboarding_button_toggle",
             "noauth:cognito_sso",
             "noauth:cognito_callback",
             "cognito_logout",

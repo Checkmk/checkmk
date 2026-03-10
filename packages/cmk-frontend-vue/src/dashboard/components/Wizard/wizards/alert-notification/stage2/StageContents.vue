@@ -21,7 +21,7 @@ import type {
 
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
-import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
+import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
 import {
   Graph,
   getAvailableGraphs,
@@ -120,8 +120,11 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
 <template>
   <Stage2Header :edit="!!editWidgetSpec" @back="gotoPrevStage" @save="addWidget" />
 
-  <SectionBlock :title="_t('Choose how to display your data')">
-    <SelectableWidgets
+  <SectionBlock
+    :title="_t('Choose how to display your data')"
+    :subtitle="_t('Visualization types')"
+  >
+    <AvailableWidgets
       v-model:selected-widget="selectedWidget as Graph"
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"

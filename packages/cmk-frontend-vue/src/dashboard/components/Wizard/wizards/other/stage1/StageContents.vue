@@ -13,7 +13,7 @@ import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import SectionBlock from '@/dashboard/components/Wizard/components/SectionBlock.vue'
 import StepsHeader from '@/dashboard/components/Wizard/components/StepsHeader.vue'
-import SelectableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/SelectableWidgets.vue'
+import AvailableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/AvailableWidgets.vue'
 import type { WidgetItemList } from '@/dashboard/components/Wizard/components/WidgetSelection/types'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
@@ -122,8 +122,11 @@ function gotoNextStage() {
 
   <ContentSpacer :dimension="8" />
 
-  <SectionBlock :title="_t('Choose how to display your data')">
-    <SelectableWidgets
+  <SectionBlock
+    :title="_t('Choose how to display your data')"
+    :subtitle="_t('Visualization types')"
+  >
+    <AvailableWidgets
       v-model:selected-widget="selectedWidget as OtherWidgetType"
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"

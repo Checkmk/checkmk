@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { TranslatedString } from '@/lib/i18nString'
 
 import type { SimpleIcons } from '@/components/CmkIcon'
@@ -14,20 +16,31 @@ interface AvailableWidgetProps {
   label: TranslatedString
   icon: SimpleIcons
   disabled?: boolean
+  selected?: boolean
+  compact?: boolean
 }
 
-defineProps<AvailableWidgetProps>()
+const props = defineProps<AvailableWidgetProps>()
+
+const modifierClass = computed(() => {
+  if (props.selected) {
+    return 'db-available-widget__item-selected'
+  }
+
+  if (props.disabled) {
+    return 'db-available-widget__item-disabled'
+  }
+
+  return 'db-available-widget__item-available'
+})
 </script>
 
 <template>
-  <div class="db-available-widget__item" :class="{ 'db-available-widget__item-button': !disabled }">
+  <div class="db-available-widget__item" :class="modifierClass">
     <div class="db-available-widget__item-icon">
-      <CmkIcon :name="icon" size="xxlarge" :colored="!disabled" />
+      <CmkIcon :name="icon" :size="compact ? 'xlarge' : 'xxlarge'" :colored="!disabled" />
     </div>
-    <div
-      class="db-available-widget__item-label"
-      :class="disabled ? 'db-available-widget__item-label-disabled' : ''"
-    >
+    <div class="db-available-widget__item-label">
       <CmkLabel :cursor="disabled ? 'default' : 'pointer'">{{ label }}</CmkLabel>
     </div>
   </div>
@@ -42,17 +55,8 @@ defineProps<AvailableWidgetProps>()
   padding: var(--dimension-4);
   max-width: 72px;
   text-align: center;
-}
-
-.db-available-widget__item-button {
-  cursor: pointer;
   border: 1px solid var(--ux-theme-6);
   border-radius: var(--dimension-4);
-  height: 85%;
-
-  &:hover {
-    background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
-  }
 }
 
 .db-available-widget__item-icon {
@@ -64,7 +68,25 @@ defineProps<AvailableWidgetProps>()
   overflow-wrap: break-word;
 }
 
-.db-available-widget__item-label-disabled {
+.db-available-widget__item-available {
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
+  }
+}
+
+.db-available-widget__item-selected {
+  border-color: var(--default-border-color-green);
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
+  }
+}
+
+.db-available-widget__item-disabled {
+  border-color: var(--ux-theme-8);
   color: var(--ux-theme-10);
 }
 </style>

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
+import SectionBlock from '@/dashboard/components/Wizard/components/SectionBlock.vue'
 
 import WidgetItem from './WidgetItem.vue'
 
@@ -29,22 +29,25 @@ const updateWidgetSelection = (graph: string) => {
 </script>
 
 <template>
-  <CmkHeading type="h3">{{ _t('Choose how to display your data') }}</CmkHeading>
-  <div class="widget-selection__container">
-    <WidgetItem
-      v-for="graph in availableItems"
-      :key="graph"
-      :name="graph"
-      :selected="graph === selectedWidget"
-      :enabled="isGraphEnabled(graph)"
-      @update="updateWidgetSelection"
-    />
-  </div>
+  <SectionBlock
+    :title="_t('Choose how to display your data')"
+    :subtitle="_t('Visualization types')"
+  >
+    <div class="db-widget-selection__container">
+      <WidgetItem
+        v-for="graph in availableItems"
+        :key="graph"
+        :name="graph"
+        :selected="graph === selectedWidget"
+        :enabled="isGraphEnabled(graph)"
+        @update="updateWidgetSelection"
+      />
+    </div>
+  </SectionBlock>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.widget-selection__container {
+.db-widget-selection__container {
   display: flex;
   gap: var(--spacing);
   justify-content: space-around;

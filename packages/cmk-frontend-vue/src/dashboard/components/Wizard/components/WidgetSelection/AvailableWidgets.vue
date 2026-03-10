@@ -14,27 +14,34 @@ import type { WidgetItemList } from './types'
 interface AvailableWidgetsProps {
   availableItems: WidgetItemList
   enabledWidgets: string[]
+  compact?: boolean
 }
 
 interface AvailableWidgetsEmits {
   (e: 'selectWidget', itemId: string): void
 }
 
-defineProps<AvailableWidgetsProps>()
+const props = defineProps<AvailableWidgetsProps>()
 const emit = defineEmits<AvailableWidgetsEmits>()
+const selectedWidget = defineModel<string | null>('selectedWidget', { default: null })
 </script>
 
 <template>
-  <div class="db-available-widgets__container">
+  <div
+    class="db-available-widgets__container"
+    :class="{ 'db-available-widgets__container-compact': props.compact }"
+  >
     <div
       v-for="(item, index) in availableItems"
       :key="index"
       role="button"
+      tabindex="0"
       :aria-label="unref(item.label)"
       class="db-available-widgets__item"
       @click="
         () => {
           if (enabledWidgets.includes(item.id)) {
+            selectedWidget = item.id
             emit('selectWidget', item.id)
           }
         }
@@ -45,6 +52,8 @@ const emit = defineEmits<AvailableWidgetsEmits>()
           :label="item.label"
           :icon="item.icon"
           :disabled="!enabledWidgets.includes(item.id)"
+          :selected="item.id === selectedWidget"
+          :compact="props.compact"
         />
       </DisabledTooltipWrapper>
     </div>
@@ -61,5 +70,17 @@ const emit = defineEmits<AvailableWidgetsEmits>()
 
 .db-available-widgets__item {
   min-width: 90px;
+}
+
+.db-available-widgets__container-compact {
+  display: grid;
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  width: max-content;
+}
+
+.db-available-widgets__container-compact .db-available-widgets__item {
+  min-width: 0;
 }
 </style>

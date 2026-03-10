@@ -23,10 +23,9 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 
-import ContentSpacer from '../../../components/ContentSpacer.vue'
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
-import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
+import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import { getGraph } from '../utils'
 import BarplotWidget from './BarplotWidget/BarplotWidget.vue'
@@ -108,13 +107,10 @@ const enabledWidgets = getAvailableGraphs(
   props.metricType
 )
 
-const availableWidgetsTop: WidgetItemList = [
+const availableWidgets: WidgetItemList = [
   { id: Graph.SINGLE_GRAPH, label: _t('Graph'), icon: 'graph' },
   { id: Graph.SINGLE_METRIC, label: _t('Metric'), icon: 'single-metric' },
-  { id: Graph.GAUGE, label: _t('Gauge'), icon: 'gauge' }
-]
-
-const availableWidgetsBottom: WidgetItemList = [
+  { id: Graph.GAUGE, label: _t('Gauge'), icon: 'gauge' },
   { id: Graph.BARPLOT, label: _t('Barplot'), icon: 'barplot' },
   { id: Graph.SCATTERPLOT, label: _t('Scatterplot'), icon: 'scatterplot' },
   { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' }
@@ -160,18 +156,13 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
   <Stage2Header :edit="!!editWidgetSpec" @back="gotoPrevStage" @save="gotoNextStage" />
 
   <div v-if="metricType === MetricSelection.SINGLE_METRIC">
-    <SectionBlock :title="_t('Choose how to display your data')">
-      <SelectableWidgets
+    <SectionBlock
+      :title="_t('Choose how to display your data')"
+      :subtitle="_t('Visualization types')"
+    >
+      <AvailableWidgets
         v-model:selected-widget="selectedWidget as Graph"
-        :available-items="availableWidgetsTop"
-        :enabled-widgets="enabledWidgets"
-      />
-
-      <ContentSpacer :dimension="6" />
-
-      <SelectableWidgets
-        v-model:selected-widget="selectedWidget as Graph"
-        :available-items="availableWidgetsBottom"
+        :available-items="availableWidgets"
         :enabled-widgets="enabledWidgets"
       />
     </SectionBlock>

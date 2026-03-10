@@ -12,6 +12,7 @@ import ContentSpacer from './ContentSpacer.vue'
 
 interface SectionBlockProps {
   title: TranslatedString
+  subtitle?: TranslatedString
 }
 
 defineProps<SectionBlockProps>()
@@ -19,11 +20,11 @@ defineProps<SectionBlockProps>()
 
 <template>
   <div role="region" :aria-label="title">
-    <CmkHeading type="h3">
-      {{ title }}
-    </CmkHeading>
-
+    <CmkHeading type="h3"> {{ title }} </CmkHeading>
     <ContentSpacer :dimension="5" />
+
+    <CmkHeading v-if="subtitle" type="h4">{{ subtitle }}</CmkHeading>
+    <ContentSpacer v-if="subtitle" :dimension="5" />
 
     <slot />
 

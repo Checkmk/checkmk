@@ -21,7 +21,7 @@ import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/F
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
-import SelectableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/SelectableWidgets.vue'
+import AvailableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/AvailableWidgets.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types'
 
@@ -41,12 +41,13 @@ const availableVisualizationTypes = getVisualizationTypes()
 </script>
 
 <template>
-  <CmkHeading type="h3">{{ _t('Choose a visualization type.') }}</CmkHeading>
-  <ContentSpacer />
-  <SelectableWidgets
+  <CmkHeading type="h4">{{ _t('Show as') }}</CmkHeading>
+  <ContentSpacer :dimension="5" />
+  <AvailableWidgets
     v-model:selected-widget="handler.visualizationType.value"
     :available-items="availableVisualizationTypes"
     :enabled-widgets="Object.values(VisualizationTimelineType)"
+    :compact="true"
   />
   <ContentSpacer />
   <div v-if="!handler.isUpdating.value">

@@ -132,5 +132,27 @@ cached($MTIME,180) (my_check) Description 0 This is mrpe output" "$OUTPUT"
 
 }
 
+test_run_cached_plugin_expired_output_timeout() {
+    # Cache older than OUTPUT_TIMEOUT (540s) should still be output
+    OLD_CACHE="$CACHEDIR/plugins_old_plugin.cache"
+    {
+        echo "<<<old_plugin_section>>>"
+        echo "This is old cached output"
+    } >"$OLD_CACHE"
+
+    # Set mtime to 600 seconds ago (exceeds OUTPUT_TIMEOUT of 540)
+    touch -d "600 seconds ago" "$OLD_CACHE"
+    MTIME="$(stat -c %Y "$OLD_CACHE")"
+
+    OUTPUT="$(_run_cached_internal "plugins_old_plugin" 170 180 540 360 "echo should_not_run")"
+
+    expected() {
+        echo "<<<old_plugin_section:cached($MTIME,180)>>>"
+        echo "This is old cached output"
+    }
+
+    assertEquals "$(expected)" "$OUTPUT"
+}
+
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

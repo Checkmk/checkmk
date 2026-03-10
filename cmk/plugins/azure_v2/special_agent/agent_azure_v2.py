@@ -1761,7 +1761,6 @@ class MetricCache(AzureAsyncCache):
             key=f"{key_prefix}_{key_suffix}",
             debug=debug,
         )
-        self.remaining_reads = None
         self.timedelta = {
             "PT1M": datetime.timedelta(minutes=1),
             "PT5M": datetime.timedelta(minutes=5),
@@ -2099,7 +2098,6 @@ def write_group_info(
         ).write()
 
     section = AzureSection("agent_info", [subscription.piggytarget])
-    section.add(("monitored-groups", json.dumps([*monitored_groups])))
     section.add(
         (
             "monitored-resources",
@@ -2130,16 +2128,21 @@ def write_subscription_labels(subscription: AzureSubscription) -> None:
     ).write()
 
 
+def write_subscription_info_section(
+    subscription: AzureSubscription,
+    rate_limit: int | None,
+    monitored_groups: Mapping[str, AzureResourceGroup],
+) -> None:
+    section = AzureSection("subscription_info", [subscription.piggytarget])
+    section.add(("monitored-groups", json.dumps([*monitored_groups])))
+    section.add(("remaining-reads", json.dumps(rate_limit)))
+    section.write()
+
+
 def write_subscription_section(subscription: AzureSubscription) -> None:
     section = AzureResourceSection(subscription)
     section.add(subscription.dumpinfo())
     section.write()
-
-
-def write_remaining_reads(rate_limit: int | None, subscription: AzureSubscription) -> None:
-    agent_info_section = AzureSection("agent_info", [subscription.piggytarget])
-    agent_info_section.add(("remaining-reads", rate_limit))
-    agent_info_section.write()
 
 
 def write_to_agent_info_section(message: str, component: str, status: int) -> None:
@@ -2775,7 +2778,7 @@ async def main_subscription(
             tasks.discard(None)
             await asyncio.gather(*tasks)  # type: ignore[arg-type]
 
-            write_remaining_reads(mgmt_client.ratelimit, subscription)
+            write_subscription_info_section(subscription, mgmt_client.ratelimit, resource_groups)
 
     except Exception as exc:
         if args.debug:

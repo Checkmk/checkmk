@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
+from collections.abc import Callable
 from typing import Any
 
 from cmk.gui.i18n import _
@@ -27,46 +28,49 @@ from cmk.gui.valuespec import (
     Percentage,
     TextInput,
     Tuple,
+    ValueSpec,
 )
 
 
-def _parameter_valuespec_azure_agent_info():
-    return Dictionary(
-        elements=[
-            (
-                "resource_pinning",
-                DropdownChoice(
-                    title=_("Resource pinning: Ensure monitored resources are unchanged"),
-                    help=_(
-                        "If this option is selected, the resources being monitored are stored during"
-                        " discovery. The service will go to a WARNING state, if they change."
-                    ),
-                    choices=[
-                        (True, _("Warn if resources appear or vanish")),
-                        (False, _("Silently ignore new or missing resources")),
-                    ],
+def _parameter_valuespec_azure_agent_info(azure_v2: bool) -> Callable[[], Dictionary]:
+    elements: list[tuple[str, ValueSpec[Any]]] = [
+        (
+            "resource_pinning",
+            DropdownChoice(
+                title=_("Resource pinning: Ensure monitored resources are unchanged"),
+                help=_(
+                    "If this option is selected, the resources being monitored are stored during"
+                    " discovery. The service will go to a WARNING state, if they change."
                 ),
+                choices=[
+                    (True, _("Warn if resources appear or vanish")),
+                    (False, _("Silently ignore new or missing resources")),
+                ],
             ),
-            (
-                "warning_levels",
-                Tuple(
-                    title=_("Upper levels for encountered warnings"),
-                    elements=[
-                        Integer(title=_("Warning at"), default_value=1),
-                        Integer(title=_("Critical at"), default_value=10),
-                    ],
-                ),
+        ),
+        (
+            "warning_levels",
+            Tuple(
+                title=_("Upper levels for encountered warnings"),
+                elements=[
+                    Integer(title=_("Warning at"), default_value=1),
+                    Integer(title=_("Critical at"), default_value=10),
+                ],
             ),
-            (
-                "exception_levels",
-                Tuple(
-                    title=_("Upper levels for encountered exceptions"),
-                    elements=[
-                        Integer(title=_("Warning at"), default_value=1),
-                        Integer(title=_("Critical at"), default_value=1),
-                    ],
-                ),
+        ),
+        (
+            "exception_levels",
+            Tuple(
+                title=_("Upper levels for encountered exceptions"),
+                elements=[
+                    Integer(title=_("Warning at"), default_value=1),
+                    Integer(title=_("Critical at"), default_value=1),
+                ],
             ),
+        ),
+    ]
+    if not azure_v2:
+        elements += [
             (
                 "remaining_reads_levels_lower",
                 Tuple(
@@ -84,7 +88,10 @@ def _parameter_valuespec_azure_agent_info():
                     default_value=1,
                 ),
             ),
-        ],
+        ]
+
+    return lambda: Dictionary(
+        elements=elements,
         ignored_keys=["discovered_resources"],
     )
 
@@ -94,7 +101,7 @@ rulespec_registry.register(
         check_group_name="azure_agent_info",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_azure_agent_info,
+        parameter_valuespec=_parameter_valuespec_azure_agent_info(False),
         title=lambda: _("Azure agent info (deprecated)"),
     )
 )
@@ -105,7 +112,7 @@ rulespec_registry.register(
         check_group_name="azure_v2_agent_info",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_azure_agent_info,
+        parameter_valuespec=_parameter_valuespec_azure_agent_info(True),
         title=lambda: _("Azure agent info"),
     )
 )

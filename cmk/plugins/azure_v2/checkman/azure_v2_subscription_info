@@ -1,0 +1,11 @@
+title: Microsoft Azure Subscription Info
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the state of a Microsoft Azure subscription.
+
+discovery:
+ One service is created per Azure subscription and on the respective
+ subscription host.

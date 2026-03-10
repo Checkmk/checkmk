@@ -147,7 +147,7 @@ class BaseAsyncApiClient:
         return self._regional_url(region) + uri_end
 
     @property
-    def ratelimit(self):
+    def ratelimit(self) -> int | None:
         if isinstance(self._ratelimit, int):
             return self._ratelimit
         return None

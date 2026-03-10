@@ -35,8 +35,8 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     TagsOption,
     UniqueHostnamesConfig,
     write_group_info,
-    write_remaining_reads,
     write_resource_groups_sections,
+    write_subscription_info_section,
     write_subscription_labels,
     write_subscription_section,
 )
@@ -613,7 +613,6 @@ async def test_filter_tags(
             "<<<<>>>>\n"
             "<<<<mock_subscription_name>>>>\n"
             "<<<azure_v2_agent_info:sep(124)>>>\n"
-            'monitored-groups|["burningman"]\n'
             'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
             id="Single group with virtual machine resource",
@@ -669,7 +668,6 @@ async def test_filter_tags(
             "<<<<>>>>\n"
             "<<<<mock_subscription_name>>>>\n"
             "<<<azure_v2_agent_info:sep(124)>>>\n"
-            'monitored-groups|["burningman", "resource_group_name"]\n'
             'monitored-resources|["my_resource"]\n'
             "<<<<>>>>\n",
             id="Multiple groups with load balancer resource",
@@ -710,7 +708,6 @@ async def test_filter_tags(
             "<<<<>>>>\n"
             "<<<<mock_subscription_name_9bb22fdd>>>>\n"
             "<<<azure_v2_agent_info:sep(124)>>>\n"
-            'monitored-groups|["burningman"]\n'
             'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
             id="Safe hostnames with virtual machine",
@@ -737,7 +734,6 @@ async def test_filter_tags(
             "<<<<>>>>\n"
             "<<<<mock_subscription_name_9bb22fdd>>>>\n"
             "<<<azure_v2_agent_info:sep(124)>>>\n"
-            'monitored-groups|["burningman"]\n'
             "monitored-resources|[]\n"
             "<<<<>>>>\n",
             id="Empty tags and resources with unique hostnames",
@@ -767,6 +763,50 @@ def test_write_subscription_labels(capsys: pytest.CaptureFixture[str]) -> None:
         '{"cloud": "azure", "subscription_name": "mock_subscription_name",'
         ' "subscription": "mock_subscription_id", "entity": "subscription", "tenant_name": "mock_tenant_name"}'
     )
+
+
+@pytest.mark.parametrize(
+    "monitored_groups, expected_output",
+    [
+        pytest.param(
+            {
+                "burningman": AzureResourceGroup(
+                    info={
+                        "tags": {"my-resource-tag": "my-resource-value"},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "burningman",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                    unique_hostnames_config=UniqueHostnamesConfig(),
+                )
+            },
+            "<<<<mock_subscription_name>>>>\n"
+            "<<<azure_v2_subscription_info:sep(124)>>>\n"
+            'monitored-groups|["burningman"]\n'
+            "remaining-reads|123\n"
+            "<<<<>>>>\n",
+            id="Single group",
+        ),
+        pytest.param(
+            {},
+            "<<<<mock_subscription_name>>>>\n"
+            "<<<azure_v2_subscription_info:sep(124)>>>\n"
+            "monitored-groups|[]\n"
+            "remaining-reads|123\n"
+            "<<<<>>>>\n",
+            id="Empty groups",
+        ),
+    ],
+)
+def test_write_subscription_info_section(
+    capsys: pytest.CaptureFixture[str],
+    monitored_groups: Mapping[str, AzureResourceGroup],
+    expected_output: str,
+) -> None:
+    write_subscription_info_section(fake_azure_subscription(), 123, monitored_groups)
+    captured = capsys.readouterr()
+    assert captured.out == expected_output
 
 
 _monitored_vm_resource = lambda tag_pattern_option: {
@@ -883,35 +923,6 @@ async def test_get_resource_health_sections(
     sections = list(_get_resource_health_sections(resource_health, monitored_resources))
 
     assert sections == expected_sections, "Sections not as expected"
-
-
-@pytest.mark.parametrize(
-    "rate_limit,expected_output",
-    [
-        pytest.param(
-            10000,
-            "<<<<mock_subscription_name>>>>\n"
-            "<<<azure_v2_agent_info:sep(124)>>>\nremaining-reads|10000\n<<<<>>>>\n",
-            id="Rate limit with specific value",
-        ),
-        pytest.param(
-            None,
-            "<<<<mock_subscription_name>>>>\n"
-            "<<<azure_v2_agent_info:sep(124)>>>\nremaining-reads|None\n<<<<>>>>\n",
-            id="No rate limit specified",
-        ),
-    ],
-)
-def test_write_remaining_reads(
-    capsys: pytest.CaptureFixture[str],
-    rate_limit: int | None,
-    expected_output: str,
-    mock_azure_subscription: AzureSubscription,
-) -> None:
-    write_remaining_reads(rate_limit, mock_azure_subscription)
-
-    captured = capsys.readouterr()
-    assert captured.out == expected_output
 
 
 @pytest.mark.parametrize(

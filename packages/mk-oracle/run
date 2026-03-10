@@ -249,10 +249,11 @@ run_test_component_remote_host() {
     TEST_NAME="test_ora_sql_test"
     SSH_ARGS=
     [ -n "$SSH_KEYFILE" ] && SSH_ARGS="$SSH_ARGS -i $SSH_KEYFILE -o StrictHostKeyChecking=no"
+    # NOTE: create test folder and directory structure emulating real deployment too
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
-        mkdir -p "${TEST_BINARY_REMOTE_PATH}"
+        mkdir -p "${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle"
 EOF
     # copy Oracle DB plug-in test-binary to the remote-host and run the tests
     # shellcheck disable=SC2086

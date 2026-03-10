@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -15,6 +17,12 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
 )
 from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
+
+
+def _migrate(old_value: object) -> Mapping[str, object]:
+    if isinstance(old_value, dict):
+        return {str(k): v for k, v in old_value.items()}
+    return {"deployment": ("sync" if old_value else "do_not_deploy", None)}
 
 
 def _valuespec_agent_config_zorp() -> Dictionary:
@@ -51,7 +59,7 @@ def _valuespec_agent_config_zorp() -> Dictionary:
                 ),
             ),
         },
-        migrate=lambda old: {"deployment": ("sync" if old else "do_not_deploy", None)},
+        migrate=_migrate,
     )
 
 

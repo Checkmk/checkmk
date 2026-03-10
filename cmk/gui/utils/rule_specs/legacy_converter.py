@@ -51,7 +51,6 @@ from cmk.gui.utils.autocompleter_config import (
     ContextAutocompleterConfig,
 )
 from cmk.gui.utils.rule_specs.compatibility import (
-    add_agent_config_match_type_key,
     remove_agent_config_match_type_key,
 )
 from cmk.gui.utils.rule_specs.types import RuleSpec as APIV1RuleSpec
@@ -437,6 +436,12 @@ def _convert_to_legacy_agent_config_rule_spec(
 def _transform_agent_config_rule_spec_match_type(
     parameter_form: FormSpecCallable, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
+    """
+    This function is a relict from when we had to do some back and forth
+    transformation on AgentConfig rule specs. This is not necessary anymore,
+    but we need to remove the key here in order to accomodate the
+    pre-update checks.
+    """
     legacy_vs = convert_to_legacy_valuespec(parameter_form, localizer)
     inner_transform = (
         legacy_vs if isinstance(legacy_vs, Transform) and parameter_form().migrate else None
@@ -445,7 +450,7 @@ def _transform_agent_config_rule_spec_match_type(
         return Transform(
             legacy_vs,
             forth=remove_agent_config_match_type_key,
-            back=add_agent_config_match_type_key,
+            back=lambda x: x,
         )
 
     # We cannot simply wrap legacy_vs into a Transform to handle the match type key. Wrapping a
@@ -459,7 +464,7 @@ def _transform_agent_config_rule_spec_match_type(
         valuespec=Transform(
             inner_transform._valuespec,
             to_valuespec=remove_agent_config_match_type_key,
-            from_valuespec=add_agent_config_match_type_key,
+            from_valuespec=lambda x: x,
         ),
         to_valuespec=inner_transform.to_valuespec,
         from_valuespec=inner_transform.from_valuespec,

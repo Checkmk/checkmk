@@ -35,6 +35,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     TagsOption,
     UniqueHostnamesConfig,
     write_group_info,
+    write_monitored_resources_to_agent_info,
     write_resource_groups_sections,
     write_subscription_info_section,
     write_subscription_labels,
@@ -610,10 +611,6 @@ async def test_filter_tags(
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "burningman"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
-            "<<<<>>>>\n"
-            "<<<<mock_subscription_name>>>>\n"
-            "<<<azure_v2_agent_info:sep(124)>>>\n"
-            'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
             id="Single group with virtual machine resource",
         ),
@@ -665,10 +662,6 @@ async def test_filter_tags(
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "resource_group_name"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
-            "<<<<>>>>\n"
-            "<<<<mock_subscription_name>>>>\n"
-            "<<<azure_v2_agent_info:sep(124)>>>\n"
-            'monitored-resources|["my_resource"]\n'
             "<<<<>>>>\n",
             id="Multiple groups with load balancer resource",
         ),
@@ -705,10 +698,6 @@ async def test_filter_tags(
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "burningman"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
-            "<<<<>>>>\n"
-            "<<<<mock_subscription_name_9bb22fdd>>>>\n"
-            "<<<azure_v2_agent_info:sep(124)>>>\n"
-            'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
             id="Safe hostnames with virtual machine",
         ),
@@ -731,10 +720,6 @@ async def test_filter_tags(
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group", "tenant_name": "mock_tenant_name", "resource_group": "burningman"}\n'
             "{}\n"
-            "<<<<>>>>\n"
-            "<<<<mock_subscription_name_9bb22fdd>>>>\n"
-            "<<<azure_v2_agent_info:sep(124)>>>\n"
-            "monitored-resources|[]\n"
             "<<<<>>>>\n",
             id="Empty tags and resources with unique hostnames",
         ),
@@ -807,6 +792,29 @@ def test_write_subscription_info_section(
     write_subscription_info_section(fake_azure_subscription(), 123, monitored_groups)
     captured = capsys.readouterr()
     assert captured.out == expected_output
+
+
+def test_write_monitored_resources_to_agent_info(capsys: pytest.CaptureFixture[str]) -> None:
+    resources = [
+        AzureResource(
+            {
+                "id": "myid",
+                "name": "MyVM",
+                "type": "Microsoft.Compute/virtualMachines",
+                "location": "westeurope",
+                "tags": {},
+                "group": "mygroup",
+            },
+            TagsImportPatternOption.import_all,
+            subscription=fake_azure_subscription(),
+            unique_hostnames_config=UniqueHostnamesConfig(),
+        ),
+    ]
+    write_monitored_resources_to_agent_info(resources)
+    captured = capsys.readouterr()
+    assert captured.out == (
+        '<<<<>>>>\n<<<azure_v2_agent_info:sep(124)>>>\nmonitored-resources|["MyVM"]\n<<<<>>>>\n'
+    )
 
 
 _monitored_vm_resource = lambda tag_pattern_option: {

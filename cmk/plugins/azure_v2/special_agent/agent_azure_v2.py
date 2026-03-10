@@ -2097,19 +2097,6 @@ def write_group_info(
             tags=group.tags,
         ).write()
 
-    section = AzureSection("agent_info", [subscription.piggytarget])
-    section.add(
-        (
-            "monitored-resources",
-            json.dumps([r.info["name"] for r in monitored_resources]),
-        )
-    )
-    section.write()
-    # write empty agent_info section for all groups, otherwise
-    # the service will only be discovered if something goes wrong
-    # ! TODO: Should this be .write(write_empty=True)?
-    AzureSection("agent_info", [*monitored_groups, subscription.piggytarget]).write()
-
 
 def write_subscription_labels(subscription: AzureSubscription) -> None:
     labels = {
@@ -2136,6 +2123,12 @@ def write_subscription_info_section(
     section = AzureSection("subscription_info", [subscription.piggytarget])
     section.add(("monitored-groups", json.dumps([*monitored_groups])))
     section.add(("remaining-reads", json.dumps(rate_limit)))
+    section.write()
+
+
+def write_monitored_resources_to_agent_info(resources: Sequence[AzureResource]) -> None:
+    section = AzureSection("agent_info")
+    section.add(("monitored-resources", json.dumps([r.info["name"] for r in resources])))
     section.write()
 
 
@@ -2779,6 +2772,7 @@ async def main_subscription(
             await asyncio.gather(*tasks)  # type: ignore[arg-type]
 
             write_subscription_info_section(subscription, mgmt_client.ratelimit, resource_groups)
+            write_monitored_resources_to_agent_info(selected_resources)
 
     except Exception as exc:
         if args.debug:

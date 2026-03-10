@@ -98,26 +98,30 @@ def _agent_config_mk_podman() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Host name used for containers"),
                     help_text=Help(
-                        "Choose which identifier is used for the piggybacked host name of monitored containers."
+                        "<p>Select how piggyback hosts are named for your containers. You can choose from:</p>"
+                        "<ul>"
+                        "<li><tt>Use container name: mycontainername</tt></li>"
+                        "<li><tt>Combine the host name and container name (default): creates names in the format "
+                        "'mypodmanhost_mycontainername'. If the host name is unavailable, the container user's name is used. "
+                        "This is recommended to prevent naming conflicts, e.g. if multiple containers with the name "
+                        "'mycontainer' exist on different Podman hosts.</tt></li>"
+                        "<li><tt>Combine container name and ID: 'mycontainername_containerID'. Please note that in some cases "
+                        "the container IDs can change. Therefore this option can cause piggyback host names to change.</tt></li>"
+                        "</ul>"
                     ),
                     prefill=DefaultValue("nodename_name"),
                     elements=[
                         SingleChoiceElement(
                             name="name",
-                            title=Title("Name - Use the name of the container"),
+                            title=Title("Use container name"),
                         ),
                         SingleChoiceElement(
                             name="nodename_name",
-                            title=Title(
-                                "Node name + Name - Combine the Podman node name and the container name. "
-                                "If the Podman node name cannot be determined, it will use the name of the host instead"
-                            ),
+                            title=Title("Combine the host name and the container name"),
                         ),
                         SingleChoiceElement(
                             name="name_id",
-                            title=Title(
-                                "Name + ID - Use the name of the container plus the container ID"
-                            ),
+                            title=Title("Combine the container name and container ID"),
                         ),
                     ],
                 ),

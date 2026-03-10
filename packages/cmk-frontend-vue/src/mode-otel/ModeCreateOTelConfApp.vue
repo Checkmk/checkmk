@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -24,6 +24,16 @@ const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')
 const currentStep = ref(1)
 
+const configName = ref<string>('')
+const siteId = ref<string | null>(null)
+
+const generalPropertiesRef =
+  useTemplateRef<InstanceType<typeof ConfigureGeneralProperties>>('generalProperties')
+
+async function validateGeneralProperties(): Promise<boolean> {
+  return generalPropertiesRef.value?.validate() ?? false
+}
+
 const close = () => {
   console.log('Activate changes')
 }
@@ -39,10 +49,14 @@ const close = () => {
         </CmkHeading>
       </template>
       <template #content>
-        <ConfigureGeneralProperties />
+        <ConfigureGeneralProperties
+          ref="generalProperties"
+          v-model:config-name="configName"
+          v-model:site-id="siteId"
+        />
       </template>
       <template #actions>
-        <CmkWizardButton type="next" />
+        <CmkWizardButton type="next" :validation-cb="validateGeneralProperties" />
       </template>
     </CmkWizardStep>
     <CmkWizardStep :index="2" :is-completed="() => currentStep > 2">

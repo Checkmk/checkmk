@@ -20,6 +20,7 @@ void execute_test(Map config = [:]) {
         cmd: "",
         output_file: "",
         container_name: "minimal-ubuntu-checkmk-${container_safe_branch_name}",
+        disable_hot_cache: false,
     ] << config;
 
     stage("Run ${defaultDict.name}") {
@@ -49,7 +50,7 @@ void execute_test(Map config = [:]) {
                             'requirements.txt',
                             'bazel/tools/package.json',
                         ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
-                        disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER == "0",
+                        disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER == "0" || defaultDict.disable_hot_cache,
                     ]) {
                         run_sh_command(cmd);
                     }

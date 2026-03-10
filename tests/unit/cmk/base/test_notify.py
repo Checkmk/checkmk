@@ -11,7 +11,7 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.base import notify
-from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.events.event_context import EnrichedEventContext, EventContext, HostName
 from cmk.utils.http_proxy_config import EnvironmentProxyConfig
 from cmk.utils.notify_types import (
     Contact,
@@ -480,3 +480,41 @@ def test_rbn_match_event_console(
         )
         == expected
     )
+
+
+def test_create_notifications_custom_script_with_call_parameters() -> None:
+    """Regression test custom notification scripts with
+    'Call with the following parameters'"""
+    rule: EventRule = {
+        "rule_id": NotificationRuleID("test_custom"),
+        "allow_disable": False,
+        "contact_all": False,
+        "contact_all_with_email": False,
+        "contact_object": False,
+        "description": "Custom script rule",
+        "disabled": False,
+        # In user notification rules with custom scripts and "Call with the following
+        # parameters", the plugin_parameter_id is a list of strings, not a
+        # NotificationParameterID string.
+        "notify_plugin": ("my_custom_script", ["param1", "param2"]),  # type: ignore[typeddict-item]
+        "contact_users": ["testuser"],
+    }
+    config_contacts = {
+        ContactName("testuser"): Contact({"email": "test@example.com"}),
+    }
+    notifications, _rule_info = notify._create_notifications(
+        enriched_context=EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"}),
+        rule=rule,
+        parameters={},
+        notifications={},
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    # Should create exactly one notification without raising ValueError
+    assert len(notifications) == 1
+    _locked, final_params, _bulk = next(iter(notifications.values()))
+    assert final_params["params"] == ["param1", "param2"]  # type: ignore[typeddict-item]

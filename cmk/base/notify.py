@@ -1236,7 +1236,7 @@ def _create_notifications(
         plugin_parameters = (
             parameters[plugin_name][plugin_parameter_id]["parameter_properties"]
             if isinstance(plugin_parameter_id, str)
-            else plugin_parameter_id
+            else {"params": plugin_parameter_id}
         )
 
         final_parameters: NotifyPluginParamsDict = _rbn_finalize_plugin_parameters(

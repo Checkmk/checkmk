@@ -694,10 +694,12 @@ fn maybe_register_updater(
         site_spec::discover_protocol(&connection_config.site_id, &connection_config.client_config)?;
 
     let Credentials::UsernamePassword { username, password } = credentials else {
-        bail!(
-            "Automatic updates require username/password credentials. \
-            Please omit --automatic-updates when using --ott."
+        warn!(
+            "Sorry, the agent updater registration currently requires username/password credentials. \
+            You requested to register the agent updater while providing a one-time-token (OTT). \
+            Skipping agent updater registration."
         );
+        return Ok(());
     };
 
     let updater_input = UpdaterRegistrationInput {

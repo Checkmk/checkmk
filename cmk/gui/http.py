@@ -314,6 +314,7 @@ class Request(
 
     # TODO investigate why there are so many form_parts
     max_form_parts = 20000
+    max_form_memory_size = None
     meta: dict[str, Any]
 
     # pylint: disable=too-many-ancestors

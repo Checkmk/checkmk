@@ -50,6 +50,10 @@ from cmk.gui.utils.autocompleter_config import (
     AutocompleterConfig,
     ContextAutocompleterConfig,
 )
+from cmk.gui.utils.rule_specs.compatibility import (
+    add_agent_config_match_type_key,
+    remove_agent_config_match_type_key,
+)
 from cmk.gui.utils.rule_specs.types import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
@@ -176,11 +180,8 @@ def convert_to_legacy_rulespec(
                 localizer,
             )
         case ruleset_api_v1.rule_specs.AgentConfig():
-            return _convert_to_legacy_host_rule_spec_rulespec(
-                to_convert,
-                legacy_rulespec_groups.RulespecGroupMonitoringAgents,
-                localizer,
-                config_scope_prefix=RuleGroup.AgentConfig,
+            return _convert_to_legacy_agent_config_rule_spec(
+                to_convert, legacy_rulespec_groups.RulespecGroupMonitoringAgents, localizer
             )
         case ruleset_api_v1.rule_specs.CheckParameters():
             return _convert_to_legacy_check_parameter_rulespec(to_convert, edition_only, localizer)
@@ -386,7 +387,6 @@ def _convert_to_legacy_host_rule_spec_rulespec(
     to_convert: (
         ruleset_api_v1.rule_specs.ActiveCheck
         | ruleset_api_v1.rule_specs.AgentAccess
-        | ruleset_api_v1.rule_specs.AgentConfig
         | ruleset_api_v1.rule_specs.Host
         | ruleset_api_v1.rule_specs.NotificationParameters
         | ruleset_api_v1.rule_specs.InventoryParameters
@@ -410,6 +410,59 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         match_type=_convert_to_legacy_match_type(to_convert),
         doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
         form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
+    )
+
+
+def _convert_to_legacy_agent_config_rule_spec(
+    to_convert: ruleset_api_v1.rule_specs.AgentConfig,
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
+    localizer: Callable[[str], str],
+) -> legacy_rulespecs.HostRulespec:
+    return legacy_rulespecs.HostRulespec(
+        group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
+        name=RuleGroup.AgentConfig(to_convert.name),
+        valuespec=partial(
+            _transform_agent_config_rule_spec_match_type,
+            FormSpecCallable(to_convert.parameter_form),
+            localizer,
+        ),
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        is_deprecated=to_convert.is_deprecated,
+        match_type=_convert_to_legacy_match_type(to_convert),
+        doc_references=_get_doc_references(RuleGroup.AgentConfig(to_convert.name), localizer),
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
+    )
+
+
+def _transform_agent_config_rule_spec_match_type(
+    parameter_form: FormSpecCallable, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ValueSpec:
+    legacy_vs = convert_to_legacy_valuespec(parameter_form, localizer)
+    inner_transform = (
+        legacy_vs if isinstance(legacy_vs, Transform) and parameter_form().migrate else None
+    )
+    if not inner_transform:
+        return Transform(
+            legacy_vs,
+            forth=remove_agent_config_match_type_key,
+            back=add_agent_config_match_type_key,
+        )
+
+    # We cannot simply wrap legacy_vs into a Transform to handle the match type key. Wrapping a
+    # valuespec into a Transform results in the following order of transformations:
+    # 1. outer transform   (remove_agent_config_match_type_key)
+    # 2. inner transforms
+    # remove_agent_config_match_type_key fails for non-dictionaries, however, it is the job of the
+    # inner transforms to migrate to a dictionairy in case of a migration from a non-dictionary
+    # rule spec.
+    return Transform(
+        valuespec=Transform(
+            inner_transform._valuespec,
+            to_valuespec=remove_agent_config_match_type_key,
+            from_valuespec=add_agent_config_match_type_key,
+        ),
+        to_valuespec=inner_transform.to_valuespec,
+        from_valuespec=inner_transform.from_valuespec,
     )
 
 

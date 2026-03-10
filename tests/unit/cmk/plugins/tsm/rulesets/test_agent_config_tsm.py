@@ -83,16 +83,20 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
         ),
         # v240p16
         (
-            {"deployment": ("sync", None)},
-            {"deployment": ("sync", None)},
+            {"deployment": ("sync", None), "cmk-match-type": "dict"},
+            {"deployment": ("sync", None), "cmk-match-type": "dict"},
         ),
         (
-            {"deployment": ("cached", 0.0)},
-            {"deployment": ("cached", 0.0)},
+            {"deployment": ("cached", 0.0), "cmk-match-type": "dict"},
+            {"deployment": ("cached", 0.0), "cmk-match-type": "dict"},
         ),
         (
-            {"deployment": ("do_not_deploy", None)},
-            {"deployment": ("do_not_deploy", None)},
+            {"deployment": ("do_not_deploy", None), "cmk-match-type": "dict"},
+            {"deployment": ("do_not_deploy", None), "cmk-match-type": "dict"},
+        ),
+        (
+            {"cmk-match-type": "dict"},
+            {"cmk-match-type": "dict"},
         ),
         (
             {
@@ -100,12 +104,14 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
                     "user": "user",
                     "password": ("cmk_postprocessed", "explicit_password", ("some_uuid", "abc")),
                 },
+                "cmk-match-type": "dict",
             },
             {
                 "auth": {
                     "user": "user",
                     "password": ("cmk_postprocessed", "explicit_password", ("some_uuid", "abc")),
                 },
+                "cmk-match-type": "dict",
             },
         ),
         (
@@ -114,12 +120,14 @@ from cmk.plugins.tsm.rulesets.agent_config_tsm import _migrate
                     "user": "user",
                     "password": ("cmk_postprocessed", "stored_password", ("password_1", "")),
                 },
+                "cmk-match-type": "dict",
             },
             {
                 "auth": {
                     "user": "user",
                     "password": ("cmk_postprocessed", "stored_password", ("password_1", "")),
                 },
+                "cmk-match-type": "dict",
             },
         ),
     ],

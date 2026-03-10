@@ -50,7 +50,7 @@ LINUX_RPM_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1.noarch.rpm -
     --header 'Accept: application/octet-stream' \\
     --header 'Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]' \\
     --data-urlencode 'os_type=linux_rpm' && \\
-sudo rpm -Uvh check-mk-agent-{version}-1.noarch.rpm"""
+sudo rpm -Uvh check-mk-agent_{version}-1.noarch.rpm"""
 
 
 def build_agent_install_cmds(

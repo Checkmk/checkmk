@@ -28,7 +28,6 @@ import CmkHtml from '@/components/CmkHtml.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import { showLoadingTransition } from '@/loading-transition/loadingTransition'
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
 import ChangesStatusBar from './components/ChangesStatusBar.vue'
@@ -246,7 +245,6 @@ async function fetchPendingChangesAjax(): Promise<void> {
 
 function openActivateChangesPage() {
   cmk.popup_menu.close_popup()
-  showLoadingTransition('table', _t('Activate pending changes'))
   window.open(props.activate_changes_url, 'main')
 }
 

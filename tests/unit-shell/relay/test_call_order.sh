@@ -91,6 +91,7 @@ test_main_successful_call_order() {
         "podman volume create relay"
         "podman pull docker.io/checkmk/check-mk-relay:1.0.0"
         "podman tag docker.io/checkmk/check-mk-relay:1.0.0 localhost/checkmk_relay:checkmk_sync"
+        "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync test -f /opt/check-mk-relay/workdir/site_config.json"
         "podman run --rm -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --token testtoken"
         "cat *" # Heredoc writes, path varies
         "chmod 755 *checkmk_relay-update-manager.sh"

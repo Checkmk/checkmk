@@ -82,7 +82,14 @@ podman() {
                 return 1 # Volume doesn't exist, will be created
             fi
             ;;
-        pull | tag | run)
+        pull | tag)
+            return 0
+            ;;
+        run)
+            # Simulate no existing registration by default
+            if [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+                return 1 # File does not exist → relay not yet registered
+            fi
             return 0
             ;;
     esac

@@ -42,7 +42,9 @@ test_registration_fails() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
-        if [[ "$1" == "run" ]] && [[ "$*" == *"cmk-relay register"* ]]; then
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        elif [[ "$1" == "run" ]] && [[ "$*" == *"cmk-relay register"* ]]; then
             return 1 # Simulate registration failure
         else
             return 0 # Other podman commands succeed
@@ -86,6 +88,9 @@ test_registration_localhost_uses_host_containers_internal() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman
@@ -118,6 +123,9 @@ test_registration_127_0_0_1_uses_host_containers_internal() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman
@@ -150,6 +158,9 @@ test_registration_127_0_1_1_uses_host_containers_internal() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman
@@ -182,6 +193,9 @@ test_registration_ipv6_localhost_uses_host_containers_internal() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman
@@ -214,6 +228,9 @@ test_registration_localhost_with_port_uses_host_containers_internal() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman
@@ -246,6 +263,9 @@ test_registration_loopback_ip_with_port_uses_host_containers_internal() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman
@@ -278,6 +298,9 @@ test_registration_remote_host_with_port_passes_through() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman
@@ -323,6 +346,9 @@ test_registration_unresolvable_address_fails() {
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman
@@ -349,12 +375,85 @@ test_registration_unresolvable_address_fails() {
     assertTrue "Error message should mention resolution failure" $?
 }
 
+# Test: main aborts when relay is already registered and no --force is provided
+test_registration_aborts_when_already_registered_without_force() {
+    # Mock podman: simulate that site_config.json exists in the volume
+    # shellcheck disable=SC2317
+    podman() {
+        echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 0 # Simulate: file exists → relay already registered
+        fi
+        return 0
+    }
+    export -f podman
+
+    # Run main in a subshell without --force
+    set +e
+    output=$(
+        set -euo pipefail
+        main --relay-name "test-relay" \
+            --initial-tag-version "1.0.0" \
+            --target-server "server.example.com" \
+            --target-site-name "mysite" \
+            --token "testtoken" \
+            2>&1
+    )
+    local exit_code=$?
+    set -e
+
+    # Assert that main exited with error
+    assertNotEquals "main should exit with error when relay is already registered" 0 "$exit_code"
+
+    # Assert that the error message mentions the problem and --force
+    echo "$output" | grep -q "already registered"
+    assertTrue "Error message should mention 'already registered'" $?
+
+    echo "$output" | grep -q "\-\-force"
+    assertTrue "Error message should mention '--force'" $?
+}
+
+# Test: main succeeds when relay is already registered and --force is provided
+test_registration_force_flag_bypasses_already_registered_check() {
+    # Mock podman: simulate that site_config.json exists in the volume
+    # shellcheck disable=SC2317
+    podman() {
+        echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 0 # Simulate: file exists → relay already registered
+        fi
+        return 0
+    }
+    export -f podman
+
+    # Run main in a subshell with --force
+    set +e
+    output=$(
+        set -euo pipefail
+        main --relay-name "test-relay" \
+            --initial-tag-version "1.0.0" \
+            --target-server "server.example.com" \
+            --target-site-name "mysite" \
+            --token "testtoken" \
+            --force \
+            2>&1
+    )
+    local exit_code=$?
+    set -e
+
+    # Assert that main succeeded despite relay being already registered
+    assertEquals "main should succeed when --force is provided" 0 "$exit_code"
+}
+
 # Test: Registration with --force passes --force to podman run
 test_registration_force_flag_is_forwarded_to_podman_run() {
     # Mock podman to succeed and track all calls
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
+        if [[ "$1" == "run" ]] && [[ "$*" == *"test -f"*"site_config.json"* ]]; then
+            return 1 # Relay not yet registered
+        fi
         return 0
     }
     export -f podman

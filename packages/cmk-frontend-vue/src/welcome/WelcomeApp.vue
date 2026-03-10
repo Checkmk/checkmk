@@ -44,11 +44,7 @@ async function stepCompleted(stepId: StepId): Promise<void> {
 <template>
   <CmkScrollContainer type="outer">
     <div class="welcome-app">
-      <WelcomeBanner
-        class="welcome-app__banner"
-        :completed-steps="completedSteps"
-        :total-steps="totalSteps"
-      />
+      <WelcomeBanner :completed-steps="completedSteps" :total-steps="totalSteps" />
       <div class="welcome-app__panels">
         <div class="welcome-app__panel-left">
           <NextSteps v-if="completedSteps === totalSteps" :cards="cards" />
@@ -75,10 +71,6 @@ async function stepCompleted(stepId: StepId): Promise<void> {
   min-height: calc(100vh - 20px);
   padding-right: 10px;
   padding-bottom: 10px;
-}
-
-.welcome-app__banner {
-  margin-top: 32px;
 }
 
 .welcome-app__panels {

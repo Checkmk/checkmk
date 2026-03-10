@@ -384,10 +384,8 @@ onMounted(async () => {
       </div>
       <CmkDialog
         :message="
-          _t(
-            `Changes are saved in a temporary environment first, letting you review and adjust them safely.
-             Activate changes to apply them to live monitoring.`
-          )
+          _t(`Changes are saved without affecting live monitoring, allowing you to review and adjust them safely.
+              Click 'Activate pending changes' to apply them.`)
         "
         :dismissal_button="{
           title: _t('Do not show again'),

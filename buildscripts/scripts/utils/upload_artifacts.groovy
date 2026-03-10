@@ -242,8 +242,9 @@ void withHotCache(Map args, Closure body) {
 
     // TODO: Remove me as soon as this is stable
     // Skip restoring "All unit tests" as it might take up to 30min due to massive 27GB and high disk utilization
+    // Skip restoring "test-mypy-docker" because restoring the 24GB archive takes around 20 minutes and causes high disk utilization
     if (
-        args.disable_hot_cache || args.target_name in ["All unit tests", "C++ unit tests"]
+        args.disable_hot_cache || args.target_name in ["All unit tests", "C++ unit tests", "Type repository with mypy"]
     ) {
         body();
         return;

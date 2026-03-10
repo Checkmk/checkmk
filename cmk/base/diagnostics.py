@@ -330,7 +330,10 @@ class DiagnosticsDump:
         core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
         parameters: DiagnosticsOptionalParameters | None = None,
     ) -> None:
-        self.fixed_elements = self._get_fixed_elements(loaded_config, core_performance_settings)
+        self.log: list[str] = []
+        self.fixed_elements = self._get_fixed_elements(
+            loaded_config, core_performance_settings, parameters
+        )
         self.optional_elements = self._get_optional_elements(parameters)
         self.elements = self.fixed_elements + self.optional_elements
 
@@ -340,12 +343,26 @@ class DiagnosticsDump:
         self.tarfile_path = dump_folder.joinpath(_file_name).with_suffix(SUFFIX)
         self.tarfile_created = False
 
+    def _console(self, message: str, severity: str) -> None:
+        if severity == "verbose":
+            console.verbose(message)
+        else:
+            console.info(message)
+
+        self.log.append(message)
+
+    def _section_step(self, message: str, verbose: bool = True, add_info: str = "") -> None:
+        section.section_step(message, verbose=verbose, add_info=add_info)
+        self.log.append("+ " + message.upper())
+
     def _get_fixed_elements(
         self,
         loaded_config: LoadedConfigFragment,
         core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+        parameters: DiagnosticsOptionalParameters | None,
     ) -> list[ABCDiagnosticsElement]:
         fixed_elements = [
+            ParametersDiagnosticsElement(parameters),
             GeneralDiagnosticsElement(),
             PerfDataDiagnosticsElement(loaded_config, core_performance_settings),
             HWDiagnosticsElement(),
@@ -462,8 +479,7 @@ class DiagnosticsDump:
         self._cleanup_dump_folder()
 
     def _create_dump_folder(self) -> None:
-        section.section_step("Create dump folder")
-        console.verbose(f"{_format_filepath(self.dump_folder)}")
+        self._section_step("Create dump folder")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self) -> None:
@@ -476,32 +492,41 @@ class DiagnosticsDump:
                 tar.add(str(filepath), arcname=rel_path)
                 self.tarfile_created = True
 
+            log_filepath = self._write_console_output_to_file(Path(tmp_dump_folder))
+            rel_path = str(log_filepath).replace(str(tmp_dump_folder), "")
+            tar.add(str(log_filepath), arcname=rel_path)
+
+    def _write_console_output_to_file(self, tmp_dump_folder: Path) -> Path:
+        logfile = tmp_dump_folder.joinpath("console_%s.log" % str(datetime.now().timestamp()))
+        store.save_text_to_file(logfile, "\n".join(self.log))
+        return logfile
+
     def _get_filepaths(self, tmp_dump_folder: Path) -> list[Path]:
-        section.section_step("Collect diagnostics information", verbose=False)
+        self._section_step("Collect diagnostics information", verbose=False)
 
         filepaths = []
         for element in self.elements:
-            console.info(f"{_format_title(element.title)}")
-            console.info(f"{_format_description(element.description)}")
+            self._console(f"{_format_title(element.title)}", "info")
+            self._console(f"{_format_description(element.description)}", "info")
 
             try:
                 for filepath in element.add_or_get_files(tmp_dump_folder):
                     filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
-                console.info(f"{_format_error(str(e))}")
+                self._console(f"{_format_error(str(e))}", "info")
                 continue
 
             except DiagnosticsElementWarning as e:
-                console.info(f"{_format_warn(str(e))}")
+                self._console(f"{_format_warn(str(e))}", "info")
                 continue
 
             except DiagnosticsElementInfo as e:
-                console.info(f"{_format_info(str(e))}")
+                self._console(f"{_format_info(str(e))}", "info")
                 continue
 
             except Exception:
-                console.info(f"{_format_error(traceback.format_exc())}")
+                self._console(f"{_format_error(traceback.format_exc())}", "info")
                 continue
 
         return filepaths
@@ -516,11 +541,11 @@ class DiagnosticsDump:
             key=lambda t: t[0],
         )[: -self._keep_num_dumps]
 
-        section.section_step(
+        self._section_step(
             "Cleanup dump folder", add_info="keep last %d dumps" % self._keep_num_dumps
         )
         for _mtime, filepath in dumps:
-            console.verbose(f"{_format_filepath(filepath)}")
+            self._console(f"{_format_filepath(filepath)}", "verbose")
             self._remove_file(filepath)
 
     def _remove_file(self, filepath: Path) -> None:
@@ -677,6 +702,29 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
     @abc.abstractmethod
     def _collect_infos(self) -> DiagnosticsElementCSVResult:
         raise NotImplementedError()
+
+
+#   ---text dumps-----------------------------------------------------------
+
+
+class ParametersDiagnosticsElement(ABCDiagnosticsElementTextDump):
+    def __init__(self, parameters: DiagnosticsOptionalParameters | None) -> None:
+        self.parameters = parameters
+
+    @property
+    def ident(self) -> str:
+        return "parameters_%s" % str(datetime.now().timestamp())
+
+    @property
+    def title(self) -> str:
+        return _("Parameters")
+
+    @property
+    def description(self) -> str:
+        return _("The parameters that were provided to create the Diagnostics dump.")
+
+    def _collect_infos(self) -> str:
+        return str(self.parameters)
 
 
 #   ---csv dumps-----------------------------------------------------------

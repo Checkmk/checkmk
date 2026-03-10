@@ -16,6 +16,9 @@ from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 from tests.gui_e2e.testlib.playwright.pom.sidebar.create_dashboard_sidebar import (
     CloneDashboardSidebar,
 )
+from tests.gui_e2e.testlib.playwright.pom.sidebar.runtime_filters_sidebar import (
+    RuntimeFiltersSidebar,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +92,15 @@ class BaseDashboard(CmkPage):
         """
         return self._menu_header.get_by_role("button", name=button_name)
 
+    def open_runtime_filters(self) -> RuntimeFiltersSidebar:
+        """Open the Runtime Filters Sidebar.
+
+        Returns:
+            An instance of the class that represents the Runtime Filters Sidebar.
+        """
+        self.get_menu_button("Filter").click()
+        return RuntimeFiltersSidebar(self.page)
+
     def check_menu_button_is_present(self, button_name: str) -> None:
         """Check that a specific button of the top menu is present.
 
@@ -130,40 +142,49 @@ class BaseDashboard(CmkPage):
             .filter(has=self.page.get_by_role("heading", name=widget_title, exact=True))
         )
 
-    def get_widget_table(self, widget_title: str) -> Locator:
+    def get_widget_table(self, widget_title: str, iframed: bool = False) -> Locator:
         """Get the table inside a widget.
 
         Args:
             widget_title: the title of the widget.
+            iframed: whether the table is inside an iframe within the widget.
 
         Returns:
             The locator of the table inside the widget.
         """
-        return self.get_widget(widget_title).locator("table")
+        widget = self.get_widget(widget_title)
+        base_locator = widget.frame_locator("iframe") if iframed else widget
+        return base_locator.locator("table")
 
-    def get_widget_table_rows(self, widget_title: str) -> Locator:
+    def get_widget_table_rows(self, widget_title: str, iframed: bool = False) -> Locator:
         """Get the rows of the table inside a widget exluding the table heading.
 
         Args:
             widget_title: the title of the widget.
+            iframed: whether the table is inside an iframe within the widget.
 
         Returns:
             The locator of the rows of the table inside the widget.
         """
-        return self.get_widget_table(widget_title).locator("tr:not(:first-child)")
+        return self.get_widget_table(widget_title, iframed).locator("tr:not(:first-child)")
 
-    def get_widget_table_column_cells(self, widget_title: str, *, column_index: int) -> Locator:
+    def get_widget_table_column_cells(
+        self, widget_title: str, *, column_index: int, iframed: bool = False
+    ) -> Locator:
         """Get the cells that belong to one specific column of the table inside a widget.
 
         Args:
             widget_title: the title of the widget.
             column_index: the index of the column to get the cells.
+            iframed: whether the table is inside an iframe within the widget.
 
         Returns:
             The locator of the cells that belong to the given column of the table
             inside the widget.
         """
-        return self.get_widget_table_rows(widget_title).locator(f"> td:nth-child({column_index})")
+        return self.get_widget_table_rows(widget_title, iframed).locator(
+            f"> td:nth-child({column_index})"
+        )
 
     def check_widget_is_present(self, widget_title: str) -> None:
         """Check that a specific widget is present on the page.

@@ -109,8 +109,8 @@ def test_main_dashboard_sanity_check(dashboard_page: MainDashboard) -> None:
         4. Check that the menu buttons are visible.
         5. Check that the SVGs for 'Host statistics' and 'Service statistics' widgets are visible.
     """
-    for dashlet_title in dashboard_page.default_widget_list:
-        dashboard_page.check_widget_is_present(dashlet_title)
+    for widget_title in dashboard_page.default_widget_list:
+        dashboard_page.check_widget_is_present(widget_title)
 
     for button_name in dashboard_page.header_buttons:
         dashboard_page.check_menu_button_is_present(button_name)
@@ -391,3 +391,78 @@ def test_add_top_list_widget(
         cloned_linux_hosts_dashboard.get_widget(widget_title),
         message=f"Widget '{widget_title}' is still present after deletion",
     ).not_to_be_attached()
+
+
+@pytest.mark.xfail(reason="Bug CMK-32296")
+def test_builtin_dashboard_runtime_filter(
+    dashboard_page: MainDashboard, linux_hosts: list[str]
+) -> None:
+    """
+    Test the built-in dashboard filter functionality with filtering by a host.
+
+    This test checks that the dashboard filter works correctly by applying a filter
+    for a specific host and verifying the displayed results.
+
+    Steps:
+        1. Apply a filter for a specific host.
+        2. Verify that the correct data is displayed.
+        3. Apply a filter for a non-existing host.
+        4. Check that the appropriate message is shown in the widgets.
+    """
+    host_name_filter = "Host name (regex)"
+    first_host = linux_hosts[0]
+    host_table_widget = "Top alerters (last 7 days)"
+    graphic_widgets = (
+        "Total host problems",
+        "Total service problems",
+        "Percentage of total service problems",
+    )
+
+    runtime_filters_sidebar = dashboard_page.open_runtime_filters()
+    runtime_filters_sidebar.add_filter_to_host_selection(host_name_filter, "Host name")
+    runtime_filters_sidebar.select_dropdown_option(
+        f"'{host_name_filter}' runtime filter",
+        runtime_filters_sidebar.get_filter_combobox(host_name_filter),
+        first_host,  # type: ignore[type-var]  # Host names are dynamic
+        expected_value=re.escape(first_host),
+    )
+    runtime_filters_sidebar.apply_button.click()
+
+    for host_name in dashboard_page.get_widget_table_column_cells(
+        host_table_widget, column_index=2, iframed=True
+    ).all():
+        assert host_name.text_content() == first_host, (
+            f"Unexpected host name found in widget '{host_table_widget}': "
+            f"{host_name.text_content()}. Only '{first_host}' host is expected"
+        )
+
+    runtime_filters_sidebar = dashboard_page.open_runtime_filters()
+    runtime_filters_sidebar.select_dropdown_option(
+        f"'{host_name_filter}' runtime filter",
+        runtime_filters_sidebar.get_filter_combobox(host_name_filter),
+        "xXxXxXx",  # type: ignore[type-var]  # Dynamic value
+        text_input=runtime_filters_sidebar.dropdown_list_filter_textbox,
+    )
+    runtime_filters_sidebar.apply_button.click()
+
+    expected_message = (
+        "As soon as you add your Checkmk server to the monitoring, a graph showing the history "
+        "of your host problems will appear here.\n Please also be aware that this message might "
+        "appear as a result of a filtered dashboard. This dashlet currently only supports "
+        "filtering for sites.Please refer to the Checkmk User Guide for more details."
+    )
+
+    for widget_title in graphic_widgets:
+        success_message = dashboard_page.get_widget(widget_title).locator("div.success")
+
+        expect(
+            success_message, message="Widget does not contain a success message."
+        ).to_be_visible()
+
+        expect(
+            success_message,
+            message=(
+                f"Widget does not contain the expected success message ('{expected_message}'). "
+                f"Actual message: {success_message.text_content()}"
+            ),
+        ).to_have_text(expected_message)

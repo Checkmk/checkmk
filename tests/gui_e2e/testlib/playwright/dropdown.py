@@ -48,12 +48,20 @@ class DropdownHelper[TDropdownOptions: DropdownOptions]:
         self.__text_input_filter.fill(option)
 
     def select_option(
-        self, option: TDropdownOptions, exact: bool = True, search: bool = False
+        self,
+        option: TDropdownOptions,
+        exact: bool = True,
+        search: bool = False,
+        expected_value: str | None = None,
     ) -> None:
         """Select an option from the dropdown.
 
         Args:
             option: The StrEnum member that represents the dropdown option to select.
+            exact: whether the option name match has to be exact or not.
+            search: whether to type the option name to filter the dropdown list before selecting.
+            expected_value: the expected text of the dropdown after selection, for validation.
+                If None, it will be validated with the option value.
         """
         logger.info("Select option '%s' in '%s' dropdown", option, self.__dropdown_name)
         self.__dropdown_box.click()
@@ -66,7 +74,8 @@ class DropdownHelper[TDropdownOptions: DropdownOptions]:
             self.__search_option(option)
 
         self.__dropdown_list.get_by_role("option", name=option, exact=exact).click()
+        expected_value = expected_value or option
         expect(
             self.__dropdown_box,
-            message=f"Option '{option}' not set in '{self.__dropdown_name}' dropdown",
-        ).to_have_text(option)
+            message=f"Option '{expected_value}' not set in '{self.__dropdown_name}' dropdown",
+        ).to_have_text(expected_value)

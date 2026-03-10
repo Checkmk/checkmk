@@ -14678,6 +14678,15 @@ msgstr ""
 "contribuire alle traduzioni su %s."
 
 msgid ""
+"Configure the local communication channel between the Windows agent and the "
+"Agent Controller. By default, a mailslot is used. If you encounter problems "
+"with mailslot communication in your environment, you can switch to a TCP "
+"socket on localhost instead.<br> <b>Note:</b> We highly recomment to leave "
+"this option untouched unless you encounter problems with the default "
+"configuration."
+msgstr ""
+
+msgid ""
 "Configure the maximum number of bytes that is sent to the monitoring site. "
 "By default, the limit is set to the maximum size of the file storing the log "
 "lines on the server side, which is 500 KB"
@@ -34901,6 +34910,10 @@ msgstr "Battito cardiaco intermittente"
 msgid "Internal ID"
 msgstr "ID interno"
 
+#, fuzzy
+msgid "Internal agent communication channel"
+msgstr "Nome del comando interno"
+
 #, python-format
 msgid ""
 "Internal automation error: %s\n"
@@ -39531,6 +39544,10 @@ msgstr "Posta in coda di posta in uscita/posta differita"
 #, fuzzy
 msgid "Mails received time"
 msgstr "Tasso di posta ricevuta"
+
+#, fuzzy
+msgid "Mailslot"
+msgstr "E-mail"
 
 msgid "Main"
 msgstr "Principale"
@@ -63533,6 +63550,10 @@ msgstr "Numero di porta TCP a cui connettersi. Di solito o 139 o 445."
 
 msgid "TCP port of Carbon line receiver"
 msgstr "Porta TCP del ricevitore della linea Carbon"
+
+#, fuzzy
+msgid "TCP socket on localhost"
+msgstr "Usa FQDN locale"
 
 msgid "TCP target resets"
 msgstr "Reset del target TCP"
@@ -91480,9 +91501,6 @@ msgstr "⚠ <b>non disponibile</b> perché Robotmk Core MKP è stato installato"
 
 #~ msgid "Database Name"
 #~ msgstr "Nome del database"
-
-#~ msgid "E-Mails"
-#~ msgstr "E-mail"
 
 #~ msgid "Email Address"
 #~ msgstr "Indirizzo e-mail"

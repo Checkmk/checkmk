@@ -14990,6 +14990,15 @@ msgstr ""
 "aux traductions sur %s."
 
 msgid ""
+"Configure the local communication channel between the Windows agent and the "
+"Agent Controller. By default, a mailslot is used. If you encounter problems "
+"with mailslot communication in your environment, you can switch to a TCP "
+"socket on localhost instead.<br> <b>Note:</b> We highly recomment to leave "
+"this option untouched unless you encounter problems with the default "
+"configuration."
+msgstr ""
+
+msgid ""
 "Configure the maximum number of bytes that is sent to the monitoring site. "
 "By default, the limit is set to the maximum size of the file storing the log "
 "lines on the server side, which is 500 KB"
@@ -35425,6 +35434,10 @@ msgstr "Battement de cœur intermittent"
 msgid "Internal ID"
 msgstr "ID interne"
 
+#, fuzzy
+msgid "Internal agent communication channel"
+msgstr "Nom de la commande interne"
+
 #, python-format
 msgid ""
 "Internal automation error: %s\n"
@@ -40108,6 +40121,10 @@ msgstr ""
 #, fuzzy
 msgid "Mails received time"
 msgstr "Taux de courriers reçus"
+
+#, fuzzy
+msgid "Mailslot"
+msgstr "E-Mails"
 
 msgid "Main"
 msgstr "Principal"
@@ -64404,6 +64421,10 @@ msgstr ""
 
 msgid "TCP port of Carbon line receiver"
 msgstr "Port TCP du récepteur de la ligne carbone"
+
+#, fuzzy
+msgid "TCP socket on localhost"
+msgstr "Utiliser le FQDN local"
 
 #, fuzzy
 msgid "TCP target resets"
@@ -92679,9 +92700,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
 #~ msgid "Database Name"
 #~ msgstr "Nom de la base de données"
-
-#~ msgid "E-Mails"
-#~ msgstr "E-Mails"
 
 #~ msgid "Email Address"
 #~ msgstr "Adresse électronique"

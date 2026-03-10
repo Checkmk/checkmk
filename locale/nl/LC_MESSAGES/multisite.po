@@ -14874,6 +14874,15 @@ msgstr ""
 "dragen aan de vertalingen op %s."
 
 msgid ""
+"Configure the local communication channel between the Windows agent and the "
+"Agent Controller. By default, a mailslot is used. If you encounter problems "
+"with mailslot communication in your environment, you can switch to a TCP "
+"socket on localhost instead.<br> <b>Note:</b> We highly recomment to leave "
+"this option untouched unless you encounter problems with the default "
+"configuration."
+msgstr ""
+
+msgid ""
 "Configure the maximum number of bytes that is sent to the monitoring site. "
 "By default, the limit is set to the maximum size of the file storing the log "
 "lines on the server side, which is 500 KB"
@@ -35108,6 +35117,10 @@ msgstr "Intermitterende hartslag"
 msgid "Internal ID"
 msgstr "Interne ID"
 
+#, fuzzy
+msgid "Internal agent communication channel"
+msgstr "Naam intern commando"
+
 #, python-format
 msgid ""
 "Internal automation error: %s\n"
@@ -39774,6 +39787,10 @@ msgstr "Mails in de wachtrij voor uitgaande mail/uitgestelde mails"
 #, fuzzy
 msgid "Mails received time"
 msgstr "Ontvangen post"
+
+#, fuzzy
+msgid "Mailslot"
+msgstr "E-Mails"
 
 msgid "Main"
 msgstr "Hoofd"
@@ -63825,6 +63842,10 @@ msgstr ""
 
 msgid "TCP port of Carbon line receiver"
 msgstr "TCP poort van Carbon line ontvanger"
+
+#, fuzzy
+msgid "TCP socket on localhost"
+msgstr "Gebruik lokale FQDN"
 
 #, fuzzy
 msgid "TCP target resets"
@@ -91836,9 +91857,6 @@ msgstr "Gebruik SSL voor de verbinding."
 
 #~ msgid "Database Name"
 #~ msgstr "Databank Naam"
-
-#~ msgid "E-Mails"
-#~ msgstr "E-Mails"
 
 #~ msgid "Email Address"
 #~ msgstr "Email Adres"

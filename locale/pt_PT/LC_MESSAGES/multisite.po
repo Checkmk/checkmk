@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-03-07 18:36+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -14870,6 +14870,15 @@ msgid ""
 msgstr ""
 "Configurar o idioma da interface do utilizador. Sinta-se à vontade para "
 "contribuir para as traduções em %s."
+
+msgid ""
+"Configure the local communication channel between the Windows agent and the "
+"Agent Controller. By default, a mailslot is used. If you encounter problems "
+"with mailslot communication in your environment, you can switch to a TCP "
+"socket on localhost instead.<br> <b>Note:</b> We highly recomment to leave "
+"this option untouched unless you encounter problems with the default "
+"configuration."
+msgstr ""
 
 msgid ""
 "Configure the maximum number of bytes that is sent to the monitoring site. "
@@ -35098,6 +35107,10 @@ msgstr "Ritmo cardíaco intermitente"
 msgid "Internal ID"
 msgstr "Identificação interna"
 
+#, fuzzy
+msgid "Internal agent communication channel"
+msgstr "Nome do comando interno"
+
 #, python-format
 msgid ""
 "Internal automation error: %s\n"
@@ -39754,6 +39767,10 @@ msgstr "Correios em fila de correio de saída/correspondência"
 #, fuzzy
 msgid "Mails received time"
 msgstr "Taxa de recepção de correio"
+
+#, fuzzy
+msgid "Mailslot"
+msgstr "E-Mails"
 
 msgid "Main"
 msgstr "Principal"
@@ -63814,6 +63831,10 @@ msgstr "Número da porta TCP a que se conectar. Normalmente 139 ou 445."
 
 msgid "TCP port of Carbon line receiver"
 msgstr "Porta TCP do receptor da linha Carbono"
+
+#, fuzzy
+msgid "TCP socket on localhost"
+msgstr "Use o FQDN local"
 
 #, fuzzy
 msgid "TCP target resets"
@@ -87987,7 +88008,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -88488,7 +88508,6 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -91736,9 +91755,6 @@ msgstr "Use SSL para a conexão."
 
 #~ msgid "Database Name"
 #~ msgstr "Nome da base de dados"
-
-#~ msgid "E-Mails"
-#~ msgstr "E-Mails"
 
 #~ msgid "Email Address"
 #~ msgstr "Endereço de e-mail"

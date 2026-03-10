@@ -14978,6 +14978,15 @@ msgstr ""
 "a las traducciones en %s."
 
 msgid ""
+"Configure the local communication channel between the Windows agent and the "
+"Agent Controller. By default, a mailslot is used. If you encounter problems "
+"with mailslot communication in your environment, you can switch to a TCP "
+"socket on localhost instead.<br> <b>Note:</b> We highly recomment to leave "
+"this option untouched unless you encounter problems with the default "
+"configuration."
+msgstr ""
+
+msgid ""
 "Configure the maximum number of bytes that is sent to the monitoring site. "
 "By default, the limit is set to the maximum size of the file storing the log "
 "lines on the server side, which is 500 KB"
@@ -35367,6 +35376,10 @@ msgstr "Latidos intermitentes"
 msgid "Internal ID"
 msgstr "Identificación interna"
 
+#, fuzzy
+msgid "Internal agent communication channel"
+msgstr "Nombre del comando interno"
+
 #, python-format
 msgid ""
 "Internal automation error: %s\n"
@@ -40065,6 +40078,10 @@ msgstr "Correos en la cola de salida/correos diferidos"
 #, fuzzy
 msgid "Mails received time"
 msgstr "Tasa de correos recibidos"
+
+#, fuzzy
+msgid "Mailslot"
+msgstr "Correos electrónicos"
 
 msgid "Main"
 msgstr "Principal"
@@ -64368,6 +64385,10 @@ msgstr "Número de puerto TCP al que conectarse. Normalmente, el 139 o el 445."
 
 msgid "TCP port of Carbon line receiver"
 msgstr "Puerto TCP del receptor de la línea Carbon"
+
+#, fuzzy
+msgid "TCP socket on localhost"
+msgstr "Utilizar el FQDN local"
 
 #, fuzzy
 msgid "TCP target resets"
@@ -92573,9 +92594,6 @@ msgstr "Usar SSL para la conexión."
 
 #~ msgid "Database Name"
 #~ msgstr "Nombre de la base de datos"
-
-#~ msgid "E-Mails"
-#~ msgstr "Correos electrónicos"
 
 #~ msgid "Email Address"
 #~ msgstr "Dirección de correo electrónico"

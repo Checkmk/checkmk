@@ -14890,6 +14890,15 @@ msgstr ""
 "contribuiți la traducerile de pe %s."
 
 msgid ""
+"Configure the local communication channel between the Windows agent and the "
+"Agent Controller. By default, a mailslot is used. If you encounter problems "
+"with mailslot communication in your environment, you can switch to a TCP "
+"socket on localhost instead.<br> <b>Note:</b> We highly recomment to leave "
+"this option untouched unless you encounter problems with the default "
+"configuration."
+msgstr ""
+
+msgid ""
 "Configure the maximum number of bytes that is sent to the monitoring site. "
 "By default, the limit is set to the maximum size of the file storing the log "
 "lines on the server side, which is 500 KB"
@@ -35195,6 +35204,10 @@ msgstr "Bătăi intermitente ale inimii"
 msgid "Internal ID"
 msgstr "ID intern"
 
+#, fuzzy
+msgid "Internal agent communication channel"
+msgstr "Denumirea comenzii interne"
+
 #, python-format
 msgid ""
 "Internal automation error: %s\n"
@@ -39834,6 +39847,10 @@ msgstr "Mesaje în coada de corespondență de ieșire/mesaje amânate"
 #, fuzzy
 msgid "Mails received time"
 msgstr "Rata mailurilor primite"
+
+#, fuzzy
+msgid "Mailslot"
+msgstr "E-mailuri"
 
 msgid "Main"
 msgstr "Principal"
@@ -63984,6 +64001,10 @@ msgstr "Numar port TCP pentru conexiune. Deobicei 139 sau 445."
 
 msgid "TCP port of Carbon line receiver"
 msgstr "Portul TCP al receptorului liniei Carbon"
+
+#, fuzzy
+msgid "TCP socket on localhost"
+msgstr "Utilizați FQDN local"
 
 msgid "TCP target resets"
 msgstr "Resetarea țintei TCP"
@@ -92089,9 +92110,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "Database Name"
 #~ msgstr "Numele bazei de date"
-
-#~ msgid "E-Mails"
-#~ msgstr "E-mailuri"
 
 #~ msgid "Email Address"
 #~ msgstr "Adresa de e-mail"

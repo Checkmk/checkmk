@@ -2113,7 +2113,7 @@ def write_group_info(
     AzureSection("agent_info", [*monitored_groups, subscription.piggytarget]).write()
 
 
-def write_subscription_info(subscription: AzureSubscription) -> None:
+def write_subscription_labels(subscription: AzureSubscription) -> None:
     labels = {
         "subscription_name": subscription.name,
         "subscription": subscription.id,
@@ -2756,7 +2756,7 @@ async def main_subscription(
             )
             write_group_info(resource_groups, selected_resources, subscription)
             write_resource_groups_sections(resource_groups)
-            write_subscription_info(subscription)
+            write_subscription_labels(subscription)
             write_subscription_section(subscription)
 
             tasks = {

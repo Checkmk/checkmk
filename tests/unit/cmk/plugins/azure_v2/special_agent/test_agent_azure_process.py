@@ -37,7 +37,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     write_group_info,
     write_remaining_reads,
     write_resource_groups_sections,
-    write_subscription_info,
+    write_subscription_labels,
     write_subscription_section,
 )
 
@@ -760,8 +760,8 @@ def test_write_group_info(
     assert captured.out == expected_result
 
 
-def test_write_subscription_info(capsys: pytest.CaptureFixture[str]) -> None:
-    write_subscription_info(fake_azure_subscription())
+def test_write_subscription_labels(capsys: pytest.CaptureFixture[str]) -> None:
+    write_subscription_labels(fake_azure_subscription())
     captured = capsys.readouterr()
     assert captured.out.splitlines()[2] == (
         '{"cloud": "azure", "subscription_name": "mock_subscription_name",'

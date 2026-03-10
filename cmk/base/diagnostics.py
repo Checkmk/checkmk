@@ -314,11 +314,11 @@ class DiagnosticsDump:
                 continue
 
             except DiagnosticsElementWarning as e:
-                console.info(f"{_format_warn(str(e))}")
+                self._console(f"{_format_warn(str(e))}", "info")
                 continue
 
             except DiagnosticsElementInfo as e:
-                console.info(f"{_format_info(str(e))}")
+                self._console(f"{_format_info(str(e))}", "info")
                 continue
 
             except Exception:

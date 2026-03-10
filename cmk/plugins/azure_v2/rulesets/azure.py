@@ -403,7 +403,7 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                                         help_text=Help(
                                             "Enabling this option excludes VMs from the host name computation and lets "
                                             "VM piggyback hosts keep their original Azure name. This is needed when "
-                                            "using Automated host creation in order to monitor VMs by installing the "
+                                            "using automated host creation in order to monitor VMs by installing the "
                                             "agent, performing TLS registration on the agent, or wanting to ping VMs "
                                             "by their DNS name."
                                         ),

@@ -6,7 +6,6 @@ azure-identity
 azure-storage-blob
 boto3
 botocore
-clickhouse-connect
 cryptography
 docstring-parser
 exchangelib

@@ -609,7 +609,6 @@ clickhouse-connect==0.10.0 \
     # via
     #   -c constraints.txt
     #   -c requirements.txt
-    #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-metric-backend/requirements.in
 cryptography==46.0.5 \
     --hash=sha256:02f547fce831f5096c9a567fd41bc12ca8f11df260959ecc7c3202555cc47a72 \

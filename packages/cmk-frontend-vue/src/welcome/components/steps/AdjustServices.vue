@@ -136,7 +136,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
           <StepParagraph>
             {{
               _t(
-                'In the ruleset view, click Add rule for current host to create a rule that applies specifically to the selected host.'
+                'In the ruleset view, click "Add rule for current host" to create a rule that applies specifically to the selected host.'
               )
             }}
             <br />

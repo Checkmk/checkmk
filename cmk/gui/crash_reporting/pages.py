@@ -128,15 +128,13 @@ class PageCrash(ABCCrashReportPage):
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
         if not user.may("general.see_crash_reports"):
-            html.show_error("<b>{}:</b> {}".format(_("Internal error"), crash_info["exc_value"]))
-            html.p(
-                _(
-                    "An internal error occurred while processing your request. "
-                    "You can report this issue to your Checkmk administrator. "
-                    "Detailed information can be found on the crash report page "
-                    "or in <tt>var/log/web.log</tt>."
-                )
+            msg = _(
+                "We are sorry, but you lack the required permissions to access "
+                "or download crash reports. Please contact your administrator to "
+                "request the following permission: <b>'See crash reports'</b>."
             )
+
+            html.show_error(msg)
             html.footer()
             return
 

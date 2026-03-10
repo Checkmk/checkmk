@@ -74,7 +74,6 @@ pkg_files(
         ":cmk-piggyback",
         ":cmk-piggyback-hub",
         ":cmk-product-usage",
-        ":cmk-pwstore",
         ":cmk-transform-inventory-trees",
         ":cmk-ui-job-scheduler",
         ":cmk-ui-job-scheduler-health",

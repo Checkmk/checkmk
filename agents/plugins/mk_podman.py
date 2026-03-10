@@ -351,6 +351,14 @@ def run_podman_command(
         return Error(f"podman {' '.join(args)}", str(e))
 
 
+def _strip_login_banner(output: str) -> str:
+    """Strip login banner/MOTD lines printed by 'su -' before the actual JSON output."""
+    for i, line in enumerate(output.splitlines()):
+        if line.lstrip().startswith(("{", "[")):
+            return "\n".join(output.splitlines()[i:])
+    return output
+
+
 def _run_cli_json_query(
     args: Sequence[str],
     section_name: str,
@@ -362,6 +370,7 @@ def _run_cli_json_query(
     if isinstance(result, Error):
         return result
     try:
+        result = _strip_login_banner(result)
         data = json.loads(result) if result.strip() else default
         if transform is not None:
             data = transform(data)
@@ -426,6 +435,7 @@ def query_raw_stats_cli(
     if isinstance(result, Error):
         return result
     try:
+        result = _strip_login_banner(result)
         stats_list = json.loads(result) if result.strip() else []
         # Convert to the same format as the API response
         return {"Stats": stats_list}

@@ -22,7 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.oauth2_connections.watolib.store import (
     load_oauth2_connections,
-    load_usable_oauth2_connections,
+    OAuth2ConnectionsConfigFile,
 )
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
@@ -65,6 +65,7 @@ EntityId = NewType("EntityId", str)
 class ConfigurationEntityDescription:
     ident: EntityId
     description: str
+    ui_hide_edit_button: bool = False
 
 
 def save_configuration_entity(
@@ -99,14 +100,16 @@ def save_configuration_entity(
                 tree, RawFrontendData(data), pprint_value=pprint_value, use_git=use_git
             )
             return ConfigurationEntityDescription(
-                ident=EntityId(folder.path), description=folder.title
+                ident=EntityId(folder.path),
+                description=folder.title,
             )
         case ConfigEntityType.passwordstore_password:
             password = save_password_from_slidein_schema(
                 RawFrontendData(data), user=user, pprint_value=pprint_value, use_git=use_git
             )
             return ConfigurationEntityDescription(
-                ident=EntityId(password.id), description=password.title
+                ident=EntityId(password.id),
+                description=password.title,
             )
         case ConfigEntityType.oauth2_connection:
             user.need_permission("general.oauth2_connections")
@@ -300,7 +303,10 @@ def get_list_of_configuration_entities(
             ]
         case ConfigEntityType.folder:
             return [
-                ConfigurationEntityDescription(ident=EntityId(ident), description=description)
+                ConfigurationEntityDescription(
+                    ident=EntityId(ident),
+                    description=description,
+                )
                 for ident, description in folder_tree().folder_choices_fulltitle()
             ]
         case ConfigEntityType.oauth2_connection:
@@ -312,13 +318,24 @@ def get_list_of_configuration_entities(
                     )
                     for ident, entry in load_oauth2_connections().items()
                 ]
+            config_file = OAuth2ConnectionsConfigFile()
+            entries = config_file.load_for_reading()
+            usable = config_file.filter_usable_entries(entries)
+            editable = config_file.filter_editable_entries(entries)
             return [
-                ConfigurationEntityDescription(ident=EntityId(ident), description=entry["title"])
-                for ident, entry in load_usable_oauth2_connections().items()
+                ConfigurationEntityDescription(
+                    ident=EntityId(ident),
+                    description=entry["title"],
+                    ui_hide_edit_button=ident not in editable,
+                )
+                for ident, entry in usable.items()
             ]
         case ConfigEntityType.passwordstore_password:
             return [
-                ConfigurationEntityDescription(ident=EntityId(obj.id), description=obj.title)
+                ConfigurationEntityDescription(
+                    ident=EntityId(obj.id),
+                    description=obj.title,
+                )
                 for obj in list_passwords(user)
             ]
         case ConfigEntityType.rule_form_spec:

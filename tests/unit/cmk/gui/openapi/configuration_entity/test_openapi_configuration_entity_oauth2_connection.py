@@ -538,3 +538,96 @@ def test_list_oauth2_connections_filtered_by_contact_group(
     # THEN - only the connection owned by user's contact group should be listed
     titles = {entry["title"] for entry in resp.json["value"]}
     assert titles == {"My OAuth2 connection"}
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_list_oauth2_connections_editable_field_as_admin(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    """Admin should see all connections marked as editable."""
+    # GIVEN - two connections with passwords owned by different groups
+    for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    _create_passwords_for_connection(
+        OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID],
+        owned_by="my_group",
+    )
+    _create_passwords_for_connection(
+        TWO_OAUTH2_CONNECTIONS_CONTENT[SECOND_OAUTH2_CONNECTION_UUID],
+        owned_by="other_group",
+    )
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    # WHEN
+    resp = clients.ConfigurationEntity.list_configuration_entities(
+        entity_type=ConfigEntityType.oauth2_connection,
+        entity_type_specifier="microsoft_entra_id",
+    )
+
+    # THEN - admin can edit all connections regardless of password ownership
+    editable_by_id = {
+        entry["id"]: not entry["extensions"]["ui_hide_edit_button"] for entry in resp.json["value"]
+    }
+    assert editable_by_id == {
+        MY_OAUTH2_CONNECTION_UUID: True,
+        SECOND_OAUTH2_CONNECTION_UUID: True,
+    }
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_list_oauth2_connections_editable_field_for_non_admin(
+    clients: ClientRegistry,
+) -> None:
+    """Connections with passwords owned by the user's group are editable;
+    connections with passwords only shared with the user's group are not."""
+    # GIVEN - create a custom role based on admin but without wato.edit_all_passwords
+    custom_role = clone_role(RoleID("admin"), pprint_value=False)
+    custom_role.permissions["wato.edit_all_passwords"] = False
+    all_roles = get_all_roles()
+    all_roles[RoleID(custom_role.name)] = custom_role
+    UserRolesConfigFile().save(
+        {role.name: role.to_dict() for role in all_roles.values()}, pprint_value=False
+    )
+
+    clients.ContactGroup.create("my_group", "My Group")
+    clients.ContactGroup.create("other_group", "Other Group")
+    clients.User.create(
+        username="oauth2_user",
+        fullname="OAuth2 User",
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        contactgroups=["my_group"],
+        roles=[custom_role.name],
+    )
+
+    # Create both connections
+    for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
+        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+    # First connection: passwords owned by the user's group → editable
+    _create_passwords_for_connection(
+        OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID],
+        owned_by="my_group",
+    )
+    # Second connection: passwords owned by another group but shared with user's group → usable but not editable
+    _create_passwords_for_connection(
+        TWO_OAUTH2_CONNECTIONS_CONTENT[SECOND_OAUTH2_CONNECTION_UUID],
+        owned_by="other_group",
+        shared_with=["my_group"],
+    )
+
+    clients.ConfigurationEntity.set_credentials("oauth2_user", "supersecretish")
+
+    # WHEN
+    resp = clients.ConfigurationEntity.list_configuration_entities(
+        entity_type=ConfigEntityType.oauth2_connection,
+        entity_type_specifier="microsoft_entra_id",
+    )
+
+    # THEN - both connections are listed, but only the owned one is editable
+    assert resp.status_code == 200
+    editable_by_id = {
+        entry["id"]: not entry["extensions"]["ui_hide_edit_button"] for entry in resp.json["value"]
+    }
+    assert editable_by_id == {
+        MY_OAUTH2_CONNECTION_UUID: True,
+        SECOND_OAUTH2_CONNECTION_UUID: False,
+    }

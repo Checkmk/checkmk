@@ -46,6 +46,7 @@ const choices = ref<Array<{ title: TranslatedString; name: string }>>(
     name: element.name
   }))
 )
+const hideButtonChoices = ref<Array<{ name: string; hide_edit: boolean }>>([])
 
 const slideInObjectId = ref<OptionId | null>(null)
 const slideInOpen = ref<boolean>(false)
@@ -55,6 +56,10 @@ onMounted(async () => {
     props.spec.config_entity_type as ConfigEntityType,
     props.spec.config_entity_type_specifier
   )
+  hideButtonChoices.value = entities.map((entity) => ({
+    name: entity.ident,
+    hide_edit: entity.hide_edit
+  }))
   choices.value = entities.map((entity) => ({
     name: entity.ident,
     title: untranslated(entity.description)
@@ -106,6 +111,7 @@ function slideInSubmitted(event: { ident: string; description: string }) {
   data.value = event.ident
   if (choices.value.find((object) => object.name === event.ident) === undefined) {
     choices.value.push({ title: untranslated(event.description), name: event.ident })
+    hideButtonChoices.value.push({ name: event.ident, hide_edit: false })
   } else {
     choices.value = choices.value.map((choice) =>
       // Update description of existing object
@@ -145,7 +151,12 @@ const { CmkErrorBoundary, error } = useCmkErrorBoundary()
       class="form-single-choice-editable__dropdown"
       required
     />
-    <template v-if="spec.allow_editing_existing_elements">
+    <template
+      v-if="
+        spec.allow_editing_existing_elements &&
+        !hideButtonChoices.find((choice) => choice.name === selectedObjectId)?.hide_edit
+      "
+    >
       <FormButton
         v-show="selectedObjectId !== null"
         icon="edit"

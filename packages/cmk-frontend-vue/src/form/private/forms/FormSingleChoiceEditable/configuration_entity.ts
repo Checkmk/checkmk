@@ -15,6 +15,7 @@ import type { ValidationMessages } from '@/form/private/validation'
 export interface EntityDescription {
   ident: string
   description: string
+  hide_edit: boolean
 }
 
 export type Payload = Record<string, unknown>
@@ -29,7 +30,10 @@ function processSaveResponse(result: {
 }): SetDataResult<EntityDescription> {
   try {
     const data = unwrap(result)
-    return { type: 'success', entity: { ident: data.id!, description: data.title! } }
+    return {
+      type: 'success',
+      entity: { ident: data.id!, description: data.title!, hide_edit: false }
+    }
   } catch (e) {
     if (result.error && 'status' in result.error && result.error.status === 422) {
       const validationMessages = (result.error as SaveResponseError422).ext!
@@ -78,10 +82,15 @@ export const configEntityAPI = {
         params: { path: { entity_type_specifier: entityTypeSpecifier } }
       })
     )
-    const values = data.value as { id: string; title: string }[]
+    const values = data.value as {
+      id: string
+      title: string
+      extensions?: { [key: string]: unknown }
+    }[]
     const entities = values.map((entity) => ({
       ident: entity.id,
-      description: entity.title
+      description: entity.title,
+      hide_edit: entity.extensions?.['ui_hide_edit_button'] === true
     }))
     return entities
   },

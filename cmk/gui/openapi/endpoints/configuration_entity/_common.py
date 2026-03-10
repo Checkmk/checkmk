@@ -90,6 +90,9 @@ def serve_configuration_entity_list(
                     include_links=False,
                     editable=False,
                     deletable=False,
+                    extensions={
+                        "ui_hide_edit_button": entry.ui_hide_edit_button,
+                    },
                 )
                 for entry in entity_descriptions
             ],

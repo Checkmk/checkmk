@@ -35,6 +35,18 @@ DEFAULT_UPDATE_INTERVAL: int = 3600
 MAX_UPDATE_INTERVAL: int = 30 * 24 * 60 * 60  # 30 days
 
 
+def _migrate(obj: object) -> Mapping[str, object]:
+    if not isinstance(obj, Mapping):
+        raise ValueError(obj)
+
+    if not obj:
+        return {
+            "updater_registration": "manual",
+        }
+
+    return obj
+
+
 def _migrate_activated(value: object) -> str:
     if isinstance(value, bool):
         return "enabled" if value else "disabled"
@@ -429,17 +441,22 @@ def _valuespec_updater_registration() -> CascadingSingleChoice:
         title=Title("Registration"),
         help_text=Help(
             "To start updating the agent package, the agent updater must register at a monitoring "
-            "site. "
-            "Additional to the classic <tt>cmk-update-agent register</tt> call, you can also "
-            "decide to auto-register for agent updates after succeeded agent controller "
-            "registration. "
-            "However, consider the differences between agent controller and agent updater "
+            "site.<br>"
+            "(_New with Checkmk 2.5_) By default, the agent updater will be registered by the agent "
+            "controller, after its own successful registration, at the same site and with the "
+            "same hostname.<br>"
+            "Here you can configure the overwriting behavior of subsequent agent controller "
+            "registrations, or opt to skip the agent controller triggered agent updater "
+            "registration entirely.<br>"
+            "Consider the differences between agent controller and agent updater "
             "registrations: "
             "The agent controller can register at multiple sites, or overwrite existing "
             "registrations when registering for the same site again. "
             "The agent updater can only hold one registration at a time. Every new registration "
-            "will overwrite the previous one, regardless of the connection details. "
-            "Choose a registration strategy here."
+            "will overwrite the previous one, regardless of the connection details.<br>"
+            "Note: Since the agent controller is available for Linux and Windows only, "
+            "this setting is not relevant for Solaris, where the agent updater will always need to "
+            "be registered manually."
         ),
         elements=[
             CascadingSingleChoiceElement(
@@ -470,9 +487,11 @@ def _valuespec_updater_registration() -> CascadingSingleChoice:
                 parameter_form=FixedValue(
                     value=None,
                     help_text=Help(
-                        "Manually register the agent updater either on agent controller "
-                        "registration with <tt>cmk-agent-ctl register [args] --automatic-updates</tt>, "
-                        "or with <tt>cmk-update-agent register</tt>. "
+                        "Manually register the agent updater.<br>"
+                        "Either on agent controller registration with explicit flag: "
+                        "<tt>cmk-agent-ctl register [args] --automatic-updates</tt><br>"
+                        "Or separately: "
+                        "<tt>cmk-update-agent register</tt>(Linux)/<tt>check_mk_agent.exe updater register</tt>(Windows).<br>"
                         "Since the registration is handled manually by the user, any existing "
                         "agent updater registration will be overwritten."
                     ),
@@ -516,10 +535,9 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
             "So after activating this feature you need at least one more manual "
             "update of the agent, of course."
             "<br><b>Note<sup>2</sup>:</b> After deploying this new plug-in "
-            "you need to call it once manually to register the agent "
-            "at your update server. Call <tt>cmk-update-agent register -H <i>HOST</i></tt> (UNIX), "
-            "or <tt>check_mk_agent.exe updater register -H <i>HOST</i></tt> (Windows), "
-            "where <i>HOST</i> must be the name of that host in your monitoring."
+            "it must be registered at your Checkmk server. This can be done either by registering "
+            "the agent controller, or by manual agent updater registration call. "
+            "Customizable in _Registration_ option below. See there for details."
             "<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
             'Python 3.7 installation (or newer) with installed python packages "pyOpenSSL", '
             '"requests" and "PySocks" is required on the target hosts.'
@@ -558,6 +576,7 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
                 parameter_form=_valuespec_updater_registration(),
             ),
         },
+        migrate=_migrate,
     )
 
 

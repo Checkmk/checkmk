@@ -9,6 +9,7 @@ import { ref, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
@@ -82,10 +83,22 @@ function tabNeedsToken(tab: AgentSlideOutTabs): boolean {
     return !!(
       (model.value === packageFormatDeb && tab.installDebCmd) ||
       (model.value === packageFormatRpm && tab.installRpmCmd) ||
-      (model.value === packageFormatTgz && tab.installTgzCmd)
+      (model.value === packageFormatTgz && tab.installTgzDownloadCmd && tab.installTgzCmd)
     )
   }
   return false
+}
+
+function currentInstallMsg(tab: AgentSlideOutTabs): string {
+  if (
+    tab.installMsgMultiple &&
+    tab.installTgzDownloadCmd &&
+    tab.installTgzCmd &&
+    model.value === packageFormatTgz
+  ) {
+    return tab.installMsgMultiple
+  }
+  return tab.installMsg || ''
 }
 
 function installCmdWithToken(cmd: string | undefined): string {
@@ -199,7 +212,7 @@ function getInitStep() {
               <div v-if="currentStep === 2" class="download_install__content">
                 <template v-if="tabNeedsToken(tab)">
                   <div class="download_install__token">
-                    <CmkParagraph>{{ tab.installMsg }}</CmkParagraph>
+                    <CmkParagraph>{{ currentInstallMsg(tab) }}</CmkParagraph>
                     <GenerateToken
                       v-model="ott"
                       token-generation-endpoint-uri="domain-types/agent_download_token/collections/all"
@@ -221,6 +234,9 @@ function getInitStep() {
                         class="code"
                         width="fill"
                       />
+                      <CmkAlertBox v-if="tab.installWarning" variant="warning">
+                        {{ tab.installWarning }}
+                      </CmkAlertBox>
                       <CmkCode
                         :title="_t('Install agent')"
                         :code_txt="tab.installCmd || ''"
@@ -246,12 +262,30 @@ function getInitStep() {
                       class="code"
                       width="fill"
                     />
-                    <CmkCode
-                      v-if="tab.installMsg && tab.installTgzCmd && model === packageFormatTgz"
-                      :code_txt="installCmdWithToken(tab.installTgzCmd)"
-                      class="code"
-                      width="fill"
-                    />
+                    <template
+                      v-if="
+                        tab.installMsg &&
+                        tab.installTgzDownloadCmd &&
+                        tab.installTgzCmd &&
+                        model === packageFormatTgz
+                      "
+                    >
+                      <CmkCode
+                        :title="_t('Download agent')"
+                        :code_txt="installCmdWithToken(tab.installTgzDownloadCmd)"
+                        class="code"
+                        width="fill"
+                      />
+                      <CmkAlertBox v-if="tab.installWarning" variant="warning">
+                        {{ tab.installWarning }}
+                      </CmkAlertBox>
+                      <CmkCode
+                        :title="_t('Install agent')"
+                        :code_txt="tab.installTgzCmd || ''"
+                        class="code"
+                        width="fill"
+                      />
+                    </template>
                   </template>
                 </template>
                 <div v-else-if="tab.installUrl" class="install_url__div">
@@ -372,7 +406,7 @@ button.all_agents {
 }
 
 .download_install__token {
-  width: fit-content;
+  width: 100%;
 }
 
 .agent_slideout__paragraph_host_exists {

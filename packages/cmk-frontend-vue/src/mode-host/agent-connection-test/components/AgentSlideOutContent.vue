@@ -100,9 +100,16 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     installMsg: _t(
       'Run this command on your Linux host to download and install the Checkmk agent.'
     ),
+    installMsgMultiple: _t(
+      'Run these commands on your Linux host to download and install the Checkmk agent.'
+    ),
+    installWarning: _t(
+      'This command extracts files directly into the root directory (/). Make sure you are executing this command on the correct host.'
+    ),
     installDebCmd: replaceMacros(props.agentInstallCmds.linux_deb, false),
     installRpmCmd: replaceMacros(props.agentInstallCmds.linux_rpm, false),
-    installTgzCmd: replaceMacros(props.agentInstallCmds.linux_tgz, false),
+    installTgzDownloadCmd: replaceMacros(props.agentInstallCmds.linux_tgz_download, false),
+    installTgzCmd: replaceMacros(props.agentInstallCmds.linux_tgz_extract, false),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,
@@ -142,8 +149,14 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
   {
     id: 'aix',
     title: _t('AIX'),
-    installMsg: _t('Run this command on your AIX host to download and install the Checkmk agent.'),
-    installCmd: replaceMacros(props.agentInstallCmds.aix, false),
+    installMsg: _t(
+      'Run these commands on your AIX host to download and install the Checkmk agent.'
+    ),
+    installWarning: _t(
+      'This command extracts files directly into the root directory (/). Make sure you are executing this command on the correct host.'
+    ),
+    installDownloadCmd: replaceMacros(props.agentInstallCmds.aix_download, false),
+    installCmd: replaceMacros(props.agentInstallCmds.aix_extract, false),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,

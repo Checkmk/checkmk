@@ -30,9 +30,11 @@
         "windows": { "type": "string" },
         "linux_deb": { "type": "string" },
         "linux_rpm": { "type": "string" },
-        "linux_tgz": { "type": "string" },
+        "linux_tgz_download": { "type": "string" },
+        "linux_tgz_extract": { "type": "string" },
         "solaris": { "type": "string" },
-        "aix": { "type": "string" }
+        "aix_download": { "type": "string" },
+        "aix_extract": { "type": "string" }
       },
       "required": ["windows_download", "windows", "linux_deb", "linux_rpm"]
     },

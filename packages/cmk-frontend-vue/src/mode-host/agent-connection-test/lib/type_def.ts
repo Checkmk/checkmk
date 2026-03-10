@@ -17,10 +17,13 @@ export interface AgentSlideOutTabs {
   id: string
   title: string
   installMsg?: TranslatedString
+  installMsgMultiple?: TranslatedString
+  installWarning?: TranslatedString
   installCmd?: string | undefined
   installDownloadCmd?: string
   installDebCmd?: string
   installRpmCmd?: string
+  installTgzDownloadCmd?: string
   installTgzCmd?: string | undefined
   registrationMsg?: TranslatedString
   registrationCmd?: string

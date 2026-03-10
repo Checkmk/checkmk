@@ -507,6 +507,11 @@ div.cmk-dialog {
   width: 100%;
 }
 
+div.cmk-alert-box {
+  box-sizing: border-box;
+  width: 100%;
+}
+
 .cmk-default-popup-mainmenu {
   display: flex;
   width: 500px;

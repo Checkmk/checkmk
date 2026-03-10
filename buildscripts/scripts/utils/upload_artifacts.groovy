@@ -175,14 +175,16 @@ boolean download_hot_cache(Map args) {
     }
 
     try {
-        println("hot cache: Decompressing ${args.file_pattern} in ${args.download_dest}");
+        timeout(time: 300, unit: 'SECONDS') {
+            println("hot cache: Decompressing ${args.file_pattern} in ${args.download_dest}");
 
-        sh("""
-            cd ${args.download_dest}
-            time mbuffer -q -P 80 -m 80% -i ${args.file_pattern} | lz4 -dc | tar -xf - 2>/dev/null
+            sh("""
+                cd ${args.download_dest}
+                time mbuffer -q -P 80 -m 80% -i ${args.file_pattern} | lz4 -dc | tar -xf - 2>/dev/null
 
-            du -sh ~/.cache
-        """);
+                du -sh ~/.cache
+            """);
+        }
     }
     catch (Exception exc) {
         print("hot cache: Decompression failed, contact your local CI dealer and tell: ${exc}");

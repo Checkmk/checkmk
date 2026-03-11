@@ -6337,15 +6337,6 @@ msgstr ""
 "Checkmk管理者に報告できます。詳細情報は、クラッシュレポートページまたは"
 "<tt>var/log/web.log</tt>にあります。"
 
-msgid ""
-"An internal error occurred while processing your request. You can report "
-"this issue to your Checkmk administrator. Detailed information can be found "
-"on the crash report page or in <tt>var/log/web.log</tt>."
-msgstr ""
-"リクエストの処理中に内部エラーが発生しました。この問題は、Checkmk管理者に報告"
-"できます。詳細情報は、クラッシュレポートページまたは<tt>var/log/web.log</tt>"
-"にあります。"
-
 msgid "An old configuration is required for existing connections."
 msgstr "既存の接続には古いコンフィギュレーションが必要です。"
 
@@ -11858,6 +11849,11 @@ msgstr "CheckmkサーバーのCheckmk概要"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmkサイドバー"
+
+msgid ""
+"Checkmk Ultimate with multi-tenancy (formerly MSP)  can only be connected "
+"with other sites using Checkmk Ultimate with multi-tenancy."
+msgstr ""
 
 msgid "Checkmk Version"
 msgstr "Checkmkバージョン"
@@ -60736,13 +60732,6 @@ msgstr ""
 "送信されたデータを暗号化して受信および復号化するために使用されたシークレット"
 "を知る必要があります。"
 
-msgid ""
-"The Checkmk Managed Services Edition can only be connected with other sites "
-"using the CME."
-msgstr ""
-"Checkmk Managed Services Editionは、CMEを使用して他のサイトにのみ接続できま"
-"す。"
-
 msgid "The Checkmk Micro Core"
 msgstr "Checkmk Micro Core"
 
@@ -61136,11 +61125,12 @@ msgstr ""
 "<tt>DISTRIBUTION</tt> タグと <tt>DISTTAG</tt>タグはRPM specファイル内で空のま"
 "まになります。ここでは、これらのタグを手動で指定できます。"
 
+#, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
-"and improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
-"performance of your GUI and will decrease resource usage."
+"The Livestatus Proxy Daemon is available with the commercial editions of "
+"Checkmk and improves the management of the inter site connections using "
+"livestatus. Using the Livestatus Proxy Daemon improves the responsiveness "
+"and performance of your GUI and will decrease resource usage."
 msgstr ""
 "LivestatusプロキシデーモンはCheckmk Enterprise Editionで使用でき、livestatus"
 "を使用したサイト間接続の管理を改善します。Livestatusプロキシデーモンを使用す"
@@ -78171,6 +78161,15 @@ msgstr ""
 "申し訳ありませんが、この操作の許可がありません。これが気に入らない場合は、管"
 "理者に次の権限を与えるように依頼してください: '<b>%s</b>'。"
 
+#, fuzzy
+msgid ""
+"We are sorry, but you lack the required permissions to access or download "
+"crash reports. Please contact your administrator to request the following "
+"permission: <b>'See crash reports'</b>."
+msgstr ""
+"申し訳ありませんが、この操作の許可がありません。これが気に入らない場合は、管"
+"理者に次の権限を与えるように依頼してください: '<b>%s</b>'。"
+
 msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
@@ -84514,6 +84513,22 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid ""
+#~ "An internal error occurred while processing your request. You can report "
+#~ "this issue to your Checkmk administrator. Detailed information can be "
+#~ "found on the crash report page or in <tt>var/log/web.log</tt>."
+#~ msgstr ""
+#~ "リクエストの処理中に内部エラーが発生しました。この問題は、Checkmk管理者に"
+#~ "報告できます。詳細情報は、クラッシュレポートページまたは<tt>var/log/"
+#~ "web.log</tt>にあります。"
+
+#~ msgid ""
+#~ "The Checkmk Managed Services Edition can only be connected with other "
+#~ "sites using the CME."
+#~ msgstr ""
+#~ "Checkmk Managed Services Editionは、CMEを使用して他のサイトにのみ接続でき"
+#~ "ます。"
 
 #, fuzzy
 #~ msgid "NetApp Snapshot Volumes"

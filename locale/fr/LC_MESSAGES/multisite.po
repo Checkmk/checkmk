@@ -6763,16 +6763,6 @@ msgstr ""
 "détaillées peuvent être trouvées sur la page du rapport de panne ou dans "
 "<tt>var/log/web.log</tt>."
 
-msgid ""
-"An internal error occurred while processing your request. You can report "
-"this issue to your Checkmk administrator. Detailed information can be found "
-"on the crash report page or in <tt>var/log/web.log</tt>."
-msgstr ""
-"Une erreur interne s'est produite lors du traitement de votre demande. Vous "
-"pouvez signaler ce problème à votre administrateur Checkmk. Des informations "
-"détaillées peuvent être trouvées sur la page du rapport de panne ou dans "
-"<tt>var/log/web.log</tt>."
-
 #, fuzzy
 msgid "An old configuration is required for existing connections."
 msgstr "Connexions de configuration dynamique des hôtes"
@@ -12720,6 +12710,11 @@ msgstr "Checkmk Aperçu du serveur Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Barre latérale Checkmk"
+
+msgid ""
+"Checkmk Ultimate with multi-tenancy (formerly MSP)  can only be connected "
+"with other sites using Checkmk Ultimate with multi-tenancy."
+msgstr ""
 
 msgid "Checkmk Version"
 msgstr "Version de Checkmk"
@@ -65277,13 +65272,6 @@ msgstr ""
 "pour crypter les données envoyées afin de pouvoir les recevoir et les "
 "décrypter."
 
-msgid ""
-"The Checkmk Managed Services Edition can only be connected with other sites "
-"using the CME."
-msgstr ""
-"Checkmk Managed Services Edition ne peut être connecté à d'autres sites "
-"qu'en utilisant le CME."
-
 msgid "The Checkmk Micro Core"
 msgstr "Le micro noyau Checkmk"
 
@@ -65705,11 +65693,12 @@ msgstr ""
 "<tt>DISTRIBUTION</tt> et <tt>DISTTAG</tt> sont laissées vides dans le "
 "fichier RPM spec. Ici, vous pouvez spécifier manuellement ces balises."
 
+#, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
-"and improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
-"performance of your GUI and will decrease resource usage."
+"The Livestatus Proxy Daemon is available with the commercial editions of "
+"Checkmk and improves the management of the inter site connections using "
+"livestatus. Using the Livestatus Proxy Daemon improves the responsiveness "
+"and performance of your GUI and will decrease resource usage."
 msgstr ""
 "Le Livestatus Proxy Daemon est disponible avec l'édition Entreprise de "
 "Checkmk et améliore la gestion des connexions inter-sites utilisant "
@@ -84211,6 +84200,16 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"We are sorry, but you lack the required permissions to access or download "
+"crash reports. Please contact your administrator to request the following "
+"permission: <b>'See crash reports'</b>."
+msgstr ""
+"Nous sommes désolés, mais vous n'avez pas la permission pour cette "
+"opération. Si cela ne vous convient pas, veuillez demander à votre "
+"administrateur de vous fournir l'autorisation suivante : '<b>%s</b>'."
+
+#, fuzzy
+msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
 "<b>Check_MK</b> and <b>Check_MK Discovery</b> services of the piggybacked "
@@ -90931,6 +90930,23 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#~ msgid ""
+#~ "An internal error occurred while processing your request. You can report "
+#~ "this issue to your Checkmk administrator. Detailed information can be "
+#~ "found on the crash report page or in <tt>var/log/web.log</tt>."
+#~ msgstr ""
+#~ "Une erreur interne s'est produite lors du traitement de votre demande. "
+#~ "Vous pouvez signaler ce problème à votre administrateur Checkmk. Des "
+#~ "informations détaillées peuvent être trouvées sur la page du rapport de "
+#~ "panne ou dans <tt>var/log/web.log</tt>."
+
+#~ msgid ""
+#~ "The Checkmk Managed Services Edition can only be connected with other "
+#~ "sites using the CME."
+#~ msgstr ""
+#~ "Checkmk Managed Services Edition ne peut être connecté à d'autres sites "
+#~ "qu'en utilisant le CME."
 
 #, fuzzy
 #~ msgid "NetApp Snapshot Volumes"

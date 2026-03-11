@@ -255,7 +255,7 @@ def _mongodb_cluster_collection_is_balanced(collection_dict):
     """
     # retrieve information from dictionary
     total_number_of_chunks = collection_dict.get("nchunks", 0)
-    total_number_of_shards = len(collection_dict.get("shards", 1))
+    total_number_of_shards = len(collection_dict.get("shards", [None]))
     average_chunks_per_shard = total_number_of_chunks / total_number_of_shards
 
     warning_info = []

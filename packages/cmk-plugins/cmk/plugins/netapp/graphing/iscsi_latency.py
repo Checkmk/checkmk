@@ -9,13 +9,13 @@ UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 
 metric_iscsi_read_latency = metrics.Metric(
     name="iscsi_read_latency",
-    title=Title("ISCSI read latency"),
+    title=Title("iSCSI read latency"),
     unit=UNIT_TIME,
     color=metrics.Color.BLUE,
 )
 metric_iscsi_write_latency = metrics.Metric(
     name="iscsi_write_latency",
-    title=Title("ISCSI write latency"),
+    title=Title("iSCSI write latency"),
     unit=UNIT_TIME,
     color=metrics.Color.GREEN,
 )

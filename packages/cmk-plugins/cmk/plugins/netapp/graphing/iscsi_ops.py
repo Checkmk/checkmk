@@ -9,13 +9,13 @@ UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 
 metric_iscsi_read_ops = metrics.Metric(
     name="iscsi_read_ops",
-    title=Title("ISCSI read ops"),
+    title=Title("iSCSI read ops"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 metric_iscsi_write_ops = metrics.Metric(
     name="iscsi_write_ops",
-    title=Title("ISCSI write ops"),
+    title=Title("iSCSI write ops"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.GREEN,
 )

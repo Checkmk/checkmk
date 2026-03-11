@@ -8,7 +8,7 @@ from cmk.graphing.v1 import metrics, Title
 
 metric_media_life_left = metrics.Metric(
     name="media_life_left",
-    title=Title("Predicted Media Life Left"),
+    title=Title("Predicted media life left"),
     unit=metrics.Unit(metrics.DecimalNotation("Percent")),
     color=metrics.Color.GREEN,
 )

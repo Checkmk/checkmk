@@ -9,13 +9,13 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
 metric_iscsi_read_data = metrics.Metric(
     name="iscsi_read_data",
-    title=Title("ISCSI data read"),
+    title=Title("iSCSI data read"),
     unit=UNIT_BYTES,
     color=metrics.Color.BLUE,
 )
 metric_iscsi_write_data = metrics.Metric(
     name="iscsi_write_data",
-    title=Title("ISCSI data written"),
+    title=Title("iSCSI data written"),
     unit=UNIT_BYTES,
     color=metrics.Color.GREEN,
 )

@@ -363,6 +363,7 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     },
     "Connection time": {"aws_route53_connection_time", "connection_time"},
     "Failed connections": {"connections_failed_rate", "failed_connections"},
+    "GPU utilization": {"esx_gpu_utilization", "gpu_utilization"},
     "Fan speed": {"fan_perc", "fan", "fan_speed"},
     "HTTP 500 errors": {"http_5xx", "aws_http_500_rate"},
     "Harddrive uncorrectable errors": {

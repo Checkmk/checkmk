@@ -23,7 +23,7 @@ metric_newest_snapshot_age = metrics.Metric(
 
 graph_snapshot_age = graphs.Graph(
     name="snapshot_age",
-    title=Title("Snapshot Age"),
+    title=Title("Snapshot age"),
     simple_lines=["oldest_snapshot_age"],
     compound_lines=["newest_snapshot_age"],
 )

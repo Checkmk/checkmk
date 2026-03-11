@@ -108,7 +108,7 @@ metric_aws_lambda_users_errors_perc = metrics.Metric(
 
 metric_aws_backend_connection_errors_rate = metrics.Metric(
     name="aws_backend_connection_errors_rate",
-    title=Title("Backend connection errors"),
+    title=Title("Back-end connection errors"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )
@@ -305,7 +305,7 @@ metric_aws_ec2_running_ondemand_instances_x_vcpu = metrics.Metric(
 
 metric_aws_ec2_running_ondemand_instances___vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances___vcpu",
-    title=Title("Total running on-demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs"),
+    title=Title("Total running on-demand standard (A, C, D, H, I, M, R, T, Z) instances vCPUs"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_YELLOW,
 )
@@ -984,7 +984,7 @@ metric_aws_lambda_memory_size_absolute = metrics.Metric(
 
 metric_aws_route53_child_health_check_healthy_count = metrics.Metric(
     name="aws_route53_child_health_check_healthy_count",
-    title=Title("Health check healty count"),
+    title=Title("Health check healthy count"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_BLUE,
 )

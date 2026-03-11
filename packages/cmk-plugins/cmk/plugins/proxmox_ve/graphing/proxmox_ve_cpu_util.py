@@ -7,14 +7,14 @@ from cmk.graphing.v1 import graphs, metrics, Title
 
 metric_disk_read_throughput = metrics.Metric(
     name="cpu_core_usage",
-    title=Title("CPU Core Usage"),
+    title=Title("CPU core usage"),
     unit=metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(digits=2)),
     color=metrics.Color.BLUE,
 )
 
 graph_cpu_usage = graphs.Graph(
     name="cpu_core_usage",
-    title=Title("CPU Cores"),
+    title=Title("CPU cores"),
     compound_lines=["cpu_core_usage"],
     simple_lines=[
         metrics.WarningOf("cpu_core_usage"),

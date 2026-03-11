@@ -9,14 +9,14 @@ UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 
 metric_net_in_throughput = metrics.Metric(
     name="net_in_throughput",
-    title=Title("Network Inbound"),
+    title=Title("Network inbound"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 
 metric_net_out_throughput = metrics.Metric(
     name="net_out_throughput",
-    title=Title("Network Outbound"),
+    title=Title("Network outbound"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.GREEN,
 )
@@ -37,10 +37,10 @@ perfometer_network_throughput = perfometers.Bidirectional(
 
 graph_network_throughput = graphs.Bidirectional(
     name="network_throughput",
-    title=Title("Network Throughput"),
+    title=Title("Network throughput"),
     lower=graphs.Graph(
         name="net_in_throughput",
-        title=Title("In Throughput"),
+        title=Title("In throughput"),
         compound_lines=["net_in_throughput"],
         simple_lines=[
             metrics.WarningOf("net_in_throughput"),
@@ -49,7 +49,7 @@ graph_network_throughput = graphs.Bidirectional(
     ),
     upper=graphs.Graph(
         name="net_out_throughput",
-        title=Title("Out Throughput"),
+        title=Title("Out throughput"),
         compound_lines=["net_out_throughput"],
         simple_lines=[
             metrics.WarningOf("net_out_throughput"),

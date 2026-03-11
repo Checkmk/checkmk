@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_esx_gpu_utilization = metrics.Metric(
     name="esx_gpu_utilization",
-    title=Title("GPU Utilization"),
+    title=Title("GPU utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.PURPLE,
 )
@@ -25,7 +25,7 @@ perfometer_esx_gpu_utilization = perfometers.Perfometer(
 
 graph_esx_gpu_utilization = graphs.Graph(
     name="esx_gpu_utilization",
-    title=Title("GPU Utilization"),
+    title=Title("GPU utilization"),
     minimal_range=graphs.MinimalRange(0, 100),
     compound_lines=("esx_gpu_utilization",),
     simple_lines=(

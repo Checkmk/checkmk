@@ -9,7 +9,7 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
 metric_splunk_slave_usage_bytes = metrics.Metric(
     name="splunk_slave_usage_bytes",
-    title=Title("Slave usage bytes across all pools"),
+    title=Title("Remote site usage bytes across all pools"),
     unit=UNIT_BYTES,
     color=metrics.Color.PURPLE,
 )

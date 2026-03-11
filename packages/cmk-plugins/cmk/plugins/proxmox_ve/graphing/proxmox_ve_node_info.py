@@ -7,7 +7,7 @@ from cmk.graphing.v1 import metrics, perfometers, Title
 
 metric_days_until_subscription_expiration = metrics.Metric(
     name="days_until_subscription_expiration",
-    title=Title("Days until Subscription Expiration"),
+    title=Title("Days until subscription expiration"),
     unit=metrics.Unit(metrics.DecimalNotation("days")),
     color=metrics.Color.BLUE,
 )

@@ -9,7 +9,7 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_graylog_diff = metrics.Metric(
     name="graylog_diff",
-    title=Title("Number of messages in defined timespan"),
+    title=Title("Number of messages in defined time span"),
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
 )

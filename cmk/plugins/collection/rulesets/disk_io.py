@@ -157,10 +157,10 @@ rule_spec_disk_io = CheckParameters(
         item_title=Title("Device"),
         item_form=String(
             help_text=Help(
-                "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
-                "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
+                "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>. For a "
+                "sum of read or write throughput, write <tt>read</tt> or <tt>write</tt> resp. "
                 "A per-disk IO is specified by the drive letter, a colon and a slash on Windows "
-                "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>)."
+                "(e.g. <tt>C:/</tt>) or by the device name on Linux/Unix (e.g. <tt>/dev/sda</tt>)."
             ),
         ),
     ),

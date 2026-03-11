@@ -310,7 +310,7 @@ def validate_tls_versions(value: Mapping[str, Any]) -> None:
     if value["compatibility_mode"] and value["min_version"] == TlsVersion.TLS_1_3:
         raise validators.ValidationError(
             Message(
-                "Enforce TLS 1.3 is not supported in compatibility mode. "
+                "'Enforce TLS 1.3' is not supported in compatibility mode. "
                 "Please select a lower minimum TLS version or disable compatibility mode."
             )
         )
@@ -398,9 +398,9 @@ def _valuespec_connection() -> Dictionary:
                     migrate=migrate_tls_versions_compatibility_mode,
                     help_text=Help(
                         "You may choose to enforce the usage of a specific TLS version. "
-                        "Either by pinning to exactly the selected version, or by also allowing "
-                        "higher versions. Please note Checkmk does not support SSLv3 or SSLv2 "
-                        "at all. TLS 1.0 and 1.1 is supported by the underlying plug-in but not "
+                        "Either by exactly pinning to the selected version, or by also allowing "
+                        "higher versions. Please note that Checkmk does not support SSLv3 or SSLv2 "
+                        "at all. TLS 1.0 and 1.1 are supported by the underlying plug-in, but not "
                         "on this rule set as the plug-in needs to be called with an unsafe "
                         "configuration of OpenSSL 3. This requires a direct call via "
                         "<i>Integrate Nagios plug-ins.</i>"
@@ -447,10 +447,10 @@ def _valuespec_connection() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("IP address family"),
                     help_text=Help(
-                        "The check will use any IP address protocol by default. Selecting a "
-                        "specific protocol or use the primary of a host will enforce the usage "
+                        "By default, the check will use any IP address protocol. Selecting a "
+                        "specific protocol or using the primary protocol of a host will enforce the usage "
                         "of your choice. This gives you more control if you want to ensure the "
-                        "availability of you web endpoint through either IPv4 or IPv6."
+                        "availability of your web endpoint through either IPv4 or IPv6."
                     ),
                     prefill=DefaultValue("any"),
                     elements=[
@@ -599,7 +599,7 @@ def _valuespec_content() -> Dictionary:
         title=Title("Search for strings"),
         help_text=Help(
             "Provide fixed string or regular expression conditions for the HTTP reponse."
-            " If the response fails the condition (E.g., expected string not found in body),"
+            " If the response fails the condition (e.g., expected string not found in body),"
             " this will result in a CRITICAL state."
         ),
         elements={
@@ -635,7 +635,7 @@ def _valuespec_content() -> Dictionary:
                     title=Title("Search in body"),
                     help_text=Help(
                         "The provided string to be looked for needs to be exactly the same as in "
-                        "the raw document body. This includes html markups between user-oriented "
+                        "the raw document body. This includes HTML markups between user-oriented "
                         "strings. This is also true for searching in a regular expression."
                     ),
                     prefill=DefaultValue("string"),
@@ -662,7 +662,7 @@ def _valuespec_content() -> Dictionary:
                     help_text=Help(
                         "If the configured string/regex searches fail, this will result in a CRIT "
                         "state by default. Here you can choose an alternative state that will apply "
-                        "to all configured string/regex searches when failing their condition."
+                        "to all configured string/regex searches when their condition fails."
                     ),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),
@@ -725,7 +725,9 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                     ),
                     level_direction=LevelDirection.UPPER,
                     help_text=Help(
-                        "This options sets a maximum time the request may take. The request will be canceled after the set time expired."
+                        "This option sets a maximum time the request "
+                        "may take. The request will be canceled after "
+                        "the set time has expired."
                     ),
                     prefill_fixed_levels=DefaultValue((0.1, 0.2)),
                 ),
@@ -735,10 +737,10 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Certificate validity"),
                     help_text=Help(
-                        "By default the certificate validity in general will be checked. With "
-                        "this option you can choose to check additionally for the remeinaing time "
-                        "the certificate will be valid or ignore the certificate completely. "
-                        "Please use the latter as last resort and with caution!"
+                        "By default, the general certificate validity will be checked. With "
+                        "this option you can choose to additionally check for the remaining time "
+                        "the certificate is still valid or to ignore the certificate completely. "
+                        "Please use the latter as a last resort and with caution!"
                     ),
                     prefill=DefaultValue("validate"),
                     migrate=_migrate_to_cascading,

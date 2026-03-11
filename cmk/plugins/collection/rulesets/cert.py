@@ -107,7 +107,7 @@ def _valuespec_validity() -> Dictionary:
                 parameter_form=BooleanChoice(
                     help_text=Help(
                         "Checking this option allows self-signed certificates by ignoring OpenSSL "
-                        "error 18 (self signed certificate), and the service will not warn when "
+                        "error 18 (self-signed certificate). The service will not warn when "
                         "this error is returned. Other errors will still trigger an alert."
                     ),
                     label=Label("Allow self-signed certificates"),
@@ -141,11 +141,11 @@ def _valuespec_specific_values() -> Dictionary:
                 parameter_form=Dictionary(
                     title=Title("Issuer"),
                     help_text=Help(
-                        "With this option you may verify the direct issuer of the checked "
+                        "With this option, you may verify the direct issuer of the checked "
                         "certificate. As the requirements of an intermediate or direct "
-                        "root CA are usually higher, this option provides some more "
-                        "fields as the option for checking the subject. All entries are "
-                        "case sensitive and need to be exaclty specified as provided in "
+                        "root certification authority are usually higher, this option provides some more "
+                        "fields as options for checking the subject. All entries are "
+                        "case-sensitive and need to be specified exactly as provided in "
                         "the certificate."
                     ),
                     elements={
@@ -177,10 +177,11 @@ def _valuespec_specific_values() -> Dictionary:
                 parameter_form=Dictionary(
                     title=Title("Subject"),
                     help_text=Help(
-                        "With this option you may verify the subject of the checked "
-                        "certificate. This includes a checking for the public key algorithm "
+                        "With this option, you may verify the subject of the verified "
+                        "certificate. This includes"
+                        " checking the algorithm "
                         "and the size of the public key. Please note that all entries are "
-                        "case sensitive and need to be exaclty specified as provided in "
+                        "case-sensitive and need to be specified exactly as provided in "
                         "the certificate."
                     ),
                     elements={
@@ -249,8 +250,8 @@ def _valuespec_specific_values() -> Dictionary:
                     help_text=Help(
                         "You may enter one or several alternative names that are "
                         "expected to be in the certificate. Please note that the check "
-                        "does only accept DNS names and is case sensitive. So, the "
-                        "alternative names need to be exactly provided as defined "
+                        "only accepts DNS names and is case-sensitive. So the "
+                        "alternative names need to be provided exactly as defined "
                         "in the certificate."
                     ),
                 ),
@@ -264,7 +265,7 @@ def _valuespec_remaining_validity() -> SimpleLevels[float]:
         title=Title("Remaining validity time"),
         help_text=Help(
             "These thresholds should be set to reasonable values still allowing "
-            "automatic renewals to run or manual processes to take place."
+            "automatic renewals or manual processes to run."
         ),
         form_spec_template=TimeSpan(
             displayed_magnitudes=[TimeMagnitude.DAY],
@@ -310,7 +311,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                     title=Title("Prefix"),
                                     help_text=Help(
                                         "The prefix is automatically attached to each service "
-                                        "name to be able to organize them. The prefix is static "
+                                        "name to be able to organize it. The prefix is static "
                                         "and will be CERT. Alternatively, you may choose not to "
                                         "use the prefix option."
                                     ),
@@ -334,7 +335,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                     title=Title("Name"),
                                     help_text=Help(
                                         "The name is the individual part of the used service "
-                                        "description. Choose a human readable and unique "
+                                        "name. Choose a human readable and unique "
                                         "title to be able to find your service later in "
                                         "Checkmk. You may use macros in this field. The most "
                                         "common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
@@ -476,8 +477,8 @@ def _signature_algorithm_choice() -> CascadingSingleChoice:
         title=Title("Certificate signature algorithm"),
         help_text=Help(
             "The signature algorithm for the "
-            "certificate's signature. Please note that an matching is done on "
-            "the OID"
+            "certificate's signature. Please note that a matching is done on "
+            "the OID."
         ),
         elements=[
             CascadingSingleChoiceElement[str](

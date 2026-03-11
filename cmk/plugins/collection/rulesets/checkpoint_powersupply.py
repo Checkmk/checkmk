@@ -19,13 +19,13 @@ def _formspec_checkpoint_powersupply() -> Dictionary:
             "up": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State when reported device status is Up"), prefill=DefaultValue(0)
+                    title=Title("State when reported device status is UP"), prefill=DefaultValue(0)
                 ),
             ),
             "present": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State when reported device status is Present"),
+                    title=Title("State when reported device status is present"),
                     prefill=DefaultValue(2),
                 ),
             ),
@@ -38,5 +38,5 @@ rule_spec_checkpoint_powersupply = CheckParameters(
     title=Title("Check Point powersupply"),
     topic=Topic.POWER,
     parameter_form=_formspec_checkpoint_powersupply,
-    condition=HostAndItemCondition(item_title=Title("Power Supply Name")),
+    condition=HostAndItemCondition(item_title=Title("Power supply name")),
 )

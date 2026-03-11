@@ -107,7 +107,7 @@ node_software_applications_azure_application_gateways_rules = Node(
 node_software_applications_azure_application_gateways_rules_backends = Node(
     name="software_applications_azure_application_gateways_rules_backends",
     path=["software", "applications", "azure", "application_gateways", "rules", "backends"],
-    title=Title("Backends"),
+    title=Title("Back-ends"),
     table=Table(
         columns={
             "application_gateway": TextField(Title("Application gateway")),
@@ -215,8 +215,8 @@ node_software_applications_azure_load_balancers_inbound_nat_rules = Node(
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
-            "frontend_port": TextField(Title("Frontend port")),
-            "backend_port": TextField(Title("Backend port")),
+            "frontend_port": TextField(Title("Front-end port")),
+            "backend_port": TextField(Title("Back-end port")),
         },
     ),
 )
@@ -236,7 +236,7 @@ node_software_applications_azure_load_balancers_inbound_nat_rules_backend_ip_con
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
-            "backend_ip_config": TextField(Title("Backend IP config")),
+            "backend_ip_config": TextField(Title("Back-end IP config")),
             "ip_address": TextField(Title("IP address")),
             "ip_allocation_method": TextField(Title("Allocation method")),
         },
@@ -274,7 +274,7 @@ node_software_applications_azure_load_balancers_inbound_nat_rules_public_ips = N
             "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
             "location": TextField(Title("Location")),
             "public_ip_name": TextField(Title("Name")),
-            "ip_address": TextField(Title("IP Address")),
+            "ip_address": TextField(Title("IP address")),
             "ip_allocation_method": TextField(Title("Allocation method")),
             "dns_fqdn": TextField(Title("DNS FQDN")),
         },
@@ -298,12 +298,12 @@ node_software_applications_azure_load_balancers_outbound_rules = Node(
 node_software_applications_azure_load_balancers_outbound_rules_backend_pools = Node(
     name="software_applications_azure_load_balancers_outbound_rules_backend_pools",
     path=["software", "applications", "azure", "load_balancers", "outbound_rules", "backend_pools"],
-    title=Title("Backend pools"),
+    title=Title("Back-end pools"),
     table=Table(
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "outbound_rule": TextField(Title("Outbound rule")),
-            "backend_pool": TextField(Title("Backend pool")),
+            "backend_pool": TextField(Title("Back-end pool")),
         },
     ),
 )
@@ -324,7 +324,7 @@ node_software_applications_azure_load_balancers_outbound_rules_backend_pools_add
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "outbound_rule": TextField(Title("Outbound rule")),
-            "backend_pool": TextField(Title("Backend pool")),
+            "backend_pool": TextField(Title("Back-end pool")),
             "address_name": TextField(Title("Address name")),
             "ip_address": TextField(Title("IP address")),
             "ip_allocation_method": TextField(Title("Allocation method")),
@@ -419,7 +419,7 @@ node_software_applications_check_mk_versions = Node(
 node_software_applications_checkmk_agent = Node(
     name="software_applications_checkmk_agent",
     path=["software", "applications", "checkmk-agent"],
-    title=Title("Checkmk Agent"),
+    title=Title("Checkmk agent"),
     attributes={
         "version": TextField(Title("Version")),
         "agentdirectory": TextField(Title("Agent directory")),
@@ -427,7 +427,7 @@ node_software_applications_checkmk_agent = Node(
         "spooldirectory": TextField(Title("Spool directory")),
         "pluginsdirectory": TextField(Title("Plug-ins directory")),
         "localdirectory": TextField(Title("Local directory")),
-        "agentcontroller": TextField(Title("Agent controller")),
+        "agentcontroller": TextField(Title("Agent Controller")),
     },
 )
 
@@ -469,8 +469,8 @@ node_software_applications_cisco_meraki_licenses = Node(
     title=Title("Licenses"),
     table=Table(
         columns={
-            "org_id": TextField(Title("Organisation ID")),
-            "org_name": TextField(Title("Organisation name")),
+            "org_id": TextField(Title("Organization ID")),
+            "org_name": TextField(Title("Organization name")),
             "summary": NumberField(Title("Summary")),
             "gateway_mg_count": NumberField(Title("Gateway (MG)")),
             "wireless_mr_count": NumberField(Title("Access points/Wireless (MR)")),
@@ -490,8 +490,8 @@ node_software_applications_cisco_meraki_networks = Node(
     title=Title("Networks"),
     table=Table(
         columns={
-            "org_id": TextField(Title("Organisation ID")),
-            "org_name": TextField(Title("Organisation name")),
+            "org_id": TextField(Title("Organization ID")),
+            "org_name": TextField(Title("Organization name")),
             "network_id": TextField(Title("Network ID")),
             "network_name": TextField(Title("Network name")),
             "time_zone": TextField(Title("Time zone")),
@@ -511,8 +511,8 @@ node_software_applications_cisco_meraki_organisations = Node(
     title=Title("Organisations"),
     table=Table(
         columns={
-            "org_id": TextField(Title("Organisation ID")),
-            "org_name": TextField(Title("Organisation name")),
+            "org_id": TextField(Title("Organization ID")),
+            "org_name": TextField(Title("Organization name")),
             "api_status": TextField(Title("API status")),
             "licensing_model": TextField(Title("Licensing model")),
             "cloud_region": TextField(Title("Cloud region")),
@@ -1155,11 +1155,11 @@ node_software_applications_synthetic_monitoring_scheduler = Node(
 node_software_applications_synthetic_monitoring_scheduler_config = Node(
     name="software_applications_synthetic_monitoring_scheduler_config",
     path=["software", "applications", "synthetic_monitoring", "scheduler", "config"],
-    title=Title("Scheduler Plan Configs"),
+    title=Title("Scheduler plan configs"),
     table=Table(
         columns={
-            "scheduler_interval": NumberField(Title("Scheduler Interval")),
-            "env_creation": TextField(Title("Env Creation")),
+            "scheduler_interval": NumberField(Title("Scheduler interval")),
+            "env_creation": TextField(Title("Env creation")),
             "n_attempts_max": NumberField(Title("Maximum number of attempts")),
             "robot_type": TextField(Title("Robot")),
             "assigned_to_host": TextField(Title("Assigned to host")),
@@ -1198,10 +1198,10 @@ node_software_configuration = Node(
 node_software_configuration_organisation = Node(
     name="software_configuration_organisation",
     path=["software", "configuration", "organisation"],
-    title=Title("Organisation"),
+    title=Title("Organization"),
     attributes={
-        "organisation_id": TextField(Title("Organisation ID")),
-        "organisation_name": TextField(Title("Organisation name")),
+        "organisation_id": TextField(Title("Organization ID")),
+        "organisation_name": TextField(Title("Organization name")),
         "network_id": TextField(Title("Network ID")),
         "network_name": TextField(Title("Network name")),
         "address": TextField(Title("Address")),
@@ -1211,7 +1211,7 @@ node_software_configuration_organisation = Node(
 node_software_configuration_snmp_info = Node(
     name="software_configuration_snmp_info",
     path=["software", "configuration", "snmp_info"],
-    title=Title("SNMP Information"),
+    title=Title("SNMP information"),
     attributes={
         "contact": TextField(Title("Contact")),
         "location": TextField(Title("Location")),
@@ -1324,7 +1324,7 @@ node_software_applications_podman_container = Node(
     path=["software", "applications", "podman", "container"],
     title=Title("Container"),
     attributes={
-        "hostname": TextField(Title("Hostname")),
+        "hostname": TextField(Title("Host name")),
         "pod": TextField(Title("Pod")),
         "labels": TextField(Title("Labels")),
     },

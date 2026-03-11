@@ -48,6 +48,6 @@ rule_spec_juniper_alarms = CheckParameters(
     name="juniper_alarms",
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_formspec_juniper_alarms,
-    title=Title("State of Juniper Alarms"),
+    title=Title("States of Juniper alarms"),
     condition=HostCondition(),
 )

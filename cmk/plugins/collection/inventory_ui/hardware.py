@@ -313,7 +313,7 @@ node_hardware_memory = Node(
 node_hardware_memory_arrays = Node(
     name="hardware_memory_arrays",
     path=["hardware", "memory", "arrays"],
-    title=Title("Arrays (Controllers)"),
+    title=Title("Arrays (controllers)"),
     table=Table(
         columns={
             "maximum_capacity": NumberField(Title("Maximum capacity"), render=UNIT_BYTES),
@@ -385,7 +385,7 @@ node_hardware_storage_disks = Node(
     },
     table=Table(
         columns={
-            "fsnode": TextField(Title("Filesystem node")),
+            "fsnode": TextField(Title("File system node")),
             "controller": TextField(Title("Controller")),
             "signature": TextField(Title("Disk ID")),
             "bus": TextField(Title("Bus")),

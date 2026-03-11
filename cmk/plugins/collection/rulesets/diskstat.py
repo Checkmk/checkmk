@@ -139,9 +139,9 @@ rule_spec_diskstat_inventory = DiscoveryParameters(
 def _item_spec_diskstat() -> String:
     return String(
         help_text=Help(
-            "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>,  "
-            "a per-disk IO is specified by the drive letter, a colon and a slash on Windows "
-            "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>)."
+            "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>. "
+            "A per-disk IO is specified by the drive letter, a colon and a slash on Windows "
+            "(e.g. <tt>C:/</tt>) or by the device name on Linux/Unix (e.g. <tt>/dev/sda</tt>)."
         ),
     )
 

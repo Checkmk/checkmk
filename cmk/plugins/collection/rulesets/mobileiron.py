@@ -86,7 +86,7 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
             ),
             "key_fields": DictElement(
                 parameter_form=SingleChoice(
-                    title=Title("Field(s) to use as a hostname key"),
+                    title=Title("Field(s) to use as a host name key"),
                     elements=[
                         SingleChoiceElement(name="serialNumber", title=Title("serialNumber")),
                         SingleChoiceElement(name="emailAddress", title=Title("emailAddress")),
@@ -98,11 +98,11 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
                             name="deviceModel_serialNumber",
                             title=Title("deviceModel and serialNumber"),
                         ),
-                        SingleChoiceElement(name="uid", title=Title("uid")),
+                        SingleChoiceElement(name="uid", title=Title("UID")),
                         SingleChoiceElement(
-                            name="uid_serialNumber", title=Title("uid and serialNumber")
+                            name="uid_serialNumber", title=Title("UID and serialNumber")
                         ),
-                        SingleChoiceElement(name="guid", title=Title("guid")),
+                        SingleChoiceElement(name="guid", title=Title("GUID")),
                     ],
                     help_text=Help("Compound fields will be joined with a '-' symbol."),
                     prefill=DefaultValue("deviceModel_serialNumber"),

@@ -90,41 +90,27 @@ async function loadApiDurationGraphTimeranges(): Promise<GraphTimerangeApiResult
 }
 
 const dropdownOptions = computed<Suggestion[]>(() => {
-  const apiByTitle = new Map(
-    apiDurationTimeranges.value.map((range) => [
-      range.title,
-      {
-        name: `duration_${range.extensions.total_seconds?.toString() ?? '0'}`,
-        title: untranslated(range.title)
-      }
-    ])
-  )
+  const predefinedTitles = new Set(Object.values(predefinedTimeranges).map((t) => t.toString()))
 
-  // Use predefined order; substitute the API version when titles match
-  const matchedApiTitles = new Set<string>()
-  const mergedRanges: Suggestion[] = Object.entries(predefinedTimeranges).map(([apiKey, title]) => {
-    const apiEntry = apiByTitle.get(title.toString())
-    if (apiEntry) {
-      matchedApiTitles.add(title.toString())
-      return apiEntry
-    }
-    return { name: apiKey, title: title }
-  })
-
-  // Prepend API duration entries that have no predefined counterpart
+  // API duration entries that have no predefined counterpart
   const extraApiRanges = apiDurationTimeranges.value
-    .filter((range) => !matchedApiTitles.has(range.title))
+    .filter((range) => !predefinedTitles.has(range.title))
     .map((range) => ({
       name: `duration_${range.extensions.total_seconds?.toString() ?? '0'}`,
       title: untranslated(range.title)
     }))
+
+  const predefinedRanges = Object.entries(predefinedTimeranges).map(([apiKey, title]) => ({
+    name: apiKey,
+    title: title
+  }))
 
   const customOptions = [
     { name: customTimeOptionName, title: customTimeOptionTitle },
     { name: customDateOptionName, title: customDateOptionTitle }
   ]
 
-  return [...extraApiRanges, ...mergedRanges, ...customOptions]
+  return [...extraApiRanges, ...predefinedRanges, ...customOptions]
 })
 
 const customDuration: Ref<Age> = ref({
@@ -149,8 +135,21 @@ const customDurationDate = ref({
 
 function getDropdownOptionFromTimerange(timerange: GraphTimerange): string | null {
   switch (timerange.type) {
-    case 'duration':
+    case 'duration': {
+      // If this duration matches a predefined entry (via API title), use the predefined name.
+      const matchingApi = apiDurationTimeranges.value.find(
+        (r) => r.extensions.total_seconds === timerange.duration
+      )
+      if (matchingApi) {
+        const predefinedEntry = Object.entries(predefinedTimeranges).find(
+          ([, title]) => title.toString() === matchingApi.title
+        )
+        if (predefinedEntry) {
+          return predefinedEntry[0]
+        }
+      }
       return `duration_${timerange.duration}`
+    }
     case 'predefined':
       return timerange.predefined
     case 'age':
@@ -164,20 +163,6 @@ onMounted(async () => {
   apiDurationTimeranges.value = await loadApiDurationGraphTimeranges()
 
   if (selectedTimerange.value) {
-    // If the initial timerange is predefined but has been replaced by an API duration entry,
-    // resolve it to the matching API duration option instead.
-    if (selectedTimerange.value.type === 'predefined' && selectedTimerange.value.predefined) {
-      const predefinedTitle = predefinedTimeranges[selectedTimerange.value.predefined]
-      if (predefinedTitle) {
-        const matchingApi = apiDurationTimeranges.value.find(
-          (r) => r.title === predefinedTitle.toString()
-        )
-        if (matchingApi) {
-          selectedTimerange.value = toPublicTimerange(matchingApi)
-        }
-      }
-    }
-
     selectedDropdownOption.value = getDropdownOptionFromTimerange(selectedTimerange.value)
     if (selectedTimerange.value.type === 'age' && selectedTimerange.value.age) {
       customDuration.value = { ...selectedTimerange.value.age }
@@ -237,12 +222,21 @@ watch(
         age: null
       }
     } else if (selectedOption in predefinedTimeranges) {
-      selectedTimerange.value = {
-        type: 'predefined',
-        predefined: selectedOption as PreDefinedTimeRange,
-        duration: null,
-        date_range: null,
-        age: null
+      // If an API duration entry matches this predefined title, use the API version (API wins).
+      const predefinedTitle = predefinedTimeranges[selectedOption as PreDefinedTimeRange]
+      const matchingApi = predefinedTitle
+        ? apiDurationTimeranges.value.find((r) => r.title === predefinedTitle.toString())
+        : undefined
+      if (matchingApi) {
+        selectedTimerange.value = toPublicTimerange(matchingApi)
+      } else {
+        selectedTimerange.value = {
+          type: 'predefined',
+          predefined: selectedOption as PreDefinedTimeRange,
+          duration: null,
+          date_range: null,
+          age: null
+        }
       }
     }
   },

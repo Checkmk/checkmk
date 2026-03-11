@@ -19,26 +19,21 @@ export const parseContextConfiguredFilters = (
   return configuredFilters
 }
 
-/**
- * Squash context and widget filters into a single collection of effective filters.
- * Filters set on the widget level override any filters from the context level that belong to the
- * same filter category (e.g. 'host', 'service', etc.)
- */
 export const squashFilters = (
   contextConfiguredFilters: ConfiguredFilters,
-  widgetFilters: ConfiguredFilters,
-  filterDefinitions: Record<string, FilterDefinition>
+  widgetFilters: ConfiguredFilters
 ): ConfiguredFilters => {
-  /* This needs to be a copy, not to mutate widgetFilters upon mutations to allFilters */
-  const allFilters: ConfiguredFilters = { ...widgetFilters }
-  const widgetFilterCategories = new Set(
-    Object.keys(widgetFilters).map((flt) => filterDefinitions![flt]?.extensions.info)
-  )
+  // Priority: dashboard < quick < widget
+  // We want to display first the widget filters, then the quick filters and last the dashboard filters
 
-  for (const flt in contextConfiguredFilters) {
-    const category = filterDefinitions![flt]?.extensions.info
-    if (!widgetFilterCategories.has(category)) {
-      allFilters[flt] = contextConfiguredFilters[flt] || {}
+  const collections: ConfiguredFilters[] = [widgetFilters, contextConfiguredFilters]
+  const allFilters: ConfiguredFilters = {}
+
+  for (const collection of collections) {
+    for (const flt in collection) {
+      if (!(flt in allFilters)) {
+        allFilters[flt] = collection[flt] || {}
+      }
     }
   }
   return allFilters
@@ -52,12 +47,7 @@ export const splitFiltersByCategory = (
 ): ConfiguredFiltersByCategory => {
   const filtersByCategory: Record<string, ConfiguredFilters> = {}
   for (const flt in filters) {
-    const category = filterDefinitions![flt]?.extensions.info
-    if (!category) {
-      console.error(`Filter ${flt} does not have a category (extensions.info) defined in its filter
-        definition.`)
-      continue
-    }
+    const category = filterDefinitions![flt]?.extensions?.info || 'host'
     if (!filtersByCategory[category]) {
       filtersByCategory[category] = {}
     }

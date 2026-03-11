@@ -130,8 +130,7 @@ const recapAndNext = (selectedWidgetType: string | null) => {
 const appliedFilters = computed((): ConfiguredFilters => {
   return squashFilters(
     contextConfiguredFilters.value,
-    extractConfiguredFilters(widgetFilterManager),
-    filterDefinitions
+    extractConfiguredFilters(widgetFilterManager)
   )
 })
 

@@ -95,8 +95,7 @@ const recapAndNext = () => {
 const appliedFilters = computed((): ConfiguredFilters => {
   return squashFilters(
     contextConfiguredFilters.value,
-    extractConfiguredFilters(widgetFilterManager),
-    filterDefinitions
+    extractConfiguredFilters(widgetFilterManager)
   )
 })
 </script>

@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<FiltersRecapProps>(), {
 const filterDefinitions = useFilterDefinitions()
 
 const allFiltersByCategory: Record<string, ConfiguredFilters> = splitFiltersByCategory(
-  squashFilters(props.contextConfiguredFilters, props.widgetFilters, filterDefinitions!),
+  squashFilters(props.contextConfiguredFilters, props.widgetFilters),
   filterDefinitions!
 )
 

@@ -42,7 +42,7 @@ def _parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def active_metric_series_retriever() -> int | None:
+def average_active_metric_series_retriever() -> int | None:
     from cmk.metric_backend.client import (  # type: ignore[import-untyped, unused-ignore]
         RetryingClient,
         RetryingQueryClient,
@@ -55,7 +55,7 @@ def active_metric_series_retriever() -> int | None:
         # the customer has not configured the metric backend at all
         return None
 
-    return client.active_series_count()  # type: ignore[no-any-return, unused-ignore]
+    return client.custom_metrics_count_average_over_time()  # type: ignore[no-any-return, unused-ignore]
 
 
 def main() -> int:
@@ -63,7 +63,7 @@ def main() -> int:
     logger = init_logging()
 
     if edition(paths.omd_root) in [Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD]:
-        active_metric_series_retriever_registry.register(active_metric_series_retriever)
+        active_metric_series_retriever_registry.register(average_active_metric_series_retriever)
 
     if args.force:
         get_next_run_file_path().unlink(missing_ok=True)

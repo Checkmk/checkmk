@@ -34,7 +34,7 @@ def logger_mock() -> Iterator[MagicMock]:
 
 
 @pytest.mark.parametrize("retriever_return", [123, None])
-def test_get_num_active_metric_series_returns_value_when_registered(
+def test_get_average_active_metric_series_returns_value_when_registered(
     retriever_function: MagicMock,
     retriever_return: int | None,
 ) -> None:
@@ -43,14 +43,14 @@ def test_get_num_active_metric_series_returns_value_when_registered(
     registry.active_metric_series_retriever_registry.register(retriever_function)
 
     # when
-    result = registry.get_num_active_metric_series()
+    result = registry.get_average_active_metric_series()
 
     # then
     assert result == retriever_return
     retriever_function.assert_called_once_with()
 
 
-def test_get_num_active_metric_series_returns_none_and_logs_on_exception(
+def test_get_average_active_metric_series_returns_none_and_logs_on_exception(
     retriever_function: MagicMock,
     logger_mock: MagicMock,
 ) -> None:
@@ -60,7 +60,7 @@ def test_get_num_active_metric_series_returns_none_and_logs_on_exception(
     registry.active_metric_series_retriever_registry.register(retriever_function)
 
     # when
-    result = registry.get_num_active_metric_series()
+    result = registry.get_average_active_metric_series()
 
     # then
     assert result is None
@@ -74,17 +74,17 @@ def test_get_num_active_metric_series_returns_none_and_logs_on_exception(
     "edition",
     [Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD],
 )
-def test_get_num_active_metric_series_logs_when_missing_registry_when_expected(
+def test_get_average_active_metric_series_logs_when_missing_registry_when_expected(
     edition_mock: MagicMock,
     logger_mock: MagicMock,
     edition: Edition,
 ) -> None:
     # given
     edition_mock.return_value = edition
-    registry.active_metric_series_retriever_registry.metric_series_retriever_function = None
+    registry.active_metric_series_retriever_registry.average_metric_series_retriever_function = None
 
     # when
-    result = registry.get_num_active_metric_series()
+    result = registry.get_average_active_metric_series()
 
     # then
     assert result is None
@@ -97,17 +97,17 @@ def test_get_num_active_metric_series_logs_when_missing_registry_when_expected(
     "edition",
     [Edition.COMMUNITY, Edition.PRO],
 )
-def test_get_num_active_metric_series_no_log_when_missing_registry_when_not_expected(
+def test_get_average_active_metric_series_no_log_when_missing_registry_when_not_expected(
     edition_mock: MagicMock,
     logger_mock: MagicMock,
     edition: Edition,
 ) -> None:
     # given
     edition_mock.return_value = edition
-    registry.active_metric_series_retriever_registry.metric_series_retriever_function = None
+    registry.active_metric_series_retriever_registry.average_metric_series_retriever_function = None
 
     # when
-    result = registry.get_num_active_metric_series()
+    result = registry.get_average_active_metric_series()
 
     # then
     assert result is None

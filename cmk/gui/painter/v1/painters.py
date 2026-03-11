@@ -52,7 +52,7 @@ for state, state_type, short_title, title in [
     ("1", "warn", _l("Warn"), _l("Number of service in state WARN")),
     ("2", "crit", _l("Crit"), _l("Number of service in state CRIT")),
     ("3", "unknown", _l("Un"), _l("Number of service in state UNKNOWN")),
-    ("p", "pending", _l("Pe"), _l("Number of service in state Pending")),
+    ("p", "pending", _l("Pe"), _l("Number of services in state PENDING")),
 ]:
     experimental_painter_registry.register(
         Painter[int](
@@ -88,7 +88,7 @@ for i in range(1, 11):
             ident=f"svc_perf_val{i:02}",
             computer=_get_perfdata_with_staleness_callable(i - 1),
             formatters=Formatters[StrWithStaleness](html=render_str_with_staleness),
-            title=_l("Service performance data - value number %2d") % i,
+            title=_l("Service metrics - value number %2d") % i,
             short_title=_l("Val. %d") % i,
             columns=["service_perf_data", "service_staleness", "host_staleness"],
         )

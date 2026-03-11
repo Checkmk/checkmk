@@ -882,7 +882,7 @@ PermissionActionAcknowledge = Permission(
     section=PERMISSION_SECTION_ACTION,
     name="acknowledge",
     title=_l("Acknowledge"),
-    description=_l("Acknowledge host and service problems and remove acknowledgements"),
+    description=_l("Acknowledge host and service problems and remove acknowledgments"),
     defaults=["user", "admin"],
 )
 

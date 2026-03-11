@@ -402,7 +402,7 @@ SorterHostTags = Sorter(
 
 SorterServiceTags = Sorter(
     ident="service",
-    title=_l("Service Tags"),
+    title=_l("Service tags"),
     columns=["service_tags"],
     sort_function=partial(_sort_tags, object_type="service"),
 )

@@ -371,7 +371,7 @@ class IPAddressFilter(Filter):
 def register_host_address_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         IPAddressFilter(
-            title=_l("Host address (Primary)"),
+            title=_l("Host address (primary)"),
             sort_index=102,
             link_columns=["host_address"],
             query_filter=query_filters.IPAddressQuery(
@@ -411,7 +411,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         FilterOption(
-            title=_l("Host address family (Primary)"),
+            title=_l("Host address family (primary)"),
             sort_index=103,
             info="host",
             query_filter=query_filters.SingleOptionQuery(
@@ -804,7 +804,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
 
     filter_registry.register(
         FilterOption(
-            title=_l("Has performance data"),
+            title=_l("Has metrics"),
             sort_index=251,
             info="service",
             query_filter=query_filters.TristateQuery(
@@ -905,7 +905,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
     filter_nagios_flag_with_register(
         filter_registry=filter_registry,
         ident="service_process_performance_data",
-        title=_l("Processes performance data"),
+        title=_l("Processes metrics"),
         sort_index=250,
         info="service",
         is_show_more=True,
@@ -1196,7 +1196,7 @@ def register_log_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         CheckboxRowFilter(
-            title=_l("Logentry class"),
+            title=_l("Log entry class"),
             sort_index=255,
             info="log",
             query_filter=query_filters.MultipleOptionsQuery(
@@ -1392,7 +1392,7 @@ class _FilterHostAuxTags(Filter):
         self.query_filter = query_filters.AuxTagsQuery(object_type="host")
         super().__init__(
             ident=self.query_filter.ident,
-            title=_l("Host Auxiliary Tags"),
+            title=_l("Host auxiliary tags"),
             sort_index=302,
             info=self.query_filter.object_type,
             htmlvars=self.query_filter.request_vars,

@@ -572,7 +572,7 @@ builtin_views.update(
             "browser_reload": 0,
             "column_headers": "pergroup",
             "datasource": "downtimes",
-            "description": _l("All host- and service-downtimes (including ids)"),
+            "description": _l("All host- and service-downtimes (including IDs)"),
             "group_painters": [ColumnSpec(name="downtime_what")],
             "hidden": True,
             "hidebutton": False,
@@ -1141,7 +1141,7 @@ builtin_views.update(
                 SorterSpec(sorter="site", negate=False),
                 SorterSpec(sorter="site_host", negate=False),
             ],
-            "title": _l("Host group of up hosts"),
+            "title": _l("Host group of UP hosts"),
             "single_infos": ["hostgroup"],
             "link_from": {},
             "topic": "",
@@ -1189,7 +1189,7 @@ builtin_views.update(
                 SorterSpec(sorter="site", negate=False),
                 SorterSpec(sorter="site_host", negate=False),
             ],
-            "title": _l("Host group of down hosts"),
+            "title": _l("Host group of DOWN hosts"),
             "single_infos": ["hostgroup"],
             "link_from": {},
             "topic": "",
@@ -1285,7 +1285,7 @@ builtin_views.update(
                 SorterSpec(sorter="site", negate=False),
                 SorterSpec(sorter="site_host", negate=False),
             ],
-            "title": _l("Host group of pending"),
+            "title": _l("Host group of PENDING"),
             "single_infos": ["hostgroup"],
             "link_from": {},
             "topic": "",
@@ -2587,7 +2587,7 @@ builtin_views.update(
                 SorterSpec(sorter="log_time", negate=True),
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
-            "title": _l("Events of host & services"),
+            "title": _l("Events of hosts & services"),
             "topic": "history",
             "sort_index": 10,
             "user_sortable": True,
@@ -2814,7 +2814,7 @@ builtin_views.update(
                 SorterSpec(sorter="log_time", negate=True),
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
-            "title": _l("Events of host & services"),
+            "title": _l("Events of hosts & services"),
             "topic": "history",
             "user_sortable": True,
             "single_infos": ["host"],
@@ -2836,7 +2836,7 @@ builtin_views.update(
             "browser_reload": 0,
             "column_headers": "off",
             "datasource": "log",
-            "description": _l("Displays entries from the logfile of the monitoring core."),
+            "description": _l("Displays entries from the log file of the monitoring core."),
             "group_painters": [ColumnSpec(name="log_date")],
             "hidden": False,
             "hidebutton": False,
@@ -3446,7 +3446,7 @@ builtin_views.update(
             },
             "datasource": "servicesbyhostgroup",
             "description": _l(
-                "A matrix of performance data values from all hosts in a certain host group"
+                "A matrix of metric data values from all hosts in a certain host group"
             ),
             "group_painters": [
                 ColumnSpec(
@@ -3471,7 +3471,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Matrix of performance data"),
+            "title": _l("Matrix of metrics"),
             "user_sortable": True,
             "owner": UserId.builtin(),
             "public": True,
@@ -3500,7 +3500,7 @@ builtin_views.update(
                 "service_labels": {},
             },
             "datasource": "services",
-            "description": _l("A matrix of performance data values, grouped by hosts and services"),
+            "description": _l("A matrix of metric data values, grouped by hosts and services"),
             "group_painters": [
                 ColumnSpec(
                     name="host",
@@ -3526,7 +3526,7 @@ builtin_views.update(
             ],
             "user_sortable": True,
             "mustsearch": True,
-            "title": _l("Search performance data"),
+            "title": _l("Search metrics"),
             "topic": "history",
             "sort_index": 60,
             "owner": UserId.builtin(),
@@ -4614,7 +4614,7 @@ builtin_views.update(
                 SorterSpec(sorter="log_time", negate=True),
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
-            "title": _l("Notifications of host & services"),
+            "title": _l("Notifications of hosts & services"),
             "topic": "history",
             "user_sortable": True,
             "single_infos": ["host"],
@@ -4680,7 +4680,7 @@ builtin_views.update(
                 SorterSpec(sorter="log_time", negate=True),
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
-            "title": _l("Notifications of host & services"),
+            "title": _l("Notifications of hosts & services"),
             "topic": "history",
             "sort_index": 20,
             "user_sortable": True,
@@ -5061,7 +5061,7 @@ builtin_views["docker_nodes"] = ViewSpec(
         "icon": DynamicIconName("docker"),
         "sort_index": 10,
         "description": _l(
-            "Overall state of all docker nodes, with counts of services in the various states."
+            "Overall state of all Docker nodes, with counts of services in the various states."
         ),
         "add_context_to_title": False,
         "painters": [
@@ -5091,7 +5091,7 @@ builtin_views["docker_containers"] = ViewSpec(
         "icon": DynamicIconName("docker"),
         "sort_index": 20,
         "description": _l(
-            "Overall state of all docker containers, with counts of services in the various states."
+            "Overall state of all Docker containers, with counts of services in the various states."
         ),
         "add_context_to_title": False,
         "painters": [
@@ -5124,7 +5124,7 @@ builtin_views["docker_containers"] = ViewSpec(
 builtin_views["vsphere_servers"] = ViewSpec(
     {
         **_host_view_spec,
-        "title": _l("vSphere Servers"),
+        "title": _l("vSphere servers"),
         "topic": "applications",
         "icon": DynamicIconName("vsphere"),
         "sort_index": 30,

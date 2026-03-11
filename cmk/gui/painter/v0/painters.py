@@ -4068,7 +4068,7 @@ class PainterCommentId(Painter):
         return "comment_id"
 
     def title(self, cell: Cell) -> str:
-        return _("Comment id")
+        return _("Comment ID")
 
     def short_title(self, cell: Cell) -> str:
         return _("ID")
@@ -4265,7 +4265,7 @@ class PainterDowntimeId(Painter):
         return "downtime_id"
 
     def title(self, cell: Cell) -> str:
-        return _("Downtime id")
+        return _("Downtime ID")
 
     def short_title(self, cell: Cell) -> str:
         return _("ID")

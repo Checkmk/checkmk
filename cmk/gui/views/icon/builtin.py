@@ -410,7 +410,7 @@ def _render_perfgraph_icon(
 
 PerfgraphIcon = Icon(
     ident="perfgraph",
-    title=_l("Performance graph"),
+    title=_l("Time series graph"),
     columns=["pnpgraph_present"],
     toplevel=True,
     sort_index=20,

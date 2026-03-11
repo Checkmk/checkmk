@@ -867,7 +867,7 @@ class FilterInvtableInterfaceType(DualListFilter):
 class FilterHasInv(FilterOption):
     def __init__(self) -> None:
         super().__init__(
-            title=_l("Has Inventory Data"),
+            title=_l("Has inventory data"),
             sort_index=801,
             info="host",
             query_filter=query_filters.TristateQuery(

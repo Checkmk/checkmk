@@ -57,7 +57,7 @@ def _render_inventory_icon(
 
 InventoryIcon = Icon(
     ident="inventory",
-    title=_l("HW/SW Inventory"),
+    title=_l("HW/SW inventory"),
     host_columns=["name"],
     render=_render_inventory_icon,
 )
@@ -110,7 +110,7 @@ def _render_inventory_history_icon(
 
 InventoryHistoryIcon = Icon(
     ident="inventory_history",
-    title=_l("HW/SW Inventory history"),
+    title=_l("HW/SW inventory history"),
     host_columns=["name"],
     render=_render_inventory_history_icon,
 )

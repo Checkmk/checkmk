@@ -241,18 +241,20 @@ def _incident_fs() -> Dictionary:
             "custom_fields": DictElement(parameter_form=_custom_fields_fs()),
             "ack_state": DictElement(
                 parameter_form=Dictionary(
-                    title=Title("Settings for incident state in case of acknowledgement"),
+                    title=Title("Settings for incident state in case of acknowledgment"),
                     help_text=Help(
-                        "Here you can define the state of the incident in case of an "
-                        "acknowledgement of the affected host or service problem."
+                        "Here, you can define the state of the incident in "
+                        "case of an acknowledgment of the affected host or "
+                        "service problem."
                     ),
                     elements={
                         "start": DictElement(
                             parameter_form=CascadingSingleChoice(
-                                title=Title("State of incident if acknowledgement is set"),
+                                title=Title("State of incident if acknowledgment is set"),
                                 help_text=Help(
-                                    "Here you can define the state of the incident in case of an "
-                                    "acknowledgement of the host or service problem."
+                                    "Here, you can define the state of the "
+                                    "incident in case of an acknowledgment "
+                                    "of the host or service problem."
                                 ),
                                 prefill=DefaultValue("predefined"),
                                 migrate=_migrate_state_of,
@@ -260,11 +262,11 @@ def _incident_fs() -> Dictionary:
                                     CascadingSingleChoiceElement(
                                         name="predefined",
                                         title=Title(
-                                            "State of incident if acknowledgement is set (predefined)"
+                                            "State of incident if acknowledgment is set (predefined)"
                                         ),
                                         parameter_form=SingleChoice(
                                             title=Title(
-                                                "State of incident if acknowledgement is set (predefined)"
+                                                "State of incident if acknowledgment is set (predefined)"
                                             ),
                                             help_text=Help(
                                                 "Please note that the mapping to the numeric "
@@ -282,11 +284,11 @@ def _incident_fs() -> Dictionary:
                                     CascadingSingleChoiceElement(
                                         name="integer",
                                         title=Title(
-                                            "State of incident if acknowledgement is set (as integer)"
+                                            "State of incident if acknowledgment is set (as integer)"
                                         ),
                                         parameter_form=Integer(
                                             title=Title(
-                                                "State of incident if acknowledgement is set (as integer)"
+                                                "State of incident if acknowledgment is set (as integer)"
                                             ),
                                             custom_validate=[NumberInRange(min_value=0)],
                                         ),
@@ -353,8 +355,10 @@ def _incident_fs() -> Dictionary:
                             parameter_form=CascadingSingleChoice(
                                 title=Title("State of incident if downtime expires"),
                                 help_text=Help(
-                                    "Here you can define the state of the incident in case of an "
-                                    "ending acknowledgement of the host or service problem."
+                                    "Here, you can define the state of the "
+                                    "incident in case of an ending "
+                                    "acknowledgment of the host or service "
+                                    "problem."
                                 ),
                                 prefill=DefaultValue("predefined"),
                                 migrate=_migrate_state_of,
@@ -553,7 +557,7 @@ def _get_state_choices(issue_type: str) -> list[tuple[str, Title]]:
         return [
             ("none", Title("Don't change state")),
             ("new", Title("New")),
-            ("progress", Title("In Progress")),
+            ("progress", Title("In progress")),
             ("hold", Title("On Hold")),
             ("resolved", Title("Resolved")),
             ("closed", Title("Closed")),

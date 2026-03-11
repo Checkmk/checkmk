@@ -436,11 +436,11 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return create_snmp_credentials(
             help_text=Help(
-                "Configure the community to be used when contacting this host via SNMP v1/v2 or "
+                "Configure the community to be used when contacting this host via SNMPv1/v2 or "
                 "v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
-                "credentials of monitored host</a> ruleset. Configuring a community explicitly "
-                "here overrides the community defined by a rule. Communication via SNMP v1 and v2c "
-                "is unencrypted. Consider using SNMP v3 for a higher level of security."
+                "credentials of monitored host</a> rule set. Configuring a community explicitly "
+                "here overrides the community defined by a rule. Communication via SNMPv1 and v2c "
+                "is unencrypted. Consider using SNMPv3 for a higher level of security."
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value="community",
@@ -1213,7 +1213,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
                     "are configuring in a remote site, this may be a host "
                     "monitored by another site. If you want to modify this "
                     "host, you will have to change the site attribute to the "
-                    "local site. But this may make the host be monitored from "
+                    "local site. But this may result in the host being monitored from "
                     "multiple sites."
                 ),
             ),

@@ -649,7 +649,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         def _validate_documentation_url(value: str) -> None:
             if not is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
                 raise ValidationError(
-                    Message("Not a valid URL (Only http and https URLs are allowed)."),
+                    Message("Not a valid URL (only HTTP and HTTPS URLs are allowed)."),
                 )
 
         elements["docu_url"] = form_specs.DictElement(

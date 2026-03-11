@@ -36,7 +36,7 @@ def form_spec() -> Dictionary:
                     help_text=Help(
                         "You need to provide a valid API key to be able to send push notifications "
                         'using Pushover. Register and login to <a href="https://www.pushover.net" '
-                        'target="_blank">Pushover</a>, thn create your Checkmk installation as '
+                        'target="_blank">Pushover</a>, then create your Checkmk installation as '
                         "application and obtain your API key."
                     ),
                     custom_validate=[
@@ -134,7 +134,7 @@ def form_spec() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="low",
-                            title=Title("Low: No sound/vibration but show popup"),
+                            title=Title("Low: No sound/vibration but show pop-up"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(

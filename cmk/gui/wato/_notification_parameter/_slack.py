@@ -33,10 +33,10 @@ def form_spec() -> Dictionary:
                     title=Title("Webhook URL"),
                     prefill=DefaultValue("webhook_url"),
                     help_text=Help(
-                        "Webhook URL. Setup Slack Webhook "
-                        '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>'
+                        "Webhook URL. Set up Slack Webhook "
+                        '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>.'
                         "<br />For Mattermost follow the documentation "
-                        '<a href="https://docs.mattermost.com/developer/webhooks-incoming.html" target="_blank">here</a>'
+                        '<a href="https://docs.mattermost.com/developer/webhooks-incoming.html" target="_blank">here</a>.'
                         "<br />This URL can also be collected from the password store of Checkmk."
                     ),
                     elements=[

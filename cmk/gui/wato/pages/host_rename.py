@@ -588,7 +588,7 @@ class ModeRenameHost(WatoMode):
         if is_locked_by_quick_setup(self._host.locked_by()):
             raise MKUserError(
                 "host",
-                _('You cannot rename host "%s", because it is managed by Quick setup.')
+                _('You cannot rename host "%s", because it is managed by Quick Setup.')
                 % self._host.name(),
             )
 
@@ -722,7 +722,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "favorites": _("Favorite entry of user"),
         "cache": _("Cached output of monitoring agent"),
         "counters": _("File with performance counter"),
-        "agent": _("Baked host specific agent"),
+        "agent": _("Baked host-specific agent"),
         "agent_deployment": _("Agent deployment status"),
         "piggyback-load": _("Piggyback information from other host"),
         "piggyback-pig": _("Piggyback information for other hosts"),

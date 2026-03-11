@@ -28,10 +28,10 @@ class PainterHostFilename(Painter):
         return "host_filename"
 
     def title(self, cell: Cell) -> str:
-        return _("Checkmk config filename")
+        return _("Checkmk config file name")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Filename")
+        return _("File name")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

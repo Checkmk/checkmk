@@ -953,10 +953,10 @@ class ModeEditRuleset(WatoMode):
         try:
             self._rulespec = rulespec_registry[self._name]
         except KeyError:
-            raise MKUserError("varname", _('The ruleset "%s" does not exist.') % self._name)
+            raise MKUserError("varname", _('The rule set "%s" does not exist.') % self._name)
 
         if not visible_ruleset(self._rulespec.name):
-            raise MKUserError("varname", _('The ruleset "%s" does not exist.') % self._name)
+            raise MKUserError("varname", _('The rule set "%s" does not exist.') % self._name)
 
         if not self._item:
             self._item = None
@@ -2165,7 +2165,7 @@ class ABCEditRuleMode(WatoMode):
             self._rulespec = rulespec_registry[self._name]
         except KeyError:
             raise MKUserError(
-                self.VAR_RULE_SPEC_NAME, _('The ruleset "%s" does not exist.') % self._name
+                self.VAR_RULE_SPEC_NAME, _('The rule set "%s" does not exist.') % self._name
             )
 
         self._back_mode = request.get_ascii_input_mandatory("back_mode", "edit_ruleset")
@@ -2419,7 +2419,7 @@ class ABCEditRuleMode(WatoMode):
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
     def _success_message(self) -> str:
-        return _('Edited rule in ruleset "%s" in folder "%s"') % (
+        return _('Edited rule in rule set "%s" in folder "%s"') % (
             self._ruleset.title(),
             self._folder.alias_path(),
         )
@@ -3378,7 +3378,7 @@ class ModeNewRule(ABCEditRuleMode):
         pass
 
     def _success_message(self) -> str:
-        return _('Created new rule in ruleset "%s" in folder "%s"') % (
+        return _('Created new rule in rule set "%s" in folder "%s"') % (
             self._ruleset.title(),
             self._folder.alias_path(),
         )

@@ -112,7 +112,7 @@ def _render_download_snmp_walk_icon(
 
 DownloadSnmpWalkIcon = Icon(
     ident="download_snmp_walk",
-    title=_l("Download snmp walk"),
+    title=_l("Download SNMP walk"),
     host_columns=["filename", "check_type"],
     sort_index=50,
     render=_render_download_snmp_walk_icon,

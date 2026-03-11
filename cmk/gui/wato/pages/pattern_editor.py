@@ -190,8 +190,8 @@ class ModePatternEditor(WatoMode):
             forms.section(_("Text to match"))
             html.help(
                 _(
-                    "You can insert some text (e.g. a line of the logfile) to test the patterns defined "
-                    "for this logfile. All patterns for this logfile are listed below. Matching patterns "
+                    "You can insert some text (e.g. a line of the log file) to test the patterns defined "
+                    "for this log file. All patterns for this log file are listed below. Matching patterns "
                     'will be highlighted after clicking the "Try out" button.'
                 )
             )

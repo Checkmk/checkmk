@@ -3112,7 +3112,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 Dictionary(
                     title=_("Build bulks also outside of time period"),
                     help=_(
-                        "By enabling this option notifications will be bundled outside of the defined time period as well."
+                        "By enabling this option, notifications will be bundled outside of the defined time period as well."
                     ),
                     elements=make_interval_entry() + bulk_options,
                     columns=1,
@@ -3212,12 +3212,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                                     _("Build bulks during time period"),
                                     Dictionary(
                                         help=_(
-                                            "By enabling this option notifications will be bulked only if the "
-                                            "specified time period is active. When the time period ends a "
+                                            "By enabling this option notifications will be bundled only if the "
+                                            "specified time period is active. When the time period ends, a "
                                             "bulk containing all notifications that appeared during that time "
                                             "will be sent. "
-                                            "If bulking should be enabled outside of the time period as well, "
-                                            'the option "Also Bulk outside of time period" can be used.'
+                                            "If building bulks should be enabled outside of the time period as well, "
+                                            'the option "Also build bulks outside of time period" can be used.'
                                         ),
                                         elements=timeperiod_entry
                                         + bulk_options

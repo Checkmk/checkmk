@@ -130,7 +130,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         }:
             raise MKUserError(
                 "_delete",
-                _('You can not delete this %s because it is <a href="%s">in use</a>.')
+                _('You cannot delete this %s because it is <a href="%s">in use</a>.')
                 % (self._mode_type.name_singular(), self._search_url(ident)),
             )
 

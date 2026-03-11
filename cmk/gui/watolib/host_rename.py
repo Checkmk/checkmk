@@ -295,7 +295,7 @@ def _rename_host_in_rulesets(
         if changed_folder_rulesets:
             add_change(
                 action_name="edit-ruleset",
-                text=_l("Renamed host in %d rulesets of folder %s")
+                text=_l("Renamed host in %d rule sets of folder %s")
                 % (len(changed_folder_rulesets), folder.title()),
                 user_id=user.id,
                 object_ref=folder.object_ref(),

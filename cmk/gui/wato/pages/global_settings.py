@@ -519,7 +519,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             forms.section(_("Current state"))
             if is_configured_globally:
                 html.write_text_permissive(
-                    _('This variable is configured in <a href="%s">global settings</a>.')
+                    _('This variable is configured in <a href="%s">Global settings</a>.')
                     % ("wato.py?mode=edit_configvar&varname=%s" % self._varname)
                 )
             elif not is_configured:

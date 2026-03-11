@@ -795,7 +795,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         ]
 
         return Dictionary(
-            title=Title("Display Options"),
+            title=Title("Display options"),
             elements={
                 name: DictElement(required=True, parameter_form=fs) for name, fs in all_options
             },

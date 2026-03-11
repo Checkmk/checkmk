@@ -35,7 +35,7 @@ from ._helpers import _get_url_prefix_setting
 def form_spec_mail() -> DictionaryExtended:
     # TODO register CSE specific version
     return DictionaryExtended(
-        title=Title("HTML Email parameters"),
+        title=Title("HTML email parameters"),
         elements=_parameter_elements(is_cse=edition(paths.omd_root) == Edition.CLOUD),
         ignored_elements=("no_floating_graphs",),
     )
@@ -166,7 +166,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                     ),
                     MultipleChoiceElement(
                         name="address",
-                        title=Title("IP Address of Hosts"),
+                        title=Title("IP address of hosts"),
                     ),
                     MultipleChoiceElement(
                         name="abstime",
@@ -178,7 +178,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                     ),
                     MultipleChoiceElement(
                         name="longoutput",
-                        title=Title("Plugin output"),
+                        title=Title("Plug-in output"),
                     ),
                     MultipleChoiceElement(
                         name="ack_author",
@@ -186,7 +186,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                     ),
                     MultipleChoiceElement(
                         name="ack_comment",
-                        title=Title("Acknowledgement comment"),
+                        title=Title("Acknowledgment comment"),
                     ),
                     MultipleChoiceElement(
                         name="notification_author",

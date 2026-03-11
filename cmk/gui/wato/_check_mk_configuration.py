@@ -562,7 +562,7 @@ def _valuespec_profile(context: GlobalSettingsContext) -> DropdownChoice:
         title=_("Profile requests"),
         help=_(
             "It is possible to profile the rendering process of graphical user interface (GUI) pages. This "
-            "Is done using the Python module cProfile. When profiling is performed "
+            "is done using the Python module cProfile. When profiling is performed "
             "three files are created in <tt>%s</tt>: <tt>multisite.profile</tt>, "
             "<tt>multisite.cachegrind</tt> and <tt>multisite.py</tt>. By executing the latter "
             "file you can get runtime statistics about the last processed page. When "
@@ -590,11 +590,11 @@ ConfigVariableDebugLivestatusQueries = ConfigVariable(
     primary_domain=ConfigDomainGUI,
     ident="debug_livestatus_queries",
     valuespec=lambda context: Checkbox(
-        title=_("Debug livestatus queries"),
-        label=_("enable debug of livestatus queries"),
+        title=_("Debug Livestatus queries"),
+        label=_("enable debug of Livestatus queries"),
         help=_(
-            "With this option turned on all livestatus queries made by multisite "
-            "in order to render views are being displayed."
+            "With this option turned on all Livestatus queries made by "
+            "the GUI in order to render views are being displayed."
         ),
     ),
 )
@@ -682,11 +682,11 @@ ConfigVariableQuicksearchDropdownLimit = ConfigVariable(
     primary_domain=ConfigDomainGUI,
     ident="quicksearch_dropdown_limit",
     valuespec=lambda context: Integer(
-        title=_("Number of elements to show in Quicksearch"),
+        title=_("Number of elements to show in quick search"),
         help=_(
-            "When typing a texts in the Quicksearch snap-in, a dropdown will "
+            "When typing a texts in the quick search snap-in, a drop-down will "
             "appear listing all matching host names containing that text. "
-            "That list is limited in size so that the dropdown will not get "
+            "That list is limited in size so that the drop-down will not get "
             "too large when you have a huge number of lists. "
         ),
         minvalue=1,
@@ -715,7 +715,7 @@ ConfigVariableQuicksearchSearchOrder = ConfigVariable(
                     ],
                 ),
                 DropdownChoice(
-                    title=_("Match behaviour"),
+                    title=_("Match behavior"),
                     choices=[
                         ("continue", _("Continue search")),
                         (
@@ -730,7 +730,7 @@ ConfigVariableQuicksearchSearchOrder = ConfigVariable(
                 ),
             ],
         ),
-        title=_("Quicksearch search order"),
+        title=_("Quick search search order"),
         add_label=_("Add search filter"),
     ),
 )
@@ -748,7 +748,7 @@ ConfigVariableExperimentalFeatures = ConfigVariable(
                 DropdownChoice(
                     title=_("Rule rendering mode"),
                     help=_(
-                        "Enable experimental rendering modes for form specs. Keep in mind that"
+                        "Enable experimental rendering modes for form specs. Keep in mind that "
                         "some form specs are always rendered in the frontend, regardless "
                         "of this setting."
                     ),
@@ -912,10 +912,10 @@ ConfigVariableEscapePluginOutput = ConfigVariable(
             "for several injection attacks. "
         )
         + _(
-            "Instead of disabling this option globally it is highly recommended to "
+            "Instead of disabling this option globally, it is highly recommended to "
             "disable the escaping selectively for individual hosts and services with "
-            'the rulesets "Escape HTML in host output" and "Escape HTML in '
-            'service output". The rulesets have the additional advantage that the '
+            'the rule sets "Escape HTML in host output" and "Escape HTML in '
+            'service output". The rule sets have the additional advantage that the '
             "configured value is accessible in the notification context."
         ),
         label=_("Prevent loading HTML from service output or log messages"),
@@ -930,8 +930,8 @@ ConfigVariableDrawRuleIcon = ConfigVariable(
         title=_("Show icon linking to Setup parameter editor for services"),
         label=_("Show Setup icon"),
         help=_(
-            "When enabled a rule editor icon is displayed for each "
-            "service in the multisite views. It is only displayed if the user "
+            "When enabled, a rule editor icon is displayed for each "
+            "service in the graphical user interface (GUI) views. It is only displayed if the user "
             "does have the permission to edit rules."
         ),
     ),
@@ -1057,12 +1057,12 @@ ConfigVariableRescheduleTimeout = ConfigVariable(
     primary_domain=ConfigDomainGUI,
     ident="reschedule_timeout",
     valuespec=lambda context: Float(
-        title=_("Timeout for rescheduling checks in Multisite"),
+        title=_("Timeout for rescheduling checks in graphical user interface (GUI)"),
         help=_(
             'When you reschedule a check by clicking on the "arrow"-icon '
-            "then Multisite will use this number of seconds as a timeout. If the "
+            "then the graphical user interface (GUI) will use this number of seconds as a timeout. If the "
             "monitoring core has not executed the check within this time, an error "
-            "will be displayed and the page not reloaded."
+            "will be displayed and the page will not be reloaded."
         ),
         minvalue=1.0,
         unit="sec",
@@ -1100,7 +1100,7 @@ ConfigVariableSidebarNotifyInterval = ConfigVariable(
         ),
         title=_("Interval of sidebar pop-up notification updates"),
         help=_(
-            "The sidebar can be configured to regularly check for pending popup notifications. "
+            "The sidebar can be configured to regularly check for pending pop-up notifications. "
             "This is disabled by default."
         ),
         none_label=_("(disabled)"),
@@ -1173,7 +1173,7 @@ ConfigVariableAuthByHTTPHeader = ConfigVariable(
                 "in this variable as name of the authenticated user. "
                 "Be warned: Only allow access from trusted IP addresses "
                 "(Apache <tt>Allow from</tt>), like proxy "
-                "servers, to this webpage. A user with access to this page could simply fake "
+                "servers, to this web page. A user with access to this page could simply fake "
                 "the authentication information. This option can be useful to "
                 "realize authentication in reverse proxy environments. As of version 1.6 and "
                 "on all platforms using Apache 2.4+ only A-Z, a-z, 0-9 and minus (-) are "
@@ -1194,9 +1194,10 @@ EnableLoginViaGet = ConfigVariable(
     valuespec=lambda context: Checkbox(
         title=_("Login via GET requests"),
         help=_(
-            "Using the GET method to authenticate against login.py leaks user credentials "
-            "in the Apache logs (see more details in our Werk 14261). We disable logging  "
-            "in via this method by default. Use this property to enable logging in via the "
+            "Using the GET method to authenticate against login.py "
+            "leaks user credentials in the Apache logs (see more details "
+            "in our Werk 14261). We disable logging in via this method "
+            "by default. Use this property to enable logging in via the "
             "GET method for all users."
         ),
     ),
@@ -1398,7 +1399,7 @@ ConfigVariableUserIconsAndActions = ConfigVariable(
                                     totext=_("Directly show the action icon in the column"),
                                     help=_(
                                         "Makes the icon appear in the column instead "
-                                        "of the dropdown menu."
+                                        "of the drop-down menu."
                                     ),
                                 ),
                             ),
@@ -1484,8 +1485,7 @@ ConfigVariableCustomServiceAttributes = ConfigVariable(
             ),
             title=_("Custom service attributes"),
             help=_(
-                "These custom service attributes can be assigned to services "
-                'using the ruleset <a href="%s">%s</a>.'
+                'These custom service attributes can be assigned to services using the rule set <a href="%s">%s</a>.'
             )
             % (
                 "wato.py?mode=edit_ruleset&varname=custom_service_attributes",
@@ -1514,7 +1514,7 @@ def _validate_id(value: str, varprefix: str) -> None:
         "ACTIONS",
     ]
     if value.upper() in internal_ids:
-        raise MKUserError(varprefix, _("This ID can not be used as custom attribute"))
+        raise MKUserError(varprefix, _("This ID cannot be used as custom attribute"))
 
 
 def _validate_unique_entries(value: Sequence[Mapping[str, object]], varprefix: str) -> None:
@@ -1795,7 +1795,7 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
     valuespec=lambda context: DropdownChoice(
         title=_("Default temperature unit"),
         help=_(
-            "Set the default temperature unit used for graphs and perfometers. The option can "
+            "Set the default temperature unit used for graphs and Perf-O-Meters. The option can "
             "be configured individually for each user in the user settings."
         ),
         choices=temperature_unit_choices(),
@@ -1884,7 +1884,7 @@ ConfigVariableAgentControllerCertificates = ConfigVariable(
                     title=_("Lifetime of certificates"),
                     help=_(
                         "This setting limits the validity of agent certificates."
-                        " Active agents (i.e., the agent controller is running as a daemon)"
+                        " Active agents (i.e., the Agent Controller is running as a daemon)"
                         " will automatically call the Checkmk site for renewal when"
                         " certificates are about to expire. Hence, with this"
                         " setting, you can assure that registrations of inactive agents"
@@ -2147,9 +2147,9 @@ ConfigVariableLogLogonFailures = ConfigVariable(
         title=_("Logging of logon failures"),
         label=_("Enable logging of logon failures"),
         help=_(
-            "This options enables automatic logging of failed logons. "
-            "If enabled, the username and client IP, the request "
-            "is coming from, is logged."
+            "This option enables automatic logging of failed logons. "
+            "If enabled, the username and client IP, which the request "
+            "is coming from, are logged."
         ),
     ),
 )
@@ -2159,10 +2159,10 @@ ConfigVariableRequireTwoFactorAllUsers = ConfigVariable(
     primary_domain=ConfigDomainGUI,
     ident="require_two_factor_all_users",
     valuespec=lambda context: Checkbox(
-        title=_("Enforce two factor authentication"),
+        title=_("Enforce two-factor authentication"),
         help=_(
-            "Enabling this option will enforce two factor authentication for all users. "
-            "Enabling this setting will overide role based two factor enforcement."
+            "Enabling this option will enforce two-factor authentication for all users. "
+            "Enabling this setting will override role based two-factor enforcement."
         ),
         label=_("Enforce for all users"),
     ),
@@ -2180,13 +2180,14 @@ ConfigVariableLockOnLogonFailures = ConfigVariable(
         title=_("Lock user accounts after N logon failures"),
         label=_("Activate automatic locking of user accounts"),
         help=_(
-            "This options enables automatic locking of user accounts after "
-            "the configured number of consecutive invalid login attempts. "
-            "These attempts include failed Two Factor authentication events. "
-            "Once the account is locked only an admin user can unlock it. "
-            "Beware: Also the admin users will be locked that way. You need "
-            "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
-            "in case you are locked out completely."
+            "This options enables automatic locking of user accounts "
+            "after the configured number of consecutive invalid login "
+            "attempts. These attempts include failed two factor "
+            "authentication events. Once the account is locked only an "
+            "admin user can unlock it. Beware: Also the admin users will "
+            "be locked that way. You need to manually edit "
+            "<tt>etc/htpasswd</tt> and remove the <tt>!</tt> in case "
+            "you are locked out completely."
         ),
     ),
 )
@@ -2484,12 +2485,12 @@ ConfigVariableUseNewDescriptionsFor = ConfigVariable(
         help=_(
             "In order to make Checkmk more consistent, "
             "the descriptions of several services have been renamed in newer "
-            "Checkmk versions. One example is the filesystem services that have "
-            "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
-            "of existing services has many implications - including existing rules, performance "
-            "data and availability history - these renamings are disabled per default for "
+            "Checkmk versions. One example is the file system services that have "
+            "been renamed from <tt>fs_</tt> into <tt>File system</tt>. But since renaming "
+            "of existing services has many implications - including existing rules, "
+            "metrics and availability history - these renamings are disabled per default for "
             "existing installations. Here you can switch to the new descriptions for "
-            "selected check types"
+            "selected check types."
         ),
         choices=[
             ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
@@ -2510,10 +2511,10 @@ ConfigVariableUseNewDescriptionsFor = ConfigVariable(
             ),
             ("db2_mem", _("DB2 memory usage")),
             ("df", _("Used space in filesystems")),
-            ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
+            ("df_netapp", _("NetApp Filers: Used space in file systems")),
             (
                 "df_netapp32",
-                _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters"),
+                _("NetApp Filers: Used space in file system using 32-bit counters"),
             ),
             ("docker_container_mem", _("Memory usage of Docker containers")),
             ("enterasys_temp", _("Enterasys Switch: Temperature")),
@@ -2535,7 +2536,7 @@ ConfigVariableUseNewDescriptionsFor = ConfigVariable(
             (
                 "http",
                 _(
-                    "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/ineffective)"
+                    "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (deprecated/ineffective)"
                 ),
             ),
             (
@@ -2574,35 +2575,35 @@ ConfigVariableUseNewDescriptionsFor = ConfigVariable(
             ("logwatch_groups", _("Check log file groups")),
             ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
             ("megaraid_ldisks", _("LSI MegaRAID: Logical Disks")),
-            ("megaraid_bbu", _("LSI MegaRAID: Battery Backup Unit")),
-            ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
+            ("megaraid_bbu", _("LSI MegaRAID: Battery backup unit")),
+            ("mem_used", _("Main memory usage (Unix / other devices)")),
             ("mem_win", _("Memory usage for %s hosts") % "Windows"),
-            ("mknotifyd", _("Notification Spooler")),
-            ("mknotifyd_connection", _("Notification Spooler Connection")),
-            ("mssql_backup", _("MSSQL Backup")),
-            ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
-            ("mssql_counters_cache_hits", _("MSSQL Cache Hits")),
-            ("mssql_counters_file_sizes", _("MSSQL File Sizes")),
-            ("mssql_counters_locks", _("MSSQL Locks")),
-            ("mssql_counters_locks_per_batch", _("MSSQL Locks per Batch")),
-            ("mssql_counters_pageactivity", _("MSSQL Page Activity")),
-            ("mssql_counters_sqlstats", _("MSSQL SQL Stats")),
-            ("mssql_counters_transactions", _("MSSQL Transactions")),
-            ("mssql_databases", _("MSSQL Database")),
-            ("mssql_datafiles", _("MSSQL Datafile")),
-            ("mssql_tablespaces", _("MSSQL Tablespace")),
-            ("mssql_transactionlogs", _("MSSQL Transactionlog")),
-            ("mssql_versions", _("MSSQL Version")),
-            ("netscaler_mem", _("Netscaler memory Usage")),
-            ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
+            ("mknotifyd", _("Notification spooler")),
+            ("mknotifyd_connection", _("Notification spooler connection")),
+            ("mssql_backup", _("MSSQL backup")),
+            ("mssql_blocked_sessions", _("MSSQL blocked sessions")),
+            ("mssql_counters_cache_hits", _("MSSQL cache hits")),
+            ("mssql_counters_file_sizes", _("MSSQL file sizes")),
+            ("mssql_counters_locks", _("MSSQL locks")),
+            ("mssql_counters_locks_per_batch", _("MSSQL locks per batch")),
+            ("mssql_counters_pageactivity", _("MSSQL page activity")),
+            ("mssql_counters_sqlstats", _("MSSQL SQL stats")),
+            ("mssql_counters_transactions", _("MSSQL transactions")),
+            ("mssql_databases", _("MSSQL database")),
+            ("mssql_datafiles", _("MSSQL datafile")),
+            ("mssql_tablespaces", _("MSSQL tablespace")),
+            ("mssql_transactionlogs", _("MSSQL transaction log")),
+            ("mssql_versions", _("MSSQL version")),
+            ("netscaler_mem", _("Netscaler memory usage")),
+            ("nullmailer_mailq", _("Nullmailer: Mail queue")),
             ("prism_alerts", _("Nutanix: Prism Alerts")),
             ("prism_containers", _("Nutanix: Containers")),
             ("prism_info", _("Nutanix: Prism Cluster")),
             ("prism_storage_pools", _("Nutanix: Storage Pools")),
             ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
-            ("postfix_mailq", _("Postfix: Mail Queue")),
+            ("postfix_mailq", _("Postfix: Mail queue")),
             ("ps", _("State and Count of Processes")),
-            ("qmail_stats", _("Qmail: Mail Queue")),
+            ("qmail_stats", _("Qmail: Mail queue")),
             ("raritan_emx", _("Raritan EMX Rack: Temperature")),
             ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
             ("services", _("Windows Services")),
@@ -2727,7 +2728,7 @@ ConfigVariableCheckMKPerfdataWithTimes = ConfigVariable(
     ident="check_mk_perfdata_with_times",
     valuespec=lambda context: Checkbox(
         title=_("Checkmk with times metrics"),
-        label=_("Return process times within performance data"),
+        label=_("Return process times within metrics"),
         help=_(
             "Enabling this option results in additional metrics "
             "for the Checkmk output, giving information regarding the process times. "
@@ -2776,7 +2777,7 @@ ConfigVariableChooseSNMPBackend = ConfigVariable(
     ident="snmp_backend_default",
     valuespec=lambda context: Transform(
         valuespec=DropdownChoice(
-            title=_("Choose SNMP backend"),
+            title=_("Choose SNMP back-end"),
             choices=[
                 (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
                 (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
@@ -3124,14 +3125,14 @@ CheckPeriods = ServiceRulespec(
 
 def _valuespec_extra_service_conf_process_perf_data() -> DropdownChoice:
     return DropdownChoice(
-        title=_("Enable/disable processing of perfdata for services"),
+        title=_("Enable/disable processing of metrics for services"),
         help=_(
             "This setting allows you to disable the processing of perfdata for a "
             "service completely."
         ),
         choices=[
-            ("1", _("Enable processing of perfdata")),
-            ("0", _("Disable processing of perfdata")),
+            ("1", _("Enable processing of metrics")),
+            ("0", _("Disable processing of metrics")),
         ],
     )
 
@@ -3273,7 +3274,7 @@ ExtraHostConfCheckPeriod = HostRulespec(
 
 def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownChoice]:
     choices: list[CascadingDropdownChoice] = [
-        ("ping", _("PING (active check with ICMP echo request)")),
+        ("ping", _("Ping (active check with ICMP echo request)")),
         ("smart", _("Smart PING (only with Checkmk Micro Core)")),
         (
             "tcp",
@@ -3289,8 +3290,8 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
                 size=45,
                 allow_empty=False,
                 help=_(
-                    "You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
-                    "with the name of the current host."
+                    "You can use the macro <tt>$HOSTNAME$</tt> here. "
+                    "It will be replaced with the name of the current host."
                 ),
             ),
         ),
@@ -3431,7 +3432,7 @@ def _valuespec_extra_host_conf_notification_options() -> Transform:
         valuespec=ListChoice(
             choices=[
                 ("d", _("Host goes down")),
-                ("u", _("Host gets unreachble")),
+                ("u", _("Host becomes unreachable")),
                 ("r", _("Host goes up again")),
                 ("f", _("Start or end of flapping state")),
                 ("s", _("Start or end of a scheduled downtime")),
@@ -3443,8 +3444,7 @@ def _valuespec_extra_host_conf_notification_options() -> Transform:
             "This ruleset allows you to restrict notifications of host problems to certain "
             "states, e.g. only notify on DOWN, but not on UNREACHABLE. Please select the types "
             "of events that should initiate notifications. Please note that several other "
-            "filters must also be passed in order for notifications to finally being sent out."
-            "<br><br>"
+            "filters must also be passed in order for notifications to finally being sent out.<br><br>"
             "Please note: There is a difference between the Micro Core and Nagios when you have "
             "a host that has no matching rule in this ruleset. In this case the Micro Core will "
             "not send out UNREACHABLE notifications while the Nagios core would send out "
@@ -3467,9 +3467,9 @@ def _valuespec_extra_service_conf_notification_options() -> Transform:
     return Transform(
         valuespec=ListChoice(
             choices=[
-                ("w", _("Service goes into warning state")),
-                ("u", _("Service goes into unknown state")),
-                ("c", _("Service goes into critical state")),
+                ("w", _("Service goes into WARNING state")),
+                ("u", _("Service goes into UNKNOWN state")),
+                ("c", _("Service goes into CRITICAL state")),
                 ("r", _("Service recovers to OK")),
                 ("f", _("Start or end of flapping state")),
                 ("s", _("Start or end of a scheduled downtime")),
@@ -4035,12 +4035,17 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                 DropdownChoice(
                     title=_("Vanished clustered services"),
                     help=_(
-                        "By default we keep a record of vanished services on the node if they are assigned to a cluster."
-                        " When a clustered service switches from one node to another, it might not be seen on either node for one check cycle."
-                        " Keeping clustered services indefinitely keeps us from losing them in this case."
-                        " However this means that truly vanished clustered services will never be removed from the cluster."
-                        " If you choose to include clustered service in the removal operation, vanished services will be removed from clusters,"
-                        " at the risk of losing services due to the described race condition."
+                        "By default, we keep a record of vanished services "
+                        "on the node if they are assigned to a cluster. When "
+                        "a clustered service switches from one node to another, "
+                        "it might not be seen on either node for one check "
+                        "cycle. Keeping clustered services indefinitely keeps "
+                        "us from losing them in this case. However, this means "
+                        "that truly vanished clustered services will never be "
+                        "removed from the cluster. If you choose to include "
+                        "clustered service in the removal operation, vanished "
+                        "services will be removed from clusters, at the risk "
+                        "of losing services due to the described race condition."
                     ),
                     choices=[
                         (True, _("Always keep vanished clustered services")),
@@ -4880,7 +4885,7 @@ ServiceIconsAndActions = ServiceRulespec(
 
 def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT() -> DropdownChoice:
     return DropdownChoice(
-        title=_("Escape HTML in host output (Dangerous to deactivate - read help)"),
+        title=_("Escape HTML in host output (dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like plug-in output or log messages. "
@@ -4894,7 +4899,7 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT() -> DropdownChoice:
         ),
         choices=[
             ("1", _("Escape HTML")),
-            ("0", _("Don't escape HTML (Dangerous - please read context help)")),
+            ("0", _("Don't escape HTML (dangerous - please read context help)")),
         ],
         default_value="1",
     )
@@ -4923,7 +4928,7 @@ def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT() -> DropdownChoice:
         ),
         choices=[
             ("1", _("Escape HTML")),
-            ("0", _("Don't escape HTML (Dangerous - please read context help)")),
+            ("0", _("Don't escape HTML (dangerous - please read context help)")),
         ],
         default_value="1",
     )
@@ -4995,8 +5000,9 @@ def _valuespec_snmp_communities() -> Alternative:
     return SNMPCredentials(
         title=_("SNMP credentials of monitored hosts"),
         help=_(
-            'By default Checkmk uses the community "public" to contact hosts via SNMP v1/v2. This rule '
-            "can be used to customize the credentials to be used when contacting hosts via SNMP."
+            'By default Checkmk uses the community "public" to contact '
+            "hosts via SNMPv1/v2. This rule can be used to customize the "
+            "credentials to be used when contacting hosts via SNMP."
         ),
     )
 
@@ -5057,7 +5063,7 @@ def _help_enable_snmpv2c() -> str:
         " Use this rule to configure SNMPv2c for as many devices as possible."
         ' However, please be aware some buggy devices do not properly support "bulkwalk" queries.'
         ' For those you may want to try disabling them using the ruleset "%s".'
-    ) % _("Disable bulkwalks")
+    ) % _("Disable bulk walks")
 
 
 BulkwalkHosts = BinaryHostRulespec(
@@ -5104,7 +5110,7 @@ SnmpBulkSize = HostRulespec(
 def _help_snmp_without_sys_descr() -> str:
     return _(
         "Devices which do not publish the system description OID .1.3.6.1.2.1.1.1.0 are "
-        "normally ignored by the SNMP inventory. Use this ruleset to select hosts which "
+        "normally ignored by the SNMP inventory. Use this rule set to select hosts which "
         "should nevertheless be checked."
     )
 
@@ -5130,7 +5136,7 @@ Snmpv2CHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_snmpv2c_without_bulkwalk,
     name="snmpv2c_hosts",
-    title=lambda: _("Disable bulkwalks"),
+    title=lambda: _("Disable bulk walks"),
 )
 
 
@@ -5188,12 +5194,13 @@ SnmpTiming = HostRulespec(
 
 def _help_non_inline_snmp_hosts() -> str:
     return _(
-        "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
-        "the load produced by SNMP monitoring on the monitoring host significantly. This "
-        "option is enabled by default for all SNMP hosts and it is a good idea to keep "
-        "this default setting. However, there are SNMP devices which have problems with "
-        "this SNMP implementation. You can use this rule to disable Inline SNMP for these "
-        "hosts."
+        "Checkmk has an efficient SNMP implementation called inline SNMP "
+        "which reduces the load produced by SNMP monitoring on the "
+        "monitoring host significantly. This option is enabled by default "
+        "for all SNMP hosts and it is a good idea to keep this default "
+        "setting. However, there are SNMP devices which have problems "
+        "with this SNMP implementation. You can use this rule to disable "
+        "inline SNMP for these hosts."
     )
 
 
@@ -5208,11 +5215,13 @@ NonInlineSnmpHosts = BinaryHostRulespec(
 
 def _help_snmp_backend() -> str:
     return _(
-        "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
-        "the load produced by SNMP monitoring on the monitoring host significantly. Inline SNMP "
-        "is enabled by default for all SNMP hosts and it is a good idea to keep this default setting. "
-        "However, there are SNMP devices which have problems with some SNMP implementations. "
-        "You can use this rule to select the SNMP Backend for these hosts."
+        "Checkmk has an efficient SNMP implementation called inline SNMP "
+        "which reduces the load produced by SNMP monitoring on the "
+        "monitoring host significantly. Inline SNMP is enabled by default "
+        "for all SNMP hosts and it is a good idea to keep this default "
+        "setting. However, there are SNMP devices which have problems "
+        "with some SNMP implementations. You can use this rule to select "
+        "the SNMP back-end for these hosts."
     )
 
 
@@ -5554,7 +5563,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                         ),
                         (
                             "mgmt_ipmi",
-                            _individual_spec(_("IPMI Management Board")),
+                            _individual_spec(_("IPMI management board")),
                         ),
                         (
                             "piggyback",
@@ -5584,7 +5593,7 @@ def _valuespec_check_mk_agent_target_versions() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Check for correct version of Checkmk agent"),
         help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
-        % _("Checkmk Agent installation auditing"),
+        % _("Checkmk agent installation auditing"),
         choices=[
             ("ignore", _("Ignore the version")),
             ("site", _("Same version as the monitoring site")),
@@ -5984,7 +5993,7 @@ def _valuespec_piggybacked_host_files() -> Migrate:
                             ],
                         ),
                         title=_("Exemptions for piggybacked hosts (VMs, ...)"),
-                        add_label=_("Add exemption"),
+                        add_label=_("Add exception"),
                     ),
                 ),
             ],

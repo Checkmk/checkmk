@@ -208,7 +208,7 @@ class ModeUserMigrate(WatoMode):
             ConnectorType.LDAP,
         ]:
             flashed_msg += "<br>" + _(
-                "Please note: Connector specific user attributes may be set on the next %s."
+                "Please note: Connector-specific user attributes may be set on the next %s."
             ) % (_("login") if connection_type == ConnectorType.SAML2 else _("synchronization"))
 
         if users_with_warning:

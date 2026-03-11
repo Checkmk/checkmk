@@ -629,7 +629,7 @@ class ModeEditTimeperiod(WatoMode):
                 ("whole_week", _("Same times for all weekdays"), ListOfTimeRanges()),
                 (
                     "day_specific",
-                    _("Weekday specific times"),
+                    _("Weekday-specific times"),
                     Dictionary(
                         elements=self._weekday_elements(),
                         optional_keys=False,

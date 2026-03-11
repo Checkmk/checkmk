@@ -20,12 +20,12 @@ def register(
         Permission(
             section=PERMISSION_SECTION_WATO,
             name="use",
-            title=_l("Use WATO"),
+            title=_l("Use Setup"),
             description=_l(
-                "This permissions allows users to use Setup - Checkmk's "
-                "Web Administration Tool. Without this "
-                "permission all references to Setup (buttons, links, "
-                "snap-ins) will be invisible."
+                "This permission allows users to use Setup - Checkmk's "
+                "web administration tool. Without this permission all "
+                "references to Setup (buttons, links, snap-ins) will "
+                "be invisible."
             ),
             defaults=["admin", "user"],
         )
@@ -404,10 +404,11 @@ def register(
         Permission(
             section=PERMISSION_SECTION_WATO,
             name="rulesets",
-            title=_l("Rulesets"),
+            title=_l("Rule sets"),
             description=_l(
-                "Access to the module for managing Checkmk rules. Please note that a user can only "
-                "manage rules in folders he has permissions to."
+                "Access to the module for managing Checkmk rules. Please "
+                "note that users can only manage rules in folders they "
+                "have permissions to."
             ),
             defaults=["admin", "user"],
         )
@@ -451,8 +452,7 @@ def register(
             name="automation",
             title=_l("Site remote automation"),
             description=_l(
-                "This permission is needed for a remote administration of the site "
-                "as a distributed Setup slave."
+                "This permission is needed for a remote administration of the site as a distributed Setup remote site."
             ),
             defaults=["admin"],
         )
@@ -537,8 +537,8 @@ def register(
         Permission(
             section=PERMISSION_SECTION_WATO,
             name="pattern_editor",
-            title=_l("Logfile pattern analyzer"),
-            description=_l("Access to the module for analyzing and validating logfile patterns."),
+            title=_l("Log file pattern analyzer"),
+            description=_l("Access to the module for analyzing and validating log file patterns."),
             defaults=["admin", "user"],
         )
     )
@@ -567,10 +567,9 @@ def register(
         Permission(
             section=PERMISSION_SECTION_WATO,
             name="download_agents",
-            title=_l("Monitoring Agents"),
+            title=_l("Monitoring agents"),
             description=_l(
-                "Download the default Checkmk monitoring agents for Linux, "
-                "Windows and other operating systems."
+                "Download the default Checkmk monitoring agents for Linux, Windows and other operating systems."
             ),
             defaults=["admin", "user"],
         )
@@ -627,8 +626,8 @@ def register(
             title=_l("Add or modify executables"),
             description=_l(
                 "There are different places in Checkmk where an admin can use the GUI to add "
-                "executable code to a Checkmk site or agent. For example when configuring "
-                "datasource programs, the user inserts a command line for gathering monitoring data. "
+                "executable code to a Checkmk site or agent. For example, when configuring "
+                "data source programs, the user inserts a command line for gathering monitoring data. "
                 "This command line is then executed during monitoring by Checkmk. Another example is "
                 "the upload of extension packages (MKPs). All these functions have in "
                 "common that the user provides data that is executed by Checkmk or the agent. "
@@ -636,7 +635,7 @@ def register(
                 "into your Checkmk installation, you only need to remove this permission for them. "
                 "This permission is needed in addition to the other component related permissions. "
                 "For example you need the <tt>wato.rulesets</tt> permission together with this "
-                "permission to be able to configure rulesets where bare command lines are "
+                "permission to be able to configure rule sets where bare command lines are "
                 "configured."
             ),
             defaults=["admin"],

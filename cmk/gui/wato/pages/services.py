@@ -1131,7 +1131,7 @@ class DiscoveryPageRenderer:
             _(
                 "Could not find any service for your cluster. You first need to "
                 "specify which services of your nodes shall be added to the "
-                'cluster. This is done using the <a href="%s">%s</a> ruleset.'
+                'cluster. This is done using the <a href="%s">%s</a> rule set.'
             )
             % (url, _("Clustered services"))
         )
@@ -1556,7 +1556,7 @@ class DiscoveryPageRenderer:
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
                 html.write_text_permissive(
-                    _("Time specific parameters computed at %s")
+                    _("Time-specific parameters computed at %s")
                     % cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"])
                 )
                 html.br()

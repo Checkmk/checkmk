@@ -40,8 +40,8 @@ ConfigVariableSiteTraceSend = ConfigVariable(
             "instance. To be able to do so, you additionally have to configure the global "
             'setting "Support > Receive traces". In case you want to do tracing in '
             "distributed setups, you need to configure that option in the central site only "
-            'and set this option to "Send traces to the central sites Jaeger instance". '
-            "Alternatively you can send the traces to another OpenTelemetry collector via OTLP."
+            'and set this option to "Send traces to the central site\'s Jaeger instance". '
+            "Alternatively you can send the traces to another OpenTelemetry Collector via OTLP."
         ),
         sorted=False,
         choices=[
@@ -104,7 +104,7 @@ ConfigVariableSiteTraceReceive = ConfigVariable(
             "This option enables receiving OpenTelemetry traces in a Jaeger instance "
             "running in the Checkmk site. This instance is run for diagnostic "
             "purposes of Checkmk and currently not intended to be used for external "
-            "use cases."
+            "use cases. "
             "In addition to this option, you need to configure the global setting "
             '"Support > Send traces from Checkmk".'
         ),

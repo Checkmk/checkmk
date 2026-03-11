@@ -725,10 +725,10 @@ class BinaryHostRulespec(HostRulespec):
         return SingleChoiceExtended[bool](
             elements=[
                 SingleChoiceElementExtended[bool](
-                    name=True, title=Title("Positive match (Add matching hosts to the set)")
+                    name=True, title=Title("Positive match (add matching hosts to the set)")
                 ),
                 SingleChoiceElementExtended[bool](
-                    name=False, title=Title("Negative match (Exclude matching hosts from the set)")
+                    name=False, title=Title("Negative match (exclude matching hosts from the set)")
                 ),
             ],
             prefill=DefaultValue(True),
@@ -786,11 +786,11 @@ class BinaryServiceRulespec(ServiceRulespec):
         return SingleChoiceExtended[bool](
             elements=[
                 SingleChoiceElementExtended[bool](
-                    name=True, title=Title("Positive match (Add services hosts to the set)")
+                    name=True, title=Title("Positive match (add services / hosts to the set)")
                 ),
                 SingleChoiceElementExtended[bool](
                     name=False,
-                    title=Title("Negative match (Exclude matching services from the set)"),
+                    title=Title("Negative match (exclude matching services from the set)"),
                 ),
             ],
             prefill=DefaultValue(True),
@@ -1361,7 +1361,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             self._get_timeperiod_valuespec().render_input(varprefix, value)
             html.buttonlink(
                 toggle_url,
-                _("Disable time specific parameters"),
+                _("Disable time-specific parameters"),
                 class_=["toggle_timespecific_parameter"],
             )
         else:
@@ -1369,7 +1369,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             self._enclosed_valuespec.render_input(varprefix, value)
             html.buttonlink(
                 toggle_url,
-                _("Enable time specific parameters"),
+                _("Enable time-specific parameters"),
                 class_=["toggle_timespecific_parameter"],
             )
 

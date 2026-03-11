@@ -60,7 +60,7 @@ def form_spec() -> Dictionary:
                                         required=True,
                                         parameter_form=String(
                                             title=Title("Username"),
-                                            help_text=Help("Configure the user name here."),
+                                            help_text=Help("Configure the username here."),
                                             custom_validate=[LengthInRange(min_value=1)],
                                         ),
                                     ),
@@ -182,9 +182,7 @@ def form_spec() -> Dictionary:
                     title=Title("Assignee"),
                     custom_validate=[LengthInRange(min_value=1)],
                     help_text=Help(
-                        "Assign created issues to "
-                        "defined user. This is the user name "
-                        "of the user (not email)."
+                        "Assign created issues to defined user. This is the username of the user (not email)."
                     ),
                 ),
             ),
@@ -252,7 +250,7 @@ def form_spec() -> Dictionary:
                     title=Title("Activate resolution with following resolution transition ID"),
                     help_text=Help(
                         "The numerical Jira resolution transition ID. "
-                        "11 - 'To Do', 21 - 'In Progress', 31 - 'Done'"
+                        "11 - 'To Do', 21 - 'In progress', 31 - 'Done'"
                     ),
                     field_size=FieldSize.SMALL,
                 ),

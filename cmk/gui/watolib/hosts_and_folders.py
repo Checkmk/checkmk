@@ -2794,7 +2794,7 @@ class Folder(FolderProtocol):
         if is_locked_by_quick_setup(host.locked_by()):
             raise MKUserError(
                 "rename-host",
-                _('You cannot rename host "%s", because it is managed by Quick setup.') % oldname,
+                _('You cannot rename host "%s", because it is managed by Quick Setup.') % oldname,
             )
 
         # 2. Actual modification

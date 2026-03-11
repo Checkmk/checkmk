@@ -37,7 +37,7 @@ def form_spec() -> Dictionary:
                 required=True,
                 parameter_form=Password(
                     title=Title(
-                        "API Key to use. Depending on your opsgenie "
+                        "API key to use. Depending on your opsgenie "
                         "subscription you can use global or team integration API "
                         "keys."
                     ),
@@ -48,7 +48,7 @@ def form_spec() -> Dictionary:
                 parameter_form=String(
                     title=Title("Domain (only used for European accounts)"),
                     help_text=Help(
-                        "If you have an european account, please set the "
+                        "If you have a European account, please set the "
                         "domain of your opsgenie. Specify an absolute URL like "
                         "https://api.eu.opsgenie.com."
                     ),
@@ -233,10 +233,10 @@ $LONGSERVICEOUTPUT$
                             name="longoutput", title=Title("Additional plug-in output")
                         ),
                         MultipleChoiceElement(
-                            name="ack_author", title=Title("Acknowledgement author")
+                            name="ack_author", title=Title("Acknowledgment author")
                         ),
                         MultipleChoiceElement(
-                            name="ack_comment", title=Title("Acknowledgement comment")
+                            name="ack_comment", title=Title("Acknowledgment comment")
                         ),
                         MultipleChoiceElement(
                             name="notification_author", title=Title("Notification author")

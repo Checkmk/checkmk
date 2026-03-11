@@ -416,7 +416,7 @@ class ModeDiagnostics(WatoMode):
                 (
                     "comp_specific",
                     Dictionary(
-                        title=_("Component specific information"),
+                        title=_("Component-specific information"),
                         elements=self._get_component_specific_elements(),
                         default_keys=[
                             OPT_COMP_BUSINESS_INTELLIGENCE,
@@ -448,7 +448,7 @@ class ModeDiagnostics(WatoMode):
                 FixedValue(
                     value=True,
                     totext="",
-                    title=_("Apache Config"),
+                    title=_("Apache config"),
                     help=_(
                         "Apache Configuration files in /etc/apache2 or /etc/httpd, "
                         "/opt/omd/apache and $OMD_ROOT/etc/apache.<br>"

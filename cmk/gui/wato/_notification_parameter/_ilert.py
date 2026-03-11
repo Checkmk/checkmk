@@ -28,12 +28,12 @@ from ._helpers import _get_url_prefix_setting
 def form_spec() -> Dictionary:
     return Dictionary(
         # optional_keys=["ignore_ssl", "proxy_url"],
-        title=Title("iLert parameters"),
+        title=Title("ilert parameters"),
         elements={
             "ilert_api_key": DictElement(
                 parameter_form=Password(
-                    title=Title("iLert alert source API key"),
-                    help_text=Help("API key for iLert alert server"),
+                    title=Title("ilert alert source API key"),
+                    help_text=Help("API key for ilert alert server"),
                     migrate=_migrate_to_password,
                 ),
                 required=True,
@@ -54,8 +54,7 @@ def form_spec() -> Dictionary:
             "ilert_priority": DictElement(
                 parameter_form=SingleChoice(
                     title=Title(
-                        "Notification priority (This will override the "
-                        "priority configured in the alert source)"
+                        "Notification priority (this will override the priority configured in the alert source)"
                     ),
                     prefill=DefaultValue("HIGH"),
                     elements=[

@@ -26,7 +26,7 @@ def form_spec() -> Dictionary:
             "password": DictElement(
                 required=True,
                 parameter_form=Password(
-                    title=Title("Team Secret"),
+                    title=Title("Team secret"),
                     custom_validate=(
                         validators.LengthInRange(
                             min_value=1,

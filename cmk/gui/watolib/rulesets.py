@@ -809,7 +809,7 @@ class Ruleset:
 
         add_change(
             action_name="new-rule",
-            text=_l('Cloned rule from rule %s in ruleset "%s" in folder "%s"')
+            text=_l('Cloned rule from rule %s in rule set "%s" in folder "%s"')
             % (orig_rule.id, self.title(), rule.folder.alias_path()),
             user_id=user.id,
             sites=rule.folder.all_site_ids(),
@@ -845,7 +845,9 @@ class Ruleset:
 
         add_change(
             action_name="edit-rule",
-            text=_l('Moved rule %s of ruleset "%s" from folder "%s" to position #%d in folder "%s"')
+            text=_l(
+                'Moved rule %s of rule set "%s" from folder "%s" to position #%d in folder "%s"'
+            )
             % (rule.id, self.title(), source_folder.title(), index, folder.title()),
             user_id=user.id,
             sites=list(affected_sites),
@@ -869,7 +871,7 @@ class Ruleset:
     def add_new_rule_change(self, index: int, folder: Folder, rule: Rule, *, use_git: bool) -> None:
         add_change(
             action_name="new-rule",
-            text=_('Created new rule #%d in ruleset "%s" in folder "%s"')
+            text=_('Created new rule #%d in rule set "%s" in folder "%s"')
             % (index, self.title(), folder.alias_path()),
             user_id=user.id,
             sites=folder.all_site_ids(),
@@ -1057,7 +1059,7 @@ class Ruleset:
 
         add_change(
             action_name="edit-rule",
-            text=_l('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
+            text=_l('Changed properties of rule #%d in rule set "%s" in folder "%s"')
             % (index, self.title(), rule.folder.alias_path()),
             user_id=user.id,
             sites=rule.folder.all_site_ids(),
@@ -1077,7 +1079,7 @@ class Ruleset:
         if create_change:
             add_change(
                 action_name="edit-rule",
-                text=_l('Deleted rule #%d in ruleset "%s" in folder "%s"')
+                text=_l('Deleted rule #%d in rule set "%s" in folder "%s"')
                 % (index, self.title(), rule.folder.alias_path()),
                 user_id=user.id,
                 sites=rule.folder.all_site_ids(),
@@ -1097,7 +1099,7 @@ class Ruleset:
         rules.insert(index, rule)
         add_change(
             action_name="edit-ruleset",
-            text=_l('Moved rule %s from position #%d to #%d in ruleset "%s" in folder "%s"')
+            text=_l('Moved rule %s from position #%d to #%d in rule set "%s" in folder "%s"')
             % (rule.id, old_index, index, self.title(), rule.folder.alias_path()),
             user_id=user.id,
             sites=rule.folder.all_site_ids(),
@@ -1215,10 +1217,12 @@ class Ruleset:
                 if not isinstance(rule.value, dict):
                     raise MKGeneralException(
                         _(
-                            'Failed to process rule #%d of ruleset "%s" in folder "%s". '
-                            "The value of a rule is incompatible to the current rule "
-                            "specification. You can try fix this by opening the rule "
-                            "for editing and save the rule again without modification."
+                            'Failed to process rule #%d of rule set "%s" '
+                            'in folder "%s". The value of a rule is '
+                            "incompatible with the current rule specification. "
+                            "You can try to fix this by opening the rule for "
+                            "editing and saving the rule again without "
+                            "modification."
                         )
                         % (rule_index, self.title(), folder.title())
                     )
@@ -1953,7 +1957,7 @@ def find_timeperiod_usage_in_time_specific_parameters(
                         ("rule_id", rule.id),
                     ]
                 )
-                used_in.append((_("Time specific check parameter #%d") % (index + 1), edit_url))
+                used_in.append((_("Time-specific check parameter #%d") % (index + 1), edit_url))
     return used_in
 
 
@@ -2115,7 +2119,7 @@ def _create_rule_properties_catalog_topic(
         ),
         "_name": TopicElement(
             parameter_form=FixedValueAPI(
-                title=Title("Ruleset name"),
+                title=Title("Rule set name"),
                 value=rule_identifier.name,
             ),
             required=True,

@@ -33,7 +33,7 @@ def form_spec() -> Dictionary:
                     title=Title("Splunk On-Call REST endpoint"),
                     prefill=DefaultValue("webhook_url"),
                     help_text=Help(
-                        "Learn how to setup a REST endpoint "
+                        "Learn how to set up a REST endpoint "
                         '<a href="https://help.victorops.com/knowledge-base/victorops-restendpoint-integration/" target="_blank">here</a>.'
                         "<br />This URL can also be collected from the password store of Checkmk."
                     ),

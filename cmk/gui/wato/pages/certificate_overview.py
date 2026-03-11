@@ -101,7 +101,7 @@ def register(mode_registry: ModeRegistry) -> None:
             lambda: {
                 root_cert_file: _("Signing the site certificate"),
                 agent_cas_dir / "ca.pem": _("Signing agents' client certificates"),
-                relay_cas_dir / "ca.pem": _("Signing relay client certificates"),
+                relay_cas_dir / "ca.pem": _("Signing Relay client certificates"),
                 site_cert_file: _("The site certificate"),
             },
         )

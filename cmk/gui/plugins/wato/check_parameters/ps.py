@@ -349,11 +349,11 @@ def process_level_elements():
                 help=_(
                     "If active, the long output of this service will contain a list of all the "
                     "matching processes and their details (i.e. PID, CPU usage, memory usage). "
-                    "Please note that HTML output will only work if rules in the rulesets "
+                    "Please note that HTML output will only work if rules in the rule sets "
                     '"%s" or "%s" are created or the global setting "%s" is disabled. '
-                    "This might expose you to Cross-Site-Scripting attacks (everyone with "
+                    "This might expose you to cross-site-scripting attacks (everyone with "
                     "write-access to checks could get scripts executed on the monitoring site "
-                    "in the context of the user of the monitoring site), so please do this if "
+                    "in the context of the user of the monitoring site), so please do this only if "
                     "you understand the consequences."
                 )
                 % (
@@ -429,9 +429,7 @@ def validate_process_discovery_descr_option(description, varprefix):
     if "%s" in description and re.search(r"%(\d+)", description):
         raise MKUserError(
             varprefix,
-            _(
-                'Combining "%s" and "%1" style replacements in the sevice description is not allowed.'
-            ),
+            _('Combining "%s" and "%1" style replacements in the service name is not allowed.'),
         )
 
 
@@ -577,11 +575,11 @@ def cgroup_match_options():
                 ],
                 match=match_alt,
                 help=_(
-                    "<p>The control group information is currently only specified by the linux agent"
+                    "<p>The control group information is currently only specified by the Linux agent"
                     " (cgroup). If it is present and this rule is set, the inventory will only trigger"
                     " if the control group of the corresponding process matches."
                     " For instance: you can use this rule to exclude all processes belonging to"
-                    ' a docker container by specifying the expression "%s" (without the quotes),'
+                    ' a Docker container by specifying the expression "%s" (without the quotes),'
                     ' and selecting "%s".</p>'
                 )
                 % (r".*/docker/", _("Invert matching")),
@@ -696,11 +694,11 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
                             totext="",
                             help=_(
                                 'Specifying "grab user" makes the created check expect the process to '
-                                "run as the same user as during inventory: the user name will be "
-                                "hardcoded into the check. In that case if you put %u into the service "
-                                "description, that will be replaced by the actual user name during "
+                                "run as the same user as during inventory: the username will be "
+                                "hard-coded into the check. In that case, if you put %u into the service "
+                                "name, that will be replaced by the actual username during "
                                 "inventory. You need that if your rule might match for more than one "
-                                "user - your would create duplicate services with the same description "
+                                "user - you would create duplicate services with the same name "
                                 "otherwise."
                             ),
                         )

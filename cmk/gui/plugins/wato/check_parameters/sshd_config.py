@@ -50,7 +50,7 @@ def _parameter_valuespec_sshd_config() -> Migrate:
                         default_value="2",
                     ),
                 ),
-                ("port", ListOfNetworkPorts(title=_("Allowed Ports"), default_value=[22])),
+                ("port", ListOfNetworkPorts(title=_("Allowed ports"), default_value=[22])),
                 (
                     "passwordauthentication",
                     DropdownChoice(

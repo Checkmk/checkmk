@@ -101,7 +101,7 @@ def _get_free_used_dynamic_form_spec(
                         custom_validate=[
                             validators.NumberInRange(
                                 min_value=0.0 if level_perspective == "used" else 0.0001,
-                                error_msg=Message("Percentage field can not be empty"),
+                                error_msg=Message("Percentage field cannot be empty"),
                             )
                         ],
                         prefill=DefaultValue(percentage_levels[0]),
@@ -111,7 +111,7 @@ def _get_free_used_dynamic_form_spec(
                         custom_validate=[
                             validators.NumberInRange(
                                 min_value=0.0 if level_perspective == "used" else 0.0001,
-                                error_msg=Message("Percentage field can not be empty"),
+                                error_msg=Message("Percentage field cannot be empty"),
                             )
                         ],
                         prefill=DefaultValue(percentage_levels[1]),
@@ -133,7 +133,7 @@ def _get_free_used_dynamic_form_spec(
                             custom_validate=[
                                 validators.NumberInRange(
                                     min_value=0 if level_perspective == "used" else 1,
-                                    error_msg=Message("Integer field can not be empty"),
+                                    error_msg=Message("Integer field cannot be empty"),
                                 )
                             ],
                         ),
@@ -143,7 +143,7 @@ def _get_free_used_dynamic_form_spec(
                             custom_validate=[
                                 validators.NumberInRange(
                                     min_value=0 if level_perspective == "used" else 1,
-                                    error_msg=Message("Integer field can not be empty"),
+                                    error_msg=Message("Integer field cannot be empty"),
                                 )
                             ],
                         ),
@@ -287,10 +287,12 @@ def _filesystem_reserved_elements() -> Mapping[str, DictElement]:
             parameter_form=SingleChoiceExtended(
                 title=Title("Show space reserved for the <tt>root</tt> user"),
                 help_text=Help(
-                    "Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
-                    "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
-                    "With this option you can have Checkmk display the current amount of reserved but yet unused "
-                    "space."
+                    "Checkmk treats space that is reserved for the "
+                    "<tt>root</tt> user on Linux and Unix as used space. "
+                    "Usually, 5% are being reserved for root when a new "
+                    "file system is being created. With this option you can "
+                    "have Checkmk display the current amount of reserved "
+                    "but yet unused space."
                 ),
                 elements=[
                     SingleChoiceElementExtended(name=True, title=Title("Show reserved space")),
@@ -306,10 +308,13 @@ def _filesystem_reserved_elements() -> Mapping[str, DictElement]:
                     "Exclude space reserved for the <tt>root</tt> user from calculation of used space"
                 ),
                 help_text=Help(
-                    "By default Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
-                    "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
-                    "With this option you can have Checkmk exclude the current amount of reserved but yet unused "
-                    "space from the calculations regarding the used space percentage."
+                    "By default Checkmk treats space that is reserved for "
+                    "the <tt>root</tt> user on Linux and Unix as used space. "
+                    "Usually, 5% are being reserved for root when a new "
+                    "file system is being created. With this option you can "
+                    "have Checkmk exclude the current amount of reserved "
+                    "but yet unused space from the calculations regarding "
+                    "the used space percentage."
                 ),
                 elements=[
                     SingleChoiceElementExtended(name=False, title=Title("Include reserved space")),
@@ -339,8 +344,8 @@ def _filesystem_inodes_elements() -> Mapping[str, DictElement]:
                 wrapped_form_spec=CascadingSingleChoice(
                     title=Title("Levels for Inodes"),
                     help_text=Help(
-                        "The number of remaining inodes on the filesystem. "
-                        "Please note that this setting has no effect on some filesystem checks."
+                        "The number of remaining inodes on the file system. "
+                        "Please note that this setting has no effect on some file system checks."
                     ),
                     elements=[
                         CascadingSingleChoiceElement(
@@ -373,7 +378,7 @@ def _filesystem_inodes_elements() -> Mapping[str, DictElement]:
                                         custom_validate=[
                                             validators.NumberInRange(
                                                 min_value=0,
-                                                error_msg=Message("Integer field can not be empty"),
+                                                error_msg=Message("Integer field cannot be empty"),
                                             )
                                         ],
                                     ),
@@ -384,7 +389,7 @@ def _filesystem_inodes_elements() -> Mapping[str, DictElement]:
                                         custom_validate=[
                                             validators.NumberInRange(
                                                 min_value=0,
-                                                error_msg=Message("Integer field can not be empty"),
+                                                error_msg=Message("Integer field cannot be empty"),
                                             )
                                         ],
                                     ),
@@ -426,13 +431,13 @@ def _filesystem_magic_elements() -> Mapping[str, DictElement]:
     return {
         "magic": DictElement(
             parameter_form=Float(
-                title=Title("Magic factor (automatic level adaptation for large filesystems)"),
+                title=Title("Magic factor (automatic level adaptation for large file systems)"),
                 prefill=DefaultValue(0.8),
                 custom_validate=[
                     validators.NumberInRange(
                         min_value=0.1,
                         max_value=1.0,
-                        error_msg=Message("Float field can not be empty"),
+                        error_msg=Message("Float field cannot be empty"),
                     )
                 ],
             ),
@@ -444,7 +449,7 @@ def _filesystem_magic_elements() -> Mapping[str, DictElement]:
                 unit_symbol="GB",
                 custom_validate=[
                     validators.NumberInRange(
-                        min_value=1, error_msg=Message("Integer field can not be empty")
+                        min_value=1, error_msg=Message("Integer field cannot be empty")
                     )
                 ],
             ),
@@ -453,8 +458,9 @@ def _filesystem_magic_elements() -> Mapping[str, DictElement]:
             parameter_form=TupleLevels(
                 title=Title("Minimum levels if using magic factor"),
                 help_text=Help(
-                    "The filesystem levels will never fall below these values, when using "
-                    "the magic factor and the filesystem is very small."
+                    "The file system levels will never fall below these "
+                    "values, when you use the magic factor and the file "
+                    "system is very small."
                 ),
                 elements=[
                     Percentage(title=Title("Warning at usage"), prefill=DefaultValue(50.0)),
@@ -472,12 +478,12 @@ def size_trend_elements() -> Mapping[str, DictElement]:
     return {
         "trend_range": DictElement(
             parameter_form=Integer(
-                title=Title("Time Range for trend computation"),
+                title=Title("Time range for trend computation"),
                 prefill=DefaultValue(24),
                 unit_symbol="hours",
                 custom_validate=[
                     validators.NumberInRange(
-                        min_value=1, error_msg=Message("Integer field can not be empty")
+                        min_value=1, error_msg=Message("Integer field cannot be empty")
                     )
                 ],
             ),
@@ -594,8 +600,8 @@ def size_trend_elements() -> Mapping[str, DictElement]:
         ),
         "trend_perfdata": DictElement(
             parameter_form=BooleanChoice(
-                title=Title("Trend performance data"),
-                label=Label("Enable generation of performance data from trends"),
+                title=Title("Trend metrics"),
+                label=Label("Enable generation of metrics from trends"),
             ),
         ),
     }

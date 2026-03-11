@@ -15,7 +15,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 def _parameter_form_spec_battery() -> Dictionary:
     return Dictionary(
-        help_text=Help("This Ruleset sets the threshold limits for battery sensors"),
+        help_text=Help("This rule set sets the threshold limits for battery sensors"),
         elements={
             "levels": DictElement(
                 required=False,

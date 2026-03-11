@@ -284,7 +284,7 @@ def fs_aws_limits(
             prefill=DefaultValue(default_limit),
             custom_validate=[
                 validators.NumberInRange(
-                    min_value=1, error_msg=Message("Integer field can not be empty")
+                    min_value=1, error_msg=Message("Integer field cannot be empty")
                 )
             ],
         )
@@ -301,7 +301,7 @@ def fs_aws_limits(
             ),
             custom_validate=[
                 validators.NumberInRange(
-                    min_value=1, error_msg=Message("Integer field can not be empty")
+                    min_value=1, error_msg=Message("Integer field cannot be empty")
                 )
             ],
         )
@@ -817,7 +817,7 @@ def _parameter_form_spec_aws_ec2_limits() -> Dictionary:
                 ),
             ),
             "spot_inst_requests": DictElement(
-                parameter_form=fs_aws_limits(Title("Spot Instance Requests"), 20)
+                parameter_form=fs_aws_limits(Title("Spot instance requests"), 20)
             ),
             "active_spot_fleet_requests": DictElement(
                 parameter_form=fs_aws_limits(Title("Active Spot Fleet Requests"), 1000),
@@ -829,7 +829,7 @@ def _parameter_form_spec_aws_ec2_limits() -> Dictionary:
             ),
             "running_ondemand_instances_total": DictElement(
                 parameter_form=fs_aws_limits(
-                    Title("Total Running On-Demand Instances(Deprecated by AWS)"), 20
+                    Title("Total running on-demand instances (deprecated by AWS)"), 20
                 ),
             ),
             "running_ondemand_instances_vcpus": DictElement(
@@ -988,14 +988,14 @@ def _parameter_form_spec_aws_elb_http() -> Dictionary:
                         title_add=lambda http_err_code: (
                             Title("")
                             if http_err_code in ["4xx", "5xx"]
-                            else Title(" (Application Load Balancers only)")
+                            else Title(" (application load balancers only)")
                         ),
                     ),
                 ),
             ),
             "levels_backend_targets": DictElement(
                 parameter_form=Dictionary(
-                    title=Title("Upper levels for Backend"),
+                    title=Title("Upper levels for back-end"),
                     elements=_fs_elements_http_errors(["2xx", "3xx", "4xx", "5xx"]),
                 ),
             ),
@@ -1035,7 +1035,7 @@ def _parameter_form_spec_aws_elb_healthy_hosts() -> Dictionary:
 
 rule_spec_aws_elb_healthy_hosts = CheckParameters(
     name="aws_elb_healthy_hosts",
-    title=Title("AWS/ELB Healthy Hosts"),
+    title=Title("AWS/ELB healthy hosts"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elb_healthy_hosts,
     condition=HostCondition(),
@@ -1047,7 +1047,7 @@ def _parameter_form_spec_aws_elb_backend_connection_errors() -> Dictionary:
         elements={
             "levels_backend_connections_errors_rate": DictElement(
                 parameter_form=TupleLevels(
-                    title=Title("Upper levels for backend connection errors per second"),
+                    title=Title("Upper levels for back-end connection errors per second"),
                     elements=[
                         Float(title=Title("Warning at"), unit_symbol="/s"),
                         Float(title=Title("Critical at"), unit_symbol="/s"),
@@ -1625,7 +1625,7 @@ def _fs_aws_dynamodb_capacity(title: Title, unit: str) -> Dictionary:
                             ),
                             custom_validate=[
                                 validators.NumberInRange(
-                                    min_value=1, error_msg=Message("Integer field can not be empty")
+                                    min_value=1, error_msg=Message("Integer field cannot be empty")
                                 )
                             ],
                         ),

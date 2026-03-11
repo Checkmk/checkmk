@@ -56,6 +56,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_replication_lag,
-        title=lambda: _("MongoDB Replica Set"),
+        title=lambda: _("MongoDB replica set"),
     )
 )

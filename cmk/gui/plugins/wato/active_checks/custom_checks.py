@@ -17,7 +17,7 @@ def _valuespec_custom_checks() -> MigrateNotUpdated:
         valuespec=Dictionary(
             title=_("Integrate Nagios plug-ins"),
             help=_(
-                'With this ruleset you can configure "classical Monitoring checks" '
+                'With this rule set you can configure "classical Monitoring checks" '
                 "to be executed directly on your monitoring server. These checks "
                 "will not use Checkmk. It is also possible to configure passive "
                 "checks that are fed with data from external sources via the "

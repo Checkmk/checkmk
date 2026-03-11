@@ -75,7 +75,7 @@ def _parameter_valuespec_graylog_messages():
             (
                 "msgs_diff",
                 Age(
-                    title=_("Timespan for difference calculation of total number of messages"),
+                    title=_("Time span for difference calculation of total number of messages"),
                     display=["days", "hours", "minutes"],
                     default_value=1800,
                 ),
@@ -83,7 +83,7 @@ def _parameter_valuespec_graylog_messages():
             (
                 "msgs_diff_lower",
                 Tuple(
-                    title=_("Number of messages in defined timespan lower level"),
+                    title=_("Number of messages in defined time span lower level"),
                     elements=[
                         Integer(title=_("Warning below"), unit="messages"),
                         Integer(title=_("Critical below"), unit="messages"),
@@ -93,7 +93,7 @@ def _parameter_valuespec_graylog_messages():
             (
                 "msgs_diff_upper",
                 Tuple(
-                    title=_("Number of messages in defined timespan upper level"),
+                    title=_("Number of messages in defined time span upper level"),
                     elements=[
                         Integer(title=_("Warning at"), unit="messages"),
                         Integer(title=_("Critical at"), unit="messages"),

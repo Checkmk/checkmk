@@ -170,7 +170,7 @@ def _parameter_valuespec_filestats():
                                 ),
                             ),
                             RegExp(
-                                title=_("Filename/- expression"),
+                                title=_("File name/- expression"),
                                 mode="infix",
                                 size=70,
                             ),
@@ -182,7 +182,7 @@ def _parameter_valuespec_filestats():
                         "This feature is to apply different rules to files that are "
                         "inconsistent with the files expected in this file group. "
                         "This means that the rules set for the file group are overwritten. "
-                        "You can specify a filename or a regular expresion, and additional "
+                        "You can specify a file name or a regular expression, and additional "
                         "rules that are applied to the matching files. In case of multiple "
                         "matching rules, the first matching rule is applied. "
                         "Note: this feature is intended for outliers, and is therefore not "

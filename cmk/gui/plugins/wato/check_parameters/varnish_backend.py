@@ -18,7 +18,7 @@ def _parameter_valuespec_varnish_backend() -> Dictionary:
             (
                 "busy",
                 Tuple(
-                    title=_('Upper levels for "backend connections busy/too many" per second'),
+                    title=_('Upper levels for "back-end connections busy/too many" per second'),
                     elements=[
                         Float(title=_("Warning at"), default_value=1.0),
                         Float(title=_("Critical at"), default_value=2.0),
@@ -28,7 +28,7 @@ def _parameter_valuespec_varnish_backend() -> Dictionary:
             (
                 "fail",
                 Tuple(
-                    title=_('Upper levels for "backend connections failures" per second'),
+                    title=_('Upper levels for "back-end connections failures" per second'),
                     elements=[
                         Float(title=_("Warning at"), default_value=1.0),
                         Float(title=_("Critical at"), default_value=2.0),
@@ -39,7 +39,7 @@ def _parameter_valuespec_varnish_backend() -> Dictionary:
                 "unhealthy",
                 Tuple(
                     title=_(
-                        'Upper levels for "backend connections unhealthy/not attempted" per second'
+                        'Upper levels for "back-end connections unhealthy/not attempted" per second'
                     ),
                     elements=[
                         Float(title=_("Warning at"), default_value=1.0),

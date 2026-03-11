@@ -20,7 +20,7 @@ def _parameter_valuespec_elasticsearch_nodes():
             (
                 "cpu_levels",
                 Tuple(
-                    title=_("Expected cpu usage"),
+                    title=_("Expected CPU usage"),
                     elements=[
                         Percentage(title=_("CPU usage warning at"), default_value=75.0),
                         Percentage(title=_("CPU usage critical at"), default_value=90.0),

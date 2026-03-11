@@ -45,7 +45,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="huawei_osn_laser",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Laser id")),
+        item_spec=lambda: TextInput(title=_("Laser ID")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_huawei_osn_laser,
         title=lambda: _("OSN Laser attenuation"),

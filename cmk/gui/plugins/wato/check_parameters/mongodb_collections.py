@@ -57,10 +57,10 @@ rulespec_registry.register(
         check_group_name="mongodb_collections",
         group=RulespecGroupCheckParametersStorage,
         item_spec=lambda: TextInput(
-            title=_("MongoDB Collection Size"),
+            title=_("MongoDB collection size"),
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_collections,
-        title=lambda: _("MongoDB Collection Size"),
+        title=lambda: _("MongoDB collection size"),
     )
 )

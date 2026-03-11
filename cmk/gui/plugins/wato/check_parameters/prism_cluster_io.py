@@ -29,8 +29,8 @@ def _parameter_valuespec_prism_cluster_io() -> Dictionary:
                 "iops",
                 Tuple(
                     elements=[
-                        Integer(title=_("Warning at"), unit=_("iops"), default_value=10000),
-                        Integer(title=_("Critical at"), unit=_("iops"), default_value=20000),
+                        Integer(title=_("Warning at"), unit=_("IOPS"), default_value=10000),
+                        Integer(title=_("Critical at"), unit=_("IOPS"), default_value=20000),
                     ],
                     title=_("Levels for IO operations per second."),
                 ),

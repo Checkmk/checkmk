@@ -360,7 +360,7 @@ def _parameter_valuespec_azure_vms() -> Migrate:
         Dictionary(
             help=_(
                 "To obtain the data required for this check, please configure"
-                ' the datasource program "Microsoft Azure".'
+                ' the data source program "Microsoft Azure".'
             ),
             title=_("Map provisioning and power states"),
             elements=[
@@ -452,7 +452,7 @@ def _parameter_valuespec_azure_vms_summary() -> Dictionary:
     return Dictionary(
         help=_(
             "To obtain the data required for this check, please configure"
-            ' the datasource program "Microsoft Azure".'
+            ' the data source program "Microsoft Azure".'
         ),
         elements=[
             (
@@ -649,7 +649,7 @@ def _parameter_valuespec_azure_usagedetails():
     return Dictionary(
         help=_(
             "To obtain the data required for this check, please configure"
-            ' the datasource program "Microsoft Azure".'
+            ' the data source program "Microsoft Azure".'
         ),
         elements=[
             (
@@ -854,6 +854,6 @@ rulespec_registry.register(
         check_group_name="azure_vm_disk",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_disk,
-        title=lambda: _("Azure VM Disk (deprecated)"),
+        title=lambda: _("Azure VM disk (deprecated)"),
     )
 )

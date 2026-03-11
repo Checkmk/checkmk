@@ -28,7 +28,7 @@ def _parameter_valuespec_netapp_luns():
                 FixedValue(
                     title=_("Ignore used space (this option disables any other options)"),
                     help=_(
-                        "Some luns, e.g. jfs formatted, tend to report incorrect used space values"
+                        "Some LUNs, e.g. JFS formatted, tend to report incorrectly used space values"
                     ),
                     totext=_("Ignore used space"),
                     value=True,

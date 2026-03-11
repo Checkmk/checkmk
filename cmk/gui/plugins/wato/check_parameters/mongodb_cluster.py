@@ -38,6 +38,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_cluster,
-        title=lambda: _("MongoDB Cluster"),
+        title=lambda: _("MongoDB cluster"),
     )
 )

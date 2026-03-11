@@ -45,6 +45,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_locks,
-        title=lambda: _("MongoDB Locks"),
+        title=lambda: _("MongoDB locks"),
     )
 )

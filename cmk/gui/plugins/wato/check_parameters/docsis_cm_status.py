@@ -64,6 +64,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("ID of the Entry")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_docsis_cm_status,
-        title=lambda: _("Docsis Cable Modem Status"),
+        title=lambda: _("Docsis cable modem status"),
     )
 )

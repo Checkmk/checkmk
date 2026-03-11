@@ -24,7 +24,7 @@ from cmk.gui.valuespec import (
 
 
 def _deprecation_message() -> str:
-    return _('This option is deprecated. Please use the ruleset <i>"%s"</i> instead.') % _(
+    return _('This option is deprecated. Please use the rule set <i>"%s"</i> instead.') % _(
         "Aggregation options for clustered services"
     )
 
@@ -75,7 +75,7 @@ def _parameter_valuespec_job():
                     ),
                     choices=[],
                     deprecated_choices=("worst", "best"),
-                    invalid_choice_title=_('Old setting: "%s". Choose that in the new ruleset.'),
+                    invalid_choice_title=_('Old setting: "%s". Choose that in the new rule set.'),
                 ),
             ),
         ],

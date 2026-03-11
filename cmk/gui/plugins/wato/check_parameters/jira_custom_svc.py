@@ -20,7 +20,7 @@ def _parameter_valuespec_jira_custom_svc():
             (
                 "count_diff",
                 Age(
-                    title=_("Timespan for difference calculation of total number of issues"),
+                    title=_("Time span for difference calculation of total number of issues"),
                     display=["days", "hours", "minutes"],
                     default_value=86400 * 7,
                 ),
@@ -68,7 +68,7 @@ def _parameter_valuespec_jira_custom_svc():
             (
                 "sum_diff",
                 Age(
-                    title=_("Timespan for difference calculation of summed up values"),
+                    title=_("Time span for difference calculation of summed up values"),
                     display=["days", "hours", "minutes"],
                     default_value=86400 * 7,
                 ),

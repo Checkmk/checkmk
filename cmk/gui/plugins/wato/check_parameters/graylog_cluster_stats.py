@@ -484,6 +484,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_graylog_cluster_stats_mongodb,
-        title=lambda: _("Graylog cluster mongodb statistics"),
+        title=lambda: _("Graylog cluster MongoDB statistics"),
     )
 )

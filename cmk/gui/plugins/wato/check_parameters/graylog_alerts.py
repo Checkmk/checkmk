@@ -40,7 +40,7 @@ def _parameter_valuespec_graylog_alerts():
             (
                 "alerts_in_range_upper",
                 Tuple(
-                    title=_("Number of alerts in defined timespan upper level"),
+                    title=_("Number of alerts in defined time span upper level"),
                     elements=[
                         Integer(title=_("Warning below"), unit="alerts"),
                         Integer(title=_("Critical below"), unit="alerts"),
@@ -50,7 +50,7 @@ def _parameter_valuespec_graylog_alerts():
             (
                 "alerts_in_range_lower",
                 Tuple(
-                    title=_("Number of alerts in defined timespan lower level"),
+                    title=_("Number of alerts in defined time span lower level"),
                     elements=[
                         Integer(title=_("Warning at"), unit="alerts"),
                         Integer(title=_("Critical at"), unit="alerts"),

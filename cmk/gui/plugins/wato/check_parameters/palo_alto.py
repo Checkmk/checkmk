@@ -66,126 +66,126 @@ def _parameter_valuespec_palo_alto() -> Dictionary:
             (
                 key := "ha_local_state_active",
                 MonitoringState(
-                    title=_("State if ha local State is Active"),
+                    title=_("State if ha local state is active"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_local_state_passive",
                 MonitoringState(
-                    title=_("State if ha local State is Passive"),
+                    title=_("State if ha local state is passive"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_local_state_active_primary",
                 MonitoringState(
-                    title=_("State if ha local State is Active-Primary"),
+                    title=_("State if ha local state is active - primary"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_local_state_active_secondary",
                 MonitoringState(
-                    title=_("State if ha local State is Active-Secondary"),
+                    title=_("State if ha local state is active - secondary"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_local_state_disabled",
                 MonitoringState(
-                    title=_("State if ha local State is Disabled"),
+                    title=_("State if ha local state is disabled"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_local_state_tentative",
                 MonitoringState(
-                    title=_("State if ha local State is Tentative"),
+                    title=_("State if ha local state is tentative"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_local_state_non_functional",
                 MonitoringState(
-                    title=_("State if ha local State is Non-Functional"),
+                    title=_("State if ha local state is non-functional"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_local_state_suspended",
                 MonitoringState(
-                    title=_("State if ha local State is Suspended"),
+                    title=_("State if ha local state is suspended"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_local_state_unknown",
                 MonitoringState(
-                    title=_("State if ha local State is Unknown"),
+                    title=_("State if ha local state is unknown"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_active",
                 MonitoringState(
-                    title=_("State if ha peer State is Active"),
+                    title=_("State if ha peer state is active"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_passive",
                 MonitoringState(
-                    title=_("State if ha peer State is Passive"),
+                    title=_("State if ha peer state is passive"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_active_primary",
                 MonitoringState(
-                    title=_("State if ha peer State is Active-Primary"),
+                    title=_("State if ha peer state is active - primary"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_active_secondary",
                 MonitoringState(
-                    title=_("State if ha peer State is Active-Secondary"),
+                    title=_("State if ha peer state is active - secondary"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_disabled",
                 MonitoringState(
-                    title=_("State if ha peer State is Disabled"),
+                    title=_("State if ha peer state is disabled"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_tentative",
                 MonitoringState(
-                    title=_("State if ha peer State is Tentative"),
+                    title=_("State if ha peer state is tentative"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_non_functional",
                 MonitoringState(
-                    title=_("State if ha peer State is Non-Functional"),
+                    title=_("State if ha peer state is non-functional"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_suspended",
                 MonitoringState(
-                    title=_("State if ha peer State is Suspended"),
+                    title=_("State if ha peer state is suspended"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),
             (
                 key := "ha_peer_state_unknown",
                 MonitoringState(
-                    title=_("State if ha peer State is Unknown"),
+                    title=_("State if ha peer state is unknown"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),

@@ -265,7 +265,7 @@ def _discovery_valuespec_qtree_quota() -> Dictionary:
                         "if you would like to use the quota and quota-users combination as the "
                         "service name on its own. "
                         "Please be advised that this may lead to a service name that is "
-                        "not unique, resulting in some services, which are not shown!"
+                        "not unique, resulting in some services not being shown!"
                     ),
                 ),
             ),

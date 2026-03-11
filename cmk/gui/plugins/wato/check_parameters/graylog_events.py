@@ -40,7 +40,7 @@ def _parameter_valuespec_graylog_events():
             (
                 "events_in_range_upper",
                 Tuple(
-                    title=_("Number of events in defined timespan upper level"),
+                    title=_("Number of events in defined time span upper level"),
                     elements=[
                         Integer(title=_("Warning below"), unit="events"),
                         Integer(title=_("Critical below"), unit="events"),
@@ -50,7 +50,7 @@ def _parameter_valuespec_graylog_events():
             (
                 "events_in_range_lower",
                 Tuple(
-                    title=_("Number of events in defined timespan lower level"),
+                    title=_("Number of events in defined time span lower level"),
                     elements=[
                         Integer(title=_("Warning at"), unit="events"),
                         Integer(title=_("Critical at"), unit="events"),

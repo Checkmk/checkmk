@@ -101,6 +101,6 @@ rulespec_registry.register(
         item_spec=_item_spec_ewon,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ewon,
-        title=lambda: _("eWON SNMP Proxy"),
+        title=lambda: _("eWON SNMP proxy"),
     )
 )

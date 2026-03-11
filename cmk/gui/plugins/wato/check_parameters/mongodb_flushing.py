@@ -48,6 +48,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_flushing,
-        title=lambda: _("MongoDB Flushes"),
+        title=lambda: _("MongoDB flushes"),
     )
 )

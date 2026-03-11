@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Filesize, Tuple
 
 def _parameter_valuespec_mongodb_mem() -> Dictionary:
     return Dictionary(
-        title=_("MongoDB Memory"),
+        title=_("MongoDB memory"),
         elements=[
             (
                 "resident_levels",
@@ -70,6 +70,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_mem,
-        title=lambda: _("MongoDB Memory"),
+        title=lambda: _("MongoDB memory"),
     )
 )

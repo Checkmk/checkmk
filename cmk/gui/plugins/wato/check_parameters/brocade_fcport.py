@@ -83,7 +83,7 @@ def _valuespec_brocade_fcport_inventory():
                     default_value=True,
                     help=_(
                         'This option lets Checkmk add the string "ISL" to the service '
-                        "description for interswitch links."
+                        "name for interswitch links."
                     ),
                 ),
             ),

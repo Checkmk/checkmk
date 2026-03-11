@@ -39,6 +39,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("ID of the channel (usually ranging from 1)")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_docsis_channels_downstream,
-        title=lambda: _("Docsis Downstream Channels"),
+        title=lambda: _("Docsis downstream channels"),
     )
 )

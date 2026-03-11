@@ -42,7 +42,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="brocade_optical",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Interface id")),
+        item_spec=lambda: TextInput(title=_("Interface ID")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_brocade_optical,
         title=lambda: _("Brocade Optical Signal"),

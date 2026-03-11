@@ -29,7 +29,7 @@ rulespec_registry.register(
 
 
 def _deprecation_message() -> str:
-    return _('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.') % _(
+    return _('This rule set is deprecated. Please use the rule set <i>"%s"</i> instead.') % _(
         "Aggregation options for clustered services"
     )
 

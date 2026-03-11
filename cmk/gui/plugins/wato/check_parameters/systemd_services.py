@@ -253,7 +253,7 @@ def _parameter_valuespec_systemd_services():
             ),
         ],
         help=_(
-            "This ruleset only applies when individual Systemd services are discovered. "
+            "This rule set only applies when individual systemd services are discovered. "
             "The user needs to configure this option in the discovery section."
         ),
     )
@@ -375,7 +375,7 @@ def _parameter_valuespec_systemd_units() -> Dictionary:
             ),
         ],
         help=_(
-            "This ruleset only applies when individual Systemd units are discovered. "
+            "This rule set only applies when individual systemd units are discovered. "
             "The user needs to configure this option in the discovery section."
         ),
     )

@@ -722,6 +722,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.render",
         "cmk.utils.rulesets",
         "cmk.utils.experimental_config",
+        "cmk.utils.global_ident_type",
         exclude=("cmk.gui.plugins", "cmk.gui.nonfree.pro.plugins"),
     ),
     Component("cmk.gui.nonfree.ultimatemt"): _allow(

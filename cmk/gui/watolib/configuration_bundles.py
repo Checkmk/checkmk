@@ -120,6 +120,7 @@ class DCDConnectionHook:
     load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
     create_dcd_connection: Callable[[str, DCDConnectionSpec], None] = _dcd_unsupported
     delete_dcd_connection: Callable[[str], None] = _dcd_unsupported
+    stamp_dcd_locked_by: Callable[[str, GlobalIdent], None] = _dcd_unsupported
     domain_definition: DomainDefinition | None = None
 
 

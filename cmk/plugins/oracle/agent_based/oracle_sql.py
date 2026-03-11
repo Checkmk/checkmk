@@ -179,10 +179,9 @@ def check_oracle_sql(item: str, params: Mapping[str, Any], section: Section) -> 
         yield from metrics
 
     if long := data.long:
-        long_details = "%s" % "\n".join(long[1:])
-        yield Result(
-            state=State.OK, summary=long[0], details=long_details if long_details else None
-        )
+        # we use notice here to not show information in the summary
+        # and only show it in the details view of the check output
+        yield Result(state=State.OK, notice="\n".join(long))
 
     if data.cache_info is not None:
         yield Result(state=State.OK, summary=render_cache_info(data.cache_info))

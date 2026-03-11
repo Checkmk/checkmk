@@ -44,14 +44,14 @@ def _parameter_form() -> Dictionary:
                 parameter_form=Integer(
                     title=Title("Port"),
                     prefill=DefaultValue(8091),
-                    help_text=Help("The port that is used for the api call."),
+                    help_text=Help("The port that is used for the API call."),
                     custom_validate=(validators.NetworkPort(),),
                 ),
             ),
             "authentication": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Authentication"),
-                    help_text=Help("The credentials for api calls with authentication."),
+                    help_text=Help("The credentials for API calls with authentication."),
                     elements={
                         "username": DictElement(
                             required=True,

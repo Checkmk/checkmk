@@ -120,7 +120,7 @@ def _parameter_form() -> Dictionary:
                     help_text=Help(
                         "The ignore option can target alert rules on different levels including "
                         "specific rules as well as entire rule groups. Matching rules will be filtered "
-                        "out on the alertmanager agent side."
+                        "out on the Alertmanager agent side."
                     ),
                     migrate=_migrate_ignore_alerts,
                     elements={

@@ -52,7 +52,7 @@ def _parameter_form() -> Dictionary:
             "use_piggyback": DictElement(
                 required=True,
                 parameter_form=BooleanChoice(
-                    title=Title("Use Piggyback"),
+                    title=Title("Use piggyback"),
                     label=Label("Enable"),
                 ),
             ),

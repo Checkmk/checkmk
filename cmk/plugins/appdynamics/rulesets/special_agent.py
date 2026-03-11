@@ -27,7 +27,7 @@ def _parameter_form() -> Dictionary:
             "username": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("AppDynamics login user name"),
+                    title=Title("AppDynamics login username"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),

@@ -37,7 +37,7 @@ def _parameter_form() -> Dictionary:
 
 rule_spec_special_agent_gcp_status = SpecialAgent(
     name="gcp_status",
-    title=Title("Google Cloud Platform (GCP) Status"),
+    title=Title("Google Cloud Platform (GCP) status"),
     topic=Topic.CLOUD,
     parameter_form=_parameter_form,
 )

@@ -158,8 +158,8 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             help_text=Help(
                                 "During each run, the agent will fetch events which are at "
                                 "maximum this old. The agent memorizes events already fetched "
-                                "during the last run, s.t. no event will be sent to the event "
-                                "console multiple times. Setting this value lower than the "
+                                "during the last run, s.t. no event will be sent to the Event "
+                                "Console multiple times. Setting this value lower than the "
                                 "check interval of the host will result in missing events. "
                                 "Also note that the Datadog API allows for creating new events "
                                 "which lie in the past. Such events will be missed by the "
@@ -284,11 +284,13 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                                 "Add text of events to data forwarded to the Event Console. "
                                 "Newline characters are replaced by '~'."
                             ),
-                            migrate=lambda value: value
-                            if isinstance(value, str)
-                            else "add_text"
-                            if value is True
-                            else "do_not_add_text",
+                            migrate=lambda value: (
+                                value
+                                if isinstance(value, str)
+                                else "add_text"
+                                if value is True
+                                else "do_not_add_text"
+                            ),
                         ),
                     ),
                 },
@@ -299,7 +301,7 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
             parameter_form=Dictionary(
                 title=Title("Fetch logs"),
                 help_text=Help(
-                    "Fetch logs of your datadog instance. Fetched logs will be forwared to the "
+                    "Fetch logs of your Datadog instance. Fetched logs will be forwarded to the "
                     "Event Console of the site where the special agent is executed."
                 ),
                 elements={
@@ -310,8 +312,8 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                             help_text=Help(
                                 "During each run, the agent will fetch logs which are at "
                                 "maximum this old. The agent memorizes logs already fetched "
-                                "during the last run, s.t. no logs will be sent to the event "
-                                "console multiple times. Setting this value lower than the "
+                                "during the last run, s.t. no logs will be sent to the Event "
+                                "Console multiple times. Setting this value lower than the "
                                 "check interval of the host will result in missing logs. "
                             ),
                             migrate=_migrate_to_float,
@@ -331,8 +333,8 @@ def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
                         parameter_form=String(
                             title=Title("Log search query"),
                             help_text=Help(
-                                "Query to speficy which logs should be forwarded to the event "
-                                "console. Use the Datadog "
+                                "Query to specify which logs should be forwarded to the Event "
+                                "Console. Use the Datadog "
                                 "<a href='https://docs.datadoghq.com/logs/explorer/search_syntax'>log search syntax</a>."
                             ),
                         ),

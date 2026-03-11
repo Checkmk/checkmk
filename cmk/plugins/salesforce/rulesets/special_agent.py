@@ -20,8 +20,8 @@ def _parameter_form() -> Dictionary:
                     title=Title("Instances"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     element_template=String(),
-                    add_element_label=Label("Add Instance"),
-                    remove_element_label=Label("Remove Instance"),
+                    add_element_label=Label("Add instance"),
+                    remove_element_label=Label("Remove instance"),
                 ),
             )
         },

@@ -84,14 +84,14 @@ def _parameter_form() -> Dictionary:
             "exporter": DictElement(
                 required=True,
                 parameter_form=List(
-                    title=Title("Prometheus Scrape Targets to fetch information from (deprecated)"),
+                    title=Title("Prometheus scrape targets to fetch information from (deprecated)"),
                     help_text=Help(
-                        "You can specify which Scrape Targets including Exporters "
+                        "You can specify which scrape targets including exporters "
                         "are connected to your Prometheus instance. The Prometheus "
-                        "Special Agent will automatically generate services for the "
+                        "special agent will automatically generate services for the "
                         "selected monitoring information. You can create your own "
                         "defined services with the custom PromQL query option below "
-                        "if one of the Scrape Target types are not listed here."
+                        "if one of the scrape target types are not listed here."
                     ),
                     add_element_label=Label("Add new Scrape Target"),
                     element_template=CascadingSingleChoice(
@@ -135,7 +135,7 @@ def _parameter_form() -> Dictionary:
                                                 elements=[
                                                     MultipleChoiceElement(
                                                         name="df",
-                                                        title=Title("Filesystems"),
+                                                        title=Title("File systems"),
                                                     ),
                                                     MultipleChoiceElement(
                                                         name="diskstat",
@@ -216,13 +216,15 @@ def _parameter_form() -> Dictionary:
                                                                             SingleChoiceElement(
                                                                                 "short",
                                                                                 Title(
-                                                                                    "Short - Use the first 12 characters of the docker container ID"
+                                                                                    "Short - Use the first "
+                                                                                    "12 characters of the "
+                                                                                    "Docker container ID"
                                                                                 ),
                                                                             ),
                                                                             SingleChoiceElement(
                                                                                 "long",
                                                                                 Title(
-                                                                                    "Long - Use the full docker container ID"
+                                                                                    "Long - Use the full Docker container ID"
                                                                                 ),
                                                                             ),
                                                                             SingleChoiceElement(
@@ -277,13 +279,15 @@ def _parameter_form() -> Dictionary:
                                                                             SingleChoiceElement(
                                                                                 "short",
                                                                                 Title(
-                                                                                    "Short - Use the first 12 characters of the docker container ID"
+                                                                                    "Short - Use the first "
+                                                                                    "12 characters of the "
+                                                                                    "Docker container ID"
                                                                                 ),
                                                                             ),
                                                                             SingleChoiceElement(
                                                                                 "long",
                                                                                 Title(
-                                                                                    "Long - Use the full docker container ID"
+                                                                                    "Long - Use the full Docker container ID"
                                                                                 ),
                                                                             ),
                                                                             SingleChoiceElement(
@@ -351,7 +355,7 @@ def _parameter_form() -> Dictionary:
                                                     ),
                                                     MultipleChoiceElement(
                                                         name="df",
-                                                        title=Title("Filesystem"),
+                                                        title=Title("File system"),
                                                     ),
                                                     MultipleChoiceElement(
                                                         name="interfaces",
@@ -402,9 +406,9 @@ def _parameter_form() -> Dictionary:
                                         _validate_hostname,
                                     ),
                                     help_text=Help(
-                                        "Specify the host to which the resulting "
+                                        "Specify the host the resulting "
                                         "service will be assigned to. The host "
-                                        "should be configured to allow Piggyback "
+                                        "should be configured to allow piggyback "
                                         "data."
                                     ),
                                 ),

@@ -82,10 +82,6 @@ _Ubuntu Linux_ may require linking `libaio`.
 ln -sf "/lib/x86_64-linux-gnu/libaio.so.1t64" "/lib/x86_64-linux-gnu/libaio.so.1"
 ```
 
-If Oracle Instant Client is already installed on the host (e.g. via `yum` or `alien`), you can use
-it instead by setting `use_host_client: always` (see [Options](#options)). Verify the installation
-with `ldconfig -p | grep libclntsh` and check `/etc/ld.so.conf.d/` for the registered path.
-
 ### Windows
 
 Download and unzip the Oracle Instant Client for Windows into a folder of your choice.

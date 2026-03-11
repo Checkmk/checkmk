@@ -5,12 +5,12 @@
  */
 import type { TranslatedString } from '@/lib/i18nString'
 
-import type { SimpleIcons } from '@/components/CmkIcon'
+import type { IconWithEmblem, SimpleIcons } from '@/components/CmkIcon'
 
 export interface WidgetItem {
   id: string
   label: TranslatedString
-  icon: SimpleIcons
+  icon: SimpleIcons | IconWithEmblem
 }
 
 export type WidgetItemList = WidgetItem[]

@@ -96,6 +96,9 @@ export type WidgetContentType =
   | SidebarElementContent
   | URLContent
   | StaticTextContent
+  | NtopAlertsContent
+  | NtopFlowsContent
+  | NtopTopTalkersContent
 
 export type InventoryContent = components['schemas']['InventoryContent']
 
@@ -125,6 +128,9 @@ export type NotificationTimelineContent = components['schemas']['NotificationTim
 export type ProblemGraphContent = components['schemas']['ProblemGraphContent']
 export type UserMessagesContent = components['schemas']['UserMessagesContent']
 export type URLContent = components['schemas']['URLContent']
+export type NtopAlertsContent = components['schemas']['NtopAlertsContent']
+export type NtopFlowsContent = components['schemas']['NtopFlowsContent']
+export type NtopTopTalkersContent = components['schemas']['NtopTopTalkersContent']
 
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']

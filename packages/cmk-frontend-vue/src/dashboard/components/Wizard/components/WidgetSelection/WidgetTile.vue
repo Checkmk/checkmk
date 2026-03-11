@@ -8,13 +8,14 @@ import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import type { SimpleIcons } from '@/components/CmkIcon'
+import type { IconWithEmblem, SimpleIcons } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 interface WidgetTileProps {
   label: TranslatedString
-  icon: SimpleIcons
+  icon: SimpleIcons | IconWithEmblem
   disabled?: boolean
   selected?: boolean
   compact?: boolean
@@ -38,7 +39,15 @@ const modifierClass = computed(() => {
 <template>
   <div class="db-widget-tile__item" :class="modifierClass">
     <div class="db-widget-tile__item-icon">
-      <CmkIcon :name="icon" :size="compact ? 'xlarge' : 'xxlarge'" :colored="!disabled" />
+      <CmkIcon
+        v-if="typeof icon === 'string'"
+        :name="icon"
+        :size="compact ? 'xlarge' : 'xxlarge'"
+        :colored="!disabled"
+      />
+      <CmkIconEmblem v-else :emblem="icon.emblem" :colored="!disabled">
+        <CmkIcon :name="icon.name" :size="compact ? 'xlarge' : 'xxlarge'" :colored="!disabled" />
+      </CmkIconEmblem>
     </div>
     <div class="db-widget-tile__item-label">
       <CmkLabel :cursor="disabled ? 'default' : 'pointer'">{{ label }}</CmkLabel>

@@ -42,7 +42,7 @@ export interface DashboardPageProperties {
     user_guide: string
   }
   available_layouts: DashboardLayout[]
-  available_features: DashboardFeatures
+  available_features: { dashboard_features: DashboardFeatures; ntop_active: boolean }
   logged_in_user: string
 }
 

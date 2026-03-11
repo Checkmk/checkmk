@@ -65,6 +65,12 @@ export function widgetTypeToSelectorMatcher(
       return 'hw_sw_inventory'
     }
 
+    case 'ntop_alerts':
+    case 'ntop_flows':
+    case 'ntop_top_talkers': {
+      return 'ntop'
+    }
+
     default: {
       throw new Error(
         `No selector defined widget content type: ${widgetContentType}. Please add it.`

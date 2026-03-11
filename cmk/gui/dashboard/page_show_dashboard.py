@@ -26,6 +26,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.ntop import get_ntop_connection
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.visuals import visual_page_breadcrumb
@@ -115,11 +116,11 @@ def page_dashboard_app(ctx: PageContext) -> None:
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         available_layouts = ["relative_grid"]
-        available_features = "restricted"
+        dashboard_features = "restricted"
 
     else:
         available_layouts = ["relative_grid", "responsive_grid"]
-        available_features = "unrestricted"
+        dashboard_features = "unrestricted"
 
     page_properties = {
         "initial_breadcrumb": [
@@ -128,13 +129,18 @@ def page_dashboard_app(ctx: PageContext) -> None:
         # TODO: consider adding initial title as well due to context generation
         "dashboard": loaded_dashboard_properties,
         "mode": mode,
-        "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
+        "url_params": {
+            "ifid": ctx.request.get_ascii_input("ifid"),
+        },
         "links": {
             "list_dashboards": f"{PAGE_EDIT_DASHBOARDS_LINK}.py",
             "user_guide": "https://docs.checkmk.com/master/en/dashboards.html",
         },
         "available_layouts": available_layouts,
-        "available_features": available_features,
+        "available_features": {
+            "dashboard_features": dashboard_features,
+            "ntop_active": bool((ntop := get_ntop_connection()) and ntop["is_activated"]),
+        },
         "logged_in_user": user.id,
     }
 

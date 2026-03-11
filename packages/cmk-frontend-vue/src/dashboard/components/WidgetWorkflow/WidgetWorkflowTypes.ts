@@ -18,53 +18,76 @@ export interface WorkflowItem {
   icon_emblem?: IconEmblems | undefined
 }
 
-export const dashboardWidgetWorkflows: Record<string, WorkflowItem> = {
-  metrics_graphs: {
-    title: _t('Metrics & graphs'),
-    subtitle: _t('Visualize key metrics using charts and graphs'),
-    icon: 'graph'
-  },
-  custom_graphs: {
-    title: _t('Custom graphs'),
-    subtitle: _t('Visualize built-in and preconfigured custom graphs'),
-    icon: 'graph',
-    icon_emblem: 'add'
-  },
-  views: {
-    title: _t('Views'),
-    subtitle: _t('Embed saved views'),
-    icon: 'view'
-  },
-  host_site_overview: {
-    title: _t('Host & site overview'),
-    subtitle: _t('Summarize key system components'),
-    icon: 'site-overview'
-  },
-  service_overview: {
-    title: _t('Service overview'),
-    subtitle: _t('Summarize key services'),
-    icon: 'services'
-  },
-  hw_sw_inventory: {
-    title: _t('HW/SW inventory'),
-    subtitle: _t('Summarize key hardware and software components'),
-    icon: 'inventory'
-  },
-  alerts_notifications: {
-    title: _t('Alerts & notifications'),
-    subtitle: _t('Summarize alerts and notifications'),
-    icon: 'alerts'
-  },
-  event_stats: {
-    title: _t('Events'),
-    subtitle: _t('Summarize events'),
-    icon: 'event-console'
-  },
-  other: {
-    title: _t('Other elements'),
-    subtitle: _t('Display user messages, sidebar elements, text or embed a URL'),
-    icon: 'static-text'
+export function getDashboardWidgetWorkflows(
+  ntopActive: boolean = false
+): Record<string, WorkflowItem> {
+  const workflows: Record<string, WorkflowItem> = {
+    metrics_graphs: {
+      title: _t('Metrics & graphs'),
+      subtitle: _t('Visualize key metrics using charts and graphs'),
+      icon: 'graph'
+    },
+    custom_graphs: {
+      title: _t('Custom graphs'),
+      subtitle: _t('Visualize built-in and preconfigured custom graphs'),
+      icon: 'graph',
+      icon_emblem: 'add'
+    },
+    views: {
+      title: _t('Views'),
+      subtitle: _t('Embed saved views'),
+      icon: 'view'
+    },
+    host_site_overview: {
+      title: _t('Host & site overview'),
+      subtitle: _t('Summarize key system components'),
+      icon: 'site-overview'
+    },
+    service_overview: {
+      title: _t('Service overview'),
+      subtitle: _t('Summarize key services'),
+      icon: 'services'
+    },
+    hw_sw_inventory: {
+      title: _t('HW/SW inventory'),
+      subtitle: _t('Summarize key hardware and software components'),
+      icon: 'inventory'
+    },
+    alerts_notifications: {
+      title: _t('Alerts & notifications'),
+      subtitle: _t('Summarize alerts and notifications'),
+      icon: 'alerts'
+    },
+    event_stats: {
+      title: _t('Events'),
+      subtitle: _t('Summarize events'),
+      icon: 'event-console'
+    },
+    other: {
+      title: _t('Other elements'),
+      subtitle: _t('Display user messages, sidebar elements, text or embed a URL'),
+      icon: 'static-text'
+    }
   }
+
+  if (ntopActive) {
+    workflows['ntop'] = {
+      title: _t('Ntop'),
+      subtitle: _t('Display ntop alerts, flows or top talkers'),
+      icon: 'ntop'
+    }
+  }
+  return workflows
 }
 
-export type DashboardWidgetWorkflowKey = keyof typeof dashboardWidgetWorkflows
+export type DashboardWidgetWorkflowKey =
+  | 'metrics_graphs'
+  | 'custom_graphs'
+  | 'views'
+  | 'host_site_overview'
+  | 'service_overview'
+  | 'hw_sw_inventory'
+  | 'alerts_notifications'
+  | 'event_stats'
+  | 'other'
+  | 'ntop'

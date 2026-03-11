@@ -31,7 +31,7 @@ import { offsetInitialPosition } from '@/dashboard/components/RelativeGrid/utils
 import { createWidgetLayout } from '@/dashboard/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import AddWidgetPage from '@/dashboard/components/WidgetWorkflow/StarterPage/AddWidgetPage.vue'
-import { dashboardWidgetWorkflows } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
+import { getDashboardWidgetWorkflows } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
 import CloneDashboardWizard from '@/dashboard/components/Wizard/CloneDashboardWizard.vue'
 import CreateDashboardWizard from '@/dashboard/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard/components/WizardSelector/WizardSelector.vue'
@@ -181,6 +181,7 @@ const widgetTitles = useComputeWidgetTitles(
   dashboardFilters.baseFilters,
   dashboardWidgets.widgetCores
 )
+const dashboardWidgetWorkflows = getDashboardWidgetWorkflows(props.available_features.ntop_active)
 
 useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {
   openDashboardFilterSettings.value = true
@@ -671,7 +672,7 @@ const reviewFilters = () => {
           v-if="openDashboardShareDialog && dashboardsManager.activeDashboardKey.value"
           :dashboard-key="dashboardsManager.activeDashboardKey.value!"
           :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
-          :available-features="available_features"
+          :available-features="available_features.dashboard_features"
           :has-runtime-filters="dashboardHasRuntimeFilters"
           @review-filters="reviewFilters"
           @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
@@ -680,7 +681,7 @@ const reviewFilters = () => {
         <AddWidgetDialog
           v-model:open="openAddWidgetDialog"
           :workflow-items="dashboardWidgetWorkflows"
-          :available-features="available_features"
+          :available-features="available_features.dashboard_features"
           @select="handleAddWidget"
           @close="openAddWidgetDialog = false"
         />
@@ -692,7 +693,7 @@ const reviewFilters = () => {
           :context-filters="dashboardFilters.contextFilters.value || {}"
           :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
           :edit-widget-id="widgetToEdit"
-          :available-features="available_features"
+          :available-features="available_features.dashboard_features"
           @back-button="handleWizardSelectorGoBack"
           @close-wizard="handleWizardClose"
           @add-widget="addWidget"
@@ -741,7 +742,7 @@ const reviewFilters = () => {
           <AddWidgetPage
             v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
             :workflow-items="dashboardWidgetWorkflows"
-            :available-features="available_features"
+            :available-features="available_features.dashboard_features"
             @select="handleAddWidget"
           />
           <DashboardComponent
@@ -763,7 +764,7 @@ const reviewFilters = () => {
           <AddWidgetPage
             v-if="openDashboardCreationDialog || openDashboardCloneDialog"
             :workflow-items="dashboardWidgetWorkflows"
-            :available-features="available_features"
+            :available-features="available_features.dashboard_features"
           />
           <CmkErrorAlert v-if="loadingError" :error="loadingError" />
           <CmkIcon

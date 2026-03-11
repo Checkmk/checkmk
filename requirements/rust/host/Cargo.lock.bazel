@@ -1,5 +1,5 @@
 {
-  "checksum": "347546d13c57607f7771cb1a2eb97a55fe7e6a95a39749982a2ce27f0322428b",
+  "checksum": "f0f49df9d766642041b1234a7a3aa17fd14ab342215817680ab6d2d61b10dc01",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -4212,6 +4212,121 @@
         "MIT"
       ],
       "license_file": null
+    },
+    "dirs 6.0.0": {
+      "name": "dirs",
+      "version": "6.0.0",
+      "package_url": "https://github.com/soc/dirs-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/dirs/6.0.0/download",
+          "sha256": "c3e8aa94d75141228480295a7d0e7feb620b1a5ad9f12bc40be62411e38cce4e"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "dirs",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "dirs",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "dirs-sys 0.5.0",
+              "target": "dirs_sys"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "6.0.0"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
+    "dirs-sys 0.5.0": {
+      "name": "dirs-sys",
+      "version": "0.5.0",
+      "package_url": "https://github.com/dirs-dev/dirs-sys-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/dirs-sys/0.5.0/download",
+          "sha256": "e01a3366d27ee9890022452ee61b2b63a67e6f13f58900b651ff5665f0bb1fab"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "dirs_sys",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "dirs_sys",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "option-ext 0.2.0",
+              "target": "option_ext"
+            }
+          ],
+          "selects": {
+            "cfg(target_os = \"redox\")": [
+              {
+                "id": "redox_users 0.5.2",
+                "target": "redox_users"
+              }
+            ],
+            "cfg(unix)": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
+            "cfg(windows)": [
+              {
+                "id": "windows-sys 0.60.2",
+                "target": "windows_sys"
+              }
+            ]
+          }
+        },
+        "edition": "2015",
+        "version": "0.5.0"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
     },
     "dispatch 0.2.0": {
       "name": "dispatch",
@@ -10045,6 +10160,10 @@
               "target": "regex"
             },
             {
+              "id": "shellexpand 3.1.2",
+              "target": "shellexpand"
+            },
+            {
               "id": "sysinfo 0.38.0",
               "target": "sysinfo"
             },
@@ -12940,6 +13059,44 @@
       ],
       "license_file": "LICENSE-MIT"
     },
+    "option-ext 0.2.0": {
+      "name": "option-ext",
+      "version": "0.2.0",
+      "package_url": "https://github.com/soc/option-ext.git",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/option-ext/0.2.0/download",
+          "sha256": "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "option_ext",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "option_ext",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "0.2.0"
+      },
+      "license": "MPL-2.0",
+      "license_ids": [
+        "MPL-2.0"
+      ],
+      "license_file": "LICENSE.txt"
+    },
     "oracle 0.6.3": {
       "name": "oracle",
       "version": "0.6.3",
@@ -15593,6 +15750,61 @@
       ],
       "license_file": "LICENSE"
     },
+    "redox_users 0.5.2": {
+      "name": "redox_users",
+      "version": "0.5.2",
+      "package_url": "https://gitlab.redox-os.org/redox-os/users",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/redox_users/0.5.2/download",
+          "sha256": "a4e608c6638b9c18977b00b475ac1f28d14e84b27d8d42f70e0bf1e3dec127ac"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "redox_users",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "redox_users",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "getrandom 0.2.16",
+              "target": "getrandom"
+            },
+            {
+              "id": "libredox 0.1.9",
+              "target": "libredox"
+            },
+            {
+              "id": "thiserror 2.0.16",
+              "target": "thiserror"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.5.2"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "ref-cast 1.0.24": {
       "name": "ref-cast",
       "version": "1.0.24",
@@ -18024,6 +18236,63 @@
         "version": "3.14.0"
       },
       "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
+    "shellexpand 3.1.2": {
+      "name": "shellexpand",
+      "version": "3.1.2",
+      "package_url": "https://gitlab.com/ijackson/rust-shellexpand",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/shellexpand/3.1.2/download",
+          "sha256": "32824fab5e16e6c4d86dc1ba84489390419a39f97699852b66480bb87d297ed8"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "shellexpand",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "shellexpand",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "base-0",
+            "default",
+            "dirs",
+            "tilde"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "dirs 6.0.0",
+              "target": "dirs"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "3.1.2"
+      },
+      "license": "MIT/Apache-2.0",
       "license_ids": [
         "Apache-2.0",
         "MIT"
@@ -27705,6 +27974,7 @@
     "serde 1.0.219",
     "serde_json 1.0.143",
     "serde_with 3.14.0",
+    "shellexpand 3.1.2",
     "socket2 0.5.10",
     "sysinfo 0.38.0",
     "tiberius 0.12.3",

@@ -28,6 +28,7 @@ log.workspace = true
 # openssl = { workspace = true, features = ["vendored"] }
 oracle = "0.6.3"
 rayon.workspace = true
+shellexpand.workspace = true
 tokio = { workspace = true, features = [
   "full",
   "rt",

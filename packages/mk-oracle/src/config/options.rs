@@ -31,8 +31,40 @@ impl UseHostClient {
             "always" => Some(UseHostClient::Always),
             "never" => Some(UseHostClient::Never),
             "auto" => Some(UseHostClient::Auto),
-            _ if s.starts_with('/') || s.contains('\\') => Some(UseHostClient::Path(s.to_string())),
-            _ => None,
+            _ => build_path(s).map(UseHostClient::Path),
+        }
+    }
+}
+
+/// Expand environment variables in `some` and return the result if it is an absolute path.
+///
+/// Returns `None` if the expanded string is not absolute (e.g. the variable is undefined
+/// and the literal fallback is relative, or the value itself is not an absolute path).
+fn build_path(some: &str) -> Option<String> {
+    if !some.contains(std::path::MAIN_SEPARATOR)
+        && !some.contains('/') // windows users might use '/' as a separator
+        && !some.starts_with('$')
+    {
+        log::warn!("use_host_client: '{some}' is not a good path");
+        return None;
+    }
+    match shellexpand::env(some) {
+        Err(e) => {
+            log::warn!(
+                "use_host_client: can't expand path '{}', ignoring path {:?}",
+                e.var_name,
+                some
+            );
+            None
+        }
+        Ok(p) => {
+            let p = p.into_owned();
+            if std::path::Path::new(&p).is_absolute() {
+                Some(p)
+            } else {
+                log::warn!("use_host_client: expanded path {p:?} is not absolute, ignoring");
+                None
+            }
         }
     }
 }
@@ -130,7 +162,7 @@ mod tests {
     #[test]
     fn test_options_from_yaml() {
         const OPTIONS_YAML: &str = r"
-options:   
+options:
     max_connections: 100
     use_host_client: always
     IGNORE_DB_NAME: 1
@@ -175,14 +207,93 @@ options:
             UseHostClient::from_str("auto").unwrap(),
             UseHostClient::Auto
         );
+        #[cfg(not(windows))]
         assert_eq!(
             UseHostClient::from_str("/p").unwrap(),
             UseHostClient::Path("/p".to_string())
         );
-        assert_eq!(
-            UseHostClient::from_str("c:\\P").unwrap(),
-            UseHostClient::Path("c:\\P".to_string())
-        );
+        #[cfg(windows)]
+        assert!(UseHostClient::from_str("/p").is_none());
         assert!(UseHostClient::from_str("trash").is_none());
+    }
+
+    #[test]
+    fn test_build_path_invalid() {
+        // Rejected on all platforms: no MAIN_SEPARATOR and doesn't start with '$'
+        assert_eq!(build_path(""), None);
+        assert_eq!(build_path("trash"), None);
+
+        // Contains '/' so passes the guard, but fails is_absolute() — rejected on all platforms
+        assert_eq!(build_path("relative/path"), None);
+
+        // Windows-style backslash paths: no '/' on Linux so guard fires → None;
+        // on Windows '\' IS MAIN_SEPARATOR so guard passes and is_absolute() → Some.
+        #[cfg(not(windows))]
+        {
+            assert_eq!(build_path("C:\\Program Files"), None);
+            assert_eq!(build_path("d:\\oracle"), None);
+        }
+        #[cfg(windows)]
+        {
+            assert_eq!(
+                build_path("C:\\Program Files"),
+                Some("C:\\Program Files".to_string())
+            );
+            assert_eq!(build_path("d:\\oracle"), Some("d:\\oracle".to_string()));
+            // Unix-style path on Windows is supported but will be rejected as non root
+            assert_eq!(build_path("/some/path"), None);
+        }
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn test_build_path_expand_env_var() {
+        // Paths starting with '$' pass the guard (with or without separators after the var name).
+        let Some(val) = std::env::var("HOME").ok() else {
+            return; // HOME not set in this environment — skip
+        };
+        assert_eq!(build_path("$HOME"), Some(val.clone()));
+        assert_eq!(build_path("/base/${HOME}"), Some(format!("/base/{val}")));
+        assert_eq!(
+            build_path("/u01/$HOME/lib"),
+            Some(format!("/u01/{val}/lib"))
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_build_path_expand_env_var() {
+        // Paths starting with '$' pass the guard (with or without separators after the var name).
+        let Some(val) = std::env::var("SYSTEMROOT").ok() else {
+            return; // SYSTEMROOT not set in this environment — skip
+        };
+        assert_eq!(build_path("$SYSTEMROOT"), Some(val.clone()));
+        assert_eq!(build_path("C:\\${SYSTEMROOT}"), Some(format!("C:\\{val}")));
+        assert_eq!(
+            build_path("C:\\$SYSTEMROOT\\lib"),
+            Some(format!("C:\\{val}\\lib"))
+        );
+    }
+
+    #[test]
+    fn test_build_path_expand_undefined_var() {
+        // Undefined variable: shellexpand returns Err, a warning is logged, and build_path yields None
+        assert_eq!(build_path("$UNDEFINED_VAR_12345"), None);
+    }
+
+    #[test]
+    fn test_build_path_expand_to_relative() {
+        // Variable expands successfully but to a relative path: a warning is logged and None is returned
+        unsafe { std::env::set_var("_MK_TEST_RELATIVE_PATH", "relative/oracle/lib") };
+        assert_eq!(build_path("$_MK_TEST_RELATIVE_PATH"), None);
+        unsafe { std::env::remove_var("_MK_TEST_RELATIVE_PATH") };
+    }
+
+    #[test]
+    fn test_build_path_separator_guard() {
+        // Path contains MAIN_SEPARATOR but does not start with '$':
+        // the guard fires and None is returned without invoking shellexpand
+        let sep = std::path::MAIN_SEPARATOR;
+        assert_eq!(build_path(&format!("relative{sep}oracle{sep}lib")), None);
     }
 }

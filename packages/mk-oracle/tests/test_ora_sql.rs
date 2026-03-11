@@ -1911,3 +1911,42 @@ mod find_sids {
         assert!(result.unwrap().is_none());
     }
 }
+
+// NOTE: Test mutates a process-wide environment variable. The unique prefix
+// `_MK_TEST_OCI_DIR` is to minimise collision risk with other parallel tests.
+#[test]
+fn test_options_use_host_client_with_env_var() {
+    #[cfg(not(windows))]
+    let (env_val, sep) = ("/opt/oracle/product/19c", "/");
+    #[cfg(windows)]
+    let (env_val, sep) = (r"C:\oracle\product\19c", r"\");
+
+    let env_var = "_MK_TEST_OCI_DIR";
+    unsafe {
+        std::env::set_var(env_var, env_val);
+    }
+
+    // $VAR/lib — starts with '$' so guard passes; expands to an absolute path
+    let cfg =
+        OracleConfig::load_str(&make_config_with_use_host(&format!("${env_var}{sep}lib"))).unwrap();
+    let options = cfg.ora_sql().unwrap().options();
+    assert_eq!(
+        options.use_host_client(),
+        &UseHostClient::Path(format!("{env_val}{sep}lib"))
+    );
+
+    // ${VAR}/lib — brace form, also starts with '$'
+    let cfg = OracleConfig::load_str(&make_config_with_use_host(&format!(
+        "${{{env_var}}}{sep}lib"
+    )))
+    .unwrap();
+    let options = cfg.ora_sql().unwrap().options();
+    assert_eq!(
+        options.use_host_client(),
+        &UseHostClient::Path(format!("{env_val}{sep}lib"))
+    );
+
+    unsafe {
+        std::env::remove_var(env_var);
+    }
+}

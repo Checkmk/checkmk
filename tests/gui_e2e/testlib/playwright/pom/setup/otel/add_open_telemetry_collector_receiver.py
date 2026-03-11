@@ -136,7 +136,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         locator.nth(target_index).fill(value)
 
     def add_new_password(self, receiver_type: str, password_data: dict[str, str]) -> None:
-        self.create_password_button(receiver_type).click()
+        self.click_on_last_locator(self.create_password_button(receiver_type))
         expect(
             self.new_password_slide_in.title,
             "The slide-in didn't open after clicking on 'Create' button",
@@ -157,7 +157,6 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         new_password_data: list[dict[str, str]] | None = None,
     ) -> None:
         """Fill in receiver properties form and create new passwords if needed."""
-        new_passwords_created = False
         self.receiver_protocol_endpoint_checkbox(receiver_type).check()
         if properties["endpoint"]["encryption"]:
             self.encrypt_communication_with_tls_checkbox(receiver_type).check()
@@ -166,19 +165,17 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         if properties["endpoint"]["auth"]["type"] != "none":
             self.authentication_method_dropdown(receiver_type).click()
             self.dropdown_option(receiver_type, "Basic Authentication").click()
+            passwords_by_title = {p["title"]: p for p in (new_password_data or [])}
             for user_data in properties["endpoint"]["auth"]["userlist"]:
                 self.add_new_credentials_button(receiver_type).click()
                 self.fill_last_locator(
                     self.username_textfield(receiver_type), user_data["username"]
                 )
-                if not new_passwords_created and new_password_data:
-                    for password_data in new_password_data:
-                        self.add_new_password(receiver_type, password_data)
-                    new_passwords_created = True
+                password_title = user_data["password"]["value"]
+                if password_title in passwords_by_title:
+                    self.add_new_password(receiver_type, passwords_by_title[password_title])
                 self.click_on_last_locator(self.password_dropdown(receiver_type))
-                self.dropdown_option(
-                    receiver_type, user_data["password"]["value"], exact=True
-                ).click()
+                self.dropdown_option(receiver_type, password_title, exact=True).click()
         if properties["endpoint"].get("event_console"):
             self.send_logs_to_event_console_checkbox(receiver_type).check()
             self.resource_attribute_for_hostname_computation_textfield(receiver_type).fill(

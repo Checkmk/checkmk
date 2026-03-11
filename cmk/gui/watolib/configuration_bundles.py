@@ -30,8 +30,8 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 _T = TypeVar("_T")
 IdentFinder = Callable[[GlobalIdent | None], str | None]
-Entity = Literal["host", "rule", "password", "dcd"]
-Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections"]
+Entity = Literal["host", "rule", "password", "dcd", "otel_collector"]
+Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections", "otel_collector"]
 CreateFunction = Callable[[], None]
 
 # TODO: deduplicate with cmk/gui/cee/dcd/_store.py
@@ -40,6 +40,14 @@ CreateFunction = Callable[[], None]
 #  have dcd connections
 DCDConnectionSpec = Any
 DCDConnectionDict = dict[str, DCDConnectionSpec]
+
+
+# TODO: move OTelCollectorBaseSpec to community code to link these types and avoid duplication
+class OTelCollectorConfigSpec(TypedDict):
+    locked_by: NotRequired[GlobalIdent]
+
+
+OTelCollectorConfigDict = Mapping[str, OTelCollectorConfigSpec]
 
 
 @dataclass(frozen=True)
@@ -68,7 +76,13 @@ def _get_affected_entities(bundle_group: str | None) -> set[Entity]:
     if bundle_group is None:
         bundle_domain = None
     else:
-        rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
+        group_prefix = bundle_group.split(":", maxsplit=1)[0]
+        if group_prefix == "otel_collector":
+            entities: set[Entity] = {"otel_collector"}
+            if DCDConnectionHook.domain_definition is not None:
+                entities.add("dcd")
+            return entities
+        rule_group_type = RuleGroupType(group_prefix)
         bundle_domain = bundle_domains().get(rule_group_type, None)
     return {domain.entity for domain in bundle_domain} if bundle_domain else ALL_ENTITIES
 
@@ -116,6 +130,10 @@ def _dcd_unsupported(*_args: Any, **_kwargs: Any) -> None:
     raise MKGeneralException("DCD not supported")
 
 
+def _otel_unsupported(*_args: Any, **_kwargs: Any) -> None:
+    raise MKGeneralException("OTel collector not supported")
+
+
 class DCDConnectionHook:
     load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
     create_dcd_connection: Callable[[str, DCDConnectionSpec], None] = _dcd_unsupported
@@ -124,12 +142,20 @@ class DCDConnectionHook:
     domain_definition: DomainDefinition | None = None
 
 
+class OTelCollectorHook:
+    load_otel_configs: Callable[[], OTelCollectorConfigDict] = lambda: {}
+    delete_otel_config: Callable[[str], None] = _otel_unsupported
+
+
 @dataclass
 class BundleReferences:
     hosts: Sequence[Host] | None = None
     passwords: Sequence[tuple[str, Password]] | None = None  # PasswordId, Password
     rules: Sequence[Rule] | None = None
     dcd_connections: Sequence[tuple[str, DCDConnectionSpec]] | None = None
+    # OTel configs are created independently via dedicated endpoints and linked to
+    # the bundle afterward by stamping locked_by, so they have no CreateBundleEntities counterpart.
+    otel_configs: Sequence[tuple[str, OTelCollectorConfigSpec]] | None = None
 
 
 def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
@@ -181,12 +207,23 @@ def identify_bundle_references(
         if "dcd" in affected_entities
         else {}
     )
+    bundle_otel_configs = (
+        _collect_many(
+            _collect_otel_configs(
+                finder=bundle_id_finder,
+                otel_configs=OTelCollectorHook.load_otel_configs(),
+            )
+        )
+        if "otel_collector" in affected_entities
+        else {}
+    )
     return {
         bundle_id: BundleReferences(
             hosts=bundle_hosts.get(bundle_id),
             passwords=bundle_password_ids.get(bundle_id),
             rules=bundle_rule_ids.get(bundle_id),
             dcd_connections=bundle_dcd_connections.get(bundle_id),
+            otel_configs=bundle_otel_configs.get(bundle_id),
         )
         for bundle_id in bundle_ids
     }
@@ -417,6 +454,8 @@ def delete_config_bundle_objects(
         _delete_dcd_connections(
             references.dcd_connections, pprint_value=pprint_value, debug=debug, use_git=use_git
         )
+    if references.otel_configs:
+        _delete_otel_configs(references.otel_configs)
 
 
 def _collect_many(values: Iterable[tuple[str, _T]]) -> Mapping[BundleId, Sequence[_T]]:
@@ -703,6 +742,21 @@ def _delete_dcd_connections(
         debug=debug,
         use_git=use_git,
     )
+
+
+def _collect_otel_configs(
+    finder: IdentFinder, otel_configs: OTelCollectorConfigDict
+) -> Iterable[tuple[str, tuple[str, OTelCollectorConfigSpec]]]:
+    for config_id, config in otel_configs.items():
+        if bundle_id := finder(config.get("locked_by")):
+            yield bundle_id, (config_id, config)
+
+
+def _delete_otel_configs(
+    otel_configs: Sequence[tuple[str, OTelCollectorConfigSpec]],
+) -> None:
+    for config_id, _spec in otel_configs:
+        OTelCollectorHook.delete_otel_config(config_id)
 
 
 def _prepare_id_finder(program_id: str, instance_ids: Container[str]) -> IdentFinder:

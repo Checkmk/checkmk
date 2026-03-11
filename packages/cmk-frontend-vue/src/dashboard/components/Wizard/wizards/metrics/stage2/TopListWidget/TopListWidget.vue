@@ -54,7 +54,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
   <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
     <TableForm>
       <TableFormRow>
-        <FieldDescription>{{ _t('Date range') }}</FieldDescription>
+        <FieldDescription>{{ _t('Data range') }}</FieldDescription>
         <FieldComponent>
           <DataRangeInput
             v-model:data-range-type="handler.dataRangeType.value"
@@ -66,7 +66,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
       </TableFormRow>
 
       <TableFormRow>
-        <FieldDescription>{{ _t('Rankin order') }}</FieldDescription>
+        <FieldDescription>{{ _t('Ranking order') }}</FieldDescription>
         <FieldComponent>
           <CmkDropdown
             :selected-option="handler.rankingOrder.value"

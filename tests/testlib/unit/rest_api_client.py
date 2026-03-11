@@ -3314,6 +3314,7 @@ class OtelConfigClient(RestApiClient):
     domain: DomainType = "otel_collector_config"
     receivers_domain: DomainType = "otel_collector_config_receivers"
     prom_scrapers_domain: DomainType = "otel_collector_config_prom_scrape"
+    bundles_domain: DomainType = "otel_collector_config_bundles"
     default_version = APIVersion.UNSTABLE
 
     def get_all(self, expect_ok: bool = True) -> Response:
@@ -3362,6 +3363,15 @@ class OtelConfigClient(RestApiClient):
         return self.request(
             "post",
             url=f"/domain-types/{self.prom_scrapers_domain}/collections/all",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def create_bundle(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.bundles_domain}/collections/all",
             body=dict(payload),
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,

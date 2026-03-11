@@ -13,6 +13,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -355,6 +356,40 @@ def create_config_bundle(
             debug=debug,
         )
         raise MKGeneralException(f'Failed to create configuration bundle "{bundle_id}"') from e
+
+
+def create_quick_setup_bundle(
+    title: str,
+    comment: str,
+    owned_by: UserId | None,
+    bundle_group: str,
+    name_template: str,
+    *,
+    pprint_value: bool,
+) -> tuple[BundleId, GlobalIdent]:
+    """Create and persist a new QuickSetup configuration bundle.
+
+    Returns the generated bundle ID and its GlobalIdent for stamping locked_by on linked configs.
+    """
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    bundle_id = BundleId(
+        unique_default_name_suggestion(name_template, used_names=all_bundles.keys())
+    )
+    bundle_ident = GlobalIdent(
+        site_id=omd_site(),
+        program_id=PROGRAM_ID_QUICK_SETUP,
+        instance_id=bundle_id,
+    )
+    all_bundles[bundle_id] = ConfigBundle(
+        title=title,
+        comment=comment,
+        owned_by=owned_by,
+        group=bundle_group,
+        program_id=PROGRAM_ID_QUICK_SETUP,
+    )
+    store.save(all_bundles, pprint_value)
+    return bundle_id, bundle_ident
 
 
 def delete_config_bundle(

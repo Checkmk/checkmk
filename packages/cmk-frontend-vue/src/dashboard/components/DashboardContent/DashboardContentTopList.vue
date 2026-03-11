@@ -58,7 +58,11 @@ onBeforeMount(() => {
   void fetchData()
 })
 
-watch(props, () => {
+const dataParameters = computed(() =>
+  JSON.stringify({ filters: props.effective_filter_context.filters, content: props.content })
+)
+
+watch(dataParameters, () => {
   void fetchData()
 })
 

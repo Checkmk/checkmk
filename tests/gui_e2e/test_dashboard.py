@@ -393,7 +393,6 @@ def test_add_top_list_widget(
     ).not_to_be_attached()
 
 
-@pytest.mark.xfail(reason="Bug CMK-32296")
 def test_builtin_dashboard_runtime_filter(
     dashboard_page: MainDashboard, linux_hosts: list[str]
 ) -> None:
@@ -428,13 +427,17 @@ def test_builtin_dashboard_runtime_filter(
     )
     runtime_filters_sidebar.apply_button.click()
 
-    for host_name in dashboard_page.get_widget_table_column_cells(
+    # Wait for the iframed widget to reload with filtered data by checking that no host cell
+    # contains a host other than the expected one. Using expect() for auto-retry since the iframe
+    # needs time to reload after the filter is applied.
+    host_cells = dashboard_page.get_widget_table_column_cells(
         host_table_widget, column_index=2, iframed=True
-    ).all():
-        assert host_name.text_content() == first_host, (
-            f"Unexpected host name found in widget '{host_table_widget}': "
-            f"{host_name.text_content()}. Only '{first_host}' host is expected"
-        )
+    )
+    expect(
+        host_cells.filter(has_not_text=first_host),
+        f"Unexpected host name found in widget '{host_table_widget}'."
+        f" Only '{first_host}' host is expected after filtering",
+    ).to_have_count(0)
 
     runtime_filters_sidebar = dashboard_page.open_runtime_filters()
     runtime_filters_sidebar.select_dropdown_option(

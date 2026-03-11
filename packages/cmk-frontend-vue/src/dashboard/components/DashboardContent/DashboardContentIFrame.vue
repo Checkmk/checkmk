@@ -32,7 +32,12 @@ const isPublicDashboard = useInjectIsPublicDashboard()
         'db-content-i-frame__preview': isPreview
       }"
     >
-      <iframe class="db-content-i-frame__iframe" allowtransparency="true" :src="content.url" />
+      <iframe
+        :key="content.url"
+        class="db-content-i-frame__iframe"
+        allowtransparency="true"
+        :src="content.url"
+      />
       <div
         v-if="isPublicDashboard && !disableClickShield"
         class="db-content-i-frame__click-shield"

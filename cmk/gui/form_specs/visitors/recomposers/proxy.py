@@ -51,7 +51,7 @@ def _validate_proxy_scheme(allowed_schemes: frozenset[ProxySchema], value: str) 
             Message("Invalid proxy scheme given. Must be one of: %s") % ", ".join(allowed_schemes)
         )
     if not is_allowed_url(value, cross_domain=True, schemes=allowed_schemes):
-        raise ValidationError(Message("Invalid proxy given: not an allowed url"))
+        raise ValidationError(Message("Invalid proxy given: not an allowed URL"))
 
 
 def _transform_from_disk(

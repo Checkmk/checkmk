@@ -51,7 +51,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
             # At least some basic tests if both keys are present
             assert isinstance(value, dict)
             if not (_ts_values_key in value and _default_value_key in value):
-                return InvalidValue(reason=_("Invalid time specific data"), fallback_value={})
+                return InvalidValue(reason=_("Invalid time-specific data"), fallback_value={})
 
             if isinstance(raw_value, RawDiskData):
                 assert isinstance(value, dict)
@@ -94,8 +94,8 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, _ParsedValueModel, _Fall
                 title=title,
                 help=help_text,
                 i18n=shared_type_defs.TimeSpecificI18n(
-                    enable=_("Enable time specific parameters"),
-                    disable=_("Disable time specific parameters"),
+                    enable=_("Enable time-specific parameters"),
+                    disable=_("Disable time-specific parameters"),
                 ),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 parameter_form_enabled=enabled_spec,

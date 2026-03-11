@@ -2077,18 +2077,18 @@ class Filename(TextInput):
             value = self._trans_func(value)
 
         if len(value) == 0:
-            raise MKUserError(varprefix, _("Please enter a filename."))
+            raise MKUserError(varprefix, _("Please enter a file name."))
 
         if value[0] != "/":
             raise MKUserError(
                 varprefix,
                 _(
-                    "Sorry, only absolute filenames are allowed. "
-                    "Your filename must begin with a slash."
+                    "Sorry, only absolute file names are allowed. "
+                    "Your file name must begin with a slash."
                 ),
             )
         if value[-1] == "/":
-            raise MKUserError(varprefix, _("Your filename must not end with a slash."))
+            raise MKUserError(varprefix, _("Your file name must not end with a slash."))
 
         directory = Path(value).parent
         if not directory.is_dir():

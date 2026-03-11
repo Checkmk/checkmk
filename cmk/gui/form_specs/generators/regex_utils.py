@@ -17,7 +17,7 @@ def create_regex(
     prefill: Prefill[str] | None = None,
 ) -> RegularExpression:
     return RegularExpression(
-        title=title or Title("Regular Expression"),
+        title=title or Title("Regular expression"),
         predefined_help_text=scope,
         help_text=make_help(help_text, case_sensitive),
         prefill=prefill or InputHint(""),

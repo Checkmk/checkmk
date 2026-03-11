@@ -51,7 +51,7 @@ def recompose(form_spec: FormSpec[str]) -> String:
         + matching_help_text
         + Help(" ")
         + Help(
-            "Read more about [regexes|regular expression matching in Checkmk] in our user guide."
+            "Read more about [regexes|regular expression matching in Checkmk] in our User Guide."
         )
     )
 

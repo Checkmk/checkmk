@@ -76,7 +76,7 @@ def _snmp_not_set_element() -> FixedValue[None]:
 
 def _snmp_community_element() -> SimplePassword:
     return SimplePassword(
-        title=Title("SNMP community (SNMP Versions 1 and 2c)"), custom_validate=(not_empty(),)
+        title=Title("SNMP community (SNMP versions 1 and 2c)"), custom_validate=(not_empty(),)
     )
 
 
@@ -221,7 +221,7 @@ def _get_elements(
             ),
             CascadingSingleChoiceElement(
                 name="community",
-                title=Title("SNMP community (SNMP Versions 1 and 2c)"),
+                title=Title("SNMP community (SNMP versions 1 and 2c)"),
                 parameter_form=_snmp_community_element(),
             ),
         ]

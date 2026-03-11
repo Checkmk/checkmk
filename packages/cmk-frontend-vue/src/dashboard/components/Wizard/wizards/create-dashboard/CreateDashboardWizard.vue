@@ -76,7 +76,7 @@ const scopeErrors = ref<string[]>([])
 const _scopeValidation = () => {
   scopeErrors.value = []
   if (dashboardType.value === DashboardType.CUSTOM && dashboardScopeIds.value.length === 0) {
-    scopeErrors.value.push(_t('At least one scope must be selected.'))
+    scopeErrors.value.push(_t('Select at least one scope.'))
   }
 }
 

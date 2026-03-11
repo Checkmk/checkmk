@@ -15,6 +15,7 @@ import { useVisualInfoCollection } from '@/dashboard/composables/api/useVisualIn
 
 const props = defineProps<{
   onlyIds?: string[] | null
+  hasErrors?: boolean
 }>()
 
 const selectedIds = defineModel<string[]>('selectedIds', { required: true })
@@ -73,7 +74,7 @@ watch(allowedIds, () => {
 </script>
 
 <template>
-  <div class="vi-selector">
+  <div class="vi-selector" :class="{ 'db-selector-single-info__has-errors': hasErrors }">
     <div class="vi-selector__meta">
       <span v-if="isLoading">{{ _t('Loading…') }}</span>
       <span v-else-if="error" class="error">
@@ -84,6 +85,7 @@ watch(allowedIds, () => {
     <CmkDualList
       v-if="!isLoading"
       v-model:data="dataElements"
+      class="cmk-dual-list__single-list"
       :elements="filteredElements"
       :title="_t('Visual information')"
       :validators="[]"
@@ -96,3 +98,17 @@ watch(allowedIds, () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown,checkmk/vue-bem-naming-convention */
+.db-selector-single-info__has-errors
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(
+    .cmk-dual-list__body
+      .cmk-dual-list__single-list:first-child
+      .cmk-searchable-list__container
+      select
+  ) {
+  border: 1px solid var(--button-danger-border-color);
+}
+</style>

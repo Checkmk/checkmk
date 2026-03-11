@@ -881,7 +881,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             if not isinstance(params, dict):
                 raise TypeError(
                     _(
-                        'The configuration of the LDAP attribute plugin "%s" is invalid. '
+                        'The configuration of the LDAP attribute plug-in "%s" is invalid. '
                         "Please check the configuration."
                     )
                     % key
@@ -1312,7 +1312,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         if not group:
             raise MKLDAPException(
                 _(
-                    "The configured ldap user filter group could not be found. "
+                    "The configured LDAP user filter group could not be found. "
                     'Please check <a href="%s">your configuration</a>.'
                 )
                 % "wato.py?mode=ldap_config&varname=ldap_userspec"
@@ -1515,7 +1515,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         if base_dn is None:
             raise MKLDAPException(
                 _(
-                    "Unable to synchronize nested groups (Found no common base DN for user base "
+                    "Unable to synchronize nested groups (found no common base DN for user base "
                     'DN "%s" and group base DN "%s")'
                 )
                 % (self._get_user_dn(), self.get_group_dn())
@@ -2955,10 +2955,11 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
                             ),
                             title=role["alias"],
                             help=_(
-                                "Distinguished Names of the LDAP groups to add users this role. "
-                                "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> "
-                                "This group must be defined within the scope of the "
-                                '<a href="wato.py?mode=ldap_config&varname=ldap_groupspec">LDAP Group Settings</a>.'
+                                "Distinguished names of the LDAP groups to add users this role, "
+                                "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>"
+                                "<br> This group must be defined within the scope of the "
+                                '<a href="wato.py?mode=ldap_config&varname=ldap_groupspec">'
+                                "LDAP group settings</a>."
                             ),
                             movable=False,
                         ),

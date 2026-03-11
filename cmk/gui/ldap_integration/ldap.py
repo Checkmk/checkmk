@@ -626,9 +626,9 @@ class LDAPConnectionValuespec(Dictionary):
                     help=_(
                         "This option defines the interval of the LDAP synchronization. This setting is only "
                         "used by sites which have the "
-                        '<a href="wato.py?mode=sites">Automatic User '
-                        "Synchronization</a> enabled.<br><br>"
-                        "Please note: Passwords of the users are never stored in Setup and therefor never cached!"
+                        '<a href="wato.py?mode=sites">Automatic user '
+                        "synchronization</a> enabled.<br><br>"
+                        "Please note: Passwords of the users are never stored in Setup and therefore never cached!"
                     ),
                     minvalue=60,
                     default_value=300,

@@ -351,7 +351,7 @@ def test_registered_configvar_groups() -> None:
             "Livestatus proxy",
             "Reporting",
             "Monitoring core",
-            "Ntopng (chargeable add-on)",
+            "ntopng (chargeable add-on)",
             "Telemetry",
         ]
 

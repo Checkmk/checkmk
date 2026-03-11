@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import os
+import sys
+from enum import auto, Enum
+from pathlib import Path
+from uuid import uuid4
+
+import omdlib
+import omdlib.backup
+import omdlib.certs
+import omdlib.utils
+from omdlib.config_hooks import (
+    config_set_all,
+    create_config_environment,
+    load_config,
+    read_site_config,
+    save_site_conf,
+    update_cmk_core_config,
+)
+from omdlib.contexts import SiteContext
+from omdlib.instance_id import create_instance_id
+from omdlib.scripts import call_scripts
+from omdlib.site_paths import SitePaths
+from omdlib.site_user import site_environment
+from omdlib.system_apache import register_with_system_apache
+from omdlib.tmpfs import prepare_and_populate_tmpfs
+from omdlib.type_defs import Config
+from omdlib.version_info import VersionInfo
+
+from cmk.utils.certs import (
+    cert_dir,
+    CN_TEMPLATE,
+    root_cert_path,
+    RootCA,
+)
+
+
+def initialize_site_ca(site: SiteContext, site_key_size: int = 4096) -> None:
+    """Initialize the site local CA and create the default site certificate
+    This will be used e.g. for serving SSL secured livestatus
+
+    site_key_size specifies the length of the site certificate's private key. It should only be
+    changed for testing purposes.
+    """
+    ca_path = cert_dir(Path(SitePaths.from_site_name(site.name).home))
+    ca = omdlib.certs.CertificateAuthority(
+        root_ca=RootCA.load_or_create(root_cert_path(ca_path), CN_TEMPLATE.format(site.name)),
+        ca_path=ca_path,
+    )
+    if not ca.site_certificate_exists(site.name):
+        ca.create_site_certificate(site.name, key_size=site_key_size)
+
+
+def initialize_agent_ca(site: SiteContext) -> None:
+    """Initialize the agents CA folder alongside a default agent signing CA.
+    The default CA shall be used for issuing certificates for requesting agent controllers.
+    Additional CAs/root certs that may be placed at the agent CA folder shall be used as additional
+    root certs for agent receiver certificate verification (either as client or server cert)
+    """
+    ca_path = cert_dir(Path(SitePaths.from_site_name(site.name).home)) / "agents"
+    RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' agent signing CA")
+
+
+class CommandType(Enum):
+    create = auto()
+    move = auto()
+    copy = auto()
+
+    # reuse in options or not:
+    restore_existing_site = auto()
+    restore_as_new_site = auto()
+
+    @property
+    def short(self) -> str:
+        if self is CommandType.create:
+            return "create"
+
+        if self is CommandType.move:
+            return "mv"
+
+        if self is CommandType.copy:
+            return "cp"
+
+        if self in [CommandType.restore_as_new_site, CommandType.restore_existing_site]:
+            return "restore"
+
+        raise TypeError()
+
+
+def finalize_site_as_user(
+    version_info: VersionInfo,
+    site: SiteContext,
+    config: Config,
+    command_type: CommandType,
+    verbose: bool,
+) -> None:
+    # Mount and create contents of tmpfs. This must be done as normal
+    # user. We also could do this at 'omd start', but this might confuse
+    # users. They could create files below tmp which would be shadowed
+    # by the mount.
+    site_home = SitePaths.from_site_name(site.name).home
+    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
+    site.set_config(config)
+    prepare_and_populate_tmpfs(version_info, site, skelroot)
+
+    # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
+    # see CMK-3067
+    config_set_all(site, config, verbose, ["TMPFS"])
+    update_cmk_core_config(config)
+    initialize_site_ca(site)
+    initialize_agent_ca(site)
+    save_site_conf(site_home, config)
+
+    if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
+        create_instance_id(site_home=Path(site_home), instance_id=uuid4())
+
+    call_scripts(site.name, "post-" + command_type.short, open_pty=sys.stdout.isatty())
+
+
+# Is being called at the end of create, cp and mv.
+# What is "create", "mv" or "cp". It is used for
+# running the appropriate hooks.
+def finalize_site(
+    version_info: VersionInfo,
+    old_site_name: str,
+    site: SiteContext,
+    config_settings: Config,
+    command_type: CommandType,
+    apache_reload: bool,
+    verbose: bool,
+) -> None:
+    site_home = SitePaths.from_site_name(site.name).home
+    # Now we need to do a few things as site user. Note:
+    # - We cannot use setuid() here, since we need to get back to root.
+    # - We cannot use seteuid() here, since the id command call will then still
+    #   report root and confuse some tools
+    # - We cannot sue setresuid() here, since that is not supported an Python 2.4
+    # So we need to fork() and use a real setuid() here and leave the main process
+    # at being root.
+    pid = os.fork()
+    if pid == 0:
+        try:
+            # From now on we run as normal site user!
+            site = site_environment(site.name, verbose)
+            os.chdir(site_home)
+            site.set_config(load_config(site, verbose) | config_settings)
+            create_config_environment(site.conf)
+            # Needed by the post-rename-site script
+            os.environ["OLD_OMD_SITE"] = old_site_name
+
+            finalize_site_as_user(version_info, site, site.conf, command_type, verbose)
+            sys.exit(0)
+        except Exception as e:
+            sys.stderr.write(f"Failed to finalize site: {e}\n")
+            sys.exit(1)
+    else:
+        _wpid, status = os.waitpid(pid, 0)
+        if status:
+            sys.exit("Error in non-privileged sub-process.")
+
+    # The config changes above, made with the site user, have to be also available for
+    # the root user, so load the site config again. Otherwise e.g. changed
+    # APACHE_TCP_PORT would not be recognized
+    config = read_site_config(site_home)
+    register_with_system_apache(
+        version_info,
+        SitePaths.from_site_name(site.name).apache_conf,
+        site.name,
+        config["APACHE_TCP_ADDR"],
+        config["APACHE_TCP_PORT"],
+        apache_reload,
+        verbose=verbose,
+    )

@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
-from omdlib import config_hooks, main
+from omdlib import config_choices, main
 
 
 @pytest.mark.parametrize(
@@ -30,7 +31,7 @@ from omdlib import config_hooks, main
     ],
 )
 def test__error_from_config_choice_accept_value(value: str) -> None:
-    assert main._error_from_config_choice(config_hooks.IpAddressListHasError(), value).is_ok()
+    assert main._error_from_config_choice(config_choices.IpAddressListHasError(), value).is_ok()
 
 
 @pytest.mark.parametrize(
@@ -63,7 +64,7 @@ def test__error_from_config_choice_accept_value(value: str) -> None:
     ],
 )
 def test__error_from_config_choice_reject_value(value: str) -> None:
-    assert main._error_from_config_choice(config_hooks.IpAddressListHasError(), value).is_error()
+    assert main._error_from_config_choice(config_choices.IpAddressListHasError(), value).is_error()
 
 
 @pytest.mark.parametrize(
@@ -78,7 +79,7 @@ def test__error_from_config_choice_reject_value(value: str) -> None:
     ],
 )
 def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
-    assert main._error_from_config_choice(config_hooks.ApacheTCPAddrHasError(), value).is_ok()
+    assert main._error_from_config_choice(config_choices.ApacheTCPAddrHasError(), value).is_ok()
 
 
 @pytest.mark.parametrize(
@@ -103,5 +104,5 @@ def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
     ],
 )
 def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None:
-    result = main._error_from_config_choice(config_hooks.ApacheTCPAddrHasError(), value)
+    result = main._error_from_config_choice(config_choices.ApacheTCPAddrHasError(), value)
     assert result.error.endswith(message)

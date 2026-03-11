@@ -5,27 +5,23 @@
 
 """Handling of site-internal init scripts"""
 
-import logging
+import contextlib
 import os
 import subprocess
 import sys
+from typing import Literal
 
-from omdlib.utils import chdir
-
-import cmk.utils.tty as tty
+from cmk.utils import tty
 from cmk.utils.crypto.secrets import SiteInternalSecret
-from cmk.utils.log import VERBOSE
 from cmk.utils.log.security_event import log_security_event, SiteStartStoppedEvent
-
-logger = logging.getLogger("cmk.omd")
 
 
 def call_init_scripts(
     site_dir: str,
-    command: str,
+    command: Literal["start", "stop", "restart", "reload", "status"],
     daemon: str | None = None,
     exclude_daemons: list[str] | None = None,
-) -> int:
+) -> Literal[0, 2]:
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
@@ -33,10 +29,10 @@ def call_init_scripts(
         log_security_event(SiteStartStoppedEvent(event="restart"))
         code_stop = call_init_scripts(site_dir, "stop", daemon)
         code_start = call_init_scripts(site_dir, "start", daemon)
-        return max(code_stop, code_start)
+        return 0 if (code_stop, code_start) == (0, 0) else 2
 
     # OMD guarantees OMD_ROOT to be the current directory
-    with chdir(site_dir):
+    with contextlib.chdir(site_dir):
         if command == "start":
             log_security_event(SiteStartStoppedEvent(event="start"))
             SiteInternalSecret().regenerate()
@@ -61,13 +57,15 @@ def call_init_scripts(
                 if not _call_init_script(f"{rc_dir}/{script}", command):
                     success = False
 
-    if success:
-        return 0
-    return 2
+    return 0 if success else 2
 
 
 def check_status(  # pylint: disable=too-many-branches
-    site_dir: str, display: bool = True, daemon: str | None = None, bare: bool = False
+    site_dir: str,
+    verbose: bool,
+    display: bool = True,
+    daemon: str | None = None,
+    bare: bool = False,
 ) -> int:
     num_running = 0
     num_unused = 0
@@ -78,7 +76,6 @@ def check_status(  # pylint: disable=too-many-branches
         if not bare:
             sys.stderr.write("ERROR: This daemon does not exist.\n")
         return 3
-    is_verbose = logger.isEnabledFor(VERBOSE)
     for script in scripts:
         komponent = script.split("/")[-1].split("-", 1)[-1]
         if daemon and komponent != daemon:
@@ -90,7 +87,7 @@ def check_status(  # pylint: disable=too-many-branches
             stderr=subprocess.DEVNULL,
         )
 
-        if display and (state != 5 or is_verbose):
+        if display and (state != 5 or verbose):
             if bare:
                 sys.stdout.write(komponent + " ")
             else:
@@ -98,7 +95,7 @@ def check_status(  # pylint: disable=too-many-branches
                 sys.stdout.write(tty.bold)
 
         if bare:
-            if state != 5 or is_verbose:
+            if state != 5 or verbose:
                 sys.stdout.write("%d\n" % state)
 
         if state == 0:
@@ -106,7 +103,7 @@ def check_status(  # pylint: disable=too-many-branches
                 sys.stdout.write(tty.green + "running\n")
             num_running += 1
         elif state == 5:
-            if display and is_verbose and not bare:
+            if display and verbose and not bare:
                 sys.stdout.write(tty.blue + "unused\n")
             num_unused += 1
         else:

@@ -8,7 +8,8 @@ import os
 import pwd
 import shlex
 import subprocess
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
+from typing import IO, Literal, overload, TYPE_CHECKING
 
 import psutil
 
@@ -16,7 +17,9 @@ if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
     from omdlib.version_info import VersionInfo
 
-import cmk.utils.tty as tty
+from omdlib.site_paths import SitePaths
+
+from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
 
 # .
@@ -30,6 +33,10 @@ from cmk.utils.exceptions import MKTerminate
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with Linux users and groups            |
 #   '----------------------------------------------------------------------'
+
+# TERM: Tells command line tools (ls, grep, vim, etc.) how to use colors, move cursors, etc...
+# CMK_CONTAINERIZED: Detect when running inside container (e.g. used for omd update)
+KEEP = ["TERM", "CMK_CONTAINERIZED"]
 
 
 def find_processes_of_user(username: str) -> list[str]:
@@ -74,19 +81,14 @@ def useradd(
     uid: str | None = None,
     gid: str | None = None,
 ) -> None:
+    site_home = SitePaths.from_site_name(site.name).home
     # Create user for running site 'name'
     _groupadd(site.name, gid)
     useradd_options = version_info.USERADD_OPTIONS
     if uid is not None:
         useradd_options += " -u %d" % int(uid)
 
-    cmd = "useradd {} -r -d '{}' -c 'OMD site {}' -g {} -G omd {} -s /bin/bash".format(
-        useradd_options,
-        site.dir,
-        site.name,
-        site.name,
-        site.name,
-    )
+    cmd = f"useradd {useradd_options} -r -d '{site_home}' -c 'OMD site {site.name}' -g {site.name} -G omd {site.name} -s /bin/bash"
     if subprocess.call(shlex.split(cmd)) != 0:
         groupdel(site.name)
         raise MKTerminate("Error creating site user.")
@@ -178,28 +180,31 @@ def user_verify(
     version_info: "VersionInfo", site: "SiteContext", allow_populated: bool = False
 ) -> bool:
     name = site.name
+    site_home = SitePaths.from_site_name(site.name).home
 
     if not user_exists(name):
         raise MKTerminate(tty.error + ": user %s does not exist" % name)
 
     user = _user_by_id(user_id(name))
-    if user.pw_dir != site.dir:
-        raise MKTerminate(tty.error + f": Wrong home directory for user {name}, must be {site.dir}")
-
-    if not os.path.exists(site.dir):
+    if user.pw_dir != site_home:
         raise MKTerminate(
-            tty.error + f": home directory for user {name} ({site.dir}) does not exist"
+            tty.error + f": Wrong home directory for user {name}, must be {site_home}"
         )
 
-    if not allow_populated and os.path.exists(site.dir + "/version"):
+    if not os.path.exists(site_home):
         raise MKTerminate(
-            tty.error + f": home directory for user {name} ({site.dir}) must be empty"
+            tty.error + f": home directory for user {name} ({site_home}) does not exist"
         )
 
-    if not _file_owner_verify(site.dir, user.pw_uid, user.pw_gid):
+    if not allow_populated and os.path.exists(site_home + "/version"):
+        raise MKTerminate(
+            tty.error + f": home directory for user {name} ({site_home}) must be empty"
+        )
+
+    if not _file_owner_verify(site_home, user.pw_uid, user.pw_gid):
         raise MKTerminate(
             tty.error
-            + f": home directory ({site.dir}) is not owned by user {name} and group {name}"
+            + f": home directory ({site_home}) is not owned by user {name} and group {name}"
         )
 
     group = _group_by_id(user.pw_gid)
@@ -249,8 +254,8 @@ def _group_by_id(id_: int) -> grp.struct_group:
     return grp.getgrgid(id_)
 
 
-def switch_to_site_user(site: "SiteContext") -> None:
-    p = pwd.getpwnam(site.name)
+def switch_to_site_user(site_name: str) -> None:
+    p = pwd.getpwnam(site_name)
     uid = p.pw_uid
     gid = p.pw_gid
     os.chdir(p.pw_dir)
@@ -262,9 +267,87 @@ def switch_to_site_user(site: "SiteContext") -> None:
     # If you know something better, that does not rely on an external
     # command (and that does not try to parse around /etc/group, of
     # course), then please tell mk -> mk@mathias-kettner.de.
-    os.setgroups(_groups_of(site.name))
+    os.setgroups(_groups_of(site_name))
     os.setuid(uid)
     os.umask(0o077)
+
+
+def run_as_site_user(
+    user: str,
+    command: list[str],
+    capture_output: bool,
+    stdin: int | IO[bytes] | None = None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.CompletedProcess[str]:
+    passwd = pwd.getpwnam(user)
+    return subprocess.run(
+        command,
+        capture_output=capture_output,
+        check=False,
+        close_fds=True,
+        cwd=passwd.pw_dir,
+        encoding="utf-8",
+        env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
+        extra_groups=os.getgrouplist(user, passwd.pw_gid),
+        group=passwd.pw_gid,
+        pass_fds=pass_fds,
+        stdin=stdin,
+        umask=0o077,
+        user=user,
+    )
+
+
+@overload
+def popen_as_site_user(
+    user: str,
+    command: list[str],
+    encoding: Literal["utf-8"],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[str]: ...
+
+
+@overload
+def popen_as_site_user(
+    user: str,
+    command: list[str],
+    encoding: Literal[None],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[bytes]: ...
+
+
+def popen_as_site_user(
+    user: str,
+    command: Sequence[str],
+    encoding: Literal["utf-8", None],
+    stdin: int | IO[str] | None,
+    stdout: int | IO[str] | None,
+    stderr: int | IO[str] | None,
+    pass_fds: Sequence[int] = (),
+) -> subprocess.Popen[str] | subprocess.Popen[bytes]:
+    # This function should really have a context manager. We don't touch this functionality here for
+    # stability of the 2.4., but please don't add new call sites.
+    passwd = pwd.getpwnam(user)
+    return subprocess.Popen(
+        command,
+        close_fds=True,
+        cwd=passwd.pw_dir,
+        encoding=encoding,
+        env={key: value for key in KEEP if (value := os.environ.get(key)) is not None},
+        extra_groups=os.getgrouplist(user, passwd.pw_gid),
+        group=passwd.pw_gid,
+        pass_fds=pass_fds,
+        stdin=stdin,
+        stdout=stdout,
+        stderr=stderr,
+        umask=0o077,
+        user=user,
+    )
 
 
 def _groups_of(username: str) -> list[int]:

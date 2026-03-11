@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
+import tempfile
+from pathlib import Path
 
-from tests.testlib.site import Site
+from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import run, wait_until
 
 
@@ -79,6 +81,72 @@ def test_run_omd_sites_bare(site: Site) -> None:
     sites = stdout.split("\n")
     assert len(sites) >= 1
     assert site.id in sites
+
+
+def test_run_omd_backup_and_omd_restore(site: Site) -> None:
+    """
+    Test the 'omd backup' and 'omd restore' commands.
+    This test creates a backup of the current site and then restores it with a new name.
+
+    """
+    site_factory = get_site_factory(prefix="")
+    restored_site_name = "restored_site"
+    restored_site = None
+    backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
+    try:
+        # run the backup
+        assert site.omd("backup", str(backup_path)) == 0
+        assert backup_path.stat().st_size > 0, "Backup file was not created."
+
+        # run restore as root to use a different site name
+        run(["omd", "restore", restored_site_name, str(backup_path)], sudo=True, check=True)
+        restored_site = site_factory.get_existing_site(restored_site_name, start=True)
+        assert restored_site.exists(), "Restored site does not exist."
+        assert restored_site.is_running(), "Restored site is not running."
+
+    finally:
+        if backup_path.exists():
+            run(["rm", "-rf", str(backup_path)], sudo=True)
+        if restored_site is not None and restored_site.exists():
+            restored_site.rm()
+
+
+def test_run_omd_backup_and_omd_restore_empty() -> None:
+    """Test that restore works on empty site directory."""
+    site_factory = get_site_factory(prefix="")
+    restored_site_name = "restored_site"
+    backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
+    try:
+        # run the backup
+        restored_site = site_factory.get_site(
+            restored_site_name,
+            start=False,
+            init_livestatus=False,
+            prepare_for_tests=False,
+            activate_changes=False,
+        )
+        assert restored_site.omd("backup", str(backup_path)) == 0
+        assert backup_path.stat().st_size > 0, "Backup file was not created."
+
+        restored_site.omd("stop")
+        assert restored_site.omd("umount") == 0
+        run(["rm", "-rf", str(restored_site.root)], sudo=True, check=True)
+        # create_site_home
+        run(["mkdir", str(restored_site.root)], sudo=True, check=True)
+        owner_group = f"{restored_site_name}:{restored_site_name}"
+        run(["chown", owner_group, str(restored_site.root)], sudo=True, check=True)
+        run(["chmod", "0751", str(restored_site.root)], sudo=True, check=True)
+
+        assert restored_site.omd("restore", "--reuse", str(backup_path)) == 0
+        restored_site = site_factory.get_existing_site(restored_site_name, start=True)
+        assert restored_site.exists(), "Restored site does not exist."
+        assert restored_site.is_running(), "Restored site is not running."
+
+    finally:
+        if backup_path.exists():
+            run(["rm", str(backup_path)], sudo=True)
+        if restored_site is not None and restored_site.exists():
+            restored_site.rm()
 
 
 def test_run_omd_status_as_site_user(site: Site) -> None:

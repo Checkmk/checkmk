@@ -18,6 +18,8 @@ $(OMD_INSTALL): omdlib-install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd.bin $(DESTDIR)$(OMD_ROOT)/bin/omd
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/bin/omd
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd_site_user.py $(DESTDIR)$(OMD_ROOT)/lib/omd/omd_site_user
+	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/omd_site_user
 # SUP-10161: our openssl is incompatible with some system executables on various sles15sp* and el9 and el10
 ifneq ($(filter sles15% el9 el10 trixie, $(DISTRO_CODE)),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/curl
@@ -42,6 +44,7 @@ endif
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	gzip -f $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd.init $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
+	install -m 644 $(PACKAGE_DIR)/$(OMD)/security-werk-18891.flag $(DESTDIR)$(OMD_ROOT)/share/omd/security-werk-18891.flag
 	sed -i 's|###DEFAULT_RUNLEVELS###|$(DEFAULT_RUNLEVELS)|g' $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omd.service $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)

@@ -22,7 +22,7 @@ def _parameter_form_mssql_instance() -> Dictionary:
 
 rule_spec_mssql_instance = CheckParameters(
     name="mssql_instance",
-    title=Title("MSSQL Instance"),
+    title=Title("MSSQL instance"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_mssql_instance,
     condition=HostAndItemCondition(item_title=Title("Instance identifier")),

@@ -32,7 +32,7 @@ rule_spec_mssql_backup_per_type = rule_specs.CheckParameters(
     name="mssql_backup_per_type",
     topic=rule_specs.Topic.APPLICATIONS,
     parameter_form=_parameter_form_mssql_backup_per_type,
-    title=Title("MSSQL Backup"),
+    title=Title("MSSQL backup"),
     condition=rule_specs.HostAndItemCondition(
         item_title=Title("Instance, tablespace & backup type"), item_form=_item_spec()
     ),

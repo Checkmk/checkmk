@@ -36,7 +36,7 @@ def _parameter_valuespec_mongodb_asserts() -> Dictionary:
 
 rule_spec_mongodb_asserts = CheckParameters(
     name="mongodb_asserts",
-    title=Title("MongoDB Assert Rates"),
+    title=Title("MongoDB assert rates"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_valuespec_mongodb_asserts,
     condition=HostCondition(),

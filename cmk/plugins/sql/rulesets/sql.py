@@ -65,12 +65,12 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
         help_text=Help(
             "This check connects to the specified database, sends a custom SQL-statement "
             "or starts a procedure, and checks that the result."
-            " Please refer to the man page of the active check <tt>check_sql</tt> for details."
+            " Please refer to the manual page of the active check <tt>check_sql</tt> for details."
         ),
         elements={
             "description": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("Service description"),
+                    title=Title("Service name"),
                     help_text=Help("The name of this active service to be displayed."),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     macro_support=True,
@@ -132,7 +132,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                         "Alternatively the first column can be interpreted as number value and you can "
                         "define levels for this number. The "
                         "second column is used as check output. The third column is optional and can "
-                        "contain performance data."
+                        "contain metrics."
                     ),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     monospaced=True,
@@ -194,7 +194,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             "perfdata": form_specs.DictElement[str](
                 parameter_form=form_specs.String(
-                    title=Title("Performance data"),
+                    title=Title("Metrics"),
                     help_text=Help(
                         "Store output value into RRD database in a metric with this name."
                     ),

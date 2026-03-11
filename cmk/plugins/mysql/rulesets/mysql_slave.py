@@ -25,10 +25,11 @@ def _parameter_form() -> Dictionary:
             "seconds_behind_master": DictElement(
                 required=True,
                 parameter_form=SimpleLevels(
-                    title=Title("Max. time behind the master"),
+                    title=Title("Max. time behind the central site"),
                     help_text=Help(
-                        "Compares the time which the slave can be behind the master. "
-                        "This rule makes the check raise warning/critical states if the time is equal to "
+                        "Compares the time which the remote can be behind "
+                        "the central. This rule makes the check raise "
+                        "WARNING/CRITICAL states if the time is equal to "
                         "or above the configured levels."
                     ),
                     level_direction=LevelDirection.UPPER,

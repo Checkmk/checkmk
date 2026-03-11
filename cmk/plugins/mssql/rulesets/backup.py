@@ -47,8 +47,8 @@ def _parameter_formspec_mssql_backup() -> form_specs.Dictionary:
         help_text=Help(
             "This rule allows you to set limits on the age of backups for "
             "different backup types. If your agent does not support "
-            "backup types (e.g. <i>Log Backup</i>, <i>Database Diff "
-            "Backup</i>, etc.) you can use the option <i>Database Backup"
+            "backup types (e.g. <i>Log backup</i>, <i>Database diff "
+            "backup</i>, etc.) you can use the option <i>Database backup"
             "</i> to set a general limit"
         ),
         elements={
@@ -69,7 +69,7 @@ def _parameter_formspec_mssql_backup() -> form_specs.Dictionary:
 
 rule_spec_mssql_backup = rule_specs.CheckParameters(
     name="mssql_backup",
-    title=Title("MSSQL Backup summary"),
+    title=Title("MSSQL backup summary"),
     topic=rule_specs.Topic.APPLICATIONS,
     parameter_form=_parameter_formspec_mssql_backup,
     condition=mssql_condition_instance_tablespace(),

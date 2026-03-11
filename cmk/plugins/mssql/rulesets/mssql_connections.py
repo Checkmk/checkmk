@@ -40,5 +40,5 @@ rule_spec_mssql_connections = CheckParameters(
     topic=Topic.APPLICATIONS,
     condition=HostAndItemCondition(item_title=Title("Database identifier")),
     parameter_form=_parameter_rulespec_mssql_connections,
-    title=Title("MSSQL Connections"),
+    title=Title("MSSQL connections"),
 )

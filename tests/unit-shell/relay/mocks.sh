@@ -97,6 +97,15 @@ podman() {
 }
 export -f podman
 
+# Mock: _get_podman_version - Returns podman version string for check_podman_version.
+# Mocked separately so tests that override podman() for other behaviour (pull, run, etc.)
+# don't also need to handle --version.
+# shellcheck disable=SC2317
+_get_podman_version() {
+    echo "5.0.0"
+}
+export -f _get_podman_version
+
 # Mock: systemctl - Systemd service management
 # shellcheck disable=SC2317
 systemctl() {
@@ -193,6 +202,15 @@ get_euid() {
     echo 1000
 }
 export -f get_euid
+
+# Mock: _confirm_or_die - Confirmation prompt for advisory checks
+# Default: die with the provided message (simulates user declining / non-interactive mode).
+# Override per-test to simulate user accepting: _confirm_or_die() { return 0; }
+# shellcheck disable=SC2317
+_confirm_or_die() {
+    die "$@"
+}
+export -f _confirm_or_die
 
 # Mock: getent - Get entries from Name Service Switch libraries
 # Used by is_loopback to resolve hostnames and by check_uid_gid_conflict to

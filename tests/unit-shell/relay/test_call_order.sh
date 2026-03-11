@@ -26,6 +26,16 @@ setUp() {
     export CHECKMK_RELAY_SYSTEMD_DIR="${TEST_DIR}/etc/systemd/system"
     export CHECKMK_RELAY_QUADLET_DIR="${TEST_DIR}/etc/containers/systemd"
 
+    # Seed a known-supported OS so warn_if_os_unsupported passes on any CI host
+    OS_RELEASE_FILE="${TEST_DIR}/os-release"
+    export OS_RELEASE_FILE
+    printf 'ID="ubuntu"\nVERSION_ID="24.04"\n' >"$OS_RELEASE_FILE"
+
+    # Mock uname so check_arch_x86_64 passes on any CI host
+    # shellcheck disable=SC2317
+    uname() { echo "x86_64"; }
+    export -f uname
+
     # Create file to track calls across subshells
     MOCK_CALLS_FILE="${TEST_DIR}/mock_calls.log"
     export MOCK_CALLS_FILE

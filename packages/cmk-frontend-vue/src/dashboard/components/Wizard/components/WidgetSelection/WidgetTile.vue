@@ -12,7 +12,7 @@ import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 
-interface AvailableWidgetProps {
+interface WidgetTileProps {
   label: TranslatedString
   icon: SimpleIcons
   disabled?: boolean
@@ -20,34 +20,34 @@ interface AvailableWidgetProps {
   compact?: boolean
 }
 
-const props = defineProps<AvailableWidgetProps>()
+const props = defineProps<WidgetTileProps>()
 
 const modifierClass = computed(() => {
   if (props.selected) {
-    return 'db-available-widget__item-selected'
+    return 'db-widget-tile__item-selected'
   }
 
   if (props.disabled) {
-    return 'db-available-widget__item-disabled'
+    return 'db-widget-tile__item-disabled'
   }
 
-  return 'db-available-widget__item-available'
+  return 'db-widget-tile__item-available'
 })
 </script>
 
 <template>
-  <div class="db-available-widget__item" :class="modifierClass">
-    <div class="db-available-widget__item-icon">
+  <div class="db-widget-tile__item" :class="modifierClass">
+    <div class="db-widget-tile__item-icon">
       <CmkIcon :name="icon" :size="compact ? 'xlarge' : 'xxlarge'" :colored="!disabled" />
     </div>
-    <div class="db-available-widget__item-label">
+    <div class="db-widget-tile__item-label">
       <CmkLabel :cursor="disabled ? 'default' : 'pointer'">{{ label }}</CmkLabel>
     </div>
   </div>
 </template>
 
 <style scoped>
-.db-available-widget__item {
+.db-widget-tile__item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -59,16 +59,16 @@ const modifierClass = computed(() => {
   border-radius: var(--dimension-4);
 }
 
-.db-available-widget__item-icon {
+.db-widget-tile__item-icon {
   display: block;
 }
 
-.db-available-widget__item-label {
+.db-widget-tile__item-label {
   display: block;
   overflow-wrap: break-word;
 }
 
-.db-available-widget__item-available {
+.db-widget-tile__item-available {
   cursor: pointer;
 
   &:hover {
@@ -76,7 +76,7 @@ const modifierClass = computed(() => {
   }
 }
 
-.db-available-widget__item-selected {
+.db-widget-tile__item-selected {
   border-color: var(--default-border-color-green);
   cursor: pointer;
 
@@ -85,7 +85,7 @@ const modifierClass = computed(() => {
   }
 }
 
-.db-available-widget__item-disabled {
+.db-widget-tile__item-disabled {
   border-color: var(--ux-theme-8);
   color: var(--ux-theme-10);
 }

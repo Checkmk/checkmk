@@ -19,7 +19,7 @@ import type { ObjectType } from '@/dashboard/types/shared.ts'
 
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage1Header from '../../../components/Stage1Header.vue'
-import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
+import WidgetTiles from '../../../components/WidgetSelection/WidgetTiles.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import { Graph, useSelectGraphTypes } from '../composables/useSelectGraphTypes'
 
@@ -110,7 +110,7 @@ const configuredFiltersByObjectType = computed(() =>
   </SectionBlock>
 
   <SectionBlock :title="_t('Available visualization type')">
-    <AvailableWidgets
+    <WidgetTiles
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"
       @select-widget="(preselectedWidgetType) => gotoNextStage(preselectedWidgetType)"

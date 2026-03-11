@@ -20,7 +20,7 @@ import type {
 
 import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
-import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
+import WidgetTiles from '../../../components/WidgetSelection/WidgetTiles.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import { Graph, getAvailableGraphs } from '../composables/useSelectGraphTypes'
 import ServiceState from './ServiceState/ServiceState.vue'
@@ -137,7 +137,7 @@ const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTE
     :title="_t('Choose how to display your data')"
     :subtitle="_t('Visualization types')"
   >
-    <AvailableWidgets
+    <WidgetTiles
       v-model:selected-widget="selectedWidget as Graph"
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"

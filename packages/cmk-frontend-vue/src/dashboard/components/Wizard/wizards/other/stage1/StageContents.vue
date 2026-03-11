@@ -13,7 +13,7 @@ import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.
 import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import SectionBlock from '@/dashboard/components/Wizard/components/SectionBlock.vue'
 import StepsHeader from '@/dashboard/components/Wizard/components/StepsHeader.vue'
-import AvailableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/AvailableWidgets.vue'
+import WidgetTiles from '@/dashboard/components/Wizard/components/WidgetSelection/WidgetTiles.vue'
 import type { WidgetItemList } from '@/dashboard/components/Wizard/components/WidgetSelection/types'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
@@ -126,7 +126,7 @@ function gotoNextStage() {
     :title="_t('Choose how to display your data')"
     :subtitle="_t('Visualization types')"
   >
-    <AvailableWidgets
+    <WidgetTiles
       v-model:selected-widget="selectedWidget as OtherWidgetType"
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"

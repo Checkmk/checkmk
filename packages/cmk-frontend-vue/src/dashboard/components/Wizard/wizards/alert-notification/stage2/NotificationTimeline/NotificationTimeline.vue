@@ -21,7 +21,7 @@ import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/F
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
-import AvailableWidgets from '@/dashboard/components/Wizard/components/WidgetSelection/AvailableWidgets.vue'
+import WidgetTiles from '@/dashboard/components/Wizard/components/WidgetSelection/WidgetTiles.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types'
 
@@ -43,7 +43,7 @@ const availableVisualizationTypes = getVisualizationTypes()
 <template>
   <CmkHeading type="h4">{{ _t('Show as') }}</CmkHeading>
   <ContentSpacer :dimension="5" />
-  <AvailableWidgets
+  <WidgetTiles
     v-model:selected-widget="handler.visualizationType.value"
     :available-items="availableVisualizationTypes"
     :enabled-widgets="Object.values(VisualizationTimelineType)"

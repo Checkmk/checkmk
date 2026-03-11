@@ -390,6 +390,7 @@ const startAjax = (): Promise<void> => {
   isSuccess.value = false
   isError.value = false
   savedAgentInstalled.value = false
+  showSettings.value = false
 
   return callAjax('wato_ajax_diag_cmk_agent.py', {
     method: 'POST'
@@ -483,6 +484,7 @@ function onClose() {
   }
 }
 const agentPort: Ref<number> = ref(6556)
+const showSettings = ref(false)
 </script>
 
 <template>
@@ -505,17 +507,38 @@ const agentPort: Ref<number> = ref(6556)
     </CmkButton>
 
     <template v-else>
-      <CmkButton
-        v-if="!isLoading && !isSuccess && !isError"
-        type="button"
-        :title="tooltipText"
-        class="agent-test-button"
-        :disabled="!hostname"
-        @click="startAjax"
-      >
-        <CmkIcon name="connection-tests" size="small" :title="tooltipText" class="button-icon" />
-        {{ _t('Test agent connection') }}
-      </CmkButton>
+      <span v-if="!isLoading && !isSuccess && !isError" class="test-controls">
+        <CmkButton
+          type="button"
+          :title="tooltipText"
+          class="agent-test-button"
+          :disabled="!hostname"
+          @click="startAjax"
+        >
+          <CmkIcon name="connection-tests" size="small" :title="tooltipText" class="button-icon" />
+          {{ _t('Test agent connection') }}
+        </CmkButton>
+
+        <button
+          type="button"
+          class="settings-toggle"
+          :class="{ disabled: !hostname }"
+          :disabled="!hostname"
+          :title="_t('Test settings')"
+          @click="showSettings = !showSettings"
+        >
+          <CmkIcon name="configuration" size="small" :title="_t('Test settings')" />
+        </button>
+
+        <div v-if="showSettings && !hostname" class="label-container disabled">
+          <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+          <CmkInput v-model="agentPort" :disabled="true" type="number" />
+        </div>
+        <div v-else-if="showSettings && hostname" class="label-container enabled">
+          <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+          <CmkInput v-model="agentPort" type="number" />
+        </div>
+      </span>
 
       <CmkAlertBox v-if="isLoading" variant="loading" size="small" class="loading-container">
         {{ _t('Testing agent connection ...') }}
@@ -523,7 +546,23 @@ const agentPort: Ref<number> = ref(6556)
 
       <CmkAlertBox v-if="isSuccess" variant="success" size="small" class="success-container">
         {{ _t('Successfully connected to agent.') }}
-        <a href="#" @click.prevent="startAjax">{{ _t('Re-test agent connection') }}</a>
+        <span class="success-button-container">
+          <a href="#" @click.prevent="startAjax">{{ _t('Re-test agent connection') }}</a>
+
+          <button
+            type="button"
+            class="settings-toggle"
+            :title="_t('Test settings')"
+            @click="showSettings = !showSettings"
+          >
+            <CmkIcon name="configuration" size="small" :title="_t('Test settings')" />
+          </button>
+
+          <div v-if="showSettings" class="label-container enabled">
+            <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+            <CmkInput v-model="agentPort" type="number" />
+          </div>
+        </span>
       </CmkAlertBox>
 
       <CmkAlertBox v-if="isError" variant="warning" size="small" class="warn-container">
@@ -535,7 +574,7 @@ const agentPort: Ref<number> = ref(6556)
           <CmkParagraph>
             {{ warnContainerValues.txt }}
           </CmkParagraph>
-          <div class="warn-button-container">
+          <span class="warn-button-container">
             <CmkButton
               type="button"
               :title="warnContainerValues.buttonOneTitle"
@@ -553,17 +592,23 @@ const agentPort: Ref<number> = ref(6556)
             >
               {{ warnContainerValues.buttonTwoButton }}
             </CmkButton>
-          </div>
+
+            <button
+              type="button"
+              class="settings-toggle"
+              :title="_t('Test settings')"
+              @click="showSettings = !showSettings"
+            >
+              <CmkIcon name="configuration" size="small" :title="_t('Test settings')" />
+            </button>
+
+            <div v-if="showSettings" class="label-container enabled">
+              <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+              <CmkInput v-model="agentPort" type="number" />
+            </div>
+          </span>
         </div>
       </CmkAlertBox>
-      <div v-if="!hostname" class="label-container disabled">
-        <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
-        <CmkInput v-model="agentPort" :disabled="true" type="number" />
-      </div>
-      <div v-else-if="!isLoading && hostname" class="label-container enabled">
-        <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
-        <CmkInput v-model="agentPort" type="number" />
-      </div>
     </template>
 
     <CmkSlideInDialog
@@ -608,9 +653,15 @@ button {
   }
 }
 
-.agent-test-button {
+.test-controls {
+  display: inline-flex;
+  align-items: center;
+  height: var(--form-field-height);
   margin-left: var(--spacing-half);
-  height: 21px;
+}
+
+.agent-test-button {
+  height: var(--form-field-height);
 
   &.alert-box-button {
     margin-left: 0;
@@ -618,7 +669,34 @@ button {
   }
 }
 
-.label-container,
+.settings-toggle {
+  background: none;
+  cursor: pointer;
+  margin-left: var(--spacing-half);
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &.disabled {
+    cursor: default;
+    opacity: 0.3;
+  }
+}
+
+.label-container {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--spacing-half);
+  position: relative;
+  top: var(--dimension-2);
+}
+
+.label-container.disabled {
+  opacity: 0.5;
+}
+
 .warn-container,
 .loading-container,
 .success-container {
@@ -627,8 +705,13 @@ button {
   margin: 0 0 0 var(--dimension-4);
 }
 
-.label-container.disabled {
-  opacity: 0.5;
+.success-container {
+  .success-button-container {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-left: var(--spacing-half);
+  }
 }
 
 .warn-container {
@@ -641,6 +724,9 @@ button {
   }
 
   .warn-button-container {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
     margin: var(--spacing-half) 0 0;
   }
 }

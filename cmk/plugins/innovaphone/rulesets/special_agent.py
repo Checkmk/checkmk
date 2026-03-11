@@ -22,7 +22,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def _parameter_form() -> Dictionary:
     return Dictionary(
         migrate=_migrate,
-        help_text=Help("Please specify the user and password needed to access the xml interface"),
+        help_text=Help("Please specify the user and password needed to access the XML interface"),
         elements={
             "protocol": DictElement(
                 parameter_form=SingleChoice(

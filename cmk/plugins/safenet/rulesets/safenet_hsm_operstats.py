@@ -38,7 +38,7 @@ def _parameter_rulespec_safenet_hsm_operstats():
             ),
             "request_rate": DictElement(
                 parameter_form=Levels(
-                    title=Title("Request Rate"),
+                    title=Title("Request rate"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Float(unit_symbol="1/s"),
                     prefill_levels_type=DefaultValue(LevelsType.FIXED),

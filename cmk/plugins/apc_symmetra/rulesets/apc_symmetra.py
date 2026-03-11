@@ -85,7 +85,7 @@ def _parameter_valuespec_apc_symmetra() -> Dictionary:
                 parameter_form=SimpleLevels(
                     title=Title("Time left on battery"),
                     help_text=Help(
-                        "Time left on Battery at and below which a warning/critical state is triggered"
+                        "Time left on battery at and below which a WARNING/CRITICAL state is triggered"
                     ),
                     form_spec_template=TimeSpan(
                         title=Title("Age"),

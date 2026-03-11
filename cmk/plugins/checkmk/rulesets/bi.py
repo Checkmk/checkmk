@@ -59,7 +59,7 @@ def _credential_vs() -> CascadingSingleChoice:
                         "username": DictElement(
                             required=True,
                             parameter_form=String(
-                                title=Title("User name"),
+                                title=Title("Username"),
                                 custom_validate=(validators.LengthInRange(min_value=0),),
                             ),
                         ),
@@ -99,7 +99,7 @@ def _bi_aggregate() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="remote",
-                            title=Title("Connect to site url"),
+                            title=Title("Connect to site URL"),
                             parameter_form=Dictionary(
                                 elements={
                                     "url": DictElement(
@@ -269,7 +269,7 @@ def _bi_aggregate() -> Dictionary:
 
 def _parameter_form() -> Dictionary:
     return Dictionary(
-        title=Title("BI Aggregations"),
+        title=Title("BI aggregations"),
         elements={
             "options": DictElement(
                 required=True,
@@ -323,7 +323,7 @@ def _tuple_do_dict_with_keys(*keys: str) -> Callable[[object], Mapping[str, obje
 
 rule_spec_special_agent_bi = SpecialAgent(
     name="bi",
-    title=Title("BI Aggregations"),
+    title=Title("BI aggregations"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form,
 )

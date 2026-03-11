@@ -24,7 +24,7 @@ rule_spec_hyperv_vm_ram = CheckParameters(
             "max_ram": DictElement(
                 required=True,
                 parameter_form=SimpleLevels(
-                    title=Title("Max levels for ram"),
+                    title=Title("Max levels for RAM"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Percentage(),
                     prefill_fixed_levels=InputHint(value=(80, 90)),
@@ -33,7 +33,7 @@ rule_spec_hyperv_vm_ram = CheckParameters(
             "min_ram": DictElement(
                 required=True,
                 parameter_form=SimpleLevels(
-                    title=Title("Min levels for ram"),
+                    title=Title("Min levels for RAM"),
                     level_direction=LevelDirection.LOWER,
                     form_spec_template=Percentage(),
                     prefill_fixed_levels=InputHint(value=(20, 10)),

@@ -48,7 +48,7 @@ def _parameter_valuespec_jenkins_system_metrics() -> Dictionary:
 rule_spec_jenkins_system_metrics = CheckParameters(
     name="jenkins_system_metrics",
     topic=Topic.APPLICATIONS,
-    condition=HostAndItemCondition(item_title=Title("Metrics Group")),
+    condition=HostAndItemCondition(item_title=Title("Metrics group")),
     parameter_form=_parameter_valuespec_jenkins_system_metrics,
     title=Title("Jenkins system metrics"),
 )

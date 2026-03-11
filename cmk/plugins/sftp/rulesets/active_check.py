@@ -71,7 +71,7 @@ def _make_form_spec_check_sftp() -> Dictionary:
             "host": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("Hostname"),
+                    title=Title("Host name"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),
@@ -92,7 +92,7 @@ def _make_form_spec_check_sftp() -> Dictionary:
             ),
             "description": DictElement(
                 parameter_form=String(
-                    title=Title("Service description"),
+                    title=Title("Service name"),
                     prefill=DefaultValue("SFTP"),
                 ),
             ),
@@ -123,7 +123,7 @@ def _make_form_spec_check_sftp() -> Dictionary:
                     title=Title("Timestamp of a remote file"),
                     help_text=Help(
                         "Show timestamp of a given file. You only need to specify the "
-                        "relative path of the remote file. Examples: 'myDirectory/testfile' "
+                        "relative path of the remote file. Examples: 'myDirectory/testfile'"
                         " or 'testfile'"
                     ),
                 ),

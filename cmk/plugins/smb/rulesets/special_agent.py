@@ -112,7 +112,7 @@ def _parameter_form() -> Dictionary:
                     label=Label("Match multiple directories with **"),
                     help_text=Help(
                         "If ** is used in the pattern, the agent will recursively look into all the subfolders, "
-                        "so use this carefully on a deeply nested filesystems."
+                        "so use this carefully on a deeply nested file systems."
                     ),
                 ),
             ),

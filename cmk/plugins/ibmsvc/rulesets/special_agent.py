@@ -21,21 +21,20 @@ def _parameter_form() -> Dictionary:
     return Dictionary(
         migrate=_migrate,
         help_text=Help(
-            "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Checkmk Agent "
+            "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Checkmk agent "
             "and allows monitoring of IBM SVC / V7000 storage systems by calling "
             "ls* commands there over SSH. "
             "Make sure you have SSH key authentication enabled for your monitoring user. "
             "That means: The user your monitoring is running under on the monitoring "
-            "system must be able to ssh to the storage system as the user you gave below "
-            "without password."
+            "system must be able to SSH to the storage system as the user you gave below without password."
         ),
         elements={
             "user": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("IBM SVC / V7000 user name"),
+                    title=Title("IBM SVC / V7000 username"),
                     help_text=Help(
-                        "User name on the storage system. Read-only permissions are sufficient."
+                        "Username on the storage system. Read-only permissions are sufficient."
                     ),
                 ),
             ),

@@ -65,7 +65,7 @@ def _parameter_valuespec_hyperv_vm_checkpoints() -> Dictionary:
 
 rule_spec_hyperv_vm_checkpoints = CheckParameters(
     name="hyperv_vm_checkpoints",
-    title=Title("Hyper-V VM Checkpoints"),
+    title=Title("Hyper-V VM checkpoints"),
     topic=Topic.APPLICATIONS,
     condition=HostCondition(),
     parameter_form=_parameter_valuespec_hyperv_vm_checkpoints,

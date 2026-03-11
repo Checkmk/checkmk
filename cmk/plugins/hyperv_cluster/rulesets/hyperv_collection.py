@@ -53,7 +53,7 @@ def _valuespec_agent_config_hyperv_collection() -> Dictionary:
                                 elements=(
                                     MultipleChoiceElement(
                                         name="hyperv_host",
-                                        title=Title("Hyper-V Host monitoring"),
+                                        title=Title("Hyper-V host monitoring"),
                                     ),
                                 ),
                                 prefill=DefaultValue(["hyperv_host"]),

@@ -26,12 +26,15 @@ def _make_form() -> Dictionary:
                 parameter_form=Dictionary(
                     title=Title("State based on status of last sync attempt"),
                     help_text=Help(
-                        "Time syncs especially against public NTP servers can fail in various "
-                        "ways throughout the course of the NTP lifecycle and therefore we do not "
-                        "alert by default when a sync fails (preferring instead to alert when too "
-                        "much time has elapsed before a successful sync). However, in some "
-                        "environments, it might be useful to know right away when a sync fails. "
-                        "The state of various kinds of failures can therefore be configured here."
+                        "Time syncs, especially against public NTP servers, "
+                        "can fail in various ways throughout the course of "
+                        "the NTP lifecycle. Therefore we do not alert by "
+                        "default when a sync fails (preferring instead to "
+                        "alert when too much time has elapsed before a "
+                        "successful sync). However, in some environments, "
+                        "it might be useful to know right away when a sync "
+                        "fails. The state of various kinds of failures can "
+                        "therefore be configured here."
                     ),
                     elements={
                         "never_synced": DictElement(
@@ -39,9 +42,11 @@ def _make_form() -> Dictionary:
                             parameter_form=ServiceState(
                                 title=Title("Never synchronized"),
                                 help_text=Help(
-                                    "When the reference ID and state machine value are both 0, it "
-                                    "usually means that the service has not synced since starting. "
-                                    "The reported state in this scenario can be configured here."
+                                    "When the reference ID and the state of "
+                                    "the machine value are both 0, it usually "
+                                    "means that the service has not synced "
+                                    "since starting. The reported state in "
+                                    "this scenario can be configured here."
                                 ),
                                 prefill=DefaultValue(ServiceState.WARN),
                             ),

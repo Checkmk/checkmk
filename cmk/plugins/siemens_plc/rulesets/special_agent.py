@@ -30,7 +30,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def _parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This rule selects the Siemens PLC agent instead of the normal Checkmk Agent "
+            "This rule selects the Siemens PLC agent instead of the normal Checkmk agent "
             "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
             "your connection settings and values to fetch here."
         ),
@@ -145,7 +145,7 @@ def _value_configuration_fields() -> dict[str, DictElement]:
                 elements=[
                     CascadingSingleChoiceElement(
                         name="db",
-                        title=Title("Datenbaustein"),
+                        title=Title("Data block (DB)"),
                         parameter_form=Integer(
                             title=Title("DB Number"),
                             custom_validate=(validators.NumberInRange(min_value=1),),
@@ -195,12 +195,12 @@ def _value_configuration_fields() -> dict[str, DictElement]:
         "data_type": DictElement(
             required=True,
             parameter_form=CascadingSingleChoice(
-                title=Title("Datatype"),
+                title=Title("Data type"),
                 prefill=DefaultValue("dint"),
                 elements=[
                     CascadingSingleChoiceElement(
                         name="dint",
-                        title=Title("Double Integer (DINT)"),
+                        title=Title("Double integer (DINT)"),
                         parameter_form=FixedValue(value=None),
                     ),
                     CascadingSingleChoiceElement(
@@ -210,7 +210,7 @@ def _value_configuration_fields() -> dict[str, DictElement]:
                     ),
                     CascadingSingleChoiceElement(
                         name="bit",
-                        title=Title("Single Bit (BOOL)"),
+                        title=Title("Single bit (BOOL)"),
                         parameter_form=FixedValue(value=None),
                     ),
                     CascadingSingleChoiceElement(
@@ -224,7 +224,7 @@ def _value_configuration_fields() -> dict[str, DictElement]:
                     ),
                     CascadingSingleChoiceElement(
                         name="raw",
-                        title=Title("Raw Bytes (HEXSTR)"),
+                        title=Title("Raw bytes (HEXSTR)"),
                         parameter_form=Integer(
                             title=Title("Size"),
                             unit_symbol="b",

@@ -79,7 +79,7 @@ def _valuespec_disk_usage(property: str, reclaimable: bool) -> DictElement:
 
 def podman_disk_usage() -> Dictionary:
     return Dictionary(
-        help_text=Help("Thresholds for the podman disk usage services."),
+        help_text=Help("Thresholds for the Podman disk usage services."),
         elements={
             "containers": _valuespec_disk_usage("containers", reclaimable=True),
             "images": _valuespec_disk_usage("images", reclaimable=False),

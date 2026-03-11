@@ -164,7 +164,7 @@ def _valuespec_fileinfo_groups() -> Dictionary:
                                         "include_pattern": DictElement(
                                             required=True,
                                             parameter_form=String(
-                                                title=Title("Include Pattern"),
+                                                title=Title("Include pattern"),
                                                 field_size=FieldSize.LARGE,
                                             ),
                                         ),
@@ -202,9 +202,9 @@ def _item_spec_fileinfo_groups():
         title=Title("File Group Name"),
         help_text=Help(
             "This name must match the name of the group defined "
-            'in the <a href="wato.py?mode=edit_ruleset&varname=fileinfo_groups">%s</a> ruleset.'
+            'in the <a href="wato.py?mode=edit_ruleset&varname=fileinfo_groups">%s</a> rule set.'
         )
-        % Help("File Grouping Patterns"),
+        % Help("File grouping patterns"),
     )
 
 
@@ -228,7 +228,7 @@ def get_fileinfo_groups_parameter_form(is_enforced: bool = False) -> Dictionary:
                             "group_pattern_include": DictElement(
                                 required=True,
                                 parameter_form=String(
-                                    title=Title("Include Pattern"),
+                                    title=Title("Include pattern"),
                                     field_size=FieldSize.MEDIUM,
                                 ),
                             ),

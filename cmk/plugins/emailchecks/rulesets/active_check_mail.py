@@ -103,30 +103,30 @@ def _migrate_method(
 
 def _ec_forwarding() -> CascadingSingleChoice:
     return CascadingSingleChoice(
-        title=Title("Send events to local event console"),
+        title=Title("Send events to local Event Console"),
         prefill=DefaultValue("local"),
         elements=(
             CascadingSingleChoiceElement(
                 name="local",
-                title=Title("Send events to local event console in same OMD site"),
+                title=Title("Send events to local Event Console in same OMD site"),
                 parameter_form=FixedValue(value=""),
             ),
             CascadingSingleChoiceElement(
                 name="socket",
-                title=Title("Send events to local event console into unix socket"),
+                title=Title("Send events to local Event Console into Unix socket"),
                 parameter_form=String(
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),
             CascadingSingleChoiceElement(
                 name="spool_local",
-                title=Title("Spooling: Send events to local event console in same OMD site"),
+                title=Title("Spooling: Send events to local Event Console in same OMD site"),
                 parameter_form=FixedValue(value=""),
             ),
             CascadingSingleChoiceElement(
                 name="spool",
                 title=Title(
-                    "Spooling: Send events to local event console into given spool directory"
+                    "Spooling: Send events to local Event Console into given spool directory"
                 ),
                 parameter_form=String(
                     custom_validate=(validators.LengthInRange(min_value=1),),
@@ -202,12 +202,12 @@ def _forward_to_ec_form() -> Dictionary:
         elements={
             "method": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Forwarding Method"),
+                    title=Title("Forwarding method"),
                     prefill=DefaultValue("ec"),
                     elements=(
                         CascadingSingleChoiceElement(
                             name="ec",
-                            title=Title("Send events to local event console"),
+                            title=Title("Send events to local Event Console"),
                             parameter_form=_ec_forwarding(),
                         ),
                         CascadingSingleChoiceElement(
@@ -287,7 +287,7 @@ def _forward_to_ec_form() -> Dictionary:
                 parameter_form=Integer(
                     title=Title("Limit length of mail body"),
                     help_text=Help(
-                        "When forwarding mails from the mailbox to the event console, the "
+                        "When forwarding mails from the mailbox to the Event Console, the "
                         "body of the mail is limited to the given number of characters."
                     ),
                     prefill=DefaultValue(1000),
@@ -295,7 +295,7 @@ def _forward_to_ec_form() -> Dictionary:
             ),
             "cleanup": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Cleanup messages"),
+                    title=Title("Clean up messages"),
                     help_text=Help(
                         "The handled messages (see <i>subject matching</i>) can be cleaned up by either "
                         "deleting them or moving them to a subfolder. By default nothing is cleaned up."

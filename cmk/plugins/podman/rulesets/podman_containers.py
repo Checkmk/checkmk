@@ -54,7 +54,7 @@ def _simple_levels_element(property: str) -> DictElement:
 
 def podman_containers() -> Dictionary:
     return Dictionary(
-        help_text=Help("Thresholds for the podman containers service."),
+        help_text=Help("Thresholds for the Podman containers service."),
         elements={
             "total": _simple_levels_element("total"),
             "running": _simple_levels_element("running"),

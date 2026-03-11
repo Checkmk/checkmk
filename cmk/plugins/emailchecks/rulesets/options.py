@@ -75,7 +75,7 @@ def smtp() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("SMTP TCP Port to connect to"),
                                 help_text=Help(
-                                    "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
+                                    "The TCP port the SMTP server is listening on. Defaulting to <tt>25</tt>."
                                 ),
                                 prefill=DefaultValue(25),
                                 custom_validate=(validators.NetworkPort(),),
@@ -127,7 +127,7 @@ def _oauth2_options() -> tuple[Sequence[CascadingSingleChoiceElement], Mapping[s
                         "client_secret": DictElement(
                             required=True,
                             parameter_form=Password(
-                                title=Title("Client Secret"), migrate=migrate_to_password
+                                title=Title("Client secret"), migrate=migrate_to_password
                             ),
                         ),
                         "tenant_id": DictElement(
@@ -210,7 +210,7 @@ def common(protocol: str, port_defaults: str) -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name="basic",
-                            title=Title("Username / Password"),
+                            title=Title("Username / password"),
                             parameter_form=Dictionary(
                                 elements={
                                     "username": DictElement(

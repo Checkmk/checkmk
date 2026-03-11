@@ -73,7 +73,7 @@ def _make_parameter_form() -> Dictionary:
                     custom_validate=(validators.LengthInRange(1, None),),
                     help_text=Help(
                         "You can specify a host name or IP address different from the IP address "
-                        "of the host as configured in your host properties."
+                        "of the host configured in your host properties."
                     ),
                     macro_support=True,
                 ),
@@ -82,7 +82,7 @@ def _make_parameter_form() -> Dictionary:
                 parameter_form=Integer(
                     title=Title("TCP Port to connect to"),
                     help_text=Help(
-                        "The TCP Port the SMTP server is listening on. The default is <tt>25</tt>."
+                        "The TCP port the SMTP server is listening on. The default is <tt>25</tt>."
                     ),
                     custom_validate=(validators.NetworkPort(),),
                     prefill=DefaultValue(25),
@@ -146,7 +146,7 @@ def _make_parameter_form() -> Dictionary:
             ),
             "cert_days": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Minimum Certificate Age"),
+                    title=Title("Minimum certificate age"),
                     help_text=Help("Minimum number of days a certificate has to be valid"),
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=(TimeMagnitude.DAY,),

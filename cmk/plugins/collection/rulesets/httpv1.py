@@ -162,7 +162,7 @@ def _active_checks_http_proxyspec() -> Dictionary:
             ),
         },
         help_text=Help(
-            "For <tt>check_http</tt> to work with a proxy server, you will most likely need use "
+            "For <tt>check_http</tt> to work with a proxy server, you will most likely need to use "
             "the HTTP method <tt>CONNECT</tt>. If you configure a proxy, Checkmk will "
             "automatically use this method, unless you explicitly select a different method in the "
             "options below (URL mode only)."
@@ -179,7 +179,7 @@ def _active_checks_http_hostspec() -> Dictionary:
             "(80/443). With this option you can override either of these parameters. By default no "
             "virtual host is set and HTTP/1.0 will be used. In some setups however, you may want "
             "to distinguish the contacted server address from your virtual host name. In this case "
-            "the HTTP Host header will be set and HTTP/1.1 is used."
+            "the HTTP host header will be set and HTTP/1.1 is used."
         ),
         elements={
             "address": DictElement(
@@ -213,8 +213,7 @@ def _active_checks_http_hostspec() -> Dictionary:
                 parameter_form=String(
                     title=Title("Virtual host"),
                     help_text=Help(
-                        "Set this in order to specify the name of mode the virtual host for the "
-                        "query."
+                        "Set this in order to specify the name of the virtual host for the query."
                     ),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
@@ -262,7 +261,7 @@ def _validate_active_check_http_name(value: object) -> None:
 
 def _parameter_form_mode() -> CascadingSingleChoice:
     return CascadingSingleChoice(
-        title=Title("Mode of the Check"),
+        title=Title("Mode of the check"),
         help_text=Help("Perform a check of the URL or the certificate expiration."),
         elements=[
             CascadingSingleChoiceElement(
@@ -330,8 +329,8 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                         ),
                         "user_agent": DictElement(
                             parameter_form=String(
-                                title=Title("User Agent"),
-                                help_text=Help('String to be sent in http header as "User Agent"'),
+                                title=Title("User agent"),
+                                help_text=Help('String to be sent in HTTP header as "User agent"'),
                                 custom_validate=(validators.LengthInRange(min_value=1),),
                             ),
                         ),
@@ -472,7 +471,7 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                         ),
                         "method": DictElement(
                             parameter_form=SingleChoice(
-                                title=Title("HTTP Method"),
+                                title=Title("HTTP method"),
                                 prefill=DefaultValue("GET"),
                                 elements=[
                                     SingleChoiceElement("GET", Title("GET")),
@@ -549,11 +548,11 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                         "extended_perfdata": DictElement(
                             parameter_form=FixedValue(
                                 value=True,
-                                label=Label("Extended perfdata"),
-                                title=Title("Record additional performance data"),
+                                label=Label("Extended metrics"),
+                                title=Title("Record additional metrics"),
                                 help_text=Help(
                                     "This option makes the HTTP check produce more detailed "
-                                    "performance data values like the connect time, header time, "
+                                    "metrics values like the connect time, header time, "
                                     "time till first byte received and the transfer time."
                                 ),
                             ),

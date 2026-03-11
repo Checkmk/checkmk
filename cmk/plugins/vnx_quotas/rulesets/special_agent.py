@@ -17,12 +17,12 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 def _paramater_form() -> Dictionary:
     return Dictionary(
-        title=Title("VNX quotas and filesystems"),
+        title=Title("VNX quotas and file systems"),
         elements={
             "user": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("NAS DB user name"),
+                    title=Title("NAS DB username"),
                 ),
             ),
             "password": DictElement(
@@ -44,7 +44,7 @@ def _paramater_form() -> Dictionary:
 
 rule_spec_special_agent_vnx_quotas = SpecialAgent(
     name="vnx_quotas",
-    title=Title("VNX quotas and filesystems"),
+    title=Title("VNX quotas and file systems"),
     topic=Topic.STORAGE,
     parameter_form=_paramater_form,
 )

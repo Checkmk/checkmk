@@ -53,7 +53,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Meraki region"),
                     help_text=Help(
-                        "<p>The Meraki API is available under different URLS for different regions of the world.</p>"
+                        "<p>The Meraki API is available under different URLs for different regions of the world.</p>"
                         "<ul>"
                         '<li>Default (most of the world): "https://api.meraki.com/api/v1"</li>'
                         '<li>Canada	"https://api.meraki.ca/api/v1"</li>'
@@ -102,7 +102,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                         ),
                         MultipleChoiceElement(
                             name="device_uplinks_info",
-                            title=Title("Device uplinks (HW/SW Inventory only)"),
+                            title=Title("Device uplinks (HW/SW inventory only)"),
                         ),
                         MultipleChoiceElement(
                             name="licenses_overview",
@@ -151,14 +151,14 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
             "org_id_as_prefix": DictElement(
                 parameter_form=FixedValue(
                     value=True,
-                    title=Title("Use Organisation-ID as host prefix"),
-                    label=Label("The Organization-ID will be used as host name prefix"),
+                    title=Title("Use organization ID as host prefix"),
+                    label=Label("The organization ID will be used as host name prefix"),
                     help_text=Help(
-                        "The Organisation-ID will be used as prefix for the hostname (separated by a -). Use "
-                        'this option together with a "Hostname translation for piggybacked hosts" to add a '
-                        "organisation prefix to the hosts from the Cisco Meraki cloud to avoid conflicting "
-                        'hostnames. You can also use this option along with the "Dynamic host management" to '
-                        "sort the host in organisation specific folders."
+                        "The organization ID will be used as prefix for the host name (separated by a -). Use "
+                        'this option together with a "Host name translation for piggybacked hosts" to add an '
+                        "organization prefix to the hosts from the Cisco Meraki cloud to avoid conflicting "
+                        'host names. You can also use this option along with the "Dynamic host management" to '
+                        "sort the host in organization-specific folders."
                     ),
                 )
             ),
@@ -168,10 +168,10 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     title=Title("Use Network-ID as host prefix"),
                     label=Label("The Network-ID will be used as host name prefix"),
                     help_text=Help(
-                        "The Network-ID will be used as prefix for the hostname (separated by a -). Use "
-                        'this option together with a "Hostname translation for piggybacked hosts" to add a '
+                        "The Network-ID will be used as prefix for the host name (separated by a -). Use "
+                        'this option together with a "Host name translation for piggybacked hosts" to add a '
                         "network prefix to the hosts from the Cisco Meraki cloud to avoid conflicting "
-                        'hostnames. You can also use this option along with the "Dynamic host management" to '
+                        'host names. You can also use this option along with the "Dynamic host management" to '
                         "sort the host in location specific folders."
                     ),
                 )

@@ -24,7 +24,7 @@ def _ms_to_s(values: object) -> dict:
 
 def _item_spec() -> form_specs.String:
     return form_specs.String(
-        help_text=Help("Specify the name of a store (This is either a mailbox or public folder)."),
+        help_text=Help("Specify the name of a store (this is either a mailbox or public folder)."),
         custom_validate=[form_specs.validators.LengthInRange(min_value=1)],
     )
 

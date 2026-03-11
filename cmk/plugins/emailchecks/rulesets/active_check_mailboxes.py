@@ -51,7 +51,7 @@ def _valuespec_active_checks_mailboxes() -> Dictionary:
             ),
             "age": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Message Age of oldest messages"),
+                    title=Title("Message age of oldest messages"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=(
@@ -67,7 +67,7 @@ def _valuespec_active_checks_mailboxes() -> Dictionary:
             ),
             "age_newest": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Message Age of newest messages"),
+                    title=Title("Message age of newest messages"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=(
@@ -83,7 +83,7 @@ def _valuespec_active_checks_mailboxes() -> Dictionary:
             ),
             "count": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Message Count"),
+                    title=Title("Message count"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
                     prefill_fixed_levels=InputHint((0, 0)),

@@ -32,6 +32,6 @@ rule_spec_cisco_meraki_org_device_status_ps = CheckParameters(
     name="cisco_meraki_org_api_response_codes",
     topic=Topic.NETWORKING,
     parameter_form=_parameter_form,
-    title=Title("Cisco Meraki organization API"),
+    title=Title("Cisco Meraki appliance performance utilization"),
     condition=HostAndItemCondition(item_title=Title("Organization")),
 )

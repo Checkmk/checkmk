@@ -35,11 +35,11 @@ VALID_VALUES = {
     **DEFAULT_VALUES,
     "hostsets": Title("HostSets: Host Set Configuration"),
     "volumesets": Title("VolumeSets: Volume Set Configuration"),
-    "vluns": Title("VLUNs: Virtual LUN Configuration"),
+    "vluns": Title("VLUNs: Virtual LUN configuration"),
     "flashcache": Title("FlashCache: Flash Cache Configuration"),
-    "users": Title("Users: User Management"),
-    "roles": Title("Roles: Role Management"),
-    "qos": Title("QoS: Quality of Service Configuration"),
+    "users": Title("Users: User management"),
+    "roles": Title("Roles: Role management"),
+    "qos": Title("QoS: Quality of service configuration"),
 }
 
 

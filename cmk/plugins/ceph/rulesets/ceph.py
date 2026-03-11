@@ -46,14 +46,14 @@ def _form_spec_agent_config_ceph() -> Dictionary:
     return Dictionary(
         migrate=migrate_bakery_rule,
         help_text=Help(
-            "This will deploy the agent plugin <tt>ceph</tt> for monitoring the status of Ceph."
+            "This will deploy the agent plug-in <tt>ceph</tt> for monitoring the status of Ceph."
             " This plug-in will be run asynchronously in the background."
         ),
         elements={
             "deploy": DictElement(
                 required=True,
                 parameter_form=BooleanChoice(
-                    label=Label("Deploy plugin for Ceph"),
+                    label=Label("Deploy plug-in for Ceph"),
                     prefill=DefaultValue(True),
                 ),
             ),

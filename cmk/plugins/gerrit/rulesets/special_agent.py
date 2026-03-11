@@ -85,8 +85,8 @@ rule_spec_gerrit = SpecialAgent(
                 parameter_form=TimeSpan(
                     title=Title("Time to wait before fetching version information"),
                     help_text=Help(
-                        "By setting a higher value, you reduce the amount of requests sent to"
-                        "your own instance as well as Gerrit's host infrastructure."
+                        "By setting a higher value, you reduce the amount of requests sent to "
+                        "your own instance as well as to Gerrit's host infrastructure."
                     ),
                     displayed_magnitudes=(
                         TimeMagnitude.HOUR,

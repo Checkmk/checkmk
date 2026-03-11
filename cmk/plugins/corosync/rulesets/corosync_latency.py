@@ -19,7 +19,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 def _parameter_form_corosync_latency() -> Dictionary:
     return Dictionary(
-        title=Title("Corosync Latency"),
+        title=Title("Corosync latency"),
         help_text=Help(
             "Configure warning and critical upper thresholds for Corosync link latency: "
             "both instantaneous maximum values and the averaged latency."
@@ -58,9 +58,9 @@ def _parameter_form_corosync_latency() -> Dictionary:
 
 
 rule_spec_corosync_latency = CheckParameters(
-    title=Title("Corosync Latency"),
+    title=Title("Corosync latency"),
     topic=Topic.NETWORKING,
     name="corosync_latency",
     parameter_form=_parameter_form_corosync_latency,
-    condition=HostAndItemCondition(item_title=Title("Corosync Link")),
+    condition=HostAndItemCondition(item_title=Title("Corosync link")),
 )

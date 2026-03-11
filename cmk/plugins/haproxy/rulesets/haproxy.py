@@ -56,10 +56,10 @@ def _parameter_formspec_haproxy_frontend() -> Dictionary:
 
 rule_spec_haproxy_frontend = CheckParameters(
     name="haproxy_frontend",
-    title=Title("HAproxy Frontend State"),
+    title=Title("HAproxy frontend state"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_formspec_haproxy_frontend,
-    condition=HostAndItemCondition(item_title=Title("Name of HAproxy Frontend")),
+    condition=HostAndItemCondition(item_title=Title("Name of HAproxy frontend")),
 )
 
 
@@ -87,8 +87,8 @@ def _parameter_formspec_haproxy_server() -> Dictionary:
 
 rule_spec_haproxy_server = CheckParameters(
     name="haproxy_server",
-    title=Title("HAproxy Server State"),
+    title=Title("HAproxy server state"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_formspec_haproxy_server,
-    condition=HostAndItemCondition(item_title=Title("Name of HAproxy Server")),
+    condition=HostAndItemCondition(item_title=Title("Name of HAproxy server")),
 )

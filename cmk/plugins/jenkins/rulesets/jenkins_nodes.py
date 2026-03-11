@@ -38,10 +38,10 @@ def _parameter_valuespec_jenkins_nodes() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Expected mode state."),
                     help_text=Help(
-                        "Choose between Normal (Utilize this node as much "
-                        "as possible) and Exclusive (Only build jobs with label "
+                        "Choose between normal (utilize this node as much "
+                        "as possible) and exclusive (only build jobs with label "
                         "restrictions matching this node). The state will "
-                        "change to warning state, if the mode differs."
+                        "change to WARNING state, if the mode differs."
                     ),
                     elements=[
                         SingleChoiceElement(name="NORMAL", title=Title("Normal")),
@@ -106,7 +106,7 @@ def _parameter_valuespec_jenkins_nodes() -> Dictionary:
             ),
             "avg_response_time": DictElement(
                 parameter_form=SimpleLevels[float](
-                    title=Title("Average round-trip response time to this node"),
+                    title=Title("Average round trip response time to this node"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[

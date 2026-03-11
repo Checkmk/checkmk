@@ -30,11 +30,11 @@ def _parameter_form() -> Dictionary:
             ),
             "segment_display_uid": DictElement(
                 parameter_form=String(
-                    title=Title("7-segment display uid"),
+                    title=Title("7-segment display UID"),
                     help_text=Help(
-                        "This is the uid of the sensor you want to display in the 7-segment display, "
-                        "not the uid of the display itself. There is currently no support for "
-                        "controling multiple displays."
+                        "This is the UID of the sensor you want to display in the 7-segment display, "
+                        "not the UID of the display itself. There is currently no support for "
+                        "controlling multiple displays."
                     ),
                 ),
             ),

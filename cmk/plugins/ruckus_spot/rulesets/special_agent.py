@@ -26,7 +26,7 @@ def _parameter_form() -> Dictionary:
     return Dictionary(
         title=Title("Ruckus Spot"),
         help_text=Help(
-            "This rule selects the Agent Ruckus Spot agent instead of the normal Checkmk Agent "
+            "This rule selects the agent Ruckus Spot agent instead of the normal Checkmk agent"
             "which collects the data through the Ruckus Spot web interface"
         ),
         elements={

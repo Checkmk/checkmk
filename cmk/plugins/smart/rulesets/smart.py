@@ -77,7 +77,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_184": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("End-to-End Errors (id 184)"),
+                    title=Title("End-to-end errors (id 184)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",
@@ -100,7 +100,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_187": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Uncorrectable Errors (id 187)"),
+                    title=Title("Uncorrectable errors (id 187)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",

@@ -36,7 +36,7 @@ def _validate_jira_projects(value: Sequence[Mapping[str, str | Sequence[str]]]) 
     for project in value:
         if project["project"] in used_project_names:
             raise validators.ValidationError(
-                Message("Each project must be unique and cannot be be used multiple times.")
+                Message("Each project must be unique and cannot be used multiple times.")
             )
         used_project_names.append(project["project"])
 
@@ -69,8 +69,7 @@ def _form_spec_jira_projects(title: Title) -> List:
                             "the name in Jira within "
                             '"Projects" - "View all '
                             'projects" - column: "Project". '
-                            "This field is case "
-                            "insensitive"
+                            "This field is case insensitive."
                         ),
                         custom_validate=(
                             validators.LengthInRange(

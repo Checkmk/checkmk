@@ -62,9 +62,9 @@ def _migrate_auth_tuple(params: object) -> Mapping[str, object]:
 def _valuespec_active_checks_disk_smb() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This ruleset helps you to configure the active check "
-            "plugin <tt>check_disk_smb</tt> that checks the access to "
-            "filesystem shares that are exported via SMB/CIFS."
+            "This rule set helps you to configure the active check "
+            "plug-in <tt>check_disk_smb</tt> that checks the access to "
+            "file system shares that are exported via SMB/CIFS."
         ),
         elements={
             "share": DictElement(

@@ -128,10 +128,10 @@ def _parameter_valuespec_hyperv_vm_nic() -> Dictionary:
 
 rule_spec_hyperv_vm_nic = CheckParameters(
     name="hyperv_vm_nic",
-    title=Title("Hyper-V VM Network Adapter"),
+    title=Title("Hyper-V VM network adapter"),
     topic=Topic.NETWORKING,
     condition=HostAndItemCondition(
-        item_title=Title("Network Adapter"),
+        item_title=Title("Network adapter"),
     ),
     parameter_form=_parameter_valuespec_hyperv_vm_nic,
 )

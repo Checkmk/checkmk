@@ -135,7 +135,7 @@ def _make_parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Alternative host name"),
                     help_text=Help(
-                        "Use a alternative field as host name in case of SSL Certificate Problems (e.g. the Hostalias )"
+                        "Use an alternative field as host name in case of SSL certificate problems (e.g. the host alias )"
                     ),
                     custom_validate=(validators.LengthInRange(1, None),),
                     prefill=DefaultValue("$HOSTALIAS$"),

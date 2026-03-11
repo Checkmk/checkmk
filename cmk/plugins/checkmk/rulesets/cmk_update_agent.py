@@ -458,11 +458,11 @@ def _valuespec_updater_registration() -> SingleChoice:
         elements=[
             SingleChoiceElement(
                 name="keep",
-                title=Title("On first agent controller registration"),
+                title=Title("On first Agent Controller registration"),
             ),
             SingleChoiceElement(
                 name="overwrite",
-                title=Title("On every agent controller registration"),
+                title=Title("On every Agent controller registration"),
             ),
             SingleChoiceElement(
                 name="manual",

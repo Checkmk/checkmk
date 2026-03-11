@@ -78,7 +78,7 @@ def parameter_form() -> Dictionary:
                 parameter_form=Integer(
                     title=Title("Port"),
                     prefill=DefaultValue(1883),
-                    help_text=Help("The port that is used for the api call."),
+                    help_text=Help("The port that is used for the API call."),
                     custom_validate=(validators.NetworkPort(),),
                 ),
             ),

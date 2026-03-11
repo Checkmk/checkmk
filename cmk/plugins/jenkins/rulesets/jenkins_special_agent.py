@@ -63,7 +63,7 @@ def _formspec_jenkins() -> Dictionary:
                     title=Title("Username"),
                     help_text=Help(
                         "The username that should be used for accessing the "
-                        "jenkins API. Has to have read permissions at least."
+                        "Jenkins API. Has to have read permissions at least."
                     ),
                     custom_validate=[LengthInRange(min_value=1)],
                 ),
@@ -116,7 +116,7 @@ def _formspec_jenkins() -> Dictionary:
                         MultipleChoiceElement(name="queue", title=Title("Queue info")),
                         MultipleChoiceElement(
                             name="system_metrics",
-                            title=Title("System metrics (requires 'Metrics' plugin in Jenkins)"),
+                            title=Title("System metrics (requires 'Metrics' plug-in in Jenkins)"),
                         ),
                     ],
                     prefill=DefaultValue(["instance", "jobs", "nodes", "queue"]),

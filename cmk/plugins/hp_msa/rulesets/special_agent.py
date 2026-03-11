@@ -18,7 +18,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def _parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This rule selects the Agent HP MSA instead of the normal Checkmk Agent "
+            "This rule selects the agent HP MSA instead of the normal Checkmk agent "
             "which collects the data through the HP MSA web interface"
         ),
         elements={

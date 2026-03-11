@@ -38,7 +38,7 @@ def _make_form(summary_form: bool) -> Callable[[], Dictionary]:
     def form() -> Dictionary:
         return Dictionary(
             help_text=Help(
-                "This check monitors the status of a peer configured in the Windows Time Service."
+                "This check monitors the status of a peer configured in the Windows Time service."
             ),
             elements={
                 "reachability_consecutive_failures": DictElement(
@@ -56,7 +56,7 @@ def _make_form(summary_form: bool) -> Callable[[], Dictionary]:
                             "peer. This setting looks into the reachability register and checks for "
                             "consecutive, recent failures, alerting after too many consecutive "
                             "failures have occurred. "
-                            "If reachability is 0, the 'Resolve Attempts' count reported by the "
+                            "If reachability is 0, the 'resolve attempts' count reported by the "
                             "Windows Time Service is used instead to determine how many attempts "
                             "have been made."
                         ),
@@ -71,13 +71,13 @@ def _make_form(summary_form: bool) -> Callable[[], Dictionary]:
                         prefill_levels_type=DefaultValue(LevelsType.NONE),
                         prefill_fixed_levels=DefaultValue((0, 0)),
                         help_text=Help(
-                            "Normally, the Windows Time Service (being an NTP client) follows the NTP "
+                            "Normally, the Windows Time service (being an NTP client) follows the NTP "
                             "convention of maintaining a 'reachability' register, which remembers the "
                             "result (success or failure) of the last (up to) 8 transactions with the "
                             "peer. This setting looks into the reachability register and counts the "
                             "total number of failed attempts, alerting when there have been too many. "
-                            "If reachability is 0, the 'Resolve Attempts' count reported by the "
-                            "Windows Time Service is used instead to determine how many attempts "
+                            "If reachability is 0, the 'resolve attempts' count reported by the "
+                            "Windows Time service is used instead to determine how many attempts "
                             "have been made."
                         ),
                     ),
@@ -100,7 +100,7 @@ def _make_form(summary_form: bool) -> Callable[[], Dictionary]:
 
 rule_spec_w32time_peers = CheckParameters(
     name="w32time_peers",
-    title=Title("Windows time service peers"),
+    title=Title("Windows Time service peers"),
     topic=Topic.WINDOWS,
     parameter_form=_make_form(False),
     condition=HostAndItemCondition(item_title=Title("Peer name")),

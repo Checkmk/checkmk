@@ -29,7 +29,7 @@ def _parameters_residual_current() -> Dictionary:
         elements={
             "warn_missing_data": DictElement(
                 parameter_form=BooleanChoice(
-                    title=Title("Missing Residual current on the PDUs"),
+                    title=Title("Missing residual current on the PDUs"),
                     label=Label("Warn on missing Residual current"),
                     prefill=DefaultValue(True),
                 ),

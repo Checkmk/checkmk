@@ -27,11 +27,11 @@ def _deployment_mode_form() -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Customize user"),
         help_text=Help(
-            "By default, the Checkmk agent runs under root. The agent controller, if deployed, runs"
-            " under the fixed user <i>cmk-agent</i>, which will be created automatically if it "
+            "By default, the Checkmk agent runs under root. The Agent Controller, if deployed, runs"
+            " under the fixed user <i>cmk-agent</i>, which will be created automatically, if it"
             " doesn't exist yet.<br>"
             "If you want to change this default behavior, you can configure this rule for setting"
-            " a custom agent/agent controller user.<br>"
+            " a custom agent/Agent Controller user.<br>"
             "<b>Note</b>: You can only use this configuration with the new single directory"
             " structure. Please enable <i>Customize installation directories</i> before saving the"
             " rule."
@@ -40,12 +40,12 @@ def _deployment_mode_form() -> CascadingSingleChoice:
         elements=[
             CascadingSingleChoiceElement(
                 name="root",
-                title=Title("Run agent as root, set agent controller user"),
+                title=Title("Run agent as root, set Agent Controller user"),
                 parameter_form=_user_form(
-                    Title("Agent controller user"),
+                    Title("Agent Controller user"),
                     Help(
-                        "This is identical to a normal agent deployment, but with a custom"
-                        " agent controller user instead of <i>cmk-agent</i>."
+                        "This is identical to a normal agent deployment, but with a custom Agent "
+                        "Controller user instead of <i>cmk-agent</i>."
                     ),
                 ),
             ),
@@ -56,8 +56,8 @@ def _deployment_mode_form() -> CascadingSingleChoice:
                     Title("Agent user"),
                     Help(
                         'This setting will lead to a "non-root agent deployment". Both agent'
-                        " and agent controller will be operated under the configured agent user."
-                        " Additionally, the agent package will set proper permissions on the"
+                        " and agent controller will be operated under the configured agent user. "
+                        "Additionally, the agent package will set proper permissions on the "
                         " agent package's resources."
                     ),
                 ),
@@ -74,7 +74,7 @@ def _user_form(user_title: Title, help_text: Help) -> Dictionary:
                 parameter_form=String(
                     title=user_title,
                     help_text=Help(
-                        "Agent or agent controller user. Will also be used as name for the"
+                        "Agent or Agent Controller user. Will also be used as name for the"
                         " corresponding group on creation."
                     ),
                     prefill=DefaultValue("cmk-agent"),

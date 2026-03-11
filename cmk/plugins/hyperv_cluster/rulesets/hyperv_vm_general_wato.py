@@ -65,7 +65,7 @@ def create_power_state_element() -> DictElement:
 def create_vm_generation_element() -> DictElement:
     return DictElement(
         parameter_form=Dictionary(
-            title=Title("VM Generation"),
+            title=Title("VM generation"),
             elements={
                 "expected_generation": DictElement(
                     parameter_form=SingleChoice(

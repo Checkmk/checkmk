@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -21,8 +21,7 @@ import type {
   ImageConversationElementContent,
   ListConversationElementContent,
   MarkdownConversationElementContent,
-  TAiConversationElementContent,
-  TextConversationElementContent
+  TAiConversationElementContent
 } from '@/ai/lib/service/ai-template'
 import { AiRole } from '@/ai/lib/utils'
 
@@ -32,7 +31,6 @@ import DialogContent from './content/DialogContent.vue'
 import ImageContent from './content/ImageContent.vue'
 import ListContent from './content/ListContent.vue'
 import MarkdownContent from './content/MarkdownContent.vue'
-import TextContent from './content/TextContent.vue'
 
 const { _t } = usei18n()
 const props = defineProps<IAiConversationElement & { elementIndex?: number }>()
@@ -49,6 +47,10 @@ const contentsToDisplay = ref<TAiConversationElementContent[]>([])
 
 const awaited = ref<boolean>(props.content instanceof Promise ? false : true)
 const done = ref(false)
+
+const hasDisplayableContent = computed(() => {
+  return contentsToDisplay.value.some((cnt) => cnt.content_type !== 'text')
+})
 
 function addNextContent(): boolean {
   const nextContent = contentData.value?.shift()
@@ -116,10 +118,10 @@ onMounted(async () => {
     </div>
 
     <template v-if="contentData !== null">
-      <div v-if="contentData" class="ai-conversation-element__text">
+      <div v-if="contentData && hasDisplayableContent" class="ai-conversation-element__text">
         <template v-for="(cnt, i) in contentsToDisplay" :key="i">
           <CmkHeading
-            v-if="cnt.title && cnt.content_type !== 'dialog'"
+            v-if="cnt.title && cnt.content_type !== 'dialog' && cnt.content_type !== 'text'"
             class="ai-conversation-element__text-header"
             type="h2"
           >
@@ -131,14 +133,8 @@ onMounted(async () => {
             :no-animation="props.noAnimation"
             @done="onContentDone"
           />
-          <TextContent
-            v-if="cnt.content_type === 'text'"
-            v-bind="cnt as TextConversationElementContent"
-            :no-animation="props.noAnimation"
-            @done="onContentDone"
-          />
           <CodeContent
-            v-else-if="cnt.content_type === 'code'"
+            v-if="cnt.content_type === 'code'"
             v-bind="cnt as CodeBlockConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"

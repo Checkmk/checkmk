@@ -372,9 +372,9 @@ def _aggregate_chunks_and_shards_info(
                 chunks_info = (
                     chunks_dict.get(database_name, {}).get(collection_name, {}).get(shard_name, {})
                 )
-                if chunks_info and shard_name in databases_dict.get(database_name).get(
-                    "collstats"
-                ).get(collection_name).get("shards"):
+                if chunks_info and shard_name in databases_dict.get(database_name, {}).get(
+                    "collstats", {}
+                ).get(collection_name, {}).get("shards", {}):
                     databases_dict.get(database_name).get("collstats").get(collection_name).get(
                         "shards"
                     ).get(shard_name).update(chunks_info)

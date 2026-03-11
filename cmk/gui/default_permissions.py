@@ -116,8 +116,8 @@ PermissionPainterOptions = Permission(
     title=_l("Change column display options"),
     description=_l(
         "Some of the display columns offer options for customizing their output. "
-        "For example time stamp columns can be displayed absolute, relative or "
-        "in a mixed style. This permission allows the user to modify display options"
+        "For example timestamp columns can be displayed absolute, relative or "
+        "in a mixed style. This permission allows the user to modify display options."
     ),
     defaults=config.default_authorized_builtin_role_ids,
 )

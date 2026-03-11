@@ -320,7 +320,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
                 required=True,
                 parameter_form=Password(
                     title=Title("Client secret"),
-                    help_text=Help("The Client secret of your registered application."),
+                    help_text=Help("The client secret of your registered application."),
                     custom_validate=[
                         validators.LengthInRange(
                             min_value=1, error_msg=Message("Client secret is required")

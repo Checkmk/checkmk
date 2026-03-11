@@ -892,7 +892,7 @@ class PageEditBackupJob:
                         title=Title("Title"),
                         custom_validate=[
                             validators.LengthInRange(
-                                min_value=1, error_msg=Message("Text field can not be empty")
+                                min_value=1, error_msg=Message("Text field cannot be empty")
                             )
                         ],
                         field_size=FieldSize.LARGE,
@@ -915,7 +915,7 @@ class PageEditBackupJob:
                     parameter_form=BooleanChoice(
                         title=Title("Compression"),
                         help_text=Help(
-                            "Enable gzip compression of the backed up files. The tar archives "
+                            "Enable GZIP compression of the backed-up files. The tar archives "
                             "created by the backup are gzipped during backup."
                         ),
                         label=Label("Compress the backed up files"),
@@ -1395,7 +1395,7 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
                     help_text=Help("The access key for your AWS account"),
                     custom_validate=[
                         validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
+                            min_value=1, error_msg=Message("Text field cannot be empty")
                         )
                     ],
                 ),
@@ -1407,7 +1407,7 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
                     help_text=Help("The secret key for your AWS account"),
                     custom_validate=[
                         validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
+                            min_value=1, error_msg=Message("Text field cannot be empty")
                         )
                     ],
                     migrate=migrate_to_password,
@@ -1466,7 +1466,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                     title=Title("Storage account name"),
                     custom_validate=[
                         validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
+                            min_value=1, error_msg=Message("Text field cannot be empty")
                         )
                     ],
                 ),
@@ -1477,7 +1477,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                     title=Title("Container name"),
                     custom_validate=[
                         validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
+                            min_value=1, error_msg=Message("Text field cannot be empty")
                         )
                     ],
                 ),
@@ -1496,7 +1496,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                                 custom_validate=[
                                     validators.LengthInRange(
                                         min_value=1,
-                                        error_msg=Message("Text field can not be empty"),
+                                        error_msg=Message("Text field cannot be empty"),
                                     )
                                 ],
                             ),
@@ -1513,9 +1513,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                                             custom_validate=[
                                                 validators.LengthInRange(
                                                     min_value=1,
-                                                    error_msg=Message(
-                                                        "Text field can not be empty"
-                                                    ),
+                                                    error_msg=Message("Text field cannot be empty"),
                                                 )
                                             ],
                                         ),
@@ -1527,9 +1525,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                                             custom_validate=[
                                                 validators.LengthInRange(
                                                     min_value=1,
-                                                    error_msg=Message(
-                                                        "Text field can not be empty"
-                                                    ),
+                                                    error_msg=Message("Text field cannot be empty"),
                                                 )
                                             ],
                                         ),
@@ -1542,9 +1538,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                                             custom_validate=[
                                                 validators.LengthInRange(
                                                     min_value=1,
-                                                    error_msg=Message(
-                                                        "Text field can not be empty"
-                                                    ),
+                                                    error_msg=Message("Text field cannot be empty"),
                                                 )
                                             ],
                                         ),
@@ -1581,12 +1575,12 @@ def _local_directory_configuration_elements(
         "is_mountpoint": DictElement(
             required=True,
             parameter_form=BooleanChoice(
-                title=Title("Mountpoint"),
-                label=Label("Is mountpoint"),
+                title=Title("Mount point"),
+                label=Label("Is mount point"),
                 help_text=Help(
                     "When this is checked, the backup ensures that the configured path "
-                    "is a mountpoint. If there is no active mount on the path, the backup "
-                    "fails with an error message."
+                    "is a mount point. If there is no active mount on the path, "
+                    "the backup fails with an error message."
                 ),
                 prefill=DefaultValue(True),
             ),

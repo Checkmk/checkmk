@@ -1904,7 +1904,7 @@ class BIModeEditAggregation(ABCBIMode):
         if value.endswith(".new"):
             raise MKUserError(
                 varprefix,
-                _("The suffix .new is a reserved keyword and cannot be used as aggregation id"),
+                _("The suffix .new is a reserved keyword and cannot be used as aggregation ID"),
             )
 
     @classmethod

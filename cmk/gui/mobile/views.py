@@ -377,7 +377,7 @@ multisite_builtin_views.update(
                 ColumnSpec(name="host_pnpgraph"),
             ],
             "sorters": [],
-            "title": _l("Host status"),
+            "title": _l("Host state"),
             "owner": UserId.builtin(),
             "name": "mobile_hoststatus",
             "single_infos": ["host"],
@@ -669,7 +669,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_time", negate=False),
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
-            "title": _l("Events of host & services"),
+            "title": _l("Events of hosts & services"),
             "owner": UserId.builtin(),
             "single_infos": ["host"],
             "context": {
@@ -828,7 +828,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_time", negate=False),
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
-            "title": _l("Notifications of host & services"),
+            "title": _l("Notifications of hosts & services"),
             "owner": UserId.builtin(),
             "single_infos": ["host"],
             "context": {

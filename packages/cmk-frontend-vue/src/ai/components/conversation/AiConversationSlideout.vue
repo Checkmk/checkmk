@@ -35,6 +35,7 @@ function onClose() {
     :is-index-page="false"
     size="small"
     :open="slideInOpen"
+    border-color="purple"
     @close="onClose"
   >
     <AiConversation v-if="slideInOpen" @close="onClose" />

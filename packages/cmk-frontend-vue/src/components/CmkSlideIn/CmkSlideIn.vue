@@ -25,10 +25,15 @@ const slideInVariants = cva('', {
     size: {
       medium: 'cmk-slide-in--size-medium',
       small: 'cmk-slide-in--size-small'
+    },
+    borderColor: {
+      default: 'cmk-slide-in--border-green',
+      purple: 'cmk-slide-in--border-purple'
     }
   },
   defaultVariants: {
-    size: 'medium'
+    size: 'medium',
+    borderColor: 'default'
   }
 })
 
@@ -40,6 +45,7 @@ export interface CmkSlideInProps {
   isIndexPage?: boolean | undefined // will be removed after the removal of the iframe
   ariaLabel?: string | undefined
   stackPriority?: number | undefined
+  borderColor?: SlideInVariants['borderColor']
 }
 
 const props = defineProps<CmkSlideInProps>()
@@ -89,7 +95,7 @@ onBeforeUnmount(() => {
       <DialogContent
         ref="dialogContentRef"
         class="cmk-vue-app cmk-slide-in__container"
-        :class="slideInVariants({ size: size })"
+        :class="slideInVariants({ size: size, borderColor: borderColor })"
         :aria-describedby="undefined"
         :aria-label="props.ariaLabel"
         @escape-key-down="emit('close')"
@@ -130,6 +136,14 @@ body:has(.cmk-slide-in__container) {
 
   &.cmk-slide-in--size-small {
     max-width: 768px;
+  }
+
+  &.cmk-slide-in--border-green {
+    border-left-color: var(--default-border-color-green);
+  }
+
+  &.cmk-slide-in--border-purple {
+    border-left-color: var(--border-color-purple);
   }
 
   &[data-state='open'] {

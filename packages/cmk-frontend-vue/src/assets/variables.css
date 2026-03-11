@@ -26,6 +26,7 @@
   --popup-dialog-warning: var(--color-yellow-50);
   --popup-dialog-danger: var(--color-light-red-50);
   --popup-dialog-info: var(--color-light-blue-50);
+  --border-color-purple: rgb(105 102 229);
 
   /* Fonts */
   --font-size-xxlarge: 18px;

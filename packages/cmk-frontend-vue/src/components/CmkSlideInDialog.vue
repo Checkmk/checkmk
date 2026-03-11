@@ -26,6 +26,7 @@ export interface CmkSlideInDialogProps {
     icon?: CmkIconProps | undefined
     closeButton: boolean
   }
+  borderColor?: SlideInVariants['borderColor']
 }
 defineProps<CmkSlideInDialogProps>()
 const emit = defineEmits(['close'])
@@ -38,6 +39,7 @@ const emit = defineEmits(['close'])
     :is-index-page="isIndexPage"
     :size="size"
     :stack-priority="stackPriority"
+    :border-color="borderColor"
     @close="emit('close')"
   >
     <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">

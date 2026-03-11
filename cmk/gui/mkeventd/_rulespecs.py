@@ -37,9 +37,9 @@ from cmk.gui.watolib.rulespecs import (
 
 def _item_help_logwatch_rules() -> str:
     return _(
-        'Put the item names of the logfiles here. For example "System$" '
+        'Put the item names of the log files here. For example "System$" '
         'to select the service "LOG System". You can use regular '
-        "expressions which must match the beginning of the logfile name."
+        "expressions which must match the beginning of the log file name."
     )
 
 
@@ -207,7 +207,14 @@ def _valuespec_logwatch_groups() -> Dictionary:
         ],
         optional_keys=[],
         help=_(
-            "The check <tt>Logwatch</tt> normally creates one service for each log file. By defining grouping patterns you can switch to the check <tt>logwatch.groups</tt>. If the pattern begins with a tilde then this pattern is interpreted as a regular expression instead of as a filename globbing pattern and <tt>*</tt> and <tt>?</tt> are treated differently. That check monitors a list of log files at once. This is useful if you have e.g. a folder with rotated log files where the name of the current log file also changes with each rotation."
+            "The check <tt>Logwatch</tt> normally creates one service for each log file. "
+            "By defining grouping patterns you can switch to the check "
+            "<tt>logwatch.groups</tt>. If the pattern begins with a tilde then this "
+            "pattern is interpreted as a regular expression instead of as a file name "
+            "globbing pattern and <tt>*</tt> and <tt>?</tt> are treated differently. "
+            "That check monitors a list of log files at once. This is useful if you "
+            "have e.g. a folder with rotated log files where the name of the current "
+            "log file also changes with each rotation."
         ),
     )
 
@@ -404,9 +411,9 @@ def _parameter_valuespec_logwatch_ec() -> Migrate:
                     ListOfStrings(
                         title=_("Restrict log files (prefix matching regular expressions)"),
                         help=_(
-                            'Put the item names of the logfiles here. For example "System$" '
+                            'Put the item names of the log files here. For example "System$" '
                             'to select the service "LOG System". You can use regular expressions '
-                            "which must match the beginning of the logfile name."
+                            "which must match the beginning of the log file name."
                         ),
                     ),
                 ),
@@ -414,7 +421,7 @@ def _parameter_valuespec_logwatch_ec() -> Migrate:
                     "monitor_logfilelist",
                     Checkbox(
                         title=_("Monitoring of forwarded log files"),
-                        label=_("Warn if list of forwarded logfiles changes"),
+                        label=_("Warn if list of forwarded log files changes"),
                         help=_(
                             "If this option is enabled, the check monitors the list of forwarded log files and will warn you if at any time a log file is missing or exceeding when compared to the initial list that was snapshotted during service detection. Re-inventorize this check in order to make it OK again."
                         ),
@@ -426,7 +433,10 @@ def _parameter_valuespec_logwatch_ec() -> Migrate:
                         valuespec=TextInput(),
                         title=_("List of expected log files"),
                         help=_(
-                            "When the monitoring of forwarded logfiles is enabled, the check verifies that all of the logfiles listed here are reported by the monitored system."
+                            "When the monitoring of forwarded log files is "
+                            "enabled, the check verifies that all of the log "
+                            "files listed here are reported by the monitored "
+                            "system."
                         ),
                     ),
                 ),
@@ -443,7 +453,7 @@ def _parameter_valuespec_logwatch_ec() -> Migrate:
                 (
                     "monitor_logfile_access_state",
                     MonitoringState(
-                        title=_("State if a logfile cannot be read"),
+                        title=_("State if a log file cannot be read"),
                         default_value=2,
                         help=_(
                             "Choose the Checkmk state in case any of the forwarded log files cannot be read"
@@ -456,7 +466,15 @@ def _parameter_valuespec_logwatch_ec() -> Migrate:
                         title=_("Create a separate check for each log file"),
                         label=_("Separate check"),
                         help=_(
-                            "If this option is enabled, there will be one separate check for each logfile found during the service discovery. This option also changes the behaviour for unknown logfiles. The default logwatch check forwards all logfiles to the event console, even logfiles which were not known during the service discovery. Creating one check per logfile changes this behaviour so that any data from unknown logfiles is discarded."
+                            "If this option is enabled, there will be one "
+                            "separate check for each log file found during "
+                            "the service discovery. This option also changes "
+                            "the behavior for unknown log files. The default "
+                            "logwatch check forwards all log files to the "
+                            "Event Console, even log files which were not "
+                            "known during the service discovery. Creating one "
+                            "check per log file changes this behavior so that "
+                            "any data from unknown log files is discarded."
                         ),
                     ),
                 ),
@@ -472,5 +490,5 @@ RulespecLogwatchEC = CheckParameterRulespecWithoutItem(
     check_group_name="logwatch_ec",
     group=RulespecGroupCheckParametersApplications,
     parameter_valuespec=_parameter_valuespec_logwatch_ec,
-    title=lambda: _("Logwatch Event Console Forwarding"),
+    title=lambda: _("Logwatch Event Console forwarding"),
 )

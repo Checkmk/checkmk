@@ -137,7 +137,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         InputTextFilter(
-            title=_l("Line number in history logfile (exact match)"),
+            title=_l("Line number in history log file (exact match)"),
             sort_index=222,
             info="history",
             query_filter=query_filters.TextQuery(ident="history_line", op="="),
@@ -229,7 +229,7 @@ def register(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         FilterTime(
-            title=_l("Last occurrance of event"),
+            title=_l("Last occurrence of event"),
             sort_index=221,
             info="event",
             query_filter=query_filters.TimeQuery(ident="event_last"),

@@ -359,7 +359,7 @@ MACROS_AND_VARS = [
     ("ID", _l("Event ID")),
     ("COUNT", _l("Number of occurrences")),
     ("TEXT", _l("Message text")),
-    ("FIRST", _l("Time of the first occurrence (time stamp)")),
+    ("FIRST", _l("Time of the first occurrence (timestamp)")),
     ("LAST", _l("Time of the most recent occurrence")),
     ("COMMENT", _l("Event comment")),
     ("SL", _l("Service level")),
@@ -3496,12 +3496,12 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     delete_url = make_confirm_delete_link(
                         url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
                         title=_("Delete MIB file"),
-                        message=_("Filename: %s") % str(filename),
+                        message=_("File name: %s") % str(filename),
                         suffix=mib.name,
                     )
                     html.icon_button(delete_url, _("Delete this MIB"), StaticIcon(IconNames.delete))
 
-                table.cell(_("Filename"), filename)
+                table.cell(_("File name"), filename)
                 table.cell(_("MIB"), mib.name)
                 table.cell(_("Organization"), mib.organization)
                 table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.size), css=["number"])
@@ -3680,7 +3680,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
     def _validate_mib_file_name(self, filename: str) -> None:
         if filename.startswith(".") or "/" in filename:
-            raise Exception(_("Invalid filename"))
+            raise Exception(_("Invalid file name"))
 
     def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:
         if not content or content.isspace():
@@ -3823,7 +3823,7 @@ ConfigureECPermission = Permission(
     section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="config",
     title=_l("Configuration of Event Console"),
-    description=_l("This permission allows to configure the global settings of the event console."),
+    description=_l("This permission allows to configure the global settings of the Event Console."),
     defaults=["admin"],
 )
 
@@ -3842,9 +3842,9 @@ ConfigureECRulesPermission = Permission(
 ActivateECPermission = Permission(
     section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="activate",
-    title=_l("Activate changes for event console"),
+    title=_l("Activate changes for Event Console"),
     description=_l(
-        "Activation of changes for the event console (rule modification, "
+        "Activation of changes for the Event Console (rule modification, "
         "global settings) is done separately from the monitoring configuration "
         "and needs this permission."
     ),
@@ -3854,11 +3854,11 @@ ActivateECPermission = Permission(
 SwitchSlaveReplicationPermission = Permission(
     section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="switchmode",
-    title=_l("Switch slave replication mode"),
+    title=_l("Switch remote site replication mode"),
     description=_l(
-        "This permission is only useful if the Event Console is "
-        "setup as a replication slave. It allows a manual switch "
-        "between sync and takeover mode."
+        "This permission is only useful if the Event Console is set up "
+        "as a replication unit. It allows a manual switch between sync "
+        "and takeover mode."
     ),
     defaults=["admin"],
 )
@@ -3990,11 +3990,14 @@ ConfigVariableEventConsoleRemoteStatus = ConfigVariable(
         ),
         title=_("Access to event status via TCP"),
         help=_(
-            'In Multisite setups if you want <a href="%s">event status checks</a> for hosts that '
-            "live on a remote site you need to activate remote access to the event status socket "
-            "via TCP. This allows to query the current event status via TCP. If you do not restrict "
-            "this to queries also event actions are possible from remote. This feature is not used "
-            "by the event status checks nor by Multisite so we propose not allowing commands via TCP."
+            "In graphical user interface (GUI) setups, if you want "
+            '<a href="%s">event status checks</a> for hosts that live on a '
+            "remote site you need to activate remote access to the event "
+            "status socket via TCP. This allows to query the current event "
+            "status via TCP. If you do not restrict this to queries also "
+            "event actions are possible from remote. This feature is not "
+            "used by the event status checks nor by GUI, so we propose "
+            "not allowing commands via TCP."
         )
         % "wato.py?mode=edit_ruleset&varname=active_checks%3Amkevents",
         none_label=_("no access via TCP"),
@@ -4160,8 +4163,9 @@ ConfigVariableEventConsoleSqliteFreelistSize = ConfigVariable(
     valuespec=lambda context: Filesize(
         title=_("Event Console history fragmentation limit size"),
         help=_(
-            "Event Console History can become fragmented over time. So if the total "
-            "size of deleted entries reaches this number the Event Console history will be cleaned up."
+            "Event Console history can become fragmented over time. "
+            "So if the total size of deleted entries reaches this number "
+            "the Event Console history will be cleaned up."
         ),
         minvalue=1 * 1024 * 1024,
         maxvalue=100 * 1024 * 1024 * 1024,
@@ -4783,12 +4787,13 @@ ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
         no_selection=_("(don't send notifications to Event Console)"),
         label=_("send notifications of contactgroup:"),
         help=_(
-            "If you select a contact group here, then all notifications of "
+            "If you select a contact group here, all notifications of "
             "hosts and services in that contact group will be sent to the "
-            "event console. <b>Note</b>: you still need to create a rule "
-            "matching those messages in order to have events created. <b>Note (2)</b>: "
-            "If you are using the Checkmk Micro Core then this setting is deprecated. "
-            "Please use the notification plug-in <i>Forward Notification to Event Console</i> instead."
+            "Event Console. <b>Note</b>: you still need to create a rule "
+            "matching those messages in order to have events created. "
+            "<b>Note (2)</b>: If you are using the Checkmk Micro Core, "
+            "this setting is deprecated. Please use the notification "
+            "plug-in <i>Forward notification to Event Console</i> instead."
         ),
     ),
     need_restart=True,
@@ -4855,15 +4860,17 @@ ConfigVariableEventConsoleServiceLevels = ConfigVariable(
         ),
         title=_("Service levels"),
         help=_(
-            "Here you can configure the list of possible service levels for hosts, services and "
-            "events. A service level can be assigned to a host or service by configuration. "
-            "The event console can configure each created event to have a specific service level. "
-            "Internally the level is represented as an integer number. Note: a higher number represents "
-            "a higher service level. This is important when filtering views "
-            "by the service level.<p>You can also attach service levels to hosts "
-            "and services in the monitoring. These levels will then be sent to the "
-            "Event Console when you forward notifications to it and will override the "
-            "setting of the matching rule."
+            "Here, you can configure the list of possible service levels "
+            "for hosts, services and events. A service level can be assigned "
+            "to a host or service by configuration. The Event Console can "
+            "configure each created event to have a specific service level. "
+            "Internally the level is represented by an integer number. "
+            "Note: a higher number represents a higher service level. "
+            "This is important when filtering views by the service level."
+            "<p>You can also attach service levels to hosts and services "
+            "in the monitoring. These levels will then be sent to the "
+            "Event Console when you forward notifications to it and will "
+            "override the setting of the matching rule."
         ),
         allow_empty=False,
     ),

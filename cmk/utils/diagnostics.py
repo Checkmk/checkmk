@@ -100,6 +100,7 @@ COMPONENT_COMMANDS = {
     "ip-a": ["ip", "a"],
     "ss-tulpen": ["ss", "-tulpen"],
     "w": ["w"],
+    "top": ["top", "-b", "-n", "1", "-H", "-c", "-w", "512", "-o", "-PID", "-1"],
 }
 
 COMPONENT_DIRECTORIES = {

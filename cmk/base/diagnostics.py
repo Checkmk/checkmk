@@ -193,6 +193,22 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
             argument=True,
             argument_descr="FILE,FILE...",
         ),
+        Option(
+            long_option=OPT_CHECKMK_CORE_FILES,
+            short_help=(
+                "Pack core files. Use filenames relative to var/check_mk. Wildcards are not supported."
+            ),
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_LICENSING_FILES,
+            short_help=(
+                "Pack licensing files. Use filenames relative to var/check_mk. Wildcards are not supported."
+            ),
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
     ]
 
     if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:

@@ -325,11 +325,6 @@ class BaseVersions:
         return cls._base_packages
 
     @classmethod
-    def get_first_base_package(cls) -> CMKPackageInfoOld:
-        """Get the first base package used for the test."""
-        return cls.get_base_packages()[0]
-
-    @classmethod
     def get_latest_base_package(cls) -> CMKPackageInfoOld:
         """Get the latest base package used for the test."""
         return cls.get_base_packages()[-1]

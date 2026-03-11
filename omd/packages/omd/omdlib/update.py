@@ -16,8 +16,8 @@ from types import TracebackType
 from typing import Literal, Self
 
 from omdlib.contexts import SiteContext
+from omdlib.options import CommandOptions
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
-from omdlib.type_defs import CommandOptions
 from omdlib.version_info import VersionInfo
 
 

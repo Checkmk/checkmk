@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import argparse
+from collections.abc import Sequence
+from typing import Annotated, Literal, TypeAlias
+
+from pydantic import BaseModel, Field, RootModel
+
+import omdlib
+from omdlib.type_defs import Skeleton
+
+
+class _Shared(BaseModel, frozen=True):
+    site: str
+    verbose: bool
+
+
+class Restore(_Shared):
+    command: Literal["restore"] = "restore"
+    old_site: str
+    descriptor: int
+    reuse: bool
+    skeleton: Skeleton
+    kill: bool
+
+
+class Move(_Shared):
+    command: Literal["move"] = "move"
+    old_site: str
+    skeleton: Skeleton
+
+
+class Copy(_Shared):
+    command: Literal["copy"] = "copy"
+    old_site: str
+    skeleton: Skeleton
+
+
+class Backup(_Shared):
+    command: Literal["backup"] = "backup"
+    descriptor: int
+    compression: bool
+    rrds: bool
+    agents: bool
+    logs: bool
+
+
+SiteArgs: TypeAlias = Annotated[Restore | Move | Copy | Backup, Field(discriminator="command")]
+
+
+def args_to_command_line(args: SiteArgs, version: str = omdlib.__version__) -> list[str]:
+    cmd_line = [f"/omd/versions/{version}/lib/omd/omd_site_user"]
+    cmd_line.extend([args.command, "--site", args.site])
+    if args.verbose:
+        cmd_line.append("--verbose")
+    match args:
+        case Restore():
+            cmd_line.extend(["--old-site", args.old_site])
+            cmd_line.extend(["--skeleton", args.skeleton.value])
+            cmd_line.extend(["--descriptor", str(args.descriptor)])
+            if args.reuse:
+                cmd_line.append("--reuse")
+            if args.kill:
+                cmd_line.append("--kill")
+        case Move() | Copy():
+            cmd_line.extend(["--old-site", args.old_site])
+            cmd_line.extend(["--skeleton", args.skeleton.value])
+        case Backup():
+            cmd_line.extend(["--descriptor", str(args.descriptor)])
+            if args.compression:
+                cmd_line.append("--compression")
+            if args.rrds:
+                cmd_line.append("--rrds")
+            if args.agents:
+                cmd_line.append("--agents")
+            if args.logs:
+                cmd_line.append("--logs")
+    return cmd_line
+
+
+class _ArgsParser(RootModel[SiteArgs]):
+    root: SiteArgs
+
+
+def parse_arguments(sysv: Sequence[str] | None = None) -> SiteArgs:
+    parser = argparse.ArgumentParser(description="Run `omd` code as site user.")
+    subparser = parser.add_subparsers(
+        dest="command",
+        required=True,
+        help="Internal tool used by `omd`. The command-line API is subject to change.",
+    )
+
+    shared_parser = argparse.ArgumentParser(add_help=False)
+    shared_parser.add_argument("--site", required=True, help="The target site")
+    shared_parser.add_argument("--verbose", action="store_true", help="Provide debug information")
+
+    parser_restore = subparser.add_parser(
+        "restore",
+        parents=[shared_parser],
+        help="Finalize site restore.",
+    )
+    parser_restore.add_argument(
+        "--old-site",
+        required=True,
+        help="The previous name of the site",
+    )
+    parser_restore.add_argument(
+        "--descriptor",
+        required=True,
+        help="An open file descriptor from the backup content can be streamed",
+    )
+    parser_restore.add_argument(
+        "--reuse",
+        default=False,
+        action="store_true",
+        help="Whether to reuse previous site",
+    )
+    parser_restore.add_argument(
+        "--kill",
+        default=False,
+        action="store_true",
+        help="Whether to kill site processes",
+    )
+    parser_restore.add_argument(
+        "--skeleton",
+        choices=[c.value for c in Skeleton],
+        required=True,
+        help="The conflict option for renaming",
+    )
+
+    parser_move = subparser.add_parser(
+        "move",
+        parents=[shared_parser],
+        help="Finalize site move.",
+    )
+    parser_move.add_argument(
+        "--old-site",
+        required=True,
+        help="The previous name of the site",
+    )
+    parser_move.add_argument(
+        "--skeleton",
+        choices=[c.value for c in Skeleton],
+        required=True,
+        help="The conflict option for renaming",
+    )
+
+    parser_copy = subparser.add_parser(
+        "copy",
+        parents=[shared_parser],
+        help="Finalize site copy.",
+    )
+    parser_copy.add_argument(
+        "--old-site",
+        required=True,
+        help="The previous name of the site",
+    )
+    parser_copy.add_argument(
+        "--skeleton",
+        choices=[c.value for c in Skeleton],
+        required=True,
+        help="The conflict option for renaming",
+    )
+
+    parser_backup = subparser.add_parser(
+        "backup",
+        parents=[shared_parser],
+        help="Finalize site backup.",
+    )
+    parser_backup.add_argument(
+        "--compression",
+        default=False,
+        action="store_true",
+        help="Whether to compress the backup",
+    )
+    parser_backup.add_argument(
+        "--descriptor",
+        required=True,
+        help="An open file descriptor from the backup content can be streamed",
+    )
+    parser_backup.add_argument(
+        "--rrds",
+        default=False,
+        action="store_true",
+        help="Whether to backup RRDs",
+    )
+    parser_backup.add_argument(
+        "--agents",
+        default=False,
+        action="store_true",
+        help="Whether to backup agents",
+    )
+    parser_backup.add_argument(
+        "--logs",
+        default=False,
+        action="store_true",
+        help="Whether to backup logs",
+    )
+
+    args = parser.parse_args(sysv)
+    return _ArgsParser.model_validate(vars(args)).root

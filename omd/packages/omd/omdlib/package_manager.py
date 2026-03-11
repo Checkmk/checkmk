@@ -36,7 +36,7 @@ class PackageManager(abc.ABC):
 
     def _execute(self, cmd: list[str], verbose: bool) -> subprocess.Popen[str]:
         if verbose:
-            sys.stdout.write("Executing: " + subprocess.list2cmdline(cmd))
+            sys.stdout.write("Executing: " + subprocess.list2cmdline(cmd) + "\n")
 
         return subprocess.Popen(
             cmd,

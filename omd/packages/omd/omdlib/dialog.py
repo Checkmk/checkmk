@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 """Wrapper functions for interactive dialogs using the dialog cmd tool"""
 
 import os
@@ -11,15 +12,11 @@ import sys
 import termios
 from re import Pattern
 from tty import setraw
-from typing import TYPE_CHECKING
 
-from omdlib.type_defs import ConfigChoiceHasError
+from omdlib.config_choices import ConfigChoiceHasError
 
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
-
-if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext
 
 DialogResult = tuple[bool, str]
 
@@ -42,7 +39,7 @@ def dialog_menu(
 
 
 def dialog_regex(
-    title: str, text: str, regex: Pattern, value: str, oktext: str, canceltext: str
+    title: str, text: str, regex: Pattern[str], value: str, oktext: str, canceltext: str
 ) -> DialogResult:
     while True:
         args = [
@@ -138,7 +135,7 @@ def _run_dialog(args: list[str]) -> DialogResult:
 
 
 def user_confirms(
-    site: "SiteContext",
+    site_home: str,
     conflict_mode: str,
     title: str,
     message: str,
@@ -156,7 +153,7 @@ def user_confirms(
     if conflict_mode == "keepold":
         return True
 
-    user_path = site.dir + "/" + relpath
+    user_path = site_home + "/" + relpath
     options = [
         (yes_choice, yes_text),
         (no_choice, no_text),
@@ -178,7 +175,7 @@ def user_confirms(
 
 # TODO: Use standard textwrap module?
 def _wrap_text(text: str, width: int) -> list[str]:
-    def fillup(line, width):
+    def fillup(line: str, width: int) -> str:
         if len(line) < width:
             line += " " * (width - len(line))
         return line
@@ -239,7 +236,7 @@ def _getch() -> str:
 def ask_user_choices(title: str, message: str, choices: list[tuple[str, str]]) -> str:
     sys.stdout.write("\n")
 
-    def pl(line):
+    def pl(line: str) -> None:
         sys.stdout.write(" %s %-76s %s\n" % (tty.bgcyan + tty.white, line, tty.normal))
 
     pl("")

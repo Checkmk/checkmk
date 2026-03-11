@@ -8,7 +8,6 @@ import enum
 import os
 import pwd
 import shutil
-from collections.abc import Iterator
 from pathlib import Path
 
 from omdlib.skel_permissions import get_skel_permissions, Permissions
@@ -23,17 +22,6 @@ def is_containerized() -> bool:
     )
 
 
-@contextlib.contextmanager
-def chdir(path: str) -> Iterator[None]:
-    """Change working directory and return on exit"""
-    prev_cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
-
-
 def delete_user_file(user_path: str) -> None:
     if not os.path.islink(user_path) and os.path.isdir(user_path):
         shutil.rmtree(user_path)
@@ -46,10 +34,6 @@ def delete_directory_contents(d: str) -> None:
         delete_user_file(d + "/" + f)
 
 
-def omd_base_path() -> str:
-    return "/"
-
-
 def get_editor() -> str:
     alternative = os.environ.get("EDITOR", "/usr/bin/vi")
     editor = os.environ.get("VISUAL", alternative)
@@ -60,13 +44,34 @@ def get_editor() -> str:
     return editor
 
 
+class SiteDistributedSetup(str, enum.Enum):
+    DISTRIBUTED_REMOTE = "distributed_remote"
+    NOT_DISTRIBUTED = "not_distributed"
+    UNKNOWN = "unknown"
+
+
+def get_site_distributed_setup() -> SiteDistributedSetup:
+    file_vars: dict[str, object] = {}
+    if (distr_wato_filepath := Path("~/etc/omd/distributed.mk").expanduser()).exists():
+        exec(  # nosec B102 # BNS:aee528
+            distr_wato_filepath.read_text(),
+            file_vars,
+            file_vars,
+        )
+    if "is_wato_remote_site" not in file_vars:
+        return SiteDistributedSetup.UNKNOWN
+    if file_vars["is_wato_remote_site"] is True:
+        return SiteDistributedSetup.DISTRIBUTED_REMOTE
+    return SiteDistributedSetup.NOT_DISTRIBUTED
+
+
 def chown_tree(directory: str, user: str) -> None:
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
-    os.chown(directory, uid, gid)
-    for dirpath, dirnames, filenames in os.walk(directory):
+    os.lchown(directory, uid, gid)
+    for _, dirnames, filenames, dir_fd in os.fwalk(directory):
         for entry in dirnames + filenames:
-            os.lchown(dirpath + "/" + entry, uid, gid)
+            os.chown(entry, uid, gid, dir_fd=dir_fd, follow_symlinks=False)
 
 
 def create_skeleton_file(
@@ -104,7 +109,7 @@ def create_skeleton_files(
 ) -> None:
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = directory == "."
-    with chdir(skelroot):  # make relative paths
+    with contextlib.chdir(skelroot):  # make relative paths
         for dirpath, dirnames, filenames in os.walk(directory):
             dirpath = dirpath.removeprefix("./")
             for entry in dirnames + filenames:
@@ -114,11 +119,7 @@ def create_skeleton_files(
                     if dirpath == "tmp" or dirpath.startswith("tmp/"):
                         continue
                 create_skeleton_file(
-                    skelroot,
-                    site_dir,
-                    dirpath + "/" + entry,
-                    replacements,
-                    skel_permissions,
+                    skelroot, site_dir, dirpath + "/" + entry, replacements, skel_permissions
                 )
 
 
@@ -128,22 +129,18 @@ def replace_tags(content: bytes, replacements: Replacements) -> bytes:
     return content
 
 
-class SiteDistributedSetup(str, enum.Enum):
-    DISTRIBUTED_REMOTE = "distributed_remote"
-    NOT_DISTRIBUTED = "not_distributed"
-    UNKNOWN = "unknown"
+# TODO: move to sites.py, this is currently not possible due to circular import
+def site_exists(site_dir: Path) -> bool:
+    # In container environments the tmpfs may be managed by the container runtime (when
+    # using the --tmpfs option).  In this case the site directory is
+    # created as parent of the tmp directory to mount the tmpfs during
+    # container initialization. Detect this situation and don't treat the
+    # site as existing in that case.
+    if is_containerized():
+        if not os.path.exists(site_dir):
+            return False
+        if os.listdir(site_dir) == ["tmp"]:
+            return False
+        return True
 
-
-def get_site_distributed_setup() -> SiteDistributedSetup:
-    file_vars: dict = {}
-    if (distr_wato_filepath := Path("~/etc/omd/distributed.mk").expanduser()).exists():
-        exec(  # nosec B102 # BNS:aee528
-            distr_wato_filepath.read_text(),
-            file_vars,
-            file_vars,
-        )
-    if "is_wato_remote_site" not in file_vars:
-        return SiteDistributedSetup.UNKNOWN
-    if file_vars["is_wato_remote_site"] is True:
-        return SiteDistributedSetup.DISTRIBUTED_REMOTE
-    return SiteDistributedSetup.NOT_DISTRIBUTED
+    return os.path.exists(site_dir)

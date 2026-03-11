@@ -20,7 +20,7 @@ from cmk.plugins.oracle.agent_based.oracle_sql import (
 
 pytestmark = pytest.mark.checks
 check_name = "oracle_sql"
-INFO_1 = [
+AGENT_OUTPUT_WITH_FAILURE = [
     ["[[[foobar1|YOLBE AFS RABAT REPL ERROR STMT]]]"],
     [
         "FOOBAR1|FAILURE|ERROR at line 17",
@@ -34,14 +34,14 @@ INFO_1 = [
     ],
 ]
 
-INFO_2 = [
+AGENT_OUTPUT_DETAILS_ONLY = [
     ["[[[foobar1|NBA SESSION LEVEL]]]"],
     ["details", "Session Level", " 5"],
     ["exit", "0"],
     ["elapsed", "0.26815"],
 ]
 
-INFO_3 = [
+AGENT_OUTPUT_LONG_WITH_INVALID_KEYWORD = [
     ["[[[bulu|BLABLI NBA SHA FILE]]]"],
     ["long", "Monitoring SHA/RAB Resultat = 1"],
     [
@@ -53,7 +53,7 @@ INFO_3 = [
     ["elapsed", "0.29285"],
 ]
 
-INFO_4 = [
+AGENT_OUTPUT_SESSIONS_WITH_PERFDATA = [
     ["[[[yoble1|NBA SESSIONS]]]"],
     ["long", "Avara SEP_ID", " 301"],
     [
@@ -71,8 +71,8 @@ INFO_4 = [
 
 # In SUP-21227 it was reported that the line 'elapsed:' shows up in the agent output. We did not
 # obtain an agent output, but this could happen if `perl -MTime::HiRes=time -wle 'print time'`
-# fails. This table was copied from INFO_4 and modified to match the ticket.
-INFO_5 = [
+# fails. This table was copied from AGENT_OUTPUT_SESSIONS_WITH_PERFDATA and modified to match the ticket.
+AGENT_OUTPUT_SESSIONS_EMPTY_ELAPSED = [
     ["[[[yoble1|NBA SESSIONS]]]"],
     ["long", "Avara SEP_ID", " 301"],
     [
@@ -93,7 +93,7 @@ INFO_5 = [
     "info,expected",
     [
         (
-            INFO_1,
+            AGENT_OUTPUT_WITH_FAILURE,
             {
                 "FOOBAR1 SQL YOLBE AFS RABAT REPL ERROR STMT": Instance(
                     details=[],
@@ -130,7 +130,7 @@ INFO_5 = [
             },
         ),
         (
-            INFO_2,
+            AGENT_OUTPUT_DETAILS_ONLY,
             {
                 "FOOBAR1 SQL NBA SESSION LEVEL": Instance(
                     details=["Session Level: 5"],
@@ -143,7 +143,7 @@ INFO_5 = [
             },
         ),
         (
-            INFO_3,
+            AGENT_OUTPUT_LONG_WITH_INVALID_KEYWORD,
             {
                 "BULU SQL BLABLI NBA SHA FILE": Instance(
                     details=[],
@@ -163,7 +163,7 @@ INFO_5 = [
             },
         ),
         (
-            INFO_4,
+            AGENT_OUTPUT_SESSIONS_WITH_PERFDATA,
             {
                 "YOBLE1 SQL NBA SESSIONS": Instance(
                     details=[
@@ -184,7 +184,7 @@ INFO_5 = [
             },
         ),
         (
-            INFO_5,
+            AGENT_OUTPUT_SESSIONS_EMPTY_ELAPSED,
             {
                 "YOBLE1 SQL NBA SESSIONS": Instance(
                     details=[
@@ -249,10 +249,10 @@ def test_parse_metrics(line, expected):
 @pytest.mark.parametrize(
     "info,expected",
     [
-        (INFO_1, [Service(item="FOOBAR1 SQL YOLBE AFS RABAT REPL ERROR STMT")]),
-        (INFO_2, [Service(item="FOOBAR1 SQL NBA SESSION LEVEL")]),
-        (INFO_3, [Service(item="BULU SQL BLABLI NBA SHA FILE")]),
-        (INFO_4, [Service(item="YOBLE1 SQL NBA SESSIONS")]),
+        (AGENT_OUTPUT_WITH_FAILURE, [Service(item="FOOBAR1 SQL YOLBE AFS RABAT REPL ERROR STMT")]),
+        (AGENT_OUTPUT_DETAILS_ONLY, [Service(item="FOOBAR1 SQL NBA SESSION LEVEL")]),
+        (AGENT_OUTPUT_LONG_WITH_INVALID_KEYWORD, [Service(item="BULU SQL BLABLI NBA SHA FILE")]),
+        (AGENT_OUTPUT_SESSIONS_WITH_PERFDATA, [Service(item="YOBLE1 SQL NBA SESSIONS")]),
     ],
 )
 def test_oracle_sql_discovery(info, expected):
@@ -263,7 +263,7 @@ def test_oracle_sql_discovery(info, expected):
     "info, item, expected",
     [
         (
-            INFO_1,
+            AGENT_OUTPUT_WITH_FAILURE,
             "FOOBAR1 SQL YOLBE AFS RABAT REPL ERROR STMT",
             [
                 Result(
@@ -275,7 +275,7 @@ def test_oracle_sql_discovery(info, expected):
             ],
         ),
         (
-            INFO_2,
+            AGENT_OUTPUT_DETAILS_ONLY,
             "FOOBAR1 SQL NBA SESSION LEVEL",
             [
                 Result(state=State.OK, summary="Session Level: 5"),
@@ -283,7 +283,7 @@ def test_oracle_sql_discovery(info, expected):
             ],
         ),
         (
-            INFO_3,
+            AGENT_OUTPUT_LONG_WITH_INVALID_KEYWORD,
             "BULU SQL BLABLI NBA SHA FILE",
             [
                 Result(
@@ -293,13 +293,12 @@ def test_oracle_sql_discovery(info, expected):
                 ),
                 Result(
                     state=State.OK,
-                    summary="Monitoring SHA/RAB Resultat = 1",
-                    details="TODO siehe FOOBAR; Monitoring SHA",
+                    notice="Monitoring SHA/RAB Resultat = 1\nTODO siehe FOOBAR; Monitoring SHA",
                 ),
             ],
         ),
         (
-            INFO_4,
+            AGENT_OUTPUT_SESSIONS_WITH_PERFDATA,
             "YOBLE1 SQL NBA SESSIONS",
             [
                 Result(
@@ -311,7 +310,7 @@ def test_oracle_sql_discovery(info, expected):
                 Metric("sessions_inactive", 0, levels=(10, 40)),
                 Metric("sessions_maxage", 0),
                 Metric("elapsed_time", 0.29444),
-                Result(state=State.OK, summary="Avara SEP_ID: 301"),
+                Result(state=State.OK, notice="Avara SEP_ID: 301"),
             ],
         ),
     ],
@@ -342,7 +341,7 @@ def test_check_oracle_sql_cached() -> None:
             Result(state=State.OK, summary="DETAILS"),
             Metric("metric_name", 1.0, levels=(2.0, 3.0), boundaries=(0.0, 5.0)),
             Metric("elapsed_time", 123.0),
-            Result(state=State.OK, summary="LONG"),
+            Result(state=State.OK, notice="LONG"),
             Result(
                 state=State.OK,
                 summary="Cache generated 9 seconds ago, cache interval: 2 seconds, elapsed cache lifespan: 450.00%",

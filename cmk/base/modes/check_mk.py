@@ -35,7 +35,9 @@ from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CORE_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
+    OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
@@ -3048,6 +3050,22 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
             long_option=OPT_CHECKMK_LOG_FILES,
             short_help=(
                 "Pack log files. Use filenames relative to var/log. Wildcards are not supported."
+            ),
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_CORE_FILES,
+            short_help=(
+                "Pack core files. Use filenames relative to var/check_mk. Wildcards are not supported."
+            ),
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_LICENSING_FILES,
+            short_help=(
+                "Pack licensing files. Use filenames relative to var/check_mk. Wildcards are not supported."
             ),
             argument=True,
             argument_descr="FILE,FILE...",

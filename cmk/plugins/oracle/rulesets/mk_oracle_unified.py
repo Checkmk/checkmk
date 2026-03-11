@@ -29,6 +29,10 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
+# Matches absolute paths on Unix (/...), env var references ($VAR or ${VAR}),
+# and absolute Windows paths (C:\... or C:/...).
+USE_HOST_CLIENT_PATH_RE = r"^(/|\$[\w{]|[a-zA-Z]:[/\\]).*"
+
 
 class Affinity(StrEnum):
     ALL = "all"
@@ -511,12 +515,19 @@ def _oracle_client_library_options() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Oracle Instant Client usage"),
                     help_text=Help(
-                        "Controls usage of host Oracle Instant Client. Allowed values: "
-                        "'auto' (auto-detect, fallback to bundled), "
-                        "'never' (force bundled), "
-                        "'always' (force host), "
-                        "or an absolute path to an OCI library directory "
-                        "(e.g. /usr/lib/oracle/...)."
+                        "Controls which Oracle Instant Client the plugin uses to connect to databases. "
+                        "Two sources are available: "
+                        "the <b>agent-local client</b> — Oracle Instant Client libraries manually installed "
+                        "alongside the Checkmk agent under "
+                        "<tt>$MK_LIBDIR/packages/mk-oracle/</tt> — "
+                        "and the <b>host client</b> — an Oracle installation already present on the monitored host. "
+                        "Note: Checkmk does <b>not</b> deploy Oracle Instant Client automatically; "
+                        "you must install it manually if you want to use the agent-local client. "
+                        "<b>Auto-detect</b>: tries the host client first, falls back to the agent-local client. "
+                        "<b>Never use host client</b>: uses only the agent-local client, ignores any host installation. "
+                        "<b>Always use host client</b>: uses only the host client, ignores the agent-local client. "
+                        "<b>Custom path</b>: uses the Oracle Instant Client at the specified path; "
+                        "supports environment variable expansion (e.g. <tt>${ORACLE_HOME}/lib</tt>)."
                     ),
                     elements=[
                         CascadingSingleChoiceElement(
@@ -526,12 +537,12 @@ def _oracle_client_library_options() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="never",
-                            title=Title("Never use host libraries (force bundled)"),
+                            title=Title("Never use host client (only agent-local client)"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
                             name="always",
-                            title=Title("Always use host libraries (force host)"),
+                            title=Title("Always use host client (ignore agent-local client)"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
@@ -541,8 +552,10 @@ def _oracle_client_library_options() -> Dictionary:
                                 title=Title("Custom path to Oracle client libraries"),
                                 custom_validate=(
                                     validators.MatchRegex(
-                                        "^/.*",
-                                        Message("Please enter an absolute path."),
+                                        USE_HOST_CLIENT_PATH_RE,
+                                        Message(
+                                            "Please enter an absolute path or a path starting with an environment variable (e.g. $VAR/lib)."
+                                        ),
                                     ),
                                 ),
                             ),

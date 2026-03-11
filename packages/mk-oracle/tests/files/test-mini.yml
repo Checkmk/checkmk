@@ -1,6 +1,8 @@
 ---
 oracle:
   main: # mandatory, to be used if no specific config
+    options:
+      _use_host_client: /usr/lib/oracle/21/client64/lib # you may use it to correctly set path to custom client
     connection: # mandatory
       hostname: ora-rocktest.dev.checkmk.net
       port: 1521

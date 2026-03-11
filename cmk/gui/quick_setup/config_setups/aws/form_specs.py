@@ -134,7 +134,7 @@ def _formspec_aws_piggyback_naming_convention() -> dict[str, DictElement]:
                 ],
                 help_text=Help(
                     "Each EC2 instance creates a piggyback host.<br><b>Note:</b> "
-                    "Not every hostname is pingable and changing the piggyback name "
+                    "Not every host name is pingable and changing the piggyback name "
                     "will reset the piggyback host.<br><br><b>IP - Region - Instance "
                     'ID:</b><br>The name consists of "{Private IPv4 '
                     'address}-{Region}-{Instance ID}". This uniquely identifies the '
@@ -246,7 +246,7 @@ def formspec_aws_proxy_details() -> Mapping[str, DictElement]:
                             title=Title("Proxy host"),
                             custom_validate=[
                                 HostAddress(
-                                    error_msg=Message("Invalid hostname or IP address."),
+                                    error_msg=Message("Invalid host name or IP address."),
                                 )
                             ],
                         ),

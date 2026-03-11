@@ -789,7 +789,9 @@ class ModeConfigurationBundle(WatoMode):
                 icon=StaticIcon(IconNames.cloud),
                 permission="rulesets",
                 description=_(
-                    'The rule set "{rule_title}" contains the special agent configuration. Credentials and other agent-specific data can be edited here'
+                    'The rule set "{rule_title}" contains the special '
+                    "agent configuration. Credentials and other "
+                    "agent-specific data can be edited here."
                 ).format(rule_title=rule.ruleset.title()),
             ),
             MenuItem(
@@ -826,7 +828,9 @@ class ModeConfigurationBundle(WatoMode):
                     icon=StaticIcon(IconNames.passwords),
                     permission="passwords",
                     description=_(
-                        'All passwords, secrets and other sensitive data are stored in the Password Store. Changes to the entry "{password_title}" can be made here.'
+                        "All passwords, secrets and other sensitive data "
+                        "are stored in the password store. Changes to the "
+                        'entry "{password_title}" can be made here.'
                     ).format(password_title=password["title"]),
                 )
             )

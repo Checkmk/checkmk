@@ -113,7 +113,14 @@ def configure_authentication() -> QuickSetupStage:
                     ),
                     Text(
                         text=_(
-                            'Assign the built-in role "Reader" to the app in the Access control (IAM). Additionally add the application permissions "Directory.Read.All" and "User.Read.All" to the app if resources available through the Graph API will be monitored. These resources include "Users in Entra ID", "Entra Connect Sync", "App Registrations".'
+                            'Assign the built-in role "Reader" to the app '
+                            "in the access control (IAM). Additionally add "
+                            "the application permissions "
+                            '"Directory.Read.All" and "User.Read.All" to '
+                            "the app if resources available through the "
+                            "Graph API will be monitored. These resources "
+                            'include "Users in Entra ID", '
+                            '"Entra Connect Sync", "App Registrations".'
                         ),
                     ),
                     Text(text=_("Create a client secret for the app and note it down.")),

@@ -90,7 +90,10 @@ def configure_authentication() -> QuickSetupStage:
                     ),
                     Text(
                         text=_(
-                            'Verify that the "Cloud Asset API" on "APIs & Serivces" is activated. It may take some minutes until the API is accessible.'
+                            'Verify that the "Cloud asset API" on '
+                            '"APIs & services" is activated. It may '
+                            "take some minutes until the API is "
+                            "accessible."
                         )
                     ),
                     Text(

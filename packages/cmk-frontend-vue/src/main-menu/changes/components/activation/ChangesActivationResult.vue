@@ -12,7 +12,7 @@ const props = defineProps<{ type: 'success' | 'warning'; title: string; info: st
 
 <template>
   <div>
-    <CmkAlertBox :variant="props.type" class="mm-changes-activation-result">
+    <CmkAlertBox :variant="props.type" class="mm-changes-activation-result" :dismissible="true">
       <template #heading>
         {{ props.title }}
       </template>

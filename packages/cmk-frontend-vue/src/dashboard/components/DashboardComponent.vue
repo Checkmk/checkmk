@@ -14,6 +14,7 @@ import type {
 } from '@/dashboard/components/DashboardContent/types'
 import RelativeGrid from '@/dashboard/components/RelativeGrid/RelativeGrid.vue'
 import ResponsiveGrid from '@/dashboard/components/ResponsiveGrid/ResponsiveGrid.vue'
+import { squashFilters } from '@/dashboard/components/Wizard/components/FiltersRecap/utils'
 import type { DashboardFilters } from '@/dashboard/composables/useDashboardFilters'
 import type { DashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
@@ -56,6 +57,7 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
       console.error(`Widget type ${widget.content.type} not found in constants`)
       continue
     }
+
     record[widgetId] = {
       widget_id: widgetId,
       general_settings: widget.general_settings,
@@ -64,12 +66,7 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
       effective_filter_context: {
         uses_infos: widget.filter_context.uses_infos,
         restricted_to_single: widgetConstants.filter_context.restricted_to_single,
-        filters: {
-          // TODO: might have to be adjusted where widget filter overwrites completely everything if available
-          // to be discussed
-          ...props.baseFilters.value,
-          ...widget.filter_context.filters
-        }
+        filters: squashFilters(props.baseFilters.value, widget.filter_context.filters)
       },
       dashboardKey: props.dashboardKey
     }

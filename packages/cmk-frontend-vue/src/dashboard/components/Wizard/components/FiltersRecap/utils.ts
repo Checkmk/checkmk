@@ -6,9 +6,6 @@
 import type { ConfiguredFilters, FilterDefinition } from '@/dashboard/components/filter/types'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
 
-// TODO: Validar metric selection (single or combined)
-// TODO: Reventar los filtros incompatibles
-
 export const parseContextConfiguredFilters = (
   contextFilters: ContextFilters
 ): ConfiguredFilters => {
@@ -19,19 +16,29 @@ export const parseContextConfiguredFilters = (
   return configuredFilters
 }
 
+const FILTER_EQUIVALENTS: Record<string, string> = {
+  host: 'hostregex',
+  hostregex: 'host',
+  service: 'serviceregex',
+  serviceregex: 'service'
+}
+
+/**
+ * Squash context and widget filters into a single collection of effective filters.
+ * Filters set on the widget level override the same and any equivalent (FILTER_EQUIVALENTS) filter
+ * from the context level.
+ */
 export const squashFilters = (
   contextConfiguredFilters: ConfiguredFilters,
   widgetFilters: ConfiguredFilters
 ): ConfiguredFilters => {
-  // Priority: dashboard < quick < widget
-  // We want to display first the widget filters, then the quick filters and last the dashboard filters
-
   const collections: ConfiguredFilters[] = [widgetFilters, contextConfiguredFilters]
   const allFilters: ConfiguredFilters = {}
 
   for (const collection of collections) {
     for (const flt in collection) {
-      if (!(flt in allFilters)) {
+      const equivalent = FILTER_EQUIVALENTS[flt]
+      if (!(flt in allFilters) && !(equivalent && equivalent in allFilters)) {
         allFilters[flt] = collection[flt] || {}
       }
     }
@@ -47,7 +54,12 @@ export const splitFiltersByCategory = (
 ): ConfiguredFiltersByCategory => {
   const filtersByCategory: Record<string, ConfiguredFilters> = {}
   for (const flt in filters) {
-    const category = filterDefinitions![flt]?.extensions?.info || 'host'
+    const category = filterDefinitions![flt]?.extensions.info
+    if (!category) {
+      console.error(`Filter ${flt} does not have a category (extensions.info) defined in its filter
+        definition.`)
+      continue
+    }
     if (!filtersByCategory[category]) {
       filtersByCategory[category] = {}
     }

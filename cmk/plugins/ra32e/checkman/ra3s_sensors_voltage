@@ -1,0 +1,15 @@
+title: AVTECH Room Alert 3S: Sensor Voltage
+agents: snmp
+catalog: hw/environment/avtech
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the voltage of sensors
+ connected to a AVTECH Room Alert 3S device.
+ Upper levels can be configured via the _Voltage levels_ ruleset.
+
+item:
+ "Voltage Sensor" if the connected sensor is a voltage sensor.
+
+discovery:
+ One service is created if the sensor emits voltage data.

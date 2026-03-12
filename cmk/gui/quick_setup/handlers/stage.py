@@ -45,6 +45,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     InfoLogger,
     JobBasedProgressLogger,
     LOAD_WAIT_LABEL,
+    MKJobNotFoundException,
     NEXT_BUTTON_ARIA_LABEL,
     NEXT_BUTTON_LABEL,
     PREV_BUTTON_ARIA_LABEL,
@@ -242,7 +243,7 @@ class StageActionResult(BaseModel, frozen=False):
     def load_from_job_result(cls, job_id: str) -> "StageActionResult":
         work_dir = Path(BackgroundJobDefines.base_dir) / job_id
         if not os.path.exists(work_dir):
-            raise MKInternalError(None, _("Stage action result not found"))
+            raise MKJobNotFoundException(None, _("Stage action result not found"))
         content = store.load_text_from_file(cls._file_path(work_dir))
         try:
             return cls.model_validate_json(content)

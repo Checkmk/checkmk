@@ -3164,6 +3164,20 @@ class QuickSetupClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_stage_action_result(self, job_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/quick_setup_stage_action_result/{job_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_action_result(self, job_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/quick_setup_action_result/{job_id}",
+            expect_ok=expect_ok,
+        )
+
 
 class ConfigurationEntityClient(RestApiClient):
     domain: DomainType = "configuration_entity"

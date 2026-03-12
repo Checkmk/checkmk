@@ -56,7 +56,11 @@ from cmk.gui.quick_setup.handlers.stage import (
     validate_stage_formspecs,
     verify_custom_validators_and_recap_stage,
 )
-from cmk.gui.quick_setup.handlers.utils import form_spec_parse, ValidationErrors
+from cmk.gui.quick_setup.handlers.utils import (
+    form_spec_parse,
+    MKJobNotFoundException,
+    ValidationErrors,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
@@ -426,8 +430,16 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
                 )
             )
         )
+
     else:
-        action_result = StageActionResult.load_from_job_result(job_id=action_background_job_id)
+        try:
+            action_result = StageActionResult.load_from_job_result(job_id=action_background_job_id)
+
+        except MKJobNotFoundException:
+            return _serve_error(
+                "Job not found", f"Background job '{action_background_job_id}' not found", 404
+            )
+
     return _serve_action_result(action_result)
 
 
@@ -580,7 +592,14 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
 def fetch_quick_setup_action_result(params: Mapping[str, Any]) -> Response:
     """Fetch the Quick action background job result"""
     action_background_job_id = params["job_id"]
-    action_result = CompleteActionResult.load_from_job_result(job_id=action_background_job_id)
+    try:
+        action_result = CompleteActionResult.load_from_job_result(job_id=action_background_job_id)
+
+    except MKJobNotFoundException:
+        return _serve_error(
+            "Job not found", f"Background job '{action_background_job_id}' not found", 404
+        )
+
     return _serve_action_result(action_result)
 
 

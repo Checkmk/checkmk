@@ -834,3 +834,15 @@ def test_fail_validate_permission(clients: ClientRegistry) -> None:
         resp.json["detail"]
         == "Action with id 'action' requires 'impossible_permisson' permissions."
     )
+
+
+def test_stage_action_result_should_return_404(clients: ClientRegistry) -> None:
+    resp = clients.QuickSetup.get_stage_action_result("foo", expect_ok=False)
+    assert resp.status_code == 404
+    assert resp.json["detail"] == "Background job 'foo' not found"
+
+
+def test_action_result_should_return_404(clients: ClientRegistry) -> None:
+    resp = clients.QuickSetup.get_action_result("foo", expect_ok=False)
+    assert resp.status_code == 404
+    assert resp.json["detail"] == "Background job 'foo' not found"

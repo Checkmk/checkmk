@@ -1,0 +1,20 @@
+title: AVTECH Room Alert 3S: Sensor Temperature
+agents: snmp
+catalog: hw/environment/avtech
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the internal temperature
+ and the temperature of sensors connected to
+ a AVTECH Room Alert 32E device.
+ Upper and lower levels as well as the display
+ unit can be configured via the _Temperature_ ruleset.
+
+item:
+ "Internal" for the device sensor and "Sensor X"
+ for connected sensors where X=1-8 is the ID
+ connected sensor.
+
+discovery:
+ One service is created for the internal sensor and
+ one service is created for each sensor that delivers temperature data.

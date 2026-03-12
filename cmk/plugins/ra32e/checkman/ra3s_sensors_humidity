@@ -1,0 +1,17 @@
+title: AVTECH Room Alert 3S: Sensor Humidity
+agents: snmp
+catalog: hw/environment/avtech
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the internal humidity
+ and the humidity of sensors connected to
+ a AVTECH Room Alert 3S device.
+ Upper and lower levels can be configured
+ via the _Humidity levels_ ruleset.
+
+item:
+ "Humidity Sensor" if the connected sensor is a humidity sensor.
+
+discovery:
+ One service is created if the sensor emits humidity data.

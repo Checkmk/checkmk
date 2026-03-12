@@ -504,7 +504,7 @@ const dashboardHasFilters = computed(
 )
 
 const dashboardHasRuntimeFilters = computed(() => {
-  return Object.keys(toRaw(dashboardFilters.appliedRuntimeFilters.value) || {}).length > 0
+  return (toRaw(dashboardFilters.configuredMandatoryRuntimeFilters.value)?.length ?? 0) > 0
 })
 
 const redirectToListDashboardsPage = () => {

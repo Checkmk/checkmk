@@ -8,6 +8,7 @@ import pprint
 import re
 import subprocess
 import time
+import uuid
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -26,6 +27,16 @@ from cmk.ec.config import (  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.site_changes import ChangeSpec  # pylint: disable=cmk-module-layer-violation
 
 logger = logging.getLogger(__name__)
+
+
+def _get_unique_event_message(base_message: str) -> str:
+    """Generate a unique event message with random ID to avoid test interference.
+
+    Ensures each test run has a unique message, preventing event queries from
+    picking up stale events when running tests with --count.
+    """
+    unique_id = uuid.uuid4().hex[:8]
+    return f"{base_message} {unique_id}"
 
 
 def _validate_process_return_code(process: subprocess.Popen, assert_msg: str) -> None:
@@ -390,7 +401,6 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_recei
     assert not queried_event_messages
 
 
-@pytest.mark.xfail(reason="CMK-32229", strict=False)
 @pytest.mark.skip_if_edition("saas")  # reason="EC is disabled in the SaaS edition"
 def test_ec_global_settings(
     site: Site, setup_ec: Iterator, enable_receivers: None, enable_snmp_trap_translation: None
@@ -402,21 +412,28 @@ def test_ec_global_settings(
     * Assert SNMP-MIB is found in the event message
     """
     match, _, _ = setup_ec
-    event_message = f"some {match} status"
+    event_message = _get_unique_event_message(f"some {match} status")
 
     _ = _execute_cmd_and_validate_return_code(
         site, _get_snmp_trap_cmd(event_message), "Failed to send message via SNMP trap."
     )
-
+    query = "GET eventconsoleevents\nColumns: event_text"
+    snmp_pattern = "SNMP.*MIB"  # pattern expected after SNMP traps translation
     queried_event_messages = _wait_for_queried_column(
-        site, "GET eventconsoleevents\nColumns: event_text"
+        site,
+        f'{query}\nFilter: event_text ~ ^.*"{event_message}"$',
     )
-    assert len(queried_event_messages) == 1
+    assert len(queried_event_messages) == 1, f"Did not find event with message: {event_message}"
 
-    pattern = "SNMP.*MIB"  # pattern expected after SNMP traps translation
-    assert re.compile(pattern).search(
-        queried_event_messages[0]
-    ), f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
+    if not re.search(snmp_pattern, queried_event_messages[0]):
+        translated_event_messages = _wait_for_queried_column(
+            site,
+            f'{query}\nFilter: event_text ~ ^.*{snmp_pattern}.*"{event_message}"$',
+            max_count=60,
+        )
+        assert (
+            len(translated_event_messages) == 1
+        ), f"SNMP translation failed: {queried_event_messages}"
 
 
 @pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")

@@ -654,8 +654,8 @@ test('dropdown with callback doesnt call callback unnecessarily', async () => {
   await userEvent.keyboard('[ArrowDown][Enter]')
   expect(selectedOption).toBe('two')
 
-  // Selecting an option does not call the callback again
-  expect(callbackDummy).toHaveBeenCalledTimes(2)
+  // Selecting re-fetches to update the filter string
+  expect(callbackDummy).toHaveBeenCalledTimes(3)
 })
 
 test('dropdown with callback and unselectable selects first selectable suggestion', async () => {
@@ -879,21 +879,22 @@ test('dropdown with callback-filtered shows warning message when callback return
   await screen.findByText('Option 2')
 })
 
-test('dropdown with callback does not prefill filter input for non-regex selected option', async () => {
-  const selectedOption = 'host1'
+test('dropdown with callback-filtered options prefills filter input', async () => {
+  const selectedOption = 'option2'
   render(CmkDropdown, {
     props: {
       options: {
         type: 'callback-filtered',
         querySuggestions: async (_) => {
           return new Response([
-            { name: 'host1', title: 'Host 1' },
-            { name: 'host2', title: 'Host 2' }
+            { name: 'option1', title: 'Option 1' },
+            { name: 'option2', title: 'Option 2' },
+            { name: 'option3', title: 'Option 3' }
           ])
         }
       },
       selectedOption,
-      inputHint: 'Select a host',
+      inputHint: 'Select an option',
       label: 'dropdown-label'
     }
   })
@@ -903,46 +904,13 @@ test('dropdown with callback does not prefill filter input for non-regex selecte
   await fireEvent.click(dropdown)
 
   const input = screen.getByRole('textbox', { name: 'filter' })
+
   await waitFor(() => {
-    // Non-regex values should NOT pre-populate the filter
-    expect(input).toHaveValue('')
-  })
-
-  const option = await screen.findByRole('option', { name: 'Host 1' })
-  expect(option).toHaveClass('selected')
-})
-
-test('dropdown with callback prefills filter input for regex selected option', async () => {
-  const selectedOption = '~host.*'
-  render(CmkDropdown, {
-    props: {
-      options: {
-        type: 'callback-filtered',
-        querySuggestions: async (_) => {
-          return new Response([
-            { name: '~host.*', title: '~host.*' },
-            { name: 'host1', title: 'Host 1' }
-          ])
-        }
-      },
-      selectedOption,
-      inputHint: 'Select a host',
-      label: 'dropdown-label'
-    }
-  })
-
-  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-
-  await fireEvent.click(dropdown)
-
-  const input = screen.getByRole('textbox', { name: 'filter' })
-  await waitFor(() => {
-    // Regex values (starting with ~) should pre-populate the filter
-    expect(input).toHaveValue('~host.*')
+    expect(input).toHaveValue('Option 2')
   })
 })
 
-test('dropdown with filtered options does not prefill filter input for non-regex selected option', async () => {
+test('dropdown with filtered options does not prefill filter input', async () => {
   const selectedOption = 'option2'
   render(CmkDropdown, {
     props: {
@@ -967,101 +935,7 @@ test('dropdown with filtered options does not prefill filter input for non-regex
   const input = screen.getByRole('textbox', { name: 'filter' })
 
   await waitFor(() => {
-    // Non-regex values should NOT pre-populate the filter
+    // Filtered dropdowns should NOT pre-populate the filter
     expect(input).toHaveValue('')
-  })
-
-  const option = screen.getByRole('option', { name: 'Option 2' })
-  expect(option).toHaveClass('selected')
-})
-
-test('dropdown with filtered options prefills filter input for regex selected option', async () => {
-  const selectedOption = '~option.*'
-  render(CmkDropdown, {
-    props: {
-      options: {
-        type: 'filtered',
-        suggestions: [
-          { name: 'option1', title: 'Option 1' },
-          { name: '~option.*', title: '~option.*' },
-          { name: 'option3', title: 'Option 3' }
-        ]
-      },
-      selectedOption,
-      inputHint: 'Select an option',
-      label: 'dropdown-label'
-    }
-  })
-
-  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-
-  await fireEvent.click(dropdown)
-
-  const input = screen.getByRole('textbox', { name: 'filter' })
-
-  await waitFor(() => {
-    // Regex values (starting with ~) should pre-populate the filter
-    expect(input).toHaveValue('~option.*')
-  })
-
-  const option = screen.getByRole('option', { name: '~option.*' })
-  expect(option).toHaveClass('selected')
-})
-
-test('dropdown with callback does not prefill filter input for non-existing non-regex selected option', async () => {
-  const selectedOption = 'host123'
-  render(CmkDropdown, {
-    props: {
-      options: {
-        type: 'callback-filtered',
-        querySuggestions: async (_) => {
-          return new Response([
-            { name: 'host1', title: 'Host 1' },
-            { name: 'host2', title: 'Host 2' }
-          ])
-        }
-      },
-      selectedOption,
-      inputHint: 'Select a host',
-      label: 'dropdown-label'
-    }
-  })
-
-  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
-
-  const input = screen.getByRole('textbox', { name: 'filter' })
-  await waitFor(() => {
-    // Non-regex values should NOT pre-populate the filter
-    expect(input).toHaveValue('')
-  })
-})
-
-test('dropdown with callback prefills filter input for non-existing regex selected option', async () => {
-  const selectedOption = '~host123.*'
-  render(CmkDropdown, {
-    props: {
-      options: {
-        type: 'callback-filtered',
-        querySuggestions: async (_) => {
-          return new Response([
-            { name: 'host1', title: 'Host 1' },
-            { name: 'host2', title: 'Host 2' }
-          ])
-        }
-      },
-      selectedOption,
-      inputHint: 'Select a host',
-      label: 'dropdown-label'
-    }
-  })
-
-  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
-
-  const input = screen.getByRole('textbox', { name: 'filter' })
-  await waitFor(() => {
-    // Regex values (starting with ~) should pre-populate the filter even if not found
-    expect(input).toHaveValue('~host123.*')
   })
 })

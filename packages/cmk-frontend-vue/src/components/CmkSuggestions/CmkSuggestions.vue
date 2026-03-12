@@ -140,7 +140,7 @@ immediateWatch(
         : null
 
       if (newSelectedSuggestion !== null && !isSelectedSuggestionSetAsFilter.value) {
-        if (newSelectedSuggestion.startsWith('~')) {
+        if (newSuggestions.type === 'callback-filtered') {
           filterString.value = foundSuggestion?.title ?? newSelectedSuggestion
           isSelectedSuggestionSetAsFilter.value = true
         }

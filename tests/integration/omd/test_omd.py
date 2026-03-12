@@ -155,12 +155,8 @@ def test_run_omd_backup_and_omd_restore(site: Site) -> None:
     This test creates a backup of the current site and then restores it with a new name.
 
     """
-    site_factory = SiteFactory(
-        package=CMKPackageInfo(version_from_env(), edition_from_env()),
-        enforce_english_gui=False,
-        prefix="",
-    )
-
+    package = CMKPackageInfo(version_from_env(), edition_from_env())
+    site_factory = SiteFactory(package=package, prefix="")
     restored_site_name = "restored_site"
     restored_site = None
     backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
@@ -182,17 +178,47 @@ def test_run_omd_backup_and_omd_restore(site: Site) -> None:
             restored_site.rm()
 
 
+def test_run_omd_backup_and_omd_restore_empty() -> None:
+    """Test that restore works on empty site directory."""
+    package = CMKPackageInfo(version_from_env(), edition_from_env())
+    site_factory = SiteFactory(package=package, prefix="")
+    restored_site_name = "restored_site"
+    backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
+    try:
+        # run the backup
+        restored_site = site_factory.get_site(restored_site_name, create=True)
+        restored_site.omd("backup", str(backup_path), check=True)
+        assert backup_path.stat().st_size > 0, "Backup file was not created."
+
+        restored_site.omd("stop")
+        restored_site.omd("umount", check=True)
+        run(["rm", "-rf", str(restored_site.root)], sudo=True, check=True)
+        # create_site_home
+        run(["mkdir", str(restored_site.root)], sudo=True, check=True)
+        owner_group = f"{restored_site_name}:{restored_site_name}"
+        run(["chown", owner_group, str(restored_site.root)], sudo=True, check=True)
+        run(["chmod", "0751", str(restored_site.root)], sudo=True, check=True)
+
+        restored_site.omd("restore", str(backup_path), check=True)
+        restored_site = site_factory.get_existing_site(restored_site_name, start=True)
+        assert restored_site.exists(), "Restored site does not exist."
+        assert restored_site.is_running(), "Restored site is not running."
+
+    finally:
+        if backup_path.exists():
+            run(["rm", str(backup_path)], sudo=True)
+        if restored_site is not None and restored_site.exists():
+            restored_site.rm()
+
+
 def test_run_omd_create_welcome_message() -> None:
     """
     Test the 'omd create' command.
     This test creates a new site and verifies that the welcome message is displayed.
 
     """
-    site_factory = SiteFactory(
-        package=CMKPackageInfo(version_from_env(), edition_from_env()),
-        enforce_english_gui=False,
-        prefix="",
-    )
+    package = CMKPackageInfo(version_from_env(), edition_from_env())
+    site_factory = SiteFactory(package=package, prefix="")
     try:
         site = site_factory.get_site("test_create_site", create=False)
         assert not site.exists()

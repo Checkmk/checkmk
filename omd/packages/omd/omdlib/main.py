@@ -3027,11 +3027,13 @@ def _restore_backup_from_tar_site(
         sys.stdout.flush()
 
         config = load_config(site, global_opts.verbose)
-        orig_apache_port = config["APACHE_TCP_PORT"]
+        orig_apache_port = config.get("APACHE_TCP_PORT")
+        site = site_environment_as_root(site.name, global_opts.verbose)
         prepare_restore_as_site_user(site, "kill" in options, global_opts.verbose)
         _process_backup_tar(
             tar, global_opts.verbose, _get_conflict_mode(options), old_site_name, site
         )
+        site = site_environment_as_root(site.name, global_opts.verbose)
         postprocess_restore_as_site_user(
             version_info, old_site_name, site, options, orig_apache_port, global_opts.verbose
         )
@@ -3088,13 +3090,14 @@ def postprocess_restore_as_site_user(
     old_site_name: str,
     site: SiteContext,
     options: CommandOptions,
-    orig_apache_port: str,
+    orig_apache_port: str | None,
     verbose: bool,
 ) -> None:
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
     config = load_config(site, verbose)
-    config["APACHE_TCP_PORT"] = orig_apache_port
+    if orig_apache_port is not None:
+        config["APACHE_TCP_PORT"] = orig_apache_port
     # Needed by the post-rename-site script
     os.environ["OLD_OMD_SITE"] = old_site_name
 

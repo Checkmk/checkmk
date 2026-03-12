@@ -17,13 +17,16 @@ from omdlib.user_processes import kill_site_user_processes
 
 
 def prepare_restore_as_site_user(site: SiteContext, kill: bool, verbose: bool) -> None:
-    if not site.is_stopped(verbose) and not kill:
-        sys.exit("Cannot restore site while it is running.")
     site_home = SitePaths.from_site_name(site.name).home
     _verify_directory_write_access(site_home)
-
-    sys.stdout.write("Stopping site processes...\n")
-    call_init_scripts(site_home, "stop")
+    if Path(site_home, "etc/init.d/").exists():
+        Path(site_home, "var/log").mkdir(parents=True, exist_ok=True)
+        if not site.is_stopped(verbose) and not kill:
+            sys.exit("Cannot restore site while it is running.")
+        sys.stdout.write("Stopping site processes...\n")
+        call_init_scripts(site_home, "stop")
+    else:
+        sys.stdout.write("Stopping site processes...\n")
     kill_site_user_processes(site.name, verbose)
     ok()
 

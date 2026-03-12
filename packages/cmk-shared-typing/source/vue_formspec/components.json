@@ -1554,6 +1554,9 @@
                 "escape_regex": {
                   "type": "boolean"
                 },
+                "literal_search": {
+                  "type": "boolean"
+                },
                 "world": {
                   "type": "string"
                 },

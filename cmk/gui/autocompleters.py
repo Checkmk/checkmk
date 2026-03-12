@@ -156,6 +156,15 @@ def check_command_autocompleter(config: Config, value: str, params: dict) -> Cho
     return empty_choices + choices
 
 
+def _build_regex_pattern(value: str, *, literal_search: bool) -> str:
+    """Build a Livestatus regex pattern from a search value."""
+    if not value:
+        return "."
+    if literal_search:
+        return re.escape(value)
+    return value
+
+
 def monitored_service_description_autocompleter(
     config: Config, value: str, params: dict
 ) -> Choices:
@@ -168,7 +177,11 @@ def monitored_service_description_autocompleter(
     ):
         return []
     context.pop("service", None)
-    context["serviceregex"] = {"service_regex": value or "."}
+    context["serviceregex"] = {
+        "service_regex": _build_regex_pattern(
+            value, literal_search=params.get("literal_search", False)
+        )
+    }
     query = livestatus_query_bare_string("service", context, ["service_description"], "reload")
 
     # In case of user errors occuring within livestatus_query_bare_string() (filter validation) the

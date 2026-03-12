@@ -32,7 +32,10 @@ def recompose(form_spec: FormSpec[Any]) -> StringAutocompleter:
             data=AutocompleterData(
                 ident="monitored_service_description",
                 params=AutocompleterParams(
-                    show_independent_of_context=True, strict=True, escape_regex=False
+                    show_independent_of_context=True,
+                    strict=True,
+                    escape_regex=False,
+                    literal_search=True,
                 ),
             ),
         ),

@@ -197,13 +197,22 @@ describe('ModeCreateRelayApp', () => {
     const scriptElement = screen.getByTestId('run-relay-install-script')
     expect(scriptElement).toBeInTheDocument()
 
-    expect(scriptElement.textContent).toContain('bash install_relay.sh')
+    expect(scriptElement.textContent).toContain('sudo bash install_relay.sh')
     expect(scriptElement.textContent).toContain('--relay-name')
     expect(scriptElement.textContent).toContain('test-relay-foo')
     expect(scriptElement.textContent).toContain('--initial-tag-version')
     expect(scriptElement.textContent).toContain('--target-server')
     expect(scriptElement.textContent).toContain('--target-site-name')
     expect(scriptElement.textContent).toContain('--user')
+  })
+
+  test('Execute installation script shows root privileges notice', async () => {
+    render(ModeCreateRelayApp, { props: mockProps })
+
+    await navigateToExecuteScriptStep()
+    expect(
+      screen.getByText(/Note that the installation requires root privileges\./)
+    ).toBeInTheDocument()
   })
 
   test('Execute installation script shows 2FA paragraph for non-cloud editions', async () => {

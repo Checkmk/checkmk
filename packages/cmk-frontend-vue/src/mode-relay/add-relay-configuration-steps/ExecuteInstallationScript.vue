@@ -52,7 +52,7 @@ const installCommand = computed(() => {
   }
 
   return [
-    'bash install_relay.sh \\',
+    'sudo bash install_relay.sh \\',
     `  --relay-name ${escapeShellArg(props.relayAlias)} \\`,
     `  --initial-tag-version ${props.siteVersion} \\`,
     `  --target-server ${props.domain}:${props.agentReceiverPort} \\`,
@@ -81,6 +81,7 @@ const installCommand = computed(() => {
                 'automatically download and register the Relay to your Checkmk site and run it afterwards.'
             )
           }}
+          {{ _t('Note that the installation requires root privileges.') }}
         </CmkParagraph>
         <CmkParagraph v-if="!props.isCloudEdition">
           {{

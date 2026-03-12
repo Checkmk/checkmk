@@ -22,6 +22,8 @@ pub enum ConnectionType {
     SmtpStarttls,
     #[value(name = "postgres_starttls")]
     PostgresStarttls,
+    #[value(name = "imap_starttls")]
+    ImapStarttls,
     #[value(name = "ldap_starttls")]
     LdapStarttls,
 }
@@ -90,6 +92,7 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
         ConnectionType::Tls => debug!("Using TLS connection"),
         ConnectionType::SmtpStarttls => starttls::smtp::perform(&mut stream, server)?,
         ConnectionType::PostgresStarttls => starttls::postgres::perform(&mut stream)?,
+        ConnectionType::ImapStarttls => starttls::imap::perform(&mut stream)?,
         ConnectionType::LdapStarttls => starttls::ldap::perform(&mut stream)?,
     };
 

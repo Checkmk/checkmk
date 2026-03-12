@@ -14,10 +14,10 @@ from dataclasses import asdict
 from enum import auto, Enum
 from typing import Any, cast, overload
 
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.regex import escape_regex_chars
+from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import (
     allow_host_label_conditions,
     allow_label_conditions,
@@ -35,8 +35,8 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 
-import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -2534,7 +2534,10 @@ class VSExplicitConditions(Transform):
     def _validate_explicit_host(self, value: str, varprefix: str) -> None:
         self._validate_list_entry(value, varprefix)
         if value.startswith("~"):
-            return
+            try:
+                re.compile(value[1:])
+            except re.error as e:
+                raise MKUserError(varprefix, _("Invalid regex pattern: %s") % str(e))
         try:
             HostName.validate(value)
         except ValueError as e:

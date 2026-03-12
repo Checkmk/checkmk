@@ -43,7 +43,6 @@ from cmk.gui.type_defs import (
     VisualName,
     VisualTypeName,
 )
-from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
@@ -64,6 +63,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry, VisualType
+from cmk.gui.watolib.profile_replication import start_profile_replication_job
 
 from ._breadcrumb import visual_page_breadcrumb
 from ._filter_valuespecs import VisualFilterList
@@ -355,8 +355,9 @@ def page_edit_visual(
                                 varstring + oldname, varstring + visual["name"]
                             )
                     save(what, all_visuals, owner_user_id)
-                    user_profile_async_replication_page(
-                        back_url=request.get_url_input("back", visual_type.show_url)
+                    start_profile_replication_job(
+                        back_url=back_url,
+                        config=active_config,
                     )
 
                 if not request.var("save_and_view"):

@@ -35,7 +35,6 @@ from cmk.gui.type_defs import (
     VisualPublic,
     VisualTypeName,
 )
-from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -49,6 +48,7 @@ from cmk.gui.utils.urls import (
     urlencode,
 )
 from cmk.gui.visuals.type import visual_type_registry
+from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.mkp_tool import PackageName
 
 from ._breadcrumb import visual_page_breadcrumb
@@ -167,8 +167,9 @@ def page_list(
 
             del visuals[(user_id, delname)]
             save(what, visuals, user_id)
-            user_profile_async_replication_page(
-                back_url=request.get_url_input("back", visual_type.show_url)
+            start_profile_replication_job(
+                back_url=request.get_url_input("back", visual_type.show_url),
+                config=active_config,
             )
             flash(_("Your %s has been deleted.") % visual_type.title)
             html.final_javascript("cmk.utils.navigate_to_page(%s)" % json.dumps(html.request.path))

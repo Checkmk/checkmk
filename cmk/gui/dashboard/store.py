@@ -20,9 +20,9 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
-from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import internal_view_to_runtime_view
+from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.utils import paths
 
 from .builtin_dashboards import (
@@ -172,7 +172,10 @@ def save_and_replicate_all_dashboards(
     owner: UserId | None = None, back: str = "edit_dashboards.py"
 ) -> None:
     save_all_dashboards(owner)
-    user_profile_async_replication_page(back_url=request.get_url_input("back", back))
+    start_profile_replication_job(
+        back_url=request.get_url_input("back", back),
+        config=active_config,
+    )
 
 
 def get_all_dashboards() -> dict[tuple[UserId, DashboardName], DashboardConfig]:

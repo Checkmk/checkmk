@@ -8,13 +8,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as typing from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { type Ref, ref } from 'vue'
 
-import { untranslated } from '@/lib/i18n'
 import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
+import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import { type ValidationMessages } from '@/form/private/validation'
 
 import { firstOperatorSuggestions, operatorSuggestions } from './suggestions'
@@ -31,25 +31,15 @@ const data: Ref<typing.BinaryConditionChoicesItem[]> = ref(props.data)
 const defaultOperator: Ref<'and' | 'or' | 'not'> = ref('and')
 const defaultLabel = ref<string | null>(null)
 
+const getUsedLabels = (): (string | null)[] => data.value.map((g) => g.label)
+const filterUnusedLabels = (s: { name: string | null }): boolean =>
+  !getUsedLabels().includes(s.name)
+
 function removeItem(itemIndex: number) {
   data.value.splice(itemIndex, 1)
   if (data.value[0] !== undefined && data.value[0].operator === 'or') {
     data.value[0].operator = 'and'
   }
-}
-
-function updateItem(item: typing.BinaryConditionChoicesItem, itemIndex: number) {
-  const theItem = data.value[itemIndex]
-  if (item.operator && item.label && theItem !== undefined) {
-    theItem.operator = item.operator
-    theItem.label = item.label
-  }
-}
-
-function hasRemainingSuggestions() {
-  return (
-    props.spec.conditions.filter((c) => !data.value.map((g) => g.label).includes(c.name)).length > 0
-  )
 }
 
 function displayFirstOperators() {
@@ -97,26 +87,11 @@ function addItem() {
             />
           </td>
           <td>
-            <CmkDropdown
-              v-model:selected-option="item.label"
-              :options="{
-                type: 'fixed',
-                suggestions: [
-                  ...props.spec.conditions
-                    .filter(
-                      (c) => item.label === c.name || !data.map((g) => g.label).includes(c.name)
-                    )
-                    .map((c) => ({
-                      name: c.name,
-                      title: untranslated(c.title)
-                    }))
-                ]
-              }"
-              :input-hint="_t('Select label')"
-              :no-elements-text="_t('Add')"
-              :label="_t('Add')"
-              :width="'fill'"
-              @update:selected-option="updateItem(item, itemIndex)"
+            <FormAutocompleter
+              v-model="item.label"
+              :autocompleter="props.spec.autocompleter"
+              :placeholder="_t('Select label')"
+              :filter="(s) => item.label === s.name || !getUsedLabels().includes(s.name)"
             />
           </td>
           <td v-if="item.label !== null">
@@ -129,7 +104,7 @@ function addItem() {
             />
           </td>
         </tr>
-        <tr v-if="hasRemainingSuggestions()">
+        <tr>
           <td v-if="displayFirstOperators()">
             <CmkDropdown
               v-model:selected-option="defaultOperator"
@@ -157,24 +132,12 @@ function addItem() {
             />
           </td>
           <td>
-            <CmkDropdown
-              v-model:selected-option="defaultLabel"
-              :options="{
-                type: props.spec.conditions.length > 10 ? 'filtered' : 'fixed',
-                suggestions: [
-                  ...props.spec.conditions
-                    .filter((c) => !data.map((g) => g.label).includes(c.name))
-                    .map((c) => ({
-                      name: c.name,
-                      title: untranslated(c.title)
-                    }))
-                ]
-              }"
-              :input-hint="_t('Select label')"
-              :no-elements-text="_t('Add')"
-              :label="_t('Add')"
-              :width="'fill'"
-              @update:selected-option="addItem()"
+            <FormAutocompleter
+              v-model="defaultLabel"
+              :autocompleter="props.spec.autocompleter"
+              :placeholder="_t('Select label')"
+              :filter="filterUnusedLabels"
+              @update:model-value="addItem()"
             />
           </td>
         </tr>

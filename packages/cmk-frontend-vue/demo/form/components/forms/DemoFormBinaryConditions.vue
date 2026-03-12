@@ -23,10 +23,15 @@ const spec: BinaryConditionChoices = {
   help: 'some help',
   validators: [],
   label: 'some label',
-  conditions: [
-    { name: 'Condition A', title: 'Condition A Title' },
-    { name: 'Condition B', title: 'Condition B Title' }
-  ]
+  autocompleter: {
+    fetch_method: 'ajax_vs_autocomplete',
+    data: {
+      ident: 'label',
+      params: {
+        world: 'core'
+      }
+    }
+  }
 }
 
 const data = ref<BinaryConditionChoicesValue>([])

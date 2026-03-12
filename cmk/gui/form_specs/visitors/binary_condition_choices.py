@@ -129,7 +129,7 @@ class BinaryConditionChoicesVisitor(
                 title=title,
                 help=help_text,
                 label=localize(self.form_spec.label),
-                conditions=self.form_spec.get_conditions(),
+                autocompleter=self.form_spec.autocompleter,
                 validators=build_vue_validators(self.form_spec.custom_validate or []),
             ),
             [] if isinstance(parsed_value, InvalidValue) else parsed_value,

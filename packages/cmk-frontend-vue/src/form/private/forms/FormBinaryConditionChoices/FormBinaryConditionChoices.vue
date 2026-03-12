@@ -45,7 +45,7 @@ function removeGroup(groupIndex: number) {
 </script>
 
 <template>
-  <div v-if="props.spec.conditions.length > 1">
+  <div>
     <table>
       <tbody>
         <tr v-for="(group, groupIndex) in data" :key="groupIndex">
@@ -84,9 +84,6 @@ function removeGroup(groupIndex: number) {
       </tbody>
     </table>
     <FormButton @click="addGroup">{{ _t('Add to condition') }}</FormButton>
-  </div>
-  <div v-else>
-    {{ _t('No labels') }}
   </div>
 </template>
 

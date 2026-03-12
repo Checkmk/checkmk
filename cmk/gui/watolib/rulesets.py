@@ -53,7 +53,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.labels import get_labels_from_core, LabelType
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoiceEntries
 from cmk.gui.watolib.check_mk_automations import (
@@ -86,7 +85,14 @@ from cmk.server_side_calls_backend.config_processing import (
     OAuth2Connection,
     process_configuration_to_parameters,
 )
-from cmk.shared_typing.vue_formspec_components import BinaryCondition, Condition, ConditionGroup
+from cmk.shared_typing.vue_formspec_components import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    Condition,
+    ConditionGroup,
+    FetchMethod,
+)
 from cmk.utils import paths
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.global_ident_type import GlobalIdent
@@ -2230,36 +2236,6 @@ def _get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
     return choices
 
 
-def _create_binary_condition(id_: str, value: str) -> BinaryCondition:
-    name = f"{id_}:{value}"
-    return BinaryCondition(name=name, title=name)
-
-
-@request_memoize()
-def _get_cached_host_labels() -> Sequence[tuple[str, str]]:
-    return get_labels_from_core(LabelType.ALL, search_label="")
-
-
-def _get_host_label_groups_condition_choices() -> list[BinaryCondition]:
-    return [_create_binary_condition(id_, value) for id_, value in _get_cached_host_labels()]
-
-
-# TODO si-host-vs-service-labels: Both host_label_groups and service_label_groups used:
-#   LabelGroups > _sub_vs = _SingleLabel(world=Labels.World.CORE)
-#               > label_autocompleter
-#               > Labels.get_labels
-#               > get_labels_from_core(LabelType.ALL, search_label)
-# Why not: hosts    -> get_labels_from_core(LabelType.HOST, ...)
-#          services -> get_labels_from_core(LabelType.SERVICE, ...)
-# @request_memoize()
-# def _get_cached_service_labels() -> Sequence[tuple[str, str]]:
-#     return get_labels_from_config(LabelType.SERVICE, search_label="")
-#
-#
-# def _get_service_label_groups_condition_choices() -> list[BinaryCondition]:
-#     return [_create_binary_condition(id_, value) for id_, value in _get_cached_service_labels()]
-
-
 def _create_explicit_rule_conditions_dict(
     *, tree: FolderTree, rule_spec_name: str, rule_spec_item: RuleSpecItem | None
 ) -> DictionaryAPI:
@@ -2291,20 +2267,28 @@ def _create_explicit_rule_conditions_dict(
                 ],
             ),
         ),
-        "host_label_groups": DictElementAPI(
-            parameter_form=BinaryConditionChoices(
-                title=Title("Host labels"),
-                help_text=Help("Rule only applies to hosts matching the label conditions."),
-                label=Label("Label"),
-                get_conditions=(
-                    lambda: _get_host_label_groups_condition_choices()
-                    if allow_host_label_conditions(rule_spec_name)
-                    else []
-                ),
-                custom_validate=[
-                    not_empty(error_msg=Message("Please add at least one host label."))
-                ],
-            )
+        **(
+            {
+                "host_label_groups": DictElementAPI(
+                    parameter_form=BinaryConditionChoices(
+                        title=Title("Host labels"),
+                        help_text=Help("Rule only applies to hosts matching the label conditions."),
+                        label=Label("Label"),
+                        autocompleter=Autocompleter(
+                            data=AutocompleterData(
+                                ident="label",
+                                params=AutocompleterParams(world="core"),
+                            ),
+                            fetch_method=FetchMethod.ajax_vs_autocomplete,
+                        ),
+                        custom_validate=[
+                            not_empty(error_msg=Message("Please add at least one host label."))
+                        ],
+                    )
+                )
+            }
+            if allow_host_label_conditions(rule_spec_name)
+            else {}
         ),
         "explicit_hosts": DictElementAPI(
             parameter_form=DictionaryAPI(
@@ -2343,23 +2327,32 @@ def _create_explicit_rule_conditions_dict(
         elements.update(
             {
                 "explicit_services": _create_explicit_rule_services_dict(rule_spec_item),
-                "service_label_groups": DictElementAPI(
-                    parameter_form=BinaryConditionChoices(
-                        title=Title("Service labels"),
-                        help_text=Help(
-                            "Use this condition to select services based on the configured service labels."
-                        ),
-                        label=Label("Label"),
-                        get_conditions=(
-                            # TODO si-host-vs-service-labels: Why do we use host labels here?
-                            lambda: _get_host_label_groups_condition_choices()
-                            if allow_service_label_conditions(rule_spec_name)
-                            else []
-                        ),
-                        custom_validate=[
-                            not_empty(error_msg=Message("Please add at least one service label."))
-                        ],
-                    )
+                **(
+                    {
+                        "service_label_groups": DictElementAPI(
+                            parameter_form=BinaryConditionChoices(
+                                title=Title("Service labels"),
+                                help_text=Help(
+                                    "Use this condition to select services based on the configured service labels."
+                                ),
+                                label=Label("Label"),
+                                autocompleter=Autocompleter(
+                                    data=AutocompleterData(
+                                        ident="label",
+                                        params=AutocompleterParams(world="core"),
+                                    ),
+                                    fetch_method=FetchMethod.ajax_vs_autocomplete,
+                                ),
+                                custom_validate=[
+                                    not_empty(
+                                        error_msg=Message("Please add at least one service label.")
+                                    )
+                                ],
+                            )
+                        )
+                    }
+                    if allow_service_label_conditions(rule_spec_name)
+                    else {}
                 ),
             }
         )

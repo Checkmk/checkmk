@@ -1708,24 +1708,11 @@
             "label": {
               "type": "string"
             },
-            "conditions": {
-              "type": "array",
-              "items": {
-                "title": "BinaryCondition",
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "title": {
-                    "type": "string"
-                  }
-                },
-                "required": ["name", "title"]
-              }
+            "autocompleter": {
+              "$ref": "#/$defs/autocompleter"
             }
           },
-          "required": ["type", "label", "conditions"]
+          "required": ["type", "label", "autocompleter"]
         }
       ]
     },

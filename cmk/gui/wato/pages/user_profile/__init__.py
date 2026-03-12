@@ -15,7 +15,6 @@ from cmk.shared_typing.main_menu import (
 )
 
 from . import (
-    async_replication,
     change_password,
     edit_profile,
     main_menu,
@@ -34,6 +33,5 @@ def register(
     two_factor.register(page_registry)
     edit_profile.register(page_registry)
     change_password.register(page_registry)
-    async_replication.register(page_registry)
     replicate.register(page_registry)
     profile_replication.register(job_registry)

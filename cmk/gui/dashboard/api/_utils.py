@@ -19,12 +19,12 @@ from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.framework.utils import dump_dict_without_omitted
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import AnnotatedUserId, VisualTypeName
-from cmk.gui.user_async_replication import add_profile_replication_change
 from cmk.gui.userdb import load_user
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
 from cmk.gui.watolib.automations import (
     remote_automation_config_from_site_config,
 )
+from cmk.gui.watolib.profile_replication import add_profile_replication_change
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_user
 from cmk.utils.automation_config import RemoteAutomationConfig

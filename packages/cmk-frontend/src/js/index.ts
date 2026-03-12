@@ -44,7 +44,6 @@ import * as page_menu from './modules/page_menu'
 import { initPasswordStrength } from './modules/password_meter'
 import * as popup_menu from './modules/popup_menu'
 import * as prediction from './modules/prediction'
-import * as profile_replication from './modules/profile_replication'
 import * as quicksearch from './modules/quicksearch'
 import * as reload_pause from './modules/reload_pause'
 import * as selection from './modules/selection'
@@ -119,7 +118,6 @@ export const cmk_export = {
     page_menu: page_menu,
     popup_menu: popup_menu,
     prediction: prediction,
-    profile_replication: profile_replication,
     quicksearch: quicksearch,
     reload_pause: reload_pause,
     render_stats_table: render_stats_table,

@@ -152,7 +152,6 @@ def test_registered_pages() -> None:
         "wato_ajax_diag_snmp",
         "wato_ajax_execute_check",
         "wato_ajax_fetch_site_status",
-        "wato_ajax_profile_repl",
         "welcome",
         "werk",
         "ajax_graph_values_at_time",

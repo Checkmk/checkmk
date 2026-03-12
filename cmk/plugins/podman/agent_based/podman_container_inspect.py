@@ -30,15 +30,12 @@ def host_label_function(section: SectionPodmanContainerInspect) -> HostLabelGene
             The user who owns the podman container.
         cmk/podman/pod:{pod}:
             The pod the container is running in (if applicable).
-        cmk/podman/node:{node}:
-            The node the container is running on.
     """
     yield HostLabel("cmk/podman/object", "container")
     if section.config.user:
         yield HostLabel("cmk/podman/user", section.config.user)
     if section.pod:
         yield HostLabel("cmk/podman/pod", section.pod)
-    yield HostLabel("cmk/podman/node", section.config.hostname)
 
 
 agent_section_podman_container_inspect: AgentSection = AgentSection(

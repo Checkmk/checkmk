@@ -81,7 +81,6 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/vsphere_vcenter",
     "cmk/systemd/unit:{name}",
     "cmk/podman/host",
-    "cmk/podman/node:{node}",
     "cmk/podman/object:container",
     "cmk/podman/object:node",
     "cmk/podman/pod:{pod}",

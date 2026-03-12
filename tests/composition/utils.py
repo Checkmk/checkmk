@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import glob
+import json
 import logging
+import subprocess
 import time
 from pathlib import Path
 
@@ -13,6 +15,10 @@ from tests.testlib.site import Site
 
 logger = logging.getLogger("composition-tests")
 logger.setLevel(logging.INFO)
+
+
+class Timeout(RuntimeError):
+    pass
 
 
 def get_package_extension() -> str:
@@ -80,3 +86,44 @@ def enable_rabbitmq_tracing(*sites: Site) -> None:
     """
     for site in sites:
         site.run(["cmk-monitor-broker", "--enable_tracing"])
+
+
+def await_broker_ready(*sites: Site) -> None:
+    # restart of rabbitmq needs re-enabling of tracing
+    enable_rabbitmq_tracing(*sites)
+    for site in sites:
+        _await_port_ready(site)
+        _await_shovels_ready(site)
+
+
+def _await_port_ready(site: Site) -> None:
+    port = int(site.omd("config", "show", "RABBITMQ_PORT", check=True).stdout)
+    for _ in range(180):
+        if site.execute(["rabbitmq-diagnostics", "check_port_listener", str(port)]).wait() == 0:
+            return
+        time.sleep(1)
+    raise Timeout(f"Rabbitmq did not start properly (port {port} not listening)")
+
+
+def _await_shovels_ready(site: Site) -> None:
+    # TODO: try reducing the waiting time here
+    for _ in range(180):
+        try:
+            raw = site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout
+        except subprocess.CalledProcessError as e:
+            logger.exception(
+                "Failed to get shovel status on %s (rc=%s, stdout=%r, stderr=%r); waiting...",
+                site.id,
+                e.returncode,
+                e.stdout,
+                e.stderr,
+            )
+            time.sleep(1)
+            continue
+
+        data = json.loads(raw)
+        if all(shovel["state"] == "running" for shovel in data):
+            return
+        logger.info("Shovels on %s are not running. Waiting...", site.id)
+        time.sleep(1)
+    raise Timeout("Rabbitmq shovels not started properly.")

@@ -13,7 +13,6 @@ import logging
 import re
 import signal
 import subprocess
-import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from types import FrameType
@@ -21,14 +20,10 @@ from typing import IO
 
 import pytest
 
-from tests.composition.utils import enable_rabbitmq_tracing
+from tests.composition.utils import await_broker_ready, Timeout
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
-
-
-class Timeout(RuntimeError):
-    pass
 
 
 @contextmanager
@@ -164,47 +159,6 @@ def broker_stopped(site: Site) -> Iterator[None]:
     finally:
         assert site.omd("start", "rabbitmq").returncode == 0
         await_broker_ready(site)
-
-
-def await_broker_ready(*sites: Site) -> None:
-    # restart of rabbitmq needs re-enabling of tracing
-    enable_rabbitmq_tracing(*sites)
-    for site in sites:
-        _await_port_ready(site)
-        _await_shovels_ready(site)
-
-
-def _await_port_ready(site: Site) -> None:
-    port = int(site.omd("config", "show", "RABBITMQ_PORT", check=True).stdout)
-    for _ in range(180):
-        if site.execute(["rabbitmq-diagnostics", "check_port_listener", str(port)]).wait() == 0:
-            return
-        time.sleep(1)
-    raise Timeout(f"Rabbitmq did not start properly (port {port} not listening)")
-
-
-def _await_shovels_ready(site: Site) -> None:
-    # TODO: try reducing the waiting time here
-    for _ in range(180):
-        try:
-            raw = site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout
-        except subprocess.CalledProcessError as e:
-            logger.exception(
-                "Failed to get shovel status on %s (rc=%s, stdout=%r, stderr=%r); waiting...",
-                site.id,
-                e.returncode,
-                e.stdout,
-                e.stderr,
-            )
-            time.sleep(1)
-            continue
-
-        data = json.loads(raw)
-        if all(shovel["state"] == "running" for shovel in data):
-            return
-        logger.info("Shovels on %s are not running. Waiting...", site.id)
-        time.sleep(1)
-    raise Timeout("Rabbitmq shovels not started properly.")
 
 
 @contextmanager

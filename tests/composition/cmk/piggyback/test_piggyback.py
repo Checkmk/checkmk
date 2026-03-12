@@ -18,6 +18,7 @@ from tests.composition.cmk.piggyback.piggyback_test_helper import (
     piggybacked_service_discovered,
     set_omd_config_piggyback_hub,
 )
+from tests.composition.utils import await_broker_ready
 from tests.testlib.site import Site
 
 _HOSTNAME_SOURCE_CENTRAL = "source_central_host"
@@ -180,20 +181,23 @@ def _turn_off_piggyback_hub(site: Site) -> Iterator[None]:
         with site.omd_config("PIGGYBACK_HUB", "off"):
             yield
     finally:
-        site.omd_config("PIGGYBACK_HUB", "on")
+        with site.omd_config("PIGGYBACK_HUB", "on"):
+            ...
+        # not really needed for the use we are doing at the moment of this method,
+        # but for the tests executed after this one
+        await_broker_ready(site)
 
 
 def test_piggyback_services_remote_remote_central_ph_off(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:
     """
-    Service for host _HOSTNAME_PIGGYBACKED, generated on site remote_site, is monitored on remote_site2
+    Service for host _HOSTNAME_PIGGYBACKED, generated on site remote_site, is not monitored on remote_site2
     with the central site's piggyback hub disabled
     """
     central_site, remote_site, remote_site_2 = piggyback_env_three_site_setup
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_remote_remote"
     with (
-        _turn_off_piggyback_hub(central_site),
         create_local_check(
             central_site,
             [_HOSTNAME_SOURCE_REMOTE],
@@ -201,14 +205,15 @@ def test_piggyback_services_remote_remote_central_ph_off(
         ),
         _setup_piggyback_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED),
     ):
-        remote_site.schedule_check(_HOSTNAME_SOURCE_REMOTE, "Check_MK")
-        central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
-            _HOSTNAME_PIGGYBACKED
+        assert piggybacked_data_gets_updated(
+            remote_site, remote_site_2, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
         )
 
-        assert piggybacked_service_discovered(
-            central_site, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
-        )
+        with _turn_off_piggyback_hub(central_site):
+            time.sleep(5)
+            assert not piggybacked_data_gets_updated(
+                remote_site, remote_site_2, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
+            )
 
 
 @contextmanager

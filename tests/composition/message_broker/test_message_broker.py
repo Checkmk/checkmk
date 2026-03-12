@@ -15,15 +15,14 @@ import pytest
 from tests.composition.message_broker.utils import (
     assert_message_exchange_not_working,
     assert_message_exchange_working,
-    await_broker_ready,
     broker_pong,
     broker_stopped,
     check_broker_ping,
     p2p_connection,
     rabbitmq_info_on_failure,
-    Timeout,
     timeout,
 )
+from tests.composition.utils import await_broker_ready, Timeout
 from tests.testlib.site import Site
 from tests.testlib.tls import CMKTLSError, tls_connect
 

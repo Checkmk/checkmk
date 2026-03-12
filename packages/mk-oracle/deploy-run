@@ -69,7 +69,7 @@ trap 'rm -f "${TMP_CONFIG}"' EXIT
 SCRIPT_DIR="$(cd -- "${BASH_SOURCE%/*}" && pwd)"
 WORKSPACE_ROOT="$(git rev-parse --show-toplevel)"
 # may be changed in the future
-TARGET_DIR="requirements/rust/host"
+TARGET_DIR="."
 BINARY_PATH="${WORKSPACE_ROOT}/${TARGET_DIR}/target/${GNU_TARGET}/release/${BINARY_NAME}"
 
 SSH_OPTS=(-o ConnectTimeout=10 -o BatchMode=yes)

@@ -2,7 +2,6 @@
 .bugs/.last
 .bugs/.my_ids
 .cache
-.cargo
 .coverage
 .coverage.*
 .directory

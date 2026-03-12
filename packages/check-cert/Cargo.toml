@@ -1,7 +1,7 @@
 [package]
 name = "check-cert"
 version = "0.1.0"
-workspace = "../../requirements/rust/site"
+workspace = "../.."
 edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -17,7 +17,7 @@ openssl.workspace = true
 openssl-probe.workspace = true
 time.workspace = true
 typed-builder.workspace = true
-x509-parser.workspace = true
+x509-parser = "0.15.1"
 der-parser.workspace = true
 aes-gcm = { workspace = true, features = ["aes", "std"] }
 scrypt = { workspace = true, features = ["std"] }

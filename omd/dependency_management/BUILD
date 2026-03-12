@@ -105,8 +105,7 @@ py_binary(
 dependency_list(
     name = "list_of_dependencies",
     manifest_srcs = [
-        "//requirements/rust/site:Cargo.lock",
-        "//requirements/rust/host:Cargo.lock",
+        "//:Cargo.lock",
         "//:pnpm-lock.yaml",
         "//:runtime-requirements.txt",
         "manual_dependency_manifest.yml",

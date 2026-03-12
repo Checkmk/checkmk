@@ -1,11 +1,15 @@
+# host_crates and site_crates share the same Cargo workspace (//:Cargo.toml)
+# and therefore the same cargo_lockfile. Each keeps its own Bazel lockfile because
+# they target different platform triples and use different OpenSSL providers
+# (shared @openssl for site, static @openssl_static for host).
 host_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 host_crates.from_cargo(
     name = "host_crates",
-    cargo_config = "//requirements/rust/host:.cargo/config.toml",
-    cargo_lockfile = "//requirements/rust/host:Cargo.lock",
-    lockfile = "//requirements/rust/host:Cargo.lock.bazel",
+    cargo_config = "//:.cargo/config.toml",
+    cargo_lockfile = "//:Cargo.lock",
+    lockfile = "//:host.Cargo.lock.bazel",
     manifests = [
-        "//requirements/rust/host:Cargo.toml",
+        "//:Cargo.toml",
         "//agents/wnx/extensions/robotmk_ext:Cargo.toml",
         "//packages/cmk-agent-ctl:Cargo.toml",
         "//packages/mk-sql:Cargo.toml",

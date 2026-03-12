@@ -553,6 +553,7 @@
   "pkg:cargo/web-time@1.1.0": "MIT OR Apache-2.0",
   "pkg:cargo/webpki-roots@0.26.8": "MPL-2.0",
   "pkg:cargo/webpki-roots@1.0.6": "CDLA-Permissive-2.0",
+  "pkg:cargo/webpki-roots@1.0.9": "CDLA-Permissive-2.0",
   "pkg:cargo/widestring@1.2.0": "MIT OR Apache-2.0",
   "pkg:cargo/winapi-i686-pc-windows-gnu@0.4.0": "MIT AND Apache-2.0",
   "pkg:cargo/winapi-util@0.1.10": "Unlicense OR MIT",

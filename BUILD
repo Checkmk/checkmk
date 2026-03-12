@@ -24,6 +24,11 @@ exports_files(
         "COPYING",
         "pnpm-lock.yaml",
         "runtime-requirements.txt",
+        "Cargo.toml",
+        "Cargo.lock",
+        "site.Cargo.lock.bazel",
+        "host.Cargo.lock.bazel",
+        ".cargo/config.toml",
     ],
 )
 

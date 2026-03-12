@@ -1,10 +1,13 @@
+# site_crates and host_crates share the same Cargo workspace (//:Cargo.toml)
+# and therefore the same cargo_lockfile. Each keeps its own Bazel lockfile because
+# they target different platform triples and use different OpenSSL providers.
 site_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 site_crates.from_cargo(
     name = "site_crates",
-    cargo_lockfile = "//requirements/rust/site:Cargo.lock",
-    lockfile = "//requirements/rust/site:Cargo.lock.bazel",
+    cargo_lockfile = "//:Cargo.lock",
+    lockfile = "//:site.Cargo.lock.bazel",
     manifests = [
-        "//requirements/rust/site:Cargo.toml",
+        "//:Cargo.toml",
         "//packages/check-cert:Cargo.toml",
         "//packages/check-http:Cargo.toml",
     ],
@@ -20,6 +23,11 @@ site_crates.annotation(
         "OPENSSL_NO_VENDOR": "1",
     },
     crate = "openssl-sys",
+    repositories = ["site_crates"],
+)
+site_crates.annotation(
+    crate = "mk-oracle",
+    gen_build_script = "off",
     repositories = ["site_crates"],
 )
 site_crates.splicing_config(

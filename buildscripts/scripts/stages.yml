@@ -155,22 +155,25 @@ VARIABLES:
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/\\|^requirements/rust/site' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/' || true"
 
     - NAME: CHANGED_CHECK_HTTP_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/\\|^requirements/rust/site' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/\\|^requirements/rust/host' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/' || true"
+
+    - NAME: CHANGED_RUST_WORKSPACE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep -E '^(Cargo\\..*|\\.cargo/config\\.toml|packages/[^/]+/BUILD)$' || true"
 
     - NAME: CHANGED_MK_ORACLE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^requirements/rust/host' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^packages/[^/]*$' || true"
 
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmc/' || true"
 
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/\\|^requirements/rust/host' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/' || true"
 
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"
@@ -524,7 +527,7 @@ STAGES:
     ########## packages ########################################################
 
     - NAME: "Package check-cert"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_CERT_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_CERT_FILES,CHANGED_RUST_WORKSPACE_FILES
       DIR: "packages/check-cert"
       COMMAND: "./run --build --lint=clippy &> ${RESULTS}/check-cert.txt"
       BAZEL_LOCKS_AMOUNT: 1
@@ -532,7 +535,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
 
     - NAME: "Package check-http"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_HTTP_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_HTTP_FILES,CHANGED_RUST_WORKSPACE_FILES
       DIR: "packages/check-http"
       COMMAND: "./run --build --lint=clippy &> ${RESULTS}/check-http.txt"
       BAZEL_LOCKS_AMOUNT: 1
@@ -579,7 +582,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-plugins.txt"
 
     - NAME: "Package cmk-agent-ctl"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES,CHANGED_RUST_WORKSPACE_FILES
       DIR: "packages/cmk-agent-ctl"
       COMMAND: "./run --build --lint=clippy &> ${RESULTS}/cmk-agent-ctl.txt"
       BAZEL_LOCKS_AMOUNT: 1
@@ -748,7 +751,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-shared-typing.txt"
 
     - NAME: "Package mk-sql"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES,CHANGED_RUST_WORKSPACE_FILES
       DIR: "packages/mk-sql"
       COMMAND: "./run --build --lint=clippy &> ${RESULTS}/mk-sql.txt"
       BAZEL_LOCKS_AMOUNT: 1
@@ -756,7 +759,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
 
     - NAME: "Package mk-oracle"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_ORACLE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_ORACLE_FILES,CHANGED_RUST_WORKSPACE_FILES
       SEC_VAR_LIST:
           - "CI_TEST_SQL_DB_ENDPOINT"
           - "CI_ORA_TEST_PASSWORD"

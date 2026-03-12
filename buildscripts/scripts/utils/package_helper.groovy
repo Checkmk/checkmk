@@ -40,12 +40,17 @@ static LinkedHashMap<String, List> dependency_paths_mapping() {
         ],
         "build-mk-oracle": [
             "packages/mk-oracle",
-            "requirements/rust/host"
+            "Cargo.toml",
+            "Cargo.lock",
+            ".cargo",
         ],
         "winagt-build": [
             "agents",
             "packages/cmk-agent-ctl",
             "packages/mk-sql",
+            "Cargo.toml",
+            "Cargo.lock",
+            ".cargo",
             "third_party/asio",
             "third_party/fmt",
             "third_party/googletest",

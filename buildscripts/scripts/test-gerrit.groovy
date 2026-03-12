@@ -324,7 +324,11 @@ void main() {
     stage("Archive artifacts") {
         dir("${checkout_dir}") {
             show_duration("archiveArtifacts") {
-                archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/**');
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: 'results/**',
+                    fingerprint: true,
+                );
             }
         }
     }

@@ -124,7 +124,11 @@ void main() {
     stage("Archive / process test reports") {
         dir("${checkout_dir}") {
             show_duration("archiveArtifacts") {
-                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: "test-results/**",
+                    fingerprint: true,
+                );
             }
             xunit([Custom(
                 customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",

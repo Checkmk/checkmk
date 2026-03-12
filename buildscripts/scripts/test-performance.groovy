@@ -90,7 +90,10 @@ void main() {
     stage("Archive / process test reports") {
         dir("${result_dir}") {
             show_duration("archiveArtifacts") {
-                archiveArtifacts("**");
+                archiveArtifacts(
+                    artifacts: "**",
+                    fingerprint: true,
+                );
             }
             xunit([Custom(
                 customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",

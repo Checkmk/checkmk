@@ -95,7 +95,11 @@ void main() {
             finally {
                 stage("Archive / process test reports") {
                     show_duration("archiveArtifacts") {
-                        archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
+                        archiveArtifacts(
+                            allowEmptyArchive: true,
+                            artifacts: "test-results/**",
+                            fingerprint: true,
+                        );
                     }
                 }
             }

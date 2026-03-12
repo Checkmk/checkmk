@@ -92,7 +92,11 @@ void main() {
 
     stage("Archive stuff") {
         show_duration("archiveArtifacts") {
-            archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
+            archiveArtifacts(
+                allowEmptyArchive: true,
+                artifacts: 'results/*',
+                fingerprint: true,
+            );
         }
     }
 }

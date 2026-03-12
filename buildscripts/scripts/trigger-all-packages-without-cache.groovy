@@ -11,7 +11,12 @@ void main() {
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
 
-    def all_editions = versioning.get_editions();
+    def all_editions = [];
+    def safe_branch_name = versioning.safe_branch_name();
+
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        all_editions = versioning.get_editions();
+    }
     def editions_to_test = all_editions;
 
     def job_parameters = [
@@ -37,29 +42,31 @@ void main() {
         """.stripMargin());
 
     def success = true;
-    for (edition in all_editions) {
-        def stepName = "Trigger ${edition}";
-        def run_condition = edition in editions_to_test;
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        for (edition in all_editions) {
+            def stepName = "Trigger ${edition}";
+            def run_condition = edition in editions_to_test;
 
-        /// this makes sure the whole parallel thread is marked as skipped
-        if (! run_condition) {
-            Utils.markStageSkippedForConditional(stepName);
+            /// this makes sure the whole parallel thread is marked as skipped
+            if (! run_condition) {
+                Utils.markStageSkippedForConditional(stepName);
+            }
+
+            success &= smart_stage(
+                name: stepName,
+                condition: run_condition,
+                raiseOnError: true,
+            ) {
+                def this_job_parameters = job_parameters + [stringParam(name: "EDITION", value: edition)];
+                smart_build(
+                    job: "${branch_base_folder}/nightly-${edition}/build-cmk-deliverables-no-cache",
+                    parameters: this_job_parameters,
+                );
+            }[0]
         }
 
-        success &= smart_stage(
-            name: stepName,
-            condition: run_condition,
-            raiseOnError: true,
-        ) {
-            def this_job_parameters = job_parameters + [stringParam(name: "EDITION", value: edition)];
-            smart_build(
-                job: "${branch_base_folder}/nightly-${edition}/build-cmk-deliverables-no-cache",
-                parameters: this_job_parameters,
-            );
-        }[0]
+        currentBuild.result = success ? "SUCCESS" : "FAILURE";
     }
-
-    currentBuild.result = success ? "SUCCESS" : "FAILURE";
 }
 
 return this;

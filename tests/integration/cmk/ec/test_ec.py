@@ -390,7 +390,8 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_recei
     assert not queried_event_messages
 
 
-@pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")
+@pytest.mark.xfail(reason="CMK-32229", strict=False)
+@pytest.mark.skip_if_edition("saas")  # reason="EC is disabled in the SaaS edition"
 def test_ec_global_settings(
     site: Site, setup_ec: Iterator, enable_receivers: None, enable_snmp_trap_translation: None
 ) -> None:

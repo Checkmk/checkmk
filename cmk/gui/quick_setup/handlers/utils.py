@@ -10,6 +10,7 @@ from typing import Any, cast
 from pydantic import BaseModel
 
 from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui.exceptions import MKInternalError
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     transform_to_disk_model,
@@ -260,3 +261,7 @@ def validate_custom_validators(
 class BackgroundJobException(BaseModel):
     message: str
     traceback: str
+
+
+class MKJobNotFoundException(MKInternalError):
+    pass

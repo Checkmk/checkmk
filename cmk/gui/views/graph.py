@@ -261,6 +261,8 @@ def _paint_time_graph_cmk(
             "Maybe metrics processing is disabled."
         )
 
+    render_async = not request.has_var("cmk-token")
+
     return "", render_graphs_from_specification_html(
         get_template_graph_specification(
             site_id=row["site"],
@@ -276,6 +278,7 @@ def _paint_time_graph_cmk(
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
+        render_async=render_async,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be

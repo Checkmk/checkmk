@@ -60,7 +60,7 @@ class ServicePage(CmkPage):
     def graph(self, graph_title: str) -> Locator:
         container = self._graph_with_timeranges_container(graph_title)
         expect(container).to_be_attached()
-        return container.locator("div[class='graph'] >> canvas")
+        return container.locator("div[class='graph with_margin'] >> canvas")
 
     @property
     def broken_graph(self) -> Locator:

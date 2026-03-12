@@ -516,6 +516,48 @@ def test_run_omd_umount_as_root(site: Site) -> None:
         site.omd("start")
 
 
+def test_run_omd_status_auto_with_autostart_enabled(site: Site) -> None:
+    """Test 'omd status --auto' when the site has AUTOSTART enabled.
+
+    Verifies that the site is included in the output when AUTOSTART is on.
+    """
+    autostart_orig = site.get_config("AUTOSTART")  # cache original autostart value to restore later
+    site.stop()
+    site.set_config("AUTOSTART", "on", with_restart=False)
+    site.start()
+    try:
+        site.set_config("AUTOSTART", "on", with_restart=False)
+        p = run(["omd", "status", "--auto"], sudo=True, check=False)
+        assert site.id in p.stdout, f"Expected site '{site.id}' to appear in output"
+        assert f"Ignoring site '{site.id}'" not in p.stdout, (
+            f"Site '{site.id}' should not be ignored when AUTOSTART=on"
+        )
+    finally:
+        site.stop()
+        site.set_config("AUTOSTART", autostart_orig, with_restart=False)
+        site.omd("start")
+
+
+def test_run_omd_status_auto_with_autostart_disabled(site: Site) -> None:
+    """Test 'omd status --auto' when the site has AUTOSTART disabled.
+
+    Verifies that the site is skipped (with an appropriate message) when AUTOSTART is off.
+    """
+    autostart_orig = site.get_config("AUTOSTART")  # cache original autostart value to restore later
+    site.stop()
+    site.set_config("AUTOSTART", "off", with_restart=False)
+    site.start()
+    try:
+        p = run(["omd", "status", "--auto"], sudo=True, check=False)
+        assert f"Ignoring site '{site.id}': AUTOSTART != on" in p.stdout, (
+            f"Expected site '{site.id}' to be ignored when AUTOSTART=off"
+        )
+    finally:
+        site.stop()
+        site.set_config("AUTOSTART", autostart_orig, with_restart=False)
+        site.omd("start")
+
+
 # TODO: Add tests for these modes (also check -h of each mode)
 # omd update                      Update site to other version of OMD
 # omd config     ...              Show and set site configuration parameters

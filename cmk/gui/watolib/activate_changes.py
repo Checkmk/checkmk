@@ -105,6 +105,7 @@ from cmk.gui.utils.roles import (
     UserPermissions,
     UserPermissionSerializableConfig,
 )
+from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
@@ -2766,18 +2767,22 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
                 with_timestamp=True,
             )
 
-            _sync_and_activate(
-                self._activation_id,
-                site_snapshot_settings,
-                activation_features_registry[
-                    str(version.edition(paths.omd_root))
-                ].sync_file_filter_func,
-                source,
-                all_site_configs,
-                debug=debug,
-                prevent_activate=prevent_activate,
-                use_git=use_git,
-            )
+            timeout_manager.enable_timeout(500)
+            try:
+                _sync_and_activate(
+                    self._activation_id,
+                    site_snapshot_settings,
+                    activation_features_registry[
+                        str(version.edition(paths.omd_root))
+                    ].sync_file_filter_func,
+                    source,
+                    all_site_configs,
+                    debug=debug,
+                    prevent_activate=prevent_activate,
+                    use_git=use_git,
+                )
+            finally:
+                timeout_manager.disable_timeout()
             job_interface.send_result_message(_("Activate changes finished"))
 
 

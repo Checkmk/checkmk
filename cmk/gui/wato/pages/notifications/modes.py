@@ -2190,7 +2190,7 @@ class ModeTestNotifications(ModeNotifications):
             resp = sites.live().query(
                 "GET hosts\n"
                 "Columns: custom_variable_names custom_variable_values groups "
-                "contact_groups labels host_alias host_address contacts notes_url\n"
+                "contact_groups labels host_alias host_address contacts notes_url tags\n"
                 f"Filter: host_name = {hostname}\n"
             )
 
@@ -2212,6 +2212,7 @@ class ModeTestNotifications(ModeNotifications):
         context["CONTACTS"] = ",".join(resp[0][8])
         context["HOSTNOTESURL"] = resp[0][9]
         context["LASTHOSTSTATECHANGE"] = str(int(event_date))
+        self._set_host_tags(context, resp[0][10])
 
     def _set_custom_variables(
         self,
@@ -2271,6 +2272,14 @@ class ModeTestNotifications(ModeNotifications):
     ) -> None:
         for k, v in labels.items():
             context[f"{prefix}LABEL_" + k] = v
+
+    def _set_host_tags(
+        self,
+        context: NotificationContext,
+        tags: Mapping[str, str],
+    ) -> None:
+        for group_id, tag_id in tags.items():
+            context[f"HOSTTAG_{group_id}"] = tag_id
 
     def _vs_test_on_options(self) -> None:
         html.open_table(class_="test_on")

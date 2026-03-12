@@ -13,11 +13,9 @@
 // - update_if_older_than (seconds)
 import { json } from 'd3'
 
+import { BackoffTracker } from '@/modules/backoff'
 import type { CMKAjaxReponse } from '@/modules/types'
 import { is_window_active } from '@/modules/utils'
-
-const BACKOFF_BASE_SECONDS = 10
-const BACKOFF_MAX_SECONDS = 120
 
 export class Scheduler {
   _scheduled_function: () => void
@@ -25,7 +23,7 @@ export class Scheduler {
   _enabled: boolean
   _last_update: number
   _suspend_updates_until: number
-  _consecutive_failures: number
+  _backoff: BackoffTracker
 
   constructor(scheduled_function: () => void, update_interval: number) {
     this._scheduled_function = scheduled_function
@@ -33,7 +31,7 @@ export class Scheduler {
     this._enabled = false
     this._last_update = 0
     this._suspend_updates_until = 0
-    this._consecutive_failures = 0
+    this._backoff = new BackoffTracker()
     setInterval(() => this._schedule(), 1000)
   }
 
@@ -67,16 +65,11 @@ export class Scheduler {
   }
 
   report_failure() {
-    const backoff = Math.min(
-      BACKOFF_BASE_SECONDS * Math.pow(2, this._consecutive_failures),
-      BACKOFF_MAX_SECONDS
-    )
-    this._consecutive_failures++
-    this.suspend_for(this._update_interval + backoff)
+    this._backoff.report_failure()
   }
 
   report_success() {
-    this._consecutive_failures = 0
+    this._backoff.report_success()
     this._suspend_updates_until = 0
   }
 
@@ -88,6 +81,7 @@ export class Scheduler {
   _schedule() {
     if (!this._enabled) return
     if (!is_window_active()) return
+    if (this._backoff.is_suspended()) return
     const now = Math.floor(new Date().getTime() / 1000)
     if (now < this._suspend_updates_until) return
     // This function is called every second. Add 0.5 seconds grace time
@@ -161,11 +155,8 @@ export class MultiDataFetcher {
     }
   }
 
-  _mark_operation_done(post_url: string, post_body: string) {
-    const operation = this._fetch_operations[post_url]?.[post_body]
-    if (!operation) return
-    operation.last_update = Math.floor(new Date().getTime() / 1000)
-    operation.fetch_in_progress = false
+  _get_operation(post_url: string, post_body: string): FetchOperationsBodyContent | undefined {
+    return this._fetch_operations[post_url]?.[post_body]
   }
 
   _schedule_operations() {
@@ -208,7 +199,9 @@ export class MultiDataFetcher {
         )
       })
       .catch(() => {
-        this._mark_operation_done(post_url, post_body)
+        const operation = this._get_operation(post_url, post_body)
+        if (operation) operation.fetch_in_progress = false
+        this.scheduler.report_failure()
       })
   }
 
@@ -220,7 +213,12 @@ export class MultiDataFetcher {
     const response = api_response.result
     const data = response.figure_response
 
-    this._mark_operation_done(post_url, post_body)
+    const operation = this._get_operation(post_url, post_body)
+    if (!operation) return
+
+    operation.last_update = Math.floor(new Date().getTime() / 1000)
+    operation.fetch_in_progress = false
+    this.scheduler.report_success()
 
     // Inform subscribers
     this._fetch_hooks[post_url][post_body].forEach((subscriber_func: (data: any) => void) => {

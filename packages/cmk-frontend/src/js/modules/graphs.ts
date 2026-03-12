@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { call_ajax } from './ajax'
+import { BackoffTracker } from './backoff'
 import { add, hide, show, update_content } from './hover'
 import { pause } from './reload_pause'
 import {
@@ -1277,6 +1278,10 @@ let g_graph_update_in_process = false
 // set to False after 100 ms to prevent too often graph rendering updates.
 let g_graph_in_cooldown_period = false
 
+// Exponential backoff for graph AJAX failures (e.g. expired sessions).
+// Prevents request spamming when the server keeps returning errors.
+const g_graph_backoff = new BackoffTracker()
+
 // Holds the timeout object which triggers an AJAX update of all other graphs
 // on the page 500ms after the last mouse wheel zoom step.
 let g_graph_wheel_timeout: null | number = null
@@ -1711,7 +1716,7 @@ interface GraphHover {
 }
 
 function update_graph_hover_popup(event: Event, graph: GraphArtwork): boolean | void {
-  if (g_graph_update_in_process || g_graph_in_cooldown_period) {
+  if (g_graph_update_in_process || g_graph_in_cooldown_period || g_graph_backoff.is_suspended()) {
     return prevent_default_events(event)
   }
 
@@ -1764,6 +1769,10 @@ function update_graph_hover_popup(event: Event, graph: GraphArtwork): boolean | 
   call_ajax(endpoint, {
     method: 'POST',
     response_handler: handle_graph_hover_popup_update,
+    error_handler: function () {
+      g_graph_update_in_process = false
+      g_graph_backoff.report_failure()
+    },
     handler_data: {
       graph: graph,
       event: event,
@@ -1788,6 +1797,7 @@ function handle_graph_hover_popup_update(
     console.log(e)
     console.error('Failed to parse graph hover update response: ' + ajax_response)
     g_graph_update_in_process = false
+    g_graph_backoff.report_failure()
     return
   }
 
@@ -1800,6 +1810,7 @@ function handle_graph_hover_popup_update(
 
   //render_graph_and_subgraphs(graph);
   g_graph_update_in_process = false
+  g_graph_backoff.report_success()
 }
 
 interface CurveValues {
@@ -1992,7 +2003,8 @@ function update_graph(
     post_data += '&consolidation_function=' + encodeURIComponent(consolidation_function)
   }
 
-  if (g_graph_update_in_process) return prevent_default_events(event)
+  if (g_graph_update_in_process || g_graph_backoff.is_suspended())
+    return prevent_default_events(event)
 
   start_graph_update(canvas!, post_data)
   return true
@@ -2008,6 +2020,10 @@ function start_graph_update(canvas: HTMLCanvasElement, post_data: string) {
     method: 'POST',
     //@ts-ignore
     response_handler: handle_graph_update,
+    error_handler: function () {
+      g_graph_update_in_process = false
+      g_graph_backoff.report_failure()
+    },
     handler_data: get_graph_container(canvas),
     post_data: post_data
   })
@@ -2027,6 +2043,8 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
   } catch (e) {
     console.log(e)
     console.error('Failed to parse graph update response: ' + ajax_response)
+    g_graph_update_in_process = false
+    g_graph_backoff.report_failure()
     return
   }
   // Structure of response:
@@ -2055,6 +2073,7 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
 
   render_graph_and_subgraphs(graph)
   g_graph_update_in_process = false
+  g_graph_backoff.report_success()
 }
 
 // re-render the given graph and check whether or not there are subgraphs

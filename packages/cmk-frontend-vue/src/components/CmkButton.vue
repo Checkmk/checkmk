@@ -243,4 +243,9 @@ button.cmk-button:disabled {
   /* Reset global style from old framework */
   box-shadow: none;
 }
+
+.cmk-button:focus-visible {
+  outline: 2px solid var(--success);
+  outline-offset: 2px;
+}
 </style>

@@ -52,6 +52,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
@@ -1053,4 +1054,8 @@ class AutomationActivateChanges(AutomationCommand[DomainRequests]):
             raise MKAutomationException(_("Invalid request: %r") % domains)
 
     def execute(self, api_request: DomainRequests) -> ConfigWarnings:
-        return activate_changes.execute_activate_changes(api_request)
+        timeout_manager.enable_timeout(500)
+        try:
+            return activate_changes.execute_activate_changes(api_request)
+        finally:
+            timeout_manager.disable_timeout()

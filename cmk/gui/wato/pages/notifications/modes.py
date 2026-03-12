@@ -91,7 +91,6 @@ from cmk.gui.type_defs import (
     StaticIcon,
     Users,
 )
-from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -163,6 +162,7 @@ from cmk.gui.watolib.notifications import (
     NotificationParameterConfigFile,
     NotificationRuleConfigFile,
 )
+from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import (
     get_default_notification_rule,
@@ -2699,10 +2699,6 @@ def _validate_general_opts(general_test_options: GeneralTestOptions, varprefix: 
 
 
 class ABCUserNotificationsMode(ABCNotificationsMode):
-    def __init__(self) -> None:
-        super().__init__()
-        self._start_async_repl = False
-
     def _from_vars(self) -> None:
         self._users = userdb.load_users(
             lock=transactions.is_transaction() or request.has_var("_move")
@@ -2774,13 +2770,6 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         return redirect(self.mode_url(user=self._user_id()))
 
     def page(self, config: Config) -> None:
-        if self._start_async_repl:
-            user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites(config.sites),
-                back_url=ModePersonalUserNotifications.mode_url(),
-            )
-            html.h3(_("Notification Rules"))
-
         self._render_notification_rules(
             rules=self._rules,
             config=config,
@@ -2962,12 +2951,15 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         site_configs: SiteConfigurations,
     ) -> None:
         if has_distributed_setup_remote_sites(site_configs):
-            self._start_async_repl = True
             _audit_log.log_audit(
                 action=action_name,
                 message=text,
                 user_id=user.id,
                 use_git=use_git,
+            )
+            start_profile_replication_job(
+                back_url=ModePersonalUserNotifications.mode_url(),
+                config=active_config,
             )
         else:
             super()._add_change(
@@ -2982,10 +2974,6 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
 
 
 class ABCEditNotificationRuleMode(ABCNotificationsMode):
-    def __init__(self) -> None:
-        super().__init__()
-        self._start_async_repl = False
-
     @abc.abstractmethod
     def _load_rules(self) -> list[EventRule]:
         raise NotImplementedError()
@@ -3551,13 +3539,6 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         return self._back_mode()
 
     def page(self, config: Config) -> None:
-        if self._start_async_repl:
-            user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites(config.sites),
-                back_url=ModePersonalUserNotifications.mode_url(),
-            )
-            return
-
         with html.form_context("rule", method="POST"):
             vs = self._valuespec(config)
             vs.render_input("rule", dict(self._rule))
@@ -3727,12 +3708,15 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
         site_configs: SiteConfigurations,
     ) -> None:
         if has_distributed_setup_remote_sites(site_configs):
-            self._start_async_repl = True
             _audit_log.log_audit(
                 action=action_name,
                 message=text,
                 user_id=self._user_id(),
                 use_git=use_git,
+            )
+            start_profile_replication_job(
+                back_url=ModePersonalUserNotifications.mode_url(),
+                config=active_config,
             )
         else:
             super()._add_change(
@@ -3743,8 +3727,6 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
             )
 
     def _back_mode(self) -> ActionResult:
-        if has_distributed_setup_remote_sites(active_config.sites):
-            return None
         search = request.get_str_input("search", "")
         if search:
             return redirect(mode_url("user_notifications_p", search=search))

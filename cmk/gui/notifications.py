@@ -37,12 +37,10 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.user_async_replication import user_profile_async_replication_page
-from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
+from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
-from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 
 def register(
@@ -199,35 +197,15 @@ class ClearFailedNotificationPage(Page):
         if ctx.request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())
 
-            if get_enabled_remote_sites_for_logged_in_user(user, ctx.config.sites):
-                title = _("Replicate user profile")
-                breadcrumb = make_simple_page_breadcrumb(
-                    main_menu_registry.menu_monitoring(), title
-                )
-                make_header(
-                    html,
-                    title,
-                    breadcrumb,
-                    debug=ctx.config.debug,
-                    lang=user.language,
-                    inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-                    load_frontend_vue=ctx.config.load_frontend_vue,
-                    custom_style_sheet=ctx.config.custom_style_sheet,
-                    screenshotmode=ctx.config.screenshotmode,
-                    inline_help_as_text=user.inline_help_as_text,
-                    hide_suggestions=not user.get_tree_state("suggestions", "all", True),
-                    user_role_ids=user.role_ids,
-                )
-
-                for message in get_flashed_messages():
-                    html.show_message(message.msg)
-                user_profile_async_replication_page(back_url="clear_failed_notifications.py")
-                return
+            start_profile_replication_job(
+                back_url="clear_failed_notifications.py",
+                config=ctx.config,
+            )
+            html.reload_whole_page()
+            return
 
         failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
         self._show_page(ctx.request, acktime, failed_notifications)
-        if ctx.request.var("_confirm"):
-            html.reload_whole_page()
 
     # TODO: We should really recode this to use the view and a normal view command / action
     def _show_page(

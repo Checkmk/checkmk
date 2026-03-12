@@ -115,7 +115,7 @@ def register(
     tags.register(mode_registry)
     timeperiods.register(mode_registry)
     user_migrate.register(mode_registry)
-    user_profile.register(page_registry, main_menu_registry, user_menu_topics)
+    user_profile.register(page_registry, main_menu_registry, user_menu_topics, job_registry)
     users.register(mode_registry)
     certificate_overview.register(mode_registry)
     certificate_rotation.register(automation_command_registry)

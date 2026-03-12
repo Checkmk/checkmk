@@ -145,6 +145,7 @@ const appliedFilters = computed((): ConfiguredFilters => {
         @update-filter-values="
           (filterId, values) => widgetFilterManager.updateFilterValues(filterId, values)
         "
+        @remove-filter="(filterId) => widgetFilterManager.filterHandler.removeFilter(filterId)"
       />
       <Suspense>
         <Stage2

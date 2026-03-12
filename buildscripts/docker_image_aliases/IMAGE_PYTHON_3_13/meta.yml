@@ -1,0 +1,2 @@
+source: python:3.13-alpine3.23
+tag: artifacts.lan.tribe29.com:4000/python:3.13-alpine3.23-image-alias-master-38c24d520ac

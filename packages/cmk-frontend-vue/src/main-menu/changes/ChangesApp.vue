@@ -39,12 +39,14 @@ import ChangesActivationResult from './components/activation/ChangesActivationRe
 import PendingChangesList from './components/pending-changes/PendingChangesList.vue'
 import SiteStatusList from './components/sites/SiteStatusList.vue'
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 const props = defineProps<ChangesProps>()
+
+type RecentlyActivatedSite = readonly [siteId: string, status: string]
 
 const numberOfChangesLastActivation = ref<number>(0)
 const selectedSites = ref<string[]>([])
-const recentlyActivatedSites = ref<string[]>([])
+const recentlyActivatedSites = ref<RecentlyActivatedSite[]>([])
 const activationStatusCollapsible = ref<boolean>(true)
 const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
@@ -121,7 +123,7 @@ async function pollActivationStatusUntilComplete(activationId: string) {
         const siteStatus = statusPerSite.find((status) => status.site === site.siteId)
         if (siteStatus) {
           site.lastActivationStatus = siteStatus
-          recentlyActivatedSites.value.push(site.siteId)
+          recentlyActivatedSites.value.push([site.siteId, siteStatus.state])
         }
       })
       numberOfChangesLastActivation.value = response.extensions.changes.length
@@ -337,6 +339,27 @@ const numberOfForeignChanges = computed((): number => {
     .length
 })
 
+const recentlyActivatedSiteIds = computed((): string[] => {
+  return recentlyActivatedSites.value.map(([siteId]) => siteId)
+})
+
+const activationSuccessTitle = computed((): string => {
+  const numberOfSuccessfullyActivatedSites = recentlyActivatedSites.value.filter(
+    ([, status]) => status === 'success'
+  ).length
+  const numberOfChanges = numberOfChangesLastActivation.value
+
+  return _t(
+    'Successfully activated %{numberOfChanges} pending %{changeWord} on %{numberOfSuccessfullyActivatedSites} %{siteWord}',
+    {
+      numberOfChanges,
+      numberOfSuccessfullyActivatedSites,
+      changeWord: _tn('change', 'changes', numberOfChanges),
+      siteWord: _tn('site', 'sites', numberOfSuccessfullyActivatedSites)
+    }
+  )
+})
+
 function calcChangesHeight(): number {
   if (!activationStatusCollapsible.value) {
     return -0.78
@@ -414,7 +437,9 @@ onMounted(async () => {
       <ChangesActivating
         v-if="activateChangesInProgress"
         :activating-on-sites="
-          recentlyActivatedSites.length > 1 ? recentlyActivatedSites : recentlyActivatedSites[0]
+          recentlyActivatedSiteIds.length > 1
+            ? recentlyActivatedSiteIds
+            : recentlyActivatedSiteIds[0]
         "
         :restart-info="restartInfoShown"
       >
@@ -427,13 +452,7 @@ onMounted(async () => {
           !sitesWithWarningsOrErrors
         "
         type="success"
-        :title="
-          numberOfChangesLastActivation === 1
-            ? _t('Successfully activated 1 change')
-            : _t('Successfully activated %{numberOfChangesLastActivation} changes', {
-                numberOfChangesLastActivation
-              })
-        "
+        :title="activationSuccessTitle"
         :info="_t('Everything is up to date')"
         class="cmk-div-activation-result-container"
       >
@@ -486,7 +505,7 @@ onMounted(async () => {
           :sites="sitesAndChanges.sites"
           :open="activationStatusCollapsible"
           :activating="activateChangesInProgress"
-          :recently-activated-sites="recentlyActivatedSites"
+          :recently-activated-sites="recentlyActivatedSiteIds"
           :pending-changes="sitesAndChanges.pendingChanges"
           :user-has-activate-foreign="props.user_has_activate_foreign"
         ></SiteStatusList>

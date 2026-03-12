@@ -73,7 +73,9 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   margin: 0;
 
   &:hover {
-    background: var(--ux-theme-6);
+    button {
+      background: var(--ux-theme-6);
+    }
   }
 
   &[data-state='open'] {
@@ -96,6 +98,16 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 
   &[data-state='closed'] {
     animation: cmk-accordion-item__slide-up 0.3s ease-out;
+  }
+}
+
+body[data-theme='modern-dark'] {
+  .cmk-accordion-item__header {
+    &:hover {
+      button {
+        background: var(--color-white-10);
+      }
+    }
   }
 }
 

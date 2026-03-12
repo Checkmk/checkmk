@@ -11,18 +11,35 @@ import CmkDropdown from '@/components/CmkDropdown'
 import CmkLinkCard from '@/components/CmkLinkCard'
 
 defineProps<{ screenshotMode: boolean }>()
-const variantSelected = ref<'standard' | 'borderless'>('standard')
+const bordersSelected = ref<'standard' | 'borderless'>('standard')
+const contrastSelected = ref<'standard' | 'high'>('standard')
 </script>
 
 <template>
-  <label>Variant: </label>
+  <label>Borders: </label>
   <CmkDropdown
-    v-model:selected-option="variantSelected"
+    v-model:selected-option="bordersSelected"
     :options="{
       type: 'fixed',
       suggestions: [
         { name: 'standard', title: 'Standard' },
         { name: 'borderless', title: 'Borderless' }
+      ]
+    }"
+    input-hint="some input hint"
+    no-results-hint="no results hint"
+    label="some label"
+    required
+  />
+  <br />
+  <label>Contrast: </label>
+  <CmkDropdown
+    v-model:selected-option="contrastSelected"
+    :options="{
+      type: 'fixed',
+      suggestions: [
+        { name: 'standard', title: 'Standard' },
+        { name: 'high', title: 'High' }
       ]
     }"
     input-hint="some input hint"
@@ -36,14 +53,16 @@ const variantSelected = ref<'standard' | 'borderless'>('standard')
     icon-name="checkmk-logo-min"
     subtitle="Have a look at our website for more information about Checkmk."
     url="https://checkmk.com"
-    :variant="variantSelected"
+    :borders="bordersSelected"
+    :contrast="contrastSelected"
     :open-in-new-tab="true"
   />
   <CmkLinkCard
     title="Ask Checkmk AI"
     subtitle="Your assistant for Checkmk – ask anything from setup to troubleshooting."
     url="https://chat.checkmk.com"
-    :variant="variantSelected"
+    :borders="bordersSelected"
+    :contrast="contrastSelected"
     :open-in-new-tab="true"
   />
   <CmkLinkCard
@@ -51,14 +70,16 @@ const variantSelected = ref<'standard' | 'borderless'>('standard')
     icon-name="about-checkmk"
     url=""
     :open-in-new-tab="false"
-    :variant="variantSelected"
+    :borders="bordersSelected"
+    :contrast="contrastSelected"
   />
 
   <CmkLinkCard
     title="Disabled"
     icon-name="checkmk-logo-min"
     url="https://checkmk.com"
-    :variant="variantSelected"
+    :borders="bordersSelected"
+    :contrast="contrastSelected"
     :disabled="true"
     :open-in-new-tab="false"
   />

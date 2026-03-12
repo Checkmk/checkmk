@@ -90,7 +90,7 @@ const classes = computed(() => [
 .cmk-link-card--borderless {
   border: var(--dimension-1) solid transparent;
 
-  --background-color: var(--ux-theme-1);
+  --background-color: var(--ux-theme-2);
 
   &.cmk-link-card--high-contrast {
     --background-color: var(--ux-theme-3);

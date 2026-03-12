@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type ModelRef, computed, readonly, ref } from 'vue'
+import { type Ref, computed, readonly, ref } from 'vue'
 
 import type {
   ContentResponsiveGrid,
@@ -211,7 +211,7 @@ export function createWidgetLayout(
 
 export function useResponsiveGridLayout(
   breakpointConfig: InternalBreakpointConfig,
-  responsiveGridContent: ModelRef<ContentResponsiveGrid>,
+  responsiveGridContent: Ref<ContentResponsiveGrid>,
   widgetConstraints: DashboardConstants['widgets']
 ) {
   const layouts = computed<ResponsiveGridConfiguredInternalLayouts>(() =>

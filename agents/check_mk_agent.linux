@@ -356,12 +356,53 @@ detect_container_environment() {
     fi
 }
 
-# Prefer (relatively) new /usr/bin/timeout from coreutils against
-# our shipped waitmax. waitmax is statically linked and crashes on
-# some Ubuntu versions recently.
+# Shell version of the waitmax utility, that limits the runtime of
+# commands. This version does not conserve the original exit code
+# of the command. It is successfull if the command terminated
+# in time.
+#
+# Only comes into action if
+# - the timeout command is not available (I.e., Linux core utils are not
+#   installed, which may happen in minimalistic environments)
+# - Our shipped 'waitmax' utility doesn't work (I.e., not running on x86-64
+#   architecture - E.g., ARM.)
+waitmax_fallback() {
+    if [ "${1}" = "-s" ]; then
+        shift
+        kill_signal="-${1}"
+        shift
+    else
+        kill_signal=
+    fi
+
+    TIMEOUT=${1}
+    shift
+
+    # Run command in background
+    "$@" &
+    PID=$!
+
+    # Wait for termination within TIMEOUT seconds
+    while [ "${TIMEOUT}" -gt 0 ]; do
+        TIMEOUT=$((TIMEOUT - 1))
+        if [ ! -e /proc/${PID} ]; then
+            return 0
+        fi
+        sleep 1
+    done
+
+    kill ${kill_signal:+"${kill_signal}"} ${PID}
+    return 1
+}
+
+# Prefer coreutils timeout against our shipped waitmax.
 if inpath timeout; then
     waitmax() {
         timeout "$@"
+    }
+elif ! inpath waitmax || ! waitmax -V >/dev/null 2>&1; then
+    waitmax() {
+        waitmax_fallback "$@"
     }
 fi
 

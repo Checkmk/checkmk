@@ -21,6 +21,7 @@ rust_library(
         "src/fetcher.rs",
         "src/lib.rs",
         "src/pwstore.rs",
+        "src/starttls/imap.rs",
         "src/starttls/ldap.rs",
         "src/starttls/postgres.rs",
         "src/starttls/smtp.rs",
@@ -49,6 +50,16 @@ rust_test(
         "tests/starttls/postgres.rs",
     ],
     crate_root = "tests/starttls/postgres.rs",
+    deps = [":check-cert-lib"],
+)
+
+rust_test(
+    name = "imap_starttls_test",
+    srcs = [
+        "tests/starttls/common/mock_stream.rs",
+        "tests/starttls/imap.rs",
+    ],
+    crate_root = "tests/starttls/imap.rs",
     deps = [":check-cert-lib"],
 )
 

@@ -111,20 +111,19 @@ async function pollActivationStatusUntilComplete(activationId: string) {
       `objects/activation_run/${activationId}`
     )) as ActivationStatusResponse
 
-    const statusPerSite = response.extensions.status_per_site
-    sitesAndChanges.value.sites.forEach((site) => {
-      const siteStatus = statusPerSite.find((status) => status.site === site.siteId)
-      if (siteStatus) {
-        site.lastActivationStatus = siteStatus
-        recentlyActivatedSites.value.push(site.siteId)
-      }
-    })
-
     if (response.extensions.is_running) {
       setTimeout(() => {
         void pollActivationStatusUntilComplete(activationId)
       }, 100)
     } else {
+      const statusPerSite = response.extensions.status_per_site
+      sitesAndChanges.value.sites.forEach((site) => {
+        const siteStatus = statusPerSite.find((status) => status.site === site.siteId)
+        if (siteStatus) {
+          site.lastActivationStatus = siteStatus
+          recentlyActivatedSites.value.push(site.siteId)
+        }
+      })
       numberOfChangesLastActivation.value = response.extensions.changes.length
       await fetchPendingChangesAjax()
       activateChangesInProgress.value = false

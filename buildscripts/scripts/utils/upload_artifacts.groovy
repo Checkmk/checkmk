@@ -151,10 +151,12 @@ void clean_caches() {
 boolean download_hot_cache(Map args) {
     try {
         // average runtime of this part is up to 60sec when transfering a 11GB linter archive
-        timeout(time: 120, unit: 'SECONDS') {
-            sh("""
+        timeout(time: 300, unit: 'SECONDS') {
+            def cp_or_rysnc = env.USE_CP_TO_COPY_FILE_FROM_NAS == "1" ? "cp" : "rsync -ah --update --ignore-existing --stats"
+
+            sh(label: "download_hot_cache", script: """
                 mkdir -p ${args.download_dest}
-                cp \
+                ${cp_or_rysnc} \
                     ${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}{${hashfile_extension},} \
                     ${args.download_dest}
             """);
@@ -204,6 +206,8 @@ void upload_hot_cache(Map args) {
         def check_conditions = cache_directories.collect { "[ -d \"${it}\" ]" }.join(" || ");
         def du_commands = cache_directories.collect { "[ -d \"${it}\" ] && du -sh ${it}" }.join("\n            ");
 
+        def cp_or_rysnc = env.USE_CP_TO_COPY_FILE_FROM_NAS == "1" ? "cp" : "rsync -ah --update --ignore-existing --stats"
+
         // do not even create the file, if it exists already on remote
         // the file might have been created by a little bit earlier running job
         // evaluation of calling this function is done at the beginning of a job and might be outdated by the time reaching these lines
@@ -221,7 +225,7 @@ void upload_hot_cache(Map args) {
             create_hash("${args.download_dest}/${args.file_pattern}");
             sh("""
                 if [ ! -s "${env.PERSISTENT_K8S_VOLUME_PATH}/${args.file_pattern}" ]; then
-                    cp ${args.download_dest}/${args.file_pattern}{${hashfile_extension},} ${env.PERSISTENT_K8S_VOLUME_PATH}/
+                    ${cp_or_rysnc} ${args.download_dest}/${args.file_pattern}{${hashfile_extension},} ${env.PERSISTENT_K8S_VOLUME_PATH}/
                 fi
             """);
         }

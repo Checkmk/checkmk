@@ -1,5 +1,5 @@
 {
-  "checksum": "06c2578e08fc152460851acd4599f759e0b14710b302e901391c83762ad1ab10",
+  "checksum": "661ffc97b158ff56c8167f0a1cc05b089809c1bcd1326103d089c9d997045490",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1611,6 +1611,10 @@
             {
               "id": "clap 4.5.29",
               "target": "clap"
+            },
+            {
+              "id": "der-parser 8.2.0",
+              "target": "der_parser"
             },
             {
               "id": "log 0.4.25",
@@ -16209,6 +16213,7 @@
     "anyhow 1.0.95",
     "bytes 1.10.0",
     "clap 4.5.29",
+    "der-parser 8.2.0",
     "encoding_rs 0.8.35",
     "httpdate 1.0.3",
     "log 0.4.25",

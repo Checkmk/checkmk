@@ -12,15 +12,18 @@ from cryptography.hazmat.primitives.asymmetric.types import CertificateIssuerPri
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from cryptography.x509 import (
+    AuthorityKeyIdentifier,
     BasicConstraints,
     Certificate,
     CertificateBuilder,
     CertificateSigningRequest,
     DNSName,
+    KeyUsage,
     load_pem_x509_certificate,
     load_pem_x509_csr,
     random_serial_number,
     SubjectAlternativeName,
+    SubjectKeyIdentifier,
 )
 from cryptography.x509.oid import NameOID
 from dateutil.relativedelta import relativedelta
@@ -52,19 +55,46 @@ def sign_csr(
     return (
         CertificateBuilder()
         .subject_name(csr.subject)
-        .public_key(csr.public_key())
-        .serial_number(random_serial_number())
+        .issuer_name(root_cert.subject)
         .not_valid_before(valid_from)
         .not_valid_after(valid_from + relativedelta(months=lifetime_in_months))
-        .issuer_name(root_cert.subject)
+        .serial_number(random_serial_number())
+        .public_key(csr.public_key())
+        # RFC 5280 4.2.1.6.  Subject Alternative Name
         .add_extension(
             SubjectAlternativeName([DNSName(extract_cn_from_csr(csr))]),
             critical=False,
         )
+        # RFC 5280 4.2.1.9.  Basic Constraints
         .add_extension(
             BasicConstraints(
                 ca=False,
                 path_length=None,
+            ),
+            critical=True,
+        )
+        # RFC 5280 4.2.1.2.  Subject Key Identifier
+        .add_extension(
+            SubjectKeyIdentifier.from_public_key(csr.public_key()),
+            critical=False,
+        )
+        # RFC 5280 4.2.1.1.  Authority Key Identifier
+        .add_extension(
+            AuthorityKeyIdentifier.from_issuer_public_key(root_key.public_key()),
+            critical=False,
+        )
+        # RFC 5280 4.2.1.9.  Key Usage
+        .add_extension(
+            KeyUsage(
+                digital_signature=True,  # signing data
+                content_commitment=False,  # aka non_repudiation
+                key_encipherment=False,
+                data_encipherment=False,
+                key_agreement=False,
+                key_cert_sign=False,
+                crl_sign=False,
+                encipher_only=False,
+                decipher_only=False,
             ),
             critical=True,
         )

@@ -117,7 +117,10 @@ void run_make_target(Map args) {
 
 void archive_and_process_reports(Map args) {
     show_duration("archiveArtifacts") {
-        archiveArtifacts(args.test_results);
+        archiveArtifacts(
+            artifacts: args.test_results,
+            fingerprint: true,  // this is mandatory to work with ci-artifacts
+        );
     }
     xunit([Custom(
         customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",

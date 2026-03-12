@@ -583,170 +583,199 @@ const reviewFilters = () => {
 
 <template>
   <CmkErrorBoundary>
-    <div>
-      <DashboardBreadcrumb
-        :selected-dashboard="selectedDashboard ?? null"
-        :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
-        :initial-breadcrumb="initial_breadcrumb"
-        :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
-      />
-      <DashboardMenuHeader
-        v-model:is-edit-mode="isDashboardEditingMode"
-        :selected-dashboard="selectedDashboard"
-        :is-dashboard-loading="
-          isDashboardLoading || isCloning || openDashboardCreationDialog || openDashboardCloneDialog
-        "
-        :can-edit-dashboard="
-          dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
-        "
-        :link-user-guide="props.links.user_guide"
-        :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
-        :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
-        :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
-        @open-runtime-filter="openRuntimeFilters"
-        @open-filter-settings="openFilterSettings"
-        @open-settings="openDashboardSettings = true"
-        @open-clone-workflow="openDashboardCloneDialog = true"
-        @open-widget-workflow="openAddWidgetDialog = true"
-        @open-share-workflow="openDashboardShareDialog = true"
-        @save="saveDashboard"
-        @enter-edit="dashboardsManager.activeDashboard.value && (isDashboardEditingMode = true)"
-        @cancel-edit="cancelEdit"
-        @set-dashboard="handleSelectDashboard"
-      />
+    <div class="db-app">
+      <div class="db-app__header">
+        <DashboardBreadcrumb
+          :selected-dashboard="selectedDashboard ?? null"
+          :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
+          :initial-breadcrumb="initial_breadcrumb"
+          :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
+        />
+        <DashboardMenuHeader
+          v-model:is-edit-mode="isDashboardEditingMode"
+          :selected-dashboard="selectedDashboard"
+          :is-dashboard-loading="
+            isDashboardLoading ||
+            isCloning ||
+            openDashboardCreationDialog ||
+            openDashboardCloneDialog
+          "
+          :can-edit-dashboard="
+            dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
+          "
+          :link-user-guide="props.links.user_guide"
+          :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
+          :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
+          :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
+          @open-runtime-filter="openRuntimeFilters"
+          @open-filter-settings="openFilterSettings"
+          @open-settings="openDashboardSettings = true"
+          @open-clone-workflow="openDashboardCloneDialog = true"
+          @open-widget-workflow="openAddWidgetDialog = true"
+          @open-share-workflow="openDashboardShareDialog = true"
+          @save="saveDashboard"
+          @enter-edit="dashboardsManager.activeDashboard.value && (isDashboardEditingMode = true)"
+          @cancel-edit="cancelEdit"
+          @set-dashboard="handleSelectDashboard"
+        />
+      </div>
+      <div>
+        <CreateDashboardWizard
+          v-model:open="openDashboardCreationDialog"
+          :available-layouts="available_layouts"
+          :logged-in-user="logged_in_user"
+          @create-dashboard="(...args) => createDashboard(...args)"
+          @cancel-creation="redirectToListDashboardsPage"
+        />
+        <CloneDashboardWizard
+          v-if="dashboardsManager.isInitialized.value"
+          v-model:open="openDashboardCloneDialog"
+          :active-dashboard-id="dashboardsManager.activeDashboardKey.value?.name ?? ''"
+          :available-layouts="available_layouts"
+          :reference-dashboard-general-settings="
+            deepClone(dashboardsManager.activeDashboard.value!.model.general_settings)
+          "
+          :reference-dashboard-restricted-to-single="
+            deepClone(
+              dashboardsManager.activeDashboard.value!.model.filter_context.restricted_to_single ||
+                []
+            )
+          "
+          :reference-dashboard-layout-type="
+            dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
+          "
+          :reference-dashboard-type="dashboardsManager.activeDashboard.value!.model.type"
+          :logged-in-user="logged_in_user"
+          @clone-dashboard="(...args) => cloneDashboard(...args)"
+          @cancel-clone="openDashboardCloneDialog = false"
+        />
+        <DashboardSharingWizard
+          v-if="openDashboardShareDialog && dashboardsManager.activeDashboardKey.value"
+          :dashboard-key="dashboardsManager.activeDashboardKey.value!"
+          :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
+          :available-features="available_features"
+          :has-runtime-filters="dashboardHasRuntimeFilters"
+          @review-filters="reviewFilters"
+          @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
+          @close="openDashboardShareDialog = false"
+        />
+        <AddWidgetDialog
+          v-model:open="openAddWidgetDialog"
+          :workflow-items="dashboardWidgetWorkflows"
+          :available-features="available_features"
+          @select="handleAddWidget"
+          @close="openAddWidgetDialog = false"
+        />
+        <WizardSelector
+          v-if="dashboardsManager.constants.value"
+          :is-open="openWizard"
+          :selected-wizard="selectedWizard"
+          :dashboard-key="dashboardsManager.activeDashboardKey.value!"
+          :context-filters="dashboardFilters.contextFilters.value || {}"
+          :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
+          :edit-widget-id="widgetToEdit"
+          :available-features="available_features"
+          @back-button="handleWizardSelectorGoBack"
+          @close-wizard="handleWizardClose"
+          @add-widget="addWidget"
+          @edit-widget="executeEditWidget"
+        />
+        <DashboardFilterSettings
+          v-model:open="openDashboardFilterSettings"
+          :configured-dashboard-filters="
+            deepClone(dashboardFilters.configuredDashboardFilters.value || {})
+          "
+          :applied-runtime-filters="deepClone(dashboardFilters.appliedRuntimeFilters.value || {})"
+          :configured-mandatory-runtime-filters="[
+            ...(dashboardFilters.configuredMandatoryRuntimeFilters.value || [])
+          ]"
+          :configured-runtime-filters-mode="
+            dashboardFilters.runtimeFiltersMode.value || RuntimeFilterMode.OVERRIDE
+          "
+          :can-edit="dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false"
+          :is-built-in="dashboardsManager.activeDashboard.value?.metadata?.is_built_in ?? false"
+          :starting-window="dashboardFilterSettingsStartingWindow"
+          @apply-runtime-filters="handleApplyRuntimeFilters"
+          @save-filter-settings="handleSaveFilterSettings"
+          @close="closeFilterSettings"
+        />
+        <DashboardSettingsWizard
+          v-if="openDashboardSettings && dashboardsManager.activeDashboard.value"
+          :active-dashboard-id="dashboardsManager.activeDashboardKey.value!.name"
+          :dashboard-general-settings="
+            deepClone(dashboardsManager.activeDashboard.value!.model.general_settings)
+          "
+          :dashboard-restricted-to-single="
+            dashboardsManager.activeDashboard.value!.model.filter_context.restricted_to_single!
+          "
+          :logged-in-user="logged_in_user"
+          @cancel="openDashboardSettings = false"
+          @save="updateDashboardSettings"
+        />
+      </div>
+      <div class="db-app__content">
+        <template v-if="dashboardsManager.isInitialized.value && !loadingError">
+          <CloneSuccessAlert
+            v-model:open="showCloneSuccessAlert"
+            :has-filters="dashboardHasFilters"
+            @edit-filters="openDashboardFilterSettings = true"
+          />
+          <AddWidgetPage
+            v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
+            :workflow-items="dashboardWidgetWorkflows"
+            :available-features="available_features"
+            @select="handleAddWidget"
+          />
+          <DashboardComponent
+            v-else-if="dashboardsManager.isInitialized.value"
+            :key="`${dashboardsManager.activeDashboardKey.value?.owner}-${dashboardsManager.activeDashboardKey.value?.name}`"
+            v-model:dashboard="dashboardsManager.activeDashboard.value!.model"
+            :dashboard-key="dashboardsManager.activeDashboardKey.value!"
+            :base-filters="dashboardFilters.baseFilters"
+            :widget-cores="dashboardWidgets.widgetCores"
+            :updated-widget-render-keys="dashboardWidgets.updatedWidgetRenderKeys"
+            :widget-titles="widgetTitles"
+            :is-editing="isDashboardEditingMode"
+            @widget:edit="editWidget($event)"
+            @widget:delete="dashboardWidgets.deleteWidget($event)"
+            @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"
+          />
+        </template>
+        <template v-else>
+          <AddWidgetPage
+            v-if="openDashboardCreationDialog || openDashboardCloneDialog"
+            :workflow-items="dashboardWidgetWorkflows"
+            :available-features="available_features"
+          />
+          <CmkErrorAlert v-if="loadingError" :error="loadingError" />
+          <CmkIcon
+            v-else-if="isCloning || !(openDashboardCreationDialog || openDashboardCloneDialog)"
+            name="load-graph"
+            size="xxlarge"
+          />
+        </template>
+      </div>
     </div>
-    <div>
-      <CreateDashboardWizard
-        v-model:open="openDashboardCreationDialog"
-        :available-layouts="available_layouts"
-        :logged-in-user="logged_in_user"
-        @create-dashboard="(...args) => createDashboard(...args)"
-        @cancel-creation="redirectToListDashboardsPage"
-      />
-      <CloneDashboardWizard
-        v-if="dashboardsManager.isInitialized.value"
-        v-model:open="openDashboardCloneDialog"
-        :active-dashboard-id="dashboardsManager.activeDashboardKey.value?.name ?? ''"
-        :available-layouts="available_layouts"
-        :reference-dashboard-general-settings="
-          deepClone(dashboardsManager.activeDashboard.value!.model.general_settings)
-        "
-        :reference-dashboard-restricted-to-single="
-          deepClone(
-            dashboardsManager.activeDashboard.value!.model.filter_context.restricted_to_single || []
-          )
-        "
-        :reference-dashboard-layout-type="
-          dashboardsManager.activeDashboard.value!.model.content.layout.type as DashboardLayout
-        "
-        :reference-dashboard-type="dashboardsManager.activeDashboard.value!.model.type"
-        :logged-in-user="logged_in_user"
-        @clone-dashboard="(...args) => cloneDashboard(...args)"
-        @cancel-clone="openDashboardCloneDialog = false"
-      />
-      <DashboardSharingWizard
-        v-if="openDashboardShareDialog && dashboardsManager.activeDashboardKey.value"
-        :dashboard-key="dashboardsManager.activeDashboardKey.value!"
-        :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
-        :available-features="available_features"
-        :has-runtime-filters="dashboardHasRuntimeFilters"
-        @review-filters="reviewFilters"
-        @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
-        @close="openDashboardShareDialog = false"
-      />
-      <AddWidgetDialog
-        v-model:open="openAddWidgetDialog"
-        :workflow-items="dashboardWidgetWorkflows"
-        :available-features="available_features"
-        @select="handleAddWidget"
-        @close="openAddWidgetDialog = false"
-      />
-      <WizardSelector
-        v-if="dashboardsManager.constants.value"
-        :is-open="openWizard"
-        :selected-wizard="selectedWizard"
-        :dashboard-key="dashboardsManager.activeDashboardKey.value!"
-        :context-filters="dashboardFilters.contextFilters.value || {}"
-        :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
-        :edit-widget-id="widgetToEdit"
-        :available-features="available_features"
-        @back-button="handleWizardSelectorGoBack"
-        @close-wizard="handleWizardClose"
-        @add-widget="addWidget"
-        @edit-widget="executeEditWidget"
-      />
-      <DashboardFilterSettings
-        v-model:open="openDashboardFilterSettings"
-        :configured-dashboard-filters="
-          deepClone(dashboardFilters.configuredDashboardFilters.value || {})
-        "
-        :applied-runtime-filters="deepClone(dashboardFilters.appliedRuntimeFilters.value || {})"
-        :configured-mandatory-runtime-filters="[
-          ...(dashboardFilters.configuredMandatoryRuntimeFilters.value || [])
-        ]"
-        :configured-runtime-filters-mode="
-          dashboardFilters.runtimeFiltersMode.value || RuntimeFilterMode.OVERRIDE
-        "
-        :can-edit="dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false"
-        :is-built-in="dashboardsManager.activeDashboard.value?.metadata?.is_built_in ?? false"
-        :starting-window="dashboardFilterSettingsStartingWindow"
-        @apply-runtime-filters="handleApplyRuntimeFilters"
-        @save-filter-settings="handleSaveFilterSettings"
-        @close="closeFilterSettings"
-      />
-      <DashboardSettingsWizard
-        v-if="openDashboardSettings && dashboardsManager.activeDashboard.value"
-        :active-dashboard-id="dashboardsManager.activeDashboardKey.value!.name"
-        :dashboard-general-settings="
-          deepClone(dashboardsManager.activeDashboard.value!.model.general_settings)
-        "
-        :dashboard-restricted-to-single="
-          dashboardsManager.activeDashboard.value!.model.filter_context.restricted_to_single!
-        "
-        :logged-in-user="logged_in_user"
-        @cancel="openDashboardSettings = false"
-        @save="updateDashboardSettings"
-      />
-    </div>
-    <template v-if="dashboardsManager.isInitialized.value && !loadingError">
-      <CloneSuccessAlert
-        v-model:open="showCloneSuccessAlert"
-        :has-filters="dashboardHasFilters"
-        @edit-filters="openDashboardFilterSettings = true"
-      />
-      <AddWidgetPage
-        v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
-        :workflow-items="dashboardWidgetWorkflows"
-        :available-features="available_features"
-        @select="handleAddWidget"
-      />
-      <DashboardComponent
-        v-else-if="dashboardsManager.isInitialized.value"
-        :key="`${dashboardsManager.activeDashboardKey.value?.owner}-${dashboardsManager.activeDashboardKey.value?.name}`"
-        v-model:dashboard="dashboardsManager.activeDashboard.value!.model"
-        :dashboard-key="dashboardsManager.activeDashboardKey.value!"
-        :base-filters="dashboardFilters.baseFilters"
-        :widget-cores="dashboardWidgets.widgetCores"
-        :updated-widget-render-keys="dashboardWidgets.updatedWidgetRenderKeys"
-        :widget-titles="widgetTitles"
-        :is-editing="isDashboardEditingMode"
-        @widget:edit="editWidget($event)"
-        @widget:delete="dashboardWidgets.deleteWidget($event)"
-        @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"
-      />
-    </template>
-    <template v-else>
-      <AddWidgetPage
-        v-if="openDashboardCreationDialog || openDashboardCloneDialog"
-        :workflow-items="dashboardWidgetWorkflows"
-        :available-features="available_features"
-      />
-      <CmkErrorAlert v-if="loadingError" :error="loadingError" />
-      <CmkIcon
-        v-else-if="isCloning || !(openDashboardCreationDialog || openDashboardCloneDialog)"
-        name="load-graph"
-        size="xxlarge"
-      />
-    </template>
   </CmkErrorBoundary>
 </template>
+
+<style scoped>
+.db-app {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100vh;
+}
+
+.db-app__header {
+  flex-shrink: 0;
+}
+
+.db-app__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+</style>

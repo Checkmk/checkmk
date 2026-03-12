@@ -56,13 +56,11 @@ const isDisabled = (id: string): boolean => {
   align-items: center;
   box-sizing: border-box;
   padding: var(--spacing-double);
+  flex: 1;
 }
 
 .db-add-widget-page__center-container {
   margin: 0;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
 }
 
 .db-add-widget-page__grid-container {

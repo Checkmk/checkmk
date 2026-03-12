@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed, nextTick, ref, watch } from 'vue'
+
 import CmkCollapsible from '@/components/CmkCollapsible'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 
@@ -14,6 +16,22 @@ export interface CmkWizardStepProps {
 const context = getWizardContext()
 
 const props = defineProps<CmkWizardStepProps>()
+
+const contentRef = ref<HTMLElement | null>(null)
+const isActive = computed(() => context.isSelected(props.index))
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
+watch(isActive, async (active) => {
+  if (active) {
+    await nextTick()
+    const target =
+      contentRef.value?.querySelector<HTMLElement>('.cmk-link-card') ??
+      contentRef.value?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
+    target?.focus()
+  }
+})
 
 function onClickGoTo() {
   if (context.mode() === 'guided' && props.isCompleted()) {
@@ -34,13 +52,17 @@ function onClickGoTo() {
   >
     <div class="cmk-wizard-step__slots-outer">
       <slot name="header"></slot>
-      <slot v-if="context.mode() === 'overview'" name="content" />
+      <div v-if="context.mode() === 'overview'" ref="contentRef">
+        <slot name="content" />
+      </div>
       <CmkCollapsible
         v-else
         :open="context.isSelected(props.index)"
         class="cmk-wizard-step__slots-inner"
       >
-        <slot name="content"></slot>
+        <div ref="contentRef">
+          <slot name="content"></slot>
+        </div>
         <div class="cmk-wizard-step__actions" @click.stop>
           <slot name="actions"></slot>
         </div>

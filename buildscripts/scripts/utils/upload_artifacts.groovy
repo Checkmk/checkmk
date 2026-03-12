@@ -178,9 +178,10 @@ boolean download_hot_cache(Map args) {
         timeout(time: 300, unit: 'SECONDS') {
             println("hot cache: Decompressing ${args.file_pattern} in ${args.download_dest}");
 
-            sh("""
+            def mbuffer_silent_flag = env.QUIET_MBUFFER_OUTPUT_FLAG == "1" ? "-q" : "";
+            sh(label: "decompress_hot_cache", script: """
                 cd ${args.download_dest}
-                time mbuffer -q -P 80 -m 80% -i ${args.file_pattern} | lz4 -dc | tar -xf - 2>/dev/null
+                time mbuffer ${mbuffer_silent_flag} -P 80 -m 80% -i ${args.file_pattern} | lz4 -dc | tar -xf - 2>/dev/null
 
                 du -sh ~/.cache
             """);

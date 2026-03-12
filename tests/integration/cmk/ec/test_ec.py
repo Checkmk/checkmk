@@ -305,7 +305,7 @@ def test_ec_rule_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
     """Generate a message via the events pipe matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
 
-    event_message = f"some {match} status"
+    event_message = _get_unique_event_message(f"some {match} status")
     _generate_message_via_events_pipe(site, event_message)
 
     # retrieve id of matching rule via livestatus query
@@ -333,7 +333,7 @@ def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
 
     Assert no event is created."""
     match, _, _ = setup_ec
-    event_message = "some other status"
+    event_message = _get_unique_event_message("some other status")
     assert match not in event_message
 
     _generate_message_via_events_pipe(site, event_message)
@@ -353,7 +353,7 @@ def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
 def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
-    event_message = f"some {match} status"
+    event_message = _get_unique_event_message(f"some {match} status")
 
     _ = _execute_cmd_and_validate_return_code(
         site, _get_snmp_trap_cmd(event_message), "Failed to send message via SNMP trap."
@@ -384,7 +384,7 @@ def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receiver
 def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap not matching any EC rule and assert no event is created"""
     match, _, _ = setup_ec
-    event_message = "some other status"
+    event_message = _get_unique_event_message("some other status")
     assert match not in event_message
 
     _ = _execute_cmd_and_validate_return_code(
@@ -448,7 +448,7 @@ def test_ec_rule_match_syslog(
 ) -> None:
     """Generate a message via Syslog matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
-    event_message = f"some {match} status"
+    event_message = _get_unique_event_message(f"some {match} status")
     _generate_message_via_syslog(site, event_message, udp=udp_enabled)
 
     # retrieve id of matching rule via livestatus query
@@ -481,7 +481,7 @@ def test_ec_rule_no_eol(site: Site, setup_ec: Iterator, enable_receivers: None) 
     """
     match, _, _ = setup_ec
 
-    event_message = f"some {match} status"
+    event_message = _get_unique_event_message(f"some {match} status")
     _generate_message_via_events_pipe(site, event_message, end_of_line=False)
     _generate_message_via_syslog(site, event_message, udp=False, end_of_line=False)
 

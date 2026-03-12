@@ -8,6 +8,9 @@ load("//bazel/tools:lint_astrein.bzl", "lint_astrein_aspect")
 mypy_aspect = mypy(
     mypy_cli = Label("@//bazel/tools:mypy_cli"),
     mypy_ini = Label("@//:pyproject.toml"),
+    # TODO: Re-enable as soon as we have a solution regarding huge execroot folders
+    # Reference: https://tribe29.slack.com/archives/C01UJKY2D7Y/p1773328309307479
+    cache = False,
     suppression_tags = ["no-mypy"],
     color = False,
     # `rules_mypy//mypy:types.bzl` mostly takes care of this but needs help with some packages.

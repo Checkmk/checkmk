@@ -81,7 +81,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def info_text(self) -> Locator:
-        return self.slideout.get_by_text("Changes are saved in a")
+        return self.slideout.get_by_text("Changes are saved without affecting")
 
     @property
     def info_close_btn(self) -> Locator:

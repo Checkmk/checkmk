@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -16,6 +15,7 @@ import { isWarningDismissed } from '@/lib/userConfig'
 
 import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 export interface CmkDialogProps {
@@ -57,7 +57,8 @@ const propsCva = cva('', {
       error: 'cmk-dialog__icon-box--error',
       warning: 'cmk-dialog__icon-box--warning',
       success: 'cmk-dialog__icon-box--success',
-      info: 'cmk-dialog__icon-box--info'
+      info: 'cmk-dialog__icon-box--info',
+      loading: 'cmk-dialog__icon-box--loading'
     }
   },
   defaultVariants: {
@@ -82,15 +83,25 @@ async function hideContent(event?: Event) {
   }
 }
 
-const iconName = computed<IconNames>(() => {
+const alertIconName = computed(() => {
   switch (props.variant) {
+    case 'success':
+      return 'checkmark'
     case 'error':
     case 'warning':
-      return 'host-svc-problems'
-    case 'success':
-      return 'check'
+      return props.variant
     default:
       return 'info'
+  }
+})
+
+const alertIconColor = computed(() => {
+  switch (props.variant) {
+    case 'warning':
+    case 'success':
+      return { custom: 'black' }
+    default:
+      return { custom: 'white' }
   }
 })
 
@@ -105,7 +116,13 @@ onMounted(() => {
 <template>
   <div v-if="open && !dialogHidden" class="cmk-dialog help">
     <div :class="['cmk-dialog__icon-box', propsCva({ variant: props.variant })]">
-      <CmkIcon :class="'cmk-dialog__icon'" :name="iconName" :size="'small'" />
+      <CmkIcon v-if="variant === 'loading'" name="load-graph" class="cmk-dialog__icon" />
+      <CmkMultitoneIcon
+        v-else
+        :name="alertIconName"
+        :primary-color="alertIconColor"
+        class="cmk-dialog__icon"
+      />
     </div>
     <div class="cmk-dialog__content">
       <span v-if="props.title" class="cmk-dialog__title">{{ props.title }}<br /></span>
@@ -151,11 +168,11 @@ div.cmk-dialog {
     display: flex;
     align-items: center;
     border-radius: var(--dimension-3) 0 0 var(--dimension-3);
+    border: 1px solid transparent;
   }
 
   .cmk-dialog__icon {
-    filter: brightness(0) invert(1);
-    padding: var(--dimension-4);
+    padding: var(--dimension-2);
   }
 
   .cmk-dialog__icon-box--info {
@@ -168,17 +185,21 @@ div.cmk-dialog {
 
   .cmk-dialog__icon-box--warning {
     background-color: var(--color-warning);
-
-    .cmk-dialog__icon {
-      filter: brightness(0);
-    }
   }
 
   .cmk-dialog__icon-box--success {
     background-color: var(--color-corporate-green-50);
+  }
 
-    .cmk-dialog__icon {
-      filter: none;
+  .cmk-dialog__icon-box--loading {
+    background-color: var(--color-corporate-green-100);
+  }
+}
+
+body[data-theme='modern-dark'] {
+  div.cmk-dialog {
+    .cmk-dialog__icon-box--loading {
+      border-color: var(--color-corporate-green-70);
     }
   }
 }

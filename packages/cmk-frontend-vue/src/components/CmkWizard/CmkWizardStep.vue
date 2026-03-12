@@ -60,7 +60,7 @@ function onClickGoTo() {
         :open="context.isSelected(props.index)"
         class="cmk-wizard-step__slots-inner"
       >
-        <div ref="contentRef">
+        <div ref="contentRef" class="cmk-wizard-step__content">
           <slot name="content"></slot>
         </div>
         <div class="cmk-wizard-step__actions" @click.stop>
@@ -165,6 +165,10 @@ function onClickGoTo() {
   gap: var(--dimension-4);
   width: 100%;
   align-items: flex-start;
+}
+
+.cmk-wizard-step__content {
+  width: 100%;
 }
 
 .cmk-wizard-step__actions {

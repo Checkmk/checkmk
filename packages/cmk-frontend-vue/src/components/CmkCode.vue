@@ -117,7 +117,7 @@ const toggleExpansion = () => {
 
     pre {
       margin: 0;
-      width: 100%;
+      white-space: pre;
     }
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

@@ -105,6 +105,7 @@ from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
+from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
@@ -2448,13 +2449,17 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             with_timestamp=True,
         )
 
-        sync_and_activate(
-            self._activation_id,
-            self._site_snapshot_settings,
-            ActivateChangesSchedulerBackgroundJob.file_filter_func,
-            self._source,
-            self._prevent_activate,
-        )
+        timeout_manager.enable_timeout(500)
+        try:
+            sync_and_activate(
+                self._activation_id,
+                self._site_snapshot_settings,
+                ActivateChangesSchedulerBackgroundJob.file_filter_func,
+                self._source,
+                self._prevent_activate,
+            )
+        finally:
+            timeout_manager.disable_timeout()
         job_interface.send_result_message(_("Activate changes finished"))
 
 

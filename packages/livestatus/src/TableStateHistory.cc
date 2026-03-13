@@ -6,7 +6,6 @@
 #include "livestatus/TableStateHistory.h"
 
 #include <bitset>
-#include <chrono>
 #include <compare>
 #include <cstdlib>
 #include <ratio>
@@ -370,7 +369,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 // or rotating the logfile. As a safeguard, we reset all
                 // downtime depths to zero. If there are already active
                 // downtimes, we will see downtime alert lines soon.
-                reset_downtime_depths(processor, only_update, state_info);
+                reset_downtime_depths(processor, only_update, entry->time(),
+                                      state_info);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::none:
@@ -437,11 +437,13 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 }
 
-void TableStateHistory::reset_downtime_depths(Processor &processor,
-                                              bool only_update,
-                                              const state_info_t &state_info) {
+void TableStateHistory::reset_downtime_depths(
+    Processor &processor, bool only_update,
+    std::chrono::system_clock::time_point entry_time,
+    const state_info_t &state_info) {
     for (const auto &[_, hss] : state_info) {
         if (hss->_downtime_depth != 0 || hss->_host_downtime_depth != 0) {
+            hss->_until = entry_time;
             if (!only_update) {
                 abort_query_ = processor.process(*hss);
             }

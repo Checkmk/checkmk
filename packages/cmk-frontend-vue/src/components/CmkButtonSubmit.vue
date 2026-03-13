@@ -6,8 +6,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkButton from './CmkButton.vue'
 import CmkIcon from './CmkIcon'
+
+const props = defineProps<{
+  disabled?: boolean
+  title?: string
+}>()
 </script>
 
 <template>
-  <CmkButton variant="secondary"><CmkIcon variant="inline" name="save" /><slot /></CmkButton>
+  <CmkButton variant="secondary" :disabled="props.disabled" :title="props.title">
+    <CmkIcon variant="inline" name="save" /><slot />
+  </CmkButton>
 </template>

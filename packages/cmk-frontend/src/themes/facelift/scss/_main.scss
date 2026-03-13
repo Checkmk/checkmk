@@ -188,7 +188,7 @@ table.vs_duallist a.control,
   }
 }
 
-button,
+button:not(.cmk-button),
 input.button,
 input.button:not([type='text']),
 input.button:not([type='password']) {

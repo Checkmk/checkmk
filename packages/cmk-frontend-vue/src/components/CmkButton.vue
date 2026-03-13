@@ -81,6 +81,7 @@ defineEmits(['click'])
     class="cmk-button"
     :class="buttonVariants({ variant: props.variant, disabled: isDisabled })"
     :disabled="isDisabled"
+    :aria-disabled="isDisabled"
     :title="title || ''"
     @click.prevent="
       (e) => {
@@ -225,7 +226,8 @@ defineEmits(['click'])
   }
 }
 
-.cmk-button--disabled {
+.cmk-button--disabled,
+button.cmk-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 

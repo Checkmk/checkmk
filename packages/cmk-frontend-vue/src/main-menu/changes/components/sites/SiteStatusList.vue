@@ -51,14 +51,12 @@ function toggleSelectedSite(siteId: string, value: boolean) {
 
 <template>
   <div class="cmk-changes-sites" :class="{ 'add-flex': props.sites.length === 1 }">
-    <div
-      v-if="
-        sitesWithChanges.length > 0 && !activating && typeof sitesWithChanges[0] !== 'undefined'
-      "
-      class="cmk-changes-site-single"
-    >
+    <div class="cmk-changes-site-single">
       <div class="cmk-changes-site-single-title">{{ _t('Site(s) with changes') }}</div>
-      <CmkScrollContainer max-height="30vh">
+      <CmkScrollContainer
+        v-if="sitesWithChanges.length > 0 && typeof sitesWithChanges[0] !== 'undefined'"
+        max-height="30vh"
+      >
         <SiteStatusItem
           v-for="(site, idx) in sitesWithChanges"
           :key="site.siteId"
@@ -75,6 +73,9 @@ function toggleSelectedSite(siteId: string, value: boolean) {
           @update-checked="toggleSelectedSite"
         ></SiteStatusItem>
       </CmkScrollContainer>
+      <span v-else class="mm-site-status-list__empty">{{
+        _t('No pending changes on your site(s).')
+      }}</span>
     </div>
 
     <!-- <CmkTabs v-if="props.sites.length > 1" model-value="sites-with-changes">
@@ -124,6 +125,10 @@ function toggleSelectedSite(siteId: string, value: boolean) {
     color: var(--font-color);
     font-weight: var(--font-weight-bold);
     padding-bottom: var(--dimension-4);
+  }
+
+  .mm-site-status-list__empty {
+    color: var(--font-color);
   }
 }
 </style>

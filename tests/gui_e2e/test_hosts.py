@@ -179,8 +179,12 @@ def test_agent_connection_test(dashboard_page: MainDashboard) -> None:
     main_area = add_host.main_area
     main_area_locator = main_area.locator()
 
-    agent_test_button_default_tag = main_area.locator("#attr_default_tag_agent > button")
-    agent_test_button_entry_tag = main_area.locator("#attr_entry_tag_agent > button")
+    agent_test_button_default_tag = main_area.locator(
+        "#attr_default_tag_agent button.agent-test-button"
+    ).first
+    agent_test_button_entry_tag = main_area.locator(
+        "#attr_entry_tag_agent button.agent-test-button"
+    ).first
     expect(agent_test_button_default_tag).to_be_disabled()
 
     add_host.host_name_text_field.fill("localhost")
@@ -190,7 +194,7 @@ def test_agent_connection_test(dashboard_page: MainDashboard) -> None:
     warning_container = add_host.main_area.locator(".warn-container")
     expect(warning_container).to_be_visible()
 
-    agent_download_button = main_area.locator("div.warn-button-container > button:nth-child(1)")
+    agent_download_button = main_area.locator("span.warn-button-container > button:nth-child(1)")
     agent_download_button.click()
     slideout = main_area.locator("div.cmk-vue-app.cmk-slide-in__container")
     expect(slideout).to_be_visible()

@@ -15,6 +15,7 @@ import logging
 import socket
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal
@@ -113,6 +114,12 @@ from cmk.utils.prediction import make_updated_predictions, MetricRecord, Predict
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
 
+type FetchResult = tuple[
+    SourceInfo,
+    result.Result[AgentRawData | SNMPRawData, Exception],
+    Snapshot,
+]
+
 __all__ = [
     "CheckerPluginMapper",
     "CMKFetcher",
@@ -150,24 +157,28 @@ def _fetch_all(
     secrets: FetcherSecrets,
     *,
     simulation: bool,
-) -> Sequence[
-    tuple[
-        SourceInfo,
-        result.Result[AgentRawData | SNMPRawData, Exception],
-        Snapshot,
-    ]
-]:
-    return [
-        _do_fetch(
-            trigger,
-            source.source_info(),
-            source.file_cache(simulation=simulation, file_cache_options=file_cache_options),
-            source.fetcher(),
-            mode,
-            secrets,
-        )
-        for source in sources
-    ]
+) -> Sequence[FetchResult]:
+    """Fetch data from all sources concurrently.
+
+    All sources are fetched in parallel using a thread pool. This ensures that
+    slow or failing sources don't block the fetching of other sources.
+    """
+
+    with ThreadPoolExecutor(max_workers=len(list(sources))) as executor:
+        futures = [
+            executor.submit(
+                _do_fetch,
+                trigger,
+                source.source_info(),
+                source.file_cache(simulation=simulation, file_cache_options=file_cache_options),
+                source.fetcher(),
+                mode,
+                secrets,
+            )
+            for source in sources
+        ]
+
+    return [future.result() for future in futures]
 
 
 def _do_fetch(
@@ -177,11 +188,7 @@ def _do_fetch(
     fetcher: Fetcher,
     mode: Mode,
     secrets: FetcherSecrets,
-) -> tuple[
-    SourceInfo,
-    result.Result[AgentRawData | SNMPRawData, Exception],
-    Snapshot,
-]:
+) -> FetchResult:
     console.debug(f"  Source: {source_info}")
     with CPUTracker(console.debug) as tracker:
         raw_data = trigger.get_raw_data(file_cache, fetcher, mode, secrets)
@@ -321,13 +328,7 @@ class SpecialAgentFetcher:
 
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[
-            SourceInfo,
-            result.Result[AgentRawData | SNMPRawData, Exception],
-            Snapshot,
-        ]
-    ]:
+    ) -> Sequence[FetchResult]:
         source_info = SourceInfo(
             hostname=host_name,
             ipaddress=ip_address,
@@ -395,13 +396,7 @@ class CMKFetcher:
 
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[
-            SourceInfo,
-            result.Result[AgentRawData | SNMPRawData, Exception],
-            Snapshot,
-        ]
-    ]:
+    ) -> Sequence[FetchResult]:
         hosts_config = self.config_cache.hosts_config
 
         # we might be checking a cluster, but the relay id is always the same.

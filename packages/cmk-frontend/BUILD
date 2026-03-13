@@ -16,13 +16,15 @@ SRCS = glob([
     # TODO: tsconfig.json is missing
     "src/css/*",  # just for the directory
     "src/images/**/*.*",
-    "src/jquery/**/*.*",
     "src/js/**/*.js",
     "src/js/**/*.ts",
     "src/openapi/**/*.*",
     "src/sounds/**/*.*",
     "src/themes/**/*.*",
-])
+]) + [
+    "//packages/cmk-frontend/src/jquery",
+    "//packages/cmk-frontend/src/openapi/swagger-ui-5.20.6:swagger-ui",
+]
 
 BUILD_DEPS = [
     ":node_modules/@babel",

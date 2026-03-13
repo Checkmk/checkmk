@@ -1543,6 +1543,18 @@ msgstr ""
 "far sì che la chiamata al singolo programma venga eseguita correttamente in "
 "tutti i contesti di esecuzione (interfaccia utente e console)."
 
+#, fuzzy
+msgid ""
+"<br><b>Note</b>: Some files may contain highly sensitive data like "
+"passwords. These files are marked with 'H'. Other files may include IP "
+"addresses, host names, user names, mail addresses or phone numbers and are "
+"marked with 'M'."
+msgstr ""
+"<br>Nota: Alcuni file possono contenere dati altamente sensibili come "
+"password. Questi file sono contrassegnati con 'H'. Altri file possono "
+"includere indirizzi IP, nomi di host, nomi utente, indirizzi e-mail o numeri "
+"di telefono, e sono contrassegnati con 'M'."
+
 msgid "<br><br>"
 msgstr "<br><br>"
 
@@ -1563,16 +1575,6 @@ msgid ""
 msgstr ""
 "<br>Se ci sono problemi di permessi, assicurati che l'utente del sito abbia "
 "i permessi di scrittura."
-
-msgid ""
-"<br>Note: Some files may contain highly sensitive data like passwords. These "
-"files are marked with 'H'. Other files may include IP addresses, host names, "
-"user names, mail addresses or phone numbers and are marked with 'M'."
-msgstr ""
-"<br>Nota: Alcuni file possono contenere dati altamente sensibili come "
-"password. Questi file sono contrassegnati con 'H'. Altri file possono "
-"includere indirizzi IP, nomi di host, nomi utente, indirizzi e-mail o numeri "
-"di telefono, e sono contrassegnati con 'M'."
 
 msgid ""
 "<br>Please note that Checkmk needs this password in clear<br>text during "
@@ -6750,7 +6752,8 @@ msgstr "Messa a punto del processo Apache"
 
 msgid ""
 "Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
-"and $OMD_ROOT/etc/apache"
+"and $OMD_ROOT/etc/apache.<br><b>Note</b>: This might include information "
+"with medium sensitivity (M)."
 msgstr ""
 
 msgid "Apache Server"
@@ -6766,8 +6769,8 @@ msgstr "File di password locale di Apache (htpasswd)"
 #, fuzzy
 msgid ""
 "Apache mode and TCP address and port, Core, Liveproxy daemon and Livestatus "
-"TCP mode, event daemon config, graphical user interface (GUI) authorisation, "
-"NSCA mode, TMP file system mode"
+"TCP mode, event daemon config, graphical user interface (GUI) authorization, "
+"NSCA mode, TMP file system mode. "
 msgstr ""
 "Modalità Apache e indirizzo e porta TCP, Core, demone Liveproxy e modalità "
 "TCP livestatus, configurazione demone evento, autorizzazione Multiste, "
@@ -15521,9 +15524,11 @@ msgid "Core files"
 msgstr "File di base"
 
 #, python-format
-msgid "Core files (config, state and history) from var/check_mk/core.%s"
+msgid ""
+"Core files (config, state and history) from var/check_mk/core.%s<br> When "
+"this component is selected, a cmcdump will be included in the dump, that is "
+"also considered highly sensitive."
 msgstr ""
-"File del nucleo (configurazione, stato e cronologia) da var/check_mk/core.%s"
 
 #, python-format
 msgid "Core files (config, state and history) from var/check_mk/core: %s"
@@ -25324,6 +25329,21 @@ msgstr "Livelli di disco del filer (NetApp, IBM SVC)"
 
 msgid "Files"
 msgstr "File"
+
+#, python-format
+msgid ""
+"Files collected by the Support Diagnostics tool are automatically "
+"categorized to help you identify sensitive data. We recommend reviewing all "
+"files prior to sharing, particularly those in the Unclassified category."
+"<ul><li>H (High): Critical security data (e.g., passwords, API keys, "
+"secrets).</li><li>M (Medium): PII and infrastructure details (e.g., IP "
+"addresses, hostnames, usernames, emails).</li><li>L (Low): Operational data; "
+"no sensitive information is expected.</li><li>U (Unclassified): Files from "
+"custom components. These might be 3rd-party extensions or modifications made "
+"by you.</li></ul><b>Note</b>: These Classifications may differ from your "
+"organization's specific data security classifications.<br><br>The following "
+"files are created by built-in components:<ul><li>%s</li></ul>"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Files in %s"
@@ -35325,6 +35345,10 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Schema URL non valido. Deve essere uno di: %s"
+
+#, fuzzy, python-format
+msgid "Invalid regex pattern: %s"
+msgstr "Espressione regolare non valida: %s"
 
 msgid "Invalid regular expression"
 msgstr "Espressione regolare non valida"
@@ -48740,7 +48764,8 @@ msgstr "Pa"
 msgid "Pack ID"
 msgstr "ID pacchetto"
 
-msgid "Pack all files: High, Medium, Low sensitivity"
+#, fuzzy
+msgid "Pack all files: High, Medium, Low, Unclassified sensitivity"
 msgstr "Impacchetta tutti i file: Alta, Media, Bassa sensibilità"
 
 msgid "Pack only Low sensitivity files"
@@ -55171,6 +55196,12 @@ msgstr "Regola %d in %s"
 #, python-format
 msgid "Rule %d in Folder %s is affected"
 msgstr "La regola %d nella cartella %s è interessata"
+
+#, python-format
+msgid ""
+"Rule <a href=\"%s\"><tt>%s</tt></a> of rule set <a href=\"%s\">%s</a> in "
+"folder \"%s\" contains an invalid regular expression: %s"
+msgstr ""
 
 msgid "Rule ID"
 msgstr "ID della regola"
@@ -66842,9 +66873,10 @@ msgstr ""
 msgid "The latest crash dumps of each type"
 msgstr "L'ultimo crash dump di ogni tipo"
 
+#, fuzzy
 msgid ""
-"The latest crash reports<br>Note: Some crash reports may contain sensitive "
-"data likehost names or user names."
+"The latest crash reports<br><b>Note</b>: Some crash reports may contain "
+"sensitive data like host names or usernames."
 msgstr ""
 "Gli ultimi report sugli arresti anomali<br>Nota: alcuni report sugli arresti "
 "anomali potrebbero contenere dati sensibili, come nomi host o nomi utente."
@@ -89761,6 +89793,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>non disponibile</b> perché Robotmk Core MKP è stato installato"
+
+#, python-format
+#~ msgid "Core files (config, state and history) from var/check_mk/core.%s"
+#~ msgstr ""
+#~ "File del nucleo (configurazione, stato e cronologia) da var/check_mk/core."
+#~ "%s"
 
 #~ msgid ""
 #~ "An internal error occurred while processing your request. You can report "

@@ -1557,6 +1557,18 @@ msgstr ""
 "um das einzelne Programm in allen Kontexten korrekt aufzurufen (UI und "
 "Konsole)."
 
+#, fuzzy
+msgid ""
+"<br><b>Note</b>: Some files may contain highly sensitive data like "
+"passwords. These files are marked with 'H'. Other files may include IP "
+"addresses, host names, user names, mail addresses or phone numbers and are "
+"marked with 'M'."
+msgstr ""
+"<br>Hinweis: Manche Dateien können hochsensitive Daten, wie Passwörter "
+"enthalten. Diese Dateien werden mit einem 'H' markiert. Andere Dateien "
+"können IP-Adressen, Host- oder Benutzernamen, E-Mail-Adressen oder "
+"Telefonnummern beinhalten. Diese werden mit einem 'M' markiert."
+
 msgid "<br><br>"
 msgstr "<br><br>"
 
@@ -1579,16 +1591,6 @@ msgid ""
 msgstr ""
 "<br>Wenn es zu Problemen mit der Berechtigung kommt, dann stellen Sie bitte "
 "sicher, dass der Instanzbenutzer Schreibrechte hat."
-
-msgid ""
-"<br>Note: Some files may contain highly sensitive data like passwords. These "
-"files are marked with 'H'. Other files may include IP addresses, host names, "
-"user names, mail addresses or phone numbers and are marked with 'M'."
-msgstr ""
-"<br>Hinweis: Manche Dateien können hochsensitive Daten, wie Passwörter "
-"enthalten. Diese Dateien werden mit einem 'H' markiert. Andere Dateien "
-"können IP-Adressen, Host- oder Benutzernamen, E-Mail-Adressen oder "
-"Telefonnummern beinhalten. Diese werden mit einem 'M' markiert."
 
 msgid ""
 "<br>Please note that Checkmk needs this password in clear<br>text during "
@@ -6720,9 +6722,11 @@ msgstr "Apache ActiveMQ Warteschlangen"
 msgid "Apache Config"
 msgstr "Apache-Konfiguration"
 
+#, fuzzy
 msgid ""
 "Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
-"and $OMD_ROOT/etc/apache"
+"and $OMD_ROOT/etc/apache.<br><b>Note</b>: This might include information "
+"with medium sensitivity (M)."
 msgstr ""
 "Apache-Konfigurationsdateien in /etc/apache2 oder /etc/httpd, /opt/omd/"
 "apache und $OMD_ROOT/etc/apache"
@@ -6736,10 +6740,11 @@ msgstr "Apache-Status"
 msgid "Apache local password file (htpasswd)"
 msgstr "Lokale Apache Passwort-Datei (htpasswd)"
 
+#, fuzzy
 msgid ""
 "Apache mode and TCP address and port, Core, Liveproxy daemon and Livestatus "
-"TCP mode, event daemon config, graphical user interface (GUI) authorisation, "
-"NSCA mode, TMP file system mode"
+"TCP mode, event daemon config, graphical user interface (GUI) authorization, "
+"NSCA mode, TMP file system mode. "
 msgstr ""
 "Apache Modus und TCP-Adresse und Port, Core, Liveproxy Daemon und Livestatus "
 "TCP Modus, Event Daemon Konfiguration, Benutzeroberflächen (GUI)-"
@@ -15253,9 +15258,11 @@ msgid "Core files"
 msgstr "Kerndateien"
 
 #, python-format
-msgid "Core files (config, state and history) from var/check_mk/core.%s"
+msgid ""
+"Core files (config, state and history) from var/check_mk/core.%s<br> When "
+"this component is selected, a cmcdump will be included in the dump, that is "
+"also considered highly sensitive."
 msgstr ""
-"Prozessorkerndateien (config, state und Historie) aus var/check_mk/core.%s"
 
 #, python-format
 msgid "Core files (config, state and history) from var/check_mk/core: %s"
@@ -24757,6 +24764,21 @@ msgstr "Levels für Filer-Platten (NetApp, IBM SVC)"
 
 msgid "Files"
 msgstr "Dateien"
+
+#, python-format
+msgid ""
+"Files collected by the Support Diagnostics tool are automatically "
+"categorized to help you identify sensitive data. We recommend reviewing all "
+"files prior to sharing, particularly those in the Unclassified category."
+"<ul><li>H (High): Critical security data (e.g., passwords, API keys, "
+"secrets).</li><li>M (Medium): PII and infrastructure details (e.g., IP "
+"addresses, hostnames, usernames, emails).</li><li>L (Low): Operational data; "
+"no sensitive information is expected.</li><li>U (Unclassified): Files from "
+"custom components. These might be 3rd-party extensions or modifications made "
+"by you.</li></ul><b>Note</b>: These Classifications may differ from your "
+"organization's specific data security classifications.<br><br>The following "
+"files are created by built-in components:<ul><li>%s</li></ul>"
+msgstr ""
 
 #, python-format
 msgid "Files in %s"
@@ -34315,6 +34337,10 @@ msgstr "Ungültiger Proxy angegeben: keine zulässige URL"
 #, python-format
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Ungültiges Proxy-Schema angegeben. Muss eines der folgenden sein: %s"
+
+#, fuzzy, python-format
+msgid "Invalid regex pattern: %s"
+msgstr "Ungültiger regulärer Ausdruck: %s"
 
 msgid "Invalid regular expression"
 msgstr "Ungültiger regulärer Ausdruck"
@@ -47144,7 +47170,8 @@ msgstr "Pa"
 msgid "Pack ID"
 msgstr "Paket-ID"
 
-msgid "Pack all files: High, Medium, Low sensitivity"
+#, fuzzy
+msgid "Pack all files: High, Medium, Low, Unclassified sensitivity"
 msgstr "Packen Sie alle Dateien: Hohe, mittlere, niedrige Empfindlichkeit"
 
 msgid "Pack only Low sensitivity files"
@@ -53326,6 +53353,12 @@ msgstr "Regel %d in %s"
 #, python-format
 msgid "Rule %d in Folder %s is affected"
 msgstr "Regel %d im Ordner %s ist betroffen"
+
+#, python-format
+msgid ""
+"Rule <a href=\"%s\"><tt>%s</tt></a> of rule set <a href=\"%s\">%s</a> in "
+"folder \"%s\" contains an invalid regular expression: %s"
+msgstr ""
 
 msgid "Rule ID"
 msgstr "Regel ID"
@@ -64832,9 +64865,10 @@ msgstr "Der Latenzbereich, ab dem Werte berücksichtigt werden sollen."
 msgid "The latest crash dumps of each type"
 msgstr "Die neuesten Absturz-Dumps für jeden Typ"
 
+#, fuzzy
 msgid ""
-"The latest crash reports<br>Note: Some crash reports may contain sensitive "
-"data likehost names or user names."
+"The latest crash reports<br><b>Note</b>: Some crash reports may contain "
+"sensitive data like host names or usernames."
 msgstr ""
 "Die neuesten Absturzberichte<br>Hinweis: Einige Absturzberichte können "
 "sensible Daten wie Host-Namen oder Benutzernamen enthalten."
@@ -87091,6 +87125,11 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#, python-format
+#~ msgid "Core files (config, state and history) from var/check_mk/core.%s"
+#~ msgstr ""
+#~ "Prozessorkerndateien (config, state und Historie) aus var/check_mk/core.%s"
 
 #~ msgid ""
 #~ "An internal error occurred while processing your request. You can report "

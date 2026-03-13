@@ -69,7 +69,22 @@ from cmk.agent_based.v2 import (
 )
 
 
-def parse_cisco_fantray(string_table):
+def parse_cisco_fantray(string_table: Any) -> dict[str, tuple[State, str]]:
+    """
+    The first SNMP table provides the operational state of the fan tray,
+    indexed by the end OID. The second table maps the same index to the
+    corresponding entPhysicalName.
+
+    Normal behavior:
+    - If both status and a non-empty name exist, the name is used as the
+      service item.
+    - If the name exists but is empty or whitespace, the end OID is used
+      as a fallback identifier.
+    - If a status entry has no matching entry in the name table, the
+      sensor is ignored
+
+    Duplicate names are disambiguated by adding a numeric suffix.
+    """
     map_states = {
         "1": (State.UNKNOWN, "unknown"),
         "2": (State.OK, "powered on"),
@@ -77,23 +92,26 @@ def parse_cisco_fantray(string_table):
         "4": (State.CRIT, "partial failure, needs replacement as soon as possible."),
     }
 
-    ppre_parsed = {}
+    statuses = {}
     for end_oid, oper_state in string_table[0]:
-        ppre_parsed.setdefault(
-            end_oid, map_states.get(oper_state, (State.UNKNOWN, "unexpected(%s)" % oper_state))
+        statuses.setdefault(
+            end_oid, map_states.get(oper_state, (State.UNKNOWN, f"unexpected({oper_state})"))
         )
 
-    pre_parsed = {}
-    for end_oid, name in string_table[1]:
-        if end_oid in ppre_parsed:
-            pre_parsed.setdefault(name, [])
-            pre_parsed[name].append(ppre_parsed[end_oid])
+    entries_by_name = {}
+    for end_oid, raw_name in string_table[1]:
+        if end_oid not in statuses:
+            continue
+
+        name = (raw_name or "").strip() or end_oid
+        entries_by_name.setdefault(name, [])
+        entries_by_name[name].append(statuses[end_oid])
 
     parsed = {}
-    for name, infos in pre_parsed.items():
+    for name, infos in entries_by_name.items():
         if len(infos) > 1:
             for k, state_info in enumerate(infos):
-                parsed["%s-%d" % (name, k + 1)] = state_info
+                parsed[f"{name}-{k + 1}"] = state_info
         else:
             parsed[name] = infos[0]
 

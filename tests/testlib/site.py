@@ -1696,6 +1696,13 @@ class Site:
                 continue
             if re.search("version `OPENSSL_3.4.0' not found", crash_detail):
                 logger.warning("Ignored crash report due to known OpenSSL issue. See CMK-28862")
+            if re.search(
+                'MKGeneralException: Cannot connect to site ".*": The site is not logged in.',
+                crash_detail,
+            ):
+                logger.warning(
+                    "Ignored crash report due to failed remote site login. See CMK-25875."
+                )
                 continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.

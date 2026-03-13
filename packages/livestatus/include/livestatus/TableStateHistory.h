@@ -6,6 +6,7 @@
 #ifndef TableStateHistory_h
 #define TableStateHistory_h
 
+#include <chrono>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -115,6 +116,7 @@ private:
                              LogEntryForwardIterator &it);
 
     void reset_downtime_depths(Processor &processor, bool only_update,
+                               std::chrono::system_clock::time_point entry_time,
                                const state_info_t &state_info);
 
     void handle_state_entry(Processor &processor, const ICore &core,

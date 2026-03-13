@@ -15,6 +15,7 @@ defineEmits(['click'])
 <template>
   <button
     class="cmk-icon-button"
+    :title="title"
     @click.prevent="
       (e) => {
         $emit('click', e)

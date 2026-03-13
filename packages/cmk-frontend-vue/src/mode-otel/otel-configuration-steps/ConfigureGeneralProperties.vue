@@ -46,7 +46,7 @@ const isLoading = ref(false)
 function applySites(rawSites: RawSite[]) {
   siteOptions.value = rawSites.map((s) => ({
     name: s.id,
-    title: untranslated(s.title)
+    title: untranslated(`${s.id} - ${s.title}`)
   }))
   // Pre-select the local site (no `logged_in` key in extensions) or first entry.
   // Only set when siteId has not been set yet so navigating back preserves the value.

@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, NotRequired, override, TypedDict
+from typing import Any, Literal, NamedTuple, NewType, NotRequired, override, Protocol, TypedDict
 
 from cmk import trace
 from cmk.ccc.site import SiteId
@@ -416,6 +416,11 @@ def get_livestatus_blob_columns() -> set[str]:
     }
 
 
+class _SupportsJsonFormat(Protocol):
+    def supports_json_format(self) -> bool: ...
+    def __str__(self) -> str: ...
+
+
 @dataclass
 class QuerySpecification:
     table: str
@@ -457,7 +462,7 @@ class Query:
 
     def __init__(
         self,
-        query: str | QuerySpecification,
+        query: str | QuerySpecification | _SupportsJsonFormat,
         suppress_exceptions: tuple[type[Exception], ...] | None = None,
     ) -> None:
         self._query = query
@@ -468,12 +473,10 @@ class Query:
 
     @override
     def __str__(self) -> str:
-        if isinstance(self._query, QuerySpecification):
-            return str(self._query)
-        return self._query
+        return str(self._query)
 
     def supports_json_format(self) -> bool:
-        if not isinstance(self._query, QuerySpecification):
+        if isinstance(self._query, str):
             return False
         return self._query.supports_json_format()
 

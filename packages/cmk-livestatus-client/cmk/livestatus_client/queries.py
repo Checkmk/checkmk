@@ -6,16 +6,22 @@
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from typing import Any, NoReturn, override
 
 from cmk.ccc.site import SiteId
 from cmk.livestatus_client import tables
-from cmk.livestatus_client._connection import LivestatusResponse, MultiSiteConnection, OnlySites
+from cmk.livestatus_client._connection import (
+    get_livestatus_blob_columns,
+    LivestatusResponse,
+    MultiSiteConnection,
+    OnlySites,
+)
 from cmk.livestatus_client.expressions import (
     And,
     BinaryExpression,
+    LqSafe,
     Not,
     NothingExpression,
     Or,
@@ -206,6 +212,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         self,
         columns: list[Column],
         filter_expr: QueryExpression = NothingExpression(),
+        extra_headers: Sequence[str | LqSafe] = (),
     ):
         """A representation of a livestatus query.
 
@@ -218,15 +225,22 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
                 A filter-expression. These can be created by comparing `Column` instances to
                 something or comparing `LiteralExpression` instances to something.
 
+            extra_headers:
+                Additional raw headers (e.g. OrderBy, Limit) appended to the compiled query.
+
         """
         self.columns = columns
         self.column_names = [col.query_name for col in columns]
         self.filter_expr = filter_expr
+        self.extra_headers = [str(h) for h in extra_headers if h]
         _tables = {column.table for column in columns}
         if len(_tables) != 1:
             raise ValueError(f"Query doesn't specify a single table: {_tables!r}")
 
         self.table: type[Table] = _tables.pop()
+
+    def supports_json_format(self) -> bool:
+        return not {c.name for c in self.columns}.intersection(get_livestatus_blob_columns())
 
     def filter(self, filter_expr: QueryExpression) -> "Query":
         """Apply additional filters to an existing query.
@@ -525,12 +539,12 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         column_names = " ".join(column.name for column in self.columns)
         _query.append(("Columns", column_names))
         _query.extend(self.filter_expr.render())
-        return "\n".join(
-            [
-                "GET %s" % self.table.__tablename__,
-                *[": ".join(line) for line in _query],
-            ]
-        )
+        parts = [
+            "GET %s" % self.table.__tablename__,
+            *[": ".join(line) for line in _query],
+            *self.extra_headers,
+        ]
+        return "\n".join(parts)
 
     def dict_repr(self) -> ExpressionDict | None:
         return expr_to_tree(self.table, self.filter_expr)

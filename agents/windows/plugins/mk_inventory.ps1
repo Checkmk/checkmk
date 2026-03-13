@@ -368,6 +368,13 @@ function RecurseFolderForExecs {
     }
 }
 
+function GetIpParametersTable {
+    $addresses = Get-NetIPAddress -ErrorAction SilentlyContinue
+    foreach ($addr in $addresses) {
+        Write-Output ("{0} {1} {2}" -f $addr.IPAddress, $addr.PrefixOrigin, $addr.SuffixOrigin)
+    }
+}
+
 function GetSoftwareFromFilesystem {
     foreach ($path in $exePaths) {
         if (Test-Path -Path $path -PathType Container) {
@@ -427,6 +434,10 @@ GetNetworkAdapter @("Name", "ServiceName", "MACAddress", "AdapterType", "DeviceI
 # Route Table
 StartSection "win_ip_r" 124 $timeUntil
 GetRouteTable
+
+# IP Parameters Table
+StartSection "win_ip_parameters" 32 $timeUntil
+GetIpParametersTable
 
 # Installed Software
 StartSection "win_wmi_software" 31 $timeUntil

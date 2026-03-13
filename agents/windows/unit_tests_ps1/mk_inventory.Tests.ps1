@@ -209,6 +209,34 @@ Context "mk_inventory.ps1 Tests" {
         }
     }
 
+    Describe "GetIpParametersTable" {
+        It "outputs expected IP address info" {
+            Mock Get-NetIPAddress {
+                @(
+                    [PSCustomObject]@{
+                        IPAddress     = "192.168.1.100"
+                        PrefixOrigin  = "Dhcp"
+                        SuffixOrigin  = "Dhcp"
+                    },
+                    [PSCustomObject]@{
+                        IPAddress     = "::1"
+                        PrefixOrigin  = "WellKnown"
+                        SuffixOrigin  = "WellKnown"
+                    }
+                )
+            }
+            $result = GetIpParametersTable
+            $result | Should -Contain "192.168.1.100 Dhcp Dhcp"
+            $result | Should -Contain "::1 WellKnown WellKnown"
+        }
+
+        It "returns nothing when no addresses are available" {
+            Mock Get-NetIPAddress { @() }
+            $result = GetIpParametersTable
+            $result | Should -BeNullOrEmpty
+        }
+    }
+
     Describe "GetSoftwareFromInstaller" {
         It "outputs expected fields using ProductsEx" {
             $mockProduct = [psobject]::new()

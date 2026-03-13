@@ -322,7 +322,7 @@ class IDStore(Generic[_TID]):
 
 
 def _check_for_server_error(response: requests.Response) -> None:
-    if HTTPStatus(response.status_code).is_server_error:
+    if 500 <= response.status_code <= 599:
         sys.exit(
             f"Datadog server responded with an error: {response.status_code!r} {response.reason!r}"
         )

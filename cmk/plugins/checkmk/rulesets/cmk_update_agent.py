@@ -436,15 +436,17 @@ def _valuespec_interval() -> TimeSpan:
     )
 
 
-def _valuespec_updater_registration() -> CascadingSingleChoice:
-    return CascadingSingleChoice(
+def _valuespec_updater_registration() -> SingleChoice:
+    return SingleChoice(
         title=Title("Registration"),
         help_text=Help(
             "To start updating the agent package, the agent updater must register at a monitoring "
             "site.<br>"
-            "(_New with Checkmk 2.5_) By default, the agent updater will be registered by the agent "
+            "<br>"
+            "<i>New with Checkmk 2.5</i>: By default, the agent updater will be registered by the agent "
             "controller, after its own successful registration, at the same site and with the "
             "same hostname.<br>"
+            "<br>"
             "Here you can configure the overwriting behavior of subsequent agent controller "
             "registrations, or opt to skip the agent controller triggered agent updater "
             "registration entirely.<br>"
@@ -454,48 +456,36 @@ def _valuespec_updater_registration() -> CascadingSingleChoice:
             "registrations when registering for the same site again. "
             "The agent updater can only hold one registration at a time. Every new registration "
             "will overwrite the previous one, regardless of the connection details.<br>"
-            "Note: Since the agent controller is available for Linux and Windows only, "
+            "<br>"
+            "Available Choices:<ul>"
+            "<li><b>On first agent controller registration</b>: An existing Agent Updater registration will be kept."
+            " If you register the agent controller at multiple sites, only the first site will be used for agent updates.</li>"
+            "<li><b>On every agent controller registration</b>: The Agent Updater registration will be overwritten on every agent controller registration."
+            " If you register the agent controller at multiple sites, only the last site will be used for agent updates.</li>"
+            "<li><b>Manual</b>: Manually register the agent updater.<br>"
+            "Either on agent controller registration with explicit flag: "
+            "<tt>cmk-agent-ctl register [args] --automatic-updates</tt><br>"
+            "Or separately: "
+            "<tt>cmk-update-agent register</tt> (Linux)/<tt>check_mk_agent.exe updater register</tt> (Windows).<br>"
+            "Since the registration is handled manually by the user, any existing "
+            "agent updater registration will be overwritten.</li>"
+            "</ul>"
+            "<i>Note</i>: Since the agent controller is available for Linux and Windows only, "
             "this setting is not relevant for Solaris, where the agent updater will always need to "
             "be registered manually."
         ),
         elements=[
-            CascadingSingleChoiceElement(
+            SingleChoiceElement(
                 name="keep",
                 title=Title("On first agent controller registration"),
-                parameter_form=FixedValue(
-                    value=None,
-                    help_text=Help(
-                        "E.g., if you register the agent controller at multiple sites, "
-                        "only the first site will be used for agent updates."
-                    ),
-                ),
             ),
-            CascadingSingleChoiceElement(
+            SingleChoiceElement(
                 name="overwrite",
                 title=Title("On every agent controller registration"),
-                parameter_form=FixedValue(
-                    value=None,
-                    help_text=Help(
-                        "E.g., if you register the agent controller at multiple sites, "
-                        "only the last site will be used for agent updates."
-                    ),
-                ),
             ),
-            CascadingSingleChoiceElement(
+            SingleChoiceElement(
                 name="manual",
                 title=Title("Manual"),
-                parameter_form=FixedValue(
-                    value=None,
-                    help_text=Help(
-                        "Manually register the agent updater.<br>"
-                        "Either on agent controller registration with explicit flag: "
-                        "<tt>cmk-agent-ctl register [args] --automatic-updates</tt><br>"
-                        "Or separately: "
-                        "<tt>cmk-update-agent register</tt>(Linux)/<tt>check_mk_agent.exe updater register</tt>(Windows).<br>"
-                        "Since the registration is handled manually by the user, any existing "
-                        "agent updater registration will be overwritten."
-                    ),
-                ),
             ),
         ],
         prefill=DefaultValue("keep"),

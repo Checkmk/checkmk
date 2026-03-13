@@ -362,19 +362,22 @@ const recentlyActivatedSiteIds = computed((): string[] => {
   return recentlyActivatedSites.value.map(([siteId]) => siteId)
 })
 
-const activationSuccessTitle = computed((): string => {
-  const numberOfSuccessfullyActivatedSites = recentlyActivatedSites.value.filter(
+const numberOfSuccessfullyActivatedSites = computed((): number => {
+  return recentlyActivatedSites.value.filter(
     ([, status]) => status === 'success' || status === 'warning'
   ).length
+})
+
+const activationSuccessTitle = computed((): string => {
   const numberOfChanges = numberOfChangesLastActivation.value
 
   return _t(
     'Successfully activated %{numberOfChanges} pending %{changeWord} on %{numberOfSuccessfullyActivatedSites} %{siteWord}',
     {
       numberOfChanges,
-      numberOfSuccessfullyActivatedSites,
+      numberOfSuccessfullyActivatedSites: numberOfSuccessfullyActivatedSites.value,
       changeWord: _tn('change', 'changes', numberOfChanges),
-      siteWord: _tn('site', 'sites', numberOfSuccessfullyActivatedSites)
+      siteWord: _tn('site', 'sites', numberOfSuccessfullyActivatedSites.value)
     }
   )
 })
@@ -457,11 +460,7 @@ onMounted(async () => {
       >
       </ChangesActivating>
       <ChangesActivationResult
-        v-if="
-          !activateChangesInProgress &&
-          recentlyActivatedSites.length > 0 &&
-          !sitesWithWarningsOrErrors
-        "
+        v-if="!activateChangesInProgress && numberOfSuccessfullyActivatedSites > 0"
         type="success"
         :title="activationSuccessTitle"
         :info="_t('Everything is up to date')"

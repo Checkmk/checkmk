@@ -69,7 +69,7 @@ const selectedWidget = defineModel<string | null>('selectedWidget', { default: n
 }
 
 .db-widget-tiles__item {
-  min-width: 90px;
+  flex: 1 1 0%;
 }
 
 .db-widget-tiles__container-compact {

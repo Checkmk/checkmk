@@ -51,12 +51,15 @@ const modifierClass = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--dimension-4);
   padding: var(--dimension-4);
-  max-width: 72px;
+  width: 100%;
+  height: 100%;
   text-align: center;
   border: 1px solid var(--ux-theme-6);
   border-radius: var(--dimension-4);
+  box-sizing: border-box;
 }
 
 .db-widget-tile__item-icon {

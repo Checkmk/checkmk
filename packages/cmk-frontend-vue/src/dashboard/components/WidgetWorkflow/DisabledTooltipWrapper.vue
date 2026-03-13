@@ -30,5 +30,6 @@ const props = defineProps<DisabledTooltipWrapperProps>()
 .db-disabled-tooltip-wrapper {
   display: block;
   width: 100%;
+  height: 100%;
 }
 </style>

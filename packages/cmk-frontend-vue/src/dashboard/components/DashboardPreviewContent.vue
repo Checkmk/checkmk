@@ -39,20 +39,19 @@ const effectiveContentProps = computed(() => {
 <style scoped>
 .db-preview-content {
   --db-preview-content-height: calc(var(--dimension-8) * 10);
-  --db-preview-content-padding: var(--dimension-3);
 
   display: flex;
   flex-direction: column;
   position: relative;
   height: var(--db-preview-content-height);
   margin: 0;
-  padding: var(--db-preview-content-padding);
+  padding: 0;
   box-sizing: border-box;
 }
 
 .db-preview-content__inner-wrapper {
   /* "parent node" is used for figure height calculation */
-  height: calc(var(--db-preview-content-height) - calc(2 * var(--db-preview-content-padding)));
+  height: var(--db-preview-content-height);
 }
 
 .db-preview-content__click-shield {

@@ -943,11 +943,43 @@ function validateFormMetricBackendCustomQuery(
 
 // Form
 
+function validateMetricGraphLine(graphLine: GraphLine): ValidationMessages {
+  const messages: ValidationMessages = []
+  if (graphLine.type !== 'metric' && graphLine.type !== 'scalar') {
+    return messages
+  }
+  if (!graphLine.host_name) {
+    messages.push({
+      message: _t('Host name is required'),
+      location: ['host_name'],
+      replacement_value: null
+    })
+  }
+  if (!graphLine.service_name) {
+    messages.push({
+      message: _t('Service name is required'),
+      location: ['service_name'],
+      replacement_value: null
+    })
+  }
+  if (!graphLine.metric_name) {
+    messages.push({
+      message: _t('Metric name is required'),
+      location: ['metric_name'],
+      replacement_value: null
+    })
+  }
+  return messages
+}
+
 window.addEventListener('submit', (event) => {
   if (
     graphLines.value.some((graphLine: GraphLine) => {
       if (graphLine.type === 'query') {
         return validateFormMetricBackendCustomQuery(undefined, graphLine).length > 0
+      }
+      if (graphLine.type === 'metric' || graphLine.type === 'scalar') {
+        return validateMetricGraphLine(graphLine).length > 0
       }
       return false
     })
@@ -1090,6 +1122,7 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
+                  :backend-validation="validateMetricGraphLine(graphLine)"
                   @update:host-name="updateGraphLineAutoTitle(graphLine)"
                   @update:service-name="updateGraphLineAutoTitle(graphLine)"
                   @update:metric-name="updateGraphLineAutoTitle(graphLine)"
@@ -1114,6 +1147,7 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
+                  :backend-validation="validateMetricGraphLine(graphLine)"
                   @update:host-name="updateGraphLineAutoTitle(graphLine)"
                   @update:service-name="updateGraphLineAutoTitle(graphLine)"
                   @update:metric-name="updateGraphLineAutoTitle(graphLine)"

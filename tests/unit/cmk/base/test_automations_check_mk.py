@@ -30,6 +30,7 @@ from cmk.base.automations.automations import AutomationContext
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.version import edition
+from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import PluginLocation
 from cmk.fetchers import (
@@ -42,7 +43,7 @@ from cmk.fetchers import (
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.snmplib import oids_to_walk, SNMPContextConfig
-from cmk.utils import paths
+from cmk.utils import config_warnings, paths
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
@@ -390,3 +391,123 @@ def test_execute_snmp_walk_deduplicates_oids_across_contexts() -> None:
 
     assert raw_data.count(shared_oid.encode()) == 1
     assert b".1.3.6.1.2.1.1.0 value" in raw_data
+
+
+class TestWarnServiceNameConflicts:
+    """Unit tests for _warn_service_name_conflicts."""
+
+    def _make_entry(
+        self, description: str, check_plugin_name: str, check_source: str = "unchanged"
+    ) -> CheckPreviewEntry:
+        return CheckPreviewEntry(
+            check_source=check_source,
+            check_plugin_name=check_plugin_name,
+            ruleset_name=None,
+            discovery_ruleset_name=None,
+            item=None,
+            old_discovered_parameters={},
+            new_discovered_parameters={},
+            effective_parameters={},
+            description=description,
+            state=None,
+            output="",
+            metrics=[],
+            old_labels={},
+            new_labels={},
+            found_on_nodes=[HostName("my_host")],
+        )
+
+    def _make_preview(self, entries: list) -> CheckPreview:
+        return CheckPreview(
+            table={HostName("my_host"): entries},
+            labels=QualifiedDiscovery.empty(),
+            source_results={},
+            kept_labels={},
+        )
+
+    def test_no_conflict(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Service A", "plugin_one", "unchanged"),
+                self._make_entry("Service B", "plugin_two", "new"),
+            ]
+        )
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        assert config_warnings.get_configuration(additional_warnings=()) == []
+
+    def test_passive_passive_conflict_emits_warning(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Check_MK Agent", "checkmk_agent", "unchanged"),
+                self._make_entry("Check_MK Agent", "custom_query_metric_backend", "new"),
+            ]
+        )
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        warnings = config_warnings.get_configuration(additional_warnings=())
+        assert len(warnings) == 1
+        assert "Check_MK Agent" in warnings[0]
+        assert "checkmk_agent" in warnings[0]
+        assert "custom_query_metric_backend" in warnings[0]
+
+    def test_vanished_monitored_conflict_emits_warning(self) -> None:
+        """A vanished (but still monitored) service can conflict with a new service.
+
+        This is the real-world scenario: the existing monitored service shows as
+        "vanished" on the discovery page while the new conflicting service is "new".
+        """
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Check_MK Agent", "checkmk_agent", "vanished"),
+                self._make_entry("Check_MK Agent", "custom_query_metric_backend", "new"),
+            ]
+        )
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        warnings = config_warnings.get_configuration(additional_warnings=())
+        assert len(warnings) == 1
+        assert "Check_MK Agent" in warnings[0]
+        assert "checkmk_agent" in warnings[0]
+        assert "custom_query_metric_backend" in warnings[0]
+
+    def test_more_than_two_conflicts_emits_single_warning(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("My Service", "plugin_a", "unchanged"),
+                self._make_entry("My Service", "plugin_b", "new"),
+                self._make_entry("My Service", "plugin_c", "new"),
+            ]
+        )
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        warnings = config_warnings.get_configuration(additional_warnings=())
+        assert len(warnings) == 1
+        assert "My Service" in warnings[0]
+        assert "plugin_a" in warnings[0]
+        assert "plugin_b" in warnings[0]
+        assert "plugin_c" in warnings[0]
+
+    def test_ignored_active_does_not_trigger_warning(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Service A", "plugin_one", "ignored_active"),
+                self._make_entry("Service A", "plugin_two", "unchanged"),
+            ]
+        )
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        assert config_warnings.get_configuration(additional_warnings=()) == []
+
+    def test_active_passive_conflict_emits_warning(self) -> None:
+        config_warnings.initialize()
+        preview = self._make_preview(
+            [
+                self._make_entry("Check_MK Agent", "checkmk_agent", "unchanged"),
+                self._make_entry("Check_MK Agent", "httpv2", "active"),
+            ]
+        )
+        check_mk._warn_service_name_conflicts(HostName("my_host"), preview)
+        warnings = config_warnings.get_configuration(additional_warnings=())
+        assert len(warnings) == 1
+        assert "Check_MK Agent" in warnings[0]

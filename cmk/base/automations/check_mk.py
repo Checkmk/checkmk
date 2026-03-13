@@ -129,6 +129,7 @@ from cmk.ccc.exceptions import (
     OnError,
 )
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.i18n import _
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -769,6 +770,8 @@ def _get_discovery_preview(
             for_relay=for_relay,
         )
 
+        _warn_service_name_conflicts(host_name, check_preview)
+
         def make_discovered_host_labels(
             labels: Sequence[HostLabel],
         ) -> DiscoveredHostLabelsDict:
@@ -1035,6 +1038,43 @@ def _execute_discovery(
         source_results=passive_check_preview.source_results,
         kept_labels=passive_check_preview.kept_labels,
     )
+
+
+_CONFLICT_IGNORED_STATES: frozenset[str] = frozenset(
+    {"removed", "ignored_active", "ignored", "ignored_custom"}
+)
+
+
+def _warn_service_name_conflicts(host_name: HostName, check_preview: CheckPreview) -> None:
+    """Emit config_warnings for services sharing a description on the same host.
+
+    When multiple services have the same description but different check plug-in
+    names, only one can ever be monitored at a time.  The service discovery page
+    enforces uniqueness, so the activation-time duplicate warning never fires.
+    We emit the warning here so it appears on the discovery page.
+    """
+    conflicts: dict[str, list[CheckPreviewEntry]] = {}
+    for entry in check_preview.table.get(host_name, []):
+        if entry.check_source in _CONFLICT_IGNORED_STATES:
+            continue
+        conflicts.setdefault(entry.description, []).append(entry)
+
+    for description, entries in conflicts.items():
+        if len(entries) < 2:
+            continue
+        items = "".join(
+            f"<li>{e.check_plugin_name}"
+            + (f" (item: {e.item!r})" if e.item is not None else "")
+            + "</li>"
+            for e in entries
+        )
+        config_warnings.warn(
+            _(
+                "Duplicate service name <b>%(description)s</b> for host <b>%(host_name)s</b>."
+                " Only one of the following services can be monitored at a time:<ul>%(items)s</ul>"
+            )
+            % {"description": repr(description), "host_name": repr(host_name), "items": items}
+        )
 
 
 def automation_autodiscovery(
@@ -2440,7 +2480,7 @@ def automation_analyze_host_rule_effectiveness(
             rules[0]["id"]: any(
                 True
                 for host_name in host_names
-                for _ in ruleset_matcher.get_host_values_all(
+                for _value in ruleset_matcher.get_host_values_all(
                     host_name, rules, label_manager.labels_of_host
                 )
             )

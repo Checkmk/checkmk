@@ -64,11 +64,15 @@ defineEmits(['click'])
     ref="buttonRef"
     class="cmk-button"
     :class="buttonVariants({ variant: props.variant, disabled: isDisabled })"
-    :href="props.href"
+    :href="isDisabled ? undefined : props.href"
     :target="props.target"
     :title="title || ''"
     @click="
       (e) => {
+        if (isDisabled) {
+          e.preventDefault()
+          return
+        }
         $emit('click', e)
       }
     "

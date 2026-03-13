@@ -35,7 +35,6 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     TagsOption,
     UniqueHostnamesConfig,
     write_group_info,
-    write_monitored_resources_to_agent_info,
     write_resource_groups_sections,
     write_subscription_info_section,
     write_subscription_labels,
@@ -770,6 +769,7 @@ def test_write_subscription_labels(capsys: pytest.CaptureFixture[str]) -> None:
             "<<<azure_v2_subscription_info:sep(124)>>>\n"
             'monitored-groups|["burningman"]\n'
             "remaining-reads|123\n"
+            'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
             id="Single group",
         ),
@@ -779,6 +779,7 @@ def test_write_subscription_labels(capsys: pytest.CaptureFixture[str]) -> None:
             "<<<azure_v2_subscription_info:sep(124)>>>\n"
             "monitored-groups|[]\n"
             "remaining-reads|123\n"
+            'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
             id="Empty groups",
         ),
@@ -789,12 +790,6 @@ def test_write_subscription_info_section(
     monitored_groups: Mapping[str, AzureResourceGroup],
     expected_output: str,
 ) -> None:
-    write_subscription_info_section(fake_azure_subscription(), 123, monitored_groups)
-    captured = capsys.readouterr()
-    assert captured.out == expected_output
-
-
-def test_write_monitored_resources_to_agent_info(capsys: pytest.CaptureFixture[str]) -> None:
     resources = [
         AzureResource(
             {
@@ -810,11 +805,9 @@ def test_write_monitored_resources_to_agent_info(capsys: pytest.CaptureFixture[s
             unique_hostnames_config=UniqueHostnamesConfig(),
         ),
     ]
-    write_monitored_resources_to_agent_info(resources)
+    write_subscription_info_section(fake_azure_subscription(), 123, monitored_groups, resources)
     captured = capsys.readouterr()
-    assert captured.out == (
-        '<<<<>>>>\n<<<azure_v2_agent_info:sep(124)>>>\nmonitored-resources|["MyVM"]\n<<<<>>>>\n'
-    )
+    assert captured.out == expected_output
 
 
 _monitored_vm_resource = lambda tag_pattern_option: {

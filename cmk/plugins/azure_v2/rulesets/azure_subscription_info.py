@@ -12,6 +12,8 @@ from cmk.rulesets.v1.form_specs import (
     LevelDirection,
     ServiceState,
     SimpleLevels,
+    SingleChoice,
+    SingleChoiceElement,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
@@ -34,6 +36,20 @@ def _make_form() -> Dictionary:
                 parameter_form=ServiceState(
                     title=Title("State if remaining API reads are unknown"),
                     prefill=DefaultValue(ServiceState.WARN),
+                ),
+            ),
+            "resource_pinning": DictElement(
+                required=False,
+                parameter_form=SingleChoice(
+                    title=Title("Resource pinning: Ensure monitored resources are unchanged"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="true", title=Title("Warn if resources appear or vanish")
+                        ),
+                        SingleChoiceElement(
+                            name="false", title=Title("Silently ignore new or missing resources")
+                        ),
+                    ],
                 ),
             ),
         },

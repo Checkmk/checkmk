@@ -27,20 +27,17 @@ class Params(TypedDict):
     warning_levels: tuple[int, int]
     exception_levels: tuple[int, int]
     resource_pinning: bool
-    discovered_resources: list[str]
 
 
 DEFAULT_PARAMS: Params = {
     "warning_levels": (1, 10),
     "exception_levels": (1, 1),
     "resource_pinning": False,
-    "discovered_resources": [],
 }
 
 
 @dataclass
 class AgentInfo:
-    monitored_resources: list[str] = field(default_factory=list)
     issues: dict[str, list[dict[str, str]]] = field(default_factory=dict)
     agent_bailouts: list[tuple[int, str]] = field(default_factory=list)
 
@@ -56,9 +53,7 @@ def parse_azure_agent_info(string_table: StringTable) -> AgentInfo:
         except ValueError:
             value = value_str
 
-        if key == "monitored-resources":
-            info.monitored_resources.extend(value)
-        elif key == "issue":
+        if key == "issue":
             info.issues.setdefault(value["type"], []).append(value)
         elif key == "agent-bailout":
             info.agent_bailouts.append(tuple(value))
@@ -67,7 +62,7 @@ def parse_azure_agent_info(string_table: StringTable) -> AgentInfo:
 
 
 def discover_azure_agent_info(section: AgentInfo) -> DiscoveryResult:
-    yield Service(parameters={"discovered_resources": section.monitored_resources})
+    yield Service()
 
 
 def _check_agent_bailouts(bailouts: list[tuple[int, str]]) -> CheckResult:
@@ -81,28 +76,6 @@ def _check_agent_bailouts(bailouts: list[tuple[int, str]]) -> CheckResult:
             value_store[text] = first_seen
             status = 0 if (now - first_seen < 3600) else status
         yield Result(state=State(status), summary=text)
-
-
-def _check_resource_pinning(present_resources: list[str], params: Params) -> CheckResult:
-    if not params.get("resource_pinning"):
-        return
-
-    discovered = params.get("discovered_resources")
-    missing = sorted(set(discovered) - set(present_resources))
-    new = sorted(set(present_resources) - set(discovered))
-    short_output = []
-
-    if missing:
-        short_output.append(f"Missing resources: {len(missing)}")
-        for r in missing:
-            yield Result(state=State.OK, notice=f"Missing resource: {r!r}(!)")
-    if new:
-        short_output.append(f"New resources: {len(new)}")
-        for r in new:
-            yield Result(state=State.OK, notice=f"New resource: {r!r}(!)")
-
-    if short_output:
-        yield Result(state=State.WARN, summary=", ".join(short_output))
 
 
 def _check_agent_issues(issues: dict[str, list[dict[str, Any]]], params: Params) -> CheckResult:
@@ -143,7 +116,6 @@ def _check_agent_issues(issues: dict[str, list[dict[str, Any]]], params: Params)
 
 def check_azure_agent_info(params: Params, section: AgentInfo) -> CheckResult:
     yield from _check_agent_bailouts(section.agent_bailouts)
-    yield from _check_resource_pinning(section.monitored_resources, params)
     yield from _check_agent_issues(section.issues, params)
 
 

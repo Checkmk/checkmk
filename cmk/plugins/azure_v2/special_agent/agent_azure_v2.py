@@ -2119,15 +2119,11 @@ def write_subscription_info_section(
     subscription: AzureSubscription,
     rate_limit: int | None,
     monitored_groups: Mapping[str, AzureResourceGroup],
+    resources: Sequence[AzureResource],
 ) -> None:
     section = AzureSection("subscription_info", [subscription.piggytarget])
     section.add(("monitored-groups", json.dumps([*monitored_groups])))
     section.add(("remaining-reads", json.dumps(rate_limit)))
-    section.write()
-
-
-def write_monitored_resources_to_agent_info(resources: Sequence[AzureResource]) -> None:
-    section = AzureSection("agent_info")
     section.add(("monitored-resources", json.dumps([r.info["name"] for r in resources])))
     section.write()
 
@@ -2771,8 +2767,9 @@ async def main_subscription(
             tasks.discard(None)
             await asyncio.gather(*tasks)  # type: ignore[arg-type]
 
-            write_subscription_info_section(subscription, mgmt_client.ratelimit, resource_groups)
-            write_monitored_resources_to_agent_info(selected_resources)
+            write_subscription_info_section(
+                subscription, mgmt_client.ratelimit, resource_groups, selected_resources
+            )
 
     except Exception as exc:
         if args.debug:

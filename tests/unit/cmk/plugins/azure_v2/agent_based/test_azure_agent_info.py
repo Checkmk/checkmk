@@ -15,7 +15,6 @@ from cmk.plugins.azure_v2.agent_based.azure_agent_info import (
     check_azure_agent_info,
     DEFAULT_PARAMS,
     discover_azure_agent_info,
-    Params,
     parse_azure_agent_info,
 )
 
@@ -28,18 +27,12 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-STRING_TABLE_BASIC: StringTable = [
-    ["monitored-resources", '["MyVM", "OtherResource"]'],
-]
-
 STRING_TABLE_WITH_ISSUES: StringTable = [
-    ["monitored-resources", '["MyVM"]'],
     ["issue", '{"type": "warning", "issued_by": "component", "msg": "something bad"}'],
     ["issue", '{"type": "exception", "issued_by": "other", "msg": "an error"}'],
 ]
 
 STRING_TABLE_WITH_BAILOUT: StringTable = [
-    ["monitored-resources", '["MyVM"]'],
     ["agent-bailout", '[2, "Agent failed to connect"]'],
 ]
 
@@ -47,7 +40,6 @@ STRING_TABLE_WITH_BAILOUT: StringTable = [
 @pytest.mark.parametrize(
     "string_table, monitored_resources, issues, agent_bailouts",
     [
-        pytest.param(STRING_TABLE_BASIC, ["MyVM", "OtherResource"], {}, [], id="only resources"),
         pytest.param(
             STRING_TABLE_WITH_ISSUES,
             ["MyVM"],
@@ -74,23 +66,25 @@ def test_parse_azure_agent_info(
     agent_bailouts: list[tuple[int, str]],
 ) -> None:
     result = parse_azure_agent_info(string_table)
-    assert result.monitored_resources == monitored_resources
     assert result.issues == issues
     assert result.agent_bailouts == agent_bailouts
 
 
 def test_discover() -> None:
-    parsed = parse_azure_agent_info(STRING_TABLE_BASIC)
+    parsed = parse_azure_agent_info(STRING_TABLE_WITH_BAILOUT)
     result = list(discover_azure_agent_info(parsed))
-    assert result == [Service(parameters={"discovered_resources": ["MyVM", "OtherResource"]})]
+    assert result == [Service()]
 
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_check_no_issues() -> None:
-    parsed = parse_azure_agent_info(STRING_TABLE_BASIC)
+    parsed = parse_azure_agent_info(STRING_TABLE_WITH_BAILOUT)
     result = list(check_azure_agent_info(DEFAULT_PARAMS, parsed))
-    states = [r.state for r in result if isinstance(r, Result)]
-    assert all(s == State.OK for s in states)
+    assert result == [
+        Result(state=State.CRIT, summary="Agent failed to connect"),
+        Result(state=State.OK, summary="Warnings: 0"),
+        Result(state=State.OK, summary="Exceptions: 0"),
+    ]
 
 
 @pytest.mark.usefixtures("empty_value_store")
@@ -99,51 +93,6 @@ def test_check_bailout() -> None:
     result = list(check_azure_agent_info(DEFAULT_PARAMS, parsed))
     assert any(
         isinstance(r, Result) and r.state == State.CRIT and "Agent failed to connect" in r.summary
-        for r in result
-    )
-
-
-@pytest.mark.usefixtures("empty_value_store")
-def test_check_resource_pinning_no_pinning() -> None:
-    parsed = parse_azure_agent_info(STRING_TABLE_BASIC)
-    params: Params = {
-        **DEFAULT_PARAMS,
-        "resource_pinning": False,
-        "discovered_resources": ["MyVM", "OtherResource"],
-    }
-    result = list(check_azure_agent_info(params, parsed))
-    assert not any(
-        isinstance(r, Result) and r.state == State.WARN and "resource" in (r.summary or "").lower()
-        for r in result
-    )
-
-
-@pytest.mark.usefixtures("empty_value_store")
-def test_check_resource_pinning_missing_resource() -> None:
-    parsed = parse_azure_agent_info(STRING_TABLE_BASIC)
-    params: Params = {
-        **DEFAULT_PARAMS,
-        "resource_pinning": True,
-        "discovered_resources": ["MyVM", "OtherResource", "DeletedVM"],
-    }
-    result = list(check_azure_agent_info(params, parsed))
-    assert any(
-        isinstance(r, Result) and r.state == State.WARN and "Missing resources: 1" in r.summary
-        for r in result
-    )
-
-
-@pytest.mark.usefixtures("empty_value_store")
-def test_check_resource_pinning_new_resource() -> None:
-    parsed = parse_azure_agent_info(STRING_TABLE_BASIC)
-    params: Params = {
-        **DEFAULT_PARAMS,
-        "resource_pinning": True,
-        "discovered_resources": ["MyVM"],
-    }
-    result = list(check_azure_agent_info(params, parsed))
-    assert any(
-        isinstance(r, Result) and r.state == State.WARN and "New resources: 1" in r.summary
         for r in result
     )
 

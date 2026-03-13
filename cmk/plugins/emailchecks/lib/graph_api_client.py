@@ -141,6 +141,7 @@ class GraphApiClient:
             json=json,
             params=params,
         ) as response:
+            response.raise_for_status()
             try:
                 json_data = response.json()
             # not always contains JSON data, it can for example also be 202 Accepted with no body

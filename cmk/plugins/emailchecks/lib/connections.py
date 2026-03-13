@@ -408,11 +408,16 @@ class GraphApi(_Connection):
     def copy(self, mails: MailMessages, folder: str) -> None:
         try:
             folders = self.folders()
-            if folder not in folders:
-                raise CleanupMailboxError(
-                    f"Failed to copy mail: target folder {folder!r} does not exist."
-                )
-            folder_id = folders[folder]
+        except Exception as exc:
+            raise CleanupMailboxError(f"Failed to copy mail to {folder}: {exc!r}") from exc
+
+        if folder not in folders:
+            raise CleanupMailboxError(
+                f"Failed to copy mail: target folder {folder!r} does not exist."
+            )
+
+        folder_id = folders[folder]
+        try:
             for mail in mails.values():
                 assert isinstance(mail, GraphApiMessage)
                 with self._build_api_client() as client:

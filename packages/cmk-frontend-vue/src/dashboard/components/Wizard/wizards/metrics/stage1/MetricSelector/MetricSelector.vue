@@ -118,39 +118,32 @@ const _updateMetricType = (value: string) => {
           <ContentSpacer :dimension="5" />
 
           <div class="db-metric-selector__container">
-            <div class="db-metric-selector__host-filter">
-              <div class="db-metric-selector__cell">
-                <div class="db-metric-selector__label" @click="() => (handler.host.value = null)">
-                  <CmkLabel style="cursor: pointer">{{ _t('Host name') }}:</CmkLabel>
-                </div>
+            <div class="db-metric-selector__cell">
+              <div class="db-metric-selector__label" @click="() => (handler.host.value = null)">
+                <CmkLabel style="cursor: pointer">{{ _t('Host name') }}:</CmkLabel>
+              </div>
 
-                <div class="db-metric-selector__autocompleter">
-                  <AutocompleteHost
-                    v-model:host-name="handler.host.value"
-                    width="fill"
-                    :placeholder="_t('Select')"
-                  />
-                </div>
+              <div class="db-metric-selector__autocompleter">
+                <AutocompleteHost
+                  v-model:host-name="handler.host.value"
+                  width="fill"
+                  :placeholder="_t('Select')"
+                />
               </div>
             </div>
 
-            <div class="db-metric-selector__service-filter">
-              <div class="db-metric-selector__cell">
-                <div
-                  class="db-metric-selector__label"
-                  @click="() => (handler.service.value = null)"
-                >
-                  <CmkLabel style="cursor: pointer">{{ _t('Service') }}:</CmkLabel>
-                </div>
+            <div class="db-metric-selector__cell">
+              <div class="db-metric-selector__label" @click="() => (handler.service.value = null)">
+                <CmkLabel style="cursor: pointer">{{ _t('Service') }}:</CmkLabel>
+              </div>
 
-                <div class="db-metric-selector__autocompleter">
-                  <AutocompleteService
-                    v-model:service-description="handler.service.value"
-                    :host-name="handler.host.value"
-                    width="fill"
-                    :placeholder="_t('Select')"
-                  />
-                </div>
+              <div class="db-metric-selector__autocompleter">
+                <AutocompleteService
+                  v-model:service-description="handler.service.value"
+                  :host-name="handler.host.value"
+                  width="fill"
+                  :placeholder="_t('Select')"
+                />
               </div>
             </div>
           </div>
@@ -190,27 +183,19 @@ const _updateMetricType = (value: string) => {
 
 .db-metric-selector__container {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1fr);
-  gap: 0 var(--dimension-6);
-}
-
-.db-metric-selector__host-filter {
-  grid-area: 1 / 1 / 2 / 2;
-}
-
-.db-metric-selector__service-filter {
-  grid-area: 1 / 2 / 2 / 3;
+  grid-template-columns: max-content 1fr;
+  gap: var(--dimension-4);
 }
 
 .db-metric-selector__metric-selector {
-  grid-area: 1 / 1 / 3 / 3;
+  display: grid;
+  grid-column: 1 / -1;
 }
 
 .db-metric-selector__cell {
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: space-between;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
   gap: var(--dimension-3);
 }

@@ -835,7 +835,12 @@ function setLockedValue(catalog: Catalog) {
   for (const element of catalog.elements) {
     if (element.name === 'value') {
       element.locked = {
-        message: _t('Cannot change rule value for rules managed by custom graph editor.')
+        message: _t(
+          'At this point, rule values cannot be changed. ' +
+            'Either go back and change the custom graph as needed or ' +
+            'save the rule and edit later via ' +
+            'Setup > Agents > Other integrations > Metric backend (custom query).'
+        )
       }
     }
   }
@@ -1313,7 +1318,10 @@ const graphDesignerContentAsJson = computed(() => {
           loading: _t('Loading'),
           validation_error: _t('Validation error'),
           fatal_error: _t('Fatal error'),
-          permanent_choice_warning: _t('When you save this rule a new rule will be created.'),
+          permanent_choice_warning: _t(
+            'This creates a special agent rule based on the selected custom graph. ' +
+              'Note that later changes to the custom graph will not be applied to the special agent rule.'
+          ),
           permanent_choice_warning_dismissal: _t('Dismiss')
         }"
         @cancel="closeSlideIn"

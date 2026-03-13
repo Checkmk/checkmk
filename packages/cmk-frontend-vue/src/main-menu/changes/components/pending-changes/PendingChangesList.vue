@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { PendingChange } from 'cmk-shared-typing/typescript/changes'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -26,7 +26,12 @@ const props = defineProps<{
   userName: string
 }>()
 
-const pendingChangesCollapsible = ref<boolean>(true)
+const isEmpty = computed(() => props.pendingChanges.length === 0)
+const pendingChangesCollapsible = ref<boolean>(!isEmpty.value)
+
+watch(isEmpty, (nowEmpty) => {
+  pendingChangesCollapsible.value = !nowEmpty
+})
 
 function filterPendingChanges(change: PendingChange): boolean {
   return (
@@ -36,6 +41,9 @@ function filterPendingChanges(change: PendingChange): boolean {
 }
 
 const changesTitle = computed(() => {
+  if (isEmpty.value) {
+    return _t('Changes on selected sites (0 of 0)')
+  }
   return _t('Changes: (%{n})', {
     n: props.pendingChanges.filter(filterPendingChanges).length
   })
@@ -53,8 +61,9 @@ const changesSideTitle = computed(() => {
   >
     <CmkCollapsibleTitle
       :title="changesTitle"
-      :side-title="changesSideTitle"
+      v-bind="isEmpty ? {} : { 'side-title': changesSideTitle }"
       class="collapsible-title"
+      :disabled="isEmpty"
       :open="pendingChangesCollapsible"
       @toggle-open="pendingChangesCollapsible = !pendingChangesCollapsible"
     />

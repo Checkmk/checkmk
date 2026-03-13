@@ -328,10 +328,6 @@ const activateChangesButtonDisabled = computed((): boolean => {
   )
 })
 
-const weHavePendingChanges = computed((): boolean => {
-  return sitesAndChanges.value.pendingChanges.length > 0
-})
-
 const activateChangesButtonTooltip = computed((): string => {
   if (!activateChangesButtonDisabled.value) {
     return ''
@@ -505,7 +501,6 @@ onMounted(async () => {
           :user-has-activate-foreign="props.user_has_activate_foreign"
         ></SiteStatusList>
         <PendingChangesList
-          v-if="weHavePendingChanges"
           v-model:pending-changes="sitesAndChanges.pendingChanges"
           v-model:number-of-foreign-changes="numberOfForeignChanges"
           class="pending-changes-container"

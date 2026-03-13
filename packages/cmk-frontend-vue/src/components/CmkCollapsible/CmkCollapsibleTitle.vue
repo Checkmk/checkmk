@@ -33,6 +33,9 @@ interface CollapsibleTitleProps {
 
   /**@property {CmkIconProps} icon - Icon to display before the title*/
   focus?: boolean | null
+
+  /**@property {boolean} disabled - If true, the title is non-interactive (greyed out, no click) */
+  disabled?: boolean
 }
 
 const focusRef = useTemplateRef('focus-ref')
@@ -55,7 +58,9 @@ immediateWatch(
     ref="focus-ref"
     type="button"
     class="cmk-collapsible-title"
-    @click.prevent="$emit('toggleOpen')"
+    :class="{ 'cmk-collapsible-title--disabled': disabled }"
+    :disabled="disabled"
+    @click.prevent="!disabled && $emit('toggleOpen')"
   >
     <span
       class="cmk-collapsible-title__chevron"
@@ -91,6 +96,13 @@ immediateWatch(
   }
 
   &:hover {
+    background-color: transparent;
+  }
+
+  &.cmk-collapsible-title--disabled {
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
     background-color: transparent;
   }
 }

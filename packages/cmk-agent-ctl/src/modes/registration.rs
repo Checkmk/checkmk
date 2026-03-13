@@ -725,7 +725,7 @@ fn maybe_register_updater(
         };
 
         if is_updater_registered(&cmk_update_agent_path) {
-            info!(
+            println!(
                 "Agent updater already registered for site {}. Skipping re-registration.",
                 connection_config.site_id
             );
@@ -816,8 +816,8 @@ pub fn register_updater_subprocess(
         Err(e) => {
             warn!(
                 "You requested to register for automatic updates, \
-                   but the agent updater is not found. \
-                   Skipping agent updater registration. ({})",
+                   but the Agent Updater is not found. \
+                   Skipping Agent Updater registration. ({})",
                 e
             );
             return Ok(()); // Skip updater registration gracefully
@@ -844,7 +844,7 @@ pub fn register_updater_subprocess(
         ) {
             Ok(cmd) => cmd,
             Err(e) => {
-                error!(
+                warn!(
                     "Warning: can't build {} command, error: {}",
                     CMK_UPDATE_AGENT_CMD, e
                 );
@@ -852,23 +852,18 @@ pub fn register_updater_subprocess(
             }
         };
 
-        info!(
-            "Registering updater for site {}",
-            updater_registration_config.site_id
-        );
+        println!("Attempting to register Agent Updater...",);
         let output = cmd.output().context(format!(
             "Failed to execute {CMK_UPDATE_AGENT_CMD} register command"
         ))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            bail!("Updater registration failed: {}", stderr);
+            warn!("Agent Updater registration failed: {}", stderr);
+            return Ok(());
         }
 
-        info!(
-            "Successfully registered updater for site {}",
-            updater_registration_config.site_id
-        );
+        println!("Agent Updater registration complete.",);
         Ok(())
     })();
 

@@ -345,7 +345,7 @@ const recentlyActivatedSiteIds = computed((): string[] => {
 
 const activationSuccessTitle = computed((): string => {
   const numberOfSuccessfullyActivatedSites = recentlyActivatedSites.value.filter(
-    ([, status]) => status === 'success'
+    ([, status]) => status === 'success' || status === 'warning'
   ).length
   const numberOfChanges = numberOfChangesLastActivation.value
 

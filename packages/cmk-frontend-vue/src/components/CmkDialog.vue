@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 import { persistWarningDismissal } from '@/lib/rest-api-client/userConfig'
@@ -24,32 +24,11 @@ export interface CmkDialogProps {
   buttons?: { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
   dismissal_button?: { title: TranslatedString; key: DismissalButtonKey }
   variant?: Variants
-  autoDismiss?: number | undefined
 }
 
 export type DismissalButtonKey = components['schemas']['UserDismissWarning']['warning']
 
 const props = defineProps<CmkDialogProps>()
-
-const open = defineModel<boolean>('open', { default: true })
-
-let timeoutId: number | null = null
-
-watch(
-  open,
-  (newOpen) => {
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId)
-      timeoutId = null
-    }
-    if (newOpen && props.autoDismiss) {
-      timeoutId = window.setTimeout(() => {
-        open.value = false
-      }, props.autoDismiss)
-    }
-  },
-  { immediate: true }
-)
 
 const propsCva = cva('', {
   variants: {
@@ -109,12 +88,11 @@ onMounted(() => {
   if (props.dismissal_button) {
     dialogHidden.value = isWarningDismissed(props.dismissal_button.key, dialogHidden.value)
   }
-  open.value = !dialogHidden.value
 })
 </script>
 
 <template>
-  <div v-if="open && !dialogHidden" class="cmk-dialog help">
+  <div v-if="!dialogHidden" class="cmk-dialog help">
     <div :class="['cmk-dialog__icon-box', propsCva({ variant: props.variant })]">
       <CmkIcon v-if="variant === 'loading'" name="load-graph" class="cmk-dialog__icon" />
       <CmkMultitoneIcon

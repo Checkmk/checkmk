@@ -465,7 +465,6 @@ onMounted(async () => {
           }
         ]"
         :variant="sitesWithErrors ? 'error' : 'warning'"
-        :auto-dismiss="6000"
       />
 
       <ChangesStatusBar

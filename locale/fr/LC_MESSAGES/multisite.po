@@ -34471,27 +34471,6 @@ msgstr ""
 "Après ce délai, toutes les périodes restent dans leur dernier état. Assurez-"
 "vous que vous <i>Activer les changements</i> avant cette date."
 
-#, fuzzy
-msgid ""
-"In order to make Checkmk more consistent, the descriptions of several "
-"services have been renamed in newer Checkmk versions. One example is the "
-"filesystem services that have been renamed from <tt>fs_</tt> into "
-"<tt>Filesystem</tt>. But since renaming of existing services has many "
-"implications - including existing rules, performance data and availability "
-"history - these renamings are disabled per default for existing "
-"installations. Here you can switch to the new descriptions for selected "
-"check types"
-msgstr ""
-"Afin de rendre Checkmk plus cohérent, les descriptions de plusieurs services "
-"ont été renommées dans les nouvelles versions de Checkmk. Un exemple est "
-"celui des services de système de fichiers qui ont été renommés de <tt>fs_</"
-"tt> en <tt>Filesystem</tt>. Mais comme le renommage de services existants a "
-"de nombreuses implications - y compris les règles existantes, les données de "
-"performance et l'historique de la disponibilité - ces renommages sont "
-"désactivés par défaut pour les installations existantes. Ici, vous pouvez "
-"basculer vers les nouvelles descriptions pour les types de contrôle "
-"sélectionnés"
-
 msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
@@ -43960,6 +43939,10 @@ msgid "NetApp Qtree discovery"
 msgstr "Découverte de NetApp Qtree"
 
 msgid "NetApp Snapshot Reserve"
+msgstr "Réserve d'instantanés NetApp"
+
+#, fuzzy
+msgid "NetApp Snapshot Volumes"
 msgstr "Réserve d'instantanés NetApp"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -81572,6 +81555,15 @@ msgstr ""
 msgid "Use the name specified in the ESX system"
 msgstr "Utiliser le nom spécifié dans le système ESX"
 
+#, fuzzy
+msgid "Use the new service name"
+msgstr "Nom du service"
+
+msgid ""
+"Use the new service name. Disabling this option does not work for services "
+"where the monitored SVM or volume names contain colons"
+msgstr ""
+
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
 "Utilisez le nom d'utilisateur ntopng tel qu'il est configuré dans les "
@@ -90960,6 +90952,27 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
+#, fuzzy
+#~ msgid ""
+#~ "In order to make Checkmk more consistent, the descriptions of several "
+#~ "services have been renamed in newer Checkmk versions. One example is the "
+#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
+#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
+#~ "implications - including existing rules, performance data and "
+#~ "availability history - these renamings are disabled per default for "
+#~ "existing installations. Here you can switch to the new descriptions for "
+#~ "selected check types"
+#~ msgstr ""
+#~ "Afin de rendre Checkmk plus cohérent, les descriptions de plusieurs "
+#~ "services ont été renommées dans les nouvelles versions de Checkmk. Un "
+#~ "exemple est celui des services de système de fichiers qui ont été "
+#~ "renommés de <tt>fs_</tt> en <tt>Filesystem</tt>. Mais comme le renommage "
+#~ "de services existants a de nombreuses implications - y compris les règles "
+#~ "existantes, les données de performance et l'historique de la "
+#~ "disponibilité - ces renommages sont désactivés par défaut pour les "
+#~ "installations existantes. Ici, vous pouvez basculer vers les nouvelles "
+#~ "descriptions pour les types de contrôle sélectionnés"
+
 #, python-format
 #~ msgid "Core files (config, state and history) from var/check_mk/core.%s"
 #~ msgstr ""
@@ -90982,14 +90995,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 #~ msgstr ""
 #~ "Checkmk Managed Services Edition ne peut être connecté à d'autres sites "
 #~ "qu'en utilisant le CME."
-
-#, fuzzy
-#~ msgid "NetApp Snapshot Volumes"
-#~ msgstr "Réserve d'instantanés NetApp"
-
-#, fuzzy
-#~ msgid "Use the new service name"
-#~ msgstr "Nom du service"
 
 #~ msgid "show only problems"
 #~ msgstr "ne montrer que les problèmes"

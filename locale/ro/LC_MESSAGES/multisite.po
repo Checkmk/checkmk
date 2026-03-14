@@ -34232,25 +34232,6 @@ msgstr ""
 "Asigurați-vă că ați <i>Activate Changes</i> înainte de acel moment."
 
 msgid ""
-"In order to make Checkmk more consistent, the descriptions of several "
-"services have been renamed in newer Checkmk versions. One example is the "
-"filesystem services that have been renamed from <tt>fs_</tt> into "
-"<tt>Filesystem</tt>. But since renaming of existing services has many "
-"implications - including existing rules, performance data and availability "
-"history - these renamings are disabled per default for existing "
-"installations. Here you can switch to the new descriptions for selected "
-"check types"
-msgstr ""
-"Pentru a face Checkmk mai coerent, descrierile mai multor servicii au fost "
-"redenumite în versiunile mai noi ale Checkmk. Un exemplu sunt serviciile de "
-"sistem de fișiere care au fost redenumite din <tt>fs_</tt> în "
-"<tt>Filesystem</tt>. Dar, deoarece redenumirea serviciilor existente are "
-"multe implicații - inclusiv regulile existente, datele de performanță și "
-"istoricul disponibilității - aceste redenumiri sunt dezactivate în mod "
-"implicit pentru instalațiile existente. Aici puteți trece la noile descrieri "
-"pentru tipurile de verificări selectate"
-
-msgid ""
 "In order to monitor S3 request metrics, you have to enable request metrics "
 "in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
 "latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. This "
@@ -43675,6 +43656,10 @@ msgid "NetApp Qtree discovery"
 msgstr "Descoperirea Qtree de la NetApp"
 
 msgid "NetApp Snapshot Reserve"
+msgstr "Rezerva de instantanee NetApp"
+
+#, fuzzy
+msgid "NetApp Snapshot Volumes"
 msgstr "Rezerva de instantanee NetApp"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
@@ -80995,6 +80980,15 @@ msgstr "Utilizați aliasul multipath ca nume de serviciu, dacă este setat unul.
 msgid "Use the name specified in the ESX system"
 msgstr "Utilizați numele specificat în sistemul ESX"
 
+#, fuzzy
+msgid "Use the new service name"
+msgstr "Denumirea serviciului"
+
+msgid ""
+"Use the new service name. Disabling this option does not work for services "
+"where the monitored SVM or volume names contain colons"
+msgstr ""
+
 msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
 "Folosiți numele de utilizator ntopng, așa cum a fost configurat în Setări "
@@ -90294,6 +90288,25 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#~ msgid ""
+#~ "In order to make Checkmk more consistent, the descriptions of several "
+#~ "services have been renamed in newer Checkmk versions. One example is the "
+#~ "filesystem services that have been renamed from <tt>fs_</tt> into "
+#~ "<tt>Filesystem</tt>. But since renaming of existing services has many "
+#~ "implications - including existing rules, performance data and "
+#~ "availability history - these renamings are disabled per default for "
+#~ "existing installations. Here you can switch to the new descriptions for "
+#~ "selected check types"
+#~ msgstr ""
+#~ "Pentru a face Checkmk mai coerent, descrierile mai multor servicii au "
+#~ "fost redenumite în versiunile mai noi ale Checkmk. Un exemplu sunt "
+#~ "serviciile de sistem de fișiere care au fost redenumite din <tt>fs_</tt> "
+#~ "în <tt>Filesystem</tt>. Dar, deoarece redenumirea serviciilor existente "
+#~ "are multe implicații - inclusiv regulile existente, datele de performanță "
+#~ "și istoricul disponibilității - aceste redenumiri sunt dezactivate în mod "
+#~ "implicit pentru instalațiile existente. Aici puteți trece la noile "
+#~ "descrieri pentru tipurile de verificări selectate"
+
 #, python-format
 #~ msgid "Core files (config, state and history) from var/check_mk/core.%s"
 #~ msgstr "Fișiere de bază (config, state și history) din var/check_mk/core.%s"
@@ -90314,14 +90327,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr ""
 #~ "Checkmk Managed Services Edition poate fi conectat numai cu alte site-uri "
 #~ "care utilizează CME."
-
-#, fuzzy
-#~ msgid "NetApp Snapshot Volumes"
-#~ msgstr "Rezerva de instantanee NetApp"
-
-#, fuzzy
-#~ msgid "Use the new service name"
-#~ msgstr "Denumirea serviciului"
 
 #~ msgid "show only problems"
 #~ msgstr "afiseaza numai probleme"

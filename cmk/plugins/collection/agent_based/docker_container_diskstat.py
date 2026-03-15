@@ -117,6 +117,10 @@ def parse_docker_container_diskstat(
             continue
         filtered_result[device_name] = data
 
+    if not filtered_result:
+        return diskstat.NoIOSection(
+            message="No disk IO activity detected for the monitored container."
+        )
     return filtered_result
 
 

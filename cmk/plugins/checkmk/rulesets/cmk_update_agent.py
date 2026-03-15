@@ -55,16 +55,6 @@ def _migrate_activated(value: object) -> str:
     raise ValueError(value)
 
 
-def _migrate_protocol(value: object) -> tuple[str, Mapping[str, object]]:
-    match value:
-        case ("http", _) | "http":
-            return "http", {}
-        case ("https", _) | "https":
-            return "https", {}
-        case _:
-            raise ValueError(value)
-
-
 def _migrate_proxy_old_format(
     value: object,
 ) -> tuple[str, object]:
@@ -123,20 +113,17 @@ def _parse_proxy_protocol(
             return "http", None
 
 
-def _migrate_edition(value: object) -> tuple[str, None]:
-    if isinstance(value, str) and value in ("64bit", "32bit", "bit32", "script"):
+def _migrate_edition(value: object) -> str:
+    if isinstance(value, str):
         match value:
             case "64bit":
-                return "bit64", None
+                return "bit64"
             case "32bit" | "bit32" | "script":
                 # 32bit binaries are no longer supported, migrate to script since that is the
                 # only alternative for 32bit systems.
-                return "script", None
+                return "script"
             case _:
                 raise ValueError(value)
-
-    if isinstance(value, Sequence):
-        return value[0], None
 
     raise ValueError(value)
 
@@ -155,16 +142,6 @@ def _migrate_certificates(value: object) -> Sequence[Any]:
                 result.append((str(name), str(mime_type), bytes(content)))
         return result
     return []
-
-
-def _migrate_signature_keys(value: object) -> Sequence[str]:
-    match value:
-        case list():
-            return value
-        case dict():
-            return list(value.values())
-        case _:
-            raise TypeError(value)
 
 
 def _valuespec_proxy_settings() -> CascadingSingleChoice:
@@ -250,8 +227,8 @@ def _valuespec_proxy_settings() -> CascadingSingleChoice:
     )
 
 
-def _valuespec_editions() -> CascadingSingleChoice:
-    return CascadingSingleChoice(
+def _valuespec_editions() -> SingleChoice:
+    return SingleChoice(
         title=Title("Executable format (Linux)"),
         help_text=Help(
             "Optionally choose the format of the agent updater executable file. Relevant for Linux only."
@@ -262,15 +239,13 @@ def _valuespec_editions() -> CascadingSingleChoice:
             " <b>Python script:</b> Python3 with modules _cryptography_, _requests_ and _pysocks_ (for SOCKS proxy support)."
         ),
         elements=[
-            CascadingSingleChoiceElement(
+            SingleChoiceElement(
                 name="bit64",
                 title=Title("packaged binary"),
-                parameter_form=FixedValue(value=None),
             ),
-            CascadingSingleChoiceElement(
+            SingleChoiceElement(
                 name="script",
                 title=Title("Python script"),
-                parameter_form=FixedValue(value=None),
             ),
         ],
         prefill=DefaultValue("bit64"),
@@ -283,7 +258,12 @@ def _valuespec_server_data() -> Dictionary:
         title=Title("Update server information"),
         help_text=Help(
             "Optionally provide protocol, server and site for agent registration "
-            "and/or updates. If not entered here, you can provide it on registration."
+            "and/or updates. If not entered here, you can provide it on registration.<br>"
+            "<br>"
+            "<i>New with Checkmk 2.5</i>: The agent updater registration will be triggered by the "
+            "agent controller registration by default. This means that these settings won't apply "
+            "to the agent updater registration.<br>"
+            "You can change the behavior below under <i>Registration</i>."
         ),
         elements={
             "usage": DictElement(
@@ -293,7 +273,7 @@ def _valuespec_server_data() -> Dictionary:
                     elements=[
                         SingleChoiceElement(
                             name="registration",
-                            title=Title("Registration and fallback"),
+                            title=Title("Manual registration and fallback"),
                         ),
                         SingleChoiceElement(
                             name="always",
@@ -301,11 +281,12 @@ def _valuespec_server_data() -> Dictionary:
                         ),
                     ],
                     help_text=Help(
-                        'In case of "Registration and fallback", the agent updater '
-                        "will use this information only on registration and rely on "
+                        "In case of <i>Manual registration and fallback</i>, the agent updater "
+                        "will use this information only on registration with `cmk-update-agent register`, and rely on "
                         "the update URL provided by the Agent Bakery afterwards. If the "
                         "connection fails, the agent updater will additionally "
-                        'use this information as a fallback. In case of "Use for all connections", '
+                        "use this information as a fallback.<br>"
+                        "In case of Use <i>for all connections</i>, "
                         "the agent updater will ignore the update URL provided by the Agent Bakery."
                     ),
                     prefill=DefaultValue("registration"),
@@ -317,9 +298,9 @@ def _valuespec_server_data() -> Dictionary:
                     title=Title("DNS name or IP address of update server"),
                     help_text=Help(
                         "This is the name/address at which the agent "
-                        "can reach your central monitoring server via HTTPS or HTTP. "
+                        "can reach your central monitoring server via HTTPS or HTTP.<br>"
                         "<b>Note</b>: If you are using HTTPS then this name must "
-                        "exactly match the common name of the server certificate."
+                        "be listed in the Subject Alternative Names (SANs) of the server certificate."
                     ),
                 ),
             ),
@@ -338,28 +319,28 @@ def _valuespec_server_data() -> Dictionary:
             ),
             "protocol": DictElement(
                 required=True,
-                parameter_form=CascadingSingleChoice(
+                parameter_form=SingleChoice(
                     title=Title("Protocol to use for fetching updates"),
                     help_text=Help(
-                        "HTTPS is the suggested setting here. It requires a valid SSL "
+                        "Optional. The agent updater will try to auto detect the protocol, "
+                        "first tryping HTTPS and then HTTP. You can use this setting to force one "
+                        "of the two protocols.<br>"
+                        "HTTPS is highly recommended. It requires a valid SSL "
                         "setup of your Apache web server on your monitoring server, however. "
                         "When using HTTP then confidential data that is contained in the baked "
                         "agents could be spied out (such as passwords for plug-ins)."
                     ),
                     elements=[
-                        CascadingSingleChoiceElement(
+                        SingleChoiceElement(
                             name="http",
                             title=Title("HTTP"),
-                            parameter_form=FixedValue(value=None),
                         ),
-                        CascadingSingleChoiceElement(
+                        SingleChoiceElement(
                             name="https",
                             title=Title("HTTPS"),
-                            parameter_form=FixedValue(value=None),
                         ),
                     ],
                     prefill=DefaultValue("https"),
-                    migrate=_migrate_protocol,
                 ),
             ),
         },
@@ -509,7 +490,6 @@ def _valuespec_signature_keys() -> MultipleChoiceExtended:
             for key in sorted(active_config.agent_signature_keys.values(), key=lambda k: k.alias)
         ],
         custom_validate=(validators.LengthInRange(min_value=1),),
-        migrate=_migrate_signature_keys,
     )
 
 

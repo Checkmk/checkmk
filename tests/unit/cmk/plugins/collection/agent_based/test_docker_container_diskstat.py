@@ -30,6 +30,7 @@ from cmk.plugins.collection.agent_based.docker_container_diskstat_cgroupv2 impor
     agent_section_docker_container_diskstat_cgroupv2,
     DockerDiskstatParser,
 )
+from cmk.plugins.lib.diskstat import NoIOSection
 
 
 @pytest.fixture
@@ -242,6 +243,25 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60 = [
     ],
 ]
 
+# io_service_bytes_recursive is present (not null) but all values are zero.
+# In this case no device passes the zero-counter filter, so the parser must
+# return NoIOSection instead of an empty dict - otherwise the check goes UNKNOWN.
+MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_ALL_ZEROS = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
+    ],
+    [
+        '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 0},'
+        ' {"major": 8, "minor": 0, "op": "write", "value": 0}],'
+        ' "io_serviced_recursive": null, "io_queue_recursive": null,'
+        ' "io_service_time_recursive": null, "io_wait_time_recursive": null,'
+        ' "io_merged_recursive": null, "io_time_recursive": null,'
+        ' "sectors_recursive": null, "time": 1640097369.0,'
+        ' "names": {"8:0": "sda"}}'
+    ],
+]
+
 
 def test_parser() -> None:
     # we had a little discussion about instance variables vs. class variable
@@ -382,3 +402,10 @@ def test_docker_container_diskstat_discovery(
             [discovery_params], section_diskstat=section_0_seconds, section_multipath=None
         )
     ) == [Service(item=expected_item)]
+
+
+def test_docker_container_diskstat_all_zeros_returns_no_io_section() -> None:
+    result = agent_section_docker_container_diskstat.parse_function(
+        MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_ALL_ZEROS
+    )
+    assert isinstance(result, NoIOSection)

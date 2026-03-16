@@ -267,6 +267,32 @@ async function checkIfMenuActive(): Promise<void> {
   }, 300)
 }
 
+const showNotAllowedMessage = computed((): boolean => {
+  /**
+   * If all sites (with changes) have at least one foreign change and the user
+   * does not have permission to activate foreign changes, show the message.
+   */
+
+  if (props.user_has_activate_foreign) {
+    return false
+  }
+
+  const { sites, pendingChanges } = sitesAndChanges.value
+  const sitesWithPendingChanges = sites.filter((site) => site.changes > 0)
+
+  if (sitesWithPendingChanges.length === 0) {
+    return false
+  }
+
+  return sitesWithPendingChanges.every((site) =>
+    pendingChanges.some(
+      (change) =>
+        change.foreignChange &&
+        (change.whichSites.includes(site.siteId) || change.whichSites.includes('All sites'))
+    )
+  )
+})
+
 const userCanActivateSelectedSites = computed((): boolean => {
   return selectedSites.value.every((siteId) => {
     const site = sitesAndChanges.value.sites.find((s) => s.siteId === siteId)
@@ -417,7 +443,7 @@ onMounted(async () => {
           key: 'changes-info'
         }"
       />
-      <CmkAlertBox v-if="!userCanActivateSelectedSites" variant="warning" class="cmk-alert-box">
+      <CmkAlertBox v-if="showNotAllowedMessage" variant="warning" class="cmk-alert-box">
         {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
       </CmkAlertBox>
 

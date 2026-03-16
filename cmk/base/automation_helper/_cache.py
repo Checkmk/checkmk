@@ -10,6 +10,8 @@ from typing import Final, Self
 import redis
 from redis.exceptions import ConnectionError
 
+from cmk.base.automation_helper._log import LOGGER
+
 LAST_DETECTED_CHANGE_TOPIC: Final = "last_change_detected"
 
 
@@ -40,7 +42,11 @@ class Cache:
             ) from err
 
     def reload_required(self, last_reload: float) -> bool:
-        return last_reload < self.get_last_detected_change()
+        try:
+            return last_reload < self.get_last_detected_change()
+        except CacheError:
+            LOGGER.warning("[cache] Redis unavailable, assuming reload required")
+            return True
 
 
 class CacheError(Exception): ...

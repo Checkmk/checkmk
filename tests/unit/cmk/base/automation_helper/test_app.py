@@ -445,7 +445,11 @@ class FailingCache(Cache):
 
 
 def test_automation_cache_error_on_stale_config() -> None:
-    """Test that a CacheError during checking for config changes results in a 503 response."""
+    """Test that a CacheError during reload_required is handled gracefully.
+
+    When Redis is unavailable, reload_required returns True (force reload) instead
+    of propagating CacheError. The automation should succeed, not return a 503.
+    """
 
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
@@ -458,7 +462,9 @@ def test_automation_cache_error_on_stale_config() -> None:
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
-    assert resp.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
-    data = resp.json()
-    assert data["error_code"] == "CACHE_ERROR"
-    assert "Automation cache error: Failed to connect to Redis" in data["detail"]
+    assert resp.status_code == status.HTTP_200_OK
+    assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
+        serialized_result_or_error_code="dummy_serialized",
+        stdout="stdout_success",
+        stderr="stderr_success",
+    )

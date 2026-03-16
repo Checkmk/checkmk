@@ -62,8 +62,17 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
 def load_and_transform(logger: Logger) -> AllRulesets:
     all_rulesets = AllRulesets.load_all_rulesets()
 
-    if not config.use_new_descriptions_for.get("http", False):
-        _force_old_http_service_description(all_rulesets)
+    match config.use_new_descriptions_for:
+        case list(enabled_plugins):
+            if "http" not in enabled_plugins:
+                _force_old_http_service_description(all_rulesets)
+        case dict(enabled_mapping):
+            if not enabled_mapping.get("http", False):
+                _force_old_http_service_description(all_rulesets)
+        case _:
+            raise ValueError(
+                f"Invalid format for config.use_new_descriptions_for: {type(config.use_new_descriptions_for)}"
+            )
 
     _delete_deprecated_wato_rulesets(
         logger,

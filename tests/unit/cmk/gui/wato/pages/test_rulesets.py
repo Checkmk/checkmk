@@ -310,13 +310,10 @@ class TestRuleConditionRenderer:
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)
 
-    @pytest.mark.xfail(
-        reason="Crash report group 3630: HostNameValidationError for host specs with wildcards"
-    )
     @pytest.mark.usefixtures("folder_lookup")
     def test_render_host_condition_text_wildcard_host_spec(self) -> None:
         # Host specs in rule conditions can contain wildcards (e.g. "AP-SEDE-TCOTILLAS*"),
-        # but HostName() rejects them, causing a crash when rendering the rule listing.
+        # but HostName() rejects them. Ensure this is rendered gracefully instead of crashing.
         result = RuleConditionRenderer()._render_host_condition_text(["AP-SEDE-TCOTILLAS*"])
         assert result == HTML.without_escaping("Host name is <b>AP-SEDE-TCOTILLAS*</b>")
 

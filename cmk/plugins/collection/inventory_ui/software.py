@@ -468,6 +468,7 @@ node_software_applications_cisco_meraki_licenses = Node(
     path=["software", "applications", "cisco_meraki", "licenses"],
     title=Title("Licenses"),
     table=Table(
+        view=View(name="invmerakilicenses", title=Title("Licenses")),
         columns={
             "org_id": TextField(Title("Organization ID")),
             "org_name": TextField(Title("Organization name")),
@@ -480,7 +481,7 @@ node_software_applications_cisco_meraki_licenses = Node(
             "security_mx_count": NumberField(Title("Security/SD-WAN (MX)")),
             "systems_manager_sm_count": NumberField(Title("Systems manager (SM)")),
             "other_count": NumberField(Title("Other")),
-        }
+        },
     ),
 )
 
@@ -489,6 +490,7 @@ node_software_applications_cisco_meraki_networks = Node(
     path=["software", "applications", "cisco_meraki", "networks"],
     title=Title("Networks"),
     table=Table(
+        view=View(name="invmerakinetworks", title=Title("Networks")),
         columns={
             "org_id": TextField(Title("Organization ID")),
             "org_name": TextField(Title("Organization name")),
@@ -501,7 +503,7 @@ node_software_applications_cisco_meraki_networks = Node(
             "enrollment_string": TextField(Title("Enrollment string")),
             "is_bound_to_template": TextField(Title("Is bound to template")),
             "url": TextField(Title("URL")),
-        }
+        },
     ),
 )
 
@@ -510,6 +512,7 @@ node_software_applications_cisco_meraki_organisations = Node(
     path=["software", "applications", "cisco_meraki", "organisations"],
     title=Title("Organisations"),
     table=Table(
+        view=View(name="invmerakiorganisations", title=Title("Organisations")),
         columns={
             "org_id": TextField(Title("Organization ID")),
             "org_name": TextField(Title("Organization name")),
@@ -517,7 +520,7 @@ node_software_applications_cisco_meraki_organisations = Node(
             "licensing_model": TextField(Title("Licensing model")),
             "cloud_region": TextField(Title("Cloud region")),
             "url": TextField(Title("URL")),
-        }
+        },
     ),
 )
 

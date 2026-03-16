@@ -163,6 +163,6 @@ check_plugin_cisco_meraki_org_appliance_uplinks = CheckPlugin(
             "not_connected": State.WARN.value,
             "failed": State.CRIT.value,
         },
-        show_traffic=True,
+        show_traffic=False,
     ),
 )

@@ -32,6 +32,6 @@ rule_spec_cisco_meraki_wireless_device_status_ssids = CheckParameters(
     name="cisco_meraki_org_wireless_device_statuses_ssids",
     topic=Topic.NETWORKING,
     parameter_form=_parameter_form,
-    title=Title("Cisco Meraki wireless device statuses"),
+    title=Title("Cisco Meraki wireless SSID statuses"),
     condition=HostAndItemCondition(item_title=Title("SSID")),
 )

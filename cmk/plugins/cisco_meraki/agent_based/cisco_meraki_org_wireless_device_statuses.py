@@ -37,7 +37,7 @@ class BasicServiceSet(BaseModel, frozen=True):
     ssid_number: int = Field(alias="ssidNumber")
     enabled: bool
     band: str
-    channel: int
+    channel: int | None = None
     channel_width: str | None = Field(default=None, alias="channelWidth")
     power: str | None = None
     visible: bool
@@ -141,7 +141,8 @@ def check_wireless_device_statuses_bands(item: str, section: Section) -> CheckRe
     yield Result(state=State.OK, summary=f"Power: {ssid.power}")
     yield Result(state=State.OK, notice=f"Broadcasting: {ssid.broadcasting}")
 
-    yield Metric(name="channel", value=ssid.channel)
+    if ssid.channel:
+        yield Metric(name="channel", value=ssid.channel)
 
     if ssid.normalized_channel_width:
         yield Metric(name="channel_width", value=ssid.normalized_channel_width)

@@ -22,7 +22,7 @@ def _parameter_form() -> Dictionary:
         elements={
             "levels_upper": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Appliance utilization"),
+                    title=Title("Utilization"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Percentage(),
                     prefill_fixed_levels=DefaultValue(value=(60, 80)),
@@ -51,6 +51,6 @@ rule_spec_cisco_meraki_org_appliance_performance = CheckParameters(
     name="cisco_meraki_org_appliance_performance",
     topic=Topic.NETWORKING,
     parameter_form=_parameter_form,
-    title=Title("Cisco Meraki appliance utilization"),
+    title=Title("Cisco Meraki appliance performance"),
     condition=HostCondition(),
 )

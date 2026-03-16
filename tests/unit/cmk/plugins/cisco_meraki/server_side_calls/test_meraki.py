@@ -137,6 +137,23 @@ HOST_CONFIG = HostConfig(
             ],
             id="Organisation IDs",
         ),
+        pytest.param(
+            {
+                "api_key": Secret(0),
+                "sections": [],
+                "orgs": [],
+            },
+            [
+                SpecialAgentCommand(
+                    command_arguments=[
+                        "testhost",
+                        "--apikey-id",
+                        Secret(0),
+                    ]
+                )
+            ],
+            id="Empty sequences are ignored",
+        ),
     ],
 )
 def test_argument_parsing(

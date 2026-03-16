@@ -70,7 +70,8 @@ def _parameter_form() -> Dictionary:
                     ),
                     value=True,
                     label=Label("Bandwidth monitoring enabled"),
-                )
+                ),
+                required=False,
             ),
         },
     )

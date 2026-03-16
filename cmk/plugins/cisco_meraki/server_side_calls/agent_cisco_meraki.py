@@ -63,11 +63,11 @@ def agent_cisco_meraki_arguments(
     if params.region:
         args += ["--region", params.region]
 
-    if params.sections is not None:
+    if params.sections:
         args.append("--sections")
         args += [s.replace("_", "-") for s in params.sections]
 
-    if params.orgs is not None:
+    if params.orgs:
         args.append("--orgs")
         args += [replace_macros(org, host_config.macros) for org in params.orgs]
 

@@ -140,7 +140,7 @@ class TestWirelessDeviceStatusesBands:
             basicServiceSets=[
                 {
                     "band": "2.4 GHz",
-                    "channel": 11,
+                    "channel": None,
                     "broadcasting": True,
                     "channelWidth": None,
                     "power": None,
@@ -153,11 +153,10 @@ class TestWirelessDeviceStatusesBands:
 
         value = list(check_wireless_device_statuses_bands("2.4 GHz", section))
         expected = [
-            Result(state=State.OK, summary="Channel: 11"),
+            Result(state=State.OK, summary="Channel: None"),
             Result(state=State.OK, summary="Channel width: None"),
             Result(state=State.OK, summary="Power: None"),
             Result(state=State.OK, notice="Broadcasting: True"),
-            Metric("channel", 11.0),
         ]
 
         assert value == expected

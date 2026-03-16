@@ -9,6 +9,7 @@ import { computed, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkCollapsible from '@/components/CmkCollapsible'
 import CmkCollapsibleTitle from '@/components/CmkCollapsible/CmkCollapsibleTitle.vue'
@@ -32,6 +33,7 @@ const props = defineProps<{
   closeButtonTitle: TranslatedString
   hostName: string
   userSettingsUrl: string
+  agentReceiverPortIsDefault: boolean
 }>()
 
 const emit = defineEmits(['close'])
@@ -87,6 +89,13 @@ function reset() {
           <template v-if="ott !== null">
             <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
             <CmkCode :code_txt="regAgentOttCmd" class="code" />
+            <CmkAlertBox v-if="agentReceiverPortIsDefault" variant="warning" size="small">
+              {{
+                _t(
+                  'The agent receiver port could not be determined from the remote site. The command uses the default port (8000). Please adjust the --server port if your site uses a different agent receiver port.'
+                )
+              }}
+            </CmkAlertBox>
           </template>
         </div>
       </div>

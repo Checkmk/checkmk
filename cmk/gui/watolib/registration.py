@@ -185,6 +185,7 @@ def register(
 def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:
     clss: Sequence[type[automation_commands.AutomationCommand]] = (
         automation_commands.AutomationPing,
+        automation_commands.AutomationGetAgentReceiverPort,
         automatic_host_removal.AutomationHostsForAutoRemoval,
         AutomationRenameHostsUUIDLink,
     )

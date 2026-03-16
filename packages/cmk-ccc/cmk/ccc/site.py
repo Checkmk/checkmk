@@ -56,6 +56,11 @@ def get_apache_port(omd_root: Path) -> int:
     return 80 if port is None else int(port)
 
 
+def get_agent_receiver_port(omd_root: Path) -> int:
+    port = get_omd_config(omd_root).get("CONFIG_AGENT_RECEIVER_PORT")
+    return 8000 if port is None else int(port)
+
+
 def resource_attributes_from_config(omd_root: Path) -> dict[str, str]:
     """Get site specific tracing resource attributes
 

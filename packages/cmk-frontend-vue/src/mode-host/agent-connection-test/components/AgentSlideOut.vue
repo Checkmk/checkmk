@@ -36,6 +36,7 @@ const props = defineProps<{
   agentInstalled: boolean
   isPushMode: boolean
   hostName: string
+  agentReceiverPortIsDefault: boolean
 }>()
 
 const { _t } = usei18n()
@@ -252,6 +253,7 @@ function getInitStep() {
             :close-button-title="closeButtonTitle"
             :host-name="hostName"
             :user-settings-url="userSettingsUrl"
+            :agent-receiver-port-is-default="agentReceiverPortIsDefault"
             @close="close"
           ></RegisterAgent>
 

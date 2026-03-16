@@ -69,6 +69,7 @@ def test_registered_automation_commands() -> None:
         "fetch-background-job-snapshot",
         "fetch-quick-setup-stage-action-result",
         "finalize-certificate-rotation",
+        "get-agent-receiver-port",
         "get-config-sync-state",
         "hosts-for-auto-removal",
         "network-scan",

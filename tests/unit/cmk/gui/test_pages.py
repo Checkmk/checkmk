@@ -147,6 +147,7 @@ def test_registered_pages() -> None:
         "widget_iframe_sidebar",
         "widget_iframe_view",
         "wato",
+        "wato_ajax_agent_receiver_port",
         "wato_ajax_diag_cmk_agent",
         "wato_ajax_diag_host",
         "wato_ajax_execute_check",

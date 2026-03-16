@@ -8,6 +8,7 @@ import {
   type AgentInstallCmds,
   type AgentRegistrationCmds
 } from 'cmk-shared-typing/typescript/agent_slideout'
+import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -23,6 +24,8 @@ const props = defineProps<{
   hostName: string
   siteId: string
   siteServer: string
+  agentReceiverPort: number
+  agentReceiverPortIsDefault: boolean
   agentInstallCmds: AgentInstallCmds
   agentRegistrationCmds: AgentRegistrationCmds
   closeButtonTitle: TranslatedString
@@ -47,6 +50,20 @@ const close = () => {
   emit('close')
 }
 
+function registrationServer(): string {
+  let host: string
+  if (props.siteServer) {
+    try {
+      host = new URL(props.siteServer).hostname
+    } catch {
+      host = props.siteServer
+    }
+  } else {
+    host = window.location.hostname
+  }
+  return `${host}:${props.agentReceiverPort}`
+}
+
 function replaceMacros(cmd: string | undefined, isRegistration: boolean) {
   if (!cmd) {
     return ''
@@ -54,7 +71,7 @@ function replaceMacros(cmd: string | undefined, isRegistration: boolean) {
 
   cmd = cmd.replace(/{{HOSTNAME}}/g, props.hostName ?? '').replace(/{{SITE}}/g, props.siteId ?? '')
   if (isRegistration) {
-    return cmd.replace(/{{SERVER}}/g, props.siteServer || window.location.host)
+    return cmd.replace(/{{SERVER}}/g, registrationServer())
   }
 
   return cmd.replace(
@@ -63,16 +80,16 @@ function replaceMacros(cmd: string | undefined, isRegistration: boolean) {
   )
 }
 
-const tabs: AgentSlideOutTabs[] = [
+const tabs = computed<AgentSlideOutTabs[]>(() => [
   {
     id: 'windows',
     title: _t('Windows'),
     installMsg: _t(
-      'Run this command on your Windows host to download and install the Checkmk agent. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”)'
+      'Run this command on your Windows host to download and install the Checkmk agent. Please make sure to run this command with sufficient permissions (e.g. "Run as Administrator")'
     ),
     installCmd: replaceMacros(props.agentInstallCmds.windows, false),
     registrationMsg: _t(
-      'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. “Run as Administrator”).'
+      'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. "Run as Administrator").'
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.windows, true)
   },
@@ -141,7 +158,7 @@ const tabs: AgentSlideOutTabs[] = [
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.aix, true)
   }
-]
+])
 </script>
 
 <template>
@@ -162,6 +179,7 @@ const tabs: AgentSlideOutTabs[] = [
     :agent-installed="agentInstalled"
     :host-name="hostName"
     :is-push-mode="isPushMode"
+    :agent-receiver-port-is-default="agentReceiverPortIsDefault"
     @close="close"
   />
 </template>

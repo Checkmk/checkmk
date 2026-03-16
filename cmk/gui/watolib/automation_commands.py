@@ -12,6 +12,7 @@ from collections.abc import Mapping
 
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import get_agent_receiver_port
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.utils import paths
@@ -81,3 +82,14 @@ class AutomationPing(AutomationCommand[None]):
             "license_state": get_license_state().name,
             "omd_status": self._get_omd_status(),
         }
+
+
+class AutomationGetAgentReceiverPort(AutomationCommand[None]):
+    def command_name(self) -> str:
+        return "get-agent-receiver-port"
+
+    def get_request(self, config: Config, request: Request) -> None:
+        return None
+
+    def execute(self, _unused_request: None) -> int:
+        return get_agent_receiver_port(paths.omd_root)

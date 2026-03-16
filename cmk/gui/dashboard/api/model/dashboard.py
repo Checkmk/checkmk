@@ -16,7 +16,7 @@ from pydantic_core import ErrorDetails
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard.page_edit_dashboard import dashboard_info_handler
 from cmk.gui.dashboard.token_util import get_dashboard_auth_token
-from cmk.gui.dashboard.type_defs import DashboardConfig, DashboardRelativeGridLayoutSpec
+from cmk.gui.dashboard.type_defs import DashboardConfig, DashboardRelativeGridLayoutSpec, WidgetId
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
@@ -289,9 +289,13 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
     )
 
     @abstractmethod
+    def _iter_widgets_with_ids(self) -> Iterable[tuple[WidgetId, BaseWidgetRequest]]:
+        """Iterate over all widgets with their IDs."""
+        pass
+
     def _iter_widgets(self) -> Iterable[BaseWidgetRequest]:
         """Iterate over all widgets that are part of this dashboard."""
-        pass
+        return (widget for _id, widget in self._iter_widgets_with_ids())
 
     @abstractmethod
     def to_internal(
@@ -352,7 +356,10 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
             mtime=int(dt.datetime.now(tz=dt.UTC).timestamp()),
             show_title=self.general_settings.title.render,
             mandatory_context_filters=self.filter_context.mandatory_context_filters,
-            dashlets=[widget.to_internal() for widget in self._iter_widgets()],
+            widgets={
+                widget_id: widget.to_internal()
+                for widget_id, widget in self._iter_widgets_with_ids()
+            },
             embedded_views=updated_embedded_views,
             public_token_id=public_token_id,
         )
@@ -409,8 +416,8 @@ class RelativeGridDashboardRequest(BaseDashboardRequest):
             raise RequestDataValidator.format_error_details(errors)
 
     @override
-    def _iter_widgets(self) -> Iterable[BaseWidgetRequest]:
-        return self.widgets.values()
+    def _iter_widgets_with_ids(self) -> Iterable[tuple[WidgetId, BaseWidgetRequest]]:
+        return self.widgets.items()
 
     @override
     def to_internal(
@@ -441,8 +448,8 @@ class RelativeGridDashboardResponse(BaseDashboardResponse):
             general_settings=DashboardGeneralSettings.from_internal(dashboard),
             filter_context=DashboardFilterContextResponse.from_internal(dashboard),
             widgets={
-                f"{dashboard['name']}-{idx}": RelativeGridWidgetResponse.from_internal(dashlet)
-                for idx, dashlet in enumerate(dashboard["dashlets"])
+                widget_id: RelativeGridWidgetResponse.from_internal(widget)
+                for widget_id, widget in dashboard["widgets"].items()
             },
             layout=DashboardRelativeGridLayout(type="relative_grid"),
         )

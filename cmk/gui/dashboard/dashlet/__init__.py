@@ -5,7 +5,6 @@
 
 from cmk.gui.dashboard.type_defs import (
     DashletConfig,
-    DashletId,
     DashletPosition,
     DashletRefreshAction,
     DashletRefreshInterval,
@@ -24,7 +23,6 @@ from .figure_dashlet import ABCFigureDashlet
 from .registry import dashlet_registry, DashletRegistry
 
 __all__ = [
-    "DashletId",
     "DashletRefreshInterval",
     "DashletRefreshAction",
     "DashletSize",

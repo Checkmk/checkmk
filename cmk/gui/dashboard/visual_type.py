@@ -33,7 +33,7 @@ from .dashlet import (
 )
 from .metadata import dashboard_uses_relative_grid
 from .store import (
-    add_dashlet,
+    add_widget,
     get_all_dashboards,
     get_permitted_dashboards,
     get_permitted_dashboards_to_edit,
@@ -156,7 +156,7 @@ class VisualTypeDashboards(VisualType):
             copy_view_into_dashlet(
                 request,
                 dashlet_spec,
-                len(dashboard["dashlets"]),
+                len(dashboard["widgets"]),
                 view_name,
                 add_context=context,
             )
@@ -165,7 +165,7 @@ class VisualTypeDashboards(VisualType):
                 dashlet_spec
             )
             dashboard.setdefault("embedded_views", {})[embedded_view_dashlet["name"]] = view_spec
-            add_dashlet(embedded_view_dashlet, dashboard)
+            add_widget(embedded_view_dashlet, dashboard)
             # Directly go to the dashboard. We send the URL as an answer to the AJAX request
             response.set_data("OK dashboard.py?name=" + target_visual_name)
             return None
@@ -179,7 +179,7 @@ class VisualTypeDashboards(VisualType):
             # but this is not an optional value. Set it to 25h initially.
             dashlet_spec.setdefault("timerange", "25h")
 
-        add_dashlet(dashlet_spec, dashboard)
+        add_widget(dashlet_spec, dashboard)
 
         # Directly go to the dashboard. We send the URL as an answer to the AJAX request
         response.set_data("OK dashboard.py?name=" + target_visual_name)
@@ -231,7 +231,7 @@ class VisualTypeDashboards(VisualType):
         initial_position = constraints.initial_position
         # Add a static vertical offset to reduce the chance of placing the new widget in a way
         # where it covers existing widgets
-        y_offset = 5 if len(dashboard["dashlets"]) > 0 else 0
+        y_offset = 5 if len(dashboard["widgets"]) > 0 else 0
         dashlet_spec["position"] = (initial_position.x, initial_position.y + y_offset)
         dashlet_spec["size"] = constraints.initial_size.to_tuple()
 

@@ -16,9 +16,9 @@ def test_idor_protection_widget_not_in_dashboard() -> None:
     fake_dashboard = {
         "name": "test_dashboard",
         "owner": "cmkadmin",
-        "dashlets": [
-            {"type": "pnpgraph", "context": {}},
-        ],
+        "widgets": {
+            "test_dashboard-0": {"type": "pnpgraph", "context": {}},
+        },
     }
     with pytest.raises(InvalidWidgetError):
         get_dashboard_widget_by_id(fake_dashboard, "other_dashboard-0")  # type: ignore[arg-type]

@@ -303,7 +303,7 @@ describe('ModeCreateRelayApp', () => {
     })
   })
 
-  test('detects duplicate relay alias', async () => {
+  test('shows warning for duplicate relay alias but allows proceeding', async () => {
     // Mock existing relay with the same alias
     getRelayCollectionSpy.mockResolvedValue([
       {
@@ -325,9 +325,37 @@ describe('ModeCreateRelayApp', () => {
     // Try to proceed
     await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
 
-    await waitFor(() => {
-      expect(screen.getByText('This relay alias is already in use')).toBeInTheDocument()
-    })
+    // Warning is shown but navigation proceeds to Install Podman
+    await screen.findByText('Install Podman')
+    expect(screen.getByText('This relay alias is already in use')).toBeInTheDocument()
+  })
+
+  test('allows proceeding with duplicate alias after navigating back', async () => {
+    render(ModeCreateRelayApp, { props: mockProps })
+
+    // Navigate forward to Install Podman step
+    await navigateToInstallPodmanStep('my-relay')
+
+    // Simulate the relay now existing (e.g. after registration)
+    getRelayCollectionSpy.mockResolvedValue([
+      {
+        id: 'relay-abc',
+        alias: 'my-relay',
+        siteid: 'site-123',
+        num_fetchers: 1,
+        log_level: 'info'
+      }
+    ])
+
+    // Navigate back to Name Relay step
+    await fireEvent.click(screen.getByRole('button', { name: /previous step/i }))
+    await screen.findByText('Name the relay')
+
+    // Try to proceed — should succeed despite duplicate alias
+    await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+    await screen.findByText('Install Podman')
+    expect(screen.getByText('This relay alias is already in use')).toBeInTheDocument()
   })
 
   test('User Guide link is present in registration results', async () => {

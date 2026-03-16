@@ -34,17 +34,28 @@ const getAliasErrors = () => {
   const errors: string[] = []
   const alias = relayAlias.value.trim()
   if (alias.length === 0) {
-    errors.push('A relay alias is required')
-  } else if (savedRelays.value.some((relay) => relay.alias === alias)) {
-    errors.push('This relay alias is already in use')
+    errors.push(_t('A relay alias is required'))
   } else if (!new RegExp(props.aliasValidationRegex).test(alias)) {
     errors.push(props.aliasValidationRegexHelp)
   }
   return errors
 }
 
+const getAliasWarnings = () => {
+  const warnings: string[] = []
+  const alias = relayAlias.value.trim()
+  if (alias.length > 0 && savedRelays.value.some((relay) => relay.alias === alias)) {
+    warnings.push(_t('This relay alias is already in use'))
+  }
+  return warnings
+}
+
 const aliasErrors = computed(() => {
   return displayErrors.value ? getAliasErrors() : []
+})
+
+const aliasWarnings = computed(() => {
+  return displayErrors.value ? getAliasWarnings() : []
 })
 
 async function validate(): Promise<boolean> {
@@ -76,6 +87,9 @@ async function validate(): Promise<boolean> {
           :external-errors="aliasErrors"
         />
       </div>
+      <CmkAlertBox v-for="warning in aliasWarnings" :key="warning" variant="warning">
+        {{ warning }}
+      </CmkAlertBox>
       <CmkAlertBox variant="info">
         {{
           _t(

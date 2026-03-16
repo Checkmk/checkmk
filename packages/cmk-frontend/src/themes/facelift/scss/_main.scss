@@ -1476,6 +1476,11 @@ div.swal2-popup {
     white-space: pre-line;
   }
 
+  div.swal2-html-container,
+  div.swal2-actions {
+    z-index: 0;
+  }
+
   button.swal2-confirm {
     background-color: $success-dimmed;
   }

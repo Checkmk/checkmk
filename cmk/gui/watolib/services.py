@@ -290,28 +290,26 @@ class Discovery:
     ) -> DiscoveryResult:
         if (
             transition := self.compute_discovery_transition(discovery_result, target_host_name)
-        ) is None:
-            return discovery_result
+        ) is not None:
+            if transition.need_sync:
+                self._save_host_service_enable_disable_rules(
+                    transition.remove_disabled_rule,
+                    transition.add_disabled_rule,
+                    automation_config=automation_config,
+                    pprint_value=pprint_value,
+                    debug=debug,
+                    use_git=use_git,
+                )
 
-        if transition.need_sync:
-            self._save_host_service_enable_disable_rules(
-                transition.remove_disabled_rule,
-                transition.add_disabled_rule,
+            self._save_services(
+                target_host_name,
+                transition.old_autochecks,
+                transition.new_autochecks,
+                need_sync=transition.need_sync,
                 automation_config=automation_config,
-                pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
             )
-
-        self._save_services(
-            target_host_name,
-            transition.old_autochecks,
-            transition.new_autochecks,
-            need_sync=transition.need_sync,
-            automation_config=automation_config,
-            debug=debug,
-            use_git=use_git,
-        )
 
         return self._apply_transitions(discovery_result)
 

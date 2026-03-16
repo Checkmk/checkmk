@@ -35,15 +35,31 @@ CUSTOM_ORACLE_LIB_OPTION: Literal["custom"] = "custom"
 
 
 def _source(base_os: OS) -> Path:
-    return Path("mk-oracle" if base_os == OS.LINUX else "mk-oracle.exe")
+    match base_os:
+        case OS.LINUX:
+            return Path("mk-oracle")
+        case OS.WINDOWS:
+            return Path("mk-oracle.exe")
+        case OS.AIX:
+            return Path("mk-oracle.aix")
+        case OS.SOLARIS:
+            return Path("mk-oracle.solaris")
+        case _:
+            raise ValueError(f"Unsupported OS: {base_os}")
 
 
 def _target(base_os: OS) -> Path:
-    return (
-        Path("packages", "mk-oracle", "mk-oracle")
-        if base_os == OS.LINUX
-        else Path("packages", "mk-oracle", "mk-oracle.exe")
-    )
+    match base_os:
+        case OS.LINUX:
+            return Path("packages", "mk-oracle", "mk-oracle")
+        case OS.WINDOWS:
+            return Path("packages", "mk-oracle", "mk-oracle.exe")
+        case OS.AIX:
+            return Path("packages", "mk-oracle", "mk-oracle.aix")
+        case OS.SOLARIS:
+            return Path("packages", "mk-oracle", "mk-oracle.solaris")
+        case _:
+            raise ValueError(f"Unsupported OS: {base_os}")
 
 
 linux_files: list[Plugin] = [
@@ -84,13 +100,51 @@ windows_files: list[Plugin] = [
     ),
 ]
 
-files_base: list[Plugin] = linux_files + windows_files
+aix_files: list[Plugin] = [
+    Plugin(
+        base_os=OS.AIX,
+        source=Path("mk-oracle.aix"),
+        target=Path("packages", "mk-oracle", "mk-oracle.aix"),
+    ),
+    Plugin(
+        base_os=OS.AIX,
+        source=Path("oracle_unified_sync.aix"),
+        target=Path("oracle_unified_sync.aix"),
+    ),
+    Plugin(
+        base_os=OS.AIX,
+        source=Path("oracle_unified_async.aix"),
+        target=Path("oracle_unified_async.aix"),
+        interval=600,
+    ),
+]
+
+solaris_files: list[Plugin] = [
+    Plugin(
+        base_os=OS.SOLARIS,
+        source=Path("mk-oracle.solaris"),
+        target=Path("packages", "mk-oracle", "mk-oracle.solaris"),
+    ),
+    Plugin(
+        base_os=OS.SOLARIS,
+        source=Path("oracle_unified_sync.solaris"),
+        target=Path("oracle_unified_sync.solaris"),
+    ),
+    Plugin(
+        base_os=OS.SOLARIS,
+        source=Path("oracle_unified_async.solaris"),
+        target=Path("oracle_unified_async.solaris"),
+        interval=600,
+    ),
+]
+
+files_base: list[Plugin] = linux_files + windows_files + aix_files + solaris_files
 
 
 def _combine(files: Sequence[Plugin], yaml_lines: Sequence[str]) -> Sequence[Plugin | PluginConfig]:
     ret = list(files) + [
         PluginConfig(base_os=base_os, lines=list(yaml_lines), target=Path("mk-oracle.yml"))
-        for base_os in (OS.LINUX, OS.WINDOWS)
+        for base_os in (OS.LINUX, OS.WINDOWS, OS.AIX, OS.SOLARIS)
     ]
 
     return sorted(ret, key=lambda x: str(x.base_os))
@@ -682,10 +736,13 @@ expected_yaml_lines_wallet_auth = [
 
 
 def _process(config: GuiConfig) -> Sequence[Plugin | PluginConfig | SystemBinary | SystemConfig]:
-    return list(
-        bakery_plugin_oracle.files_function(
-            bakery_plugin_oracle.parameter_parser(config.model_dump())
-        )
+    return sorted(
+        list(
+            bakery_plugin_oracle.files_function(
+                bakery_plugin_oracle.parameter_parser(config.model_dump())
+            )
+        ),
+        key=lambda x: str(x.base_os),
     )
 
 

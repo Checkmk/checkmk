@@ -361,6 +361,7 @@ class ModeTags(ABCTagMode):
             ),
             empty_text=_("You haven't defined any tag groups yet."),
             searchable=False,
+            sortable=False,
         ) as table:
             for nr, tag_group in enumerate(self._effective_config.tag_groups):
                 table.row()

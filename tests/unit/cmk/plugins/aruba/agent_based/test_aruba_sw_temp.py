@@ -106,6 +106,70 @@ DATA = [
         "22000",
         "55000",
     ],
+    [
+        "1.3.1.9",
+        "1/1-Fabric-IBC",
+        "normal",
+        "46000",  # Exceeds 45°C WARN
+        "25000",
+        "45000",
+    ],
+    [
+        "1.3.1.10",
+        "1/1-PCIE-Management",
+        "normal",
+        "56000",  # Exceeds 55°C WARN
+        "30000",
+        "55000",
+    ],
+    [
+        "1.3.1.11",
+        "1/3-Board-rear",
+        "normal",
+        "46000",  # Exceeds 45°C WARN
+        "25000",
+        "45000",
+    ],
+    [
+        "1.3.1.12",
+        "1/3-Exhaust-left",
+        "normal",
+        "47000",  # Exceeds 45°C WARN
+        "25000",
+        "45000",
+    ],
+    [
+        "1.3.1.13",
+        "1/1-Exhaust-Air",
+        "normal",
+        "48000",  # Exceeds 45°C WARN
+        "25000",
+        "45000",
+    ],
+    [
+        "1.3.1.14",
+        "1/3-IBC",
+        "normal",
+        "49000",  # Exceeds 45°C WARN
+        "25000",
+        "45000",
+    ],
+    [
+        "1.3.1.15",
+        "1/4-Switch-ASIC",
+        "normal",
+        "85000",  # Exceeds 80°C WARN
+        "40000",
+        "80000",
+    ],
+    [
+        "1.3.1.16",
+        "1/1-Board-NW",
+        "normal",
+        "38000",  # Exceeds 35°C WARN
+        "20000",
+        "35000",
+    ],
 ]
 
 
@@ -126,6 +190,14 @@ DATA = [
                 Service(item="1/1-Switch-DDR-Inlet-1"),
                 Service(item="1/1-Switch-Mainboard"),
                 Service(item="1/1-Internal"),
+                Service(item="1/1-Fabric-IBC"),
+                Service(item="1/1-PCIE-Management"),
+                Service(item="1/3-Board-rear"),
+                Service(item="1/3-Exhaust-left"),
+                Service(item="1/1-Exhaust-Air"),
+                Service(item="1/3-IBC"),
+                Service(item="1/4-Switch-ASIC"),
+                Service(item="1/1-Board-NW"),
             ],
         ),
     ],
@@ -355,6 +427,170 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 Result(state=State.OK, summary="Device status: normal"),
                 Result(state=State.OK, summary="Min temperature: 22.0 °C"),
                 Result(state=State.OK, summary="Max temperature: 55.0 °C"),
+            ],
+        ),
+        (
+            [["1.3.1.9", "1/1-Fabric-IBC", "normal", "46000", "25000", "45000"]],
+            "1/1-Fabric-IBC",
+            [
+                Metric(
+                    "temp",
+                    46.0,
+                    levels=(aruba_sw_temp.SensorWarnTemp.IBC, aruba_sw_temp.SensorCritTemp.IBC),
+                ),
+                Result(state=State.WARN, summary="Temperature: 46.0 °C (warn/crit at 45 °C/50 °C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+                Result(state=State.OK, summary="Device status: normal"),
+                Result(state=State.OK, summary="Min temperature: 25.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 45.0 °C"),
+            ],
+        ),
+        (
+            [["1.3.1.10", "1/1-PCIE-Management", "normal", "56000", "30000", "55000"]],
+            "1/1-PCIE-Management",
+            [
+                Metric(
+                    "temp",
+                    56.0,
+                    levels=(aruba_sw_temp.SensorWarnTemp.PCIE, aruba_sw_temp.SensorCritTemp.PCIE),
+                ),
+                Result(state=State.WARN, summary="Temperature: 56.0 °C (warn/crit at 55 °C/60 °C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+                Result(state=State.OK, summary="Device status: normal"),
+                Result(state=State.OK, summary="Min temperature: 30.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 55.0 °C"),
+            ],
+        ),
+        (
+            [["1.3.1.11", "1/3-Board-rear", "normal", "46000", "25000", "45000"]],
+            "1/3-Board-rear",
+            [
+                Metric(
+                    "temp",
+                    46.0,
+                    levels=(
+                        aruba_sw_temp.SensorWarnTemp.BOARD_REAR,
+                        aruba_sw_temp.SensorCritTemp.BOARD_REAR,
+                    ),
+                ),
+                Result(state=State.WARN, summary="Temperature: 46.0 °C (warn/crit at 45 °C/50 °C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+                Result(state=State.OK, summary="Device status: normal"),
+                Result(state=State.OK, summary="Min temperature: 25.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 45.0 °C"),
+            ],
+        ),
+        (
+            [["1.3.1.12", "1/3-Exhaust-left", "normal", "47000", "25000", "45000"]],
+            "1/3-Exhaust-left",
+            [
+                Metric(
+                    "temp",
+                    47.0,
+                    levels=(
+                        aruba_sw_temp.SensorWarnTemp.EXHAUST,
+                        aruba_sw_temp.SensorCritTemp.EXHAUST,
+                    ),
+                ),
+                Result(state=State.WARN, summary="Temperature: 47.0 °C (warn/crit at 45 °C/50 °C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+                Result(state=State.OK, summary="Device status: normal"),
+                Result(state=State.OK, summary="Min temperature: 25.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 45.0 °C"),
+            ],
+        ),
+        (
+            [["1.3.1.13", "1/1-Exhaust-Air", "normal", "48000", "25000", "45000"]],
+            "1/1-Exhaust-Air",
+            [
+                Metric(
+                    "temp",
+                    48.0,
+                    levels=(
+                        aruba_sw_temp.SensorWarnTemp.EXHAUST,
+                        aruba_sw_temp.SensorCritTemp.EXHAUST,
+                    ),
+                ),
+                Result(state=State.WARN, summary="Temperature: 48.0 °C (warn/crit at 45 °C/50 °C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+                Result(state=State.OK, summary="Device status: normal"),
+                Result(state=State.OK, summary="Min temperature: 25.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 45.0 °C"),
+            ],
+        ),
+        (
+            [["1.3.1.14", "1/3-IBC", "normal", "49000", "25000", "45000"]],
+            "1/3-IBC",
+            [
+                Metric(
+                    "temp",
+                    49.0,
+                    levels=(aruba_sw_temp.SensorWarnTemp.IBC, aruba_sw_temp.SensorCritTemp.IBC),
+                ),
+                Result(state=State.WARN, summary="Temperature: 49.0 °C (warn/crit at 45 °C/50 °C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+                Result(state=State.OK, summary="Device status: normal"),
+                Result(state=State.OK, summary="Min temperature: 25.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 45.0 °C"),
+            ],
+        ),
+        (
+            [["1.3.1.15", "1/4-Switch-ASIC", "normal", "85000", "40000", "80000"]],
+            "1/4-Switch-ASIC",
+            [
+                Metric(
+                    "temp",
+                    85.0,
+                    levels=(aruba_sw_temp.SensorWarnTemp.ASIC, aruba_sw_temp.SensorCritTemp.ASIC),
+                ),
+                Result(state=State.WARN, summary="Temperature: 85.0 °C (warn/crit at 80 °C/90 °C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+                Result(state=State.OK, summary="Device status: normal"),
+                Result(state=State.OK, summary="Min temperature: 40.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 80.0 °C"),
+            ],
+        ),
+        (
+            [["1.3.1.16", "1/1-Board-NW", "normal", "38000", "20000", "35000"]],
+            "1/1-Board-NW",
+            [
+                Metric(
+                    "temp",
+                    38.0,
+                    levels=(
+                        aruba_sw_temp.SensorWarnTemp.MAINBOARD,
+                        aruba_sw_temp.SensorCritTemp.MAINBOARD,
+                    ),
+                ),
+                Result(state=State.WARN, summary="Temperature: 38.0 °C (warn/crit at 35 °C/40 °C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+                Result(state=State.OK, summary="Device status: normal"),
+                Result(state=State.OK, summary="Min temperature: 20.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 35.0 °C"),
             ],
         ),
     ],

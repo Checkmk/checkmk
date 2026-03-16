@@ -60,6 +60,10 @@ class SensorWarnTemp:
     DDR_INLET = 40
     MAINBOARD = 35
     INTERNAL = 45
+    IBC = 45
+    PCIE = 55
+    BOARD_REAR = 45
+    EXHAUST = 45
 
 
 class SensorCritTemp:
@@ -71,6 +75,10 @@ class SensorCritTemp:
     DDR_INLET = 45
     MAINBOARD = 40
     INTERNAL = 50
+    IBC = 50
+    PCIE = 60
+    BOARD_REAR = 50
+    EXHAUST = 50
 
 
 Section = Mapping[str, TemperatureSensor]
@@ -118,6 +126,14 @@ def check_aruba_sw_temp(
             return (SensorWarnTemp.PHY, SensorCritTemp.PHY)
         if "Internal" in name:
             return (SensorWarnTemp.INTERNAL, SensorCritTemp.INTERNAL)
+        if "IBC" in name:
+            return (SensorWarnTemp.IBC, SensorCritTemp.IBC)
+        if "PCIE" in name:
+            return (SensorWarnTemp.PCIE, SensorCritTemp.PCIE)
+        if "Board-rear" in name:
+            return (SensorWarnTemp.BOARD_REAR, SensorCritTemp.BOARD_REAR)
+        if "Exhaust" in name:
+            return (SensorWarnTemp.EXHAUST, SensorCritTemp.EXHAUST)
 
         return (SensorWarnTemp.MAINBOARD, SensorCritTemp.MAINBOARD)
 

@@ -45,12 +45,14 @@ void main() {
         // TODO: check why this doesn't work
         // docker_reference_image().inside(docker_args) {
 
-        dir("${checkout_dir}") {
-            sh("""
-                make buildclean
-                rm -rf ${WORKSPACE}/build
-            """);
-            versioning.set_version(cmk_version);
+        stage("Prepare workspace") {
+            dir("${checkout_dir}") {
+                sh("""
+                    make buildclean
+                    rm -rf ${WORKSPACE}/build
+                """);
+                versioning.set_version(cmk_version);
+            }
         }
 
         stage("Build agent updater binary for Linux") {

@@ -6,15 +6,14 @@
 // Artifacts will be consumed by bw-release.
 
 void main() {
-    stage("Clean workspace") {
-        dir("${checkout_dir}") {
-            // We don't want to fill up the workspace with old annoucement files
-            sh(script: "make clean");
-        }
-    }
-    stage("Build announcement") {
+    dir("${checkout_dir}") {
         inside_container() {
-            dir("${checkout_dir}") {
+            stage("Clean workspace") {
+                // We don't want to fill up the workspace with old annoucement files
+                sh(script: "make clean");
+            }
+
+            stage("Build announcement") {
                 def announce_file = sh(script: 'make print-CHECK_MK_ANNOUNCE_TAR_FILE', returnStdout: true).trim();
                 sh(script: "make announcement");
                 show_duration("archiveArtifacts") {

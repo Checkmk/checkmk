@@ -113,6 +113,7 @@ const changesSideTitle = computed(() => {
   width: 100%;
   margin-top: var(--dimension-8);
   margin-bottom: var(--dimension-6);
+  min-height: 0;
 }
 
 .collapsible-title {
@@ -126,7 +127,9 @@ const changesSideTitle = computed(() => {
 
 .cmk-collapsible-pending-changes {
   width: 100%;
-  height: calc(100% - 158px);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
@@ -156,6 +159,9 @@ const changesSideTitle = computed(() => {
   width: 100%;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .cmk-div-pending-changes-container {

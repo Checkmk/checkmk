@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.6.0b1"
+
+case "$(uname -m)" in
+    arm* | aarch64)
+        exit 1
+        ;;
+esac
+
+if [ -z "${MK_LIBDIR}" ] || [ ! -d "${MK_LIBDIR}" ]; then
+    echo "MK_LIBDIR is not set or not directory"
+    exit 1
+fi
+
+bin_exe="${MK_LIBDIR}/plugins/packages/mk-oracle/mk-oracle.solaris"
+
+if [ ! -x "${bin_exe}" ]; then
+    echo "${bin_exe} is not executable or not found"
+    exit 1
+fi
+
+if [ -z "${MK_CONFDIR}" ] || [ ! -d "${MK_CONFDIR}" ]; then
+    echo "MK_CONFDIR is not set or not directory"
+    exit 1
+fi
+
+if [ ! -f "${MK_CONFDIR}/mk-oracle.yml" ]; then
+    echo "Configuration file mk-oracle.yml not found in ${MK_CONFDIR}"
+    exit 1
+fi
+
+${bin_exe} -c "${MK_CONFDIR}/mk-oracle.yml" --filter sync

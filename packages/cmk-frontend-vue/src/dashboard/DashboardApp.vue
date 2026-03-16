@@ -79,6 +79,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const props = defineProps<DashboardPageProperties>()
 
+const dbAppRef = ref<HTMLElement | null>(null)
 const isDashboardLoading = ref(false)
 const loadingError = ref<Error | null>(null)
 const isDashboardEditingMode = ref(props.mode === 'edit_layout' && !!props.dashboard)
@@ -201,6 +202,17 @@ onBeforeUnmount(() => {
   window.removeEventListener('popstate', handlePopState)
 })
 
+// This is a workaround to hide the scrollbar on ancestor elements outside
+// of this component's control (obviously not ideal). Ideally the page-level scroll behavior would be
+// managed by the parent layout (but this is on the python page level so we don't do this)
+function setAncestorsEmptyClass(add: boolean) {
+  let el = dbAppRef.value?.parentElement
+  while (el) {
+    el.classList.toggle('db-app--empty-dashboard', add)
+    el = el.parentElement
+  }
+}
+
 /* Set/Remove the page's background gradient when there are no/any widgets */
 watch(
   dashboardWidgets.widgetCores,
@@ -208,11 +220,13 @@ watch(
     if (Object.entries(newWidgetCores).length === 0) {
       document.body.style.backgroundImage =
         'linear-gradient(to bottom, var(--ux-theme-1), var(--ux-theme-8))'
+      setAncestorsEmptyClass(true)
     } else if (
       (!oldWidgetCores || Object.entries(oldWidgetCores).length === 0) &&
       Object.entries(newWidgetCores).length > 0
     ) {
       document.body.style.backgroundImage = 'none'
+      setAncestorsEmptyClass(false)
     }
   },
   { immediate: true }
@@ -507,6 +521,10 @@ const dashboardHasRuntimeFilters = computed(() => {
   return (toRaw(dashboardFilters.configuredMandatoryRuntimeFilters.value)?.length ?? 0) > 0
 })
 
+const isDashboardEmpty = computed(
+  () => Object.entries(dashboardWidgets.widgetCores.value).length === 0
+)
+
 const redirectToListDashboardsPage = () => {
   window.location.href = props.links.list_dashboards
 }
@@ -583,7 +601,7 @@ const reviewFilters = () => {
 
 <template>
   <CmkErrorBoundary>
-    <div class="db-app">
+    <div ref="dbAppRef" :class="['db-app', { 'db-app--empty': isDashboardEmpty }]">
       <div class="db-app__header">
         <DashboardBreadcrumb
           :selected-dashboard="selectedDashboard ?? null"
@@ -760,22 +778,39 @@ const reviewFilters = () => {
 </template>
 
 <style scoped>
-.db-app {
+.db-app--empty {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.db-app__header {
+.db-app--empty .db-app__header {
   flex-shrink: 0;
 }
 
-.db-app__content {
+.db-app--empty .db-app__content {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
+}
+
+@media (width < 800px) {
+  .db-app--empty .db-app__content {
+    overflow-y: auto;
+  }
+}
+</style>
+
+<style>
+.db-app--empty-dashboard {
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.db-app--empty-dashboard::-webkit-scrollbar {
+  display: none;
 }
 </style>

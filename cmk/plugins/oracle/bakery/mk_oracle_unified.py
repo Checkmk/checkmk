@@ -70,6 +70,51 @@ WIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     ],
 )
 
+AIX_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
+    OS.AIX,
+    [
+        OraclePluginFile(
+            source=Path("mk-oracle.aix"),
+            target=Path("packages", "mk-oracle", "mk-oracle.aix"),
+        ),
+        OraclePluginFile(
+            source=Path("oracle_unified_sync.aix"),
+            target=Path("oracle_unified_sync.aix"),
+        ),
+        OraclePluginFile(
+            source=Path("oracle_unified_async.aix"),
+            target=Path("oracle_unified_async.aix"),
+            cached=True,
+        ),
+    ],
+)
+
+SOLARIS_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
+    OS.SOLARIS,
+    [
+        OraclePluginFile(
+            source=Path("mk-oracle.solaris"),
+            target=Path("packages", "mk-oracle", "mk-oracle.solaris"),
+        ),
+        OraclePluginFile(
+            source=Path("oracle_unified_sync.solaris"),
+            target=Path("oracle_unified_sync.solaris"),
+        ),
+        OraclePluginFile(
+            source=Path("oracle_unified_async.solaris"),
+            target=Path("oracle_unified_async.solaris"),
+            cached=True,
+        ),
+    ],
+)
+
+OS_ORACLE_FILES: Sequence[tuple[OS, Sequence[OraclePluginFile]]] = (
+    LIN_ORACLE_FILES,
+    WIN_ORACLE_FILES,
+    AIX_ORACLE_FILES,
+    SOLARIS_ORACLE_FILES,
+)
+
 GuiSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
 
 
@@ -225,7 +270,7 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
 
     config_lines = list(_get_oracle_yaml_lines(confm))
 
-    for base_os, files in (LIN_ORACLE_FILES, WIN_ORACLE_FILES):
+    for base_os, files in OS_ORACLE_FILES:
         for file in files:
             yield Plugin(
                 base_os=base_os,

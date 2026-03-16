@@ -25,8 +25,8 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.azure_v2.agent_based.lib import parse_azure_datetime
 
-THIRTY_DAYS = 30 * 24 * 60 * 60
-SEVEN_DAYS = 7 * 24 * 60 * 60
+THIRTY_DAYS = 30 * 24 * 60 * 60.0
+SEVEN_DAYS = 7 * 24 * 60 * 60.0
 
 
 class Params(TypedDict):

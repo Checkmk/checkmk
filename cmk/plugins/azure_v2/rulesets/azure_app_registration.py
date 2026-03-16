@@ -15,8 +15,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
-THIRTY_DAYS = 30 * 24 * 60 * 60
-SEVEN_DAYS = 7 * 24 * 60 * 60
+THIRTY_DAYS = 30 * 24 * 60 * 60.0
+SEVEN_DAYS = 7 * 24 * 60 * 60.0
 
 
 def _make_form() -> Dictionary:

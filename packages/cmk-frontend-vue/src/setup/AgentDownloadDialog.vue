@@ -37,6 +37,8 @@ interface Props {
   isPushMode: boolean
   siteId: string
   siteServer: string
+  agentReceiverPort: number
+  agentReceiverPortIsDefault: boolean
 }
 
 const props = defineProps<Props>()
@@ -117,6 +119,8 @@ const triggerRescan = () => {
       :host-name="agentSlideout.host_name"
       :site-id="siteId"
       :site-server="siteServer"
+      :agent-receiver-port="agentReceiverPort"
+      :agent-receiver-port-is-default="agentReceiverPortIsDefault"
       :agent-install-cmds="agentSlideout.agent_install_cmds"
       :agent-registration-cmds="agentSlideout.agent_registration_cmds"
       :legacy-agent-url="agentSlideout.legacy_agent_url"

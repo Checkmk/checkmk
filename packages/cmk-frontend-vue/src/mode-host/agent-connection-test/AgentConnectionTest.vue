@@ -11,8 +11,12 @@ import {
   type ModeHostSite
 } from 'cmk-shared-typing/typescript/mode_host'
 import type { Ref } from 'vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
+import {
+  DEFAULT_AGENT_RECEIVER_PORT,
+  fetchAgentReceiverPort as fetchAgentReceiverPortApi
+} from '@/lib/agentReceiverPort'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -139,6 +143,21 @@ const siteId = ref(
 const siteServer = ref(
   props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
 )
+const agentReceiverPort = ref(DEFAULT_AGENT_RECEIVER_PORT)
+const agentReceiverPortFetched = ref(false)
+const agentReceiverPortIsDefault = ref(false)
+
+async function fetchAgentReceiverPort(forSiteId: string) {
+  agentReceiverPortFetched.value = false
+  agentReceiverPortIsDefault.value = false
+  try {
+    const result = await fetchAgentReceiverPortApi(forSiteId)
+    agentReceiverPort.value = result.port
+    agentReceiverPortIsDefault.value = result.isDefault
+  } finally {
+    agentReceiverPortFetched.value = true
+  }
+}
 const ipV4 = ref(props.ipv4InputElement.value || '')
 const ipV6 = ref(props.ipv6InputElement.value || '')
 const targetElement = ref<HTMLElement>(
@@ -200,6 +219,7 @@ onMounted(() => {
           props.sites.find((site) => site.id_hash === selectedSiteIdHash.value)?.site_id ?? ''
         siteServer.value =
           props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
+        agentReceiverPortFetched.value = false
 
         break
       }
@@ -224,6 +244,7 @@ onMounted(() => {
         }
         siteServer.value =
           props.serverPerSite.find((item) => item.site_id === siteId.value)?.server ?? ''
+        agentReceiverPortFetched.value = false
         break
       }
       case props.ipv4InputButtonElement: {
@@ -403,6 +424,12 @@ const reTestAgentClick: () => Promise<void> = startAjax
 const openSlideoutClick: () => void = () => {
   slideInOpen.value = true
 }
+
+watch(slideInOpen, (open) => {
+  if (open && !agentReceiverPortFetched.value && !props.agentSlideout.save_host) {
+    void fetchAgentReceiverPort(siteId.value)
+  }
+})
 
 interface ContainerValues {
   header: string
@@ -624,6 +651,8 @@ const showSettings = ref(false)
         :host-name="hostname"
         :site-id="siteId"
         :site-server="siteServer"
+        :agent-receiver-port="agentReceiverPort"
+        :agent-receiver-port-is-default="agentReceiverPortIsDefault"
         :agent-install-cmds="agentSlideout.agent_install_cmds"
         :agent-registration-cmds="agentSlideout.agent_registration_cmds"
         :legacy-agent-url="agentSlideout.legacy_agent_url"

@@ -6,8 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
 import { type AgentDownloadServerPerSite } from 'cmk-shared-typing/typescript/setup'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
+import { DEFAULT_AGENT_RECEIVER_PORT, fetchAgentReceiverPort } from '@/lib/agentReceiverPort'
 import usei18n from '@/lib/i18n'
 
 import AgentDownloadDialog from '@/setup/AgentDownloadDialog.vue'
@@ -56,6 +57,14 @@ if (!props.is_push_mode && props.output.includes(noTlsSearchTerm)) {
 
 const hideButtonTitle = _t('Ignore for this host')
 const siteServer = props.server_per_site.find((item) => item.site_id === props.site)?.server ?? ''
+const agentReceiverPort = ref(DEFAULT_AGENT_RECEIVER_PORT)
+const agentReceiverPortIsDefault = ref(false)
+
+onMounted(async () => {
+  const result = await fetchAgentReceiverPort(props.site)
+  agentReceiverPort.value = result.port
+  agentReceiverPortIsDefault.value = result.isDefault
+})
 </script>
 
 <template>
@@ -74,5 +83,7 @@ const siteServer = props.server_per_site.find((item) => item.site_id === props.s
     :is-push-mode="is_push_mode ?? false"
     :site-id="site"
     :site-server="siteServer"
+    :agent-receiver-port="agentReceiverPort"
+    :agent-receiver-port-is-default="agentReceiverPortIsDefault"
   />
 </template>

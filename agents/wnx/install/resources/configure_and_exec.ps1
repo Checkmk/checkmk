@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Script to correctly configure defaults for other powershel scripts 
+# Script to correctly configure defaults for other powershell scripts 
 
 $executable = $args[0]
 $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()

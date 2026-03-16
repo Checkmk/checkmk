@@ -48,13 +48,18 @@ function processSaveResponse(result: {
 }
 
 export const configEntityAPI = {
-  getSchema: async (entityType: ConfigEntityType, entityTypeSpecifier: string) => {
+  getSchema: async (
+    entityType: ConfigEntityType,
+    entityTypeSpecifier: string,
+    signal?: AbortSignal
+  ) => {
     const data = unwrap(
       await client.GET('/domain-types/form_spec/collections/{entity_type}', {
         params: {
           path: { entity_type: entityType },
           query: { entity_type_specifier: entityTypeSpecifier }
-        }
+        },
+        signal: signal ?? null
       })
     )
     return {
@@ -62,7 +67,7 @@ export const configEntityAPI = {
       defaultValues: data.extensions!.default_values as Payload
     }
   },
-  getData: async (entityType: ConfigEntityType, entityId: string) => {
+  getData: async (entityType: ConfigEntityType, entityId: string, signal?: AbortSignal) => {
     if (entityType === 'folder') {
       throw new Error('Folders are not supported in configEntityAPI.getData')
     }
@@ -71,15 +76,21 @@ export const configEntityAPI = {
     }
     const data = unwrap(
       await client.GET(`/objects/${entityType}/{entity_id}`, {
-        params: { path: { entity_id: entityId } }
+        params: { path: { entity_id: entityId } },
+        signal: signal ?? null
       })
     )
     return data.extensions as Payload
   },
-  listEntities: async (entityType: ConfigEntityType, entityTypeSpecifier: string) => {
+  listEntities: async (
+    entityType: ConfigEntityType,
+    entityTypeSpecifier: string,
+    signal?: AbortSignal
+  ) => {
     const data = unwrap(
       await client.GET(`/domain-types/${entityType}/collections/{entity_type_specifier}`, {
-        params: { path: { entity_type_specifier: entityTypeSpecifier } }
+        params: { path: { entity_type_specifier: entityTypeSpecifier } },
+        signal: signal ?? null
       })
     )
     const values = data.value as {

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { onMounted, ref, toRaw } from 'vue'
+import { onMounted, onUnmounted, ref, toRaw } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -51,42 +51,58 @@ const hideButtonChoices = ref<Array<{ name: string; hide_edit: boolean }>>([])
 const slideInObjectId = ref<OptionId | null>(null)
 const slideInOpen = ref<boolean>(false)
 
+const abortController = new AbortController()
+onUnmounted(() => {
+  abortController.abort()
+})
+
 onMounted(async () => {
-  const entities = await configEntityAPI.listEntities(
-    props.spec.config_entity_type as ConfigEntityType,
-    props.spec.config_entity_type_specifier
-  )
-  hideButtonChoices.value = entities.map((entity) => ({
-    name: entity.ident,
-    hide_edit: entity.hide_edit
-  }))
-  choices.value = entities.map((entity) => ({
-    name: entity.ident,
-    title: untranslated(entity.description)
-  }))
+  try {
+    const entities = await configEntityAPI.listEntities(
+      props.spec.config_entity_type as ConfigEntityType,
+      props.spec.config_entity_type_specifier,
+      abortController.signal
+    )
+    hideButtonChoices.value = entities.map((entity) => ({
+      name: entity.ident,
+      hide_edit: entity.hide_edit
+    }))
+    choices.value = entities.map((entity) => ({
+      name: entity.ident,
+      title: untranslated(entity.description)
+    }))
+  } catch (e) {
+    if (abortController.signal.aborted) {
+      return
+    }
+    throw e
+  }
 })
 
 const slideInAPI = {
-  getSchema: async () => {
+  getSchema: async (signal?: AbortSignal) => {
     return (
       await configEntityAPI.getSchema(
         props.spec.config_entity_type as ConfigEntityType,
-        props.spec.config_entity_type_specifier
+        props.spec.config_entity_type_specifier,
+        signal
       )
     ).schema
   },
-  getData: async (objectId: OptionId | null) => {
+  getData: async (objectId: OptionId | null, signal?: AbortSignal) => {
     if (objectId === null) {
       return (
         await configEntityAPI.getSchema(
           props.spec.config_entity_type as ConfigEntityType,
-          props.spec.config_entity_type_specifier
+          props.spec.config_entity_type_specifier,
+          signal
         )
       ).defaultValues
     }
     const result = await configEntityAPI.getData(
       props.spec.config_entity_type as ConfigEntityType,
-      objectId
+      objectId,
+      signal
     )
     return result
   },

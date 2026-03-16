@@ -8,7 +8,7 @@ import type {
   FormSpec,
   ValidationMessage
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref, toRaw } from 'vue'
+import { onUnmounted, ref, toRaw } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { untranslated } from '@/lib/i18n'
@@ -31,8 +31,8 @@ export type SetDataResult<Result> =
   | { type: 'error'; validationMessages: Array<ValidationMessage> }
 
 export type API<ObjectIdent, Result> = {
-  getSchema: () => Promise<FormSpec>
-  getData: (objectId: ObjectIdent | null) => Promise<Payload>
+  getSchema: (signal?: AbortSignal) => Promise<FormSpec>
+  getData: (objectId: ObjectIdent | null, signal?: AbortSignal) => Promise<Payload>
   setData: (objectId: ObjectIdent | null, data: Payload) => Promise<SetDataResult<Result>>
 }
 
@@ -90,6 +90,11 @@ const emit = defineEmits<{
   (e: 'submitted', result: Result): void
 }>()
 
+const abortController = new AbortController()
+onUnmounted(() => {
+  abortController.abort()
+})
+
 async function reloadAll({
   api,
   objectId
@@ -97,9 +102,19 @@ async function reloadAll({
   api: API<ObjectIdent, Result>
   objectId: ObjectIdent | null
 }) {
-  const [apiData, apiSchema] = await Promise.all([api.getData(objectId), api.getSchema()])
-  data.value = apiData
-  schema.value = apiSchema
+  try {
+    const [apiData, apiSchema] = await Promise.all([
+      api.getData(objectId, abortController.signal),
+      api.getSchema(abortController.signal)
+    ])
+    data.value = apiData
+    schema.value = apiSchema
+  } catch (e) {
+    if (abortController.signal.aborted) {
+      return
+    }
+    throw e
+  }
 }
 
 immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)

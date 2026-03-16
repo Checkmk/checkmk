@@ -197,7 +197,7 @@ def _active_filter_flag(allowed_filters: set[str], url_vars: Iterator[tuple[str,
 
 
 def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) -> set[FilterName]:
-    return missing_context_filters(get_single_info_keys(single_infos), context)
+    return missing_context_filters(set(get_single_info_keys(single_infos)), context)
 
 
 def missing_context_filters(
@@ -256,8 +256,8 @@ def info_params(info_key: InfoName) -> list[FilterName]:
     return [key for key, _vs in visual_info_registry[info_key]().single_spec]
 
 
-def get_single_info_keys(single_infos: SingleInfos) -> set[FilterName]:
-    return set(chain.from_iterable(map(info_params, single_infos)))
+def get_single_info_keys(single_infos: SingleInfos) -> list[FilterName]:
+    return list(dict.fromkeys(chain.from_iterable(map(info_params, single_infos))))
 
 
 def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> dict[str, str]:

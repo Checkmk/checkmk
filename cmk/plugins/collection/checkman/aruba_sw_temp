@@ -6,7 +6,19 @@ distribution: check_mk
 description:
  This check monitors the temperature of Aruba 6100+ devices.
 
- For these devices, different temperature thresholds are defined for the different sensors, e.g CPU, Inlet Air etc.
+ For these devices, different temperature thresholds are defined for the different sensors, i.e.,
+
+ - CPU / ASIC / PHY: 80°C (WARN), 90°C (CRIT)
+ - DDR: 60°C (WARN), 70°C (CRIT)
+ - PCIE: 55°C (WARN), 60°C (CRIT)
+ - IBC: 45°C (WARN), 50°C (CRIT)
+ - Exhaust: 45°C (WARN), 50°C (CRIT)
+ - Internal: 45°C (WARN), 50°C (CRIT)
+ - DDR Inlet: 40°C (WARN), 45°C (CRIT)
+ - Inlet: 30°C (WARN), 40°C (CRIT)
+ - Board-rear: 45°C (WARN), 50°C (CRIT)
+ - Mainboard and Default (Board-front, Board-NW, Board-W, etc.): 35°C (WARN), 40°C (CRIT)
+
  When a sensor is in a "fault" state, this check is in a "WARN" state.
  When the sensor is in the "emergency" state, the check is in the "CRIT" state.
 

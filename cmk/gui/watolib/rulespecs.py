@@ -1484,4 +1484,11 @@ def main_module_from_rulespec_group_name(
     ]()
 
 
+def is_rulespec_for_service(rulespec: Rulespec) -> bool:
+    return isinstance(
+        rulespec,
+        CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem | ServiceRulespec,
+    )
+
+
 rulespec_registry = RulespecRegistry(rulespec_group_registry)

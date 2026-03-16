@@ -2237,7 +2237,11 @@ def _get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
 
 
 def _create_explicit_rule_conditions_dict(
-    *, tree: FolderTree, rule_spec_name: str, rule_spec_item: RuleSpecItem | None
+    *,
+    tree: FolderTree,
+    rule_spec_name: str,
+    rule_spec_item: RuleSpecItem | None,
+    is_service_rule: bool,
 ) -> DictionaryAPI:
     elements: dict[str, DictElementAPI] = {
         "folder_path": DictElementAPI(
@@ -2324,37 +2328,26 @@ def _create_explicit_rule_conditions_dict(
         ),
     }
     if rule_spec_item:
-        elements.update(
-            {
-                "explicit_services": _create_explicit_rule_services_dict(rule_spec_item),
-                **(
-                    {
-                        "service_label_groups": DictElementAPI(
-                            parameter_form=BinaryConditionChoices(
-                                title=Title("Service labels"),
-                                help_text=Help(
-                                    "Use this condition to select services based on the configured service labels."
-                                ),
-                                label=Label("Label"),
-                                autocompleter=Autocompleter(
-                                    data=AutocompleterData(
-                                        ident="label",
-                                        params=AutocompleterParams(world="core"),
-                                    ),
-                                    fetch_method=FetchMethod.ajax_vs_autocomplete,
-                                ),
-                                custom_validate=[
-                                    not_empty(
-                                        error_msg=Message("Please add at least one service label.")
-                                    )
-                                ],
-                            )
-                        )
-                    }
-                    if allow_service_label_conditions(rule_spec_name)
-                    else {}
+        elements["explicit_services"] = _create_explicit_rule_services_dict(rule_spec_item)
+    if is_service_rule and allow_service_label_conditions(rule_spec_name):
+        elements["service_label_groups"] = DictElementAPI(
+            parameter_form=BinaryConditionChoices(
+                title=Title("Service labels"),
+                help_text=Help(
+                    "Use this condition to select services based on the configured service labels."
                 ),
-            }
+                label=Label("Label"),
+                autocompleter=Autocompleter(
+                    data=AutocompleterData(
+                        ident="label",
+                        params=AutocompleterParams(world="core"),
+                    ),
+                    fetch_method=FetchMethod.ajax_vs_autocomplete,
+                ),
+                custom_validate=[
+                    not_empty(error_msg=Message("Please add at least one service label."))
+                ],
+            )
         )
     return DictionaryAPI(elements=elements)
 
@@ -2365,6 +2358,7 @@ def _create_rule_conditions_catalog_topic(
     tree: FolderTree,
     rule_spec_name: str,
     rule_spec_item: RuleSpecItem | None,
+    is_service_rule: bool,
 ) -> dict[str, Topic]:
     return {
         "conditions": Topic(
@@ -2381,6 +2375,7 @@ def _create_rule_conditions_catalog_topic(
                                     tree=tree,
                                     rule_spec_name=rule_spec_name,
                                     rule_spec_item=rule_spec_item,
+                                    is_service_rule=is_service_rule,
                                 ),
                             ),
                             CascadingSingleChoiceElementAPI(
@@ -2411,6 +2406,7 @@ def create_rule_conditions_catalog(
     tree: FolderTree,
     rule_spec_name: str,
     rule_spec_item: RuleSpecItem | None,
+    is_service_rule: bool,
 ) -> Catalog:
     return Catalog(
         elements=_create_rule_conditions_catalog_topic(
@@ -2418,6 +2414,7 @@ def create_rule_conditions_catalog(
             tree=tree,
             rule_spec_name=rule_spec_name,
             rule_spec_item=rule_spec_item,
+            is_service_rule=is_service_rule,
         )
     )
 
@@ -2431,6 +2428,7 @@ def create_rule_catalog(
     tree: FolderTree,
     rule_spec_name: str,
     rule_spec_item: RuleSpecItem | None,
+    is_service_rule: bool,
 ) -> Catalog:
     return Catalog(
         elements={
@@ -2453,6 +2451,7 @@ def create_rule_catalog(
                 tree=tree,
                 rule_spec_name=rule_spec_name,
                 rule_spec_item=rule_spec_item,
+                is_service_rule=is_service_rule,
             ),
         }
     )

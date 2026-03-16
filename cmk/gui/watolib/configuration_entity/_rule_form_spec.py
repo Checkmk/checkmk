@@ -31,7 +31,7 @@ from cmk.gui.watolib.rulesets import (
     RuleIdentifier,
     RuleSpecItem,
 )
-from cmk.gui.watolib.rulespecs import Rulespec, rulespec_registry
+from cmk.gui.watolib.rulespecs import is_rulespec_for_service, Rulespec, rulespec_registry
 from cmk.rulesets.v1.form_specs import FormSpec
 
 
@@ -78,6 +78,7 @@ def _get_rule_spec_and_form_spec(
                 if (rule_spec.item_type and rule_spec.item_name is not None)
                 else None
             ),
+            is_service_rule=is_rulespec_for_service(rule_spec),
         ),
     )
 

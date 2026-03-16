@@ -10,7 +10,6 @@ from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission, permission_registry
 from cmk.utils import paths
 
-from ._network_topology import get_topology_context_and_filters
 from .builtin_dashboards import (
     builtin_dashboard_extender_registry,
     builtin_dashboards,
@@ -49,7 +48,6 @@ __all__ = [
     "dashlet_registry",
     "StaticTextDashletConfig",
     "get_dashlet",
-    "get_topology_context_and_filters",
     "get_all_dashboards",
     "get_permitted_dashboards",
     "noop_builtin_dashboard_extender",

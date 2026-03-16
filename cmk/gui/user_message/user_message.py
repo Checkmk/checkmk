@@ -30,7 +30,7 @@ from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
@@ -88,7 +88,7 @@ def _handle_ack_all() -> None:
     if request.var("_ack_all"):
         num = len([msg for msg in message.get_gui_messages() if not msg.get("acknowledged")])
         message.acknowledge_gui_message(None)
-        flash(
+        html.show_message(
             _("%d %s.")
             % (
                 num,
@@ -99,7 +99,6 @@ def _handle_ack_all() -> None:
                 ),
             )
         )
-        html.reload_whole_page()
 
 
 def _page_menu_entries_ack_all_messages() -> Iterator[PageMenuEntry]:

@@ -139,6 +139,26 @@ TEST_F(AgentControllerCreateToml, PortAndRuntimeOpts) {
     EXPECT_EQ(table[6], "validate_api_cert = true");
 }
 
+TEST_F(AgentControllerCreateToml, UpdaterRegistration) {
+    auto table = loadConfigAndGetResult(
+        fmt::format("global:\n"
+                    "  enabled: yes\n"
+                    "  only_from: \n"
+                    "  port: {}\n"
+                    "system:\n"
+                    "  controller:\n"
+                    "    updater_registration: \"overwrite\"\n",
+                    port));
+    for (auto index : {0, 1, 2}) {
+        EXPECT_EQ(table[index][0], '#');
+    }
+    EXPECT_TRUE(table[3].empty());
+    EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+    EXPECT_EQ(table[5], "detect_proxy = false");
+    EXPECT_EQ(table[6], "validate_api_cert = false");
+    EXPECT_EQ(table[7], "updater_registration = \"overwrite\"");
+}
+
 TEST(AgentController, BuildCommandLineAgentChannelOk) {
     const auto default_channel = fmt::format(
         "ms/{}",

@@ -258,10 +258,18 @@ bool CreateTomlConfig(const fs::path &toml_file) {
         fmt::format("{} = {}\n", cfg::vars::kControllerValidApiCert,
                     cfg::GetVal(controller_config,
                                 cfg::vars::kControllerValidApiCert, false));
+    auto updater_registration =
+        cfg::GetVal(controller_config,
+                    cfg::vars::kControllerUpdaterRegistration, std::string{""});
     try {
         std::ofstream ofs(toml_file);
         ofs << text << pull_port << allowed_ip << detect_proxy
             << valid_api_cert;
+        if (!updater_registration.empty()) {
+            ofs << fmt::format("{} = \"{}\"\n",
+                               cfg::vars::kControllerUpdaterRegistration,
+                               updater_registration);
+        }
     } catch (const std::exception &e) {
         XLOG::l("Failed to create TOML config with exception {}", e.what());
         return false;

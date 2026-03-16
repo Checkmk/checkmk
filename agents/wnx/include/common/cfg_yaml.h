@@ -224,6 +224,8 @@ constexpr std::string_view kControllerAgentChannel = "agent_channel";  // str
 constexpr std::string_view kControllerLocalOnly = "local_only";        // bool
 constexpr std::string_view kControllerOnCrash = "on_crash";            // string
 constexpr std::string_view kControllerAllowElevated = "allow_elevated";  // bool
+constexpr std::string_view kControllerUpdaterRegistration =
+    "updater_registration";  // string
 
 constexpr const char *const kFirewall = "firewall";  // dictionary
 constexpr const char *const kFirewallMode = "mode";  // string

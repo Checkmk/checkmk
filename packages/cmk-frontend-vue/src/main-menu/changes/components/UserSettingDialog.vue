@@ -41,17 +41,19 @@ async function setFullPage() {
     await restAPI.put(`ajax_set_change_action_full_page.py`, {
       _csrf_token: encodeURIComponent(global_csrf_token)
     })
+
+    successFullPage.value = true
   } catch (e) {
     error.value = (e as Error).message
     undismiss()
+    successFullPage.value = false
   }
-
   loading.value = false
-  successFullPage.value = true
 }
 
 function setQuickActivation() {
   successSlideout.value = true
+  error.value = null
 
   dismiss()
 }
@@ -70,7 +72,7 @@ function undismiss() {
 </script>
 <template>
   <CmkDialog
-    v-if="!dismissed"
+    v-if="!dismissed && !loading"
     :title="_t('Working with a complex environment?')"
     :message="
       _t(

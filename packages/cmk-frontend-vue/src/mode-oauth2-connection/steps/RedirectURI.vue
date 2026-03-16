@@ -76,7 +76,11 @@ immediateWatch(
   () => filteredData.value,
   (newValue) => {
     overrideSite.value = newValue.override_site ?? null
-    model.value.data = { ...model.value.data, ...newValue }
+    const filteredKeys = new Set(filteredDictionary.value.elements.map((e) => e.name))
+    const baseData = Object.fromEntries(
+      Object.entries(model.value.data).filter(([key]) => !filteredKeys.has(key))
+    ) as OAuth2FormData
+    model.value.data = { ...baseData, ...newValue }
   },
   { deep: true }
 )

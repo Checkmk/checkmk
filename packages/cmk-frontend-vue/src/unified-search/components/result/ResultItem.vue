@@ -92,15 +92,6 @@ function setFocus() {
   }
 }
 
-function navigateToTarget(title: string, target?: UnifiedSearchResultTarget | undefined) {
-  if (target) {
-    window.open(target.url, 'main')
-    if (target.transition) {
-      showLoadingTransition(target.transition, title)
-    }
-  }
-}
-
 immediateWatch(
   () => ({ newFocus: props.focus }),
   async ({ newFocus }) => {
@@ -175,11 +166,7 @@ onBeforeUnmount(() => {
         class="result-item-handler inline"
         :class="{ indented: props.indented }"
       >
-        <CmkButton
-          ref="item-focus-inline"
-          class="inline-button"
-          @click="navigateToTarget(ib.title, ib.target)"
-        >
+        <CmkButton ref="item-focus-inline" :href="ib.target.url" class="inline-button">
           <div v-if="ib.icon" class="result-item-inner-start">
             <CmkDynamicIcon :spec="ib.icon" size="small" class="result-item-icon" />
           </div>

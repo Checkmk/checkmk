@@ -19,7 +19,6 @@ daily_reduced: &daily_reduced
     - "debian-13"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
-    - "sles-15sp7"
     - "sles-16.0"
 
 daily_saas: &daily_saas
@@ -55,7 +54,7 @@ editions:
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]
         weekly: [*common, *cma_distros]
-        testbuild: ["ubuntu-24.04", "sles-15sp7", "cma-4"]
+        testbuild: ["ubuntu-24.04", "sles-16.0", "cma-4"]
     ultimate:
         release: [*common, *cma_distros]
         daily: *daily_reduced

@@ -380,6 +380,7 @@ class ModeTags(ABCTagMode):
             ),
             empty_text=_("You haven't defined any tag groups yet."),
             searchable=False,
+            sortable=False,
         ) as table:
             host_attributes = all_host_attributes(
                 host_attribute_specs, self._effective_config.get_tag_groups_by_topic()

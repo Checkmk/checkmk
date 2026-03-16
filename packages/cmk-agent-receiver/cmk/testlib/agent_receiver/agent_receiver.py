@@ -196,6 +196,12 @@ class AgentReceiverClient:
             },
         )
 
+    def get_task(self, *, relay_id: str, task_id: str, site_cn: str) -> httpx.Response:
+        return self.client.get(
+            f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
+            headers={INJECTED_UUID_HEADER: site_cn},
+        )
+
     def activate_config(self, site_cn: str) -> httpx.Response:
         headers = {
             INJECTED_UUID_HEADER: site_cn,

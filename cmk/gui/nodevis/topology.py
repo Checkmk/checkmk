@@ -29,11 +29,11 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import locked
 from cmk.ccc.user import UserId
-from cmk.gui import sites
+from cmk.gui import sites, visuals
 from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, make_topic_breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.dashboard import get_topology_context_and_filters
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -95,11 +95,13 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.view import View
 from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
-from cmk.gui.views.store import multisite_builtin_views
+from cmk.gui.views.page_show_view import get_all_active_filters
+from cmk.gui.views.store import get_all_views, get_permitted_views, multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
-from cmk.gui.visuals.filter import FilterRegistry
+from cmk.gui.visuals.filter import Filter, FilterRegistry
 from cmk.utils.tags import TagID
 
 
@@ -271,7 +273,7 @@ class ABCTopologyPage(Page):
         pass
 
     def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
-        context, _show_filters = get_topology_context_and_filters()
+        context, _show_filters = _get_topology_context_and_filters()
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
         display_dropdown.topics.insert(
@@ -387,7 +389,7 @@ class NetworkTopologyPage(ABCTopologyPage):
 
 class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
     def _get_context(self, page_name: str) -> dict:
-        _view, show_filters = get_topology_context_and_filters()
+        _view, show_filters = _get_topology_context_and_filters()
         return {f.ident: {} for f in show_filters if f.available()}
 
 
@@ -1720,7 +1722,7 @@ def _get_topology_settings_from_filters() -> dict[str, str]:
 
 def _get_query_string() -> str:
     # Determine hosts from filters
-    filter_headers = "".join(get_livestatus_filter_headers(*get_topology_context_and_filters()))
+    filter_headers = "".join(get_livestatus_filter_headers(*_get_topology_context_and_filters()))
     query = "GET hosts\nColumns: name"
     if filter_headers:
         query += "\n%s" % filter_headers
@@ -1943,3 +1945,24 @@ def _convert_to_sort_tuple(name: str) -> tuple:
             return value
 
     return tuple(map(try_int, re.split(r"(\d+)", name)))
+
+
+def _get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]], list[Filter]]:
+    view_name = "topology_filters"
+    view_spec = visuals.get_permissioned_visual(
+        view_name,
+        request.get_validated_type_input(UserId, "owner"),
+        "view",
+        get_permitted_views(),
+        get_all_views(),
+    )
+
+    datasource = data_source_registry[view_spec["datasource"]]()
+    context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+    view = View(
+        view_name,
+        view_spec,
+        context,
+        UserPermissions.from_config(active_config, permission_registry),
+    )
+    return context, visuals.visible_filters_of_visual(view.spec, get_all_active_filters(view))

@@ -230,11 +230,11 @@ BEGIN
       LEFT OUTER JOIN sys.databases db ON CAST(b.database_name AS NVARCHAR(MAX)) = CAST(db.name AS NVARCHAR(MAX))
       LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id
     WHERE
-      (is_local is null or is_local = ''1'')
-      AND (is_primary_replica is null or is_primary_replica = ''1'')
-      AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR(120)))
+      (rep.is_local is null or rep.is_local = 1)
+      AND (rep.is_primary_replica is null or rep.is_primary_replica = 1)
+      AND UPPER(b.machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR(120)))
     GROUP BY
-      type,
+      b.type,
       rep.replica_id,
       rep.is_primary_replica,
       rep.is_local,

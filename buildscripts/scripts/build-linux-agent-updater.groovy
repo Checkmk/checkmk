@@ -77,8 +77,8 @@ void main() {
 
         stage("Create and sign deb/rpm packages") {
             dir("${checkout_dir}/agents") {
-                sh("make rpm");
-                sh("make deb");
+                sh("make rpm NEW_VERSION='${cmk_version}'");
+                sh("make deb NEW_VERSION='${cmk_version}'");
             }
             def package_name_rpm = cmd_output("find ${checkout_dir} -name *.rpm");
             def package_name_deb = cmd_output("find ${checkout_dir} -name *.deb");

@@ -6728,9 +6728,11 @@ class AWSSectionsUSEast(AWSSections):
         distributor = ResultDistributor()
 
         if "ce" in services:
-            ce_client = self._init_client("ce")
-            self._sections.append(CostsAndUsage(ce_client, region, config))
-            self._sections.append(ReservationUtilization(ce_client, region, config))
+            # ce_client = self._init_client("ce")
+            # TODO: Disabled for 2.5 beta 1, pending CMK-32519
+            # self._sections.append(CostsAndUsage(ce_client, region, config))
+            # self._sections.append(ReservationUtilization(ce_client, region, config))
+            pass
 
         cloudwatch_client = self._init_client("cloudwatch")
         tagging_client = self._init_client("resourcegroupstaggingapi")

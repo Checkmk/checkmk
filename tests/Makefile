@@ -263,13 +263,9 @@ test-requirements:
 	$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_requirements.py;
 
 test-py-extensions:
-	# block 1: no changes file given, test all files
-	# block 2: changes file given, test only changed files
-	if test -z "$$CHANGED_FILES_WITH_MODE_FILE"; then \
-		$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_python_extensions.py --test-all-files -k 'py_extension' --result-out="$$RESULTS_FILE"; \
-	else \
-		$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_python_extensions.py --git-changes="$$CHANGED_FILES_WITH_MODE_FILE" -k 'py_extension' --result-out="$$RESULTS_FILE"; \
-	fi
+	bazel build --aspects=//bazel/tools:aspects.bzl%python_extension_checker //... \
+	--@aspect_rules_lint//lint:fail_on_violation=True --//:use_faked_artifacts=True \
+	--keep_going
 
 test-format:
 	bazel run //:format.check

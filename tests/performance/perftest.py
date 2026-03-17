@@ -306,7 +306,8 @@ class PerformanceTest:
 
         Sequentially issues 100 Playwright requests against the sites given page_url, appending a
         millisecond timestamp (_ts) as query parameter to avoid cache hits. Each request includes
-        cache-busting headers and uses a timeout.
+        cache-busting headers and uses a timeout. For each request, wait for the domcontentloaded
+        event being triggered.
 
         Args:
             context: Playwright browser context.
@@ -334,7 +335,7 @@ class PerformanceTest:
                 timeout_ms = 1000 * (
                     page_url.first_request_timeout if i == 0 else page_url.request_timeout
                 )
-                resp = page.goto(unique_url, timeout=timeout_ms)
+                resp = page.goto(unique_url, timeout=timeout_ms, wait_until="domcontentloaded")
                 if i == 0:
                     first_request_duration = time() - start_time
                     logger.info(

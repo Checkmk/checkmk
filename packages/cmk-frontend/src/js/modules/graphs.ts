@@ -312,7 +312,7 @@ function get_id_of_graph(ajax_context: AjaxContext) {
   return 'graph_' + g_current_graph_id++
 }
 
-function show_error(container: HTMLDivElement, msg: string) {
+function show_graph_error(container: HTMLDivElement, msg: string) {
   let element = document.getElementById('error_container')
   if (element === null) {
     element = document.createElement('div')
@@ -323,7 +323,7 @@ function show_error(container: HTMLDivElement, msg: string) {
   element.innerHTML = msg
 }
 
-function show_warning(container: HTMLDivElement, msg: string) {
+function show_graph_warning(container: HTMLDivElement, msg: string) {
   let element = document.getElementById('warning_container')
   if (element === null) {
     element = document.createElement('div')
@@ -341,14 +341,14 @@ export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: H
   // calculating a new one. Otherwise e.g. g_graphs will grow continously.
   const error = ajax_graph['error']
   if (error) {
-    show_error(container, error)
+    show_graph_error(container, error)
   } else {
     document.getElementById('error_container')?.remove()
   }
 
   const warning = ajax_graph['warning']
   if (warning) {
-    show_warning(container, warning)
+    show_graph_warning(container, warning)
   } else {
     document.getElementById('warning_container')?.remove()
   }
@@ -2047,6 +2047,23 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
     g_graph_backoff.report_failure()
     return
   }
+  const container = graph_container as HTMLDivElement
+
+  if (response.error) {
+    show_graph_error(container, response.error)
+    g_graph_update_in_process = false
+    g_graph_backoff.report_failure()
+    return
+  } else {
+    document.getElementById('error_container')?.remove()
+  }
+
+  if (response.warning) {
+    show_graph_warning(container, response.warning)
+  } else {
+    document.getElementById('warning_container')?.remove()
+  }
+
   // Structure of response:
   // {
   //     "html" : html_code,
@@ -2177,6 +2194,10 @@ function set_graph_timerange(graph_id: string, start_time: number, end_time: num
       post_data: post_data,
       //this is related to the third argument of the function, which I think is never used in ajax.ts
       response_handler: handle_graph_timerange_update,
+      error_handler: function () {
+        g_graph_update_in_process = false
+        g_graph_backoff.report_failure()
+      },
       handler_data: get_graph_container(canvas)
     })
   }

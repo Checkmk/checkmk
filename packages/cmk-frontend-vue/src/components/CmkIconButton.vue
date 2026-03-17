@@ -14,6 +14,7 @@ defineEmits(['click'])
 
 <template>
   <button
+    type="button"
     class="cmk-icon-button"
     :title="title"
     @click.prevent="

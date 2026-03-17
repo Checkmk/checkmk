@@ -62,6 +62,7 @@ defineEmits(['click'])
 <template>
   <button
     ref="button"
+    type="button"
     role="combobox"
     class="cmk-dropdown-button"
     :class="[

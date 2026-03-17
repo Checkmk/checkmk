@@ -518,6 +518,9 @@ allows = ["@ccc", "@trace"]
 [components."cmk.crypto"]
 allows = ["@ccc"]
 
+[components."cmk.dev_deploy"]
+allows = []
+
 [components."cmk.diagnostics"]
 allows = ["cmk.ccc.site", "cmk.utils.paths"]
 

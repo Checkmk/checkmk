@@ -27,8 +27,8 @@ def check_checkpoint_svn_status(section: StringTable) -> CheckResult:
     if section:
         major, minor, code, description = section[0]
         ver = f"v{major}.{minor}"
-        if int(code) != 0:
-            yield Result(state=State.CRIT, summary=description)
+        if code != "" and int(code) != 0:
+            yield Result(state=State.CRIT, summary=description or f"Error code {code} ({ver})")
             return
         yield Result(state=State.OK, summary="OK (%s)" % ver)
 

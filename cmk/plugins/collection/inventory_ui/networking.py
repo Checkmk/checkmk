@@ -576,15 +576,15 @@ node_networking_lldp_cache_neighbors = Node(
     table=Table(
         view=View(name="invlldpcache", title=Title("LLDP neighbors")),
         columns={
-            "capabilities": TextField(Title("Capabilities supported")),
-            "capabilities_map_supported": TextField(Title("Capabilities supported")),
+            "neighbor_name": TextField(Title("Neighbor name")),
+            "neighbor_port": TextField(Title("Neighbor port")),
             "local_port": TextField(Title("Local port")),
             "neighbor_address": TextField(Title("Neighbor address")),
             "neighbor_id": TextField(Title("Neighbor ID")),
-            "neighbor_name": TextField(Title("Neighbor name")),
-            "neighbor_port": TextField(Title("Neighbor port")),
-            "port_description": TextField(Title("Neighbor port description")),
             "system_description": TextField(Title("Neighbor description")),
+            "port_description": TextField(Title("Neighbor port description")),
+            "capabilities": TextField(Title("Capabilities")),
+            "capabilities_map_supported": TextField(Title("Capabilities supported")),
         },
     ),
 )

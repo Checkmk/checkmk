@@ -52,9 +52,9 @@ void main() {
                 // Only build the relay with ultimate edition sources
                 sh("""
                     bazel build --cmk_edition=ultimate //omd/non-free/relay:image_tar
-                    mkdir -p ${artifact_directory}/${cmk_version}
+                    mkdir -p ${artifact_directory}/${cmk_version_rc_aware}
                     cp \$(bazel cquery --cmk_edition=ultimate //omd/non-free/relay:image_tar --output=files) \
-                        ${artifact_directory}/${cmk_version}/${tarball_name};
+                        ${artifact_directory}/${cmk_version_rc_aware}/${tarball_name};
                 """)
             }
 

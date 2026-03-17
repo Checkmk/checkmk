@@ -22,7 +22,7 @@ from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
 Seconds = typing.NewType("Seconds", float)
 
-__version__ = "2.5.0b1"
+__version__ = "2.5.0b2"
 
 AGENT = "aws_status"
 

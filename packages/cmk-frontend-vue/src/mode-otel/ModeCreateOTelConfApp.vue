@@ -15,6 +15,7 @@ import CmkWizard, {
   CmkWizardStep
 } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import ConfigureCollector from './otel-configuration-steps/ConfigureCollector.vue'
 import ConfigureGeneralProperties from './otel-configuration-steps/ConfigureGeneralProperties.vue'
@@ -64,6 +65,9 @@ const close = () => {
         <CmkHeading>
           {{ _t('Configure OpenTelemetry collector') }}
         </CmkHeading>
+        <CmkParagraph>{{
+          _t('Configure at least one OpenTelemetry Collector receiver.')
+        }}</CmkParagraph>
       </template>
       <template #content>
         <ConfigureCollector />

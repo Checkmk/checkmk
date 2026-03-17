@@ -380,7 +380,6 @@ class ModeTags(ABCTagMode):
             ),
             empty_text=_("You haven't defined any tag groups yet."),
             searchable=False,
-            sortable=False,
         ) as table:
             host_attributes = all_host_attributes(
                 host_attribute_specs, self._effective_config.get_tag_groups_by_topic()
@@ -388,7 +387,7 @@ class ModeTags(ABCTagMode):
             for nr, tag_group in enumerate(self._effective_config.tag_groups):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
-                self._show_tag_icons(tag_group, nr)
+                self._show_tag_icons(table, tag_group, nr)
 
                 table.cell(_("ID"), tag_group.id)
                 table.cell(_("Title"), tag_group.title)
@@ -400,7 +399,7 @@ class ModeTags(ABCTagMode):
                     tag_group_attribute = host_attributes["tag_%s" % tag_group.id]
                     tag_group_attribute.render_input("", tag_group_attribute.default_value())
 
-    def _show_tag_icons(self, tag_group: cmk.utils.tags.TagGroup, nr: int) -> None:
+    def _show_tag_icons(self, table: Table, tag_group: cmk.utils.tags.TagGroup, nr: int) -> None:
         # Tag groups were made built-in with ~1.4. Previously users could modify
         # these groups.  These users now have the modified tag groups in their
         # user configuration and should be able to cleanup this using the GUI
@@ -414,7 +413,9 @@ class ModeTags(ABCTagMode):
         edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
         html.icon_button(edit_url, _("Edit this tag group"), StaticIcon(IconNames.edit))
 
-        html.element_dragger_url("tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)]))
+        table.element_dragger_url(
+            "tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)])
+        )
 
         delete_url = make_confirm_delete_link(
             url=make_action_link([("mode", "tags"), ("_delete", tag_group.id)]),

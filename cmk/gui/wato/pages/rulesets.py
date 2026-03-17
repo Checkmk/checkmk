@@ -1308,7 +1308,6 @@ class ModeEditRuleset(WatoMode):
                 ),
                 css="ruleset",
                 searchable=False,
-                sortable=False,
                 limit=None,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
                 omit_update_header=True,
@@ -1421,7 +1420,7 @@ class ModeEditRuleset(WatoMode):
             )
 
         else:
-            html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
+            table.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
             html.icon_button(
                 url=make_confirm_delete_link(
                     url=self._action_url("delete", folder, rule.id),
@@ -3698,7 +3697,6 @@ class ModeUnknownRulesets(WatoMode):
                 self.name(),
                 title=None,
                 searchable=False,
-                sortable=False,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
                 limit=None,
             ) as table:

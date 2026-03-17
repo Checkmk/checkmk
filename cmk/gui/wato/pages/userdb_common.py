@@ -139,7 +139,7 @@ def render_connections_page(
     connection_type: str, edit_mode_path: str, config_mode_path: str
 ) -> None:
     customer = customer_api()
-    with table_element(sortable=False) as table:
+    with table_element() as table:
         for display_index, (real_index, connection) in _connections_by_gui_index(
             connection_type, load_connection_config(lock=False)
         ).items():
@@ -174,7 +174,7 @@ def render_connections_page(
             html.icon_button(
                 clone_url, _("Create a copy of this connection"), StaticIcon(IconNames.clone)
             )
-            html.element_dragger_url("tr", base_url=drag_url)
+            table.element_dragger_url("tr", base_url=drag_url)
             html.icon_button(delete_url, _("Delete this connection"), StaticIcon(IconNames.delete))
 
             table.cell("", css=["narrow"])

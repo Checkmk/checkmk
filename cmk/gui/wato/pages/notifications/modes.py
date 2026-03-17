@@ -458,7 +458,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
         all_users = userdb.load_users()
         title = self._table_title(show_title, profilemode, userid)
-        with table_element(title=title, limit=None, sortable=False) as table:
+        with table_element(title=title, limit=None) as table:
             if analyse:
                 analyse_rules, _analyse_plugins = analyse
 
@@ -499,7 +499,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                         _("Delete this notification rule"),
                         StaticIcon(IconNames.delete),
                     )
-                    html.element_dragger_url("tr", base_url=links.drag)
+                    table.element_dragger_url("tr", base_url=links.drag)
                 else:
                     table.cell("", css=["buttons"])
                     for _x in range(4):
@@ -1504,7 +1504,6 @@ class ModeAnalyzeNotifications(ModeNotifications):
         with table_element(
             table_id="backlog",
             title=_("Analysis: Recent notifications"),
-            sortable=False,
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
@@ -1969,7 +1968,6 @@ class ModeTestNotifications(ModeNotifications):
         with table_element(
             table_id="notification_test",
             title=_("Analysis: Test notifications"),
-            sortable=False,
         ) as table:
             table.row()
             table.cell("&nbsp;", css=["buttons"])
@@ -4043,7 +4041,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
     ) -> None:
         spec = self._spec()
         method_name = self._method_name()
-        with table_element(title=_("Parameters"), limit=None, sortable=False) as table:
+        with table_element(title=_("Parameters"), limit=None) as table:
             for nr, (parameter_id, parameter) in enumerate(parameters.items()):
                 table.row()
 
@@ -4059,7 +4057,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                     _("Create a copy of this notification parameter"),
                     StaticIcon(IconNames.clone),
                 )
-                html.element_dragger_url("tr", base_url=links.drag)
+                table.element_dragger_url("tr", base_url=links.drag)
                 html.icon_button(
                     links.delete,
                     _("Delete this notification parameter"),

@@ -349,7 +349,7 @@ class Table:
                 Foldable.FOLDABLE_SAVE_STATE,
                 Foldable.FOLDABLE_STATELESS,
             ]:
-                html.open_div(class_="foldable_wrapper")
+                html.open_div(class_="foldable_wrapper", id_=f"wrapper.table.{self.id}")
                 container = foldable_container(
                     treename="table",
                     id_=self.id,

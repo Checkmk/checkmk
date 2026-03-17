@@ -800,7 +800,9 @@ export async function fix_simplebar_scroll_to_id_in_chrome(
       if (element) {
         const scrollElement = g_content_scrollbar!.getScrollElement()
         if (scrollElement) {
-          scrollElement.scrollTop = element.offsetTop
+          const elementRect = element.getBoundingClientRect()
+          const scrollRect = scrollElement.getBoundingClientRect()
+          scrollElement.scrollTop += elementRect.top - scrollRect.top
         }
       }
     },

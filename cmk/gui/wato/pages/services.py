@@ -1211,17 +1211,17 @@ class DiscoveryPageRenderer:
             self._render_fix_all_element(
                 ungettext("New host label: ", "New host labels: ", new_host_labels),
                 new_host_labels,
-                "#tree.table.host_labels",
+                "#wrapper.table.host_labels",
             )
             self._render_fix_all_element(
-                ungettext("Vanished host label: ", "Vanished host labels: ", new_host_labels),
+                ungettext("Vanished host label: ", "Vanished host labels: ", vanished_host_labels),
                 vanished_host_labels,
-                "#tree.table.host_labels",
+                "#wrapper.table.host_labels",
             )
             self._render_fix_all_element(
-                ungettext("Changed host label: ", "Changed host labels: ", new_host_labels),
+                ungettext("Changed host label: ", "Changed host labels: ", changed_host_labels),
                 changed_host_labels,
-                "#tree.table.host_labels",
+                "#wrapper.table.host_labels",
             )
             fix_all_elements = HTML.without_escaping(output_funnel.drain())
 

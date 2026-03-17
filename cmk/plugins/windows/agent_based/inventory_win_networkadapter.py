@@ -71,6 +71,7 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
     ...     ['Address', '10.11.12.13 10.11.12.14 fe80::89d8:dead:beef:4223'],
     ...     ['Subnet', '255.255.255.0 255.255.255.0 64'],
     ...     ['DefaultGateway', '10.11.12.1'],
+    ...     ['Parameters', 'fe80::89d8:dead:beef:4223%23 RouterAdvertisement Random,10.11.12.14 WellKnown Link'],
     ...     ['AdapterType', 'T2'],
     ...     ['MACAddress', 'BE:EF'],
     ...     ['Name', 'Name2'],
@@ -78,13 +79,13 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
     ...     ['Address', '169.178.23.42 fe80::c118:dead:beef:2342'],
     ...     ['Subnet', '255.255.0.0 64'],
     ... ]): print(parsed_adapter)
-    IPNetworkAdapter(name='Name1', type='T1', state_infos=None, link_ether='', macaddress='DE:AD', gateway='10.11.12.1', speed=100, inet4=[AugmentedIPv4Interface('10.11.12.13/24'), AugmentedIPv4Interface('10.11.12.14/24')], inet6=[AugmentedIPv6Interface('fe80::89d8:dead:beef:4223/64')])
-    IPNetworkAdapter(name='Name2', type='T2', state_infos=None, link_ether='', macaddress='BE:EF', gateway='', speed=200, inet4=[AugmentedIPv4Interface('169.178.23.42/16')], inet6=[AugmentedIPv6Interface('fe80::c118:dead:beef:2342/64')])
+    IPNetworkAdapter(name='Name1', type='T1', state_infos=None, link_ether='', macaddress='DE:AD', gateway='10.11.12.1', speed=100, inet4=[AugmentedIPv4Interface('10.11.12.13/24'), AugmentedIPv4Interface('10.11.12.14/24')], inet6=[AugmentedIPv6Interface('fe80::89d8:dead:beef:4223/64', is_temporary=True)])
+    IPNetworkAdapter(name='Name2', type='T2', state_infos=None, link_ether='', macaddress='BE:EF', gateway='', speed=200, inet4=[AugmentedIPv4Interface('169.178.23.42/16')], inet6=[AugmentedIPv6Interface('fe80::c118:dead:beef:2342/64', is_temporary=False)])
     """
 
     def group_adapters(split_lines: StringTable) -> Iterable[dict]:
         first_varname = None
-        result: dict = {"addrv4": [], "addrv6": [], "subnv4": [], "subnv6": []}
+        result: dict = {"addrv4": [], "addrv6": [], "subnv4": [], "subnv6": [], "params": {}}
 
         for varname, value in (
             (element[0].strip(), value)
@@ -98,7 +99,7 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
             # is new instance
             if first_varname and varname == first_varname:
                 yield result
-                result = {"addrv4": [], "addrv6": [], "subnv4": [], "subnv6": []}
+                result = {"addrv4": [], "addrv6": [], "subnv4": [], "subnv6": [], "params": {}}
 
             if not first_varname:
                 first_varname = varname
@@ -111,6 +112,12 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
             elif varname == "Subnet":
                 for address in value.split(" "):
                     result.setdefault("subnv4" if "." in address else "subnv6", []).append(address)
+            elif varname == "Parameters":
+                result["params"] = {
+                    key.split("%")[0].strip().lower(): value.lower()
+                    for entry in value.split(",")
+                    for key, value in (entry.split(" ", maxsplit=1),)
+                }
         if result.get("Name"):
             yield result
 
@@ -126,8 +133,9 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
                 for address, subnet in zip(adapter["addrv4"], adapter["subnv4"])
             ],
             inet6=[
-                AugmentedIPv6Interface(f"{address}/{subnet}")
+                AugmentedIPv6Interface(f"{address}/{subnet}", is_temporary=is_temporary)
                 for address, subnet in zip(adapter["addrv6"], adapter["subnv6"])
+                for is_temporary in ("random" in (adapter["params"].get(address) or ""),)
             ],
         )
 
@@ -135,9 +143,6 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
 agent_section_win_networkadapter = AgentSection(
     name="win_networkadapter",
     parse_function=parse_win_networkadapter,
-    # fixme
-    # refactor-me: should use cmk.plugins.network.agent_based.ip_addresses.host_label_ip_addresses
-    #              but that has to be refactored first to use Adapter
     host_label_function=host_label_win_ip_address,
 )
 
@@ -173,4 +178,5 @@ inventory_plugin_win_ip_address = InventoryPlugin(
     name="win_ip_address",
     sections=["win_networkadapter"],
     inventory_function=inventorize_ip_addresses_windows,
+    # host_label_function=host_label_win_ip_address,
 )

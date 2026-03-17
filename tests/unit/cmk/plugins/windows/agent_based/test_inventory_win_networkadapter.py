@@ -236,6 +236,61 @@ def test_host_label_win_ip_address(
     )
 
 
+@pytest.mark.parametrize(
+    ("string_table", "expected_inet6"),
+    [
+        pytest.param(
+            [
+                ["AdapterType", " Ethernet 802.3"],
+                ["MACAddress", " AA", "BB", "CC", "DD", "EE", "FF"],
+                ["Name", " Adapter1"],
+                ["Speed", " 1000000000"],
+                ["Address", " 192.168.1.1 2001:db8::1"],
+                ["Subnet", " 255.255.255.0 64"],
+                ["Parameters", ""],
+            ],
+            [AugmentedIPv6Interface("2001:db8::1/64", is_temporary=False)],
+            id="parameters_empty",
+        ),
+        pytest.param(
+            [
+                ["AdapterType", " Ethernet 802.3"],
+                ["MACAddress", " AA", "BB", "CC", "DD", "EE", "FF"],
+                ["Name", " Adapter1"],
+                ["Speed", " 1000000000"],
+                ["Address", " 192.168.1.1 2001:db8::1"],
+                ["Subnet", " 255.255.255.0 64"],
+                ["Parameters", "2001:db8::1 RouterAdvertisement Random"],
+            ],
+            [AugmentedIPv6Interface("2001:db8::1/64", is_temporary=True)],
+            id="parameters_single",
+        ),
+        pytest.param(
+            [
+                ["AdapterType", " Ethernet 802.3"],
+                ["MACAddress", " AA", "BB", "CC", "DD", "EE", "FF"],
+                ["Name", " Adapter1"],
+                ["Speed", " 1000000000"],
+                ["Address", " 192.168.1.1 2001:db8::1 2001:db8::2"],
+                ["Subnet", " 255.255.255.0 64 64"],
+                ["Parameters", "2001:db8::1 RouterAdvertisement Random,2001:db8::2 WellKnown Link"],
+            ],
+            [
+                AugmentedIPv6Interface("2001:db8::1/64", is_temporary=True),
+                AugmentedIPv6Interface("2001:db8::2/64", is_temporary=False),
+            ],
+            id="parameters_multiple",
+        ),
+    ],
+)
+def test_parse_win_networkadapter_parameters(
+    string_table: StringTable,
+    expected_inet6: list[AugmentedIPv6Interface],
+) -> None:
+    [adapter] = list(parse_win_networkadapter(string_table))
+    assert adapter.inet6 == expected_inet6
+
+
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just set _PYTEST_RAISES=1 and run this file from your IDE and dive into the code.

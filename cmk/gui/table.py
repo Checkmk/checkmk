@@ -325,6 +325,16 @@ class Table:
         """
         self.next_header = title
 
+    def element_dragger_url(self, dragging_tag: str, base_url: str) -> None:
+        self.options["sortable"] = False
+        html.write_html(
+            html.render_element_dragger(
+                dragging_tag,
+                drop_handler="function(index){return cmk.element_dragging.url_drop_handler(%s, index);})"
+                % json.dumps(base_url),
+            )
+        )
+
     def _end(self) -> None:
         if not self.rows and not self.action_message and self.options["omit_if_empty"]:
             return

@@ -2024,7 +2024,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 pack_hits += rule_stats.get(rule["id"], 0)
             rule_pack_hits[rp["id"]] = pack_hits
 
-        with table_element(css="ruleset", limit=None, sortable=False, title=title) as table:
+        with table_element(css="ruleset", limit=None, title=title) as table:
             for nr, rule_pack in enumerate(self._rule_packs):
                 id_ = rule_pack["id"]
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
@@ -2047,7 +2047,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
 
                 drag_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
-                html.element_dragger_url("tr", base_url=drag_url)
+                table.element_dragger_url("tr", base_url=drag_url)
 
                 if type_ == ec.RulePackType.internal:
                     delete_url = make_confirm_delete_link(
@@ -2487,7 +2487,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         facilities = dict(_deref(syslog_facilities))
 
         # Show content of the rule pack
-        with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
+        with table_element(title=_("Rules"), css="ruleset", limit=None) as table:
             have_match = False
             hits = _get_rule_stats_from_ec()
             for nr, rule in enumerate(rules):
@@ -2524,7 +2524,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 html.icon_button(
                     clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone)
                 )
-                html.element_dragger_url("tr", base_url=drag_url)
+                table.element_dragger_url("tr", base_url=drag_url)
                 html.icon_button(delete_url, _("Delete this rule"), StaticIcon(IconNames.delete))
 
                 table.cell("", css=["buttons"])
@@ -3658,7 +3658,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def _process_uploaded_mib_file(
         self, filename: str, content_bytes: bytes, *, use_git: bool, debug: bool
     ) -> str:
-        mibname = filename.split(".")[0] if "." in filename else filename
+        mibname = filename.split(".", maxsplit=1)[0] if "." in filename else filename
 
         # FIXME: This is a temporary local fix that should be removed once
         # handling of file contents uses a uniformly encoded representation
@@ -4324,9 +4324,9 @@ ConfigVariableEventConsoleActions = ConfigVariable(
                     ),
                 ],
             ),
-            title_function=lambda value: not value["id"]
-            and _("New Action")
-            or (value["id"] + " - " + value["title"]),
+            title_function=lambda value: (
+                not value["id"] and _("New Action") or (value["id"] + " - " + value["title"])
+            ),
         ),
         title=_("Actions (emails & scripts)"),
         help=_(

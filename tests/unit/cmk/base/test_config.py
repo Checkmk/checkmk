@@ -2546,16 +2546,22 @@ def test_config_cache_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> Non
 @pytest.mark.parametrize(
     "use_new_descr,result",
     [
-        (True, "Check_MK Discovery"),
-        (False, "Check_MK inventory"),
+        pytest.param({"cmk_inventory": True}, "Check_MK Discovery", id="new description"),
+        pytest.param({"cmk_inventory": False}, "Check_MK inventory", id="old description"),
+        pytest.param(
+            USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"],
+            "Check_MK Discovery",
+            id="from sample config",
+        ),
+        pytest.param({}, "Check_MK inventory", id="default config"),
     ],
 )
 def test_config_cache_service_discovery_name(
-    monkeypatch: MonkeyPatch, use_new_descr: bool, result: str
+    monkeypatch: MonkeyPatch, use_new_descr: dict[str, bool], result: str
 ) -> None:
     ts = Scenario()
-    if use_new_descr:
-        ts.set_option("use_new_descriptions_for", ["cmk_inventory"])
+    ts.set_option("use_new_descriptions_for", use_new_descr)
+
     ts.apply(monkeypatch)
 
     assert ConfigCache.service_discovery_name() == result

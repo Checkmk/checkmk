@@ -228,6 +228,21 @@ fs::path GetWorkController() {
     return fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
 }
 
+std::string GetUpdaterRegistration(const YAML::Node &controller_config) {
+    auto value =
+        cfg::GetVal(controller_config,
+                    cfg::vars::kControllerUpdaterRegistration, std::string{""});
+    if (!value.empty()) {
+        XLOG::l.i(
+            "updater_registration found in yml config, writing to cmk-agent-ctl.toml");
+        return fmt::format("{} = \"{}\"\n",
+                           cfg::vars::kControllerUpdaterRegistration, value);
+    }
+    XLOG::l.i(
+        "updater_registration not set in yml config, skipping in cmk-agent-ctl.toml");
+    return {};
+}
+
 bool CreateTomlConfig(const fs::path &toml_file) {
     constexpr std::string_view text{
         "# Controlled by Check_MK Agent Bakery.\n"
@@ -258,18 +273,18 @@ bool CreateTomlConfig(const fs::path &toml_file) {
         fmt::format("{} = {}\n", cfg::vars::kControllerValidApiCert,
                     cfg::GetVal(controller_config,
                                 cfg::vars::kControllerValidApiCert, false));
-    auto updater_registration =
-        cfg::GetVal(controller_config,
-                    cfg::vars::kControllerUpdaterRegistration, std::string{""});
+
+    auto updater_registration_line = GetUpdaterRegistration(controller_config);
     try {
         std::ofstream ofs(toml_file);
-        ofs << text << pull_port << allowed_ip << detect_proxy
-            << valid_api_cert;
-        if (!updater_registration.empty()) {
-            ofs << fmt::format("{} = \"{}\"\n",
-                               cfg::vars::kControllerUpdaterRegistration,
-                               updater_registration);
+        if (!ofs.is_open()) {
+            XLOG::l("Failed to open TOML config file '{}'", toml_file.string());
+            return false;
         }
+        ofs.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+        ofs << text << pull_port << allowed_ip << detect_proxy << valid_api_cert
+            << updater_registration_line;
+
     } catch (const std::exception &e) {
         XLOG::l("Failed to create TOML config with exception {}", e.what());
         return false;

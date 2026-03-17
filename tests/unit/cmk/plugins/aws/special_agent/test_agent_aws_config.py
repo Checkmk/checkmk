@@ -5,6 +5,7 @@
 
 
 from argparse import Namespace as Args
+from pathlib import Path
 
 import pytest
 
@@ -60,3 +61,15 @@ def test_agent_aws_config_hash_processes(
     """Test whether the hash is the same across different python processes"""
     aws_config_1 = AWSConfig("heute1", sys_argv, ([], []), NamingConvention.ip_region_instance)
     assert bool(aws_config_1._compute_config_hash(sys_argv) == hashed_val) is expected_result
+
+
+def test_config_hash_roundtrip(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Written config hash must round-trip correctly so the config is not
+    considered changed on subsequent runs.
+    """
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+    args = Args(foo="Foo")
+    cfg = AWSConfig("heute1", args, ([], []), NamingConvention.ip_region_instance)
+    cfg._write_config_hash()
+    assert cfg._load_config_hash() == cfg._current_config_hash

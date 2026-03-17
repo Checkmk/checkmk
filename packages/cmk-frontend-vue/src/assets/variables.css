@@ -120,6 +120,7 @@
     --slide-in-left-part: var(--color-daylight-grey-30);
     --dropdown-arrow-color: var(--color-conference-grey-100);
     --dashed-border-color: var(--color-mid-grey-20);
+    --shared-dashboard-indicator-background: var(--color-daylight-grey-30);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);
@@ -240,6 +241,7 @@
     --slide-in-left-part: var(--ux-theme-2);
     --dropdown-arrow-color: var(--color-white-100);
     --dashed-border-color: var(--color-mid-grey-80);
+    --shared-dashboard-indicator-background: var(--color-midnight-grey-100);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);

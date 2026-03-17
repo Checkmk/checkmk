@@ -53,7 +53,8 @@ const bullet: string = '●'
 .db-status-message__container {
   padding: var(--dimension-4) var(--dimension-6);
   border-radius: var(--dimension-3);
-  background-color: var(--ux-theme-0);
+  background-color: var(--shared-dashboard-indicator-background);
+  white-space: nowrap;
 }
 
 .db-status-message__bullet-ok {

@@ -315,19 +315,6 @@ class PerformanceTest:
         Behavior:
         - Logs a warning if a response is non-OK (non-2xx status).
         - Logs a warning if an exception occurs during the request.
-        - Does not collect timing metrics or enforce performance thresholds.
-
-        Returns:
-            None
-
-        Side Effects:
-            Generates network load and may take noticeable time if the target is slow.
-            Emits warning log entries for failed or errored requests.
-
-        Potential Improvements:
-            - Capture and aggregate latency metrics (e.g., min/avg/p95).
-            - Add success/failure summary and assertions for automated regression detection.
-            - Introduce configurable request count and concurrency for broader coverage.
         """
 
         first_request_duration = 0.0

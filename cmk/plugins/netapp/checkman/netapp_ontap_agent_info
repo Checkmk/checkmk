@@ -1,0 +1,18 @@
+title: NetApp ONTAP: Agent Info
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports errors that occurred while the NetApp ONTAP special agent
+ was collecting monitoring data from the cluster.
+
+ The service is always discovered and shows {OK} when all sections were collected
+ successfully. It shows {WARN} for each section that failed to collect, displaying
+ the section name and the error message. Services for affected sections will go stale.
+
+ Sections that depend on other sections that failed to collect (e.g. {fan} and {temp}
+ depend on node data) are also reported as skipped with an explanation.
+
+discovery:
+ One service is created per host monitored via the NetApp ONTAP special agent.

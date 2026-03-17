@@ -1173,6 +1173,7 @@ def _get_vue_data() -> Notifications:
                     ("filled_in", "filter"),
                     ("_active", "logtime;log_notification_phase;log_class;log_type"),
                     ("logtime_from", "7"),
+                    ("logtime_from_range", "86400"),
                     ("is_log_notification_phase", "0"),
                     ("logclass3", "on"),
                     ("log_type", ".*NOTIFICATION RESULT$"),

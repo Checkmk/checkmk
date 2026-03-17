@@ -769,8 +769,6 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                 }
                 hss._debug_info =
                     hss._is_host ? "HOST DOWNTIME" : "SVC HOST DOWNTIME";
-            } else {
-                state_changed = ModificationStatus::unchanged;
             }
             hss._host_downtime_depth += started ? 1 : -1;
             if (hss._is_host) {

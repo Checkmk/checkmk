@@ -109,7 +109,7 @@ onMounted(() => {
         <CmkSpace :direction="'vertical'" />
         <!-- eslint-disable vue/valid-v-for since no unique identifier is present for key -->
         <template v-for="button in props.buttons">
-          <CmkButton :variant="button.variant" @click="button.onclick">
+          <CmkButton :variant="button.variant" @click.stop="button.onclick">
             {{ button.title }}
           </CmkButton>
           <CmkSpace />

@@ -81,11 +81,11 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def info_text(self) -> Locator:
-        return self.slideout.get_by_text("Changes are saved without affecting")
+        return self.slideout.get_by_text("Working with a complex environment?")
 
     @property
     def info_close_btn(self) -> Locator:
-        return self.slideout.get_by_role("button", name="Do not show again")
+        return self.slideout.get_by_role("button", name="Keep quick activation")
 
     @property
     def sites_section(self) -> Locator:
@@ -183,7 +183,9 @@ class ActivateChangesSlideout(LocatorHelper):
         expect(
             self.slideout.get_by_role(
                 "heading",
-                name=f"Successfully activated {expected_changes} changes",
+                name=re.compile(
+                    f"Successfully activated {expected_changes} pending changes? on \\d+ sites?"
+                ),
             )
         ).to_be_visible()
 

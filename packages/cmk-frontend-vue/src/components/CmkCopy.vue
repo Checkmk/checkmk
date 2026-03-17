@@ -22,7 +22,8 @@ const props = defineProps<{
   text: string
 }>()
 
-const TOOLTIP_DISPLAY_DURATION = 8000
+const TOOLTIP_DISPLAY_DURATION = 3000
+const TOOLTIP_ERROR_DISPLAY_DURATION = 8000
 
 const showMessage = ref(false)
 const errorMessage = ref('')
@@ -40,10 +41,13 @@ async function copyToClipboard() {
     console.error('Copy failed', err)
   }
   showMessage.value = true
-  tooltipTimeoutId = setTimeout(() => {
-    showMessage.value = false
-    tooltipTimeoutId = null
-  }, TOOLTIP_DISPLAY_DURATION)
+  tooltipTimeoutId = setTimeout(
+    () => {
+      showMessage.value = false
+      tooltipTimeoutId = null
+    },
+    errorMessage.value ? TOOLTIP_ERROR_DISPLAY_DURATION : TOOLTIP_DISPLAY_DURATION
+  )
 }
 
 const handlePointerDownOutside = () => {

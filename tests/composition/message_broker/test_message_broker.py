@@ -191,11 +191,9 @@ UNSUPPORTED_VERSIONS = (
     ssl.TLSVersion.SSLv3,
     ssl.TLSVersion.TLSv1,
     ssl.TLSVersion.TLSv1_1,
-)
-SUPPORTED_VERSIONS = (
     ssl.TLSVersion.TLSv1_2,
-    ssl.TLSVersion.TLSv1_3,
 )
+SUPPORTED_VERSIONS = (ssl.TLSVersion.TLSv1_3,)
 
 
 @pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS, ids=lambda v: v.name)

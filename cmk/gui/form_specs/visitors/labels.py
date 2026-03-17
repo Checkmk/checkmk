@@ -47,7 +47,7 @@ class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FallbackModel]):
                     remove_label=translate_to_current_language("Remove label"),
                     add_some_labels=translate_to_current_language("Add some labels"),
                     key_value_format_error=translate_to_current_language(
-                        "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
+                        "Labels need to be in the format [KEY]:[VALUE]. For example os:windows or net:ip:v4."
                     ),
                     max_labels_reached=translate_to_current_language("Max labels reached"),
                     uniqueness_error=translate_to_current_language("Labels need to be unique."),

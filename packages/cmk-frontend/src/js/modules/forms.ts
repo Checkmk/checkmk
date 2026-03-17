@@ -158,7 +158,7 @@ function enable_label_input_fields(container: HTMLElement | HTMLDocument | null)
     const world = element.getAttribute('data-world')
 
     const tagify_args: CheckMKTagifyArgs = {
-      pattern: /^[^:]+:[^:]+$/,
+      pattern: /^[^:]+:.+$/,
       dropdown: {
         enabled: 1, // show dropdown on first character
         caseSensitive: false

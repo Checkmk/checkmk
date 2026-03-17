@@ -7557,7 +7557,7 @@ class _SingleLabel(AjaxDropdownChoice):
         super().__init__(
             regex=cmk.ccc.regex.regex(LABEL_REGEX),
             regex_error=_(
-                'Labels need to be in the format "[KEY]:[VALUE]". For example "os:windows".'
+                'Labels need to be in the format "[KEY]:[VALUE]". For example "os:windows" or "net:ip:v4".'
             ),
             autocompleter=AutocompleterConfig(
                 ident=self.ident,

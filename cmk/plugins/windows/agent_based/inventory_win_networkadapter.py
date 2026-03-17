@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 # Example output:
+# consists from the header, adapters and _optional_ footer where footer is Parameters
 # <<<win_networkadapter:sep(58)>>>
 # AdapterType: Ethernet 802.3
 # DeviceID: 7
@@ -17,6 +18,11 @@
 # Address: 192.168.178.26
 # Subnet: 255.255.255.0
 # DefaultGateway: 192.168.178.1
+# ....
+# Parameters: ::1 RouterAdvertised Random,::2 RouterAdvertised Link
+
+# Parameters format:
+# Parameters:[ <IPAddress> <Prefix> <Suffix>[, ...]]
 
 from collections.abc import Iterable
 

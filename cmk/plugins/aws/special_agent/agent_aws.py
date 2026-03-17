@@ -391,7 +391,7 @@ class AWSConfig:
         return self._config_hash_storage.read(self._config_hash_key, default=None)
 
     def _write_config_hash(self) -> None:
-        self._config_hash_storage.write(self._config_hash_key, f"{self._current_config_hash}\n")
+        self._config_hash_storage.write(self._config_hash_key, self._current_config_hash)
 
 
 # .
@@ -6728,11 +6728,9 @@ class AWSSectionsUSEast(AWSSections):
         distributor = ResultDistributor()
 
         if "ce" in services:
-            # ce_client = self._init_client("ce")
-            # TODO: Disabled for 2.5 beta 1, pending CMK-32519
-            # self._sections.append(CostsAndUsage(ce_client, region, config))
-            # self._sections.append(ReservationUtilization(ce_client, region, config))
-            pass
+            ce_client = self._init_client("ce")
+            self._sections.append(CostsAndUsage(ce_client, region, config))
+            self._sections.append(ReservationUtilization(ce_client, region, config))
 
         cloudwatch_client = self._init_client("cloudwatch")
         tagging_client = self._init_client("resourcegroupstaggingapi")

@@ -370,8 +370,15 @@ function RecurseFolderForExecs {
 
 function GetIpParametersTable {
     $addresses = Get-NetIPAddress -ErrorAction SilentlyContinue
-    foreach ($addr in $addresses) {
-        Write-Output ("{0} {1} {2}" -f $addr.IPAddress, $addr.PrefixOrigin, $addr.SuffixOrigin)
+
+    $items = foreach ($addr in $addresses) {
+        "{0} {1} {2}" -f $addr.IPAddress, $addr.PrefixOrigin, $addr.SuffixOrigin
+    }
+
+    if ($items) {
+        "Parameters: {0}" -f ($items -join ",")
+    } else {
+        "Parameters:"
     }
 }
 
@@ -430,14 +437,12 @@ GetWmiObject "Win32_VideoController" @("Name", "Description", "Caption", "Adapte
 # Network Adapter
 StartSection "win_networkadapter" 58 $timeUntil
 GetNetworkAdapter @("Name", "ServiceName", "MACAddress", "AdapterType", "DeviceID", "NetworkAddresses", "Speed")
+# Network Adapter Parameters IP address, prefix, suffix, etc.
+GetIpParametersTable
 
 # Route Table
 StartSection "win_ip_r" 124 $timeUntil
 GetRouteTable
-
-# IP Parameters Table
-StartSection "win_ip_parameters" 32 $timeUntil
-GetIpParametersTable
 
 # Installed Software
 StartSection "win_wmi_software" 31 $timeUntil

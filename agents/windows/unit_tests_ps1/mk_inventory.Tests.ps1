@@ -215,25 +215,24 @@ Context "mk_inventory.ps1 Tests" {
                 @(
                     [PSCustomObject]@{
                         IPAddress     = "192.168.1.100"
-                        PrefixOrigin  = "Dhcp"
-                        SuffixOrigin  = "Dhcp"
+                        PrefixOrigin  = "Dhcp1"
+                        SuffixOrigin  = "Dhcp2"
                     },
                     [PSCustomObject]@{
                         IPAddress     = "::1"
-                        PrefixOrigin  = "WellKnown"
-                        SuffixOrigin  = "WellKnown"
+                        PrefixOrigin  = "WellKnown1"
+                        SuffixOrigin  = "WellKnown2"
                     }
                 )
             }
             $result = GetIpParametersTable
-            $result | Should -Contain "192.168.1.100 Dhcp Dhcp"
-            $result | Should -Contain "::1 WellKnown WellKnown"
+            $result | Should -Match "Parameters: 192.168.1.100 Dhcp1 Dhcp2,::1 WellKnown1 WellKnown2"
         }
 
         It "returns nothing when no addresses are available" {
             Mock Get-NetIPAddress { @() }
             $result = GetIpParametersTable
-            $result | Should -BeNullOrEmpty
+            $result | Should -Match "Parameters:"
         }
     }
 

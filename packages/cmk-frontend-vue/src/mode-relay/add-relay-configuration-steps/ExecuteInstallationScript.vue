@@ -81,9 +81,9 @@ const installCommand = computed(() => {
                 'automatically download and register the Relay to your Checkmk site and run it afterwards.'
             )
           }}
-          {{ _t('Note that the installation requires root privileges.') }}
         </CmkParagraph>
         <CmkParagraph v-if="!props.isCloudEdition">
+          <br />
           {{
             _t(
               'If you do not want to run the script as the specified user — or 2FA is active for that user —, ' +
@@ -92,11 +92,7 @@ const installCommand = computed(() => {
           }}
         </CmkParagraph>
         <CmkAlertBox variant="info">
-          {{ _t('You can only execute the following command as rootless.') }}
-          <br />
-          {{ _t('If you are logged in as root make sure to change the user using ') }}
-          <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-          <code>su -l &lt;user&gt;</code>
+          {{ _t('Note that the installation requires root privileges.') }}
         </CmkAlertBox>
 
         <GenerateToken

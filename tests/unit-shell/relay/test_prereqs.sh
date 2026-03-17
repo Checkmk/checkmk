@@ -463,11 +463,39 @@ test_warn_if_os_unsupported_plus_spec_cross_major_rejected() {
     assertTrue "Output should mention unsupported OS" $?
 }
 
+# Test: RHEL 8 at minimum patch level (8.10) is accepted by rhel:8.10+ spec
+test_warn_if_os_unsupported_rhel8_at_minimum_patch_accepted() {
+    printf 'ID="rhel"\nVERSION_ID="8.10"\n' >"$OS_RELEASE_FILE"
+    SUPPORTED_OS=("rhel:8.10+")
+
+    set +e
+    output=$(warn_if_os_unsupported 2>&1)
+    local exit_code=$?
+    set -e
+
+    assertEquals "rhel 8.10 should be accepted by spec rhel:8.10+" 0 "$exit_code"
+}
+
+# Test: RHEL 8 below minimum patch level (8.7) is rejected by rhel:8.10+ spec
+test_warn_if_os_unsupported_rhel8_below_minimum_patch_rejected() {
+    printf 'ID="rhel"\nVERSION_ID="8.7"\n' >"$OS_RELEASE_FILE"
+    SUPPORTED_OS=("rhel:8.10+")
+
+    set +e
+    output=$(warn_if_os_unsupported 2>&1)
+    local exit_code=$?
+    set -e
+
+    assertNotEquals "rhel 8.9 should be rejected by spec rhel:8.10+" 0 "$exit_code"
+    echo "$output" | grep -q "Unsupported OS"
+    assertTrue "Output should mention unsupported OS" $?
+}
+
 # Test: warning message uses human-readable format, not raw internal tokens
 test_warn_if_os_unsupported_message_human_readable() {
     printf 'ID="someos"\nVERSION_ID="1.0"\n' >"$OS_RELEASE_FILE"
-    SUPPORTED_OS=("ubuntu:24.04" "rhel:9" "rhel:9.7+" "rhel:10")
-
+    SUPPORTED_OS=("ubuntu:24.04" "rhel:8.10+" "rhel:9" "rhel:9.7+" "rhel:10")
+    export SUPPORTED_OS
     set +e
     output=$(warn_if_os_unsupported 2>&1)
     set -e
@@ -480,6 +508,8 @@ test_warn_if_os_unsupported_message_human_readable() {
     # Must show human-readable phrases
     echo "$output" | grep -q "Ubuntu 24.04"
     assertTrue "Output should contain 'Ubuntu 24.04'" $?
+    echo "$output" | grep -q "RHEL 8.10+"
+    assertTrue "Output should contain 'RHEL 8.10+'" $?
     echo "$output" | grep -q "RHEL 9.x"
     assertTrue "Output should contain 'RHEL 9.x'" $?
     echo "$output" | grep -q "RHEL 9.7+"

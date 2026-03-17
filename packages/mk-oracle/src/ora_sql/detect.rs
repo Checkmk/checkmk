@@ -22,8 +22,11 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use sysinfo::System;
 
-/// Regex pattern to match Oracle SID prefixes for PMON processes.
-const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)";
+/// Regex pattern to match Oracle PMON processes and capture the SID.
+///
+/// Group 1: the prefix (e.g. `ora_pmon_`)
+/// Group 2: the SID name (e.g. `TEST19`)
+const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)(.+)";
 
 /// Method is similar to `ps -ef | grep <match_string>`
 /// May not work on Windows systems
@@ -108,10 +111,26 @@ pub fn dump_detected_sids() -> Result<String> {
     return find_sids_by_processes(None)
         .map(|list| {
             log::info!("Found SIDs: {:?}", list);
-            list.iter().cloned().collect::<Vec<_>>().join("\n")
+            list.iter().cloned().collect::<Vec<_>>().join("\n") + "\n"
         })
         .or_else(|e| {
             log::info!("Error while detecting SIDs: {:?}", e);
             anyhow::bail!(e)
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ora_sql::detect::SID_MASK;
+    use regex::Regex;
+
+    #[test]
+    fn test_find_sids_by_processes() {
+        let re = Regex::new(SID_MASK).expect("Failed to compile regex");
+        let x = re
+            .captures("ora_pmon_TEST19")
+            .and_then(|c| c.get(2))
+            .map(|m| m.as_str().to_string());
+        assert_eq!(x, Some("TEST19".to_string()));
+    }
 }

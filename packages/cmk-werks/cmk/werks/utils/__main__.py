@@ -13,9 +13,7 @@ from cmk.ccc.version import __version__, Version
 from cmk.werks.models import EditionV2, EditionV3, WerkV3
 
 from . import (
-    load_precompiled_werks_file,
     load_raw_files,
-    write_as_text,
     write_precompiled_werks,
 )
 from .collect import main as collect
@@ -58,15 +56,6 @@ def main_precompile(args: argparse.Namespace) -> None:
     write_precompiled_werks(args.destination, werks)
 
 
-def main_changelog(args: argparse.Namespace) -> None:
-    werks: dict[int, WerkV3] = {}
-    for path in (Path(p) for p in args.precompiled_werk):
-        werks.update(load_precompiled_werks_file(path))
-
-    with open(args.destination, "w", encoding="utf-8") as f:
-        write_as_text(werks, f)
-
-
 def main_collect(args: argparse.Namespace) -> None:
     branches = {}
     if args.substitute_branches:
@@ -78,11 +67,6 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
-
-    parser_changelog = subparsers.add_parser("changelog", help="Show who worked on a werk")
-    parser_changelog.add_argument("destination")
-    parser_changelog.add_argument("precompiled_werk", nargs="+")
-    parser_changelog.set_defaults(func=main_changelog)
 
     parser_precompile = subparsers.add_parser(
         "precompile", help="Collect werk files of current major version into json."

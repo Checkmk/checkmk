@@ -1,11 +1,4 @@
-The textual changelog of Checkmk is created for regular releases only. If you
-want to see these changelogs, take a look at these files that you can find in
-your monitoring sites:
-
-All Editions:             share/doc/check_mk/ChangeLog
-Enterprise Edition:       share/doc/check_mk_enterprise/ChangeLog
-Managed Services Edition: share/doc/check_mk_managed/ChangeLog
-Cloud Edition:            share/doc/check_mk_cloud/ChangeLog
+Checkmk is using the `werks` concept as official changelog (see https://checkmk.com/werks).
 
 If you want to see the changes of a specific version and maybe filter the
 changes in a flexible way, please check out the list of changes on our
@@ -13,5 +6,10 @@ website (https://checkmk.com/werks), see the werk list in your site (click
 "Help" in the navigation bar, then "Change log (Werks)") or execute the
 "scripts/run-uvenv werk list" command from the git directory of Checkmk.
 
-From the git of Check_MK, you can create the ChangeLog file with the command
-"make `pwd`/ChangeLog".
+The textual/machine-readable changelog of Checkmk is created for regular releases only. If you
+want to see the werks (aka changes), take a look at these files that you can find in
+your monitoring sites under share/check_mk/werks.
+Edition-specific changes are contained in share/check_mk/werks-EDITION_NAME
+
+From the git of Checkmk, you can create the ChangeLog file with the command
+"bazel build --cmk_edition=community --cmk_version=2.6.0b1 //omd/packages/changelog".

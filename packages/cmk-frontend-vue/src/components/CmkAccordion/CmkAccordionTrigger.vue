@@ -28,6 +28,7 @@ function toggle() {
 <template>
   <button
     :id="'cmk-accordion-trigger-'.concat(props.value)"
+    type="button"
     :aria-controls="'cmk-accordion-content-'.concat(props.value)"
     :aria-expanded="isItemExpanded(props.value)"
     :aria-label="_t('Toggle accordion item %{item}', { item: props.value })"

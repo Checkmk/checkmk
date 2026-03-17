@@ -69,7 +69,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 <template>
   <span>
-    <CmkButton @click="toggleTimeSpecific">
+    <CmkButton type="button" @click="toggleTimeSpecific">
       {{ timespecificActive ? spec.i18n.disable : spec.i18n.enable }} </CmkButton
     ><CmkSpace size="small" /><CmkHelpText :help="untranslated(spec.help)" />
     <br />

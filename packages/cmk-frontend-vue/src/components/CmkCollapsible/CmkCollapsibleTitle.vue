@@ -51,7 +51,12 @@ immediateWatch(
 </script>
 
 <template>
-  <button ref="focus-ref" class="cmk-collapsible-title" @click.prevent="$emit('toggleOpen')">
+  <button
+    ref="focus-ref"
+    type="button"
+    class="cmk-collapsible-title"
+    @click.prevent="$emit('toggleOpen')"
+  >
     <span
       class="cmk-collapsible-title__chevron"
       :class="`cmk-collapsible-title__chevron--${open ? 'bottom' : 'right'}`"

@@ -47,6 +47,7 @@ const id = useId()
 <template>
   <div :class="propsCva({ variant })">
     <button
+      type="button"
       class="cmk-catalog-panel__header"
       :class="{ 'cmk-catalog-panel__header--closed': !open }"
       :title="label"

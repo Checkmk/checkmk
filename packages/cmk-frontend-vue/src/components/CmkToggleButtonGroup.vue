@@ -38,6 +38,7 @@ function setSelectedOption(value: string) {
     <button
       v-for="option in options"
       :key="option.value"
+      type="button"
       class="toggle_option"
       :class="{
         selected: isSelected(option.value),

@@ -8,7 +8,22 @@ SHELL ["/bin/bash", "-c"]
 ENV \
     LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \
+    DISTRO_MAJOR_VERSION=9 \
+    DISTRO_MINOR_VERSION=2 \
     PATH="/opt/bin:${PATH}"
+
+# Pin all AlmaLinux base repos to vault.almalinux.org/9.2 so that
+# yum install always pulls from the frozen 9.2 snapshot regardless
+# of what the default mirrorlist resolves to.
+# IMPORTANT: When updating the base image (IMAGE_ALMALINUX_9), update
+# the vault version below to match. Current base: almalinux:9.2
+RUN sed -i \
+        -e 's|^mirrorlist=|#mirrorlist=|g' \
+        -e 's|^# baseurl=|baseurl=|g' \
+        -e 's|https://repo\.almalinux\.org/[^/]*/\$releasever/|https://vault.almalinux.org/'"${DISTRO_MAJOR_VERSION}.${DISTRO_MINOR_VERSION}"'/|g' \
+        /etc/yum.repos.d/almalinux*.repo \
+    && yum clean all \
+    && yum makecache
 
 RUN yum -y --enablerepo=crb  makecache && yum repolist --enablerepo=crb \
     && yum -y --allowerasing --enablerepo=crb install \
@@ -106,6 +121,17 @@ RUN yum -y makecache \
     epel-release \
     --nogpgcheck \
     && yum clean all
+
+# Pin EPEL to the Fedora archive snapshot aligned with AlmaLinux 9.2.
+# Archive index: https://dl.fedoraproject.org/pub/archive/epel/
+# IMPORTANT: When updating the AlmaLinux vault pin, update this version too.
+RUN sed -i \
+        -e 's|^metalink=|#metalink=|g' \
+        -e 's|^#baseurl=|baseurl=|g' \
+        -e 's|https://download\.example/pub/epel/[^/]*/|https://dl.fedoraproject.org/pub/archive/epel/'"${DISTRO_MAJOR_VERSION}.${DISTRO_MINOR_VERSION}"'/|g' \
+        /etc/yum.repos.d/epel*.repo \
+    && yum clean all \
+    && yum makecache
 
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way
@@ -226,7 +252,11 @@ RUN /opt/install-patchelf.sh
 RUN touch /etc/fstab
 
 COPY ci.bazelrc /etc/
-RUN echo "common:ci --@//:filesystem_layout=fhs" >> /etc/ci.bazelrc
+RUN <<EOF cat >> /etc/ci.bazelrc
+common:ci --@//:filesystem_layout=fhs
+common:ci --action_env=DISTRO_MAJOR_VERSION=${DISTRO_MAJOR_VERSION}
+common:ci --action_env=DISTRO_MINOR_VERSION=${DISTRO_MINOR_VERSION}
+EOF
 
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt

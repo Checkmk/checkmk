@@ -63,11 +63,14 @@ def get_failed_notification_count() -> int:
 def get_total_sent_notifications(from_timestamp: int) -> int:
     query = (
         "GET log\n"
-        "Stats: class = 3\n"
+        "Filter: class = 3\n"
         f"Filter: log_time >= {from_timestamp}\n"
-        "Filter: log_type ~~ .*NOTIFICATION RESULT$\n"
+        "Filter: log_type = HOST NOTIFICATION RESULT\n"
+        "Filter: log_type = SERVICE NOTIFICATION RESULT\n"
+        "Or: 2\n"
         # do not show internal notification events (just end user notifications)
         "Filter: log_command_name != check-mk-notify\n"
+        "Stats: class = 3\n"
     )
     try:
         send_per_site_list = live().query(query)

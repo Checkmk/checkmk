@@ -93,6 +93,26 @@ def write_section(
         sys.stdout.write(json_dict + "\n")
 
 
+def _write_error(section: str, error: str) -> None:
+    sys.stdout.write("<<<netapp_ontap_agent_info:sep(0)>>>\n")
+    error_data = models.AgentInfoModel(section=section, info=error, is_error=True).model_dump_json(
+        exclude_unset=True, exclude_none=False
+    )
+    sys.stdout.write(error_data + "\n")
+
+
+def safe_write_section(
+    section_name: str,
+    generator: Iterable[BaseModel],
+    logger: logging.Logger,
+) -> None:
+    try:
+        write_section(section_name, generator, logger)
+    except Exception as exc:
+        logger.exception("Section '%s' failed", section_name)
+        _write_error(section_name, str(exc))
+
+
 def _collect_netapp_resource_volume(
     connection: HostConnection, is_constituent: bool
 ) -> Iterable[Resource]:
@@ -929,86 +949,106 @@ def write_sections(
     """Write monitoring sections based on selected resources"""
     fetched_resources = {obj.value for obj in args.fetched_resources}
 
-    nodes = None
+    nodes: Sequence[models.NodeModel] | None = None
     if RESOURCES_NEEDING_NODES_INFO & fetched_resources:
-        nodes = list(fetch_nodes(connection))
+        try:
+            nodes = list(fetch_nodes(connection))
+        except Exception as exc:
+            logger.exception("Failed to fetch nodes")
+            _write_error("node", str(exc))
 
     if FetchedResource.node.value in fetched_resources:
-        if not nodes:
-            raise CannotRecover("Node resource needs nodes information.")
-        write_section("node", nodes, logger)
+        if nodes is not None:
+            safe_write_section("node", nodes, logger)
 
-    # Store volumes for counter sections that depend on them
-    volumes = None
+    volumes: Sequence[models.VolumeModel] | None = None
     if (
         FetchedResource.volumes.value in fetched_resources
         or FetchedResource.volumes_counters.value in fetched_resources
     ):
-        volumes = list(fetch_volumes(connection))
-        write_section("volumes", volumes, logger)
-
-    # Volume counters (depends on volumes)
-    if FetchedResource.volumes_counters.value in fetched_resources:
-        if volumes is None:
+        try:
             volumes = list(fetch_volumes(connection))
-        write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
+        except Exception as exc:
+            logger.exception("Failed to fetch volumes")
+            _write_error("volumes", str(exc))
+
+    if FetchedResource.volumes.value in fetched_resources:
+        if volumes is not None:
+            safe_write_section("volumes", volumes, logger)
+
+    if FetchedResource.volumes_counters.value in fetched_resources:
+        if volumes is not None:
+            safe_write_section(
+                "volumes_counters", fetch_volumes_counters(connection, volumes), logger
+            )
 
     if FetchedResource.disk.value in fetched_resources:
-        write_section("disk", fetch_disks(connection), logger)
+        safe_write_section("disk", fetch_disks(connection), logger)
 
     if FetchedResource.luns.value in fetched_resources:
-        write_section("luns", fetch_luns(connection), logger)
+        safe_write_section("luns", fetch_luns(connection), logger)
 
     if FetchedResource.aggr.value in fetched_resources:
-        write_section("aggr", fetch_aggr(connection, args), logger)
+        safe_write_section("aggr", fetch_aggr(connection, args), logger)
 
     if FetchedResource.qtree_quota.value in fetched_resources:
-        write_section("qtree_quota", fetch_qtree_quota(connection), logger)
+        safe_write_section("qtree_quota", fetch_qtree_quota(connection), logger)
 
     if FetchedResource.snapvault.value in fetched_resources:
-        write_section("snapvault", fetch_snapmirror(connection), logger)
+        safe_write_section("snapvault", fetch_snapmirror(connection), logger)
 
     if FetchedResource.vs_status.value in fetched_resources:
-        write_section("vs_status", fetch_vs_status(connection), logger)
+        safe_write_section("vs_status", fetch_vs_status(connection), logger)
 
     if FetchedResource.interfaces.value in fetched_resources:
-        interfaces = list(fetch_interfaces(connection))
-        write_section("if", interfaces, logger)
-        write_section("if_counters", fetch_interfaces_counters(connection, interfaces), logger)
+        interfaces: list[models.IpInterfaceModel] | None = None
+        try:
+            interfaces = list(fetch_interfaces(connection))
+        except Exception as exc:
+            logger.exception("Failed to fetch interfaces")
+            _write_error("if", str(exc))
+
+        if interfaces is not None:
+            safe_write_section("if", interfaces, logger)
+            safe_write_section(
+                "if_counters", fetch_interfaces_counters(connection, interfaces), logger
+            )
 
     if FetchedResource.fan.value in fetched_resources:
-        if not nodes:
-            raise CannotRecover("Fan resource needs nodes information.")
-        write_section("fan", fetch_fans(connection, _pick_oldest_node_version(nodes)), logger)
+        if nodes is not None:
+            safe_write_section(
+                "fan", fetch_fans(connection, _pick_oldest_node_version(nodes)), logger
+            )
 
     if FetchedResource.temp.value in fetched_resources:
-        if not nodes:
-            raise CannotRecover("Temp resource needs nodes information.")
-        write_section(
-            "temp", fetch_temperatures(connection, _pick_oldest_node_version(nodes)), logger
-        )
+        if nodes is not None:
+            safe_write_section(
+                "temp", fetch_temperatures(connection, _pick_oldest_node_version(nodes)), logger
+            )
 
     if FetchedResource.alerts.value in fetched_resources:
-        write_section("alerts", fetch_alerts(connection, args), logger)
+        safe_write_section("alerts", fetch_alerts(connection, args), logger)
 
     if FetchedResource.vs_traffic.value in fetched_resources:
-        write_section("vs_traffic", fetch_vs_traffic_counters(connection), logger)
+        safe_write_section("vs_traffic", fetch_vs_traffic_counters(connection), logger)
 
     if FetchedResource.psu.value in fetched_resources:
-        write_section("psu", fetch_psu(connection), logger)
+        safe_write_section("psu", fetch_psu(connection), logger)
 
     if FetchedResource.environment.value in fetched_resources:
-        write_section("environment", fetch_environment(connection), logger)
+        safe_write_section("environment", fetch_environment(connection), logger)
 
     if FetchedResource.fc_interfaces.value in fetched_resources:
-        write_section("fc_ports", fetch_fc_ports(connection), logger)
-        write_section("fc_interfaces_counters", fetch_fc_interfaces_counters(connection), logger)
+        safe_write_section("fc_ports", fetch_fc_ports(connection), logger)
+        safe_write_section(
+            "fc_interfaces_counters", fetch_fc_interfaces_counters(connection), logger
+        )
 
-    try:
-        if FetchedResource.ports.value in fetched_resources:
-            write_section("ports", fetch_ports(connection), logger)
-    except NetAppRestError:
-        raise CannotRecover("Fetch ports failed. Cluster could be in a degraded state.")
+    if FetchedResource.ports.value in fetched_resources:
+        safe_write_section("ports", fetch_ports(connection), logger)
+
+    # Always write the errors section header so the service always exists
+    sys.stdout.write("<<<netapp_ontap_agent_info:sep(0)>>>\n")
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:

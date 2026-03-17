@@ -733,3 +733,12 @@ class FcInterfaceTrafficCountersModel(BaseModel):
     counters: Sequence[dict]
     name: str  # was: instance-name
     port_wwpn: str
+
+
+class AgentInfoModel(BaseModel, frozen=True):
+    """Internal model, not a netapp object"""
+
+    section: str
+    info: str
+    # for now we are only writing errors, but this is kept for future dev
+    is_error: bool = False

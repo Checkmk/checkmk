@@ -39,7 +39,10 @@ class MetricVisitor(StringVisitor):
                     data=shared_type_defs.AutocompleterData(
                         ident="monitored_service_description",
                         params=shared_type_defs.AutocompleterParams(
-                            show_independent_of_context=True, strict=True, escape_regex=False
+                            show_independent_of_context=True,
+                            strict=True,
+                            escape_regex=False,
+                            literal_search=True,
                         ),
                     ),
                 ),

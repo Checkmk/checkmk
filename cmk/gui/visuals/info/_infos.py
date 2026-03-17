@@ -132,6 +132,7 @@ class VisualInfoService(VisualInfo):
                     ident=MonitoredServiceDescription.ident,
                     strict=True,
                     show_independent_of_context=True,
+                    literal_search=True,
                 ),
             )
         ]

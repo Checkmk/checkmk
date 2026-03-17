@@ -71,6 +71,7 @@ const serviceNameAutocompleter = computed(
         ident: 'monitored_service_description',
         params: {
           strict: true,
+          literal_search: true,
           context: { host: { host: hostName.value } }
         }
       }

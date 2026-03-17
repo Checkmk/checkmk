@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """
 AutocompleterConfig is used to transport data from python via html, javascript
 and ajax back to python.
@@ -39,11 +38,13 @@ class AutocompleterConfig:
         strict: bool = False,
         dynamic_params_callback_name: DynamicParamsCallbackName | None = None,
         escape_regex: bool = False,
+        literal_search: bool = False,
     ):
         self._ident = ident
         self._strict = strict
         self._dynamic_params_callback_name = dynamic_params_callback_name
         self._escape_regex = escape_regex
+        self._literal_search = literal_search
 
     @property
     def ident(self) -> str:
@@ -51,7 +52,11 @@ class AutocompleterConfig:
 
     @property
     def params(self) -> AutocompleterParams:
-        return {"strict": self._strict, "escape_regex": self._escape_regex}
+        return {
+            "strict": self._strict,
+            "escape_regex": self._escape_regex,
+            "literal_search": self._literal_search,
+        }
 
     @property
     def config(self) -> AutocompleterConfigJson:
@@ -84,11 +89,13 @@ class ContextAutocompleterConfig(AutocompleterConfig):
         strict: bool = True,
         show_independent_of_context: bool = False,
         dynamic_params_callback_name: DynamicParamsCallbackName | None = None,
+        literal_search: bool = False,
     ) -> None:
         super().__init__(
             ident=ident,
             dynamic_params_callback_name=dynamic_params_callback_name,
             strict=strict,
+            literal_search=literal_search,
         )
         self._show_independent_of_context = show_independent_of_context
 

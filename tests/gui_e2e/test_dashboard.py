@@ -268,7 +268,7 @@ def test_widget_filters(
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
     cloned_linux_hosts_dashboard.save_button.click()
-    cloned_linux_hosts_dashboard.validate_page()
+    cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
     expect(
@@ -291,8 +291,9 @@ def test_widget_filters(
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
     cloned_linux_hosts_dashboard.save_button.click()
-    cloned_linux_hosts_dashboard.validate_page()
+    cloned_linux_hosts_dashboard.navigate()
 
+    widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
     expect(
         widget_rows,
         message=(
@@ -311,8 +312,9 @@ def test_widget_filters(
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
     cloned_linux_hosts_dashboard.save_button.click()
-    cloned_linux_hosts_dashboard.validate_page()
+    cloned_linux_hosts_dashboard.navigate()
 
+    widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
     expect(
         widget_rows,
         message=(
@@ -331,8 +333,9 @@ def test_widget_filters(
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
     cloned_linux_hosts_dashboard.save_button.click()
-    cloned_linux_hosts_dashboard.validate_page()
+    cloned_linux_hosts_dashboard.navigate()
 
+    widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
     expect(
         widget_rows,
         message=(

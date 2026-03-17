@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type Ref, computed } from 'vue'
+
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { type IFrameContent } from '@/dashboard/types/widget.ts'
 
@@ -15,8 +17,20 @@ interface DashboardContentIFrameProps extends ContentProps<IFrameContent> {
   disableClickShield?: boolean
 }
 
-const { contentCenter, disableClickShield = false } = defineProps<DashboardContentIFrameProps>()
+const {
+  content,
+  contentCenter,
+  disableClickShield = false
+} = defineProps<DashboardContentIFrameProps>()
 const isPublicDashboard = useInjectIsPublicDashboard()
+
+const isValidUrl: Ref<boolean> = computed(() => {
+  try {
+    return ['https:', 'http:'].includes(new URL(content.url).protocol)
+  } catch {
+    return false
+  }
+})
 </script>
 
 <template>
@@ -24,12 +38,12 @@ const isPublicDashboard = useInjectIsPublicDashboard()
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
     :content-center="contentCenter"
-    :is-scrollable-preview="isPreview ?? false"
+    :is-scrollable-preview="isPreview && isValidUrl"
   >
     <div
       class="db-content-i-frame__div"
       :class="{
-        'db-content-i-frame__preview': isPreview
+        'db-content-i-frame__preview': isPreview && isValidUrl
       }"
     >
       <iframe

@@ -184,11 +184,12 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
             if (branch_latest) {
                 def bom_mapping_branch_latest = readJSON(
                     text: sh(script: """
-                        scripts/run-uvenv \
+                        scripts/run-pipenv \
+                            run \
                             buildscripts/scripts/assert_build_artifacts.py \
                             --editions_file "${checkout_dir}/editions.yml" \
-                            dump_bom_artifact_mapping \
-                            --version ${cmk_version} \
+                            dump_meta_artifacts_mapping \
+                            --version ${TARGET_VERSION} \
                         """,
                         returnStdout: true)
                 );
@@ -203,12 +204,13 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
             if (latest) {
                 def bom_mapping_latest = readJSON(
                     text: sh(script: """
-                        scripts/run-uvenv \
+                        scripts/run-pipenv \
+                            run \
                             buildscripts/scripts/assert_build_artifacts.py \
                             --editions_file "${checkout_dir}/editions.yml" \
-                            dump_bom_artifact_mapping \
+                            dump_meta_artifacts_mapping \
                             --version_agnostic \
-                            --version ${cmk_version} \
+                            --version ${TARGET_VERSION} \
                         """,
                         returnStdout: true)
                 );

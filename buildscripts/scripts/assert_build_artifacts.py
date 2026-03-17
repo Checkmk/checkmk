@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import sys
 import urllib.parse
-from argparse import ArgumentParser
+from argparse import ArgumentParser, BooleanOptionalAction
 from argparse import Namespace as Args
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 import docker  # type: ignore
 import requests
@@ -21,9 +22,11 @@ sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from tests.testlib.utils import get_cmk_download_credentials
 from tests.testlib.version import ABCPackageManager, code_name
 
-from cmk.utils.version import Edition
+from cmk.utils.version import Edition, Version
 
 from buildscripts.scripts.lib.common import flatten, load_editions_file
+
+MetaFileExtension = Literal["json", "csv"]
 
 
 class Credentials(NamedTuple):
@@ -199,6 +202,47 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
             yield hash_file(package_name), internal_only
 
 
+def meta_file_name(edition: str, version: str, extension: MetaFileExtension) -> str:
+    return f"check-mk-{edition}-{version}-bill-of-materials.{extension}"
+
+
+def build_meta_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+    for edition in loaded_yaml["editions"]:
+        bom_file_name = meta_file_name(edition, args.version, "json")
+        csv_file_name = meta_file_name(edition, args.version, "csv")
+        internal_only = edition in loaded_yaml.get("internal_editions", [])
+        yield bom_file_name, internal_only
+        yield hash_file(bom_file_name), internal_only
+        yield csv_file_name, internal_only
+        yield hash_file(csv_file_name), internal_only
+
+
+def build_meta_file_latest_mapping(
+    args: Args, loaded_yaml: dict, file_type: MetaFileExtension
+) -> dict[str, str]:
+    base_version = Version.from_str(args.version).base
+    return {
+        meta_file_name(
+            edition, f"{'' if args.version_agnostic else f'{base_version}-'}latest", file_type
+        ): meta_file_name(edition, args.version, file_type)
+        for edition in loaded_yaml["editions"]
+        if edition not in loaded_yaml.get("internal_editions", [])
+    }
+
+
+def build_csv_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
+    base_version = Version.from_str(args.version).base
+    return {
+        meta_file_name(
+            edition,
+            f"{'' if args.version_agnostic else f'{base_version}-'}latest",
+            "csv",
+        ): meta_file_name(edition, args.version, "csv")
+        for edition in loaded_yaml["editions"]
+        if edition not in loaded_yaml.get("internal_editions", [])
+    }
+
+
 def file_exists_on_download_server(filename: str, version: str, credentials: Credentials) -> bool:
     url = f"https://download.checkmk.com/checkmk/{version}/{filename}"
     sys.stdout.write(f"Checking for {url}...")
@@ -259,6 +303,17 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     # TODO
 
 
+def dump_meta_artifacts_mapping(args: Args, loaded_yaml: dict) -> None:
+    print(
+        json.dumps(
+            {
+                **build_meta_file_latest_mapping(args, loaded_yaml, "json"),
+                **build_meta_file_latest_mapping(args, loaded_yaml, "csv"),
+            }
+        )
+    )
+
+
 def parse_arguments() -> Args:
     parser = ArgumentParser()
 
@@ -270,6 +325,11 @@ def parse_arguments() -> Args:
     sub_assert_build_artifacts.set_defaults(func=assert_build_artifacts)
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)
     sub_assert_build_artifacts.add_argument("--use_case", required=False, default="release")
+
+    sub_print_bom_artifacts = subparsers.add_parser("dump_meta_artifacts_mapping")
+    sub_print_bom_artifacts.set_defaults(func=dump_meta_artifacts_mapping)
+    sub_print_bom_artifacts.add_argument("--version", required=True, default=False)
+    sub_print_bom_artifacts.add_argument("--version_agnostic", action=BooleanOptionalAction)
 
     return parser.parse_args()
 

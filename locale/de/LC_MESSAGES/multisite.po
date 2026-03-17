@@ -37774,6 +37774,26 @@ msgstr "Abmeldung"
 msgid "Logs"
 msgstr "Protokolle"
 
+#, fuzzy
+msgid "Logs refused by the Event console"
+msgstr "Zugriff auf Event Console"
+
+msgid "Logs refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Logs refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Logs successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Logs successfully received (HTTP receiver)"
+msgstr ""
+
+#, fuzzy
+msgid "Logs successfully sent to Event console"
+msgstr "Zugriff auf Event Console"
+
 msgid "Logswitches"
 msgstr "Logswitches"
 
@@ -40202,6 +40222,24 @@ msgstr "Der Metrikpfad muss ein String sein."
 
 msgid "Metrics path must start with a '/'."
 msgstr "Der Metrikpfad muss mit '/' beginnen."
+
+msgid "Metrics refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (Prometheus scraper)"
+msgstr ""
+
+msgid "Metrics successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (Prometheus scraper)"
+msgstr ""
 
 msgid "Metrics system"
 msgstr "Metrik-System"
@@ -58120,6 +58158,22 @@ msgstr "Erstellen der Sicherung läuft gerade"
 
 msgid "Snapshot created with old version"
 msgstr "Mit alter Version erstellter Snapshot"
+
+#, fuzzy
+msgid "Snapshot reserve"
+msgstr "NetApp Snapshot-Reserve"
+
+#, fuzzy
+msgid "Snapshot reserve size"
+msgstr "Reserviertern Platz anzeigen"
+
+#, fuzzy
+msgid "Snapshot reserve used %"
+msgstr "Reserviertern Platz anzeigen"
+
+#, fuzzy
+msgid "Snapshot reserve used space"
+msgstr "Reserviertern Platz anzeigen"
 
 msgid "Snapshots"
 msgstr "Sicherungen"

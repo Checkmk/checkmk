@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-03-14 18:36+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -39109,6 +39109,26 @@ msgstr "Sair"
 msgid "Logs"
 msgstr "Logs"
 
+#, fuzzy
+msgid "Logs refused by the Event console"
+msgstr "Acesso ao Console de Eventos"
+
+msgid "Logs refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Logs refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Logs successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Logs successfully received (HTTP receiver)"
+msgstr ""
+
+#, fuzzy
+msgid "Logs successfully sent to Event console"
+msgstr "Acesso ao Console de Eventos"
+
 msgid "Logswitches"
 msgstr "Comutadores"
 
@@ -41620,6 +41640,24 @@ msgstr "O valor deve ser uma cadeia de caracteres"
 #, fuzzy
 msgid "Metrics path must start with a '/'."
 msgstr "O login não é permitido neste site."
+
+msgid "Metrics refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (Prometheus scraper)"
+msgstr ""
+
+msgid "Metrics successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (Prometheus scraper)"
+msgstr ""
 
 msgid "Metrics system"
 msgstr "Sistema de métricas"
@@ -60396,6 +60434,22 @@ msgstr "Construção instantânea actualmente em curso"
 
 msgid "Snapshot created with old version"
 msgstr "Snapshot criado com a versão antiga"
+
+#, fuzzy
+msgid "Snapshot reserve"
+msgstr "Reserva de Instantâneos da NetApp"
+
+#, fuzzy
+msgid "Snapshot reserve size"
+msgstr "Mostrar espaço reservado"
+
+#, fuzzy
+msgid "Snapshot reserve used %"
+msgstr "Mostrar espaço reservado"
+
+#, fuzzy
+msgid "Snapshot reserve used space"
+msgstr "Mostrar espaço reservado"
 
 msgid "Snapshots"
 msgstr "Instantâneos"
@@ -88029,7 +88083,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -88530,7 +88583,6 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

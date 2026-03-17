@@ -39459,6 +39459,26 @@ msgstr "Déconnexion"
 msgid "Logs"
 msgstr "Bûches"
 
+#, fuzzy
+msgid "Logs refused by the Event console"
+msgstr "Accès à la console d'événements"
+
+msgid "Logs refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Logs refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Logs successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Logs successfully received (HTTP receiver)"
+msgstr ""
+
+#, fuzzy
+msgid "Logs successfully sent to Event console"
+msgstr "Accès à la console d'événements"
+
 msgid "Logswitches"
 msgstr "Commutateurs logiques"
 
@@ -41977,6 +41997,24 @@ msgstr "La valeur doit être une chaîne de caractères"
 #, fuzzy
 msgid "Metrics path must start with a '/'."
 msgstr "La connexion n'est pas autorisée sur ce site."
+
+msgid "Metrics refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (Prometheus scraper)"
+msgstr ""
+
+msgid "Metrics successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (Prometheus scraper)"
+msgstr ""
 
 msgid "Metrics system"
 msgstr "Système de mesure"
@@ -60962,6 +61000,22 @@ msgstr "Construction d'un instantané en cours"
 
 msgid "Snapshot created with old version"
 msgstr "Snapshot créé avec une ancienne version"
+
+#, fuzzy
+msgid "Snapshot reserve"
+msgstr "Réserve d'instantanés NetApp"
+
+#, fuzzy
+msgid "Snapshot reserve size"
+msgstr "Afficher l'espace réservé"
+
+#, fuzzy
+msgid "Snapshot reserve used %"
+msgstr "Afficher l'espace réservé"
+
+#, fuzzy
+msgid "Snapshot reserve used space"
+msgstr "Afficher l'espace réservé"
 
 msgid "Snapshots"
 msgstr "Les snapshots"

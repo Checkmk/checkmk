@@ -36750,6 +36750,26 @@ msgstr "ログアウト"
 msgid "Logs"
 msgstr "ログ"
 
+#, fuzzy
+msgid "Logs refused by the Event console"
+msgstr "イベントコンソールへのアクセス"
+
+msgid "Logs refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Logs refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Logs successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Logs successfully received (HTTP receiver)"
+msgstr ""
+
+#, fuzzy
+msgid "Logs successfully sent to Event console"
+msgstr "イベントコンソールへのアクセス"
+
 msgid "Logswitches"
 msgstr "ログスイッチ"
 
@@ -39139,6 +39159,24 @@ msgstr "メトリクスのパスは文字列でなければなりません。"
 
 msgid "Metrics path must start with a '/'."
 msgstr "メトリクスのパスは必ず「/」で始まる必要があります。"
+
+msgid "Metrics refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (Prometheus scraper)"
+msgstr ""
+
+msgid "Metrics successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (Prometheus scraper)"
+msgstr ""
 
 msgid "Metrics system"
 msgstr "メトリックシステム"
@@ -56732,6 +56770,22 @@ msgstr "現在進行中のスナップショットビルド"
 
 msgid "Snapshot created with old version"
 msgstr "古いバージョンで作成されたスナップショット"
+
+#, fuzzy
+msgid "Snapshot reserve"
+msgstr "NetAppスナップショットリザーブ"
+
+#, fuzzy
+msgid "Snapshot reserve size"
+msgstr "予約済みのスペースを表示する"
+
+#, fuzzy
+msgid "Snapshot reserve used %"
+msgstr "予約済みのスペースを表示する"
+
+#, fuzzy
+msgid "Snapshot reserve used space"
+msgstr "予約済みのスペースを表示する"
 
 msgid "Snapshots"
 msgstr "スナップショット"

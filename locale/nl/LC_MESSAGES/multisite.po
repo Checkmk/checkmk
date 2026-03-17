@@ -39133,6 +39133,26 @@ msgstr "Uitloggen"
 msgid "Logs"
 msgstr "Logs"
 
+#, fuzzy
+msgid "Logs refused by the Event console"
+msgstr "Toegang tot de gebeurtenissenconsole"
+
+msgid "Logs refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Logs refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Logs successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Logs successfully received (HTTP receiver)"
+msgstr ""
+
+#, fuzzy
+msgid "Logs successfully sent to Event console"
+msgstr "Toegang tot de gebeurtenissenconsole"
+
 msgid "Logswitches"
 msgstr "Logswitches"
 
@@ -41628,6 +41648,24 @@ msgstr "De waarde moet een string zijn"
 #, fuzzy
 msgid "Metrics path must start with a '/'."
 msgstr "Inloggen is niet toegestaan op deze site."
+
+msgid "Metrics refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (Prometheus scraper)"
+msgstr ""
+
+msgid "Metrics successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (Prometheus scraper)"
+msgstr ""
 
 msgid "Metrics system"
 msgstr "Metriek systeem"
@@ -60418,6 +60456,22 @@ msgstr "Snapshot build is bezig"
 
 msgid "Snapshot created with old version"
 msgstr "Snapshot gemaakt met oude versie"
+
+#, fuzzy
+msgid "Snapshot reserve"
+msgstr "NetApp Snapshot Reserve"
+
+#, fuzzy
+msgid "Snapshot reserve size"
+msgstr "Toon gereserveerde ruimte"
+
+#, fuzzy
+msgid "Snapshot reserve used %"
+msgstr "Toon gereserveerde ruimte"
+
+#, fuzzy
+msgid "Snapshot reserve used space"
+msgstr "Toon gereserveerde ruimte"
 
 #, fuzzy
 msgid "Snapshots"

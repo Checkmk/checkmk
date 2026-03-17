@@ -38897,6 +38897,26 @@ msgstr "Logout"
 msgid "Logs"
 msgstr "Registri"
 
+#, fuzzy
+msgid "Logs refused by the Event console"
+msgstr "Accesso alla console degli eventi"
+
+msgid "Logs refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Logs refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Logs successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Logs successfully received (HTTP receiver)"
+msgstr ""
+
+#, fuzzy
+msgid "Logs successfully sent to Event console"
+msgstr "Accesso alla console degli eventi"
+
 msgid "Logswitches"
 msgstr "Interruttori di registro"
 
@@ -41383,6 +41403,24 @@ msgstr "Il valore deve essere una stringa"
 #, fuzzy
 msgid "Metrics path must start with a '/'."
 msgstr "Il login non è consentito su questo sito."
+
+msgid "Metrics refused by the receiver (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics refused by the receiver (Prometheus scraper)"
+msgstr ""
+
+msgid "Metrics successfully received (GRPC receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (HTTP receiver)"
+msgstr ""
+
+msgid "Metrics successfully received (Prometheus scraper)"
+msgstr ""
 
 msgid "Metrics system"
 msgstr "Sistema metrico"
@@ -60121,6 +60159,22 @@ msgstr "Costruzione dell'istantanea attualmente in corso"
 
 msgid "Snapshot created with old version"
 msgstr "Istantanea creata con la vecchia versione"
+
+#, fuzzy
+msgid "Snapshot reserve"
+msgstr "Riserva di snapshot di NetApp"
+
+#, fuzzy
+msgid "Snapshot reserve size"
+msgstr "Mostra lo spazio riservato"
+
+#, fuzzy
+msgid "Snapshot reserve used %"
+msgstr "Mostra lo spazio riservato"
+
+#, fuzzy
+msgid "Snapshot reserve used space"
+msgstr "Mostra lo spazio riservato"
 
 msgid "Snapshots"
 msgstr "Istantanee"

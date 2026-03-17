@@ -50,7 +50,7 @@ async function interceptor({ request }: { request: Request }) {
   const jsonData = (await request.formData()).get('request')
   const query = JSON.parse(jsonData as string).value
   const userProvided: Array<[string, string]> = []
-  if (/^[^:]+:[^:]+$/.test(query)) {
+  if (/^[^:]+:.+$/.test(query)) {
     userProvided.push([query, query])
   }
   return HttpResponse.json({

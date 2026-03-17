@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import "select2";
 import "element-closest-polyfill";
+import "select2";
 
 import type {EditTagsRuntimeSettings} from "@yaireo/tagify";
 import Tagify from "@yaireo/tagify";
@@ -184,7 +184,7 @@ function enable_label_input_fields(
         const world = element.getAttribute("data-world");
 
         const tagify_args: CheckMKTagifyArgs = {
-            pattern: /^[^:]+:[^:]+$/,
+            pattern: /^[^:]+:.+$/,
             dropdown: {
                 enabled: 1, // show dropdown on first character
                 caseSensitive: false,

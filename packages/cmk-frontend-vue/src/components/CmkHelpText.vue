@@ -28,7 +28,11 @@ const props = defineProps<{
 }>()
 
 const open = ref(false)
+const side = ref<'top' | 'bottom'>('top')
 const triggerRef = ref<InstanceType<typeof CmkIconButton> | null>(null)
+
+const SCROLL_MAX_HEIGHT_PX = 160
+const TOOLTIP_MAX_HEIGHT = SCROLL_MAX_HEIGHT_PX + 16 * 2
 
 const checkClosing = (e: MouseEvent) => {
   e.preventDefault()
@@ -45,6 +49,13 @@ const checkClosing = (e: MouseEvent) => {
 const triggerHelp = (e: MouseEvent) => {
   e.preventDefault()
   e.stopPropagation()
+  if (!open.value && triggerRef.value) {
+    const el = triggerRef.value.$el
+    if (el instanceof HTMLElement) {
+      const rect = el.getBoundingClientRect()
+      side.value = rect.top >= TOOLTIP_MAX_HEIGHT ? 'top' : 'bottom'
+    }
+  }
   open.value = !open.value
 }
 
@@ -72,7 +83,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
         />
       </CmkTooltipTrigger>
       <CmkTooltipContent
-        side="top"
+        :side="side"
         align="start"
         as-child
         avoid-collisions
@@ -80,7 +91,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
-        <CmkScrollContainer :max-height="'160px'">
+        <CmkScrollContainer :max-height="`${SCROLL_MAX_HEIGHT_PX}px`">
           <div class="cmk-help-text__content">
             <CmkHtml :html="props.help" />
           </div>

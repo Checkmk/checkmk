@@ -48,6 +48,11 @@ const close = () => {
         <CmkHeading>
           {{ _t('Configure title and site') }}
         </CmkHeading>
+        <CmkParagraph>{{
+          _t(
+            'Set the configuration name and select the site the OpenTelemetry Collector will run on.'
+          )
+        }}</CmkParagraph>
       </template>
       <template #content>
         <ConfigureGeneralProperties

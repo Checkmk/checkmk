@@ -25,14 +25,11 @@ import usei18n, { untranslated } from '@/lib/i18n'
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-// NOTE: uses api/unstable because the site_connection endpoint is not yet
-// promoted to api/1.0. Tracked in CMK-28687.
-const API_ROOT = 'api/unstable'
+const API_ROOT = 'api/v1'
 
 const { _t } = usei18n()
 
@@ -122,9 +119,6 @@ defineExpose({ validate })
 </script>
 
 <template>
-  <CmkParagraph>{{
-    _t('Set the configuration name and select the site the OpenTelemetry Collector will run on.')
-  }}</CmkParagraph>
   <CmkInlineValidation v-if="loadError" :validation="[loadError]" />
 
   <div class="mode-otel-configure-general-properties__form">

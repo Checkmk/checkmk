@@ -599,6 +599,15 @@ def formatted_if_statement_for_responses(
         else "    pprint.pprint(json.loads(resp.read().decode()))\n"
     )
 
+    # some clients like requests follow redirects automatically, so the final
+    # response carries the status code of the redirect target, not the 3xx.
+    # we simply add all potentially relevant success status codes for such cases
+    if any(300 <= code < 400 for code in expected_response_status_codes):
+        if 200 not in expected_response_status_codes:
+            expected_response_status_codes.append(200)
+        if 204 not in expected_response_status_codes:
+            expected_response_status_codes.append(204)
+
     if 200 in expected_response_status_codes and 201 in expected_response_status_codes:
         unknown_success = True
         expected_response_status_codes.remove(201)

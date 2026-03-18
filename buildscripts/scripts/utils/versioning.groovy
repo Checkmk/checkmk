@@ -206,16 +206,7 @@ void configure_checkout_folder(edition, cmk_version) {
 }
 
 void delete_non_cre_files() {
-    non_cre_paths = [
-        "non-free",
-        "nonfree",
-        "enterprise",
-        "pro",
-        "ultimatemt",
-        "ultimate",
-        "cloud",
-    ]
-    find_pattern = non_cre_paths.collect({ p -> "-name ${p}"}).join(" -or ");
+    find_pattern = REPO_PATCH_RULES["community"]["paths_to_be_removed"].collect({ p -> "-name ${p}"}).join(" -or ");
     // Do not remove files in .git, .venv, .mypy_cache directories
     sh("""
         bash -c \"find . \\

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -12,9 +14,19 @@ import cmk.product_usage.collectors.grafana as grafana_collector
 from cmk.utils.paths import var_dir
 
 
-@pytest.fixture(autouse=True)
-def init_grafana_usage_directory() -> None:
-    grafana_collector._grafana_usage_file_path(var_dir).parent.mkdir(parents=True, exist_ok=True)
+@pytest.fixture
+def logger_capture_exception() -> mock.Mock:
+    """Mock to catch whenever we log an exception"""
+
+    def capture_exception(msg: str, *args: object, **kwargs: object) -> None:
+        if (exc := sys.exc_info()[1]) is not None:
+            raise AssertionError("exception logged") from exc
+
+    logger_mock = mock.Mock()
+    logger_mock.error.side_effect = capture_exception
+    logger_mock.critical.side_effect = capture_exception
+    logger_mock.exception.side_effect = capture_exception
+    return logger_mock
 
 
 def test_collect_when_grafana_not_used() -> None:
@@ -113,6 +125,23 @@ def test_grafana_data_collector_store_usage_data_twice() -> None:
     grafana_collector.store_usage_data(
         headers=Headers(headers), var_dir=var_dir, logger=mock.Mock()
     )
+
+
+def test_store_usage_data_creates_missing_directory(
+    tmp_path: Path, logger_capture_exception: mock.Mock
+) -> None:
+    headers = {
+        "X-Grafana-Org-Id": "1",
+        "User-Agent": "Grafana/1",
+        "X-Grafana-Referer": "https://self-hosted.com",
+    }
+    grafana_collector.store_usage_data(
+        headers=Headers(headers), var_dir=tmp_path, logger=logger_capture_exception
+    )
+
+    data = grafana_collector.collect(tmp_path)
+    assert data is not None
+    assert data.is_used is True
 
 
 def test_remove_grafana_usage_data() -> None:

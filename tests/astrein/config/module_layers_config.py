@@ -898,6 +898,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.product_usage"): _allow(
         # NOTE: this is a dependency of both 'gui' and 'base',
         # so it must not depend on either of them.
+        "cmk.ccc.store",
         "cmk.ccc.version",
         "cmk.livestatus_client",
         "cmk.utils.http_proxy_config",

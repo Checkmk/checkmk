@@ -169,8 +169,7 @@ function _update_figures_in_selection(
     }
 
     // @ts-ignore
-    nodes[idx].__figure_instance__!.update_data(figure_config)
-    nodes[idx].__figure_instance__!.update_gui()
+    nodes[idx].__figure_instance__!.process_data(figure_config)
   })
 }
 

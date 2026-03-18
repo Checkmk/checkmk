@@ -289,6 +289,10 @@ export class TimeseriesFigure<
   }
 
   override update_gui() {
+    if (this._subplots.length === 0) {
+      this._show_error_info('No data available', 'warning')
+      return
+    }
     this.update_domains()
     this.resize()
     this.render()

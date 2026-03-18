@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import ast
+import functools
 import hashlib
 import io
 import logging
@@ -64,7 +65,7 @@ from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.site import get_omd_config, omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
@@ -144,7 +145,9 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
-from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
+from cmk.gui.watolib.piggyback_hub import (
+    has_piggyback_hub_relevant_changes,
+)
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 from cmk.messaging import rabbitmq
@@ -1692,8 +1695,12 @@ class ActivateChangesManager:
 
         # rabbitmq must be running on the central site if one of the remote sites
         # has piggyback-hub running
-        if rabbitmq.rabbitmqctl_running() and has_piggyback_hub_relevant_changes(
-            [change for _, change in self.changes.pending_changes]
+        if (
+            _piggyback_hub_enabled_in_omd_config()
+            and rabbitmq.rabbitmqctl_running()
+            and has_piggyback_hub_relevant_changes(
+                [change for _, change in self.changes.pending_changes]
+            )
         ):
             with (
                 tracer.span("distribute_piggyback_hub_configs"),
@@ -3949,3 +3956,8 @@ class ActivationFeaturesRegistry(Registry[ActivationFeatures]):
 
 
 activation_features_registry = ActivationFeaturesRegistry()
+
+
+@functools.cache
+def _piggyback_hub_enabled_in_omd_config() -> bool:
+    return get_omd_config(paths.omd_root).get("CONFIG_PIGGYBACK_HUB", "off") == "on"

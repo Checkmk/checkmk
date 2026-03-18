@@ -28,6 +28,9 @@ export interface QuickSetupAppProps {
 
   /** @property {string} objectId - Optional, if editing an existing object created by quick setup */
   objectId: string | null
+
+  /** @property {string} search - Optional, the search query to preserve when redirecting after save */
+  search?: string
 }
 
 /**

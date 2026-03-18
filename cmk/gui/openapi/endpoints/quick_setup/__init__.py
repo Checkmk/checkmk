@@ -139,6 +139,15 @@ QUICKSETUP_OBJECT_ID_REQUIRED = {
     )
 }
 
+QUICKSETUP_SEARCH = {
+    "search": fields.String(
+        required=False,
+        description="Optional search query to preserve when redirecting after save",
+        example="my rule",
+        load_default="",
+    )
+}
+
 JOB_ID = {
     "job_id": fields.String(
         required=True,
@@ -465,7 +474,7 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
     method="post",
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
-    query_params=[QUICKSETUP_MODE],
+    query_params=[QUICKSETUP_MODE, QUICKSETUP_SEARCH],
     additional_status_codes=[201, 303, 403, 429],
     status_descriptions={
         303: "The validation and complete action has been started in the background. "
@@ -486,7 +495,7 @@ def quick_setup_run_action(params: Mapping[str, Any]) -> Response:
     method="put",
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
-    query_params=[QUICKSETUP_OBJECT_ID_REQUIRED],
+    query_params=[QUICKSETUP_OBJECT_ID_REQUIRED, QUICKSETUP_SEARCH],
     additional_status_codes=[201, 303, 403, 429],
     status_descriptions={
         303: "The validation and complete action has been started in the background. "

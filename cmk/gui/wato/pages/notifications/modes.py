@@ -4015,6 +4015,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
                 "mode": "guided" if self._new and self._clone_nr < 0 else "overview",
                 "toggle_enabled": True,
                 "object_id": self._object_id,
+                "search": request.get_str_input("search", ""),
             },
         )
 

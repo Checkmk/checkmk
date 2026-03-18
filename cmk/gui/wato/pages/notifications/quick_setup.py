@@ -42,6 +42,7 @@ from cmk.gui.form_specs.private.list_unique_selection import (
 )
 from cmk.gui.form_specs.private.multiple_choice import MultipleChoiceElementExtended
 from cmk.gui.hooks import request_memoize
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.quick_setup.private.widgets import (
@@ -1957,7 +1958,10 @@ def save_and_test_action(
     object_id: str | None,
 ) -> str:
     result_msg = _save_or_edit(all_stages_form_data, mode, object_id)
-    return mode_url("test_notifications", result=result_msg)
+    search = request.get_str_input("search", "")
+    return mode_url(
+        "test_notifications", result=result_msg, **({"search": search} if search else {})
+    )
 
 
 def save_and_new_action(
@@ -1967,9 +1971,9 @@ def save_and_new_action(
     object_id: str | None,
 ) -> str:
     result_msg = _save_or_edit(all_stages_form_data, mode, object_id)
+    search = request.get_str_input("search", "")
     return mode_url(
-        "notification_rule_quick_setup",
-        result=result_msg,
+        "notification_rule_quick_setup", result=result_msg, **({"search": search} if search else {})
     )
 
 
@@ -1980,7 +1984,8 @@ def save_and_view_action(
     object_id: str | None,
 ) -> str:
     result_msg = _save_or_edit(all_stages_form_data, mode, object_id)
-    return mode_url("notifications", result=result_msg)
+    search = request.get_str_input("search", "")
+    return mode_url("notifications", result=result_msg, **({"search": search} if search else {}))
 
 
 def _save_or_edit(

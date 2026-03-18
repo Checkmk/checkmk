@@ -121,13 +121,15 @@ export const runStageAction = async (
 export const runQuickSetupAction = async (
   quickSetupId: string,
   actionId: string,
-  stages: QuickSetupStageRequest[]
+  stages: QuickSetupStageRequest[],
+  search?: string
 ): Promise<
   | QuickSetupCompleteResponse
   | BackgroundJobSpawnResponse
   | QuickSetupCompleteActionValidationResponse
 > => {
-  const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/run-action/invoke`
+  const searchParam = search ? `?search=${encodeURIComponent(search)}` : ''
+  const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/run-action/invoke${searchParam}`
 
   try {
     const { data } = await axios.post(url, { button_id: actionId, stages })
@@ -155,13 +157,15 @@ export const editQuickSetup = async (
   quickSetupId: string,
   actionId: string,
   stages: QuickSetupStageRequest[],
-  objectId: string
+  objectId: string,
+  search?: string
 ): Promise<
   | QuickSetupCompleteResponse
   | BackgroundJobSpawnResponse
   | QuickSetupCompleteActionValidationResponse
 > => {
-  const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/edit/invoke?object_id=${objectId}`
+  const searchParam = search ? `&search=${encodeURIComponent(search)}` : ''
+  const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/edit/invoke?object_id=${objectId}${searchParam}`
 
   try {
     const { data } = await axios.put(url, { button_id: actionId, stages })

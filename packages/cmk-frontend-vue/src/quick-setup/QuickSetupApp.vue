@@ -36,6 +36,7 @@ const { ErrorBoundary } = useErrorBoundary()
         :toggle-enabled="toggleEnabled"
         :mode="mode"
         :object-id="objectId"
+        v-bind="search ? { search } : {}"
       />
       <template #fallback>
         <CmkIcon name="load-graph" size="xxlarge" />

@@ -109,31 +109,6 @@ void main() {
                 );
             }
         }
-
-        stage("Upload BOM") {
-            withCredentials([
-                string(
-                    credentialsId: 'dtrack',
-                    variable: 'DTRACK_API_KEY')
-            ]) {
-                withEnv(["DTRACK_URL=${DTRACK_URL}"]) {
-                    inside_container(
-                        image: scanner_image,
-                        args: [
-                            "-v ${checkout_dir}:${checkout_dir}", // why?!
-                            "--env DTRACK_URL,DTRACK_API_KEY",
-                        ],
-                    ) {
-                        sh("""
-                        scripts/upload-bom \
-                            --bom-path '${bom_path}' \
-                            --project-name 'Checkmk ${branch_version}' \
-                            --project-version '${version}'
-                        """);
-                    }
-                }
-            }
-        }
     }
 }
 

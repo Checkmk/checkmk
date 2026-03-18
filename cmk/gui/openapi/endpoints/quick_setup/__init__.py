@@ -192,11 +192,19 @@ def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
     match mode:
         case QuickSetupMode.OVERVIEW.value:
             return _serve_data(
-                data=quick_setup_overview_mode(quick_setup=quick_setup, prefill_data=prefill_data)
+                data=quick_setup_overview_mode(
+                    quick_setup=quick_setup,
+                    prefill_data=prefill_data,
+                    is_edit_mode=bool(object_id),
+                )
             )
         case QuickSetupMode.GUIDED.value:
             return _serve_data(
-                data=quick_setup_guided_mode(quick_setup=quick_setup, prefill_data=prefill_data)
+                data=quick_setup_guided_mode(
+                    quick_setup=quick_setup,
+                    prefill_data=prefill_data,
+                    is_edit_mode=bool(object_id),
+                )
             )
         case _:
             return _serve_error(

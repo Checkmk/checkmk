@@ -1966,20 +1966,44 @@ def save_and_test_action(
     use_git: bool,
     pprint_value: bool,
 ) -> str:
-    match mode:
-        case QuickSetupActionMode.SAVE:
-            _save(all_stages_form_data, use_git=use_git, pprint_value=pprint_value)
-            result_msg = _("New notification rule successfully created!")
-        case QuickSetupActionMode.EDIT:
-            assert object_id is not None
-            _edit(all_stages_form_data, object_id, use_git=use_git, pprint_value=pprint_value)
-            result_msg = _("Notification rule successfully edited!")
-        case _:
-            raise ValueError(f"Unknown mode {mode}")
+    result_msg = _save_or_edit(
+        all_stages_form_data, mode, _progress_logger, object_id, use_git, pprint_value
+    )
     return mode_url("test_notifications", result=result_msg)
 
 
 def save_and_new_action(
+    all_stages_form_data: ParsedFormData,
+    mode: QuickSetupActionMode,
+    _progress_logger: ProgressLogger,
+    object_id: str | None,
+    use_git: bool,
+    pprint_value: bool,
+) -> str:
+    result_msg = _save_or_edit(
+        all_stages_form_data, mode, _progress_logger, object_id, use_git, pprint_value
+    )
+    return mode_url(
+        "notification_rule_quick_setup",
+        result=result_msg,
+    )
+
+
+def save_and_view_action(
+    all_stages_form_data: ParsedFormData,
+    mode: QuickSetupActionMode,
+    _progress_logger: ProgressLogger,
+    object_id: str | None,
+    use_git: bool,
+    pprint_value: bool,
+) -> str:
+    result_msg = _save_or_edit(
+        all_stages_form_data, mode, _progress_logger, object_id, use_git, pprint_value
+    )
+    return mode_url("notifications", result=result_msg)
+
+
+def _save_or_edit(
     all_stages_form_data: ParsedFormData,
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
@@ -1997,10 +2021,7 @@ def save_and_new_action(
             result_msg = _("Notification rule successfully edited!")
         case _:
             raise ValueError(f"Unknown mode {mode}")
-    return mode_url(
-        "notification_rule_quick_setup",
-        result=result_msg,
-    )
+    return result_msg
 
 
 def register(quick_setup_registry: QuickSetupRegistry) -> None:
@@ -2070,6 +2091,12 @@ quick_setup_notifications = QuickSetup(
             label=_("Apply & create another rule"),
             icon=QuickSetupActionButtonIcon(name="checkmark-plus"),
             action=save_and_new_action,
+        ),
+        QuickSetupAction(
+            id=ActionId("apply_and_view"),
+            label=_("Apply"),
+            action=save_and_view_action,
+            modes=[QuickSetupActionMode.EDIT],
         ),
     ],
     load_data=load_notifications,

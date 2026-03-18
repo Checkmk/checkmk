@@ -90,8 +90,15 @@ class QuickSetupOverview:
     overview_mode_string: str = field(default=_("Overview mode"))
 
 
+def _action_visible_for_mode(action: QuickSetupAction, is_edit_mode: bool) -> bool:
+    if action.modes is None:
+        return True
+    target_mode = QuickSetupActionMode.EDIT if is_edit_mode else QuickSetupActionMode.SAVE
+    return target_mode in action.modes
+
+
 def quick_setup_guided_mode(
-    quick_setup: QuickSetup, prefill_data: ParsedFormData | None
+    quick_setup: QuickSetup, prefill_data: ParsedFormData | None, is_edit_mode: bool = False
 ) -> QuickSetupOverview:
     stages = [stage() for stage in quick_setup.stages]
 
@@ -139,6 +146,7 @@ def quick_setup_guided_mode(
                 load_wait_label=LOAD_WAIT_LABEL,
             )
             for action in quick_setup.actions
+            if _action_visible_for_mode(action, is_edit_mode)
         ],
         prev_button=Button(
             label=PREV_BUTTON_LABEL,
@@ -169,6 +177,7 @@ class QuickSetupAllStages:
 def quick_setup_overview_mode(
     quick_setup: QuickSetup,
     prefill_data: ParsedFormData | None,
+    is_edit_mode: bool = False,
 ) -> QuickSetupAllStages:
     stages = [stage() for stage in quick_setup.stages]
     return QuickSetupAllStages(
@@ -220,6 +229,7 @@ def quick_setup_overview_mode(
                 load_wait_label=LOAD_WAIT_LABEL,
             )
             for action in quick_setup.actions
+            if _action_visible_for_mode(action, is_edit_mode)
         ],
     )
 

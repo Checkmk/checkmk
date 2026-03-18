@@ -211,6 +211,9 @@ class QuickSetupAction:
         permissions:
             The required permission name to be checked by the Quick Setup endpoint. By default
             it is set to None and no permission check is performed
+        modes:
+            An optional list of QuickSetupActionMode values that restricts which modes this
+            action is displayed in. If None (the default), the action is shown in all modes.
     """
 
     id: ActionId
@@ -219,6 +222,7 @@ class QuickSetupAction:
     icon: QuickSetupActionButtonIcon | None = None
     custom_validators: Iterable[CallableValidator] = ()
     permissions: list[str] | None = None
+    modes: Sequence[QuickSetupActionMode] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

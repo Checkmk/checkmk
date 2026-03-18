@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import enum
+import functools
 import hashlib
 import io
 import logging
@@ -45,7 +46,7 @@ from livestatus import BrokerConnections, SiteConfiguration, SiteId
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import get_omd_config, omd_site
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
 from cmk.utils.hostaddress import HostName
@@ -132,7 +133,9 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
-from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
+from cmk.gui.watolib.piggyback_hub import (
+    has_piggyback_hub_relevant_changes,
+)
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 
@@ -1498,8 +1501,10 @@ class ActivateChangesManager(ActivateChanges):
 
         # rabbitmq must be running on the central site if one of the remote sites
         # has piggyback-hub running
-        if rabbitmq.rabbitmqctl_running() and has_piggyback_hub_relevant_changes(
-            [change for _, change in self._pending_changes]
+        if (
+            _piggyback_hub_enabled_in_omd_config()
+            and rabbitmq.rabbitmqctl_running()
+            and has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes])
         ):
             with (
                 tracer.start_as_current_span("distribute_piggyback_hub_configs"),
@@ -3529,3 +3534,8 @@ class ActivationFeaturesRegistry(Registry[ActivationFeatures]):
 
 
 activation_features_registry = ActivationFeaturesRegistry()
+
+
+@functools.cache
+def _piggyback_hub_enabled_in_omd_config() -> bool:
+    return get_omd_config(paths.omd_root).get("CONFIG_PIGGYBACK_HUB", "off") == "on"

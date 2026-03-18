@@ -56,6 +56,8 @@ class Wiremock(BaseModel):
     def reset(self) -> None:
         resp = httpx.delete(f"{self.admin_url}/mappings")
         assert resp.status_code == HTTPStatus.OK
+        resp = httpx.delete(f"{self.admin_url}/requests")
+        assert resp.status_code == HTTPStatus.OK
 
     def setup_mapping(
         self,

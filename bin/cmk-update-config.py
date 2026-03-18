@@ -5,7 +5,10 @@
 
 import sys
 
-from cmk.update_config.main import ensure_site_is_stopped, main
+from cmk.update_config.main import (  # astrein: disable=cmk-module-layer-violation
+    ensure_site_is_stopped,
+    main,
+)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:], ensure_site_is_stopped))

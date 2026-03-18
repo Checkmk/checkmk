@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.post_rename_site import main
+from cmk.post_rename_site import main  # astrein: disable=cmk-module-layer-violation
 
 if __name__ == "__main__":
     sys.exit(main.main(sys.argv[1:]))

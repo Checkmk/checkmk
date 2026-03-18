@@ -1,3 +1,4 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
@@ -62,7 +63,7 @@ pkg_files(
         ":cmk-general-version-infos",
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets",
-        ":cmk-migrate-http",
+        ":cmk-migrate-http.py",
         ":cmk-monitor-apache",
         ":cmk-monitor-broker",
         ":cmk-monitor-core",
@@ -77,7 +78,7 @@ pkg_files(
         ":cmk-transform-inventory-trees",
         ":cmk-ui-job-scheduler",
         ":cmk-ui-job-scheduler-health",
-        ":cmk-update-config",
+        ":cmk-update-config.py",
         ":cmk-update-license-usage",
         ":cmk-validate-config",
         ":cmk-validate-plugins",
@@ -88,12 +89,17 @@ pkg_files(
         ":mkevent",
         ":mkeventd",
         ":mkp",
-        ":post-rename-site",
+        ":post-rename-site.py",
     ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     prefix = "bin",
+    renames = {
+        "cmk-migrate-http.py": "cmk-migrate-http",
+        "cmk-update-config.py": "cmk-update-config",
+        "post-rename-site.py": "post-rename-site",
+    },
 )
 
 pkg_tar(
@@ -125,6 +131,29 @@ pkg_files(
         mode = "0755",
     ),
     renames = {"//cmk/utils:password_store/cli.py": "bin/cmk-pwstore"},
+)
+
+# Not shipped — only exists so that static analysis tools (ruff, …)
+# can discover these .py files via Bazel.
+py_library(
+    name = "cmk_migrate_http_py",
+    srcs = ["cmk-migrate-http.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "cmk_update_config_py",
+    srcs = ["cmk-update-config.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "post_rename_site_py",
+    srcs = ["post-rename-site.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
 )
 
 sh_library(

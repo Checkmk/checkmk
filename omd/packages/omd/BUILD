@@ -17,7 +17,7 @@ exports_files([
 # Make it possible to replace OMD_VERSION by labels
 replace_string_in_file(
     name = "omd_main_in",
-    src = "omd.bin",
+    src = "omd.bin.py",
     out = "bin/omd_in",
     replace_dict = {
         "###OMD_VERSION###": "{CMK_VERSION}.{CMK_EDITION}",
@@ -281,6 +281,17 @@ py_doc_test(
         "PYTHONWARNINGS": "ignore",
     },
     tags = ["no-mypy"],
+)
+
+# Not shipped — only exists so that static analysis tools (ruff, mypy, …)
+# and pytest can discover and check omd.bin.py via Bazel.
+py_binary(
+    name = "omd_bin_py",
+    srcs = ["omd.bin.py"],
+    imports = ["."],
+    main = "omd.bin.py",
+    visibility = ["//visibility:public"],
+    deps = [":omdlib"],
 )
 
 pkg_files(

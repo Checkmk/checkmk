@@ -53,6 +53,7 @@ def _make_form() -> Dictionary:
                 ),
             ),
         },
+        ignored_elements=("discovered_resources",),
     )
 
 

@@ -74,6 +74,20 @@ function saveHostAction() {
 }
 const ott = ref<string | null | Error>(null)
 
+function tabNeedsToken(tab: AgentSlideOutTabs): boolean {
+  if (tab.installCmd) {
+    return true
+  }
+  if (tab.toggleButtonOptions) {
+    return !!(
+      (model.value === packageFormatDeb && tab.installDebCmd) ||
+      (model.value === packageFormatRpm && tab.installRpmCmd) ||
+      (model.value === packageFormatTgz && tab.installTgzCmd)
+    )
+  }
+  return false
+}
+
 function installCmdWithToken(cmd: string | undefined): string {
   if (!cmd) {
     return ''
@@ -183,62 +197,55 @@ function getInitStep() {
             </template>
             <template #content>
               <div v-if="currentStep === 2" class="download_install__content">
-                <div class="download_install__token">
-                  <CmkParagraph>{{ tab.installMsg }}</CmkParagraph>
-                  <GenerateToken
-                    v-model="ott"
-                    token-generation-endpoint-uri="domain-types/agent_download_token/collections/all"
-                    :description="_t('This requires the generation of a download token.')"
-                    :expires-in-seconds="604800"
-                    :token-generation-body="{}"
-                  />
-                </div>
-                <template v-if="ott !== null">
-                  <CmkCode
-                    v-if="tab.installMsg && tab.installCmd"
-                    :code_txt="installCmdWithToken(tab.installCmd)"
-                    class="code"
-                  />
-                  <div
-                    v-if="
-                      tab.installUrl &&
-                      !tab.installCmd &&
-                      !(tab.installDebCmd && model === packageFormatDeb) &&
-                      !(tab.installRpmCmd && model === packageFormatRpm) &&
-                      !(tab.installTgzCmd && model === packageFormatTgz)
-                    "
-                    class="install_url__div"
-                  >
-                    <CmkParagraph v-if="tab.installUrl.msg">{{ tab.installUrl.msg }}</CmkParagraph>
-                    <CmkLinkCard
-                      :title="tab.installUrl.title"
-                      :url="tab.installUrl.url"
-                      :icon-name="tab.installUrl.icon"
-                      :open-in-new-tab="true"
+                <template v-if="tabNeedsToken(tab)">
+                  <div class="download_install__token">
+                    <CmkParagraph>{{ tab.installMsg }}</CmkParagraph>
+                    <GenerateToken
+                      v-model="ott"
+                      token-generation-endpoint-uri="domain-types/agent_download_token/collections/all"
+                      :description="_t('This requires the generation of a download token.')"
+                      :expires-in-seconds="604800"
+                      :token-generation-body="{}"
                     />
                   </div>
-                  <CmkCode
-                    v-if="tab.installMsg && tab.installDebCmd && model === packageFormatDeb"
-                    :code_txt="installCmdWithToken(tab.installDebCmd)"
-                    class="code"
-                  />
-                  <CmkCode
-                    v-if="tab.installMsg && tab.installRpmCmd && model === packageFormatRpm"
-                    :code_txt="installCmdWithToken(tab.installRpmCmd)"
-                    class="code"
-                  />
-                  <CmkCode
-                    v-if="tab.installMsg && tab.installTgzCmd && model === packageFormatTgz"
-                    :code_txt="installCmdWithToken(tab.installTgzCmd)"
-                    class="code"
-                  />
+                  <template v-if="ott !== null">
+                    <CmkCode
+                      v-if="tab.installMsg && tab.installCmd"
+                      :code_txt="installCmdWithToken(tab.installCmd)"
+                      class="code"
+                    />
+                    <CmkCode
+                      v-if="tab.installMsg && tab.installDebCmd && model === packageFormatDeb"
+                      :code_txt="installCmdWithToken(tab.installDebCmd)"
+                      class="code"
+                    />
+                    <CmkCode
+                      v-if="tab.installMsg && tab.installRpmCmd && model === packageFormatRpm"
+                      :code_txt="installCmdWithToken(tab.installRpmCmd)"
+                      class="code"
+                    />
+                    <CmkCode
+                      v-if="tab.installMsg && tab.installTgzCmd && model === packageFormatTgz"
+                      :code_txt="installCmdWithToken(tab.installTgzCmd)"
+                      class="code"
+                    />
+                  </template>
                 </template>
+                <div v-else-if="tab.installUrl" class="install_url__div">
+                  <CmkParagraph v-if="tab.installUrl.msg">{{ tab.installUrl.msg }}</CmkParagraph>
+                  <CmkLinkCard
+                    :title="tab.installUrl.title"
+                    :url="tab.installUrl.url"
+                    :icon-name="tab.installUrl.icon"
+                    :open-in-new-tab="true"
+                  />
+                </div>
               </div>
             </template>
             <template v-if="currentStep === 2" #actions>
               <CmkWizardButton
                 type="next"
-                :disabled="ott === null || ott instanceof Error"
+                :disabled="tabNeedsToken(tab) && (ott === null || ott instanceof Error)"
                 :override-label="_t('Next step: Register agent')"
               />
               <CmkWizardButton type="previous" />

@@ -2239,7 +2239,11 @@ class ConfigCache:
             or cds.is_tcp
             or self.is_piggyback_host(host_name)
             or self.has_management_board(host_name)
+            or self._has_metric_backend(host_name)
         )
+
+    def _has_metric_backend(self, host_name: HostName) -> bool:
+        return "metrics_association" in self.explicit_host_attributes(host_name)
 
     def is_tcp(self, host_name: HostName) -> bool:
         return self.computed_datasources(host_name).is_tcp

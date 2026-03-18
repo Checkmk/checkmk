@@ -620,6 +620,25 @@ def test_is_ping_host(
     assert ts.apply(monkeypatch).is_ping_host(hostname) is result
 
 
+def test_is_not_ping_host_with_otel(monkeypatch: MonkeyPatch) -> None:
+    """A host with no agent/SNMP but with OTel metrics_association is not a ping host."""
+    hostname = HostName("testhost")
+    ts = Scenario()
+    ts.add_host(
+        hostname,
+        {
+            TagGroupID("agent"): TagID("no-agent"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("piggyback"): TagID("no-piggyback"),
+        },
+    )
+    ts.set_option(
+        "explicit_host_conf",
+        {"metrics_association": {hostname: "some_otel_config"}},
+    )
+    assert ts.apply(monkeypatch).is_ping_host(hostname) is False
+
+
 @pytest.mark.parametrize(
     "hostname, tags, result",
     [

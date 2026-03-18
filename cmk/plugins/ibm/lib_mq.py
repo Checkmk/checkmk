@@ -14,8 +14,8 @@ ResultType = dict[str, dict[str, str]]
 RE_INTRO = re.compile(r"^QMNAME\((.*)\)[\s]*STATUS\((.*?)\)[\s]*NOW\((.*)\)")
 RE_GROUP = re.compile(r"^(AMQ\d+\w?:|CSQM\d+\w? !)")
 RE_KEY = re.compile(r"([\s]*|CSQM\d+\w? ![A-Z0-9.]+[\s]+)([A-Z0-9]+\()")
-RE_SECOND_COLUMN = re.compile(r"[A-Z]+\([^&]+\)$")
-RE_KEY_VALUE = re.compile(r"([A-Z0-9]+)\(([^&]+)\)")
+RE_SECOND_COLUMN = re.compile(r"[A-Z]+\([^&]*\)$")
+RE_KEY_VALUE = re.compile(r"([A-Z0-9]+)\(([^&]*)\)")
 
 
 def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:

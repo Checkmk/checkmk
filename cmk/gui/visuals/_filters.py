@@ -1796,7 +1796,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
                         "monitoring, a graph showing the history of your host "
                         "problems will appear here.\n Please also be aware that "
                         "this message might appear as a result of a filtered "
-                        "dashboard. This dashlet currently only supports "
+                        "dashboard. This widget currently only supports "
                         "filtering for sites."
                     )
                     + doc_ref
@@ -1808,7 +1808,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
                     "problems will appear here. Currently, the following Checkmk "
                     "sites are not monitored: %s\n Please also be aware that "
                     "this message might appear as a result of a filtered "
-                    "dashboard. This dashlet currently only supports filtering "
+                    "dashboard. This widget currently only supports filtering "
                     "for sites."
                 )
                 % ", ".join(connected_sites - unique_sites_from_services)

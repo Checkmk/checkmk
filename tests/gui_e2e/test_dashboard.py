@@ -454,7 +454,7 @@ def test_builtin_dashboard_runtime_filter(
     expected_message = (
         "As soon as you add your Checkmk server to the monitoring, a graph showing the history "
         "of your host problems will appear here.\n Please also be aware that this message might "
-        "appear as a result of a filtered dashboard. This dashlet currently only supports "
+        "appear as a result of a filtered dashboard. This widget currently only supports "
         "filtering for sites.Please refer to the Checkmk User Guide for more details."
     )
 

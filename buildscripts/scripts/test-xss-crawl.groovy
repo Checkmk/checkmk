@@ -94,6 +94,9 @@ void main() {
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
                             test_filter: params.TEST_FILTER,
+                            // can hit 100min (without wait time)
+                            // using FoS of 3
+                            timeout: 300,
                         );
                     }
                 }

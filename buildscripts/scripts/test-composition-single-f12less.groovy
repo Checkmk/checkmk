@@ -78,6 +78,10 @@ void main() {
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
                             test_filter: params.TEST_FILTER,
+                            // ultimatemt can hit 120min during the nightly runs (without wait time)
+                            // runs of heavy chain are around 45-90min depending on the edition
+                            // using FoS of 3
+                            timeout: 360,
                         );
                     }
                 }

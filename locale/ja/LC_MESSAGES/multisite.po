@@ -34535,9 +34535,10 @@ msgstr ""
 "key:value<br><br>キーにも値にも「:」は使用できません。Checkmkは、使用するラベ"
 "ルに対して他のバリデーションは行いません。"
 
+#, fuzzy
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example "
-"\"os:windows\"."
+"\"os:windows\" or \"net:ip:v4\"."
 msgstr ""
 "ラベルは\"[KEY]:[VALUE]\"という形式である必要があります。例えば、"
 "\"os:windows \"のように。"

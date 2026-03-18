@@ -36591,9 +36591,10 @@ msgstr ""
 "potervi fare riferimento in seguito in altri punti di Checkmk, ad esempio "
 "nelle catene di regole."
 
+#, fuzzy
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example "
-"\"os:windows\"."
+"\"os:windows\" or \"net:ip:v4\"."
 msgstr ""
 "Le etichette devono avere il formato \"[CHIAVE]:[VALORE]\". Ad esempio "
 "\"os:windows\"."

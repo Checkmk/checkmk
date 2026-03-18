@@ -36897,9 +36897,10 @@ msgstr ""
 "lanțurile de reguli.<br><b>Format etichetă:</b> cheie:valoare<br><br>Checkmk "
 "nu efectuează nicio validare a etichetelor pe care le utilizați."
 
+#, fuzzy
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example "
-"\"os:windows\"."
+"\"os:windows\" or \"net:ip:v4\"."
 msgstr ""
 "Etichetele trebuie să fie în formatul \"[KEY]:[VALUE]\". De exemplu, "
 "\"os:windows\"."

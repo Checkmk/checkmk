@@ -36810,9 +36810,10 @@ msgstr ""
 "key:value<br><br>Checkmk voert geen validatie uit op de labels die u "
 "gebruikt."
 
+#, fuzzy
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example "
-"\"os:windows\"."
+"\"os:windows\" or \"net:ip:v4\"."
 msgstr ""
 "Labels moeten zijn in het formaat \"[KEY]:[VALUE]\". Bijvoorbeeld "
 "\"os:windows\"."

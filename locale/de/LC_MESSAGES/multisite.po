@@ -35523,9 +35523,10 @@ msgstr ""
 "':' enthalten. Checkmk führt keine weitere Validierung für die von Ihnen "
 "verwendeten Labels durch."
 
+#, fuzzy
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example "
-"\"os:windows\"."
+"\"os:windows\" or \"net:ip:v4\"."
 msgstr ""
 "Labels müssen das Format \"[SCHLÜSSEL]:[WERT]\" haben. Zum Beispiel "
 "\"os:windows\"."

@@ -37071,9 +37071,10 @@ msgstr ""
 "clave:valor<br><br>Checkmk no realiza ninguna validación en las etiquetas "
 "que utilice."
 
+#, fuzzy
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example "
-"\"os:windows\"."
+"\"os:windows\" or \"net:ip:v4\"."
 msgstr ""
 "Las etiquetas deben tener el formato \"[CLAVE]:[VALOR]\". Por ejemplo "
 "\"os:windows\"."

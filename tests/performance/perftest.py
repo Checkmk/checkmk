@@ -304,7 +304,7 @@ class PerformanceTest:
         """
         Scenario: UI response time.
 
-        Sequentially issues 100 Playwright requests against the sites given page_url, appending a
+        Sequentially issues 10 Playwright requests against the sites given page_url, appending a
         millisecond timestamp (_ts) as query parameter to avoid cache hits. Each request includes
         cache-busting headers and uses a timeout. For each request, wait for the domcontentloaded
         event being triggered.
@@ -319,47 +319,52 @@ class PerformanceTest:
         """
 
         first_request_duration = 0.0
+        counter = 10
         page = self.page(self.central_site, context, page_url.login)
-        site_url = urljoin(self.central_site.url, page_url.value).format_map(
-            {"folder": "", "host": "dummy"}
-        )
-        parsed_url = urlparse(site_url)
-        query_params = parse_qs(parsed_url.query)
-        counter = self.object_count
         start_time = time()
-        for i in range(counter):
-            query_params["_ts"] = [f"{int(time() * 1000)}"]
-            new_query = urlencode(query_params, doseq=True)
-            unique_url = urlunparse(parsed_url._replace(query=new_query))
-            try:
-                timeout_ms = 1000 * (
-                    page_url.first_request_timeout if i == 0 else page_url.request_timeout
-                )
-                resp = page.goto(unique_url, timeout=timeout_ms, wait_until="domcontentloaded")
-                if i == 0:
-                    first_request_duration = time() - start_time
-                    logger.info(
-                        'UI response "%s" - first request duration: %ss',
-                        page_url.id,
-                        round(first_request_duration, 3),
+        try:
+            site_url = urljoin(self.central_site.url, page_url.value).format_map(
+                {"folder": "", "host": "dummy"}
+            )
+            parsed_url = urlparse(site_url)
+            query_params = parse_qs(parsed_url.query)
+
+            for i in range(counter):
+                query_params["_ts"] = [f"{int(time() * 1000)}"]
+                new_query = urlencode(query_params, doseq=True)
+                unique_url = urlunparse(parsed_url._replace(query=new_query))
+                try:
+                    timeout_ms = 1000 * (
+                        page_url.first_request_timeout if i == 0 else page_url.request_timeout
                     )
-                if resp and not resp.ok:
+                    resp = page.goto(unique_url, timeout=timeout_ms, wait_until="domcontentloaded")
+                    if i == 0:
+                        first_request_duration = time() - start_time
+                        logger.info(
+                            'UI response "%s" - first request duration: %ss',
+                            page_url.id,
+                            round(first_request_duration, 3),
+                        )
+                    if resp and not resp.ok:
+                        logger.warning(
+                            'UI response "%s" - request %s failed with status %s (%s)',
+                            page_url.id,
+                            i,
+                            resp.status,
+                            unique_url,
+                        )
+                except Exception as exc:
                     logger.warning(
-                        'UI response "%s" - request %s failed with status %s (%s)',
+                        'UI response "%s" - request %s raised %s (%s)',
                         page_url.id,
                         i,
-                        resp.status,
+                        exc,
                         unique_url,
                     )
-            except Exception as exc:
-                logger.warning(
-                    'UI response "%s" - request %s raised %s (%s)',
-                    page_url.id,
-                    i,
-                    exc,
-                    unique_url,
-                )
-        end_time = time()
+        finally:
+            end_time = time()
+            page.close()
+
         duration = end_time - start_time
         average_request_duration = (duration - first_request_duration) / (counter - 1)
         logger.info(

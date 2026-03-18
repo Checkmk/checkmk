@@ -61,7 +61,8 @@ def _valuespec_connection() -> SingleChoice:
         help_text=Help(
             "Select the connection type for the SSL/TLS check. "
             "Direct TLS establishes an immediate encrypted connection. "
-            "SMTP STARTTLS negotiates encryption after connecting in plain text."
+            "STARTTLS variants (SMTP, Postgres, IMAP, LDAP) negotiate encryption after "
+            "connecting in plain text using the respective protocol. "
             "Proxy connections allow to connect via a proxy server, only global and manual "
             "proxy configurations are supported."
         ),
@@ -77,6 +78,14 @@ def _valuespec_connection() -> SingleChoice:
             SingleChoiceElement(
                 name=ConnectionType.POSTGRES_STARTTLS.value,
                 title=Title("Postgres STARTTLS"),
+            ),
+            SingleChoiceElement(
+                name=ConnectionType.IMAP_STARTTLS.value,
+                title=Title("IMAP STARTTLS"),
+            ),
+            SingleChoiceElement(
+                name=ConnectionType.LDAP_STARTTLS.value,
+                title=Title("LDAP STARTTLS"),
             ),
         ],
         prefill=DefaultValue(ConnectionType.TLS.value),

@@ -5,14 +5,13 @@
 
 
 import re
-import shutil
-import tempfile
 from logging import Logger
 from pathlib import Path
 
 import pydantic
 from werkzeug.datastructures import Headers
 
+from cmk.ccc import store
 from cmk.product_usage.schema import GrafanaUsageData
 
 
@@ -33,7 +32,8 @@ def store_usage_data(headers: Headers, var_dir: Path, logger: Logger) -> None:
             is_grafana_cloud=_is_grafana_cloud(headers),
         )
 
-        _write_grafana_usage_file(data, grafana_file_path)
+        grafana_file_path.parent.mkdir(parents=True, exist_ok=True)
+        store.save_text_to_file(grafana_file_path, data.model_dump_json())
     except Exception:
         logger.error("Store Grafana usage failed", exc_info=True)
 
@@ -55,14 +55,6 @@ def _is_grafana_cloud(headers: Headers) -> bool:
     return False
 
 
-def _write_grafana_usage_file(data: GrafanaUsageData, grafana_file_path: Path) -> None:
-    # Write in a temporary file first, then move the file to the final destination so the
-    # operation is atomic
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
-        f.write(data.model_dump_json())
-    shutil.move(f.name, grafana_file_path)
-
-
 def remove_grafana_usage_data(var_dir: Path) -> None:
     grafana_fp = _grafana_usage_file_path(var_dir)
     if grafana_fp.exists():
@@ -75,7 +67,4 @@ def collect(var_dir: Path) -> GrafanaUsageData | None:
     if not grafana_fp.exists():
         return None
 
-    with grafana_fp.open() as f:
-        data_json = f.read()
-        data = GrafanaUsageData.model_validate_json(data_json)
-        return data
+    return GrafanaUsageData.model_validate_json(grafana_fp.read_text())

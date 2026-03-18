@@ -5,25 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# Example output:
-# consists from the header, adapters and _optional_ footer where footer is Parameters
-# <<<win_networkadapter:sep(58)>>>
-# AdapterType: Ethernet 802.3
-# DeviceID: 7
-# MACAddress: 08:00:27:9C:F8:39
-# Name: Intel(R) PRO/1000 MT-Desktopadapter
-# NetworkAddresses:
-# ServiceName: E1G60
-# Speed: 1000000000
-# Address: 192.168.178.26
-# Subnet: 255.255.255.0
-# DefaultGateway: 192.168.178.1
-# ....
-# Parameters: ::1 RouterAdvertised Random,::2 RouterAdvertised Link
-
-# Parameters format:
-# Parameters:[ <IPAddress> <Prefix> <Suffix>[, ...]]
-
 from collections.abc import Iterable
 
 from cmk.agent_based.v2 import (
@@ -114,9 +95,9 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
                     result.setdefault("subnv4" if "." in address else "subnv6", []).append(address)
             elif varname == "Parameters":
                 result["params"] = {
-                    key.split("%")[0].strip().lower(): value.lower()
-                    for entry in value.split(",")
-                    for key, value in (entry.split(" ", maxsplit=1),)
+                    key.split("%")[0].strip(): value.split()
+                    for entry in value.lower().split(",")
+                    for key, value in (entry.strip().split(maxsplit=1),)
                 }
         if result.get("Name"):
             yield result
@@ -135,7 +116,7 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
             inet6=[
                 AugmentedIPv6Interface(f"{address}/{subnet}", is_temporary=is_temporary)
                 for address, subnet in zip(adapter["addrv6"], adapter["subnv6"])
-                for is_temporary in ("random" in (adapter["params"].get(address) or ""),)
+                for is_temporary in ("random" in (adapter["params"].get(address) or []),)
             ],
         )
 
@@ -178,5 +159,4 @@ inventory_plugin_win_ip_address = InventoryPlugin(
     name="win_ip_address",
     sections=["win_networkadapter"],
     inventory_function=inventorize_ip_addresses_windows,
-    # host_label_function=host_label_win_ip_address,
 )

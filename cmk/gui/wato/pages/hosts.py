@@ -1105,16 +1105,16 @@ class PageAjaxPingHost(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
+        ip_or_dns_name: HostName | str = unquote(
+            request.get_ascii_input_mandatory("ip_or_dns_name")
+        )
 
-        if cmd == PingHostCmd.PING6:
-            ip_or_dns_name = unquote(request.get_ascii_input_mandatory("ip_or_dns_name"))
-
+        if cmd == PingHostCmd.PING6 and ":" in ip_or_dns_name:
             if not HostAddress()._is_valid_ipv6_address(ip_or_dns_name):
                 return {
                     "status_code": 99,
                     "message": "Not a valid IPv6 address.",
                 }
-
         else:
             try:
                 ip_or_dns_name = request.get_validated_type_input_mandatory(

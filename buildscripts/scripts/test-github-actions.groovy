@@ -18,27 +18,8 @@ void main() {
         }
 
         test_jenkins_helper.execute_test([
-            name: "test-format",
-            cmd: "EDITION=community bazel run //:format.check",
-            container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
-        ]);
-
-        test_jenkins_helper.execute_test([
-            name: "test-lint",
-            cmd: "EDITION=community bazel lint --fixes=false ...",
-            container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
-        ]);
-
-        test_jenkins_helper.execute_test([
-            name: "test-bandit",
-            cmd: "EDITION=community make -C tests test-bandit",
-            container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
-            disable_hot_cache: true,
-        ]);
-
-        test_jenkins_helper.execute_test([
-            name: "test-unit",
-            cmd: "EDITION=community make -C tests test-unit",
+            name: "make test-github-actions",
+            cmd: "make test-github-actions",
             container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
         ]);
     }

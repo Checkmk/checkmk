@@ -61,6 +61,8 @@ defineEmits<{
 
 <style scoped>
 .db-responsive-grid-widget__frame {
+  --z-index-edit-controls: 4;
+
   height: 100%;
   width: 100%;
   position: relative;
@@ -91,7 +93,7 @@ defineEmits<{
 
 .db-responsive-grid-widget__edit-controls {
   /* this must be above the content and placeholder, but below the resizer */
-  z-index: 4;
+  z-index: var(--z-index-edit-controls);
   background-color: color-mix(in srgb, var(--color-daylight-grey-50) 50%, transparent);
 }
 
@@ -109,5 +111,9 @@ body[data-theme='modern-dark'] .db-responsive-grid-widget__edit-controls {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
+}
+
+.db-responsive-grid-widget__edit-controls + .db-responsive-grid-widget__content {
+  z-index: calc(var(--z-index-edit-controls) - 1);
 }
 </style>

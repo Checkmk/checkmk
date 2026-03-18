@@ -79,6 +79,11 @@ def main() {
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
                             test_filter: params.TEST_FILTER,
+                            // can hit 150min during the heavy chain runs (without wait time)
+                            // runs of heavy chain are around 15-30min depending on the edition
+                            // Only Pro edition usually takes 150min
+                            // using FoS of 3
+                            timeout: edition.toLowerCase() == "pro" ? 450 : 90,
                         );
                     }
                 }

@@ -27,6 +27,9 @@ def warn_about_network_ports(old_site_id: SiteId, new_site_id: SiteId, logger: L
             "For example if you enabled livestatus to listen via TCP or enabled the Event Console "
             "to listen for incoming Syslog messages or SNMP traps, you may have to update the "
             "configuration in one of the sites to resolve the conflicts.\n"
+            "If enabled, the same applies to the metric backend (Ultimate and Cloud editions only). "
+            "Without changing the ports in one of the sites, port collisions will prevent one of "
+            "the metric backends from starting, rendering your site dysfunctional.\n"
         )
     )
 

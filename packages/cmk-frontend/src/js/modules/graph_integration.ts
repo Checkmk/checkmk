@@ -5,7 +5,7 @@
  */
 import { call_ajax } from './ajax'
 import { show, update_content } from './hover'
-import { prevent_default_events } from './utils'
+import { get_url_param, prevent_default_events } from './utils'
 
 export function show_hover_graphs(
   event_: MouseEvent,
@@ -13,6 +13,11 @@ export function show_hover_graphs(
   host_name: string,
   service_description: string
 ) {
+  // Not available on shared dashboards (no authenticated session).
+  if (get_url_param('cmk-token')) {
+    return
+  }
+
   show(event_, '<div class="message">Loading...</div>')
 
   show_check_mk_hover_graphs(site_id, host_name, service_description, event_)

@@ -38,6 +38,8 @@ class ConnectionType(StrEnum):
     TLS = "tls"
     SMTP_STARTTLS = "smtp_starttls"
     POSTGRES_STARTTLS = "postgres_starttls"
+    IMAP_STARTTLS = "imap_starttls"
+    LDAP_STARTTLS = "ldap_starttls"
 
 
 FloatLevels = (

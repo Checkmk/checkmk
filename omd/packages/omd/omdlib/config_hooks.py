@@ -26,6 +26,7 @@ from re import Pattern
 from typing import TYPE_CHECKING
 
 from omdlib.config_choices import (
+    ApacheNetworkPortHasError,
     ApacheTCPAddrHasError,
     ConfigChoiceHasError,
     IpAddressListHasError,
@@ -154,6 +155,8 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             return IpListenAddressHasError()
         case ["@{NETWORK_PORT}"]:
             return NetworkPortHasError()
+        case ["@{APACHE_NETWORK_PORT}"]:
+            return ApacheNetworkPortHasError()
         case ["@{IP_ADDRESS_LIST}"]:
             return IpAddressListHasError()
         case ["@{APACHE_TCP_ADDR}"]:

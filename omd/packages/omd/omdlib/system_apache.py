@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from omdlib.config_choices import ApacheTCPAddrHasError, NetworkPortHasError
+from omdlib.config_choices import ApacheNetworkPortHasError, ApacheTCPAddrHasError
 from omdlib.console import show_success
 from omdlib.utils import is_containerized
 from omdlib.version_info import VersionInfo
@@ -41,7 +41,7 @@ def register_with_system_apache(
     """
     if (err := ApacheTCPAddrHasError()(apache_tcp_addr)).is_error():
         sys.exit(f"Invalid value for '{apache_tcp_addr}' for APACHE_TCP_ADDR'. {err.error}\n")
-    if (err := NetworkPortHasError()(apache_tcp_port)).is_error():
+    if (err := ApacheNetworkPortHasError()(apache_tcp_port)).is_error():
         sys.exit(f"Invalid value for '{apache_tcp_port}' for APACHE_TCP_PORT'. {err.error}\n")
 
     create_apache_hook(

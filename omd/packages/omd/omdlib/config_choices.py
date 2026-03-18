@@ -80,3 +80,17 @@ class NetworkPortHasError(ConfigChoiceHasError):
             return result.Error("Invalid port number")
 
         return result.OK(None)
+
+
+class ApacheNetworkPortHasError(ConfigChoiceHasError):
+    @override
+    def __call__(self, value: str) -> result.Result[None, str]:
+        try:
+            port = int(value)
+        except ValueError:
+            return result.Error("Invalid port number")
+
+        if port < 1 or port > 99999:
+            return result.Error("Invalid port number")
+
+        return result.OK(None)

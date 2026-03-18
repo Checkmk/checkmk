@@ -77,34 +77,6 @@ function toggleSelectedSite(siteId: string, value: boolean) {
         _t('No pending changes on your site(s).')
       }}</span>
     </div>
-
-    <!-- <CmkTabs v-if="props.sites.length > 1" model-value="sites-with-changes">
-      <template #tabs>
-        <CmkTab v-if="sitesWithChanges.length > 0" id="sites-with-changes">{{
-          _t('Sites with changes: %{n}', { n: sitesWithChanges.length })
-        }}</CmkTab>
-      </template>
-      <template #tab-contents>
-        <CmkTabContent id="sites-with-changes" spacing="none">
-          <CmkScrollContainer height="auto" max-height="30vh" class="cmk-scroll-container">
-            <SiteStatusItem
-              v-for="(site, idx) in sitesWithChanges"
-              :key="idx"
-              :idx="idx"
-              :site="site"
-              :activating="activating"
-              :checked="selectedSites.includes(site.siteId)"
-              :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
-              :has-activation-issues="siteHasActivationIssues(site)"
-              :has-status-problems="siteHasStatusProblems(site)"
-              :has-foreign-changes-without-permission="siteHasForeignChangesWithoutPermission(site)"
-              :selection-disabled="siteSelectionIsDisabled(site)"
-              @update-checked="toggleSelectedSite"
-            ></SiteStatusItem>
-          </CmkScrollContainer>
-        </CmkTabContent>
-      </template>
-    </CmkTabs> -->
   </div>
 </template>
 

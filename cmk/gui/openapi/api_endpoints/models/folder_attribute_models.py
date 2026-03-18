@@ -37,9 +37,11 @@ class BaseFolderAttributeModel:
     site: str | ApiOmitted = api_field(
         description="The site that should monitor this host.", default_factory=ApiOmitted
     )
-    parents: list[Annotated[str, AfterValidator(HostConverter.host_name)]] | ApiOmitted = api_field(
-        description="A list of parents of this host.",
-        default_factory=ApiOmitted,
+    parents: list[Annotated[str, AfterValidator(HostConverter().host_name)]] | ApiOmitted = (
+        api_field(
+            description="A list of parents of this host.",
+            default_factory=ApiOmitted,
+        )
     )
     contactgroups: HostContactGroupModel | ApiOmitted = api_field(
         description=(

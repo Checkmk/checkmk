@@ -10,8 +10,6 @@ import pytest
 from pydantic import AfterValidator
 from pytest_mock import MockerFixture
 
-from cmk.automations.results import DeleteHostsResult
-from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
@@ -24,11 +22,8 @@ from cmk.gui.openapi.framework.model.converter import (
     TagConverter,
     UserConverter,
 )
-from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.session import UserContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.watolib.groups import HostAttributeContactGroups
-from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from tests.unit.cmk.gui.users import create_and_destroy_user
@@ -288,33 +283,6 @@ class TestHostConverter:
             return [perm for perm in permission_types if perm != "monitor"]
 
         return permission_types
-
-    @pytest.fixture(name="sample_host")
-    def fixture_sample_host(self, request_context: None) -> Iterator[str]:
-        host_name = "test_host"
-        root_folder = folder_tree().root_folder()
-
-        # for test_exists_setup_write_edit_hosts
-        contact_groups = HostAttributeContactGroups().default_value()
-        contact_groups["groups"] = ["all"]
-
-        with SuperUserContext():
-            root_folder.create_hosts(
-                [(HostName(host_name), HostAttributes(contactgroups=contact_groups), None)],
-                pprint_value=False,
-                use_git=False,
-            )
-        try:
-            yield host_name
-        finally:
-            with SuperUserContext():
-                root_folder.delete_hosts(
-                    [HostName(host_name)],
-                    automation=lambda _automation_config, _hosts, _debug: DeleteHostsResult(),
-                    pprint_value=False,
-                    debug=False,
-                    use_git=False,
-                )
 
     @pytest.mark.parametrize("permission_type", _permission_types())
     def test_exists_fails_not_found(

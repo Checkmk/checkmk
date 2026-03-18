@@ -20,7 +20,13 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, IconNames, Row, StaticIcon
+from cmk.gui.type_defs import (
+    FilterHTTPVariables,
+    HTTPVariables,
+    IconNames,
+    Row,
+    StaticIcon,
+)
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group, Label

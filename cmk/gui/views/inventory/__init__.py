@@ -99,7 +99,9 @@ def _register_painter(
             "export_for_json": lambda self, row, cell, user: from_hint["export_for_json"](
                 row, cell
             ),
-            "group_by": lambda self, row, cell: self._spec.get("groupby"),
+            "group_by": lambda self, row, cell: (
+                None if (f := self._spec.get("groupby")) is None else f(row, cell)
+            ),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
             "printable": property(lambda s: s._spec.get("printable", True)),

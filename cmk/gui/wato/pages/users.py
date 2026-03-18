@@ -1440,7 +1440,7 @@ class ModeEditUser(WatoMode):
                 size=30,
                 id_="automation_secret",
                 placeholder="******" if "automation_secret" in self._user else "",
-                autocomplete="off",
+                autocomplete="new-password",
             )
             html.write_text_permissive(" ")
             html.open_b(style=["position: relative", "top: 4px;"])

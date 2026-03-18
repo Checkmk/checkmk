@@ -107,6 +107,7 @@ const passwordStoreOptions = computed(() => {
       v-model="explicitPassword"
       :aria-label="_t('explicit password')"
       type="password"
+      autocomplete="new-password"
       :placeholder="'******'"
       :class="{ 'form-password__validation-error': validation.length > 0 }"
     />

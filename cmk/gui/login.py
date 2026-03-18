@@ -342,7 +342,7 @@ class LoginPage(Page):
                 class_="login_label",
             )
             html.open_td(class_="login_input")
-            html.text_input(self._username_varname, id_="input_user")
+            html.text_input(self._username_varname, id_="input_user", autocomplete="username")
             html.close_td()
             html.close_tr()
             html.open_tr()
@@ -356,7 +356,9 @@ class LoginPage(Page):
                 class_="login_label",
             )
             html.open_td(class_="login_input")
-            html.password_input(self._password_varname, id_="input_pass", size=None)
+            html.password_input(
+                self._password_varname, id_="input_pass", size=None, autocomplete="current-password"
+            )
             html.close_td()
             html.close_tr()
             html.close_table()

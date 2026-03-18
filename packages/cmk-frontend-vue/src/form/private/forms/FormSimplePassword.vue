@@ -48,6 +48,7 @@ const componentId = useId()
     v-model="password"
     :aria-label="props.spec.title"
     type="password"
+    autocomplete="new-password"
     :placeholder="'******'"
     :class="{ 'form-simple-password__validation-error': validation.length > 0 }"
   />

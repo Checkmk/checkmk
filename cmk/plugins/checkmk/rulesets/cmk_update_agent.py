@@ -39,20 +39,19 @@ def _migrate(obj: object) -> Mapping[str, object]:
     if not isinstance(obj, Mapping):
         raise ValueError(obj)
 
-    if not obj:
+    ACTIVATED_KEY = "activated"
+    UPDATER_REGISTRATION_KEY = "updater_registration"
+
+    if isinstance((activated := obj[ACTIVATED_KEY]), bool):
+        # This is a clear sign that we come from Checkmk 2.4.0, so we use this as condition
+        # to set the updater_registration to manual to preserve the existing behavior.
         return {
-            "updater_registration": "manual",
+            **obj,
+            ACTIVATED_KEY: "enabled" if activated else "disabled",
+            UPDATER_REGISTRATION_KEY: "manual",
         }
 
     return obj
-
-
-def _migrate_activated(value: object) -> str:
-    if isinstance(value, bool):
-        return "enabled" if value else "disabled"
-    if isinstance(value, str) and value in ("enabled", "disabled"):
-        return value
-    raise ValueError(value)
 
 
 def _migrate_proxy_old_format(
@@ -373,7 +372,6 @@ def _valuespec_activation() -> SingleChoice:
             ),
         ],
         prefill=DefaultValue("disabled"),
-        migrate=_migrate_activated,
     )
 
 

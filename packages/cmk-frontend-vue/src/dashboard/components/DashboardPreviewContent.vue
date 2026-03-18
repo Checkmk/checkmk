@@ -52,6 +52,7 @@ const effectiveContentProps = computed(() => {
 .db-preview-content__inner-wrapper {
   /* "parent node" is used for figure height calculation */
   height: var(--db-preview-content-height);
+  contain: inline-size;
 }
 
 .db-preview-content__click-shield {

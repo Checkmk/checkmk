@@ -116,6 +116,7 @@ export function enable_select2_dropdowns(
   ;(async () => {
     elements.select2({
       dropdownAutoWidth: true,
+      width: 'auto',
       minimumResultsForSearch: 5,
       templateResult: format_select2_item,
       templateSelection: format_select2_item

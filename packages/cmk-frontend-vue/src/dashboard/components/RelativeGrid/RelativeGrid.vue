@@ -210,7 +210,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
           :dimensions="
             getAbsoluteLayout(spec.widget_id)?.frame.dimensions || { width: 100, height: 100 }
           "
-          :z-index="getLayoutZIndex(spec.widget_id) || 1"
+          :z-index="isEditing ? getLayoutZIndex(spec.widget_id) || 1 : 1"
           :position="getAbsoluteLayout(spec.widget_id)?.frame.position || { left: 0, top: 0 }"
           :handle-drag="handleDragForWidget(spec.widget_id)"
           :handle-resize="handleResizeForWidget(spec.widget_id)"

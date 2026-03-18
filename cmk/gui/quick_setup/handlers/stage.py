@@ -233,6 +233,9 @@ def recap_stage(
 
 
 class StageActionResult(BaseModel, frozen=False):
+    quick_setup_id: QuickSetupId
+    stage_index: StageIndex
+    action_id: ActionId
     validation_errors: ValidationErrors | None = None
     # TODO: This should be a list of widgets using only Sequence[Widget] will remove all fields
     #  when the data is returned (this is a temporary fix)
@@ -275,7 +278,11 @@ def verify_custom_validators_and_recap_stage(
     if progress_logger is None:
         progress_logger = InfoLogger()
 
-    response = StageActionResult()
+    response = StageActionResult(
+        quick_setup_id=quick_setup.id,
+        stage_index=stage_index,
+        action_id=stage_action_id,
+    )
     if (
         errors := verify_stage_custom_validators(
             quick_setup=quick_setup,
@@ -368,9 +375,12 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
                 exception_message = str(e)
                 job_interface.send_exception(exception_message)
                 StageActionResult(
+                    quick_setup_id=self._quick_setup_id,
+                    stage_index=self._stage_index,
+                    action_id=self._action_id,
                     background_job_exception=BackgroundJobException(
                         message=exception_message, traceback=traceback.format_exc()
-                    )
+                    ),
                 ).save_to_file(Path(job_interface.get_work_dir()))
 
     def _run_quick_setup_stage_action(

@@ -263,6 +263,8 @@ def complete_quick_setup(
 
 
 class CompleteActionResult(BaseModel):
+    quick_setup_id: QuickSetupId
+    action_id: ActionId
     all_stage_errors: Sequence[ValidationErrors] | None = None
     redirect_url: str | None = None
     background_job_exception: BackgroundJobException | None = None
@@ -315,7 +317,11 @@ def verify_custom_validators_and_complete_quick_setup(
         progress_logger=progress_logger,
     )
     if errors.exist():
-        return CompleteActionResult(all_stage_errors=[errors])
+        return CompleteActionResult(
+            quick_setup_id=quick_setup.id,
+            action_id=action_id,
+            all_stage_errors=[errors],
+        )
 
     redirect_url = complete_quick_setup(
         action=action,
@@ -327,7 +333,11 @@ def verify_custom_validators_and_complete_quick_setup(
         use_git=use_git,
         pprint_value=pprint_value,
     ).redirect_url
-    return CompleteActionResult(redirect_url=redirect_url)
+    return CompleteActionResult(
+        quick_setup_id=quick_setup.id,
+        action_id=action_id,
+        redirect_url=redirect_url,
+    )
 
 
 class QuickSetupActionBackgroundJob(BackgroundJob):
@@ -379,10 +389,12 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                 exception_message = str(e)
                 job_interface.send_exception(exception_message)
                 CompleteActionResult(
+                    quick_setup_id=self._quick_setup_id,
+                    action_id=self._action_id,
                     background_job_exception=BackgroundJobException(
                         message=exception_message,
                         traceback=traceback.format_exc(),
-                    )
+                    ),
                 ).save_to_file(Path(job_interface.get_work_dir()))
 
     def _run_quick_setup_stage(

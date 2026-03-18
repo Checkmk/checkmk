@@ -81,10 +81,7 @@ from cmk.gui.watolib.automations import (
 from cmk.utils.encoding import json_encode
 
 from .. import background_job
-from .request_schemas import (
-    QuickSetupFinalActionRequest,
-    QuickSetupStageActionRequest,
-)
+from .request_schemas import QuickSetupFinalActionRequest, QuickSetupStageActionRequest
 from .response_schemas import (
     QuickSetupCompleteResponse,
     QuickSetupResponse,
@@ -323,7 +320,12 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
     )
     if errors.exist():
         return _serve_action_result(
-            StageActionResult(validation_errors=errors),
+            StageActionResult(
+                validation_errors=errors,
+                quick_setup_id=quick_setup_id,
+                stage_index=stage_index,
+                action_id=stage_action_id,
+            ),
             status_code=400,
         )
 
@@ -412,6 +414,7 @@ class FieldSiteId:
     path_params=[JOB_ID],
     query_params=[{FieldSiteId.field_name: FieldSiteId.field_definition}],
     response_schema=QuickSetupStageActionResponse,
+    additional_status_codes=[403],
 )
 def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response:
     """Fetch the Quick setup stage action background job result"""
@@ -439,6 +442,25 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
             return _serve_error(
                 "Job not found", f"Background job '{action_background_job_id}' not found", 404
             )
+
+    if (quick_setup := quick_setup_registry.get(action_result.quick_setup_id)) is None:
+        return _serve_error(
+            title="Quick setup not found",
+            detail=f"Quick setup with id '{action_result.quick_setup_id}' does not exist.",
+        )
+
+    stage_action = matching_stage_action(
+        quick_setup.stages[action_result.stage_index](), action_result.action_id
+    )
+
+    if stage_action.permissions is not None and not all(
+        user.may(perm) for perm in stage_action.permissions
+    ):
+        return _serve_error(
+            title="Action not allowed",
+            detail=f"Action with id '{action_result.action_id}' requires {', '.join(f"'{x}'" for x in stage_action.permissions)} permissions.",
+            status_code=403,
+        )
 
     return _serve_action_result(action_result)
 
@@ -531,7 +553,11 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
 
     if errors is not None:
         return _serve_action_result(
-            CompleteActionResult(all_stage_errors=_add_summary_error_message(errors)),
+            CompleteActionResult(
+                all_stage_errors=_add_summary_error_message(errors),
+                quick_setup_id=quick_setup_id,
+                action_id=action_id,
+            ),
             status_code=400,
         )
 
@@ -588,6 +614,7 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
     method="get",
     path_params=[JOB_ID],
     response_schema=QuickSetupCompleteResponse,
+    additional_status_codes=[403],
 )
 def fetch_quick_setup_action_result(params: Mapping[str, Any]) -> Response:
     """Fetch the Quick action background job result"""
@@ -598,6 +625,21 @@ def fetch_quick_setup_action_result(params: Mapping[str, Any]) -> Response:
     except MKJobNotFoundException:
         return _serve_error(
             "Job not found", f"Background job '{action_background_job_id}' not found", 404
+        )
+
+    if (quick_setup := quick_setup_registry.get(action_result.quick_setup_id)) is None:
+        return _serve_error(
+            title="Quick setup not found",
+            detail=f"Quick setup with id '{action_result.quick_setup_id}' does not exist.",
+        )
+
+    permissions = get_all_permissions(quick_setup)
+
+    if permissions is not None and not all(user.may(perm) for perm in permissions):
+        return _serve_error(
+            title="Action not allowed",
+            detail=f"Requires {', '.join(f"'{p}'" for p in permissions)} permissions.",
+            status_code=403,
         )
 
     return _serve_action_result(action_result)

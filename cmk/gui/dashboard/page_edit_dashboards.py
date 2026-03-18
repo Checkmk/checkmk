@@ -30,6 +30,8 @@ from .type_defs import DashboardConfig, DashboardName
 
 PAGE_EDIT_DASHBOARDS_LINK = "edit_dashboards"
 
+MAX_COMMENT_CHARS = 150
+
 
 def page_edit_dashboards(ctx: PageContext) -> None:
     visuals.page_list(
@@ -116,6 +118,12 @@ def _render_dashboard_columns() -> Callable[[Table, VisualName, TVisual], None]:
             )
         table.cell(_("Link created"), auth_token.issued_at.strftime("%Y-%m-%d"))
         if isinstance(auth_token.details, DashboardToken):
-            table.cell(_("Comments"), auth_token.details.comment)
+            comment = auth_token.details.comment
+            table.cell(
+                _("Comments"),
+                comment[:MAX_COMMENT_CHARS] + "..."
+                if len(comment) > MAX_COMMENT_CHARS
+                else comment,
+            )
 
     return render

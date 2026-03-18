@@ -91,13 +91,14 @@ export const saveOrEditQuickSetup = async (
   buttonId: string,
   formData: StageData[],
   objectId: string | null = null,
-  onLogUpdate?: LogWatcher
+  onLogUpdate?: LogWatcher,
+  search?: string
 ): Promise<QuickSetupCompleteResponse | QuickSetupCompleteActionValidationResponse> => {
   const stages: QuickSetupStageRequest[] = formData.map((stage) => ({ form_data: stage }))
 
   const data = objectId
-    ? await quickSetupClient.editQuickSetup(quickSetupId, buttonId, stages, objectId)
-    : await quickSetupClient.runQuickSetupAction(quickSetupId, buttonId, stages)
+    ? await quickSetupClient.editQuickSetup(quickSetupId, buttonId, stages, objectId, search)
+    : await quickSetupClient.runQuickSetupAction(quickSetupId, buttonId, stages, search)
 
   if (data instanceof QuickSetupCompleteActionValidationResponse) {
     return data

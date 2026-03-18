@@ -333,7 +333,8 @@ const save = async (buttonId: string) => {
       buttonId,
       userInput,
       props.object_id,
-      handleBackgroundJobLogUpdate
+      handleBackgroundJobLogUpdate,
+      props.search
     )
     loading.value = true
 

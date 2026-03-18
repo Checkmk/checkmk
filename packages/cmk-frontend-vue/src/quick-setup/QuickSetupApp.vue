@@ -38,6 +38,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :toggle_enabled="toggle_enabled"
         :mode="mode"
         :object_id="object_id"
+        v-bind="search ? { search } : {}"
       />
       <template #fallback>
         <CmkIcon name="load-graph" size="xxlarge" />

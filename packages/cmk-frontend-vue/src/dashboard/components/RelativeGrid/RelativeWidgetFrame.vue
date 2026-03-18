@@ -87,114 +87,112 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
     :style="{ ...containerStyle }"
     :aria-label="_t('Widget')"
   >
-    <MissingFiltersMsg :effective-filter-context="contentProps.effective_filter_context">
-      <div :style="{ position: 'relative', height: '100%', width: '100%' }">
+    <div :style="{ position: 'relative', height: '100%', width: '100%' }">
+      <MissingFiltersMsg :effective-filter-context="contentProps.effective_filter_context">
         <DashboardContent v-bind="contentProps" />
+      </MissingFiltersMsg>
 
+      <div
+        v-if="props.isEditing"
+        :id="`dashlet_controls_${contentProps!.widget_id}`"
+        class="controls"
+        @pointerdown="handleDrag"
+      >
+        <!-- Resize handles -->
         <div
-          v-if="props.isEditing"
-          :id="`dashlet_controls_${contentProps!.widget_id}`"
-          class="controls"
-          @pointerdown="handleDrag"
-        >
-          <!-- Resize handles -->
-          <div
-            v-if="isResizable && props.dimensionModes.width === SIZING_MODE.MANUAL"
-            class="resize-handle resize-left resize"
-            @pointerdown.stop.prevent="(e) => handleResize(e, 'left')"
-          ></div>
-          <div
-            v-if="isResizable && props.dimensionModes.width === SIZING_MODE.MANUAL"
-            class="resize-handle resize-right resize-right-border"
-            @pointerdown.stop.prevent="(e) => handleResize(e, 'right')"
-          ></div>
-          <div
-            v-if="isResizable && props.dimensionModes.height === SIZING_MODE.MANUAL"
-            class="resize-handle resize-top resize-top-border"
-            @pointerdown.stop.prevent="(e) => handleResize(e, 'top')"
-          ></div>
-          <div
-            v-if="isResizable && props.dimensionModes.height === SIZING_MODE.MANUAL"
-            class="resize-handle resize-bottom resize-bottom-border"
-            @pointerdown.stop.prevent="(e) => handleResize(e, 'bottom')"
-          ></div>
+          v-if="isResizable && props.dimensionModes.width === SIZING_MODE.MANUAL"
+          class="resize-handle resize-left resize"
+          @pointerdown.stop.prevent="(e) => handleResize(e, 'left')"
+        ></div>
+        <div
+          v-if="isResizable && props.dimensionModes.width === SIZING_MODE.MANUAL"
+          class="resize-handle resize-right resize-right-border"
+          @pointerdown.stop.prevent="(e) => handleResize(e, 'right')"
+        ></div>
+        <div
+          v-if="isResizable && props.dimensionModes.height === SIZING_MODE.MANUAL"
+          class="resize-handle resize-top resize-top-border"
+          @pointerdown.stop.prevent="(e) => handleResize(e, 'top')"
+        ></div>
+        <div
+          v-if="isResizable && props.dimensionModes.height === SIZING_MODE.MANUAL"
+          class="resize-handle resize-bottom resize-bottom-border"
+          @pointerdown.stop.prevent="(e) => handleResize(e, 'bottom')"
+        ></div>
 
-          <!-- Anchors -->
-          <template v-for="corner in anchorCorners" :key="corner.key">
-            <div class="anchor-slot" :class="`anchor--${corner.key}`">
-              <div
-                :class="`anchor-icon ${anchorBackgroundColorClass(corner.pos)}`"
-                aria-hidden="true"
-                @pointerdown.stop.prevent="onAnchorSelect(corner.pos)"
-              />
-              <div
-                v-if="props.anchorPosition === corner.pos"
-                class="anchor-label anchor-label-pos anchor-label-color"
-              >
-                {{ _t('Anchor') }}
-              </div>
-            </div>
-          </template>
-
-          <!-- Centered edit controls -->
-          <div class="db-centered-edit-controls">
-            <!-- left column: sizing buttons -->
-            <div v-if="isResizable" class="db-sizing-controls">
-              <CmkButton
-                class="sizing-button"
-                :title="_t('Toggle sizing for width')"
-                @click.stop="emit('toggle:sizing', 'width')"
-              >
-                {{ getSizingText(props.dimensionModes.width, 'width') }}
-              </CmkButton>
-
-              <CmkButton
-                class="sizing-button"
-                :title="_t('Toggle sizing for height')"
-                @click.stop="emit('toggle:sizing', 'height')"
-              >
-                {{ getSizingText(props.dimensionModes.height, 'height') }}
-              </CmkButton>
-            </div>
-
-            <!-- right row: icon buttons -->
-            <div class="db-icon-controls">
-              <CmkIconButton
-                class="db-centered-edit-controls-button control-button-color"
-                name="widget-delete"
-                size="xlarge"
-                :title="_t('Delete widget')"
-                :aria-label="_t('Delete widget')"
-                @click="emit('click:delete')"
-              />
-              <CmkIconButton
-                class="db-centered-edit-controls-button control-button-color"
-                name="widget-clone"
-                size="xlarge"
-                :title="_t('Clone widget')"
-                :aria-label="_t('Clone widget')"
-                @click="emit('click:clone')"
-              />
-              <CmkIconButton
-                class="db-centered-edit-controls-button control-button-color"
-                name="widget-edit"
-                size="xlarge"
-                :title="_t('Edit widget')"
-                :aria-label="_t('Edit widget')"
-                @click="emit('click:edit')"
-              />
+        <!-- Anchors -->
+        <template v-for="corner in anchorCorners" :key="corner.key">
+          <div class="anchor-slot" :class="`anchor--${corner.key}`">
+            <div
+              :class="`anchor-icon ${anchorBackgroundColorClass(corner.pos)}`"
+              aria-hidden="true"
+              @pointerdown.stop.prevent="onAnchorSelect(corner.pos)"
+            />
+            <div
+              v-if="props.anchorPosition === corner.pos"
+              class="anchor-label anchor-label-pos anchor-label-color"
+            >
+              {{ _t('Anchor') }}
             </div>
           </div>
+        </template>
 
-          <!-- Debug info -->
-          <div v-if="debug" class="debug-container">
-            {{ dimensions.width }} x {{ dimensions.height }} | {{ position.left }},{{
-              position.top
-            }}
+        <!-- Centered edit controls -->
+        <div class="db-centered-edit-controls">
+          <!-- left column: sizing buttons -->
+          <div v-if="isResizable" class="db-sizing-controls">
+            <CmkButton
+              class="sizing-button"
+              :title="_t('Toggle sizing for width')"
+              @click.stop="emit('toggle:sizing', 'width')"
+            >
+              {{ getSizingText(props.dimensionModes.width, 'width') }}
+            </CmkButton>
+
+            <CmkButton
+              class="sizing-button"
+              :title="_t('Toggle sizing for height')"
+              @click.stop="emit('toggle:sizing', 'height')"
+            >
+              {{ getSizingText(props.dimensionModes.height, 'height') }}
+            </CmkButton>
+          </div>
+
+          <!-- right row: icon buttons -->
+          <div class="db-icon-controls">
+            <CmkIconButton
+              class="db-centered-edit-controls-button control-button-color"
+              name="widget-delete"
+              size="xlarge"
+              :title="_t('Delete widget')"
+              :aria-label="_t('Delete widget')"
+              @click="emit('click:delete')"
+            />
+            <CmkIconButton
+              class="db-centered-edit-controls-button control-button-color"
+              name="widget-clone"
+              size="xlarge"
+              :title="_t('Clone widget')"
+              :aria-label="_t('Clone widget')"
+              @click="emit('click:clone')"
+            />
+            <CmkIconButton
+              class="db-centered-edit-controls-button control-button-color"
+              name="widget-edit"
+              size="xlarge"
+              :title="_t('Edit widget')"
+              :aria-label="_t('Edit widget')"
+              @click="emit('click:edit')"
+            />
           </div>
         </div>
+
+        <!-- Debug info -->
+        <div v-if="debug" class="debug-container">
+          {{ dimensions.width }} x {{ dimensions.height }} | {{ position.left }},{{ position.top }}
+        </div>
       </div>
-    </MissingFiltersMsg>
+    </div>
   </div>
 </template>
 

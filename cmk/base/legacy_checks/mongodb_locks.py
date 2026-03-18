@@ -19,7 +19,9 @@ check_info = {}
 
 
 def inventory_mongodb_locks(info):
-    return [(None, {})]
+    if info:
+        return [(None, {})]
+    return []
 
 
 def check_mongodb_locks(_no_item, params, info):

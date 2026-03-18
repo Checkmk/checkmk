@@ -28,7 +28,8 @@ from cmk.agent_based.v2 import (
 
 
 def discover_mongodb_locks(section: StringTable) -> DiscoveryResult:
-    yield Service()
+    if section:
+        yield Service()
 
 
 def check_mongodb_locks(params: Mapping[str, Any], section: StringTable) -> CheckResult:

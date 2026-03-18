@@ -2011,6 +2011,10 @@ function update_graph(
 }
 
 function start_graph_update(canvas: HTMLCanvasElement, post_data: string) {
+  // Shared dashboards (token-auth) have no session — graph updates cannot work.
+  if (get_url_param('cmk-token')) {
+    return
+  }
   g_graph_update_in_process = true
 
   set_graph_update_cooldown()
@@ -2074,6 +2078,12 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
   //         "data_range"     : graph_data_range,
   //         "render_config"  : graph_render_config,
   // }
+  if (!response.context) {
+    console.error('Graph update response missing context')
+    g_graph_update_in_process = false
+    g_graph_backoff.report_failure()
+    return
+  }
   const graph_id = response.context.graph_id
   const graph: GraphArtwork = response.graph
   graph['id'] = graph_id
@@ -2168,6 +2178,10 @@ function update_next_graph_timerange() {
 }
 
 function set_graph_timerange(graph_id: string, start_time: number, end_time: number) {
+  // Shared dashboards (token-auth) have no session — graph updates cannot work.
+  if (get_url_param('cmk-token')) {
+    return
+  }
   const graph = g_graphs[graph_id]
   if (!graph) return
   const canvas = graph['canvas_obj']

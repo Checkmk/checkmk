@@ -50,6 +50,7 @@ const activationStatusCollapsible = ref<boolean>(true)
 const restAPI = new Api(`api/1.0/`, [['Content-Type', 'application/json']])
 const ajaxCall = new Api()
 const activateChangesInProgress = ref<boolean>(false)
+const showActivationResultWarningsErrors = ref<boolean>(false)
 const alreadyMadeAjaxCall = ref<boolean>(false)
 const defaultActivationError = {
   title: _t('Activation of changes failed'),
@@ -126,6 +127,9 @@ async function pollActivationStatusUntilComplete(activationId: string) {
       })
       numberOfChangesLastActivation.value = response.extensions.changes.length
       await fetchPendingChangesAjax()
+      if (sitesWithWarningsOrErrors.value) {
+        showActivationResultWarningsErrors.value = true
+      }
       activateChangesInProgress.value = false
     }
   } catch (error) {
@@ -254,6 +258,7 @@ async function checkIfMenuActive(): Promise<void> {
       activationError.value = null
       await fetchPendingChangesAjax()
       alreadyMadeAjaxCall.value = true
+      showActivationResultWarningsErrors.value = false
     }
   } else {
     alreadyMadeAjaxCall.value = false
@@ -468,7 +473,11 @@ onMounted(async () => {
       >
       </ChangesActivationResult>
       <CmkDialog
-        v-if="sitesWithWarningsOrErrors && !activateChangesInProgress"
+        v-if="
+          sitesWithWarningsOrErrors &&
+          !activateChangesInProgress &&
+          showActivationResultWarningsErrors
+        "
         :title="_t('Problems detected during activation')"
         :message="_t('Some things may not be monitored properly.')"
         :buttons="[

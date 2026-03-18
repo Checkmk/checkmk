@@ -373,7 +373,7 @@ REDACT_PATTERNS: list[RedactPattern] = [
         replace_regex=re.compile(
             r"(\('authPriv', '[^']+', '[^']+', [\"']).*?([\"'], '[^']+', [\"']).*?([\"']\))"
         ),
-        replacement=r"\1{}\2{}\3".format(REDACT_STRING, REDACT_STRING),
+        replacement=rf"\1{REDACT_STRING}\2{REDACT_STRING}\3",
     ),
     # This one is for the fact that the SNMP community is always stored as cleartext
     # Can be removed, once the password store can be used, here

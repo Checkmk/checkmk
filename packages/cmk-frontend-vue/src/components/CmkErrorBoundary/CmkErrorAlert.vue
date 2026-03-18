@@ -29,7 +29,7 @@ const detailMessage = computed<string>(() => {
   <CmkAlertBox variant="error">
     <p>{{ _t('An unexpected error occurred') }}:</p>
     <CmkIndent>
-      <CmkHtml :html="props.error.message" />
+      <CmkHtml :html="props.error.message" class="cmk-error-alert__short" />
     </CmkIndent>
     <p>
       {{
@@ -52,6 +52,12 @@ const detailMessage = computed<string>(() => {
 </template>
 
 <style scoped>
+pre,
+.cmk-error-alert__short {
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
 pre {
   white-space: pre-wrap;
   padding: 0;

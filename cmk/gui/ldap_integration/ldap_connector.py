@@ -69,7 +69,9 @@ from ldap import (  # type: ignore[attr-defined,unused-ignore]
     SIZELIMIT_EXCEEDED,
     TIMEOUT,
 )
-from ldap.controls import SimplePagedResultsControl  # type: ignore[import-untyped,unused-ignore]
+from ldap.controls import (
+    SimplePagedResultsControl,  # type: ignore[import-untyped,unused-ignore]
+)
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
@@ -113,7 +115,12 @@ from cmk.gui.userdb._roles import load_roles
 from cmk.gui.userdb._user_attribute import get_user_attributes, UserAttribute
 from cmk.gui.userdb._user_spec import add_internal_attributes, new_user_template
 from cmk.gui.userdb._user_sync_config import user_sync_config
-from cmk.gui.userdb.store import load_cached_profile, load_users, release_users_lock, save_users
+from cmk.gui.userdb.store import (
+    load_cached_profile,
+    load_users,
+    release_users_lock,
+    save_users,
+)
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.security_log_events import UserManagementEvent
@@ -231,7 +238,9 @@ def _get_ad_locator() -> Any:
     # "unused-ignore" is needed because rules_mypy and the IDEs behave differently
     # See https://tribe29.slack.com/archives/C01EA6ZBG58/p1753888028549459
     import activedirectory  # type: ignore[import-untyped,unused-ignore]
-    from activedirectory.protocol import netlogon  # type: ignore[import-untyped,unused-ignore]
+    from activedirectory.protocol import (
+        netlogon,  # type: ignore[import-untyped,unused-ignore]
+    )
 
     class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc,name-defined,unused-ignore]
         @override
@@ -1367,7 +1376,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 filt = f"(&{filt}{add_filt})"
 
             for dn, obj in self._ldap_search(
-                self.get_group_dn(), filt, ["cn", member_attr], self._config["group_scope"]
+                self.get_group_dn(),
+                filt,
+                ["cn", member_attr],
+                self._config["group_scope"],
             ):
                 groups[_unescape_dn(dn)] = {
                     "cn": obj["cn"][0],
@@ -1597,7 +1609,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             result = True
         except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
-                "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)
+                "Unable to authenticate user %s. Reason: %s",
+                user_id,
+                e.args[0].get("desc", e),
             )
             result = False
         except Exception:
@@ -1656,7 +1670,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     def _user_enforces_this_connection(self, username: UserId) -> bool | None:
         matched_connection_ids = []
-        for suffix, connection_id in LDAPUserConnector.get_connection_suffixes().items():
+        for (
+            suffix,
+            connection_id,
+        ) in LDAPUserConnector.get_connection_suffixes().items():
             if self._username_matches_suffix(username, suffix):
                 matched_connection_ids.append(connection_id)
 
@@ -2446,12 +2463,12 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
         # Special handling for active directory: Is the user enabled / disabled?
         if connection._is_active_directory() and ldap_user.get("useraccountcontrol"):
             # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
-            locked_in_ad = int(ldap_user["useraccountcontrol"][0]) & 2
+            locked_in_ad = bool(int(ldap_user["useraccountcontrol"][0]) & 2)
             locked_in_cmk = user["locked"]
 
-            if locked_in_ad and not locked_in_cmk:
+            if locked_in_ad != locked_in_cmk:
                 return {
-                    "locked": True,
+                    "locked": locked_in_ad,
                     "serial": user.get("serial", 0) + 1,
                 }
 

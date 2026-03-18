@@ -270,10 +270,7 @@ def parse_cisco_temperature(
         if sensortype not in ("dBm", "celsius"):
             continue
 
-        if sensor_id in descriptions:
-            descr = descriptions[sensor_id]
-        else:
-            descr = sensor_id
+        descr = descriptions.get(sensor_id) or sensor_id
 
         if not descr:
             continue

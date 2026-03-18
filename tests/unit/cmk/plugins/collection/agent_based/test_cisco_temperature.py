@@ -1054,6 +1054,29 @@ def test_check_dom_not_ok_sensors(
     assert list(ct.check_cisco_temperature_dom(item, {}, section_not_ok_sensors)) == expected_result
 
 
+def test_parse_empty_description_falls_back_to_sensor_id() -> None:
+    section = ct.parse_cisco_temperature(
+        [
+            [
+                ["21590", "", "module-1 Crossbar1(s1)"],
+                ["21591", "", ""],
+            ],
+            [
+                ["21590", "8", "9", "0", "62", "1"],
+                ["21591", "8", "9", "0", "58", "1"],
+            ],
+            [],
+            [],
+            [],
+            [],
+        ]
+    )
+    # Sensor 21590 has a non-empty description and should use it
+    assert "module-1 Crossbar1(s1)" in section["8"]
+    # Sensor 21591 has an empty description and should fall back to sensor_id
+    assert "21591" in section["8"]
+
+
 def test_ensure_invalid_data_is_ignored(as_path: Callable[[str], Path]) -> None:
     input_table = """.1.3.6.1.2.1.1.1.0 Cisco NX-OS(tm) Nexus9000 C93240YC-FX2, Software (NXOS 64-bit), Version 10.2(5), RELEASE SOFTWARE Copyright (c) 2002-2023 by Cisco Systems, Inc. Compiled 3/10/2023 12:00:00
 .1.3.6.1.4.1.9.9.91.1.1.1.1.1.38487 8

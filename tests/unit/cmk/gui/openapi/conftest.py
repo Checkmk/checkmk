@@ -6,11 +6,19 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Iterator
+
 import pytest
 
 import cmk.gui.mkeventd.wato as mkeventd
+from cmk.automations.results import DeleteHostsResult
+from cmk.ccc.hostaddress import HostName
+from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.watolib import groups
+from cmk.gui.watolib.groups import HostAttributeContactGroups
+from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
 from tests.testlib.unit.rest_api_client import RestApiClient
 from tests.unit.cmk.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
@@ -33,6 +41,31 @@ def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_
     groups.delete_group("routers", "service", pprint_value=False, use_git=False)
     monkeypatch.setattr(mkeventd, "_get_rule_stats_from_ec", lambda: {})
     groups.delete_group("admins", "contact", pprint_value=False, use_git=False)
+
+
+@pytest.fixture(name="sample_host")
+def fixture_sample_host(request_context: None) -> Iterator[str]:
+    host_name = "test_host"
+    root_folder = folder_tree().root_folder()
+    contact_groups = HostAttributeContactGroups().default_value()
+    contact_groups["groups"] = ["all"]
+    with SuperUserContext():
+        root_folder.create_hosts(
+            [(HostName(host_name), HostAttributes(contactgroups=contact_groups), None)],
+            pprint_value=False,
+            use_git=False,
+        )
+    try:
+        yield host_name
+    finally:
+        with SuperUserContext():
+            root_folder.delete_hosts(
+                [HostName(host_name)],
+                automation=lambda _automation_config, _hosts, _debug: DeleteHostsResult(),
+                pprint_value=False,
+                debug=False,
+                use_git=False,
+            )
 
 
 @pytest.fixture(name="fresh_app_instance", scope="function")

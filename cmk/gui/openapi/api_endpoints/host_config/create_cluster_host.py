@@ -45,7 +45,7 @@ class CreateClusterHostModel:
         description="Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.",
         example={"ipaddress": "192.168.0.123"},
     )
-    nodes: Annotated[list[HostName], TypedPlainValidator(list, HostConverter.host_name)] = (
+    nodes: list[Annotated[HostName, TypedPlainValidator(str, HostConverter().host_name)]] = (
         api_field(
             description="Nodes where the newly created host should be the cluster-container of.",
             example=["host1", "host2", "host3"],

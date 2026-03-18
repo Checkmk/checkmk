@@ -135,7 +135,7 @@ class BaseHostAttributeModel:
         Sequence[
             Annotated[
                 HostName,
-                TypedPlainValidator(str, HostConverter.host_name),
+                TypedPlainValidator(str, HostConverter().host_name),
                 WithJsonSchema({"type": "string"}, mode="serialization"),
             ]
         ]

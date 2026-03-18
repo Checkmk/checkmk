@@ -6,9 +6,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { IconEmblems } from './types'
 
-defineProps<{
-  emblem: IconEmblems | undefined
-}>()
+withDefaults(
+  defineProps<{
+    emblem: IconEmblems | undefined
+    colored?: boolean | undefined
+  }>(),
+  {
+    colored: true
+  }
+)
 </script>
 
 <template>
@@ -17,7 +23,12 @@ defineProps<{
     <!-- "emblem" is coming from legacy css -->
     <img
       v-if="emblem"
-      :class="['emblem', 'cmk-icon-emblem__emblem', `cmk-icon-emblem__emblem--${emblem}`]"
+      :class="[
+        'emblem',
+        'cmk-icon-emblem__emblem',
+        `cmk-icon-emblem__emblem--${emblem}`,
+        { 'cmk-icon-emblem--colorless': !colored }
+      ]"
     />
   </span>
 </template>
@@ -25,6 +36,7 @@ defineProps<{
 <style scoped>
 .cmk-icon-emblem {
   position: relative;
+  display: inline-block;
 }
 
 .cmk-icon-emblem__emblem {
@@ -33,6 +45,10 @@ defineProps<{
   position: absolute;
   right: 5%;
   bottom: -20%;
+}
+
+.cmk-icon-emblem--colorless {
+  filter: grayscale(100%);
 }
 </style>
 

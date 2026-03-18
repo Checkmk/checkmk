@@ -11,6 +11,7 @@ import type { cmkIconVariants, cmkMultitoneIconVariants, iconSizes } from './ico
 
 export type SimpleIcons = IconNames
 export type IconEmblems = (typeof emblems)[number]
+export type IconWithEmblem = { name: IconNames; emblem: IconEmblems }
 export type OneColorIcons = (typeof oneColorIcons)[number]
 export type TwoColorIcons = (typeof twoColorIcons)[number]
 

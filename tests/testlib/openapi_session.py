@@ -283,8 +283,11 @@ class AgentReceiverApiSession(requests.Session):
         self.relays = AgentReceiverRelayAPI(self)
         self.verify = False
 
-    def set_authentication_header(self, user: str, password: str) -> None:
+    def set_authentication_header_bearer(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
+
+    def set_authentication_header_token(self, token: str) -> None:
+        self.headers["Authorization"] = f"CMK-TOKEN {token}"
 
     @property
     def port(self) -> int:

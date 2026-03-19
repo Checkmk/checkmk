@@ -115,7 +115,10 @@ class MasterControlSnapin(SidebarSnapin):
             return
 
         if site_state["state"] == "dead":
-            html.show_error(str(site_state["exception"]))
+            if site_state.get("exception"):
+                html.show_error(str(site_state["exception"]))
+            else:
+                html.show_error(_("Site is dead"))
             return
 
         if site_state["state"] == "disabled":

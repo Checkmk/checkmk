@@ -31,19 +31,15 @@ const bullet: string = '●'
   <div class="db-status-message__container">
     <template v-if="topic">
       <strong>{{ topic }}:</strong>
-      <CmkSpace />
+      <CmkSpace size="small" />
     </template>
     <template v-if="status">
-      <span
-        class="db-status-message__bullet"
-        :class="status ? `db-status-message__bullet-${status.toLowerCase()}` : ''"
-        >{{ bullet }}</span
-      >
-      <CmkSpace />
+      <span :class="`db-status-message__bullet-${status.toLowerCase()}`">{{ bullet }}</span>
+      <CmkSpace size="small" />
     </template>
     <span>{{ text }}</span>
     <template v-if="linkedText">
-      <CmkSpace />
+      <CmkSpace size="small" />
       <a href="#" @click.prevent="$emit('click')">{{ linkedText }}</a>
     </template>
   </div>
@@ -51,25 +47,32 @@ const bullet: string = '●'
 
 <style scoped>
 .db-status-message__container {
+  display: flex;
+  align-items: center;
   padding: var(--dimension-4) var(--dimension-6);
   border-radius: var(--dimension-3);
   background-color: var(--shared-dashboard-indicator-background);
   white-space: nowrap;
+  font-size: var(--font-size-normal);
 }
 
 .db-status-message__bullet-ok {
   color: var(--popup-dialog-success);
+  -webkit-text-stroke: 1px var(--color-corporate-green-70);
 }
 
 .db-status-message__bullet-warning {
   color: var(--popup-dialog-warning);
+  -webkit-text-stroke: 1px var(--color-yellow-70);
 }
 
 .db-status-message__bullet-danger {
   color: var(--popup-dialog-danger);
+  -webkit-text-stroke: 1px var(--color-dark-red-40);
 }
 
 .db-status-message__bullet-info {
   color: var(--popup-dialog-info);
+  -webkit-text-stroke: 1px var(--color-light-blue-50);
 }
 </style>

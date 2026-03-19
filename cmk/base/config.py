@@ -3357,6 +3357,10 @@ class ConfigCache:
                 socket.AddressFamily.AF_INET
             )
             for h in sorted_nodes:
+                node_family = self.ip_stack_config(h)
+                if node_family is IPStackConfig.NO_IP:
+                    # We know a lookup will fail
+                    continue
                 addr = ip_address_of(h, family)
                 if addr is not None:
                     node_ips_4.append(addr)
@@ -3367,6 +3371,10 @@ class ConfigCache:
         if IPStackConfig.IPv6 in ip_stack_config:
             family = socket.AddressFamily.AF_INET6
             for h in sorted_nodes:
+                node_family = self.ip_stack_config(h)
+                if node_family is IPStackConfig.NO_IP:
+                    # We know a lookup will fail
+                    continue
                 addr = ip_address_of(h, family)
                 if addr is not None:
                     node_ips_6.append(addr)

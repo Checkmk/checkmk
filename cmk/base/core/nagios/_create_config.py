@@ -462,7 +462,7 @@ def create_nagios_host_spec(
         nodes = get_cluster_nodes_for_config(
             hostname,
             config_cache.nodes(hostname),
-            ip_lookup_config.ip_stack_config(hostname),
+            ip_lookup_config.ip_stack_config,
             ip_lookup_config.default_address_family,
             config_cache.host_tags,
             config_cache.hosts_config.hosts,

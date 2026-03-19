@@ -19,7 +19,7 @@ from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import ServiceID
-from cmk.utils import config_warnings, ip_lookup
+from cmk.utils import config_warnings
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import Labels
 from cmk.utils.servicename import Item, ServiceName
@@ -276,7 +276,7 @@ def get_tags_with_groups_from_attributes(
 def get_cluster_nodes_for_config(
     host_name: HostName,
     nodes: Sequence[HostName],
-    ip_stack_config: ip_lookup.IPStackConfig,
+    address_family_lookup: Callable[[HostName], IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
     ],
@@ -286,7 +286,7 @@ def get_cluster_nodes_for_config(
     all_existing_hosts: Iterable[HostName],
     is_monitored_host: Callable[[HostName], bool],
 ) -> Sequence[HostName]:
-    _verify_cluster_address_family(host_name, ip_stack_config, nodes, default_address_family)
+    _verify_cluster_address_family(host_name, address_family_lookup, nodes, default_address_family)
     _verify_cluster_datasource(host_name, nodes, host_tags)
     monitored_hosts = {h for h in all_existing_hosts if is_monitored_host(h)}
     nodes = list(nodes[:])
@@ -301,12 +301,13 @@ def get_cluster_nodes_for_config(
 
 def _verify_cluster_address_family(
     host_name: HostName,
-    ip_stack_config: ip_lookup.IPStackConfig,
+    address_family_lookup: Callable[[HostName], IPStackConfig],
     nodes: Iterable[HostName],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
     ],
 ) -> None:
+    ip_stack_config = address_family_lookup(host_name)
     if ip_stack_config is IPStackConfig.NO_IP:
         cluster_host_family = None
         address_families = []
@@ -321,7 +322,7 @@ def _verify_cluster_address_family(
     address_family = cluster_host_family
     mixed = False
     for nodename in nodes:
-        family = "IPv6" if default_address_family(nodename) is socket.AF_INET6 else "IPv4"
+        family = str(address_family_lookup(nodename).name)
         address_families.append(f"{nodename}: {family}")
         if address_family is None:
             address_family = family

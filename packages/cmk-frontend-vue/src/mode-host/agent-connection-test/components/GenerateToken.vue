@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
 import usei18n from '@/lib/i18n'
@@ -35,12 +35,13 @@ export interface IAgentTokenGenerationRequestBody {
   expires_at?: Date | undefined
 }
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 const props = defineProps<{
   description?: TranslatedString | undefined
   tokenGenerationEndpointUri: string
   tokenGenerationBody: IAgentTokenGenerationRequestBody
-  expiresInDays?: number | undefined
+  expiresInSeconds?: number | undefined
+  showValidityText?: boolean | undefined
 }>()
 
 const ott = defineModel<string | null | Error>({ required: true })
@@ -52,13 +53,35 @@ const noOTT = ref(false)
 const api = new Api('api/internal/', [['Content-Type', 'application/json']])
 const tokenGenerationBody = ref<IAgentTokenGenerationRequestBody>(props.tokenGenerationBody)
 
+const validityText = computed<TranslatedString | null>(() => {
+  const s = props.expiresInSeconds
+  if (!s) {
+    return null
+  }
+  let n: number, unit: TranslatedString
+  if (s < 60) {
+    n = s
+    unit = _tn('%{n} second', '%{n} seconds', n, { n })
+  } else if (s < 3600) {
+    n = Math.round(s / 60)
+    unit = _tn('%{n} minute', '%{n} minutes', n, { n })
+  } else if (s < 86400) {
+    n = Math.round(s / 3600)
+    unit = _tn('%{n} hour', '%{n} hours', n, { n })
+  } else {
+    n = Math.round(s / 86400)
+    unit = _tn('%{n} day', '%{n} days', n, { n })
+  }
+  return _t('This token remains valid for %{duration}.', { duration: unit }) as TranslatedString
+})
+
 async function generateOTT() {
   noOTT.value = false
   ottGenerating.value = true
 
-  if (props.expiresInDays) {
+  if (props.expiresInSeconds) {
     const ottExpiryDate = new Date()
-    ottExpiryDate.setDate(ottExpiryDate.getDate() + props.expiresInDays)
+    ottExpiryDate.setSeconds(ottExpiryDate.getSeconds() + props.expiresInSeconds)
     tokenGenerationBody.value.expires_at = ottExpiryDate
   }
 
@@ -105,9 +128,12 @@ async function generateOTT() {
     }}</CmkAlertBox>
     <template v-else>
       <CmkAlertBox variant="success">
-        {{ _t('Successfully generated token') }}
-        {{ _t(`(Expires: ${ottExpiry?.toLocaleString() || 'never'})`) }}</CmkAlertBox
-      >
+        <template v-if="showValidityText && validityText">{{ validityText }}</template>
+        <template v-else>
+          {{ _t('Successfully generated token') }}
+          {{ _t(`(Expires: ${ottExpiry?.toLocaleString() || 'never'})`) }}
+        </template>
+      </CmkAlertBox>
     </template>
   </template>
 </template>

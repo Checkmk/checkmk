@@ -98,7 +98,8 @@ const installCommand = computed(() => {
         <GenerateToken
           v-model="ott"
           token-generation-endpoint-uri="domain-types/relay_registration_token/collections/all"
-          :expires-in-days="7"
+          :expires-in-seconds="3600"
+          :show-validity-text="true"
           :token-generation-body="{}"
           :description="_t('This requires the generation of a registration token.')"
         />

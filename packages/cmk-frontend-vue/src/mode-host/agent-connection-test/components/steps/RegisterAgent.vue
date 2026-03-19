@@ -79,7 +79,7 @@ function reset() {
           <GenerateToken
             v-model="ott"
             token-generation-endpoint-uri="domain-types/agent_registration_token/collections/all"
-            :expires-in-days="7"
+            :expires-in-seconds="604800"
             :token-generation-body="{
               host: hostName,
               comment: 'Agent registration token for agent slideout'

@@ -28,6 +28,12 @@ class ConfigCreationContext:
     serial_created: int
 
 
+@dataclass(frozen=True)
+class Serial:
+    value: int
+    path: Path
+
+
 def detect_latest_config_path(base: Path) -> Path:
     """Resolve the 'latest' symlink to the latest config path.
 
@@ -88,15 +94,36 @@ def _increment_to_next_serial(base: Path) -> int:
 
 
 def cleanup_old_configs(base: Path) -> None:
-    current_config_path = detect_latest_config_path(base)
     root = VersionedConfigPath.make_root_path(base)
-    for path in root.iterdir() if root.exists() else []:
-        if (
-            not path.is_symlink()  # keep "lates" symlink
-            and path.is_dir()  # keep "serial.mk"
-            and path.resolve() != current_config_path  # keep latest config
-        ):
-            shutil.rmtree(path)
+    if not root.exists():
+        return
+
+    current_config_path = detect_latest_config_path(base)
+
+    serials: list[Serial] = []
+    for path in root.iterdir():
+        # keep "latest" symlink and "serial.mk"
+        if path.is_symlink() or not path.is_dir():
+            continue
+        # keep the latest config
+        if path.resolve() == current_config_path:
+            continue
+        if path.name.isnumeric():
+            serials.append(Serial(int(path.name), path))
+
+    serials.sort(reverse=True, key=lambda x: x.value)
+
+    # Determine the serial of the latest (active) config so we can identify
+    # the previous config: the highest serial that is still below the active one.
+    latest_serial = int(current_config_path.name)
+    count_kept_serials = 0
+    additional_serials_to_keep = 1
+    for serial in serials:
+        if serial.value < latest_serial and count_kept_serials < additional_serials_to_keep:
+            count_kept_serials += 1
+            continue
+
+        shutil.rmtree(serial.path)
 
 
 @contextmanager

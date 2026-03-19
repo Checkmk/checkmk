@@ -134,13 +134,19 @@ class TestCleanupOldConfigs:
         root, _ = self._make_helper_config(tmp_path, serials=[1, 2, 3], latest_serial=3)
         cleanup_old_configs(tmp_path)
         assert not (root / "1").exists()
-        assert not (root / "2").exists()
 
     def test_single_config_nothing_removed(self, tmp_path: Path) -> None:
         """Only one config dir exists; nothing to remove."""
         root, _ = self._make_helper_config(tmp_path, serials=[1], latest_serial=1)
         cleanup_old_configs(tmp_path)
         assert (root / "1").exists()
+
+    def test_two_configs_nothing_removed(self, tmp_path: Path) -> None:
+        """Two config dirs exist; both should survive"""
+        root, _ = self._make_helper_config(tmp_path, serials=[1, 2], latest_serial=2)
+        cleanup_old_configs(tmp_path)
+        assert (root / "1").exists()
+        assert (root / "2").exists()
 
     def test_latest_not_highest_serial(self, tmp_path: Path) -> None:
         """Latest symlink may not point to the highest serial (e.g. after a failed create).
@@ -150,7 +156,7 @@ class TestCleanupOldConfigs:
         root, _ = self._make_helper_config(tmp_path, serials=[1, 2, 3], latest_serial=2)
         cleanup_old_configs(tmp_path)
         # latest target (2) must survive
-        assert not (root / "1").exists()
+        assert (root / "1").exists()
         assert (root / "2").exists()
         assert not (root / "3").exists()
 
@@ -159,9 +165,9 @@ class TestCleanupOldConfigs:
         serials, latest = [1, 2, 3, 4, 5], 5
         root, _ = self._make_helper_config(tmp_path, serials=serials, latest_serial=latest)
         cleanup_old_configs(tmp_path)
-        for serial in serials[:-1]:
+        for serial in serials[:-2]:
             assert not (root / str(serial)).exists()
-        for serial in serials[-1:]:
+        for serial in serials[-2:]:
             assert (root / str(serial)).exists()
 
     def test_non_sequential_serials(self, tmp_path: Path) -> None:
@@ -186,3 +192,13 @@ class TestCleanupOldConfigs:
         assert (root / "4").exists()  # latest target
         assert (root / "latest").is_symlink()
         assert (root / "serial.mk").exists()
+
+    def test_proper_sorting(self, tmp_path: Path) -> None:
+        """Serial directories must be sorted numerically, not lexically."""
+        root, _ = self._make_helper_config(tmp_path, serials=[1, 5, 7, 12, 23], latest_serial=23)
+        cleanup_old_configs(tmp_path)
+        assert not (root / "1").exists()
+        assert not (root / "5").exists()
+        assert not (root / "7").exists()
+        assert (root / "12").exists()
+        assert (root / "23").exists()

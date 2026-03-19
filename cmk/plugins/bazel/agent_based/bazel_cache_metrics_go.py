@@ -23,9 +23,31 @@ from cmk.agent_based.v2 import (
 
 Section = Mapping[str, int]
 
+_KEYS_TO_PARSE = {
+    "go_gc_duration_seconds_count",
+    "go_goroutines",
+    "go_memstats_alloc_bytes",
+    "go_memstats_buck_hash_sys_bytes",
+    "go_memstats_gc_sys_bytes",
+    "go_memstats_heap_alloc_bytes",
+    "go_memstats_heap_idle_bytes",
+    "go_memstats_heap_released_bytes",
+    "go_memstats_last_gc_time_seconds",
+    "go_memstats_next_gc_bytes",
+    "go_memstats_other_sys_bytes",
+    "go_memstats_stack_inuse_bytes",
+    "go_memstats_stack_sys_bytes",
+    "go_memstats_sys_bytes",
+    "go_threads",
+}
+
 
 def parse_bazel_cache_go(string_table: StringTable) -> Section:
-    return {key: int(float(value)) for key, value in json.loads(string_table[0][0]).items()}
+    return {
+        key: int(float(value))
+        for key, value in json.loads(string_table[0][0]).items()
+        if key in _KEYS_TO_PARSE
+    }
 
 
 def discover_bazel_cache(section: Section) -> DiscoveryResult:

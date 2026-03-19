@@ -3214,27 +3214,47 @@ class ConfigCache:
 
         return socket.AddressFamily.AF_INET6 if is_ipv6_primary() else socket.AddressFamily.AF_INET
 
-    def _has_piggyback_data(self, host_name: HostName) -> bool:
-        return (
-            self._host_has_piggyback_data_right_now(host_name)
-            or make_persisted_section_dir(
-                fetcher_type=FetcherType.PIGGYBACK,
-                host_name=host_name,
-                ident="piggyback",
-                section_cache_path=Path(cmk.utils.paths.var_dir),
-            ).exists()
-        )
+    def primary_ip_address_of(self, host_name: HostName) -> HostAddress | None:
+        match self.default_address_family(host_name):
+            case socket.AddressFamily.AF_INET:
+                return ipaddresses.get(host_name)
+            case socket.AddressFamily.AF_INET6:
+                return ipv6addresses.get(host_name)
+            case other:
+                assert_never(other)
 
-    def _host_has_piggyback_data_right_now(self, host_name: HostAddress) -> bool:
+    def _has_piggyback_data(self, host_name: HostName) -> bool:
+        ip_address = self.primary_ip_address_of(host_name)
+        if self._host_has_piggyback_data_right_now(host_name, ip_address):
+            return True
+
+        return make_persisted_section_dir(
+            fetcher_type=FetcherType.PIGGYBACK,
+            host_name=host_name,
+            ident="piggyback",
+            section_cache_path=Path(cmk.utils.paths.var_dir),
+        ).exists()
+
+    def _host_has_piggyback_data_right_now(
+        self, piggybacked_hostname: HostName, ip_address: HostAddress | None
+    ) -> bool:
+        # NOTE: This is a best effort guess on whether we should create the piggyback datasource.
+        # Users can still configure it to be absent or present manually.
+        # In case of false positives (DS created but no data) the datasource will be OK anyway.
+
         # This duplicates logic and should be kept in sync with what the fetcher does.
-        # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
+        # Can we somehow instantiate the hypothetical fetcher here, and just let it fetch?
         piggy_config = piggyback_backend.Config(
-            host_name,
+            piggybacked_hostname,
             [
-                *self._piggybacked_host_files(host_name),
+                *self._piggybacked_host_files(piggybacked_hostname),
                 (None, "max_cache_age", piggyback_max_cachefile_age),
             ],
         )
+
+        identifiers: set[HostAddress] = {HostAddress(piggybacked_hostname)}
+        if ip_address is not None:
+            identifiers.add(ip_address)
 
         now = time.time()
 
@@ -3242,7 +3262,9 @@ class ConfigCache:
             return (now - data.meta.last_update) <= piggy_config.max_cache_age(data.meta.source)
 
         return any(
-            map(_is_usable, piggyback_backend.get_messages_for(host_name, cmk.utils.paths.omd_root))
+            _is_usable(msg)
+            for identifier in identifiers
+            for msg in piggyback_backend.get_messages_for(identifier, cmk.utils.paths.omd_root)
         )
 
     def _piggybacked_host_files(
@@ -3890,14 +3912,24 @@ class ConfigCache:
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: HostName | None = None
     ) -> piggyback_backend.PiggybackTimeSettings:
-        all_sources = piggyback_backend.get_piggybacked_host_with_sources(
-            cmk.utils.paths.omd_root, piggybacked_hostname
-        )
-        used_sources = (
-            {m.source for sources in all_sources.values() for m in sources}
-            if piggybacked_hostname is None
-            else {m.source for m in all_sources.get(piggybacked_hostname, [])}
-        )
+        if piggybacked_hostname is not None:
+            ip_address = self.primary_ip_address_of(piggybacked_hostname)
+            identifiers: set[HostName] = {piggybacked_hostname}
+            if ip_address is not None:
+                identifiers.add(HostName(ip_address))
+            used_sources = {
+                m.source
+                for identifier in identifiers
+                for sources in piggyback_backend.get_piggybacked_host_with_sources(
+                    cmk.utils.paths.omd_root, identifier
+                ).values()
+                for m in sources
+            }
+        else:
+            all_sources = piggyback_backend.get_piggybacked_host_with_sources(
+                cmk.utils.paths.omd_root
+            )
+            used_sources = {m.source for sources in all_sources.values() for m in sources}
 
         return [
             *(

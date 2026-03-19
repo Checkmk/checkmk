@@ -81,10 +81,11 @@ const { buttonPadding = '16px' } = defineProps<{
 .cmk-list-item {
   --button-padding-top: 4px;
 
+  display: flex;
+
   .cmk-list-item__button-container,
   .cmk-list-item__content {
-    display: inline-block;
-    vertical-align: top;
+    flex-direction: column;
     padding: var(--spacing) 0;
 
     .cmk-list-item__buttons {

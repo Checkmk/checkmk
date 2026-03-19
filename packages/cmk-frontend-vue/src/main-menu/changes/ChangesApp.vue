@@ -104,7 +104,7 @@ declare const cmk: any
 
 const activationPollStartTime = ref<number | null>(null)
 const restartInfoShown = ref(false)
-const siteRestartWaitTime = 30000
+const siteRestartWaitTime = 60000
 
 async function pollActivationStatusUntilComplete(activationId: string) {
   try {
@@ -163,6 +163,7 @@ async function pollActivationStatusUntilComplete(activationId: string) {
     restartInfoShown.value = false
     cmk.sidebar.restart_pending_changes_update()
     cmk.sidebar.restart_sidebar_scheduler()
+    void fetchPendingChangesAjax()
 
     throw new Error(`Polling of activation result failed: ${error}`)
   }

@@ -200,6 +200,7 @@ def _special_agents_azure_tag_based_config_subscriptions() -> List:
                                 parameter_form=String(
                                     title=Title("Tag value"),
                                     field_size=FieldSize.LARGE,
+                                    custom_validate=(validators.LengthInRange(min_value=1),),
                                 ),
                             ),
                         ],
@@ -239,7 +240,11 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         title=Title("Explicit list of subscription IDs"),
                         parameter_form=List(
                             title=Title("Explicitly specify subscription IDs"),
-                            element_template=String(macro_support=True, field_size=FieldSize.LARGE),
+                            element_template=String(
+                                macro_support=True,
+                                field_size=FieldSize.LARGE,
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                            ),
                             custom_validate=(validators.LengthInRange(min_value=1),),
                             editable_order=False,
                         ),

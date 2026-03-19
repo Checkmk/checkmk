@@ -1986,7 +1986,8 @@ class RelayRegistrationTokenAPI(BaseAPI):
     _domain_url = "/domain-types/relay_registration_token/collections/all"
     _headers = {"Content-Type": "application/json"}
 
-    def create(self, expires_at: datetime = datetime.now(UTC) + timedelta(hours=1)) -> str:
+    def create(self, expires_at: datetime | None = None) -> str:
+        expires_at = expires_at or datetime.now(UTC) + timedelta(hours=1)
         response = self.session.post(
             url=self._domain_url,
             headers=self._headers,

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.config_path import create, VersionedConfigPath
+from cmk.ccc.config_path import cleanup_old_configs, create, VersionedConfigPath
 
 
 class TestVersionedConfigPath:
@@ -83,3 +83,106 @@ def test_create_no_latest_link_update_on_failure(tmp_path: Path) -> None:
 
     assert failing_created_path.exists()
     assert latest_path.resolve() == succesfully_created_path
+
+
+class TestCleanupOldConfigs:
+    @staticmethod
+    def _make_helper_config(
+        base: Path, serials: list[int], latest_serial: int
+    ) -> tuple[Path, list[Path]]:
+        """Set up a helper_config directory with numbered serial dirs, the latest symlink, and serial.mk.
+
+        Returns (root, serial_dirs) where root is the helper_config directory and serial_dirs
+        is the list of created serial directories (in the order of `serials`).
+        """
+        root = VersionedConfigPath.make_root_path(base)
+        root.mkdir(parents=True, exist_ok=True)
+
+        serial_dirs = []
+        for serial in serials:
+            d = root / str(serial)
+            d.mkdir()
+            serial_dirs.append(d)
+
+        latest_link = root / "latest"
+        latest_link.symlink_to(str(latest_serial))
+
+        # serial.mk is a regular file that must survive cleanup
+        (root / "serial.mk").touch()
+
+        return root, serial_dirs
+
+    def test_noop_when_root_does_not_exist(self, tmp_path: Path) -> None:
+        """tolerate helper_config root not existing."""
+        cleanup_old_configs(tmp_path)  # must not raise
+
+    def test_keeps_latest(self, tmp_path: Path) -> None:
+        """the 'latest' symlink itself is preserved."""
+        root, _ = self._make_helper_config(tmp_path, serials=[1, 2, 3], latest_serial=3)
+        cleanup_old_configs(tmp_path)
+        assert (root / "latest").is_symlink()
+        assert (root / "3").exists()
+
+    def test_keeps_serial_mk(self, tmp_path: Path) -> None:
+        """serial.mk (a regular file) is preserved."""
+        root, _ = self._make_helper_config(tmp_path, serials=[1, 2, 3], latest_serial=3)
+        cleanup_old_configs(tmp_path)
+        assert (root / "serial.mk").exists()
+
+    def test_removal_of_outdated(self, tmp_path: Path) -> None:
+        """directories other than the latest are removed"""
+        root, _ = self._make_helper_config(tmp_path, serials=[1, 2, 3], latest_serial=3)
+        cleanup_old_configs(tmp_path)
+        assert not (root / "1").exists()
+        assert not (root / "2").exists()
+
+    def test_single_config_nothing_removed(self, tmp_path: Path) -> None:
+        """Only one config dir exists; nothing to remove."""
+        root, _ = self._make_helper_config(tmp_path, serials=[1], latest_serial=1)
+        cleanup_old_configs(tmp_path)
+        assert (root / "1").exists()
+
+    def test_latest_not_highest_serial(self, tmp_path: Path) -> None:
+        """Latest symlink may not point to the highest serial (e.g. after a failed create).
+
+        keep the latest target AND the highest-serial remaining dir.
+        """
+        root, _ = self._make_helper_config(tmp_path, serials=[1, 2, 3], latest_serial=2)
+        cleanup_old_configs(tmp_path)
+        # latest target (2) must survive
+        assert not (root / "1").exists()
+        assert (root / "2").exists()
+        assert not (root / "3").exists()
+
+    def test_many_old_configs(self, tmp_path: Path) -> None:
+        """With many serials, only the two latest should remain."""
+        serials, latest = [1, 2, 3, 4, 5], 5
+        root, _ = self._make_helper_config(tmp_path, serials=serials, latest_serial=latest)
+        cleanup_old_configs(tmp_path)
+        for serial in serials[:-1]:
+            assert not (root / str(serial)).exists()
+        for serial in serials[-1:]:
+            assert (root / str(serial)).exists()
+
+    def test_non_sequential_serials(self, tmp_path: Path) -> None:
+        """Serials may have gaps; cleanup must still work correctly."""
+        root, _ = self._make_helper_config(tmp_path, serials=[10, 20, 30], latest_serial=30)
+        cleanup_old_configs(tmp_path)
+        assert not (root / "10").exists()
+        assert (root / "30").exists()
+
+    def test_integration_with_create(self, tmp_path: Path) -> None:
+        """End-to-end: use the real `create` context manager, then clean up."""
+        for _ in range(4):
+            with create(tmp_path):
+                pass
+
+        root = VersionedConfigPath.make_root_path(tmp_path)
+        # serials 1..4 exist, latest → 4
+        assert all((root / str(s)).exists() for s in range(1, 5))
+
+        cleanup_old_configs(tmp_path)
+
+        assert (root / "4").exists()  # latest target
+        assert (root / "latest").is_symlink()
+        assert (root / "serial.mk").exists()

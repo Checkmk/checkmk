@@ -35,8 +35,6 @@ const props = defineProps<
     domain: string
     agentReceiverPort: number
     siteVersion: string
-    urlToGetAnAutomationSecret: string
-    isCloudEdition: boolean
   }
 >()
 

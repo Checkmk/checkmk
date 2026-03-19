@@ -19,15 +19,12 @@ const mockProps: CreateRelay = {
   urls: {
     create_host: '/wato.py?mode=newhost',
     relay_overview: '/wato.py?mode=relay_overview',
-    automation_secret: '/wato.py?mode=automation',
     documentation: 'https://docs.checkmk.com/relay'
   },
   site_name: 'test_site',
   domain: 'localhost',
   agent_receiver_port: 8000,
   site_version: '2.5.0',
-  is_cloud_edition: false,
-  user_id: 'cmkadmin',
   supported_os: ['Ubuntu 24.04 LTS', 'Red Hat Enterprise Linux (RHEL) 10']
 }
 

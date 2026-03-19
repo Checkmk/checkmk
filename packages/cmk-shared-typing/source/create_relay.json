@@ -24,14 +24,11 @@
         "relay_overview": {
           "type": "string"
         },
-        "automation_secret": {
-          "type": "string"
-        },
         "documentation": {
           "type": "string"
         }
       },
-      "required": ["create_host", "relay_overview", "automation_secret", "documentation"]
+      "required": ["create_host", "relay_overview", "documentation"]
     },
     "site_name": {
       "type": "string"
@@ -43,12 +40,6 @@
       "type": "integer"
     },
     "site_version": {
-      "type": "string"
-    },
-    "is_cloud_edition": {
-      "type": "boolean"
-    },
-    "user_id": {
       "type": "string"
     },
     "supported_os": {
@@ -65,8 +56,6 @@
     "domain",
     "agent_receiver_port",
     "site_version",
-    "is_cloud_edition",
-    "user_id",
     "supported_os"
   ]
 }

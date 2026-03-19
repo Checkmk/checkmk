@@ -37,27 +37,21 @@ const props = defineProps<
     siteVersion: string
     urlToGetAnAutomationSecret: string
     isCloudEdition: boolean
-    useTokenBasedInstall: boolean
-    userId: string
   }
 >()
 
 const ott = ref<string | null | Error>(null)
+const hasValidToken = async () => ott.value !== null && !(ott.value instanceof Error)
 
 const installCommand = computed(() => {
-  const username = props.isCloudEdition ? 'api_user' : props.userId
-  let auth = `  --user ${username}`
-  if (ott.value && !(ott.value instanceof Error)) {
-    auth = `  --token ${ott.value}`
-  }
-
+  const token = ott.value instanceof Error ? '' : (ott.value ?? '')
   return [
     'sudo bash install_relay.sh \\',
     `  --relay-name ${escapeShellArg(props.relayAlias)} \\`,
     `  --initial-tag-version ${props.siteVersion} \\`,
     `  --target-server ${props.domain}:${props.agentReceiverPort} \\`,
     `  --target-site-name ${props.siteName} \\`,
-    auth
+    `  --token ${token}`
   ].join('\n')
 })
 </script>
@@ -69,51 +63,37 @@ const installCommand = computed(() => {
     </template>
 
     <template #content>
-      <template v-if="props.useTokenBasedInstall">
-        <!-- TODO(CMK-30135): alternative installation flow -->
-      </template>
-      <template v-else>
-        <CmkParagraph>
-          {{
-            _t(
-              'On the machine on which the Relay will be running, run the command below to execute ' +
-                'the downloaded installation script with the parameters shown. The script will ' +
-                'automatically download and register the Relay to your Checkmk site and run it afterwards.'
-            )
-          }}
-        </CmkParagraph>
-        <CmkParagraph v-if="!props.isCloudEdition">
-          <br />
-          {{
-            _t(
-              'If you do not want to run the script as the specified user — or 2FA is active for that user —, ' +
-                'change the parameter to another user with sufficient permissions, such as an automation user.'
-            )
-          }}
-        </CmkParagraph>
-        <CmkAlertBox variant="info">
-          {{ _t('Note that the installation requires root privileges.') }}
-        </CmkAlertBox>
+      <CmkParagraph>
+        {{
+          _t(
+            'On the machine on which the Relay will be running, run the command below to execute ' +
+              'the downloaded installation script with the parameters shown. The script will ' +
+              'automatically download and register the Relay to your Checkmk site and run it afterwards.'
+          )
+        }}
+      </CmkParagraph>
+      <CmkAlertBox variant="info">
+        {{ _t('Note that the installation requires root privileges.') }}
+      </CmkAlertBox>
 
-        <GenerateToken
-          v-model="ott"
-          token-generation-endpoint-uri="domain-types/relay_registration_token/collections/all"
-          :expires-in-seconds="3600"
-          :show-validity-text="true"
-          :token-generation-body="{}"
-          :description="_t('This requires the generation of a registration token.')"
-        />
+      <GenerateToken
+        v-model="ott"
+        token-generation-endpoint-uri="domain-types/relay_registration_token/collections/all"
+        :expires-in-seconds="3600"
+        :show-validity-text="true"
+        :token-generation-body="{}"
+        :description="_t('This requires the generation of a registration token.')"
+      />
 
-        <CmkCode
-          v-if="ott"
-          :code_txt="installCommand"
-          data-testid="run-relay-install-script"
-        ></CmkCode>
-      </template>
+      <CmkCode
+        v-if="ott && !(ott instanceof Error)"
+        :code_txt="installCommand"
+        data-testid="run-relay-install-script"
+      ></CmkCode>
     </template>
 
     <template #actions>
-      <CmkWizardButton type="next" />
+      <CmkWizardButton type="next" :validation-cb="hasValidToken" />
       <CmkWizardButton type="previous" />
     </template>
   </CmkWizardStep>

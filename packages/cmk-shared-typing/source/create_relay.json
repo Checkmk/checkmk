@@ -48,10 +48,6 @@
     "is_cloud_edition": {
       "type": "boolean"
     },
-    "use_token_based_install": {
-      "type": "boolean",
-      "description": "When true, show the token-based installation flow."
-    },
     "user_id": {
       "type": "string"
     },
@@ -70,7 +66,6 @@
     "agent_receiver_port",
     "site_version",
     "is_cloud_edition",
-    "use_token_based_install",
     "user_id",
     "supported_os"
   ]

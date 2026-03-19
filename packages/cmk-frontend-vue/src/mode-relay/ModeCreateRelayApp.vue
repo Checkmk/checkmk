@@ -71,8 +71,6 @@ const openRelayOverviewPage = () => {
         :site-version="props.site_version"
         :url-to-get-an-automation-secret="props.urls.automation_secret"
         :is-cloud-edition="props.is_cloud_edition"
-        :use-token-based-install="props.use_token_based_install"
-        :user-id="props.user_id"
         :index="4"
         :is-completed="() => currentStep > 4"
       />

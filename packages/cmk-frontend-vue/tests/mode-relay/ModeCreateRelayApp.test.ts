@@ -27,7 +27,6 @@ const mockProps: CreateRelay = {
   agent_receiver_port: 8000,
   site_version: '2.5.0',
   is_cloud_edition: false,
-  use_token_based_install: false,
   user_id: 'cmkadmin',
   supported_os: ['Ubuntu 24.04 LTS', 'Red Hat Enterprise Linux (RHEL) 10']
 }
@@ -186,24 +185,15 @@ describe('ModeCreateRelayApp', () => {
     ).toBeInTheDocument()
   })
 
-  test('Execute installation script step contains expected parameters', async () => {
+  test('Execute installation script hides command when token generation fails', async () => {
     render(ModeCreateRelayApp, { props: mockProps })
 
     await navigateToExecuteScriptStep('test-relay-foo')
 
     await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
-    await screen.findByText(/error on generating token/i) // token cannot be generated as API needs to be available => scriptElement falls back to user auth
+    await screen.findByText(/error on generating token/i)
 
-    const scriptElement = screen.getByTestId('run-relay-install-script')
-    expect(scriptElement).toBeInTheDocument()
-
-    expect(scriptElement.textContent).toContain('sudo bash install_relay.sh')
-    expect(scriptElement.textContent).toContain('--relay-name')
-    expect(scriptElement.textContent).toContain('test-relay-foo')
-    expect(scriptElement.textContent).toContain('--initial-tag-version')
-    expect(scriptElement.textContent).toContain('--target-server')
-    expect(scriptElement.textContent).toContain('--target-site-name')
-    expect(scriptElement.textContent).toContain('--user')
+    expect(screen.queryByTestId('run-relay-install-script')).not.toBeInTheDocument()
   })
 
   test('Execute installation script shows root privileges notice', async () => {
@@ -213,25 +203,6 @@ describe('ModeCreateRelayApp', () => {
     expect(
       screen.getByText(/Note that the installation requires root privileges\./)
     ).toBeInTheDocument()
-  })
-
-  test('Execute installation script shows 2FA paragraph for non-cloud editions', async () => {
-    render(ModeCreateRelayApp, { props: mockProps })
-
-    await navigateToExecuteScriptStep()
-    expect(
-      screen.getByText(/If you do not want to run the script as the specified user/)
-    ).toBeInTheDocument()
-  })
-
-  test('Execute installation script hides 2FA paragraph for cloud editions', async () => {
-    const cloudProps = { ...mockProps, is_cloud_edition: true }
-    render(ModeCreateRelayApp, { props: cloudProps })
-
-    await navigateToExecuteScriptStep()
-    expect(
-      screen.queryByText(/If you do not want to run the script as the specified user/)
-    ).not.toBeInTheDocument()
   })
 
   test('Verify registration step shows loading state initially', async () => {
@@ -392,14 +363,7 @@ describe('ModeCreateRelayApp', () => {
     // Step 4: Verify Execute Installation Script
     await screen.findByText('Run the installation script')
     await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
-    await screen.findByText(/error on generating token/i) // token cannot be generated as API needs to be available => scriptElement falls back to user auth
-
-    const scriptElement = screen.getByTestId('run-relay-install-script')
-    expect(scriptElement.textContent).toContain('complete-flow-test')
-    await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
-
-    // Step 5: Verify Registration Results step renders
-    await screen.findByText('Registration results')
-    expect(screen.getByText('Registration results')).toBeInTheDocument()
+    await screen.findByText(/error on generating token/i)
+    expect(screen.queryByTestId('run-relay-install-script')).not.toBeInTheDocument()
   })
 })

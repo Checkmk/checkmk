@@ -233,7 +233,12 @@ def _inventory_as_check(
         ),
     )
     parser = CMKParser(
-        config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
+        config.make_parser_config(
+            loaded_config,
+            ruleset_matcher,
+            label_manager,
+            ip_address_of=config_cache.primary_ip_address_of,
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),

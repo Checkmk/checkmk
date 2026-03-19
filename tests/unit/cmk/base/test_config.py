@@ -11,6 +11,7 @@ import itertools
 import re
 import shutil
 import socket
+import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -72,6 +73,7 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.fetchers import Mode, TCPEncryptionHandling
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1_unstable import Secret
+from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls.v1 import ActiveCheckConfig
 from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.ip_lookup import IPStackConfig
@@ -330,7 +332,7 @@ def _assert_not_called(*args: object) -> NoReturn:
         (HostName("testhost"), {TagGroupID("piggyback"): TagID("no-piggyback")}, False),
     ],
 )
-def test_is_piggyback_host(
+def test_is_piggyback_host_tag_based(
     monkeypatch: MonkeyPatch, hostname: HostName, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     ts = Scenario()
@@ -339,32 +341,44 @@ def test_is_piggyback_host(
 
 
 @pytest.mark.parametrize(
-    "with_data,result",
+    "store_under, tags, piggyback_host_expected",
     [
-        (True, True),
-        (False, False),
+        pytest.param(None, {}, False, id="no_piggyback_data"),
+        pytest.param(HostAddress("testhost"), {}, True, id="data_stored_under_hostname"),
+        pytest.param(HostAddress("1.2.3.4"), {}, True, id="data_stored_under_ipv4_address"),
+        pytest.param(
+            HostAddress("::1"),
+            {TagGroupID("address_family"): TagID("ip-v6-only")},
+            True,
+            id="data_stored_under_ipv6_address",
+        ),
     ],
 )
-@pytest.mark.parametrize(
-    "hostname, tags",
-    [
-        (HostName("testhost"), {}),
-        (HostName("testhost"), {TagGroupID("piggyback"): TagID("auto-piggyback")}),
-    ],
-)
-def test_is_piggyback_host_auto(
+def test_is_piggyback_host_data_based(
     monkeypatch: MonkeyPatch,
-    hostname: HostName,
+    store_under: HostAddress | None,
     tags: dict[TagGroupID, TagID],
-    with_data: bool,
-    result: bool,
+    piggyback_host_expected: bool,
 ) -> None:
+    hostname = HostName("testhost")
     ts = Scenario()
     ts.add_host(hostname, tags)
+    ts.set_option("ipaddresses", {hostname: "1.2.3.4"})
+    ts.set_option("ipv6addresses", {hostname: "::1"})
+
+    if store_under is not None:
+        now = time.time()
+        piggyback_backend.store_piggyback_raw_data(
+            source_hostname=HostName("source-host"),
+            piggybacked_raw_data={store_under: (b"section data",)},
+            message_timestamp=now,
+            contact_timestamp=now,
+            omd_root=cmk.utils.paths.omd_root,
+        )
+
     config_cache = ts.apply(monkeypatch)
 
-    config_cache._host_has_piggyback_data_right_now = lambda piggybacked_host_name: with_data  # type: ignore[method-assign]
-    assert config_cache.is_piggyback_host(hostname) == result
+    assert config_cache.is_piggyback_host(hostname) is piggyback_host_expected
 
 
 @pytest.mark.parametrize(

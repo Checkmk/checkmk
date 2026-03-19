@@ -1513,7 +1513,10 @@ def test_commandline_discovery(
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
         config.make_parser_config(
-            config_cache._loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
+            config_cache._loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager,
+            ip_address_of=config_cache.primary_ip_address_of,
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,

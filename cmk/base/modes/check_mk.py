@@ -800,6 +800,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
                         loaded_config,
                         ruleset_matcher,
                         label_manager,
+                        ip_address_of=config_cache.primary_ip_address_of,
                     ),
                     source_info.hostname,
                     source_info.ipaddress,
@@ -2168,7 +2169,10 @@ def mode_check_discovery(
     )
     parser = CMKParser(
         config.make_parser_config(
-            loading_result.loaded_config, ruleset_matcher, config_cache.label_manager
+            loading_result.loaded_config,
+            ruleset_matcher,
+            config_cache.label_manager,
+            ip_address_of=config_cache.primary_ip_address_of,
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2476,7 +2480,12 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
         CheckPluginName,
     )
     parser = CMKParser(
-        config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
+        config.make_parser_config(
+            loaded_config,
+            ruleset_matcher,
+            label_manager,
+            ip_address_of=config_cache.primary_ip_address_of,
+        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2811,7 +2820,10 @@ def run_checking(
     )
     parser = CMKParser(
         config.make_parser_config(
-            loaded_config, config_cache.ruleset_matcher, config_cache.label_manager
+            loaded_config,
+            config_cache.ruleset_matcher,
+            config_cache.label_manager,
+            ip_address_of=config_cache.primary_ip_address_of,
         ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -3117,7 +3129,12 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
         ),
     )
     parser = CMKParser(
-        config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
+        config.make_parser_config(
+            loaded_config,
+            ruleset_matcher,
+            label_manager,
+            ip_address_of=config_cache.primary_ip_address_of,
+        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -3372,7 +3389,12 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
     )
 
     parser = CMKParser(
-        config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
+        config.make_parser_config(
+            loaded_config,
+            ruleset_matcher,
+            label_manager,
+            ip_address_of=config_cache.primary_ip_address_of,
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),

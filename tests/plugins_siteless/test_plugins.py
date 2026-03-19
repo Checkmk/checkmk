@@ -87,7 +87,10 @@ def test_checks_executor(
         (get_builtin_host_labels := make_app(edition(paths.omd_root)).get_builtin_host_labels),
     ).initialize(get_builtin_host_labels)
     parser_config = config.make_parser_config(
-        EMPTY_CONFIG, config_cache.ruleset_matcher, config_cache.label_manager
+        EMPTY_CONFIG,
+        config_cache.ruleset_matcher,
+        config_cache.label_manager,
+        ip_address_of=config_cache.primary_ip_address_of,
     )
 
     # make sure logwatch doesn't crash

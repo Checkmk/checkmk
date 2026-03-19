@@ -55,7 +55,6 @@ from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.piggyback import (
     guess_piggybacked_hosts_time_settings,
-    make_piggyback_time_settings,
 )
 from cmk.base.configlib.scheduling import make_check_interval_config
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
@@ -1731,6 +1730,7 @@ class ConfigCache:
                     self.ruleset_matcher,
                     self.label_manager.labels_of_host,
                     piggybacked_hostname=host_name,
+                    ip_address=self.primary_ip_address_of(host_name),
                 ),
             ),
             expect_data=self.is_piggyback_host(host_name),
@@ -3044,10 +3044,22 @@ class ConfigCache:
 
         return socket.AddressFamily.AF_INET6 if is_ipv6_primary() else socket.AddressFamily.AF_INET
 
+    def primary_ip_address_of(self, host_name: HostName) -> HostAddress | None:
+        match self.default_address_family(host_name):
+            case socket.AF_INET:
+                return self._loaded_config.ipaddresses.get(host_name)
+            case socket.AF_INET6:
+                return self._loaded_config.ipv6addresses.get(host_name)
+            case other:
+                assert_never(other)
+
     def _has_piggyback_data(self, host_name: HostName) -> bool:
+        ip_address = self.primary_ip_address_of(host_name)
+        if self._host_has_piggyback_data_right_now(host_name, ip_address):
+            return True
+
         return (
-            self._host_has_piggyback_data_right_now(host_name)
-            or make_persisted_section_dir(
+            make_persisted_section_dir(
                 host_name=host_name,
                 ident="piggyback",
                 section_cache_path=cmk.utils.paths.var_dir,
@@ -3056,22 +3068,29 @@ class ConfigCache:
             # and it might as well just return `bool(piggyback_backend.get_messages_for(...))`
         )
 
-    def _host_has_piggyback_data_right_now(self, piggybacked_host_name: HostAddress) -> bool:
+    def _host_has_piggyback_data_right_now(
+        self, piggybacked_hostname: HostName, ip_address: HostAddress | None
+    ) -> bool:
         # NOTE: This is a best effort guess on whether we should create the piggyback datasource.
         # Users can still configure it to be absent or present manually.
-        # In case of false positives (DS created but no data) the dasource will be OK anyway.
+        # In case of false positives (DS created but no data) the datasource will be OK anyway.
 
         # This duplicates logic and should be kept in sync with what the parser does.
-        # Can we somehow instanciate the hypothetical parser here, and just let it parse?
+        # Can we somehow instantiate the hypothetical parser here, and just let it parse?
         piggy_config = piggyback_backend.Config(
-            piggybacked_host_name,
-            make_piggyback_time_settings(
+            piggybacked_hostname,
+            guess_piggybacked_hosts_time_settings(
                 self._loaded_config,
                 self.ruleset_matcher,
                 self.label_manager.labels_of_host,
-                source_host_names=[piggybacked_host_name],  # I don't think this is right.
+                piggybacked_hostname=piggybacked_hostname,  # I don't think this is right.
+                ip_address=ip_address,
             ),
         )
+
+        identifiers: set[HostAddress] = {piggybacked_hostname}
+        if ip_address is not None:
+            identifiers.add(ip_address)
 
         now = time.time()
 
@@ -3079,10 +3098,9 @@ class ConfigCache:
             return (now - data.meta.last_update) <= piggy_config.max_cache_age(data.meta.source)
 
         return any(
-            map(
-                _is_usable,
-                piggyback_backend.get_messages_for(piggybacked_host_name, cmk.utils.paths.omd_root),
-            )
+            _is_usable(msg)
+            for identifier in identifiers
+            for msg in piggyback_backend.get_messages_for(identifier, cmk.utils.paths.omd_root)
         )
 
     def tags_of_service(
@@ -3739,6 +3757,7 @@ def make_parser_config(
     loaded_config: LoadedConfigFragment,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
+    ip_address_of: Callable[[HostName], HostAddress | None],
 ) -> ParserConfig:
     check_interval_config = make_check_interval_config(
         loaded_config, ruleset_matcher, label_manager
@@ -3759,6 +3778,7 @@ def make_parser_config(
                     ruleset_matcher,
                     label_manager.labels_of_host,
                     piggybacked_host_name,
+                    ip_address=ip_address_of(piggybacked_host_name),
                 ),
             ).max_cache_age
         ),

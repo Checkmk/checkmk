@@ -119,7 +119,7 @@ def _parse_proxy_protocol(
 def _migrate_edition(value: object) -> str:
     if isinstance(value, str):
         match value:
-            case "64bit":
+            case "64bit" | "bit64":
                 return "bit64"
             case "32bit" | "bit32" | "script":
                 # 32bit binaries are no longer supported, migrate to script since that is the

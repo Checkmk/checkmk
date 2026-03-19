@@ -57,8 +57,8 @@ ProblemsDashboard = DashboardConfig(
         "description": _l(
             "This dashboard gives you a general overview on the state of your monitored devices."
         ),
-        "widgets": {
-            "host-stats": StatsDashletConfig(
+        "dashlets": [
+            StatsDashletConfig(
                 {
                     "title": _("Host statistics"),
                     "type": "hoststats",
@@ -69,7 +69,7 @@ ProblemsDashboard = DashboardConfig(
                     "single_infos": [],
                 }
             ),
-            "service-stats": StatsDashletConfig(
+            StatsDashletConfig(
                 {
                     "title": _("Service statistics"),
                     "type": "servicestats",
@@ -80,7 +80,7 @@ ProblemsDashboard = DashboardConfig(
                     "single_infos": [],
                 }
             ),
-            "host-problems": EmbeddedViewDashletConfig(
+            EmbeddedViewDashletConfig(
                 {
                     "type": "embedded_view",
                     "title": _("Host problems (unhandled)"),
@@ -103,7 +103,7 @@ ProblemsDashboard = DashboardConfig(
                     "name": "dashlet_2",
                 }
             ),
-            "service-problems": EmbeddedViewDashletConfig(
+            EmbeddedViewDashletConfig(
                 {
                     "type": "embedded_view",
                     "title": _("Service problems (unhandled)"),
@@ -128,7 +128,7 @@ ProblemsDashboard = DashboardConfig(
                     "name": "dashlet_3",
                 }
             ),
-            "recent-events": EmbeddedViewDashletConfig(
+            EmbeddedViewDashletConfig(
                 {
                     "type": "embedded_view",
                     "title": _("Events of recent 4 hours"),
@@ -147,7 +147,7 @@ ProblemsDashboard = DashboardConfig(
                     "name": "dashlet_4",
                 }
             ),
-        },
+        ],
         "owner": UserId.builtin(),
         "public": True,
         "name": "problems",
@@ -270,8 +270,8 @@ SimpleProblemsDashboard = DashboardConfig(
         "description": _l(
             "A compact dashboard which lists your unhandled host and service problems."
         ),
-        "widgets": {
-            "host-problems": EmbeddedViewDashletConfig(
+        "dashlets": [
+            EmbeddedViewDashletConfig(
                 {
                     "type": "embedded_view",
                     "title": _("Host problems (unhandled)"),
@@ -289,7 +289,7 @@ SimpleProblemsDashboard = DashboardConfig(
                     "name": "dashlet_0",
                 }
             ),
-            "service-problems": EmbeddedViewDashletConfig(
+            EmbeddedViewDashletConfig(
                 {
                     "type": "embedded_view",
                     "title": _("Service problems (unhandled)"),
@@ -314,7 +314,7 @@ SimpleProblemsDashboard = DashboardConfig(
                     "name": "dashlet_1",
                 }
             ),
-        },
+        ],
         "owner": UserId.builtin(),
         "public": True,
         "name": "simple_problems",
@@ -406,8 +406,8 @@ CheckmkOverviewDashboard = DashboardConfig(
         "hidden": False,
         "mtime": 0,
         "show_title": True,
-        "widgets": {
-            "cmk-servers": LinkedViewDashletConfig(
+        "dashlets": [
+            LinkedViewDashletConfig(
                 {
                     "background": True,
                     "type": "linked_view",
@@ -419,7 +419,7 @@ CheckmkOverviewDashboard = DashboardConfig(
                     "size": (0, 0),
                 }
             ),
-            "cmk-sites": LinkedViewDashletConfig(
+            LinkedViewDashletConfig(
                 {
                     "name": "cmk_sites",
                     "title": _("Site overview"),
@@ -432,7 +432,7 @@ CheckmkOverviewDashboard = DashboardConfig(
                     "size": (0, 0),
                 }
             ),
-        },
+        ],
         "embedded_views": {},
         "single_infos": [],
         "icon": DynamicIconName("dashboard_system"),

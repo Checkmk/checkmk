@@ -211,8 +211,8 @@ def _get_view_owners(dashboard_config: DashboardConfig) -> dict[str, UserId]:
 
     This is relative to the current user and their permissions."""
     widget_id_to_view_name = {
-        widget_id: cast(LinkedViewDashletConfig, widget)["name"]
-        for widget_id, widget in dashboard_config["widgets"].items()
+        f"{dashboard_config['name']}-{idx}": cast(LinkedViewDashletConfig, widget)["name"]
+        for idx, widget in enumerate(dashboard_config["dashlets"])
         if widget["type"] == "linked_view"
     }
     view_owners: dict[str, UserId] = {}
@@ -445,8 +445,13 @@ def impersonate_dashboard_token_issuer(
 
 def get_dashboard_widget_by_id(dashboard_config: DashboardConfig, widget_id: str) -> DashletConfig:
     """Get the widget configuration for the given widget ID."""
-    if widget := dashboard_config["widgets"].get(widget_id):
-        return widget
+    # TODO: once widgets are stored with their own IDs, this function should be removed
+    widgets = {
+        f"{dashboard_config['name']}-{idx}": widget_config
+        for idx, widget_config in enumerate(dashboard_config["dashlets"])
+    }
+    if widget_config := widgets.get(widget_id):
+        return widget_config
 
     raise InvalidWidgetError()
 

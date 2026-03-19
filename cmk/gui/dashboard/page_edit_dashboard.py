@@ -59,7 +59,7 @@ def create_dashboard(old_dashboard: DashboardConfig, dashboard: DashboardConfig)
     dashboard.update(board_properties)  # type: ignore[typeddict-item]
 
     # Do not remove the dashlet configuration during general property editing
-    dashboard["widgets"] = old_dashboard.get("widgets", {})
+    dashboard["dashlets"] = old_dashboard.get("dashlets", [])
     dashboard["mtime"] = int(time.time())
 
     return dashboard

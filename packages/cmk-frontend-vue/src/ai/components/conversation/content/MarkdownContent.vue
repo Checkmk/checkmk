@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { marked } from 'marked'
-import { onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 
 import type {
   MarkdownConversationElementContent,
@@ -19,28 +19,51 @@ const parsedMarkdown = ref<string>()
 const typedText = ref<string>('')
 const emit = defineEmits<TBaseConversationElementEmits>()
 
-onMounted(async () => {
+async function renderMarkdown() {
   parsedMarkdown.value = await marked.parse(props.content, { breaks: true })
 
   if (props.noAnimation) {
     typedText.value = parsedMarkdown.value
     emit('done')
   } else {
+    typedText.value = ''
     typewriter(typedText, parsedMarkdown.value, () => {
       emit('done')
     })
   }
-})
+}
+
+watch(
+  () => props.content,
+  async () => {
+    await renderMarkdown()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
-  <!-- eslint-disable-next-line vue/no-v-html -->
-  <div class="ai-markdown-content" v-html="typedText"></div>
+  <!-- eslint-disable vue/no-v-html -->
+  <div
+    class="ai-markdown-content"
+    :class="{ 'ai-markdown-content--thinking': props.title === 'thinking' }"
+    v-html="typedText"
+  ></div>
+  <!-- eslint-enable vue/no-v-html -->
 </template>
 
 <style scoped>
 .ai-markdown-content {
   padding-bottom: var(--dimension-4);
+}
+
+.ai-markdown-content--thinking {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--font-color-dimmed);
+  border: 1px solid var(--default-form-element-bg-color);
+  border-radius: var(--dimension-2);
+  padding: 0 var(--dimension-6) var(--dimension-2) var(--dimension-6);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */

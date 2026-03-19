@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -34,23 +34,49 @@ import MarkdownContent from './content/MarkdownContent.vue'
 
 const { _t } = usei18n()
 const props = defineProps<IAiConversationElement & { elementIndex?: number }>()
-
 const aiTemplate = getInjectedAiTemplate()
 
-const contentData = ref<TAiConversationElementContent[] | null>(
-  typeof props.content === 'function' || props.content instanceof Promise
-    ? null
-    : [...props.content]
+function filterThinkingForReopen(
+  items: TAiConversationElementContent[]
+): TAiConversationElementContent[] {
+  const hasAnswer = items.some((c) => c.title === 'answer' || c.content_type === 'alert')
+  if (hasAnswer) {
+    return items.filter((c) => c.title !== 'thinking')
+  }
+  let lastThinking: TAiConversationElementContent | undefined
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i]?.title === 'thinking') {
+      lastThinking = items[i]
+      break
+    }
+  }
+  const nonThinking = items.filter((c) => c.title !== 'thinking')
+  return lastThinking ? [...nonThinking, lastThinking] : nonThinking
+}
+
+function initContentData(): TAiConversationElementContent[] | null {
+  const items = Array.isArray(props.content) ? props.content : []
+  if (props.streaming) {
+    return items.length > 0 ? filterThinkingForReopen(items) : null
+  }
+  return filterThinkingForReopen(items)
+}
+
+const currentState = ref<string>(
+  props.content?.length > 0 ? props.content[props.content.length - 1]?.title || '' : ''
 )
 
+const contentData = ref<TAiConversationElementContent[] | null>(initContentData())
+
+// Separate display list for non-streaming animation; streaming uses contentData directly.
 const contentsToDisplay = ref<TAiConversationElementContent[]>([])
+const displayItems = computed(() => (props.streaming ? contentData.value : contentsToDisplay.value))
+const hasDisplayableContent = computed(
+  () => displayItems.value?.some((cnt) => cnt.content_type !== 'text') ?? false
+)
 
-const awaited = ref<boolean>(props.content instanceof Promise ? false : true)
+const awaited = ref<boolean>(true)
 const done = ref(false)
-
-const hasDisplayableContent = computed(() => {
-  return contentsToDisplay.value.some((cnt) => cnt.content_type !== 'text')
-})
 
 function addNextContent(): boolean {
   const nextContent = contentData.value?.shift()
@@ -74,7 +100,8 @@ function setElementDone() {
 }
 
 function onContentDone() {
-  if (!props.noAnimation) {
+  // Skip animation during streaming; the done signal comes from the streaming-done watcher.
+  if (!props.noAnimation && !props.streaming) {
     setTimeout(() => {
       if (!addNextContent()) {
         aiTemplate.value?.setActiveRole(AiRole.user)
@@ -84,21 +111,64 @@ function onContentDone() {
   }
 }
 
-onMounted(async () => {
-  if (typeof props.content === 'function') {
-    contentData.value = [...(await props.content())]
-  } else if (props.content instanceof Promise) {
-    contentData.value = [...(await props.content)]
-  }
-  aiTemplate.value?.setAnimationActiveChange(true)
-  awaited.value = true
-  if (props.noAnimation) {
-    contentsToDisplay.value = contentData.value ?? []
-    setElementDone()
-  } else {
-    onContentDone()
+onMounted(() => {
+  if (!props.streaming && contentData.value) {
+    aiTemplate.value?.setAnimationActiveChange(true)
+    awaited.value = true
+    if (props.noAnimation) {
+      contentsToDisplay.value = contentData.value.slice()
+      contentData.value = []
+      setElementDone()
+    } else {
+      onContentDone()
+    }
   }
 })
+
+watch(
+  () => props.streaming,
+  (isStreaming, wasStreaming) => {
+    if (isStreaming && !wasStreaming) {
+      currentState.value = ''
+    }
+    if (wasStreaming && !isStreaming) {
+      setElementDone()
+    }
+  }
+)
+
+watch(
+  () => props.content.length,
+  () => {
+    if (!props.streaming) {
+      return
+    }
+    const newItem = props.content[props.content.length - 1]
+    if (newItem) {
+      if (contentData.value === null) {
+        contentData.value = []
+      }
+
+      currentState.value = newItem.title || ''
+
+      const isThinkingItem = newItem.title === 'thinking'
+      const isFinalChunk = newItem.title === 'answer' || newItem.content_type === 'alert'
+
+      // Prune previous thinking items: replace with the latest during thinking,
+      // and clear all of them once the final answer/error chunk arrives.
+      const shouldPrunePreviousThinking = isThinkingItem || isFinalChunk
+      if (shouldPrunePreviousThinking) {
+        for (let i = contentData.value.length - 1; i >= 0; i--) {
+          if (contentData.value[i]?.title === 'thinking') {
+            contentData.value.splice(i, 1)
+          }
+        }
+      }
+
+      contentData.value.push(newItem)
+    }
+  }
+)
 </script>
 
 <template>
@@ -111,6 +181,10 @@ onMounted(async () => {
           <CmkIcon name="load-graph" size="large" class="ai-conversation-element__text-loader" />
           <label>{{ loadingText ?? _t('Generating response...') }}</label>
         </div>
+        <div v-else-if="currentState === 'thinking'" class="ai-conversation-element__loader">
+          <CmkIcon name="load-graph" size="large" class="ai-conversation-element__text-loader" />
+          <label>{{ _t('Thinking...') }}</label>
+        </div>
         <div v-else class="ai-conversation-element__disclaimer">
           <label>{{ _t('Please review to ensure factual correctness.') }}</label>
         </div>
@@ -118,15 +192,8 @@ onMounted(async () => {
     </div>
 
     <template v-if="contentData !== null">
-      <div v-if="contentData && hasDisplayableContent" class="ai-conversation-element__text">
-        <template v-for="(cnt, i) in contentsToDisplay" :key="i">
-          <CmkHeading
-            v-if="cnt.title && cnt.content_type !== 'dialog' && cnt.content_type !== 'text'"
-            class="ai-conversation-element__text-header"
-            type="h2"
-          >
-            {{ cnt.title }}
-          </CmkHeading>
+      <div v-if="hasDisplayableContent" class="ai-conversation-element__text">
+        <template v-for="(cnt, i) in displayItems" :key="i">
           <AlertContent
             v-if="cnt.content_type === 'alert'"
             v-bind="cnt as AlertConversationElementContent"
@@ -161,6 +228,7 @@ onMounted(async () => {
             v-else-if="cnt.content_type === 'markdown'"
             v-bind="cnt as MarkdownConversationElementContent"
             :no-animation="props.noAnimation"
+            :streaming="props.streaming"
             @done="onContentDone"
           />
         </template>

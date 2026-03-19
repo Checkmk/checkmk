@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
-import { type Ref, ref } from 'vue'
+import { type Ref, reactive, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
@@ -13,7 +13,12 @@ import usePersistentRef from '@/lib/usePersistentRef'
 
 import { type ButtonProps } from '@/components/CmkButton.vue'
 
-import { AiApiClient, type AiServiceAction, type InfoResponse } from '@/ai/lib/ai-api-client'
+import {
+  AiApiClient,
+  type AiServiceAction,
+  type InfoResponse,
+  type StreamEvent
+} from '@/ai/lib/ai-api-client'
 import { AiRole } from '@/ai/lib/utils'
 
 const { _t } = usei18n()
@@ -91,26 +96,25 @@ export type TAiConversationElementContent =
 
 export interface IAiConversationElement {
   role: AiRole
-  content:
-    | TAiConversationElementContent[]
-    | Promise<TAiConversationElementContent[]>
-    | (() => Promise<TAiConversationElementContent[]>)
+  content: TAiConversationElementContent[]
   noAnimation?: boolean | undefined
   hideControls?: boolean | undefined
   loadingText?: string | undefined
   error?: string | undefined
   displayed?: boolean | undefined
+  streaming?: boolean | undefined
 }
 
 export type OnAnimationActiveChangeCallback = (active: boolean) => void
 
 export class AiTemplateService extends ServiceBase {
   public conversationOpen = ref(false)
-  public elements: IAiConversationElement[] = []
+  public elements = reactive<IAiConversationElement[]>([])
   public config: IAiConversationConfig<unknown>
   public activeRole: AiRole = AiRole.user
   public info: InfoResponse | null = null
   protected api: AiApiClient
+  private streamAbortController: AbortController | null = null
 
   constructor(
     public templateId: string,
@@ -259,10 +263,75 @@ export class AiTemplateService extends ServiceBase {
   }
 
   protected execAiAction(action: AiActionButton): IAiConversationElement {
-    return {
+    this.streamAbortController?.abort()
+    this.streamAbortController = new AbortController()
+    const { signal } = this.streamAbortController
+
+    const contents = ref<TAiConversationElementContent[]>([])
+
+    const element: IAiConversationElement = {
       role: AiRole.ai,
-      content: this.getAiInferenceElement(action)
+      content: contents.value,
+      noAnimation: true,
+      streaming: true,
+      displayed: true
     }
+
+    void this.api.streamInference(
+      action,
+      this.context_data,
+      (event: StreamEvent) => {
+        if (!event?.type) {
+          return
+        }
+        switch (event.type) {
+          case 'metadata':
+            break
+          case 'thinking':
+            contents.value.push({
+              content_type: 'markdown',
+              content: event.text,
+              title: event.type
+            } as MarkdownConversationElementContent)
+            break
+
+          case 'answer': {
+            const lastItem = contents.value[contents.value.length - 1]
+            if (lastItem?.title === 'answer' && lastItem.content_type === 'markdown') {
+              // Append to existing answer chunk
+              ;(lastItem as MarkdownConversationElementContent).content += event.text
+            } else {
+              // Create new answer chunk
+              contents.value.push({
+                content_type: 'markdown',
+                content: event.text,
+                title: event.type
+              } as MarkdownConversationElementContent)
+            }
+            break
+          }
+        }
+      },
+      (_error: Error) => {
+        if (signal.aborted) {
+          return
+        }
+        contents.value.push({
+          content_type: 'alert',
+          variant: 'error',
+          text: _t('Something went wrong. Please try again later.')
+        } as AlertConversationElementContent)
+        element.streaming = false
+        element.noAnimation = false
+      },
+      () => {
+        element.streaming = false
+        element.noAnimation = false
+      },
+      signal
+    )
+
+    return element
   }
 
   protected async loadAiUserActions() {
@@ -271,27 +340,6 @@ export class AiTemplateService extends ServiceBase {
     } catch (e) {
       this.config.userActions.actionButtons = e as Error
     }
-  }
-
-  protected async getAiInferenceElement(
-    action: AiServiceAction
-  ): Promise<TAiConversationElementContent[]> {
-    const contents: TAiConversationElementContent[] = []
-    try {
-      const res = await this.api.inference(action, this.context_data)
-
-      for (const es of res.explanation_sections) {
-        contents.push(es as MarkdownConversationElementContent)
-      }
-    } catch {
-      contents.push({
-        content_type: 'alert',
-        variant: 'error',
-        text: _t('Something went wrong. Please try again later.')
-      })
-    }
-
-    return contents
   }
 
   protected getInitialElements(): IAiConversationElement[] {

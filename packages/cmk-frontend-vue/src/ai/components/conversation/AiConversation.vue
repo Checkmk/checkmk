@@ -23,6 +23,9 @@ const showConsent = ref<boolean>(!aiTemplate.value?.isDisclaimerShown())
 const emit = defineEmits(['close', 'consent'])
 
 const elements = computed(() => aiTemplate.value?.elements as unknown as IAiConversationElement[])
+const showUserActions = computed(
+  () => !aiTemplate.value?.elements.some((e) => e.role === AiRole.ai)
+)
 const scrollInterval = ref<ReturnType<typeof setInterval> | null>(null)
 const scrollToRef = useTemplateRef('automatic-scroll-to')
 
@@ -107,7 +110,7 @@ onBeforeUnmount(() => {
         :element-index="index"
         v-bind="element"
       />
-      <AiUserAction v-if="aiTemplate?.activeRole === AiRole.user" />
+      <AiUserAction v-if="showUserActions" />
     </template>
     <div ref="automatic-scroll-to" class="ai-conversation__auto-scroll-el"></div>
   </div>

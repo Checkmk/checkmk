@@ -6,6 +6,8 @@
 import { Api, type ApiResponseBody } from '@/lib/api-client'
 import { randomId } from '@/lib/randomId'
 
+import { streamJsonResponse } from './utils'
+
 export type AiBaseRequestResponse = object
 
 export interface AiBaseLlmResponse extends AiBaseRequestResponse {
@@ -60,17 +62,39 @@ export interface AiInference extends AiBaseLlmResponse {
   used_resources: AiInferenceUsedResource[]
 }
 
+export interface MetadataEvent {
+  type: 'metadata'
+  model?: string
+}
+
+export interface ThinkingEvent {
+  type: 'thinking'
+  text: string
+}
+
+export interface AnswerEvent {
+  type: 'answer'
+  text: string
+}
+
+export type StreamEvent = MetadataEvent | ThinkingEvent | AnswerEvent
+
 export class AiApiClient extends Api {
+  private readonly defaultHeaders: Record<string, string>
   public constructor(siteName: string) {
     // no leading slash to use the given base url and path https://hostname.tld/sitename/check_mk/
-    super('ai-service/api/v1/', [
+    const headers: [string, string][] = [
       ['Content-Type', 'application/json'],
       ['Accept', 'application/json'],
       ['x-checkmk-site-name', siteName]
-      // Uncomment this line for local testing,
+      // Uncomment the next two lines for local testing,
       // in production the reverse proxy will set the correct host header:
-      // , ['x-forwarded-host', 'localhost:3000'], ['x-forwarded-proto', 'http']
-    ])
+      // ,['x-forwarded-host', 'localhost:3000'],
+      // ['x-forwarded-proto', 'http']
+    ]
+
+    super('ai-service/api/v1/', headers)
+    this.defaultHeaders = Object.fromEntries(headers)
   }
 
   public async getInfo(): Promise<InfoResponse> {
@@ -83,6 +107,51 @@ export class AiApiClient extends Api {
         `enumerate-action-types?template_id=${templateId}`
       )) as EnumerateActionsResponse
     ).all_possible_action_types
+  }
+
+  public async streamInference(
+    action: AiServiceAction,
+    contextData: unknown,
+    onEvent: (event: StreamEvent) => void,
+    onError?: (error: Error) => void,
+    onComplete?: () => void,
+    signal?: AbortSignal
+  ): Promise<void> {
+    const options: AiInferenceRequest = {
+      action_type: action,
+      context_data: contextData
+    }
+
+    try {
+      const res = await fetch(`${this.baseUrl}stream-inference`, {
+        method: 'POST',
+        headers: {
+          ...this.defaultHeaders,
+          'x-saas-request-id': randomId()
+        },
+        body: JSON.stringify(options),
+        signal: signal ?? null
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(`Stream inference request failed: ${errorText}`)
+      }
+
+      if (!res.body) {
+        throw new Error('Stream inference response body is null')
+      }
+
+      const jsonStream = streamJsonResponse(res.body)
+
+      for await (const chunk of jsonStream) {
+        onEvent(chunk as StreamEvent)
+      }
+
+      onComplete?.()
+    } catch (e) {
+      onError?.(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   public async inference(

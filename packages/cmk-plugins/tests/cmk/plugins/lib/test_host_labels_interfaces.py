@@ -255,6 +255,24 @@ from cmk.plugins.lib.interfaces import (
         pytest.param(
             [
                 IPNetworkAdapter(
+                    name="lo",
+                    inet4=[AugmentedIPv4Interface("127.0.0.1/8")],
+                    inet6=[AugmentedIPv6Interface("::1/128")],
+                ),
+                IPNetworkAdapter(
+                    name="eth0",
+                    inet4=[AugmentedIPv4Interface("169.254.10.5/16")],
+                    inet6=[AugmentedIPv6Interface("fe80::1/64")],
+                ),
+            ],
+            [
+                HostLabel("cmk/l3v4_topology", "singlehomed"),
+            ],
+            id="host_labels_09_apipa_not_filtered",
+        ),
+        pytest.param(
+            [
+                IPNetworkAdapter(
                     name="one",
                     inet6=[AugmentedIPv6Interface("2a00:6020:4083:1100:333:1111:2222:3333/64")],
                 ),

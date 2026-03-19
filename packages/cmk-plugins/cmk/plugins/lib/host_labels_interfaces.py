@@ -43,7 +43,7 @@ def host_labels_if(adapters: None | Iterable[IPNetworkAdapter]) -> HostLabelGene
             (
                 interface_ip.is_broadcast,
                 interface_ip.is_loopback,
-                interface_ip.is_link_local,
+                interface_ip.is_link_local and interface_ip.version == 6,
                 interface_ip.is_unspecified,
                 interface_ip.is_ula,
                 interface_ip.is_temporary,

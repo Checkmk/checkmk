@@ -1835,7 +1835,7 @@ class ACTestAutomationUserSecret(ACTest):
         )
 
     def is_relevant(self) -> bool:
-        return True
+        return not is_distributed_setup_remote_site(active_config.sites)
 
     @staticmethod
     def get_flagged_users(

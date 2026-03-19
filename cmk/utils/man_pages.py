@@ -92,6 +92,7 @@ CATALOG_TITLES: Final = {
     "aws": "Amazon Web Services",
     "aws_status": "Amazon Web Service (AWS) Status",
     "azure": "Azure",
+    "azure_v2": "Azure",
     "azure_status": "Azure Status",
     "bachmann": "Bachmann",
     "barracuda": "Barracuda",

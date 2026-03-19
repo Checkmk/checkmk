@@ -17,7 +17,6 @@ import CmkWizard, {
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import ConfigureCollector from './otel-configuration-steps/ConfigureCollector.vue'
 import ConfigureGeneralProperties from './otel-configuration-steps/ConfigureGeneralProperties.vue'
 import ConfigureHosts from './otel-configuration-steps/ConfigureHosts.vue'
 
@@ -59,11 +58,11 @@ const close = () => {
           ref="generalProperties"
           v-model:config-name="configName"
           v-model:site-id="siteId"
-          :config-name-placeholder="_t('opentelemetry_config_1')"
-          config-list-endpoint="api/internal/domain-types/otel_collector_config_receivers/collections/all"
+          :config-name-placeholder="_t('prometheus_config_1')"
+          config-list-endpoint="api/internal/domain-types/otel_collector_config_prom_scrape/collections/all"
           :already-configured-error="
             _t(
-              'OpenTelemetry is already configured for this site. Select another site or update the existing configuration.'
+              'Prometheus is already configured for this site. Select another site or update the existing configuration.'
             )
           "
         />
@@ -75,15 +74,11 @@ const close = () => {
     <CmkWizardStep :index="2" :is-completed="() => currentStep > 2">
       <template #header>
         <CmkHeading>
-          {{ _t('Configure OpenTelemetry collector') }}
+          {{ _t('Configure scraper') }}
         </CmkHeading>
-        <CmkParagraph>{{
-          _t('Configure at least one OpenTelemetry Collector receiver.')
-        }}</CmkParagraph>
+        <CmkParagraph>{{ _t('Specify the Prometheus target you want to scrape.') }}</CmkParagraph>
       </template>
-      <template #content>
-        <ConfigureCollector />
-      </template>
+      <template #content> </template>
       <template #actions>
         <CmkWizardButton type="next" />
         <CmkWizardButton type="previous" />

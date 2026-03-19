@@ -29,9 +29,19 @@ import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
+type OTelConfigEntry = {
+  extensions?: { site?: string[] }
+}
+
 const API_ROOT = 'api/v1'
 
 const { _t } = usei18n()
+
+const props = defineProps<{
+  configNamePlaceholder: string
+  configListEndpoint: string
+  alreadyConfiguredError: string
+}>()
 
 const configName = defineModel<string>('configName', { required: true })
 const siteId = defineModel<string | null>('siteId', { required: true })
@@ -97,21 +107,54 @@ const configNameErrors = computed<string[]>(() => {
   return []
 })
 
-const siteErrors = computed<string[]>(() => {
-  if (!displayErrors.value) {
-    return []
-  }
+const siteErrors = ref<string[]>([])
+
+function validateSiteRequired(): string[] {
   if (!siteId.value) {
     return [_t('Site is required but not specified.')]
   }
   return []
-})
+}
 
-function validate(): boolean {
+async function checkSiteAlreadyConfigured(): Promise<string[]> {
+  if (!siteId.value) {
+    return []
+  }
+
+  try {
+    const response = await fetchRestAPI(props.configListEndpoint, 'GET')
+    await response.raiseForStatus()
+    const data = await response.json()
+
+    const hasExistingConfig = data.value.some((config: OTelConfigEntry) =>
+      config.extensions?.site?.includes(siteId.value!)
+    )
+
+    if (hasExistingConfig) {
+      return [props.alreadyConfiguredError]
+    }
+  } catch {
+    return [_t('Failed to validate site configuration. Please try again.')]
+  }
+
+  return []
+}
+
+async function validate(): Promise<boolean> {
   if (isLoading.value) {
     return false
   }
   displayErrors.value = true
+
+  const requiredErrors = validateSiteRequired()
+  if (configNameErrors.value.length > 0 || requiredErrors.length > 0) {
+    siteErrors.value = requiredErrors
+    return false
+  }
+
+  const configErrors = await checkSiteAlreadyConfigured()
+  siteErrors.value = [...requiredErrors, ...configErrors]
+
   return configNameErrors.value.length === 0 && siteErrors.value.length === 0
 }
 
@@ -128,7 +171,7 @@ defineExpose({ validate })
       v-model="configName"
       type="text"
       field-size="FILL"
-      :placeholder="_t('opentelemetry_config_1')"
+      :placeholder="props.configNamePlaceholder"
       :external-errors="configNameErrors"
     />
 

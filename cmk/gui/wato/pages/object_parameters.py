@@ -328,8 +328,11 @@ class ModeObjectParameters(WatoMode):
             render_labels()
             return
 
-        if RuleGroup.StaticChecks(checkgroup) in rulespec_registry:
+        if RuleGroup.StaticChecks(checkgroup) not in rulespec_registry:
+            # Neither checkgroup_parameters nor static_checks rulespec is registered
+            # (e.g. third-party plugins like infortend_chassis1).
             not_configurable_render()
+            render_labels()
             return
 
         rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]

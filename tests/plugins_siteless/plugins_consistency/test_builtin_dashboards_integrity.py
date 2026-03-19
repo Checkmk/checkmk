@@ -16,7 +16,7 @@ from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id
 
 def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:
     for dashboard_config in builtin_dashboards.values():
-        for dashlet_config in dashboard_config["widgets"].values():
+        for dashlet_config in dashboard_config["dashlets"]:
             if dashlet_config["type"] == TemplateGraphDashlet.type_name():
                 source = cast(TemplateGraphDashletConfig, dashlet_config)["source"]
                 assert isinstance(source, str), "Graph source must be string identifier"

@@ -64,9 +64,13 @@ def _compute_widget_title(widget_config: DashletConfig) -> str:
 
 
 def compute_widget_titles(board: DashboardConfig) -> dict[str, str]:
-    """Compute widget titles for all widgets in a dashboard."""
+    """Compute widget titles for all dashlets in a dashboard.
+
+    NOTE: the widget IDs (keys) must match the conversion functions that build the dashboard spec
+    """
     return {
-        widget_id: _compute_widget_title(widget) for widget_id, widget in board["widgets"].items()
+        f"{board['name']}-{idx}": _compute_widget_title(widget)
+        for idx, widget in enumerate(board["dashlets"])
     }
 
 
@@ -90,7 +94,7 @@ def remove_sensitive_filter_information(board: DashboardConfig) -> None:
     before converting the dashboard to the API model.
     """
     board["context"] = _remove_filter_values(board.get("context", {}))
-    for widget in board["widgets"].values():
+    for widget in board.get("dashlets", []):
         widget["context"] = _remove_filter_values(widget.get("context", {}))
 
 

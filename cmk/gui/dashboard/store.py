@@ -7,16 +7,17 @@
 # mypy: disable-error-code="no-any-return"
 
 import time
-import uuid
-from collections.abc import Iterable
-from typing import Any, cast, NotRequired
+from typing import Any, cast
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
@@ -36,9 +37,9 @@ from .type_defs import (
     DashboardConfig,
     DashboardName,
     DashletConfig,
+    DashletId,
     EmbeddedViewDashletConfig,
     ViewDashletConfig,
-    WidgetId,
 )
 
 
@@ -119,37 +120,27 @@ class DashboardStore:
         return result
 
 
-def _iter_widgets(dashboard: dict[str, Any]) -> Iterable[tuple[WidgetId, DashletConfig]]:
-    if "widgets" in dashboard:
-        yield from dashboard["widgets"].items()
-        return
-
-    for idx, dashlet_spec in enumerate(dashboard.get("dashlets", [])):
-        widget_id = f"{dashboard['name']}-{idx}"
-        yield widget_id, dashlet_spec
-
-
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
     raw_dashboard.setdefault("packaged", False)
     raw_dashboard.setdefault("main_menu_search_terms", [])
-    dashboard: MaybeOldDashboardConfig = {
+    dashboard: DashboardConfig = {
         # Need to assume that we are right for now. We will have to introduce parsing there to do a
         # real conversion in one of the following typing steps
         **raw_dashboard,  # type: ignore[typeddict-item]
-        "widgets": {
-            widget_id: (
-                internal_view_to_runtime_view(widget_spec)
-                if widget_spec["type"] == "view"
-                else widget_spec
+        "dashlets": [
+            (
+                internal_view_to_runtime_view(dashlet_spec)
+                if dashlet_spec["type"] == "view"
+                else dashlet_spec
             )
-            for widget_id, widget_spec in _iter_widgets(raw_dashboard)
-        },
+            for dashlet_spec in raw_dashboard["dashlets"]
+        ],
         "embedded_views": {
             embedded_id: _internal_embedded_view_to_runtime_embedded_view(embedded_view)
             for embedded_id, embedded_view in raw_dashboard.get("embedded_views", {}).items()
         },
     }
-    return migrate_dashboard_config(dashboard)
+    return _migrate_dashboard_config(dashboard)
 
 
 def _internal_embedded_view_to_runtime_embedded_view(
@@ -204,20 +195,25 @@ def load_dashboard(
     )
 
 
-def add_widget(widget_spec: DashletConfig, dashboard: DashboardConfig) -> None:
-    widget_id = str(uuid.uuid4())
-    dashboard["widgets"][widget_id] = widget_spec
+def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
+    try:
+        dashboard = get_permitted_dashboards()[board]
+    except KeyError:
+        raise MKUserError("name", _("The requested dashboard does not exist."))
+
+    try:
+        return dashboard["dashlets"][ident]
+    except IndexError:
+        raise MKGeneralException(_("The dashboard element does not exist."))
+
+
+def add_dashlet(dashlet_spec: DashletConfig, dashboard: DashboardConfig) -> None:
+    dashboard["dashlets"].append(dashlet_spec)
     dashboard["mtime"] = int(time.time())
     save_and_replicate_all_dashboards(dashboard["owner"])
 
 
-# This isn't 100% correct, since non-migrated dashboards won't have the "widgets" field
-# But it at least tells mypy what we expect from the "dashlets" field
-class MaybeOldDashboardConfig(DashboardConfig):
-    dashlets: NotRequired[list[DashletConfig]]
-
-
-def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardConfig:
+def _migrate_dashboard_config(dashboard: DashboardConfig) -> DashboardConfig:
     """Migrate old dashboard configurations to the latest format.
 
     This is done at runtime, since an update action would not be able to migrate MKPs."""
@@ -226,40 +222,34 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
     dashboard.setdefault("context", {})
     dashboard.setdefault("mandatory_context_filters", [])
 
-    if "dashlets" in dashboard:
-        raw_dashlets = dashboard.pop("dashlets")
-        dashboard["widgets"] = {
-            f"{dashboard['name']}-{idx}": dashlet for idx, dashlet in enumerate(raw_dashlets)
-        }
-
     # responsive dashboard already uses the new dashlet format
     if dashboard_uses_relative_grid(dashboard):
-        widgets, embedded_views = _migrate_widgets(dashboard)
-        dashboard["widgets"] = widgets
+        dashlets, embedded_views = _migrate_dashlets(dashboard)
+        dashboard["dashlets"] = dashlets
         dashboard["embedded_views"] = embedded_views
 
     return dashboard
 
 
-def _migrate_widgets(
+def _migrate_dashlets(
     dashboard: DashboardConfig,
-) -> tuple[dict[str, DashletConfig], dict[str, DashboardEmbeddedViewSpec]]:
+) -> tuple[list[DashletConfig], dict[str, DashboardEmbeddedViewSpec]]:
     embedded_views = dashboard.get("embedded_views", dict())
-    widgets: dict[str, DashletConfig] = {}
-    for widget_id, widget in dashboard["widgets"].items():
-        if "size" not in widget:
+    dashlets: list[DashletConfig] = []
+    for dashlet in dashboard["dashlets"]:
+        if "size" not in dashlet:
             # dashlets with fixed sizes didn't save the size before
-            dashlet_type = dashlet_registry[widget["type"]]
-            widget["size"] = dashlet_type.relative_layout_constraints().initial_size.to_tuple()
+            dashlet_type = dashlet_registry[dashlet["type"]]
+            dashlet["size"] = dashlet_type.relative_layout_constraints().initial_size.to_tuple()
 
-        if widget["type"] == "view":
-            view_widget, embedded_view = _migrate_view_widget(cast(ViewDashletConfig, widget))
+        if dashlet["type"] == "view":
+            view_widget, embedded_view = _migrate_view_widget(cast(ViewDashletConfig, dashlet))
             embedded_views[view_widget["name"]] = embedded_view
-            widget = view_widget
+            dashlet = view_widget
 
-        widgets[widget_id] = widget
+        dashlets.append(dashlet)
 
-    return widgets, embedded_views
+    return dashlets, embedded_views
 
 
 def _migrate_view_widget(

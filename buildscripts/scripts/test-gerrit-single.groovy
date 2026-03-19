@@ -3,6 +3,7 @@
 /// file: test-gerrit-single.groovy
 
 // groovylint-disable MethodSize
+// groovylint-disable NestedBlockDepth
 void main() {
     check_job_parameters([
         "CIPARAM_NAME",
@@ -197,7 +198,9 @@ void main() {
             // The pod templates uses - instead.
             def container_safe_branch_name = safe_branch_name.replace(".", "-");
             def container_name = "ubuntu-2404-${container_safe_branch_name}-latest";
-            println("'execute_test' is using k8s container '${container_name}'");
+            def node_of_pod = cmd_output("""printenv | grep 'HOSTNAME_RUNNING_POD' | cut -f2 -d=""")
+            println("'execute_test' is using k8s container '${container_name}' on node '${node_of_pod}'");
+
             container(container_name) {
                 withCredentials(credentials) {
                     withEnv(env_var_list) {
@@ -220,7 +223,20 @@ void main() {
                                 ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
                                 disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER == "0",
                             ]) {
-                                cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
+                                if ("${params.CIPARAM_NAME}" == "${env.LIMIT_PARALLEL_CV_JOB_NAME}") {
+                                    println("This job is limited to 1 per node");
+                                    // there is only one resource with name "ping_bzl_lock_1_00x" per node
+                                    lock(
+                                        label: 'bzl_lock_pong_' + node_of_pod.split("-")[-1],
+                                        quantity: 1,
+                                        resource : null,
+                                    ) {
+                                        println("Lockable resource received, starting task now");
+                                        cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
+                                    }
+                                } else {
+                                    cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
+                                }
                             }
                             archiveArtifacts(
                                 artifacts: "${result_dir}/**",

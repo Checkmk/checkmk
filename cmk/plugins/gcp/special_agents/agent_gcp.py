@@ -26,6 +26,7 @@ from google.api_core.exceptions import (
     InternalServerError,
     InvalidArgument,
     PermissionDenied,
+    ResourceExhausted,
     Unauthenticated,
 )
 from google.auth.exceptions import MalformedError
@@ -495,9 +496,9 @@ def time_series(client: ClientProtocol, service: Service) -> Sequence[Result]:
         except PermissionDenied:
             raise
         except Exception as e:
-            # 429 is a rate limit error (429 Query aborted. Please reduce the query rate.).
-            # 500 is a transient GCP internal error. Both are non-fatal: skip the metric.
-            if "429" in str(e) or isinstance(e, InternalServerError):
+            # ResourceExhausted (429) is a rate limit error, InternalServerError (500) is a
+            # transient GCP error. Both are non-fatal: skip the metric and continue.
+            if isinstance(e, (ResourceExhausted, InternalServerError)):
                 exc_type, exception, traceback = sys.exc_info()
                 gcp_serializer(
                     [

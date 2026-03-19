@@ -92,26 +92,58 @@ void fetch_package(Map args) {
     }
 }
 
+void withAugmentedTimeout(Map args = [:], Closure body) {
+    // update the default map content with the user provided config content
+    // new key/value of provided map is automatically added to the defaultDict
+    def defaultDict = [
+        timeout: 0,
+        message: "Warning - ran into a timeout while executing tests",
+    ] << args;
+
+    if (!defaultDict.timeout || defaultDict.timeout <= 0) {
+        body();
+        return;
+    }
+
+    try {
+        timeout(time: defaultDict.timeout, unit: "MINUTES") {
+            println("Starting with ${defaultDict.timeout}min timeout");
+            body();
+            return;
+        }
+    } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException exc) {
+        if (exc.causes.any { it.toString().contains("Timeout") }) {
+            println("Timeout detected");
+            raise("${defaultDict.message}. Timeout is ${defaultDict.timeout}min");
+        }
+    }
+}
+
 void run_make_target(Map args) {
-    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-        // no inline bash comments are allowed in this sh call
-        sh("""
-            RESULT_PATH='${args.result_path}' \
-            EDITION='${args.edition}' \
-            DOCKER_TAG='${args.docker_tag}' \
-            VERSION='${args.version}' \
-            DISTRO='${args.distro}' \
-            BRANCH='${args.branch_name}' \
-            TEST_FILTER='${args.test_filter}' \
-            CI_NODE_NAME='${env.NODE_NAME}' \
-            CI_WORKSPACE='${env.WORKSPACE}' \
-            CI_JOB_NAME='${env.JOB_NAME}' \
-            CI_BUILD_NUMBER='${env.BUILD_NUMBER}' \
-            CI_BUILD_URL='${env.BUILD_URL}' \
-            OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
-            OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
-            make ${args.make_target}
-        """);
+    withAugmentedTimeout([
+        timeout: args.timeout,
+        message: args.message,
+    ]) {
+        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+            // no inline bash comments are allowed in this sh call
+            sh("""
+                RESULT_PATH='${args.result_path}' \
+                EDITION='${args.edition}' \
+                DOCKER_TAG='${args.docker_tag}' \
+                VERSION='${args.version}' \
+                DISTRO='${args.distro}' \
+                BRANCH='${args.branch_name}' \
+                TEST_FILTER='${args.test_filter}' \
+                CI_NODE_NAME='${env.NODE_NAME}' \
+                CI_WORKSPACE='${env.WORKSPACE}' \
+                CI_JOB_NAME='${env.JOB_NAME}' \
+                CI_BUILD_NUMBER='${env.BUILD_NUMBER}' \
+                CI_BUILD_URL='${env.BUILD_URL}' \
+                OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
+                OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
+                make ${args.make_target}
+            """);
+        }
     }
 }
 

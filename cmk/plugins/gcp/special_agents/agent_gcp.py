@@ -22,7 +22,12 @@ from types import TracebackType
 from typing import Any, assert_never, Protocol, Self
 
 import google.protobuf.duration_pb2 as duration
-from google.api_core.exceptions import InvalidArgument, PermissionDenied, Unauthenticated
+from google.api_core.exceptions import (
+    InternalServerError,
+    InvalidArgument,
+    PermissionDenied,
+    Unauthenticated,
+)
 from google.auth.exceptions import MalformedError
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3.types import Aggregation as GoogleAggregation
@@ -491,8 +496,8 @@ def time_series(client: ClientProtocol, service: Service) -> Sequence[Result]:
             raise
         except Exception as e:
             # 429 is a rate limit error (429 Query aborted. Please reduce the query rate.).
-            # We want to catch this and continue with the next metric
-            if "429" in str(e):
+            # 500 is a transient GCP internal error. Both are non-fatal: skip the metric.
+            if "429" in str(e) or isinstance(e, InternalServerError):
                 exc_type, exception, traceback = sys.exc_info()
                 gcp_serializer(
                     [

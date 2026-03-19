@@ -1665,7 +1665,7 @@ class PerftestPlot:
         baseline_name = {0: "weekly", 30: "monthly", 365: "yearly"}.get(
             baseline_offset, f"{baseline_offset}d"
         )
-        baseline_date = Datetime.today() - timedelta(days=baseline_offset)
+        baseline_date = date.today() - timedelta(days=baseline_offset)
 
         skipped_scenarios = [
             SkippedScenario(pattern="test_performance_piggyback", reason="CMK-27171"),

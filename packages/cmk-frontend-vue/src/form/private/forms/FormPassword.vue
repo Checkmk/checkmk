@@ -118,7 +118,7 @@ const passwordStoreOptions = computed(() => {
     <CmkDropdown
       v-else
       v-model:selected-option="passwordStoreChoice"
-      :options="{ type: 'fixed', suggestions: passwordStoreOptions }"
+      :options="{ type: 'filtered', suggestions: passwordStoreOptions }"
       :label="untranslated(props.spec.i18n.choose_password_from_store)"
       required
     />

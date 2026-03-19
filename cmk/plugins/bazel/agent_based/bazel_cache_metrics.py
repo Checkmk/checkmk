@@ -27,8 +27,36 @@ from cmk.agent_based.v2 import (
 Section = Mapping[str, int]
 
 
+_KEYS_TO_PARSE = {
+    "bazel_remote_azblob_cache_hits",
+    "bazel_remote_azblob_cache_misses",
+    "bazel_remote_disk_cache_evicted_bytes_total",
+    "bazel_remote_disk_cache_logical_bytes",
+    "bazel_remote_disk_cache_longest_item_idle_time_seconds",
+    "bazel_remote_disk_cache_overwritten_bytes_total",
+    "bazel_remote_disk_cache_size_bytes",
+    "bazel_remote_http_cache_hits",
+    "bazel_remote_http_cache_misses",
+    "bazel_remote_incoming_requests_total_kind_ac_method_get_status_hit",
+    "bazel_remote_incoming_requests_total_kind_ac_method_get_status_miss",
+    "bazel_remote_s3_cache_hits",
+    "bazel_remote_s3_cache_misses",
+    "process_cpu_seconds_total",
+    "process_max_fds",
+    "process_open_fds",
+    "process_resident_memory_bytes",
+    "process_start_time_seconds",
+    "process_virtual_memory_bytes",
+    "process_virtual_memory_max_bytes",
+}
+
+
 def parse_bazel_cache(string_table: StringTable) -> Section:
-    return {key: int(float(value)) for key, value in json.loads(string_table[0][0]).items()}
+    return {
+        key: int(float(value))
+        for key, value in json.loads(string_table[0][0]).items()
+        if key in _KEYS_TO_PARSE
+    }
 
 
 def discover_bazel_cache(section: Section) -> DiscoveryResult:

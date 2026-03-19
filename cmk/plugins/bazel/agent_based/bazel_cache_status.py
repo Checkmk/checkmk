@@ -32,10 +32,21 @@ class VersionSection:
     latest: _Updates | None
 
 
+_KEYS_TO_PARSE = {
+    "curr_size",
+    "max_size",
+    "num_files",
+    "num_goroutines",
+    "reserved_size",
+    "uncompressed_size",
+}
+
+
 def parse_bazel_cache_status(string_table: StringTable) -> CacheSection:
     return {
-        key: int(value) if not isinstance(value, str) else value
+        key: int(value)
         for key, value in json.loads(string_table[0][0]).items()
+        if key in _KEYS_TO_PARSE
     }
 
 

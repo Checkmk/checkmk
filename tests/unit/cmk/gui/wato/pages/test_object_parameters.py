@@ -16,16 +16,10 @@ from cmk.gui.wato.pages.object_parameters import ModeObjectParameters
 from cmk.gui.watolib.rulespecs import AllowAll, rulespec_registry
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason=(
-        "Crash report 0caf1f60-fd07-11f0-a9cc-4e6947623c97: _handle_auto_origin crashes with"
-        " KeyError when a discovered check's checkgroup has no registered rulespec"
-        " (e.g. third-party checks like infortend_chassis1)"
-    ),
-)
 def test_handle_auto_origin_no_keyerror_for_unknown_checkgroup() -> None:
+    # Regression test for crash report 0caf1f60-fd07-11f0-a9cc-4e6947623c97:
+    # _handle_auto_origin used to crash with KeyError when a discovered check's
+    # checkgroup had no registered rulespec (e.g. third-party checks like infortend_chassis1).
     checkgroup = "infortend_chassis1"  # third-party check, not in registry
     if RuleGroup.StaticChecks(checkgroup) in rulespec_registry:
         pytest.skip("checkgroup is now registered; test precondition no longer holds")
@@ -57,3 +51,5 @@ def test_handle_auto_origin_no_keyerror_for_unknown_checkgroup() -> None:
         service_result,
         lambda: None,  # render_labels
     )
+
+    mock_self._render_rule_reason.assert_called_once()

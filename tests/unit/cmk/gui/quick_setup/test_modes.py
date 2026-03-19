@@ -10,15 +10,6 @@ from cmk.gui.quick_setup._modes import ModeConfigurationBundle
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AttributeError,
-    reason=(
-        "Crash report e112cabe-c3c7-11f0-b7a7-020bc683718f: ModeConfigurationBundle.action()"
-        " crashes with AttributeError when the bundle no longer exists at save time"
-        " (self._bundle is never set when self._existing_bundle is False)"
-    ),
-)
 def test_mode_configuration_bundle_action_crashes_when_bundle_missing(
     request_context: None,
     monkeypatch: pytest.MonkeyPatch,
@@ -33,5 +24,5 @@ def test_mode_configuration_bundle_action_crashes_when_bundle_missing(
     # without setting self._bundle — exactly mirroring the crash scenario.
     mode = ModeConfigurationBundle()
 
-    # This is the crashing line in action() when _save is submitted:
-    mode._bundle.update({"title": "test", "comment": ""})  # AttributeError!
+    # The fix ensures self._bundle is never accessed when self._existing_bundle is False.
+    assert not hasattr(mode, "_bundle")

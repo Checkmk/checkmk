@@ -872,6 +872,9 @@ class ModeConfigurationBundle(WatoMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url(bundle_id=self._bundle_id))
 
+        if not self._existing_bundle:
+            return redirect(self.mode_url(bundle_id=self._bundle_id))
+
         if request.has_var("_clean_up"):
             references = identify_bundle_references(None, {self._bundle_id})[self._bundle_id]
             delete_config_bundle_objects(

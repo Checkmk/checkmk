@@ -71,6 +71,11 @@ class SectionPodmanContainerInspect(BaseModel, frozen=True):
     pod: str = Field(alias="Pod", description="The pod this container is part of, if any.")
     config: SectionPodmanContainerConfig = Field(alias="Config")
     network: PodmanContainerNetworkSettings = Field(alias="NetworkSettings")
+    socket_user: str | None = Field(
+        default=None,
+        alias="SocketUser",
+        description="The host user who owns the Podman socket the container originates from.",
+    )
 
 
 class SectionPodmanContainerStats(BaseModel, frozen=True):

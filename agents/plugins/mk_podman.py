@@ -127,6 +127,13 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
         return None
 
 
+def get_socket_owner(socket_path: Path) -> Union[str, None]:
+    try:
+        return socket_path.owner()
+    except (OSError, KeyError):
+        return None
+
+
 def find_user_sockets() -> Sequence[str]:
     run_user_dir = "/run/user"
 
@@ -419,12 +426,27 @@ def query_container_inspect_cli(
     container_id: str,
     run_as_user: Union[str, None] = None,
 ) -> Union[JSONSection, Error]:
+    socket_owner: str
+    if run_as_user is not None:
+        socket_owner = run_as_user
+    else:
+        try:
+            socket_owner = pwd.getpwuid(os.getuid()).pw_name
+        except KeyError:
+            socket_owner = "root"
+
+    def _transform(d: Any) -> Any:
+        result = d[0] if isinstance(d, list) and d else d
+        if isinstance(result, dict):
+            result["SocketUser"] = socket_owner
+        return result
+
     return _run_cli_json_query(
         ["inspect", container_id],
         "container_inspect",
         default=[],
         run_as_user=run_as_user,
-        transform=lambda d: d[0] if isinstance(d, list) and d else d,
+        transform=_transform,
     )
 
 
@@ -575,14 +597,16 @@ def query_container_inspect(
     session: Session,
     socket_path: str,
     container_id: str,
+    socket_owner: Union[str, None] = None,
 ) -> Union[JSONSection, Error]:
     endpoint = f"/{PODMAN_API_VERSION}/libpod/containers/{container_id}/json"
     try:
         response = session.get(build_url_callable(socket_path, endpoint))
         response.raise_for_status()
-        section: Union[JSONSection, Error] = JSONSection(
-            "container_inspect", json.dumps(response.json())
-        )
+        data = response.json()
+        if socket_owner is not None:
+            data["SocketUser"] = socket_owner
+        section: Union[JSONSection, Error] = JSONSection("container_inspect", json.dumps(data))
     except Exception as e:
         section = Error(build_url_human_readable(socket_path, endpoint), str(e))
     return section
@@ -672,6 +696,7 @@ def handle_containers_stats(
     piggyback_name_method: PiggybackNameMethod = PiggybackNameMethod.NODENAME_NAME,
     nodename: Union[str, None] = None,
 ) -> None:
+    socket_owner = get_socket_owner(Path(socket_path))
     for container in containers:
         container_id = str(container.get("Id", ""))
         target_host = get_piggyback_host(
@@ -685,7 +710,7 @@ def handle_containers_stats(
 
         write_piggyback_section(
             target_host=target_host,
-            section=query_container_inspect(session, socket_path, container_id),
+            section=query_container_inspect(session, socket_path, container_id, socket_owner),
         )
 
         if stats := container_stats.get(container_id):

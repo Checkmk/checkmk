@@ -40,6 +40,7 @@ SECTION_RUNNING = SectionPodmanContainerInspect(
     ),
     RestartCount=5,
     Pod="",
+    SocketUser="hostuser",
 )
 
 SECTION_PAUSED = SectionPodmanContainerInspect(
@@ -69,6 +70,7 @@ SECTION_PAUSED = SectionPodmanContainerInspect(
     ),
     RestartCount=5,
     Pod="Pod1",
+    SocketUser="hostuser",
 )
 
 SECTION_CONTAINER_STATS = SectionPodmanContainerStats(

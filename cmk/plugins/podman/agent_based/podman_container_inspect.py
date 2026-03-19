@@ -27,13 +27,13 @@ def host_label_function(section: SectionPodmanContainerInspect) -> HostLabelGene
         cmk/podman/object:container:
             Fixed - shows that the object type is container.
         cmk/podman/user:{user}:
-            The user who owns the podman container.
+            The host user who owns the Podman socket the container originates from.
         cmk/podman/pod:{pod}:
             The pod the container is running in (if applicable).
     """
     yield HostLabel("cmk/podman/object", "container")
-    if section.config.user:
-        yield HostLabel("cmk/podman/user", section.config.user)
+    if section.socket_user:
+        yield HostLabel("cmk/podman/user", section.socket_user)
     if section.pod:
         yield HostLabel("cmk/podman/pod", section.pod)
 

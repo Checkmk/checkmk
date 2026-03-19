@@ -614,6 +614,17 @@ export function reset_sidebar_scheduler() {
   execute_sidebar_scheduler()
 }
 
+export function pause_sidebar_scheduler() {
+  if (g_sidebar_scheduler_timer !== null) {
+    clearTimeout(g_sidebar_scheduler_timer)
+    g_sidebar_scheduler_timer = null
+  }
+}
+
+export function restart_sidebar_scheduler() {
+  reset_sidebar_scheduler()
+}
+
 export function execute_sidebar_scheduler() {
   g_seconds_to_update =
     g_seconds_to_update !== null ? g_seconds_to_update - 1 : sidebar_update_interval
@@ -1168,14 +1179,16 @@ interface AjaxSidebarGetPendingChanges {
   number_of_pending_changes: number
 }
 
+let g_pending_changes_timeout: ReturnType<typeof setTimeout> | null = null
+
 function handle_pending_changes(_data: any, response_text: string) {
   try {
     const response: CMKAjaxReponse<AjaxSidebarGetPendingChanges> = JSON.parse(response_text)
     if (response.result_code != 0) {
-      setTimeout(update_pending_changes, 30000)
+      g_pending_changes_timeout = setTimeout(update_pending_changes, 30000)
       return
     }
-    setTimeout(update_pending_changes, 3000)
+    g_pending_changes_timeout = setTimeout(update_pending_changes, 3000)
     const l = document.getElementById('changes_label')
     if (l) {
       if (response.result.number_of_pending_changes === 0) {
@@ -1189,7 +1202,7 @@ function handle_pending_changes(_data: any, response_text: string) {
       l.style.display = 'inline'
     }
   } catch {
-    setTimeout(update_pending_changes, 30000)
+    g_pending_changes_timeout = setTimeout(update_pending_changes, 30000)
   }
 }
 
@@ -1197,6 +1210,18 @@ function update_pending_changes() {
   call_ajax('ajax_sidebar_get_number_of_pending_changes.py', {
     response_handler: handle_pending_changes
   })
+}
+
+export function pause_pending_changes_update() {
+  if (g_pending_changes_timeout !== null) {
+    clearTimeout(g_pending_changes_timeout)
+    g_pending_changes_timeout = null
+  }
+}
+
+export function restart_pending_changes_update() {
+  pause_pending_changes_update()
+  update_pending_changes()
 }
 
 interface AjaxSidebarGetUnackIncompWerks {

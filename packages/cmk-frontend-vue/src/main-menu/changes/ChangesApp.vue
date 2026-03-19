@@ -130,6 +130,8 @@ async function pollActivationStatusUntilComplete(activationId: string) {
       if (sitesWithWarningsOrErrors.value) {
         showActivationResultWarningsErrors.value = true
       }
+      cmk.sidebar.restart_pending_changes_update()
+      cmk.sidebar.restart_sidebar_scheduler()
       activateChangesInProgress.value = false
     }
   } catch (error) {
@@ -138,12 +140,14 @@ async function pollActivationStatusUntilComplete(activationId: string) {
       const statusCode = cmkError.getStatusCode()
 
       if (
-        statusCode === 503 &&
+        (statusCode === 503 || statusCode === 502) &&
         activationPollStartTime.value &&
         Date.now() - activationPollStartTime.value <= siteRestartWaitTime
       ) {
         if (!restartInfoShown.value) {
           restartInfoShown.value = true
+          cmk.sidebar.pause_pending_changes_update()
+          cmk.sidebar.pause_sidebar_scheduler()
         }
 
         setTimeout(() => {
@@ -157,6 +161,8 @@ async function pollActivationStatusUntilComplete(activationId: string) {
     activateChangesInProgress.value = false
     activationPollStartTime.value = null
     restartInfoShown.value = false
+    cmk.sidebar.restart_pending_changes_update()
+    cmk.sidebar.restart_sidebar_scheduler()
 
     throw new Error(`Polling of activation result failed: ${error}`)
   }

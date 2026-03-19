@@ -7,7 +7,7 @@
 
 
 import argparse
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -19,6 +19,8 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     AzureResource,
     AzureResourceGroup,
     AzureSubscription,
+    main_async,
+    Selector,
     TagsImportPatternOption,
     UniqueHostnamesConfig,
 )
@@ -484,3 +486,76 @@ async def test_get_subscriptions_wrong_subscription(mock_api_client: AsyncMock) 
     ):
         with pytest.raises(ApiError, match="Subscription non_existent_subscription_id not found."):
             await _get_subscriptions(args)
+
+
+def _make_test_connection_args(**kwargs: object) -> Args:
+    return Args(
+        debug=True,
+        proxy="",
+        tenant="tenant",
+        tenant_name=None,
+        client="",
+        secret=Secret(""),
+        authority="global",
+        connection_test=True,
+        explicit_config=[],
+        require_tag=[],
+        require_tag_value=[],
+        **kwargs,
+    )
+
+
+def _patch_api_client(
+    subscriptions_response: Sequence[Mapping[str, str]] | None = None,
+) -> tuple[AsyncMock, MagicMock]:
+    mock_client = AsyncMock()
+    if subscriptions_response is not None:
+        mock_client.request_async.return_value = subscriptions_response
+    mock_context_manager = MagicMock()
+    mock_context_manager.__aenter__.return_value = mock_client
+    return mock_client, mock_context_manager
+
+
+_SUBSCRIPTIONS_LIST = [
+    {"subscriptionId": "subscription_id_12345678"},
+    {"subscriptionId": "subscription_id_987654321"},
+]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "subscriptions, expected_result",
+    [
+        pytest.param(["non_existent_subscription_id"], 2, id="invalid_subscription_returns_2"),
+        pytest.param(["subscription_id_12345678"], 0, id="valid_subscription_returns_0"),
+    ],
+)
+async def test_connection_test_subscription_validation(
+    subscriptions: Sequence[str], expected_result: int
+) -> None:
+    args = _make_test_connection_args(subscriptions=subscriptions)
+    _, mock_context_manager = _patch_api_client(_SUBSCRIPTIONS_LIST)
+
+    with patch(
+        "cmk.plugins.azure_v2.special_agent.agent_azure_v2.BaseAsyncApiClient",
+        return_value=mock_context_manager,
+    ):
+        result = await main_async(args, Selector(args))
+
+    assert result == expected_result
+
+
+@pytest.mark.asyncio
+async def test_connection_test_no_subscriptions_arg_skips_check() -> None:
+    # no subscriptions passed, so the api won't be called
+    args = _make_test_connection_args(subscriptions=[])
+    mock_client, mock_context_manager = _patch_api_client()
+
+    with patch(
+        "cmk.plugins.azure_v2.special_agent.agent_azure_v2.BaseAsyncApiClient",
+        return_value=mock_context_manager,
+    ):
+        result = await main_async(args, Selector(args))
+
+    assert result == 0
+    mock_client.request_async.assert_not_called()

@@ -2502,9 +2502,22 @@ async def _test_connection(args: argparse.Namespace) -> int:
             client=args.client,
             # revealing later would be better, but I'm keeping this simple for now
             secret=resolve_secret_option(args, SECRET_OPTION).reveal(),
-        ):
-            # we just need to authenticate
-            ...
+        ) as api_client:
+            if args.subscriptions:
+                response = await api_client.request_async(
+                    method="GET",
+                    full_uri="https://management.azure.com/subscriptions",
+                    params={"api-version": "2022-12-01"},
+                    key="value",
+                )
+                available = {item["subscriptionId"] for item in response}
+                for sub_id in args.subscriptions:
+                    if sub_id not in available:
+                        sys.stderr.write(
+                            f"Subscription {sub_id!r} not found in Azure. "
+                            "Check the subscription ID and client permissions.\n"
+                        )
+                        return 2
     except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Connection failed with: {exc}\n"
         sys.stderr.write(error_msg)

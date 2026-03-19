@@ -438,17 +438,10 @@ def configuration_advanced() -> Mapping[str, DictElement]:
             parameter_form=CascadingSingleChoice(
                 title=Title("Filter Azure tags imported as host/service labels"),
                 help_text=Help(
-                    "Enable this option to import Azure tags as host/service labels. "
-                    "The imported tags are added as host labels for resource groups and "
-                    "VMs monitored as hosts and as service labels for resources monitored "
-                    "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"
-                    "Additionally, each host representing a resource group is given the "
-                    "host label 'cmk/azure/resource_group:{rg_name}', and VMs monitored as "
-                    "hosts are given the host label 'cmk/azure/vm:instance', which is done "
-                    "independent of this option.<br>"
-                    "You can further restrict the imported tags by specifying a pattern "
-                    "which Checkmk searches for in the key of the Azure tag, or you can "
-                    "disable the import of Azure tags altogether."
+                    "By default, all Azure tags for subscriptions, resource groups, and resources "
+                    "are imported as host labels with the format: cmk/azure/tag/{key}:{value}.<br>"
+                    "Use this option to filter tags to be imported by entering a pattern to match against "
+                    "the Azure tag keys. You can also disable the importing of tags altogether."
                 ),
                 elements=[
                     CascadingSingleChoiceElement(

@@ -47,7 +47,8 @@ const containerStyle = computed(() => ({
   left: `${props.position?.left || 0}px`,
   width: `${props.dimensions?.width || 100}px`,
   height: `${props.dimensions?.height || 100}px`,
-  zIndex: props.zIndex
+  zIndex: props.zIndex,
+  overflow: props.isEditing ? 'hidden' : undefined
 }))
 
 const anchorBackgroundColorClass = (pos: string) =>

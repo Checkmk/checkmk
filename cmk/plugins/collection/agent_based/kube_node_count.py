@@ -151,7 +151,7 @@ agent_section_kube_node_count_v1 = AgentSection(
 )
 
 check_default_parameters = KubeNodeCountVSResult(
-    control_plane_roles=["master", "control_plane"],
+    control_plane_roles=["master", "control-plane"],
     worker_levels_lower="no_levels",
     worker_levels_upper="no_levels",
     control_plane_levels_lower="no_levels",

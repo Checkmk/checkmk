@@ -49,7 +49,7 @@ def __control_plane_roles() -> list[DictionaryEntry]:
             ListOfStrings(
                 title=_("Specify roles of a control plane node"),
                 valuespec=TextInput(size=80),
-                default_value=["master", "control_plane"],
+                default_value=["master", "control-plane"],
                 help=_(
                     "If a node has any of these roles, then it is considered a control plane "
                     "node by Checkmk. Otherwise, it is considered a worker node."

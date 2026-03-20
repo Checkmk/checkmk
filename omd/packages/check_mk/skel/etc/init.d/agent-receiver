@@ -69,7 +69,7 @@ case "$1" in
         # Add site CA to allow internal site mTLS authentication (e.g., for activate-config endpoint)
         # The site certificate is signed by this CA, so we need to trust it
         if [ -f "${OMD_ROOT}/etc/ssl/ca.pem" ]; then
-            cat "${OMD_ROOT}/etc/ssl/ca.pem" >>"${CERT_STORE}"
+            openssl x509 -in "${OMD_ROOT}/etc/ssl/ca.pem" >>"${CERT_STORE}"
         else
             exit_failure "CA file ${OMD_ROOT}/etc/ssl/ca.pem not found, cannot start agent-receiver"
         fi

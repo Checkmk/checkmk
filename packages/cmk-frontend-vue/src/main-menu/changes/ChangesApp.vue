@@ -208,6 +208,7 @@ async function activateAllChanges() {
       if ([401, 403, 409, 422, 423, 503].includes(statusCode)) {
         activationError.value = getActivationErrorFromFetchError(cmkError)
         activateChangesInProgress.value = false
+        await fetchPendingChangesAjax()
         return
       }
     }

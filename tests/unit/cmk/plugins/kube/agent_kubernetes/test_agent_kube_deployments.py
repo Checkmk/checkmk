@@ -6,6 +6,8 @@
 
 from typing import cast
 
+import pytest
+
 from tests.unit.cmk.plugins.kube.data.kube_1_33 import simple_deployment_default_fg
 
 from cmk.plugins.kube.schemata import api
@@ -33,23 +35,36 @@ class TestAPIDeployments:
         assert deployment.status.number_terminating is None
         assert deployment.status.replicas.ready == 1
 
-    def test_parse_metadata(self) -> None:
-        metadata_obj: JSONMetaData = {
-            "name": "cluster-collector",
-            "namespace": "checkmk-monitoring",
-            "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
-            "creationTimestamp": "2022-03-25T13:24:42Z",
-            "labels": {"app": "cluster-collector"},
-            "annotations": {
-                "deployment.kubernetes.io/revision": "2",
-                "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
+    @pytest.mark.parametrize(
+        "json_metadata",
+        [
+            {
+                "name": "cluster-collector",
+                "namespace": "checkmk-monitoring",
+                "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
+                "creationTimestamp": "2022-03-25T13:24:42Z",
+                "labels": {"app": "cluster-collector"},
+                "annotations": {
+                    "deployment.kubernetes.io/revision": "2",
+                    "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
+                },
             },
-        }
-
-        metadata = _metadata_from_json(metadata_obj)
+            {
+                "name": "cluster-collector",
+                "namespace": "checkmk-monitoring",
+                "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
+                "labels": {"app": "cluster-collector"},
+                "annotations": {
+                    "deployment.kubernetes.io/revision": "2",
+                    "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
+                },
+            },
+        ],
+    )
+    def test_parse_metadata(self, json_metadata: JSONMetaData) -> None:
+        metadata = _metadata_from_json(json_metadata)
         assert metadata.name == "cluster-collector"
         assert metadata.namespace == "checkmk-monitoring"
-        assert isinstance(metadata.creation_timestamp, float)
         assert metadata.labels == {
             "app": api.Label(name=api.LabelName("app"), value=api.LabelValue("cluster-collector"))
         }

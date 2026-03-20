@@ -25,7 +25,7 @@ import datetime
 import enum
 import math
 from collections.abc import Mapping, Sequence
-from typing import Literal, NewType
+from typing import Literal, NewType, overload
 
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from pydantic.fields import Field
@@ -209,7 +209,17 @@ def _parse_quantity(value: str) -> float:
     return float(value)
 
 
-def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> Timestamp:
+@overload
+def convert_to_timestamp(kube_date_time: None) -> None: ...
+
+
+@overload
+def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> Timestamp: ...
+
+
+def convert_to_timestamp(kube_date_time: str | datetime.datetime | None) -> Timestamp | None:
+    if kube_date_time is None:
+        return None
     if isinstance(kube_date_time, str):
         date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
             tzinfo=datetime.UTC
@@ -280,7 +290,7 @@ class MetaDataNoNamespace(ClientModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
-    creation_timestamp: Timestamp = Field(..., alias="creationTimestamp")
+    creation_timestamp: Timestamp | None = Field(None, alias="creationTimestamp")
     labels: Labels = {}
     annotations: Annotations = {}
 

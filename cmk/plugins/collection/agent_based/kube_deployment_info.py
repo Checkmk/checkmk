@@ -52,7 +52,7 @@ def check_kube_deployment_info(now: float, section: DeploymentInfo) -> CheckResu
         {
             "name": section.name,
             "namespace": section.namespace,
-            "age": now - section.creation_timestamp,
+            "age": None if section.creation_timestamp is None else now - section.creation_timestamp,
         }
     )
 

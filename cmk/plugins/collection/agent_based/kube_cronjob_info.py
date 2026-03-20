@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 
-import typing
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -99,7 +98,7 @@ def check_kube_cronjob_info(now: float, section: CronJobInfo) -> CheckResult:
     yield from check_info(
         {
             "name": section.name,
-            "age": now - typing.cast(float, section.creation_timestamp),
+            "age": None if section.creation_timestamp is None else now - section.creation_timestamp,
             "schedule": section.schedule,
             "concurrency_policy": section.concurrency_policy,
             "failed_jobs_history_limit": section.failed_jobs_history_limit,

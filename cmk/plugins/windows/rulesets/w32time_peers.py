@@ -50,15 +50,12 @@ def _make_form(summary_form: bool) -> Callable[[], Dictionary]:
                         prefill_levels_type=DefaultValue(LevelsType.NONE),
                         prefill_fixed_levels=DefaultValue((0, 0)),
                         help_text=Help(
-                            "Normally, the Windows Time Service (being an NTP client) follows the NTP "
-                            "convention of maintaining a 'reachability' register, which remembers the "
-                            "result (success or failure) of the last (up to) 8 transactions with the "
-                            "peer. This setting looks into the reachability register and checks for "
-                            "consecutive, recent failures, alerting after too many consecutive "
-                            "failures have occurred. "
-                            "If reachability is 0, the 'resolve attempts' count reported by the "
-                            "Windows Time Service is used instead to determine how many attempts "
-                            "have been made."
+                            "This checks consecutive sync failures within the last 8 attempts by "
+                            "monitoring the 8-bit 'Reachability' register within the Windows Time "
+                            "Service. It triggers a Warning or Critical alert when the <b>number of "
+                            "consecutive failed attempts</b> exceeds the defined threshold. For "
+                            "example, setting a threshold of 4 means that Checkmk will alert if the "
+                            "<b>last</b> 4 of 8 attempts have consecutively failed."
                         ),
                     ),
                 ),
@@ -71,14 +68,12 @@ def _make_form(summary_form: bool) -> Callable[[], Dictionary]:
                         prefill_levels_type=DefaultValue(LevelsType.NONE),
                         prefill_fixed_levels=DefaultValue((0, 0)),
                         help_text=Help(
-                            "Normally, the Windows Time service (being an NTP client) follows the NTP "
-                            "convention of maintaining a 'reachability' register, which remembers the "
-                            "result (success or failure) of the last (up to) 8 transactions with the "
-                            "peer. This setting looks into the reachability register and counts the "
-                            "total number of failed attempts, alerting when there have been too many. "
-                            "If reachability is 0, the 'resolve attempts' count reported by the "
-                            "Windows Time service is used instead to determine how many attempts "
-                            "have been made."
+                            "This checks consecutive sync failures within the last 8 attempts by "
+                            "monitoring the 8-bit 'Reachability' register within the Windows Time "
+                            "Service. It triggers a Warning or Critical alert when the <b>number of "
+                            "total failed attempts</b> exceeds the defined threshold. For "
+                            "example, setting a threshold of 4 means that Checkmk will alert if "
+                            "<b>any</b> 4 of the last 8 attempts have failed."
                         ),
                     ),
                 ),

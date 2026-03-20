@@ -168,7 +168,12 @@ WHERE object_name NOT LIKE '%Deprecated%'
             CAST(blocking_session_id AS varchar) AS blocking_session_id
     FROM sys.dm_os_waiting_tasks";
 
-    pub const DATABASE_NAMES: &str = "SELECT name FROM sys.databases";
+    pub const DATABASE_NAMES: &str = r#"SELECT d.name
+FROM sys.databases AS d
+WHERE
+    sys.fn_hadr_is_primary_replica(d.name) IS NULL
+    OR sys.fn_hadr_is_primary_replica(d.name) = 1
+    OR COALESCE(CAST(DATABASEPROPERTYEX(d.name, 'Updateability') AS nvarchar(60)), '') = 'READ_ONLY';"#;
 
     /// Executes `sp_spaceused` for each database parsing output AS resuult set
     /// Requires NVARCHAR support

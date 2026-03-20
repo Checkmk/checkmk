@@ -11,8 +11,6 @@ from dataclasses import dataclass
 from enum import Enum, unique
 from typing import override
 
-import livestatus
-
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.gui import sites
@@ -40,6 +38,7 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri
+from cmk.livestatus_client.expressions import LqSafe
 from cmk.shared_typing.unified_search import ProviderName, UnifiedSearchResultItem
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -864,7 +863,7 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
             filter_prefix = "%s_groups >= " % self._group_type
 
         for entry in used_filters.get(self.name, []):
-            filter_lines.append(f"Filter: {filter_prefix}{entry}")
+            filter_lines.append(f"Filter: {filter_prefix}{LqSafe.sanitize(entry)}")
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
@@ -947,7 +946,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     ) -> LivestatusFilterHeaders:
         filter_lines = []
         for entry in used_filters.get(self.name, []):
-            filter_lines.append("Filter: service_description ~~ %s" % entry)
+            filter_lines.append("Filter: service_description ~~ %s" % LqSafe.sanitize(entry))
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
@@ -1011,7 +1010,7 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
             return ""
 
         filter_lines = [
-            f"Filter: state = {self._get_service_state_from_filter(entry)}"
+            f"Filter: state = {LqSafe.sanitize(self._get_service_state_from_filter(entry))}"
             for entry in raw_used_filters
         ]
 
@@ -1075,7 +1074,9 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
     ) -> LivestatusFilterHeaders:
         filter_lines = []
         for entry in used_filters.get(self.name, []):
-            filter_lines.append(f"Filter: {self._get_real_fieldname(livestatus_table)} ~~ {entry}")
+            filter_lines.append(
+                f"Filter: {self._get_real_fieldname(livestatus_table)} ~~ {LqSafe.sanitize(entry)}"
+            )
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
@@ -1193,12 +1194,12 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
             if ":" not in entry:
                 # Be compatible to pre 1.6 filtering for some time (no
                 # tag-group:tag-value, but tag-value only)
-                filter_lines.append("Filter: host_tag_values >= %s" % livestatus.lqencode(entry))
+                filter_lines.append("Filter: host_tag_values >= %s" % LqSafe.sanitize(entry))
                 continue
 
             tag_key, tag_value = entry.split(":", 1)
             filter_lines.append(
-                f"Filter: tags = {livestatus.lqencode(tag_key)} {livestatus.lqencode(tag_value)}"
+                f"Filter: tags = {LqSafe.sanitize(tag_key)} {LqSafe.sanitize(tag_value)}"
             )
 
         if len(filter_lines) > 1:

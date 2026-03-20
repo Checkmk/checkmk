@@ -36,6 +36,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
+from enum import StrEnum
 from typing import Any, NamedTuple
 
 import requests
@@ -110,6 +111,12 @@ class Relay(NamedTuple):
     site_id: str
     num_fetchers: int | None
     log_level: str | None
+
+
+class APIVersion(StrEnum):
+    V1 = "1.0"
+    INTERNAL = "internal"
+    UNSTABLE = "unstable"
 
 
 class CMKOpenApiSession(requests.Session):

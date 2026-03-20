@@ -91,6 +91,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
 	test-integration-agent-plugin test-integration-agent-plugin-docker \
+	test-relay-integration test-relay-integration-docker \
 	test-format \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
@@ -124,6 +125,8 @@ help:
 	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-integration-agent-plugin       - Run agent plugin integration tests"
 	@echo "test-integration-agent-plugin-docker - Run agent plugin integration tests in docker"
+	@echo "test-relay-integration              - Run relay integration tests"
+	@echo "test-relay-integration-docker       - Run relay integration tests in docker"
 	@echo "test-mypy-community                 - Run mypy with community config"
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-unit                           - Run unit tests"
@@ -201,6 +204,14 @@ test-integration-agent-plugin:
 	$(PYTEST) -x $(realpath agent_plugin_integration) \
 	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600 \
 	$(MK_ORACLE_BINARY_PATH)
+
+test-relay-integration-docker:
+	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json:ro -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
+	    ../scripts/run-in-docker.sh make --quiet test-relay-integration
+
+test-relay-integration:
+	$(PYTEST) -x $(realpath relay_integration) \
+	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
 
 test-lint-bazel:
 	../scripts/run-buildifier --lint=warn --mode=check

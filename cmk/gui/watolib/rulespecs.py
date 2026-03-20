@@ -1358,20 +1358,20 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
 
         if is_active:
             value = self._get_timeperiod_value(value)
-            self._get_timeperiod_valuespec().render_input(varprefix, value)
             html.buttonlink(
                 toggle_url,
                 _("Disable time-specific parameters"),
                 class_=["toggle_timespecific_parameter"],
             )
+            self._get_timeperiod_valuespec().render_input(varprefix, value)
         else:
             value = self._get_timeless_value(value)
-            self._enclosed_valuespec.render_input(varprefix, value)
             html.buttonlink(
                 toggle_url,
                 _("Enable time-specific parameters"),
                 class_=["toggle_timespecific_parameter"],
             )
+            self._enclosed_valuespec.render_input(varprefix, value)
 
     def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)

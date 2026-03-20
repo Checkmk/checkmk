@@ -53,7 +53,6 @@ ENV \
 # lsb-release is required to use installation scripts
 # libenchant-2-dev is required to build the software architecture due to sphinxcontrib.spelling
 # make is required for installations
-# mbuffer is required for faster decompression with lz4
 # sudo is required to install packer
 # unzip is required to install aws-cli
 # wget is required to download artifacts
@@ -68,7 +67,6 @@ RUN apt-get update && \
         lsb-release \
         libenchant-2-dev \
         make \
-        mbuffer \
         sudo \
         unzip \
         wget && \

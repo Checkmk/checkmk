@@ -6,6 +6,7 @@ load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
@@ -151,4 +152,12 @@ py_binary(
     main = "cmk/werks/utils/__main__.py",
     visibility = ["//visibility:public"],
     deps = ["//packages/cmk-werks"],
+)
+
+py_requirements_test(
+    name = "requirements-test",
+    libs = [
+        ":cmk-werks",
+    ],
+    requirements_in = "requirements.in",
 )

@@ -3,6 +3,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files(["requirements.in"])
 
@@ -520,4 +521,39 @@ sh_library(
         "//cmk/gui:wsgi/.f12",
         "//cmk/plugins:shell_scripts",
     ],
+)
+
+py_requirements_test(
+    name = "requirements-test",
+    known_undeclared = [
+        "tinkerforge",  # cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py
+        "ibm-db",  # cmk/plugins/sql/active_check/check_sql.py
+        "ibm-db-dbi",  # cmk/plugins/sql/active_check/check_sql.py
+        "sqlanydb",  # cmk/plugins/sql/active_check/check_sql.py
+        "rados",  # cmk/plugins/ceph/agents/mk_ceph.py
+        "typeshed",  # shipped with the standard library part of typeshed, which is bundled with mypy
+        "rrdtool",  # is built as part of the project
+        "pytest",  # clarify with CMK-32954
+    ],
+    known_unused = [
+        # were declared in original requirements tests with or without reason
+        "setuptools",  # pinned transitive dependency
+        "setuptools-scm",
+        "snmpsim",
+        # clarify with CMK-32954
+        "pyghmi",
+        "pysnmp",
+        "tenacity",
+        "pysmi",
+        "vcrpy",
+        "opsgenie-sdk",
+    ],
+    libs = [
+        "//cmk/editions:community",
+        "//cmk/editions/nonfree:cloud",
+        "//cmk/editions/nonfree:pro",
+        "//cmk/editions/nonfree:ultimate",
+        "//cmk/editions/nonfree:ultimatemt",
+    ],
+    requirements_in = "requirements.in",
 )

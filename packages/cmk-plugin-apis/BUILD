@@ -4,6 +4,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files(
     [
@@ -451,4 +452,22 @@ sh_library(
     srcs = [
         ".f12",
     ],
+)
+
+py_requirements_test(
+    name = "requirements-test",
+    libs = [
+        ":agent_based",
+        ":bakery",
+        ":discover_plugins",
+        ":graphing",
+        ":rulesets",
+        ":password_store",
+        ":server_side_calls",
+        ":server_side_programs",
+        ":dcd_connectors",
+        ":dcd_connector_parameters",
+        ":inventory_ui",
+    ],
+    requirements_in = "requirements.in",
 )

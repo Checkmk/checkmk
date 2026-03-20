@@ -4,6 +4,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
@@ -102,4 +103,10 @@ sh_library(
         ".f12",
         "run",
     ],
+)
+
+py_requirements_test(
+    name = "requirements-test",
+    libs = [":cmk-crypto"],
+    requirements_in = "requirements.in",
 )

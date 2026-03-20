@@ -5,6 +5,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
@@ -134,4 +135,12 @@ sh_library(
     srcs = [
         ".f12",
     ],
+)
+
+py_requirements_test(
+    name = "requirements-test",
+    libs = [
+        ":cmk-notification-plugins",
+    ],
+    requirements_in = "requirements.in",
 )

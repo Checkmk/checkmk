@@ -15,7 +15,12 @@ defineEmits<CloseButtonEmits>()
 
 <template>
   <div class="db-close-button">
-    <CmkIconButton name="close" size="xsmall" @click="$emit('close')" />
+    <CmkIconButton
+      name="close"
+      size="xsmall"
+      data-testid="icon-x-close-button"
+      @click="$emit('close')"
+    />
   </div>
 </template>
 

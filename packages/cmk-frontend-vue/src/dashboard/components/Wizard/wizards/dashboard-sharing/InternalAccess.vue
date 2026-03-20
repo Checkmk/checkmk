@@ -32,6 +32,7 @@ defineProps<InternalAccessProps>()
     <CmkCode
       :title="_t('Dashboard URL')"
       :code_txt="dashboardUrl"
+      copy-button-test-id="copy-internal-url"
       class="db-internal-access__url"
     />
   </CmkCatalogPanel>

@@ -18,14 +18,19 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import ContentSpacer from './Wizard/components/ContentSpacer.vue'
 
+interface PopupButtonProps {
+  title: TranslatedString
+  variant: ButtonVariants['variant']
+  testId?: string
+  onclick: () => void
+}
+
 export interface PopupDialogProps {
   open: boolean
   title?: TranslatedString | undefined
   message: TranslatedString | TranslatedString[]
   variant?: 'info' | 'warning' | 'danger' | 'success' | undefined
-  buttons?:
-    | { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
-    | undefined
+  buttons?: PopupButtonProps[] | undefined
   dismissal_button?: { title: TranslatedString; key: string } | undefined
 }
 
@@ -99,7 +104,11 @@ const slots = useSlots()
 
         <div class="db-popup-dialog__button-bar">
           <div v-for="(button, index) in buttons" :key="index">
-            <CmkButton :variant="button.variant" @click="button.onclick">
+            <CmkButton
+              :variant="button.variant"
+              :data-testId="button.testId"
+              @click="button.onclick"
+            >
               {{ button.title }}
             </CmkButton>
             <CmkSpace />

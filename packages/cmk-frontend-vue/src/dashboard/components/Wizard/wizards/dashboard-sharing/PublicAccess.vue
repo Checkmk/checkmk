@@ -46,7 +46,14 @@ const dialogData: Reactive<PopupDialogProps> = reactive({
   title: _t('Stop sharing public link?'),
   message: _t('This will disable the link and revoke access for all viewers.'),
   variant: 'warning',
-  buttons: [{ title: _t('Enable access'), variant: 'warning', onclick: () => {} }]
+  buttons: [
+    {
+      title: _t('Enable access'),
+      testId: 'enable-access-popup-action',
+      variant: 'warning',
+      onclick: () => {}
+    }
+  ]
 })
 
 const handler = usePublicAccess(
@@ -91,6 +98,7 @@ const handleEnableAccess = async () => {
     {
       title: _t('Enable access'),
       variant: 'warning',
+      testId: 'enable-access-popup-action',
       onclick: async () => {
         dialogData.open = false
         activeAction.value = 'update'
@@ -115,6 +123,7 @@ const handleDisableAccess = async () => {
     {
       title: _t('Disable access'),
       variant: 'warning',
+      testId: 'disable-access-popup-action',
       onclick: async () => {
         dialogData.open = false
         activeAction.value = 'update'

@@ -103,7 +103,7 @@ def test__check_levels_zero_control_plane_nodes_with_levels() -> None:
             ReadyCount(ready=0, not_ready=0, total=0),
             NodeType.control_plane,
             KubeNodeCountVSResult(
-                control_plane_roles=["master", "control_plane"],
+                control_plane_roles=["master", "control-plane"],
                 worker_levels_lower="no_levels",
                 worker_levels_upper="no_levels",
                 control_plane_levels_lower=("levels", (1, 1)),
@@ -117,19 +117,35 @@ def test__check_levels_zero_control_plane_nodes_with_levels() -> None:
 @pytest.mark.parametrize("node_count", [0, 10, 20])
 def test_node_count_returns_number_of_nodes_ready_not_ready(node_count: int) -> None:
     section = NodeCount(nodes=CountableNodeFactory.batch(size=node_count))
-    worker, control_plane = ReadyCount.node_count(["master", "control_plane"], section)
+    worker, control_plane = ReadyCount.node_count(["master", "control-plane"], section)
     assert worker.total + control_plane.total == node_count
 
 
-def test_node_control_plane_count() -> None:
-    section = NodeCount(nodes=CountableNodeFactory.batch(size=1, roles=["master"], ready=True))
-    worker, control_plane = ReadyCount.node_count(["master", "control_plane"], section)
+@pytest.mark.parametrize(
+    "roles",
+    [
+        ["control-plane"],
+        ["master"],
+        ["master", "control-plane", "etcd"],
+    ],
+)
+def test_node_control_plane_count(roles: list[str]) -> None:
+    section = NodeCount(nodes=CountableNodeFactory.batch(size=1, roles=roles, ready=True))
+    worker, control_plane = ReadyCount.node_count(["master", "control-plane"], section)
     assert worker.total == 0
     assert control_plane.total == 1
     assert control_plane.ready == 1
 
 
+@pytest.mark.parametrize("roles", [["worker"], ["unknown-role"]])
+def test_node_worker_classification(roles: list[str]) -> None:
+    section = NodeCount(nodes=CountableNodeFactory.batch(size=1, roles=roles, ready=True))
+    worker, control_plane = ReadyCount.node_count(["master", "control-plane"], section)
+    assert worker.total == 1
+    assert control_plane.total == 0
+
+
 def test_node_control_plane_not_ready_count() -> None:
     section = NodeCount(nodes=CountableNodeFactory.batch(size=1, roles=["master"], ready=False))
-    _worker, control_plane = ReadyCount.node_count(["master", "control_plane"], section)
+    _worker, control_plane = ReadyCount.node_count(["master", "control-plane"], section)
     assert control_plane.not_ready == 1

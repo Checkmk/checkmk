@@ -28,6 +28,7 @@ void main() {
         "test-integration-single-node",
         "test-plugins",
         "test-plugins-piggyback",
+        "test-relay-integration",
         "test-update-cloud",
         "test-update-community",
         "test-update-pro",

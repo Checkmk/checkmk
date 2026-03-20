@@ -116,6 +116,7 @@ class Relay(NamedTuple):
 class APIVersion(StrEnum):
     V1 = "1.0"
     INTERNAL = "internal"
+    UNSTABLE = "unstable"
 
 
 class CMKOpenApiSession(requests.Session):

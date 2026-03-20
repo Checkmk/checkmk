@@ -106,6 +106,8 @@ OTHER TESTS
   test-docker-docker                      Run docker tests in docker
   test-integration-agent-plugin           Run agent plugin integration tests
   test-integration-agent-plugin-docker    Run agent plugin integration tests in docker
+  test-relay-integration                  Run relay integration tests
+  test-relay-integration-docker           Run relay integration tests in docker
   test-performance                        Run performance tests
   test-performance-docker                 Run performance tests in docker
   test-doctest                            Run doctests via bazel
@@ -233,6 +235,16 @@ test-integration-agent-plugin() {
 test-integration-agent-plugin-docker() {
     DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
         "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-integration-agent-plugin
+}
+
+test-relay-integration() {
+    _pytest -x "$(realpath "$SCRIPT_DIR/relay_integration")" \
+        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
+}
+
+test-relay-integration-docker() {
+    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
+        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-relay-integration
 }
 
 # ---------------------------------------------------------------------------

@@ -351,6 +351,21 @@ py_library(
 )
 
 py_library(
+    name = "relay_integration",
+    testonly = True,
+    srcs = glob(
+        include = ["relay_integration/**/*.py"],
+    ),
+    imports = [".."],
+    deps = [
+        "//tests/testlib",
+        "//tests/testlib/common:utils",
+        requirement("docker"),
+        requirement("pytest"),
+    ],
+)
+
+py_library(
     name = "scripts",
     testonly = True,
     srcs = glob(

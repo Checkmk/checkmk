@@ -32,7 +32,8 @@ def test_activate_changes_slideout_one_change(
 
     logger.info("Validate elements of the slideout without changes")
     expect(
-        slideout.no_pending_changes_text, "The banner 'No pending changes' is not visible!"
+        slideout.no_pending_changes_text,
+        "The 'No pending changes on your site(s).' text is not visible!",
     ).to_be_visible()
     expect(slideout.info_text, "The info banner is not visible!").to_be_visible()
     slideout.info_close_btn.click()

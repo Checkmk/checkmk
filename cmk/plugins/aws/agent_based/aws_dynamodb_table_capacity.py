@@ -98,11 +98,12 @@ def aws_capacity_params_to_levels(params: Mapping[str, tuple]) -> tuple[LevelsT,
 
 
 def _capacity_params_to_level(params: Mapping[str, tuple], key: str) -> LevelsT:
-    if all(val is None for val in params[key]):
-        return ("no_levels", None)
+    if key in params:
+        if all(val is None for val in params[key]):
+            return ("no_levels", None)
 
-    if len(params[key]) == 2:
-        return ("fixed", (params[key][0], params[key][1]))
+        if len(params[key]) == 2:
+            return ("fixed", (params[key][0], params[key][1]))
 
     return ("no_levels", None)
 

@@ -10,6 +10,7 @@ from collections.abc import Mapping
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.aws.agent_based.aws_dynamodb_table_capacity import (
+    aws_capacity_params_to_levels,
     aws_dynamodb_capacity_get_metric_name_and_unit,
     aws_dynamodb_table_check_capacity,
 )
@@ -81,6 +82,16 @@ def test_aws_dynamodb_table_check_capacity_write_capacity():
     assert len(result_list) == 4
 
     assert all(r.state == State.OK for r in result_list)
+
+
+def test_aws_capacity_params_to_levels_missing_keys():
+    # Regression: missing keys caused KeyError; {} triggers KeyError 'levels_upper' (min/max path),
+    # partial dict triggers KeyError 'levels_lower' (average path with default params)
+    assert aws_capacity_params_to_levels({}) == (("no_levels", None), ("no_levels", None))
+    assert aws_capacity_params_to_levels({"levels_upper": (80.0, 90.0)}) == (
+        ("fixed", (80.0, 90.0)),
+        ("no_levels", None),
+    )
 
 
 def test_aws_dynamodb_capacity_get_metric_name_and_unit():

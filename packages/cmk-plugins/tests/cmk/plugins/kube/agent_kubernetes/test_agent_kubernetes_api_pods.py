@@ -6,12 +6,15 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="name-defined"
+# mypy: disable-error-code="misc"
 # ruff: noqa: SLF001  # Private member accessed
 
 import datetime
+from typing import Any
 from unittest import TestCase
 from zoneinfo import ZoneInfo
 
+import pytest
 from kubernetes import client
 
 from cmk.plugins.kube.agent_handlers import pod_handler
@@ -27,35 +30,66 @@ from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPIPod:
-    def test_parse_metadata(self, core_client: client.CoreV1Api, dummy_host: str) -> None:
-        mocked_pods = {
-            "metadata": {
-                "name": "cluster-collector-595b64557d-x9t5q",
-                "generateName": "cluster-collector-595b64557d-",
-                "namespace": "checkmk-monitoring",
-                "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
-                "resourceVersion": "221646",
-                "creationTimestamp": "2022-03-28T09:19:41Z",
-                "labels": {"app": "cluster-collector"},
-                "annotations": {"foo": "case"},
-                "ownerReferences": [
-                    {
-                        "apiVersion": "apps/v1",
-                        "kind": "ReplicaSet",
-                        "name": "cluster-collector-595b64557d",
-                        "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
-                        "controller": "true",
-                        "blockOwnerDeletion": "true",
-                    }
-                ],
-            },
-        }
-        pod = core_client.api_client.deserialize(FakeResponse(mocked_pods), "V1Pod")
+    @pytest.mark.parametrize(
+        "raw_metadata",
+        [
+            pytest.param(
+                {
+                    "name": "cluster-collector-595b64557d-x9t5q",
+                    "generateName": "cluster-collector-595b64557d-",
+                    "namespace": "checkmk-monitoring",
+                    "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
+                    "resourceVersion": "221646",
+                    "creationTimestamp": "2022-03-28T09:19:41Z",
+                    "labels": {"app": "cluster-collector"},
+                    "annotations": {"foo": "case"},
+                    "ownerReferences": [
+                        {
+                            "apiVersion": "apps/v1",
+                            "kind": "ReplicaSet",
+                            "name": "cluster-collector-595b64557d",
+                            "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
+                            "controller": "true",
+                            "blockOwnerDeletion": "true",
+                        }
+                    ],
+                },
+                id="full metadata",
+            ),
+            pytest.param(
+                {
+                    "name": "cluster-collector-595b64557d-x9t5q",
+                    "generateName": "cluster-collector-595b64557d-",
+                    "namespace": "checkmk-monitoring",
+                    "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
+                    "resourceVersion": "221646",
+                    "labels": {"app": "cluster-collector"},
+                    "annotations": {"foo": "case"},
+                    "ownerReferences": [
+                        {
+                            "apiVersion": "apps/v1",
+                            "kind": "ReplicaSet",
+                            "name": "cluster-collector-595b64557d",
+                            "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
+                            "controller": "true",
+                            "blockOwnerDeletion": "true",
+                        }
+                    ],
+                },
+                id="missing creationTimestamp",
+            ),
+        ],
+    )
+    def test_parse_metadata(
+        self, raw_metadata: dict[str, Any], core_client: client.CoreV1Api, dummy_host: str
+    ) -> None:
+        data = {"metadata": raw_metadata}
+        pod = core_client.api_client.deserialize(FakeResponse(data), "V1Pod")
 
         metadata = parse_metadata(pod.metadata)
         assert metadata.name == "cluster-collector-595b64557d-x9t5q"
         assert metadata.namespace == "checkmk-monitoring"
-        assert isinstance(metadata.creation_timestamp, float)
+        assert metadata.creation_timestamp is None or isinstance(metadata.creation_timestamp, float)
         assert metadata.labels == {
             "app": api.Label(name=api.LabelName("app"), value=api.LabelValue("cluster-collector"))
         }

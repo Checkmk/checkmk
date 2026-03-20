@@ -53,7 +53,7 @@ def check_kube_statefulset_info(now: float, section: StatefulSetInfo) -> CheckRe
         {
             "name": section.name,
             "namespace": section.namespace,
-            "age": now - section.creation_timestamp,
+            "age": None if section.creation_timestamp is None else now - section.creation_timestamp,
         }
     )
 

@@ -117,15 +117,12 @@ def check_kube_pod_info(now: float, section: PodInfo) -> CheckResult:
     if section.namespace is None:
         raise KubernetesError("Pod has no namespace")
 
-    if section.creation_timestamp is None:
-        raise KubernetesError("Pod has no creation timestamp")
-
     yield from check_info(
         {
             "node": section.node,
             "name": section.name,
             "namespace": section.namespace,
-            "age": now - section.creation_timestamp,
+            "age": None if section.creation_timestamp is None else now - section.creation_timestamp,
             "qos_class": section.qos_class,
             "uid": section.uid,
             "restart_policy": section.restart_policy,

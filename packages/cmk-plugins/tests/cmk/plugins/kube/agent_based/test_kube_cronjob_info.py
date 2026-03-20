@@ -35,3 +35,30 @@ def test_check_kube_cronjob_info() -> None:
         Result(state=State.OK, notice="Successful jobs history limit: 10"),
         Result(state=State.OK, notice="Suspend: False"),
     )
+
+
+def test_check_kube_cronjob_info_absent_creation_timestamp() -> None:
+    section = CronJobInfo(
+        name="cronjob",
+        namespace=NamespaceName("checkmk-monitoring"),
+        creation_timestamp=None,
+        labels={},
+        annotations=FilteredAnnotations({}),
+        schedule="0 * * * *",
+        concurrency_policy=ConcurrencyPolicy.Allow,
+        failed_jobs_history_limit=10,
+        successful_jobs_history_limit=10,
+        suspend=False,
+        cluster="cluster",
+        kubernetes_cluster_hostname="host",
+    )
+
+    assert tuple(check_kube_cronjob_info(1600000001.0, section)) == (
+        Result(state=State.OK, summary="Name: cronjob"),
+        Result(state=State.OK, summary="Schedule: 0 * * * *"),
+        Result(state=State.OK, summary="Age: unknown"),
+        Result(state=State.OK, notice="Concurrency policy: ConcurrencyPolicy.Allow"),
+        Result(state=State.OK, notice="Failed jobs history limit: 10"),
+        Result(state=State.OK, notice="Successful jobs history limit: 10"),
+        Result(state=State.OK, notice="Suspend: False"),
+    )

@@ -1011,7 +1011,11 @@ def _write_sections_based_on_api_data(
                 filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
                 sorted(
                     [api_jobs[uid] for uid in api_cron_job.job_uids],
-                    key=lambda job: job.metadata.creation_timestamp,
+                    key=(
+                        lambda job: job.metadata.creation_timestamp
+                        if job.metadata.creation_timestamp is not None
+                        else api.Timestamp(0.0)
+                    ),
                 ),
                 host_settings=checkmk_host_settings,
                 piggyback_name=piggyback_formatter(api_cron_job),

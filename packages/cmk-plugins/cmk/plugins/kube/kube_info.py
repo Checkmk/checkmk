@@ -28,7 +28,9 @@ def result_simple(display_name: str, notice_only: bool = False) -> Callable[[obj
 Age = NewType("Age", float)
 
 
-def result_from_age(value: Age) -> Result:
+def result_from_age(value: Age | None) -> Result:
+    if value is None:
+        return Result(state=State.OK, summary="Age: unknown")
     return Result(
         state=State.OK,
         summary=f"Age: {render.timespan(value)}",

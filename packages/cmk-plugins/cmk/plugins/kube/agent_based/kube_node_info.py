@@ -103,7 +103,7 @@ def check_kube_node_info(now: float, section: NodeInfo) -> CheckResult:
     yield from check_info(
         {
             "name": section.name,
-            "age": now - section.creation_timestamp,
+            "age": None if section.creation_timestamp is None else now - section.creation_timestamp,
             "os_image": section.os_image,
             "container_runtime_version": section.container_runtime_version,
             "architecture": section.architecture,

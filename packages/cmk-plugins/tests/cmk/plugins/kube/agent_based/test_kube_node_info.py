@@ -44,6 +44,32 @@ from cmk.plugins.kube.schemata.section import FilteredAnnotations, NodeInfo
             ],
             id="overall look of node with age 1 second",
         ),
+        pytest.param(
+            NodeInfo(
+                architecture="amd64",
+                kernel_version="5.13.0-27-generic",
+                os_image="Ubuntu 20.04.2 LTS",
+                operating_system="linux",
+                container_runtime_version="docker://20.10.8",
+                name=NodeName("minikube"),
+                creation_timestamp=None,
+                labels={},
+                annotations=FilteredAnnotations({}),
+                addresses=[],
+                cluster="cluster",
+                kubernetes_cluster_hostname="host",
+            ),
+            [
+                Result(state=State.OK, summary="Name: minikube"),
+                Result(state=State.OK, summary="Age: unknown"),
+                Result(state=State.OK, summary="OS: Ubuntu 20.04.2 LTS"),
+                Result(state=State.OK, summary="Container runtime: docker://20.10.8"),
+                Result(state=State.OK, notice="Architecture: amd64"),
+                Result(state=State.OK, notice="Kernel version: 5.13.0-27-generic"),
+                Result(state=State.OK, notice="OS family: linux"),
+            ],
+            id="Node with absent creation timestamp shows Age: unknown",
+        ),
     ],
 )
 def test_check_kube_node_info(

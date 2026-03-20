@@ -36,6 +36,27 @@ from cmk.plugins.kube.schemata.section import FilteredAnnotations, StatefulSetIn
             ),
             id="overall look of StatefulSet with age 1 second",
         ),
+        pytest.param(
+            StatefulSetInfo(
+                name="oh-lord",
+                namespace=NamespaceName("have-mercy"),
+                labels={},
+                annotations=FilteredAnnotations({}),
+                selector=Selector(match_labels={}, match_expressions=[]),
+                creation_timestamp=None,
+                containers=ThinContainers(
+                    images=frozenset({"i/name:0.5"}), names=[ContainerName("name")]
+                ),
+                cluster="cluster",
+                kubernetes_cluster_hostname="host",
+            ),
+            (
+                Result(state=State.OK, summary="Name: oh-lord"),
+                Result(state=State.OK, summary="Namespace: have-mercy"),
+                Result(state=State.OK, summary="Age: unknown"),
+            ),
+            id="StatefulSet with absent creation timestamp shows Age: unknown",
+        ),
     ],
 )
 def test_check_kube_statefulset_info(

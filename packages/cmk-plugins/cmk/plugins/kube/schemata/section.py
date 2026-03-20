@@ -342,7 +342,7 @@ class NodeInfo(Section):
     container_runtime_version: str
     # ObjectMeta
     name: api.NodeName
-    creation_timestamp: api.Timestamp
+    creation_timestamp: api.Timestamp | None = None
     labels: api.Labels
     annotations: FilteredAnnotations
     addresses: api.NodeAddresses
@@ -371,7 +371,7 @@ class DeploymentInfo(Section):
     labels: api.Labels
     annotations: FilteredAnnotations
     selector: api.Selector
-    creation_timestamp: api.Timestamp
+    creation_timestamp: api.Timestamp | None = None
     containers: ThinContainers
     cluster: str
     kubernetes_cluster_hostname: str
@@ -385,7 +385,7 @@ class DaemonSetInfo(Section):
     labels: api.Labels
     annotations: FilteredAnnotations
     selector: api.Selector
-    creation_timestamp: api.Timestamp
+    creation_timestamp: api.Timestamp | None = None
     containers: ThinContainers
     cluster: str
     kubernetes_cluster_hostname: str
@@ -399,7 +399,7 @@ class StatefulSetInfo(Section):
     labels: api.Labels
     annotations: FilteredAnnotations
     selector: api.Selector
-    creation_timestamp: api.Timestamp
+    creation_timestamp: api.Timestamp | None = None
     containers: ThinContainers
     cluster: str
     kubernetes_cluster_hostname: str

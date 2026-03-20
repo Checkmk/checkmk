@@ -24,3 +24,19 @@ def test_check_kube_namespace_info() -> None:
         Result(state=State.OK, summary="Name: namespace"),
         Result(state=State.OK, summary="Age: 1 second"),
     ]
+
+
+def test_check_kube_namespace_info_absent_creation_timestamp() -> None:
+    info = NamespaceInfo(
+        name=NamespaceName("namespace"),
+        creation_timestamp=None,
+        labels={},
+        annotations=FilteredAnnotations({}),
+        cluster="cluster",
+        kubernetes_cluster_hostname="host",
+    )
+    check_result = check_kube_namespace_info(1600000001.0, info)
+    assert list(check_result) == [
+        Result(state=State.OK, summary="Name: namespace"),
+        Result(state=State.OK, summary="Age: unknown"),
+    ]

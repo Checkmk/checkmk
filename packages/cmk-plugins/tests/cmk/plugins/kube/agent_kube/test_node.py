@@ -102,7 +102,7 @@ def test_api_node_info_section() -> None:
     )
     assert node_info.name == api_node.metadata.name
     assert node_info.labels == api_node.metadata.labels
-    assert isinstance(node_info.creation_timestamp, float)
+    assert node_info.creation_timestamp is None or isinstance(node_info.creation_timestamp, float)
 
 
 def test_api_node_conditions() -> None:

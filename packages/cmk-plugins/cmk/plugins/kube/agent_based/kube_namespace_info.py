@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -92,7 +91,7 @@ def check_kube_namespace_info(now: float, section: NamespaceInfo) -> CheckResult
     yield from check_info(
         {
             "name": section.name,
-            "age": now - typing.cast(float, section.creation_timestamp),
+            "age": None if section.creation_timestamp is None else now - section.creation_timestamp,
         }
     )
 

@@ -15,6 +15,8 @@ let g_reload_pause_timer: number | null = null
 // is reached, the whole page is reloaded.
 export function pause(seconds: number) {
   stop_reload_timer()
+  // Do not render the reload pause overlay on dashboards as they have their own reloading mechanism
+  if (!!document.querySelector('cmk-dashboard, cmk-shared-dashboard')) return
   draw_overlay(seconds)
   // Reset the timer if pause was used. Otherwise the page will reload even
   // in pause mode.

@@ -348,6 +348,7 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
             vm,
             config_lock_data,
             logged_backup_data,
+            vmid in backup_data["scheduled_vmids"],
             snapshot_data,
             node_cluster_mapping,
         ):
@@ -455,6 +456,7 @@ def _create_vm_sections(
     vm: Any,
     config_lock_data: Mapping[str, Mapping[str, str]],
     logged_backup_data: Mapping[str, object],
+    backup_enabled: bool,
     snapshot_data: Mapping[str, object],
     node_cluster_mapping: Mapping[str, object],
 ) -> Iterable[tuple[str, object]]:
@@ -519,6 +521,7 @@ def _create_vm_sections(
         {
             # todo: info about erroneous backups
             "last_backup": logged_backup_data.get(vmid),
+            "backup_enabled": backup_enabled,
         },
     )
     yield ("proxmox_ve_vm_snapshot_age", snapshot_data.get(vmid))

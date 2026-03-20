@@ -50,7 +50,10 @@ def parse_proxmox_ve_vm_backup_status(
     string_table: StringTable,
 ) -> Section:
     result = BackupData()
-    backup_data = json.loads(string_table[0][0])["last_backup"] or {}
+
+    backup_json = json.loads(string_table[0][0])
+
+    backup_data = backup_json["last_backup"] or {}
     if "started_time" in backup_data:
         # the datetime object has timezone information
         result["started_time"] = datetime.strptime(
@@ -84,7 +87,10 @@ def parse_proxmox_ve_vm_backup_status(
         result["backup_time"] = float(backup_data["backup_time"])
     if "error" in backup_data:
         result["error"] = str(backup_data["error"])
-    return {"last_backup": result}
+
+    backup_enabled = bool(backup_json["backup_enabled"]) or False
+
+    return {"last_backup": result, "backup_enabled": backup_enabled}
 
 
 def discover_single(section: Section) -> DiscoveryResult:
@@ -100,7 +106,7 @@ def check_proxmox_ve_vm_backup_status(
     if not last_backup:
         yield (
             Result(state=State.CRIT, summary="No backup found")
-            if params["age_levels_upper"][0] == "fixed"
+            if params["age_levels_upper"][0] == "fixed" and section.get("backup_enabled")
             else Result(state=State.OK, summary="No backup found and none needed")  #
         )
         return

@@ -44,19 +44,16 @@ import ldap.filter  # type: ignore[import]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
 from six import ensure_str
 
-import cmk.utils.password_store as password_store
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import password_store, store
 from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
-import cmk.gui.hooks as hooks
-import cmk.gui.log as log
-import cmk.gui.utils.escaping as escaping
+from cmk.gui import hooks, log
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
@@ -65,6 +62,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
+from cmk.gui.utils import escaping
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -2150,12 +2148,12 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         # Special handling for active directory: Is the user enabled / disabled?
         if connection._is_active_directory() and ldap_user.get("useraccountcontrol"):
             # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
-            locked_in_ad = int(ldap_user["useraccountcontrol"][0]) & 2
+            locked_in_ad = bool(int(ldap_user["useraccountcontrol"][0]) & 2)
             locked_in_cmk = user["locked"]
 
-            if locked_in_ad and not locked_in_cmk:
+            if locked_in_ad != locked_in_cmk:
                 return {
-                    "locked": True,
+                    "locked": locked_in_ad,
                     "serial": user.get("serial", 0) + 1,
                 }
 

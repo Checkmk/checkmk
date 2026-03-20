@@ -48,7 +48,7 @@ interface MetricsWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 }
 
 const props = defineProps<MetricsWizardProps>()
@@ -72,7 +72,7 @@ const widgetFilterManager = useWidgetFilterManager(
 const addFilters = useAddFilter()
 
 const { hostSelection, serviceSelection, metricSelection } = getDefaultsFromGraph(
-  props.availableFeatures,
+  props.dashboardFeatures,
   props.editWidgetSpec?.content?.type
 )
 
@@ -218,7 +218,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :context-filters="contextFilters"
         :is-in-filter-selection-menu-focus="widgetFilterManager.objectTypeIsInFocus"
-        :available-features="availableFeatures"
+        :dashboard-features="dashboardFeatures"
         @go-next="recapAndNext"
         @set-focus="widgetFilterManager.openSelectionMenu"
         @update-filter-values="

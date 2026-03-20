@@ -45,7 +45,7 @@ interface Stage2Props {
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
   editWidgetSpec: WidgetSpec | null
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
   preselectedWidgetType?: string | null
 }
 
@@ -82,7 +82,7 @@ const gotoPrevStage = () => {
 const enabledWidgets = getAvailableGraphs(
   props.hostFilterType,
   props.serviceFilterType,
-  props.availableFeatures
+  props.dashboardFeatures
 )
 const availableWidgets: WidgetItemList = [
   { id: Graph.SERVICE_STATE, label: _t('Service state'), icon: 'graph' },
@@ -119,7 +119,7 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   [Graph.SERVICE_STATS]: await useServiceStatistics(props.filters, props.editWidgetSpec)
 }
 
-if (props.availableFeatures === DashboardFeatures.UNRESTRICTED) {
+if (props.dashboardFeatures === DashboardFeatures.UNRESTRICTED) {
   handler[Graph.SERVICE_STATE] = await useServiceState(props.filters, props.editWidgetSpec)
   handler[Graph.SERVICE_STATE_SUMMARY] = await useServiceStateSummary(
     props.filters,
@@ -127,7 +127,7 @@ if (props.availableFeatures === DashboardFeatures.UNRESTRICTED) {
   )
 }
 
-const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTED
+const isUnrestricted = props.dashboardFeatures === DashboardFeatures.UNRESTRICTED
 </script>
 
 <template>

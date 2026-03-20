@@ -33,7 +33,7 @@ interface PublicAccessSettingsEmits {
 
 interface PublicAccessSettingsProps {
   validationError: TranslatedString[] | null
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
   validate: () => boolean
 }
 
@@ -89,7 +89,7 @@ const handleSave = () => {
       <FieldComponent>
         <CmkCheckbox
           :model-value="hasValidity"
-          :disabled="props.availableFeatures === DashboardFeatures.RESTRICTED"
+          :disabled="props.dashboardFeatures === DashboardFeatures.RESTRICTED"
           :label="_t('Set expiration date')"
           padding="top"
           @update:model-value="

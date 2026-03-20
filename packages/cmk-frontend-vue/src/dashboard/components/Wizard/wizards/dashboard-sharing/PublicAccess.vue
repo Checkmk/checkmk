@@ -30,7 +30,7 @@ const { _t } = usei18n()
 interface PublicAccessLinkProps {
   dashboardKey: DashboardKey
   publicToken: DashboardTokenModel | null
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
   hasRuntimeFilters: boolean
 }
 
@@ -53,7 +53,7 @@ const handler = usePublicAccess(
   props.dashboardKey.name,
   props.dashboardKey.owner,
   toRef(props, 'publicToken'),
-  props.availableFeatures
+  props.dashboardFeatures
 )
 
 const activeAction = ref<'create' | 'update' | 'delete' | null>(null)
@@ -257,7 +257,7 @@ const handleUpdate = async () => {
         v-model:comment="handler.comment.value"
         :validate="handler.validate"
         :validation-error="handler.validationError.value"
-        :available-features="availableFeatures"
+        :dashboard-features="dashboardFeatures"
         @update-settings="handleUpdate"
       />
     </template>

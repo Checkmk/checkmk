@@ -672,7 +672,7 @@ const reviewFilters = () => {
           v-if="openDashboardShareDialog && dashboardsManager.activeDashboardKey.value"
           :dashboard-key="dashboardsManager.activeDashboardKey.value!"
           :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
-          :available-features="available_features.dashboard_features"
+          :dashboard-features="available_features.dashboard_features"
           :has-runtime-filters="dashboardHasRuntimeFilters"
           @review-filters="reviewFilters"
           @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
@@ -681,7 +681,7 @@ const reviewFilters = () => {
         <AddWidgetDialog
           v-model:open="openAddWidgetDialog"
           :workflow-items="dashboardWidgetWorkflows"
-          :available-features="available_features.dashboard_features"
+          :dashboard-features="available_features.dashboard_features"
           @select="handleAddWidget"
           @close="openAddWidgetDialog = false"
         />
@@ -693,7 +693,7 @@ const reviewFilters = () => {
           :context-filters="dashboardFilters.contextFilters.value || {}"
           :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
           :edit-widget-id="widgetToEdit"
-          :available-features="available_features.dashboard_features"
+          :dashboard-features="available_features.dashboard_features"
           @back-button="handleWizardSelectorGoBack"
           @close-wizard="handleWizardClose"
           @add-widget="addWidget"
@@ -742,7 +742,7 @@ const reviewFilters = () => {
           <AddWidgetPage
             v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
             :workflow-items="dashboardWidgetWorkflows"
-            :available-features="available_features.dashboard_features"
+            :dashboard-features="available_features.dashboard_features"
             @select="handleAddWidget"
           />
           <DashboardComponent
@@ -764,7 +764,7 @@ const reviewFilters = () => {
           <AddWidgetPage
             v-if="openDashboardCreationDialog || openDashboardCloneDialog"
             :workflow-items="dashboardWidgetWorkflows"
-            :available-features="available_features.dashboard_features"
+            :dashboard-features="available_features.dashboard_features"
           />
           <CmkErrorAlert v-if="loadingError" :error="loadingError" />
           <CmkIcon

@@ -34,7 +34,7 @@ interface AllWizardsProps {
   contextFilters: ContextFilters
   editWidgetSpec: WidgetSpec | null
   editWidgetId: string | null
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 }
 
 const { _t } = usei18n()
@@ -103,7 +103,7 @@ const handleAddEditWidget = (
         :dashboard-key="dashboardKey"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
-        :available-features="availableFeatures"
+        :dashboard-features="dashboardFeatures"
         @go-back="handleGoBack"
         @close="handleClose"
         @add-widget="handleAddEditWidget"
@@ -124,7 +124,7 @@ const handleAddEditWidget = (
         :dashboard-key="dashboardKey"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
-        :available-features="availableFeatures"
+        :dashboard-features="dashboardFeatures"
         @go-back="handleGoBack"
         @close="handleClose"
         @add-widget="handleAddEditWidget"
@@ -135,7 +135,7 @@ const handleAddEditWidget = (
         :dashboard-key="dashboardKey"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
-        :available-features="availableFeatures"
+        :dashboard-features="dashboardFeatures"
         @go-back="handleGoBack"
         @close="handleClose"
         @add-widget="handleAddEditWidget"

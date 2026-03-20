@@ -29,7 +29,7 @@ interface Stage1Props {
   widgetActiveFilters: string[]
   contextFilters: ContextFilters
   isInFilterSelectionMenuFocus: (objectType: ObjectType) => boolean
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 }
 
 interface Emits {
@@ -49,7 +49,7 @@ const gotoNextStage = (preselectedWidgetType: string | null = null) => {
 
 const hostObjectType = 'host'
 const hostFilterType = defineModel<ElementSelection>('hostFilterType', { required: true })
-const enabledWidgets = useSelectGraphTypes(hostFilterType, props.availableFeatures)
+const enabledWidgets = useSelectGraphTypes(hostFilterType, props.dashboardFeatures)
 
 // Filters
 const filterDefinitions = useFilterDefinitions()

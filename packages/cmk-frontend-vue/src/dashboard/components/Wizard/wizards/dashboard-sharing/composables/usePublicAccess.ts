@@ -37,7 +37,7 @@ export const usePublicAccess = (
   dashboardName: string,
   dashboardOwner: string,
   publicToken: Ref<DashboardTokenModel | null>,
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 ): UsePublicAccess => {
   const hasValidity = ref<boolean>(false)
   const validUntil = ref<Date | null>(null)
@@ -59,7 +59,7 @@ export const usePublicAccess = (
   )
 
   const createToken = async () => {
-    if (availableFeatures === DashboardFeatures.RESTRICTED && !hasValidity.value) {
+    if (dashboardFeatures === DashboardFeatures.RESTRICTED && !hasValidity.value) {
       const expiresAt = new Date()
       expiresAt.setMonth(expiresAt.getMonth() + 1)
       validUntil.value = expiresAt
@@ -83,7 +83,7 @@ export const usePublicAccess = (
 
   const _limitExpirationDate = () => {
     const limit = new Date()
-    if (availableFeatures === DashboardFeatures.RESTRICTED) {
+    if (dashboardFeatures === DashboardFeatures.RESTRICTED) {
       limit.setDate(limit.getDate() + 30)
     } else {
       limit.setFullYear(limit.getFullYear() + 2)
@@ -96,7 +96,7 @@ export const usePublicAccess = (
     validationError.value = []
     const expiration = validUntil.value
 
-    if (availableFeatures === DashboardFeatures.UNRESTRICTED && !hasValidity.value) {
+    if (dashboardFeatures === DashboardFeatures.UNRESTRICTED && !hasValidity.value) {
       return true
     }
 
@@ -115,7 +115,7 @@ export const usePublicAccess = (
     const targetDate = _limitExpirationDate()
 
     const expirationError: TranslatedString =
-      availableFeatures === DashboardFeatures.RESTRICTED
+      dashboardFeatures === DashboardFeatures.RESTRICTED
         ? _t('Expiration date cannot be more than 30 days in the future.')
         : _t('Expiration date cannot be more than 2 years in the future.')
 
@@ -128,7 +128,7 @@ export const usePublicAccess = (
 
   watch([hasValidity], () => {
     const maxDate = _limitExpirationDate()
-    if (availableFeatures === DashboardFeatures.RESTRICTED) {
+    if (dashboardFeatures === DashboardFeatures.RESTRICTED) {
       if (validUntil.value === null || validUntil.value > maxDate) {
         validUntil.value = maxDate
       }
@@ -139,11 +139,11 @@ export const usePublicAccess = (
 
   const handleHasValidity = computed({
     get: () => {
-      return availableFeatures === DashboardFeatures.RESTRICTED ? true : hasValidity.value
+      return dashboardFeatures === DashboardFeatures.RESTRICTED ? true : hasValidity.value
     },
 
     set: (value: boolean) => {
-      hasValidity.value = availableFeatures === DashboardFeatures.RESTRICTED ? true : value
+      hasValidity.value = dashboardFeatures === DashboardFeatures.RESTRICTED ? true : value
     }
   })
 

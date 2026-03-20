@@ -106,10 +106,10 @@ interface GetDefaultsFromGraph {
 }
 
 export const getDefaultsFromGraph = (
-  availableFeatures: DashboardFeatures,
+  dashboardFeatures: DashboardFeatures,
   graph?: Graph | string
 ): GetDefaultsFromGraph => {
-  if (availableFeatures === DashboardFeatures.RESTRICTED) {
+  if (dashboardFeatures === DashboardFeatures.RESTRICTED) {
     return {
       hostSelection: ElementSelection.SPECIFIC,
       serviceSelection: ElementSelection.SPECIFIC,

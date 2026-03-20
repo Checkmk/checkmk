@@ -47,7 +47,7 @@ interface Stage2Props {
   filters: ConfiguredFilters
   widgetFilters: ConfiguredFilters
   editWidgetSpec: WidgetSpec | null
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
   preselectedWidgetType?: string | null
 }
 
@@ -81,7 +81,7 @@ const gotoPrevStage = () => {
   emit('goPrev')
 }
 
-const enabledWidgets = getAvailableGraphs(props.hostFilterType, props.availableFeatures)
+const enabledWidgets = getAvailableGraphs(props.hostFilterType, props.dashboardFeatures)
 
 function getSelectedWidget(): Graph {
   const widgetType = props.preselectedWidgetType || props.editWidgetSpec?.content?.type
@@ -103,13 +103,13 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   [Graph.HOST_STATS]: await useHostStatistics(props.filters, props.editWidgetSpec)
 }
 
-if (props.availableFeatures === DashboardFeatures.UNRESTRICTED) {
+if (props.dashboardFeatures === DashboardFeatures.UNRESTRICTED) {
   handler[Graph.HOST_STATE] = await useHostState(props.filters, props.editWidgetSpec)
   handler[Graph.HOST_STATE_SUMMARY] = await useHostStateSummary(props.filters, props.editWidgetSpec)
   handler[Graph.SITE_OVERVIEW] = await useSiteOverview(props.filters, props.editWidgetSpec)
 }
 
-const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTED
+const isUnrestricted = props.dashboardFeatures === DashboardFeatures.UNRESTRICTED
 </script>
 
 <template>

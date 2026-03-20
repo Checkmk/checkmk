@@ -22,7 +22,7 @@ const { _t } = usei18n()
 export interface AddWidgetDialogProperties {
   workflowItems: Record<string, WorkflowItem>
   open: boolean
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 }
 
 const props = defineProps<AddWidgetDialogProperties>()
@@ -31,7 +31,7 @@ defineEmits(['close', 'select'])
 
 const isDisabled = (id: string): boolean => {
   return (
-    props.availableFeatures === DashboardFeatures.RESTRICTED &&
+    props.dashboardFeatures === DashboardFeatures.RESTRICTED &&
     ['custom_graphs', 'hw_sw_inventory', 'alerts_notifications'].includes(id)
   )
 }

@@ -54,7 +54,7 @@ interface ServicesOverviewWizardProps {
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec?: WidgetSpec | null
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 }
 
 const props = defineProps<ServicesOverviewWizardProps>()
@@ -197,7 +197,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :context-filters="contextFilters"
         :is-in-filter-selection-menu-focus="widgetFilterManager.objectTypeIsInFocus"
-        :available-features="availableFeatures"
+        :dashboard-features="dashboardFeatures"
         @go-next="recapAndNext"
         @set-focus="widgetFilterManager.openSelectionMenu"
         @update-filter-values="
@@ -215,7 +215,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :filters="appliedFilters"
           :widget-filters="extractConfiguredFilters(widgetFilterManager)"
           :edit-widget-spec="editWidgetSpec ?? null"
-          :available-features="availableFeatures"
+          :dashboard-features="dashboardFeatures"
           :preselected-widget-type="preselectedWidgetType"
           @go-prev="wizardHandler.prev"
           @add-widget="

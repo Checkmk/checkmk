@@ -13,7 +13,7 @@ import WorkflowCard from './WorkflowCard.vue'
 
 export interface AddWidgetDialogProperties {
   workflowItems: Record<string, WorkflowItem>
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 }
 
 const { _t } = usei18n()
@@ -24,7 +24,7 @@ const emit = defineEmits(['select'])
 
 const isDisabled = (id: string): boolean => {
   return (
-    props.availableFeatures === DashboardFeatures.RESTRICTED &&
+    props.dashboardFeatures === DashboardFeatures.RESTRICTED &&
     ['custom_graphs', 'hw_sw_inventory', 'alerts_notifications'].includes(id)
   )
 }

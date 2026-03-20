@@ -29,14 +29,14 @@ type UseAvailableGraphs = Ref<Graph[]>
 
 export const useSelectGraphTypes = (
   hostSelection: Ref<ElementSelection>,
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 ): UseAvailableGraphs => {
   const availableGraphs = ref<Graph[]>([])
 
   watch(
     hostSelection,
     (newHostSelection): void => {
-      availableGraphs.value = getAvailableGraphs(newHostSelection, availableFeatures)
+      availableGraphs.value = getAvailableGraphs(newHostSelection, dashboardFeatures)
     },
     { deep: true, immediate: true }
   )
@@ -46,9 +46,9 @@ export const useSelectGraphTypes = (
 
 export const getAvailableGraphs = (
   hostSelection: ElementSelection,
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 ): Graph[] => {
-  if (availableFeatures === DashboardFeatures.RESTRICTED) {
+  if (dashboardFeatures === DashboardFeatures.RESTRICTED) {
     return [Graph.HOST_STATS]
   }
 

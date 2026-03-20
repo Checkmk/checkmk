@@ -27,7 +27,7 @@ const { _t } = usei18n()
 interface ShareDashboardSettingsProps {
   dashboardKey: DashboardKey
   publicToken: DashboardTokenModel | null
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
   hasRuntimeFilters: boolean
 }
 
@@ -65,7 +65,7 @@ const clonedToken = computed(() => (props.publicToken ? structuredClone(props.pu
       <PublicAccess
         :dashboard-key="dashboardKey"
         :public-token="clonedToken"
-        :available-features="availableFeatures"
+        :dashboard-features="dashboardFeatures"
         :has-runtime-filters="hasRuntimeFilters"
         @review-filters="$emit('reviewFilters')"
         @refresh-dashboard-settings="$emit('refreshDashboardSettings')"

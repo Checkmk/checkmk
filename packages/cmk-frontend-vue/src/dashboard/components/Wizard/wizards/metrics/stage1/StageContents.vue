@@ -32,7 +32,7 @@ interface Stage1Props {
   widgetActiveFilters: string[]
   contextFilters: ContextFilters
   isInFilterSelectionMenuFocus: (objectType: ObjectType) => boolean
-  availableFeatures: DashboardFeatures
+  dashboardFeatures: DashboardFeatures
 }
 
 interface Emits {
@@ -90,13 +90,13 @@ const configuredFiltersByObjectType = computed(() =>
 )
 
 const availableFilterTypes = computed(() =>
-  props.availableFeatures === DashboardFeatures.RESTRICTED
+  props.dashboardFeatures === DashboardFeatures.RESTRICTED
     ? [ElementSelection.SPECIFIC]
     : [ElementSelection.SPECIFIC, ElementSelection.MULTIPLE]
 )
 
 const availableMetricTypes = computed(() =>
-  props.availableFeatures === DashboardFeatures.RESTRICTED
+  props.dashboardFeatures === DashboardFeatures.RESTRICTED
     ? [MetricSelection.COMBINED_GRAPH]
     : [MetricSelection.SINGLE_METRIC, MetricSelection.COMBINED_GRAPH]
 )

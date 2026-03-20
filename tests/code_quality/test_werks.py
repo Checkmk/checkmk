@@ -158,7 +158,7 @@ def test_werk_versions_after_tagged(werks_loaded: dict[int, WerkV3]) -> None:
 
         # Some werks were added after the version was released. Mostly they were forgotten by
         # the developer. Consider it a hall of shame ;)
-        if werk_id in {10062, 10063, 10064, 10125, 12836}:
+        if werk_id in {10062, 10063, 10064, 10125, 12836, 19034}:
             continue
 
         tag_name = "v%s" % werk.version

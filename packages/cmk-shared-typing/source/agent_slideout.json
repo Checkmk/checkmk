@@ -26,6 +26,7 @@
     "agent_install_cmds": {
       "type": "object",
       "properties": {
+        "windows_download": { "type": "string" },
         "windows": { "type": "string" },
         "linux_deb": { "type": "string" },
         "linux_rpm": { "type": "string" },
@@ -33,7 +34,7 @@
         "solaris": { "type": "string" },
         "aix": { "type": "string" }
       },
-      "required": ["windows", "linux_deb", "linux_rpm"]
+      "required": ["windows_download", "windows", "linux_deb", "linux_rpm"]
     },
     "agent_registration_cmds": {
       "type": "object",

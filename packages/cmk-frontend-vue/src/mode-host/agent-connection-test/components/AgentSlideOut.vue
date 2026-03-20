@@ -203,14 +203,31 @@ function getInitStep() {
                     <GenerateToken
                       v-model="ott"
                       token-generation-endpoint-uri="domain-types/agent_download_token/collections/all"
-                      :description="_t('This requires the generation of a download token.')"
+                      :description="
+                        _t(
+                          'To securely fetch the latest agent package via the command line, you must first generate a temporary authentication token. ' +
+                            'This token is valid for 7 days and is used solely for the download process'
+                        )
+                      "
                       :expires-in-seconds="604800"
                       :token-generation-body="{}"
                     />
                   </div>
                   <template v-if="ott !== null">
+                    <template v-if="tab.installDownloadCmd">
+                      <CmkCode
+                        :title="_t('Download agent')"
+                        :code_txt="installCmdWithToken(tab.installDownloadCmd)"
+                        class="code"
+                      />
+                      <CmkCode
+                        :title="_t('Install agent')"
+                        :code_txt="tab.installCmd || ''"
+                        class="code"
+                      />
+                    </template>
                     <CmkCode
-                      v-if="tab.installMsg && tab.installCmd"
+                      v-else-if="tab.installMsg && tab.installCmd"
                       :code_txt="installCmdWithToken(tab.installCmd)"
                       class="code"
                     />

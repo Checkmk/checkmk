@@ -85,8 +85,9 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     id: 'windows',
     title: _t('Windows'),
     installMsg: _t(
-      'Run this command on your Windows host to download and install the Checkmk agent. Please make sure to run this command with sufficient permissions (e.g. "Run as Administrator")'
+      'Run these commands on your Windows host to download and install the Checkmk agent. Please make sure to run these commands with sufficient permissions (e.g. "Run as Administrator")'
     ),
+    installDownloadCmd: replaceMacros(props.agentInstallCmds.windows_download, false),
     installCmd: replaceMacros(props.agentInstallCmds.windows, false),
     registrationMsg: _t(
       'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. "Run as Administrator").'

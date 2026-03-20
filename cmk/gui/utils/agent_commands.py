@@ -29,14 +29,15 @@ from cmk.shared_typing.setup import AgentInstallCmds as SetupAgentInstallCmds
 from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrationCmds
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 
-WINDOWS_AGENT_INSTALL_CMD = (
+WINDOWS_AGENT_DOWNLOAD_CMD = (
     "curl.exe -o check-mk-agent_{version}.msi"
     ' "{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke"'
     ' --header "Accept: application/octet-stream"'
     ' --header "Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]"'
     ' --data-urlencode "os_type=windows_msi"'
-    " && msiexec /i check-mk-agent_{version}.msi"
 )
+
+WINDOWS_AGENT_INSTALL_CMD = "msiexec /i check-mk-agent_{version}.msi"
 
 LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1_all.deb -fJG \\
     '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
@@ -58,17 +59,20 @@ def build_agent_install_cmds(
     hostname: HostName,
 ) -> AgentInstallCmds:
     return AgentInstallCmds(
+        windows_download=WINDOWS_AGENT_DOWNLOAD_CMD.format(version=version),
         windows=WINDOWS_AGENT_INSTALL_CMD.format(version=version),
         linux_deb=LINUX_DEBIAN_AGENT_INSTALL_CMD.format(version=version),
         linux_rpm=LINUX_RPM_AGENT_INSTALL_CMD.format(version=version),
     )
 
 
-WINDOWS_AGENT_REGISTRATION_CMD = """\"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe\" register ^
-    --hostname {{HOSTNAME}} ^
-    --server {{SERVER}} ^
-    --site {{SITE}} ^
-    --user agent_registration"""
+WINDOWS_AGENT_REGISTRATION_CMD = (
+    '"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe" register'
+    " --hostname {{HOSTNAME}}"
+    " --server {{SERVER}}"
+    " --site {{SITE}}"
+    " --user agent_registration"
+)
 
 LINUX_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
     --hostname {{HOSTNAME}} \\

@@ -20,11 +20,34 @@ const aiTemplate = getInjectedAiTemplate()
 const disclaimerActive = ref<boolean>(false)
 const consentTriggered = ref<boolean>(false)
 const startButtonDisabled = ref<boolean>(false)
+const aiInfo = ref<string | null>(null)
+
+function loadAiInfo() {
+  if (!aiTemplate.value?.info) {
+    return
+  }
+
+  aiInfo.value =
+    _t(
+      `The feature "Explain with AI" uses a Large Language Model (LLM) [${aiTemplate.value.info.models.join(', ')}] of [${aiTemplate.value.info.provider}] to generate its output. `
+    ) +
+    _t('Generated content (output) may contain errors or inaccuracies. ') +
+    _t(
+      'Ensure all output generated is carefully reviewed and checked by a human for factual correctness before being used in any way. '
+    ) +
+    _t('For further information visit our ')
+}
 
 onMounted(async () => {
   if (!aiTemplate.value?.isDisclaimerShown()) {
     disclaimerActive.value = true
   }
+
+  loadAiInfo()
+})
+
+aiTemplate.value?.onInfoLoaded(() => {
+  loadAiInfo()
 })
 
 const emit = defineEmits(['consent', 'decline'])
@@ -46,14 +69,7 @@ function onConsent() {
       {{ _t('Checkmk AI feature usage notice') }}
     </CmkHeading>
     <div class="ai-conversation-disclaimer__element">
-      {{
-        _t(
-          `The feature "Explain with AI" uses a Large Language Model (LLM) [${aiTemplate?.info?.models.join(', ')}] of [${aiTemplate?.info?.provider}] to generate its output. ` +
-            'Generated content (output) my contain errors or inaccuracies. ' +
-            'Ensure all output generated is carefully reviewed and checked by a human for factual correctness before being used in any way. ' +
-            'For further information visit our '
-        )
-      }}
+      {{ aiInfo }}
       <a href="https://docs.checkmk.com/latest" target="_blank">{{ _t('Documentation') }}</a>
       {{ _t('and') }}
       <a href="https://checkmk.com/privacy-policy" target="_blank">{{ _t('Privacy Policy') }}</a

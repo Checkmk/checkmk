@@ -74482,10 +74482,30 @@ msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r5dn"
 msgid "Total running on-demand instances of type r5n"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r5n"
 
+#, fuzzy
+msgid "Total running on-demand instances of type r6a"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
+
 msgid "Total running on-demand instances of type r6g"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
 
 msgid "Total running on-demand instances of type r6gd"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6gd"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6i"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6id"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6gd"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r8g"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r8gd"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6gd"
 
 msgid "Total running on-demand instances of type t1"
@@ -75082,6 +75102,50 @@ msgstr "Insgesamt laufende On-Demand r5n.metal-Instanzen"
 msgid "Total running on-demand r5n.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.xlarge-Instanzen"
 
+#, fuzzy
+msgid "Total running on-demand r6a.12xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5a.12xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.16xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5a.16xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.24xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5a.24xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.2xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5a.2xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.32xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.2xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.48xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.8xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.4xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5a.4xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.8xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5a.8xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.large instances"
+msgstr "Insgesamt laufende On-Demand r5a.large-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.metal instances"
+msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6a.xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5a.xlarge-Instanzen"
+
 msgid "Total running on-demand r6g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.12xlarge-Instanzen"
 
@@ -75134,6 +75198,182 @@ msgid "Total running on-demand r6gd.metal instances"
 msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
 
 msgid "Total running on-demand r6gd.xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.12xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.12xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.16xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.16xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.24xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.24xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.2xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.2xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.32xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.32xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.4xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.4xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.8xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.8xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.large instances"
+msgstr "Insgesamt laufende On-Demand m6i.large-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.metal instances"
+msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6i.xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.12xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.12xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.16xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.16xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.24xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5d.24xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.2xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.2xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.32xlarge instances"
+msgstr "Insgesamt laufende On-Demand m6i.32xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.4xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.8xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.8xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.large instances"
+msgstr "Insgesamt laufende On-Demand r6gd.large-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.metal instances"
+msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r6id.xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.12xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.12xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.16xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.16xlarge -Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.24xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5.24xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.2xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.2xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.48xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.8xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.4xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.4xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.8xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.8xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.large instances"
+msgstr "Insgesamt laufende On-Demand r6g.large-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.medium instances"
+msgstr "Insgesamt laufende On-Demand r6g.medium-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.metal-24xl instances"
+msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.metal-48xl instances"
+msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8g.xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6g.xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.12xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.12xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.16xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.16xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.24xlarge instances"
+msgstr "Insgesamt laufende On-Demand r5d.24xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.2xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.2xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.48xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.4xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.8xlarge instances"
+msgstr "Insgesamt laufende On-Demand r6gd.8xlarge-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.large instances"
+msgstr "Insgesamt laufende On-Demand r6gd.large-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.medium instances"
+msgstr "Insgesamt laufende On-Demand r6gd.medium-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.metal-24xl instances"
+msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.metal-48xl instances"
+msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
 
 msgid "Total running on-demand t1.micro instances"

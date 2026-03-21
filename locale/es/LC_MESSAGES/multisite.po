@@ -77474,11 +77474,31 @@ msgid "Total running on-demand instances of type r5n"
 msgstr "Total de instancias bajo demanda en funcionamiento"
 
 #, fuzzy
+msgid "Total running on-demand instances of type r6a"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
 msgid "Total running on-demand instances of type r6g"
 msgstr "Total de instancias bajo demanda en funcionamiento"
 
 #, fuzzy
 msgid "Total running on-demand instances of type r6gd"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6i"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6id"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r8g"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r8gd"
 msgstr "Total de instancias bajo demanda en funcionamiento"
 
 #, fuzzy
@@ -78274,6 +78294,50 @@ msgid "Total running on-demand r5n.xlarge instances"
 msgstr "Total de instancias bajo demanda en funcionamiento"
 
 #, fuzzy
+msgid "Total running on-demand r6a.12xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.16xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.24xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.2xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.32xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.48xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.4xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.8xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.large instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.metal instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6a.xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
 msgid "Total running on-demand r6g.12xlarge instances"
 msgstr "Total de instancias bajo demanda en funcionamiento"
 
@@ -78343,6 +78407,182 @@ msgstr "Total de instancias bajo demanda en funcionamiento"
 
 #, fuzzy
 msgid "Total running on-demand r6gd.xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.12xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.16xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.24xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.2xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.32xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.4xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.8xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.large instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.metal instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6i.xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.12xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.16xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.24xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.2xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.32xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.4xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.8xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.large instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.metal instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r6id.xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.12xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.16xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.24xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.2xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.48xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.4xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.8xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.large instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.medium instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.metal-24xl instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.metal-48xl instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8g.xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.12xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.16xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.24xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.2xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.48xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.4xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.8xlarge instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.large instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.medium instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.metal-24xl instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.metal-48xl instances"
+msgstr "Total de instancias bajo demanda en funcionamiento"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.xlarge instances"
 msgstr "Total de instancias bajo demanda en funcionamiento"
 
 #, fuzzy

@@ -77055,10 +77055,30 @@ msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r5dn"
 msgid "Total running on-demand instances of type r5n"
 msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r5n"
 
+#, fuzzy
+msgid "Total running on-demand instances of type r6a"
+msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r6g"
+
 msgid "Total running on-demand instances of type r6g"
 msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r6g"
 
 msgid "Total running on-demand instances of type r6gd"
+msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r6gd"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6i"
+msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r6g"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6id"
+msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r6gd"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r8g"
+msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r6g"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r8gd"
 msgstr "Totalul instanțelor la cerere care rulează la cerere de tip r6gd"
 
 msgid "Total running on-demand instances of type t1"
@@ -77840,6 +77860,50 @@ msgid "Total running on-demand r5n.xlarge instances"
 msgstr "Total instanțe On-Demand r5n.xlarge care rulează la cerere"
 
 #, fuzzy
+msgid "Total running on-demand r6a.12xlarge instances"
+msgstr "Totalul instanțelor On-Demand r5a.12xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.16xlarge instances"
+msgstr "Total de instanțe On-Demand r5a.16xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.24xlarge instances"
+msgstr "Total de instanțe On-Demand r5a.24xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.2xlarge instances"
+msgstr "Total de instanțe On-Demand r5a.2xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.32xlarge instances"
+msgstr "Total instanțe On-Demand r6g.2xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.48xlarge instances"
+msgstr "Total de instanțe On-Demand r6g.8xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.4xlarge instances"
+msgstr "Totalul instanțelor On-Demand r5a.4xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.8xlarge instances"
+msgstr "Totalul instanțelor On-Demand r5a.8xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.large instances"
+msgstr "Totalul instanțelor On-Demand r5a.large care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.metal instances"
+msgstr "Totalul instanțelor r6g.metal On-Demand care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6a.xlarge instances"
+msgstr "Total instanțe On-Demand r5a.xlarge care rulează la cerere"
+
+#, fuzzy
 msgid "Total running on-demand r6g.12xlarge instances"
 msgstr "Total de instanțe On-Demand r6g.12xlarge care rulează la cerere"
 
@@ -77909,6 +77973,182 @@ msgstr "Total de instanțe r6gd.metal care rulează On-Demand la cerere"
 
 #, fuzzy
 msgid "Total running on-demand r6gd.xlarge instances"
+msgstr "Total instanțe On-Demand r6gd.xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.12xlarge instances"
+msgstr "Totalul instanțelor On-Demand m6i.12xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.16xlarge instances"
+msgstr "Totalul instanțelor On-Demand m6i.16xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.24xlarge instances"
+msgstr "Total de instanțe On-Demand m6i.24xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.2xlarge instances"
+msgstr "Totalul instanțelor On-Demand m6i.2xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.32xlarge instances"
+msgstr "Totalul instanțelor On-Demand m6i.32xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.4xlarge instances"
+msgstr "Totalul instanțelor On-Demand m6i.4xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.8xlarge instances"
+msgstr "Totalul instanțelor On-Demand m6i.8xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.large instances"
+msgstr "Totalul instanțelor m6i.large On-Demand care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.metal instances"
+msgstr "Totalul instanțelor r6g.metal On-Demand care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6i.xlarge instances"
+msgstr "Totalul instanțelor On-Demand m6i.xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.12xlarge instances"
+msgstr "Total de instanțe On-Demand r6gd.12xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.16xlarge instances"
+msgstr "Total instanțe On-Demand r6gd.16xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.24xlarge instances"
+msgstr "Total de instanțe On-Demand r5d.24xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.2xlarge instances"
+msgstr "Total de instanțe On-Demand r6gd.2xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.32xlarge instances"
+msgstr "Totalul instanțelor On-Demand m6i.32xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.4xlarge instances"
+msgstr "Total instanțe On-Demand r6gd.4xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.8xlarge instances"
+msgstr "Total de instanțe On-Demand r6gd.8xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.large instances"
+msgstr "Totalul instanțelor On-Demand r6gd.large care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.metal instances"
+msgstr "Total de instanțe r6gd.metal care rulează On-Demand la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r6id.xlarge instances"
+msgstr "Total instanțe On-Demand r6gd.xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.12xlarge instances"
+msgstr "Total de instanțe On-Demand r6g.12xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.16xlarge instances"
+msgstr "Total instanțe On-Demand r6g.16xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.24xlarge instances"
+msgstr "Total de instanțe On-Demand r5.24xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.2xlarge instances"
+msgstr "Total instanțe On-Demand r6g.2xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.48xlarge instances"
+msgstr "Total de instanțe On-Demand r6g.8xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.4xlarge instances"
+msgstr "Total instanțe On-Demand r6g.4xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.8xlarge instances"
+msgstr "Total de instanțe On-Demand r6g.8xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.large instances"
+msgstr "Totalul instanțelor r6g.large On-Demand care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.medium instances"
+msgstr "Totalul instanțelor r6g.medium On-Demand care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.metal-24xl instances"
+msgstr "Totalul instanțelor r6g.metal On-Demand care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.metal-48xl instances"
+msgstr "Totalul instanțelor r6g.metal On-Demand care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8g.xlarge instances"
+msgstr "Total de instanțe r6g.xlarge On-Demand care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.12xlarge instances"
+msgstr "Total de instanțe On-Demand r6gd.12xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.16xlarge instances"
+msgstr "Total instanțe On-Demand r6gd.16xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.24xlarge instances"
+msgstr "Total de instanțe On-Demand r5d.24xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.2xlarge instances"
+msgstr "Total de instanțe On-Demand r6gd.2xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.48xlarge instances"
+msgstr "Total instanțe On-Demand r6gd.4xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.4xlarge instances"
+msgstr "Total instanțe On-Demand r6gd.4xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.8xlarge instances"
+msgstr "Total de instanțe On-Demand r6gd.8xlarge care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.large instances"
+msgstr "Totalul instanțelor On-Demand r6gd.large care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.medium instances"
+msgstr "Total instanțe On-Demand r6gd.medium care rulează la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.metal-24xl instances"
+msgstr "Total de instanțe r6gd.metal care rulează On-Demand la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.metal-48xl instances"
+msgstr "Total de instanțe r6gd.metal care rulează On-Demand la cerere"
+
+#, fuzzy
+msgid "Total running on-demand r8gd.xlarge instances"
 msgstr "Total instanțe On-Demand r6gd.xlarge care rulează la cerere"
 
 #, fuzzy

@@ -74,8 +74,8 @@ class ContainerSpecFactory(ModelFactory):
     __model__ = api.ContainerSpec
 
 
-class ContainerResourcesFactory(ModelFactory):
-    __model__ = api.ContainerResources
+class ResourceRequirementsFactory(ModelFactory):
+    __model__ = api.ResourceRequirements
 
 
 # General Factories

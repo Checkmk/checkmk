@@ -716,21 +716,21 @@ class Phase(str, enum.Enum):
     UNKNOWN = "unknown"
 
 
-class ResourcesRequirements(BaseModel):
+class ResourceRequirement(BaseModel):
     memory: float | None = None
     cpu: float | None = None
 
 
-class ContainerResources(BaseModel):
-    limits: ResourcesRequirements
-    requests: ResourcesRequirements
+class ResourceRequirements(BaseModel):
+    limits: ResourceRequirement
+    requests: ResourceRequirement
 
 
 ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
 
 
 class ContainerSpec(BaseModel):
-    resources: ContainerResources
+    resources: ResourceRequirements
     name: ContainerName
     image_pull_policy: ImagePullPolicy
 

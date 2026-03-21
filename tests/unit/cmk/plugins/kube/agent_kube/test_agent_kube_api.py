@@ -15,12 +15,12 @@ from tests.unit.cmk.plugins.kube.agent_kube.factory import (
     APINodeFactory,
     APIPodFactory,
     composed_entities_builder,
-    ContainerResourcesFactory,
     ContainerSpecFactory,
     MetaDataFactory,
     pod_phase_generator,
     PodSpecFactory,
     PodStatusFactory,
+    ResourceRequirementsFactory,
 )
 
 import cmk.plugins.kube.agent_handlers.common
@@ -30,8 +30,8 @@ from cmk.plugins.kube.schemata import api, section
 from cmk.plugins.kube.special_agents import agent_kube as agent
 
 
-class ResourcesRequirementsFactory(ModelFactory):
-    __model__ = api.ResourcesRequirements
+class ResourceRequirementFactory(ModelFactory):
+    __model__ = api.ResourceRequirement
 
 
 def test_pod_node_allocation_within_cluster() -> None:
@@ -61,9 +61,9 @@ def container_spec(
     limit_memory: float | None = 2.0 * ONE_MiB,
 ) -> api.ContainerSpec:
     return ContainerSpecFactory.build(
-        resources=api.ContainerResources(
-            limits=api.ResourcesRequirements(memory=limit_memory, cpu=limit_cpu),
-            requests=api.ResourcesRequirements(memory=request_memory, cpu=request_cpu),
+        resources=api.ResourceRequirements(
+            limits=api.ResourceRequirement(memory=limit_memory, cpu=limit_cpu),
+            requests=api.ResourceRequirement(memory=request_memory, cpu=request_cpu),
         )
     )
 
@@ -200,13 +200,13 @@ def test_filter_pods_by_phase(phase: api.Phase) -> None:
 
 @pytest.mark.parametrize("pods_count", [0, 5])
 def test_collect_workload_resources_from_api_pods(pods_count: int) -> None:
-    requirements = ResourcesRequirementsFactory.build(memory=ONE_MiB, cpu=0.5)
+    requirements = ResourceRequirementFactory.build(memory=ONE_MiB, cpu=0.5)
     pods = [
         APIPodFactory.build(
             spec=PodSpecFactory.build(
                 containers=[
                     ContainerSpecFactory.build(
-                        resources=ContainerResourcesFactory.build(
+                        resources=ResourceRequirementsFactory.build(
                             limits=requirements, requests=requirements
                         )
                     )
@@ -242,14 +242,16 @@ def test_collect_workload_resources_from_api_pods(pods_count: int) -> None:
 
 @pytest.mark.parametrize("pods_count", [5, 10, 15])
 def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
-    requests = ResourcesRequirementsFactory.build(memory=ONE_MiB, cpu=0.5)
-    limits = ResourcesRequirementsFactory.build(memory=2 * ONE_MiB, cpu=1.0)
+    requests = ResourceRequirementFactory.build(memory=ONE_MiB, cpu=0.5)
+    limits = ResourceRequirementFactory.build(memory=2 * ONE_MiB, cpu=1.0)
     pods = [
         APIPodFactory.build(
             spec=PodSpecFactory.build(
                 containers=[
                     ContainerSpecFactory.build(
-                        resources=ContainerResourcesFactory.build(limits=limits, requests=requests)
+                        resources=ResourceRequirementsFactory.build(
+                            limits=limits, requests=requests
+                        )
                     )
                 ]
             )

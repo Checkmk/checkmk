@@ -10,10 +10,10 @@ from cmk.plugins.kube.agent_handlers.common import PodOwner
 from cmk.plugins.kube.schemata import api
 from tests.cmk.plugins.kube.agent_kube.factory import (
     APIPodFactory,
-    ContainerResourcesFactory,
     ContainerSpecFactory,
     PodSpecFactory,
     PodStatusFactory,
+    ResourceRequirementsFactory,
 )
 
 
@@ -41,9 +41,9 @@ def test_pod_owner_pod_resources_one_pod_per_phase() -> None:
 
 
 def test_pod_owner_memory_resources() -> None:
-    container_resources_requirements = ContainerResourcesFactory.build(
-        limits=api.ResourcesRequirements(memory=2.0 * 1024),
-        requests=api.ResourcesRequirements(memory=1.0 * 1024),
+    container_resources_requirements = ResourceRequirementsFactory.build(
+        limits=api.ResourceRequirement(memory=2.0 * 1024),
+        requests=api.ResourceRequirement(memory=1.0 * 1024),
     )
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
@@ -55,9 +55,9 @@ def test_pod_owner_memory_resources() -> None:
 
 
 def test_pod_owner_cpu_resources() -> None:
-    container_resources_requirements = ContainerResourcesFactory.build(
-        limits=api.ResourcesRequirements(cpu=2.0),
-        requests=api.ResourcesRequirements(cpu=1.0),
+    container_resources_requirements = ResourceRequirementsFactory.build(
+        limits=api.ResourceRequirement(cpu=2.0),
+        requests=api.ResourceRequirement(cpu=1.0),
     )
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))

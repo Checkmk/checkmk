@@ -95,9 +95,9 @@ def test_pod_init_container_specs() -> None:
         spec=PodSpecFactory.build(
             init_containers=[
                 api.ContainerSpec(
-                    resources=api.ContainerResources(
-                        limits=api.ResourcesRequirements(memory=2, cpu=10),
-                        requests=api.ResourcesRequirements(memory=None, cpu=1),
+                    resources=api.ResourceRequirements(
+                        limits=api.ResourceRequirement(memory=2, cpu=10),
+                        requests=api.ResourceRequirement(memory=None, cpu=1),
                     ),
                     name=api.ContainerName("init_container"),
                     image_pull_policy="Never",

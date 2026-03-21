@@ -58,22 +58,22 @@ def parse_metadata(metadata: V1ObjectMeta) -> api.MetaData:
     return api.MetaData.model_validate(metadata)
 
 
-def container_resources(container: V1Container) -> api.ContainerResources:
-    parsed_limits = api.ResourcesRequirements()
-    parsed_requests = api.ResourcesRequirements()
+def container_resources(container: V1Container) -> api.ResourceRequirements:
+    parsed_limits = api.ResourceRequirement()
+    parsed_requests = api.ResourceRequirement()
     if container.resources is not None:
         if limits := container.resources.limits:
-            parsed_limits = api.ResourcesRequirements(
+            parsed_limits = api.ResourceRequirement(
                 memory=parse_resource_value(limits["memory"]) if "memory" in limits else None,
                 cpu=parse_cpu_cores(limits["cpu"]) if "cpu" in limits else None,
             )
         if requests := container.resources.requests:
-            parsed_requests = api.ResourcesRequirements(
+            parsed_requests = api.ResourceRequirement(
                 memory=parse_resource_value(requests["memory"]) if "memory" in requests else None,
                 cpu=parse_cpu_cores(requests["cpu"]) if "cpu" in requests else None,
             )
 
-    return api.ContainerResources(
+    return api.ResourceRequirements(
         limits=parsed_limits,
         requests=parsed_requests,
     )

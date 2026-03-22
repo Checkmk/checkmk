@@ -254,7 +254,7 @@ def _call_hook(
     )
 
     if verbose:
-        sys.stdout.write("Calling hook: " + subprocess.list2cmdline(cmd))
+        sys.stdout.write("Calling hook: " + subprocess.list2cmdline(cmd) + "\n")
 
     completed_process = subprocess.run(
         cmd,

@@ -281,3 +281,40 @@ LLDP_NEIGHBOR_ATTRIBUTE = TableRow(
 def test_inventory_lldp_cache(section: Lldp, params: Any, expected: InventoryResult) -> None:  # type: ignore[misc]
     parsed = list(inventory_lldp_cache(params=params, section=section))
     assert parsed == expected
+
+
+# Crash report ada1756a-2397-11f1-84b2-bc2411b4a7e5: Some devices report an IPv4
+# address with LLDP address family 2 (IPv6), causing a ValueError in ip_address().
+STRING_TABLE_IPV4_AS_IPV6_MGMT_ADDR: Sequence[StringByteTable] = [
+    [  # lldp_rem_entry
+        [
+            "0.1.1",
+            "4",
+            [0, 13, 185, 74, 165, 68],
+            "5",
+            [105, 103, 98, 49],
+            "",
+            "OPNsense",
+            "FreeBSD",
+            "9",
+            "\x08",
+        ]
+    ],
+    [  # lldp_local_port_entry
+        ["1", "7", [49]]
+    ],
+    [  # lldp_local_info
+        ["4", [184, 236, 163, 230, 8, 135], "GS1900", "GS1900-8", " ", " "]
+    ],
+    [  # lldp_rem_man_addr_entry — address family 2 (IPv6) but only 4 bytes (IPv4)
+        ["0.1.1.2.4.192.168.42.254", "-2"]
+    ],
+]
+
+
+def test_parse_lldp_cache_ipv4_reported_as_ipv6() -> None:
+    """Device reports IPv4 address with IPv6 address family in LLDP management address."""
+    parsed = parse_lldp_cache(string_table=STRING_TABLE_IPV4_AS_IPV6_MGMT_ADDR)
+    assert parsed is not None
+    assert len(parsed.lldp_neighbors) == 1
+    assert parsed.lldp_neighbors[0].neighbor_address == "192.168.42.254"

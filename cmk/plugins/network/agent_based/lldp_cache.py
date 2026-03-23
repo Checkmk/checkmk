@@ -284,9 +284,15 @@ def parse_lldp_cache(string_table: Sequence[StringByteTable]) -> Lldp | None:
                     case "1":  # ipv4 address
                         neighbor_address = neighbor_address[4:]
                     case "2":  # ipv6 address
-                        neighbor_address = _render_ipv6_address(
-                            [int(k) for k in neighbor_address.split(".")[2:]]
-                        )
+                        addr_bytes = [int(k) for k in neighbor_address.split(".")[2:]]
+                        if len(addr_bytes) == 16:
+                            neighbor_address = _render_ipv6_address(addr_bytes)
+                        elif len(addr_bytes) == 4:
+                            # Some devices incorrectly report IPv4 addresses
+                            # with address family 2 (IPv6)
+                            neighbor_address = _render_ipv4_address(addr_bytes)
+                        else:
+                            neighbor_address = ""
                     case "6":  # mac address
                         mac_addr = _render_mac_address(
                             [int(k) for k in neighbor_address.split(".")[2:]]

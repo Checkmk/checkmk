@@ -1044,6 +1044,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.utils.prediction"): _allow(
         *PACKAGE_CCC,
         "cmk.agent_based.prediction_backend",
+        "cmk.livestatus_client",
         "cmk.utils.servicename",
         "cmk.utils.log",
     ),

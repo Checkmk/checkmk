@@ -19,6 +19,15 @@ export const storageHandler = {
   }
 }
 
+export function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export function capitalizeFirstLetter(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }

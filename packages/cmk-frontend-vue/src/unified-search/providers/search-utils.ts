@@ -10,6 +10,7 @@ import { type InjectionKey, type Ref, inject, provide, ref } from 'vue'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import { randomId } from '@/lib/randomId'
 import usePersistentRef from '@/lib/usePersistentRef'
+import { escapeHtml } from '@/lib/utils'
 
 import type { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import type { UnifiedSearch } from '@/unified-search/lib/unified-search'
@@ -289,11 +290,31 @@ function disableShortCuts() {
 
 function highlightQuery(s: string): string {
   if (!query.input.value) {
-    return s
+    return escapeHtml(s)
   }
   const sanitized = query.input.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trimEnd()
-  const regex = new RegExp(sanitized, 'ig')
-  return s.replace(regex, `<span class="highlight-query">$&</span>`)
+  if (!sanitized) {
+    return escapeHtml(s)
+  }
+  const regex = new RegExp(sanitized, 'igu')
+
+  // Match against the original string so that query terms are never matched
+  // inside HTML entity sequences (e.g. searching "amp" must not match inside
+  // "&amp;" that arose from escaping a "&" in the title). Each segment is
+  // escaped individually before reassembly.
+  let result = ''
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(s)) !== null) {
+    result += escapeHtml(s.slice(lastIndex, match.index))
+    result += `<span class="highlight-query">${escapeHtml(match[0])}</span>`
+    lastIndex = match.index + match[0].length
+    if (match[0].length === 0) {
+      regex.lastIndex++ // guard against zero-length matches
+    }
+  }
+  result += escapeHtml(s.slice(lastIndex))
+  return result
 }
 
 function breadcrumb(provider: ProviderName, topic: string): string[] {

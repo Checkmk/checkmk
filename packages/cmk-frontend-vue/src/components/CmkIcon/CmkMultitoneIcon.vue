@@ -92,7 +92,7 @@ immediateWatch(
     v-if="svg"
     class="cmk-multitone-icon"
     :class="getColorClasses(props.name)"
-    :title="props.title || getIconFileName(props.name)"
+    :title="props.title"
     v-html="svg"
   ></div>
 </template>

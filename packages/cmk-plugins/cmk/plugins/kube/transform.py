@@ -44,7 +44,11 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     V1StatefulSet,
 )
 
-from . import transform_json
+from .from_json.metadata import (
+    dependent_object_owner_references_from_json,
+    dependent_object_uid_from_json,
+    JSONObjectWithMetadata,
+)
 from .schemata import api
 from .schemata.api import convert_to_timestamp, parse_cpu_cores, parse_resource_value
 from .transform_any import parse_match_labels
@@ -499,7 +503,7 @@ WorkloadResource: TypeAlias = (
 )
 
 
-def dependent_object_owner_refererences_from_client(
+def dependent_object_owner_references_from_client(
     dependent: WorkloadResource,
 ) -> api.OwnerReferences:
     return [
@@ -516,16 +520,16 @@ def dependent_object_owner_refererences_from_client(
 
 def parse_object_to_owners(
     workload_resources_client: Iterable[WorkloadResource],
-    workload_resources_json: Iterable[transform_json.JSONObjectWithMetadata],
+    workload_resources_json: Iterable[JSONObjectWithMetadata],
 ) -> Mapping[str, api.OwnerReferences]:
     return {
-        workload_resource.metadata.uid: dependent_object_owner_refererences_from_client(
+        workload_resource.metadata.uid: dependent_object_owner_references_from_client(
             dependent=workload_resource
         )
         for workload_resource in workload_resources_client
     } | {
-        transform_json.dependent_object_uid_from_json(
+        dependent_object_uid_from_json(
             workload_resource
-        ): transform_json.dependent_object_owner_refererences_from_json(workload_resource)
+        ): dependent_object_owner_references_from_json(workload_resource)
         for workload_resource in workload_resources_json
     }

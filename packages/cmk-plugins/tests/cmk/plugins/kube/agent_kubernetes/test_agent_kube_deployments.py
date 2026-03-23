@@ -11,15 +11,14 @@ from typing import cast
 
 import pytest
 
-from cmk.plugins.kube.schemata import api
-from cmk.plugins.kube.transform_json import (
-    _metadata_from_json,
+from cmk.plugins.kube.from_json.deployment import (
     deployment_conditions,
     deployment_from_json,
     JSONDeployment,
     JSONDeploymentStatus,
-    JSONMetaData,
 )
+from cmk.plugins.kube.from_json.metadata import _metadata_from_json, JSONMetaData
+from cmk.plugins.kube.schemata import api
 from tests.cmk.plugins.kube.data.kube_1_33 import simple_deployment_default_fg
 
 

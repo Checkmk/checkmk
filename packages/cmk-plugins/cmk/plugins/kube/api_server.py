@@ -35,6 +35,10 @@ from kubernetes.client import (  # type: ignore[attr-defined]
 from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.kube import query
 from cmk.plugins.kube.controllers import ControllerGraph
+from cmk.plugins.kube.from_json.deployment import deployment_from_json, JSONDeploymentList
+from cmk.plugins.kube.from_json.metadata import dependent_object_uid_from_json
+from cmk.plugins.kube.from_json.node import JSONNodeList, node_list_from_json
+from cmk.plugins.kube.from_json.statefulset import JSONStatefulSetList, statefulset_from_json
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import (
     cron_job_from_client,
@@ -47,15 +51,6 @@ from cmk.plugins.kube.transform import (
     resource_quota_from_client,
 )
 from cmk.plugins.kube.transform_any import parse_open_metric_samples
-from cmk.plugins.kube.transform_json import (
-    dependent_object_uid_from_json,
-    deployment_from_json,
-    JSONDeploymentList,
-    JSONNodeList,
-    JSONStatefulSetList,
-    node_list_from_json,
-    statefulset_from_json,
-)
 
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")

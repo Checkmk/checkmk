@@ -13,8 +13,8 @@ import pydantic
 from kubernetes import client
 from pydantic import ConfigDict
 
+from cmk.plugins.kube.from_json.node import _metadata_no_namespace_from_json, JSONNodeMetaData
 from cmk.plugins.kube.schemata import api
-from cmk.plugins.kube.transform_json import _metadata_no_namespace_from_json, JSONNodeMetaData
 from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 

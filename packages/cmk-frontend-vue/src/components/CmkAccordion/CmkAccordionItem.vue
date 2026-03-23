@@ -60,6 +60,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 
 .cmk-accordion-item__content-wrapper {
   overflow: hidden;
+  padding: 20px 60px;
 }
 
 .cmk-accordion-item__header {
@@ -85,8 +86,6 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 }
 
 .cmk-accordion-item__content {
-  margin: 20px 60px 8px;
-
   &:focus-within {
     position: relative;
     z-index: 1;

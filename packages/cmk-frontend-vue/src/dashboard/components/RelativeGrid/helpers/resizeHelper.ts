@@ -45,7 +45,7 @@ export interface ResizeDimensions {
 
 type Edges = 'left' | 'right' | 'top' | 'bottom'
 
-function clampResizeDeltas(
+export function clampResizeDeltas(
   direction: ResizeDirection,
   dx: number,
   dy: number,

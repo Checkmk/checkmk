@@ -8,7 +8,6 @@ import logging
 import re
 import signal
 import subprocess
-import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from types import FrameType
@@ -16,13 +15,11 @@ from typing import IO
 
 import pytest
 
+from tests.composition.utils import await_broker_ready, Timeout
+
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
-
-
-class Timeout(RuntimeError):
-    pass
 
 
 @contextmanager
@@ -107,7 +104,7 @@ def check_broker_ping(site: Site, destination: str, time_out_: int = 5) -> None:
 
         if "UUIDs match" not in output[-1]:
             raise RuntimeError(
-                f"cmk-broker-test received another message from {destination} than sent"
+                f"cmk-broker-test received another message from {destination} than sent, output is: {output}"
             )
         if ping.stderr is not None and (error_output := ping.stderr.read()):
             logger.error("stderr: %s", error_output)
@@ -125,11 +122,11 @@ def assert_message_exchange_working(site1: Site, site2: Site) -> None:
     # Checking for the binding, the queues or the shovels as well as check_port_connectivity
     # did not help, but waiting for some time does
     retries = 10
-    time_out_ = 2
     for _ in range(retries):
         with contextlib.suppress(Timeout):
+            purge_queues_messages((site1, site2))  # purge queues to avoid receiving old messages
             with broker_pong(site1):
-                check_broker_ping(site2, site1.id, time_out_=time_out_)
+                check_broker_ping(site2, site1.id)
             break
     else:
         assert False, f"Message exchange not working after {retries} retries"
@@ -160,30 +157,6 @@ def broker_stopped(site: Site) -> Iterator[None]:
         await_broker_ready(site)
 
 
-def await_broker_ready(*sites: Site) -> None:
-    for site in sites:
-        _await_port_ready(site)
-        _await_shovels_ready(site)
-
-
-def _await_port_ready(site: Site) -> None:
-    port = int(site.omd("config", "show", "RABBITMQ_PORT", check=True).stdout)
-    for _ in range(180):
-        if site.execute(["rabbitmq-diagnostics", "check_port_listener", str(port)]).wait() == 0:
-            return
-        time.sleep(1)
-    raise Timeout(f"Rabbitmq did not start properly (port {port} not listening)")
-
-
-def _await_shovels_ready(site: Site) -> None:
-    for _ in range(180):
-        raw = json.loads(site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout)
-        if all(shovel["state"] == "running" for shovel in raw):
-            return
-        time.sleep(1)
-    raise Timeout(f"Rabbitmq shovels not started properly: {raw!r}")
-
-
 @contextmanager
 def p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -> Iterator[None]:
     """Establish a direct connection between two sites"""
@@ -193,10 +166,12 @@ def p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -
             connection_id, connecter=remote_site.id, connectee=remote_site_2.id
         )
         central_site.openapi.changes.activate_and_wait_for_completion()
+        await_broker_ready(central_site, remote_site, remote_site_2)
         yield
     finally:
         central_site.openapi.broker_connections.delete(connection_id)
         central_site.openapi.changes.activate_and_wait_for_completion()
+        await_broker_ready(central_site, remote_site, remote_site_2)
 
 
 def _rabbitmq_status_vhost(site: Site, vhost: str) -> str:
@@ -216,6 +191,7 @@ def _rabbitmq_status_vhost(site: Site, vhost: str) -> str:
 @contextlib.contextmanager
 def rabbitmq_info_on_failure(sites: Sequence[Site]) -> Iterator[None]:
     try:
+        await_broker_ready(*sites)
         yield
     except (AssertionError, RuntimeError) as e:
         error_message = f"{e}\n"
@@ -232,3 +208,28 @@ def rabbitmq_info_on_failure(sites: Sequence[Site]) -> Iterator[None]:
                 error_message += f"Error occurred trying to determine rabbitmq status: {exc}\n"
                 continue
         raise type(e)(error_message) from e
+
+
+def purge_queues_messages(sites: Sequence[Site]) -> None:
+    def _list_sites_queues(site: Site) -> list[str]:
+        try:
+            return (
+                site.run(["rabbitmqctl", "list_queues", "--quiet", "--no-table-headers", "name"])
+                .stdout.strip()
+                .splitlines()
+            )
+        except Exception as e:
+            logger.error("Failed to list RabbitMQ queues on %s: %s", site.id, e)
+            raise
+
+    def _purge_queues(site: Site, queues: list[str]) -> None:
+        for queue in queues:
+            try:
+                logger.info("Purging RabbitMQ queue %s on %s", queue, site.id)
+                site.run(["rabbitmqctl", "purge_queue", queue])
+            except Exception as e:
+                logger.error("Failed to purge RabbitMQ queue %s on %s: %s", queue, site.id, e)
+                raise
+
+    for site in sites:
+        _purge_queues(site, _list_sites_queues(site))

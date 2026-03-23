@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import glob
+import json
 import logging
+import subprocess
 import time
 from pathlib import Path
 
@@ -13,6 +15,10 @@ from tests.testlib.site import Site
 
 logger = logging.getLogger("composition-tests")
 logger.setLevel(logging.INFO)
+
+
+class Timeout(RuntimeError):
+    pass
 
 
 def get_package_extension() -> str:
@@ -62,3 +68,60 @@ def get_cre_agent_path(site: Site) -> Path:
             f"Can't find '{package_extension}' agent to install in folder '{agent_folder}'"
         )
     return Path(agent_results[0])
+
+
+def enable_rabbitmq_tracing(*sites: Site) -> None:
+    """
+    - cmk-monitor-broker --enable_tracing does two things:
+        (a) runs rabbitmq-plugins enable rabbitmq_tracing which persists to the enabled_plugins file, and
+        (b) binds the trace log via the management API (which does not persist across RabbitMQ restarts)
+    - RabbitMQ only starts once PIGGYBACK_HUB is turned on, so tracing can only be enabled after that
+    - trace log binding won't survive a site restart (e.g., during _turn_off_piggyback_hub).
+      The plugin itself will, because rabbitmq-plugins enable modifies enabled_plugins.
+    - therefore:
+        1. This should be called, if needed, after every RabbitMQ restart
+        2. there should be NO NEED to disable tracing; it's basically disabled automatically
+           when RAbbitMQ is restarted; disabling it only adds incerased risk of flakes.
+    """
+    for site in sites:
+        site.run(["cmk-monitor-broker", "--enable_tracing"])
+
+
+def await_broker_ready(*sites: Site) -> None:
+    # restart of rabbitmq needs re-enabling of tracing
+    enable_rabbitmq_tracing(*sites)
+    for site in sites:
+        _await_port_ready(site)
+        _await_shovels_ready(site)
+
+
+def _await_port_ready(site: Site) -> None:
+    port = int(site.omd("config", "show", "RABBITMQ_PORT", check=True).stdout)
+    for _ in range(60):
+        if site.execute(["rabbitmq-diagnostics", "check_port_listener", str(port)]).wait() == 0:
+            return
+        time.sleep(1)
+    raise Timeout(f"Rabbitmq did not start properly (port {port} not listening)")
+
+
+def _await_shovels_ready(site: Site) -> None:
+    for _ in range(60):
+        try:
+            raw = site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout
+        except subprocess.CalledProcessError as e:
+            logger.exception(
+                "Failed to get shovel status on %s (rc=%s, stdout=%r, stderr=%r); waiting...",
+                site.id,
+                e.returncode,
+                e.stdout,
+                e.stderr,
+            )
+            time.sleep(1)
+            continue
+
+        data = json.loads(raw)
+        if all(shovel["state"] == "running" for shovel in data):
+            return
+        logger.info("Shovels on %s are not running. Waiting...", site.id)
+        time.sleep(1)
+    raise Timeout("Rabbitmq shovels not started properly.")

@@ -71,6 +71,7 @@ import UclCmkErrorBoundary from './system-feedback/CmkErrorBoundary/UclCmkErrorB
 import UclCmkHelpText from './system-feedback/CmkHelpText/UclCmkHelpText.vue'
 import UclCmkInlineValidation from './system-feedback/CmkInlineValidation/UclCmkInlineValidation.vue'
 import UclCmkLoading from './system-feedback/CmkLoading/UclCmkLoading.vue'
+import UclCmkPaste from './system-feedback/CmkPaste/UclCmkPaste.vue'
 import UclCmkPerfometer from './system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
 import UclCmkPopup from './system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
@@ -156,6 +157,7 @@ const systemFeedbackPages = [
   new Page('CmkHelpText', UclCmkHelpText),
   new Page('CmkInlineValidation', UclCmkInlineValidation),
   new Page('CmkLoading', UclCmkLoading),
+  new Page('CmkPaste', UclCmkPaste),
   new Page('CmkPerfometer', UclCmkPerfometer),
   new Page('CmkPopup', UclCmkPopup),
   new Page('CmkPopupDialog', UclCmkPopupDialog),

@@ -1398,7 +1398,7 @@ class ActivateChanges:
                 pending_changes.append(
                     PendingChangeSummary(
                         changeId=change["id"],
-                        changeText=unescape(change["text"]),
+                        changeText=change["text"],
                         user=change["user_id"],
                         time=change["time"],
                         foreignChange=is_foreign_change(change),

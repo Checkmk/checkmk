@@ -478,6 +478,8 @@ export function update_time(target: string, time: string) {
   const container = document.getElementById(target) as HTMLInputElement
   if (container) {
     container.value = time
+    // Notify Vue web components about the programmatic value change
+    container.dispatchEvent(new Event('cmk-update'))
   }
 }
 //#.

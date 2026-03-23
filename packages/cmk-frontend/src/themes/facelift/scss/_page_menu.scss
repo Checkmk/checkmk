@@ -804,6 +804,7 @@ div.page_menu_popup {
 
     input[type='date'],
     input[type='time'],
+    cmk-date-time-picker,
     select#_down_recurring + span .select2-selection.select2-selection--single,
     .server_time {
       margin-left: 10px;
@@ -888,7 +889,7 @@ div.page_menu_popup {
         }
       }
 
-      div {
+      > div {
         margin-top: 1.5 * $spacing;
 
         &.example {
@@ -901,14 +902,11 @@ div.page_menu_popup {
           padding-right: 0;
         }
 
-        &.date_time_picker {
-          display: inline-block;
-          margin-top: 0;
-
-          input[type='date']:not(.active),
-          input[type='time']:not(.active) {
-            color: $font-color-dimmed;
-          }
+        &.ack_expire_row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 4px;
         }
 
         &.disabled {

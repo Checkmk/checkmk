@@ -974,24 +974,26 @@ def command_acknowledge_render(what: str) -> None:
     is_community_edition: bool = (
         cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY
     )
-    html.open_div(class_="disabled" if is_community_edition else "")
+    html.open_div(class_="ack_expire_row" + (" disabled" if is_community_edition else ""))
     html.checkbox(
         "_ack_expire",
         False,
         label=_("Expire on"),
         onclick="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
     )
-    html.open_div(class_="date_time_picker")
-    _vs_date().render_input("_ack_expire_date", date)
-    _vs_time().render_input("_ack_expire_time", time_)
-    html.close_div()
-
-    html.span(
-        timezone_utc_offset_str()
-        + " "
-        + _("Server time (currently: %s)")
-        % time.strftime("%m/%d/%Y %H:%M", time.localtime(time.time())),
-        class_="server_time",
+    html.vue_component(
+        "cmk-date-time-picker",
+        data={
+            "date_varprefix": "_ack_expire_date",
+            "time_varprefix": "_ack_expire_time",
+            "date_value": date,
+            "time_value": time_,
+            "server_time_text": timezone_utc_offset_str()
+            + " "
+            + _("Server time (currently: %s)")
+            % time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time())),
+        },
+        onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
     )
     if is_community_edition:
         render_community_upgrade_button()
@@ -1533,35 +1535,46 @@ class CommandScheduleDowntimesForm:
         html.close_tr()
 
         html.open_tr()
-        html.open_td()
+        html.open_td(style="vertical-align:middle;")
         html.write_text_permissive(_("Start"))
         html.close_td()
         html.open_td()
-        _vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
-        _vs_time().render_input("_down_from_time", time.strftime("%H:%M"))
-        html.span(
-            timezone_utc_offset_str()
-            + " "
-            + _("Server time (currently: %s)") % time.strftime("%m/%d/%Y %H:%M", time.localtime()),
-            class_="server_time",
+        html.vue_component(
+            "cmk-date-time-picker",
+            data={
+                "date_varprefix": "_down_from_date",
+                "time_varprefix": "_down_from_time",
+                "date_value": time.strftime("%Y-%m-%d"),
+                "time_value": time.strftime("%H:%M"),
+                "server_time_text": timezone_utc_offset_str()
+                + " "
+                + _("Server time (currently: %s)")
+                % time.strftime("%Y-%m-%d %H:%M", time.localtime()),
+            },
+            onchange="cmk.page_menu.update_down_duration_button();",
         )
         html.close_td()
         html.close_tr()
 
         # End section
         html.open_tr()
-        html.open_td()
+        html.open_td(style="vertical-align:middle;")
         html.write_text_permissive(_("End"))
         html.close_td()
         html.open_td()
-        _vs_date().render_input("_down_to_date", time.strftime("%Y-%m-%d"))
         default_endtime: float = time.time() + 7200
-        _vs_time().render_input(
-            "_down_to_time", time.strftime("%H:%M", time.localtime(default_endtime))
-        )
-        html.span(
-            timezone_utc_offset_str(default_endtime) + " " + _("Server time"),
-            class_="server_time",
+        html.vue_component(
+            "cmk-date-time-picker",
+            data={
+                "date_varprefix": "_down_to_date",
+                "time_varprefix": "_down_to_time",
+                "date_value": time.strftime("%Y-%m-%d"),
+                "time_value": time.strftime("%H:%M", time.localtime(default_endtime)),
+                "server_time_text": timezone_utc_offset_str(default_endtime)
+                + " "
+                + _("Server time"),
+            },
+            onchange="cmk.page_menu.update_down_duration_button();",
         )
         html.close_td()
 
@@ -1609,18 +1622,6 @@ class CommandScheduleDowntimesForm:
             request,
             [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
             filename="wato.py",
-        )
-
-    def _vs_date(self) -> DatePicker:
-        return DatePicker(
-            title=_("Downtime date picker"),
-            onchange="cmk.page_menu.update_down_duration_button();",
-        )
-
-    def _vs_time(self) -> TimePicker:
-        return TimePicker(
-            title=_("Downtime time picker"),
-            onchange="cmk.page_menu.update_down_duration_button();",
         )
 
     def _get_onclick(

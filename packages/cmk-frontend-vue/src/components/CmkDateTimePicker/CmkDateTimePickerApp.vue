@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import CmkDateTimePicker from './CmkDateTimePicker.vue'
 
@@ -29,6 +29,29 @@ const dateInputId = computed(() =>
 const timeInputId = computed(() =>
   props.time_varprefix ? `time_${props.time_varprefix}` : undefined
 )
+
+const dateInputRef = ref<HTMLInputElement | null>(null)
+const timeInputRef = ref<HTMLInputElement | null>(null)
+
+function onDateUpdate(e: Event) {
+  const input = e.target as HTMLInputElement
+  dateValue.value = input.value
+}
+
+function onTimeUpdate(e: Event) {
+  const input = e.target as HTMLInputElement
+  timeValue.value = input.value
+}
+
+onMounted(() => {
+  dateInputRef.value?.addEventListener('cmk-update', onDateUpdate)
+  timeInputRef.value?.addEventListener('cmk-update', onTimeUpdate)
+})
+
+onUnmounted(() => {
+  dateInputRef.value?.removeEventListener('cmk-update', onDateUpdate)
+  timeInputRef.value?.removeEventListener('cmk-update', onTimeUpdate)
+})
 </script>
 
 <template>
@@ -41,6 +64,7 @@ const timeInputId = computed(() =>
   <input
     v-if="date_varprefix"
     :id="dateInputId"
+    ref="dateInputRef"
     type="hidden"
     :name="date_varprefix"
     :value="dateValue"
@@ -48,6 +72,7 @@ const timeInputId = computed(() =>
   <input
     v-if="time_varprefix"
     :id="timeInputId"
+    ref="timeInputRef"
     type="hidden"
     :name="time_varprefix"
     :value="timeValue"

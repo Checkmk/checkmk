@@ -862,6 +862,9 @@ class ModeNotifications(ABCNotificationsMode):
         return self.mode_url()
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
+        search_vars: HTTPVariables = (
+            [("search", search)] if (search := request.get_str_input("search", "")) else []
+        )
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -876,7 +879,11 @@ class ModeNotifications(ABCNotificationsMode):
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
-                                            [("mode", "notification_rule_quick_setup")]
+                                            [
+                                                ("mode", "notification_rule_quick_setup"),
+                                                ("back_mode", self.name()),
+                                            ]
+                                            + search_vars
                                         )
                                     ),
                                     is_shortcut=True,
@@ -1754,6 +1761,9 @@ class ModeTestNotifications(ModeNotifications):
         return _("Test notifications")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
+        search_vars: HTTPVariables = (
+            [("search", search)] if (search := request.get_str_input("search", "")) else []
+        )
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -1772,6 +1782,7 @@ class ModeTestNotifications(ModeNotifications):
                                                 ("mode", "notification_rule_quick_setup"),
                                                 ("back_mode", self.name()),
                                             ]
+                                            + search_vars
                                         )
                                     ),
                                     is_shortcut=False,

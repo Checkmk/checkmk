@@ -294,6 +294,7 @@ defineExpose({
   border: 1px solid var(--ux-theme-6);
   box-sizing: border-box;
   border-radius: 0;
+  width: fit-content;
   min-width: 100%;
   max-width: 512px;
   margin: 0;
@@ -312,7 +313,11 @@ defineExpose({
   }
 
   input {
-    width: 100%;
+    field-sizing: content;
+    box-sizing: border-box;
+    min-width: 100%;
+    max-width: 100%;
+    padding: 10px 4px;
     margin: 0;
     background: var(--ux-theme-3);
   }

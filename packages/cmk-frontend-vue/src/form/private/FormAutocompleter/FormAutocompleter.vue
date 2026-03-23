@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useSlots } from 'vue'
 
-import { untranslated } from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDropdown from '@/components/CmkDropdown'
@@ -20,6 +20,8 @@ import {
 } from '@/components/CmkSuggestions'
 
 import { fetchSuggestions } from '@/form/private/FormAutocompleter/autocompleter'
+
+const { _t } = usei18n()
 
 const props = defineProps<{
   id?: string
@@ -70,6 +72,7 @@ const slots = useSlots()
     :label="untranslated(label || '')"
     :start-of-group="startOfGroup || false"
     :width="width || 'wide'"
+    :no-results-hint="_t('No results found')"
     :form-validation="hasError || false"
     :disabled="disabled || false"
   >

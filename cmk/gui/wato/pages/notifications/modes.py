@@ -24,6 +24,7 @@ from datetime import datetime, timedelta
 from typing import Any, cast, Literal, NamedTuple, NotRequired, overload, TypedDict
 
 from livestatus import LivestatusResponse, SiteConfiguration, SiteConfigurations
+from livestatus import Query as OldQuery
 
 import cmk.gui.view_utils
 import cmk.gui.watolib.audit_log as _audit_log
@@ -181,6 +182,10 @@ from cmk.gui.watolib.user_scripts import (
     load_notification_scripts,
 )
 from cmk.gui.watolib.users import notification_script_choices
+from cmk.livestatus_client.expressions import And, LqSafe
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.hosts import Hosts
+from cmk.livestatus_client.tables.services import Services
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 from cmk.shared_typing.notifications import (
     NotificationCoreStats,
@@ -1870,9 +1875,12 @@ class ModeTestNotifications(ModeNotifications):
                 raise MKUserError(None, "Failed to parse context from request.") from e
 
             event_date = time.time()
-            self._add_missing_host_context(context, event_date)
-            if context["WHAT"] == "SERVICE":
-                self._add_missing_service_context(context, event_date)
+            try:
+                self._add_missing_host_context(context, event_date)
+                if context["WHAT"] == "SERVICE":
+                    self._add_missing_service_context(context, event_date)
+            except ValueError as e:
+                raise MKUserError(None, str(e)) from e
 
             site_id = SiteId(context["SITEOFHOST"])
             site_config = site_configs[site_id]
@@ -2225,13 +2233,23 @@ class ModeTestNotifications(ModeNotifications):
         """We don't want to transport all possible informations via HTTP vars
         so we enrich the context after fetching all user defined options"""
         hostname = context["HOSTNAME"]
+        query = Query(
+            [
+                Hosts.custom_variable_names,
+                Hosts.custom_variable_values,
+                Hosts.groups,
+                Hosts.contact_groups,
+                Hosts.labels,
+                Hosts.alias,
+                Hosts.address,
+                Hosts.contacts,
+                Hosts.notes_url,
+                Hosts.tags,
+            ],
+            Hosts.name == LqSafe(hostname),
+        )
         with sites.prepend_site():
-            resp = sites.live().query(
-                "GET hosts\n"
-                "Columns: custom_variable_names custom_variable_values groups "
-                "contact_groups labels host_alias host_address contacts notes_url tags\n"
-                f"Filter: host_name = {hostname}\n"
-            )
+            resp = sites.live().query(OldQuery(query))
 
         if len(resp) < 1:
             raise MKUserError(
@@ -2279,12 +2297,24 @@ class ModeTestNotifications(ModeNotifications):
 
     def _add_missing_service_context(self, context: NotificationContext, event_date: float) -> None:
         hostname = context["HOSTNAME"]
-        resp = sites.live().query(
-            "GET services\n"
-            "Columns: custom_variable_names custom_variable_values groups contact_groups check_command labels contacts display_name notes_url\n"
-            "Filter: host_name = %s\nFilter: service_description = %s"
-            % (hostname, context["SERVICEDESC"])
+        query = Query(
+            [
+                Services.custom_variable_names,
+                Services.custom_variable_values,
+                Services.groups,
+                Services.contact_groups,
+                Services.check_command,
+                Services.labels,
+                Services.contacts,
+                Services.display_name,
+                Services.notes_url,
+            ],
+            And(
+                Services.host_name == LqSafe(hostname),
+                Services.description == LqSafe(context["SERVICEDESC"]),
+            ),
         )
+        resp = sites.live().query(OldQuery(query))
         if len(resp) < 1:
             raise MKUserError(
                 None,

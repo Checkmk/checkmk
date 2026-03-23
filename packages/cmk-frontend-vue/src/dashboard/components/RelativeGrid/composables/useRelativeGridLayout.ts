@@ -22,14 +22,14 @@ import {
 } from '../types.ts'
 import { calculateAbsoluteLayouts, convertAbsoluteToRelativePosition } from '../utils.ts'
 
-const widgetHasTitle = (widget: RelativeGridWidget): boolean => {
+export const widgetHasTitle = (widget: RelativeGridWidget): boolean => {
   return (
     widget.general_settings.title?.render_mode === 'with_background' ||
     widget.general_settings.title?.render_mode === 'without_background'
   )
 }
 
-const legacySizeValue = (value: WidgetSizeValue): number => {
+export const legacySizeValue = (value: WidgetSizeValue): number => {
   if (typeof value === 'number') {
     return value
   }

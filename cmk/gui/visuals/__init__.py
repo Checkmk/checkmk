@@ -73,7 +73,7 @@ from ._store import available_by_owner as available_by_owner
 from ._store import declare_custom_permissions as declare_custom_permissions
 from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
 from ._store import get_permissioned_visual as get_permissioned_visual
-from ._store import invalidate_all_caches
+from ._store import invalidate_all_caches as invalidate_all_caches
 from ._store import load as load
 from ._store import load_visuals_of_a_user as load_visuals_of_a_user
 from ._store import save as save

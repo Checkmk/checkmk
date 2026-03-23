@@ -28,7 +28,7 @@ from .dashlet import (
     IFrameDashlet,
     StaticTextDashletConfig,
 )
-from .store import get_all_dashboards, get_dashlet, get_permitted_dashboards
+from .store import get_all_dashboards, get_permitted_dashboards
 from .title_macros import render_title_with_macros_string
 from .type_defs import DashboardConfig, DashboardName
 from .visual_type import VisualTypeDashboards
@@ -47,7 +47,6 @@ __all__ = [
     "GROW",
     "dashlet_registry",
     "StaticTextDashletConfig",
-    "get_dashlet",
     "get_all_dashboards",
     "get_permitted_dashboards",
     "noop_builtin_dashboard_extender",

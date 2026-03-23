@@ -23,7 +23,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.valuespec import HostStateValue, MonitoringStateValue, TimerangeValue
 
 DashboardName = str
-DashletId = int
+WidgetId = str
 DashletRefreshInterval = bool | int
 DashletRefreshAction = str | None
 DashletSize = tuple[int, int]
@@ -254,10 +254,8 @@ class DashboardResponsiveGridLayoutSpec(TypedDict):
 
 
 class DashboardConfig(Visual):
-    # TODO: rename dashlets to widgets, change list to dict -> update action
-    #       this can include complete overhaul for how widgets are stored
     mtime: int
-    dashlets: list[DashletConfig]
+    widgets: dict[WidgetId, DashletConfig]
     show_title: bool
     mandatory_context_filters: list[FilterName]
     layout: NotRequired[

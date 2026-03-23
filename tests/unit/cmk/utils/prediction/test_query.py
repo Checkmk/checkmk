@@ -52,6 +52,7 @@ class TestPredictionQuerier:
             f"Columns: prediction_files\n"
             f"Filter: host_name = {querier.host_name}\n"
             f"Filter: description = {querier.service_name}\n"
+            "And: 2\n"
             "ColumnHeaders: off"
         )
         mock_livestatus.expect_query(

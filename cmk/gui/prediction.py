@@ -183,9 +183,12 @@ def page_graph(ctx: PageContext) -> None:
         user_role_ids=user.role_ids,
     )
 
-    selected_predictions = _select_prediction(
-        livestatus_connection, host_name, service_name, metric_name
-    )
+    try:
+        selected_predictions = _select_prediction(
+            livestatus_connection, host_name, service_name, metric_name
+        )
+    except ValueError as e:
+        raise MKGeneralException(str(e)) from e
     x_range = selected_predictions.get_x_range()
 
     measurement_point = _get_current_perfdata_via_livestatus(host_name, service_name, metric_name)

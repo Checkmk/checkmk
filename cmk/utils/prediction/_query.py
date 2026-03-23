@@ -7,10 +7,14 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
+from livestatus import Query as OldQuery
 from livestatus import SingleSiteConnection
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName
+from cmk.livestatus_client.expressions import And, LqSafe
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.services import Services
 from cmk.utils.servicename import ServiceName
 
 from ._prediction import PredictionData, PredictionStore
@@ -40,23 +44,29 @@ class PredictionQuerier:
         rel_filename = PredictionStore.relative_data_file(meta)
         return PredictionData.model_validate_json(self._query_prediction_file_content(rel_filename))
 
+    def _service_filter(self) -> And:
+        return And(
+            Services.host_name == LqSafe(self.host_name),
+            Services.description == LqSafe(self.service_name),
+        )
+
     def _query_prediction_files(self) -> Iterator[Path]:
+        query = Query(
+            [Services.prediction_files],
+            self._service_filter(),
+        )
         yield from (
             Path(prediction_file)
-            for prediction_file in self.livestatus_connection.query_row(
-                "GET services\n"
-                "Columns: prediction_files\n"
-                f"Filter: host_name = {self.host_name}\n"
-                f"Filter: description = {self.service_name}"
-            )[0]
+            for prediction_file in self.livestatus_connection.query_row(OldQuery(query))[0]
         )
 
     def _query_prediction_file_content(self, relative_file_path: Path) -> bytes:
+        # Dynamic column names are not supported by the query builder, so we use a string-based query here.
         return b"\n".join(
             self.livestatus_connection.query_row(
                 "GET services\n"
                 f"Columns: prediction_file:file:{relative_file_path}\n"
-                f"Filter: host_name = {self.host_name}\n"
-                f"Filter: description = {self.service_name}"
+                f"Filter: host_name = {LqSafe(self.host_name)}\n"
+                f"Filter: description = {LqSafe(self.service_name)}"
             )
         )

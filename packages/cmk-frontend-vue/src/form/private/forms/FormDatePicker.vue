@@ -5,11 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { DatePicker } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { ref } from 'vue'
 
 import useId from '@/lib/useId'
 
+import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import CmkInput from '@/components/user-input/CmkInput.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
@@ -28,6 +30,7 @@ const [validation, value] = useValidation<string>(
 )
 
 const componentId = useId()
+const unusedTime = ref('00:00')
 </script>
 
 <template>
@@ -41,13 +44,10 @@ const componentId = useId()
         <FormRequired :spec="props.spec" :space="'after'" />
       </template>
     </div>
-    <CmkInput
-      :id="componentId"
-      v-model="value"
-      :type="'date'"
-      :aria-label="props.spec.label || props.spec.title"
-      :external-errors="validation"
-    />
+    <div class="form-date-picker__input-wrapper">
+      <FormValidation :validation="validation" />
+      <CmkDateTimePicker v-model:date="value" v-model:time="unusedTime" mode="date" />
+    </div>
   </div>
 </template>
 <style scoped>
@@ -59,5 +59,10 @@ const componentId = useId()
 .form-date-picker__label {
   display: flex;
   align-items: flex-end;
+}
+
+.form-date-picker__input-wrapper {
+  display: flex;
+  flex-direction: column;
 }
 </style>

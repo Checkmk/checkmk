@@ -8,8 +8,9 @@ import type { TimePicker } from 'cmk-shared-typing/typescript/vue_formspec_compo
 
 import useId from '@/lib/useId'
 
+import CmkTimePicker from '@/components/CmkDateTimePicker/CmkTimePicker.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import CmkInput from '@/components/user-input/CmkInput.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
@@ -41,13 +42,10 @@ const componentId = useId()
         <FormRequired :spec="props.spec" :space="'after'" />
       </template>
     </div>
-    <CmkInput
-      :id="componentId"
-      v-model="value"
-      :type="'time'"
-      :aria-label="props.spec.label || props.spec.title"
-      :external-errors="validation"
-    />
+    <div class="form-time-picker__input-wrapper">
+      <FormValidation :validation="validation" />
+      <CmkTimePicker :id="componentId" v-model="value" />
+    </div>
   </div>
 </template>
 <style scoped>
@@ -59,5 +57,10 @@ const componentId = useId()
 .form-time-picker__label {
   display: flex;
   align-items: flex-end;
+}
+
+.form-time-picker__input-wrapper {
+  display: flex;
+  flex-direction: column;
 }
 </style>

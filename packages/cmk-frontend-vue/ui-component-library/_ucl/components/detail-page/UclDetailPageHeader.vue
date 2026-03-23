@@ -8,7 +8,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 </script>
 
 <template>
-  <CmkHeading type="h1" class="ucl-detail-page-title">
+  <CmkHeading type="h1">
     <slot />
   </CmkHeading>
 </template>

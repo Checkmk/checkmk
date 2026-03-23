@@ -4,6 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkSpace from '@/components/CmkSpace.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+
 import demoLayoutImage from '../assets/images/ucl-layout.png'
 import UclHeroBanner from '../components/UclHeroBanner.vue'
 import HomeLayout from '../components/UclHomeLayout.vue'
@@ -19,7 +22,7 @@ defineProps<{ screenshotMode: boolean }>()
     </template>
 
     <template #intro>
-      <h1>The single source of truth for Checkmk UI components</h1>
+      <CmkHeading type="h1">The single source of truth for Checkmk UI components</CmkHeading>
       <p>
         Explore, understand, and use Vue UI components consistently across Checkmk — with real
         behavior, real code, and no guesswork.
@@ -38,9 +41,9 @@ defineProps<{ screenshotMode: boolean }>()
     </template>
 
     <template #feature-left>
-      <h1>What’s included</h1>
-
-      <h2>Components</h2>
+      <CmkHeading type="h1">What’s included</CmkHeading>
+      <CmkSpace size="medium" direction="vertical" />
+      <CmkHeading type="h2">Components</CmkHeading>
       <p>
         Components are reusable, functional UI building blocks built on top of the foundations that
         meet specific interaction needs. They are designed to be consistent, accessible, and
@@ -57,7 +60,7 @@ defineProps<{ screenshotMode: boolean }>()
     </template>
 
     <template #audience-title>
-      <h1>Audience and usage</h1>
+      <CmkHeading type="h1">Audience and usage</CmkHeading>
     </template>
 
     <template #audience-cards>
@@ -109,9 +112,3 @@ defineProps<{ screenshotMode: boolean }>()
     </template>
   </HomeLayout>
 </template>
-
-<style scoped>
-h1 {
-  font-size: 24px !important;
-}
-</style>

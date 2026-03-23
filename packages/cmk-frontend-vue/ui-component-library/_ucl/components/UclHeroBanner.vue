@@ -62,7 +62,7 @@ defineProps<{
 }
 
 .ucl-hero-banner__title {
-  font-size: 24px;
+  font-size: var(--ucl-font-size-h1-heading);
   font-weight: 800;
   margin: 0 0 8px;
   color: var(--color-white-100);

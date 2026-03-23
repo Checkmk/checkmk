@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from '@/components/CmkButton.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const props = defineProps<{
   title: string
@@ -21,7 +22,7 @@ const handleButtonClick = () => {
 <template>
   <div class="ucl-footer">
     <div class="ucl-footer__content">
-      <h2 class="ucl-footer__title">{{ title }}</h2>
+      <CmkHeading type="h2">{{ title }}</CmkHeading>
       <p class="ucl-footer__subtitle">{{ subtitle }}</p>
       <CmkButton variant="primary" @click="handleButtonClick">
         {{ buttonText }}
@@ -58,12 +59,6 @@ const handleButtonClick = () => {
 .ucl-footer__content {
   position: relative;
   max-width: 700px;
-}
-
-.ucl-footer__title {
-  font-size: 16px;
-  line-height: normal;
-  margin: 0 0 12px;
 }
 
 .ucl-footer__subtitle {

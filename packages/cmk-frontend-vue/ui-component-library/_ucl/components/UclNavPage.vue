@@ -28,6 +28,7 @@ const { page } = defineProps<{
 <style scoped>
 :root a.ucl-nav-page {
   display: block;
+  font-size: var(--ucl-font-size-body);
   padding: 6px 0 6px 20px;
   text-decoration: none;
   cursor: pointer;

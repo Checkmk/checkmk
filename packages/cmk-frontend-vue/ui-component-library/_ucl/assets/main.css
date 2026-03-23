@@ -10,18 +10,10 @@ body {
   margin: 0;
   padding: 0 0 0 10px;
   font-family: Inter, sans-serif;
-  font-size: 14px;
   font-weight: 400;
+  font-size: var(--ucl-font-size-body);
   color: var(--ucl-body-text-color);
   background-color: var(--ucl-app-bg-color);
-}
-
-h1,
-h2,
-h3,
-h4 {
-  color: var(--ucl-headings-font-color);
-  font-weight: 700;
 }
 
 p,

@@ -7,16 +7,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { useLegacyCss } from '@ucl/_ucl/composables/useLegacyCss'
 
 import CmkHelpText from '@/components/CmkHelpText.vue'
-import CmkLabel from '@/components/CmkLabel.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkSwitch from '@/components/CmkSwitch.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { isLegacyCssEnabled } = useLegacyCss()
 </script>
 
 <template>
   <div class="ucl-legacy-css-switch">
-    <CmkLabel variant="title"> Legacy CSS </CmkLabel>
+    <CmkHeading type="h4">Legacy CSS</CmkHeading>
 
     <CmkHelpText
       help="When enabled, legacy CSS styling is active. When disabled, only the Vue-based styling is applied. The component should render correctly and maintain a consistent, polished appearance in both modes."

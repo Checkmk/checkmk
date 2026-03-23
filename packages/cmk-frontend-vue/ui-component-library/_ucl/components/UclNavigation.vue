@@ -37,7 +37,7 @@ const isSearching = ref(false)
 <style scoped>
 .ucl-navigation__home-link {
   display: block;
-  font-size: 14px;
+  font-size: var(--ucl-font-size-body);
   font-weight: 700;
   color: var(--ucl-headings-font-color);
   padding: 4px 0 4px 26px;

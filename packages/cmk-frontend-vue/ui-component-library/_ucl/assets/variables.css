@@ -5,6 +5,11 @@
  */
 
 @layer theme {
+  body {
+    --ucl-font-size-body: 12px;
+    --ucl-font-size-h1-heading: 18px;
+  }
+
   body[data-theme='facelift'] {
     --ucl-app-bg-color: var(--color-daylight-grey-20);
     --ucl-header-bg-color: var(--color-daylight-grey-20);

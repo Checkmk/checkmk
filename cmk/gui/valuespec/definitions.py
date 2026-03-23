@@ -8777,11 +8777,14 @@ class DatePicker(ValueSpec[str]):
     def render_input(self, varprefix: str, value: str) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
-        html.date(
-            var=varprefix,
-            value=value,
-            id_="date_" + varprefix,
-            onchange=self._onchange,
+        html.vue_component(
+            "cmk-date-time-picker",
+            data={
+                "mode": "date",
+                "date_varprefix": varprefix,
+                "date_value": value,
+            },
+            onchange=self._onchange or "",
         )
 
     def canonical_value(self) -> str:
@@ -8824,11 +8827,14 @@ class TimePicker(ValueSpec[str]):
         )
 
     def render_input(self, varprefix: str, value: str) -> None:
-        html.time(
-            var=varprefix,
-            value=value,
-            id_="time_" + varprefix,
-            onchange=self._onchange,
+        html.vue_component(
+            "cmk-date-time-picker",
+            data={
+                "mode": "time",
+                "time_varprefix": varprefix,
+                "time_value": value,
+            },
+            onchange=self._onchange or "",
         )
 
     def canonical_value(self) -> str:

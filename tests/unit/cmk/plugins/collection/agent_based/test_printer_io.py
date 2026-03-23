@@ -235,14 +235,16 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
         (
             "1",
             {
-                "capacity_levels": ("fixed", (70, 80)),
+                "capacity_levels": ("fixed", (30, 20)),
             },
-            [[["1.1", "", "", "0", "8", "15", "11"]]],
+            [[["1.1", "", "", "0", "8", "15", "4"]]],
             [
                 Result(state=State.OK, summary="Status: Available and idle"),
                 Result(state=State.OK, summary="Alerts: None"),
                 Result(state=State.OK, summary="Maximal capacity: 15 sheets"),
-                Result(state=State.WARN, summary="Filled: 73.33% (warn/crit at 70.00%/80.00%)"),
+                Result(
+                    state=State.WARN, summary="Remaining: 26.67% (warn/crit below 30.00%/20.00%)"
+                ),
             ],
         ),
     ],

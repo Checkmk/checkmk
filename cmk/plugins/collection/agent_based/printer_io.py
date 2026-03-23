@@ -239,10 +239,9 @@ def check_printer_io(
 
     yield from check_levels(
         100.0 * tray.level / tray.capacity_max,  # to percent
-        levels_upper=None if io_type == IOType.INPUT else params["capacity_levels"],
-        levels_lower=params["capacity_levels"] if io_type == IOType.INPUT else None,
+        levels_lower=params["capacity_levels"],
         render_func=render.percent,
-        label=quantity_message.capitalize(),
+        label="Remaining",
     )
 
 
@@ -270,5 +269,5 @@ check_plugin_printer_output = CheckPlugin(
     discovery_function=discovery_printer_io,
     check_function=check_printer_output,
     check_ruleset_name="printer_output",
-    check_default_parameters={"capacity_levels": ("fixed", (100.0, 100.0))},
+    check_default_parameters={"capacity_levels": ("fixed", (0.0, 0.0))},
 )

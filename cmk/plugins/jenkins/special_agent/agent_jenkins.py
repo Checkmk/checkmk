@@ -24,7 +24,7 @@ from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 __version__ = "2.5.0b5"
 
 AGENT = "jenkins"
-
+USER_AGENT = f"checkmk-special-{AGENT}-{__version__}"
 PASSWORD_OPTION = "secret"
 
 
@@ -143,6 +143,7 @@ def handle_request(args, sections):
     # labels = {}
 
     session = requests.Session()
+    session.headers.update({"User-Agent": USER_AGENT})
     session.auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
 
     for section in sections:

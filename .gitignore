@@ -112,3 +112,4 @@ test-results/
 .aider*
 /.github/copilot-review-instructions.md
 /.claude/settings.local.json
+/target

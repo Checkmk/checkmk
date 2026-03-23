@@ -330,7 +330,12 @@ def docker_load(args: argparse.Namespace, version_tag: str, registry: str, folde
         LOG.debug("Loading image '%s' ...", tar_name)
 
         with gzip.open(tar_name, "rb") as tar_ball:
-            loaded_image = docker_client.images.load(tar_ball)[0]
+            # We are reading the content in one go before loading it,
+            # because directly passing the filehandle to the load function
+            # stopped working.
+            file_content = tar_ball.read()
+
+        loaded_image = docker_client.images.load(file_content)[0]
 
     LOG.debug("Create '%s:%s' tag ...", this_repository, version_tag)
     loaded_image.tag(

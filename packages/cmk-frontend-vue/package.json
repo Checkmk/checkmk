@@ -8,6 +8,7 @@
     "node": ">=22.0.0 <=23.0.0"
   },
   "dependencies": {
+    "@internationalized/date": "^3.7.0",
     "axios": "^1.14.0",
     "class-variance-authority": "^0.7.1",
     "grid-layout-plus": "^1.1.1",

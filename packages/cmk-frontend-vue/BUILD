@@ -209,6 +209,7 @@ SRCS = [
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",
     ":node_modules/@vitejs",
+    ":node_modules/@internationalized",
     ":node_modules/@types",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",

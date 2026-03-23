@@ -26,6 +26,7 @@ import UclCmkSlideIn from './content-organization/UclCmkSlideIn.vue'
 import UclCmkSlideInDialog from './content-organization/UclCmkSlideInDialog.vue'
 import UclTwoFactorAuth from './content-organization/UclTwoFactorAuthentication.vue'
 import UclCmkCheckbox from './form-elements/UclCmkCheckbox.vue'
+import UclCmkDateTimePicker from './form-elements/UclCmkDateTimePicker.vue'
 import UclCmkDropdown from './form-elements/UclCmkDropdown.vue'
 import UclCmkDualList from './form-elements/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/UclCmkInput.vue'
@@ -85,6 +86,7 @@ const contentOrganizationPages = [
 
 const formElementsPages = [
   new Page('CmkCheckbox', UclCmkCheckbox),
+  new Page('CmkDateTimePicker', UclCmkDateTimePicker),
   new Page('CmkDropdown', UclCmkDropdown),
   new Page('CmkDualList', UclCmkDualList),
   new Page('CmkInput', UclCmkInput),

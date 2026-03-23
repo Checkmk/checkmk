@@ -343,6 +343,9 @@ importers:
 
   packages/cmk-frontend-vue:
     dependencies:
+      '@internationalized/date':
+        specifier: ^3.7.0
+        version: 3.12.0
       axios:
         specifier: ^1.14.0
         version: 1.14.0(debug@4.4.3)

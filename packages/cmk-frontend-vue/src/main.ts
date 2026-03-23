@@ -14,6 +14,7 @@ import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 
 import AiExplainThisIssueApp from './ai/AiExplainButtonApp.vue'
+import DateTimePickerApp from './components/CmkDateTimePicker/CmkDateTimePickerApp.vue'
 import DynamicIconApp from './components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
 import IconApp from './components/CmkIcon/IconApp.vue'
 import RnbwApp from './components/graphics/RnbwApp.vue'
@@ -71,3 +72,4 @@ defineCmkComponent('cmk-static-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-two-factor-authentication', TwoFactorAuthApp)
 defineCmkComponent('cmk-webauthn-register-button', WebAuthnRegisterButtonApp)
 defineCmkComponent('cmk-product-usage-analytics', ProductUsageAnalyticsApp)
+defineCmkComponent('cmk-date-time-picker', DateTimePickerApp)

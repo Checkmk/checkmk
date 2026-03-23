@@ -133,6 +133,7 @@ import lightIconCheckmkLogoMinSvg from '~cmk-frontend/themes/facelift/images/ico
 import lightIconCleanupPng from '~cmk-frontend/themes/facelift/images/icon_cleanup.png?url&no-inline'
 import lightIconClearPng from '~cmk-frontend/themes/facelift/images/icon_clear.png?url&no-inline'
 import lightIconClipboardSvg from '~cmk-frontend/themes/facelift/images/icon_clipboard.svg?url&no-inline'
+import lightIconClockSvg from '~cmk-frontend/themes/facelift/images/icon_clock.svg?url&no-inline'
 import lightIconCloneSvg from '~cmk-frontend/themes/facelift/images/icon_clone.svg?url&no-inline'
 import lightIconCloseSvg from '~cmk-frontend/themes/facelift/images/icon_close.svg?url&no-inline'
 import lightIconClosetimewarpPng from '~cmk-frontend/themes/facelift/images/icon_closetimewarp.png?url&no-inline'
@@ -933,6 +934,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   clear: lightIconClearPng,
   clipboard: lightIconClipboardSvg,
   clone: lightIconCloneSvg,
+  clock: lightIconClockSvg,
   closetimewarp: lightIconClosetimewarpPng,
   cloud: lightIconCloudSvg,
   cluster: lightIconClusterPng,

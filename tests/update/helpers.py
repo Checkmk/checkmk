@@ -321,7 +321,7 @@ class BaseVersions:
                     CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
                     for base_version_str in base_versions_pb + base_versions_cb
                 ]
-
+        assert cls._base_packages, "No base packages found for the test!"
         return cls._base_packages
 
     @classmethod

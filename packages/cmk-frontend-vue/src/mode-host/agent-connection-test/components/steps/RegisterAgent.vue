@@ -88,7 +88,7 @@ function reset() {
           />
           <template v-if="ott !== null">
             <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
-            <CmkCode :code_txt="regAgentOttCmd" class="code" />
+            <CmkCode :code_txt="regAgentOttCmd" class="code" width="fill" />
             <CmkAlertBox v-if="agentReceiverPortIsDefault" variant="warning" size="small">
               {{
                 _t(
@@ -131,7 +131,7 @@ function reset() {
             <a :href="userSettingsUrl" target="_blank"> {{ _t('agent_registration user') }}</a>
             {{ _t(`and paste it into the terminal to continue the registration.`) }}
           </CmkParagraph>
-          <CmkCode :code_txt="regAgentOttCmd" class="code" />
+          <CmkCode :code_txt="regAgentOttCmd" class="code" width="fill" />
         </CmkIndent>
       </CmkCollapsible>
     </template>

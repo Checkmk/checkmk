@@ -219,32 +219,38 @@ function getInitStep() {
                         :title="_t('Download agent')"
                         :code_txt="installCmdWithToken(tab.installDownloadCmd)"
                         class="code"
+                        width="fill"
                       />
                       <CmkCode
                         :title="_t('Install agent')"
                         :code_txt="tab.installCmd || ''"
                         class="code"
+                        width="fill"
                       />
                     </template>
                     <CmkCode
                       v-else-if="tab.installMsg && tab.installCmd"
                       :code_txt="installCmdWithToken(tab.installCmd)"
                       class="code"
+                      width="fill"
                     />
                     <CmkCode
                       v-if="tab.installMsg && tab.installDebCmd && model === packageFormatDeb"
                       :code_txt="installCmdWithToken(tab.installDebCmd)"
                       class="code"
+                      width="fill"
                     />
                     <CmkCode
                       v-if="tab.installMsg && tab.installRpmCmd && model === packageFormatRpm"
                       :code_txt="installCmdWithToken(tab.installRpmCmd)"
                       class="code"
+                      width="fill"
                     />
                     <CmkCode
                       v-if="tab.installMsg && tab.installTgzCmd && model === packageFormatTgz"
                       :code_txt="installCmdWithToken(tab.installTgzCmd)"
                       class="code"
+                      width="fill"
                     />
                   </template>
                 </template>
@@ -292,7 +298,12 @@ function getInitStep() {
                   command into the CLI of the target system.`)
                 }}
               </CmkParagraph>
-              <CmkCode v-if="currentStep === 4" code_txt="cmk-agent-ctl status" />
+              <CmkCode
+                v-if="currentStep === 4"
+                code_txt="cmk-agent-ctl status"
+                class="code"
+                width="fill"
+              />
             </template>
             <template #actions>
               <CmkWizardButton type="finish" :override-label="closeButtonTitle" @click="close" />
@@ -338,6 +349,7 @@ button.all_agents {
 
 .code {
   margin: var(--dimension-5) 0 var(--dimension-7);
+  width: 100%;
 }
 
 .register-heading-row {

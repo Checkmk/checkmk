@@ -23,11 +23,11 @@ def _form_printer_output() -> Dictionary:
             "capacity_levels": DictElement(
                 required=False,
                 parameter_form=SimpleLevels(
-                    title=Title("Capacity filled"),
+                    title=Title("Capacity remaining"),
                     form_spec_template=Percentage(),
                     migrate=migrate_to_float_simple_levels,
-                    level_direction=LevelDirection.UPPER,
-                    prefill_fixed_levels=InputHint((80.0, 90.0)),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((20.0, 10.0)),
                 ),
             )
         },

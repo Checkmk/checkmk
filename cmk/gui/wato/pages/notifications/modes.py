@@ -15,7 +15,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any, cast, Literal, NamedTuple, overload
 
-from livestatus import LivestatusResponse, SiteId
+from livestatus import LivestatusResponse, lqencode, SiteId
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -2058,7 +2058,7 @@ class ModeTestNotifications(ModeNotifications):
                 "GET hosts\n"
                 "Columns: custom_variable_names custom_variable_values groups "
                 "contact_groups labels host_alias host_address contacts notes_url tags\n"
-                f"Filter: host_name = {hostname}\n"
+                f"Filter: host_name = {lqencode(hostname)}\n"
             )
 
         if len(resp) < 1:
@@ -2111,7 +2111,7 @@ class ModeTestNotifications(ModeNotifications):
             "GET services\n"
             "Columns: custom_variable_names custom_variable_values groups contact_groups check_command labels contacts display_name notes_url\n"
             "Filter: host_name = %s\nFilter: service_description = %s"
-            % (hostname, context["SERVICEDESC"])
+            % (lqencode(hostname), lqencode(context["SERVICEDESC"]))
         )
         if len(resp) < 1:
             raise MKUserError(

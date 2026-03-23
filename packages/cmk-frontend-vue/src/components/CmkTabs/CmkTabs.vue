@@ -31,7 +31,7 @@ const model = defineModel<string | number>({ default: 1 })
   padding: 0;
   margin: 0;
   display: flex;
-  flex-direction: row;
+  flex-flow: row wrap;
   list-style-type: none;
   flex-shrink: 0;
   position: relative;

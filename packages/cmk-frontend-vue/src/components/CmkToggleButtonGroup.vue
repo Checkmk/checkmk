@@ -58,11 +58,14 @@ function setSelectedOption(value: string) {
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .toggle_buttons_container {
   width: max-content;
+  max-width: 100%;
   margin-bottom: 8px;
   padding: 5px;
   border-radius: 5px;
   border: 1px solid var(--toggle-button-group-border-color);
   background-color: var(--toggle-button-group-inactive-bg-color);
+  display: flex;
+  flex-wrap: wrap;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

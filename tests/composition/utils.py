@@ -98,7 +98,7 @@ def await_broker_ready(*sites: Site) -> None:
 
 def _await_port_ready(site: Site) -> None:
     port = int(site.omd("config", "show", "RABBITMQ_PORT", check=True).stdout)
-    for _ in range(180):
+    for _ in range(60):
         if site.execute(["rabbitmq-diagnostics", "check_port_listener", str(port)]).wait() == 0:
             return
         time.sleep(1)
@@ -106,8 +106,7 @@ def _await_port_ready(site: Site) -> None:
 
 
 def _await_shovels_ready(site: Site) -> None:
-    # TODO: try reducing the waiting time here
-    for _ in range(180):
+    for _ in range(60):
         try:
             raw = site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout
         except subprocess.CalledProcessError as e:

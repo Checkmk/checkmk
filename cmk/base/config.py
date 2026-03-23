@@ -301,18 +301,8 @@ def _aggregate_check_table_services(
     # services than are attached to the host itself, so that we get the needed data
     # even if a failover occurred since the last discovery.
 
-    # Consider the case where we've clustered 3 nodes `node{1,2,3}`.
-    # Let `service A` be
-    #  * (only) in the autochecks of node1
-    #  * clustered by a clustered service rule matching hosts node1 and node2.
-    #
-    # The following must include `service A` for node1 and node2 but *not* for node3.
-    # Failing to exclude node3 might add an undesired service to it.
-    # For node1 it was added from the autochecks above.
-
     yield from (
         s
-        # ... this adds it for node2
         for s in _get_services_from_cluster_nodes(
             config_cache,
             service_name_config,
@@ -323,9 +313,6 @@ def _aggregate_check_table_services(
             plugins,
         )
         if sfilter.keep(s)
-        # ... and this condition prevents it from being added on node3
-        # 'not is_mine' means: would it be there, it would be clustered.
-        and not sfilter.is_mine(s)
     )
 
 
@@ -396,15 +383,28 @@ def _get_services_from_cluster_nodes(
     ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Iterable[ConfiguredService]:
+    # Consider the case where we've clustered 3 nodes `node{1,2,3}`.
+    # Let `service A` be
+    #  * (only) in the autochecks of node1
+    #  * clustered by a clustered service rule matching hosts node1 and node2.
+    #
+    # This must include `service A` for node1 and node2 but *not* for node3.
+    # Failing to exclude node3 might add an undesired service to it.
+    # For node1 it was added from the autochecks of the calling function.
+    # The effective_host check below adds it for node2 and excludes it for node3.
     for cluster in config_cache.clusters_of(node_name):
-        yield from _get_clustered_services(
-            config_cache,
-            service_name_config,
-            cluster,
-            get_autochecks,
-            configure_autochecks,
-            enforced_services_table,
-            plugins,
+        yield from (
+            s
+            for s in _get_clustered_services(
+                config_cache,
+                service_name_config,
+                cluster,
+                get_autochecks,
+                configure_autochecks,
+                enforced_services_table,
+                plugins,
+            )
+            if config_cache.effective_host(node_name, s.description, s.labels) != node_name
         )
 
 

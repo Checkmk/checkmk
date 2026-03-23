@@ -52,6 +52,7 @@ const openRelayOverviewPage = () => {
       <InstallRelay
         :domain="props.domain"
         :site-name="props.site_name"
+        :server-port="props.server_port ?? null"
         :index="1"
         :is-completed="() => currentStep > 1"
       />

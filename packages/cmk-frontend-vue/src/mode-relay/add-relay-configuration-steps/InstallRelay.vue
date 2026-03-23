@@ -18,11 +18,17 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<CmkWizardStepProps & { domain: string; siteName: string }>()
+const props = defineProps<
+  CmkWizardStepProps & { domain: string; siteName: string; serverPort?: number | null }
+>()
+
+const hostWithPort = computed(() =>
+  props.serverPort ? `${props.domain}:${props.serverPort}` : props.domain
+)
 
 const installScriptUrl = computed(
   () =>
-    `${window.location.protocol}//${props.domain}/${props.siteName}/check_mk/relays/install_relay.sh`
+    `${window.location.protocol}//${hostWithPort.value}/${props.siteName}/check_mk/relays/install_relay.sh`
 )
 
 const insecureProtocolWarning = computed(() => {
@@ -53,7 +59,10 @@ const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)
         }}
       </CmkParagraph>
       <CmkAlertBox v-if="insecureProtocolWarning">{{ insecureProtocolWarning }}</CmkAlertBox>
-      <CmkCode :code_txt="downloadCommand" data-testid="download-relay-install-script"></CmkCode>
+      <CmkCode
+        :code_txt="downloadCommand"
+        :aria-label="_t('Download relay install script command')"
+      ></CmkCode>
     </template>
 
     <template #actions>

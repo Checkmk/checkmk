@@ -98,16 +98,31 @@ describe('ModeCreateRelayApp', () => {
     render(ModeCreateRelayApp, { props: mockProps })
 
     expect(screen.getByText('Download the Relay installation script')).toBeInTheDocument()
-    const scriptElement = screen.getByTestId('download-relay-install-script')
-    expect(scriptElement).toBeInTheDocument()
-    expect(scriptElement.textContent).toContain('install_relay.sh')
+    const downloadCommand = screen.getByLabelText('Download relay install script command')
+    expect(downloadCommand).toBeInTheDocument()
+    expect(downloadCommand.textContent).toContain('install_relay.sh')
   })
 
   test('download command contains site name', () => {
     render(ModeCreateRelayApp, { props: mockProps })
 
-    const scriptElement = screen.getByTestId('download-relay-install-script')
-    expect(scriptElement.textContent).toContain('test_site')
+    const downloadCommand = screen.getByLabelText('Download relay install script command')
+    expect(downloadCommand.textContent).toContain('test_site')
+  })
+
+  test('download command includes port when server_port is provided', () => {
+    render(ModeCreateRelayApp, { props: { ...mockProps, server_port: 5000 } })
+
+    const downloadCommand = screen.getByLabelText('Download relay install script command')
+    expect(downloadCommand.textContent).toContain('localhost:5000')
+  })
+
+  test('download command omits port when server_port is not provided', () => {
+    render(ModeCreateRelayApp, { props: mockProps })
+
+    const downloadCommand = screen.getByLabelText('Download relay install script command')
+    expect(downloadCommand.textContent).toMatch(/\/\/localhost\//)
+    expect(downloadCommand.textContent).not.toContain('localhost:')
   })
 
   test('can navigate to Name the relay step', async () => {

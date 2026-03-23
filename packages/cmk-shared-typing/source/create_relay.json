@@ -47,6 +47,9 @@
       "items": {
         "type": "string"
       }
+    },
+    "server_port": {
+      "type": ["integer", "null"]
     }
   },
   "required": [

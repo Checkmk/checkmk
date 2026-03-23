@@ -8,20 +8,39 @@ import { defineComponent, ref } from 'vue'
 
 import ConfigurePrometheusScraper from '@/mode-otel/otel-configuration-steps/ConfigurePrometheusScraper.vue'
 
-function renderComponent(initialJobName = '', initialPort: number | undefined = undefined) {
+interface RenderOptions {
+  jobName?: string
+  metricsPath?: string
+  port?: number | undefined
+}
+
+function renderComponent(options: RenderOptions = {}) {
+  const {
+    jobName: initialJobName = '',
+    metricsPath: initialMetricsPath = '',
+    port: initialPort = undefined
+  } = options
+
   const jobName = ref(initialJobName)
+  const metricsPath = ref(initialMetricsPath)
   const port = ref(initialPort)
   const compRef = ref<InstanceType<typeof ConfigurePrometheusScraper>>()
 
   render(
     defineComponent({
       components: { ConfigurePrometheusScraper },
-      setup: () => ({ jobName, port, compRef }),
-      template: `<ConfigurePrometheusScraper ref="compRef" v-model:job-name="jobName" v-model:port="port" />`
+      setup: () => ({ jobName, metricsPath, port, compRef }),
+      template: `<ConfigurePrometheusScraper ref="compRef" v-model:job-name="jobName" v-model:metrics-path="metricsPath" v-model:port="port" />`
     })
   )
 
-  return { jobName, port, compRef }
+  return { jobName, metricsPath, port, compRef }
+}
+
+const VALID_INPUT: RenderOptions = {
+  jobName: 'my_job',
+  metricsPath: '/metrics',
+  port: 9090
 }
 
 describe('ConfigurePrometheusScraper', () => {
@@ -33,78 +52,114 @@ describe('ConfigurePrometheusScraper', () => {
     renderComponent()
 
     expect(screen.queryByText('Enter a name for your job.')).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('Metrics path is required but not specified.')
+    ).not.toBeInTheDocument()
     expect(screen.queryByText('Port is required but not specified.')).not.toBeInTheDocument()
   })
 
-  test('validate() returns false and shows error for empty job name', async () => {
-    const { compRef } = renderComponent('', 9090)
-
-    const result = compRef.value!.validate()
-
-    expect(result).toBe(false)
-    await screen.findByText('Enter a name for your job.')
-  })
-
-  test('validate() returns false and shows error for missing port', async () => {
-    const { compRef } = renderComponent('my_job', undefined)
-
-    const result = compRef.value!.validate()
-
-    expect(result).toBe(false)
-    await screen.findByText('Port is required but not specified.')
-  })
-
-  test('validate() returns false and shows both errors when both fields are empty', async () => {
-    const { compRef } = renderComponent('', undefined)
-
-    const result = compRef.value!.validate()
-
-    expect(result).toBe(false)
-    await screen.findByText('Enter a name for your job.')
-    await screen.findByText('Port is required but not specified.')
-  })
-
-  test('validate() returns true when job name and port are provided', () => {
-    const { compRef } = renderComponent('my_job', 9090)
+  test('validate() returns true when all required fields are valid', () => {
+    const { compRef } = renderComponent(VALID_INPUT)
 
     const result = compRef.value!.validate()
 
     expect(result).toBe(true)
   })
 
-  test('validate() returns false for whitespace-only job name', async () => {
-    const { compRef } = renderComponent('   ', 9090)
+  describe('job name validation', () => {
+    test('shows error for empty job name', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, jobName: '' })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Enter a name for your job.')
+    })
+
+    test('shows error for whitespace-only job name', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, jobName: '   ' })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Enter a name for your job.')
+    })
+  })
+
+  describe('metrics path validation', () => {
+    test('shows error for empty metrics path', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, metricsPath: '' })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Metrics path is required but not specified.')
+    })
+
+    test('shows error when metrics path does not start with /', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, metricsPath: 'metrics' })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText("Metrics path must start with a '/'.")
+    })
+
+    test('accepts a multi-segment metrics path', () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, metricsPath: '/metrics/custom' })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(true)
+    })
+  })
+
+  describe('port validation', () => {
+    test('shows error for missing port', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, port: undefined })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Port is required but not specified.')
+    })
+
+    test('shows error for non-integer port', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, port: 80.5 })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Port must be a whole number.')
+    })
+
+    test('shows error for port below 1', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, port: 0 })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Port must be between 1 and 65535.')
+    })
+
+    test('shows error for port above 65535', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, port: 70000 })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Port must be between 1 and 65535.')
+    })
+  })
+
+  test('shows all errors when all required fields are empty', async () => {
+    const { compRef } = renderComponent()
 
     const result = compRef.value!.validate()
 
     expect(result).toBe(false)
     await screen.findByText('Enter a name for your job.')
-  })
-
-  test('validate() returns false for non-integer port', async () => {
-    const { compRef } = renderComponent('my_job', 80.5)
-
-    const result = compRef.value!.validate()
-
-    expect(result).toBe(false)
-    await screen.findByText('Port must be a whole number.')
-  })
-
-  test('validate() returns false for port below 1', async () => {
-    const { compRef } = renderComponent('my_job', 0)
-
-    const result = compRef.value!.validate()
-
-    expect(result).toBe(false)
-    await screen.findByText('Port must be between 1 and 65535.')
-  })
-
-  test('validate() returns false for port above 65535', async () => {
-    const { compRef } = renderComponent('my_job', 70000)
-
-    const result = compRef.value!.validate()
-
-    expect(result).toBe(false)
-    await screen.findByText('Port must be between 1 and 65535.')
+    await screen.findByText('Metrics path is required but not specified.')
+    await screen.findByText('Port is required but not specified.')
   })
 })

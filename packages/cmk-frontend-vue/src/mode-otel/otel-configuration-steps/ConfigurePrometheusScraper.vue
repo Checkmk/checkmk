@@ -15,6 +15,7 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 const { _t } = usei18n()
 
 const jobName = defineModel<string>('jobName', { required: true })
+const metricsPath = defineModel<string>('metricsPath', { required: true })
 const port = defineModel<number | undefined>('port', { required: true })
 
 const displayErrors = ref(false)
@@ -25,6 +26,19 @@ const jobNameErrors = computed<string[]>(() => {
   }
   if (!jobName.value.trim()) {
     return [_t('Enter a name for your job.')]
+  }
+  return []
+})
+
+const metricsPathErrors = computed<string[]>(() => {
+  if (!displayErrors.value) {
+    return []
+  }
+  if (!metricsPath.value.trim()) {
+    return [_t('Metrics path is required but not specified.')]
+  }
+  if (!metricsPath.value.startsWith('/')) {
+    return [_t("Metrics path must start with a '/'.")]
   }
   return []
 })
@@ -47,7 +61,11 @@ const portErrors = computed<string[]>(() => {
 
 function validate(): boolean {
   displayErrors.value = true
-  return jobNameErrors.value.length === 0 && portErrors.value.length === 0
+  return (
+    jobNameErrors.value.length === 0 &&
+    metricsPathErrors.value.length === 0 &&
+    portErrors.value.length === 0
+  )
 }
 
 defineExpose({ validate })
@@ -57,6 +75,22 @@ defineExpose({ validate })
   <div class="mode-otel-configure-prometheus-scraper__form">
     <CmkLabel>{{ _t('Job name') }} <CmkLabelRequired /></CmkLabel>
     <CmkInput v-model="jobName" type="text" field-size="MEDIUM" :external-errors="jobNameErrors" />
+
+    <CmkLabel
+      :help="
+        _t(
+          'The HTTP resource path on which to fetch metrics from targets. Must start with a \'/\'.'
+        )
+      "
+      >{{ _t('Metrics path') }} <CmkLabelRequired
+    /></CmkLabel>
+    <CmkInput
+      v-model="metricsPath"
+      type="text"
+      field-size="MEDIUM"
+      placeholder="/metrics"
+      :external-errors="metricsPathErrors"
+    />
 
     <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
     <CmkInput v-model="port" type="number" placeholder="9090" :external-errors="portErrors" />

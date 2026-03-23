@@ -28,6 +28,7 @@ const currentStep = ref(1)
 const configName = ref<string>('')
 const siteId = ref<string | null>(null)
 const jobName = ref<string>('')
+const metricsPath = ref<string>('')
 const port = ref<number | undefined>(undefined)
 
 const generalPropertiesRef =
@@ -91,6 +92,7 @@ const close = () => {
         <ConfigurePrometheusScraper
           ref="prometheusScraper"
           v-model:job-name="jobName"
+          v-model:metrics-path="metricsPath"
           v-model:port="port"
         />
       </template>

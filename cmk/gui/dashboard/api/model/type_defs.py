@@ -21,4 +21,4 @@ type AnnotatedInfoName = Annotated[InfoName, TypedPlainValidator(str, _validate_
 
 
 # without alpha channel, either 3 or 6 hex digits
-type ColorHex = Annotated[str, pydantic.Field(pattern=r"^#(?:[0-9A-F]{3}){1,2}$")]
+type ColorHex = Annotated[str, pydantic.Field(pattern=r"^#(?:[0-9A-Fa-f]{3}){1,2}$")]

@@ -13,5 +13,8 @@ description:
  "powering" is the only known state for this, which indicates a healthy PS ({OK}),
  any other state will be treated as {WARN}.
 
+ In order to make this check plug-in work, you have to configure the ruleset for
+ the special agent {{Cisco Meraki}} to include the "Device statuses" section.
+
 discovery:
  One service is created for each power supply.

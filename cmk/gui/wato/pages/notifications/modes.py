@@ -2606,7 +2606,7 @@ class ModeTestNotifications(ModeNotifications):
                                     title=timezone_utc_offset_str()
                                     + " "
                                     + _("Server time (currently: %s)")
-                                    % time.strftime("%m/%d/%Y %H:%M", time.localtime()),
+                                    % time.strftime("%Y-%m-%d %H:%M", time.localtime()),
                                     cssclass="server_time",
                                 ),
                             ],

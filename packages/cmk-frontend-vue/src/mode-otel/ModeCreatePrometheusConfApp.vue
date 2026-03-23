@@ -29,6 +29,7 @@ const configName = ref<string>('')
 const siteId = ref<string | null>(null)
 const jobName = ref<string>('')
 const metricsPath = ref<string>('')
+const address = ref<string>('')
 const port = ref<number | undefined>(undefined)
 
 const generalPropertiesRef =
@@ -93,6 +94,7 @@ const close = () => {
           ref="prometheusScraper"
           v-model:job-name="jobName"
           v-model:metrics-path="metricsPath"
+          v-model:address="address"
           v-model:port="port"
         />
       </template>

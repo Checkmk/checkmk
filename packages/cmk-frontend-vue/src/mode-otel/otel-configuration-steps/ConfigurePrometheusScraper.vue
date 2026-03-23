@@ -16,9 +16,13 @@ const { _t } = usei18n()
 
 const jobName = defineModel<string>('jobName', { required: true })
 const metricsPath = defineModel<string>('metricsPath', { required: true })
+const address = defineModel<string>('address', { required: true })
 const port = defineModel<number | undefined>('port', { required: true })
 
 const displayErrors = ref(false)
+
+const HOSTNAME_PATTERN =
+  /^(?:(?:\d{1,3}\.){3}\d{1,3}|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?|::1?|::ffff:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|[0-9a-fA-F:]+)$/
 
 const jobNameErrors = computed<string[]>(() => {
   if (!displayErrors.value) {
@@ -43,12 +47,25 @@ const metricsPathErrors = computed<string[]>(() => {
   return []
 })
 
+const addressErrors = computed<string[]>(() => {
+  if (!displayErrors.value) {
+    return []
+  }
+  if (!address.value.trim()) {
+    return [_t('Enter a valid IP address or host name.')]
+  }
+  if (!HOSTNAME_PATTERN.test(address.value.trim())) {
+    return [_t('Your input is not a valid host name or IP address.')]
+  }
+  return []
+})
+
 const portErrors = computed<string[]>(() => {
   if (!displayErrors.value) {
     return []
   }
   if (port.value === undefined) {
-    return [_t('Port is required but not specified.')]
+    return [_t('Enter a valid port number (example: 1234).')]
   }
   if (!Number.isInteger(port.value)) {
     return [_t('Port must be a whole number.')]
@@ -64,6 +81,7 @@ function validate(): boolean {
   return (
     jobNameErrors.value.length === 0 &&
     metricsPathErrors.value.length === 0 &&
+    addressErrors.value.length === 0 &&
     portErrors.value.length === 0
   )
 }
@@ -92,8 +110,24 @@ defineExpose({ validate })
       :external-errors="metricsPathErrors"
     />
 
+    <CmkLabel
+      :help="
+        _t(
+          'The IP address or host name the OpenTelemetry Collector should listen on. To listen only locally, use \'127.0.0.1\' or \'::1\'. To listen on all interfaces, use \'0.0.0.0\' or \'::\'.'
+        )
+      "
+      >{{ _t('IP address or hostname') }} <CmkLabelRequired
+    /></CmkLabel>
+    <CmkInput
+      v-model="address"
+      type="text"
+      field-size="MEDIUM"
+      placeholder="0.0.0.0"
+      :external-errors="addressErrors"
+    />
+
     <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
-    <CmkInput v-model="port" type="number" placeholder="9090" :external-errors="portErrors" />
+    <CmkInput v-model="port" type="number" placeholder="0" :external-errors="portErrors" />
   </div>
 </template>
 

@@ -32,6 +32,7 @@ import UclCmkDualList from './form-elements/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/UclCmkInput.vue'
 import UclCmkList from './form-elements/UclCmkList.vue'
 import UclCmkToggleButtonGroup from './form-elements/UclCmkToggleButtonGroup.vue'
+import UclConfigurationEntityDropdown from './form-elements/UclConfigurationEntityDropdown.vue'
 import UclCmkIcon from './foundation-elements/CmkIcon/UclCmkIcon.vue'
 import UclCmkIconEmblem from './foundation-elements/CmkIcon/UclCmkIconEmblem.vue'
 import UclCmkMultitoneIcon from './foundation-elements/CmkIcon/UclCmkMultitoneIcon.vue'
@@ -86,6 +87,7 @@ const contentOrganizationPages = [
 
 const formElementsPages = [
   new Page('CmkCheckbox', UclCmkCheckbox),
+  new Page('CmkConfigurationEntityDropdown', UclConfigurationEntityDropdown),
   new Page('CmkDateTimePicker', UclCmkDateTimePicker),
   new Page('CmkDropdown', UclCmkDropdown),
   new Page('CmkDualList', UclCmkDualList),

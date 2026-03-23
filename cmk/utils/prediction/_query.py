@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from livestatus import SingleSiteConnection
+from livestatus import lqencode, SingleSiteConnection
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -48,8 +48,8 @@ class PredictionQuerier:
                 (
                     "GET services\n"
                     "Columns: prediction_files\n"
-                    f"Filter: host_name = {self.host_name}\n"
-                    f"Filter: description = {self.service_name}"
+                    f"Filter: host_name = {lqencode(self.host_name)}\n"
+                    f"Filter: description = {lqencode(self.service_name)}"
                 )
             )[0]
         )
@@ -60,8 +60,8 @@ class PredictionQuerier:
                 (
                     "GET services\n"
                     f"Columns: prediction_file:file:{relative_file_path}\n"
-                    f"Filter: host_name = {self.host_name}\n"
-                    f"Filter: description = {self.service_name}"
+                    f"Filter: host_name = {lqencode(self.host_name)}\n"
+                    f"Filter: description = {lqencode(self.service_name)}"
                 )
             )
         )

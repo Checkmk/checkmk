@@ -92,7 +92,7 @@ function reset() {
             <CmkAlertBox v-if="agentReceiverPortIsDefault" variant="warning" size="small">
               {{
                 _t(
-                  'The agent receiver port could not be determined from the remote site. The command uses the default port (8000). Please adjust the --server port if your site uses a different agent receiver port.'
+                  'The agent receiver port could not be determined from the remote site. The command uses the default port (8000). Adjust the --server port if your site uses a different agent receiver port.'
                 )
               }}
             </CmkAlertBox>

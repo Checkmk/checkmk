@@ -137,7 +137,11 @@ def test_run_omd_backup_and_omd_restore_empty() -> None:
         run(["chown", owner_group, str(restored_site.root)], sudo=True, check=True)
         run(["chmod", "0751", str(restored_site.root)], sudo=True, check=True)
 
-        assert restored_site.omd("restore", "--reuse", str(backup_path)) == 0
+        run(
+            ["omd", "restore", "--reuse", restored_site_name, str(backup_path)],
+            sudo=True,
+            check=True,
+        )
         restored_site = site_factory.get_existing_site(restored_site_name, start=True)
         assert restored_site.exists(), "Restored site does not exist."
         assert restored_site.is_running(), "Restored site is not running."

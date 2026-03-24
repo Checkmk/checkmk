@@ -105,7 +105,7 @@ fn dump_local_instances() -> String {
         .iter()
         .map(|i| {
             format!(
-                "'{:16}': home={:60} base={:60}",
+                "{:16} {:60} {:60}",
                 i.name,
                 i.home.display().to_string(),
                 i.base
@@ -116,7 +116,14 @@ fn dump_local_instances() -> String {
         })
         .collect::<Vec<String>>()
         .join("\n");
-    format!("{}\nTotal instances found: {}\n", rows, instances.len())
+    let header = format!("{:16} {:60} {:60}", "SID", "ORACLE_HOME", "ORACLE_BASE");
+
+    format!(
+        "{}\n{}\nTotal instances found: {}\n",
+        header,
+        rows,
+        instances.len()
+    )
 }
 
 pub fn dump_detected_sids() -> Result<String> {

@@ -109,16 +109,22 @@ pub mod registry {
 
     /// Finds the oratab file in standard locations.
     /// Returns the Result with path to oratab file or error if not found.
-    #[cfg(unix)]
     pub fn find_oratab_file(oratab_paths: Option<&[&str]>) -> Result<PathBuf> {
         use std::path::Path;
 
-        oratab_paths
-            .unwrap_or(&["/etc/oratab", "/var/opt/oracle/oratab"])
-            .iter()
-            .find(|p| Path::new(p).is_file())
-            .map(PathBuf::from)
-            .ok_or(anyhow::anyhow!("ORA-99999 oratab not found in local mode")) // ORA-99999 is a code from legacy plugin, we keep it for backward compatibility of error handling
+        if cfg!(windows) {
+            Err(anyhow::anyhow!(
+                "ORA-99999 oratab is not supported on Windows"
+            )) // ORA-99999 is a code from legacy plugin, we keep it for backward compatibility of error handling
+        } else {
+            oratab_paths
+                .unwrap_or(&["/etc/oratab", "/var/opt/oracle/oratab"])
+                .iter()
+                .find(|p| Path::new(p).is_file())
+                .map(PathBuf::from)
+                .ok_or(anyhow::anyhow!("ORA-99999 oratab not found in local mode"))
+            // ORA-99999 is a code from legacy plugin, we keep it for backward compatibility of error handling
+        }
     }
 
     #[cfg(unix)]

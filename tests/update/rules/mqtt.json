@@ -7,7 +7,7 @@
       "description": "My mqtt rule",
       "comment": "My mqtt rule"
     },
-    "value_raw": "{'password': ('store', 'mydummypass')}",
+    "value_raw": "{'password': ('cmk_postprocessed', 'stored_password', ('mydummypass', ''))}",
     "conditions": {}
   }
 ]

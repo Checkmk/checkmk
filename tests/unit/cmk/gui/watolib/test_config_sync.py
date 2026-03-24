@@ -24,7 +24,7 @@ from cmk import trace
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.nodevis.utils import topology_dir
+from cmk.gui.nodevis.utils import topology_configs_dir
 from cmk.gui.watolib import activate_changes, config_sync
 from cmk.gui.watolib.automations import (
     remote_automation_config_from_site_config,
@@ -111,7 +111,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
     (cmk.utils.paths.omd_root / "local").mkdir(parents=True, exist_ok=True)
     (cmk.utils.paths.var_dir / "packages").mkdir(parents=True, exist_ok=True)
-    topology_dir.mkdir(parents=True, exist_ok=True)
+    topology_configs_dir.mkdir(parents=True, exist_ok=True)
 
     gui_conf_dir = cmk.utils.paths.default_config_dir / "multisite.d/wato"
     gui_conf_dir.mkdir(parents=True, exist_ok=True)
@@ -384,7 +384,7 @@ def _get_expected_paths(
             "var/check_mk/packages",
             "var/check_mk/packages_local",
             "var/check_mk/disabled_packages",
-            "var/check_mk/topology",
+            "var/check_mk/topology/configs",
         ]
 
     # TODO: Shouldn't we clean up these subtle differences?

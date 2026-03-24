@@ -9,15 +9,11 @@ data structures to version independent data structured defined in schemata.api
 
 from __future__ import annotations
 
-import typing
 from collections.abc import Iterable, Mapping, Sequence
-from typing import cast, Literal, TypeAlias, TypeVar
+from typing import cast, Literal, TypeAlias
 
-import pydantic
 from kubernetes.client import (  # type: ignore[attr-defined]
     # https://github.com/kubernetes-client/python/issues/2033
-    V1Container,
-    V1ContainerStatus,
     V1CronJob,
     V1CronJobSpec,
     V1CronJobStatus,
@@ -34,8 +30,6 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     V1ObjectMeta,
     V1PersistentVolumeClaim,
     V1Pod,
-    V1PodCondition,
-    V1PodSpec,
     V1ReplicaSet,
     V1ReplicationController,
     V1ResourceQuota,
@@ -60,183 +54,6 @@ def parse_metadata_no_namespace(metadata: V1ObjectMeta) -> api.MetaDataNoNamespa
 
 def parse_metadata(metadata: V1ObjectMeta) -> api.MetaData:
     return api.MetaData.model_validate(metadata)
-
-
-def container_resources(container: V1Container) -> api.ResourceRequirements:
-    parsed_limits = api.ResourceRequirement()
-    parsed_requests = api.ResourceRequirement()
-    if container.resources is not None:
-        if limits := container.resources.limits:
-            parsed_limits = api.ResourceRequirement(
-                memory=parse_resource_value(limits["memory"]) if "memory" in limits else None,
-                cpu=parse_cpu_cores(limits["cpu"]) if "cpu" in limits else None,
-            )
-        if requests := container.resources.requests:
-            parsed_requests = api.ResourceRequirement(
-                memory=parse_resource_value(requests["memory"]) if "memory" in requests else None,
-                cpu=parse_cpu_cores(requests["cpu"]) if "cpu" in requests else None,
-            )
-
-    return api.ResourceRequirements(
-        limits=parsed_limits,
-        requests=parsed_requests,
-    )
-
-
-def containers_spec(containers: Sequence[V1Container]) -> Sequence[api.ContainerSpec]:
-    return [
-        api.ContainerSpec(
-            name=container.name,
-            resources=container_resources(container),
-            image_pull_policy=container.image_pull_policy,
-        )
-        for container in containers
-    ]
-
-
-T = TypeVar("T")
-
-
-def expect_value(v: T | None) -> T:
-    if v is None:
-        raise NotImplementedError("Unexpected missing value.")
-    return v
-
-
-def pod_spec(pod: V1Pod) -> api.PodSpec:
-    spec: V1PodSpec = expect_value(pod.spec)
-
-    def _parse_obj_as(
-        model: type[list[T]], expr: typing.Sequence[T] | None
-    ) -> typing.Sequence[T] | None:
-        adapter = pydantic.TypeAdapter(model)
-        return adapter.validate_python(expr)
-
-    return api.PodSpec(
-        node=spec.node_name,
-        host_network=spec.host_network,
-        dns_policy=spec.dns_policy,
-        restart_policy=spec.restart_policy,
-        containers=containers_spec(spec.containers),
-        init_containers=containers_spec(
-            spec.init_containers if spec.init_containers is not None else []
-        ),
-        priority_class_name=spec.priority_class_name,
-        active_deadline_seconds=spec.active_deadline_seconds,
-        volumes=_parse_obj_as(list[api.Volume], spec.volumes) if spec.volumes else None,
-    )
-
-
-def pod_status(pod: V1Pod) -> api.PodStatus:
-    start_time: float | None
-    if pod.status.start_time is not None:
-        start_time = convert_to_timestamp(pod.status.start_time)
-    else:
-        start_time = None
-
-    return api.PodStatus(
-        conditions=pod_conditions(pod.status.conditions) if pod.status.conditions else None,
-        phase=api.Phase(pod.status.phase.lower()),
-        start_time=api.Timestamp(start_time) if start_time else None,
-        host_ip=api.IpAddress(pod.status.host_ip) if pod.status.host_ip else None,
-        pod_ip=api.IpAddress(pod.status.pod_ip) if pod.status.pod_ip else None,
-        qos_class=pod.status.qos_class.lower() if pod.status.qos_class else None,
-    )
-
-
-def pod_containers(
-    container_statuses: Sequence[V1ContainerStatus] | None,
-) -> dict[str, api.ContainerStatus]:
-    result: dict[str, api.ContainerStatus] = {}
-    if container_statuses is None:
-        return {}
-    for status in container_statuses:
-        state: api.ContainerTerminatedState | api.ContainerRunningState | api.ContainerWaitingState
-        if (details := status.state.terminated) is not None:
-            state = api.ContainerTerminatedState(
-                exit_code=details.exit_code,
-                start_time=(
-                    int(convert_to_timestamp(details.started_at))
-                    if details.started_at is not None
-                    else None
-                ),
-                end_time=(
-                    int(convert_to_timestamp(details.finished_at))
-                    if details.finished_at is not None
-                    else None
-                ),
-                reason=details.reason,
-                detail=details.message,
-            )
-        elif (details := status.state.running) is not None:
-            state = api.ContainerRunningState(
-                start_time=int(convert_to_timestamp(details.started_at)),
-            )
-        elif (details := status.state.waiting) is not None:
-            state = api.ContainerWaitingState(
-                reason=details.reason,
-                detail=details.message,
-            )
-        else:
-            raise AssertionError(f"Unknown container state {status.state}")
-
-        result[status.name] = api.ContainerStatus(
-            container_id=status.container_id,
-            image_id=status.image_id,
-            name=status.name,
-            image=status.image,
-            ready=status.ready,
-            state=state,
-            restart_count=status.restart_count,
-        )
-    return result
-
-
-def pod_conditions(
-    conditions: Sequence[V1PodCondition],
-) -> list[api.PodCondition]:
-    condition_types = {
-        "PodHasNetwork": api.ConditionType.PODHASNETWORK,
-        "PodReadyToStartContainers": api.ConditionType.PODREADYTOSTARTCONTAINERS,
-        "PodScheduled": api.ConditionType.PODSCHEDULED,
-        "Initialized": api.ConditionType.INITIALIZED,
-        "ContainersReady": api.ConditionType.CONTAINERSREADY,
-        "Ready": api.ConditionType.READY,
-        "DisruptionTarget": api.ConditionType.DISRUPTIONTARGET,
-        "PodResizePending": api.ConditionType.PODRESIZEPENDING,
-        "PodResizeInProgress": api.ConditionType.PODRESIZEINPROGRESS,
-    }
-    result = []
-    for condition in conditions:
-        pod_condition = {
-            "status": condition.status,
-            "reason": condition.reason,
-            "detail": condition.message,
-            "last_transition_time": (
-                int(convert_to_timestamp(condition.last_transition_time))
-                if condition.last_transition_time
-                else None
-            ),
-        }
-        if condition.type in condition_types:
-            pod_condition["type"] = condition_types[condition.type]
-        else:
-            pod_condition["custom_type"] = condition.type
-
-        result.append(api.PodCondition(**pod_condition))
-    return result
-
-
-def pod_from_client(pod: V1Pod, controllers: Sequence[api.Controller]) -> api.Pod:
-    return api.Pod(
-        uid=api.PodUID(pod.metadata.uid),
-        metadata=parse_metadata(pod.metadata),
-        status=pod_status(pod),
-        spec=pod_spec(pod),
-        containers=pod_containers(pod.status.container_statuses),
-        init_containers=pod_containers(pod.status.init_container_statuses),
-        controllers=controllers,
-    )
 
 
 def parse_match_expressions(

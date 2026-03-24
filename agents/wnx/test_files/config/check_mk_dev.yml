@@ -91,8 +91,8 @@ global:
         # log in file also internal debug messages, recommended when we have problems
         # allowed no, yes and all. Default yes!
         debug: no
-        # you may send logging messages in realtime in windows debug sink, default is yes
-        windbg: yes
+        # you may send logging messages in realtime in windows debug sink, default is no
+        windbg: no
 
         # you may disable your eventlog ability
         eventlog: yes

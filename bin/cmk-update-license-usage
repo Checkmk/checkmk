@@ -44,12 +44,12 @@ def _parse_arguments() -> argparse.Namespace:
 
 def average_active_metric_series_retriever() -> int | None:
     # Note: these type hints are needed to avoid breaking Github actions.
-    from cmk.metric_backend.query.query_client import (
+    from cmk.metric_backend.query.query_client import (  # type: ignore[import-untyped, unused-ignore]
         RetryingQueryClient,
-    )  # type: ignore[import-untyped, unused-ignore]
-    from cmk.metric_backend.retrying_client import (
+    )
+    from cmk.metric_backend.retrying_client import (  # type: ignore[import-untyped, unused-ignore]
         RetryingClient,
-    )  # type: ignore[import-untyped, unused-ignore]
+    )
 
     try:
         client = RetryingQueryClient(RetryingClient.read_only_from_omd_root(paths.omd_root))

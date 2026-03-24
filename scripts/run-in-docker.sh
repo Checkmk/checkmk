@@ -79,6 +79,12 @@ fi
     --cpuset-cpus="0-$(($(nproc) - 2))" \
     "}"
 
+: "${MOUNT_DOCKER_SOCKET:=1}"
+DOCKER_SOCKET_ARGS=""
+if [ "${MOUNT_DOCKER_SOCKET}" = "1" ]; then
+    DOCKER_SOCKET_ARGS="-v /var/run/docker.sock:/var/run/docker.sock --group-add=$(getent group docker | cut -d: -f3)"
+fi
+
 if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
 fi
@@ -96,8 +102,7 @@ docker run -a stdout -a stderr \
     ${DOCKER_LOCAL_ARGS} \
     ${REFERENCE_CLONE_MOUNT} \
     ${DOCKER_CONF_JENKINS_MOUNT} \
-    -v "/var/run/docker.sock:/var/run/docker.sock" \
-    --group-add="$(getent group docker | cut -d: -f3)" \
+    ${DOCKER_SOCKET_ARGS} \
     -w "${PWD}" \
     -e BANDIT_OUTPUT_ARGS \
     -e GROOVYLINT_OUTPUT_ARGS \

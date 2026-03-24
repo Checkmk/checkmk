@@ -38,7 +38,7 @@ def main() {
 
     stage("Prepare workspace") {
         dir("${checkout_dir}") {
-            sh("scripts/run-in-docker.sh buildscripts/scripts/ensure-workspace-integrity");
+            sh("MOUNT_DOCKER_SOCKET=0 scripts/run-in-docker.sh buildscripts/scripts/ensure-workspace-integrity");
             sh("rm -rf ${result_dir}; mkdir ${result_dir}");
 
             /// Reason for the following try/catch block:
@@ -48,7 +48,7 @@ def main() {
             /// attempts to use a trap in the .venv Makefile-target were also not succesful - SIGKILL is not trap-able...
             /// So at the end, we need to use a groovy try/catch to ensure a rebuild in the next job in case something failed
             try {
-                sh("""scripts/run-in-docker.sh \
+                sh("""MOUNT_DOCKER_SOCKET=0 scripts/run-in-docker.sh \
                     make .venv
                 """);
             } catch (e) {

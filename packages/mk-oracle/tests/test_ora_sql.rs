@@ -374,13 +374,10 @@ async fn test_absent_remote_custom_instance_connection() {
     );
 }
 
-// TODO: Remove this test when TNS_ADMIN is properly supported on non-Windows platforms
+// TODO: Remove windows tag when TNS_ADMIN is properly supported on non-Windows platforms
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "relies on external system, see https://tribe29.slack.com/archives/C085MHGLPJ6/p1770313684390069"]
 async fn test_remote_tns_custom_instance_connection() {
-    let logger = flexi_logger::Logger::try_with_str("info").unwrap();
-    logger.log_to_stderr().start().unwrap();
     add_runtime_to_path();
     log::warn!(
         "TNS_ADMIN='{}'",
@@ -402,7 +399,11 @@ async fn test_remote_tns_custom_instance_connection() {
     let rows: Vec<&str> = table[1].split("\n").collect();
     assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");
     for r in rows[1..].iter() {
-        assert!(r.starts_with("FREE"));
+        assert!(
+            r.starts_with("TEST23"),
+            "Row does not start with TEST23: {}",
+            r
+        );
     }
 }
 

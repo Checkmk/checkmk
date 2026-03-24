@@ -34,14 +34,7 @@ pub mod platform {
     }
 
     fn _init_runtime_path() -> PathBuf {
-        let this_file: PathBuf = PathBuf::from(file!());
-        let base_root = this_file
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap();
+        let base_root = std::env::current_dir().unwrap();
         std::env::set_var(
             "TNS_ADMIN",
             base_root.join("tests").join("files").join("tns"),
@@ -56,17 +49,28 @@ pub mod platform {
             .join("runtime")
     }
 
+    pub fn clean_path() -> String {
+        let path = std::env::var("PATH").unwrap_or_default();
+        let cleaned: Vec<&str> = path
+            .split(';')
+            .filter(|p| {
+                let lower = p.to_ascii_lowercase();
+                !lower.contains("mk-oracle") && !lower.contains(r"xe\bin")
+            })
+            .collect();
+        cleaned.join(";")
+    }
+
     fn _patch_path() {
         let path = RUNTIME_PATH
             .get_or_init(_init_runtime_path)
             .clone()
             .into_os_string();
-        let cwd = path.to_str().unwrap();
+        let oci_path = path.to_str().unwrap();
+        let cleaned_path = clean_path();
         unsafe {
-            std::env::set_var("PATH", format!("{cwd};") + &std::env::var("PATH").unwrap());
+            std::env::set_var("PATH", format!("{oci_path};{cleaned_path}"));
         }
-        std::env::set_current_dir(cwd).unwrap();
-        eprintln!("PATH={}", std::env::var("PATH").unwrap());
     }
 }
 

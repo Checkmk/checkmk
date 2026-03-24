@@ -517,6 +517,7 @@ HostServiceState *TableStateHistory::get_state_for_entry(
         hss->_host_name = entry->host_name();
         hss->_service_description = entry->service_description();
         hss->_from = period.since;
+        hss->_log_output = "No information about that period of time available";
 
         // No state found. Now check if this host/services is filtered out.
         // Note: we currently do not filter out hosts since they might be needed

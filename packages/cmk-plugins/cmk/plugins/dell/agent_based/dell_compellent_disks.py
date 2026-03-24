@@ -14,9 +14,10 @@
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.6.2 ""
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.11.1 1
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.11.2 1
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from enum import StrEnum
+from typing import Self
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -31,19 +32,47 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.dell.lib import compellent_dev_state_map, DETECT_DELL_COMPELLENT
 
-_HEALTH_MAP: Mapping[str, tuple[State, str]] = {
-    "1": (State.OK, "healthy"),
-    "0": (State.CRIT, "not healthy"),
-}
+
+class Health(StrEnum):
+    HEALTHY = "healthy"
+    NOT_HEALTHY = "not healthy"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def from_value(cls, value: str) -> Self:
+        match value:
+            case "1":
+                return cls.HEALTHY
+            case "2":
+                return cls.NOT_HEALTHY
+            case _:
+                return cls.UNKNOWN
 
 
 @dataclass(frozen=True)
 class DiskInfo:
     status: str
-    health: str
+    health: Health
     health_message: str
     enclosure: str
     serial: str | None
+
+    @property
+    def health_state(self) -> State:
+        match self.health:
+            case Health.HEALTHY:
+                return State.OK
+            case Health.NOT_HEALTHY:
+                return State.CRIT
+            case _:
+                return State.UNKNOWN
+
+    @property
+    def health_summary(self) -> str:
+        msg = f"Health: {self.health}"
+        if self.health_message:
+            msg += f", Reason: {self.health_message}"
+        return msg
 
 
 Section = Mapping[str, DiskInfo]
@@ -52,17 +81,24 @@ Section = Mapping[str, DiskInfo]
 def parse_dell_compellent_disks(string_table: Sequence[StringTable]) -> Section:
     disk_info = string_table[0]
     disk_serials = dict(string_table[1])
+    parsed: dict[str, DiskInfo] = {}
+    for number, status, disk_name_position, health, health_message, enclosure in disk_info:
+        health_enum = Health.from_value(health)
+        if health_enum is Health.UNKNOWN:
+            unknown_health_value = f"unknown health state [{health}]"
+            if health_message:
+                health_message += f", {unknown_health_value}"
+            else:
+                health_message = unknown_health_value
 
-    return {
-        disk_name_position: DiskInfo(
+        parsed[disk_name_position] = DiskInfo(
             status=status,
-            health=health,
+            health=health_enum,
             health_message=health_message,
             enclosure=enclosure,
             serial=disk_serials.get(number),
         )
-        for number, status, disk_name_position, health, health_message, enclosure in disk_info
-    }
+    return parsed
 
 
 def discover_dell_compellent_disks(section: Section) -> DiscoveryResult:
@@ -81,14 +117,7 @@ def check_dell_compellent_disks(item: str, section: Section) -> CheckResult:
     if disk.serial is not None:
         yield Result(state=State.OK, summary=f"Serial number: {disk.serial}")
 
-    if disk.health_message:
-        health_state, health_state_readable = _HEALTH_MAP.get(
-            disk.health, (State.UNKNOWN, f"unknown[{disk.health}]")
-        )
-        yield Result(
-            state=health_state,
-            summary=f"Health: {health_state_readable}, Reason: {disk.health_message}",
-        )
+    yield Result(state=disk.health_state, summary=disk.health_summary)
 
 
 snmp_section_dell_compellent_disks = SNMPSection(

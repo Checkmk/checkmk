@@ -804,13 +804,18 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         }
     }
 
-    const bool fix_me =
+    const auto fixed_plugin_output =
         (entry->kind() == LogEntryKind::initial_host_state ||
          entry->kind() == LogEntryKind::initial_service_state) &&
-        entry->plugin_output() == "(null)";
-    hss._log_output = fix_me ? "" : entry->plugin_output();
-    hss._long_log_output = entry->long_plugin_output();
-
+                entry->plugin_output() == "(null)"
+            ? ""
+            : entry->plugin_output();
+    if (!fixed_plugin_output.empty() || hss._log_output.empty()) {
+        hss._log_output = fixed_plugin_output;
+    }
+    if (!entry->long_plugin_output().empty() || hss._long_log_output.empty()) {
+        hss._long_log_output = entry->long_plugin_output();
+    }
     return state_changed;
 }
 

@@ -20,14 +20,14 @@ def convert_rrds(
     split: bool,
     delete: bool,
     omd_root: Path,
+    rrd_paths: RRDPaths,
 ) -> None:
     if not hostnames:
-        hostnames = read_hostnames()
+        hostnames = read_hostnames(omd_root)
 
-    rrd_paths = RRDPaths.from_omd_root(omd_root)
     for hostname in hostnames:
         RRDConverter(rrd_interface, hostname, rrd_paths).convert_rrds_of_host(
-            RRDConfig(hostname),
+            RRDConfig(hostname, omd_root),
             split=split,
             delete=delete,
         )

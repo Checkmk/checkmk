@@ -30,7 +30,7 @@ def attach_suffix(p: Path, suffix: str) -> Path:
     return p.with_name(p.name + suffix)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RRDPaths:
     rrd_multiple_dir: Path
     rrd_single_dir: Path

@@ -12,6 +12,7 @@ import rrdtool  # type: ignore[import-not-found]
 
 # NOTE: rrdtool is missing type hints
 from cmk.ccc.hostaddress import HostName  # astrein: disable=cmk-module-layer-violation
+from cmk.rrd import RRDPaths
 from cmk.rrd.convert_rrds.main import convert_rrds  # astrein: disable=cmk-module-layer-violation
 from cmk.utils.log import verbosity_to_log_level  # astrein: disable=cmk-module-layer-violation
 
@@ -46,12 +47,14 @@ def main() -> None:
 
     _set_log_level(args.verbose)
 
+    omd_root = Path(os.environ.get("OMD_ROOT", ""))
     convert_rrds(
         rrdtool,
         args.hostnames,
         args.split_rrds,
         args.delete_rrds,
-        omd_root=Path(os.environ.get("OMD_ROOT", "")),
+        omd_root=omd_root,
+        rrd_paths=RRDPaths.from_omd_root(omd_root),
     )
 
 

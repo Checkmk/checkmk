@@ -738,7 +738,7 @@ class RRDCreator:
         self._rrd_paths = rrd_paths
         self._rrd_helper_output_buffer = b""
 
-    def create_rrds_keepalive(self, config_class: type[RRDConfig]) -> None:
+    def create_rrds_keepalive(self, config_factory: Callable[[HostName], RRDConfig]) -> None:
         input_buffer = b""
         self._rrd_helper_output_buffer = b""
         job_queue = list[bytes]()
@@ -771,7 +771,7 @@ class RRDCreator:
 
                 # Create *one* RRD file
                 if job_queue:
-                    self._handle_job(job_queue[0].decode("utf-8"), config_class)
+                    self._handle_job(job_queue[0].decode("utf-8"), config_factory)
                     del job_queue[0]
 
         except Exception:
@@ -789,9 +789,9 @@ class RRDCreator:
         written = os.write(1, self._rrd_helper_output_buffer[:size])
         self._rrd_helper_output_buffer = self._rrd_helper_output_buffer[written:]
 
-    def _handle_job(self, spec: str, config_class: type[RRDConfig]) -> None:
+    def _handle_job(self, spec: str, config_factory: Callable[[HostName], RRDConfig]) -> None:
         parsed_spec = RRDSpec.parse(spec)
-        config = config_class(parsed_spec.host)
+        config = config_factory(parsed_spec.host)
         try:
             self._create_rrd_from_spec(config, parsed_spec)
         except self._rrd_interface.OperationalError as exc:

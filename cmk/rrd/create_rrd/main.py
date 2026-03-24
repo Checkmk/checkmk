@@ -23,4 +23,6 @@ def _handle_keepalive_interrupt(signum: int, frame: FrameType | None) -> NoRetur
 
 def create_rrd(rrd_interface: RRDInterface, omd_root: Path, rrd_paths: RRDPaths) -> None:
     signal.signal(signal.SIGINT, _handle_keepalive_interrupt)
-    RRDCreator(rrd_interface, omd_root, rrd_paths).create_rrds_keepalive(RRDConfig)
+    RRDCreator(rrd_interface, omd_root, rrd_paths).create_rrds_keepalive(
+        lambda hostname: RRDConfig(hostname, omd_root)
+    )

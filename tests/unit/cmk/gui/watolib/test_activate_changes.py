@@ -96,7 +96,13 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ReplicationPath(
             ty="dir",
             ident="topology",
-            site_path="var/check_mk/topology",
+            site_path="var/check_mk/topology/configs",
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="file",
+            ident="topology_settings",
+            site_path="var/check_mk/topology/topology_settings",
             excludes=[],
         ),
         ReplicationPath(

@@ -79,7 +79,7 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.nodevis.utils import topology_dir
+from cmk.gui.nodevis.utils import topology_configs_dir, topology_settings_lookup
 from cmk.gui.site_config import (
     configured_sites,
     enabled_sites,
@@ -314,7 +314,13 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ReplicationPath(
             ty="dir",
             ident="topology",
-            site_path=os.path.relpath(topology_dir, cmk.utils.paths.omd_root),
+            site_path=os.path.relpath(topology_configs_dir, cmk.utils.paths.omd_root),
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="file",
+            ident="topology_settings",
+            site_path=os.path.relpath(topology_settings_lookup, cmk.utils.paths.omd_root),
             excludes=[],
         ),
         ReplicationPath(

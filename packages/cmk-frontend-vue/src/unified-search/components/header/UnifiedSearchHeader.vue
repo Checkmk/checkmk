@@ -128,7 +128,7 @@ const getSearchInputPlaceholder = computed(() => {
     <div class="unified-search-header__input-panel">
       <div class="unified-search-header__input-wrapper" @click="searchUtils.input.setFocus">
         <div class="unified-search-header__input-tag-root">
-          <form>
+          <form class="unified-search-header__form">
             <input
               id="search-username"
               type="text"
@@ -190,6 +190,10 @@ const getSearchInputPlaceholder = computed(() => {
   padding: 0 var(--spacing-double);
   border-top: 1px solid var(--default-nav-border-color);
   border-bottom: 1px solid var(--default-nav-border-color);
+}
+
+.unified-search-header__form {
+  width: 100%;
 }
 
 .unified-search-header__input-hide {
@@ -295,7 +299,7 @@ const getSearchInputPlaceholder = computed(() => {
 .unified-search-header__input {
   background: transparent;
   border: 0;
-  width: auto;
+  width: 100%;
   line-height: 15px;
   height: 27px;
   padding: 0;

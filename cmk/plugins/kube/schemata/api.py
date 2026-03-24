@@ -735,12 +735,12 @@ class ContainerSpec(BaseModel):
     image_pull_policy: ImagePullPolicy
 
 
-class VolumePersistentVolumeClaimSource(ClientModel):
+class VolumePersistentVolumeClaimSource(BaseModel):
     claim_name: str
     read_only: bool | None = None
 
 
-class Volume(ClientModel):
+class Volume(BaseModel):
     """
     name:
         volume's name; must be a dns_label and unique within the pod
@@ -828,6 +828,30 @@ class ConditionType(str, enum.Enum):
     DISRUPTIONTARGET = "disruptiontarget"
     PODRESIZEPENDING = "resizepending"
     PODRESIZEINPROGRESS = "resizeinprogress"
+
+    @classmethod
+    def from_kube_api(cls, condition: str) -> "ConditionType | None":
+        match condition:
+            case "PodHasNetwork":
+                return cls.PODHASNETWORK
+            case "PodReadyToStartContainers":
+                return cls.PODREADYTOSTARTCONTAINERS
+            case "PodScheduled":
+                return cls.PODSCHEDULED
+            case "ContainersReady":
+                return cls.CONTAINERSREADY
+            case "Initialized":
+                return cls.INITIALIZED
+            case "Ready":
+                return cls.READY
+            case "DisruptionTarget":
+                return cls.DISRUPTIONTARGET
+            case "PodResizePending":
+                return cls.PODRESIZEPENDING
+            case "PodResizeInProgress":
+                return cls.PODRESIZEINPROGRESS
+            case _:
+                return None
 
 
 class PodCondition(BaseModel):

@@ -33,7 +33,9 @@ from cmk.plugins.kube.special_agents import agent_kube as agent
 T = typing.TypeVar("T", bound=pydantic.BaseModel)
 
 
-class Batch(typing.Protocol[T]):
+# mypy 1.13 false positive on Protocol variance, fixed by
+# https://github.com/python/mypy/pull/20110 (mypy 1.19+)
+class Batch(typing.Protocol[T]):  # type: ignore[misc,unused-ignore]
     def __call__(self, size: int) -> list[T]: ...
 
 

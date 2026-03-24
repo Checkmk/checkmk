@@ -6,9 +6,8 @@
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
-from kubernetes import client  # type: ignore[import-untyped]
-
-from cmk.plugins.kube.schemata import api
+from .from_json.pod.pod import JSONPodList
+from .schemata import api
 
 
 @dataclass(frozen=True)
@@ -104,11 +103,11 @@ def _match_controllers(
 
 
 def map_controllers(
-    raw_pods: Sequence[client.V1Pod],
+    raw_pods: JSONPodList,
     object_to_owners: Mapping[str, api.OwnerReferences],
 ) -> tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
     pod_to_controllers = _find_control_chains(
-        pod_uids=(pod.metadata.uid for pod in raw_pods),
+        pod_uids=(api.PodUID(pod["metadata"]["uid"]) for pod in raw_pods["items"]),
         object_to_owners=object_to_owners,
     )
     return _match_controllers(pod_to_controllers), pod_to_controllers

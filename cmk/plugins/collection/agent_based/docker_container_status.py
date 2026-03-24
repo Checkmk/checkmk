@@ -74,16 +74,16 @@ def host_labels_docker_container_status(section: Section) -> HostLabelGenerator:
 
         cmk/docker_image:
             This label is set to the docker image if the corresponding host is
-            a docker container.
+            a docker or podman container.
             For instance: "docker.io/library/nginx:latest"
 
         cmk/docker_image_name:
             This label is set to the docker image name if the corresponding host
-            is a docker container. For instance: "nginx".
+            is a docker or podman container. For instance: "nginx".
 
         cmk/docker_image_version:
             This label is set to the docker images version if the corresponding
-            host is a docker container. For instance: "latest".
+            host is a docker or podman container. For instance: "latest".
 
     Examples:
 

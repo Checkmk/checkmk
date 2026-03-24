@@ -76,6 +76,9 @@ class SectionPodmanContainerInspect(BaseModel, frozen=True):
         alias="SocketUser",
         description="The host user who owns the Podman socket the container originates from.",
     )
+    image_name: str = Field(
+        default="", alias="ImageName", description="The image name of the container."
+    )
 
 
 class SectionPodmanContainerStats(BaseModel, frozen=True):

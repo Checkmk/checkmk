@@ -3,38 +3,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
-from cmk.agent_based.v2 import contains, SNMPTree
-from cmk.legacy_includes.humidity import check_humidity
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+)
 from cmk.legacy_includes.hwg import parse_hwg
-
-check_info = {}
+from cmk.plugins.lib.humidity import check_humidity
 
 HWG_HUMIDITY_DEFAULTLEVELS = {"levels": (60.0, 70.0)}
 
 
 def discover_hwg_humidity(
-    parsed: Mapping[str, Mapping[str, Any]],
-) -> Iterable[tuple[str, dict[str, Any]]]:
-    for index, attrs in parsed.items():
+    section: Mapping[str, Mapping[str, Any]],
+) -> DiscoveryResult:
+    for index, attrs in section.items():
         if attrs.get("humidity"):
-            yield index, {}
+            yield Service(item=index)
 
 
 def check_hwg_humidity(
-    item: str, params: Mapping[str, Any], parsed: Mapping[str, Mapping[str, Any]]
-) -> Iterable[LegacyResult | tuple[int, str]]:
-    if not (data := parsed.get(item)):
+    item: str, params: Mapping[str, Any], section: Mapping[str, Mapping[str, Any]]
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
 
-    yield check_humidity(data["humidity"], params)
-    yield 0, "Description: {}, Status: {}".format(data["descr"], data["dev_status_name"])
+    yield from check_humidity(data["humidity"], params)
+    yield Result(
+        state=State.OK,
+        summary=f"Description: {data['descr']}, Status: {data['dev_status_name']}",
+    )
 
 
-check_info["hwg_humidity"] = LegacyCheckDefinition(
+snmp_section_hwg_humidity = SimpleSNMPSection(
     name="hwg_humidity",
     detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
     fetch=SNMPTree(
@@ -42,6 +52,11 @@ check_info["hwg_humidity"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "7"],
     ),
     parse_function=parse_hwg,
+)
+
+
+check_plugin_hwg_humidity = CheckPlugin(
+    name="hwg_humidity",
     service_name="Humidity %s",
     discovery_function=discover_hwg_humidity,
     check_function=check_hwg_humidity,
@@ -49,7 +64,8 @@ check_info["hwg_humidity"] = LegacyCheckDefinition(
     check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,
 )
 
-check_info["hwg_ste2.humidity"] = LegacyCheckDefinition(
+
+check_plugin_hwg_ste2_humidity = CheckPlugin(
     name="hwg_ste2_humidity",
     service_name="Humidity %s",
     sections=["hwg_ste2"],

@@ -11,7 +11,7 @@
 
 from typing import Any
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.legacy_checks.hwg_humidity import (
     check_hwg_humidity,
     discover_hwg_humidity,
@@ -24,14 +24,14 @@ def test_discover_hwg_humidity_basic() -> None:
     string_table: StringTable = [
         ["1", "Sensor 1", "2", "45.5", "4"],  # humidity sensor (%=unit 4)
         ["2", "Sensor 2", "2", "55.2", "4"],  # humidity sensor (%=unit 4)
-        ["3", "Temp Sensor", "2", "23.5", "1"],  # temperature sensor (°C=unit 1)
+        ["3", "Temp Sensor", "2", "23.5", "1"],  # temperature sensor (C=unit 1)
     ]
 
     parsed = parse_hwg(string_table)
     result = list(discover_hwg_humidity(parsed))
 
     # Should discover humidity sensors (index 1 and 2), but not temperature (index 3)
-    assert sorted(result) == [("1", {}), ("2", {})]
+    assert sorted(r.item or "" for r in result) == ["1", "2"]
 
 
 def test_check_hwg_humidity_normal_levels() -> None:
@@ -45,19 +45,21 @@ def test_check_hwg_humidity_normal_levels() -> None:
 
     result = list(check_hwg_humidity("1", params, parsed))
 
-    # Should return one result
-    assert len(result) == 2
+    # Should return Result, Metric, and description Result
+    assert len(result) == 3
 
     # 45.5% is below warning level (60%), so should be OK
-    assert result[0][0] == 0
-    assert "45.5" in result[0][1]
-    # Should have performance data
-    assert len(result[0]) == 3
-    assert result[0][2]
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.OK
+    assert "45.5" in result[0].summary
 
-    assert result[1][0] == 0
-    assert "Office Humidity" in result[1][1]
-    assert "Status:" in result[1][1]
+    assert isinstance(result[1], Metric)
+    assert result[1].name == "humidity"
+
+    assert isinstance(result[2], Result)
+    assert result[2].state == State.OK
+    assert "Office Humidity" in result[2].summary
+    assert "Status:" in result[2].summary
 
 
 def test_check_hwg_humidity_warning_level() -> None:
@@ -71,17 +73,18 @@ def test_check_hwg_humidity_warning_level() -> None:
 
     result = list(check_hwg_humidity("2", params, parsed))
 
-    # Should return one result
-    assert len(result) == 2
+    # Should return Result, Metric, and description Result
+    assert len(result) == 3
 
     # 65% is above warning (60%) but below critical (70%), so should be WARNING
-    assert result[0][0] == 1
-    assert "65.0" in result[0][1]
-    # Should have performance data
-    assert len(result[0]) == 3
-    assert result[0][2]
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.WARN
+    assert "65.0" in result[0].summary
 
-    assert "Warehouse Humidity" in result[1][1]
+    assert isinstance(result[1], Metric)
+
+    assert isinstance(result[2], Result)
+    assert "Warehouse Humidity" in result[2].summary
 
 
 def test_check_hwg_humidity_critical_level() -> None:
@@ -95,23 +98,24 @@ def test_check_hwg_humidity_critical_level() -> None:
 
     result = list(check_hwg_humidity("3", params, parsed))
 
-    # Should return one result
-    assert len(result) == 2
+    # Should return Result, Metric, and description Result
+    assert len(result) == 3
 
     # 75% is above critical (70%), so should be CRITICAL
-    assert result[0][0] == 2
-    assert "75.0" in result[0][1]
-    # Should have performance data
-    assert len(result[0]) == 3
-    assert result[0][2]
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.CRIT
+    assert "75.0" in result[0].summary
 
-    assert "Server Room" in result[1][1]
+    assert isinstance(result[1], Metric)
+
+    assert isinstance(result[2], Result)
+    assert "Server Room" in result[2].summary
 
 
 def test_check_hwg_humidity_device_status() -> None:
     """Test check function for hwg_humidity includes device status information."""
     string_table: StringTable = [
-        ["1", "Test Sensor", "3", "50.0", "4"],  # status 3 = "alarm low"
+        ["1", "Test Sensor", "3", "50.0", "4"],  # status 3 = "out of range high"
     ]
 
     parsed = parse_hwg(string_table)
@@ -119,12 +123,13 @@ def test_check_hwg_humidity_device_status() -> None:
 
     result = list(check_hwg_humidity("1", params, parsed))
 
-    # Should return one result
-    assert len(result) == 2
+    # Should return Result, Metric, and description Result
+    assert len(result) == 3
 
     # Should include device status in summary
-    assert "Test Sensor" in result[1][1]
-    assert "Status:" in result[1][1]
+    assert isinstance(result[2], Result)
+    assert "Test Sensor" in result[2].summary
+    assert "Status:" in result[2].summary
 
 
 def test_check_hwg_humidity_missing_item() -> None:

@@ -12,6 +12,7 @@
 # test by something more appropriate.
 
 from cmk.agent_based.internal import evaluate_snmp_detection
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.hwg_humidity import (
     check_hwg_humidity,
     discover_hwg_humidity,
@@ -35,7 +36,7 @@ def test_detect_hwg_ste2() -> None:
 def test_hwg_ste2_parse() -> None:
     """Test parsing of SNMP data for hwg_ste2."""
     string_table = [
-        ["1", "Sensor 215", "1", "23.8", "1"],  # index, descr, status, value, unit (1=°C)
+        ["1", "Sensor 215", "1", "23.8", "1"],  # index, descr, status, value, unit (1=C)
         ["2", "Sensor 216", "1", "34.6", "4"],  # index, descr, status, value, unit (4=%)
     ]
 
@@ -105,9 +106,7 @@ def test_hwg_ste2_humidity_discovery() -> None:
 
     discovery_result = list(discover_hwg_humidity(parsed))
 
-    expected: list[tuple[str, dict]] = [("2", {})]
-
-    assert discovery_result == expected
+    assert discovery_result == [Service(item="2")]
 
 
 def test_hwg_ste2_temperature_check() -> None:
@@ -145,18 +144,22 @@ def test_hwg_ste2_humidity_check() -> None:
             "dev_status": "1",
         },
     }
-    params = {"levels": (60, 70)}
+    params = {"levels": (60.0, 70.0)}
 
     results = list(check_hwg_humidity("2", params, parsed))
-    assert len(results) == 2
+    assert len(results) == 3
 
-    assert results[0][0] == 0  # OK
-    assert "34.60%" in results[0][1]
-    assert len(results[0]) == 3
-    assert results[0][2] == [("humidity", 34.6, 60.0, 70.0, 0.0, 100.0)]
+    assert isinstance(results[0], Result)
+    assert results[0].state == State.OK
+    assert "34.60%" in results[0].summary
 
-    assert "Description: Sensor 216" in results[1][1]
-    assert "Status: normal" in results[1][1]
+    assert isinstance(results[1], Metric)
+    assert results[1].name == "humidity"
+
+    assert isinstance(results[2], Result)
+    assert results[2].state == State.OK
+    assert "Description: Sensor 216" in results[2].summary
+    assert "Status: normal" in results[2].summary
 
 
 def test_hwg_ste2_temperature_missing_item() -> None:

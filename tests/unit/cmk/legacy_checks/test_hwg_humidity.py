@@ -3,21 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
-from cmk.agent_based.v2 import StringTable
-from cmk.legacy_checks.hwg_humidity import check_hwg_humidity, check_info, discover_hwg_humidity
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.legacy_checks.hwg_humidity import (
+    check_hwg_humidity,
+    discover_hwg_humidity,
+    snmp_section_hwg_humidity,
+)
 from cmk.legacy_includes.hwg import parse_hwg
 
 
 def test_detect_hwg_humidity() -> None:
-    assert (detect_spec := check_info["hwg_humidity"].detect)
+    assert (detect_spec := snmp_section_hwg_humidity.detect)
     assert evaluate_snmp_detection(
         detect_spec=detect_spec,
         oid_value_getter={".1.3.6.1.2.1.1.1.0": "contains lower HWG"}.get,
@@ -29,17 +30,17 @@ def test_detect_hwg_humidity() -> None:
     [
         (
             [["1", "Sensor 215", "1", "23.8", "1"], ["2", "Sensor 216", "1", "34.6", "4"]],
-            [("2", {})],
+            [Service(item="2")],
         ),
     ],
 )
-def test_discover_hwg_humidity(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
-) -> None:
+def test_discover_hwg_humidity(info: StringTable, expected_discoveries: Sequence[Service]) -> None:
     """Test discovery function for hwg_humidity check."""
     parsed = parse_hwg(info)
     result = list(discover_hwg_humidity(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
@@ -47,24 +48,24 @@ def test_discover_hwg_humidity(
     [
         (
             "2",
-            (0, 0, 60, 70),
+            {"levels": (60.0, 70.0)},
             [["1", "Sensor 215", "1", "23.8", "1"], ["2", "Sensor 216", "1", "34.6", "4"]],
             [
-                (
-                    0,
-                    "34.60%",
-                    [("humidity", 34.6, 60.0, 70.0, 0.0, 100.0)],
-                ),
-                (
-                    0,
-                    "Description: Sensor 216, Status: normal",
+                Result(state=State.OK, summary="34.60%"),
+                Metric("humidity", 34.6, levels=(60.0, 70.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.OK,
+                    summary="Description: Sensor 216, Status: normal",
                 ),
             ],
         ),
     ],
 )
 def test_check_hwg_humidity(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, float],
+    info: StringTable,
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for hwg_humidity check."""
     parsed = parse_hwg(info)

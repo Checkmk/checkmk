@@ -518,6 +518,7 @@ import lightIconSoftwareSvg from '~cmk-frontend/themes/facelift/images/icon_soft
 import lightIconSolarisPkgSvg from '~cmk-frontend/themes/facelift/images/icon_solaris_pkg.svg?url&no-inline'
 import lightIconSolarisTgzSvg from '~cmk-frontend/themes/facelift/images/icon_solaris_tgz.svg?url&no-inline'
 import lightIconSparkleSvg from '~cmk-frontend/themes/facelift/images/icon_sparkle.svg?url&no-inline'
+import lightIconSparkleWhiteSvg from '~cmk-frontend/themes/facelift/images/icon_sparkle_white.svg?url&no-inline'
 import lightIconStaleSvg from '~cmk-frontend/themes/facelift/images/icon_stale.svg?url&no-inline'
 import lightIconStarredPng from '~cmk-frontend/themes/facelift/images/icon_starred.png?url&no-inline'
 import lightIconStartPng from '~cmk-frontend/themes/facelift/images/icon_start.png?url&no-inline'
@@ -689,6 +690,7 @@ import darkIconSiteUnreachSvg from '~cmk-frontend/themes/modern-dark/images/icon
 import darkIconSiteWaitingSvg from '~cmk-frontend/themes/modern-dark/images/icon_site_waiting.svg?url&no-inline'
 import darkIconSnmpmibSvg from '~cmk-frontend/themes/modern-dark/images/icon_snmpmib.svg?url&no-inline'
 import darkIconSparkleSvg from '~cmk-frontend/themes/modern-dark/images/icon_sparkle.svg?url&no-inline'
+import darkIconSparkleWhiteSvg from '~cmk-frontend/themes/modern-dark/images/icon_sparkle_white.svg?url&no-inline'
 import darkIconStaleSvg from '~cmk-frontend/themes/modern-dark/images/icon_stale.svg?url&no-inline'
 import darkIconSuggestionSvg from '~cmk-frontend/themes/modern-dark/images/icon_suggestion.svg?url&no-inline'
 import darkIconTableActionsOffSvg from '~cmk-frontend/themes/modern-dark/images/icon_table_actions_off.svg?url&no-inline'
@@ -1431,6 +1433,7 @@ export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
     'site-waiting': lightIconSiteWaitingSvg,
     snmpmib: lightIconSnmpmibSvg,
     sparkle: lightIconSparkleSvg,
+    'sparkle-white': lightIconSparkleWhiteSvg,
     speedometer: lightSpeedometerSvg,
     stale: lightIconStaleSvg,
     suggestion: lightIconSuggestionSvg,
@@ -1501,6 +1504,7 @@ export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
     'site-waiting': darkIconSiteWaitingSvg,
     snmpmib: darkIconSnmpmibSvg,
     sparkle: darkIconSparkleSvg,
+    'sparkle-white': darkIconSparkleWhiteSvg,
     speedometer: darkSpeedometerSvg,
     stale: darkIconStaleSvg,
     suggestion: darkIconSuggestionSvg,

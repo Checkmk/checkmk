@@ -102,9 +102,69 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
       }
     "
   />
+
+  <Teleport v-if="templateLoaded && !conversationOpen" defer to=".main">
+    <div class="ai-explain-button-app__tooltip-wrapper">
+      <button
+        type="button"
+        class="ai-explain-button-app__tooltip-button"
+        role="button"
+        @click="explainThis"
+      >
+        {{ button_text }}
+        <CmkIcon name="sparkle-white" size="xlarge" />
+      </button>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
+.ai-explain-button-app__tooltip-wrapper {
+  position: absolute;
+  top: calc(50% - 20px);
+  right: 0;
+  height: 40px;
+  width: 30px;
+  overflow: hidden;
+  z-index: var(--z-index-ai-tooltip);
+  transition: width 0.3s ease;
+
+  &:hover {
+    width: 170px;
+  }
+}
+
+.ai-explain-button-app__tooltip-button {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-4);
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-left: 0;
+  height: 100%;
+  width: 170px;
+  padding: 4px 8px 4px 12px;
+  border: none;
+  border-radius: 25px 0 0 25px;
+  background-color: var(--color-purple-60);
+  box-sizing: border-box;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--color-white-100);
+
+  &::before {
+    display: inline-block;
+    padding: 3px;
+    border: solid var(--color-white-100);
+    border-width: 0 3px 3px 0;
+    border-radius: 0 0 2px;
+    transform: rotate(135deg);
+    content: '';
+  }
+}
+
 .ai-explain-button-app__button {
   height: 30px;
   margin: 3px 0;

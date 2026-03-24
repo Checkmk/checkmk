@@ -9,6 +9,7 @@
 :root {
   --z-index-base: 0;
   --z-index-title-menu: 1000;
+  --z-index-ai-tooltip: 1100;
   --z-index-navigation: 2000;
   --z-index-modal: 3000;
   --z-index-modal-popup-overlay: 3400;

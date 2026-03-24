@@ -1,0 +1,14 @@
+title: Redfish PDU Status
+agents: agent_redfish_power
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of Redfish Power Distribution Units (PDUs).
+ It reports firmware version, serial number, model, manufacturer, and health state.
+
+discovery:
+ One service is created for each PDU.
+
+item:
+ The ID of the PDU.

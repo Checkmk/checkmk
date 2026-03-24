@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from typing import Any
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -27,18 +30,29 @@ agent_section_redfish_storage = AgentSection(
 
 def discovery_redfish_storage(section: RedfishAPIData) -> DiscoveryResult:
     """Discover single controllers"""
-    for key in section.keys():
+    for key in section:
         if section[key].get("Status", {}).get("State") == "UnavailableOffline":
             continue
         yield Service(item=section[key]["Id"])
 
 
-def check_redfish_storage(item: str, section: RedfishAPIData) -> CheckResult:
+def check_redfish_storage(
+    item: str, params: Mapping[str, Any], section: RedfishAPIData
+) -> CheckResult:
     """Check single Controller state"""
-    data = section.get(item, None)
+    data = section.get(item)
     if data is None:
         return
 
+    check_type = params.get("check_type", "full")
+
+    # Rollup mode: only report overall health
+    if check_type == "rollup":
+        dev_state, dev_msg = redfish_health_state(data.get("Status", {}))
+        yield Result(state=State(dev_state), summary=dev_msg)
+        return
+
+    # Full mode: detailed controller info
     controller_list = data.get("StorageControllers", [])
     if len(controller_list) == 1:
         for ctrl_data in controller_list:
@@ -71,10 +85,51 @@ def check_redfish_storage(item: str, section: RedfishAPIData) -> CheckResult:
         yield Result(state=State(dev_state), notice=dev_msg)
 
 
-check_plugin_redfish_storate = CheckPlugin(
+def discovery_redfish_storage_battery(section: RedfishAPIData) -> DiscoveryResult:
+    """Discover Dell storage controller batteries."""
+    for key in section:
+        if section[key].get("Status", {}).get("State") == "UnavailableOffline":
+            continue
+        battery_data = section[key].get("Oem", {}).get("Dell", {}).get("DellControllerBattery")
+        if battery_data:
+            yield Service(item=section[key]["Id"])
+
+
+def check_redfish_storage_battery(item: str, section: RedfishAPIData) -> CheckResult:
+    """Check Dell storage controller battery state."""
+    data = section.get(item)
+    if data is None:
+        return
+
+    battery_data = data.get("Oem", {}).get("Dell", {}).get("DellControllerBattery", {})
+    if not battery_data:
+        return
+
+    primary_status = battery_data.get("PrimaryStatus", "Unknown")
+    raid_state = battery_data.get("RAIDState", "Unknown")
+
+    _battery_status_map = {"OK": State.OK, "Warning": State.WARN, "Degraded": State.WARN}
+    state = _battery_status_map.get(primary_status, State.CRIT)
+    yield Result(
+        state=state,
+        summary=f"Battery status: {primary_status}, RAID state: {raid_state}",
+    )
+
+
+check_plugin_redfish_storage = CheckPlugin(
     name="redfish_storage",
     service_name="Storage controller %s",
     sections=["redfish_storage"],
     discovery_function=discovery_redfish_storage,
     check_function=check_redfish_storage,
+    check_ruleset_name="redfish_storage",
+    check_default_parameters={},
+)
+
+check_plugin_redfish_storage_battery = CheckPlugin(
+    name="redfish_storage_battery",
+    service_name="Storage controller %s battery",
+    sections=["redfish_storage"],
+    discovery_function=discovery_redfish_storage_battery,
+    check_function=check_redfish_storage_battery,
 )

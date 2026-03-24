@@ -1,0 +1,15 @@
+title: Redfish Storage Controller Battery
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the battery status of Dell storage controllers via
+ Redfish OEM data. It reports the primary status and RAID state of the
+ controller battery.
+
+discovery:
+ One service is created for each storage controller that has Dell OEM battery data.
+
+item:
+ The ID of the storage controller.

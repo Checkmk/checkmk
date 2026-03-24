@@ -1,0 +1,16 @@
+title: Redfish Power Consumption
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors power consumption metrics from Redfish compatible devices.
+ It tracks average, minimum, and maximum consumed watts per system.
+ Graphs are available for up to 4 systems (member IDs 0 through 3).
+ Systems beyond this limit are still monitored but without graph definitions.
+
+discovery:
+ One service is created for each power control entry with power consumption data.
+
+item:
+ The member ID of the power control entry.

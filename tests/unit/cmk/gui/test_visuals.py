@@ -284,6 +284,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invpsu",
         "invsensor",
         "invstack",
+        "invstorageredfishdrives",
         "invswpac",
         "invsyntheticmonitoringplans",
         "invsyntheticmonitoringtests",

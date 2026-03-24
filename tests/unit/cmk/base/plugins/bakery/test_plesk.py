@@ -10,7 +10,7 @@ from cmk.base.plugins.bakery.plesk import get_plesk_files
 
 
 def test_plesk_files() -> None:
-    result = sorted(get_plesk_files(3600), key=repr)
+    result = sorted(get_plesk_files({"deployment": ("cached", 3600.0)}), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("plesk_backups.py"), interval=3600),

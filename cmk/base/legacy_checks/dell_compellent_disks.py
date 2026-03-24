@@ -27,7 +27,7 @@ check_info = {}
 
 dell_compellent_disks_health_map = {
     "1": (0, "healthy"),
-    "0": (2, "not healthy"),
+    "2": (2, "not healthy"),
 }
 
 

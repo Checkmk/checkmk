@@ -9,6 +9,7 @@ import { computed, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkLabel from '@/components/CmkLabel.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
@@ -18,6 +19,7 @@ const jobName = defineModel<string>('jobName', { required: true })
 const metricsPath = defineModel<string>('metricsPath', { required: true })
 const address = defineModel<string>('address', { required: true })
 const port = defineModel<number | undefined>('port', { required: true })
+const encryption = defineModel<boolean>('encryption', { required: true })
 
 const displayErrors = ref(false)
 
@@ -128,6 +130,9 @@ defineExpose({ validate })
 
     <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
     <CmkInput v-model="port" type="number" placeholder="0" :external-errors="portErrors" />
+
+    <CmkLabel>{{ _t('Encryption') }}</CmkLabel>
+    <CmkCheckbox v-model="encryption" :label="_t('Encrypt communication with TLS')" />
   </div>
 </template>
 

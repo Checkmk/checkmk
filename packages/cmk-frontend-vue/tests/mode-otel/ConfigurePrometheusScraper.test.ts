@@ -13,6 +13,7 @@ interface RenderOptions {
   metricsPath?: string
   address?: string
   port?: number | undefined
+  encryption?: boolean
 }
 
 function renderComponent(options: RenderOptions = {}) {
@@ -20,24 +21,26 @@ function renderComponent(options: RenderOptions = {}) {
     jobName: initialJobName = '',
     metricsPath: initialMetricsPath = '',
     address: initialAddress = '',
-    port: initialPort = undefined
+    port: initialPort = undefined,
+    encryption: initialEncryption = false
   } = options
 
   const jobName = ref(initialJobName)
   const metricsPath = ref(initialMetricsPath)
   const address = ref(initialAddress)
   const port = ref(initialPort)
+  const encryption = ref(initialEncryption)
   const compRef = ref<InstanceType<typeof ConfigurePrometheusScraper>>()
 
   render(
     defineComponent({
       components: { ConfigurePrometheusScraper },
-      setup: () => ({ jobName, metricsPath, address, port, compRef }),
-      template: `<ConfigurePrometheusScraper ref="compRef" v-model:job-name="jobName" v-model:metrics-path="metricsPath" v-model:address="address" v-model:port="port" />`
+      setup: () => ({ jobName, metricsPath, address, port, encryption, compRef }),
+      template: `<ConfigurePrometheusScraper ref="compRef" v-model:job-name="jobName" v-model:metrics-path="metricsPath" v-model:address="address" v-model:port="port" v-model:encryption="encryption" />`
     })
   )
 
-  return { jobName, metricsPath, address, port, compRef }
+  return { jobName, metricsPath, address, port, encryption, compRef }
 }
 
 const VALID_INPUT: RenderOptions = {
@@ -282,6 +285,20 @@ describe('ConfigurePrometheusScraper', () => {
 
       expect(result).toBe(false)
       await screen.findByText('Port must be between 1 and 65535.')
+    })
+  })
+
+  describe('encryption', () => {
+    test('defaults to unchecked', () => {
+      const { encryption } = renderComponent(VALID_INPUT)
+
+      expect(encryption.value).toBe(false)
+    })
+
+    test('can be set to true', () => {
+      const { encryption } = renderComponent({ ...VALID_INPUT, encryption: true })
+
+      expect(encryption.value).toBe(true)
     })
   })
 

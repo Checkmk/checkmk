@@ -31,6 +31,7 @@ const jobName = ref<string>('')
 const metricsPath = ref<string>('')
 const address = ref<string>('')
 const port = ref<number | undefined>(undefined)
+const encryption = ref<boolean>(false)
 
 const generalPropertiesRef =
   useTemplateRef<InstanceType<typeof ConfigureGeneralProperties>>('generalProperties')
@@ -96,6 +97,7 @@ const close = () => {
           v-model:metrics-path="metricsPath"
           v-model:address="address"
           v-model:port="port"
+          v-model:encryption="encryption"
         />
       </template>
       <template #actions>

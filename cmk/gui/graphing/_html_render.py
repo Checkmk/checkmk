@@ -364,17 +364,20 @@ def _show_graph_html_content(
     if v_axis_label:
         html.div(v_axis_label, class_="v_axis_label")
 
-    # Add the floating elements
-    if graph_render_config.show_graph_time and not graph_render_config.preview:
-        html.div(
-            graph_artwork.time_axis["title"] or "",
-            css=["time"] + (["inline"] if graph_render_config.show_title == "inline" else []),
-        )
-
     if graph_render_config.show_controls and graph_render_config.resizable:
         html.img(src=theme.detect_icon_path("resize_graph", prefix=""), class_="resize")
 
-    if title := text_with_links_to_user_translated_html(
+    # Render title and time info together so they can be laid out without overlapping.
+    # The canvas pixel width is computed here so the header div can carry an explicit width,
+    # which is the only reliable way to constrain a flex container inside an inline-block and
+    # thus allow the title to wrap when title + time info would exceed the canvas width.
+    is_inline = graph_render_config.show_title == "inline"
+    graph_width: float = graph_render_config.size[0] * html_size_per_ex
+    time_text: str | None = None
+    if graph_render_config.show_graph_time and not graph_render_config.preview:
+        time_text = graph_artwork.time_axis["title"] or ""
+
+    title = text_with_links_to_user_translated_html(
         _render_graph_title_elements(
             request,
             graph_artwork,
@@ -382,14 +385,24 @@ def _show_graph_html_content(
             explicit_title=graph_render_config.explicit_title,
         ),
         separator=HTML.without_escaping(" / "),
-    ):
-        html.div(
-            title,
-            class_=["title"] + (["inline"] if graph_render_config.show_title == "inline" else []),
+    )
+
+    if title or time_text is not None:
+        # For the inline variant the width is already constrained by CSS (left:0; right:18px).
+        # For the non-inline variant we must set it explicitly so the flex container has a
+        # definite size and the title can wrap instead of stretching the parent inline-block.
+        header_style = None if is_inline else f"width: {int(graph_width)}px;"
+        html.open_div(
+            class_=["graph_header"] + (["inline"] if is_inline else []),
+            style=header_style,
         )
+        if title:
+            html.div(title, class_="title")
+        if time_text is not None:
+            html.div(time_text, class_="time")
+        html.close_div()
 
     # Create canvas where actual graph will be rendered
-    graph_width: float = graph_render_config.size[0] * html_size_per_ex
     graph_height: float = graph_render_config.size[1] * html_size_per_ex
     html.canvas(
         "",

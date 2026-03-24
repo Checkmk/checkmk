@@ -42,24 +42,40 @@ div.graph {
     }
   }
 
-  div.title {
-    margin-bottom: 1ex;
-    font-weight: $font-weight-bold;
-    text-align: center;
+  div.graph_header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 4px;
+    box-sizing: border-box;
+
+    div.title {
+      flex: 1;
+      min-width: 0;
+      font-weight: $font-weight-bold;
+      text-align: center;
+      white-space: normal;
+      overflow-wrap: break-word;
+    }
+
+    div.time {
+      flex-shrink: 0;
+      padding-left: 8px;
+      white-space: nowrap;
+    }
+
+    &.inline {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 18px;
+      z-index: 10;
+      margin-bottom: 0;
+    }
   }
 
   img.loading {
     display: block;
     margin: 20px auto;
-  }
-
-  div.time {
-    position: absolute;
-    top: 0;
-    right: 18px;
-    z-index: 10;
-    margin-top: 5px;
-    text-align: right;
   }
 
   div.v_axis_label {
@@ -196,28 +212,17 @@ div.graph {
     padding: 0;
     margin: 0;
 
-    > div.title {
+    > .graph_header {
       position: absolute;
       top: 5px;
       z-index: 10;
-      width: 100%;
-      font-size: $font-size-large;
-      font-weight: $font-weight-default;
+      margin-bottom: 0;
+
+      div.title {
+        font-size: $font-size-large;
+        font-weight: $font-weight-default;
+      }
     }
-  }
-
-  div.title.inline,
-  div.time.inline {
-    position: absolute;
-    top: 10px;
-    z-index: 10;
-    margin: 0;
-    font-weight: $font-weight-bold;
-    text-align: center;
-  }
-
-  div.title.inline {
-    width: 100%;
   }
 }
 
@@ -254,18 +259,17 @@ div.graph_with_timeranges {
     border: 1px solid $color-table-border;
     box-shadow: none;
 
-    div.title {
-      display: block;
-    }
-
-    &.preview .title {
+    &.preview .graph_header {
       top: 12px;
       width: calc(100% - 16px);
       padding: 8px 0;
-      font-weight: $font-weight-default;
-      color: $font-color;
-      text-shadow: none;
       box-sizing: border-box;
+
+      div.title {
+        font-weight: $font-weight-default;
+        color: $font-color;
+        text-shadow: none;
+      }
     }
 
     table.legend td {

@@ -689,6 +689,15 @@ function render_graph(graph: GraphArtwork) {
     legendContainer.style.width = canvas.width / 2 - legendMarginLeft + 'px'
   }
 
+  // Align the graph header's left edge with the vertical axis so the title doesn't
+  // extend into the axis label area. v_axis_width is in canvas coords; halve it for CSS px.
+  const graph_header_el = (container.childNodes[0] as HTMLElement).querySelector(
+    '.graph_header'
+  ) as HTMLElement | null
+  if (graph_header_el) {
+    graph_header_el.style.paddingLeft = to_display_coord(v_axis_width) + 'px'
+  }
+
   const width = canvas.width
   const height = canvas.height
 
@@ -1099,7 +1108,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
       }
     },
     {
-      selector: 'div.graph.preview .title',
+      selector: 'div.graph.preview .graph_header .title',
       attrs: {
         'text-shadow':
           '-1px 0 ' +
@@ -1113,7 +1122,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
       }
     },
     {
-      selector: 'div.graph div.title.inline, div.graph div.time.inline',
+      selector: 'div.graph .graph_header.inline .title, div.graph .graph_header.inline .time',
       attrs: {
         'text-shadow':
           '-1px 0 ' +

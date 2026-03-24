@@ -106,6 +106,14 @@ _get_podman_version() {
 }
 export -f _get_podman_version
 
+# Mock: _get_max_user_namespaces - Returns the kernel's max_user_namespaces value.
+# Mocked separately so tests don't depend on the host kernel's sysctl setting.
+# shellcheck disable=SC2317
+_get_max_user_namespaces() {
+    echo "15000"
+}
+export -f _get_max_user_namespaces
+
 # Mock: systemctl - Systemd service management
 # shellcheck disable=SC2317
 systemctl() {

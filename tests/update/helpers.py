@@ -168,19 +168,41 @@ def inject_rules(site: Site) -> None:
             ignore_list = [_ for _ in ignore_list_file.read().splitlines() if _]
     except FileNotFoundError:
         ignore_list = []
-    rules_file_names = [
-        _ for _ in os.listdir(RULES_DIR) if _.endswith(".json") and _ not in ignore_list
+    rule_file_paths = [
+        _use_version_specific_json_if_present(rule_json, site.version)
+        for rule_json in os.listdir(RULES_DIR)
+        if rule_json.endswith(".json") and rule_json not in ignore_list
     ]
-    for rules_file_name in rules_file_names:
-        if edition_from_env().is_community_edition() and rules_file_name.startswith("cmc_"):
+    for rule_file_path in rule_file_paths:
+        if edition_from_env().is_community_edition() and Path(rule_file_path).name.startswith(
+            "cmc_"
+        ):
             continue
-        rules_file_path = RULES_DIR / rules_file_name
+        rules_file_path = RULES_DIR / rule_file_path
         with open(rules_file_path, encoding="UTF-8") as ruleset_file:
             logger.info('Importing rules file "%s"...', rules_file_path)
             rules = json.load(ruleset_file)
             for rule in rules:
                 site.openapi.rules.create(value=rule)
     site.activate_changes_and_wait_for_core_reload()
+
+
+def _use_version_specific_json_if_present(rule_json: str, cmk_version: CMKVersion) -> str:
+    """Return version-specific JSON filename, if present.
+
+    Otherwise, return the default JSON filename present within `RULES_DIR`.
+    """
+    version_base = cmk_version.version_data.version_base
+    try:
+        for rule_json_250 in os.listdir(RULES_DIR / f"overrides_for_{version_base}"):
+            if rule_json == rule_json_250:
+                # version-specific JSON file exists.
+                return str(Path(version_base) / rule_json)
+    except FileNotFoundError:
+        # version-specific directory does not exist.
+        return rule_json
+    # version-specific JSON file does not exist.
+    return rule_json
 
 
 def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:

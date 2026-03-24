@@ -17,7 +17,7 @@ from scripts.gerrit_api.werks import werk_details, WerkImpact
 ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
 # TODO: improve detection of master branch's version.
-MASTER_BRANCH: Final = "2.5.0"
+MASTER_BRANCH: Final = "2.6.0"
 CSV_DELIMITER: Final = ", "
 
 

@@ -1,4 +1,4 @@
-title: Microsoft Azure Traffic Manager: Probe State
+title: Microsoft Azure Traffic Manager: Probe State (deprecated)
 agents: azure
 catalog: cloud/azure
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Microsoft Azure App Registration Secret
+title: Microsoft Azure App Registration Secret (deprecated)
 agents: azure
 catalog: cloud/azure
 license: GPLv2

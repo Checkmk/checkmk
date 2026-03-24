@@ -1,4 +1,4 @@
-title: Microsoft Azure SQL Databases: CPU Utilization
+title: Microsoft Azure SQL Databases: CPU Utilization (deprecated)
 agents: azure
 catalog: cloud/azure
 license: GPLv2

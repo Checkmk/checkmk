@@ -1,4 +1,4 @@
-title: Microsoft Azure Virtual Machine: Burst CPU Credits
+title: Microsoft Azure Virtual Machine: Burst CPU Credits (deprecated)
 agents: azure
 catalog: cloud/azure
 license: GPLv2

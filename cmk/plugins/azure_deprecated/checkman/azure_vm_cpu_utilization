@@ -1,4 +1,4 @@
-title: Microsoft Azure Virtual Machine: CPU Utilization
+title: Microsoft Azure Virtual Machine: CPU Utilization (deprecated)
 agents: azure
 catalog: cloud/azure
 license: GPLv2

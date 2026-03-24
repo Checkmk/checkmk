@@ -1,4 +1,4 @@
-title: Microsoft Azure MySQL Database: CPU Utilization
+title: Microsoft Azure MySQL Database: CPU Utilization (deprecated)
 agents: azure
 catalog: cloud/azure
 license: GPLv2

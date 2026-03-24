@@ -2032,6 +2032,7 @@ builtin_views.update(
                 "host_tags": {},
                 "siteopt": {},
                 "serviceregex": {"service_regex": ""},
+                "svcstate": {},
                 "output": {"service_output": ""},
                 "service_labels": {},
             },

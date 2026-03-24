@@ -117,20 +117,20 @@ async function generateOTT() {
       @click="generateOTT"
     >
       <CmkIcon name="signature-key" class="mh-generate-token__icon" />
-      {{ _t('Generate token') }}
+      {{ _t('Generate one-time token') }}
     </CmkButton>
 
-    <CmkAlertBox v-else variant="loading">{{ _t('Generating token') }}</CmkAlertBox>
+    <CmkAlertBox v-else variant="loading">{{ _t('Generating one-time token') }}</CmkAlertBox>
   </template>
   <template v-else>
     <CmkAlertBox v-if="ottError" variant="error">{{
-      _t(`Error on generating token: ${ottError.message}`)
+      _t(`Error generating one-time token: ${ottError.message}`)
     }}</CmkAlertBox>
     <template v-else>
       <CmkAlertBox variant="success">
         <template v-if="showValidityText && validityText">{{ validityText }}</template>
         <template v-else>
-          {{ _t('Successfully generated token') }}
+          {{ _t('Successfully generated one-time token') }}
           {{ _t(`(Expires: ${ottExpiry?.toLocaleString() || 'never'})`) }}
         </template>
       </CmkAlertBox>

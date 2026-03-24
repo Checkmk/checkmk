@@ -202,8 +202,8 @@ describe('ModeCreateRelayApp', () => {
 
     await navigateToExecuteScriptStep('test-relay-foo')
 
-    await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
-    await screen.findByText(/error on generating token/i)
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/error generating one-time token/i)
 
     expect(screen.queryByTestId('run-relay-install-script')).not.toBeInTheDocument()
   })
@@ -374,8 +374,8 @@ describe('ModeCreateRelayApp', () => {
 
     // Step 4: Verify Execute Installation Script
     await screen.findByText('Run the installation script')
-    await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
-    await screen.findByText(/error on generating token/i)
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/error generating one-time token/i)
     expect(screen.queryByTestId('run-relay-install-script')).not.toBeInTheDocument()
   })
 })

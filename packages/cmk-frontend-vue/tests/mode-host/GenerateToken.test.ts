@@ -51,7 +51,7 @@ describe('GenerateToken', () => {
       global: { stubs: { teleport: true } }
     })
 
-    await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
     await screen.findByText(expectedPattern)
   })
 
@@ -67,8 +67,8 @@ describe('GenerateToken', () => {
       global: { stubs: { teleport: true } }
     })
 
-    await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
-    await screen.findByText(/Successfully generated token/)
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Successfully generated one-time token/)
   })
 
   test('falls back to expiry timestamp when expiresInSeconds set but showValidityText absent', async () => {
@@ -84,7 +84,7 @@ describe('GenerateToken', () => {
       global: { stubs: { teleport: true } }
     })
 
-    await fireEvent.click(screen.getByRole('button', { name: /generate token/i }))
-    await screen.findByText(/Successfully generated token/)
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Successfully generated one-time token/)
   })
 })

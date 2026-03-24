@@ -280,15 +280,15 @@ div.dashlet.edit {
       }
 
       &.edit {
-        background-image: url('../facelift/images/dashlet_edit.svg');
+        background-image: url('images/dashlet_edit.svg');
       }
 
       &.clone {
-        background-image: url('../facelift/images/dashlet_clone.svg');
+        background-image: url('images/dashlet_clone.svg');
       }
 
       &.del {
-        background-image: url('../facelift/images/dashlet_delete.svg');
+        background-image: url('images/dashlet_delete.svg');
       }
     }
   }

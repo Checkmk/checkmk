@@ -480,3 +480,71 @@ def test_ldap_sync(mocker: MockerFixture, sync_ldap_data: SyncLdapData) -> None:
     assert sync_ldap_data.change_str in sync_user_result.changes[0]
     assert len(sync_user_result.security_events) == 1
     assert sync_user_result.security_events[0] == sync_ldap_data.security_event
+
+
+_test_config_with_auth_expire = LDAPUserConnectionConfig(
+    id="test-golden-ldap-connector",
+    description="LDAP connector with auth_expire",
+    comment="",
+    docu_url="",
+    disabled=False,
+    directory_type=(
+        "openldap",
+        LDAPConnectionConfigFixed(
+            connect_to=(
+                "fixed_list",
+                Fixed(
+                    server="lolcathorst",
+                    failover_servers=["internet"],
+                ),
+            )
+        ),
+    ),
+    user_dn="ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
+    user_scope="sub",
+    user_id_umlauts="keep",
+    group_dn="ou=Groups,dc=ldap_golden,dc=unit_tests,dc=local",
+    group_scope="sub",
+    active_plugins=ActivePlugins(
+        auth_expire=SyncAttribute(),
+    ),
+    cache_livetime=300,
+    type="ldap",
+    bind=("bind_dn", ("store", "ldap_golden_unknown_password")),
+    version=2,
+    connect_timeout=0.1,
+    lower_user_ids=True,
+    suffix="LDAP_SUFFIX",
+)
+
+
+def test_check_credentials_with_auth_expire(mocker: MockerFixture, request_context: None) -> None:
+    """Login with auth_expire plugin enabled must request all needed LDAP attributes.
+
+    Regression test: _get_user() used to fetch only the user-id attribute, so
+    the auth_expire sync plugin could not find pwdchangedtime in the user spec.
+    """
+    connector = LDAPUserConnector(_test_config_with_auth_expire)
+    with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
+        connector.connect()
+        assert connector._ldap_obj
+
+        _mock_result3(
+            mocker,
+            connector,
+            [("carol", {"uid": [b"CAROL_ID"], "pwdchangedtime": [b"20250101000000Z"]})],
+        )
+
+        connector.check_credentials(
+            UserId("carol"),
+            Password("hunter2"),
+            get_user_attributes([]),
+            [_test_config_with_auth_expire],
+            default_user_profile={},
+        )
+
+        search_ext_call = connector._ldap_obj.search_ext.call_args
+        requested_attrs = search_ext_call[1].get("attrlist") or search_ext_call[0][3]
+        assert "pwdchangedtime" in requested_attrs, (
+            f"auth_expire needs 'pwdchangedtime' but _get_user() only requested: {requested_attrs}"
+        )

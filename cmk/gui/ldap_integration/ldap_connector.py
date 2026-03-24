@@ -1168,6 +1168,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self,
         username: LdapUsername,
         no_escape: bool = False,
+        additional_columns: list[str] | None = None,
     ) -> FetchedLDAPUser | None:
         """Returns None when the user is not found in the LDAP instance
         or is not uniq, else returns FetchedLDAPUser which includes the
@@ -1177,6 +1178,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             return self._user_cache[username]
 
         user_id_attr = self._user_id_attr()
+
+        columns = [user_id_attr]
+        if additional_columns:
+            columns.extend(additional_columns)
 
         # Check whether or not the user exists in the directory matching the username AND
         # the user search filter configured in the "LDAP User Settings".
@@ -1190,7 +1195,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 ldap.filter.escape_filter_chars(username),
                 self._config.get("user_filter", ""),
             ),
-            [user_id_attr],
+            columns,
             self._config["user_scope"],
         )
 
@@ -1578,7 +1583,11 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 return None  # Skip this connection, another one is enforced
 
         if (
-            fetched_ldap_user := self._get_user(self._strip_suffix(user_id), True)
+            fetched_ldap_user := self._get_user(
+                self._strip_suffix(user_id),
+                no_escape=True,
+                additional_columns=self._needed_attributes(user_attributes),
+            )
         ) is None:  # The user does not exist on the LDAP server
             if enforce_this_connection:
                 return False  # Refuse login

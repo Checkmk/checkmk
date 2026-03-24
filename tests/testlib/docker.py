@@ -134,7 +134,8 @@ def prepare_package(package_info: CMKPackageInfo | CMKPackageInfoOld) -> None:
             logger.info("Checkmk package already exists at %s!", test_package_path)
         else:
             # download CMK installation package for use in container
-            ABCPackageManager.factory().download(target_folder=build_path)
+            # Always use the Docker image's distro, not the host distro
+            ABCPackageManager.factory(DISTRO_CODENAME).download(target_folder=build_path)
         return
 
     source_package_path = Path(

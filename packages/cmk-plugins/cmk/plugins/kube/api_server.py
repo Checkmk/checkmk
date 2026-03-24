@@ -27,7 +27,6 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     V1Namespace,
     V1PersistentVolume,
     V1PersistentVolumeClaim,
-    V1Pod,
     V1ReplicaSet,
     V1ResourceQuota,
 )
@@ -38,6 +37,7 @@ from cmk.plugins.kube.controllers import ControllerGraph
 from cmk.plugins.kube.from_json.deployment import deployment_from_json, JSONDeploymentList
 from cmk.plugins.kube.from_json.metadata import dependent_object_uid_from_json
 from cmk.plugins.kube.from_json.node import JSONNodeList, node_list_from_json
+from cmk.plugins.kube.from_json.pod.pod import JSONPodList, pod_from_client
 from cmk.plugins.kube.from_json.statefulset import JSONStatefulSetList, statefulset_from_json
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import (
@@ -47,7 +47,6 @@ from cmk.plugins.kube.transform import (
     namespace_from_client,
     parse_object_to_owners,
     persistent_volume_claim_from_client,
-    pod_from_client,
     resource_quota_from_client,
 )
 from cmk.plugins.kube.transform_any import parse_open_metric_samples
@@ -99,10 +98,9 @@ class ClientBatchAPI(ClientAPI):
 
 
 class ClientCoreAPI(ClientAPI):
-    def query_raw_pods(self) -> Sequence[V1Pod]:
+    def query_raw_pods(self) -> JSONPodList:
         request = requests.Request("GET", self._config.url("/api/v1/pods"))
-        response = send_request(self._config, self._client, request)
-        return self._deserializer.run("V1PodList", response).items
+        return send_request(self._config, self._client, request).json()
 
     def query_raw_resource_quotas(self) -> Sequence[V1ResourceQuota]:
         request = requests.Request("GET", self._config.url("/api/v1/resourcequotas"))
@@ -367,7 +365,7 @@ class APIData:
 class UnparsedAPIData:
     raw_jobs: Sequence[V1Job]
     raw_cron_jobs: Sequence[V1CronJob]
-    raw_pods: Sequence[V1Pod]
+    raw_pods: JSONPodList
     raw_nodes: JSONNodeList
     raw_namespaces: Sequence[V1Namespace]
     raw_resource_quotas: Sequence[V1ResourceQuota]
@@ -415,7 +413,7 @@ def query_raw_api_data_v2(
 
 def parse_api_data(
     raw_cron_jobs: Sequence[V1CronJob],
-    raw_pods: Sequence[V1Pod],
+    raw_pods: JSONPodList,
     raw_jobs: Sequence[V1Job],
     raw_nodes: JSONNodeList,
     raw_namespaces: Sequence[V1Namespace],
@@ -477,8 +475,10 @@ def parse_api_data(
     namespaces = [namespace_from_client(raw_namespace) for raw_namespace in raw_namespaces]
     nodes = node_list_from_json(raw_nodes, node_to_kubelet_health)
     pods = [
-        pod_from_client(pod, controller_graph.pod_to_control_chain(pod.metadata.uid))
-        for pod in raw_pods
+        pod_from_client(
+            pod, controller_graph.pod_to_control_chain(api.PodUID(pod["metadata"]["uid"]))
+        )
+        for pod in raw_pods["items"]
     ]
     persistent_volume_claims = [
         persistent_volume_claim_from_client(pvc) for pvc in raw_persistent_volume_claims
@@ -544,11 +544,11 @@ def create_api_data_v2(
             raw_api_data.raw_replica_sets,
             raw_api_data.raw_cron_jobs,
             raw_api_data.raw_jobs,
-            raw_api_data.raw_pods,
         ),
         workload_resources_json=itertools.chain(
             raw_api_data.raw_statefulsets["items"],
             raw_api_data.raw_deployments["items"],
+            raw_api_data.raw_pods["items"],
         ),
     )
     controller_graph = ControllerGraph(raw_api_data.raw_pods, object_to_owners=object_to_owners)

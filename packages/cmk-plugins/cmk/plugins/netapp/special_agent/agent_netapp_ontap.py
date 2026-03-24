@@ -108,6 +108,11 @@ def safe_write_section(
 ) -> None:
     try:
         write_section(section_name, generator, logger)
+    except NetAppRestError as exc:
+        if exc.status_code == 401:
+            raise
+        logger.exception("Section '%s' failed", section_name)
+        _write_error(section_name, str(exc))
     except Exception as exc:
         logger.exception("Section '%s' failed", section_name)
         _write_error(section_name, str(exc))
@@ -953,6 +958,11 @@ def write_sections(
     if RESOURCES_NEEDING_NODES_INFO & fetched_resources:
         try:
             nodes = list(fetch_nodes(connection))
+        except NetAppRestError as exc:
+            if exc.status_code == 401:
+                raise
+            logger.exception("Failed to fetch nodes")
+            _write_error("node", str(exc))
         except Exception as exc:
             logger.exception("Failed to fetch nodes")
             _write_error("node", str(exc))
@@ -968,6 +978,11 @@ def write_sections(
     ):
         try:
             volumes = list(fetch_volumes(connection))
+        except NetAppRestError as exc:
+            if exc.status_code == 401:
+                raise
+            logger.exception("Failed to fetch volumes")
+            _write_error("volumes", str(exc))
         except Exception as exc:
             logger.exception("Failed to fetch volumes")
             _write_error("volumes", str(exc))
@@ -1004,6 +1019,11 @@ def write_sections(
         interfaces: list[models.IpInterfaceModel] | None = None
         try:
             interfaces = list(fetch_interfaces(connection))
+        except NetAppRestError as exc:
+            if exc.status_code == 401:
+                raise
+            logger.exception("Failed to fetch interfaces")
+            _write_error("if", str(exc))
         except Exception as exc:
             logger.exception("Failed to fetch interfaces")
             _write_error("if", str(exc))

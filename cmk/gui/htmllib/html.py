@@ -527,7 +527,7 @@ class HTMLGenerator(HTMLWriter):
         self.form_vars.append(varname)
 
     # Beware: call this method just before end_form(). It will
-    # add all current non-underscored HTML variables as hiddedn
+    # add all current non-underscored HTML variables as hidden
     # field to the form - *if* they are not used in any input
     # field. (this is the reason why you must not add any further
     # input fields after this method has been called).

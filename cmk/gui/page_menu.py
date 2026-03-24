@@ -979,25 +979,23 @@ def search_form(title: str | None = None, mode: str | None = None, default_value
 def inpage_search_form(mode: str | None = None, default_value: str = "") -> None:
     form_name = "inpage_search_form"
     reset_button_id = "%s_reset" % form_name
-    was_submitted = request.get_ascii_input("filled_in") == form_name or bool(
-        get_search_expression()
-    )
+    was_submitted = bool(get_search_expression())
     with html.form_context(form_name, add_transid=False):
         html.text_input(
             "search",
             size=32,
             default_value=default_value,
             placeholder=_("Find on this page ..."),
-            required=True,
             title="",
         )
-        html.hidden_fields()
         if mode:
             html.hidden_field("mode", mode, add_var=True)
         reset_url = request.get_ascii_input_mandatory(
             "reset_url", makeuri(request, [], delvars=["filled_in", "search"])
         )
         html.hidden_field("reset_url", reset_url, add_var=True)
+        html.form_vars.append("submit")  # prevent hidden_fields() from re-emitting it
+        html.hidden_fields()
         html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
         html.button("submit", "", cssclass="submit", help_=_("Apply"))
     html.javascript(

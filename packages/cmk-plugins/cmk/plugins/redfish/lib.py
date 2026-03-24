@@ -110,6 +110,8 @@ def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
             item = entry.get("@odata.id")
         elif "Thermal" in entry.get("@odata.type"):
             item = entry.get("@odata.id")
+        elif "Volume" in entry.get("@odata.type"):
+            item = entry.get("@odata.id")
         else:
             item = entry.get("Id")
         parsed.setdefault(item, entry)
@@ -259,6 +261,8 @@ def process_redfish_perfdata(entry: Mapping[str, Any]) -> None | Perfdata:
 
     def optional_tuple(warn: float | None, crit: float | None) -> Levels | None:
         assert (warn is None) == (crit is None)
+        if warn == 0 and crit == 0:
+            return None
         if warn is not None and crit is not None:
             return ("fixed", (warn, crit))
         return None

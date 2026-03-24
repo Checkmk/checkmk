@@ -1,0 +1,15 @@
+title: Redfish Power Redundancy
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the power supply redundancy state of Redfish compatible devices.
+ It reports the redundancy mode, minimum needed and maximum supported power supplies,
+ and the current number of power supplies in the redundancy set.
+
+discovery:
+ One service is created for each redundancy entry.
+
+item:
+ The member ID of the redundancy entry.

@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="unreachable"
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -32,12 +28,19 @@ agent_section_redfish_ethernetinterfaces = AgentSection(
 )
 
 
+def _render_speed(speed: int) -> str:
+    """Render link speed with appropriate unit."""
+    if speed >= 1000:
+        return f"{speed / 1000:g} Gbps"
+    return f"{speed} Mbps"
+
+
 def discovery_redfish_ethernetinterfaces(
     params: Mapping[str, Any], section: RedfishAPIData
 ) -> DiscoveryResult:
     """Discover single interfaces"""
     disc_state = params.get("state")
-    for key in section.keys():
+    for key in section:
         if not section[key].get("Status"):
             continue
         if section[key].get("Status", {}).get("State") in [
@@ -52,47 +55,66 @@ def discovery_redfish_ethernetinterfaces(
             continue
         if section[key].get("LinkStatus", "NOLINK") in ["LinkUp"] and disc_state == "down":
             continue
-        yield Service(item=section[key]["Id"])
+
+        speed = section[key].get("SpeedMbps", 0)
+        if speed == 0:
+            speed = section[key].get("CurrentLinkSpeedMbps", 0)
+
+        yield Service(
+            item=section[key]["Id"],
+            parameters={
+                "discover_speed": speed if speed else 0,
+                "discover_link_status": section[key].get("LinkStatus", "NOLINK"),
+            },
+        )
 
 
-def check_redfish_ethernetinterfaces(item: str, section: RedfishAPIData) -> CheckResult:
+def check_redfish_ethernetinterfaces(
+    item: str, params: Mapping[str, Any], section: RedfishAPIData
+) -> CheckResult:
     """Check single interfaces"""
-    data = section.get(item, None)
+    data = section.get(item)
     if data is None:
         return
 
+    # Link status
+    link_state = State.OK
+    link_summary = "Link: No info"
+    if (link_status := data.get("LinkStatus")) is not None:
+        link_summary = f"Link: {link_status}"
+        discover_link = params.get("discover_link_status")
+        if discover_link and discover_link != link_status:
+            link_state = State(params.get("state_if_link_status_changed", 2))
+            link_summary = f"Link: {link_status} (changed from {discover_link})"
+    yield Result(state=link_state, summary=link_summary)
+
+    # Speed
+    link_speed = data.get("CurrentLinkSpeedMbps") or data.get("SpeedMbps") or 0
+    speed_state = State.OK
+    speed_summary = f"Speed: {_render_speed(link_speed)}" if link_speed else "Speed: Unknown"
+    discover_speed = params.get("discover_speed")
+    if discover_speed and link_speed and discover_speed != link_speed:
+        speed_state = State(params.get("state_if_link_speed_changed", 1))
+        speed_summary = (
+            f"Speed: {_render_speed(link_speed)} (changed from {_render_speed(discover_speed)})"
+        )
+    yield Result(state=speed_state, summary=speed_summary)
+
+    # MAC address
     mac_addr = ""
     if data.get("AssociatedNetworkAddresses"):
         mac_addr = ", ".join(data.get("AssociatedNetworkAddresses"))
     elif data.get("MACAddress"):
         mac_addr = data.get("MACAddress")
+    if mac_addr:
+        yield Result(state=State.OK, summary=f"MAC: {mac_addr}")
 
-    link_speed = 0
-    if data.get("CurrentLinkSpeedMbps"):
-        link_speed = data.get("CurrentLinkSpeedMbps")
-    elif data.get("SpeedMbps"):
-        link_speed = data.get("SpeedMbps")
-    if link_speed is None:
-        link_speed = 0
-
-    link_status = "Unknown"
-    if data.get("LinkStatus"):
-        link_status = data.get("LinkStatus")
-        if link_status is None:
-            link_status = "Down"
-
-    int_msg = f"Link: {link_status}, Speed: {link_speed:0.0f}Mbps, MAC: {mac_addr}"
-    yield Result(state=State(0), summary=int_msg)
-
+    # Health state
     if data.get("Status"):
         dev_state, dev_msg = redfish_health_state(data.get("Status", {}))
-        status = dev_state
-        message = dev_msg
+        yield Result(state=State(dev_state), notice=dev_msg)
     else:
-        status = 0
-        message = "No known status value found"
-
-    yield Result(state=State(status), notice=message)
+        yield Result(state=State.OK, notice="No known status value found")
 
 
 check_plugin_redfish_ethernetinterfaces = CheckPlugin(
@@ -103,4 +125,6 @@ check_plugin_redfish_ethernetinterfaces = CheckPlugin(
     discovery_ruleset_name="discovery_redfish_ethernetinterfaces",
     discovery_default_parameters={"state": "updown"},
     check_function=check_redfish_ethernetinterfaces,
+    check_ruleset_name="check_redfish_ethernetinterfaces",
+    check_default_parameters={},
 )

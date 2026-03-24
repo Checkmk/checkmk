@@ -343,9 +343,12 @@ def fetch_sections(
             continue
         if section not in data.keys():
             continue
-        section_data = fetch_data(
-            redfishobj.redfish_connection, data[section]["@odata.id"], section
-        )
+        if not data.get(section, {}):
+            continue
+        section_url = data.get(section, {}).get("@odata.id")
+        if not section_url:
+            continue
+        section_data = fetch_data(redfishobj.redfish_connection, section_url, section)
         if section_data.get("Members@odata.count") == 0:
             continue
         if "Collection" in section_data.get("@odata.type", {}):
@@ -499,6 +502,11 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     manager_url = redfishobj.base_data.get("Managers", {}).get("@odata.id")
     chassis_url = redfishobj.base_data.get("Chassis", {}).get("@odata.id")
     systems_url = redfishobj.base_data.get("Systems", {}).get("@odata.id")
+
+    if not systems_url or not chassis_url:
+        raise CannotRecover(
+            "ERROR: probably not a Redfish computer system - missing Systems or Chassis information"
+        )
 
     data_model = ""
     manager_data: Sequence[Mapping[str, Any]] = []

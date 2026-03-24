@@ -44,6 +44,10 @@ SectionName = Literal["RackPDUs", "Mains", "Outlets", "Sensors"]
 PASSWORD_OPTION = "password"
 
 
+class CannotRecover(RuntimeError):
+    """Raised when the agent encounters an unrecoverable error."""
+
+
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     """Parse arguments needed to construct an URL and for connection conditions"""
 
@@ -305,6 +309,10 @@ def get_information(redfishobj):
     sys.stdout.write(f"<<<labels:sep(0)>>>\n{json.dumps(labels)}\n")
 
     # fetch systems
+    if not systems_url:
+        raise CannotRecover(
+            "ERROR: probably not a Redfish power equipment - missing PowerEquipment information"
+        )
     systems_data = list([fetch_data(redfishobj, systems_url, "PowerEquipment")])
 
     if manager_data:
@@ -325,6 +333,18 @@ def get_information(redfishobj):
                 process_result(fetch_sections(redfishobj, sub_sections, entry))
         else:
             process_result(fetch_sections(redfishobj, sub_sections, pdu_data))
+
+    # fetch chassis and sensor data
+    chassis_url = base_data.get("Chassis", {}).get("@odata.id")
+    if chassis_url:
+        chassis_col = fetch_data(redfishobj, chassis_url, "Chassis")
+        chassis_data = fetch_collection(redfishobj, chassis_col, "Chassis")
+        sys.stdout.write("<<<redfish_chassis:sep(0)>>>\n")
+        sys.stdout.write(f"{json.dumps(chassis_data, sort_keys=True)}\n")
+        chassis_sections: tuple[SectionName, ...] = ("Sensors",)
+        for chassis in chassis_data:
+            result = fetch_sections(redfishobj, chassis_sections, chassis)
+            process_result(result)
 
     return 0
 

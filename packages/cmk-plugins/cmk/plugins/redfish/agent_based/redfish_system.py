@@ -41,17 +41,24 @@ def check_redfish_system(item: str, section: SectionSystem) -> CheckResult:
     if not (data := section.get(item)):
         return
 
-    state = data.get("Status", {"Health": "Unknown"})
-    result_state, state_text = redfish_health_state(state)
-    message = f"System with SerialNr: {data.get('SerialNumber')}, has State: {state_text}"
-    details = None
+    if serial := data.get("SerialNumber"):
+        yield Result(state=State(0), summary=f"Serial Number: {serial}")
 
-    if service_tag := (
-        data.get("Oem", {}).get("Dell", {}).get("DellSystem", {}).get("ChassisServiceTag")
-    ):
-        details = f"Service Tag: {service_tag}"
+    details = []
+    if sku_data := data.get("SKU"):
+        details.append(f"SKU: {sku_data}")
 
-    yield Result(state=State(result_state), summary=message, details=details)
+    # Extract Dell OEM rollup/tag/code details
+    if dell_data := (data.get("Oem") or {}).get("Dell", {}).get("DellSystem", {}):
+        for key in dell_data:
+            if "Rollup" in key or "Tag" in key or "Code" in key:
+                key_name = key.replace("Rollup", " Rollup").replace("Status", " Status").strip()
+                details.append(f"{key_name}: {dell_data[key]}")
+
+    details_msg = "\n".join(details) if details else None
+
+    dev_state, dev_msg = redfish_health_state(data.get("Status", {}))
+    yield Result(state=State(dev_state), summary=dev_msg, details=details_msg)
 
 
 check_plugin_redfish_system = CheckPlugin(

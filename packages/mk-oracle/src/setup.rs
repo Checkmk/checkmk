@@ -738,13 +738,8 @@ mod tests {
 
     fn base_dir() -> std::path::PathBuf {
         std::path::PathBuf::from(std::env::var("MK_CONFDIR").unwrap_or_else(|_| {
-            let this_file: PathBuf = PathBuf::from(file!());
-            this_file
-                .parent()
+            std::env::current_dir()
                 .unwrap()
-                .parent()
-                .unwrap()
-                .to_owned()
                 .into_os_string()
                 .into_string()
                 .unwrap()

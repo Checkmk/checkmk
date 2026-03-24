@@ -45,7 +45,6 @@ use mk_oracle::types::{
 };
 use regex::Regex;
 use std::collections::HashSet;
-use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
@@ -675,17 +674,17 @@ fn test_locks_last() {
         let instance_name = inst.as_str();
         assert!(
             rows[0].starts_with(format!("{}.CDB$ROOT|", instance_name).as_str()),
-            "expected {instance_name} {}",
+            "expected {} starts with {instance_name}",
             rows[0]
         );
         assert!(
             rows[1].starts_with(format!("{0}.", instance_name).as_str()),
-            "expected {instance_name} {}",
+            "expected {} starts with {instance_name}",
             rows[1]
         );
         assert!(
-            rows[2].starts_with(format!("{}|", instance_name).as_str()),
-            "expected {instance_name} {}",
+            rows[2].starts_with(instance_name.to_string().as_str()),
+            "expected {} starts with {instance_name}",
             rows[2]
         );
     }
@@ -1408,13 +1407,8 @@ fn test_detect_host_runtime() {
 
 fn base_dir() -> std::path::PathBuf {
     std::path::PathBuf::from(std::env::var("MK_CONFDIR").unwrap_or_else(|_| {
-        let this_file: PathBuf = PathBuf::from(file!());
-        this_file
-            .parent()
+        std::env::current_dir()
             .unwrap()
-            .parent()
-            .unwrap()
-            .to_owned()
             .into_os_string()
             .into_string()
             .unwrap()
@@ -1603,9 +1597,8 @@ fn test_add_runtime_to_path() {
         std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
     }
     exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
-    assert!(std::env::var(mut_env_var.to_str())
-        .unwrap()
-        .starts_with(good_path_str.as_str()));
+    let var_value = std::env::var(mut_env_var.to_str()).unwrap();
+    assert!(var_value.starts_with(good_path_str.as_str()));
 
     // *** NEVER ***
     let cfg = OracleConfig::load_str(&make_config_with_use_host("never")).unwrap();

@@ -21,6 +21,7 @@ use crate::config::authentication::Authentication;
 use crate::config::connection::Connection;
 use crate::config::options::Options;
 use crate::config::target::TargetId;
+use crate::ora_sql::detect::get_local_sid_names;
 use crate::types::{
     DescriptorSid, HostName, InstanceAlias, InstanceName, ServiceName, ServiceType, Sid,
     SqlBindParam,
@@ -116,12 +117,11 @@ impl Config {
             .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &section_info))
             .collect::<Result<Vec<CustomInstance>>>()?;
         if discovery.detect() {
-            let registry_instances =
-                get_additional_registry_instances(&custom_instances, &auth, &conn);
+            let local_instances = get_additional_local_instances(&custom_instances, &auth, &conn);
             log::info!(
-                "Found {} Oracle instances in REGISTRY: [ {} ]",
-                registry_instances.len(),
-                registry_instances
+                "Found {} local Oracle instances: [ {} ]",
+                local_instances.len(),
+                local_instances
                     .iter()
                     .map(|i| format!(
                         "{}:{:?}",
@@ -134,7 +134,7 @@ impl Config {
                     .join(", ")
             );
 
-            custom_instances.extend(registry_instances);
+            custom_instances.extend(local_instances);
         } else {
             log::info!("skipping registry instances: the reason detection disabled");
         }
@@ -219,17 +219,37 @@ impl Config {
     }
 }
 
-fn get_additional_registry_instances(
-    _already_found_instances: &[CustomInstance],
-    _auth: &Authentication,
+fn get_additional_local_instances(
+    already_found_instances: &[CustomInstance],
+    auth: &Authentication,
     conn: &Connection,
 ) -> Vec<CustomInstance> {
     if !conn.is_local() {
-        log::info!("skipping registry instances: the host is not enough localhost");
+        log::info!("The host is not local - skipping local instances detection");
+        return vec![];
     }
-    log::error!("NOT IMPLEMENTED");
-
-    vec![]
+    get_local_sid_names()
+        .into_iter()
+        .map(|name| {
+            CustomInstance::new(
+                auth.clone(),
+                conn.clone(),
+                Some(TargetId::Sid(Sid::from(&name))),
+                None,
+                None,
+            )
+        })
+        .filter(|c| {
+            let c_sid = c.standalone_sid().map(|s| s.to_string());
+            !already_found_instances.iter().any(|a| {
+                c_sid.as_deref()
+                    == a.standalone_sid()
+                        .map(|s| s.to_string())
+                        .or_else(|| a.descriptor_sid().map(|s| s.to_string()))
+                        .as_deref()
+            })
+        })
+        .collect()
 }
 
 #[derive(PartialEq, Debug, Clone, Default)]
@@ -363,7 +383,6 @@ impl TryFrom<&str> for Mode {
 
 #[derive(PartialEq, Debug, Clone, Default)]
 pub struct CustomInstance {
-    /// also known as sid
     auth: Authentication,
     conn: Connection,
     target_id: Option<TargetId>,
@@ -1279,6 +1298,8 @@ oracle:
     authentication:
       username: system
       password: oracle
+    discovery:
+      detect: no
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(
@@ -1301,6 +1322,8 @@ oracle:
     authentication:
       username: system
       password: oracle
+    discovery:
+      detect: no
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(
@@ -1327,6 +1350,8 @@ oracle:
       password: oracle
     instances:
       - sid: FREE
+    discovery:
+      detect: no
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(config.instances().len(), 1);
@@ -1352,6 +1377,8 @@ oracle:
     instances:
       - sid: FREE
         service_name: FREE.service_name
+    discovery:
+      detect: no
 "#;
         let config = Config::from_string(CONFIG).unwrap().unwrap();
         assert_eq!(config.instances().len(), 1);

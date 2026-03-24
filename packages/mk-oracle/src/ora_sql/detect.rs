@@ -28,6 +28,21 @@ use sysinfo::System;
 /// Group 2: the SID name (e.g. `TEST19`)
 const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)(.+)";
 
+/// Retrieves local Oracle SIDs from the registry and running processes.
+/// On Windows, it checks the registry for Oracle instances and also looks for PMON processes.
+pub fn get_local_sid_names() -> Vec<String> {
+    let instances = get_instances(None).unwrap_or_default();
+    let registry_sids = instances
+        .into_iter()
+        .map(|i| i.name.to_string())
+        .collect::<Vec<String>>();
+    let process_sids = find_sids_by_processes(Some(SID_MASK))
+        .unwrap_or_default()
+        .into_iter()
+        .collect::<Vec<String>>();
+    registry_sids.into_iter().chain(process_sids).collect()
+}
+
 /// Method is similar to `ps -ef | grep <match_string>`
 /// May not work on Windows systems
 pub fn find_sids_by_processes(match_string: Option<&str>) -> Result<HashSet<String>> {

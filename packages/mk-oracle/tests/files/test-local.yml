@@ -8,3 +8,6 @@ oracle:
       password: $CI_ORA1_DB_TEST
       type: standard
       role: sysdba # it may be not enabled by Oracle DBA
+    # uncomment block below rto be sure that detection works
+    #discovery:
+    #  detect: no 

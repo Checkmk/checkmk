@@ -676,18 +676,6 @@ def get_piggyback_host(
     return container_name
 
 
-def should_use_cli(config: Union[PodmanConfig, None]) -> bool:
-    socket_paths = get_socket_paths(config)
-    for socket_path in socket_paths:
-        if os.path.exists(socket_path):
-            return False
-
-    if which("podman"):
-        return True
-
-    return False
-
-
 def handle_containers_stats(
     containers: Sequence[Mapping[str, object]],
     container_stats: Mapping[str, object],
@@ -733,14 +721,26 @@ def main() -> None:
     # Write empty errors section to indicate successful start
     write_serialized_section("errors", json.dumps({}))
 
-    if should_use_cli(config):
-        run_cli_queries(piggyback_name_method)
+    socket_paths = get_socket_paths(config)
+    available_sockets = [sp for sp in socket_paths if os.path.exists(sp)]
+
+    if not available_sockets:
+        if which("podman"):
+            run_cli_queries(piggyback_name_method)
+            return
+
+        checked = ", ".join(socket_paths) if socket_paths else "(none configured)"
+        write_section(
+            Error(
+                "podman_status",
+                f"No podman socket found and podman binary is not available. "
+                f"Checked paths: {checked}. "
+                "Ensure the podman service is running or install the podman binary.",
+            )
+        )
         return
 
-    # Socket-based queries
-    socket_paths = get_socket_paths(config)
-
-    for socket_path_str in socket_paths:
+    for socket_path_str in available_sockets:
         socket_path = Path(socket_path_str)
         with make_unixsocket_session(
             socket_path=socket_path,

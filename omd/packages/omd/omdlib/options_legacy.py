@@ -611,7 +611,9 @@ def parse_arguments_dispatcher(
             return ExecOtherOmd(version=target_version)
         case "setversion":
             # No vulnerability, but allows changing to vulnerable version.
-            return DispatcherError(message=werk_18891_error(target_version))
+            return DispatcherError(message=werk_18891_error(target_version, False))
+        case "restore":
+            return DispatcherError(message=werk_18891_error(target_version, True))
         case (
             "create"
             | "init"
@@ -620,13 +622,12 @@ def parse_arguments_dispatcher(
             | "update-apache-config"
             | "mv"
             | "cp"
-            | "restore"
             | "backup"
         ):
             # These commands cannot be correctly executed after root privileges are dropped.
             # And we can't use the vulnerable versions omd these commands without dropping the
             # privileges first.
-            return DispatcherError(message=werk_18891_error(target_version))
+            return DispatcherError(message=werk_18891_error(target_version, False))
         case "rm":
             if args_before_site_name_count >= len(args):
                 sys.exit("omd: please specify site.")
@@ -656,9 +657,8 @@ def parse_arguments_dispatcher(
             if args_before_site_name_count >= len(args):
                 if command.needs_site == 2:
                     # Invoking `omd -V 2.3.0p24 start` as root is not allowed.
-                    return DispatcherError(message=werk_18891_error(target_version))
-                else:
-                    sys.exit("omd: please specify site.")
+                    return DispatcherError(message=werk_18891_error(target_version, False))
+                sys.exit("omd: please specify site.")
             target_site = args[args_before_site_name_count]
             return ArgsToDispatch(
                 version=target_version,

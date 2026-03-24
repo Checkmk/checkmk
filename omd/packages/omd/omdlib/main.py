@@ -1767,7 +1767,7 @@ def main_setversion(
     if version == default_version(versions_path):
         sys.exit("The given version is already default.")
     if not verify_security(version):
-        sys.exit(werk_18891_error(version))
+        sys.exit(werk_18891_error(version, False))
 
     # Special handling for debian based distros which use update-alternatives
     # to control the path to the omd binary, manpage and so on
@@ -2935,7 +2935,7 @@ def _restore_backup_from_tar_root(
     if version != omdlib.__version__:
         if verify_security(version) or not is_root():
             exec_other_omd(version)
-        sys.exit(werk_18891_error(version))
+        sys.exit(werk_18891_error(version, True))
 
     if not version_exists(version, Path("/omd/versions/")):
         sys.exit(

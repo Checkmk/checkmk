@@ -30,7 +30,7 @@ from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrat
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 
 WINDOWS_AGENT_DOWNLOAD_CMD = (
-    "curl.exe -o check-mk-agent_{version}.msi"
+    "curl.exe -o check-mk-agent_{version}.msi -fG"
     ' "{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke"'
     ' --header "Accept: application/octet-stream"'
     ' --header "Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]"'

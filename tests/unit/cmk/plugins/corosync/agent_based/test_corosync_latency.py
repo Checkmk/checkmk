@@ -15,7 +15,7 @@ from cmk.plugins.corosync.agent_based.corosync_latency import (
     SectionCorosyncLatency,
 )
 
-STRING_TABLE = string_table = [
+STRING_TABLE = [
     ["stats.knet.node1.link0.connected", "(u8)", "=", "1"],
     ["stats.knet.node1.link0.latency_ave", "(u32)", "=", "0"],
     ["stats.knet.node1.link0.latency_max", "(u32)", "=", "0"],
@@ -71,6 +71,7 @@ def test_parse_corosync_latency() -> None:
 
 def test_discover_corosync_latency() -> None:
     assert list(discover_corosync_latency(SECTION)) == [
+        Service(item="node1.link0"),
         Service(item="node1.link1"),
         Service(item="node2.link0"),
     ]
@@ -79,6 +80,18 @@ def test_discover_corosync_latency() -> None:
 @pytest.mark.parametrize(
     "item, section, params, expected_result",
     [
+        pytest.param(
+            "node1.link0",
+            SECTION,
+            {"latency_max": ("fixed", (0.02, 0.03)), "latency_ave": ("fixed", (0.01, 0.02))},
+            [
+                Result(state=State.OK, summary="Latency Max: 0 seconds"),
+                Metric("latency_max", 0.0, levels=(0.02, 0.03)),
+                Result(state=State.OK, summary="Latency Average: 0 seconds"),
+                Metric("latency_ave", 0.0, levels=(0.01, 0.02)),
+            ],
+            id="node1.link0 -> OK/OK because connected link without samples is still checked",
+        ),
         pytest.param(
             "node1.link1",
             SECTION,
@@ -102,7 +115,7 @@ def test_discover_corosync_latency() -> None:
             SECTION,
             {"latency_max": ("no_levels", None), "latency_ave": ("no_levels", None)},
             [Result(state=State.CRIT, summary="Link is not connected or down")],
-            id="node2.link0 -> CRIT because link is down (no results)",
+            id="node2.link0 -> CRIT because link is down",
         ),
         pytest.param(
             "random.link",
@@ -114,6 +127,9 @@ def test_discover_corosync_latency() -> None:
     ],
 )
 def test_check_corosync_latency(
-    item: str, section: SectionCorosyncLatency, params: Params, expected_result: CheckResult
+    item: str,
+    section: SectionCorosyncLatency,
+    params: Params,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_corosync_latency(item, params, section)) == expected_result

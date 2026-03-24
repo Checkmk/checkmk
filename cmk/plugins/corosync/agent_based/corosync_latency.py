@@ -74,11 +74,7 @@ agent_section_corosync_latency = AgentSection(
 
 
 def discover_corosync_latency(section: SectionCorosyncLatency) -> DiscoveryResult:
-    for item, link in section.items():
-        if link.latency_samples == 0 and link.connected is True:
-            # We are skipping links that are connected but have no samples
-            # as they did not have any traffic
-            continue
+    for item, _ in section.items():
         yield Service(item=item)
 
 

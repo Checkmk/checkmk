@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     State,
 )
-from cmk.legacy_includes.hwg import parse_hwg
+from cmk.plugins.hwg.agent_based.lib import parse_hwg
 from cmk.plugins.lib.humidity import check_humidity
 
 HWG_HUMIDITY_DEFAULTLEVELS = {"levels": (60.0, 70.0)}

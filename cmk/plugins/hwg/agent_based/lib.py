@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
+from collections.abc import Mapping
 from typing import NotRequired, TypedDict
 
 
@@ -14,6 +14,9 @@ class HwgSensorData(TypedDict, total=False):
     dev_unit: NotRequired[str | None]
     dev_status_name: str
     dev_status: str
+
+
+type SectionHwg = Mapping[str, HwgSensorData]
 
 
 map_units = {"1": "c", "2": "f", "3": "k", "4": "%"}
@@ -28,7 +31,7 @@ map_dev_states = {
 }
 
 
-def parse_hwg(info: list[list[str]]) -> dict[str, HwgSensorData]:
+def parse_hwg(info: list[list[str]]) -> SectionHwg:
     parsed: dict[str, HwgSensorData] = {}
 
     for index, descr, sensorstatus, current, unit in info:

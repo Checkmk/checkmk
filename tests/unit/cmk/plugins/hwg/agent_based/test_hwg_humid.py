@@ -12,11 +12,11 @@
 from typing import Any
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.legacy_checks.hwg_humidity import (
+from cmk.plugins.hwg.agent_based.hwg_humidity import (
     check_hwg_humidity,
     discover_hwg_humidity,
 )
-from cmk.legacy_includes.hwg import parse_hwg
+from cmk.plugins.hwg.agent_based.lib import parse_hwg
 
 
 def test_discover_hwg_humidity_basic() -> None:

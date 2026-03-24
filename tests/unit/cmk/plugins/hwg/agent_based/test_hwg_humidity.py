@@ -9,12 +9,12 @@ import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.hwg_humidity import (
+from cmk.plugins.hwg.agent_based.hwg_humidity import (
     check_hwg_humidity,
     discover_hwg_humidity,
     snmp_section_hwg_humidity,
 )
-from cmk.legacy_includes.hwg import parse_hwg
+from cmk.plugins.hwg.agent_based.lib import parse_hwg
 
 
 def test_detect_hwg_humidity() -> None:

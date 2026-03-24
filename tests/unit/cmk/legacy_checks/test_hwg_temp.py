@@ -13,7 +13,7 @@ import pytest
 
 from cmk.agent_based.v2 import StringTable
 from cmk.legacy_checks.hwg_temp import check_hwg_temp, discover_hwg_temp
-from cmk.legacy_includes.hwg import parse_hwg
+from cmk.plugins.hwg.agent_based.lib import parse_hwg
 
 
 @pytest.mark.parametrize(

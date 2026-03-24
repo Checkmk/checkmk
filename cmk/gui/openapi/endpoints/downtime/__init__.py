@@ -534,9 +534,9 @@ def _generate_target_downtimes_query(
         query_expr = Downtimes.id == body["downtime_id"]
         site_id = SiteId(body["site_id"])
     elif find_type == "hostgroup":
-        query_expr = Downtimes.host_groups.contains(body["hostgroup_name"])
+        query_expr = Downtimes.host_groups.equals(body["hostgroup_name"])
     elif find_type == "servicegroup":
-        query_expr = Downtimes.service_groups.contains(body["servicegroup_name"])
+        query_expr = Downtimes.service_groups.equals(body["servicegroup_name"])
     else:
         hostname = body["host_name"]
         if "service_descriptions" not in body:

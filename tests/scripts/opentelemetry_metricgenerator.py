@@ -273,10 +273,12 @@ def main() -> None:
 
     print("\nMetric series calculation:")
     print(
-        f"  Per service: {counter_series_per_service} counter + {gauge_series_per_service} gauge + {histogram_series_per_service} histogram = {series_per_service} series"
+        f"  Per service: {counter_series_per_service} counter + {gauge_series_per_service} gauge"
+        f" + {histogram_series_per_service} histogram = {series_per_service} series"
     )
     print(
-        f"  Total across all services: {series_per_service} × {total_services} = {total_series} metric series\n"
+        f"  Total across all services: {series_per_service} × {total_services} = {total_series}"
+        " metric series\n"
     )
 
     # Set up multiple resources with their own meters
@@ -341,7 +343,10 @@ def main() -> None:
             )
 
             print(
-                f"  Initialized app-{app_id}-copy-{service_id} (server-{app_id:02d}-{service_id:02d}) with {args.num_counters} counters, {args.num_gauges} gauges, {args.num_histograms} histograms"
+                f"  Initialized app-{app_id}-copy-{service_id}"
+                f" (server-{app_id:02d}-{service_id:02d})"
+                f" with {args.num_counters} counters, {args.num_gauges} gauges,"
+                f" {args.num_histograms} histograms"
             )
 
     print()
@@ -433,7 +438,8 @@ def main() -> None:
                         )
 
                 print(
-                    f"    app-{app_id}-copy-{service_id}: {total_requests} counter requests, {len(gauges)} gauges, {total_histogram_records} histogram records"
+                    f"    app-{app_id}-copy-{service_id}: {total_requests} counter requests,"
+                    f" {len(gauges)} gauges, {total_histogram_records} histogram records"
                 )
 
             print()

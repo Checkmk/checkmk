@@ -6,12 +6,12 @@
 from pathlib import Path
 
 from cmk.bakery.v1 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mtr import Conf, get_mtr_files
+from cmk.base.plugins.bakery.mtr import get_mtr_files
 
 
 def test_mtr_files_basic() -> None:
-    conf: Conf = {
-        "interval": 600,
+    conf = {
+        "deployment": ("cached", 600.0),
         "mtr_config": [
             {"hostname": "example.com"},
         ],
@@ -51,8 +51,8 @@ def test_mtr_files_basic() -> None:
 
 
 def test_mtr_files_with_options() -> None:
-    conf: Conf = {
-        "interval": 300,
+    conf = {
+        "deployment": ("cached", 300.0),
         "mtr_config": [
             {
                 "hostname": "10.0.0.1",

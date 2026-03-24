@@ -979,7 +979,9 @@ def search_form(title: str | None = None, mode: str | None = None, default_value
 def inpage_search_form(mode: str | None = None, default_value: str = "") -> None:
     form_name = "inpage_search_form"
     reset_button_id = "%s_reset" % form_name
-    was_submitted = request.get_ascii_input("filled_in") == form_name
+    was_submitted = request.get_ascii_input("filled_in") == form_name or bool(
+        get_search_expression()
+    )
     with html.form_context(form_name, add_transid=False):
         html.text_input(
             "search",

@@ -2,8 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import argparse
 import configparser
 import json
+import logging
 import os
 import pwd
 import shlex
@@ -28,6 +30,33 @@ except ImportError:
 
 
 __version__ = "2.5.0b3"
+
+LOGGER = logging.getLogger(__name__)
+
+
+def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="mk_podman", description="Checkmk Podman agent plugin")
+    parser.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Verbose mode (use -vv for debug output)",
+    )
+    args = parser.parse_args(argv)
+
+    fmt = "%%(levelname)5s: %s%%(message)s"
+    if args.verbose == 0:
+        LOGGER.propagate = False
+    elif args.verbose == 1:
+        logging.basicConfig(level=logging.INFO, format=fmt % "")
+    else:
+        logging.basicConfig(level=logging.DEBUG, format=fmt % "(line %(lineno)3d) ")
+
+    LOGGER.debug("parsed args: %r", args)
+    return args
+
 
 DEFAULT_CFG_FILE = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman.cfg"
 
@@ -93,6 +122,7 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
     config = configparser.ConfigParser(DEFAULT_CFG_SECTION)
 
     if not cfg_file.is_file():
+        LOGGER.debug("No config file found at %s, using defaults.", cfg_file)
         return None
 
     try:
@@ -108,10 +138,12 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
 
         if method == "manual" and socket_paths_str:
             socket_paths = [p.strip() for p in socket_paths_str.split(",") if p.strip()]
+            LOGGER.info("Config loaded from %s: manual socket paths: %s", cfg_file, socket_paths)
             return PodmanConfig(
                 socket_detection=("manual", socket_paths),
                 piggyback_name_method=piggyback_name_method,
             )
+        LOGGER.info("Config loaded from %s: socket detection method: %s", cfg_file, method)
         return PodmanConfig(
             socket_detection=AutomaticSocketDetectionMethod(method),
             piggyback_name_method=piggyback_name_method,
@@ -140,11 +172,13 @@ def find_user_sockets() -> Sequence[str]:
     if not os.path.isdir(run_user_dir):
         return []
 
-    return [
+    sockets = [
         os.path.join(run_user_dir, entry, "podman", "podman.sock")
         for entry in os.listdir(run_user_dir)
         if os.path.exists(os.path.join(run_user_dir, entry, "podman", "podman.sock"))
     ]
+    LOGGER.debug("Discovered user sockets: %s", sockets)
+    return sockets
 
 
 def find_podman_users_from_conmon() -> Sequence[Union[str, None]]:
@@ -160,9 +194,10 @@ def find_podman_users_from_conmon() -> Sequence[Union[str, None]]:
             check=False,
         )
         if result.returncode != 0:
-            sys.stderr.write(
-                f"mk_podman.py: 'ps' command failed (rc={result.returncode}): "
-                f"{result.stderr.strip()}. Falling back to root user only.\n"
+            LOGGER.warning(
+                "'ps' command failed (rc=%d): %s. Falling back to root user only.",
+                result.returncode,
+                result.stderr.strip(),
             )
             return [None]
 
@@ -178,15 +213,15 @@ def find_podman_users_from_conmon() -> Sequence[Union[str, None]]:
                     # Skip if UID is invalid or user not found
                     continue
     except Exception as e:
-        sys.stderr.write(
-            f"mk_podman.py: Failed to discover podman users from conmon: {e}. "
-            "Falling back to root user only.\n"
+        LOGGER.warning(
+            "Failed to discover podman users from conmon: %s. Falling back to root user only.", e
         )
         return [None]
 
     # Always include root/current user first
     result_list: list[Union[str, None]] = [None]
     result_list.extend(sorted(users))
+    LOGGER.debug("Discovered podman users from conmon: %s", result_list)
     return result_list
 
 
@@ -499,6 +534,7 @@ def run_cli_queries_for_user(
     piggyback_name_method: PiggybackNameMethod,
     run_as_user: Union[str, None] = None,
 ) -> None:
+    LOGGER.info("Running CLI queries as user: %s", run_as_user or "root")
     containers_section = query_containers_cli(run_as_user)
     engine_section = query_engine_cli(run_as_user)
 
@@ -715,6 +751,7 @@ def _get_piggyback_name_method(config: Union[PodmanConfig, None]) -> PiggybackNa
 
 
 def main() -> None:
+    parse_arguments()
     config = load_cfg()
     piggyback_name_method = _get_piggyback_name_method(config)
 
@@ -726,10 +763,12 @@ def main() -> None:
 
     if not available_sockets:
         if which("podman"):
+            LOGGER.info("No accessible socket found; using CLI mode.")
             run_cli_queries(piggyback_name_method)
             return
 
         checked = ", ".join(socket_paths) if socket_paths else "(none configured)"
+        LOGGER.error("No podman socket available and podman CLI not found.")
         write_section(
             Error(
                 "podman_status",
@@ -741,6 +780,7 @@ def main() -> None:
         return
 
     for socket_path_str in available_sockets:
+        LOGGER.info("Querying podman via socket: %s", socket_path_str)
         socket_path = Path(socket_path_str)
         with make_unixsocket_session(
             socket_path=socket_path,

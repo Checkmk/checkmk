@@ -13,8 +13,6 @@ from cmk.server_side_programs.v1_unstable import Storage
 
 # A namespace to match a string to a uuid hash.
 _HASH_NAMESPACE: Final = uuid.UUID("5871b8db-dcef-4c22-9b36-e81d7d4d66bb")
-# A sentinel for separating args from kwargs.
-_KWARG_MARK: Final = object()
 
 
 def cache_ttl[**P, R](store: Storage, *, ttl: int) -> Callable[[Callable[P, R]], Callable[P, R]]:
@@ -36,7 +34,7 @@ def cache_ttl[**P, R](store: Storage, *, ttl: int) -> Callable[[Callable[P, R]],
                 raise ValueError(f"Unhashable kwarg values: {kwargs}")
 
             # generate a unique key hash based on the passed arguments.
-            key = _hash(str(args + (_KWARG_MARK,) + tuple(sorted(kwargs.items()))))
+            key = _hash(f"args={args}, kwargs={tuple(sorted(kwargs.items()))}")
 
             if (data := store.read(key, None)) is not None:
                 raw_cache = json.loads(data)

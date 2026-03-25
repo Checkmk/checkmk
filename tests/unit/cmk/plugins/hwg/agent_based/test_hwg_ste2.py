@@ -12,15 +12,15 @@ import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks import hwg_temp
-from cmk.legacy_checks.hwg_temp import (
-    check_hwg_temp,
-    discover_hwg_temp,
-    snmp_section_hwg_ste2,
-)
+from cmk.plugins.hwg.agent_based import hwg_temp
 from cmk.plugins.hwg.agent_based.hwg_humidity import (
     check_hwg_humidity,
     discover_hwg_humidity,
+)
+from cmk.plugins.hwg.agent_based.hwg_temp import (
+    check_hwg_temp,
+    discover_hwg_temp,
+    snmp_section_hwg_ste2,
 )
 from cmk.plugins.hwg.agent_based.lib import parse_hwg
 from cmk.plugins.lib.temperature import TempParamDict

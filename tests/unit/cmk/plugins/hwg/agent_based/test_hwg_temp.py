@@ -10,8 +10,8 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks import hwg_temp
-from cmk.legacy_checks.hwg_temp import check_hwg_temp, discover_hwg_temp
+from cmk.plugins.hwg.agent_based import hwg_temp
+from cmk.plugins.hwg.agent_based.hwg_temp import check_hwg_temp, discover_hwg_temp
 from cmk.plugins.hwg.agent_based.lib import parse_hwg
 from cmk.plugins.lib.temperature import TempParamType
 

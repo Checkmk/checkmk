@@ -535,6 +535,23 @@ class UsersAPI(BaseAPI):
 class UserRoleAPI(BaseAPI):
     """Wrap REST-API interface to interact with `user role`."""
 
+    def create(self, base_role_id: str, new_role_id: str, new_alias: str) -> None:
+        response = self.session.post(
+            "/domain-types/user_role/collections/all",
+            json={"role_id": base_role_id, "new_role_id": new_role_id, "new_alias": new_alias},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def edit_permissions(self, role_id: str, permissions: dict[str, str]) -> None:
+        response = self.session.put(
+            f"/objects/user_role/{role_id}",
+            json={"new_permissions": permissions},
+            headers={"If-Match": "*"},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
     def delete(self, role_id: str) -> None:
         response = self.session.delete(f"/objects/user_role/{role_id}")
         if response.status_code != 204:

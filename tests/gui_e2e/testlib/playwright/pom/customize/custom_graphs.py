@@ -68,6 +68,13 @@ class CreateCustomGraph(CmkPage):
         title_bar = self.main_area.get_input("_p_title")
         title_bar.fill(title)
 
+    def set_visibility_public(self) -> None:
+        """Set the graph visibility to 'Publish to all users'."""
+        self.main_area.locator("label[for='cb__p_public_use']").click()
+        self.main_area.locator("[name='_p_public_value_sel']").select_option(
+            label="Publish to all users"
+        )
+
     def save_graph(self) -> None:
         logger.info("Save custom graph")
         self.main_area.get_suggestion("Save & go to Custom graph").click()
@@ -127,12 +134,25 @@ class DesignGraph(BaseGraph):
 
     def add_graph_line_otel(self, metric_name: str) -> None:
         self.main_area.get_text("Metric name", exact=False).click()
-        self.main_area.get_text(metric_name).click()
+        self.main_area.locator("input[aria-label='filter']").fill(metric_name)
+        suggestion = self.main_area.locator(
+            "[role='listbox'] [role='option']", has_text=metric_name
+        )
+        expect(suggestion).to_be_visible()
+        suggestion.click()
         self.main_area.get_text("Add").click()
+        # Wait for the auto_title cell of the newly added row to appear. This literal
+        # string only exists after Vue has pushed the graph line into graphLines.value,
+        # so it guarantees the reactive state is committed.
+        expect(self.main_area.get_text("$METRIC_NAME$ - $SERIES_ID$")).to_be_visible()
 
     def save_graph(self) -> None:
         logger.info("Save designed graph")
-        self.main_area.get_suggestion("Save").click()
+        # Wait for the form POST to complete before returning. Without this, the caller
+        # may navigate away before the server has processed the submission,
+        # leaving the graph with no metrics saved.
+        with self.page.expect_response(re.compile(r"custom_graph_design\.py")):
+            self.main_area.get_suggestion("Save").click()
 
     def open_slide_in_for_metric_backend_rule(self) -> None:
         logger.info("Open 'Design graph' slide-in")

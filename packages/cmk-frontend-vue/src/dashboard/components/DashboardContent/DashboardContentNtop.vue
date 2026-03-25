@@ -25,6 +25,10 @@ const exception = ref<{ class: 'warning' | 'error'; msg: string } | null>(null)
 onMounted(async () => {
   try {
     ifid = await getIfid(cmkToken)
+    // Persist the resolved ifid to the URL so page reloads always use the same interface
+    const url = new URL(window.location.href)
+    url.searchParams.set('ifid', ifid)
+    window.history.replaceState({}, '', url.toString())
     ntop = new NtopBase(
       props.content.type as NtopType,
       interfaceDivId,

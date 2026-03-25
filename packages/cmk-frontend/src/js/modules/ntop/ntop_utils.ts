@@ -70,6 +70,11 @@ export class interface_table extends TableFigure {
       default:
         return
     }
+    // Persist the selected interface to the URL so page reloads always use the same interface
+    const url = new URL(window.location.href)
+    url.searchParams.set('ifid', this._ifid)
+    url.searchParams.set('vlanid', this._vlanid)
+    window.history.replaceState({}, '', url.toString())
     const host_body = this._host_address ? '&host_address=' + this._host_address : ''
     this.set_post_url_and_body(
       'ajax_ntop_interface_quickstats.py?vlanid=' + this._vlanid + '&ifid=' + this._ifid + host_body

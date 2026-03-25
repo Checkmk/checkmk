@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import functools
+import os
 import re
 import subprocess
 from collections import defaultdict
-from collections.abc import Callable
-from functools import partial
+from collections.abc import Callable, Iterator
+from functools import lru_cache, partial
 from pathlib import Path
 from typing import NamedTuple
 
@@ -19,7 +19,41 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.werks
 import cmk.werks.utils
 from cmk.werks.models import WerkV3
-from tests.testlib.common.repo import repo_path
+from tests.code_quality.bazel_utils import bazel_repo_root
+
+
+@lru_cache
+def git_dir() -> Path:
+    # Note on the `Path.resolve()` call.  The `BUILD` file tags these tests as `"no-sandbox"`
+    # but experiment shown that this is not honored.  More investigation is required here.
+    for parent in Path(__file__).resolve().parents:
+        if (parent / ".git").exists():
+            real_git = parent / ".git"
+            return real_git
+    else:
+        raise RuntimeError("Could not find .git directory")
+
+
+@pytest.fixture(scope="module")
+def prepare_git_env() -> Iterator[None]:
+    # https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIGCOUNT
+    git_env = {
+        "GIT_DIR": str(git_dir()),
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "safe.directory",
+        "GIT_CONFIG_VALUE_0": "*",
+    }
+    saved = {key: os.environ.pop(key, None) for key in git_env}
+    os.environ.update(git_env)
+    try:
+        yield
+    finally:
+        for key, old_value in saved.items():
+            if old_value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = old_value
+
 
 CVSS_REGEX_V31 = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
@@ -62,7 +96,7 @@ def fixture_werks_loader(tmp_path: Path) -> dict[int, WerkV3]:
     """
     base_dir = tmp_path / "werks_base_dir_precompiled"
     base_dir.mkdir()
-    all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
+    all_werks = cmk.werks.utils.load_raw_files(bazel_repo_root() / ".werks")
     cmk.werks.utils.write_precompiled_werks(base_dir / "werks", {w.id: w for w in all_werks})
 
     unacknowledged_werks_json = tmp_path / "ut_unacknowledged_werks_json"
@@ -75,7 +109,7 @@ def fixture_werks_loader(tmp_path: Path) -> dict[int, WerkV3]:
 
 
 def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
-    all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
+    all_werks = cmk.werks.utils.load_raw_files(bazel_repo_root() / ".werks")
     # Handle both v2 editions (cre, cee, cme, cce, cse) and v3 editions (community, pro, ultimatemt, ultimate, cloud)
     cre_werks = {w.id: w for w in all_werks if w.edition.value in ("cre", "community")}
     cee_werks = {w.id: w for w in all_werks if w.edition.value in ("cee", "pro")}
@@ -146,6 +180,7 @@ def test_secwerk_has_cvss(werks_loaded: dict[int, WerkV3]) -> None:
         ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 
+@pytest.mark.usefixtures("prepare_git_env")
 def test_werk_versions_after_tagged(werks_loaded: dict[int, WerkV3]) -> None:
     _assert_git_tags_available()
 
@@ -188,7 +223,7 @@ def test_werk_versions_after_tagged(werks_loaded: dict[int, WerkV3]) -> None:
 
 
 def test_werks_commit_message() -> None:
-    repo = git.Repo(repo_path())
+    repo = git.Repo(str(git_dir()))
 
     if not _are_werks_files_added_in_the_commit(repo.head.commit):
         pytest.skip("No werks files added in the latest commit")
@@ -211,7 +246,6 @@ def _assert_git_tags_available() -> None:
         len(
             subprocess.check_output(
                 ["git", "tag", "--list"],
-                cwd=repo_path(),
             )
             .decode()
             .split("\n")
@@ -222,14 +256,13 @@ def _assert_git_tags_available() -> None:
     )
 
 
-@functools.lru_cache
+@lru_cache
 def _git_tag_exists(tag: str) -> bool:
     return (
         subprocess.Popen(
             ["git", "rev-list", tag],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
-            cwd=repo_path(),
         ).wait()
         == 0
     )
@@ -248,12 +281,11 @@ def _tags_containing_werk(werk_id: int) -> list[str]:
 _werk_to_git_tag = defaultdict(list)
 
 
-@functools.lru_cache
+@lru_cache
 def _werks_in_git_tag(tag: str) -> list[str]:
     werks_in_tag = (
         subprocess.check_output(
             [b"git", b"ls-tree", b"-r", b"--name-only", tag.encode(), b".werks"],
-            cwd=repo_path(),
         )
         .decode()
         .split("\n")

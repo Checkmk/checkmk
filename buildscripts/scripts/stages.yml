@@ -200,15 +200,24 @@ STAGES:
     - NAME: "Python Werks Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES
       DIR: "tests"
-      GIT_FETCH_TAGS: true
+      GIT_FETCH_TAGS: true  # expensive
       ENV_VARS:
-          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-werks-junit.xml --color=no"
-      COMMAND: "make test-werks"
+          BAZEL_TEST_LOGS_DEST: "../results/werks"
+      COMMAND: |
+          make_rc=0
+            ../buildscripts/scripts/bazel_test_ci.sh \
+            --test_verbose_timeout_warnings \
+            --cmk_edition=ultimate \
+            -- \
+            //tests/code_quality/werks:werks || make_rc=$?
+          ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
+          exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
-      JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_werks/"
+      RESULT_CHECK_FILE_PATTERN: "results/werks/**/test.xml"
+      JENKINS_TEST_RESULT_PATH: "testReport/"
+
 
     - NAME: "Python Werks Commands"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_CODE_FILES,CHANGED_RUN_UVENV_SCRIPT

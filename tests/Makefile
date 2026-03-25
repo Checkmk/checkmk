@@ -62,7 +62,6 @@ DOCKERABLE_TESTS := \
 	test-plugins-siteless \
 	test-unit-all \
 	test-unit-testlib \
-	test-werks
 
 .PHONY: clean help prepare-playwright  \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker) \
@@ -267,9 +266,6 @@ test-py-extensions:
 
 test-format:
 	bazel run //:format.check
-
-test-werks:
-	$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_werks.py;
 
 test-mypy: test-mypy-cmk
 

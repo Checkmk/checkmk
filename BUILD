@@ -1,7 +1,9 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -37,6 +39,14 @@ exports_files(
         "runtime-requirements.txt",
     ],
     visibility = ["//:__subpackages__"],
+)
+
+py_library(
+    name = "pyproject-toml",
+    data = ["pyproject.toml"],
+    visibility = ["//:__subpackages__"],
+    # Marshmallow is required for the pytest filter.
+    deps = [requirement("marshmallow")],
 )
 
 js_library(

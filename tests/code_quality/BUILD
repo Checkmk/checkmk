@@ -17,13 +17,9 @@ py_library(
     ),
     imports = ["../.."],
     deps = [
-        "//cmk/utils",
-        "//packages/cmk-ccc:version",
-        "//packages/cmk-werks",
         "//tests/testlib/common:repo",
         requirement("pytest"),
         requirement("isort"),
         requirement("requirements-parser"),
-        requirement("gitpython"),
     ],
 )

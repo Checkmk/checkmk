@@ -131,10 +131,10 @@ class ModeRoles(WatoMode):
 
         elif request.var("_clone"):
             role_id = RoleID(request.get_ascii_input_mandatory("_clone"))
-            userroles.clone_role(role_id, pprint_value=config.wato_pprint_config)
+            cloned_role = userroles.clone_role(role_id, pprint_value=config.wato_pprint_config)
             _changes.add_change(
                 action_name="edit-roles",
-                text=_("Created new role '%s'") % role_id,
+                text=_("Created new role '%s'") % cloned_role.name,
                 user_id=user.id,
                 sites=get_login_sites(config.sites),
                 use_git=config.wato_use_git,

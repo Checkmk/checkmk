@@ -28,7 +28,7 @@ def _parameter_form() -> Dictionary:
     )
 
 
-rule_spec_cisco_meraki_wireless_device_status_ssids = CheckParameters(
+rule_spec_cisco_meraki_wireless_device_statuses_ssids = CheckParameters(
     name="cisco_meraki_org_wireless_device_statuses_ssids",
     topic=Topic.NETWORKING,
     parameter_form=_parameter_form,

@@ -647,7 +647,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         host_name: HostName,
     ) -> tuple[str, MsgType]:
         if not discovery_result.sources:
-            return _("Updating..."), "waiting"
+            # empty string should hide the message
+            return _("Updating...") if discovery_result.is_active() else "", "waiting"
 
         if initial_action and performed_action != DiscoveryAction.NONE:
             initial_action = None

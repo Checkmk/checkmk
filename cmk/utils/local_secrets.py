@@ -105,6 +105,10 @@ class AutomationUserSecret:
         return secrets.compare_digest(self.read().encode("utf-8"), other.encode("utf-8"))
 
 
+def get_automation_secret_path(username: str, profile_dir: Path | None = None) -> Path:
+    return AutomationUserSecret(UserId(username), profile_dir).path
+
+
 class DistributedSetupSecret:
     """The secret used by the central site to sync the config"""
 

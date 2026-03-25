@@ -384,6 +384,7 @@ def _get_expected_paths(
             "var/check_mk/packages",
             "var/check_mk/packages_local",
             "var/check_mk/disabled_packages",
+            "var/check_mk/topology",
             "var/check_mk/topology/configs",
         ]
 

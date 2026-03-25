@@ -177,7 +177,7 @@ description = CPU\\nAnd: 2'
         ...           Services.description == "CPU",
         ...           Not(Services.host_name.contains("morgen")))).compile()
         'GET services\\nColumns: description host_name\\nFilter: host_name = heute\\nFilter: \
-description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
+description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
 
         >>> Query([Hosts.name],
         ...       Hosts.parents.empty()).compile()

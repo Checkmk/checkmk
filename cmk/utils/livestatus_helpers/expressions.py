@@ -352,7 +352,7 @@ class Not(QueryExpression):
     """Negates a QueryExpression instance.
 
     >>> Not(Or(LiteralExpression("hurz") == 1)).render()
-    [('Filter', 'hurz = 1'), ('Negate', '1')]
+    [('Filter', 'hurz = 1'), ('Negate', '')]
 
     """
 
@@ -363,4 +363,4 @@ class Not(QueryExpression):
         return f"Not({self.other!r})"
 
     def render(self) -> RenderIntermediary:
-        return self.other.render() + [("Negate", "1")]
+        return self.other.render() + [("Negate", "")]

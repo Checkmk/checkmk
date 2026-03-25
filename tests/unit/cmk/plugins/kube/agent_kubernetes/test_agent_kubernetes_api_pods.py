@@ -14,6 +14,7 @@ from dateutil.tz import tzutc
 from kubernetes import client  # type: ignore[import-untyped]
 
 from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
+from tests.unit.cmk.plugins.kube.data.kube_1_34 import pod_missing_creation_timestamp
 
 from cmk.plugins.kube.agent_handlers import pod_handler
 from cmk.plugins.kube.schemata import api, section
@@ -21,12 +22,28 @@ from cmk.plugins.kube.transform import (
     parse_metadata,
     pod_conditions,
     pod_containers,
+    pod_from_client,
     pod_spec,
     pod_status,
 )
 
 
 class TestAPIPod:
+    def test_parse_full_pod(self, core_client: client.CoreV1Api) -> None:
+        """
+        Test that we can load a raw Pod response from Kube successfully
+        into schemata.api objects.
+        """
+        client_pod = core_client.api_client.deserialize(
+            FakeResponse(pod_missing_creation_timestamp.DATA), "V1Pod"
+        )
+        pod = pod_from_client(client_pod, [])
+
+        assert pod.metadata.name == "checkmk-cluster-collector-84bf9d765d-lqlrf"
+        assert pod.metadata.creation_timestamp is None
+        assert pod.status.phase == api.Phase.RUNNING
+        assert pod.spec.containers[0].name == "cluster-collector"
+
     @pytest.mark.parametrize(
         "raw_metadata",
         [

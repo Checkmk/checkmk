@@ -26,7 +26,7 @@ CVSS_REGEX_V31 = re.compile(
 CVSS_REGEX_V40 = re.compile(
     r"CVSS:4.0/AV:[NALP]/AC:[LH]/AT:[NP]/PR:[NLH]/UI:[NPA]/VC:[NLH]/VI:[NLH]/VA:[NLH]/SC:[NLH]/SI:[NLH]/SA:[NLH]"
 )
-JIRA_ISSUE_REGEX = re.compile(r"(CMK|SUP|KNW)-\d+")
+JIRA_ISSUE_REGEX = re.compile(r"(CMK|SUP|KNW|BETA)-\d+")
 
 
 @pytest.fixture(scope="function", name="precompiled_werks")

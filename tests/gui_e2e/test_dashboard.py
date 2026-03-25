@@ -17,7 +17,10 @@ from tests.gui_e2e.testlib.playwright.pom.customize.edit_dashboard import (
 from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.empty_dashboard import EmptyDashboard
-from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import (
+    LinuxHostsDashboard,
+    WindowsHostsDashboard,
+)
 from tests.gui_e2e.testlib.playwright.pom.sidebar.create_dashboard_sidebar import (
     CreateDashboardSidebar,
 )
@@ -117,6 +120,85 @@ def test_main_dashboard_sanity_check(dashboard_page: MainDashboard) -> None:
 
     dashboard_page.check_widget_icon_is_present("Host statistics")
     dashboard_page.check_widget_icon_is_present("Service statistics")
+
+
+@pytest.mark.parametrize(
+    ("hosts", "dashboard_class", "widgets_expected_row_count"),
+    (
+        pytest.param(
+            "linux_hosts",
+            LinuxHostsDashboard,
+            {
+                "Host statistics": 0,
+                "Service statistics": 0,
+                "Total agent execution time": 0,
+                "Top 10: CPU utilization": 1,
+                "Top 10: Memory utilization": 1,
+                "Top 10: Input bandwidth": 2,
+                "Top 10: Output bandwidth": 2,
+                "Host information": 1,
+                "Filesystems": 4,
+            },
+            id="linux_dashboard",
+        ),
+        pytest.param(
+            "windows_hosts",
+            WindowsHostsDashboard,
+            {
+                "Host statistics": 0,
+                "Service statistics": 0,
+                "Total agent execution time": 0,
+                "Top 10: Memory utilization": 1,
+                "Filesystems": 1,
+            },
+            id="windows_dashboard",
+        ),
+    ),
+)
+def test_host_dashboard(
+    dashboard_page: MainDashboard,
+    dashboard_class: type[LinuxHostsDashboard | WindowsHostsDashboard],
+    widgets_expected_row_count: dict[str, int],
+    hosts: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test 'Linux Hosts' and 'Windows Hosts' dashboards.
+
+    Test that when agent data is available, the widgets on the 'Linux Hosts'
+    and 'Windows Hosts' pages have no errors and contain data.
+
+    Steps:
+        1. Navigate to the 'Linux Hosts' or 'Windows Hosts' dashboard page.
+        2. Check that there are no errors on the page.
+        3. Check that all expected widgets are presented on the page.
+        4. Check that widgets with tables are not empty.
+        5. Check that widgets with charts contain data.
+    """
+    hosts_count = len(request.getfixturevalue(hosts))
+    not_empty_dashboards = widgets_expected_row_count.keys()
+    hosts_dashboard_page = dashboard_class(dashboard_page.page)
+
+    hosts_dashboard_page.check_no_errors()
+
+    for widget in hosts_dashboard_page.widgets_list:
+        hosts_dashboard_page.check_widget_is_present(widget.name)
+
+    for widget in hosts_dashboard_page.table_widgets:
+        if widget.name in not_empty_dashboards:
+            expect(
+                hosts_dashboard_page.get_widget_table_rows(widget.name, iframed=widget.iframed),
+                f"Table in widget '{widget.name}' is empty",
+            ).to_have_count(widgets_expected_row_count[widget.name] * hosts_count)
+
+    for widget in hosts_dashboard_page.chart_widgets:
+        if widget.name in not_empty_dashboards:
+            expect(
+                hosts_dashboard_page.get_chart_widget_hexagon(widget.name),
+                message=f"Hexagon chart of widget {widget.name} is not present",
+            ).to_be_visible()
+            assert hosts_dashboard_page.get_chart_widget_total_value(widget.name) > 0, (
+                f"Total count in widget '{widget.name}' is 0"
+            )
 
 
 def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[str]) -> None:

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import override
+from typing import NamedTuple, override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect
@@ -14,14 +14,19 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 logger = logging.getLogger(__name__)
 
 
+class WidgetInfo(NamedTuple):
+    name: str
+    iframed: bool = False
+
+
 class HostsDashboard(BaseDashboard):
     """Represent a base class for 'Linux hosts' and 'Windows hosts' pages."""
 
-    chart_widgets: list[str] = []
-    table_widgets: list[str] = []
-    plot_widgets: list[str] = []
+    chart_widgets: list[WidgetInfo] = []
+    table_widgets: list[WidgetInfo] = []
+    plot_widgets: list[WidgetInfo] = []
 
-    widgets_list: list[str] = []
+    widgets_list: list[WidgetInfo] = []
 
     @override
     def navigate(self) -> None:
@@ -52,19 +57,21 @@ class LinuxHostsDashboard(HostsDashboard):
     page_title = "Linux hosts"
 
     table_widgets = [
-        "Top 10: CPU utilization",
-        "Top 10: Memory utilization",
-        "Top 10: Input bandwidth",
-        "Top 10: Output bandwidth",
-        "Top 10: Disk utilization",
-        "Host information",
-        "Filesystems",
+        WidgetInfo("Top 10: CPU utilization"),
+        WidgetInfo("Top 10: Memory utilization"),
+        WidgetInfo("Top 10: Input bandwidth"),
+        WidgetInfo("Top 10: Output bandwidth"),
+        WidgetInfo("Top 10: Disk utilization"),
+        WidgetInfo("Host information", iframed=True),
+        WidgetInfo("Filesystems", iframed=True),
     ]
     chart_widgets = [
-        "Host statistics",
-        "Service statistics",
+        WidgetInfo("Host statistics"),
+        WidgetInfo("Service statistics"),
     ]
-    plot_widgets = ["Total agent execution time"]
+    plot_widgets = [
+        WidgetInfo("Total agent execution time"),
+    ]
 
     widgets_list = table_widgets + chart_widgets + plot_widgets
 
@@ -78,18 +85,20 @@ class WindowsHostsDashboard(HostsDashboard):
     page_title = "Windows hosts"
 
     table_widgets = [
-        "Top 10: CPU utilization (Windows)",
-        "Top 10: Memory utilization",
-        "Top 10: Input bandwidth",
-        "Top 10: Output bandwidth",
-        "Top 10: Avg. disk write latency",
-        "Host information",
-        "Filesystems",
+        WidgetInfo("Top 10: CPU utilization (Windows)"),
+        WidgetInfo("Top 10: Memory utilization"),
+        WidgetInfo("Top 10: Input bandwidth"),
+        WidgetInfo("Top 10: Output bandwidth"),
+        WidgetInfo("Top 10: Avg. disk write latency"),
+        WidgetInfo("Host information", iframed=True),
+        WidgetInfo("Filesystems", iframed=True),
     ]
     chart_widgets = [
-        "Host statistics",
-        "Service statistics",
+        WidgetInfo("Host statistics"),
+        WidgetInfo("Service statistics"),
     ]
-    plot_widgets = ["Total agent execution time"]
+    plot_widgets = [
+        WidgetInfo("Total agent execution time"),
+    ]
 
     widgets_list = table_widgets + chart_widgets + plot_widgets

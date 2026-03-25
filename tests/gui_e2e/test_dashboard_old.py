@@ -23,7 +23,6 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard_old import (
 )
 from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard_old import (
     LinuxHostsDashboard,
-    WindowsHostsDashboard,
 )
 from tests.gui_e2e.testlib.playwright.pom.tactical_overview_snapin import TacticalOverviewSnapin
 from tests.testlib.site import Site
@@ -49,92 +48,6 @@ def cloned_linux_hosts_dashboard(
     # Cleanup: delete the cloned dashboard after the test
     if is_cleanup_enabled():
         cloned_linux_hosts_dashboard.delete()
-
-
-@pytest.mark.parametrize(
-    "hosts, dashboard_class, dashlets_expected_row_count",
-    [
-        pytest.param(
-            "linux_hosts",
-            LinuxHostsDashboard,
-            {
-                "Host statistics": 0,
-                "Service statistics": 0,
-                "Total agent execution time": 0,
-                "Top 10: CPU utilization": 1,
-                "Top 10: Memory utilization": 1,
-                "Top 10: Input bandwidth": 2,
-                "Top 10: Output bandwidth": 2,
-                "Host information": 1,
-                "Filesystems": 4,
-            },
-            id="linux_dashboard",
-        ),
-        pytest.param(
-            "windows_hosts",
-            WindowsHostsDashboard,
-            {
-                "Host statistics": 0,
-                "Service statistics": 0,
-                "Total agent execution time": 0,
-                "Top 10: Memory utilization": 1,
-                "Filesystems": 1,
-            },
-            id="windows_dashboard",
-        ),
-    ],
-)
-def test_host_dashboard(
-    dashboard_page: MainDashboard,
-    dashboard_class: type[LinuxHostsDashboard | WindowsHostsDashboard],
-    dashlets_expected_row_count: dict[str, int],
-    hosts: str,
-    request: pytest.FixtureRequest,
-) -> None:
-    """Test 'Linux Hosts' and 'Windows Hosts' dashboards.
-
-    Test that when agent data is available, the dashlets on the 'Linux Hosts'
-    and 'Windows Hosts' pages have no errors and contain data.
-
-    Steps:
-        1. Navigate to the 'Linux Hosts' or 'Windows Hosts' dashboard page.
-        2. Check that there are no errors on the page.
-        3. Check that scatterplots are visible on dashlets.
-        4. Check that all expected dashlets are presented on the page.
-        5. Check that dashlets with tables are not empty.
-        6. Check that dashlets with charts contain data.
-    """
-    hosts_count = len(request.getfixturevalue(hosts))
-    not_empty_dashboards = dashlets_expected_row_count.keys()
-    hosts_dashboard_page = dashboard_class(dashboard_page.page)
-
-    hosts_dashboard_page.check_no_errors()
-
-    # Can be moved down after CMK-18863 is fixed
-    logger.info("Check that scatterplots are visible on dashlets")
-    for dashlet_title in hosts_dashboard_page.plot_dashlets:
-        if dashlet_title in not_empty_dashboards:
-            hosts_dashboard_page.wait_for_scatterplot_to_load(dashlet_title)
-
-    logger.info("Check that all expected dashlets are presented on the page")
-    for dashlet_title in hosts_dashboard_page.dashlets_list:
-        hosts_dashboard_page.check_dashlet_is_present(dashlet_title)
-
-    logger.info("Check that dashlets with tables are not empty")
-    for dashlet_title in hosts_dashboard_page.table_dashlets:
-        if dashlet_title in not_empty_dashboards:
-            expect(
-                hosts_dashboard_page.dashlet_table_rows(dashlet_title),
-                f"Table in dashlet '{dashlet_title}' is empty",
-            ).to_have_count(dashlets_expected_row_count[dashlet_title] * hosts_count)
-
-    logger.info("Check that dashlets with chart contain data")
-    for dashlet_title in hosts_dashboard_page.chart_dashlets:
-        if dashlet_title in not_empty_dashboards:
-            hosts_dashboard_page.check_hexagon_chart_is_not_empty(dashlet_title)
-            assert int(hosts_dashboard_page.total_count(dashlet_title).inner_text()) > 0, (
-                f"Total count in dashlet '{dashlet_title}' is 0"
-            )
 
 
 def test_dashboard_required_context_filter_by_host_name(

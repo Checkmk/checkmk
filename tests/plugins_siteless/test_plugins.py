@@ -50,9 +50,10 @@ HOSTNAME = HostName("test_host")
 @pytest.fixture(name="setup_dirs", scope="function")
 def _setup_dirs() -> Iterator[None]:
     var_dir = Path(os.getcwd()) / "var"
-    assert not var_dir.exists()
+    if var_dir.exists():
+        shutil.rmtree(var_dir)
     autochecks_dir = var_dir / "check_mk/autochecks/"
-    os.makedirs(autochecks_dir, exist_ok=False)
+    os.makedirs(autochecks_dir)
     yield
     shutil.rmtree(var_dir)
 

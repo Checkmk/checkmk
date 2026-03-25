@@ -9,6 +9,7 @@ and the (file, lineno) of each traceback frame). The on-disk ``.fingerprint_inde
 maps the stable hash of a fingerprint to the crash directory that holds the first
 occurrence, so repeated crashes merge into one directory instead of piling up."""
 
+import dataclasses
 import hashlib
 import json
 from collections.abc import Sequence
@@ -22,12 +23,26 @@ from ._crash import CrashOccurrences
 _FINGERPRINT_INDEX_FILE: Final = ".fingerprint_index"
 
 
+@dataclasses.dataclass(frozen=True)
+class CrashFingerprint:
+    """Deduplication key for a crash: crash type, exception type, and (file, lineno) per frame."""
+
+    crash_type: str
+    exc_type: str | None
+    frames: tuple[tuple[str, int], ...]
+
+    def hash(self) -> str:
+        """Stable hex digest of the fingerprint, used as the key in the on-disk index."""
+        raw = json.dumps(dataclasses.astuple(self), separators=(",", ":"), default=str)
+        return hashlib.sha256(raw.encode()).hexdigest()
+
+
 def crash_fingerprint(
     crash_type: str, exc_traceback: Sequence[tuple[str, int, str, str]], exc_type: str | None
-) -> tuple[str, str | None, tuple[tuple[str, int], ...]]:
+) -> CrashFingerprint:
     """Return a deduplication key for a crash: crash type, exception type, and (file, lineno) per frame."""
     frames = tuple((t[0], t[1]) for t in exc_traceback)
-    return crash_type, exc_type, frames
+    return CrashFingerprint(crash_type=crash_type, exc_type=exc_type, frames=frames)
 
 
 def normalize_crash_time(raw_time: object) -> CrashOccurrences:
@@ -46,14 +61,6 @@ def normalize_crash_time(raw_time: object) -> CrashOccurrences:
         ts = float(raw_time)
         return CrashOccurrences(first_seen=ts, last_seen=ts, count=1)
     raise TypeError(f"time field in crash report is in an unexpected format: {raw_time!r}")
-
-
-def fingerprint_hash(
-    fingerprint: tuple[str, str | None, tuple[tuple[str, int], ...]],
-) -> str:
-    """Stable hex digest for a crash fingerprint, used as key in the on-disk index."""
-    raw = json.dumps(fingerprint, separators=(",", ":"), default=str)
-    return hashlib.sha256(raw.encode()).hexdigest()
 
 
 def _load_fingerprint_index(base_dir: Path) -> dict[str, str]:

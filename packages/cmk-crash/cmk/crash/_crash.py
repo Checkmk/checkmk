@@ -55,7 +55,7 @@ class CrashOccurrences(TypedDict):
 
 
 class CrashInfo[TDetails](VersionInfoBase):
-    crash_info_version: int
+    crash_info_version: NotRequired[int]
     exc_type: str | None
     crash_type: str
     exc_traceback: NotRequired[Sequence[tuple[str, int, str, str]]]

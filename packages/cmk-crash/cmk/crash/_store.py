@@ -14,9 +14,11 @@ age and total size. It is meant to be run regularly, independent of new crashes
 arriving."""
 
 import json
+import logging
 import time
 import uuid
-from collections.abc import Iterator
+from collections import defaultdict
+from collections.abc import Iterator, Sequence
 from contextlib import suppress
 from datetime import timedelta
 from itertools import islice
@@ -27,6 +29,7 @@ from cmk.ccc import store
 
 from ._crash import (
     ABCCrashReport,
+    CRASH_INFO_VERSION,
     CrashInfo,
     CrashOccurrences,
     RobustJSONEncoder,
@@ -37,9 +40,11 @@ from ._fingerprint import (
     _load_fingerprint_index,
     _save_fingerprint_index,
     crash_fingerprint,
-    fingerprint_hash,
+    CrashFingerprint,
     normalize_crash_time,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 def _uuid_crash_dirs(type_dir: Path) -> Iterator[Path]:
@@ -196,7 +201,7 @@ class CrashReportStore:
                     exc_traceback=exc_traceback,
                     exc_type=crash.crash_info["exc_type"],
                 )
-                index[fingerprint_hash(fp)] = crash.crash_dir().name
+                index[fp.hash()] = crash.crash_dir().name
 
             self._cleanup_old_crashes(base_dir, index)
             _save_fingerprint_index(base_dir, index)
@@ -216,7 +221,7 @@ class CrashReportStore:
             exc_traceback=exc_traceback,
             exc_type=crash.crash_info["exc_type"],
         )
-        fp_hash = fingerprint_hash(new_fingerprint)
+        fp_hash = new_fingerprint.hash()
 
         # Fast path: index hit — one directory check instead of N file reads.
         if fp_hash in index:
@@ -242,7 +247,7 @@ class CrashReportStore:
                 exc_type=existing_info["exc_type"],
             )
             # Opportunistically populate the index for every entry we read.
-            index[fingerprint_hash(existing_fp)] = existing_dir.name
+            index[existing_fp.hash()] = existing_dir.name
 
             if existing_fp == new_fingerprint:
                 return crash_info_path
@@ -308,3 +313,121 @@ class CrashReportStore:
         ):
             _remove_crash_dir(crash_dir)
             _drop_from_index(index, crash_dir.name)
+
+    def consolidate_all_crash_dirs(self, crashes_base: Path) -> None:
+        """Migrate, deduplicate, and prune all crash type directories.
+
+        Called periodically by the background consolidation job to process crash
+        reports written by server-side programs that bypass ``CrashReportStore``
+        and write files directly (e.g. ``cmk-plugin-apis`` SSP crashes).
+        """
+        try:
+            crash_type_dirs = tuple(crashes_base.iterdir())
+        except FileNotFoundError:
+            return
+
+        for crash_type_dir in crash_type_dirs:
+            if not crash_type_dir.is_dir():
+                continue
+            try:
+                self.consolidate_crash_type_dir(crash_type_dir)
+            except Exception:
+                _logger.exception("Error consolidating crash dir %s", crash_type_dir.name)
+
+    def consolidate_crash_type_dir(self, crash_type_dir: Path) -> None:
+        """Migrate, deduplicate, and prune one crash type directory.
+
+        - Migrates v0 (``time: float``) crash.info files to v1 (``CrashOccurrences``).
+        - Merges crash reports that share the same fingerprint.
+        - Rebuilds the fingerprint index so subsequent ``save()`` calls take
+          the fast index-lookup path.
+        - Enforces ``keep_num_crashes`` by removing the oldest surplus entries.
+        """
+        crash_type_dir.mkdir(parents=True, exist_ok=True)
+        with store.locked(crash_type_dir / ".crash_report_lock"):
+            groups: dict[CrashFingerprint, list[tuple[Path, CrashInfo[Any], bool]]] = defaultdict(
+                list
+            )
+            # Crashes without a traceback can't be fingerprinted, so they are never
+            # merged — only migrated in place to the current on-disk format.
+            no_traceback: list[tuple[Path, CrashInfo[Any], bool]] = []
+
+            for crash_dir in crash_type_dir.iterdir():
+                if not crash_dir.is_dir():
+                    continue
+                crash_info_path = crash_dir / "crash.info"
+                try:
+                    crash_info: CrashInfo[Any] = json.loads(
+                        store.load_text_from_file(crash_info_path)
+                    )
+                except Exception:
+                    _logger.debug("Skipping unreadable crash.info in %s", crash_dir.name)
+                    continue
+
+                # Bring legacy v0 files up to date: normalize the time field and add the
+                # version. ``needs_write`` stays False for already-current files so we
+                # don't rewrite them (and bump their mtime) on every consolidation run.
+                raw_time = crash_info["time"]
+                needs_write = not isinstance(raw_time, dict)
+                crash_info["time"] = normalize_crash_time(raw_time)
+                if "crash_info_version" not in crash_info:
+                    needs_write = True
+                crash_info.setdefault("crash_info_version", CRASH_INFO_VERSION)
+
+                exc_traceback = crash_info.get("exc_traceback") or []
+                if not exc_traceback:
+                    no_traceback.append((crash_dir, crash_info, needs_write))
+                    continue
+
+                fp = crash_fingerprint(
+                    crash_type=crash_info["crash_type"],
+                    exc_traceback=exc_traceback,
+                    exc_type=crash_info.get("exc_type"),
+                )
+                groups[fp].append((crash_dir, crash_info, needs_write))
+
+            for crash_dir, crash_info, needs_write in no_traceback:
+                if needs_write:
+                    self._write_crash_info(crash_dir / "crash.info", crash_info)
+
+            new_index: dict[str, str] = {}
+            for fp, group in groups.items():
+                surviving_dir, surviving_info = self._merge_crash_group(
+                    [(d, i) for d, i, _ in group]
+                )
+                # A merged group always changed; a lone crash only if it needed migration.
+                if len(group) > 1 or group[0][2]:
+                    self._write_crash_info(surviving_dir / "crash.info", surviving_info)
+                new_index[fp.hash()] = surviving_dir.name
+
+            self._cleanup_old_crashes(crash_type_dir, new_index)
+            _save_fingerprint_index(crash_type_dir, new_index)
+
+    @staticmethod
+    def _merge_crash_group[T](
+        group: Sequence[tuple[Path, CrashInfo[T]]],
+    ) -> tuple[Path, CrashInfo[T]]:
+        """Merge all crashes in the group into one, deleting the surplus directories.
+
+        The crash with the most recent ``last_seen`` survives and inherits the
+        aggregated occurrences; the rest are removed.
+        """
+        keep_dir, keep_info = max(group, key=lambda x: x[1]["time"]["last_seen"])
+        if len(group) == 1:
+            return keep_dir, keep_info
+
+        keep_info["time"] = CrashOccurrences(
+            first_seen=min(info["time"]["first_seen"] for _, info in group),
+            last_seen=max(info["time"]["last_seen"] for _, info in group),
+            count=sum(info["time"]["count"] for _, info in group),
+        )
+
+        for crash_dir, _ in group:
+            if crash_dir != keep_dir:
+                _remove_crash_dir(crash_dir)
+
+        return keep_dir, keep_info
+
+    @staticmethod
+    def _write_crash_info(path: Path, crash_info: CrashInfo[Any]) -> None:
+        store.save_text_to_file(path, CrashReportStore.dump_crash_info(crash_info) + "\n")

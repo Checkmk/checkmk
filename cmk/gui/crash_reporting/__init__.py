@@ -18,6 +18,7 @@ from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroupRegistry, ConfigVariableRegistry
 
 from . import pages as crash_reporting_pages
+from ._consolidation import consolidate_crash_reports
 from ._settings import ConfigVariableCrashReportTarget, ConfigVariableCrashReportURL
 from .views import (
     CommandDeleteCrashReports,
@@ -72,6 +73,14 @@ def register(
     cron_job_registry: CronJobRegistry,
 ) -> None:
     crash_reporting_pages.register(page_registry)
+    cron_job_registry.register(
+        CronJob(
+            name="consolidate_crash_reports",
+            callable=consolidate_crash_reports,
+            interval=timedelta(minutes=10),
+            run_in_thread=True,
+        )
+    )
     data_source_registry.register(DataSourceCrashReports)
     sorter_registry.register(SorterCrashCheckType)
     sorter_registry.register(SorterCrashHost)

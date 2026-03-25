@@ -30,7 +30,7 @@ from ._crash import (
 )
 from ._fingerprint import (
     crash_fingerprint,
-    fingerprint_hash,
+    CrashFingerprint,
     normalize_crash_time,
 )
 from ._store import (
@@ -47,6 +47,7 @@ __all__ = [
     "ContactDetails",
     "CRASH_INFO_VERSION",
     "CrashInfo",
+    "CrashFingerprint",
     "CrashOccurrences",
     "CrashReportStore",
     "DEFAULT_MAX_CRASH_AGE",
@@ -58,7 +59,6 @@ __all__ = [
     "TDetails",
     "VersionInfo",
     "crash_fingerprint",
-    "fingerprint_hash",
     "format_var_for_export",
     "make_crash_report_base_path",
     "normalize_crash_time",

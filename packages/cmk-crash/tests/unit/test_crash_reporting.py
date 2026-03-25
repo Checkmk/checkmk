@@ -17,9 +17,9 @@ from cmk.crash import (
     ABCCrashReport,
     cleanup_crash_reports,
     crash_fingerprint,
+    CrashFingerprint,
     CrashInfo,
     CrashReportStore,
-    fingerprint_hash,
     format_var_for_export,
     make_crash_report_base_path,
     REDACTED_STRING,
@@ -619,27 +619,31 @@ def test_crash_report_json_dump(
 
 def test_fingerprint_hash_is_stable() -> None:
     """The same fingerprint must always produce the same hash."""
-    fp = ("check", "ValueError", (("mymodule.py", 42), ("other.py", 7)))
-    assert fingerprint_hash(fp) == fingerprint_hash(fp)
+    fp = CrashFingerprint("check", "ValueError", (("mymodule.py", 42), ("other.py", 7)))
+    assert fp.hash() == fp.hash()
 
 
 def test_fingerprint_hash_differs_for_different_fingerprints() -> None:
     frames = (("mymodule.py", 42),)
-    assert fingerprint_hash(("check", "ValueError", frames)) != fingerprint_hash(
-        ("check", "TypeError", frames)
+    assert (
+        CrashFingerprint("check", "ValueError", frames).hash()
+        != CrashFingerprint("check", "TypeError", frames).hash()
     )
-    assert fingerprint_hash(("check", "ValueError", frames)) != fingerprint_hash(
-        ("gui", "ValueError", frames)
+    assert (
+        CrashFingerprint("check", "ValueError", frames).hash()
+        != CrashFingerprint("gui", "ValueError", frames).hash()
     )
-    assert fingerprint_hash(("check", "ValueError", frames)) != fingerprint_hash(
-        ("check", "ValueError", (("mymodule.py", 99),))
+    assert (
+        CrashFingerprint("check", "ValueError", frames).hash()
+        != CrashFingerprint("check", "ValueError", (("mymodule.py", 99),)).hash()
     )
 
 
 def test_fingerprint_hash_handles_none_exc_type() -> None:
     frames = (("mymodule.py", 1),)
-    assert fingerprint_hash(("check", None, frames)) != fingerprint_hash(
-        ("check", "ValueError", frames)
+    assert (
+        CrashFingerprint("check", None, frames).hash()
+        != CrashFingerprint("check", "ValueError", frames).hash()
     )
 
 
@@ -677,14 +681,14 @@ def test_crash_report_store_writes_fingerprint_index(tmp_path: Path) -> None:
         exc_traceback=crash.crash_info["exc_traceback"],
         exc_type=crash.crash_info["exc_type"],
     )
-    expected_hash = fingerprint_hash(fp)
+    expected_hash = fp.hash()
     assert expected_hash in index
     assert index[expected_hash] == crash.ident_to_text()
 
 
 def test_fingerprint_hash_returns_hex_string() -> None:
-    fp = ("check", "ValueError", (("mymodule.py", 1),))
-    result = fingerprint_hash(fp)
+    fp = CrashFingerprint("check", "ValueError", (("mymodule.py", 1),))
+    result = fp.hash()
     assert isinstance(result, str)
     assert len(result) == 64  # SHA-256 hex digest
     int(result, 16)  # raises if not valid hex

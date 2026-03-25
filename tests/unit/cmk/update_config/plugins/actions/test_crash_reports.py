@@ -4,20 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import logging
 from pathlib import Path
 
 from cmk.ccc import store
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.actions.crash_reports import MigrateCrashReports
-
-logger = logging.getLogger(__name__)
-_ACTION = MigrateCrashReports(
-    name="migrate_crash_reports",
-    title="test",
-    sort_index=0,
-    expiry_version=ExpiryVersion.NEVER,
-)
+from cmk.crash import CrashReportStore
 
 _TRACEBACK = [("mymodule.py", 42, "my_func", "raise ValueError('x')")]
 _TRACEBACK_B = [("other.py", 7, "other_func", "raise RuntimeError('y')")]
@@ -71,7 +61,7 @@ def test_migrate_no_traceback_legacy_time_is_written(tmp_path: Path) -> None:
     crashes_dir = _crashes_dir(tmp_path)
     crash_dir = _write_crash(crashes_dir, "crash-a", time=1000.0, traceback=None)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
     assert info["time"] == {"first_seen": 1000.0, "last_seen": 1000.0, "count": 1}
@@ -86,7 +76,7 @@ def test_migrate_no_traceback_already_migrated_is_not_rewritten(tmp_path: Path) 
     )
     mtime_before = (crash_dir / "crash.info").stat().st_mtime_ns
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     assert (crash_dir / "crash.info").stat().st_mtime_ns == mtime_before
 
@@ -101,7 +91,7 @@ def test_migrate_single_crash_legacy_time_is_written(tmp_path: Path) -> None:
     crashes_dir = _crashes_dir(tmp_path)
     crash_dir = _write_crash(crashes_dir, "crash-a", time=2000.0)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
     assert info["time"] == {"first_seen": 2000.0, "last_seen": 2000.0, "count": 1}
@@ -114,7 +104,7 @@ def test_migrate_single_crash_already_migrated_is_not_rewritten(tmp_path: Path) 
     crash_dir = _write_crash(crashes_dir, "crash-a", time=already_migrated, crash_info_version=1)
     mtime_before = (crash_dir / "crash.info").stat().st_mtime_ns
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     assert (crash_dir / "crash.info").stat().st_mtime_ns == mtime_before
 
@@ -131,7 +121,7 @@ def test_migrate_merges_duplicate_crashes(tmp_path: Path) -> None:
     _write_crash(crashes_dir, "crash-2000", time=2000.0)
     _write_crash(crashes_dir, "crash-3000", time=3000.0)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     dirs = [p for p in crashes_dir.iterdir() if p.is_dir()]
     assert len(dirs) == 1
@@ -145,7 +135,7 @@ def test_migrate_keeps_directory_with_latest_last_seen(tmp_path: Path) -> None:
     _write_crash(crashes_dir, "crash-early", time=1000.0)
     _write_crash(crashes_dir, "crash-late", time=9000.0)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     dirs = [p for p in crashes_dir.iterdir() if p.is_dir()]
     assert len(dirs) == 1
@@ -158,7 +148,7 @@ def test_migrate_removes_duplicate_directories(tmp_path: Path) -> None:
     _write_crash(crashes_dir, "crash-old", time=1000.0)
     _write_crash(crashes_dir, "crash-new", time=2000.0)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     assert not (crashes_dir / "crash-old").exists()
 
@@ -171,7 +161,7 @@ def test_migrate_does_not_merge_different_fingerprints(tmp_path: Path) -> None:
         crashes_dir, "crash-b", time=2000.0, traceback=_TRACEBACK_B, exc_type="RuntimeError"
     )
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     dirs = [p for p in crashes_dir.iterdir() if p.is_dir()]
     assert len(dirs) == 2
@@ -185,7 +175,7 @@ def test_migrate_merges_legacy_and_new_format(tmp_path: Path) -> None:
         crashes_dir, "crash-new", time={"first_seen": 2000.0, "last_seen": 3000.0, "count": 2}
     )
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     dirs = [p for p in crashes_dir.iterdir() if p.is_dir()]
     assert len(dirs) == 1
@@ -204,13 +194,13 @@ def test_migrate_is_idempotent(tmp_path: Path) -> None:
     _write_crash(crashes_dir, "crash-1000", time=1000.0)
     _write_crash(crashes_dir, "crash-2000", time=2000.0)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
     dirs_after_first = {p.name for p in crashes_dir.iterdir() if p.is_dir()}
     info_after_first = json.loads(
         store.load_text_from_file(crashes_dir / next(iter(dirs_after_first)) / "crash.info")
     )
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
     dirs_after_second = {p.name for p in crashes_dir.iterdir() if p.is_dir()}
     info_after_second = json.loads(
         store.load_text_from_file(crashes_dir / next(iter(dirs_after_second)) / "crash.info")
@@ -234,7 +224,7 @@ def test_migrate_skips_unreadable_crash_info(tmp_path: Path) -> None:
 
     good_dir = _write_crash(crashes_dir, "crash-good", time=1000.0)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     # The good crash was migrated; the bad directory was left untouched
     info = json.loads(store.load_text_from_file(good_dir / "crash.info"))
@@ -250,7 +240,7 @@ def test_migrate_skips_missing_crash_info(tmp_path: Path) -> None:
 
     good_dir = _write_crash(crashes_dir, "crash-good", time=1000.0)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     info = json.loads(store.load_text_from_file(good_dir / "crash.info"))
     assert info["time"] == {"first_seen": 1000.0, "last_seen": 1000.0, "count": 1}
@@ -265,7 +255,7 @@ def test_migrate_skips_non_directory_entries(tmp_path: Path) -> None:
 
     crash_dir = _write_crash(crashes_dir, "crash-a", time=1000.0)
 
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)
 
     info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
     assert info["time"] == {"first_seen": 1000.0, "last_seen": 1000.0, "count": 1}
@@ -274,7 +264,7 @@ def test_migrate_skips_non_directory_entries(tmp_path: Path) -> None:
 def test_migrate_empty_crash_type_dir(tmp_path: Path) -> None:
     """An empty crash-type directory must be handled gracefully."""
     crashes_dir = _crashes_dir(tmp_path)
-    _ACTION._migrate_crash_type_dir(crashes_dir, logger)  # must not raise
+    CrashReportStore().consolidate_crash_type_dir(crashes_dir)  # must not raise
 
 
 def test_migrate_processes_multiple_crash_type_dirs(tmp_path: Path) -> None:
@@ -291,8 +281,8 @@ def test_migrate_processes_multiple_crash_type_dirs(tmp_path: Path) -> None:
     _write_crash(gui_dir, "gui-500", time=500.0, exc_type="KeyError")
     _write_crash(gui_dir, "gui-600", time=600.0, exc_type="KeyError")
 
-    _ACTION._migrate_crash_type_dir(check_dir, logger)
-    _ACTION._migrate_crash_type_dir(gui_dir, logger)
+    CrashReportStore().consolidate_crash_type_dir(check_dir)
+    CrashReportStore().consolidate_crash_type_dir(gui_dir)
 
     check_dirs = [p for p in check_dir.iterdir() if p.is_dir()]
     assert len(check_dirs) == 1

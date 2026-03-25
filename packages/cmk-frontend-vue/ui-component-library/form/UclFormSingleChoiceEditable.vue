@@ -27,25 +27,7 @@ async function loadSpec() {
     elements: [],
     config_entity_type: 'notification_parameter',
     config_entity_type_specifier: 'mail',
-    allow_editing_existing_elements: true,
-    i18n: {
-      slidein_save_button: 'i18n slidein_save_button',
-      slidein_cancel_button: 'i18n slidein_cancel_button',
-      slidein_create_button: 'i18n slidein_create_button',
-      edit: 'i18n edit',
-      create: 'i18n create',
-      loading: 'i18n loading',
-      no_objects: 'i18n no_objects',
-      no_selection: 'i18n_no_selection',
-      validation_error: 'i18n validation_error',
-      fatal_error: 'i18n fatal_error',
-      fatal_error_reload: 'i18n fatal_error_reload',
-      // TODO: save & create vs. new and edit!
-      slidein_new_title: 'i18n_slidein_new_title',
-      slidein_edit_title: 'i18n_slidein_edit_title',
-      permanent_change_warning: 'i18n permanent_change_warning',
-      permanent_change_warning_dismiss: 'i18n permanent_change_warning_dismiss'
-    }
+    allow_editing_existing_elements: true
   }
 
   specTemplate.elements = (

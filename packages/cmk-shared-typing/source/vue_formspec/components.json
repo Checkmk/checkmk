@@ -1451,78 +1451,12 @@
             "allow_editing_existing_elements": {
               "type": "boolean"
             },
-            "i18n": {
-              "title": "single_choice_editable_i18n",
-              "type": "object",
-              "properties": {
-                "slidein_save_button": {
-                  "type": "string"
-                },
-                "slidein_cancel_button": {
-                  "type": "string"
-                },
-                "slidein_create_button": {
-                  "type": "string"
-                },
-                "slidein_new_title": {
-                  "type": "string"
-                },
-                "slidein_edit_title": {
-                  "type": "string"
-                },
-                "edit": {
-                  "type": "string"
-                },
-                "create": {
-                  "type": "string"
-                },
-                "loading": {
-                  "type": "string"
-                },
-                "no_objects": {
-                  "type": "string"
-                },
-                "no_selection": {
-                  "type": "string"
-                },
-                "validation_error": {
-                  "type": "string"
-                },
-                "fatal_error": {
-                  "type": "string"
-                },
-                "fatal_error_reload": {
-                  "type": "string"
-                },
-                "permanent_change_warning": {
-                  "type": "string"
-                },
-                "permanent_change_warning_dismiss": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "slidein_save_button",
-                "slidein_cancel_button",
-                "slidein_create_button",
-                "slidein_new_title",
-                "slidein_edit_title",
-                "edit",
-                "create",
-                "loading",
-                "no_objects",
-                "no_selection",
-                "validation_error",
-                "fatal_error",
-                "fatal_error_reload",
-                "permanent_change_warning",
-                "permanent_change_warning_dismiss"
-              ]
+            "input_hint": {
+              "type": "string"
             }
           },
           "required": [
             "type",
-            "i18n",
             "config_entity_type",
             "config_entity_type_specifier",
             "elements",

@@ -36,6 +36,7 @@ const [validation, selectedObjectId] = useValidation<string | null>(
       :initial-elements="spec.elements.map((e) => ({ name: e.name, title: e.title }))"
       :allow-editing-existing-elements="spec.allow_editing_existing_elements"
       :label="spec.title"
+      v-bind="spec.input_hint !== undefined ? { inputHint: spec.input_hint } : {}"
       :validation="validation"
     />
   </div>

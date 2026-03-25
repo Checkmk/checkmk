@@ -3,58 +3,71 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import contains, SNMPTree
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+)
 from cmk.plugins.hwg.agent_based.lib import parse_hwg
-
-check_info = {}
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 HWG_TEMP_DEFAULTLEVELS = {"levels": (30.0, 35.0)}
 
-READABLE_STATES = {
-    "invalid": 3,
-    "normal": 0,
-    "out of range low": 2,
-    "out of range high": 2,
-    "alarm low": 2,
-    "alarm high": 2,
+READABLE_STATES: Mapping[str, State] = {
+    "invalid": State.UNKNOWN,
+    "normal": State.OK,
+    "out of range low": State.CRIT,
+    "out of range high": State.CRIT,
+    "alarm low": State.CRIT,
+    "alarm high": State.CRIT,
 }
 
 
-def discover_hwg_temp(parsed):
-    for index, attrs in parsed.items():
+def discover_hwg_temp(section: Mapping[str, Mapping[str, Any]]) -> DiscoveryResult:
+    for index, attrs in section.items():
         if attrs.get("temperature") and attrs["dev_status_name"] not in ["invalid", ""]:
-            yield index, {}
+            yield Service(item=index)
 
 
-def check_hwg_temp(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_hwg_temp(
+    item: str, params: TempParamType, section: Mapping[str, Mapping[str, Any]]
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    state = READABLE_STATES.get(data["dev_status_name"], 3)
+    state = READABLE_STATES.get(data["dev_status_name"], State.UNKNOWN)
     state_readable = data["dev_status_name"]
     temp = data["temperature"]
     if temp is None:
-        yield state, "Status: %s" % state_readable
+        yield Result(state=state, summary=f"Status: {state_readable}")
         return
 
-    state, infotext, perfdata = check_temperature(
+    yield from check_temperature(
         temp,
         params,
-        "hwg_temp_%s" % item,
+        unique_name=f"hwg_temp_{item}",
+        value_store=get_value_store(),
         dev_unit=data["dev_unit"],
-        dev_status=state,
+        dev_status=state.value,
         dev_status_name=state_readable,
     )
+    yield Result(
+        state=State.OK,
+        summary=f"Description: {data['descr']}, Status: {data['dev_status_name']}",
+    )
 
-    infotext += " (Description: {}, Status: {})".format(data["descr"], data["dev_status_name"])
-    yield state, "%s" % infotext, perfdata
 
-
-check_info["hwg_temp"] = LegacyCheckDefinition(
+snmp_section_hwg_temp = SimpleSNMPSection(
     name="hwg_temp",
     detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
     fetch=SNMPTree(
@@ -62,6 +75,11 @@ check_info["hwg_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "7"],
     ),
     parse_function=parse_hwg,
+)
+
+
+check_plugin_hwg_temp = CheckPlugin(
+    name="hwg_temp",
     service_name="Temperature %s",
     discovery_function=discover_hwg_temp,
     check_function=check_hwg_temp,
@@ -69,7 +87,7 @@ check_info["hwg_temp"] = LegacyCheckDefinition(
     check_default_parameters=HWG_TEMP_DEFAULTLEVELS,
 )
 
-check_info["hwg_ste2"] = LegacyCheckDefinition(
+snmp_section_hwg_ste2 = SimpleSNMPSection(
     name="hwg_ste2",
     detect=contains(".1.3.6.1.2.1.1.1.0", "STE2"),
     fetch=SNMPTree(
@@ -77,6 +95,12 @@ check_info["hwg_ste2"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "7"],
     ),
     parse_function=parse_hwg,
+)
+
+
+check_plugin_hwg_ste2 = CheckPlugin(
+    name="hwg_ste2",
+    sections=["hwg_ste2"],
     service_name="Temperature %s",
     discovery_function=discover_hwg_temp,
     check_function=check_hwg_temp,

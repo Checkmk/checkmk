@@ -3,30 +3,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="type-arg"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
+import pytest
+
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.legacy_checks import hwg_temp
 from cmk.legacy_checks.hwg_temp import (
     check_hwg_temp,
-    check_info,
     discover_hwg_temp,
+    snmp_section_hwg_ste2,
 )
 from cmk.plugins.hwg.agent_based.hwg_humidity import (
     check_hwg_humidity,
     discover_hwg_humidity,
 )
 from cmk.plugins.hwg.agent_based.lib import parse_hwg
+from cmk.plugins.lib.temperature import TempParamDict
+
+
+@pytest.fixture(autouse=True)
+def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(hwg_temp, "get_value_store", lambda: {})
 
 
 def test_detect_hwg_ste2() -> None:
-    assert (detect_spec := check_info["hwg_ste2"].detect)
+    assert (detect_spec := snmp_section_hwg_ste2.detect)
     assert evaluate_snmp_detection(
         detect_spec=detect_spec,
         oid_value_getter={".1.3.6.1.2.1.1.1.0": "contains STE2"}.get,
@@ -81,7 +87,7 @@ def test_hwg_ste2_temperature_discovery() -> None:
 
     discovery_result = list(discover_hwg_temp(parsed))
 
-    expected: list[tuple[str, dict]] = [("1", {})]
+    expected = [Service(item="1")]
 
     assert discovery_result == expected
 
@@ -120,18 +126,30 @@ def test_hwg_ste2_temperature_check() -> None:
             "dev_status": "1",
         },
     }
-    params = {"levels": (30, 35)}
+    params: TempParamDict = {"levels": (30.0, 35.0)}
 
-    result = list(check_hwg_temp("1", params, parsed))
+    results = list(check_hwg_temp("1", params, parsed))
 
-    assert len(result) == 1
-    assert result[0][0] == 0  # OK
-    assert "23.8" in result[0][1]
-    assert "°C" in result[0][1]
-    assert "Description: Sensor 215" in result[0][1]
-    assert "Status: normal" in result[0][1]
-    assert len(result[0]) == 3
-    assert result[0][2] == [("temp", 23.8, 30.0, 35.0)]
+    # Should contain Metric, Result (reading), and Result (description)
+    result_objs = [r for r in results if isinstance(r, Result)]
+    metric_objs = [r for r in results if isinstance(r, Metric)]
+
+    assert len(result_objs) >= 2
+    assert len(metric_objs) >= 1
+
+    # Check reading result
+    reading_result = result_objs[0]
+    assert reading_result.state == State.OK
+    assert "23.8" in reading_result.summary
+    assert "\u00b0C" in reading_result.summary
+
+    # Check description result
+    desc_result = result_objs[-1]
+    assert "Description: Sensor 215" in desc_result.summary
+    assert "Status: normal" in desc_result.summary
+
+    # Check metric
+    assert metric_objs[0].name == "temp"
 
 
 def test_hwg_ste2_humidity_check() -> None:
@@ -165,7 +183,7 @@ def test_hwg_ste2_humidity_check() -> None:
 def test_hwg_ste2_temperature_missing_item() -> None:
     """Test temperature check with missing item."""
     parsed = {"1": {"temperature": 23.8}}
-    params = {"levels": (30, 35)}
+    params: TempParamDict = {"levels": (30.0, 35.0)}
 
     result = list(check_hwg_temp("999", params, parsed))
 

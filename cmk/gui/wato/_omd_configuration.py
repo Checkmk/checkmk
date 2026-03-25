@@ -446,6 +446,7 @@ ConfigVariableSiteApacheProcessTuning = ConfigVariable(
     ident="apache_process_tuning",
     valuespec=lambda context: Dictionary(
         title=_("Apache process tuning"),
+        optional_keys=[],
         elements=[
             (
                 "number_of_processes",

@@ -26,8 +26,13 @@ from cmk.plugins.emailchecks.lib.connections import (
             [(b"1 (RFC822 {14630}", b"lots", b"data", b")")],
         ),
         (("OK", ["payload"]), ["payload"]),
-        # POP
+        # POP (2-element tuple)
         ((b"+OK message follows", [b"some payload"]), [b"some payload"]),
+        # POP (3-element tuple, as returned by poplib list/retr)
+        ((b"+OK 2 messages:", [b"1 3035", b"2 38374"], 17), [b"1 3035", b"2 38374"]),
+        ((b"+OK message follows", [b"line1", b"line2"], 42), [b"line1", b"line2"]),
+        # POP 3-element tuple with error
+        ((b"-ERR no such message", [], 0), RuntimeError),
         # server returned an error
         (("NO", []), RuntimeError),
         ((b"NO", []), RuntimeError),

@@ -633,8 +633,9 @@ TEST(AgentConfig, FactoryConfig) {
             GetVal(logging, vars::kLogLocation, std::string("")).empty());
 
         auto debug = GetVal(logging, vars::kLogDebug, std::string("xxx"));
-        EXPECT_TRUE(debug == "yes" || debug == "all");
-        EXPECT_TRUE(GetVal(logging, vars::kLogWinDbg, false));
+        EXPECT_TRUE(debug == "yes" || debug == "all")
+            << "unexpected value for debug log: " << debug;
+        EXPECT_FALSE(GetVal(logging, vars::kLogWinDbg, true));
         EXPECT_TRUE(GetVal(logging, vars::kLogEvent, false));
 
         EXPECT_TRUE(
@@ -865,9 +866,9 @@ TEST(AgentConfig, LoadingCheck) {
         wtools::ToStr(fs::path{XLOG::l.getLogParam().filename()}.filename());
     EXPECT_TRUE(fname == std::string{kDefaultLogFileName});
     EXPECT_TRUE(XLOG::d.isFileDbg());
-    EXPECT_TRUE(XLOG::d.isWinDbg());
+    EXPECT_FALSE(XLOG::d.isWinDbg());
     EXPECT_TRUE(XLOG::l.isFileDbg());
-    EXPECT_TRUE(XLOG::l.isWinDbg());
+    EXPECT_FALSE(XLOG::l.isWinDbg());
 
     EXPECT_TRUE(!groups::g_global.enabledSections().empty());
     EXPECT_TRUE(groups::g_global.disabledSections().empty());

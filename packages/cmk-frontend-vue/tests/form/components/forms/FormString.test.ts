@@ -181,6 +181,42 @@ test('FormString with autocompleter loads value', async () => {
   })
 })
 
+test('FormString with autocompleter shows placeholder when data is empty string', async () => {
+  render(FormString, {
+    props: {
+      spec: {
+        type: 'string',
+        title: '',
+        help: '',
+        validators: [],
+        label: 'ut_label',
+        input_hint: 'Select hostname',
+        field_size: 'MEDIUM',
+        autocompleter: {
+          data: {
+            ident: 'config_hostname',
+            params: {
+              show_independent_of_context: true,
+              strict: true,
+              escape_regex: true,
+              world: 'world',
+              context: {}
+            }
+          },
+          fetch_method: 'ajax_vs_autocomplete'
+        }
+      },
+      data: '',
+      backendValidation: []
+    }
+  })
+
+  const element = screen.getByRole('combobox', { name: 'ut_label' })
+  await waitFor(() => {
+    expect(element.textContent).toContain('Select hostname')
+  })
+})
+
 test('FormString with autocompleter updates value to title', async () => {
   render(FormString, {
     props: {

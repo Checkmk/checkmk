@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { X } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 import useId from '@/lib/useId'
@@ -37,6 +38,13 @@ const [validation, value] = useValidation<string>(
 )
 
 const componentId = useId()
+
+const autoCompleterValue = computed<string | null>({
+  get: () => (value.value === '' ? null : value.value),
+  set: (v: string | null) => {
+    value.value = v ?? ''
+  }
+})
 </script>
 
 <template>
@@ -53,7 +61,7 @@ const componentId = useId()
         <div class="form-string--dropdown-container">
           <FormAutocompleter
             :id="componentId"
-            v-model="value"
+            v-model="autoCompleterValue"
             :autocompleter="spec.autocompleter"
             :placeholder="untranslated(spec.input_hint ?? '')"
             :label="spec.label || ''"

@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.kube.schemata import api
-from cmk.plugins.kube.transform_json import (
-    dependent_object_owner_refererences_from_json,
+from cmk.plugins.kube.from_json.metadata import dependent_object_owner_references_from_json
+from cmk.plugins.kube.from_json.statefulset import (
     JSONStatefulSet,
     JSONStatefulSetOnDelete,
 )
+from cmk.plugins.kube.schemata import api
 
 JSON_STATEFULSET: JSONStatefulSet = {
     "metadata": {
@@ -60,7 +60,7 @@ JSON_STATEFULSET_WITH_NO_OWNER_REFERENCES: JSONStatefulSet = {
 
 
 def test_dependent_object_owner_references_from_json() -> None:
-    owner_reference = dependent_object_owner_refererences_from_json(JSON_STATEFULSET)[0]
+    owner_reference = dependent_object_owner_references_from_json(JSON_STATEFULSET)[0]
     assert isinstance(owner_reference, api.OwnerReference)
     assert owner_reference.uid == "owner-reference-uid"
     assert owner_reference.controller is True
@@ -71,6 +71,5 @@ def test_dependent_object_owner_references_from_json() -> None:
 
 def test_dependent_object_owner_references_from_json_with_no_owner_references_present() -> None:
     assert (
-        dependent_object_owner_refererences_from_json(JSON_STATEFULSET_WITH_NO_OWNER_REFERENCES)
-        == []
+        dependent_object_owner_references_from_json(JSON_STATEFULSET_WITH_NO_OWNER_REFERENCES) == []
     )

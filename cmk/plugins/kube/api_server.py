@@ -19,6 +19,9 @@ from kubernetes import client  # type: ignore[import-untyped]
 
 from cmk.plugins.kube import query
 from cmk.plugins.kube.controllers import map_controllers, map_controllers_top_to_down
+from cmk.plugins.kube.from_json.deployment import deployment_from_json, JSONDeploymentList
+from cmk.plugins.kube.from_json.node import JSONNodeList, node_list_from_json
+from cmk.plugins.kube.from_json.statefulset import JSONStatefulSetList, statefulset_list_from_json
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import (
     cron_job_from_client,
@@ -31,14 +34,6 @@ from cmk.plugins.kube.transform import (
     resource_quota_from_client,
 )
 from cmk.plugins.kube.transform_any import parse_open_metric_samples
-from cmk.plugins.kube.transform_json import (
-    deployment_from_json,
-    JSONDeploymentList,
-    JSONNodeList,
-    JSONStatefulSetList,
-    node_list_from_json,
-    statefulset_list_from_json,
-)
 
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")

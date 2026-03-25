@@ -10,8 +10,8 @@ from pydantic import ConfigDict
 
 from tests.unit.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
+from cmk.plugins.kube.from_json.node import _metadata_no_namespace_from_json
 from cmk.plugins.kube.schemata import api
-from cmk.plugins.kube.transform_json import _metadata_no_namespace_from_json
 
 
 class NodeConditions(pydantic.RootModel):

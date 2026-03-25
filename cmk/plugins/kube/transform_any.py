@@ -5,7 +5,7 @@
 
 """
 
-This file contains helper functions for transform and transform_json. Each
+This file contains helper functions for transform.py and from_json/*.py. Each
 function is required to handle data from the client or from JSON.
 """
 

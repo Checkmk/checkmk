@@ -52,6 +52,8 @@ def test_plugins(site: Site, redfish_hosts: Hosts) -> None:
         "check_mk-redfish_memory",
         "check_mk-redfish_memory_summary",
         "check_mk-redfish_networkadapters",
+        "check_mk-redfish_power_consumption",
+        "check_mk-redfish_power_redundancy",
         "check_mk-redfish_processors",
         "check_mk-redfish_psu",
         "check_mk-redfish_storage",

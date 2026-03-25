@@ -38,6 +38,7 @@ from typing import Any, Final, Literal, overload
 
 import pytest
 import pytest_check
+import requests
 
 import livestatus
 
@@ -1326,12 +1327,18 @@ class Site:
         )
 
     def activate_changes_and_wait_for_site_restart(
-        self, timeout: int = 60, interval: int = 2
+        self, timeout: int = 120, interval: int = 2
     ) -> None:
         """Activate changes which require a site restart and wait until the site is
         fully running again.
         """
-        self.openapi.changes.activate()
+        try:
+            self.openapi.changes.activate()
+        except requests.exceptions.ConnectionError:
+            # The activation may trigger a site restart that kills httpd before the
+            # response is sent back. This is expected — proceed to wait for the site
+            # to come back up.
+            pass
         # first wait for the site to change the status to partially running
         self.wait_for_status_update(2, timeout, interval)
         # then wait for the site to be fully running

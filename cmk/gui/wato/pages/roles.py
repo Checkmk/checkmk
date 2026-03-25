@@ -126,9 +126,9 @@ class ModeRoles(WatoMode):
 
         elif request.var("_clone"):
             role_id = RoleID(request.get_ascii_input_mandatory("_clone"))
-            userroles.clone_role(role_id)
+            cloned_role = userroles.clone_role(role_id)
             _changes.add_change(
-                "edit-roles", _("Created new role '%s'") % role_id, sites=get_login_sites()
+                "edit-roles", _("Created new role '%s'") % cloned_role.name, sites=get_login_sites()
             )
 
         return redirect(self.mode_url())

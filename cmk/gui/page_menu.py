@@ -999,7 +999,7 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
         html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
         html.button("submit", "", cssclass="submit", help_=_("Apply"))
     html.javascript(
-        f"cmk.page_menu.inpage_search_init({json.dumps(reset_button_id)}, {json.dumps(was_submitted)})"
+        f"cmk.page_menu.inpage_search_init({json.dumps(reset_button_id)}, {json.dumps(was_submitted)}, {json.dumps(reset_url)})"
     )
 
 

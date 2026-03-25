@@ -314,12 +314,27 @@ export function side_popup_add_simplebar_scrollbar(popup_id: string) {
   add_simplebar_scrollbar_to_object(content)
 }
 
-export function inpage_search_init(reset_button_id: string, was_submitted: boolean) {
+export function inpage_search_init(
+  reset_button_id: string,
+  was_submitted: boolean,
+  reset_url: string
+) {
   const reset_button = document.getElementById(reset_button_id) as HTMLButtonElement
   if (!reset_button) return
 
   if (!was_submitted) {
     reset_button.disabled = true
+  }
+
+  const form = reset_button.form
+  if (form) {
+    form.addEventListener('submit', (e: Event) => {
+      const search_input = form.elements.namedItem('search') as HTMLInputElement | null
+      if (search_input && search_input.value.trim() === '') {
+        e.preventDefault()
+        window.location.href = reset_url
+      }
+    })
   }
 }
 

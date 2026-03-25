@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import importlib
 import os
+import pkgutil
 import sys
 from collections import defaultdict
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
@@ -116,6 +117,17 @@ def discover_families(
                 family_paths[f"{module.__name__}.{family}"].append(f"{path}/{family}")
 
     return family_paths
+
+
+# this might be consolidated with `discover_modules`, but
+# for now let's keep this slightly different variant
+def discover_submodules(*namespaces: str, raise_errors: bool) -> Iterable[str]:
+    return {
+        mod.name
+        for ns in namespaces
+        if (plugins_ns := _import_optionally(ns, raise_errors))
+        for mod in pkgutil.iter_modules(plugins_ns.__path__, f"{plugins_ns.__name__}.")
+    }
 
 
 def discover_modules(

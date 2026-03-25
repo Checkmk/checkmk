@@ -6,23 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { onMounted, onUnmounted, ref, toRaw } from 'vue'
 
-import { untranslated } from '@/lib/i18n'
-import type { TranslatedString } from '@/lib/i18nString'
+import CmkConfigurationEntityDropdown from '@/components/user-input/CmkConfigurationEntityDropdown'
 
-import CmkDropdown from '@/components/CmkDropdown'
-import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
-import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-import CmkSpace from '@/components/CmkSpace.vue'
-import {
-  type Payload,
-  configEntityAPI
-} from '@/components/user-input/CmkConfigurationEntityDropdown'
-import CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-
-import FormSingleChoiceEditableEditAsync from '@/form/FormEditAsync.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 const props = defineProps<{
@@ -39,187 +25,18 @@ const [validation, selectedObjectId] = useValidation<string | null>(
   props.spec.validators,
   () => props.backendValidation
 )
-
-const choices = ref<Array<{ title: TranslatedString; name: string }>>(
-  structuredClone(toRaw(props.spec.elements)).map((element) => ({
-    title: untranslated(element.title),
-    name: element.name
-  }))
-)
-const hideButtonChoices = ref<Array<{ name: string; hide_edit: boolean }>>([])
-
-const slideInObjectId = ref<OptionId | null>(null)
-const slideInOpen = ref<boolean>(false)
-
-const abortController = new AbortController()
-onUnmounted(() => {
-  abortController.abort()
-})
-
-onMounted(async () => {
-  try {
-    const entities = await configEntityAPI.listEntities(
-      props.spec.config_entity_type as ConfigEntityType,
-      props.spec.config_entity_type_specifier,
-      abortController.signal
-    )
-    hideButtonChoices.value = entities.map((entity) => ({
-      name: entity.ident,
-      hide_edit: entity.hide_edit
-    }))
-    choices.value = entities.map((entity) => ({
-      name: entity.ident,
-      title: untranslated(entity.description)
-    }))
-  } catch (e) {
-    if (abortController.signal.aborted) {
-      return
-    }
-    throw e
-  }
-})
-
-const slideInAPI = {
-  getSchema: async (signal?: AbortSignal) => {
-    return (
-      await configEntityAPI.getSchema(
-        props.spec.config_entity_type as ConfigEntityType,
-        props.spec.config_entity_type_specifier,
-        signal
-      )
-    ).schema
-  },
-  getData: async (objectId: OptionId | null, signal?: AbortSignal) => {
-    if (objectId === null) {
-      return (
-        await configEntityAPI.getSchema(
-          props.spec.config_entity_type as ConfigEntityType,
-          props.spec.config_entity_type_specifier,
-          signal
-        )
-      ).defaultValues
-    }
-    const result = await configEntityAPI.getData(
-      props.spec.config_entity_type as ConfigEntityType,
-      objectId,
-      signal
-    )
-    return result
-  },
-  setData: async (objectId: OptionId | null, data: Payload) => {
-    if (objectId === null) {
-      return await configEntityAPI.createEntity(
-        props.spec.config_entity_type as ConfigEntityType,
-        props.spec.config_entity_type_specifier,
-        data
-      )
-    }
-    return await configEntityAPI.updateEntity(
-      props.spec.config_entity_type as ConfigEntityType,
-      props.spec.config_entity_type_specifier,
-      objectId,
-      data
-    )
-  }
-}
-
-function slideInSubmitted(event: { ident: string; description: string }) {
-  data.value = event.ident
-  if (choices.value.find((object) => object.name === event.ident) === undefined) {
-    choices.value.push({ title: untranslated(event.description), name: event.ident })
-    hideButtonChoices.value.push({ name: event.ident, hide_edit: false })
-  } else {
-    choices.value = choices.value.map((choice) =>
-      // Update description of existing object
-      choice.name === event.ident
-        ? { title: untranslated(event.description), name: event.ident }
-        : choice
-    )
-  }
-  closeSlideIn()
-}
-
-function closeSlideIn() {
-  slideInOpen.value = false
-}
-
-function openSlideIn(objectId: null | OptionId) {
-  slideInObjectId.value = objectId
-  slideInOpen.value = true
-  error.value = null
-}
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const { CmkErrorBoundary, error } = useCmkErrorBoundary()
 </script>
 
 <template>
   <div>
-    <CmkDropdown
-      v-model:selected-option="selectedObjectId"
-      :options="{
-        type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
-        suggestions: choices
-      }"
-      :input-hint="untranslated(spec.i18n.no_selection)"
-      :no-elements-text="untranslated(spec.i18n.no_objects)"
-      :label="untranslated(spec.title)"
-      class="form-single-choice-editable__dropdown"
-      required
+    <CmkConfigurationEntityDropdown
+      v-model="selectedObjectId"
+      :config-entity-type="spec.config_entity_type as ConfigEntityType"
+      :config-entity-type-specifier="spec.config_entity_type_specifier"
+      :initial-elements="spec.elements.map((e) => ({ name: e.name, title: e.title }))"
+      :allow-editing-existing-elements="spec.allow_editing_existing_elements"
+      :label="spec.title"
+      :validation="validation"
     />
-    <template
-      v-if="
-        spec.allow_editing_existing_elements &&
-        !hideButtonChoices.find((choice) => choice.name === selectedObjectId)?.hide_edit
-      "
-    >
-      <CmkInlineButton
-        v-show="selectedObjectId !== null"
-        icon="edit"
-        @click="openSlideIn(selectedObjectId)"
-      >
-        {{ spec.i18n.edit }}
-      </CmkInlineButton>
-      <CmkSpace v-show="selectedObjectId !== null" />
-    </template>
-    <CmkInlineButton @click="openSlideIn(null)">
-      {{ spec.i18n.create }}
-    </CmkInlineButton>
-
-    <CmkSlideInDialog
-      :open="slideInOpen"
-      :header="{
-        title:
-          slideInObjectId === null ? spec.i18n.slidein_new_title : spec.i18n.slidein_edit_title,
-        closeButton: true
-      }"
-      @close="closeSlideIn"
-    >
-      <CmkErrorBoundary>
-        <FormSingleChoiceEditableEditAsync
-          :object-id="slideInObjectId"
-          :api="slideInAPI"
-          :i18n="{
-            save_button: spec.i18n.slidein_save_button,
-            cancel_button: spec.i18n.slidein_cancel_button,
-            create_button: spec.i18n.slidein_create_button,
-            loading: spec.i18n.loading,
-            validation_error: spec.i18n.validation_error,
-            fatal_error: spec.i18n.fatal_error,
-            permanent_choice_warning: spec.i18n.permanent_change_warning,
-            permanent_choice_warning_dismissal: spec.i18n.permanent_change_warning_dismiss
-          }"
-          @cancel="closeSlideIn"
-          @submitted="slideInSubmitted"
-        />
-      </CmkErrorBoundary>
-    </CmkSlideInDialog>
   </div>
-  <FormValidation :validation="validation"></FormValidation>
 </template>
-
-<style scoped>
-.form-single-choice-editable__dropdown {
-  margin-right: 1em;
-}
-</style>

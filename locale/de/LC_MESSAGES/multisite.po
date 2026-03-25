@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-11 18:36+0000\n"
+"PO-Revision-Date: 2026-03-24 18:46+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.16\n"
+"X-Generator: Weblate 5.16.2\n"
 
 msgid " "
 msgstr " "
@@ -1165,6 +1165,9 @@ msgstr "Untergrenzen für 12 Volt Ausgang"
 
 msgid "12 Volt output upper levels"
 msgstr "Obergrenzen für 12 Volt Ausgabe"
+
+msgid "12.1 or newer"
+msgstr ""
 
 msgid "15 minutes"
 msgstr "15 Minuten"
@@ -11334,9 +11337,6 @@ msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
 #, python-format
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kann Datei \"%s\" nicht schreiben: %s"
-
-msgid "Capacity filled"
-msgstr "Gefüllte Papiermenge"
 
 msgid "Capacity providers per cluster"
 msgstr "Capacity providers pro Cluster"
@@ -35523,13 +35523,12 @@ msgstr ""
 "':' enthalten. Checkmk führt keine weitere Validierung für die von Ihnen "
 "verwendeten Labels durch."
 
-#, fuzzy
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example "
 "\"os:windows\" or \"net:ip:v4\"."
 msgstr ""
 "Labels müssen das Format \"[SCHLÜSSEL]:[WERT]\" haben. Zum Beispiel "
-"\"os:windows\"."
+"\"os:windows\" oder \"net:ip:v4\"."
 
 msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/"
@@ -38243,7 +38242,7 @@ msgid "MSSQL Backup summary"
 msgstr "MSSQL-Sicherung Zusammenfassung"
 
 msgid "MSSQL Blocked Sessions"
-msgstr "MSSQL Blocked Sessions"
+msgstr "MSSQL blockierte Sitzungen"
 
 msgid "MSSQL Cache Hits"
 msgstr "MSSQL-Cache-Treffer"
@@ -38273,7 +38272,7 @@ msgid "MSSQL Locks"
 msgstr "MSSQL Sperren"
 
 msgid "MSSQL Locks per Batch"
-msgstr "MSSQL Sperren pro Bündel"
+msgstr "MSSQL-Sperren pro Bündel"
 
 msgid "MSSQL Log and Data File Sizes"
 msgstr "MSSQL Log- und Daten-Dateigrößen"
@@ -38306,7 +38305,7 @@ msgid "MSSQL Transactionlog Sizes"
 msgstr "MSSQL Transaktionslog Größen"
 
 msgid "MSSQL Transactions"
-msgstr "MSSQL Transaktionen"
+msgstr "MSSQL-Transaktionen"
 
 msgid "MSSQL Version"
 msgstr "MSSQL-Version"
@@ -53382,6 +53381,8 @@ msgid ""
 "Rule <a href=\"%s\"><tt>%s</tt></a> of rule set <a href=\"%s\">%s</a> in "
 "folder \"%s\" contains an invalid regular expression: %s"
 msgstr ""
+"Die Regel <a href=\"%s\"><tt>%s</tt></a> im Regelsatz <a href=\"%s\">%s</a> "
+"im Ordner \"%s\" enthält einen ungültigen regulären Ausdruck: %s"
 
 msgid "Rule ID"
 msgstr "Regel ID"
@@ -75224,9 +75225,8 @@ msgstr "Insgesamt laufende On-Demand m6i.32xlarge-Instanzen"
 msgid "Total running on-demand r6i.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.8xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.8xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.8xlarge-Instanzen"
 
 #, fuzzy
 msgid "Total running on-demand r6i.large instances"
@@ -75280,13 +75280,11 @@ msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
 msgid "Total running on-demand r6id.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.12xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.12xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.16xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.16xlarge -Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.16xlarge -Instanzen"
 
 #, fuzzy
 msgid "Total running on-demand r8g.24xlarge instances"
@@ -75340,9 +75338,8 @@ msgstr "Insgesamt laufende On-Demand r6gd.16xlarge-Instanzen"
 msgid "Total running on-demand r8gd.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.2xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.2xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.2xlarge-Instanzen"
 
 #, fuzzy
 msgid "Total running on-demand r8gd.48xlarge instances"
@@ -75356,9 +75353,8 @@ msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
 msgid "Total running on-demand r8gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.large instances"
-msgstr "Insgesamt laufende On-Demand r6gd.large-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.large-Instanzen"
 
 #, fuzzy
 msgid "Total running on-demand r8gd.medium instances"
@@ -87415,6 +87411,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Capacity filled"
+#~ msgstr "Gefüllte Papiermenge"
 
 #~ msgid ""
 #~ "In order to make Checkmk more consistent, the descriptions of several "

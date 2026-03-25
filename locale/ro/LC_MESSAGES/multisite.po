@@ -1170,6 +1170,9 @@ msgstr "12 volți Niveluri inferioare de ieșire"
 msgid "12 Volt output upper levels"
 msgstr "Niveluri superioare de ieșire de 12 volți"
 
+msgid "12.1 or newer"
+msgstr ""
+
 msgid "15 minutes"
 msgstr "15 minute"
 
@@ -11732,9 +11735,6 @@ msgstr "Nu se poate scrie fișierul de configurare \"%s\": %s."
 #, python-format
 msgid "Cannot write file \"%s\": %s"
 msgstr "Nu se poate scrie fișierul \"%s\": %s."
-
-msgid "Capacity filled"
-msgstr "Capacitate umplută"
 
 msgid "Capacity providers per cluster"
 msgstr "Furnizori de capacitate per cluster"
@@ -90582,6 +90582,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Capacity filled"
+#~ msgstr "Capacitate umplută"
 
 #~ msgid ""
 #~ "In order to make Checkmk more consistent, the descriptions of several "

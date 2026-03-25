@@ -1169,6 +1169,9 @@ msgstr "Niveaux inférieurs de la sortie 12 volts"
 msgid "12 Volt output upper levels"
 msgstr "Niveaux supérieurs de la sortie 12 volts"
 
+msgid "12.1 or newer"
+msgstr ""
+
 msgid "15 minutes"
 msgstr "15 minutes"
 
@@ -11789,9 +11792,6 @@ msgstr "Impossible d'écrire le fichier de configuration \"%s\" : %s"
 #, python-format
 msgid "Cannot write file \"%s\": %s"
 msgstr "Impossible d'écrire le fichier \"%s\" : %s"
-
-msgid "Capacity filled"
-msgstr "Capacité remplie"
 
 msgid "Capacity providers per cluster"
 msgstr "Fournisseurs de capacité par groupe"
@@ -91246,6 +91246,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#~ msgid "Capacity filled"
+#~ msgstr "Capacité remplie"
 
 #, fuzzy
 #~ msgid ""

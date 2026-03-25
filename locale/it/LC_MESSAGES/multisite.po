@@ -1156,6 +1156,9 @@ msgstr "Livelli inferiori di uscita a 12 Volt"
 msgid "12 Volt output upper levels"
 msgstr "Livelli superiori di uscita a 12 Volt"
 
+msgid "12.1 or newer"
+msgstr ""
+
 msgid "15 minutes"
 msgstr "15 minuti"
 
@@ -11542,9 +11545,6 @@ msgstr "Impossibile scrivere il file di configurazione \"%s\": %s"
 #, python-format
 msgid "Cannot write file \"%s\": %s"
 msgstr "Impossibile scrivere il file \"%s\": %s"
-
-msgid "Capacity filled"
-msgstr "Capacità riempita"
 
 msgid "Capacity providers per cluster"
 msgstr "Fornitori di capacità per cluster"
@@ -90081,6 +90081,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>non disponibile</b> perché Robotmk Core MKP è stato installato"
+
+#~ msgid "Capacity filled"
+#~ msgstr "Capacità riempita"
 
 #~ msgid ""
 #~ "In order to make Checkmk more consistent, the descriptions of several "

@@ -1160,6 +1160,9 @@ msgstr "12 Volt Uitvoer Ondergrens"
 msgid "12 Volt output upper levels"
 msgstr "12 Volt Uitvoer Bovengrens"
 
+msgid "12.1 or newer"
+msgstr ""
+
 msgid "15 minutes"
 msgstr "15 minuten"
 
@@ -11703,9 +11706,6 @@ msgstr "Kan configuratiebestand \"%s\" niet schrijven: %s"
 #, python-format
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kan bestand \"%s\" niet schrijven: %s"
-
-msgid "Capacity filled"
-msgstr "Capaciteit gevuld"
 
 msgid "Capacity providers per cluster"
 msgstr "Capaciteitsleveranciers per cluster"
@@ -90376,6 +90376,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Capacity filled"
+#~ msgstr "Capaciteit gevuld"
 
 #, fuzzy
 #~ msgid ""

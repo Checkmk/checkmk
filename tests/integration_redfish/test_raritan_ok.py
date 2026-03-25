@@ -46,8 +46,9 @@ def test_plugins(site: Site, redfish_hosts: Hosts) -> None:
 
     assert not {s for s in services if s.state != 0}
     assert {s.check_command for s in services} >= {
-        "check_mk-redfish_system",
-        "check_mk-redfish_outlets",
-        "check_mk-redfish_sensors",
         "check_mk-redfish_mains",
+        "check_mk-redfish_outlets",
+        "check_mk-redfish_pdus",
+        "check_mk-redfish_sensors",
+        "check_mk-redfish_system",
     }

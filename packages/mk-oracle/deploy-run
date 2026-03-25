@@ -20,7 +20,7 @@ set -euo pipefail
 
 GNU_TARGET="x86_64-unknown-linux-gnu"
 BINARY_NAME="mk-oracle"
-REMOTE_DEPLOY_DIR="${HOME}/${BINARY_NAME}-deploy"
+REMOTE_DEPLOY_DIR="/tmp/${USER}-mk-oracle/${BINARY_NAME}-deploy"
 
 # ---------------------------------------------------------------------------
 # Argument parsing
@@ -67,37 +67,44 @@ WORKSPACE_ROOT="$(git rev-parse --show-toplevel)"
 TARGET_DIR="requirements/rust/host"
 BINARY_PATH="${WORKSPACE_ROOT}/${TARGET_DIR}/target/${GNU_TARGET}/release/${BINARY_NAME}"
 
-# ---------------------------------------------------------------------------
-# Step 1: ensure tools are available, adding it if necessary
-# ---------------------------------------------------------------------------
-echo "==> [1/5.1] Adding zigbuild'..."
-cargo install cargo-zigbuild
+SSH_OPTS=(-o ConnectTimeout=10 -o BatchMode=yes)
 
 # ---------------------------------------------------------------------------
-# Step 2: build library targeting glibc 2.17 for maximum compatibility
+# Step 1: ensure cargo-zigbuild is available
 # ---------------------------------------------------------------------------
-echo "==> [2/5] Building binary LIBC=2.17 ..."
+if ! command -v cargo-zigbuild &>/dev/null; then
+    echo "==> [1/5] Installing cargo-zigbuild..."
+    cargo install cargo-zigbuild
+else
+    echo "==> [1/5] cargo-zigbuild already installed, skipping."
+fi
+
+# ---------------------------------------------------------------------------
+# Step 2: build binary targeting glibc 2.17 for maximum compatibility
+# ---------------------------------------------------------------------------
+echo "==> [2/5] Building binary (glibc 2.17)..."
 cd "${SCRIPT_DIR}"
 cargo zigbuild --release --target x86_64-unknown-linux-gnu.2.17
 
+if [[ ! -f "${BINARY_PATH}" ]]; then
+    echo "Error: expected binary not found at '${BINARY_PATH}'." >&2
+    exit 1
+fi
 echo "    Binary: ${BINARY_PATH}"
-# ---------------------------------------------------------------------------
-# Step 3: ssh to remote
-# ---------------------------------------------------------------------------
-# shellcheck disable=SC2029
-ssh "${REMOTE_HOST}" "mkdir -p ${REMOTE_DEPLOY_DIR}"
 
 # ---------------------------------------------------------------------------
-# Step 4: scp binary to remote
+# Step 3: copy binary to remote
 # ---------------------------------------------------------------------------
 echo "==> [3/5] Copying binary to ${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/..."
-scp "${BINARY_PATH}" "${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/${BINARY_NAME}"
+# shellcheck disable=SC2029  # variables expand client-side intentionally (they hold remote paths)
+ssh "${SSH_OPTS[@]}" "${REMOTE_HOST}" "mkdir -p ${REMOTE_DEPLOY_DIR}"
+scp "${SSH_OPTS[@]}" "${BINARY_PATH}" "${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/${BINARY_NAME}"
 
 # ---------------------------------------------------------------------------
-# Step 5: scp config file to remote
+# Step 4: copy config file to remote
 # ---------------------------------------------------------------------------
 echo "==> [4/5] Copying config '${CONFIG_FILE}' to ${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/..."
-scp "${CONFIG_FILE}" "${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/${CONFIG_BASENAME}"
+scp "${SSH_OPTS[@]}" "${CONFIG_FILE}" "${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/${CONFIG_BASENAME}"
 
 # ---------------------------------------------------------------------------
 # Step 5: run binary on remote
@@ -111,5 +118,5 @@ ENV_PREFIX=""
 
 echo "==> [5/5] Running on ${REMOTE_HOST}: ${ENV_PREFIX}${BINARY_NAME} -c ${REMOTE_CONFIG} ${EXTRA_ARGS[*]+"${EXTRA_ARGS[*]}"}"
 echo "--- output ---"
-# shellcheck disable=SC2029
-ssh "${REMOTE_HOST}" "chmod +x ${REMOTE_BINARY} && ${ENV_PREFIX}${REMOTE_BINARY} -c ${REMOTE_CONFIG}${EXTRA_ARGS:+ ${EXTRA_ARGS[*]}}"
+# shellcheck disable=SC2029  # variables expand client-side intentionally (they hold remote paths)
+ssh "${SSH_OPTS[@]}" "${REMOTE_HOST}" "chmod +x ${REMOTE_BINARY} && ${ENV_PREFIX}${REMOTE_BINARY} -c ${REMOTE_CONFIG}${EXTRA_ARGS:+ ${EXTRA_ARGS[*]}}"

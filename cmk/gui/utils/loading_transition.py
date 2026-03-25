@@ -45,6 +45,6 @@ def loading_transition_onclick(
 ) -> str:
     template_value = "null" if template is None else f"'{template.value}'"
     if title:
-        return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms}, '{title}');"
+        return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms}, event, '{title}');"
 
-    return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms});"
+    return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms}, event);"

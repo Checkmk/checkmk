@@ -970,8 +970,12 @@ function getContentBody(): HTMLElement | null {
 export function makeLoadingTransition(
   template: string | null,
   delay: number,
+  event: MouseEvent,
   title?: string
 ): void {
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) {
+    return
+  }
   const contentBody = getContentBody()
   if (!contentBody) {
     return

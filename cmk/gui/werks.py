@@ -10,12 +10,12 @@
 
 import itertools
 import time
-from collections.abc import Callable, Container, Iterable, Iterator
+from collections.abc import Callable, Container, Iterable, Iterator, Sequence
 from functools import partial
 from typing import Any, cast, Literal, override, TypedDict
 
 import cmk.werks.utils as werks_utils
-from cmk.ccc.version import Edition
+from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -62,6 +62,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.utils import paths
 from cmk.utils.man_pages import make_man_page_path_map
 from cmk.utils.werks import load_werk_entries
 from cmk.utils.werks.acknowledgement import is_acknowledged
@@ -406,10 +407,27 @@ def num_unacknowledged_incompatible_werks() -> int:
     return len(unacknowledged_incompatible_werks())
 
 
+def _edition_layer(current_edition: Edition) -> Sequence[Edition]:
+    match current_edition:
+        case Edition.COMMUNITY:
+            return [Edition.COMMUNITY]
+        case Edition.PRO:
+            return [Edition.COMMUNITY, Edition.PRO]
+        case Edition.ULTIMATE:
+            return [Edition.COMMUNITY, Edition.PRO, Edition.ULTIMATE]
+        case Edition.ULTIMATEMT:
+            return [Edition.COMMUNITY, Edition.PRO, Edition.ULTIMATE, Edition.ULTIMATEMT]
+        case Edition.CLOUD:
+            return [Edition.COMMUNITY, Edition.PRO, Edition.ULTIMATE, Edition.CLOUD]
+
+
 def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, ValueSpec, Any]]:
     translator = werks_utils.WerkTranslator()
     component_choices: list[tuple[None | str, str]] = [(None, _("All components"))]
     component_choices += sorted(translator.components())
+
+    available_editions = _edition_layer(edition(paths.omd_root))
+
     return [
         (
             "classes",
@@ -482,13 +500,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
                     (None, _("All editions")),
                     *(
                         (e.short, _("Werks only concerning the %s") % e.title)
-                        for e in (
-                            Edition.ULTIMATE,
-                            Edition.ULTIMATEMT,
-                            Edition.PRO,
-                            Edition.COMMUNITY,
-                            Edition.CLOUD,
-                        )
+                        for e in available_editions
                     ),
                 ],
             ),

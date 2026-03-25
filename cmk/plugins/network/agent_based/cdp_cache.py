@@ -55,7 +55,7 @@ class CdpNeighbor(BaseModel, frozen=True):
     address: str | None
     capabilities: str | None
     duplex: str | None
-    native_vlan: str | None
+    native_vlan: int | None
     platform: str | None
     platform_details: str | None
     power_consumption: str | None
@@ -332,7 +332,7 @@ def parse_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
                 platform=str(platform) if platform else None,
                 capabilities=_get_capabilities(capabilities),
                 vtp_mgmt_domain=str(vtp_mgmt_domain) if vtp_mgmt_domain else None,
-                native_vlan=str(native_vlan) if str(native_vlan) else None,
+                native_vlan=int(str(native_vlan)) if str(native_vlan).isdigit() else None,
                 duplex=_get_cdp_duplex_name(str(duplex)),
                 power_consumption=str(power_consumption) if str(power_consumption) else None,
             )

@@ -548,7 +548,7 @@ node_networking_cdp_cache_neighbors = Node(
             "platform_details": TextField(Title("Neighbor platform details")),
             "capabilities": TextField(Title("Capabilities")),
             "duplex": TextField(Title("Duplex")),
-            "native_vlan": TextField(Title("Native VLAN")),
+            "native_vlan": NumberField(Title("Native VLAN"), render=UNIT_COUNT),
             "vtp_mgmt_domain": TextField(Title("VTP domain")),
             "power_consumption": TextField(Title("Power level")),
         },

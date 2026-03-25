@@ -32,6 +32,11 @@ async function loadUserActions() {
       userActions.value = []
     } else {
       userActions.value = actions
+
+      // Auto trigger service action if it is the only action
+      if (actions.length === 1 && actions[0]?.action_id === 'explain_this_service') {
+        void aiTemplate.value?.execUserActionButton(actions[0])
+      }
     }
   }
 }
@@ -43,9 +48,9 @@ onMounted(async () => {
 
 <template>
   <div class="ai-conversation-user-action__container">
-    <CmkHeading v-if="userActions && userActions.filter((a) => !a.executed).length > 0" type="h4">{{
-      _t('What would you like the AI to do?')
-    }}</CmkHeading>
+    <CmkHeading v-if="userActions && userActions.filter((a) => !a.executed).length > 0" type="h4"
+      >{{ _t('What would you like the AI to do?') }}
+    </CmkHeading>
     <template v-if="userActions">
       <AiConversationUserActionButton
         v-for="action in userActions.filter((a) => !a.executed)"

@@ -565,9 +565,15 @@ def verified_result(data: object) -> Sequence[bytes | tuple[bytes, bytes]] | Seq
     """
 
     if isinstance(data, tuple):
-        if len(data) != 2:
-            raise AssertionError(f"Expected tuple with two elements, got {data!r}")
-        status, result = data
+        if len(data) == 2:
+            status, result = data
+        elif len(data) == 3:
+            # POP3 methods (list, retr, ...) return 3-element tuples:
+            # (response, ['line', ...], octets) — the third element is ignored.
+            status, result, _octets = data
+        else:
+            raise AssertionError(f"Expected tuple with two or three elements, got {data!r}")
+
         if (isinstance(status, str) and status not in {"OK", "BYE"}) or (
             isinstance(status, bytes) and not status.startswith(b"+OK")
         ):

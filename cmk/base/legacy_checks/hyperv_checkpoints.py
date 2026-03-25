@@ -40,6 +40,9 @@ def check_hyperv_checkpoints(item, params, info):
         ("Last", "age", snapshots[-1]),
     ]:
         name, age = snapshot
+        if age < 0:
+            yield 1, f"{title} ({name}): negative checkpoint age ({age}s), check for clock skew"
+            continue
         yield check_levels(
             age,
             key,

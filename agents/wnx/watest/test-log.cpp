@@ -191,28 +191,23 @@ TEST(LogTest, All) {
 
         auto debug_log_level = cma::cfg::groups::g_global.debugLogLevel();
         if (debug_log_level < 1)
-            EXPECT_EQ(xlogd.logParam().directions_,
-                      xlog::Directions::kDebuggerPrint);
+            EXPECT_EQ(xlogd.logParam().directions_, 0);
         else
             EXPECT_EQ(xlogd.logParam().directions_,
-                      xlog::Directions::kDebuggerPrint |
-                          xlog::Directions::kFilePrint);
+                      xlog::Directions::kFilePrint);
 
         EXPECT_TRUE(xlogd.type() == XLOG::LogType::debug);
     }
 
     {
         auto &xlogl = XLOG::l;
-        EXPECT_EQ(
-            xlogl.logParam().directions_,
-            xlog::Directions::kDebuggerPrint | xlog::Directions::kFilePrint);
+        EXPECT_EQ(xlogl.logParam().directions_, xlog::Directions::kFilePrint);
         EXPECT_EQ(xlogl.type(), XLOG::LogType::log);
     }
 
     {
         auto &xlogt = XLOG::t;
-        EXPECT_EQ(xlogt.logParam().directions_,
-                  xlog::Directions::kDebuggerPrint);
+        EXPECT_EQ(xlogt.logParam().directions_, 0);
         EXPECT_EQ(xlogt.type(), XLOG::LogType::trace);
     }
 
@@ -228,7 +223,7 @@ TEST(LogTest, All) {
     auto prefix_ascii = wtools::ToUtf8(prefix);
     const auto &lp = l.logParam();
 
-    EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(lp.directions_ & xlog::Directions::kDebuggerPrint);
     EXPECT_TRUE(lp.filename()[0] != 0);
 
     // Check API
@@ -261,7 +256,7 @@ TEST(LogTest, All) {
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
     }
 
-    EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(lp.directions_ & xlog::Directions::kDebuggerPrint);
 
     // CLEAN FILE
     {
@@ -334,12 +329,12 @@ TEST(LogTest, All) {
     EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ &
                  xlog::Directions::kFilePrint);
 
-    EXPECT_TRUE(XLOG::l.getLogParam().directions_ &
-                xlog::Directions::kDebuggerPrint);
-    EXPECT_TRUE(XLOG::d.getLogParam().directions_ &
-                xlog::Directions::kDebuggerPrint);
-    EXPECT_TRUE(XLOG::t.getLogParam().directions_ &
-                xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::l.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::d.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
+    EXPECT_FALSE(XLOG::t.getLogParam().directions_ &
+                 xlog::Directions::kDebuggerPrint);
     EXPECT_FALSE(XLOG::stdio.getLogParam().directions_ &
                  xlog::Directions::kDebuggerPrint);
 

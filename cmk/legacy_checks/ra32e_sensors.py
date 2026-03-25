@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import SNMPTree
 from cmk.legacy_includes.elphase import check_elphase
 from cmk.legacy_includes.humidity import check_humidity
 from cmk.legacy_includes.temperature import check_temperature
-from cmk.plugins.ra32e.lib import DETECT_RA32E
+from cmk.plugins.roomalert.lib import DETECT_RA32E
 
 check_info = {}
 

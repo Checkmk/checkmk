@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingState, ReadingWithState
 from cmk.plugins.lib.humidity import check_humidity, CheckParams
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
-from cmk.plugins.ra32e.lib import DETECT_RA3S
+from cmk.plugins.roomalert.lib import DETECT_RA3S
 
 
 class InternalSection(NamedTuple):

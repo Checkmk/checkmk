@@ -6,7 +6,7 @@ from collections.abc import Mapping, MutableMapping
 
 from cmk.agent_based.v1 import Metric, Result, State
 from cmk.plugins.lib.temperature import TempParamDict
-from cmk.plugins.ra32e.agent_based.ra3s_sensors import (
+from cmk.plugins.roomalert.agent_based.ra3s_sensors import (
     _check_ra3s_temperature,
     check_ra3s_humidity,
     check_ra3s_power,

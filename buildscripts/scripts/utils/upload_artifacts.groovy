@@ -182,7 +182,9 @@ boolean download_hot_cache(Map args) {
 
             sh(label: "decompress_hot_cache", script: """
                 cd ${args.download_dest}
-                time lz4 -dc ${args.file_pattern} | tar -xf - 2>/dev/null
+                CGROUP_CPU=\$(cat /sys/fs/cgroup/cpu.max | cut -d' ' -f1)
+                LZ4_CORES=\$(( CGROUP_CPU / 100 / 1000 ))
+                time lz4 --threads=\${LZ4_CORES} -dc ${args.file_pattern} | tar -xf - 2>/dev/null
 
                 du -sh ~/.cache
             """);
@@ -215,7 +217,9 @@ void upload_hot_cache(Map args) {
                 cd ${args.download_dest}
                 if ${check_conditions}; then
                     ${du_commands}
-                    time tar -cf - ${dirs} 2>/dev/null | lz4 > ${args.file_pattern}
+                    CGROUP_CPU=\$(cat /sys/fs/cgroup/cpu.max | cut -d' ' -f1)
+                    LZ4_CORES=\$(( CGROUP_CPU / 100 / 1000 ))
+                    time tar -cf - ${dirs} 2>/dev/null | lz4 --threads=\${LZ4_CORES} > ${args.file_pattern}
                 fi
             fi
         """);

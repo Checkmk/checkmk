@@ -42,7 +42,7 @@ def _migrate(obj: object) -> Mapping[str, object]:
     ACTIVATED_KEY = "activated"
     UPDATER_REGISTRATION_KEY = "updater_registration"
 
-    if isinstance((activated := obj[ACTIVATED_KEY]), bool):
+    if isinstance((activated := obj.get(ACTIVATED_KEY)), bool):
         # This is a clear sign that we come from Checkmk 2.4.0, so we use this as condition
         # to set the updater_registration to manual to preserve the existing behavior.
         return {

@@ -349,6 +349,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Notification periods information, name: active(1)/inactive(0)
     TimePeriods time_periods;
 
+    bool log_has_been_rotated{false};
+
     while (const LogEntry *entry = it.getNextLogentry()) {
         if (abort_query_ || entry->time() >= period.until) {
             break;
@@ -366,19 +368,20 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
         switch (entry->kind()) {
             case LogEntryKind::log_version:
+                log_has_been_rotated = true;
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                 }
-                // This kind log line comes very early after starting the core
-                // or rotating the logfile. As a safeguard, we reset all
-                // downtime depths to zero. If there are already active
-                // downtimes, we will see downtime alert lines soon.
-                reset_downtime_depths(processor, only_update, entry->time(),
-                                      state_info);
+                in_nagios_initial_states = false;
+                break;
+            case LogEntryKind::core_starting:
+                log_has_been_rotated = false;
+                if (in_nagios_initial_states) {
+                    set_unknown_to_unmonitored(state_info);
+                }
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::none:
-            case LogEntryKind::core_starting:
             case LogEntryKind::core_stopping:
             case LogEntryKind::host_acknowledge_alert:
             case LogEntryKind::service_acknowledge_alert:
@@ -431,6 +434,15 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     set_unknown_to_unmonitored(state_info);
                 }
                 handle_log_initial_states(state_info, entry->time());
+                // This kind log line comes very early after starting the core
+                // or rotating the logfile. As a safeguard, we reset all
+                // downtime depths to zero after a rotation. If there are
+                // already active downtimes, we will see downtime alert lines
+                // soon (but only after a rotation, not a restart).
+                if (log_has_been_rotated) {
+                    reset_downtime_depths(processor, only_update, entry->time(),
+                                          state_info);
+                }
                 in_nagios_initial_states = true;
                 break;
         }

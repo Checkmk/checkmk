@@ -527,7 +527,7 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
         ),
         elements={
             "activated": DictElement(
-                required=True,
+                required=False,
                 parameter_form=_valuespec_activation(),
             ),
             "server_data": DictElement(

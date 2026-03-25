@@ -10,6 +10,7 @@
       "Skill(jira-plan-ticket)",
       "Skill(jira-read-ticket)",
       "Skill(backport)",
+      "Skill(readme)",
 
       "Bash(bazel *)",
       "Bash(make *)",

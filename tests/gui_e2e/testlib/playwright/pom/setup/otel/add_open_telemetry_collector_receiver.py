@@ -51,7 +51,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         logger.info(f"Validate that current page is '{self.page_title}' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.unique_id_textfield).to_be_visible()
-        expect(self.receiver_protocol_endpoint_checkbox("GRPC-based receiver")).to_be_visible()
+        expect(self.receiver_protocol_endpoint_checkbox("GRPC-based OTLP receiver")).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -198,13 +198,13 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         self.site_restriction_checkbox(site_id).check()
         if grpc_receiver_properties:
             self._fill_collector_receiver_properties(
-                "GRPC-based receiver",
+                "GRPC-based OTLP receiver",
                 grpc_receiver_properties,
                 grpc_password_data,
             )
         if http_receiver_properties:
             self._fill_collector_receiver_properties(
-                "HTTP-based receiver",
+                "HTTP-based OTLP receiver",
                 http_receiver_properties,
                 http_password_data,
             )

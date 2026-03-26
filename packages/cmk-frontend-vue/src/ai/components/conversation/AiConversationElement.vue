@@ -9,7 +9,9 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
@@ -73,6 +75,45 @@ const contentsToDisplay = ref<TAiConversationElementContent[]>([])
 const displayItems = computed(() => (props.streaming ? contentData.value : contentsToDisplay.value))
 const hasDisplayableContent = computed(
   () => displayItems.value?.some((cnt) => cnt.content_type !== 'text') ?? false
+)
+const copyableAnswerText = computed(() => {
+  const items = Array.isArray(props.content) ? props.content : []
+  const chunks: string[] = []
+
+  for (const item of items) {
+    if (item.title === 'thinking') {
+      continue
+    }
+
+    // We can remove unwanted supported content types as needed
+    switch (item.content_type) {
+      case 'markdown':
+        chunks.push(item.content)
+        break
+      case 'text':
+        chunks.push(item.text)
+        break
+      case 'list':
+        chunks.push(item.items.join('\n'))
+        break
+      case 'code':
+        chunks.push(item.code)
+        break
+    }
+  }
+
+  return chunks.join('\n\n').trim()
+})
+const hasFinalAnswerChunk = computed(() => {
+  const items = Array.isArray(props.content) ? props.content : []
+  return items.some((item) => item.title === 'answer' || item.content_type === 'alert')
+})
+const showCopyButton = computed(
+  () =>
+    props.role === AiRole.ai &&
+    hasFinalAnswerChunk.value &&
+    currentState.value !== 'thinking' &&
+    copyableAnswerText.value.length > 0
 )
 
 const awaited = ref<boolean>(true)
@@ -232,18 +273,16 @@ watch(
             @done="onContentDone"
           />
         </template>
-        <!--
-        <div v-if="done && !hideControls" class="ai-conversation-element__ctrls">
-          <template v-if="role === AiRole.ai">
-            <CmkIconButton name="checkmark"></CmkIconButton>
-            <CmkIconButton name="cross"></CmkIconButton>
-          </template>
-          <template v-if="role === AiRole.user">
-            <CmkIconButton name="edit"></CmkIconButton>
-          </template>
-          <CmkIconButton name="copied"></CmkIconButton>
+        <div class="ai-conversation-element__copy-controls">
+          <CmkCopy v-if="showCopyButton" :text="copyableAnswerText">
+            <CmkIconButton
+              name="copied"
+              size="medium"
+              :title="_t('Copy answer')"
+              class="ai-conversation-element__copy-button ai-conversation-element__copy-button--white"
+            />
+          </CmkCopy>
         </div>
-        -->
       </div>
     </template>
   </div>
@@ -299,6 +338,25 @@ watch(
     position: relative;
     margin-bottom: var(--dimension-10);
     margin-left: calc(var(--dimension-4) + var(--dimension-7));
+
+    .ai-conversation-element__copy-controls {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: var(--dimension-4);
+
+      .ai-conversation-element__copy-button {
+        border: 1px solid var(--default-component-bg-color);
+        border-radius: var(--border-radius);
+        background: var(--code-background-color);
+        padding: var(--dimension-3);
+      }
+
+      .ai-conversation-element__copy-button--white
+        /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+      :deep(img) {
+        filter: brightness(0) invert(1);
+      }
+    }
 
     .ai-conversation-element__text-header {
       width: 100%;

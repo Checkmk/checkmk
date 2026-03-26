@@ -1389,7 +1389,10 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
-                                            [("mode", "notification_rule_quick_setup")]
+                                            [
+                                                ("mode", "notification_rule_quick_setup"),
+                                                ("back_mode", self.name()),
+                                            ]
                                         )
                                     ),
                                     is_shortcut=False,
@@ -1765,7 +1768,10 @@ class ModeTestNotifications(ModeNotifications):
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
                                         folder_preserving_link(
-                                            [("mode", "notification_rule_quick_setup")]
+                                            [
+                                                ("mode", "notification_rule_quick_setup"),
+                                                ("back_mode", self.name()),
+                                            ]
                                         )
                                     ),
                                     is_shortcut=False,

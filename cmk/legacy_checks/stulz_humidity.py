@@ -3,53 +3,58 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
-from cmk.legacy_includes.humidity import check_humidity
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.stulz.lib import DETECT_STULZ
 
-check_info = {}
 
-
-def savefloat(f: str) -> float:
-    """Tries to cast a string to an float and return it. In case this fails,
-    it returns 0.0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0.0 back from this function,
-    you can not know whether it is really 0.0 or something went wrong."""
+def _savefloat(f: str) -> float:
     try:
         return float(f)
     except (TypeError, ValueError):
         return 0.0
 
 
-def discover_stulz_humidity(info):
-    return [(x[0], {}) for x in info]
-
-
-def check_stulz_humidity(item, params, info):
-    for line in info:
-        if line[0] == item:
-            return check_humidity(savefloat(line[1]) / 10, params)
-    return None
-
-
 def parse_stulz_humidity(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["stulz_humidity"] = LegacyCheckDefinition(
+def discover_stulz_humidity(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in section)
+
+
+def check_stulz_humidity(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    for line in section:
+        if line[0] == item:
+            yield from check_humidity(_savefloat(line[1]) / 10, params)
+            return
+
+
+snmp_section_stulz_humidity = SimpleSNMPSection(
     name="stulz_humidity",
-    parse_function=parse_stulz_humidity,
     detect=DETECT_STULZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1.1194",
         oids=[OIDEnd(), "1"],
     ),
+    parse_function=parse_stulz_humidity,
+)
+
+check_plugin_stulz_humidity = CheckPlugin(
+    name="stulz_humidity",
     service_name="Humidity %s ",
     discovery_function=discover_stulz_humidity,
     check_function=check_stulz_humidity,

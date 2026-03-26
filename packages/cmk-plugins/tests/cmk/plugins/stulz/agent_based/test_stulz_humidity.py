@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
+# mypy: disable-error-code="misc,import-untyped"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.stulz_humidity import (
+from cmk.plugins.stulz.agent_based.stulz_humidity import (
     check_stulz_humidity,
     discover_stulz_humidity,
     parse_stulz_humidity,

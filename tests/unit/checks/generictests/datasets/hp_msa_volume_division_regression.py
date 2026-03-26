@@ -66,7 +66,7 @@ info = [
     ["volumes", "1", "pi-format", "T0"],
     ["volumes", "1", "pi-format-numeric", "0"],
     ["volumes", "1", "health", "Warning"],
-    ["volumes", "1", "health-numeric", "0"],
+    ["volumes", "1", "health-numeric", "1"],
     ["volumes", "1", "health-reason", "There", "is", "a", "warning"],
     ["volumes", "1", "health-recommendation"],
     ["volumes", "1", "volume-group", "UNGROUPEDVOLUMES"],
@@ -217,7 +217,7 @@ checks = {
             [
                 (
                     1,
-                    "Status: warning (There is a warning), container name: IMSAKO2B1_U1_B01-04 (RAID10)",
+                    "Status: degraded/warning (There is a warning), container name: IMSAKO2B1_U1_B01-04 (RAID10)",
                     [],
                 )
             ],

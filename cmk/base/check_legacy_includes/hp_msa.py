@@ -11,14 +11,11 @@ import cmk.plugins.lib.hp_msa as hp_msa
 # See for state mapping: https://support.hpe.com/hpsc/doc/public/display?docId=emr_na-a00017709en_us
 
 hp_msa_state_map = {
-    "Up": (0, "up"),
-    "OK": (0, "OK"),
-    "Warning": (1, "warning"),
-    "Degraded": (1, "degraded"),
-    "Error": (2, "error"),
-    "Not Present": (2, "not present"),
-    "Fault": (2, "fault"),
-    "Unknown": (3, "unknown"),
+    "0": (0, "OK"),
+    "1": (1, "degraded/warning"),
+    "2": (2, "fault/error"),
+    "3": (3, "unknown"),
+    "4": (2, "not present"),
 }
 
 parse_hp_msa = hp_msa.parse_hp_msa
@@ -31,7 +28,7 @@ def inventory_hp_msa_health(parsed):
 def check_hp_msa_health(item, _no_params, parsed):
     if item in parsed:
         infotexts = []
-        health_state, health_state_readable = hp_msa_state_map[parsed[item]["health"]]
+        health_state, health_state_readable = hp_msa_state_map[parsed[item]["health-numeric"]]
         health_info = "Status: %s" % health_state_readable
         if health_state and parsed[item].get("health-reason", ""):
             health_info += " (%s)" % parsed[item]["health-reason"]

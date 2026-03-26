@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import { useDebounceRef } from '@/lib/useDebounce'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
@@ -113,45 +114,58 @@ async function getSuggestions(
   }
 }
 
+const debouncedFilterString = useDebounceRef(filterString)
+const effectiveFilterString = computed(() =>
+  suggestions.type === 'callback-filtered' ? debouncedFilterString.value : filterString.value
+)
+
+async function handleSuggestionsUpdate(
+  newSuggestions: Suggestions,
+  query: string,
+  newSelectedSuggestion: string | null
+): Promise<void> {
+  const result = await getSuggestions(newSuggestions, query)
+
+  if (result instanceof ErrorResponse) {
+    error.value = result.error
+    warning.value = ''
+  } else if (result instanceof WarningResponse) {
+    warning.value = result.warning
+    error.value = ''
+    filteredSuggestions.value = result.choices
+    activeSuggestion.value = null
+    setSiblingOrFirstActive(0)
+  } else {
+    error.value = ''
+    warning.value = ''
+    filteredSuggestions.value = result.choices
+    const foundSuggestion = newSelectedSuggestion
+      ? filteredSuggestions.value.find((s) => s.name === newSelectedSuggestion)
+      : null
+
+    if (newSelectedSuggestion !== null && !isSelectedSuggestionSetAsFilter.value) {
+      if (newSuggestions.type === 'callback-filtered') {
+        filterString.value = foundSuggestion?.title ?? newSelectedSuggestion
+        isSelectedSuggestionSetAsFilter.value = true
+      }
+    }
+    if (foundSuggestion) {
+      activeSuggestion.value = foundSuggestion
+    } else {
+      activeSuggestion.value = null
+      setSiblingOrFirstActive(0)
+    }
+  }
+}
+
 immediateWatch(
   () => ({
     newSuggestions: suggestions,
-    newFilterString: filterString,
+    newFilterString: effectiveFilterString.value,
     newSelectedSuggestion: selectedSuggestion
   }),
   async ({ newSuggestions, newFilterString, newSelectedSuggestion }) => {
-    const result = await getSuggestions(newSuggestions, newFilterString.value)
-
-    if (result instanceof ErrorResponse) {
-      error.value = result.error
-      warning.value = ''
-    } else if (result instanceof WarningResponse) {
-      warning.value = result.warning
-      error.value = ''
-      filteredSuggestions.value = result.choices
-      activeSuggestion.value = null
-      setSiblingOrFirstActive(0)
-    } else {
-      error.value = ''
-      warning.value = ''
-      filteredSuggestions.value = result.choices
-      const foundSuggestion = newSelectedSuggestion
-        ? filteredSuggestions.value.find((s) => s.name === newSelectedSuggestion)
-        : null
-
-      if (newSelectedSuggestion !== null && !isSelectedSuggestionSetAsFilter.value) {
-        if (newSuggestions.type === 'callback-filtered') {
-          filterString.value = foundSuggestion?.title ?? newSelectedSuggestion
-          isSelectedSuggestionSetAsFilter.value = true
-        }
-      }
-      if (foundSuggestion) {
-        activeSuggestion.value = foundSuggestion
-      } else {
-        activeSuggestion.value = null
-        setSiblingOrFirstActive(0)
-      }
-    }
+    await handleSuggestionsUpdate(newSuggestions, newFilterString, newSelectedSuggestion)
   },
   { deep: 2 }
 )

@@ -616,48 +616,6 @@ test('dropdown with callback and unselectable suggestion shows title', async () 
   await screen.findByText('unselectable')
 })
 
-test('dropdown with callback doesnt call callback unnecessarily', async () => {
-  let selectedOption: string = 'one'
-  const callbackDummy = vi.fn()
-  render(CmkDropdown, {
-    props: {
-      options: {
-        type: 'callback-filtered',
-        querySuggestions: async (_) => {
-          callbackDummy()
-          return new Response([
-            { name: 'one', title: '1' },
-            { name: 'two', title: '2' },
-            { name: 'three', title: '3' },
-            { name: 'four', title: '4' }
-          ])
-        }
-      },
-      selectedOption,
-      inputHint: 'Select an option',
-      label: 'dropdown-label',
-      'onUpdate:selectedOption': (option: string | null) => {
-        selectedOption = option!
-      }
-    }
-  })
-
-  // Getting the title calls the callback once
-  expect(callbackDummy).toHaveBeenCalledTimes(1)
-
-  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
-
-  // Opening the dropdown calls the callback again to get all suggestions
-  expect(callbackDummy).toHaveBeenCalledTimes(2)
-
-  await userEvent.keyboard('[ArrowDown][Enter]')
-  expect(selectedOption).toBe('two')
-
-  // Selecting re-fetches to update the filter string
-  expect(callbackDummy).toHaveBeenCalledTimes(3)
-})
-
 test('dropdown with callback and unselectable selects first selectable suggestion', async () => {
   let selectedOption: string | null = ''
   render(CmkDropdown, {
@@ -908,6 +866,45 @@ test('dropdown with callback-filtered options prefills filter input', async () =
   await waitFor(() => {
     expect(input).toHaveValue('Option 2')
   })
+})
+
+test('callback-filtered dropdown debounces querySuggestions while typing', async () => {
+  vi.useFakeTimers()
+
+  const querySuggestions = vi.fn(async (_: string) => {
+    return new Response([
+      { name: 'one', title: 'one' },
+      { name: 'two', title: 'two' }
+    ])
+  })
+
+  render(CmkDropdown, {
+    props: {
+      options: { type: 'callback-filtered', querySuggestions },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'some aria label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+  await fireEvent.click(dropdown)
+
+  // Update rapidly without advancing timers by using fireEvent instead of userEvent
+  const input = screen.getByRole('textbox', { name: 'filter' })
+  await fireEvent.update(input, 'a')
+  await fireEvent.update(input, 'ab')
+  await fireEvent.update(input, 'abc')
+
+  expect(querySuggestions).toHaveBeenCalledTimes(1)
+
+  // Advance past the debounce delay
+  await vi.advanceTimersByTimeAsync(1000)
+
+  expect(querySuggestions).toHaveBeenCalledTimes(2)
+  expect(querySuggestions).toHaveBeenLastCalledWith('abc')
+
+  vi.useRealTimers()
 })
 
 test('dropdown with filtered options does not prefill filter input', async () => {

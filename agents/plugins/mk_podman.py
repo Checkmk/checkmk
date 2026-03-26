@@ -61,6 +61,7 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
 DEFAULT_CFG_FILE = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman.cfg"
 
 DEFAULT_CFG_SECTION = {
+    "connection_method": "api",
     "socket_detection_method": "auto",
     "socket_paths": "",
     "piggyback_name_method": "nodename_name",
@@ -86,6 +87,11 @@ if (
     sys.exit(1)
 
 
+class ConnectionMethod(Enum):
+    API = "api"
+    CLI = "cli"
+
+
 class AutomaticSocketDetectionMethod(Enum):
     AUTO = "auto"
     ONLY_ROOT_SOCKET = "only_root_socket"
@@ -99,13 +105,16 @@ class PiggybackNameMethod(Enum):
 
 
 class PodmanConfig(TypedDict):
+    connection_method: ConnectionMethod
     socket_detection: Union[AutomaticSocketDetectionMethod, tuple[Literal["manual"], Sequence[str]]]
     piggyback_name_method: PiggybackNameMethod
 
 
-def _parse_piggyback_name_method(value: str, cfg_file: Path) -> PiggybackNameMethod:
+def _parse_piggyback_name_method(value: str | None, cfg_file: Path) -> PiggybackNameMethod:
     try:
-        return PiggybackNameMethod(value)
+        return (
+            PiggybackNameMethod(value) if value is not None else PiggybackNameMethod.NODENAME_NAME
+        )
     except ValueError:
         write_section(
             Error(
@@ -130,21 +139,36 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
         section_name = "PODMAN" if config.sections() else "DEFAULT"
         conf_dict = dict(config.items(section_name))
 
+        try:
+            connection_method = ConnectionMethod(conf_dict.get("connection_method"))
+        except ValueError:
+            write_section(
+                Error(
+                    "config",
+                    f"Invalid connection_method '{conf_dict.get('connection_method')}' in {cfg_file}. "
+                    f"Valid options are: {', '.join(m.value for m in ConnectionMethod)}. "
+                    "Using default 'api'.",
+                )
+            )
+            connection_method = ConnectionMethod.API
+
         method = conf_dict["socket_detection_method"]
         socket_paths_str = conf_dict["socket_paths"]
         piggyback_name_method = _parse_piggyback_name_method(
-            conf_dict.get("piggyback_name_method", "name"), cfg_file
+            conf_dict.get("piggyback_name_method"), cfg_file
         )
 
         if method == "manual" and socket_paths_str:
             socket_paths = [p.strip() for p in socket_paths_str.split(",") if p.strip()]
             LOGGER.info("Config loaded from %s: manual socket paths: %s", cfg_file, socket_paths)
             return PodmanConfig(
+                connection_method=connection_method,
                 socket_detection=("manual", socket_paths),
                 piggyback_name_method=piggyback_name_method,
             )
         LOGGER.info("Config loaded from %s: socket detection method: %s", cfg_file, method)
         return PodmanConfig(
+            connection_method=connection_method,
             socket_detection=AutomaticSocketDetectionMethod(method),
             piggyback_name_method=piggyback_name_method,
         )
@@ -758,23 +782,24 @@ def main() -> None:
     # Write empty errors section to indicate successful start
     write_serialized_section("errors", json.dumps({}))
 
+    if config is not None and config["connection_method"] is ConnectionMethod.CLI:
+        LOGGER.info("Connection method: CLI (from config).")
+        run_cli_queries(piggyback_name_method)
+        return
+
     socket_paths = get_socket_paths(config)
     available_sockets = [sp for sp in socket_paths if os.path.exists(sp)]
 
     if not available_sockets:
-        if which("podman"):
-            LOGGER.info("No accessible socket found; using CLI mode.")
-            run_cli_queries(piggyback_name_method)
-            return
-
         checked = ", ".join(socket_paths) if socket_paths else "(none configured)"
-        LOGGER.error("No podman socket available and podman CLI not found.")
+        LOGGER.error("No podman socket available.")
         write_section(
             Error(
                 "podman_status",
-                f"No podman socket found and podman binary is not available. "
+                f"No podman socket found. "
                 f"Checked paths: {checked}. "
-                "Ensure the podman service is running or install the podman binary.",
+                "Ensure the podman socket service is running "
+                "(e.g. systemctl enable --now podman.socket).",
             )
         )
         return

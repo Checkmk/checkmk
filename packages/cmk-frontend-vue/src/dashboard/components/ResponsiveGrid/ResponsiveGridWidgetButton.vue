@@ -36,9 +36,6 @@ defineEmits<{
   /* match size of the header height */
   width: var(--dimension-8);
   height: var(--dimension-8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   margin: 0;
   padding: 0;
   border: none;
@@ -65,6 +62,9 @@ body[data-theme='modern-dark'] .db-responsive-grid-widget-button__icon {
 .db-responsive-grid-widget-button__highlight {
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   --db-rgw-button-bg-hover-color: var(--color-white-50);
 

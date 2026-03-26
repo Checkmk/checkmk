@@ -10,11 +10,11 @@ from cmk.base.plugins.bakery.unitrends import get_unitrends_files
 
 
 def test_unitrends_files() -> None:
-    result = sorted(get_unitrends_files(None), key=repr)
+    result = sorted(get_unitrends_files({"deployment": ("sync", None)}), key=repr)
     expected = sorted(
         [
-            Plugin(base_os=OS.LINUX, source=Path("unitrends_backup")),
-            Plugin(base_os=OS.LINUX, source=Path("unitrends_replication.py")),
+            Plugin(base_os=OS.LINUX, source=Path("unitrends_backup"), interval=None),
+            Plugin(base_os=OS.LINUX, source=Path("unitrends_replication.py"), interval=None),
         ],
         key=repr,
     )

@@ -3,29 +3,72 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_unitrends() -> DropdownChoice[bool | None]:
-    return DropdownChoice(
-        title=_("Unitrends backup and replication plug-ins (Linux)"),
-        help=_("This rule set is for deploying two plug-ins for monitoring Unitrends software."),
-        choices=[
-            (True, _("Deploy Unitrends plug-ins")),
-            (None, _("Do not deploy Unitrends plug-ins")),
-        ],
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict):
+        return value
+    return {"deployment": ("sync" if value else "do_not_deploy", None)}
+
+
+def _valuespec_agent_config_unitrends() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "Deploy the agent plug-ins <tt>unitrends_backup</tt> and"
+            " <tt>unitrends_replication</tt> on your target system."
+        ),
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-ins and run them synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-ins and run them asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-ins"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("unitrends"),
-        valuespec=_valuespec_agent_config_unitrends,
-    )
+rule_spec_unitrends = AgentConfig(
+    title=Title("Unitrends backup and replication plug-ins (Linux)"),
+    name="unitrends",
+    topic=Topic.APPLICATIONS,
+    parameter_form=_valuespec_agent_config_unitrends,
 )

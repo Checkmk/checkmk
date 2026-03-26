@@ -19,6 +19,7 @@ from pydantic import BaseModel
 
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
+from cmk.automations.types import AutomationID
 from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext, AutomationError
@@ -41,7 +42,7 @@ class AutomationEngine(Protocol):
     def execute(
         self,
         ctx: AutomationContext,
-        cmd: str,
+        cmd: AutomationID,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,

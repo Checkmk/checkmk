@@ -35,6 +35,7 @@ import livestatus
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult
+from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, AutomationContext, load_config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
@@ -107,7 +108,7 @@ def automation_create_diagnostics_dump(
     core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
 ) -> Automation:
     return Automation(
-        ident="create-diagnostics-dump",
+        ident=AutomationID("create-diagnostics-dump"),
         handler=_make_automation_create_diagnostics_dump(core_performance_settings),
     )
 

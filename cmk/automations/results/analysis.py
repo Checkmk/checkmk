@@ -28,6 +28,8 @@ from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
+from ..types import AutomationID
+
 
 class ServiceInfo(TypedDict, total=False):
     origin: str
@@ -57,8 +59,8 @@ class AnalyseServiceResult(ABCAutomationResult):
         return SerializedResult(repr((previous_serialized,)))
 
     @staticmethod
-    def automation_call() -> str:
-        return "analyse-service"
+    def automation_call() -> AutomationID:
+        return AutomationID("analyse-service")
 
 
 result_type_registry.register(AnalyseServiceResult)
@@ -69,8 +71,8 @@ class GetServicesLabelsResult(ABCAutomationResult):
     labels: Mapping[ServiceName, Labels]
 
     @staticmethod
-    def automation_call() -> str:
-        return "get-services-labels"
+    def automation_call() -> AutomationID:
+        return AutomationID("get-services-labels")
 
 
 result_type_registry.register(GetServicesLabelsResult)
@@ -81,8 +83,8 @@ class GetServiceNameResult(ABCAutomationResult):
     service_name: str
 
     @staticmethod
-    def automation_call() -> str:
-        return "get-service-name"
+    def automation_call() -> AutomationID:
+        return AutomationID("get-service-name")
 
 
 result_type_registry.register(GetServiceNameResult)
@@ -94,8 +96,8 @@ class AnalyseHostResult(ABCAutomationResult):
     label_sources: LabelSources
 
     @staticmethod
-    def automation_call() -> str:
-        return "analyse-host"
+    def automation_call() -> AutomationID:
+        return AutomationID("analyse-host")
 
 
 result_type_registry.register(AnalyseHostResult)
@@ -106,8 +108,8 @@ class AnalyzeHostRuleMatchesResult(ABCAutomationResult):
     results: dict[str, list[object]]
 
     @staticmethod
-    def automation_call() -> str:
-        return "analyze-host-rule-matches"
+    def automation_call() -> AutomationID:
+        return AutomationID("analyze-host-rule-matches")
 
 
 result_type_registry.register(AnalyzeHostRuleMatchesResult)
@@ -118,8 +120,8 @@ class AnalyzeServiceRuleMatchesResult(ABCAutomationResult):
     results: dict[str, list[object]]
 
     @staticmethod
-    def automation_call() -> str:
-        return "analyze-service-rule-matches"
+    def automation_call() -> AutomationID:
+        return AutomationID("analyze-service-rule-matches")
 
 
 result_type_registry.register(AnalyzeServiceRuleMatchesResult)
@@ -130,8 +132,8 @@ class AnalyzeHostRuleEffectivenessResult(ABCAutomationResult):
     results: dict[str, bool]
 
     @staticmethod
-    def automation_call() -> str:
-        return "analyze-host-rule-effectiveness"
+    def automation_call() -> AutomationID:
+        return AutomationID("analyze-host-rule-effectiveness")
 
 
 result_type_registry.register(AnalyzeHostRuleEffectivenessResult)
@@ -143,8 +145,8 @@ class ActiveCheckResult(ABCAutomationResult):
     output: ServiceDetails
 
     @staticmethod
-    def automation_call() -> str:
-        return "active-check"
+    def automation_call() -> AutomationID:
+        return AutomationID("active-check")
 
 
 result_type_registry.register(ActiveCheckResult)
@@ -155,8 +157,8 @@ class UnknownCheckParameterRuleSetsResult(ABCAutomationResult):
     result: Sequence[str]
 
     @staticmethod
-    def automation_call() -> str:
-        return "find-unknown-check-parameter-rule-sets"
+    def automation_call() -> AutomationID:
+        return AutomationID("find-unknown-check-parameter-rule-sets")
 
 
 result_type_registry.register(UnknownCheckParameterRuleSetsResult)

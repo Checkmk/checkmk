@@ -22,6 +22,7 @@ from starlette import status
 
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult, SerializedResult
+from cmk.automations.types import AutomationID
 from cmk.base.automation_helper._app import (
     _reloader_task,
     _State,
@@ -44,8 +45,8 @@ from tests.testlib.common.utils import wait_until
 class _DummyAutomationResult(ABCAutomationResult):
     @staticmethod
     @override
-    def automation_call() -> str:
-        return "dummy"
+    def automation_call() -> AutomationID:
+        return AutomationID("dummy")
 
     @override
     def serialize(self, for_cmk_version: Version) -> SerializedResult:
@@ -95,7 +96,7 @@ class _DummyAutomationEngineSystemExit:
 
 
 _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
-    name="dummy", args=[], stdin="", log_level=logging.INFO
+    name=AutomationID("dummy"), args=[], stdin="", log_level=logging.INFO
 ).model_dump()
 
 

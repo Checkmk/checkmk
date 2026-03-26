@@ -24,6 +24,7 @@ import cmk.gui.watolib.utils as watolib_utils
 import cmk.utils.paths
 from cmk import trace
 from cmk.automations.results import result_type_registry, SerializedResult
+from cmk.automations.types import AutomationID
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
@@ -199,7 +200,7 @@ class PageAutomation(AjaxPage):
     def _format_cmk_automation_result(
         *,
         serialized_result: SerializedResult,
-        cmk_command: str,
+        cmk_command: AutomationID,
         cmdline_cmd: Iterable[str],
         debug: bool,
     ) -> SerializedResult:
@@ -220,7 +221,7 @@ class PageAutomation(AjaxPage):
             raise MKAutomationException(msg)
 
     def _execute_cmk_automation(self, *, debug: bool) -> None:
-        cmk_command = request.get_str_input_mandatory("automation")
+        cmk_command = AutomationID(request.get_str_input_mandatory("automation"))
         args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
         stdin_data = watolib_utils.mk_eval(request.get_str_input_mandatory("stdin_data"))

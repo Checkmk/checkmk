@@ -21,6 +21,7 @@ from cmk.automations.results import (
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
+from cmk.automations.types import AutomationID
 from cmk.base.app import make_app
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -50,8 +51,8 @@ class AutomationResultTest(ABCAutomationResult):
     e: Mapping[str, str]
 
     @staticmethod
-    def automation_call() -> str:
-        return "test"
+    def automation_call() -> AutomationID:
+        return AutomationID("test")
 
 
 def test_serialization() -> None:

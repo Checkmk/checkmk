@@ -12,6 +12,7 @@ from typing import Any, NamedTuple
 import cmk.ccc.version as cmk_version
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
+from cmk.automations.types import AutomationID
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
@@ -34,14 +35,14 @@ from cmk.utils.servicename import Item, ServiceName
 
 
 class AutomationResponse(NamedTuple):
-    command: str
+    command: AutomationID
     serialized_result: results.SerializedResult
     local: bool
     cmdline: Iterable[str]
 
 
 def _automation_serialized(
-    command: str,
+    command: AutomationID,
     *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     args: Sequence[str] | None = None,
@@ -166,7 +167,7 @@ def discovery(
 ) -> results.ServiceDiscoveryResult:
     return _deserialize(
         _automation_serialized(
-            "service-discovery",
+            AutomationID("service-discovery"),
             automation_config=automation_config,
             args=[
                 *(("@scan",) if scan else ()),
@@ -191,7 +192,7 @@ def special_agent_discovery_preview(
 ) -> results.SpecialAgentDiscoveryPreviewResult:
     return _deserialize(
         _automation_serialized(
-            "special-agent-discovery-preview",
+            AutomationID("special-agent-discovery-preview"),
             automation_config=automation_config,
             args=None,
             stdin_data=special_agent_preview_input.serialize(
@@ -217,7 +218,7 @@ def local_discovery_preview(
 ) -> results.ServiceDiscoveryPreviewResult:
     return _deserialize(
         _automation_serialized(
-            "service-discovery-preview",
+            AutomationID("service-discovery-preview"),
             automation_config=LocalAutomationConfig(),
             args=[
                 *(("@nofetch",) if prevent_fetching else ()),
@@ -234,7 +235,7 @@ def local_discovery_preview(
 def autodiscovery(*, debug: bool) -> results.AutodiscoveryResult:
     return _deserialize(
         _automation_serialized(
-            "autodiscovery",
+            AutomationID("autodiscovery"),
             automation_config=LocalAutomationConfig(),
             debug=debug,
         ),
@@ -251,7 +252,7 @@ def set_autochecks_v2(
 ) -> results.SetAutochecksV2Result:
     return _deserialize(
         _automation_serialized(
-            "set-autochecks-v2",
+            AutomationID("set-autochecks-v2"),
             automation_config=automation_config,
             args=None,
             stdin_data=checks.serialize(),
@@ -271,7 +272,7 @@ def update_host_labels(
 ) -> results.UpdateHostLabelsResult:
     return _deserialize(
         _automation_serialized(
-            "update-host-labels",
+            AutomationID("update-host-labels"),
             automation_config=automation_config,
             args=[host_name],
             indata={label.name: label.to_dict() for label in host_labels},
@@ -290,7 +291,7 @@ def rename_hosts(
 ) -> results.RenameHostsResult:
     return _deserialize(
         _automation_serialized(
-            "rename-hosts",
+            AutomationID("rename-hosts"),
             automation_config=automation_config,
             indata=name_pairs,
             non_blocking_http=True,
@@ -310,7 +311,7 @@ def get_services_labels(
 ) -> results.GetServicesLabelsResult:
     return _deserialize(
         _automation_serialized(
-            "get-services-labels",
+            AutomationID("get-services-labels"),
             automation_config=automation_config,
             args=[host_name, *service_names],
             debug=debug,
@@ -325,7 +326,7 @@ def get_service_name(
 ) -> results.GetServiceNameResult:
     return _deserialize(
         _automation_serialized(
-            "get-service-name",
+            AutomationID("get-service-name"),
             automation_config=LocalAutomationConfig(),
             args=[host_name, str(check_plugin_name), repr(item)],
             debug=debug,
@@ -344,7 +345,7 @@ def analyse_service(
 ) -> results.AnalyseServiceResult:
     return _deserialize(
         _automation_serialized(
-            "analyse-service",
+            AutomationID("analyse-service"),
             automation_config=automation_config,
             args=[host_name, service_name],
             debug=debug,
@@ -362,7 +363,7 @@ def analyse_host(
 ) -> results.AnalyseHostResult:
     return _deserialize(
         _automation_serialized(
-            "analyse-host",
+            AutomationID("analyse-host"),
             automation_config=automation_config,
             args=[host_name],
             debug=debug,
@@ -380,7 +381,7 @@ def analyze_host_rule_matches(
 ) -> results.AnalyzeHostRuleMatchesResult:
     return _deserialize(
         _automation_serialized(
-            "analyze-host-rule-matches",
+            AutomationID("analyze-host-rule-matches"),
             automation_config=LocalAutomationConfig(),
             args=[host_name],
             indata=rules,
@@ -401,7 +402,7 @@ def analyze_service_rule_matches(
 ) -> results.AnalyzeServiceRuleMatchesResult:
     return _deserialize(
         _automation_serialized(
-            "analyze-service-rule-matches",
+            AutomationID("analyze-service-rule-matches"),
             automation_config=LocalAutomationConfig(),
             args=[host_name, service_or_item],
             indata=(rules, service_labels),
@@ -417,7 +418,7 @@ def analyze_host_rule_effectiveness(
 ) -> results.AnalyzeHostRuleEffectivenessResult:
     return _deserialize(
         _automation_serialized(
-            "analyze-host-rule-effectiveness",
+            AutomationID("analyze-host-rule-effectiveness"),
             automation_config=LocalAutomationConfig(),
             args=[],
             indata=rules,
@@ -435,7 +436,7 @@ def delete_hosts(
 ) -> results.DeleteHostsResult:
     return _deserialize(
         _automation_serialized(
-            "delete-hosts",
+            AutomationID("delete-hosts"),
             automation_config=automation_config,
             args=host_names,
             debug=debug,
@@ -448,7 +449,7 @@ def delete_hosts(
 def restart(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> results.RestartResult:
     return _deserialize(
         _automation_serialized(
-            "restart",
+            AutomationID("restart"),
             automation_config=LocalAutomationConfig(),
             args=hosts_to_update,
             debug=debug,
@@ -461,7 +462,7 @@ def restart(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> resul
 def reload(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized(
-            "reload",
+            AutomationID("reload"),
             automation_config=LocalAutomationConfig(),
             args=hosts_to_update,
             debug=debug,
@@ -478,7 +479,7 @@ def get_configuration(
 ) -> results.GetConfigurationResult:
     return _deserialize(
         _automation_serialized(
-            "get-configuration",
+            AutomationID("get-configuration"),
             automation_config=LocalAutomationConfig(),
             indata=config_var_names,
             # We must not call this through the automation helper,
@@ -494,7 +495,7 @@ def get_configuration(
 def update_merged_password_file(*, debug: bool) -> results.UpdatePasswordsMergedFileResult:
     return _deserialize(
         _automation_serialized(
-            "update-passwords-merged-file",
+            AutomationID("update-passwords-merged-file"),
             automation_config=LocalAutomationConfig(),
             debug=debug,
         ),
@@ -506,7 +507,7 @@ def update_merged_password_file(*, debug: bool) -> results.UpdatePasswordsMerged
 def get_check_information(*, debug: bool) -> results.GetCheckInformationResult:
     return _deserialize(
         _automation_serialized(
-            "get-check-information",
+            AutomationID("get-check-information"),
             automation_config=LocalAutomationConfig(),
             debug=debug,
         ),
@@ -524,7 +525,7 @@ def get_check_information_cached(*, debug: bool) -> Mapping[CheckPluginName, Map
 def _get_section_information(*, debug: bool) -> results.GetSectionInformationResult:
     return _deserialize(
         _automation_serialized(
-            "get-section-information",
+            AutomationID("get-section-information"),
             automation_config=LocalAutomationConfig(),
             debug=debug,
         ),
@@ -550,7 +551,7 @@ def scan_parents(
 ) -> results.ScanParentsResult:
     return _deserialize(
         _automation_serialized(
-            "scan-parents",
+            AutomationID("scan-parents"),
             automation_config=automation_config,
             args=[
                 str(timeout),
@@ -574,7 +575,7 @@ def diag_special_agent(
 ) -> results.DiagSpecialAgentResult:
     return _deserialize(
         _automation_serialized(
-            "diag-special-agent",
+            AutomationID("diag-special-agent"),
             automation_config=automation_config,
             args=None,
             stdin_data=diag_special_agent_input.serialize(
@@ -595,7 +596,7 @@ def ping_host(
 ) -> results.PingHostResult:
     return _deserialize(
         _automation_serialized(
-            "ping-host",
+            AutomationID("ping-host"),
             automation_config=automation_config,
             args=None,
             stdin_data=ping_host_input.serialize(
@@ -617,7 +618,7 @@ def diag_host(
 ) -> results.DiagHostResult:
     return _deserialize(
         _automation_serialized(
-            "diag-host",
+            AutomationID("diag-host"),
             automation_config=automation_config,
             args=[host_name, test, *args],
             debug=debug,
@@ -635,7 +636,7 @@ def diag_cmk_agent(
 ) -> results.DiagCmkAgentResult:
     return _deserialize(
         _automation_serialized(
-            "diag-cmk-agent",
+            AutomationID("diag-cmk-agent"),
             automation_config=automation_config,
             args=None,
             stdin_data=diag_cmk_agent_input.serialize(
@@ -656,7 +657,7 @@ def diag_snmp(
 ) -> results.DiagSnmpResult:
     return _deserialize(
         _automation_serialized(
-            "diag-snmp",
+            AutomationID("diag-snmp"),
             automation_config=automation_config,
             args=None,
             stdin_data=diag_snmp_input.serialize(
@@ -679,7 +680,7 @@ def active_check(
 ) -> results.ActiveCheckResult:
     return _deserialize(
         _automation_serialized(
-            "active-check",
+            AutomationID("active-check"),
             automation_config=automation_config,
             args=[host_name, check_type, item],
             sync=False,
@@ -697,7 +698,7 @@ def update_dns_cache(
 ) -> results.UpdateDNSCacheResult:
     return _deserialize(
         _automation_serialized(
-            "update-dns-cache",
+            AutomationID("update-dns-cache"),
             automation_config=automation_config,
             debug=debug,
         ),
@@ -716,7 +717,7 @@ def get_agent_output(
 ) -> results.GetAgentOutputResult:
     return _deserialize(
         _automation_serialized(
-            "get-agent-output",
+            AutomationID("get-agent-output"),
             automation_config=automation_config,
             args=[host_name, agent_type],
             timeout=timeout,
@@ -732,7 +733,7 @@ def notification_replay(
 ) -> results.NotificationReplayResult:
     return _deserialize(
         _automation_serialized(
-            "notification-replay",
+            AutomationID("notification-replay"),
             automation_config=LocalAutomationConfig(),
             args=[str(notification_number)],
             debug=debug,
@@ -747,7 +748,7 @@ def notification_analyse(
 ) -> results.NotificationAnalyseResult:
     return _deserialize(
         _automation_serialized(
-            "notification-analyse",
+            AutomationID("notification-analyse"),
             automation_config=LocalAutomationConfig(),
             args=[str(notification_number)],
             debug=debug,
@@ -765,7 +766,7 @@ def notification_test(
 ) -> results.NotificationTestResult:
     return _deserialize(
         _automation_serialized(
-            "notification-test",
+            AutomationID("notification-test"),
             automation_config=LocalAutomationConfig(),
             args=[json.dumps(raw_context), dispatch],
             debug=debug,
@@ -778,7 +779,7 @@ def notification_test(
 def notification_get_bulks(*, only_ripe: bool, debug: bool) -> results.NotificationGetBulksResult:
     return _deserialize(
         _automation_serialized(
-            "notification-get-bulks",
+            AutomationID("notification-get-bulks"),
             automation_config=LocalAutomationConfig(),
             args=[str(int(only_ripe))],
             debug=debug,
@@ -797,7 +798,7 @@ def create_diagnostics_dump(
 ) -> results.CreateDiagnosticsDumpResult:
     return _deserialize(
         _automation_serialized(
-            "create-diagnostics-dump",
+            AutomationID("create-diagnostics-dump"),
             automation_config=automation_config,
             args=serialized_params,
             timeout=timeout,
@@ -817,7 +818,7 @@ def bake_agents(
 ) -> results.BakeAgentsResult:
     return _deserialize(
         _automation_serialized(
-            "bake-agents",
+            AutomationID("bake-agents"),
             automation_config=LocalAutomationConfig(),
             indata="" if indata is None else indata,
             force_cli_interface=force_automation_cli_interface,
@@ -833,7 +834,7 @@ def find_unknown_check_parameter_rule_sets(
 ) -> results.UnknownCheckParameterRuleSetsResult:
     return _deserialize(
         _automation_serialized(
-            "find-unknown-check-parameter-rule-sets",
+            AutomationID("find-unknown-check-parameter-rule-sets"),
             automation_config=LocalAutomationConfig(),
             debug=debug,
         ),

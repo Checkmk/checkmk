@@ -16,13 +16,14 @@ from cmk.automations.backends._base import (
     AutomationExecutor,
     LocalAutomationResult,
 )
+from cmk.automations.types import AutomationID
 from cmk.utils.log import VERBOSE
 
 
 class SubprocessExecutor(AutomationExecutor):
     def execute(
         self,
-        command: str,
+        command: AutomationID,
         args: Sequence[str],
         stdin: str,
         logger: logging.Logger,
@@ -58,13 +59,17 @@ class SubprocessExecutor(AutomationExecutor):
         )
 
     def command_description(
-        self, command: str, args: Sequence[str], logger: logging.Logger, timeout: int | None
+        self,
+        command: AutomationID,
+        args: Sequence[str],
+        logger: logging.Logger,
+        timeout: int | None,
     ) -> str:
         return subprocess.list2cmdline(_automation_command(command, args, logger, timeout))
 
 
 def _automation_command(
-    command: str, args: Sequence[str], logger: logging.Logger, timeout: int | None
+    command: AutomationID, args: Sequence[str], logger: logging.Logger, timeout: int | None
 ) -> list[str]:
     cmd = ["check_mk"]
     if (log_level := logger.getEffectiveLevel()) <= logging.DEBUG:

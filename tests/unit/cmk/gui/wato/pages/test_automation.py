@@ -13,6 +13,7 @@ from flask import Flask
 
 import cmk.ccc.version as cmk_version
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
+from cmk.automations.types import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKAuthException
@@ -36,8 +37,8 @@ class ResultTest(ABCAutomationResult):
         )
 
     @staticmethod
-    def automation_call() -> str:
-        return "test"
+    def automation_call() -> AutomationID:
+        return AutomationID("test")
 
 
 class TestPageAutomation:

@@ -20,11 +20,13 @@ from cmk.ccc import version as cmk_version
 from cmk.ccc.plugin_registry import Registry
 from cmk.utils.labels import HostLabelValueDict
 
+from ..types import AutomationID
+
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 
 class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
-    def plugin_name(self, instance: type[ABCAutomationResult]) -> str:
+    def plugin_name(self, instance: type[ABCAutomationResult]) -> AutomationID:
         return instance.automation_call()
 
 
@@ -54,7 +56,7 @@ class ABCAutomationResult(ABC):
 
     @staticmethod
     @abstractmethod
-    def automation_call() -> str: ...
+    def automation_call() -> AutomationID: ...
 
     def _default_serialize(self) -> SerializedResult:
         return SerializedResult(repr(astuple(self)))

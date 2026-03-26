@@ -53,6 +53,7 @@ from cmk.automations.results import (
     NotificationReplayResult,
     NotificationTestResult,
 )
+from cmk.automations.types import AutomationID
 from cmk.base import config, events
 from cmk.base.automations.automations import (
     Automation,
@@ -262,19 +263,19 @@ def mode_notify() -> Mode:
 def automations_notify() -> list[Automation]:
     return [
         Automation(
-            ident="notification-replay",
+            ident=AutomationID("notification-replay"),
             handler=_automation_notification_replay,
         ),
         Automation(
-            ident="notification-analyse",
+            ident=AutomationID("notification-analyse"),
             handler=_automation_notification_analyse,
         ),
         Automation(
-            ident="notification-test",
+            ident=AutomationID("notification-test"),
             handler=_automation_notification_test,
         ),
         Automation(
-            ident="notification-get-bulks",
+            ident=AutomationID("notification-get-bulks"),
             handler=_automation_get_bulks,
         ),
     ]
@@ -333,7 +334,7 @@ def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
 
     try:
         result = HelperExecutor().execute(
-            command="notify",
+            command=AutomationID("notify"),
             args=args,
             stdin="",
             logger=logger,

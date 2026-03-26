@@ -34,6 +34,7 @@ import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.automations.backends import AutomationExecutor, HelperExecutor, SubprocessExecutor
 from cmk.automations.results import SerializedResult
+from cmk.automations.types import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_omd_config, SiteId
@@ -117,7 +118,7 @@ def cmk_version_of_remote_automation_source(remote_request: Request) -> cmk_vers
 
 def check_mk_local_automation_serialized(
     *,
-    command: str,
+    command: AutomationID,
     args: Sequence[str] | None = None,
     indata: object = "",
     stdin_data: str | None = None,
@@ -209,7 +210,7 @@ def check_mk_local_automation_serialized(
 
 def get_local_automation_failure_message(
     *,
-    command: str,
+    command: AutomationID,
     cmdline: Iterable[str],
     code: int | None = None,
     out: str | None = None,
@@ -237,7 +238,7 @@ def _hilite_errors(outdata: str) -> str:
 def check_mk_remote_automation_serialized(
     *,
     automation_config: RemoteAutomationConfig,
-    command: str,
+    command: AutomationID,
     args: Sequence[str] | None,
     indata: object,
     stdin_data: str | None = None,
@@ -622,7 +623,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str, *, debug
 
 
 class CheckmkAutomationRequest(NamedTuple):
-    command: str
+    command: AutomationID
     args: Sequence[str] | None
     indata: object
     stdin_data: str | None

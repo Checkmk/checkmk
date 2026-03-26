@@ -30,6 +30,8 @@ from cmk.checkengine.plugins import AutocheckEntry
 from cmk.utils.labels import HostLabel
 from cmk.utils.servicename import ServiceName
 
+from ..types import AutomationID
+
 
 def _serialize_discovery_report(
     report: DiscoveryReport, for_cmk_version: cmk_version.Version
@@ -91,8 +93,8 @@ class ServiceDiscoveryResult(ABCAutomationResult):
         return cls(cls._from_dict(literal_eval(serialized_result)))
 
     @staticmethod
-    def automation_call() -> str:
-        return "service-discovery"
+    def automation_call() -> AutomationID:
+        return AutomationID("service-discovery")
 
 
 result_type_registry.register(ServiceDiscoveryResult)
@@ -155,8 +157,8 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
         )
 
     @staticmethod
-    def automation_call() -> str:
-        return "service-discovery-preview"
+    def automation_call() -> AutomationID:
+        return AutomationID("service-discovery-preview")
 
 
 result_type_registry.register(ServiceDiscoveryPreviewResult)
@@ -164,8 +166,8 @@ result_type_registry.register(ServiceDiscoveryPreviewResult)
 
 class SpecialAgentDiscoveryPreviewResult(ServiceDiscoveryPreviewResult):
     @staticmethod
-    def automation_call() -> str:
-        return "special-agent-discovery-preview"
+    def automation_call() -> AutomationID:
+        return AutomationID("special-agent-discovery-preview")
 
 
 result_type_registry.register(SpecialAgentDiscoveryPreviewResult)
@@ -198,8 +200,8 @@ class AutodiscoveryResult(ABCAutomationResult):
         return cls(cls._hosts_from_dict(hosts), changes_activated)
 
     @staticmethod
-    def automation_call() -> str:
-        return "autodiscovery"
+    def automation_call() -> AutomationID:
+        return AutomationID("autodiscovery")
 
 
 result_type_registry.register(AutodiscoveryResult)
@@ -208,8 +210,8 @@ result_type_registry.register(AutodiscoveryResult)
 @dataclass
 class SetAutochecksV2Result(ABCAutomationResult):
     @staticmethod
-    def automation_call() -> str:
-        return "set-autochecks-v2"
+    def automation_call() -> AutomationID:
+        return AutomationID("set-autochecks-v2")
 
 
 result_type_registry.register(SetAutochecksV2Result)
@@ -258,8 +260,8 @@ class SetAutochecksInput:
 @dataclass
 class UpdateHostLabelsResult(ABCAutomationResult):
     @staticmethod
-    def automation_call() -> str:
-        return "update-host-labels"
+    def automation_call() -> AutomationID:
+        return AutomationID("update-host-labels")
 
 
 result_type_registry.register(UpdateHostLabelsResult)

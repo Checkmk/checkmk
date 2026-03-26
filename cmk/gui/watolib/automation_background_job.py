@@ -18,6 +18,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from cmk.automations.results import result_type_registry, SerializedResult
+from cmk.automations.types import AutomationID
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Version
@@ -172,7 +173,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         *,
         path: Path,
         serialized_result: SerializedResult,
-        automation_cmd: str,
+        automation_cmd: AutomationID,
         cmdline_cmd: Iterable[str],
         debug: bool,
         for_cmk_version: Version,

@@ -15,6 +15,7 @@ import pytest
 
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from cmk.automations.results import AnalyseServiceResult, SerializedResult
+from cmk.automations.types import AutomationID
 from cmk.base.automation_helper._app import HealthCheckResponse
 from cmk.base.automation_helper._config import (
     Config,
@@ -42,7 +43,9 @@ def test_config_reloading_without_reloader(site: Site) -> None:
             site,
             AutomationMode(
                 payload=AutomationPayload(
-                    name="non-existing-automation",  # we just want to trigger a reload
+                    name=AutomationID(
+                        "non-existing-automation"
+                    ),  # we just want to trigger a reload
                     args=[],
                     stdin="",
                     log_level=logging.INFO,
@@ -284,7 +287,7 @@ def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceRes
                     site,
                     AutomationMode(
                         payload=AutomationPayload(
-                            name="analyse-service",
+                            name=AutomationID("analyse-service"),
                             args=args,
                             stdin="",
                             log_level=logging.INFO,

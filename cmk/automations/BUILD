@@ -5,6 +5,7 @@ py_library(
     name = "automations",
     srcs = [
         "__init__.py",
+        "types.py",
     ] + glob([
         "backends/*.py",
         "models/*.py",

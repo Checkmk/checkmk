@@ -14,6 +14,7 @@ from typing import assert_never
 import cmk.ccc.debug
 from cmk import trace
 from cmk.automations.results import ABCAutomationResult
+from cmk.automations.types import AutomationID
 from cmk.base import config, profiling
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core.interface import MonitoringCore
@@ -77,7 +78,7 @@ class AutomationContext:
 
 @dataclass
 class Automation:
-    ident: str
+    ident: AutomationID
     handler: Callable[
         [
             AutomationContext,
@@ -92,7 +93,7 @@ class Automation:
 class Automations:
     def __init__(self) -> None:
         super().__init__()
-        self._automations: dict[str, Automation] = {}
+        self._automations: dict[AutomationID, Automation] = {}
 
     def register(self, automation: Automation) -> None:
         self._automations[automation.ident] = automation
@@ -100,7 +101,7 @@ class Automations:
     def execute(
         self,
         ctx: AutomationContext,
-        cmd: str,
+        cmd: AutomationID,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
         loading_result: config.LoadingResult | None = None,
@@ -116,7 +117,7 @@ class Automations:
     def execute_and_write_serialized_result_to_stdout(
         self,
         ctx: AutomationContext,
-        cmd: str,
+        cmd: AutomationID,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
         loading_result: config.LoadingResult | None = None,
@@ -149,7 +150,7 @@ class Automations:
     def _execute(
         self,
         ctx: AutomationContext,
-        cmd: str,
+        cmd: AutomationID,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,

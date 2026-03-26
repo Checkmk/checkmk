@@ -17,6 +17,7 @@ from cmk.automations.backends._base import (
     LocalAutomationResult,
 )
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
+from cmk.automations.types import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.utils import paths
@@ -33,7 +34,7 @@ class HelperExecutor(AutomationExecutor):
 
     def execute(
         self,
-        command: str,
+        command: AutomationID,
         args: Sequence[str],
         stdin: str,
         logger: logging.Logger,
@@ -85,6 +86,10 @@ class HelperExecutor(AutomationExecutor):
                 assert_never(response_data.serialized_result_or_error_code)
 
     def command_description(
-        self, command: str, args: Sequence[str], logger: logging.Logger, timeout: int | None
+        self,
+        command: AutomationID,
+        args: Sequence[str],
+        logger: logging.Logger,
+        timeout: int | None,
     ) -> str:
         return repr({"command": command, "args": arguments_with_timeout(args, timeout)})

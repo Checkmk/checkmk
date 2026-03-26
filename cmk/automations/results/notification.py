@@ -17,12 +17,14 @@ from cmk.automations.results._base import (
 from cmk.ccc import version as cmk_version
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 
+from ..types import AutomationID
+
 
 @dataclass
 class NotificationReplayResult(ABCAutomationResult):
     @staticmethod
-    def automation_call() -> str:
-        return "notification-replay"
+    def automation_call() -> AutomationID:
+        return AutomationID("notification-replay")
 
 
 result_type_registry.register(NotificationReplayResult)
@@ -33,8 +35,8 @@ class NotificationAnalyseResult(ABCAutomationResult):
     result: NotifyAnalysisInfo | None
 
     @staticmethod
-    def automation_call() -> str:
-        return "notification-analyse"
+    def automation_call() -> AutomationID:
+        return AutomationID("notification-analyse")
 
 
 result_type_registry.register(NotificationAnalyseResult)
@@ -45,8 +47,8 @@ class NotificationTestResult(ABCAutomationResult):
     result: NotifyAnalysisInfo | None
 
     @staticmethod
-    def automation_call() -> str:
-        return "notification-test"
+    def automation_call() -> AutomationID:
+        return AutomationID("notification-test")
 
 
 result_type_registry.register(NotificationTestResult)
@@ -57,8 +59,8 @@ class NotificationGetBulksResult(ABCAutomationResult):
     result: NotifyBulks
 
     @staticmethod
-    def automation_call() -> str:
-        return "notification-get-bulks"
+    def automation_call() -> AutomationID:
+        return AutomationID("notification-get-bulks")
 
 
 result_type_registry.register(NotificationGetBulksResult)
@@ -70,8 +72,8 @@ class NotifyResult(ABCAutomationResult):
     output: str
 
     @staticmethod
-    def automation_call() -> str:
-        return "notify"
+    def automation_call() -> AutomationID:
+        return AutomationID("notify")
 
     def serialize(
         self,

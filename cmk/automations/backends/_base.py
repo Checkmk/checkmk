@@ -8,6 +8,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+from cmk.automations.types import AutomationID
+
 
 @dataclass(frozen=True)
 class LocalAutomationResult:
@@ -20,7 +22,7 @@ class LocalAutomationResult:
 class AutomationExecutor(Protocol):
     def execute(
         self,
-        command: str,
+        command: AutomationID,
         args: Sequence[str],
         stdin: str,
         logger: logging.Logger,
@@ -29,7 +31,7 @@ class AutomationExecutor(Protocol):
 
     def command_description(
         self,
-        command: str,
+        command: AutomationID,
         args: Sequence[str],
         logger: logging.Logger,
         timeout: int | None,

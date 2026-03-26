@@ -20,14 +20,16 @@ from cmk.checkengine.submitters import ServiceDetails
 from cmk.helper_interface import AgentRawData
 from cmk.utils.config_warnings import ConfigurationWarnings
 
+from ..types import AutomationID
+
 
 @dataclass
 class RenameHostsResult(ABCAutomationResult):
     action_counts: Mapping[str, int]
 
     @staticmethod
-    def automation_call() -> str:
-        return "rename-hosts"
+    def automation_call() -> AutomationID:
+        return AutomationID("rename-hosts")
 
 
 result_type_registry.register(RenameHostsResult)
@@ -36,8 +38,8 @@ result_type_registry.register(RenameHostsResult)
 @dataclass
 class DeleteHostsResult(ABCAutomationResult):
     @staticmethod
-    def automation_call() -> str:
-        return "delete-hosts"
+    def automation_call() -> AutomationID:
+        return AutomationID("delete-hosts")
 
 
 result_type_registry.register(DeleteHostsResult)
@@ -46,8 +48,8 @@ result_type_registry.register(DeleteHostsResult)
 @dataclass
 class DeleteHostsKnownRemoteResult(ABCAutomationResult):
     @staticmethod
-    def automation_call() -> str:
-        return "delete-hosts-known-remote"
+    def automation_call() -> AutomationID:
+        return AutomationID("delete-hosts-known-remote")
 
 
 result_type_registry.register(DeleteHostsKnownRemoteResult)
@@ -58,8 +60,8 @@ class RestartResult(ABCAutomationResult):
     config_warnings: ConfigurationWarnings
 
     @staticmethod
-    def automation_call() -> str:
-        return "restart"
+    def automation_call() -> AutomationID:
+        return AutomationID("restart")
 
 
 result_type_registry.register(RestartResult)
@@ -68,8 +70,8 @@ result_type_registry.register(RestartResult)
 @dataclass
 class ReloadResult(RestartResult):
     @staticmethod
-    def automation_call() -> str:
-        return "reload"
+    def automation_call() -> AutomationID:
+        return AutomationID("reload")
 
 
 result_type_registry.register(ReloadResult)
@@ -80,8 +82,8 @@ class GetConfigurationResult(ABCAutomationResult):
     result: Mapping[str, Any]
 
     @staticmethod
-    def automation_call() -> str:
-        return "get-configuration"
+    def automation_call() -> AutomationID:
+        return AutomationID("get-configuration")
 
 
 result_type_registry.register(GetConfigurationResult)
@@ -92,8 +94,8 @@ class GetCheckInformationResult(ABCAutomationResult):
     plugin_infos: Mapping[str, Mapping[str, Any]]
 
     @staticmethod
-    def automation_call() -> str:
-        return "get-check-information"
+    def automation_call() -> AutomationID:
+        return AutomationID("get-check-information")
 
 
 result_type_registry.register(GetCheckInformationResult)
@@ -104,8 +106,8 @@ class GetSectionInformationResult(ABCAutomationResult):
     section_infos: Mapping[str, Mapping[str, str]]
 
     @staticmethod
-    def automation_call() -> str:
-        return "get-section-information"
+    def automation_call() -> AutomationID:
+        return AutomationID("get-section-information")
 
 
 result_type_registry.register(GetSectionInformationResult)
@@ -117,8 +119,8 @@ class UpdateDNSCacheResult(ABCAutomationResult):
     failed_hosts: Sequence[HostName]
 
     @staticmethod
-    def automation_call() -> str:
-        return "update-dns-cache"
+    def automation_call() -> AutomationID:
+        return AutomationID("update-dns-cache")
 
 
 result_type_registry.register(UpdateDNSCacheResult)
@@ -127,8 +129,8 @@ result_type_registry.register(UpdateDNSCacheResult)
 @dataclass
 class UpdatePasswordsMergedFileResult(ABCAutomationResult):
     @staticmethod
-    def automation_call() -> str:
-        return "update-passwords-merged-file"
+    def automation_call() -> AutomationID:
+        return AutomationID("update-passwords-merged-file")
 
 
 result_type_registry.register(UpdatePasswordsMergedFileResult)
@@ -141,8 +143,8 @@ class GetAgentOutputResult(ABCAutomationResult):
     raw_agent_data: AgentRawData
 
     @staticmethod
-    def automation_call() -> str:
-        return "get-agent-output"
+    def automation_call() -> AutomationID:
+        return AutomationID("get-agent-output")
 
 
 result_type_registry.register(GetAgentOutputResult)
@@ -153,8 +155,8 @@ class BakeAgentsResult(ABCAutomationResult):
     output: str | None
 
     @staticmethod
-    def automation_call() -> str:
-        return "bake-agents"
+    def automation_call() -> AutomationID:
+        return AutomationID("bake-agents")
 
 
 result_type_registry.register(BakeAgentsResult)

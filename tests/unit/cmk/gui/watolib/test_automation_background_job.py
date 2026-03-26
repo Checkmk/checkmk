@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
+from cmk.automations.types import AutomationID
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.gui.background_job import BackgroundProcessInterface
@@ -45,8 +46,8 @@ class ResultTest(ABCAutomationResult):
         )
 
     @staticmethod
-    def automation_call() -> str:
-        return "test"
+    def automation_call() -> AutomationID:
+        return AutomationID("test")
 
 
 class TestCheckmkAutomationBackgroundJob:
@@ -81,7 +82,7 @@ class TestCheckmkAutomationBackgroundJob:
     @staticmethod
     def _api_request() -> CheckmkAutomationRequest:
         return CheckmkAutomationRequest(
-            command="test",
+            command=AutomationID("test"),
             args=None,
             indata=None,
             stdin_data=None,

@@ -2020,6 +2020,7 @@ _BROWSE_MAN_MODE = Mode(
 
 
 def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
+    from cmk.automations.types import AutomationID
     from cmk.base.automations.automations import AutomationContext, MKAutomationError
 
     if not args:
@@ -2039,7 +2040,7 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
         log.logger.addHandler(logging.NullHandler())
         log.logger.setLevel(logging.INFO)
 
-    name, automation_args = args[0], args[1:]
+    name, automation_args = AutomationID(args[0]), args[1:]
     with tracer.span(
         f"mode_automation[{name}]",
         attributes={

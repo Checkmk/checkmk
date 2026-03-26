@@ -7,9 +7,11 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel
 
+from cmk.automations.types import AutomationID
+
 
 class AutomationPayload(BaseModel, frozen=True):
-    name: str
+    name: AutomationID
     args: Sequence[str]
     stdin: str
     log_level: int

@@ -30,6 +30,8 @@ from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.oauth2_connection import OAuth2Connection
 
+from ..types import AutomationID
+
 
 @dataclass(frozen=True)
 class Gateway:
@@ -51,8 +53,8 @@ class ScanParentsResult(ABCAutomationResult):
     results: Sequence[GatewayResult]
 
     @staticmethod
-    def automation_call() -> str:
-        return "scan-parents"
+    def automation_call() -> AutomationID:
+        return AutomationID("scan-parents")
 
     @classmethod
     def deserialize(cls, serialized_result: SerializedResult) -> ScanParentsResult:
@@ -198,8 +200,8 @@ class DiagSpecialAgentResult(ABCAutomationResult):
     results: Sequence[SpecialAgentResult]
 
     @staticmethod
-    def automation_call() -> str:
-        return "diag-special-agent"
+    def automation_call() -> AutomationID:
+        return AutomationID("diag-special-agent")
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return SerializedResult(
@@ -261,8 +263,8 @@ class DiagCmkAgentResult(ABCAutomationResult):
     response: str
 
     @staticmethod
-    def automation_call() -> str:
-        return "diag-cmk-agent"
+    def automation_call() -> AutomationID:
+        return AutomationID("diag-cmk-agent")
 
 
 result_type_registry.register(DiagCmkAgentResult)
@@ -335,8 +337,8 @@ class DiagSnmpResult(ABCAutomationResult):
     response: str
 
     @staticmethod
-    def automation_call() -> str:
-        return "diag-snmp"
+    def automation_call() -> AutomationID:
+        return AutomationID("diag-snmp")
 
 
 result_type_registry.register(DiagSnmpResult)
@@ -348,8 +350,8 @@ class DiagHostResult(ABCAutomationResult):
     response: str
 
     @staticmethod
-    def automation_call() -> str:
-        return "diag-host"
+    def automation_call() -> AutomationID:
+        return AutomationID("diag-host")
 
 
 result_type_registry.register(DiagHostResult)
@@ -361,8 +363,8 @@ class PingHostResult(ABCAutomationResult):
     response: str
 
     @staticmethod
-    def automation_call() -> str:
-        return "ping-host"
+    def automation_call() -> AutomationID:
+        return AutomationID("ping-host")
 
 
 result_type_registry.register(PingHostResult)
@@ -403,8 +405,8 @@ class CreateDiagnosticsDumpResult(ABCAutomationResult):
     tarfile_created: bool
 
     @staticmethod
-    def automation_call() -> str:
-        return "create-diagnostics-dump"
+    def automation_call() -> AutomationID:
+        return AutomationID("create-diagnostics-dump")
 
 
 result_type_registry.register(CreateDiagnosticsDumpResult)

@@ -3,58 +3,66 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-from cmk.legacy_includes.temperature import check_temperature
-
-check_info = {}
-
-
-def format_nvidia_name(identifier):
+def _format_nvidia_name(identifier: str) -> str:
     identifier = identifier.replace("Temp", "")
     if identifier == "GPUCore":
         return "GPU NVIDIA"
 
     # afaik temperature sensors can be GPU or Board, maybe memory
-    return "System NVIDIA %s" % identifier
+    return f"System NVIDIA {identifier}"
 
 
-def inventory_nvidia_temp(core, info):
-    for line in info:
+def _discover_nvidia_temp(core: bool, section: StringTable) -> DiscoveryResult:
+    for line in section:
         line_san = line[0].strip(":")
         if line_san.lower().endswith("temp"):
             if core == (line_san == "GPUCoreTemp"):
-                yield format_nvidia_name(line_san), {}
+                yield Service(item=_format_nvidia_name(line_san))
 
 
-def check_nvidia_temp(item, params, info):
-    for line in info:
-        if format_nvidia_name(line[0].strip(":")) == item or item == line[0].strip(
+def check_nvidia_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
+    for line in section:
+        if _format_nvidia_name(line[0].strip(":")) == item or item == line[0].strip(
             ":"
         ):  # compatibility code for "old discovered" services
-            return check_temperature(int(line[1]), params, "nvidia_%s" % item)
-    return None
+            yield from check_temperature(
+                int(line[1]),
+                params,
+                unique_name=f"nvidia_{item}",
+                value_store=get_value_store(),
+            )
 
 
 def parse_nvidia(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["nvidia"] = LegacyCheckDefinition(
+agent_section_nvidia = AgentSection(
     name="nvidia",
     parse_function=parse_nvidia,
 )
 
 
-def discover_nvidia_temp(info):
-    return inventory_nvidia_temp(False, info)
+def discover_nvidia_temp(section: StringTable) -> DiscoveryResult:
+    yield from _discover_nvidia_temp(False, section)
 
 
-check_info["nvidia.temp"] = LegacyCheckDefinition(
+check_plugin_nvidia_temp = CheckPlugin(
     name="nvidia_temp",
     service_name="Temperature %s",
     sections=["nvidia"],
@@ -65,11 +73,11 @@ check_info["nvidia.temp"] = LegacyCheckDefinition(
 )
 
 
-def discover_nvidia_temp_core(info):
-    return inventory_nvidia_temp(True, info)
+def discover_nvidia_temp_core(section: StringTable) -> DiscoveryResult:
+    yield from _discover_nvidia_temp(True, section)
 
 
-check_info["nvidia.temp_core"] = LegacyCheckDefinition(
+check_plugin_nvidia_temp_core = CheckPlugin(
     name="nvidia_temp_core",
     service_name="Temperature %s",
     sections=["nvidia"],
@@ -80,28 +88,28 @@ check_info["nvidia.temp_core"] = LegacyCheckDefinition(
 )
 
 
-def discover_nvidia_errors(info):
-    for line in info:
+def discover_nvidia_errors(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if line[0] == "GPUErrors:":
-            return [(None, None)]
-    return []
+            yield Service()
 
 
-def check_nvidia_errors(_no_item, _no_params, info):
-    for line in info:
+def check_nvidia_errors(section: StringTable) -> CheckResult:
+    for line in section:
         if line[0] == "GPUErrors:":
             errors = int(line[1])
             if errors == 0:
-                return (0, "No GPU errors")
-            return (2, "%d GPU errors" % errors)
-    return (3, "incomplete output from agent")
+                yield Result(state=State.OK, summary="No GPU errors")
+                return
+            yield Result(state=State.CRIT, summary=f"{errors} GPU errors")
+            return
+    yield Result(state=State.UNKNOWN, summary="incomplete output from agent")
 
 
-check_info["nvidia.errors"] = LegacyCheckDefinition(
+check_plugin_nvidia_errors = CheckPlugin(
     name="nvidia_errors",
     service_name="NVIDIA GPU Errors",
     sections=["nvidia"],
     discovery_function=discover_nvidia_errors,
     check_function=check_nvidia_errors,
-    check_ruleset_name="hw_errors",
 )

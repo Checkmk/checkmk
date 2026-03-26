@@ -10,16 +10,11 @@ from cmk.base.plugins.bakery.hyperv_vms import get_hyperv_vms_files
 
 
 def test_hyperv_vms_files_enabled() -> None:
-    result = list(get_hyperv_vms_files(True))
-    expected = [Plugin(base_os=OS.WINDOWS, source=Path("hyperv_vms.ps1"))]
+    result = list(get_hyperv_vms_files({"deployment": ("sync", None)}))
+    expected = [Plugin(base_os=OS.WINDOWS, source=Path("hyperv_vms.ps1"), interval=None)]
     assert result == expected
 
 
 def test_hyperv_vms_files_disabled() -> None:
-    result = list(get_hyperv_vms_files(False))
-    assert result == []
-
-
-def test_hyperv_vms_files_none() -> None:
-    result = list(get_hyperv_vms_files(None))
+    result = list(get_hyperv_vms_files({"deployment": ("do_not_deploy", None)}))
     assert result == []

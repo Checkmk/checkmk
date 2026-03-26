@@ -134,7 +134,7 @@ function navigateUrl(url: string) {
       align-items: flex-start;
 
       .mm-default-popup__header-left-info {
-        color: var(--color-white-50);
+        color: var(--font-color-dimmed);
         text-align: right;
       }
     }

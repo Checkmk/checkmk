@@ -104,8 +104,6 @@ from cmk.rulesets.v1.form_specs import (
     InvalidElementValidator,
     migrate_to_password,
     Password,
-    SingleChoice,
-    SingleChoiceElement,
     String,
     validators,
 )
@@ -900,7 +898,7 @@ class PageEditBackupJob:
                 ),
                 "target": DictElement(
                     required=True,
-                    parameter_form=SingleChoice(
+                    parameter_form=SingleChoiceExtended(
                         title=Title("Target"),
                         elements=self.backup_target_choices(backup_config),
                         custom_validate=[target_validation],
@@ -999,9 +997,11 @@ class PageEditBackupJob:
             for ident, title in self.key_store.choices()
         ]
 
-    def backup_target_choices(self, backup_config: BackupConfig) -> Sequence[SingleChoiceElement]:
+    def backup_target_choices(
+        self, backup_config: BackupConfig
+    ) -> Sequence[SingleChoiceElementExtended[str]]:
         return [
-            SingleChoiceElement(
+            SingleChoiceElementExtended(
                 name=target.ident,
                 title=Title(target.title),  # astrein: disable=localization-checker
             )

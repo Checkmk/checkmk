@@ -1,5 +1,8 @@
 load("@//bazel/rules:filtered_subdir.bzl", "filtered_subdir")
 load("@//bazel/rules:make_deployable.bzl", "string_replace")
+load("@//bazel/rules:patchelf.bzl", "set_runpath")
+load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
+load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
@@ -62,10 +65,41 @@ filegroup(
     tags = ["manual"],
 )
 
+directory_path(
+    name = "npcdmod_dir_path",
+    directory = ":gen_dir_filegroup",
+    path = "lib/npcdmod.o",
+    tags = ["manual"],
+)
+
+copy_file(
+    name = "npcdmod_o",
+    src = ":npcdmod_dir_path",
+    out = "npcdmod.o",
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "npcdmod_runpath",
+    srcs = [":npcdmod_o"],
+    tags = ["manual"],
+)
+
+pkg_files(
+    name = "npcdmod_pkg",
+    srcs = [":npcdmod_runpath"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "lib",
+    tags = ["manual"],
+)
+
 filtered_subdir(
     name = "lib_filegroup",
     src = ":gen_dir_filegroup",
-    excludes = ["kohana/"],
+    excludes = [
+        "kohana/",
+        "npcdmod.o",
+    ],
     subdir = "lib",
     tags = ["manual"],
 )
@@ -156,6 +190,7 @@ pkg_tar(
         ":emptydirs_pkg",
         ":lib_pkg",
         ":man_pkg",
+        ":npcdmod_pkg",
         ":skel_pkg",
     ],
     stamp = 1,

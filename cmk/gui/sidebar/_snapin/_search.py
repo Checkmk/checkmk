@@ -57,7 +57,6 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
-from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
 
@@ -386,16 +385,6 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 continue
             _text, url_filters = match_info
             url_params.extend(url_filters)
-
-        # Compute the _active flag so the view filter sidebar correctly displays
-        # which filters are applied (e.g. service state from "st:" search).
-        active_filters = {
-            filter_name
-            for var, _value in url_params
-            if (filter_name := filter_registry.htmlvars_to_filter.get(var))
-        }
-        if active_filters:
-            url_params.append(("_active", ";".join(sorted(active_filters))))
 
         return url_params
 

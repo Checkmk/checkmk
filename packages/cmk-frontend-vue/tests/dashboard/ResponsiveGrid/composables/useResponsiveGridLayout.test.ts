@@ -523,9 +523,9 @@ describe('createWidgetLayout', () => {
     // 'unknown_widget' is not in constants.widgets
     const layout = createWidgetLayout(content, 'unknown_widget', constants)
 
-    // fallback for L/XL: columns=3, rows=8
-    expect(layout.layouts['default']!['L']!.size).toEqual({ columns: 3, rows: 8 })
-    expect(layout.layouts['default']!['XL']!.size).toEqual({ columns: 3, rows: 8 })
+    // fallback for L/XL: columns=3, rows=7
+    expect(layout.layouts['default']!['L']!.size).toEqual({ columns: 3, rows: 7 })
+    expect(layout.layouts['default']!['XL']!.size).toEqual({ columns: 3, rows: 7 })
   })
 
   it('should fall back when breakpoint is missing from widget constraints', () => {
@@ -534,8 +534,8 @@ describe('createWidgetLayout', () => {
     const layout = createWidgetLayout(content, 'static_text', constants)
 
     // M is not defined in static_text responsive constraints, so falls back
-    // For M breakpoint (not L/XL), fallback is columns=4, rows=8
-    expect(layout.layouts['default']!['M']!.size).toEqual({ columns: 4, rows: 8 })
+    // For M breakpoint (not L/XL), fallback is columns=4, rows=7
+    expect(layout.layouts['default']!['M']!.size).toEqual({ columns: 4, rows: 7 })
     // L is defined with initial_size
     expect(layout.layouts['default']!['L']!.size).toEqual({ columns: 4, rows: 4 })
   })

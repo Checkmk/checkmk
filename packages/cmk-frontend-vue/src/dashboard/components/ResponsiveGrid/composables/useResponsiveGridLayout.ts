@@ -40,7 +40,7 @@ function getMinimumSize(
   return (
     widgetConstraints[widgetContentType]?.layout.responsive[breakpoint]?.minimum_size ?? {
       columns: breakpoint === 'L' || breakpoint === 'XL' ? 3 : 4,
-      rows: 8
+      rows: 7
     }
   )
 }

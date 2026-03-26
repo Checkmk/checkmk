@@ -18,14 +18,27 @@ const props = defineProps<{
 }>()
 
 const percentage: Ref<number> = computed(() =>
-  Math.round(
-    (100 * (props.value - props.valueRange[0])) / (props.valueRange[1] - props.valueRange[0])
+  Math.min(
+    100,
+    Math.max(
+      0,
+      Math.round(
+        (100 * (props.value - props.valueRange[0])) / (props.valueRange[1] - props.valueRange[0])
+      )
+    )
   )
 )
 </script>
 
 <template>
-  <div class="cmk-perfometer" :aria-label="_t('Perf-O-Meter')">
+  <div
+    class="cmk-perfometer"
+    role="progressbar"
+    :aria-label="_t('Perf-O-Meter')"
+    :aria-valuenow="percentage"
+    :aria-valuemin="0"
+    :aria-valuemax="100"
+  >
     <div
       class="cmk-perfometer__bar"
       :style="{

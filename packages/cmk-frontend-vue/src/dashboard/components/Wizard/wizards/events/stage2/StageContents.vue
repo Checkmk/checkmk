@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, toValue } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import { useDebounceRef } from '@/lib/useDebounce'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
@@ -16,7 +17,6 @@ import WidgetVisualization from '@/dashboard/components/Wizard/components/Widget
 import { useWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization.ts'
 import type { EventStatsContent } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import { useDebounceRef } from '@/dashboard/composables/useDebounce.ts'
 import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { DashboardKey } from '@/dashboard/types/dashboard'

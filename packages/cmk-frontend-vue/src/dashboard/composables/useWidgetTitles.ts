@@ -5,13 +5,14 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
+import { useDebounceRef } from '@/lib/useDebounce'
+
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from '@/dashboard/types/api'
 
 import type { WidgetContent, WidgetGeneralSettings } from '../types/widget'
 import { dashboardAPI } from '../utils'
 import type { DashboardFilters } from './useDashboardFilters'
 import type { DashboardWidgets } from './useDashboardWidgets'
-import { useDebounceRef } from './useDebounce'
 
 export type WidgetTitles = ComputeWidgetTitlesResponse['extensions']['titles']
 

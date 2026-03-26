@@ -5,6 +5,8 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
+import { useDebounceFn } from '@/lib/useDebounce'
+
 import {
   type UseLinkContent,
   useLinkContent
@@ -20,7 +22,6 @@ import type {
   WidgetProps
 } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
-import { useDebounceFn } from '@/dashboard/composables/useDebounce'
 import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { computePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'

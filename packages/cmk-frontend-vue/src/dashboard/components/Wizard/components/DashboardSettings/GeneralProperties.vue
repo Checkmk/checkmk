@@ -7,14 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, watch } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
+import { useDebounceFn } from '@/lib/useDebounce'
 
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
-
-import { useDebounceFn } from '@/dashboard/composables/useDebounce'
 
 import IconSelector from '../IconSelector/IconSelector.vue'
 import FieldComponent from '../TableForm/FieldComponent.vue'

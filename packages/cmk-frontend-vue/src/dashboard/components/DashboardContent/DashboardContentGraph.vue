@@ -6,12 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useDebounceFn } from '@/lib/useDebounce'
 import useTimer from '@/lib/useTimer.ts'
 
 import CmkIcon from '@/components/CmkIcon'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
-import { useDebounceFn } from '@/dashboard/composables/useDebounce'
 import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { FilterHTTPVars, GraphWidgetContent } from '@/dashboard/types/widget.ts'
 

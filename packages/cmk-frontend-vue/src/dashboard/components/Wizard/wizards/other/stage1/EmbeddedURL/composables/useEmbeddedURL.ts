@@ -5,12 +5,13 @@
  */
 import { type Ref, computed, ref } from 'vue'
 
+import { useDebounceRef } from '@/lib/useDebounce'
+
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type { URLContent, UseWidgetHandler, WidgetProps } from '@/dashboard/components/Wizard/types'
-import { useDebounceRef } from '@/dashboard/composables/useDebounce.ts'
 import { useInjectDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { usePreviewWidgetTitle } from '@/dashboard/composables/useWidgetTitles'
 import type { WidgetSpec } from '@/dashboard/types/widget'

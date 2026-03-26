@@ -17,8 +17,9 @@ const { _t } = usei18n()
 interface Props {
   spec: ContentProps
   isEditing: boolean
+  rows: number
 }
-const { spec, isEditing } = defineProps<Props>()
+const { spec, isEditing, rows } = defineProps<Props>()
 
 defineEmits<{
   'click:edit': []
@@ -35,7 +36,10 @@ defineEmits<{
     :aria-label="_t('Widget')"
   >
     <div v-if="isEditing" class="db-responsive-grid-widget__edit-controls">
-      <div class="db-responsive-grid-widget__edit-controls-buttons">
+      <div
+        class="db-responsive-grid-widget__edit-controls-buttons"
+        :class="{ 'db-responsive-grid-widget__edit-controls-buttons--compact': rows <= 1 }"
+      >
         <ResponsiveGridWidgetButton
           icon-name="db-widget-delete"
           :title="_t('Delete widget')"
@@ -111,6 +115,14 @@ body[data-theme='modern-dark'] .db-responsive-grid-widget__edit-controls {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
+
+  /* transition for smooth movement when switching to compact mode */
+  transition: right 200ms ease;
+}
+
+.db-responsive-grid-widget__edit-controls-buttons--compact {
+  /* shift buttons left so the resize handle doesn't cover them */
+  right: var(--dimension-8);
 }
 
 .db-responsive-grid-widget__edit-controls + .db-responsive-grid-widget__content {

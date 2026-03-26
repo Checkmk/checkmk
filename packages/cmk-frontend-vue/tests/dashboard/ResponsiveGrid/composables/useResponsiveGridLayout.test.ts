@@ -4,14 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 import { useInternalBreakpointConfig } from '@/dashboard/components/ResponsiveGrid/composables/useInternalBreakpointConfig'
 import {
   createWidgetLayout,
   useResponsiveGridLayout
 } from '@/dashboard/components/ResponsiveGrid/composables/useResponsiveGridLayout'
-import type { ContentResponsiveGrid, DashboardConstants } from '@/dashboard/types/dashboard'
+import type {
+  ContentResponsiveGrid,
+  DashboardConstants,
+  ResponsiveGridBreakpoint
+} from '@/dashboard/types/dashboard'
 
 import {
   breakpointSettings,
@@ -27,13 +31,49 @@ describe('useResponsiveGridLayout', () => {
     return useResponsiveGridLayout(breakpointConfig, contentRef, widgetConstraints)
   }
 
+  function setupWithConstraints(
+    content: ContentResponsiveGrid,
+    constraints: DashboardConstants['widgets']
+  ) {
+    const breakpointConfig = useInternalBreakpointConfig(breakpointSettings)
+    const contentRef = ref(content)
+    const composable = useResponsiveGridLayout(breakpointConfig, contentRef, constraints)
+    return { composable, contentRef }
+  }
+
+  function makeWidgetConstraints(
+    responsive: Partial<
+      Record<
+        ResponsiveGridBreakpoint,
+        {
+          minimum_size: { columns: number; rows: number }
+          initial_size: { columns: number; rows: number }
+        }
+      >
+    >
+  ): DashboardConstants['widgets'][string] {
+    return {
+      filter_context: { restricted_to_single: [] },
+      title_macros: [],
+      layout: {
+        relative: {
+          initial_size: { width: 1, height: 1 },
+          minimum_size: { width: 1, height: 1 },
+          initial_position: { x: 0, y: 0 },
+          is_resizable: true
+        },
+        responsive
+      }
+    }
+  }
+
   describe('layout computation', () => {
     it('should compute internal layouts from widget definitions', () => {
       const content = makeRGContent({
         widget_1: makeLayoutWidget({
           default: {
-            L: { position: { x: 0, y: 0 }, size: { columns: 6, rows: 4 } },
-            XL: { position: { x: 0, y: 0 }, size: { columns: 8, rows: 4 } }
+            L: { position: { x: 0, y: 0 }, size: { columns: 6, rows: 8 } },
+            XL: { position: { x: 0, y: 0 }, size: { columns: 8, rows: 8 } }
           }
         })
       })
@@ -48,7 +88,7 @@ describe('useResponsiveGridLayout', () => {
       expect(layout['md']![0]!.x).toBe(0)
       expect(layout['md']![0]!.y).toBe(0)
       expect(layout['md']![0]!.w).toBe(6)
-      expect(layout['md']![0]!.h).toBe(4)
+      expect(layout['md']![0]!.h).toBe(8)
     })
 
     it('should merge multiple widgets into the same arrangement', () => {
@@ -79,6 +119,96 @@ describe('useResponsiveGridLayout', () => {
 
       expect(composable.selectedLayout.value['md']).toEqual([])
       expect(composable.selectedLayout.value['lg']).toEqual([])
+    })
+
+    it('should clamp widget size to minimum from widget constraints', () => {
+      const constraints: DashboardConstants['widgets'] = {
+        static_text: makeWidgetConstraints({
+          L: {
+            minimum_size: { columns: 6, rows: 2 },
+            initial_size: { columns: 6, rows: 4 }
+          }
+        })
+      }
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              L: { position: { x: 0, y: 0 }, size: { columns: 3, rows: 1 } }
+            }
+          })
+        },
+        ['L']
+      )
+
+      const { composable } = setupWithConstraints(content, constraints)
+      const element = composable.selectedLayout.value['md']![0]!
+
+      expect(element.w).toBe(6) // clamped from 3
+      expect(element.h).toBe(2) // clamped from 1
+      expect(element.minW).toBe(6)
+      expect(element.minH).toBe(2)
+    })
+
+    it('should not change size when already at or above minimum', () => {
+      const constraints: DashboardConstants['widgets'] = {
+        static_text: {
+          filter_context: { restricted_to_single: [] },
+          title_macros: [],
+          layout: {
+            relative: {
+              initial_size: { width: 1, height: 1 },
+              minimum_size: { width: 1, height: 1 },
+              initial_position: { x: 0, y: 0 },
+              is_resizable: true
+            },
+            responsive: {
+              L: {
+                minimum_size: { columns: 4, rows: 3 },
+                initial_size: { columns: 6, rows: 4 }
+              }
+            }
+          }
+        }
+      }
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              L: { position: { x: 0, y: 0 }, size: { columns: 6, rows: 4 } }
+            }
+          })
+        },
+        ['L']
+      )
+
+      const { composable } = setupWithConstraints(content, constraints)
+      const element = composable.selectedLayout.value['md']![0]!
+
+      expect(element.w).toBe(6)
+      expect(element.h).toBe(4)
+    })
+
+    it('should use fallback minimums when widget type has no constraints', () => {
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              L: { position: { x: 0, y: 0 }, size: { columns: 2, rows: 5 } }
+            }
+          })
+        },
+        ['L']
+      )
+
+      const composable = setup(content)
+      const element = composable.selectedLayout.value['md']![0]!
+
+      // fallback for L: columns=3, rows=7
+      expect(element.w).toBe(3) // clamped from 2
+      expect(element.h).toBe(7) // clamped from 5
+      expect(element.minW).toBe(3)
+      expect(element.minH).toBe(7)
     })
   })
 
@@ -218,8 +348,8 @@ describe('useResponsiveGridLayout', () => {
       const content = makeRGContent({
         w1: makeLayoutWidget({
           default: {
-            L: { position: { x: 0, y: 0 }, size: { columns: 6, rows: 4 } },
-            XL: { position: { x: 0, y: 0 }, size: { columns: 8, rows: 4 } }
+            L: { position: { x: 0, y: 0 }, size: { columns: 6, rows: 8 } },
+            XL: { position: { x: 0, y: 0 }, size: { columns: 8, rows: 8 } }
           }
         })
       })
@@ -231,7 +361,7 @@ describe('useResponsiveGridLayout', () => {
       expect(clonedLayout!.type).toBe('responsive_grid')
 
       const clonedBreakpoint = clonedLayout!.layouts['default']!['L']!
-      expect(clonedBreakpoint.size).toEqual({ columns: 6, rows: 4 })
+      expect(clonedBreakpoint.size).toEqual({ columns: 6, rows: 8 })
       expect(clonedBreakpoint.position).toBeDefined()
     })
 
@@ -346,10 +476,10 @@ describe('useResponsiveGridLayout', () => {
         {
           w1: makeLayoutWidget({
             default: {
-              L: { position: { x: 0, y: 0 }, size: { columns: 4, rows: 4 } }
+              L: { position: { x: 0, y: 0 }, size: { columns: 4, rows: 8 } }
             },
             secondary: {
-              L: { position: { x: 1, y: 1 }, size: { columns: 8, rows: 8 } }
+              L: { position: { x: 1, y: 1 }, size: { columns: 8, rows: 10 } }
             }
           })
         },
@@ -365,14 +495,14 @@ describe('useResponsiveGridLayout', () => {
       expect(composable.selectedLayout.value['md']!.length).toBe(1)
       const defaultWidgetLayout = composable.selectedLayout.value['md']![0]!
       expect(defaultWidgetLayout.w).toBe(4)
-      expect(defaultWidgetLayout.h).toBe(4)
+      expect(defaultWidgetLayout.h).toBe(8)
 
       composable.selectLayout('secondary')
       expect(composable.selectedLayoutName.value).toBe('secondary')
       expect(composable.selectedLayout.value['md']!.length).toBe(1)
       const secondaryWidgetLayout = composable.selectedLayout.value['md']![0]!
       expect(secondaryWidgetLayout.w).toBe(8)
-      expect(secondaryWidgetLayout.h).toBe(8)
+      expect(secondaryWidgetLayout.h).toBe(10)
     })
   })
 
@@ -410,6 +540,186 @@ describe('useResponsiveGridLayout', () => {
 
       expect(composable.availableLayouts.value).toContain('default')
       expect(composable.availableLayouts.value).toContain('extra')
+    })
+  })
+
+  describe('enforce constraints on content type change', () => {
+    it('should resize widget when content type changes to a type with larger minimums', async () => {
+      const constraints: DashboardConstants['widgets'] = {
+        static_text: makeWidgetConstraints({
+          L: { minimum_size: { columns: 3, rows: 2 }, initial_size: { columns: 4, rows: 3 } }
+        }),
+        gauge: makeWidgetConstraints({
+          L: { minimum_size: { columns: 8, rows: 6 }, initial_size: { columns: 10, rows: 8 } }
+        })
+      }
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              L: { position: { x: 0, y: 0 }, size: { columns: 4, rows: 3 } }
+            }
+          })
+        },
+        ['L']
+      )
+
+      const { composable, contentRef } = setupWithConstraints(content, constraints)
+      expect(composable.selectedLayout.value['md']![0]!.w).toBe(4)
+
+      contentRef.value.widgets['w1']!.content.type = 'gauge'
+      await nextTick()
+
+      const layout = contentRef.value.widgets['w1']!.layout.layouts['default']!['L']!
+      expect(layout.size.columns).toBe(8)
+      expect(layout.size.rows).toBe(6)
+    })
+
+    it('should not mutate layout when current size already meets new type minimums', async () => {
+      const constraints: DashboardConstants['widgets'] = {
+        static_text: makeWidgetConstraints({
+          L: { minimum_size: { columns: 3, rows: 2 }, initial_size: { columns: 6, rows: 4 } }
+        }),
+        gauge: makeWidgetConstraints({
+          L: { minimum_size: { columns: 4, rows: 3 }, initial_size: { columns: 6, rows: 4 } }
+        })
+      }
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              L: { position: { x: 2, y: 3 }, size: { columns: 6, rows: 4 } }
+            }
+          })
+        },
+        ['L']
+      )
+
+      const { contentRef } = setupWithConstraints(content, constraints)
+
+      contentRef.value.widgets['w1']!.content.type = 'gauge'
+      await nextTick()
+
+      const layout = contentRef.value.widgets['w1']!.layout.layouts['default']!['L']!
+      expect(layout.size).toEqual({ columns: 6, rows: 4 })
+      expect(layout.position).toEqual({ x: 2, y: 3 })
+    })
+
+    it('should enforce constraints across multiple breakpoints', async () => {
+      const constraints: DashboardConstants['widgets'] = {
+        static_text: makeWidgetConstraints({
+          L: { minimum_size: { columns: 3, rows: 2 }, initial_size: { columns: 4, rows: 3 } },
+          XL: { minimum_size: { columns: 3, rows: 2 }, initial_size: { columns: 6, rows: 4 } }
+        }),
+        gauge: makeWidgetConstraints({
+          L: { minimum_size: { columns: 6, rows: 5 }, initial_size: { columns: 8, rows: 6 } },
+          XL: { minimum_size: { columns: 10, rows: 8 }, initial_size: { columns: 12, rows: 10 } }
+        })
+      }
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              L: { position: { x: 0, y: 0 }, size: { columns: 4, rows: 3 } },
+              XL: { position: { x: 0, y: 0 }, size: { columns: 6, rows: 4 } }
+            }
+          })
+        },
+        ['L', 'XL']
+      )
+
+      const { contentRef } = setupWithConstraints(content, constraints)
+
+      contentRef.value.widgets['w1']!.content.type = 'gauge'
+      await nextTick()
+
+      const layoutL = contentRef.value.widgets['w1']!.layout.layouts['default']!['L']!
+      expect(layoutL.size.columns).toBe(6)
+      expect(layoutL.size.rows).toBe(5)
+
+      const layoutXL = contentRef.value.widgets['w1']!.layout.layouts['default']!['XL']!
+      expect(layoutXL.size.columns).toBe(10)
+      expect(layoutXL.size.rows).toBe(8)
+    })
+
+    it('should reposition widget to avoid overlap when it grows', async () => {
+      const constraints: DashboardConstants['widgets'] = {
+        static_text: makeWidgetConstraints({
+          L: { minimum_size: { columns: 2, rows: 2 }, initial_size: { columns: 3, rows: 3 } }
+        }),
+        gauge: makeWidgetConstraints({
+          L: { minimum_size: { columns: 8, rows: 4 }, initial_size: { columns: 8, rows: 4 } }
+        })
+      }
+      // w1 is small, w2 occupies columns 3-11 in row 0
+      // when w1 grows to 8 columns, it can't fit in row 0 next to w2
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              L: { position: { x: 0, y: 0 }, size: { columns: 3, rows: 3 } }
+            }
+          }),
+          w2: makeLayoutWidget({
+            default: {
+              L: { position: { x: 3, y: 0 }, size: { columns: 9, rows: 4 } }
+            }
+          })
+        },
+        ['L']
+      )
+
+      const { contentRef } = setupWithConstraints(content, constraints)
+
+      contentRef.value.widgets['w1']!.content.type = 'gauge'
+      await nextTick()
+
+      const layout = contentRef.value.widgets['w1']!.layout.layouts['default']!['L']!
+      expect(layout.size.columns).toBe(8)
+      expect(layout.size.rows).toBe(4)
+      // w2 occupies (3,0)-(12,4), so w1 (8 cols wide) must go below
+      expect(layout.position.y).toBeGreaterThanOrEqual(4)
+    })
+
+    it('should enforce constraints across multiple named layouts', async () => {
+      const constraints: DashboardConstants['widgets'] = {
+        static_text: makeWidgetConstraints({
+          L: { minimum_size: { columns: 2, rows: 2 }, initial_size: { columns: 3, rows: 3 } }
+        }),
+        gauge: makeWidgetConstraints({
+          L: { minimum_size: { columns: 6, rows: 5 }, initial_size: { columns: 6, rows: 5 } }
+        })
+      }
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              L: { position: { x: 0, y: 0 }, size: { columns: 3, rows: 3 } }
+            },
+            secondary: {
+              L: { position: { x: 0, y: 0 }, size: { columns: 4, rows: 3 } }
+            }
+          })
+        },
+        ['L'],
+        {
+          default: { title: 'Default', breakpoints: ['L'] },
+          secondary: { title: 'Secondary', breakpoints: ['L'] }
+        }
+      )
+
+      const { contentRef } = setupWithConstraints(content, constraints)
+
+      contentRef.value.widgets['w1']!.content.type = 'gauge'
+      await nextTick()
+
+      const defaultLayout = contentRef.value.widgets['w1']!.layout.layouts['default']!['L']!
+      expect(defaultLayout.size.columns).toBe(6)
+      expect(defaultLayout.size.rows).toBe(5)
+
+      const secondaryLayout = contentRef.value.widgets['w1']!.layout.layouts['secondary']!['L']!
+      expect(secondaryLayout.size.columns).toBe(6)
+      expect(secondaryLayout.size.rows).toBe(5)
     })
   })
 })

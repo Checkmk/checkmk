@@ -12,14 +12,14 @@ import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/u
 
 import { makeContentProps } from './testHelpers'
 
-function renderWidget(props: { spec: ContentProps; isEditing: boolean }) {
+function renderWidget(props: { spec: ContentProps; isEditing: boolean; rows?: number }) {
   const wrapperComponent = defineComponent({
     components: { ResponsiveGridWidget },
     setup() {
       useProvideMissingRuntimeFiltersAction(ref(true), () => {})
-      return { spec: props.spec, isEditing: props.isEditing }
+      return { spec: props.spec, isEditing: props.isEditing, rows: props.rows ?? 7 }
     },
-    template: '<ResponsiveGridWidget :spec="spec" :is-editing="isEditing" />'
+    template: '<ResponsiveGridWidget :spec="spec" :is-editing="isEditing" :rows="rows" />'
   })
   return render(wrapperComponent)
 }
@@ -54,5 +54,25 @@ describe('ResponsiveGridWidget', () => {
 
     // all 3 buttons are still present after clicking
     expect(screen.getAllByRole('button')).toHaveLength(3)
+  })
+
+  it('should apply compact class to edit buttons when rows is 1', () => {
+    const { container } = renderWidget({ spec: makeContentProps(), isEditing: true, rows: 1 })
+
+    const buttonsDiv = container.querySelector('.db-responsive-grid-widget__edit-controls-buttons')
+    expect(buttonsDiv).not.toBeNull()
+    expect(buttonsDiv!.classList).toContain(
+      'db-responsive-grid-widget__edit-controls-buttons--compact'
+    )
+  })
+
+  it('should not apply compact class to edit buttons when rows is greater than 1', () => {
+    const { container } = renderWidget({ spec: makeContentProps(), isEditing: true, rows: 2 })
+
+    const buttonsDiv = container.querySelector('.db-responsive-grid-widget__edit-controls-buttons')
+    expect(buttonsDiv).not.toBeNull()
+    expect(buttonsDiv!.classList).not.toContain(
+      'db-responsive-grid-widget__edit-controls-buttons--compact'
+    )
   })
 })

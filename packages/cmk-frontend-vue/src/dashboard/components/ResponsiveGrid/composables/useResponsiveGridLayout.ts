@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, computed, readonly, ref } from 'vue'
+import { type Ref, computed, readonly, ref, watch } from 'vue'
 
 import type {
   ContentResponsiveGrid,
@@ -68,8 +68,8 @@ function arrangementElementFromWidget(
     i: widgetId,
     x: sizeAndPos.position.x,
     y: sizeAndPos.position.y,
-    w: sizeAndPos.size.columns,
-    h: sizeAndPos.size.rows,
+    w: Math.max(sizeAndPos.size.columns, minimumSize.columns),
+    h: Math.max(sizeAndPos.size.rows, minimumSize.rows),
     minW: minimumSize.columns,
     minH: minimumSize.rows
   } as ResponsiveGridInternalArrangementElement
@@ -121,6 +121,42 @@ function findPositionForWidget(
       if (!overlaps) {
         return { x, y }
       }
+    }
+  }
+}
+
+function enforceWidgetLayoutConstraints(
+  widgetId: string,
+  widget: ResponsiveGridWidget,
+  widgetConstraints: DashboardConstants['widgets'],
+  allLayouts: ResponsiveGridConfiguredInternalLayouts,
+  columnsPerBreakpoint: Record<ResponsiveGridInternalBreakpoint, number>
+): void {
+  for (const [layoutName, breakpoints] of Object.entries(widget.layout.layouts)) {
+    for (const [bp, sizeAndPos] of Object.entries(breakpoints) as [
+      ResponsiveGridBreakpoint,
+      ResponsiveGridWidgetLayout
+    ][]) {
+      const minimum = getMinimumSize(widget.content.type, bp, widgetConstraints)
+      const clampedColumns = Math.max(sizeAndPos.size.columns, minimum.columns)
+      const clampedRows = Math.max(sizeAndPos.size.rows, minimum.rows)
+
+      if (clampedColumns === sizeAndPos.size.columns && clampedRows === sizeAndPos.size.rows) {
+        continue // no constraint violation
+      }
+
+      // Find a free position with the new size to avoid overlapping other widgets
+      const internalBreakpoint = breakpointToInternal[bp]
+      const maxColumns = columnsPerBreakpoint[internalBreakpoint]
+      const otherWidgets = (allLayouts[layoutName]?.[internalBreakpoint] ?? []).filter(
+        (el) => el.i !== widgetId
+      )
+      const position = findPositionForWidget(otherWidgets, maxColumns, clampedColumns, clampedRows)
+
+      sizeAndPos.size.columns = clampedColumns
+      sizeAndPos.size.rows = clampedRows
+      sizeAndPos.position.x = position.x
+      sizeAndPos.position.y = position.y
     }
   }
 }
@@ -223,6 +259,37 @@ export function useResponsiveGridLayout(
   const selectedLayout = computed<ResponsiveGridInternalLayout>(
     () => layouts.value[selectedLayoutName.value]!
   )
+
+  // Track widget content types to detect type changes and enforce layout constraints
+  const widgetContentTypes = computed(() =>
+    Object.fromEntries(
+      Object.entries(responsiveGridContent.value.widgets).map(([id, widget]) => [
+        id,
+        widget.content.type
+      ])
+    )
+  )
+
+  watch(widgetContentTypes, (newTypes, oldTypes) => {
+    if (!oldTypes) {
+      return
+    }
+    const columnsPerBreakpoint = breakpointConfig.value.columns
+    for (const [widgetId, newType] of Object.entries(newTypes)) {
+      if (oldTypes[widgetId] !== undefined && oldTypes[widgetId] !== newType) {
+        const widget = responsiveGridContent.value.widgets[widgetId]
+        if (widget) {
+          enforceWidgetLayoutConstraints(
+            widgetId,
+            widget,
+            widgetConstraints,
+            layouts.value,
+            columnsPerBreakpoint
+          )
+        }
+      }
+    }
+  })
 
   function selectLayout(name: keyof ResponsiveGridConfiguredInternalLayouts) {
     if (name in layouts.value) {

@@ -221,6 +221,7 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
             :key="props.updatedWidgetRenderKeys[<string>item.i] ?? <string>item.i"
             :spec="props.contentProps[<string>item.i]!"
             :is-editing="props.isEditing"
+            :rows="item.h"
             @click:edit="$emit('widget:edit', <string>item.i)"
             @click:delete="$emit('widget:delete', <string>item.i)"
             @click:clone="

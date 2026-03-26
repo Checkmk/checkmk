@@ -10,7 +10,6 @@ import { type Ref, computed, provide, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
 import AiConversationSlideout from './components/conversation/AiConversationSlideout.vue'
@@ -83,15 +82,6 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
 </script>
 
 <template>
-  <div id="ai-explain-button"></div>
-  <Teleport v-if="props.hide_button !== true" defer :to="props.teleport ?? '#ai-explain-button'">
-    <CmkButton class="ai-explain-button-app__button" @click="explainThis">
-      <div class="ai-explain-button-app__shimmer"></div>
-      <CmkIcon name="sparkle" />
-      {{ button_text }}
-    </CmkButton>
-  </Teleport>
-
   <AiConversationSlideout
     v-if="templateLoaded"
     :slideout-open="conversationOpen"

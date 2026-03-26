@@ -69,6 +69,8 @@ _bind_tracing_vhost() {
         _get_tracing_config
     } | curl -i --config - \
         --cacert "${CA_CERT}" \
+        --noproxy "${OMD_SITE}" \
+        --connect-timeout 5 \
         --connect-to "${OMD_SITE}::localhost:" \
         -H "content-type:application/json" \
         -XPUT "https://${OMD_SITE}:${MANAGEMENT_API_PORT}/api/traces/${vhost}/${TRACING_LOG_FILE_NAME}" 2>&1)
@@ -95,13 +97,15 @@ _delete_tracing() {
         api_vhost="$(_format_vhost "${vhost}")"
         _get_user_config | curl --config - \
             --cacert "${CA_CERT}" \
+            --noproxy "${OMD_SITE}" \
+            --connect-timeout 5 \
             --connect-to "${OMD_SITE}::localhost:" \
             -DELETE "https://${OMD_SITE}:${MANAGEMENT_API_PORT}/api/traces/${api_vhost}/${TRACING_LOG_FILE_NAME}"
     done
 }
 
 query() {
-    _get_user_config | curl --config - --cacert "${CA_CERT}" --connect-to "${OMD_SITE}::localhost:" "https://${OMD_SITE}:${MANAGEMENT_API_PORT}/${1}"
+    _get_user_config | curl --config - --cacert "${CA_CERT}" --noproxy "${OMD_SITE}" --connect-timeout 5 --connect-to "${OMD_SITE}::localhost:" "https://${OMD_SITE}:${MANAGEMENT_API_PORT}/${1}"
 }
 
 enable_tracing() {

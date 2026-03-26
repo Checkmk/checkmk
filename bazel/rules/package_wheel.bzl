@@ -45,6 +45,8 @@ def _package_wheel_impl(
     pkg_tar(
         name = name,
         srcs = [pkg_files_name + "2"] + additional_files,
+        mtime = 1767744000,
+        portable_mtime = False,
         visibility = visibility,
     )
 

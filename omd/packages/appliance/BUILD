@@ -76,6 +76,8 @@ pkg_files(
             ":webconf_snapin",
         ],
         extension = "tar.gz",
+        mtime = 1767744000,
+        portable_mtime = False,
         visibility = ["//visibility:public"],
     )
     for edition in [

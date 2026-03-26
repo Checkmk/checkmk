@@ -231,6 +231,8 @@ pkg_filegroup(
 pkg_tar(
     name = "openssl_tar",
     srcs = [":openssl_files_pkg"],
+    mtime = 1767744000,
+    portable_mtime = False,
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

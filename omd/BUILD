@@ -76,7 +76,9 @@ pkg_mkdirs(
 pkg_tar(
     name = "omd_global_dirs_tar",
     srcs = [":omd_global_dirs"],
+    mtime = 1767744000,
     package_dir = "/",
+    portable_mtime = False,
 )
 
 run_binary(
@@ -455,7 +457,9 @@ pkg_files(
 
 [pkg_tar(
     name = "deps_install_" + edition,
+    mtime = 1767744000,
     package_dir_file = ":omd_root_dir",
+    portable_mtime = False,
     tags = ["manual"],
     deps = [
         ":deps_packages_" + edition,
@@ -470,6 +474,8 @@ pkg_files(
 
 [pkg_tar(
     name = "complete_install_" + edition,
+    mtime = 1767744000,
+    portable_mtime = False,
     tags = ["manual"],
     deps = [
         ":deps_install_" + edition,
@@ -488,6 +494,8 @@ pkg_files(
     compressor = "@zstd//:zstd_cli",
     compressor_args = "-19",
     extension = "tar.zst",
+    mtime = 1767744000,
+    portable_mtime = False,
     tags = ["manual"],
     deps = [
         ":complete_install_" + edition,
@@ -736,7 +744,9 @@ write_omd_spec(
     pkg_tar(
         name = "appliance_" + edition,
         extension = "tar.gz",
+        mtime = 1767744000,
         package_dir_file = "//omd:omd_root_dir_appliance",
+        portable_mtime = False,
         visibility = ["//visibility:public"],
         deps = [
             "//omd:deps_packages_" + edition,

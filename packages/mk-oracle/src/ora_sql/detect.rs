@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::platform::registry::get_instances;
-use crate::types::Sid;
+use crate::types::{LocalInstance, Sid};
 use anyhow::Result;
 use regex::Regex;
 use std::collections::HashSet;
@@ -93,58 +93,84 @@ pub fn find_oracle_home(
     Ok(None)
 }
 
-#[cfg(windows)]
-fn dump_local_instances() -> String {
-    use crate::platform::get_local_instances;
-
-    let instances = get_local_instances().unwrap_or_else(|e| {
-        log::error!("{:?}", e);
-        vec![]
-    });
-    let rows = instances
-        .iter()
-        .map(|i| {
-            format!(
-                "{:16} {:60} {:60}",
-                i.name,
-                i.home.display().to_string(),
-                i.base
-                    .as_deref()
-                    .map(|p| p.display().to_string())
-                    .unwrap_or_else(|| "N/A".to_string())
-            )
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
-    let header = format!("{:16} {:60} {:60}", "SID", "ORACLE_HOME", "ORACLE_BASE");
-
+fn format_instance_info(
+    local_instance: &LocalInstance,
+    known_processes: Option<&HashSet<String>>,
+) -> String {
+    let state = if let Some(processes) = known_processes {
+        if processes.contains(&local_instance.name.to_string()) {
+            "Run"
+        } else {
+            "Stop"
+        }
+    } else {
+        "N/A"
+    };
     format!(
-        "{}\n{}\nTotal instances found: {}\n",
-        header,
-        rows,
-        instances.len()
+        "{:16} {:5} {:60} {}",
+        local_instance.name,
+        state,
+        local_instance.home.display(),
+        local_instance
+            .base
+            .as_ref()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|| "N/A".to_string()),
     )
 }
 
-pub fn dump_detected_sids() -> Result<String> {
-    #[cfg(windows)]
-    return Ok(dump_local_instances());
-    #[cfg(not(windows))]
-    return find_sids_by_processes(None)
-        .map(|list| {
-            log::info!("Found SIDs: {:?}", list);
-            list.iter().cloned().collect::<Vec<_>>().join("\n") + "\n"
-        })
-        .or_else(|e| {
-            log::info!("Error while detecting SIDs: {:?}", e);
-            anyhow::bail!(e)
-        });
+fn instance_info_header() -> String {
+    format!(
+        "{:16} {:5} {:60} {}",
+        "SID", "STATE", "ORACLE_HOME", "ORACLE_BASE"
+    )
+}
+
+pub fn dump_detected_sids() -> String {
+    let oracle_processes = if cfg!(windows) {
+        None
+    } else {
+        Some(
+            find_sids_by_processes(None)
+                .map_err(|e| {
+                    log::info!("Error while detecting Oracle processes: {:?}", e);
+                })
+                .unwrap_or_default(),
+        )
+    };
+
+    print_detected_sids(&get_instances(None).unwrap_or_default(), oracle_processes)
+}
+
+fn print_detected_sids(
+    locals: &[LocalInstance],
+    oracle_processes: Option<HashSet<String>>,
+) -> String {
+    let rows = locals
+        .iter()
+        .map(|local| format_instance_info(local, oracle_processes.as_ref()))
+        .collect::<Vec<String>>()
+        .join("\n");
+    if rows.is_empty() {
+        "No local instances found.\n".to_string()
+    } else {
+        instance_info_header() + "\n" + &rows + "\n"
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::ora_sql::detect::SID_MASK;
-    use regex::Regex;
+    use super::*;
+    use crate::types::{InstanceName, LocalInstance};
+    use std::path::PathBuf;
+
+    fn make_instance(name: &str, home: &str, base: Option<&str>) -> LocalInstance {
+        LocalInstance {
+            name: InstanceName::from(name),
+            home: PathBuf::from(home),
+            base: base.map(PathBuf::from),
+        }
+    }
 
     #[test]
     fn test_find_sids_by_processes() {
@@ -154,5 +180,100 @@ mod tests {
             .and_then(|c| c.get(2))
             .map(|m| m.as_str().to_string());
         assert_eq!(x, Some("TEST19".to_string()));
+    }
+
+    fn parts(inst: LocalInstance, processes: Option<&HashSet<String>>) -> Vec<String> {
+        format_instance_info(&inst, processes)
+            .split_whitespace()
+            .map(str::to_string)
+            .collect()
+    }
+
+    #[test]
+    fn test_format_instance_info_no_processes() {
+        let result = parts(make_instance("orcl", "/path/to/ora/home", None), None);
+        assert_eq!(result, vec!["ORCL", "N/A", "/path/to/ora/home", "N/A"]);
+    }
+
+    #[test]
+    fn test_format_instance_info_running() {
+        let procs = HashSet::from(["TEST19".to_string()]);
+        let result = parts(
+            make_instance("TEST19", "/path/to/ora/home", Some("/path/to/ora/base")),
+            Some(&procs),
+        );
+        assert_eq!(
+            result,
+            vec!["TEST19", "Run", "/path/to/ora/home", "/path/to/ora/base"]
+        );
+    }
+
+    #[test]
+    fn test_format_instance_info_stopped() {
+        let result = parts(
+            make_instance("TEST19", "/path/to/ora/home", Some("/path/to/ora/base")),
+            Some(&HashSet::new()),
+        );
+        assert_eq!(
+            result,
+            vec!["TEST19", "Stop", "/path/to/ora/home", "/path/to/ora/base"]
+        );
+    }
+
+    #[test]
+    fn test_format_instance_info_no_base() {
+        let result = parts(make_instance("XE", "/path/to/ora/home", None), None);
+        assert_eq!(result, vec!["XE", "N/A", "/path/to/ora/home", "N/A"]);
+    }
+
+    fn split_row(line: &str) -> Vec<&str> {
+        line.split_whitespace().collect()
+    }
+
+    /// Empty instance list — even with known processes the output is the "not found" message.
+    #[test]
+    fn test_print_detected_sids_empty() {
+        let procs = HashSet::from(["abc".to_string(), "xyz".to_string()]);
+        let result = print_detected_sids(&[], Some(procs));
+        assert_eq!(result, "No local instances found.\n");
+    }
+
+    /// Windows output: process state is always "N/A" because we don't check processes on Windows, only registry.
+    #[test]
+    fn test_print_detected_sids_windows() {
+        let instances = vec![
+            make_instance("TEST19", "/path/to/ora/home", None),
+            make_instance("XE", "/path/to/ora/xe", Some("/path/to/ora/base")),
+        ];
+        let output = print_detected_sids(&instances, None);
+        let lines: Vec<&str> = output.lines().collect();
+        assert_eq!(
+            split_row(lines[1]),
+            vec!["TEST19", "N/A", "/path/to/ora/home", "N/A"]
+        );
+        assert_eq!(
+            split_row(lines[2]),
+            vec!["XE", "N/A", "/path/to/ora/xe", "/path/to/ora/base"]
+        );
+    }
+
+    /// Linux output: process has info "Run" or "Stop".
+    #[test]
+    fn test_print_detected_sids_linux() {
+        let instances = vec![
+            make_instance("TEST19", "/path/to/ora/home", Some("/path/to/ora/base")),
+            make_instance("XE", "/path/to/ora/xe", None),
+        ];
+        let procs = HashSet::from(["TEST19".to_string()]);
+        let output = print_detected_sids(&instances, Some(procs));
+        let lines: Vec<&str> = output.lines().collect();
+        assert_eq!(
+            split_row(lines[1]),
+            vec!["TEST19", "Run", "/path/to/ora/home", "/path/to/ora/base"]
+        );
+        assert_eq!(
+            split_row(lines[2]),
+            vec!["XE", "Stop", "/path/to/ora/xe", "N/A"]
+        );
     }
 }

@@ -36,7 +36,7 @@ impl OracleConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ora_sql) = self.ora_sql() {
             if environment.detect_sids() {
-                return dump_detected_sids();
+                return Ok(dump_detected_sids());
             }
             if environment.find_runtime() {
                 let use_host_client: UseHostClient = ora_sql.options().use_host_client().clone();

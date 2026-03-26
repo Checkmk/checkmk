@@ -10,14 +10,15 @@ from cmk.base.plugins.bakery.nfsexports import get_nfsexports_files
 
 
 def test_nfsexports_files() -> None:
-    result = sorted(get_nfsexports_files(None), key=repr)
+    result = sorted(get_nfsexports_files({"deployment": ("sync", None)}), key=repr)
     expected = sorted(
         [
-            Plugin(base_os=OS.LINUX, source=Path("nfsexports")),
+            Plugin(base_os=OS.LINUX, source=Path("nfsexports"), interval=None),
             Plugin(
                 base_os=OS.SOLARIS,
                 source=Path("nfsexports.solaris"),
                 target=Path("nfsexports"),
+                interval=None,
             ),
         ],
         key=repr,

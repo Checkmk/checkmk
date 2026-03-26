@@ -3,52 +3,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 from collections.abc import Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    OIDEnd,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.stulz.lib import DETECT_STULZ
-
-check_info = {}
-
-
-def discover_stulz_pump(info):
-    inventory = []
-    for pump_id, _pump_status in info[0]:
-        pump_id = pump_id.replace(".1", "")
-        inventory.append((pump_id, None))
-    return inventory
-
-
-def check_stulz_pump(item, _no_params, info):
-    for index, (pump_id, pump_status) in enumerate(info[0]):
-        pump_id = pump_id.replace(".1", "")
-        if pump_id == item:
-            pump_rpm = info[1][index][0]
-            perfdata = [("rpm", pump_rpm + "%", None, None, 0, 100)]
-            if pump_status == "1":
-                state = 0
-                infotext = "Pump is running at %s%%" % pump_rpm
-            elif pump_status == "0":
-                state = 2
-                infotext = "Pump is not running"
-            else:
-                state = 3
-                infotext = "Pump reports unidentified status " + pump_status
-            return state, infotext, perfdata
-    return 3, "Pump %s not found" % item
 
 
 def parse_stulz_pump(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
     return string_table
 
 
-check_info["stulz_pump"] = LegacyCheckDefinition(
+def discover_stulz_pump(section: Sequence[StringTable]) -> DiscoveryResult:
+    for pump_id, _pump_status in section[0]:
+        yield Service(item=pump_id.replace(".1", ""))
+
+
+def check_stulz_pump(item: str, section: Sequence[StringTable]) -> CheckResult:
+    for index, (pump_id, pump_status) in enumerate(section[0]):
+        pump_id = pump_id.replace(".1", "")
+        if pump_id == item:
+            pump_rpm = section[1][index][0]
+            if pump_status == "1":
+                yield Result(state=State.OK, summary=f"Pump is running at {pump_rpm}%")
+            elif pump_status == "0":
+                yield Result(state=State.CRIT, summary="Pump is not running")
+            else:
+                yield Result(
+                    state=State.UNKNOWN,
+                    summary=f"Pump reports unidentified status {pump_status}",
+                )
+            yield Metric("rpm", float(pump_rpm), boundaries=(0.0, 100.0))
+            return
+
+
+snmp_section_stulz_pump = SNMPSection(
     name="stulz_pump",
-    parse_function=parse_stulz_pump,
     detect=DETECT_STULZ,
     fetch=[
         SNMPTree(
@@ -60,6 +62,11 @@ check_info["stulz_pump"] = LegacyCheckDefinition(
             oids=["2"],
         ),
     ],
+    parse_function=parse_stulz_pump,
+)
+
+check_plugin_stulz_pump = CheckPlugin(
+    name="stulz_pump",
     service_name="Pump %s",
     discovery_function=discover_stulz_pump,
     check_function=check_stulz_pump,

@@ -1,18 +1,39 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 exports_files(["skel.permissions"])
+
+set_runpath(
+    name = "bin_runpath",
+    srcs = [
+        "@stunnel//:stunnel_bin",
+    ],
+    rpaths = ["${ORIGIN}/../lib"],
+)
 
 pkg_files(
     name = "bin_pkg",
     srcs = [
+        ":bin_runpath",
         "@stunnel//:stunnel3_bin",
-        "@stunnel//:stunnel_bin",
     ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     prefix = "bin",
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "lib_runpath",
+    srcs = ["@stunnel//:libstunnel.so"],
+)
+
+pkg_files(
+    name = "lib_pkg",
+    srcs = [":lib_runpath"],
+    prefix = "lib/stunnel",
     tags = ["manual"],
 )
 
@@ -25,15 +46,6 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "skel/etc/bash_completion.d",
-    tags = ["manual"],
-)
-
-pkg_files(
-    name = "lib_pkg",
-    srcs = [
-        "@stunnel//:libstunnel.so",
-    ],
-    prefix = "lib/stunnel",
     tags = ["manual"],
 )
 

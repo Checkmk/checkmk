@@ -15,11 +15,7 @@ configure_make(
         "--with-ssl=$$EXT_BUILD_DEPS/openssl",
         "--with-bashcompdir=$$INSTALLDIR/share",
     ],
-    copts = [
-        "-Wl,--rpath,$ORIGIN_VAR/../lib",
-    ],
     env = {
-        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "PKG_CONFIG_PATH": ":".join([
             "/usr/lib/pkgconfig",
             "/usr/lib64/pkgconfig",

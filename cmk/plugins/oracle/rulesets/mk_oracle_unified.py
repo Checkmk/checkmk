@@ -50,6 +50,8 @@ type _NamedOption = Mapping[str, object]
 
 class SectionOptions(BaseModel):
     section: str
+    title: str
+    help_text: str | None = None
     # use full name because GUI throws error if `async` name is used
     mode: Literal["synchronous", "asynchronous", "disabled"]
 
@@ -57,78 +59,99 @@ class SectionOptions(BaseModel):
 SECTIONS: Sequence[SectionOptions] = (
     SectionOptions(
         section="instance",
+        title="General instance status",
         mode="synchronous",
     ),
     SectionOptions(
         section="asm_instance",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="dataguard_stats",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="locks",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="logswitches",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="longactivesessions",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="performance",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="processes",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="recovery_area",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="recovery_status",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="sessions",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="systemparameter",
-        mode="synchronous",
-    ),
-    SectionOptions(
-        section="undostat",
+        title="ASM - General instance status",
         mode="synchronous",
     ),
     SectionOptions(
         section="asm_diskgroup",
+        title="ASM - Disk groups",
         mode="asynchronous",
     ),
     SectionOptions(
+        section="dataguard_stats",
+        title="Dataguard statistics",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="locks",
+        title="Locks",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="logswitches",
+        title="Logswitches",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="longactivesessions",
+        title="Long active sessions",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="performance",
+        title="Performance",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="processes",
+        title="Current number of processes",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="recovery_area",
+        title="Recovery area",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="recovery_status",
+        title="Recovery status",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="sessions",
+        title="Current number of sessions",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="systemparameter",
+        title="System parameters",
+        mode="synchronous",
+    ),
+    SectionOptions(
+        section="undostat",
+        title="Undo statistics",
+        mode="synchronous",
+    ),
+    SectionOptions(
         section="iostats",
+        title="Performance: IO stats",
+        help_text="WARNING: This section will increase the load of your Checkmk server and "
+        "may increase load of your Database.",
         mode="asynchronous",
     ),
     SectionOptions(
         section="jobs",
+        title="Scheduled jobs",
         mode="asynchronous",
     ),
     SectionOptions(
         section="resumable",
+        title="Resumables",
         mode="asynchronous",
     ),
     SectionOptions(
         section="rman",
+        title="RMAN backups",
         mode="asynchronous",
     ),
     SectionOptions(
         section="tablespaces",
+        title="Tablespaces",
         mode="asynchronous",
     ),
 )
@@ -395,7 +418,7 @@ def _connection_options() -> Dictionary:
     )
 
 
-def _section_options(title: Title, help_text: Help, mode: str) -> SingleChoice:
+def _section_options(title: Title, help_text: Help | None, mode: str) -> SingleChoice:
     return SingleChoice(
         title=title,
         help_text=help_text,
@@ -419,13 +442,15 @@ def _section_options(title: Title, help_text: Help, mode: str) -> SingleChoice:
 
 def _sections() -> Dictionary:
     return Dictionary(
-        title=Title("Data to collect (Sections)"),
+        title=Title("Sections - data to collect"),
         help_text=Help("Select which data(sections) should be collected from the Oracle database."),
         elements={
             section.section: DictElement(
                 parameter_form=_section_options(
-                    title=Title("%s section") % section.section,
-                    help_text=Help("Configuration options for the %s section.") % section.section,
+                    title=Title("%s") % section.title,
+                    help_text=Help("%s") % section.help_text
+                    if section.help_text is not None
+                    else None,
                     mode=section.mode,
                 ),
                 required=True,

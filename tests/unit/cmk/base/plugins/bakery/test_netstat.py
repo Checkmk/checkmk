@@ -10,7 +10,7 @@ from cmk.base.plugins.bakery.netstat import get_netstat_files
 
 
 def test_netstat_files_with_interval() -> None:
-    conf = {"interval": 120}
+    conf = {"deployment": ("cached", 120.0)}
     result = sorted(get_netstat_files(conf), key=repr)
     expected = sorted(
         [
@@ -39,7 +39,7 @@ def test_netstat_files_with_interval() -> None:
 
 
 def test_netstat_files_without_interval() -> None:
-    conf: dict[str, int] = {}
+    conf = {"deployment": ("sync", None)}
     result = sorted(get_netstat_files(conf), key=repr)
     expected = sorted(
         [

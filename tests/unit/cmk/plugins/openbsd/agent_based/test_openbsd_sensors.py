@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.openbsd_sensors import (
+from cmk.plugins.openbsd.agent_based.openbsd_sensors import (
     check_openbsd_sensors,
     discover_openbsd_sensors,
     parse_openbsd_sensors,
@@ -122,7 +122,7 @@ def test_discover_openbsd_sensors() -> None:
         ("temp0", 30.0),
     ],
 )
-@patch("cmk.legacy_checks.openbsd_sensors.get_value_store", return_value={})
+@patch("cmk.plugins.openbsd.agent_based.openbsd_sensors.get_value_store", return_value={})
 def test_check_openbsd_sensors(_mock_value_store: object, item: str, expected_temp: float) -> None:
     """Test check function for openbsd_sensors check."""
     parsed = parse_openbsd_sensors(STRING_TABLE)
@@ -134,7 +134,7 @@ def test_check_openbsd_sensors(_mock_value_store: object, item: str, expected_te
     assert any(r.state == State.OK for r in state_results)
 
 
-@patch("cmk.legacy_checks.openbsd_sensors.get_value_store", return_value={})
+@patch("cmk.plugins.openbsd.agent_based.openbsd_sensors.get_value_store", return_value={})
 def test_check_openbsd_sensors_not_found(_mock_value_store: object) -> None:
     """Test check function returns nothing for non-existent item."""
     parsed = parse_openbsd_sensors(STRING_TABLE)

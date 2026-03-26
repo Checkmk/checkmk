@@ -11546,6 +11546,10 @@ msgstr "Impossibile scrivere il file di configurazione \"%s\": %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Impossibile scrivere il file \"%s\": %s"
 
+#, fuzzy
+msgid "Capacity"
+msgstr "Capacità UPS"
+
 msgid "Capacity providers per cluster"
 msgstr "Fornitori di capacità per cluster"
 
@@ -13266,6 +13270,10 @@ msgstr "Classe di ospiti"
 
 msgid "Classes"
 msgstr "Classi"
+
+#, fuzzy
+msgid "Classic"
+msgstr "Classico"
 
 msgid "Classic Load Balancing (ELB)"
 msgstr "Bilanciamento del carico classico (ELB)"
@@ -15409,6 +15417,10 @@ msgstr "Controllore"
 #, python-format
 msgid "Controller %d"
 msgstr "Controllore %d"
+
+#, fuzzy
+msgid "Controller ID"
+msgstr "Controllore"
 
 #, fuzzy
 msgid "Controller version"
@@ -19958,7 +19970,15 @@ msgid "Discovery settings"
 msgstr "Impostazioni di scoperta"
 
 #, fuzzy
+msgid "Discovery settings for physical drives"
+msgstr "Impostazioni di scoperta"
+
+#, fuzzy
 msgid "Discovery settings for physical ports"
+msgstr "Impostazioni di scoperta"
+
+#, fuzzy
+msgid "Discovery settings for volumes"
 msgstr "Impostazioni di scoperta"
 
 msgid "Discovery state"
@@ -22789,6 +22809,11 @@ msgstr "Abilita il calcolo della tendenza"
 msgid "Enable/Disable active checks"
 msgstr "Abilitazione/disabilitazione dei controlli attivi"
 
+msgid ""
+"Enable/Disable logging to Windows debugging interface. Off by default. View "
+"with <i>WinDbg</i>"
+msgstr ""
+
 msgid "Enable/Disable passive checks"
 msgstr "Abilitare/disabilitare i controlli passivi"
 
@@ -25574,6 +25599,10 @@ msgstr "Firmware"
 msgid "Firmware Versions"
 msgstr "Versione del kernel"
 
+#, fuzzy
+msgid "Firmware version"
+msgstr "Versione del kernel"
+
 msgid "First"
 msgstr "Prima"
 
@@ -26540,6 +26569,10 @@ msgstr "Descrizione completa"
 
 msgid "Full access"
 msgstr "Accesso completo"
+
+#, fuzzy
+msgid "Full controller status"
+msgstr "Agente controllore"
 
 msgid "Full dump of all variables"
 msgstr "Scaricamento completo di tutte le variabili"
@@ -40936,6 +40969,10 @@ msgstr "Controllo della connettività dei media fallito"
 msgid "Media and data integrity errors"
 msgstr "Errori di integrità dei media e dei dati"
 
+#, fuzzy
+msgid "Media type"
+msgstr "Tipo di partita"
+
 #, python-format
 msgid "Median %s"
 msgstr "Mediano %s"
@@ -50048,6 +50085,10 @@ msgstr "Indirizzo fisico (MAC)"
 msgid "Physical components"
 msgstr "Componenti fisici"
 
+#, fuzzy
+msgid "Physical port"
+msgstr "Fisico"
+
 msgid "Physical port states to discover"
 msgstr "Stati delle porte fisiche da scoprire"
 
@@ -53125,8 +53166,32 @@ msgid "Redfish Compatible Power Equipment (PDU)"
 msgstr ""
 
 #, fuzzy
+msgid "Redfish Ethernet Interface"
+msgstr "Scoperta del servizio in sospeso"
+
+#, fuzzy
 msgid "Redfish Ethernet Interface discovery"
 msgstr "Scoperta del servizio in sospeso"
+
+#, fuzzy
+msgid "Redfish Physical Drive discovery"
+msgstr "Stati delle porte fisiche da scoprire"
+
+#, fuzzy
+msgid "Redfish Power Consumption"
+msgstr "Consumo di energia"
+
+#, fuzzy
+msgid "Redfish Storage Controller"
+msgstr "Disattivare il controllore"
+
+#, fuzzy
+msgid "Redfish Volume discovery"
+msgstr "Scoperta del contatore MSSQL"
+
+#, fuzzy
+msgid "Redfish drives"
+msgstr "Scoperta del contatore MSSQL"
 
 #, fuzzy
 msgid "Redfish outlet discovery"
@@ -55142,6 +55207,9 @@ msgstr "Gestione della sessione"
 #, fuzzy
 msgid "Rollovers Asserts"
 msgstr "%s Asserisce"
+
+msgid "Rollup check only"
+msgstr ""
 
 msgid "Root CA"
 msgstr ""
@@ -60902,6 +60970,24 @@ msgstr ""
 " The defaults are shown in the checks man page (see <i>%s</i>)."
 
 msgid ""
+"Specify how the storage controller should be checked:\n"
+"\n"
+" Full: Report detailed controller status including RAID levels and device "
+"protocols\n"
+"\n"
+" Rollup: Only report overall health state"
+msgstr ""
+
+msgid ""
+"Specify how to name drives during discovery:\n"
+"\n"
+" Classic: Use the drive ID and name (e.g., '0-1.2TB 12G SAS HDD')\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:drive)"
+msgstr ""
+
+msgid ""
 "Specify how to name the outlets during discovery:\n"
 "\n"
 " Port ID: Use the ID of the port as name\n"
@@ -60911,6 +60997,15 @@ msgid ""
 "\n"
 " Zero padded port ID: Use the zero padded port ID (to the length of the "
 "highest port ID)"
+msgstr ""
+
+msgid ""
+"Specify how to name volumes during discovery:\n"
+"\n"
+" Classic: Use the volume ID\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:volume)"
 msgstr ""
 
 #, fuzzy
@@ -61989,6 +62084,14 @@ msgstr "Stato se l'ingresso è Sconosciuto"
 
 msgid "State if license is expired"
 msgstr "Indicare se la licenza è scaduta"
+
+#, fuzzy
+msgid "State if link speed changed"
+msgstr "Stato se nessuna riserva è configurata"
+
+#, fuzzy
+msgid "State if link status changed"
+msgstr "Riepilogo all'ultima variazione di stato"
 
 msgid "State if mode is Active-Active"
 msgstr "Stato se la modalità è Attivo-Attivo"
@@ -63439,6 +63542,42 @@ msgstr "Registrazione dei messaggi di tipo Syslog"
 
 msgid "System"
 msgstr "Sistema"
+
+msgid "System 0 average consumed watts"
+msgstr ""
+
+msgid "System 0 maximum consumed watts"
+msgstr ""
+
+msgid "System 0 minimum consumed watts"
+msgstr ""
+
+msgid "System 1 average consumed watts"
+msgstr ""
+
+msgid "System 1 maximum consumed watts"
+msgstr ""
+
+msgid "System 1 minimum consumed watts"
+msgstr ""
+
+msgid "System 2 average consumed watts"
+msgstr ""
+
+msgid "System 2 maximum consumed watts"
+msgstr ""
+
+msgid "System 2 minimum consumed watts"
+msgstr ""
+
+msgid "System 3 average consumed watts"
+msgstr ""
+
+msgid "System 3 maximum consumed watts"
+msgstr ""
+
+msgid "System 3 minimum consumed watts"
+msgstr ""
 
 msgid "System Events on APX Inrow Devices"
 msgstr "Eventi di sistema sui dispositivi APX Inrow"
@@ -84800,6 +84939,10 @@ msgstr "Registrazione dell'agente Windows"
 msgid "Windows authentication"
 msgstr "Autenticazione Windows"
 
+#, fuzzy
+msgid "Windows debugging"
+msgstr "Registrazione dell'agente Windows"
+
 msgid "Windows files"
 msgstr "File di Windows"
 
@@ -90009,6 +90152,9 @@ msgstr "stato peggiore"
 
 msgid "wrap"
 msgstr "avvolgere"
+
+msgid "write log messages to the Windows debugging interface"
+msgstr ""
 
 #, python-format
 msgid "wrong type, expected %s"

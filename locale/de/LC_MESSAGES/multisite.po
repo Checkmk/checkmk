@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-24 18:46+0000\n"
+"PO-Revision-Date: 2026-03-25 18:46+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -1167,7 +1167,7 @@ msgid "12 Volt output upper levels"
 msgstr "Obergrenzen für 12 Volt Ausgabe"
 
 msgid "12.1 or newer"
-msgstr ""
+msgstr "12.1 oder neuer"
 
 msgid "15 minutes"
 msgstr "15 Minuten"
@@ -1560,16 +1560,15 @@ msgstr ""
 "um das einzelne Programm in allen Kontexten korrekt aufzurufen (UI und "
 "Konsole)."
 
-#, fuzzy
 msgid ""
 "<br><b>Note</b>: Some files may contain highly sensitive data like "
 "passwords. These files are marked with 'H'. Other files may include IP "
 "addresses, host names, user names, mail addresses or phone numbers and are "
 "marked with 'M'."
 msgstr ""
-"<br>Hinweis: Manche Dateien können hochsensitive Daten, wie Passwörter "
-"enthalten. Diese Dateien werden mit einem 'H' markiert. Andere Dateien "
-"können IP-Adressen, Host- oder Benutzernamen, E-Mail-Adressen oder "
+"<br><b>Hinweis</b>: Manche Dateien können hochsensitive Daten, wie "
+"Passwörter enthalten. Diese Dateien werden mit einem 'H' markiert. Andere "
+"Dateien können IP-Adressen, Host- oder Benutzernamen, E-Mail-Adressen oder "
 "Telefonnummern beinhalten. Diese werden mit einem 'M' markiert."
 
 msgid "<br><br>"
@@ -6725,14 +6724,14 @@ msgstr "Apache ActiveMQ Warteschlangen"
 msgid "Apache Config"
 msgstr "Apache-Konfiguration"
 
-#, fuzzy
 msgid ""
 "Apache Configuration files in /etc/apache2 or /etc/httpd, /opt/omd/apache "
 "and $OMD_ROOT/etc/apache.<br><b>Note</b>: This might include information "
 "with medium sensitivity (M)."
 msgstr ""
 "Apache-Konfigurationsdateien in /etc/apache2 oder /etc/httpd, /opt/omd/"
-"apache und $OMD_ROOT/etc/apache"
+"apache und $OMD_ROOT/etc/apache.<br><b>Hinweis</b>: Es können Informationen "
+"mittlerer Sensitivität (M) enthalten sein."
 
 msgid "Apache Server"
 msgstr "Apache-Server"
@@ -6743,7 +6742,6 @@ msgstr "Apache-Status"
 msgid "Apache local password file (htpasswd)"
 msgstr "Lokale Apache Passwort-Datei (htpasswd)"
 
-#, fuzzy
 msgid ""
 "Apache mode and TCP address and port, Core, Liveproxy daemon and Livestatus "
 "TCP mode, event daemon config, graphical user interface (GUI) authorization, "
@@ -6751,7 +6749,7 @@ msgid ""
 msgstr ""
 "Apache Modus und TCP-Adresse und Port, Core, Liveproxy Daemon und Livestatus "
 "TCP Modus, Event Daemon Konfiguration, Benutzeroberflächen (GUI)-"
-"Autorisierung, NSCA Modus, TMP Dateisystem Modus"
+"Autorisierung, NSCA Modus, TMP Dateisystem Modus. "
 
 msgid ""
 "Apache mode and TCP address and port, Core, Liveproxy daemon and livestatus "
@@ -11338,6 +11336,10 @@ msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kann Datei \"%s\" nicht schreiben: %s"
 
+#, fuzzy
+msgid "Capacity"
+msgstr "USV-Kapazität"
+
 msgid "Capacity providers per cluster"
 msgstr "Capacity providers pro Cluster"
 
@@ -13040,6 +13042,10 @@ msgstr "Klasse von Hosts"
 
 msgid "Classes"
 msgstr "Klassen"
+
+#, fuzzy
+msgid "Classic"
+msgstr "Klassisch"
 
 msgid "Classic Load Balancing (ELB)"
 msgstr "Classic Load Balancing (ELB)"
@@ -15148,6 +15154,10 @@ msgstr "Controller"
 msgid "Controller %d"
 msgstr "Controller %d"
 
+#, fuzzy
+msgid "Controller ID"
+msgstr "Controller"
+
 msgid "Controller version"
 msgstr "Controller-Version"
 
@@ -15263,6 +15273,9 @@ msgid ""
 "this component is selected, a cmcdump will be included in the dump, that is "
 "also considered highly sensitive."
 msgstr ""
+"Kern-Dateien (Config, Zustand und Historie) aus var/check_mk/core.%s<br> "
+"Wenn diese Komponente ausgewählt ist, wird ein cmcdump in den Dump "
+"aufgenommen, der ebenfalls als hochsensibel eingestuft wird."
 
 #, python-format
 msgid "Core files (config, state and history) from var/check_mk/core: %s"
@@ -19560,8 +19573,16 @@ msgstr "Erkennungsregeln"
 msgid "Discovery settings"
 msgstr "Erkennungseinstellungen"
 
+#, fuzzy
+msgid "Discovery settings for physical drives"
+msgstr "Erkennungseinstellungen für physikalische Ports"
+
 msgid "Discovery settings for physical ports"
 msgstr "Erkennungseinstellungen für physikalische Ports"
+
+#, fuzzy
+msgid "Discovery settings for volumes"
+msgstr "Erkennungseinstellungen"
 
 msgid "Discovery state"
 msgstr "Erkennungszustand"
@@ -22261,6 +22282,11 @@ msgstr "Trendberechnung ein"
 msgid "Enable/Disable active checks"
 msgstr "Aktive Checks aktivieren/deaktivieren"
 
+msgid ""
+"Enable/Disable logging to Windows debugging interface. Off by default. View "
+"with <i>WinDbg</i>"
+msgstr ""
+
 msgid "Enable/Disable passive checks"
 msgstr "Passive Checks aktivieren/deaktivieren"
 
@@ -24779,6 +24805,20 @@ msgid ""
 "organization's specific data security classifications.<br><br>The following "
 "files are created by built-in components:<ul><li>%s</li></ul>"
 msgstr ""
+"Die von den Support Diagnostics erfassten Dateien werden automatisch "
+"kategorisiert, um Ihnen die Identifizierung sensibler Daten zu erleichtern. "
+"Wir empfehlen, alle Dateien vor der Freigabe zu überprüfen, insbesondere "
+"diejenigen in der Kategorie \"Unclassified\".<ul><li>H (High): Kritische "
+"Sicherheitsdaten (z. B. Passwörter, API-Schlüssel, Geheimnisse).</li><li>M "
+"(Medium): Personenbezogene Daten und Infrastrukturdetails (z. B. IP-"
+"Adressen, Host-Namen, Benutzernamen, E-Mail-Adressen).</li><li>L (Low): "
+"Betriebsdaten; es sind keine sensiblen Informationen zu erwarten. </li>li>U "
+"(Unclassified): Dateien aus benutzerdefinierten Komponenten. Dabei kann es "
+"sich um Erweiterungen von Drittanbietern oder von Ihnen vorgenommene "
+"Änderungen handeln.</li></ul><b>Hinweis</b>: Diese Klassifizierungen können "
+"von den spezifischen Datensicherheitsklassifizierungen Ihrer Organisation "
+"abweichen.<br><br>Die folgenden Dateien werden von mitgelieferten "
+"Komponenten erstellt:<ul><li>%s</li></ul>"
 
 #, python-format
 msgid "Files in %s"
@@ -25002,6 +25042,10 @@ msgid "Firmware"
 msgstr "Firmware"
 
 msgid "Firmware Versions"
+msgstr "Firmware-Versionen"
+
+#, fuzzy
+msgid "Firmware version"
 msgstr "Firmware-Versionen"
 
 msgid "First"
@@ -25957,6 +26001,10 @@ msgstr "Vollständige Beschreibung"
 
 msgid "Full access"
 msgstr "Vollständiger Zugriff"
+
+#, fuzzy
+msgid "Full controller status"
+msgstr "Benutzer des Agent Controllers"
 
 msgid "Full dump of all variables"
 msgstr "Vollständige Ausgabe aller Variablen"
@@ -34319,7 +34367,7 @@ msgstr "Ungültiger Proxy angegeben: keine zulässige URL"
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Ungültiges Proxy-Schema angegeben. Muss eines der folgenden sein: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid regex pattern: %s"
 msgstr "Ungültiger regulärer Ausdruck: %s"
 
@@ -37774,25 +37822,23 @@ msgstr "Abmeldung"
 msgid "Logs"
 msgstr "Protokolle"
 
-#, fuzzy
 msgid "Logs refused by the Event console"
-msgstr "Zugriff auf Event Console"
+msgstr "Von der Event Console abgelehnte Logs"
 
 msgid "Logs refused by the receiver (GRPC receiver)"
-msgstr ""
+msgstr "Vom Empfänger abgelehnte Logs (GRPC-Empfänger)"
 
 msgid "Logs refused by the receiver (HTTP receiver)"
-msgstr ""
+msgstr "Vom Empfänger abgelehnte Logs (HTTP-Empfänger)"
 
 msgid "Logs successfully received (GRPC receiver)"
-msgstr ""
+msgstr "Erfolgreich empfangene Logs (GRPC-Empfänger)"
 
 msgid "Logs successfully received (HTTP receiver)"
-msgstr ""
+msgstr "Erfolgreich empfangene Logs (HTTP-Empfänger)"
 
-#, fuzzy
 msgid "Logs successfully sent to Event console"
-msgstr "Zugriff auf Event Console"
+msgstr "Erfolgreich an die Event Console geschickte Logs"
 
 msgid "Logswitches"
 msgstr "Logswitches"
@@ -39495,7 +39541,7 @@ msgstr ""
 "Speicher festlegen, ergibt sich ein hartes Limit von 600 MiB und ein weiches "
 "Limit von 350 MiB (das Spitzenlimit entspricht 250 MiB)."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -39503,8 +39549,8 @@ msgid ""
 "limit). The recommended value for spike limit is about 20% limit."
 msgstr ""
 "Maximal zulässiger Speicherauslastungsanstieg zwischen den Messungen der "
-"Speichernutzung. Der Wert muss unter dem Limit liegen. Diese Option wird zur "
-"Berechnung des maximalen Anstiegswerts verwendet. Das weiche Limit "
+"Speicherauslastung. Der Wert muss unter dem Limit liegen. Diese Option wird "
+"zur Berechnung des maximalen Anstiegswerts verwendet. Das weiche Limit "
 "entspricht (Limit – Anstiegslimit). Der empfohlene Wert für das "
 "Anstiegslimit liegt bei etwa 20 % des Limits."
 
@@ -39772,6 +39818,10 @@ msgstr "Fehler der Medienverbindungsprüfung"
 
 msgid "Media and data integrity errors"
 msgstr "Medien- und Datenintegritätsfehler"
+
+#, fuzzy
+msgid "Media type"
+msgstr "Match-Typ"
 
 #, python-format
 msgid "Median %s"
@@ -40224,22 +40274,22 @@ msgid "Metrics path must start with a '/'."
 msgstr "Der Metrikpfad muss mit '/' beginnen."
 
 msgid "Metrics refused by the receiver (GRPC receiver)"
-msgstr ""
+msgstr "Vom Empfänger abgelehnte Metriken (GRPC-Empfänger)"
 
 msgid "Metrics refused by the receiver (HTTP receiver)"
-msgstr ""
+msgstr "Vom Empfänger abgelehnte Metriken (HTTP-Empfänger)"
 
 msgid "Metrics refused by the receiver (Prometheus scraper)"
-msgstr ""
+msgstr "Vom Empfänger abgelehnte Metriken (Prometheus Scraper)"
 
 msgid "Metrics successfully received (GRPC receiver)"
-msgstr ""
+msgstr "Erfolgreich empfangene Metriken (GRPC-Empfänger)"
 
 msgid "Metrics successfully received (HTTP receiver)"
-msgstr ""
+msgstr "Erfolgreich empfangene Metriken (HTTP-Empfänger)"
 
 msgid "Metrics successfully received (Prometheus scraper)"
-msgstr ""
+msgstr "Erfolgreich empfangene Metriken (Prometheus Scraper)"
 
 msgid "Metrics system"
 msgstr "Metrik-System"
@@ -42092,7 +42142,7 @@ msgid "NetApp Filers: Used Space in Filesystems"
 msgstr "NetApp Filer: Belegter Platz in Dateisystemen"
 
 msgid "NetApp Filers: Used space in Filesystem Using 32-Bit Counters"
-msgstr "NetApp Filer: Belegter Platz in Dateisystemen - mit 32-Bit-Zählern"
+msgstr "NetApp Filers: Belegter Platz in Dateisystemen mit 32-Bit-Zählern"
 
 msgid "NetApp LUNs"
 msgstr "NetApp LUNs"
@@ -42104,7 +42154,7 @@ msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot-Reserve"
 
 msgid "NetApp Snapshot Volumes"
-msgstr "NetApp Snapshot Volumes"
+msgstr "NetApp Snapshot-Volumen"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
 msgstr "NetApp Snapvaults / Snapmirror Lag-Zeit"
@@ -44632,7 +44682,7 @@ msgid "OMD config changes have been applied."
 msgstr "Die Änderungen der OMD-Konfiguration wurden angewendet."
 
 msgid "OMD filesystem usage"
-msgstr "Nutzung des OMD-Dateisystems"
+msgstr "Auslastung des OMD-Dateisystems"
 
 msgid "OMD monitoring cores"
 msgstr "OMD-Monitoring-Kerne"
@@ -45977,7 +46027,7 @@ msgid "Oracle data file incremental backup large reads"
 msgstr "Oracle Datendatei inkrementelle Sicherung Large Reads"
 
 msgid "Oracle data file incremental backup large write bytes"
-msgstr "Oracle inkrementelle Sicherung Large Write in Bytes"
+msgstr "Oracle Datendatei inkrementelle Sicherung Large Write in Bytes"
 
 msgid "Oracle data file incremental backup large writes"
 msgstr "Oracle Datendatei inkrementelle Sicherung Large Writes"
@@ -47192,9 +47242,10 @@ msgstr "Pa"
 msgid "Pack ID"
 msgstr "Paket-ID"
 
-#, fuzzy
 msgid "Pack all files: High, Medium, Low, Unclassified sensitivity"
-msgstr "Packen Sie alle Dateien: Hohe, mittlere, niedrige Empfindlichkeit"
+msgstr ""
+"Alle Dateien packen: Hohe, mittlere, niedrige Empfindlichkeit, nicht "
+"klassifiziert"
 
 msgid "Pack only Low sensitivity files"
 msgstr "Nur Dateien mit niedriger Empfindlichkeit packen"
@@ -48402,6 +48453,10 @@ msgstr "Physikalische Adresse (MAC)"
 
 msgid "Physical components"
 msgstr "Physikalische Komponenten"
+
+#, fuzzy
+msgid "Physical port"
+msgstr "Physikalisch"
 
 msgid "Physical port states to discover"
 msgstr "Physikalische Port-Zustände, die erkannt werden sollen"
@@ -51350,8 +51405,32 @@ msgstr "Redfish kompatible Management-Steuerung"
 msgid "Redfish Compatible Power Equipment (PDU)"
 msgstr "Redfish kompatible Stromversorgung (PDU)"
 
+#, fuzzy
+msgid "Redfish Ethernet Interface"
+msgstr "Redfish Ethernet Interface Erkennung"
+
 msgid "Redfish Ethernet Interface discovery"
 msgstr "Redfish Ethernet Interface Erkennung"
+
+#, fuzzy
+msgid "Redfish Physical Drive discovery"
+msgstr "Physikalische Port-Erkennung für Redfish"
+
+#, fuzzy
+msgid "Redfish Power Consumption"
+msgstr "Stromverbrauch"
+
+#, fuzzy
+msgid "Redfish Storage Controller"
+msgstr "Redfish kompatible Management-Steuerung"
+
+#, fuzzy
+msgid "Redfish Volume discovery"
+msgstr "Erkennung der Redfish Ausgänge"
+
+#, fuzzy
+msgid "Redfish drives"
+msgstr "Redfish"
 
 msgid "Redfish outlet discovery"
 msgstr "Erkennung der Redfish Ausgänge"
@@ -53304,6 +53383,9 @@ msgstr "Rollen: Rollenverwaltung"
 
 msgid "Rollovers Asserts"
 msgstr "Rollovers Asserts"
+
+msgid "Rollup check only"
+msgstr ""
 
 msgid "Root CA"
 msgstr "Root CA"
@@ -58161,21 +58243,17 @@ msgstr "Erstellen der Sicherung läuft gerade"
 msgid "Snapshot created with old version"
 msgstr "Mit alter Version erstellter Snapshot"
 
-#, fuzzy
 msgid "Snapshot reserve"
-msgstr "NetApp Snapshot-Reserve"
+msgstr "Snapshot-Reserve"
 
-#, fuzzy
 msgid "Snapshot reserve size"
-msgstr "Reserviertern Platz anzeigen"
+msgstr "Größe der Snapshot-Reserve"
 
-#, fuzzy
 msgid "Snapshot reserve used %"
-msgstr "Reserviertern Platz anzeigen"
+msgstr "Snapshot-Reserve nutzte %"
 
-#, fuzzy
 msgid "Snapshot reserve used space"
-msgstr "Reserviertern Platz anzeigen"
+msgstr "Von der Snapshop-Reserve genutzter Speicher"
 
 msgid "Snapshots"
 msgstr "Sicherungen"
@@ -58904,6 +58982,24 @@ msgstr ""
 "(siehe <i>%s</i>)."
 
 msgid ""
+"Specify how the storage controller should be checked:\n"
+"\n"
+" Full: Report detailed controller status including RAID levels and device "
+"protocols\n"
+"\n"
+" Rollup: Only report overall health state"
+msgstr ""
+
+msgid ""
+"Specify how to name drives during discovery:\n"
+"\n"
+" Classic: Use the drive ID and name (e.g., '0-1.2TB 12G SAS HDD')\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:drive)"
+msgstr ""
+
+msgid ""
 "Specify how to name the outlets during discovery:\n"
 "\n"
 " Port ID: Use the ID of the port as name\n"
@@ -58924,6 +59020,15 @@ msgstr ""
 "\n"
 " Null aufgefüllte Port-ID: Verwenden Sie die mit Nullen aufgefüllte Port-ID "
 "(bis zur Länge der höchsten Port-ID)"
+
+msgid ""
+"Specify how to name volumes during discovery:\n"
+"\n"
+" Classic: Use the volume ID\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:volume)"
+msgstr ""
 
 msgid "Specify if port state UP, DOWN or booth should be discovered"
 msgstr "Festlegen, ob Portzustand UP, DOWN oder beide erkannt werden sollen"
@@ -59970,6 +60075,14 @@ msgstr "Zustand, wenn die Eingabe UNKNOWN ist"
 
 msgid "State if license is expired"
 msgstr "Zustand, wenn die Lizenz abgelaufen ist"
+
+#, fuzzy
+msgid "State if link speed changed"
+msgstr "Zustand, wenn keine Reserve konfiguriert ist"
+
+#, fuzzy
+msgid "State if link status changed"
+msgstr "Zusammenfassung bei letzter Statusänderung"
 
 msgid "State if mode is Active-Active"
 msgstr "Zustand, wenn der Modus Active-Active ist"
@@ -61360,6 +61473,42 @@ msgstr "Syslog-ähnliche Meldungsprotokollierung"
 
 msgid "System"
 msgstr "System"
+
+msgid "System 0 average consumed watts"
+msgstr ""
+
+msgid "System 0 maximum consumed watts"
+msgstr ""
+
+msgid "System 0 minimum consumed watts"
+msgstr ""
+
+msgid "System 1 average consumed watts"
+msgstr ""
+
+msgid "System 1 maximum consumed watts"
+msgstr ""
+
+msgid "System 1 minimum consumed watts"
+msgstr ""
+
+msgid "System 2 average consumed watts"
+msgstr ""
+
+msgid "System 2 maximum consumed watts"
+msgstr ""
+
+msgid "System 2 minimum consumed watts"
+msgstr ""
+
+msgid "System 3 average consumed watts"
+msgstr ""
+
+msgid "System 3 maximum consumed watts"
+msgstr ""
+
+msgid "System 3 minimum consumed watts"
+msgstr ""
 
 msgid "System Events on APX Inrow Devices"
 msgstr "Systemereignisse auf APX Inrow-Geräten"
@@ -64905,13 +65054,12 @@ msgstr "Der Latenzbereich, ab dem Werte berücksichtigt werden sollen."
 msgid "The latest crash dumps of each type"
 msgstr "Die neuesten Absturz-Dumps für jeden Typ"
 
-#, fuzzy
 msgid ""
 "The latest crash reports<br><b>Note</b>: Some crash reports may contain "
 "sensitive data like host names or usernames."
 msgstr ""
-"Die neuesten Absturzberichte<br>Hinweis: Einige Absturzberichte können "
-"sensible Daten wie Host-Namen oder Benutzernamen enthalten."
+"Die neuesten Absturzberichte<br><b>Hinweis</b>: Einige Absturzberichte "
+"können sensible Daten wie Host-Namen oder Benutzernamen enthalten."
 
 msgid ""
 "The levels on costs will be considered to be in the currency corresponding "
@@ -74483,9 +74631,8 @@ msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r5dn"
 msgid "Total running on-demand instances of type r5n"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r5n"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r6a"
-msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6a"
 
 msgid "Total running on-demand instances of type r6g"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
@@ -74493,21 +74640,17 @@ msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
 msgid "Total running on-demand instances of type r6gd"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6gd"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r6i"
-msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6i"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r6id"
-msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6gd"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6id"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r8g"
-msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6g"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r8g"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r8gd"
-msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r6gd"
+msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ r8gd"
 
 msgid "Total running on-demand instances of type t1"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ t1"
@@ -75103,49 +75246,38 @@ msgstr "Insgesamt laufende On-Demand r5n.metal-Instanzen"
 msgid "Total running on-demand r5n.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.12xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5a.12xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.16xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5a.16xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.24xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5a.24xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.2xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5a.2xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.32xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.2xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.32xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.48xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.8xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.48xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.4xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5a.4xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.8xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5a.8xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.large instances"
-msgstr "Insgesamt laufende On-Demand r5a.large-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.metal instances"
-msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6a.xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5a.xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6a.xlarge-Instanzen"
 
 msgid "Total running on-demand r6g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.12xlarge-Instanzen"
@@ -75201,84 +75333,65 @@ msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
 msgid "Total running on-demand r6gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.12xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.12xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.16xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.16xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.24xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.24xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.2xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.2xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.32xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.32xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.32xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.4xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.4xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.4xlarge-Instanzen"
 
 msgid "Total running on-demand r6i.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6i.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.large instances"
-msgstr "Insgesamt laufende On-Demand m6i.large-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.metal instances"
-msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6i.xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6i.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.12xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.12xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.16xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.16xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.24xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5d.24xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.2xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.2xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.32xlarge instances"
-msgstr "Insgesamt laufende On-Demand m6i.32xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.32xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.4xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.8xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.8xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.large instances"
-msgstr "Insgesamt laufende On-Demand r6gd.large-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.metal instances"
-msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6id.xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r6id.xlarge-Instanzen"
 
 msgid "Total running on-demand r8g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r8g.12xlarge-Instanzen"
@@ -75286,91 +75399,71 @@ msgstr "Insgesamt laufende On-Demand r8g.12xlarge-Instanzen"
 msgid "Total running on-demand r8g.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r8g.16xlarge -Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.24xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5.24xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.2xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.2xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.48xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.8xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.48xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.4xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.4xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.8xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.8xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.large instances"
-msgstr "Insgesamt laufende On-Demand r6g.large-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.medium instances"
-msgstr "Insgesamt laufende On-Demand r6g.medium-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.metal-24xl instances"
-msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.metal-24xl-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.metal-48xl instances"
-msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.metal-48xl-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8g.xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6g.xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8g.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.12xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.12xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.16xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.16xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.24xlarge instances"
-msgstr "Insgesamt laufende On-Demand r5d.24xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.24xlarge-Instanzen"
 
 msgid "Total running on-demand r8gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r8gd.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.48xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.48xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.4xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.8xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.8xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.8xlarge-Instanzen"
 
 msgid "Total running on-demand r8gd.large instances"
 msgstr "Insgesamt laufende On-Demand r8gd.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.medium instances"
-msgstr "Insgesamt laufende On-Demand r6gd.medium-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.metal-24xl instances"
-msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.metal-24xl-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.metal-48xl instances"
-msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.metal-48xl-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r8gd.xlarge instances"
-msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
+msgstr "Insgesamt laufende On-Demand r8gd.xlarge-Instanzen"
 
 msgid "Total running on-demand t1.micro instances"
 msgstr "Insgesamt laufende On-Demand t1.micro-Instanzen"
@@ -82155,6 +82248,10 @@ msgstr "Optionen des Windows-Agenten"
 msgid "Windows authentication"
 msgstr "Windows-Authentifizierung"
 
+#, fuzzy
+msgid "Windows debugging"
+msgstr "Protokollierung Windows Agent"
+
 msgid "Windows files"
 msgstr "Windows Dateien"
 
@@ -87339,6 +87436,9 @@ msgstr "schlechtester Zustand"
 
 msgid "wrap"
 msgstr "Umbrechen"
+
+msgid "write log messages to the Windows debugging interface"
+msgstr ""
 
 #, python-format
 msgid "wrong type, expected %s"

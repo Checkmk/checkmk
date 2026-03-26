@@ -10988,6 +10988,10 @@ msgstr "構成ファイル \"%s\"を書き込めません:%s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "ファイル \"%s\"を書き込めません: %s"
 
+#, fuzzy
+msgid "Capacity"
+msgstr "UPS容量"
+
 msgid "Capacity providers per cluster"
 msgstr "クラスタごとのキャパシティプロバイダ"
 
@@ -12625,6 +12629,10 @@ msgstr "ホストのクラス"
 
 msgid "Classes"
 msgstr "クラス"
+
+#, fuzzy
+msgid "Classic"
+msgstr "クラシック"
 
 msgid "Classic Load Balancing (ELB)"
 msgstr "クラシックロードバランシング(ELB)"
@@ -14662,6 +14670,10 @@ msgstr "コントローラー"
 #, python-format
 msgid "Controller %d"
 msgstr "コントローラー %d"
+
+#, fuzzy
+msgid "Controller ID"
+msgstr "コントローラー"
 
 msgid "Controller version"
 msgstr "コントローラバージョン"
@@ -18983,8 +18995,16 @@ msgstr "ディスカバリールール"
 msgid "Discovery settings"
 msgstr "ディスカバリー設定"
 
+#, fuzzy
+msgid "Discovery settings for physical drives"
+msgstr "物理ポートの検出設定"
+
 msgid "Discovery settings for physical ports"
 msgstr "物理ポートの検出設定"
+
+#, fuzzy
+msgid "Discovery settings for volumes"
+msgstr "ディスカバリー設定"
 
 msgid "Discovery state"
 msgstr "ディスカバリ状態"
@@ -21620,6 +21640,11 @@ msgstr "トレンド計算を有効にする"
 
 msgid "Enable/Disable active checks"
 msgstr "アクティブチェックを有効/無効にする"
+
+msgid ""
+"Enable/Disable logging to Windows debugging interface. Off by default. View "
+"with <i>WinDbg</i>"
+msgstr ""
 
 msgid "Enable/Disable passive checks"
 msgstr "パッシブチェックを有効/無効にする"
@@ -24300,6 +24325,10 @@ msgstr "ファームウェア"
 msgid "Firmware Versions"
 msgstr "Firmwareのバージョン"
 
+#, fuzzy
+msgid "Firmware version"
+msgstr "Firmwareのバージョン"
+
 msgid "First"
 msgstr "最初"
 
@@ -25221,6 +25250,10 @@ msgstr "完全な説明"
 
 msgid "Full access"
 msgstr "フルアクセス"
+
+#, fuzzy
+msgid "Full controller status"
+msgstr "エージェントコントローラーユーザー"
 
 msgid "Full dump of all variables"
 msgstr "すべての変数の完全なダンプ"
@@ -38721,6 +38754,10 @@ msgstr "メディア接続チェックの失敗"
 msgid "Media and data integrity errors"
 msgstr "メディアとデータの整合性エラー"
 
+#, fuzzy
+msgid "Media type"
+msgstr "マッチタイプ"
+
 #, python-format
 msgid "Median %s"
 msgstr "中央値 %s"
@@ -47213,6 +47250,10 @@ msgstr "物理アドレス(MAC)"
 msgid "Physical components"
 msgstr "物理コンポーネント"
 
+#, fuzzy
+msgid "Physical port"
+msgstr "物理的"
+
 msgid "Physical port states to discover"
 msgstr "検出する物理ポートの状態"
 
@@ -50088,8 +50129,32 @@ msgstr "Redfish 対応管理コントローラー"
 msgid "Redfish Compatible Power Equipment (PDU)"
 msgstr "Redfish 対応電源装置（PDU）"
 
+#, fuzzy
+msgid "Redfish Ethernet Interface"
+msgstr "Redfish Ethernet Interface の検出"
+
 msgid "Redfish Ethernet Interface discovery"
 msgstr "Redfish Ethernet Interface の検出"
+
+#, fuzzy
+msgid "Redfish Physical Drive discovery"
+msgstr "Redfish 物理ポート検出"
+
+#, fuzzy
+msgid "Redfish Power Consumption"
+msgstr "消費電力"
+
+#, fuzzy
+msgid "Redfish Storage Controller"
+msgstr "Redfish 対応管理コントローラー"
+
+#, fuzzy
+msgid "Redfish Volume discovery"
+msgstr "Redfish のアウトレット検出"
+
+#, fuzzy
+msgid "Redfish drives"
+msgstr "Redfish"
 
 msgid "Redfish outlet discovery"
 msgstr "Redfish のアウトレット検出"
@@ -52018,6 +52083,9 @@ msgstr "Roles: 役割ロールの管理"
 
 msgid "Rollovers Asserts"
 msgstr "ロールオーバーアサート"
+
+msgid "Rollup check only"
+msgstr ""
 
 msgid "Root CA"
 msgstr "Root CA"
@@ -57486,6 +57554,24 @@ msgstr ""
 " デフォルトはcheckmkのマニュアルページに記載されています(<i>%s</i>)。"
 
 msgid ""
+"Specify how the storage controller should be checked:\n"
+"\n"
+" Full: Report detailed controller status including RAID levels and device "
+"protocols\n"
+"\n"
+" Rollup: Only report overall health state"
+msgstr ""
+
+msgid ""
+"Specify how to name drives during discovery:\n"
+"\n"
+" Classic: Use the drive ID and name (e.g., '0-1.2TB 12G SAS HDD')\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:drive)"
+msgstr ""
+
+msgid ""
 "Specify how to name the outlets during discovery:\n"
 "\n"
 " Port ID: Use the ID of the port as name\n"
@@ -57505,6 +57591,15 @@ msgstr ""
 "\n"
 " ゼロパディングされたポートID: 最高位のポートIDの長さに合わせてゼロパディング"
 "されたポートIDを使用します"
+
+msgid ""
+"Specify how to name volumes during discovery:\n"
+"\n"
+" Classic: Use the volume ID\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:volume)"
+msgstr ""
 
 msgid "Specify if port state UP, DOWN or booth should be discovered"
 msgstr "ポート状態がUP, DOWN, またはBOOTH であるかどうかを確認してください"
@@ -58497,6 +58592,14 @@ msgstr "入力がUnknownの場合の状態"
 
 msgid "State if license is expired"
 msgstr "ライセンスの有効期限が切れているかどうかを記載する"
+
+#, fuzzy
+msgid "State if link speed changed"
+msgstr "予約が構成されていない場合の状態"
+
+#, fuzzy
+msgid "State if link status changed"
+msgstr "最終ステータス変更時の概要"
 
 msgid "State if mode is Active-Active"
 msgstr "モードActive-Activeの場合の状態"
@@ -59870,6 +59973,42 @@ msgstr "Syslogのようなメッセージログ"
 
 msgid "System"
 msgstr "システム"
+
+msgid "System 0 average consumed watts"
+msgstr ""
+
+msgid "System 0 maximum consumed watts"
+msgstr ""
+
+msgid "System 0 minimum consumed watts"
+msgstr ""
+
+msgid "System 1 average consumed watts"
+msgstr ""
+
+msgid "System 1 maximum consumed watts"
+msgstr ""
+
+msgid "System 1 minimum consumed watts"
+msgstr ""
+
+msgid "System 2 average consumed watts"
+msgstr ""
+
+msgid "System 2 maximum consumed watts"
+msgstr ""
+
+msgid "System 2 minimum consumed watts"
+msgstr ""
+
+msgid "System 3 average consumed watts"
+msgstr ""
+
+msgid "System 3 maximum consumed watts"
+msgstr ""
+
+msgid "System 3 minimum consumed watts"
+msgstr ""
 
 msgid "System Events on APX Inrow Devices"
 msgstr "APX Inrowデバイスのシステムイベント"
@@ -79787,6 +79926,10 @@ msgstr "Windows エージェント オプション"
 msgid "Windows authentication"
 msgstr "Windows認証"
 
+#, fuzzy
+msgid "Windows debugging"
+msgstr "Windows エージェント ログ"
+
 msgid "Windows files"
 msgstr "Windowsファイル"
 
@@ -84767,6 +84910,9 @@ msgstr "最悪の状態"
 
 msgid "wrap"
 msgstr "ラップ"
+
+msgid "write log messages to the Windows debugging interface"
+msgstr ""
 
 #, python-format
 msgid "wrong type, expected %s"

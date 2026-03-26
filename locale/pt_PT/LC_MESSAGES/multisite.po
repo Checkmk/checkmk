@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-24 18:46+0000\n"
+"PO-Revision-Date: 2026-03-25 18:46+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -11713,6 +11713,10 @@ msgstr "Não é possível escrever o ficheiro de configuração \"%s\": %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Não é possível escrever o ficheiro \"%s\": %s"
 
+#, fuzzy
+msgid "Capacity"
+msgstr "Capacidade da UPS"
+
 msgid "Capacity providers per cluster"
 msgstr "Fornecedores de capacidade por cluster"
 
@@ -13454,6 +13458,10 @@ msgstr "Classe de anfitriões"
 
 msgid "Classes"
 msgstr "Aulas"
+
+#, fuzzy
+msgid "Classic"
+msgstr "Clássico"
 
 msgid "Classic Load Balancing (ELB)"
 msgstr "Balanceamento de carga clássico (ELB)"
@@ -15600,6 +15608,10 @@ msgstr "Controlador"
 #, python-format
 msgid "Controller %d"
 msgstr "Controlador %d"
+
+#, fuzzy
+msgid "Controller ID"
+msgstr "Controlador"
 
 #, fuzzy
 msgid "Controller version"
@@ -20166,7 +20178,15 @@ msgid "Discovery settings"
 msgstr "Configurações de descoberta"
 
 #, fuzzy
+msgid "Discovery settings for physical drives"
+msgstr "Configurações de descoberta"
+
+#, fuzzy
 msgid "Discovery settings for physical ports"
+msgstr "Configurações de descoberta"
+
+#, fuzzy
+msgid "Discovery settings for volumes"
 msgstr "Configurações de descoberta"
 
 msgid "Discovery state"
@@ -22972,6 +22992,11 @@ msgstr "Habilitar o cálculo de tendências"
 msgid "Enable/Disable active checks"
 msgstr "Ativar/desativar verificações activas"
 
+msgid ""
+"Enable/Disable logging to Windows debugging interface. Off by default. View "
+"with <i>WinDbg</i>"
+msgstr ""
+
 msgid "Enable/Disable passive checks"
 msgstr "Ativar/desativar os controlos passivos"
 
@@ -25772,6 +25797,10 @@ msgstr "Firmware"
 msgid "Firmware Versions"
 msgstr "Versão Kernel"
 
+#, fuzzy
+msgid "Firmware version"
+msgstr "Versão Kernel"
+
 msgid "First"
 msgstr "Primeiro"
 
@@ -26748,6 +26777,10 @@ msgstr "Descrição completa"
 
 msgid "Full access"
 msgstr "Acesso total"
+
+#, fuzzy
+msgid "Full controller status"
+msgstr "Controlador de agentes"
 
 msgid "Full dump of all variables"
 msgstr "Lixeira completa de todas as variáveis"
@@ -41174,6 +41207,10 @@ msgstr "Falha na Verificação da Conectividade da Mídia"
 msgid "Media and data integrity errors"
 msgstr "Erros de integridade da mídia e dos dados"
 
+#, fuzzy
+msgid "Media type"
+msgstr "Tipo de jogo"
+
 #, python-format
 msgid "Median %s"
 msgstr "Mediana %s"
@@ -50283,6 +50320,10 @@ msgstr "Endereço Físico (MAC)"
 msgid "Physical components"
 msgstr "Componentes físicos"
 
+#, fuzzy
+msgid "Physical port"
+msgstr "Físico"
+
 msgid "Physical port states to discover"
 msgstr "Estados físicos portuários a descobrir"
 
@@ -53381,8 +53422,32 @@ msgid "Redfish Compatible Power Equipment (PDU)"
 msgstr ""
 
 #, fuzzy
+msgid "Redfish Ethernet Interface"
+msgstr "Pendente de descoberta de serviços"
+
+#, fuzzy
 msgid "Redfish Ethernet Interface discovery"
 msgstr "Pendente de descoberta de serviços"
+
+#, fuzzy
+msgid "Redfish Physical Drive discovery"
+msgstr "Estados físicos portuários a descobrir"
+
+#, fuzzy
+msgid "Redfish Power Consumption"
+msgstr "Consumo de energia"
+
+#, fuzzy
+msgid "Redfish Storage Controller"
+msgstr "Desactivar o controlador"
+
+#, fuzzy
+msgid "Redfish Volume discovery"
+msgstr "Descoberta do contador MSSQL"
+
+#, fuzzy
+msgid "Redfish drives"
+msgstr "Descoberta do contador MSSQL"
 
 #, fuzzy
 msgid "Redfish outlet discovery"
@@ -55416,6 +55481,9 @@ msgstr "Gestão de sessões"
 #, fuzzy
 msgid "Rollovers Asserts"
 msgstr "%s Afirmações"
+
+msgid "Rollup check only"
+msgstr ""
 
 msgid "Root CA"
 msgstr ""
@@ -61170,6 +61238,24 @@ msgstr ""
 "i> )."
 
 msgid ""
+"Specify how the storage controller should be checked:\n"
+"\n"
+" Full: Report detailed controller status including RAID levels and device "
+"protocols\n"
+"\n"
+" Rollup: Only report overall health state"
+msgstr ""
+
+msgid ""
+"Specify how to name drives during discovery:\n"
+"\n"
+" Classic: Use the drive ID and name (e.g., '0-1.2TB 12G SAS HDD')\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:drive)"
+msgstr ""
+
+msgid ""
 "Specify how to name the outlets during discovery:\n"
 "\n"
 " Port ID: Use the ID of the port as name\n"
@@ -61179,6 +61265,15 @@ msgid ""
 "\n"
 " Zero padded port ID: Use the zero padded port ID (to the length of the "
 "highest port ID)"
+msgstr ""
+
+msgid ""
+"Specify how to name volumes during discovery:\n"
+"\n"
+" Classic: Use the volume ID\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:volume)"
 msgstr ""
 
 #, fuzzy
@@ -62255,6 +62350,14 @@ msgstr "Estado se a entrada for Desconhecido"
 
 msgid "State if license is expired"
 msgstr "Estado se a licença estiver expirada"
+
+#, fuzzy
+msgid "State if link speed changed"
+msgstr "Declarar se nenhuma reserva estiver configurada"
+
+#, fuzzy
+msgid "State if link status changed"
+msgstr "Resumo da última alteração de estado"
 
 msgid "State if mode is Active-Active"
 msgstr "Estado se o modo for Activo-Activo"
@@ -63715,6 +63818,42 @@ msgstr "Log de mensagens do tipo Syslog"
 
 msgid "System"
 msgstr "Sistema"
+
+msgid "System 0 average consumed watts"
+msgstr ""
+
+msgid "System 0 maximum consumed watts"
+msgstr ""
+
+msgid "System 0 minimum consumed watts"
+msgstr ""
+
+msgid "System 1 average consumed watts"
+msgstr ""
+
+msgid "System 1 maximum consumed watts"
+msgstr ""
+
+msgid "System 1 minimum consumed watts"
+msgstr ""
+
+msgid "System 2 average consumed watts"
+msgstr ""
+
+msgid "System 2 maximum consumed watts"
+msgstr ""
+
+msgid "System 2 minimum consumed watts"
+msgstr ""
+
+msgid "System 3 average consumed watts"
+msgstr ""
+
+msgid "System 3 maximum consumed watts"
+msgstr ""
+
+msgid "System 3 minimum consumed watts"
+msgstr ""
 
 msgid "System Events on APX Inrow Devices"
 msgstr "Eventos do sistema em dispositivos APX Inrow"
@@ -85024,6 +85163,10 @@ msgstr "Registo de agentes do Windows"
 msgid "Windows authentication"
 msgstr "autenticação do Windows"
 
+#, fuzzy
+msgid "Windows debugging"
+msgstr "Registo de agentes do Windows"
+
 msgid "Windows files"
 msgstr "arquivos do Windows"
 
@@ -90192,6 +90335,9 @@ msgstr "pior estado"
 
 msgid "wrap"
 msgstr "embrulho"
+
+msgid "write log messages to the Windows debugging interface"
+msgstr ""
 
 #, python-format
 msgid "wrong type, expected %s"

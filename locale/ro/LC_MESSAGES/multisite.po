@@ -11736,6 +11736,10 @@ msgstr "Nu se poate scrie fișierul de configurare \"%s\": %s."
 msgid "Cannot write file \"%s\": %s"
 msgstr "Nu se poate scrie fișierul \"%s\": %s."
 
+#, fuzzy
+msgid "Capacity"
+msgstr "Capacitate UPS"
+
 msgid "Capacity providers per cluster"
 msgstr "Furnizori de capacitate per cluster"
 
@@ -13472,6 +13476,10 @@ msgstr "Clasa de gazde"
 
 msgid "Classes"
 msgstr "Clase"
+
+#, fuzzy
+msgid "Classic"
+msgstr "Clasică"
 
 msgid "Classic Load Balancing (ELB)"
 msgstr "Echilibrarea încărcării clasice (ELB)"
@@ -15620,6 +15628,10 @@ msgstr "Controler"
 #, python-format
 msgid "Controller %d"
 msgstr "Controler %d"
+
+#, fuzzy
+msgid "Controller ID"
+msgstr "Controler"
 
 #, fuzzy
 msgid "Controller version"
@@ -20201,7 +20213,15 @@ msgid "Discovery settings"
 msgstr "Setări de descoperire"
 
 #, fuzzy
+msgid "Discovery settings for physical drives"
+msgstr "Setări de descoperire"
+
+#, fuzzy
 msgid "Discovery settings for physical ports"
+msgstr "Setări de descoperire"
+
+#, fuzzy
+msgid "Discovery settings for volumes"
 msgstr "Setări de descoperire"
 
 msgid "Discovery state"
@@ -23027,6 +23047,11 @@ msgstr "Activați calculul tendințelor"
 msgid "Enable/Disable active checks"
 msgstr "Activarea/dezactivarea verificărilor active"
 
+msgid ""
+"Enable/Disable logging to Windows debugging interface. Off by default. View "
+"with <i>WinDbg</i>"
+msgstr ""
+
 msgid "Enable/Disable passive checks"
 msgstr "Activarea/Dezactivarea verificărilor pasive"
 
@@ -25831,6 +25856,10 @@ msgstr "Firmware"
 msgid "Firmware Versions"
 msgstr "Versiunea Kernel"
 
+#, fuzzy
+msgid "Firmware version"
+msgstr "Versiunea Kernel"
+
 msgid "First"
 msgstr "Prima"
 
@@ -26801,6 +26830,10 @@ msgstr "Descriere completă"
 
 msgid "Full access"
 msgstr "Acces complet"
+
+#, fuzzy
+msgid "Full controller status"
+msgstr "Controlor agent"
 
 msgid "Full dump of all variables"
 msgstr "Descărcarea completă a tuturor variabilelor"
@@ -41241,6 +41274,10 @@ msgstr "Eșecul verificării conectivității media"
 msgid "Media and data integrity errors"
 msgstr "Erori de integritate a mediilor și a datelor"
 
+#, fuzzy
+msgid "Media type"
+msgstr "Tipul de meci"
+
 #, python-format
 msgid "Median %s"
 msgstr "Median %s"
@@ -50385,6 +50422,10 @@ msgstr "Adresa fizică (MAC)"
 msgid "Physical components"
 msgstr "Componente fizice"
 
+#, fuzzy
+msgid "Physical port"
+msgstr "Fizic"
+
 msgid "Physical port states to discover"
 msgstr "Stări de port fizic de descoperit"
 
@@ -53491,8 +53532,32 @@ msgid "Redfish Compatible Power Equipment (PDU)"
 msgstr ""
 
 #, fuzzy
+msgid "Redfish Ethernet Interface"
+msgstr "Descoperirea serviciilor în așteptare"
+
+#, fuzzy
 msgid "Redfish Ethernet Interface discovery"
 msgstr "Descoperirea serviciilor în așteptare"
+
+#, fuzzy
+msgid "Redfish Physical Drive discovery"
+msgstr "Stări de port fizic de descoperit"
+
+#, fuzzy
+msgid "Redfish Power Consumption"
+msgstr "Consumul de energie electrică"
+
+#, fuzzy
+msgid "Redfish Storage Controller"
+msgstr "Dezactivați controlerul"
+
+#, fuzzy
+msgid "Redfish Volume discovery"
+msgstr "Descoperirea contorului MSSQL"
+
+#, fuzzy
+msgid "Redfish drives"
+msgstr "Descoperirea contorului MSSQL"
 
 #, fuzzy
 msgid "Redfish outlet discovery"
@@ -55505,6 +55570,9 @@ msgstr "Gestionarea sesiunii"
 #, fuzzy
 msgid "Rollovers Asserts"
 msgstr "%s Afirmă"
+
+msgid "Rollup check only"
+msgstr ""
 
 msgid "Root CA"
 msgstr ""
@@ -61332,6 +61400,24 @@ msgstr ""
 "vedea <i>%s</i> )."
 
 msgid ""
+"Specify how the storage controller should be checked:\n"
+"\n"
+" Full: Report detailed controller status including RAID levels and device "
+"protocols\n"
+"\n"
+" Rollup: Only report overall health state"
+msgstr ""
+
+msgid ""
+"Specify how to name drives during discovery:\n"
+"\n"
+" Classic: Use the drive ID and name (e.g., '0-1.2TB 12G SAS HDD')\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:drive)"
+msgstr ""
+
+msgid ""
 "Specify how to name the outlets during discovery:\n"
 "\n"
 " Port ID: Use the ID of the port as name\n"
@@ -61341,6 +61427,15 @@ msgid ""
 "\n"
 " Zero padded port ID: Use the zero padded port ID (to the length of the "
 "highest port ID)"
+msgstr ""
+
+msgid ""
+"Specify how to name volumes during discovery:\n"
+"\n"
+" Classic: Use the volume ID\n"
+"\n"
+" Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
+"for system:storage:volume)"
 msgstr ""
 
 #, fuzzy
@@ -62423,6 +62518,14 @@ msgstr "Stare dacă intrarea este Necunoscută"
 
 msgid "State if license is expired"
 msgstr "Indicați dacă licența este expirată"
+
+#, fuzzy
+msgid "State if link speed changed"
+msgstr "Stare dacă nu este configurată nicio rezervă"
+
+#, fuzzy
+msgid "State if link status changed"
+msgstr "Rezumat la ultima modificare a statutului"
 
 msgid "State if mode is Active-Active"
 msgstr "Stare dacă modul este Activ-Activ"
@@ -63891,6 +63994,42 @@ msgstr "Înregistrarea mesajelor de tip Syslog"
 
 msgid "System"
 msgstr "Sistem"
+
+msgid "System 0 average consumed watts"
+msgstr ""
+
+msgid "System 0 maximum consumed watts"
+msgstr ""
+
+msgid "System 0 minimum consumed watts"
+msgstr ""
+
+msgid "System 1 average consumed watts"
+msgstr ""
+
+msgid "System 1 maximum consumed watts"
+msgstr ""
+
+msgid "System 1 minimum consumed watts"
+msgstr ""
+
+msgid "System 2 average consumed watts"
+msgstr ""
+
+msgid "System 2 maximum consumed watts"
+msgstr ""
+
+msgid "System 2 minimum consumed watts"
+msgstr ""
+
+msgid "System 3 average consumed watts"
+msgstr ""
+
+msgid "System 3 maximum consumed watts"
+msgstr ""
+
+msgid "System 3 minimum consumed watts"
+msgstr ""
 
 msgid "System Events on APX Inrow Devices"
 msgstr "Evenimente de sistem pe dispozitivele APX Inrow"
@@ -85301,6 +85440,10 @@ msgstr "Jurnalizare agent Windows"
 msgid "Windows authentication"
 msgstr "Autentificare Windows"
 
+#, fuzzy
+msgid "Windows debugging"
+msgstr "Jurnalizare agent Windows"
+
 msgid "Windows files"
 msgstr "Fișiere Windows"
 
@@ -90513,6 +90656,9 @@ msgstr "cea mai rea stare"
 
 msgid "wrap"
 msgstr "înfășurați"
+
+msgid "write log messages to the Windows debugging interface"
+msgstr ""
 
 #, python-format
 msgid "wrong type, expected %s"

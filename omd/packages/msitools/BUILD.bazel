@@ -1,12 +1,6 @@
-load("@rules_pkg//pkg:mappings.bzl", "REMOVE_BASE_DIRECTORY", "filter_directory", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-
-filegroup(
-    name = "gen_dir",
-    srcs = ["@msitools"],
-    output_group = "gen_dir",
-    tags = ["manual"],
-)
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 filegroup(
     name = "msibuild",
@@ -22,40 +16,65 @@ filegroup(
     tags = ["manual"],
 )
 
-pkg_files(
-    name = "bin",
+set_runpath(
+    name = "bin_runpath",
     srcs = [
         ":msibuild",
         ":msiinfo",
     ],
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    renames = {
-        ":msibuild": "bin/msibuild",
-        ":msiinfo": "bin/msiinfo",
-    },
-    tags = ["manual"],
-)
-
-filter_directory(
-    name = "without_bin_filter",
-    src = ":gen_dir",
-    excludes = [
-        "bin/msibuild",
-        "bin/msiinfo",
-    ],
+    rpaths = ["${ORIGIN}/../lib"],
     tags = ["manual"],
 )
 
 pkg_files(
-    name = "without_bin",
+    name = "bin",
+    srcs = [":bin_runpath"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "libmsi.so.0.0.0",
+    srcs = ["@msitools"],
+    output_group = "libmsi.so.0.0.0",
+)
+
+set_runpath(
+    name = "libmsi_so_runpath",
+    srcs = [":libmsi.so.0.0.0"],
+    tags = ["manual"],
+)
+
+pkg_files(
+    name = "libmsi_so",
+    srcs = [":libmsi_so_runpath"],
+)
+
+pkg_mklink(
+    name = "libmsi_so_major_symlink",
+    link_name = "libmsi.so.0",
+    tags = ["manual"],
+    target = "libmsi.so.0.0.0",
+)
+
+pkg_mklink(
+    name = "libmsi_so_symlink",
+    link_name = "libmsi.so",
+    tags = ["manual"],
+    target = "libmsi.so.0",
+)
+
+pkg_filegroup(
+    name = "lib",
     srcs = [
-        ":without_bin_filter",
+        ":libmsi_so",
+        ":libmsi_so_major_symlink",
+        ":libmsi_so_symlink",
     ],
-    renames = {
-        ":without_bin_filter": REMOVE_BASE_DIRECTORY,
-    },
+    prefix = "lib",
     tags = ["manual"],
 )
 
@@ -63,7 +82,7 @@ pkg_tar(
     name = "msitools",
     srcs = [
         ":bin",
-        ":without_bin",
+        ":lib",
     ],
     stamp = 1,
     tags = ["manual"],

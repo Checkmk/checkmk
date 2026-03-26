@@ -4007,13 +4007,16 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         search = request.get_str_input("search", "")
         back_mode = request.var("back_mode") or ModeNotifications.name()
+        # Don't forward the search parameter when going back to "test_notifications",
+        # so that we don't hide notifications when testing them.
+        forward_search = search and back_mode != "test_notifications"
         return make_simple_form_page_menu(
             title=_("Notification rule"),
             breadcrumb=breadcrumb,
             add_cancel_link=True,
             cancel_url=(
-                mode_url(mode_name=back_mode, search=search)
-                if search
+                mode_url(mode_name=back_mode, search=search or "")
+                if forward_search
                 else mode_url(mode_name=back_mode)
             ),
         )

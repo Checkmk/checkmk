@@ -876,10 +876,16 @@ class ModeNotifications(ABCNotificationsMode):
                 NotificationRuleConfigFile().save,
             )
 
-        if back_mode := request.var("back_mode"):
-            return redirect(mode_url(back_mode, user=request.get_str_input_mandatory("user")))
-
         search = request.get_str_input("search", "")
+        if back_mode := request.var("back_mode"):
+            return redirect(
+                mode_url(
+                    back_mode,
+                    user=request.get_str_input_mandatory("user"),
+                    **({"search": search} if search else {}),
+                )
+            )
+
         if search:
             return redirect(self.mode_url(search=search))
         return redirect(self.mode_url())

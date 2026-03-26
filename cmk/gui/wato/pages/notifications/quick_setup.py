@@ -1970,10 +1970,9 @@ def save_and_test_action(
     result_msg = _save_or_edit(
         all_stages_form_data, mode, _progress_logger, object_id, use_git, pprint_value
     )
-    search = request.get_str_input("search", "")
-    return mode_url(
-        "test_notifications", result=result_msg, **({"search": search} if search else {})
-    )
+    # We don't forward the search parameter, so that we don't hide notifications
+    # when testing them in the "Test notifications" mode.
+    return mode_url("test_notifications", result=result_msg)
 
 
 def save_and_new_action(

@@ -121,9 +121,14 @@ export function toggle_class(o: Nullable<HTMLElement>, a: string, b: string) {
 
 // Adds document/window global event handlers
 // TODO: Move the window fallback to the call sites (when necessary) and nuke this function
-export function add_event_handler(type: string, func: (e: Event) => void, obj?: EventTarget) {
+export function add_event_handler(
+  type: string,
+  func: (e: Event) => void,
+  obj?: EventTarget,
+  options?: AddEventListenerOptions
+) {
   obj = typeof obj === 'undefined' ? window : obj
-  obj.addEventListener(type, func, false)
+  obj.addEventListener(type, func, options ?? false)
 }
 
 export function del_event_handler(type: string, func: (e?: Event) => void, obj?: any) {

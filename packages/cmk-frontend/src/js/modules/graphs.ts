@@ -1332,7 +1332,13 @@ function graph_global_mouse_wheel(event: Event): boolean | void {
   let obj: HTMLElement | ParentNode | null = event!.target as HTMLElement
   // prevent page scrolling when making wheelies over graphs
   while (obj instanceof HTMLElement && !obj.className) obj = obj.parentNode
-  if (obj instanceof HTMLElement && obj.tagName == 'DIV' && obj.className == 'graph_container')
+  if (
+    obj instanceof HTMLElement &&
+    obj.tagName == 'DIV' &&
+    obj.className == 'graph' &&
+    obj.parentElement instanceof HTMLElement &&
+    obj.parentElement.className == 'graph_container'
+  )
     return prevent_default_events(event!)
 }
 
@@ -1358,8 +1364,8 @@ function graph_activate_mouse_control(graph: GraphArtwork) {
     return graph_mouse_wheel(event, graph)
   }
 
-  add_event_handler(wheel_event_name(), on_wheel, canvas)
-  add_event_handler(wheel_event_name(), graph_global_mouse_wheel)
+  add_event_handler(wheel_event_name(), on_wheel, canvas, { passive: false })
+  add_event_handler(wheel_event_name(), graph_global_mouse_wheel, undefined, { passive: false })
 
   add_event_handler('mouseup', global_graph_mouse_up)
 

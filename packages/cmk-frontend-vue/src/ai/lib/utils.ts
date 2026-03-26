@@ -30,15 +30,26 @@ export function typewriter(ref: Ref<string>, text: string, onTyped: () => void) 
  * Processes a stream of text chunks and yields valid JSON objects.
  * Handles SSE format with "data: {...}" messages separated by blank lines.
  * Buffers incomplete messages until double-newline separator is found.
+ * Optionally you can specify a timeout for waiting for new data to prevent
+ * hanging on stalled streams.
  */
-export async function* streamJsonResponse(stream: ReadableStream<Uint8Array>) {
+export async function* streamJsonResponse(stream: ReadableStream<Uint8Array>, timeoutMs?: number) {
   const reader = stream.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
 
   try {
     while (true) {
-      const { done, value } = await reader.read()
+      const readPromise = reader.read()
+      let timeoutId: ReturnType<typeof setTimeout> | undefined
+      const { done, value } = timeoutMs
+        ? await Promise.race([
+            readPromise,
+            new Promise<never>((_, reject) => {
+              timeoutId = setTimeout(() => reject(new Error('Stream read timed out')), timeoutMs)
+            })
+          ]).finally(() => clearTimeout(timeoutId))
+        : await readPromise
       if (done) {
         break
       }
@@ -85,6 +96,9 @@ export async function* streamJsonResponse(stream: ReadableStream<Uint8Array>) {
         console.warn('Failed to parse remaining JSON:', remaining, e)
       }
     }
+  } catch (e) {
+    await reader.cancel()
+    throw e
   } finally {
     reader.releaseLock()
   }

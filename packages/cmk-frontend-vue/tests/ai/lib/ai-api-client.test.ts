@@ -181,7 +181,8 @@ describe('streamInference', () => {
   test('calls onEvent for each parsed StreamEvent yielded by the stream', async () => {
     const events: StreamEvent[] = [
       { type: 'thinking', text: 'reasoning...' },
-      { type: 'answer', text: 'final answer' }
+      { type: 'answer', text: 'final answer' },
+      { type: 'finish' }
     ]
     fetchMock.mockResolvedValue(mockStreamResponse(makeStream(...events)))
     const onEvent = vi.fn()
@@ -189,19 +190,75 @@ describe('streamInference', () => {
 
     await client.streamInference(ACTION, CONTEXT_DATA, onEvent)
 
-    expect(onEvent).toHaveBeenCalledTimes(2)
+    expect(onEvent).toHaveBeenCalledTimes(3)
     expect(onEvent).toHaveBeenNthCalledWith(1, events[0])
     expect(onEvent).toHaveBeenNthCalledWith(2, events[1])
+    expect(onEvent).toHaveBeenNthCalledWith(3, events[2])
   })
 
-  test('calls onComplete after all events are processed', async () => {
-    fetchMock.mockResolvedValue(mockStreamResponse(makeStream({ type: 'answer', text: 'done' })))
+  test('calls onComplete when the last event is a finish event', async () => {
+    fetchMock.mockResolvedValue(
+      mockStreamResponse(makeStream({ type: 'answer', text: 'done' }, { type: 'finish' }))
+    )
     const onComplete = vi.fn()
     const client = new AiApiClient(SITE_NAME)
 
     await client.streamInference(ACTION, CONTEXT_DATA, vi.fn(), undefined, onComplete)
 
     expect(onComplete).toHaveBeenCalledOnce()
+  })
+
+  test('calls onError when stream ends without a finish event', async () => {
+    fetchMock.mockResolvedValue(mockStreamResponse(makeStream({ type: 'answer', text: 'partial' })))
+    const onEvent = vi.fn()
+    const onError = vi.fn()
+    const onComplete = vi.fn()
+    const client = new AiApiClient(SITE_NAME)
+
+    await client.streamInference(ACTION, CONTEXT_DATA, onEvent, onError, onComplete)
+
+    expect(onEvent).toHaveBeenCalledOnce()
+    expect(onComplete).not.toHaveBeenCalled()
+    expect(onError).toHaveBeenCalledOnce()
+    expect((onError.mock.calls[0]![0] as Error).message).toBe(
+      'Stream did not complete successfully'
+    )
+  })
+
+  test('calls onError when an error event is received', async () => {
+    fetchMock.mockResolvedValue(
+      mockStreamResponse(
+        makeStream(
+          { type: 'answer', text: 'partial' },
+          { type: 'error', message: 'something broke' }
+        )
+      )
+    )
+    const onEvent = vi.fn()
+    const onError = vi.fn()
+    const onComplete = vi.fn()
+    const client = new AiApiClient(SITE_NAME)
+
+    await client.streamInference(ACTION, CONTEXT_DATA, onEvent, onError, onComplete)
+
+    expect(onComplete).not.toHaveBeenCalled()
+    expect(onError).toHaveBeenCalledOnce()
+    expect((onError.mock.calls[0]![0] as Error).message).toContain('something broke')
+  })
+
+  test('does not forward the error event to onEvent', async () => {
+    fetchMock.mockResolvedValue(
+      mockStreamResponse(
+        makeStream({ type: 'answer', text: 'before error' }, { type: 'error', message: 'fail' })
+      )
+    )
+    const onEvent = vi.fn()
+    const client = new AiApiClient(SITE_NAME)
+
+    await client.streamInference(ACTION, CONTEXT_DATA, onEvent, vi.fn())
+
+    expect(onEvent).toHaveBeenCalledOnce()
+    expect(onEvent).toHaveBeenCalledWith({ type: 'answer', text: 'before error' })
   })
 
   test('calls onError when fetch rejects with a network error', async () => {

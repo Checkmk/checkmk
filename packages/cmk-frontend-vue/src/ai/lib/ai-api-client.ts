@@ -77,7 +77,19 @@ export interface AnswerEvent {
   text: string
 }
 
-export type StreamEvent = MetadataEvent | ThinkingEvent | AnswerEvent
+export interface ErrorEvent {
+  type: 'error'
+  message: string
+}
+
+export interface FinishEvent {
+  type: 'finish'
+}
+
+export type StreamEvent = MetadataEvent | ThinkingEvent | AnswerEvent | ErrorEvent | FinishEvent
+
+// Must exceed the ai_service keepalive ping interval (currently 15s).
+const STREAM_TIMEOUT_MS = 20_000
 
 export class AiApiClient extends Api {
   private readonly defaultHeaders: Record<string, string>
@@ -142,13 +154,22 @@ export class AiApiClient extends Api {
         throw new Error('Stream inference response body is null')
       }
 
-      const jsonStream = streamJsonResponse(res.body)
+      const jsonStream = streamJsonResponse(res.body, STREAM_TIMEOUT_MS)
 
+      let lastEvent: StreamEvent | undefined
       for await (const chunk of jsonStream) {
-        onEvent(chunk as StreamEvent)
+        lastEvent = chunk as StreamEvent
+        if (lastEvent.type === 'error') {
+          throw new Error(`Error event received: ${lastEvent.message}`)
+        }
+        onEvent(lastEvent)
       }
 
-      onComplete?.()
+      if (lastEvent?.type === 'finish') {
+        onComplete?.()
+      } else {
+        throw new Error('Stream did not complete successfully')
+      }
     } catch (e) {
       onError?.(e instanceof Error ? e : new Error(String(e)))
     }

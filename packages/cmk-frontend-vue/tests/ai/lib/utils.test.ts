@@ -135,6 +135,99 @@ describe('streamJsonResponse', () => {
     })
   })
 
+  describe('timeout', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    // These two tests use real timers because fake timers + Promise.race causes
+    // unhandled rejection warnings: advanceTimersByTimeAsync fires the reject()
+    // before the async generator's catch handler is wired up via microtasks.
+    test('rejects with timeout error when stream stalls longer than timeoutMs', async () => {
+      vi.useRealTimers()
+
+      const stream = new ReadableStream<Uint8Array>({
+        start() {
+          // Never enqueues or closes — simulates a stalled connection
+        }
+      })
+
+      const resultPromise = (async () => {
+        const results: unknown[] = []
+        for await (const item of streamJsonResponse(stream, 200)) {
+          results.push(item)
+        }
+        return results
+      })()
+
+      await expect(resultPromise).rejects.toThrow('Stream read timed out')
+    })
+
+    test('cancels the stream reader when a timeout occurs', async () => {
+      vi.useRealTimers()
+
+      let cancelCalled = false
+      const stream = new ReadableStream<Uint8Array>({
+        start() {
+          // Never enqueues or closes — simulates a stalled connection
+        },
+        cancel() {
+          cancelCalled = true
+        }
+      })
+
+      const resultPromise = (async () => {
+        const results: unknown[] = []
+        for await (const item of streamJsonResponse(stream, 200)) {
+          results.push(item)
+        }
+        return results
+      })()
+
+      await expect(resultPromise).rejects.toThrow('Stream read timed out')
+      expect(cancelCalled).toBe(true)
+    })
+
+    test('does not time out when chunks arrive within the timeout window', async () => {
+      const encoder = new TextEncoder()
+      let enqueue: (chunk: Uint8Array) => void
+      let close: () => void
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          enqueue = (chunk) => controller.enqueue(chunk)
+          close = () => controller.close()
+        }
+      })
+
+      const results: unknown[] = []
+      const resultPromise = (async () => {
+        for await (const item of streamJsonResponse(stream, 200)) {
+          results.push(item)
+        }
+        return results
+      })()
+
+      // Send first chunk at t=100 (within 200ms timeout)
+      await vi.advanceTimersByTimeAsync(100)
+      enqueue!(encoder.encode('data: {"n":1}\n\n'))
+
+      // Send second chunk at t=200 (100ms after last chunk, within 200ms timeout)
+      await vi.advanceTimersByTimeAsync(100)
+      enqueue!(encoder.encode('data: {"n":2}\n\n'))
+
+      // Close stream
+      await vi.advanceTimersByTimeAsync(0)
+      close!()
+
+      await vi.advanceTimersByTimeAsync(0)
+      expect(await resultPromise).toEqual([{ n: 1 }, { n: 2 }])
+    })
+  })
+
   describe('empty / blank lines between events', () => {
     test('skips empty message segments produced by consecutive \\n\\n', async () => {
       const stream = makeStreamFromChunks('data: {"n":1}\n\n\n\ndata: {"n":2}\n\n')

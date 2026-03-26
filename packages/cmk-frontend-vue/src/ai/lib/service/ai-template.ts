@@ -297,6 +297,9 @@ export class AiTemplateService extends ServiceBase {
         switch (event.type) {
           case 'metadata':
             break
+          case 'finish':
+            break
+
           case 'thinking':
             contents.value.push({
               content_type: 'markdown',

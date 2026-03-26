@@ -9,7 +9,7 @@ Level: 1
 Version: 2.2.0b1
 
 The agent plugin "mk_oracle" implements its own caching functionality because
-of long running SQL statements (and custom SQLs with own cache interalls). But
+of long running SQL statements (and custom SQLs with own cache intervals). But
 the execution of synchronous and asynchronous SQls does not work properly with
 systemd anymore if the plugin is installed to `../check_mk_agent/plugins/`
 because the "check-mk-agent-sync.service" would wait for all child processes

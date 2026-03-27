@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-25 18:46+0000\n"
+"PO-Revision-Date: 2026-03-26 18:46+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -1227,7 +1227,7 @@ msgid "3PAR configuration"
 msgstr "3PAR Konfiguration"
 
 msgid "3PAR ports"
-msgstr "3PAR Ports"
+msgstr "3PAR-Ports"
 
 msgid "4xx error rate"
 msgstr "4xx Fehlerrate"
@@ -11336,9 +11336,8 @@ msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kann Datei \"%s\" nicht schreiben: %s"
 
-#, fuzzy
 msgid "Capacity"
-msgstr "USV-Kapazität"
+msgstr "Kapazität"
 
 msgid "Capacity providers per cluster"
 msgstr "Capacity providers pro Cluster"
@@ -13043,7 +13042,6 @@ msgstr "Klasse von Hosts"
 msgid "Classes"
 msgstr "Klassen"
 
-#, fuzzy
 msgid "Classic"
 msgstr "Klassisch"
 
@@ -15154,9 +15152,8 @@ msgstr "Controller"
 msgid "Controller %d"
 msgstr "Controller %d"
 
-#, fuzzy
 msgid "Controller ID"
-msgstr "Controller"
+msgstr "Controller-ID"
 
 msgid "Controller version"
 msgstr "Controller-Version"
@@ -19573,16 +19570,14 @@ msgstr "Erkennungsregeln"
 msgid "Discovery settings"
 msgstr "Erkennungseinstellungen"
 
-#, fuzzy
 msgid "Discovery settings for physical drives"
-msgstr "Erkennungseinstellungen für physikalische Ports"
+msgstr "Erkennungseinstellungen für physische Laufwerke"
 
 msgid "Discovery settings for physical ports"
 msgstr "Erkennungseinstellungen für physikalische Ports"
 
-#, fuzzy
 msgid "Discovery settings for volumes"
-msgstr "Erkennungseinstellungen"
+msgstr "Erkennungseinstellungen für Datenträger"
 
 msgid "Discovery state"
 msgstr "Erkennungszustand"
@@ -25044,9 +25039,8 @@ msgstr "Firmware"
 msgid "Firmware Versions"
 msgstr "Firmware-Versionen"
 
-#, fuzzy
 msgid "Firmware version"
-msgstr "Firmware-Versionen"
+msgstr "Firmware-Version"
 
 msgid "First"
 msgstr "Erste/r/s"
@@ -26002,9 +25996,8 @@ msgstr "Vollständige Beschreibung"
 msgid "Full access"
 msgstr "Vollständiger Zugriff"
 
-#, fuzzy
 msgid "Full controller status"
-msgstr "Benutzer des Agent Controllers"
+msgstr "Vollständiger Controller-Status"
 
 msgid "Full dump of all variables"
 msgstr "Vollständige Ausgabe aller Variablen"
@@ -39541,7 +39534,7 @@ msgstr ""
 "Speicher festlegen, ergibt sich ein hartes Limit von 600 MiB und ein weiches "
 "Limit von 350 MiB (das Spitzenlimit entspricht 250 MiB)."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
@@ -39819,9 +39812,8 @@ msgstr "Fehler der Medienverbindungsprüfung"
 msgid "Media and data integrity errors"
 msgstr "Medien- und Datenintegritätsfehler"
 
-#, fuzzy
 msgid "Media type"
-msgstr "Match-Typ"
+msgstr "Medientyp"
 
 #, python-format
 msgid "Median %s"
@@ -48454,9 +48446,8 @@ msgstr "Physikalische Adresse (MAC)"
 msgid "Physical components"
 msgstr "Physikalische Komponenten"
 
-#, fuzzy
 msgid "Physical port"
-msgstr "Physikalisch"
+msgstr "Physischer Port"
 
 msgid "Physical port states to discover"
 msgstr "Physikalische Port-Zustände, die erkannt werden sollen"
@@ -51405,32 +51396,26 @@ msgstr "Redfish kompatible Management-Steuerung"
 msgid "Redfish Compatible Power Equipment (PDU)"
 msgstr "Redfish kompatible Stromversorgung (PDU)"
 
-#, fuzzy
 msgid "Redfish Ethernet Interface"
-msgstr "Redfish Ethernet Interface Erkennung"
+msgstr "Redfish Ethernet-Schnittstelle"
 
 msgid "Redfish Ethernet Interface discovery"
 msgstr "Redfish Ethernet Interface Erkennung"
 
-#, fuzzy
 msgid "Redfish Physical Drive discovery"
-msgstr "Physikalische Port-Erkennung für Redfish"
+msgstr "Erkennung des physischen Redfish-Laufwerks"
 
-#, fuzzy
 msgid "Redfish Power Consumption"
-msgstr "Stromverbrauch"
+msgstr "Redfish-Stromverbrauch"
 
-#, fuzzy
 msgid "Redfish Storage Controller"
-msgstr "Redfish kompatible Management-Steuerung"
+msgstr "Redfish Speicher-Controller"
 
-#, fuzzy
 msgid "Redfish Volume discovery"
-msgstr "Erkennung der Redfish Ausgänge"
+msgstr "Erkennung des Redfish Volumes"
 
-#, fuzzy
 msgid "Redfish drives"
-msgstr "Redfish"
+msgstr "Redfish-Laufwerke"
 
 msgid "Redfish outlet discovery"
 msgstr "Erkennung der Redfish Ausgänge"
@@ -60065,10 +60050,10 @@ msgid "State if ha peer State is Unknown"
 msgstr "Zustand, wenn HA-Peer-Zustand unbekannt ist"
 
 msgid "State if input is OFF"
-msgstr "Zustand, wenn der Eingang OFF ist"
+msgstr "Zustand, wenn die Eingabe OFF ist"
 
 msgid "State if input is ON"
-msgstr "Zustand, wenn der Eingang ON ist"
+msgstr "Zustand, wenn die Eingabe ON ist"
 
 msgid "State if input is Unknown"
 msgstr "Zustand, wenn die Eingabe UNKNOWN ist"
@@ -60076,13 +60061,11 @@ msgstr "Zustand, wenn die Eingabe UNKNOWN ist"
 msgid "State if license is expired"
 msgstr "Zustand, wenn die Lizenz abgelaufen ist"
 
-#, fuzzy
 msgid "State if link speed changed"
-msgstr "Zustand, wenn keine Reserve konfiguriert ist"
+msgstr "Zustand, wenn sich die Link-Geschwindigkeit geändert hat"
 
-#, fuzzy
 msgid "State if link status changed"
-msgstr "Zusammenfassung bei letzter Statusänderung"
+msgstr "Zustand, wenn der Link-Status sich geändert hat"
 
 msgid "State if mode is Active-Active"
 msgstr "Zustand, wenn der Modus Active-Active ist"

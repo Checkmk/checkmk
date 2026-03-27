@@ -465,6 +465,7 @@ py_library(
     }),
     imports = [".."],
     deps = [
+        ":scripts",
         ":testlib",
         "//tests/testlib/common:utils",
         requirement("pytest"),

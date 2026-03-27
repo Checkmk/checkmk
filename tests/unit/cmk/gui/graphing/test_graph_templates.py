@@ -15,9 +15,9 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
 from cmk.gui.graphing._graph_specification import (
+    GraphEnvironment,
     GraphMetric,
     GraphRecipe,
-    GraphRenderContext,
     HorizontalRule,
     MinimalVerticalRange,
 )
@@ -791,7 +791,7 @@ def test_template_recipes_matching(
             graph_id=graph_id,
             graph_index=graph_index,
         ).recipes(
-            GraphRenderContext(
+            GraphEnvironment(
                 registered_metrics={
                     "metric1": RegisteredMetric(
                         name="metric1",
@@ -825,7 +825,6 @@ def test_template_recipes_matching(
                     ),
                 },
                 user_permissions=UserPermissions({}, {}, {}, []),
-                consolidation_function="max",
                 temperature_unit=TemperatureUnit.CELSIUS,
                 backend_time_series_fetcher=None,
                 debug=False,
@@ -2022,7 +2021,7 @@ def test_template_recipes_fs() -> None:
             host_name=HostName("host_name"),
             service_description="service_name",
         ).recipes(
-            GraphRenderContext(
+            GraphEnvironment(
                 registered_metrics={
                     "fs_growth": RegisteredMetric(
                         name="fs_growth",
@@ -2085,7 +2084,6 @@ def test_template_recipes_fs() -> None:
                     ),
                 },
                 user_permissions=UserPermissions({}, {}, {}, []),
-                consolidation_function="max",
                 temperature_unit=TemperatureUnit.CELSIUS,
                 backend_time_series_fetcher=None,
                 debug=False,

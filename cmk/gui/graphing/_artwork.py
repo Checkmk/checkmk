@@ -42,10 +42,10 @@ from ._graph_metric_expressions import (
 from ._graph_specification import (
     AugmentedTimeSeriesOfGraphMetric,
     FixedVerticalRange,
+    GraphEnvironment,
     GraphMetricLimit,
     GraphRecipe,
     GraphRecipeWithOverrides,
-    GraphRenderContext,
     GraphSpecification,
     GraphTimeRange,
     HorizontalRule,
@@ -301,7 +301,7 @@ def iter_graph_artworks(
     graph_specification: GraphSpecification,
     time_range: GraphTimeRange,
     size: tuple[float, float],
-    context: GraphRenderContext,
+    env: GraphEnvironment,
     *,
     pin_time: int | None = None,
 ) -> Iterator[tuple[GraphRecipeWithOverrides, GraphArtworkOrErrors]]:
@@ -310,16 +310,16 @@ def iter_graph_artworks(
     Combines spec.recipes() + compute_graph_artwork() into a single iterator,
     applying per-recipe time_range overrides automatically.
     """
-    for recipe_with_overrides in graph_specification.recipes(context):
+    for recipe_with_overrides in graph_specification.recipes(env):
         yield (
             recipe_with_overrides,
             compute_graph_artwork(
                 recipe_with_overrides.recipe,
                 recipe_with_overrides.time_range or time_range,
                 size,
-                context.registered_metrics,
-                temperature_unit=context.temperature_unit,
-                backend_time_series_fetcher=context.backend_time_series_fetcher,
+                env.registered_metrics,
+                temperature_unit=env.temperature_unit,
+                backend_time_series_fetcher=env.backend_time_series_fetcher,
                 pin_time=pin_time,
                 mark_requested_end_time=recipe_with_overrides.mark_requested_end_time,
             ),

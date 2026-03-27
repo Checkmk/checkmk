@@ -47,13 +47,12 @@ from ._unit import (
 
 
 @dataclass(frozen=True)
-class GraphRenderContext:
+class GraphEnvironment:
     """Bundles the server-side environment passed unchanged through every rendering path."""
 
     registered_metrics: Mapping[str, RegisteredMetric]
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional]
     user_permissions: UserPermissions
-    consolidation_function: GraphConsolidationFunction
     temperature_unit: TemperatureUnit
     backend_time_series_fetcher: FetchTimeSeries | None
     debug: bool = False
@@ -141,7 +140,11 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def graph_type_name() -> str: ...
 
     @abstractmethod
-    def recipes(self, context: GraphRenderContext) -> Sequence[GraphRecipeWithOverrides]: ...
+    def recipes(
+        self,
+        env: GraphEnvironment,
+        consolidation_function: GraphConsolidationFunction = "max",
+    ) -> Sequence[GraphRecipeWithOverrides]: ...
 
     # mypy does not support other decorators on top of @property:
     # https://github.com/python/mypy/issues/14461

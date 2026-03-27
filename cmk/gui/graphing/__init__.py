@@ -31,10 +31,10 @@ from ._graph_pdf import (
     render_graph_pdf,
 )
 from ._graph_specification import (
+    GraphEnvironment,
     GraphMetric,
     GraphRecipe,
     GraphRecipeWithOverrides,
-    GraphRenderContext,
     GraphSpecification,
     GraphTimeRange,
     parse_raw_graph_specification,
@@ -117,7 +117,7 @@ __all__ = [
     "GraphPluginChoice",
     "GraphRecipe",
     "GraphRecipeWithOverrides",
-    "GraphRenderContext",
+    "GraphEnvironment",
     "GraphDisplayConfigHTML",
     "GraphDisplayConfigImage",
     "GraphRenderOptions",

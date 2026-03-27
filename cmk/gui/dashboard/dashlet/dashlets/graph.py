@@ -29,9 +29,9 @@ from cmk.gui.graphing import (
     get_temperature_unit,
     get_template_graph_specification,
     GraphDestinations,
+    GraphEnvironment,
     GraphPluginChoice,
     GraphRecipeWithOverrides,
-    GraphRenderContext,
     graphs_from_api,
     GraphSpecification,
     metrics_from_api,
@@ -200,11 +200,10 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
     ) -> Sequence[GraphRecipeWithOverrides]:
         try:
             return graph_specification.recipes(
-                GraphRenderContext(
+                GraphEnvironment(
                     registered_metrics=metrics_from_api,
                     registered_graphs=graphs_from_api,
                     user_permissions=UserPermissions.from_config(config, permission_registry),
-                    consolidation_function="max",
                     temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
                     backend_time_series_fetcher=None,
                     debug=config.debug,

@@ -70,9 +70,9 @@ from ._graph_display_config import (
 from ._graph_metric_expressions import GraphMetricExpression
 from ._graph_specification import (
     AdditionalGraphHTML,
+    GraphEnvironment,
     GraphRecipe,
     GraphRecipeWithOverrides,
-    GraphRenderContext,
     GraphSpecification,
     GraphTimeRange,
     parse_raw_graph_specification,
@@ -292,11 +292,10 @@ def host_service_graph_popup_cmk(
             ),
             time_range,
             display_config,
-            GraphRenderContext(
+            GraphEnvironment(
                 registered_metrics=registered_metrics,
                 registered_graphs=registered_graphs,
                 user_permissions=user_permissions,
-                consolidation_function="max",
                 temperature_unit=temperature_unit,
                 backend_time_series_fetcher=backend_time_series_fetcher,
                 debug=debug,
@@ -1073,13 +1072,13 @@ def render_deferred_graphs_html(
     graph_specification: GraphSpecification,
     time_range: GraphTimeRange,
     display_config: GraphDisplayConfigHTML,
-    context: GraphRenderContext,
+    env: GraphEnvironment,
     *,
     display_id: str = "",
 ) -> HTML:
     """Render async AJAX loading containers. JavaScript fills them via ajax_render_graph_content."""
     try:
-        recipes = graph_specification.recipes(context)
+        recipes = graph_specification.recipes(env)
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
             title=_("Cannot calculate graph recipes"),
@@ -1091,13 +1090,13 @@ def render_deferred_graphs_html(
                     graph_specification,
                 )
             ),
-            debug=context.debug,
+            debug=env.debug,
         )
     except Exception as e:
         return render_graph_error_html(
             title=_("Cannot calculate graph recipes"),
             msg_or_exc=e,
-            debug=context.debug,
+            debug=env.debug,
         )
 
     output = HTML.empty()
@@ -1122,14 +1121,14 @@ def render_graphs_html(
     graph_specification: GraphSpecification,
     time_range: GraphTimeRange,
     display_config: GraphDisplayConfigHTML,
-    context: GraphRenderContext,
+    env: GraphEnvironment,
     *,
     graph_timeranges: Sequence[GraphTimerange],
     display_id: str = "",
 ) -> HTML:
     """Render graph content synchronously without AJAX."""
     try:
-        recipes = graph_specification.recipes(context)
+        recipes = graph_specification.recipes(env)
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
             title=_("Cannot calculate graph recipes"),
@@ -1141,13 +1140,13 @@ def render_graphs_html(
                     graph_specification,
                 )
             ),
-            debug=context.debug,
+            debug=env.debug,
         )
     except Exception as e:
         return render_graph_error_html(
             title=_("Cannot calculate graph recipes"),
             msg_or_exc=e,
-            debug=context.debug,
+            debug=env.debug,
         )
 
     output = HTML.empty()
@@ -1165,15 +1164,15 @@ def render_graphs_html(
                 effective_time_range,
                 effective_config.size,
                 metrics_from_api,
-                temperature_unit=context.temperature_unit,
-                backend_time_series_fetcher=context.backend_time_series_fetcher,
+                temperature_unit=env.temperature_unit,
+                backend_time_series_fetcher=env.backend_time_series_fetcher,
                 pin_time=_load_graph_pin(),
                 mark_requested_end_time=recipe_with_overrides.mark_requested_end_time,
             ),
-            debug=context.debug,
+            debug=env.debug,
             graph_timeranges=graph_timeranges,
-            temperature_unit=context.temperature_unit,
-            backend_time_series_fetcher=context.backend_time_series_fetcher,
+            temperature_unit=env.temperature_unit,
+            backend_time_series_fetcher=env.backend_time_series_fetcher,
             display_id=display_id,
             expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
             show_limits_if_reached=False,

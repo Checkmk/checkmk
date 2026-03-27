@@ -57,8 +57,8 @@ from ._graph_pdf import (
 )
 from ._graph_specification import (
     AugmentedTimeSeriesOfGraphMetric,
+    GraphEnvironment,
     GraphRecipeWithOverrides,
-    GraphRenderContext,
     GraphTimeRange,
     parse_raw_graph_specification,
 )
@@ -152,11 +152,10 @@ def _answer_graph_image_request(
         time_range = graph_image_time_range(display_config, start_time, end_time)
         num_graphs = request.get_integer_input("num_graphs")
 
-        render_context = GraphRenderContext(
+        env = GraphEnvironment(
             registered_metrics=registered_metrics,
             registered_graphs=registered_graphs,
             user_permissions=user_permissions,
-            consolidation_function="max",
             temperature_unit=temperature_unit,
             backend_time_series_fetcher=backend_time_series_fetcher,
             debug=debug,
@@ -173,7 +172,7 @@ def _answer_graph_image_request(
                 ),
                 time_range,
                 display_config.size,
-                render_context,
+                env,
             ),
             num_graphs,
         ):
@@ -299,15 +298,15 @@ def graph_recipes_for_api_request(
 
     try:
         recipes = graph_specification.recipes(
-            GraphRenderContext(
+            GraphEnvironment(
                 registered_metrics=registered_metrics,
                 registered_graphs=registered_graphs,
                 user_permissions=user_permissions,
-                consolidation_function=api_request.get("consolidation_function", "max"),
                 temperature_unit=temperature_unit,
                 backend_time_series_fetcher=None,
                 debug=debug,
-            )
+            ),
+            consolidation_function=api_request.get("consolidation_function", "max"),
         )
 
     except MKGraphNotFound:

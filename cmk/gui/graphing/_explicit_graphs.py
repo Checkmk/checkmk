@@ -9,10 +9,10 @@ from typing import Literal
 from ._graph_metric_expressions import GraphConsolidationFunction
 from ._graph_specification import (
     FixedVerticalRange,
+    GraphEnvironment,
     GraphMetric,
     GraphRecipe,
     GraphRecipeWithOverrides,
-    GraphRenderContext,
     GraphSpecification,
     HorizontalRule,
 )
@@ -33,7 +33,11 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["explicit"]:
         return "explicit"
 
-    def recipes(self, context: GraphRenderContext) -> Sequence[GraphRecipeWithOverrides]:
+    def recipes(
+        self,
+        env: GraphEnvironment,
+        consolidation_function: GraphConsolidationFunction = "max",
+    ) -> Sequence[GraphRecipeWithOverrides]:
         return [
             GraphRecipeWithOverrides(
                 recipe=GraphRecipe(

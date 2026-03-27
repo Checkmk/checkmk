@@ -21,7 +21,7 @@ from cmk.gui.graphing import (
     get_temperature_unit,
     get_template_graph_specification,
     GraphDisplayConfigHTML,
-    GraphRenderContext,
+    GraphEnvironment,
     GraphRenderOptions,
     graphs_from_api,
     make_graph_time_range,
@@ -276,11 +276,10 @@ def _paint_time_graph_cmk(
         service_name=row.get("service_description", "_HOST_"),
     )
 
-    context = GraphRenderContext(
+    env = GraphEnvironment(
         registered_metrics=registered_metrics,
         registered_graphs=registered_graphs,
         user_permissions=user_permissions,
-        consolidation_function="max",
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
         debug=debug,
@@ -290,7 +289,7 @@ def _paint_time_graph_cmk(
             spec,
             time_range,
             display_config,
-            context,
+            env,
             graph_timeranges=graph_timeranges,
             display_id=display_id,
         )
@@ -298,7 +297,7 @@ def _paint_time_graph_cmk(
         spec,
         time_range,
         display_config,
-        context,
+        env,
         display_id=display_id,
     )
 

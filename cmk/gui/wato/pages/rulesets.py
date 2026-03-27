@@ -2454,18 +2454,17 @@ class ABCEditRuleMode(WatoMode):
         return self._do_validate_on_render or not isinstance(self, ModeNewRule)
 
     def _get_rule_properties_from_rule(self) -> RawDiskData:
-        return RawDiskData(
-            {
-                "properties": {
-                    "description": self._rule.rule_options.description,
-                    "comment": self._rule.rule_options.comment,
-                    "docu_url": self._rule.rule_options.docu_url,
-                    "disabled": self._rule.rule_options.disabled or False,
-                    "id": self._rule.id,
-                    "_name": self._rule.ruleset.name,
-                }
-            }
-        )
+        properties = {
+            "description": self._rule.rule_options.description,
+            "comment": self._rule.rule_options.comment,
+            "docu_url": self._rule.rule_options.docu_url,
+            "disabled": self._rule.rule_options.disabled or False,
+            "id": self._rule.id,
+            "_name": self._rule.ruleset.name,
+        }
+        if self._locked_conditions:
+            properties["source"] = self._locked_conditions.instance_id
+        return RawDiskData({"properties": properties})
 
     def _get_rule_conditions_from_rule(self) -> RawDiskData:
         if self._rule.rule_options.predefined_condition_id:

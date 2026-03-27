@@ -28,12 +28,16 @@ const [validation] = useValidation<unknown>(
 const fixedValue = computed(() => {
   return props.spec.label === null ? props.spec.value : props.spec.label
 })
+
+const allowedClasses = {
+  a: ['config-bundle-link'] // Needed for the icon in configuration bundle links
+}
 </script>
 
 <template>
   <FormValidation v-if="fixedValue" :validation="validation"></FormValidation>
   <FormLabel v-if="fixedValue">
-    <CmkHtml v-if="spec.label" :html="spec.label" />
+    <CmkHtml v-if="spec.label" :html="spec.label" :allowed-classes="allowedClasses" />
     <template v-else>{{ fixedValue }}</template>
   </FormLabel>
 </template>

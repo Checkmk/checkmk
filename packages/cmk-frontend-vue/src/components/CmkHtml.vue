@@ -5,10 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import sanitizeHtml from 'sanitize-html'
+import { computed } from 'vue'
 
-defineProps<{ html: string | undefined }>()
+const { allowedClasses } = defineProps<{
+  html: string | undefined
+  allowedClasses?: sanitizeHtml.IOptions['allowedClasses']
+}>()
 
-const options: sanitizeHtml.IOptions = {
+const options = computed<sanitizeHtml.IOptions>(() => ({
+  allowedClasses: allowedClasses,
   // Following cmk/utils/escaping.py
   allowedTags: [
     'h1',
@@ -29,7 +34,7 @@ const options: sanitizeHtml.IOptions = {
     'a'
   ],
   allowedSchemes: ['http', 'https', 'mailto']
-}
+}))
 </script>
 
 <template>

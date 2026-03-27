@@ -148,12 +148,7 @@ SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Port
             cast(blocking_session_id as varchar) as blocking_session_id \
     FROM sys.dm_os_waiting_tasks";
 
-    pub const DATABASE_NAMES: &str = r#"SELECT d.name
-FROM sys.databases AS d
-WHERE
-    sys.fn_hadr_is_primary_replica(d.name) IS NULL
-    OR sys.fn_hadr_is_primary_replica(d.name) = 1
-    OR COALESCE(CAST(DATABASEPROPERTYEX(d.name, 'Updateability') AS nvarchar(60)), '') = 'READ_ONLY';"#;
+    pub const DATABASE_NAMES: &str = "SELECT name FROM sys.databases";
 
     /// Executes `sp_spaceused` for each database parsing output as resuult set
     /// Requires nvarchar support

@@ -142,7 +142,12 @@ export function activate(context: vscode.ExtensionContext): void {
         ...registerSnippets(ctx),
         ...registerBazelTestRunner(ctx),
         toggleSettings(pythonDisable),
-        { dispose: () => killAllDmypyDaemons() }
+        { dispose: () => killAllDmypyDaemons() },
+        {
+          dispose: () => {
+            setTimeout(() => vscode.commands.executeCommand('testing.refreshTests'), 500)
+          }
+        }
       ]
     },
     pythonDisable
@@ -166,6 +171,7 @@ export function activate(context: vscode.ExtensionContext): void {
         {
           dispose: () => {
             vscode.commands.executeCommand('rust-analyzer.stopServer')
+            setTimeout(() => vscode.commands.executeCommand('testing.refreshTests'), 500)
           }
         }
       ]

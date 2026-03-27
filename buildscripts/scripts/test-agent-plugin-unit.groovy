@@ -16,7 +16,7 @@ void main() {
                 sh("""
                     set -o pipefail
                     PYTHON_VERSION_MAJ_MIN=${python_version} \
-                        tests/agent-plugin-unit/bootstrap.sh --populate --install --run 2>&1 | tee ${output_file}
+                        tests/agent-plugin-unit/bootstrap.sh --execute 2>&1 | tee ${output_file}
                 """);
 
                 archiveArtifacts(

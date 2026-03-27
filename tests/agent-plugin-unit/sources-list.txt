@@ -1,0 +1,50 @@
+# This is a list of source (and test) files that are needed
+# when running the legacy python unit tests for our agent plugin.
+# Unfortunately we have to maintain a list here, as creating it
+# on the fly would significantly increase the load on the CI.
+#
+agents/plugins/apache_status.py
+agents/plugins/isc_dhcpd.py
+agents/plugins/mk_docker.py
+agents/plugins/mk_filestats.py
+agents/plugins/mk_inotify.py
+agents/plugins/mk_logwatch.py
+agents/plugins/mk_mongodb.py
+agents/plugins/mk_podman.py
+agents/plugins/mk_postgres.py
+agents/plugins/mk_sap.py
+agents/plugins/mk_tinkerforge.py
+agents/plugins/mtr.py
+agents/plugins/nginx_status.py
+agents/plugins/plesk_backups.py
+agents/plugins/plesk_domains.py
+agents/plugins/unitrends_replication.py
+tests/agent-plugin-unit/datasets/mk_filestats/subdir/testfile2.html
+tests/agent-plugin-unit/datasets/mk_filestats/testfile1.txt
+tests/agent-plugin-unit/datasets/mk_logwatch/test_append.log
+tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch.txt
+tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch_crlf.txt
+tests/agent-plugin-unit/datasets/mk_mongodb/OWNERS
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_arbiter-3.4.21.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_arbiter-3.6.13.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_arbiter-4.0.10.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_config-3.4.21.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_config-3.6.13.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_config-4.0.10.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_router-3.4.21.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_router-3.6.13.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_router-4.0.10.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_shard-3.4.21.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_shard-3.6.13.json
+tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_shard-4.0.10.json
+tests/agent-plugin-unit/test_apache_status.py
+tests/agent-plugin-unit/test_mk_filestats.py
+tests/agent-plugin-unit/test_mk_logwatch.py
+tests/agent-plugin-unit/test_mk_mongodb.py
+tests/agent-plugin-unit/test_mk_podman.py
+tests/agent-plugin-unit/test_mk_postgres.py
+tests/agent-plugin-unit/test_mk_sap.py
+tests/agent-plugin-unit/test_mtr.py
+tests/agent-plugin-unit/test_nginx_status.py
+tests/agent-plugin-unit/test_plesk_backups.py
+tests/agent-plugin-unit/test_plesk_domains.py

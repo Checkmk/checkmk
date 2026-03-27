@@ -2,14 +2,14 @@
 
 set -e -o pipefail
 
-# get the python version of the container if not specified
-: "${PYTHON_VERSION_MAJ_MIN:="$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])));')"}"
+SOURCES_LIST="$(dirname "$0")/sources-list.txt"
+STAGE_DIR="/stage"
 
 install_packages() {
-    echo "PYTHON_VERSION_MAJ_MIN: $PYTHON_VERSION_MAJ_MIN"
+    echo "PYTHON_VERSION_MAJ_MIN: ${PYTHON_VERSION_MAJ_MIN?}"
 
     # see Change-Id Ifae494bec4849ef7bd34348f8977310fb64b00e5
-    if [ "$PYTHON_VERSION_MAJ_MIN" = "3.4" ]; then
+    if [ "${PYTHON_VERSION_MAJ_MIN?}" = "3.4" ]; then
         PYMONGO="pymongo==3.12"
     else
         PYMONGO="pymongo"
@@ -17,43 +17,79 @@ install_packages() {
     echo "Specific PYMONGO package: $PYMONGO"
 
     # see Change-Id Ia88498098c77bf9199cf5ab9d8fb4d1e84133492
-    python"${PYTHON_VERSION_MAJ_MIN}" -m pip install pytest pytest-mock mock requests "${PYMONGO}" --target "$(python"${PYTHON_VERSION_MAJ_MIN}" -c 'import sys; print(sys.path[-1])')"
+    python"${PYTHON_VERSION_MAJ_MIN?}" -m pip install pytest pytest-mock mock requests "${PYMONGO}" --target "$(python"${PYTHON_VERSION_MAJ_MIN?}" -c 'import sys; print(sys.path[-1])')"
+}
+
+query_rel_sources() {
+    ws="$(bazel info | grep "workspace:" | cut -d' ' -f2)"
+    bazel query 'kind("source file", deps(attr(tags, "legacy-python", //...)))' --output=location |
+        grep -v @ |
+        grep -v pyproject.toml |
+        cut -d: -f1 |
+        sed "s|${ws}/||"
+}
+
+replay_rel_sources() {
+    # I would love to use query_rel_sources directly here,
+    # but this stage runs in a context that doesn't have
+    # bazel :-(. Adding it would be very expensive.
+    # So instead, we store the result of the query in a
+    # file, and only ensure it is up to date.
+    grep -v '^#' "${SOURCES_LIST}"
+}
+
+check_sources() {
+    expected="$(query_rel_sources | sort)"
+    actual="$(replay_rel_sources | sort)"
+
+    new=$(comm -13 <(echo "${actual}") <(echo "${expected}"))
+    remove=$(comm -23 <(echo "${actual}") <(echo "${expected}"))
+
+    if [ -n "${new}" ]; then
+        echo "Files missing from ${SOURCES_LIST}:"
+        echo "${new}"
+    fi
+
+    if [ -n "${remove}" ]; then
+        echo "Files to remove from ${SOURCES_LIST}:"
+        echo "${remove}"
+    fi
+
+    [ -z "${new}${remove}" ]
 }
 
 populate_folders() {
-    mkdir -p /tests /tests/datasets /agents
-    cp -r tests/agent-plugin-unit/datasets/* /tests/datasets/
-    cp -r agents/ /agents/
-    find tests/agent-plugin-unit/ -maxdepth 1 -type f -exec cp {} /tests/ \;
+    echo "Populating ${STAGE_DIR?} ..."
+    replay_rel_sources | while read -r src; do
+        mkdir -p "${STAGE_DIR?}/$(dirname "${src}")"
+        cp "${src}" "${STAGE_DIR?}/${src}"
+    done
 
     # Temporarily skip tests for mk_podman. Fix with CMK-33079
-    podman_test="/tests/test_mk_podman.py"
-    case "${PYTHON_VERSION_MAJ_MIN}" in
+    podman_test="${STAGE_DIR?}/tests/agent-plugin-unit/test_mk_podman.py"
+    case "${PYTHON_VERSION_MAJ_MIN?}" in
         3.4 | 3.5 | 3.6 | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 | 3.12) rm "${podman_test}" ;;
     esac
 }
 
 run_test() {
-    python"${PYTHON_VERSION_MAJ_MIN}" -m pytest "/tests"
+    (
+        cd "${STAGE_DIR?}"
+        python"${PYTHON_VERSION_MAJ_MIN?}" -m pytest .
+    )
 }
 
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        '-p' | '--populate')
-            populate_folders
-            shift
-            ;;
-        '-i' | '--install')
-            install_packages
-            shift
-            ;;
-        '-r' | '--run')
-            run_test
-            shift
-            ;;
-        --* | -*)
-            echo "Unknown option $1"
-            exit 1
-            ;;
-    esac
-done
+case "$1" in
+    '--check-sources')
+        check_sources
+        ;;
+    '--execute')
+        populate_folders
+        install_packages
+        run_test
+        ;;
+    *)
+        echo "Unknown option $1"
+        exit 1
+        ;;
+esac

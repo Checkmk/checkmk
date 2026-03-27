@@ -22,6 +22,7 @@ py_test(
     ],
     data = ["@//:pyproject.toml"] + glob(["datasets/**"]),
     main = ":__test__.py",
+    tags = ["legacy-python"],
     visibility = ["//visibility:private"],
     deps = [
         ":__test__",

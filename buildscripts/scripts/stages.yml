@@ -141,7 +141,8 @@ STAGES:
       COMMAND: |
           ./scripts/in_bazel.sh "py" "py_binary|py_library|py_test" \
               --known-offender omd/packages/omd/omdlib/__init__.py \
-              > ${RESULTS}/results.txt
+              > ${RESULTS}/results.txt || exit 1
+          ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
       BAZEL_LOCKS_AMOUNT: 1
 

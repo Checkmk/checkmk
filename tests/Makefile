@@ -117,7 +117,8 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 	   exit 1; \
 	fi
 	PYTHON_VERSION="$(patsubst test-agent-plugin-unit-py%-docker,%,$@)" ; \
-	docker run \
+	$(REPO_PATH)/tests/agent-plugin-unit/bootstrap.sh --check-sources \
+	    && docker run \
 		--cpus=2 --memory=2g \
 		--rm \
 		--workdir /checkmk \
@@ -126,7 +127,7 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 		-e "PYTHON_VERSION_MAJ_MIN=$$PYTHON_VERSION" \
 		-e "PYTHONPATH=/agents/plugins" \
 		${DOCKER_REGISTRY_NO_HTTPS}/python:$$PYTHON_VERSION \
-		tests/agent-plugin-unit/bootstrap.sh --populate --install --run
+		tests/agent-plugin-unit/bootstrap.sh --execute
 
 prepare-playwright:
 	$(UVENV) playwright install-deps "chromium";

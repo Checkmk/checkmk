@@ -612,7 +612,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
         back_mode = []
         mode_from_vars = request.var("mode")
-        if mode_from_vars in ["analyze_notifications", "test_notifications"]:
+        if mode_from_vars:
             back_mode.append(("back_mode", mode_from_vars))
 
         search = request.get_str_input("search", "")
@@ -4010,6 +4010,8 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
     def breadcrumb(self) -> Breadcrumb:
         with request.stashed_vars():
+            if request.var("back_mode") != ModeNotifications.name():
+                request.del_var("search")
             return super().breadcrumb()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

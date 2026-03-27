@@ -24,6 +24,9 @@ import UclFooter from '../UclFooter.vue'
   display: flex;
   flex-direction: column;
   padding: var(--dimension-6);
-  gap: 24px;
+}
+
+.ucl-detail-page-layout > * + * {
+  margin-top: 24px;
 }
 </style>

@@ -12,15 +12,21 @@ body {
   font-family: Inter, sans-serif;
   font-weight: 400;
   font-size: var(--ucl-font-size-body);
+  letter-spacing: 0.5px;
   color: var(--ucl-body-text-color);
   background-color: var(--ucl-app-bg-color);
 }
 
 p,
 li {
+  margin: 0;
   color: var(--ucl-body-text-color);
+  letter-spacing: 0.5px;
 }
 
 button {
+  margin: 0;
+  font-family: inherit;
+  letter-spacing: inherit;
   color: inherit;
 }

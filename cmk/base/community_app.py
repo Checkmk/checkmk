@@ -33,7 +33,7 @@ def make_app() -> CheckmkBaseApp:
     automations = _automations(
         [
             *automations_common(),
-            diagnostics.automation_create_diagnostics_dump(lambda x: {}),
+            diagnostics.automation_create_diagnostics_dump(),
             *notify.automations_notify(),
         ]
     )

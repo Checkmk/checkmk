@@ -88,6 +88,12 @@ from cmk.utils import log
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 
+try:
+    from cmk.base.nonfree.diagnostics import (  # type: ignore[import-not-found, unused-ignore]
+        cmc_specific_attrs as core_performance_settings,
+    )
+except ImportError:
+    core_performance_settings = lambda *_, **__: {}
 # TODO: why is there localization in this module?
 
 
@@ -104,13 +110,8 @@ class _DiagnosticsElement:
 SUFFIX = ".tar.gz"
 
 
-def automation_create_diagnostics_dump(
-    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
-) -> Automation:
-    return Automation(
-        ident=AutomationID("create-diagnostics-dump"),
-        handler=_make_automation_create_diagnostics_dump(core_performance_settings),
-    )
+def automation_create_diagnostics_dump() -> Automation:
+    return AUTOMATION_CREATE_DIAGNOSTICS_DUMP
 
 
 def mode_create_diagnostics_dump(
@@ -226,51 +227,44 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
     return sub_options
 
 
-def _make_automation_create_diagnostics_dump(
-    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
-) -> Callable[
-    [
-        AutomationContext,
-        DiagnosticsCLParameters,
-        AgentBasedPlugins | None,
-        LoadingResult | None,
-    ],
-    CreateDiagnosticsDumpResult,
-]:
-    def handler(
-        ctx: AutomationContext,
-        args: DiagnosticsCLParameters,
-        plugins: AgentBasedPlugins | None,
-        loading_result: LoadingResult | None,
-    ) -> CreateDiagnosticsDumpResult:
-        omd_config = get_omd_config(cmk.utils.paths.omd_root)
+def handler(
+    ctx: AutomationContext,
+    args: DiagnosticsCLParameters,
+    plugins: AgentBasedPlugins | None,
+    loading_result: LoadingResult | None,
+) -> CreateDiagnosticsDumpResult:
+    omd_config = get_omd_config(cmk.utils.paths.omd_root)
 
-        if loading_result is None:
-            loading_result = load_config(
-                discovery_rulesets=(),
-                get_builtin_host_labels=ctx.get_builtin_host_labels,
-                edition=ctx.edition,
-            )
-        buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
-            log.setup_console_logging()
-            # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-            log.logger.setLevel(logging.INFO)
-            dump = DiagnosticsDump(
-                loading_result.loaded_config,
-                core_performance_settings,
-                omd_config,
-                cmk.utils.paths.omd_root,
-                deserialize_cl_parameters(args),
-            )
-            dump.create()
-            return CreateDiagnosticsDumpResult(
-                output=buf.getvalue(),
-                tarfile_path=str(dump.tarfile_path),
-                tarfile_created=dump.tarfile_created,
-            )
+    if loading_result is None:
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+            edition=ctx.edition,
+        )
+    buf = io.StringIO()
+    with redirect_stdout(buf), redirect_stderr(buf):
+        log.setup_console_logging()
+        # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+        log.logger.setLevel(logging.INFO)
+        dump = DiagnosticsDump(
+            loading_result.loaded_config,
+            core_performance_settings,
+            omd_config,
+            cmk.utils.paths.omd_root,
+            deserialize_cl_parameters(args),
+        )
+        dump.create()
+        return CreateDiagnosticsDumpResult(
+            output=buf.getvalue(),
+            tarfile_path=str(dump.tarfile_path),
+            tarfile_created=dump.tarfile_created,
+        )
 
-    return handler
+
+AUTOMATION_CREATE_DIAGNOSTICS_DUMP = Automation(
+    ident=AutomationID("create-diagnostics-dump"),
+    handler=handler,
+)
 
 
 def create_diagnostics_dump(

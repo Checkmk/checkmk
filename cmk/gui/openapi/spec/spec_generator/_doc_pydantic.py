@@ -17,6 +17,7 @@ from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
 from cmk.ccc.version import Edition
 from cmk.gui.http import Response
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
+from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import api_field
 from cmk.gui.openapi.framework.model.headers import (
@@ -98,7 +99,7 @@ def _extract_body_example(body_type: type | None) -> dict[str, object] | None:
 
 
 def pydantic_endpoint_to_doc_endpoint(
-    spec: APISpec, endpoint: VersionedSpecEndpoint, site_name: str
+    spec: APISpec, endpoint: VersionedSpecEndpoint, site_name: str, api_version: APIVersion
 ) -> DocEndpoint:
     family_tag_obj = build_tag_obj_from_family(endpoint.family)
     add_tag(spec, family_tag_obj, tag_group=endpoint.doc_group)
@@ -153,7 +154,12 @@ def pydantic_endpoint_to_doc_endpoint(
             doc_group=endpoint.doc_group,
             doc_sort_index=endpoint.doc_sort_index,
             operation_object=_to_operation_dict(
-                spec, spec_endpoint, schema_definitions, site_name, endpoint.deprecated_werk_id
+                spec,
+                spec_endpoint,
+                schema_definitions,
+                site_name,
+                api_version,
+                endpoint.deprecated_werk_id,
             ),
         )
     except ValueError as e:
@@ -167,6 +173,7 @@ def _to_operation_dict(
     spec_endpoint: SpecEndpoint,
     schema_definitions: PydanticSchemaDefinitions,
     site_name: str,
+    api_version: APIVersion,
     werk_id: int | None = None,
 ) -> OperationObject:
     response_headers: dict[str, OpenAPIParameter] = {}
@@ -256,6 +263,7 @@ def _to_operation_dict(
         path_params=path_parameters,
         query_params=query_parameters,
         site_name=site_name,
+        api_version=api_version,
     )
 
     # If we don't have any parameters we remove the empty list, so the spec will not have it.

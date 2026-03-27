@@ -21,6 +21,7 @@ from typing import Any, cast, NamedTuple, TypeAlias
 import jinja2
 from apispec import APISpec
 
+from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template
 from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
 from cmk.gui.openapi.spec.spec_generator._type_defs import SpecEndpoint
@@ -79,8 +80,9 @@ import urllib.request
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
+API_VERSION = "{{ api_version }}"
 PROTO = "http" #[http|https]
-API_URL = f"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/v1"
+API_URL = f"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/{API_VERSION}"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
@@ -127,8 +129,9 @@ CODE_TEMPLATE_CURL = """
 
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
+API_VERSION="{{ api_version }}"
 PROTO="http" #[http|https]
-API_URL="$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/v1"
+API_URL="$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/$API_VERSION"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -181,8 +184,9 @@ CODE_TEMPLATE_HTTPIE = """
 #!/bin/bash
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
+API_VERSION="{{ api_version }}"
 PROTO="http" #[http|https]
-API_URL="$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/v1"
+API_URL="$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/$API_VERSION"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -229,8 +233,9 @@ import shutil {%- endif %}
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
+API_VERSION = "{{ api_version }}"
 PROTO = "http" #[http|https]
-API_URL = f"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/v1"
+API_URL = f"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/{API_VERSION}"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
@@ -411,6 +416,7 @@ def code_samples(
     path_params: Sequence[OpenAPIParameter],
     query_params: Sequence[OpenAPIParameter],
     site_name: str,
+    api_version: APIVersion,
 ) -> list[CodeSample]:
     """Create a list of rendered code sample Objects
 
@@ -427,6 +433,7 @@ def code_samples(
                 .render(
                     hostname="localhost",
                     site=site_name,
+                    api_version=str(api_version),
                     username="automation",
                     password="test123",
                     content_type=spec_endpoint.content_type,

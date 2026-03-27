@@ -502,7 +502,9 @@ def populate_spec(
         ):
             continue
         doc_endpoints.append(
-            pydantic_endpoint_to_doc_endpoint(spec, versioned_endpoint.spec_endpoint(), site_name)
+            pydantic_endpoint_to_doc_endpoint(
+                spec, versioned_endpoint.spec_endpoint(), site_name, api_version
+            )
         )
 
     for doc_endpoint in sorted(doc_endpoints, key=sort_key):

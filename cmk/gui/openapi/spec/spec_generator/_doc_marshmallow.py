@@ -22,6 +22,7 @@ from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
 
 from cmk.ccc.version import Edition
+from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.framework.model.headers import (
     CONTENT_TYPE,
     ETAG_HEADER,
@@ -312,6 +313,7 @@ def _to_operation_dict(
         path_params=marshmallow_to_openapi(path_params, "path"),
         query_params=marshmallow_to_openapi(query_params, "query"),
         site_name=site_name,
+        api_version=APIVersion.V1,
     )
 
     # If we don't have any parameters we remove the empty list, so the spec will not have it.

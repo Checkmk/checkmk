@@ -220,10 +220,6 @@ export class AiTemplateService extends ServiceBase {
   }
 
   public async execUserActionButton(userAction: AiActionButton) {
-    if (userAction.executed) {
-      return
-    }
-
     if (Array.isArray(this.config.userActions?.actionButtons)) {
       this.config.userActions.actionButtons?.map((a) => {
         if (a.action_id === userAction.action_id) {
@@ -247,6 +243,20 @@ export class AiTemplateService extends ServiceBase {
     }
 
     this.addElement(this.execAiAction(userAction))
+  }
+
+  public refreshUserActionButton(userAction: AiActionButton) {
+    const refreshedAiElement = this.execAiAction(userAction)
+
+    for (let i = this.elements.length - 1; i >= 0; i--) {
+      if (this.elements[i]?.role === AiRole.ai) {
+        this.setActiveRole(refreshedAiElement.role)
+        this.elements.splice(i, 1, refreshedAiElement)
+        return
+      }
+    }
+
+    this.addElement(refreshedAiElement)
   }
 
   public onInfoLoaded(cb: () => void) {

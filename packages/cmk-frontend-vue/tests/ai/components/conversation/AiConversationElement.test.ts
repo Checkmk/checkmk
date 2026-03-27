@@ -69,7 +69,7 @@ test('shows copy button after answer is complete', async () => {
   })
 
   await waitFor(() => {
-    expect(screen.getByTitle('Copy answer')).toBeInTheDocument()
+    expect(screen.getByTitle('Copy response')).toBeInTheDocument()
   })
 })
 
@@ -81,7 +81,7 @@ test('does not show copy button while still thinking', () => {
     content: [{ content_type: 'markdown', content: 'still thinking', title: 'thinking' }]
   })
 
-  expect(screen.queryByTitle('Copy answer')).not.toBeInTheDocument()
+  expect(screen.queryByTitle('Copy response')).not.toBeInTheDocument()
 })
 
 test('builds copy text from answer chunks and excludes thinking', async () => {

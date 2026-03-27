@@ -25,6 +25,7 @@ import type {
   MarkdownConversationElementContent,
   TAiConversationElementContent
 } from '@/ai/lib/service/ai-template'
+import { loadUserActions } from '@/ai/lib/user-actions'
 import { AiRole } from '@/ai/lib/utils'
 
 import AlertContent from './content/AlertContent.vue'
@@ -108,16 +109,82 @@ const hasFinalAnswerChunk = computed(() => {
   const items = Array.isArray(props.content) ? props.content : []
   return items.some((item) => item.title === 'answer' || item.content_type === 'alert')
 })
-const showCopyButton = computed(
+const showExtraButtons = computed(
   () =>
     props.role === AiRole.ai &&
     hasFinalAnswerChunk.value &&
     currentState.value !== 'thinking' &&
     copyableAnswerText.value.length > 0
 )
+const showAiHeader = computed(() => {
+  if (props.role !== AiRole.ai) {
+    return false
+  }
+
+  const currentIndex = props.elementIndex
+  if (currentIndex === undefined) {
+    return true
+  }
+
+  const elements = aiTemplate.value?.elements ?? []
+  for (let i = 0; i < elements.length; i++) {
+    if (elements[i]?.role === AiRole.ai) {
+      return i === currentIndex
+    }
+  }
+
+  return true
+})
+const latestAiElement = computed<IAiConversationElement | null>(() => {
+  const elements = aiTemplate.value?.elements ?? []
+  for (let i = elements.length - 1; i >= 0; i--) {
+    if (elements[i]?.role === AiRole.ai) {
+      return elements[i] as IAiConversationElement
+    }
+  }
+  return null
+})
+const latestAiItems = computed(() =>
+  Array.isArray(latestAiElement.value?.content) ? latestAiElement.value.content : []
+)
+const isHeaderLoading = computed(
+  () => Boolean(latestAiElement.value?.streaming) && latestAiItems.value.length === 0
+)
+const isHeaderThinking = computed(() => {
+  if (!latestAiElement.value?.streaming || latestAiItems.value.length === 0) {
+    return false
+  }
+
+  return latestAiItems.value[latestAiItems.value.length - 1]?.title === 'thinking'
+})
+const headerLoadingText = computed(
+  () => latestAiElement.value?.loadingText ?? props.loadingText ?? _t('Generating response...')
+)
 
 const awaited = ref<boolean>(true)
 const done = ref(false)
+
+function resetElementState() {
+  currentState.value =
+    props.content?.length > 0 ? props.content[props.content.length - 1]?.title || '' : ''
+  contentData.value = initContentData()
+  contentsToDisplay.value = []
+  done.value = false
+}
+
+function initializeDisplayState() {
+  if (!props.streaming && contentData.value) {
+    aiTemplate.value?.setAnimationActiveChange(true)
+    awaited.value = true
+    if (props.noAnimation) {
+      contentsToDisplay.value = contentData.value.slice()
+      contentData.value = []
+      setElementDone()
+    } else {
+      onContentDone()
+    }
+  }
+}
 
 function addNextContent(): boolean {
   const nextContent = contentData.value?.shift()
@@ -152,19 +219,32 @@ function onContentDone() {
   }
 }
 
-onMounted(() => {
-  if (!props.streaming && contentData.value) {
-    aiTemplate.value?.setAnimationActiveChange(true)
-    awaited.value = true
-    if (props.noAnimation) {
-      contentsToDisplay.value = contentData.value.slice()
-      contentData.value = []
-      setElementDone()
-    } else {
-      onContentDone()
-    }
+async function onRefresh() {
+  const actions = await loadUserActions(aiTemplate.value, { autoExecuteSingleAction: false })
+  if (actions instanceof Error) {
+    return
   }
+
+  if (actions.length === 1 && actions[0]?.action_id === 'explain_this_service') {
+    aiTemplate.value?.refreshUserActionButton(actions[0])
+  }
+}
+
+onMounted(() => {
+  initializeDisplayState()
 })
+
+watch(
+  () => props.content,
+  (newContent, oldContent) => {
+    if (newContent === oldContent) {
+      return
+    }
+
+    resetElementState()
+    initializeDisplayState()
+  }
+)
 
 watch(
   () => props.streaming,
@@ -214,15 +294,15 @@ watch(
 
 <template>
   <div class="ai-conversation-element" :class="`ai-conversation-element--${role}`">
-    <div v-if="role === AiRole.ai" class="ai-conversation-element__ai-header">
+    <div v-if="showAiHeader" class="ai-conversation-element__ai-header">
       <CmkIcon name="sparkle" size="xlarge" />
       <div class="ai-conversation-element__ai-header-text">
         <CmkHeading type="h2">{{ _t('AI-generated answer') }}</CmkHeading>
-        <div v-if="contentData === null" class="ai-conversation-element__loader">
+        <div v-if="isHeaderLoading" class="ai-conversation-element__loader">
           <CmkIcon name="load-graph" size="large" class="ai-conversation-element__text-loader" />
-          <label>{{ loadingText ?? _t('Generating response...') }}</label>
+          <label>{{ headerLoadingText }}</label>
         </div>
-        <div v-else-if="currentState === 'thinking'" class="ai-conversation-element__loader">
+        <div v-else-if="isHeaderThinking" class="ai-conversation-element__loader">
           <CmkIcon name="load-graph" size="large" class="ai-conversation-element__text-loader" />
           <label>{{ _t('Thinking...') }}</label>
         </div>
@@ -273,15 +353,22 @@ watch(
             @done="onContentDone"
           />
         </template>
-        <div class="ai-conversation-element__copy-controls">
-          <CmkCopy v-if="showCopyButton" :text="copyableAnswerText">
+        <div v-if="showExtraButtons" class="ai-conversation-element__controls">
+          <CmkCopy :text="copyableAnswerText" :copied-message="_t('Copied!')">
             <CmkIconButton
               name="copied"
               size="medium"
-              :title="_t('Copy answer')"
-              class="ai-conversation-element__copy-button ai-conversation-element__copy-button--white"
+              :title="_t('Copy response')"
+              class="ai-conversation-element__extra-button ai-conversation-element__extra-button--white"
             />
           </CmkCopy>
+          <CmkIconButton
+            name="reload"
+            size="medium"
+            :title="_t('Refresh')"
+            class="ai-conversation-element__extra-button ai-conversation-element__extra-button--white"
+            @click="onRefresh"
+          />
         </div>
       </div>
     </template>
@@ -339,19 +426,19 @@ watch(
     margin-bottom: var(--dimension-10);
     margin-left: calc(var(--dimension-4) + var(--dimension-7));
 
-    .ai-conversation-element__copy-controls {
+    .ai-conversation-element__controls {
       display: flex;
       justify-content: flex-start;
       margin-top: var(--dimension-4);
 
-      .ai-conversation-element__copy-button {
+      .ai-conversation-element__extra-button {
         border: 1px solid var(--default-component-bg-color);
         border-radius: var(--border-radius);
         background: var(--code-background-color);
         padding: var(--dimension-3);
       }
 
-      .ai-conversation-element__copy-button--white
+      .ai-conversation-element__extra-button--white
         /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
       :deep(img) {
         filter: brightness(0) invert(1);

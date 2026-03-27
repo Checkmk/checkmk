@@ -15,6 +15,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import AlertContent from '@/ai/components/conversation/content/AlertContent.vue'
 import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
 import type { AiActionButton } from '@/ai/lib/service/ai-template'
+import { loadUserActions } from '@/ai/lib/user-actions'
 
 import AiConversationUserActionButton from './AiConversationUserActionButton.vue'
 
@@ -23,26 +24,17 @@ const aiTemplate = getInjectedAiTemplate()
 const actionsError = ref<Error | null>(null)
 const userActions = ref<AiActionButton[] | null>(null)
 
-async function loadUserActions() {
-  const actions = await aiTemplate.value?.getUserActionButtons()
+async function loadActionsForUi() {
+  const actions = await loadUserActions(aiTemplate.value)
   if (actions instanceof Error) {
     actionsError.value = actions
   } else {
-    if (!actions) {
-      userActions.value = []
-    } else {
-      userActions.value = actions
-
-      // Auto trigger service action if it is the only action
-      if (actions.length === 1 && actions[0]?.action_id === 'explain_this_service') {
-        void aiTemplate.value?.execUserActionButton(actions[0])
-      }
-    }
+    userActions.value = actions
   }
 }
 
 onMounted(async () => {
-  await loadUserActions()
+  await loadActionsForUi()
 })
 </script>
 

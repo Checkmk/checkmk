@@ -92,10 +92,3 @@ py_test(
         requirement("pytest"),
     ],
 )
-
-sh_library(
-    name = "helpers",
-    srcs = [
-        "run",
-    ],
-)

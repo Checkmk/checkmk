@@ -66,8 +66,8 @@ clang-analyzer/
 cmc-*.tar.gz
 /container_shadow_workspace*/
 download/
-doc/plugin-api/build/
-doc/plugin-api/source/apidoc/
+packages/cmk-plugin-apis/doc/build/
+packages/cmk-plugin-apis/doc/apidoc/
 doc/documentation/*.png
 doc/documentation/*.cmapx
 docker-build.log

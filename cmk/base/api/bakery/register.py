@@ -27,7 +27,7 @@ def bakery_plugin(
     scriptlets_function: ScriptletsFunction | None = None,
     windows_config_function: WindowsConfigFunction | None = None,
 ) -> None:
-    # Register a bakery plugin; doc is maintained in doc/plugin-api.
+    # Register a bakery plugin; doc is maintained in the rst files of the sphinx doc
     bakery_plugin_object = create_bakery_plugin(
         name=name,
         files_function=files_function,

@@ -14,7 +14,7 @@ ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
 echo "Updating documentation..."
-bazel_target="//doc/plugin-api:pkg_tar"
+bazel_target="//packages/cmk-plugin-apis/doc:pkg_tar"
 bazel build --cmk_edition=ultimate ${bazel_target}
 
 echo "Updating site $SITE..."

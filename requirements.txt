@@ -5062,6 +5062,7 @@ sphinx==9.1.0 \
     --hash=sha256:7741722357dd75f8190766926071fed3bdc211c74dd2d7d4df5404da95930ddb \
     --hash=sha256:c84fdd4e782504495fe4f2c0b3413d6c2bf388589bb352d439b2a3bb99991978
     # via
+    #   -r packages/cmk-plugin-apis/dev-requirements.in
     #   -r tests/dev-requirements.in
     #   furo
     #   sphinx-autoapi
@@ -5074,11 +5075,15 @@ sphinx==9.1.0 \
 sphinx-autoapi==3.7.0 \
     --hash=sha256:5c8a934d788f00d11b8c8092536c7373592cce986820de8dd7daf6dfd79afd91 \
     --hash=sha256:5ea37271b50de08538cf6e33044ef4fb6e981ddb693060ec84f297005014fdfd
-    # via -r tests/dev-requirements.in
+    # via
+    #   -r packages/cmk-plugin-apis/dev-requirements.in
+    #   -r tests/dev-requirements.in
 sphinx-autodoc-typehints==3.6.2 \
     --hash=sha256:3d37709a21b7b765ad6e20a04ecefcb229b9eb0007cb24f6ebaa8a4576ea7f06 \
     --hash=sha256:9e70bee1f487b087c83ba0f4949604a4630bee396e263a324aae1dc4268d2c0f
-    # via -r tests/dev-requirements.in
+    # via
+    #   -r packages/cmk-plugin-apis/dev-requirements.in
+    #   -r tests/dev-requirements.in
 sphinx-basic-ng==1.0.0b2 \
     --hash=sha256:9ec55a47c90c8c002b5960c57492ec3021f5193cb26cebc2dc4ea226848651c9 \
     --hash=sha256:eb09aedbabfb650607e9b4b68c9d240b90b1e1be221d6ad71d61c52e29f7932b
@@ -5086,7 +5091,9 @@ sphinx-basic-ng==1.0.0b2 \
 sphinx-rtd-theme==3.1.0 \
     --hash=sha256:1785824ae8e6632060490f67cf3a72d404a85d2d9fc26bce3619944de5682b89 \
     --hash=sha256:b44276f2c276e909239a4f6c955aa667aaafeb78597923b1c60babc76db78e4c
-    # via -r tests/dev-requirements.in
+    # via
+    #   -r packages/cmk-plugin-apis/dev-requirements.in
+    #   -r tests/dev-requirements.in
 sphinxcontrib-applehelp==2.0.0 \
     --hash=sha256:2f29ef331735ce958efa4734873f084941970894c6090408b079c61b2e1c06d1 \
     --hash=sha256:4cd3f0ec4ac5dd9c17ec65e9ab272c9b867ea77425228e68ecf08d6b28ddbdb5

@@ -1,5 +1,5 @@
-pydantic
-vcrpy
 cryptography
+pydantic
 requests
 urllib3
+vcrpy

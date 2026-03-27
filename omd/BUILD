@@ -695,7 +695,7 @@ pkg_tar(
         "//active_checks:pkg_tar",
         "//bin:pkg_tar",
         "//cmk:cmk_tar",
-        "//doc/plugin-api/source:pkg_tar",
+        "//packages/cmk-plugin-apis/doc:pkg_tar",
         "//locale",
         "//packages/cmk-notification-plugins:pkg_tar",
         #added here instead of above because of disappearing file

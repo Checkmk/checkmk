@@ -5,7 +5,7 @@
 
 # NOTE: The scope of what is exposed here is *not* the same as the API exposed to the plugins
 # for version 1, but these *are* the actual classes.
-# This is confusing, and will be fixed for v2:w
+# This is confusing, and will be fixed for v2
 
 
 from ._artifact_types import Plugin as Plugin

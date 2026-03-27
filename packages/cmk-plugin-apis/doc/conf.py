@@ -17,6 +17,7 @@
 
 import enum
 import logging
+
 from sphinx.application import Sphinx
 
 # -- Project information -----------------------------------------------------
@@ -35,17 +36,6 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx_rtd_theme",
-]
-
-# Ignore unneeded dependencies during sphinx doc build time for now.
-#
-# The better way to deal with it would be to create a dedicated venv for the plugin API doc
-# generator which pulls in our packages as dependencies. This way we would ensure that all
-# dependencies are available during the sphinx execution.
-autodoc_mock_imports = [
-    "cmk.trace",
-    "livestatus",
-    "cryptography",
 ]
 
 suppress_warnings = [
@@ -96,6 +86,7 @@ html_static_path = ["_static"]
 
 
 # -- Enum member listing -----------------------------------------------------
+
 
 def _append_enum_members(
     _app: object, what: str, _name: object, obj: object, _options: object, lines: list[str]

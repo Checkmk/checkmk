@@ -9,32 +9,15 @@ py_binary(
     srcs = ["@rules_sphinx//sphinx/tools:sphinx_build_wrapper.py"],
     main = "sphinx_build_wrapper.py",
     tags = ["no-mypy"],
-    deps = select({
-        "@cmk//edition:cloud": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:cloud",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
-        ],
-        "@cmk//edition:community": [
-            "//cmk/editions:community",
-        ],
-        "@cmk//edition:pro": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-        ],
-        "@cmk//edition:ultimate": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
-        ],
-        "@cmk//edition:ultimatemt": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
-            "//cmk/editions/nonfree:ultimatemt",
-        ],
-    }) + [
+    deps = [
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:bakery",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:inventory_ui",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
         requirement("sphinx"),
         requirement("sphinx_autodoc_typehints"),
         requirement("sphinx_rtd_theme"),
@@ -87,4 +70,11 @@ pkg_tar(
     stamp = 1,
     strip_prefix = "plugin-api_html",
     visibility = ["//omd:__pkg__"],
+)
+
+sh_library(
+    name = "doc_plugin-api_sh",
+    srcs = [
+        ".f12",
+    ],
 )

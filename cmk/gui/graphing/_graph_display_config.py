@@ -70,20 +70,21 @@ class GraphRenderOptions(BaseModel):
         return self.model_dump(exclude_none=True)
 
 
+_DEFAULT_TITLE_FORMAT = GraphTitleFormat(
+    plain=True,
+    add_host_name=False,
+    add_host_alias=False,
+    add_service_description=False,
+)
+
+
 class GraphDisplayConfigBase(BaseModel):
     font_size: SizePT = SizePT(8.0)
     show_graph_time: bool = True
     show_legend: bool = True
     show_margin: bool = True
-    show_title: bool | Literal["inline"] = True
     show_vertical_axis: bool = True
     size: tuple[float, float] = (70, 16)
-    title_format: GraphTitleFormat = GraphTitleFormat(
-        plain=True,
-        add_host_name=False,
-        add_host_alias=False,
-        add_service_description=False,
-    )
 
     def update_from_options(self, options: GraphRenderOptions) -> Self:
         return self.model_copy(
@@ -106,6 +107,8 @@ class GraphDisplayConfigHTML(GraphDisplayConfigBase):
     show_controls: bool = True
     show_pin: bool = True
     show_time_range_previews: bool = True
+    show_title: bool | Literal["inline"] = True
+    title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
 
     @classmethod
     def from_user_context_and_options(
@@ -123,6 +126,8 @@ class GraphDisplayConfigHTML(GraphDisplayConfigBase):
 class GraphDisplayConfigImage(GraphDisplayConfigBase):
     border_width: SizeMM = 0.05
     show_time_axis: bool = True
+    show_title: bool = True
+    title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
     background_color: str = "#f8f4f0"
     canvas_color: str = "#ffffff"

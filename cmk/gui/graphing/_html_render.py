@@ -66,8 +66,8 @@ from ._artwork import (
 from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import (
-    GraphDisplayConfigBase,
     GraphDisplayConfigHTML,
+    GraphDisplayConfigImage,
     GraphRenderOptions,
 )
 from ._graph_metric_expressions import GraphMetricExpression
@@ -408,7 +408,7 @@ def _render_title_elements_plain(elements: Iterable[str]) -> str:
 def render_plain_graph_title(
     specification: GraphSpecification,
     artwork: GraphArtwork,
-    display_config: GraphDisplayConfigBase,
+    display_config: GraphDisplayConfigHTML | GraphDisplayConfigImage,
 ) -> str:
     return _render_title_elements_plain(
         element.text
@@ -426,7 +426,7 @@ def _render_graph_title_elements(
     request: Request,
     specification: GraphSpecification,
     artwork: GraphArtwork,
-    display_config: GraphDisplayConfigBase,
+    display_config: GraphDisplayConfigHTML | GraphDisplayConfigImage,
     explicit_title: str | None = None,
 ) -> Iterator[_TitleElement]:
     if not display_config.show_title:

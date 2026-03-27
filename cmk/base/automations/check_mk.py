@@ -4464,134 +4464,168 @@ def automation_find_unknown_check_parameter_rule_sets(
     )
 
 
+AUTOMATION_SERVICE_DISCOVERY = Automation(
+    ident=AutomationID("service-discovery"),
+    handler=automation_service_discovery,
+)
+AUTOMATION_SPECIAL_AGENT_DISCOVERY_PREVIEW = Automation(
+    ident=AutomationID("special-agent-discovery-preview"),
+    handler=automation_special_agent_discovery_preview,
+)
+AUTOMATION_SERVICE_DISCOVERY_PREVIEW = Automation(
+    ident=AutomationID("service-discovery-preview"),
+    handler=automation_discovery_preview,
+)
+AUTOMATION_AUTODISCOVERY = Automation(
+    ident=AutomationID("autodiscovery"),
+    handler=automation_autodiscovery,
+)
+AUTOMATION_SET_AUTOCHECKS_V2 = Automation(
+    ident=AutomationID("set-autochecks-v2"),
+    handler=automation_set_autochecks_v2,
+)
+AUTOMATION_UPDATE_HOST_LABELS = Automation(
+    ident=AutomationID("update-host-labels"),
+    handler=automation_update_host_labels,
+)
+AUTOMATION_RENAME_HOSTS = Automation(
+    ident=AutomationID("rename-hosts"),
+    handler=AutomationRenameHosts().execute,
+)
+AUTOMATION_GET_SERVICES_LABELS = Automation(
+    ident=AutomationID("get-services-labels"),
+    handler=automation_get_service_labels,
+)
+AUTOMATION_GET_SERVICE_NAME = Automation(
+    ident=AutomationID("get-service-name"),
+    handler=automation_get_service_name,
+)
+AUTOMATION_ANALYSE_SERVICE = Automation(
+    ident=AutomationID("analyse-service"),
+    handler=AutomationAnalyseServices().execute,
+)
+AUTOMATION_ANALYSE_HOST = Automation(
+    ident=AutomationID("analyse-host"),
+    handler=automation_analyse_host,
+)
+AUTOMATION_ANALYZE_HOST_RULE_MATCHES = Automation(
+    ident=AutomationID("analyze-host-rule-matches"),
+    handler=automation_analyze_host_rule_matches,
+)
+AUTOMATION_ANALYZE_SERVICE_RULE_MATCHES = Automation(
+    ident=AutomationID("analyze-service-rule-matches"),
+    handler=automation_analyze_service_rule_matches,
+)
+AUTOMATION_ANALYZE_HOST_RULE_EFFECTIVENESS = Automation(
+    ident=AutomationID("analyze-host-rule-effectiveness"),
+    handler=automation_analyze_host_rule_effectiveness,
+)
+AUTOMATION_DELETE_HOSTS = Automation(
+    ident=AutomationID("delete-hosts"),
+    handler=AutomationDeleteHosts().execute,
+)
+AUTOMATION_DELETE_HOSTS_KNOWN_REMOTE = Automation(
+    ident=AutomationID("delete-hosts-known-remote"),
+    handler=AutomationDeleteHostsKnownRemote().execute,
+)
+AUTOMATION_RESTART = Automation(
+    ident=AutomationID("restart"),
+    handler=AutomationRestart().execute,
+)
+AUTOMATION_RELOAD = Automation(
+    ident=AutomationID("reload"),
+    handler=AutomationReload().execute,
+)
+AUTOMATION_GET_CONFIGURATION = Automation(
+    ident=AutomationID("get-configuration"),
+    handler=automation_get_configuration,
+)
+AUTOMATION_GET_CHECK_INFORMATION = Automation(
+    ident=AutomationID("get-check-information"),
+    handler=automation_get_check_information,
+)
+AUTOMATION_GET_SECTION_INFORMATION = Automation(
+    ident=AutomationID("get-section-information"),
+    handler=automation_get_section_information,
+)
+AUTOMATION_SCAN_PARENTS = Automation(
+    ident=AutomationID("scan-parents"),
+    handler=automation_scan_parents,
+)
+AUTOMATION_DIAG_SPECIAL_AGENT = Automation(
+    ident=AutomationID("diag-special-agent"),
+    handler=automation_diag_special_agent,
+)
+AUTOMATION_PING_HOST = Automation(
+    ident=AutomationID("ping-host"),
+    handler=automation_ping_host,
+)
+AUTOMATION_DIAG_CMK_AGENT = Automation(
+    ident=AutomationID("diag-cmk-agent"),
+    handler=automation_diag_cmk_agent,
+)
+AUTOMATION_DIAG_SNMP = Automation(
+    ident=AutomationID("diag-snmp"),
+    handler=automation_diag_snmp,
+)
+AUTOMATION_DIAG_HOST = Automation(
+    ident=AutomationID("diag-host"),
+    handler=AutomationDiagHost().execute,
+)
+AUTOMATION_ACTIVE_CHECK = Automation(
+    ident=AutomationID("active-check"),
+    handler=AutomationActiveCheck().execute,
+)
+AUTOMATION_UPDATE_PASSWORDS_MERGED_FILE = Automation(
+    ident=AutomationID("update-passwords-merged-file"),
+    handler=automation_update_passwords_merged_file,
+)
+AUTOMATION_UPDATE_DNS_CACHE = Automation(
+    ident=AutomationID("update-dns-cache"),
+    handler=automation_update_dns_cache,
+)
+AUTOMATION_GET_AGENT_OUTPUT = Automation(
+    ident=AutomationID("get-agent-output"),
+    handler=automation_get_agent_output,
+)
+AUTOMATION_FIND_UNKNOWN_CHECK_PARAMETER_RULE_SETS = Automation(
+    ident=AutomationID("find-unknown-check-parameter-rule-sets"),
+    handler=automation_find_unknown_check_parameter_rule_sets,
+)
+
+
 def automations_common() -> list[Automation]:
     return [
-        Automation(
-            ident=AutomationID("service-discovery"),
-            handler=automation_service_discovery,
-        ),
-        Automation(
-            ident=AutomationID("special-agent-discovery-preview"),
-            handler=automation_special_agent_discovery_preview,
-        ),
-        Automation(
-            ident=AutomationID("service-discovery-preview"),
-            handler=automation_discovery_preview,
-        ),
-        Automation(
-            ident=AutomationID("autodiscovery"),
-            handler=automation_autodiscovery,
-        ),
-        Automation(
-            ident=AutomationID("set-autochecks-v2"),
-            handler=automation_set_autochecks_v2,
-        ),
-        Automation(
-            ident=AutomationID("update-host-labels"),
-            handler=automation_update_host_labels,
-        ),
-        Automation(
-            ident=AutomationID("rename-hosts"),
-            handler=AutomationRenameHosts().execute,
-        ),
-        Automation(
-            ident=AutomationID("get-services-labels"),
-            handler=automation_get_service_labels,
-        ),
-        Automation(
-            ident=AutomationID("get-service-name"),
-            handler=automation_get_service_name,
-        ),
-        Automation(
-            ident=AutomationID("analyse-service"),
-            handler=AutomationAnalyseServices().execute,
-        ),
-        Automation(
-            ident=AutomationID("analyse-host"),
-            handler=automation_analyse_host,
-        ),
-        Automation(
-            ident=AutomationID("analyze-host-rule-matches"),
-            handler=automation_analyze_host_rule_matches,
-        ),
-        Automation(
-            ident=AutomationID("analyze-service-rule-matches"),
-            handler=automation_analyze_service_rule_matches,
-        ),
-        Automation(
-            ident=AutomationID("analyze-host-rule-effectiveness"),
-            handler=automation_analyze_host_rule_effectiveness,
-        ),
-        Automation(
-            ident=AutomationID("delete-hosts"),
-            handler=AutomationDeleteHosts().execute,
-        ),
-        Automation(
-            ident=AutomationID("delete-hosts-known-remote"),
-            handler=AutomationDeleteHostsKnownRemote().execute,
-        ),
-        Automation(
-            ident=AutomationID("restart"),
-            handler=AutomationRestart().execute,
-        ),
-        Automation(
-            ident=AutomationID("reload"),
-            handler=AutomationReload().execute,
-        ),
-        Automation(
-            ident=AutomationID("get-configuration"),
-            handler=automation_get_configuration,
-        ),
-        Automation(
-            ident=AutomationID("get-check-information"),
-            handler=automation_get_check_information,
-        ),
-        Automation(
-            ident=AutomationID("get-section-information"),
-            handler=automation_get_section_information,
-        ),
-        Automation(
-            ident=AutomationID("scan-parents"),
-            handler=automation_scan_parents,
-        ),
-        Automation(
-            ident=AutomationID("diag-special-agent"),
-            handler=automation_diag_special_agent,
-        ),
-        Automation(
-            ident=AutomationID("ping-host"),
-            handler=automation_ping_host,
-        ),
-        Automation(
-            ident=AutomationID("diag-cmk-agent"),
-            handler=automation_diag_cmk_agent,
-        ),
-        Automation(
-            ident=AutomationID("diag-snmp"),
-            handler=automation_diag_snmp,
-        ),
-        Automation(
-            ident=AutomationID("diag-host"),
-            handler=AutomationDiagHost().execute,
-        ),
-        Automation(
-            ident=AutomationID("active-check"),
-            handler=AutomationActiveCheck().execute,
-        ),
-        Automation(
-            ident=AutomationID("update-passwords-merged-file"),
-            handler=automation_update_passwords_merged_file,
-        ),
-        Automation(
-            ident=AutomationID("update-dns-cache"),
-            handler=automation_update_dns_cache,
-        ),
-        Automation(
-            ident=AutomationID("get-agent-output"),
-            handler=automation_get_agent_output,
-        ),
-        Automation(
-            ident=AutomationID("find-unknown-check-parameter-rule-sets"),
-            handler=automation_find_unknown_check_parameter_rule_sets,
-        ),
+        AUTOMATION_SERVICE_DISCOVERY,
+        AUTOMATION_SPECIAL_AGENT_DISCOVERY_PREVIEW,
+        AUTOMATION_SERVICE_DISCOVERY_PREVIEW,
+        AUTOMATION_AUTODISCOVERY,
+        AUTOMATION_SET_AUTOCHECKS_V2,
+        AUTOMATION_UPDATE_HOST_LABELS,
+        AUTOMATION_RENAME_HOSTS,
+        AUTOMATION_GET_SERVICES_LABELS,
+        AUTOMATION_GET_SERVICE_NAME,
+        AUTOMATION_ANALYSE_SERVICE,
+        AUTOMATION_ANALYSE_HOST,
+        AUTOMATION_ANALYZE_HOST_RULE_MATCHES,
+        AUTOMATION_ANALYZE_SERVICE_RULE_MATCHES,
+        AUTOMATION_ANALYZE_HOST_RULE_EFFECTIVENESS,
+        AUTOMATION_DELETE_HOSTS,
+        AUTOMATION_DELETE_HOSTS_KNOWN_REMOTE,
+        AUTOMATION_RESTART,
+        AUTOMATION_RELOAD,
+        AUTOMATION_GET_CONFIGURATION,
+        AUTOMATION_GET_CHECK_INFORMATION,
+        AUTOMATION_GET_SECTION_INFORMATION,
+        AUTOMATION_SCAN_PARENTS,
+        AUTOMATION_DIAG_SPECIAL_AGENT,
+        AUTOMATION_PING_HOST,
+        AUTOMATION_DIAG_CMK_AGENT,
+        AUTOMATION_DIAG_SNMP,
+        AUTOMATION_DIAG_HOST,
+        AUTOMATION_ACTIVE_CHECK,
+        AUTOMATION_UPDATE_PASSWORDS_MERGED_FILE,
+        AUTOMATION_UPDATE_DNS_CACHE,
+        AUTOMATION_GET_AGENT_OUTPUT,
+        AUTOMATION_FIND_UNKNOWN_CHECK_PARAMETER_RULE_SETS,
     ]

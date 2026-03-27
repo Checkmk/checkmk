@@ -262,22 +262,10 @@ def mode_notify() -> Mode:
 
 def automations_notify() -> list[Automation]:
     return [
-        Automation(
-            ident=AutomationID("notification-replay"),
-            handler=_automation_notification_replay,
-        ),
-        Automation(
-            ident=AutomationID("notification-analyse"),
-            handler=_automation_notification_analyse,
-        ),
-        Automation(
-            ident=AutomationID("notification-test"),
-            handler=_automation_notification_test,
-        ),
-        Automation(
-            ident=AutomationID("notification-get-bulks"),
-            handler=_automation_get_bulks,
-        ),
+        AUTOMATION_NOTIFICATION_REPLAY,
+        AUTOMATION_NOTIFICATION_ANALYSE,
+        AUTOMATION_NOTIFICATION_TEST,
+        AUTOMATION_NOTIFICATION_GET_BULKS,
     ]
 
 
@@ -1049,6 +1037,24 @@ def _automation_get_bulks(
             ),
         )
     )
+
+
+AUTOMATION_NOTIFICATION_REPLAY = Automation(
+    ident=AutomationID("notification-replay"),
+    handler=_automation_notification_replay,
+)
+AUTOMATION_NOTIFICATION_ANALYSE = Automation(
+    ident=AutomationID("notification-analyse"),
+    handler=_automation_notification_analyse,
+)
+AUTOMATION_NOTIFICATION_TEST = Automation(
+    ident=AutomationID("notification-test"),
+    handler=_automation_notification_test,
+)
+AUTOMATION_NOTIFICATION_GET_BULKS = Automation(
+    ident=AutomationID("notification-get-bulks"),
+    handler=_automation_get_bulks,
+)
 
 
 # .

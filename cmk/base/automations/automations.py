@@ -24,6 +24,7 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.fetchers import Fetcher, FetcherTriggerFactory
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.helper_interface import AgentRawData
@@ -89,11 +90,35 @@ class Automation:
         ABCAutomationResult,
     ]
 
+    # This property is needed for compatibility with the plugin discovery mechanism
+    @property
+    def name(self) -> str:
+        return self.ident
+
 
 class Automations:
     def __init__(self) -> None:
         super().__init__()
         self._automations: dict[AutomationID, Automation] = {}
+
+    def discover(self) -> None:
+        discovery_result = discover_plugins_from_modules(
+            plugin_prefixes={Automation: "AUTOMATION_"},
+            module_names_by_priority=[
+                # TODO: We need to get rid of this hard-coded list
+                "cmk.base.automations.check_mk",
+                "cmk.base.diagnostics",
+                "cmk.base.notify",
+                "cmk.base.nonfree.notify_automation",
+                "cmk.bakery.base.automation",  # non-free
+            ],
+            skip_wrong_types=False,
+            raise_errors=True,
+        )
+        assert not discovery_result.errors
+        self._automations.update(
+            {automation.ident: automation for automation in discovery_result.plugins.values()}
+        )
 
     def register(self, automation: Automation) -> None:
         self._automations[automation.ident] = automation

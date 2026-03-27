@@ -2796,6 +2796,9 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return request.get_validated_type_input_mandatory(UserId, "user")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
+        search_vars: HTTPVariables = (
+            [("search", search)] if (search := request.get_str_input("search", "")) else []
+        )
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -2813,7 +2816,9 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                                             [
                                                 ("mode", "user_notification_rule"),
                                                 ("user", self._user_id()),
+                                                ("back_mode", self.name()),
                                             ]
+                                            + search_vars
                                         )
                                     ),
                                     is_shortcut=True,
@@ -2870,6 +2875,9 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         return self.mode_url()
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
+        search_vars: HTTPVariables = (
+            [("search", search)] if (search := request.get_str_input("search", "")) else []
+        )
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -2883,11 +2891,17 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                                     title=_("Add rule"),
                                     icon_name=StaticIcon(IconNames.new),
                                     item=make_simple_link(
-                                        folder_preserving_link([("mode", "notification_rule_p")])
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "notification_rule_p"),
+                                                ("back_mode", self.name()),
+                                            ]
+                                            + search_vars
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
-                                ),
+                                )
                             ],
                         )
                     ],

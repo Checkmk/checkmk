@@ -71,21 +71,10 @@ class GraphRenderOptions(BaseModel):
 
 
 class GraphDisplayConfigBase(BaseModel):
-    border_width: SizeMM = 0.05
-    color_gradient: float = 20.0
-    editing: bool = False
-    fixed_timerange: bool = False
     font_size: SizePT = SizePT(8.0)
-    interaction: bool = True
-    preview: bool = False
-    resizable: bool = True
-    show_controls: bool = True
     show_graph_time: bool = True
     show_legend: bool = True
     show_margin: bool = True
-    show_pin: bool = True
-    show_time_axis: bool = True
-    show_time_range_previews: bool = True
     show_title: bool | Literal["inline"] = True
     show_vertical_axis: bool = True
     size: tuple[float, float] = (70, 16)
@@ -95,18 +84,28 @@ class GraphDisplayConfigBase(BaseModel):
         add_host_alias=False,
         add_service_description=False,
     )
-    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
-    legend_max_height_px: int | None = None
 
     def update_from_options(self, options: GraphRenderOptions) -> Self:
         return self.model_copy(
-            update=options.dump_set_fields(),
+            update={
+                k: v for k, v in options.dump_set_fields().items() if k in type(self).model_fields
+            },
         )
 
 
 class GraphDisplayConfigHTML(GraphDisplayConfigBase):
+    color_gradient: float = 20.0
+    editing: bool = False
     explicit_title: str | None = None
-    foreground_color: str
+    fixed_timerange: bool = False
+    foreground_color: str = "#000000"
+    interaction: bool = True
+    legend_max_height_px: int | None = None
+    preview: bool = False
+    resizable: bool = True
+    show_controls: bool = True
+    show_pin: bool = True
+    show_time_range_previews: bool = True
 
     @classmethod
     def from_user_context_and_options(
@@ -122,6 +121,9 @@ class GraphDisplayConfigHTML(GraphDisplayConfigBase):
 
 
 class GraphDisplayConfigImage(GraphDisplayConfigBase):
+    border_width: SizeMM = 0.05
+    show_time_axis: bool = True
+    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
     background_color: str = "#f8f4f0"
     canvas_color: str = "#ffffff"
     foreground_color: str = "#000000"

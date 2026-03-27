@@ -233,12 +233,8 @@ function _hover_cache_set(key: string, data: GraphHover): void {
 
 interface DelayedGraph {
   graph_load_container: HTMLElement | Node | null
-  recipe: GraphRecipe
-  specification: object
-  time_range: GraphTimeRange
-  display_config: GraphDisplayConfigHTML
+  context: GraphContext
   script_object: HTMLScriptElement
-  display_id: string
   additional_html: object | null
 }
 
@@ -427,14 +423,7 @@ function get_current_script(): HTMLScriptElement {
 //    user for the first time.
 // b) Process the rendering asynchronous via javascript to make the page loading
 //    faster by parallelizing the graph loading processes.
-export function load_graph_content(
-  recipe: GraphRecipe,
-  specification: object,
-  time_range: GraphTimeRange,
-  display_config: GraphDisplayConfigHTML,
-  display_id: string,
-  additional_html: object | null = null
-) {
+export function load_graph_content(context: GraphContext, additional_html: object | null = null) {
   const script_object = get_current_script()
 
   // In case the graph load container (-> is at future graph location) is not
@@ -443,25 +432,13 @@ export function load_graph_content(
   if (!is_in_viewport(graph_load_container as HTMLElement)) {
     g_delayed_graphs.push({
       graph_load_container: graph_load_container,
-      recipe: recipe,
-      specification: specification,
-      time_range: time_range,
-      display_config: display_config,
+      context: context,
       script_object: script_object,
-      display_id: display_id,
       additional_html: additional_html
     })
     return
   } else {
-    do_load_graph_content(
-      recipe,
-      specification,
-      time_range,
-      display_config,
-      script_object,
-      display_id,
-      additional_html
-    )
+    do_load_graph_content(context, script_object, additional_html)
   }
 }
 
@@ -487,12 +464,8 @@ export function register_delayed_graph_listener() {
 }
 
 function do_load_graph_content(
-  recipe: GraphRecipe,
-  specification: object,
-  time_range: GraphTimeRange,
-  display_config: GraphDisplayConfigHTML,
+  context: GraphContext,
   script_object: HTMLScriptElement,
-  display_id: string,
   additional_html: object | null = null
 ) {
   const graph_load_container = script_object.previousSibling as HTMLElement
@@ -506,11 +479,7 @@ function do_load_graph_content(
     'request=' +
     encodeURIComponent(
       JSON.stringify({
-        recipe: recipe,
-        specification: specification,
-        time_range: time_range,
-        display_config: display_config,
-        display_id: display_id,
+        ...context,
         additional_html: additional_html
       })
     )
@@ -583,15 +552,7 @@ function delayed_graph_renderer() {
   while (i--) {
     const entry = g_delayed_graphs[i]
     if (is_in_viewport(entry.graph_load_container as HTMLElement)) {
-      do_load_graph_content(
-        entry.recipe,
-        entry.specification,
-        entry.time_range,
-        entry.display_config,
-        entry.script_object,
-        entry.display_id,
-        entry.additional_html
-      )
+      do_load_graph_content(entry.context, entry.script_object, entry.additional_html)
       g_delayed_graphs.splice(i, 1)
     }
   }
@@ -601,8 +562,8 @@ function delayed_graph_renderer() {
 function update_delayed_graphs_timerange(start_time: number, end_time: number) {
   for (let i = 0, len = g_delayed_graphs.length; i < len; i++) {
     const entry = g_delayed_graphs[i]
-    entry.time_range.start = start_time
-    entry.time_range.end = end_time
+    entry.context.time_range.start = start_time
+    entry.context.time_range.end = end_time
   }
 }
 

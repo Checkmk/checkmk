@@ -1034,20 +1034,16 @@ class UserGraphTimeRangeStore:
 
 # cmk.graphs.load_graph_content will call ajax_render_graph_content() via JSON to finally load the graph
 def _render_deferred_graph_html(
-    recipe: GraphRecipe,
-    specification: GraphSpecification,
-    time_range: GraphTimeRange,
-    display_config: GraphDisplayConfigHTML,
+    context: GraphContext,
     *,
-    display_id: str,
     additional_html: AdditionalGraphHTML | None = None,
 ) -> HTML:
     # Estimate size of graph. This will not be the exact size of the graph, because
     # this does calculate the size of the canvas area and does not take e.g. the legend
     # into account. We would need the artwork to calculate that, but this is something
     # we don't have in this early stage.
-    graph_width = display_config.size[0] * html_size_per_ex
-    graph_height = display_config.size[1] * html_size_per_ex
+    graph_width = context.display_config.size[0] * html_size_per_ex
+    graph_height = context.display_config.size[1] * html_size_per_ex
 
     content = HTMLWriter.render_div("", class_="title") + HTMLWriter.render_div(
         "", class_="content", style="width:%dpx;height:%dpx" % (graph_width, graph_height)
@@ -1058,13 +1054,9 @@ def _render_deferred_graph_html(
         class_="graph_load_container",
     )
     output += HTMLWriter.render_javascript(
-        "cmk.graphs.load_graph_content(%s, %s, %s, %s, %s, %s)"
+        "cmk.graphs.load_graph_content(%s, %s)"
         % (
-            json.dumps(recipe.model_dump()),
-            json.dumps(specification.model_dump()),
-            json.dumps(time_range.model_dump()),
-            json.dumps(display_config.model_dump()),
-            json.dumps(display_id),
+            json.dumps(context.model_dump()),
             json.dumps(additional_html.model_dump() if additional_html else None),
         )
     )
@@ -1111,11 +1103,15 @@ def render_deferred_graphs_html(
     output = HTML.empty()
     for recipe_with_overrides in recipes:
         output += _render_deferred_graph_html(
-            recipe_with_overrides.recipe,
-            recipe_with_overrides.specification,
-            recipe_with_overrides.time_range or time_range,
-            display_config.update_from_options(recipe_with_overrides.render_options),
-            display_id=display_id,
+            GraphContext(
+                recipe=recipe_with_overrides.recipe,
+                specification=recipe_with_overrides.specification,
+                time_range=recipe_with_overrides.time_range or time_range,
+                display_config=display_config.update_from_options(
+                    recipe_with_overrides.render_options
+                ),
+                display_id=display_id,
+            ),
             additional_html=recipe_with_overrides.additional_html,
         )
     return output
@@ -1192,10 +1188,7 @@ class AjaxRenderGraphContent(AjaxPage):
         # Called from javascript code via JSON to initially render a graph
         """Registered as `ajax_render_graph_content`."""
         api_request = ctx.request.get_request()
-        recipe = GraphRecipe.model_validate(api_request["recipe"])
-        specification = parse_raw_graph_specification(api_request["specification"])
-        time_range = GraphTimeRange.model_validate(api_request["time_range"])
-        display_config = GraphDisplayConfigHTML.model_validate(api_request["display_config"])
+        context = GraphContext.model_validate(api_request)
         additional_html = (
             None
             if (raw_additional_html := api_request.get("additional_html")) is None
@@ -1205,17 +1198,16 @@ class AjaxRenderGraphContent(AjaxPage):
         backend_time_series_fetcher = metric_backend_registry[
             str(edition(paths.omd_root))
         ].get_time_series_fetcher()
-        display_id = api_request["display_id"]
         return _render_graph_content_html(
             ctx.request,
-            recipe,
-            specification,
-            time_range,
-            display_config,
+            context.recipe,
+            context.specification,
+            context.time_range,
+            context.display_config,
             compute_graph_artwork(
-                recipe,
-                time_range,
-                display_config.size,
+                context.recipe,
+                context.time_range,
+                context.display_config.size,
                 metrics_from_api,
                 temperature_unit=temperature_unit,
                 backend_time_series_fetcher=backend_time_series_fetcher,
@@ -1225,7 +1217,7 @@ class AjaxRenderGraphContent(AjaxPage):
             graph_timeranges=ctx.config.graph_timeranges,
             temperature_unit=temperature_unit,
             backend_time_series_fetcher=backend_time_series_fetcher,
-            display_id=display_id,
+            display_id=context.display_id,
             expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
             show_limits_if_reached=False,
             additional_html=additional_html,

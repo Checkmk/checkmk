@@ -1,0 +1,76 @@
+#!/bin/bash
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# This file is for execution by the pre-commit framework.
+# Maps changed Python files to their corresponding unit test packages
+# and runs only those packages via bazel test.
+set -e
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+
+# Walk up the directory tree to find the nearest BUILD / BUILD.bazel file and
+# return the corresponding Bazel package target (e.g. //tests/unit/cmk/foo:all).
+find_bazel_package() {
+    local dir
+    dir=$(dirname "$1")
+    while [[ "$dir" != "." ]]; do
+        if [[ -f "${REPO_PATH}/${dir}/BUILD" || -f "${REPO_PATH}/${dir}/BUILD.bazel" ]]; then
+            echo "//${dir}:all"
+            return
+        fi
+        dir=$(dirname "$dir")
+    done
+    echo "//:all"
+}
+
+declare -a TEST_PACKAGES
+
+for param in "$@"; do
+    if [[ "$param" == tests/unit/* ]]; then
+        TEST_PACKAGES+=("$(find_bazel_package "$param")")
+        continue
+    elif [[ "$param" == tests* ]]; then
+        # Skip all other tests/* files
+        continue
+    fi
+    # For non-test files, look for a corresponding unit test file
+    dir=$(dirname "${param}")
+    filename=$(basename "${param}")
+    testfile="tests/unit/${dir}/test_${filename}"
+    if [[ -f "${REPO_PATH}/${testfile}" ]]; then
+        TEST_PACKAGES+=("$(find_bazel_package "$testfile")")
+    fi
+done
+
+if [ "${#TEST_PACKAGES[@]}" == "0" ]; then
+    echo "No tests." >&2
+    exit 0
+fi
+
+# Deduplicate
+mapfile -t TEST_PACKAGES < <(printf '%s\n' "${TEST_PACKAGES[@]}" | sort -u)
+
+pushd "${REPO_PATH}" >/dev/null
+
+set +e
+bazel test \
+    --test_verbose_timeout_warnings \
+    --test_env=TZ='America/Chicago' \
+    --test_tag_filters=-component,-cpp \
+    --keep_going \
+    --//:use_faked_artifacts=true \
+    --cmk_edition=ultimate \
+    -- "${TEST_PACKAGES[@]}"
+exit_code=$?
+set -e
+
+# Exit code 4: build succeeded but no test targets were found — treat as success,
+# since the changed file simply has no registered Bazel test target yet.
+if [[ $exit_code -eq 4 ]]; then
+    exit 0
+fi
+
+popd >/dev/null
+exit $exit_code

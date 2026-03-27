@@ -1,0 +1,43 @@
+#!/bin/bash
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# This file is for execution by the pre-commit framework.
+# Maps changed Python file paths to their Bazel packages and runs mypy on those packages.
+set -e
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+
+# Walk up the directory tree to find the nearest BUILD / BUILD.bazel file and
+# return the corresponding Bazel package target (e.g. //cmk/foo:all).
+find_bazel_package() {
+    local dir
+    dir=$(dirname "$1")
+    while [[ "$dir" != "." ]]; do
+        if [[ -f "${REPO_PATH}/${dir}/BUILD" || -f "${REPO_PATH}/${dir}/BUILD.bazel" ]]; then
+            echo "//${dir}:all"
+            return
+        fi
+        dir=$(dirname "$dir")
+    done
+    echo "//:all"
+}
+
+declare -a PACKAGES
+
+for param in "$@"; do
+    PACKAGES+=("$(find_bazel_package "$param")")
+done
+
+if [ "${#PACKAGES[@]}" == "0" ]; then
+    echo "No packages to type-check." >&2
+    exit 0
+fi
+
+# Deduplicate
+mapfile -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | sort -u)
+
+pushd "${REPO_PATH}" >/dev/null
+bazel build --config=mypy -- "${PACKAGES[@]}"
+popd >/dev/null

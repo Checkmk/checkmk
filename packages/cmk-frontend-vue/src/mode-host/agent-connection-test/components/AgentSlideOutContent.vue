@@ -90,7 +90,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     installDownloadCmd: replaceMacros(props.agentInstallCmds.windows_download, false),
     installCmd: replaceMacros(props.agentInstallCmds.windows, false),
     registrationMsg: _t(
-      'After you have downloaded the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. "Run as Administrator").'
+      'After you have installed the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. "Run as Administrator").'
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.windows, true)
   },
@@ -114,7 +114,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
         }
       : undefined,
     registrationMsg: _t(
-      'After you have downloaded the agent, run this command on your Linux host to register the Checkmk agent controller.'
+      'After you have installed the agent, run this command on your Linux host to register the Checkmk agent controller.'
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.linux, true),
     toggleButtonOptions: toggleButtonOptions
@@ -135,7 +135,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
         }
       : undefined,
     registrationMsg: _t(
-      'After you have downloaded the agent, run this command on your Solaris host to install the Checkmk agent.'
+      'After you have installed the agent, run this command on your Solaris host to register the Checkmk agent.'
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.solaris, true)
   },
@@ -155,7 +155,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
         }
       : undefined,
     registrationMsg: _t(
-      'After you have downloaded the agent, run this command on your AIX host to register the Checkmk agent controller.'
+      'After you have installed the agent, run this command on your AIX host to register the Checkmk agent controller.'
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.aix, true)
   }

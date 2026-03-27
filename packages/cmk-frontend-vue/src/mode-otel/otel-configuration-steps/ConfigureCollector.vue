@@ -31,6 +31,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
@@ -38,9 +39,13 @@ import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+import CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
+
+import PasswordStoreSlideIn from './PasswordStoreSlideIn.vue'
+import type { PasswordConfig } from './password_store_password.types.ts'
 
 const { _t } = usei18n()
 
@@ -67,6 +72,7 @@ const httpEventConsole = defineModel<EventConsoleConfig | null>('httpEventConsol
 const activeTab = ref('grpc')
 const availablePasswords = ref<Suggestion[]>([])
 const displayErrors = ref(false)
+const passwordStoreSlideInOpen = ref(false)
 
 onMounted(async () => {
   try {
@@ -326,6 +332,15 @@ function validate(): boolean {
   return isValid
 }
 
+function onPasswordCreated(password: PasswordConfig) {
+  passwordStoreSlideInOpen.value = false
+  // TODO: properly handle the created password
+  availablePasswords.value.push({
+    name: password.general_props.id,
+    title: password.general_props.title as TranslatedString
+  })
+}
+
 defineExpose({ validate })
 </script>
 
@@ -389,10 +404,9 @@ defineExpose({ validate })
                   :form-validation="grpcPasswordErrors.length > 0"
                   :no-elements-text="_t('No passwords available')"
                 />
-                <!-- enable when password creation flow is implemented -->
-                <button type="button" disabled class="mode-otel-configure-collector__btn-create">
-                  {{ _t('+ Create') }}
-                </button>
+                <CmkInlineButton @click="passwordStoreSlideInOpen = true">{{
+                  _t('Create')
+                }}</CmkInlineButton>
               </div>
               <CmkInlineValidation
                 v-if="grpcPasswordErrors.length"
@@ -486,10 +500,9 @@ defineExpose({ validate })
                   :form-validation="httpPasswordErrors.length > 0"
                   :no-elements-text="_t('No passwords available')"
                 />
-                <!-- enable when password creation flow is implemented -->
-                <button type="button" disabled class="mode-otel-configure-collector__btn-create">
-                  {{ _t('+ Create') }}
-                </button>
+                <CmkInlineButton @click="passwordStoreSlideInOpen = true">{{
+                  _t('Create')
+                }}</CmkInlineButton>
               </div>
               <CmkInlineValidation
                 v-if="httpPasswordErrors.length"
@@ -531,6 +544,12 @@ defineExpose({ validate })
       </CmkTabContent>
     </template>
   </CmkTabs>
+
+  <PasswordStoreSlideIn
+    :open="passwordStoreSlideInOpen"
+    @close="passwordStoreSlideInOpen = false"
+    @created="onPasswordCreated"
+  />
 </template>
 
 <style scoped>
@@ -550,15 +569,6 @@ defineExpose({ validate })
 
 .mode-otel-configure-collector__password-error {
   grid-column: 2;
-}
-
-.mode-otel-configure-collector__btn-create {
-  cursor: pointer;
-}
-
-.mode-otel-configure-collector__btn-create:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
 }
 
 .mode-otel-configure-collector__sub-field {

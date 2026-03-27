@@ -138,11 +138,9 @@ def edition_to_registry(ed: str, registries: list[Registry]) -> Registry:
     raise RuntimeError(f"Cannot determine registry for edition: {ed}!")
 
 
-def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+def build_source_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        file_name = (
-            f"check-mk-{edition}-{args.version}.{Edition.from_long_edition(edition).short}.tar.gz"
-        )
+        file_name = f"check-mk-{edition}-{version.version_without_rc}.{Edition.from_long_edition(edition).short}.tar.gz"
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only
@@ -243,12 +241,18 @@ def build_csv_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
     }
 
 
-def file_exists_on_download_server(filename: str, version: str, credentials: Credentials) -> bool:
-    url = f"https://download.checkmk.com/checkmk/{version}/{filename}"
-    sys.stdout.write(f"Checking for {url}...")
+def file_exists_on_download_server(
+    filename: str, version: Version, credentials: Credentials
+) -> bool:
+    expected_server_url = (
+        f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version_rc_aware}/{filename}"
+        if version.release_candidate.value
+        else f"https://download.checkmk.com/checkmk/{version}/{filename}"
+    )
+    sys.stdout.write(f"Checking for {expected_server_url}...")
     if (
         requests.head(
-            f"https://download.checkmk.com/checkmk/{version}/{filename}",
+            expected_server_url,
             auth=(credentials.username, credentials.password),
             timeout=10,
         ).status_code
@@ -261,12 +265,9 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
 
 
 def assert_presence_on_download_server(
-    args: Args, internal_only: bool, artifact_name: str, credentials: Credentials
+    version: Version, internal_only: bool, artifact_name: str, credentials: Credentials
 ) -> None:
-    if (
-        not file_exists_on_download_server(artifact_name, args.version, credentials)
-        != internal_only
-    ):
+    if not file_exists_on_download_server(artifact_name, version, credentials) != internal_only:
         raise RuntimeError(
             f"{artifact_name} should {'not' if internal_only else ''} "
             "be available on download server!"
@@ -274,6 +275,8 @@ def assert_presence_on_download_server(
 
 
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
+    version = Version.from_str(args.version)
+
     credentials = get_credentials()
     registries = [
         Registry(
@@ -284,14 +287,14 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
             editions=["raw", "cloud", "managed"],
         ),
     ]
-    for artifact_name, internal_only in build_source_artifacts(args, loaded_yaml):
-        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+    for artifact_name, internal_only in build_source_artifacts(version, loaded_yaml):
+        assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
 
     for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
-        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
 
     for artifact_name, internal_only in build_docker_artifacts(args, loaded_yaml):
-        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
 
     for image_name, edition, registry in build_docker_image_name_and_registry(
         args, loaded_yaml, registries

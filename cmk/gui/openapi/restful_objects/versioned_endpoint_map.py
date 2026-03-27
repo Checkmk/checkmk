@@ -3,11 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
+
 from cmk.gui.hooks import request_memoize
 from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
 from cmk.gui.openapi.framework.registry import EndpointDefinition, versioned_endpoint_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry as legacy_endpoint_registry
+
+
+class EndpointVersionChange(enum.Enum):
+    """The type of change an endpoint has compared to the previous API version."""
+
+    NEW = "new"
+    CHANGED = "changed"
+
 
 type ExcludedEndpoints = set[str]
 type ExcludedEndpointsByVersion = dict[APIVersion, ExcludedEndpoints]
@@ -40,9 +50,12 @@ def _discover_endpoints(
     """
 
     try:
-        discovered_endpoints, excluded_endpoints = _discover_endpoints(
+        prev_discovered, prev_excluded = _discover_endpoints(
             APIConfig.get_previous_released_version(target_version=version)
         )
+        # Shallow-copy to avoid mutating the memoized result of the previous version
+        discovered_endpoints = prev_discovered.copy()
+        excluded_endpoints = {k: v.copy() for k, v in prev_excluded.items()}
 
     except ValueError:
         # No previous version available, so we start with empty dictionaries
@@ -78,3 +91,28 @@ def _discover_endpoints(
             add_removed_in_version(removed_in_version, versioned_endpoint.ident)
 
     return discovered_endpoints, excluded_endpoints
+
+
+def compute_endpoint_changes(version: APIVersion) -> dict[str, EndpointVersionChange]:
+    """Compute which endpoints are new or changed for the given version.
+
+    For each endpoint explicitly registered for ``version``, determine whether it
+    is NEW (not present in the previous version) or CHANGED (overrides an endpoint
+    that already existed in the previous version).
+
+    Endpoints inherited unchanged from the previous version are not included in the
+    result.
+    """
+    try:
+        previous_version = APIConfig.get_previous_released_version(target_version=version)
+    except ValueError:
+        return {}
+
+    previous_endpoints = discover_endpoints(previous_version)
+    changes: dict[str, EndpointVersionChange] = {}
+    for endpoint in versioned_endpoint_registry.specified_endpoints(version):
+        if endpoint.ident in previous_endpoints:
+            changes[endpoint.ident] = EndpointVersionChange.CHANGED
+        else:
+            changes[endpoint.ident] = EndpointVersionChange.NEW
+    return changes

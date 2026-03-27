@@ -43,6 +43,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 from cmk.gui.openapi.restful_objects.utils import (
     identify_expected_status_codes,
 )
+from cmk.gui.openapi.restful_objects.versioned_endpoint_map import EndpointVersionChange
 from cmk.gui.openapi.spec.plugin_pydantic import CheckmkGenerateJsonSchema
 from cmk.gui.openapi.spec.spec_generator._code_examples import code_samples
 from cmk.gui.openapi.spec.spec_generator._doc_utils import (
@@ -99,7 +100,11 @@ def _extract_body_example(body_type: type | None) -> dict[str, object] | None:
 
 
 def pydantic_endpoint_to_doc_endpoint(
-    spec: APISpec, endpoint: VersionedSpecEndpoint, site_name: str, api_version: APIVersion
+    spec: APISpec,
+    endpoint: VersionedSpecEndpoint,
+    site_name: str,
+    api_version: APIVersion,
+    version_change: EndpointVersionChange | None = None,
 ) -> DocEndpoint:
     family_tag_obj = build_tag_obj_from_family(endpoint.family)
     add_tag(spec, family_tag_obj, tag_group=endpoint.doc_group)
@@ -160,6 +165,7 @@ def pydantic_endpoint_to_doc_endpoint(
                 site_name,
                 api_version,
                 endpoint.deprecated_werk_id,
+                version_change,
             ),
         )
     except ValueError as e:
@@ -175,6 +181,7 @@ def _to_operation_dict(
     site_name: str,
     api_version: APIVersion,
     werk_id: int | None = None,
+    version_change: EndpointVersionChange | None = None,
 ) -> OperationObject:
     response_headers: dict[str, OpenAPIParameter] = {}
     for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
@@ -213,6 +220,7 @@ def _to_operation_dict(
             editions=spec_endpoint.supported_editions,
             permissions_required=spec_endpoint.permissions_required,
             permissions_description=spec_endpoint.permissions_description,
+            version_change=version_change,
         ),
         "summary": spec_endpoint.title,
     }

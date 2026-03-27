@@ -17,6 +17,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import get_multiple_edition_description
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag, TagGroup
+from cmk.gui.openapi.restful_objects.versioned_endpoint_map import EndpointVersionChange
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import permission_verification as permissions
 
@@ -67,9 +68,10 @@ def build_spec_description(
     editions: Container[Edition] | None,
     permissions_required: permissions.BasePerm | None,
     permissions_description: Mapping[str, str] | None,
+    version_change: EndpointVersionChange | None = None,
 ) -> str:
     # The validator will complain on empty descriptions being set, even though it's valid.
-    spec_description = _build_description(endpoint_description, werk_id, editions)
+    spec_description = _build_description(endpoint_description, werk_id, editions, version_change)
 
     if permissions_required is not None:
         # Check that all the names are known to the system.
@@ -128,6 +130,7 @@ def _build_description(
     description_text: str | None,
     werk_id: int | None = None,
     editions: Container[Edition] | None = None,
+    version_change: EndpointVersionChange | None = None,
 ) -> str:
     r"""Build a OperationSpecType description.
 
@@ -151,6 +154,15 @@ def _build_description(
         >>> _build_description('Foo', 12345, {Edition.COMMUNITY})
         '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\nAvailable in the following editions: Community\n\nFoo'
 
+        >>> _build_description('Foo', version_change=EndpointVersionChange.NEW)
+        '`NEW`: This endpoint is new in this API version.\n\nFoo'
+
+        >>> _build_description('Foo', version_change=EndpointVersionChange.CHANGED)
+        '`CHANGED`: This endpoint has been modified in this API version.\n\nFoo'
+
+        >>> _build_description('Foo', werk_id=12345, version_change=EndpointVersionChange.CHANGED)
+        '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\n`CHANGED`: This endpoint has been modified in this API version.\n\nFoo'
+
     Args:
         description_text:
             The text of the description. This may be None.
@@ -161,18 +173,26 @@ def _build_description(
         editions:
             The editions this endpoint is available in. This may be None.
 
+        version_change:
+            The type of change this endpoint has compared to the previous version. This may be None.
+
     Returns:
         Either a complete description or None
 
     """
+    description = ""
     if werk_id:
         werk_link = f"https://checkmk.com/werk/{werk_id}"
-        description = (
+        description += (
             f"`WARNING`: This URL is deprecated, see [Werk {werk_id}]({werk_link}) for more "
             "details.\n\n"
         )
-    else:
-        description = ""
+
+    if version_change is not None:
+        if version_change == EndpointVersionChange.NEW:
+            description += "`NEW`: This endpoint is new in this API version.\n\n"
+        elif version_change == EndpointVersionChange.CHANGED:
+            description += "`CHANGED`: This endpoint has been modified in this API version.\n\n"
 
     if editions is not None:
         editions_description = get_multiple_edition_description(editions)

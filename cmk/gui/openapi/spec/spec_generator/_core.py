@@ -415,6 +415,7 @@ from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 from cmk.gui.openapi.restful_objects.versioned_endpoint_map import (
+    compute_endpoint_changes,
     discover_endpoints,
 )
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
@@ -480,6 +481,7 @@ def populate_spec(
     doc_endpoints = []
 
     marshmallow_endpoints, versioned_endpoints = get_endpoints_for_version(api_version)
+    endpoint_changes = compute_endpoint_changes(api_version)
 
     marshmallow_endpoint: Endpoint
     for marshmallow_endpoint in marshmallow_endpoints:
@@ -503,7 +505,11 @@ def populate_spec(
             continue
         doc_endpoints.append(
             pydantic_endpoint_to_doc_endpoint(
-                spec, versioned_endpoint.spec_endpoint(), site_name, api_version
+                spec,
+                versioned_endpoint.spec_endpoint(),
+                site_name,
+                api_version,
+                version_change=endpoint_changes.get(versioned_endpoint.ident),
             )
         )
 

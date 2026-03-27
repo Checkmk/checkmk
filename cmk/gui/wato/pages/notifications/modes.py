@@ -3379,6 +3379,14 @@ class ModeNotificationParametersOverview(WatoMode):
     def title(self) -> str:
         return _("Parameters for notification methods")
 
+    def breadcrumb(self) -> Breadcrumb:
+        # Override to prevent forwarding the search parameter from this page to the parent
+        # "Notifications" breadcrumb link. The search here filters notification parameter
+        # methods, not notification rules.
+        with request.stashed_vars():
+            request.del_var("search")
+            return super().breadcrumb()
+
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[

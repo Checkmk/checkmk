@@ -74,7 +74,7 @@ class ApiInterfaceAttributes(TypedDict, total=False):
     mega_menu_icons: Literal["topic", "entry"]  # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     show_mode: Literal["default", "default_show_less", "default_show_more", "enforce_show_more"]
     contextual_help_icon: Literal["show_icon", "hide_icon"]
-    navbar_changes_action: Literal["full_page", "slideout"]
+    navbar_changes_action: Literal["full_page", "slideout", "slideout_ask"]
 
 
 class InternalInterfaceAttributes(TypedDict, total=False):
@@ -690,7 +690,9 @@ def _interface_options_to_internal_format(
     match api_interface_options.get("navbar_changes_action"):
         case "full_page":
             internal_interface_options["navbar_changes_action"] = "full_page"
-        case "slideout" | None:
+        case "slideout":
+            internal_interface_options["navbar_changes_action"] = "slideout"
+        case "slideout_ask":
             internal_interface_options["navbar_changes_action"] = None
         case _:
             ...
@@ -747,10 +749,10 @@ def _interface_options_to_api_format(
     match internal_interface_options.get("navbar_changes_action"):
         case "full_page":
             attributes["navbar_changes_action"] = "full_page"
-        case None:
+        case "slideout":
             attributes["navbar_changes_action"] = "slideout"
         case _:
-            ...
+            attributes["navbar_changes_action"] = "slideout_ask"
 
     return attributes
 

@@ -430,7 +430,12 @@ onMounted(async () => {
           {{ _t('Open full view') }}
         </CmkButton>
       </div>
-      <UserSettingDialog v-if="!new_installation" :activate-changes-url="activate_changes_url" />
+      <UserSettingDialog
+        v-if="!new_installation"
+        :activate-changes-url="activate_changes_url"
+        :changes-action="props.navbar_changes_action ?? ''"
+        :user-name="user_name"
+      />
       <CmkDialog
         v-else
         :message="

@@ -9,7 +9,7 @@ from cmk.gui import site_config
 from cmk.gui.config import active_config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _l
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import (
     MainMenu,
@@ -17,9 +17,10 @@ from cmk.gui.main_menu_types import (
     MainMenuVueApp,
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
+from cmk.gui.userdb.store import load_custom_attr
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.activate_changes import get_last_wato_snapshot_file
-from cmk.shared_typing.changes import ChangesProps
+from cmk.shared_typing.changes import ChangesProps, NavbarChangesActionChoices
 
 
 @dataclass
@@ -35,6 +36,16 @@ def _hide_menu() -> bool:
     )
 
 
+def _get_navbar_changes_action(user: LoggedInUser) -> NavbarChangesActionChoices | None:
+    assert user.id is not None
+    raw = load_custom_attr(
+        user_id=user.id,
+        key="navbar_changes_action",
+        parser=lambda x: None if x == "None" else x,
+    )
+    return NavbarChangesActionChoices(raw) if raw is not None else None
+
+
 def _data(request: Request) -> ActivateChangesData:
     return ActivateChangesData(
         activate_changes_url=makeuri_contextless(
@@ -45,6 +56,7 @@ def _data(request: Request) -> ActivateChangesData:
         user_has_activate_foreign=user.may("wato.activateforeign"),
         new_installation=get_last_wato_snapshot_file(debug=False) is None,
         user_name=user.ident,
+        navbar_changes_action=_get_navbar_changes_action(user),
     )
 
 

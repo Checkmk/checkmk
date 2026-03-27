@@ -38,6 +38,7 @@ from cmk.gui.search_menu import UnifiedSearchMainMenuData
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.userdb.store import load_custom_attr
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import loading_transition
 from cmk.gui.utils.output_funnel import output_funnel
@@ -145,7 +146,16 @@ class MainMenuRenderer:
         self, user_permissions: UserPermissions, popup_triggers: list[MainMenuPopupTrigger]
     ) -> None:
         for popup_trigger in popup_triggers:
-            if popup_trigger.name == "changes" and user.get_attribute("navbar_changes_action"):
+            if (
+                user.id is not None
+                and popup_trigger.name == "changes"
+                and load_custom_attr(
+                    user_id=user.id,
+                    key="navbar_changes_action",
+                    parser=lambda x: None if x == "None" else x,
+                )
+                == "full_page"
+            ):
                 render_direct_link_instead_of_changes_slideout(popup_trigger)
                 continue
 

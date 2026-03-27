@@ -32,9 +32,7 @@ def register(
     page_registry.register(PageEndpoint("ajax_ui_theme", ModeAjaxCycleThemes()))
     page_registry.register(PageEndpoint("ajax_sidebar_position", ModeAjaxCycleSidebarPosition()))
     page_registry.register(PageEndpoint("ajax_set_dashboard_start_url", ModeAjaxSetStartURL()))
-    page_registry.register(
-        PageEndpoint("ajax_set_change_action_full_page", ModeAjaxChangesActionFullPage())
-    )
+    page_registry.register(PageEndpoint("ajax_set_change_action", ModeAjaxChangesAction()))
 
     main_menu_registry.register(
         MainMenu(
@@ -209,14 +207,21 @@ class ModeAjaxCycleThemes(AjaxPage):
         return {}
 
 
-class ModeAjaxChangesActionFullPage(AjaxPage):
-    """AJAX handler for quick access option 'Changes Action" in changes menu"""
+class ModeAjaxChangesAction(AjaxPage):
+    """AJAX handler for setting the changes action preference in the changes menu"""
+
+    _VALID_ACTIONS = frozenset({"full_page", "slideout"})
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token(ctx.request.get_json()["_csrf_token"])
+        body = ctx.request.get_json()
+        check_csrf_token(body["_csrf_token"])
 
-        set_user_attribute("navbar_changes_action", "full_page")
+        action = body.get("action")
+        if action not in self._VALID_ACTIONS:
+            raise MKUserError(None, _("Invalid action: %s") % action)
+
+        set_user_attribute("navbar_changes_action", action)
         return {}
 
 

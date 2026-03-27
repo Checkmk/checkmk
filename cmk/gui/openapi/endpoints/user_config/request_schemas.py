@@ -237,9 +237,9 @@ class UserInterfaceAttributes(BaseSchema):
     )
     navbar_changes_action = fields.String(
         required=False,
-        description="The view mode for activating changes. Either the slideout or the full page view.",
-        enum=["slideout", "full_page"],
-        load_default="slideout",
+        description="The view mode for activating changes. Either the quick activation slideout or the full page view.",
+        enum=["slideout_ask", "slideout", "full_page"],
+        load_default="slideout_ask",
         example="slideout",
     )
 
@@ -491,8 +491,8 @@ class UserInterfaceUpdateAttributes(BaseSchema):
     )
     navbar_changes_action = fields.String(
         required=False,
-        description="The view mode for activating changes. Either the slideout or the full page view.",
-        enum=["slideout", "full_page"],
+        description="The view mode for activating changes. Either the quick activation slideout or the full page view.",
+        enum=["slideout_ask", "slideout", "full_page"],
         example="slideout",
     )
 

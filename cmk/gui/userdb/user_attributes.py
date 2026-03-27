@@ -411,8 +411,15 @@ class ChangesSlideoutDisabled(UserAttribute):
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Default behavior for 'Changes'"),
-            help=_("Show the slideout for activating changes or show the full page view instead."),
-            choices=[(None, _("Quick activation")), ("full_page", _("Full activation page"))],
+            help=_(
+                "Decide whether to show the quick activation slideout,"
+                " the full page view or being asked every time."
+            ),
+            choices=[
+                (None, _("Ask (in the quick activation slideout)")),
+                ("slideout", _("Quick activation slideout")),
+                ("full_page", _("Full activation page")),
+            ],
         )
 
     def user_editable(self) -> bool:

@@ -792,7 +792,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
             "show_mode": "default",
             "sidebar_position": "right",
             "contextual_help_icon": "show_icon",
-            "navbar_changes_action": "slideout",
+            "navbar_changes_action": "slideout_ask",
         },
         "start_url": "default_start_url",
     }
@@ -1447,6 +1447,7 @@ def test_openapi_create_user_edit_start_url(clients: ClientRegistry) -> None:
 @pytest.mark.parametrize(
     "field_value, expected_status_code",
     [
+        ("slideout_ask", 200),
         ("slideout", 200),
         ("full_page", 200),
         ("invalid", 400),

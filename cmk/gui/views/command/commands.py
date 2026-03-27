@@ -2040,7 +2040,7 @@ class DowntimeSchedule:
         self.end_time = end_time
         self.mode = mode
         self.delayed_duration = delayed_duration
-        self.comment = comment
+        self.comment = f"Author ({user.id}): {comment}"
 
     def livestatus_command(
         self, specification: str, cmdtag: Literal["HOST", "SVC"]

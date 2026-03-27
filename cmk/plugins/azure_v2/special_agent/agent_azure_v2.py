@@ -69,7 +69,7 @@ from ._data_cache import DataCache
 T = TypeVar("T")
 type ResourceId = str
 
-__version__ = "2.5.0b2"
+__version__ = "2.5.0b3"
 
 AGENT = "azure_v2"
 

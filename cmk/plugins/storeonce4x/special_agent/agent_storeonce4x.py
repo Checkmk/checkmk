@@ -29,7 +29,7 @@ from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 AnyGenerator = Generator[Any]
 ResultFn = Callable[..., AnyGenerator]
 
-__version__ = "2.5.0b2"
+__version__ = "2.5.0b3"
 
 AGENT = "storeonce4x"
 

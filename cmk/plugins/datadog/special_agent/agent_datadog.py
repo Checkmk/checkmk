@@ -37,7 +37,7 @@ from cmk.utils.paths import omd_root, tmp_dir
 
 Tags = Sequence[str]
 
-__version__ = "2.5.0b2"
+__version__ = "2.5.0b3"
 
 AGENT = "datadog"
 

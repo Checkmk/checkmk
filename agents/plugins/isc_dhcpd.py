@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 
-__version__ = "2.5.0b2"
+__version__ = "2.5.0b3"
 
 # Monitor leases if ISC-DHCPD
 import calendar

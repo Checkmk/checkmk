@@ -27,7 +27,7 @@ except ImportError:
         return func
 
 
-__version__ = "2.5.0b2"
+__version__ = "2.5.0b3"
 
 DEFAULT_CFG_FILE = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman.cfg"
 

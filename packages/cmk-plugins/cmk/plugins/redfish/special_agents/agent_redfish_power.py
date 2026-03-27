@@ -37,7 +37,7 @@ from redfish.rest.v1 import (
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
-__version__ = "2.5.0b2"
+__version__ = "2.5.0b3"
 
 SectionName = Literal["RackPDUs", "Mains", "Outlets", "Sensors"]
 

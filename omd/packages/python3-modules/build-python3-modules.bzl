@@ -106,11 +106,11 @@ build_cmd = """
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freedts/freedts/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
 
-    echo "ninja==1.11.1.1" > $$TMPDIR/constraints.txt
-    echo "setuptools<82.0.0" >> $$TMPDIR/constraints.txt
-    echo "maturin~=1.11.0" >> $$TMPDIR/constraints.txt
-    echo "setuptools_scm<10.0.0" >> $$TMPDIR/constraints.txt
-    export PIP_CONSTRAINT="$$TMPDIR/constraints.txt"
+    echo "ninja==1.11.1.1" > $$HOME/constraints.txt
+    echo "setuptools<82.0.0" >> $$HOME/constraints.txt
+    echo "maturin~=1.11.0" >> $$HOME/constraints.txt
+    echo "setuptools_scm<10.0.0" >> $$HOME/constraints.txt
+    export PIP_CONSTRAINT="$$HOME/constraints.txt"
 
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
@@ -124,7 +124,7 @@ build_cmd = """
       --no-warn-script-location \\
       --prefix="$$HOME/$$MODULE_NAME" \\
       -i {pypi_mirror} \\
-      --constraint "$$TMPDIR/constraints.txt" \\
+      --constraint "$$HOME/constraints.txt" \\
       {pip_add_opts} \\
       $$REQUIREMENTS 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 

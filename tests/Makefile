@@ -305,7 +305,6 @@ test-unit:
 	bazel test --test_verbose_timeout_warnings //tests/unit/... \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \
-	    --test_arg="--numprocesses=4" \
             --cmk_edition=$(EDITION)
 
 test-unit-docker:
@@ -318,8 +317,7 @@ test-unit-docker:
 test-unit-all: test-doctest
 	cd .. && \
 	    bazel test --test_verbose_timeout_warnings //tests/unit/... \
-	    --test_env=TZ=$(RANDOM_TZ) \
-	    --test_arg="--numprocesses=4"
+	    --test_env=TZ=$(RANDOM_TZ)
 
 # Default bazel coverage options are defined in .bazelrc.
 # With BAZEL_COVERAGE_ARGS you can pass additional arguments to bazel coverage command, for example
@@ -331,7 +329,6 @@ test-unit-all-coverage:
 	cd .. && \
 	    bazel coverage --test_verbose_timeout_warnings //tests/unit/ \
 	    --test_env=TZ=$(RANDOM_TZ) \
-	    --test_arg="--numprocesses=4" \
 	    --test_arg="-m" --test_arg="not skip_on_code_coverage" \
 		$(BAZEL_COVERAGE_ARGS) ; \
 	    export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path) && \

@@ -5,12 +5,12 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-def"
-
 import importlib.util
 import os
 import os.path
 import types
 from importlib._bootstrap_external import SourceFileLoader
+from typing import override
 
 import flask
 import pytest
@@ -19,6 +19,7 @@ from werkzeug.test import create_environ
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint
 from tests.unit.cmk.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 
@@ -175,3 +176,26 @@ def test_pnp_template(wsgi_app: WebTestAppForCMK) -> None:
     resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=404)
     assert "Page not found" in resp.text
     assert "page_menu_bar" in resp.text
+
+
+def test_ajax_return_401_when_unauthorized(
+    wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]
+) -> None:
+    username, _ = with_user
+
+    class MyPage(Page):
+        @override
+        def page(self, ctx: PageContext) -> None: ...
+
+    page_registry.register(PageEndpoint("my_page", MyPage()))
+    URL = "/NO_SITE/check_mk/my_page.py?_ajaxid=0"
+
+    wsgi_app.set_authorization(("Basic", ("unknown_random_dude", "foobazbar")))
+    wsgi_app.get(
+        URL,
+        headers={"Accept": "application/json"},
+        status=401,
+        extra_environ={"REMOTE_USER": str(username)},
+    )
+
+    page_registry.unregister("my_page")

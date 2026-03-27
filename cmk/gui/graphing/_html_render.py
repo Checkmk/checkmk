@@ -103,7 +103,7 @@ class ExpandableLegendAppearance(Enum):
 # an update of the graph should be done. It must contain everything that we need to
 # create the HTML code of the graph. The entry "graph_id" will be set by the javascript
 # code since it is not known to us.
-class GraphContext(BaseModel):
+class GraphRenderState(BaseModel):
     """Round-trip envelope sent to the browser and echoed back on graph updates."""
 
     graph_id: str = ""
@@ -381,7 +381,7 @@ def _render_graph_html(
             json.dumps(str(html_code)),
             json.dumps(artwork.model_dump()),
             json.dumps(
-                GraphContext(
+                GraphRenderState(
                     recipe=recipe,
                     specification=specification,
                     time_range=time_range,
@@ -429,7 +429,7 @@ def _show_graph_html_content(
             data=[
                 "pnpgraph",
                 None,
-                GraphContext(
+                GraphRenderState(
                     recipe=recipe,
                     specification=specification,
                     time_range=time_range,
@@ -823,10 +823,10 @@ class AjaxGraph(Page):
         response.set_content_type("application/json")
         try:
             context_var = ctx.request.get_str_input_mandatory("context")
-            context = GraphContext.model_validate(json.loads(context_var))
+            render_state = GraphRenderState.model_validate(json.loads(context_var))
             response_data = render_ajax_graph(
                 ctx.request,
-                context,
+                render_state,
                 metrics_from_api,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
@@ -847,7 +847,7 @@ class AjaxGraph(Page):
 @tracer.instrument("graphing.render_ajax_graph")
 def render_ajax_graph(
     request: Request,
-    context: GraphContext,
+    render_state: GraphRenderState,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
@@ -855,9 +855,9 @@ def render_ajax_graph(
     show_titles_if_limit_reached: bool,
     converter: Callable[[GraphMetricExpression], JsonSerializable] | None,
 ) -> JsonSerializable:
-    time_range = context.time_range
-    display_config = context.display_config
-    recipe = context.recipe
+    time_range = render_state.time_range
+    display_config = render_state.display_config
+    recipe = render_state.recipe
 
     start_time_var = request.var("start_time")
     end_time_var = request.var("end_time")
@@ -904,11 +904,11 @@ def render_ajax_graph(
     )
 
     # Persist the current data range for the graph editor.
-    if display_config.editing and (context.specification.id):
+    if display_config.editing and (render_state.specification.id):
         assert user.id is not None
-        UserGraphTimeRangeStore(user.id).save(context.specification.id, time_range)
+        UserGraphTimeRangeStore(user.id).save(render_state.specification.id, time_range)
 
-    display_id = context.display_id
+    display_id = render_state.display_id
 
     artwork_or_errors = compute_graph_artwork(
         recipe,
@@ -961,7 +961,7 @@ def render_ajax_graph(
     html_code = _collect_graph_html(
         request,
         recipe,
-        context.specification,
+        render_state.specification,
         display_id,
         artwork_or_errors.artwork,
         time_range,
@@ -972,10 +972,10 @@ def render_ajax_graph(
     return {
         "html": str(html_code),
         "graph": artwork_or_errors.artwork.model_dump(),
-        "context": GraphContext(
-            graph_id=context.graph_id,
+        "context": GraphRenderState(
+            graph_id=render_state.graph_id,
             recipe=recipe,
-            specification=context.specification,
+            specification=render_state.specification,
             time_range=time_range,
             display_config=display_config,
             display_id=display_id,
@@ -1033,7 +1033,7 @@ class UserGraphTimeRangeStore:
 
 # cmk.graphs.load_graph_content will call ajax_render_graph_content() via JSON to finally load the graph
 def _render_deferred_graph_html(
-    context: GraphContext,
+    render_state: GraphRenderState,
     *,
     additional_html: AdditionalGraphHTML | None = None,
 ) -> HTML:
@@ -1041,8 +1041,8 @@ def _render_deferred_graph_html(
     # this does calculate the size of the canvas area and does not take e.g. the legend
     # into account. We would need the artwork to calculate that, but this is something
     # we don't have in this early stage.
-    graph_width = context.display_config.size[0] * html_size_per_ex
-    graph_height = context.display_config.size[1] * html_size_per_ex
+    graph_width = render_state.display_config.size[0] * html_size_per_ex
+    graph_height = render_state.display_config.size[1] * html_size_per_ex
 
     content = HTMLWriter.render_div("", class_="title") + HTMLWriter.render_div(
         "", class_="content", style="width:%dpx;height:%dpx" % (graph_width, graph_height)
@@ -1055,7 +1055,7 @@ def _render_deferred_graph_html(
     output += HTMLWriter.render_javascript(
         "cmk.graphs.load_graph_content(%s, %s)"
         % (
-            json.dumps(context.model_dump()),
+            json.dumps(render_state.model_dump()),
             json.dumps(additional_html.model_dump() if additional_html else None),
         )
     )
@@ -1102,7 +1102,7 @@ def render_deferred_graphs_html(
     output = HTML.empty()
     for recipe_with_overrides in recipes:
         output += _render_deferred_graph_html(
-            GraphContext(
+            GraphRenderState(
                 recipe=recipe_with_overrides.recipe,
                 specification=recipe_with_overrides.specification,
                 time_range=recipe_with_overrides.time_range or time_range,
@@ -1187,7 +1187,7 @@ class AjaxRenderGraphContent(AjaxPage):
         # Called from javascript code via JSON to initially render a graph
         """Registered as `ajax_render_graph_content`."""
         api_request = ctx.request.get_request()
-        context = GraphContext.model_validate(api_request)
+        render_state = GraphRenderState.model_validate(api_request)
         additional_html = (
             None
             if (raw_additional_html := api_request.get("additional_html")) is None
@@ -1199,14 +1199,14 @@ class AjaxRenderGraphContent(AjaxPage):
         ].get_time_series_fetcher()
         return _render_graph_content_html(
             ctx.request,
-            context.recipe,
-            context.specification,
-            context.time_range,
-            context.display_config,
+            render_state.recipe,
+            render_state.specification,
+            render_state.time_range,
+            render_state.display_config,
             compute_graph_artwork(
-                context.recipe,
-                context.time_range,
-                context.display_config.size,
+                render_state.recipe,
+                render_state.time_range,
+                render_state.display_config.size,
                 metrics_from_api,
                 temperature_unit=temperature_unit,
                 backend_time_series_fetcher=backend_time_series_fetcher,
@@ -1216,7 +1216,7 @@ class AjaxRenderGraphContent(AjaxPage):
             graph_timeranges=ctx.config.graph_timeranges,
             temperature_unit=temperature_unit,
             backend_time_series_fetcher=backend_time_series_fetcher,
-            display_id=context.display_id,
+            display_id=render_state.display_id,
             expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
             show_limits_if_reached=False,
             additional_html=additional_html,
@@ -1454,12 +1454,12 @@ def estimate_graph_step_for_html(
 class AjaxGraphHover(Page):
     def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph_hover`."""
-        context = GraphContext.model_validate(
+        render_state = GraphRenderState.model_validate(
             json.loads(ctx.request.get_str_input_mandatory("context"))
         )
         render_graph_hover_for_recipe(
-            context.recipe,
-            context.time_range,
+            render_state.recipe,
+            render_state.time_range,
             metrics_from_api,
             debug=ctx.config.debug,
             hover_time=ctx.request.get_integer_input_mandatory("hover_time"),

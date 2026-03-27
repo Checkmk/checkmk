@@ -48,8 +48,8 @@ from ._graph_templates import (
 )
 from ._graph_title import render_plain_graph_title
 from ._html_render import (
-    GraphContext,
     GraphDestinations,
+    GraphRenderState,
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
     make_graph_time_range,
@@ -107,7 +107,7 @@ __all__ = [
     "FetchTimeSeries",
     "GraphArtwork",
     "GraphConsolidationFunction",
-    "GraphContext",
+    "GraphRenderState",
     "GraphTimeRange",
     "GraphDestinations",
     "GraphMetric",

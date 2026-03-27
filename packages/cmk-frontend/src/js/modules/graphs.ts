@@ -64,7 +64,7 @@ interface GraphTimeRange {
   end: number
 }
 
-export interface GraphContext {
+export interface GraphRenderState {
   graph_id: string
   recipe: GraphRecipe
   specification: object
@@ -77,7 +77,7 @@ export interface GraphContext {
 export interface AjaxGraph {
   html: string
   graph: GraphArtwork
-  context: GraphContext
+  context: GraphRenderState
   error?: string
   warning?: string
   queries_reached_limit?: Record<string, any>[]
@@ -189,7 +189,7 @@ const g_delayed_graphs: DelayedGraph[] = []
 
 // Global graph constructs to store the graphs etc.
 const g_graphs: Record<string, GraphInstance> = {}
-const g_ajax_contexts: Record<string, GraphContext> = {}
+const g_ajax_contexts: Record<string, GraphRenderState> = {}
 let g_current_graph_id = 0
 
 // Graph hover cache for shared dashboards (bounded LRU).
@@ -233,7 +233,7 @@ function _hover_cache_set(key: string, data: GraphHover): void {
 
 interface DelayedGraph {
   graph_load_container: HTMLElement | Node | null
-  context: GraphContext
+  render_state: GraphRenderState
   script_object: HTMLScriptElement
   additional_html: object | null
 }
@@ -263,7 +263,7 @@ function purge_stale_graphs() {
   }
 }
 
-function get_id_of_graph(ajax_context: GraphContext) {
+function get_id_of_graph(ajax_context: GraphRenderState) {
   purge_stale_graphs()
   // Return the graph_id for and eventual existing graph
   for (const graph_id in g_graphs) {
@@ -355,7 +355,11 @@ export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: H
   render_graph(g_graphs[graph_id])
 }
 
-export function create_graph(html_code: string, artwork: GraphArtwork, ajax_context: GraphContext) {
+export function create_graph(
+  html_code: string,
+  artwork: GraphArtwork,
+  ajax_context: GraphRenderState
+) {
   // Detect whether or not a new graph_id has to be calculated. During the view
   // data reload create_graph() is called again for all already existing graphs.
   // In this situation the graph_id needs to be detected and reused instead of
@@ -423,7 +427,10 @@ function get_current_script(): HTMLScriptElement {
 //    user for the first time.
 // b) Process the rendering asynchronous via javascript to make the page loading
 //    faster by parallelizing the graph loading processes.
-export function load_graph_content(context: GraphContext, additional_html: object | null = null) {
+export function load_graph_content(
+  render_state: GraphRenderState,
+  additional_html: object | null = null
+) {
   const script_object = get_current_script()
 
   // In case the graph load container (-> is at future graph location) is not
@@ -432,13 +439,13 @@ export function load_graph_content(context: GraphContext, additional_html: objec
   if (!is_in_viewport(graph_load_container as HTMLElement)) {
     g_delayed_graphs.push({
       graph_load_container: graph_load_container,
-      context: context,
+      render_state: render_state,
       script_object: script_object,
       additional_html: additional_html
     })
     return
   } else {
-    do_load_graph_content(context, script_object, additional_html)
+    do_load_graph_content(render_state, script_object, additional_html)
   }
 }
 
@@ -464,7 +471,7 @@ export function register_delayed_graph_listener() {
 }
 
 function do_load_graph_content(
-  context: GraphContext,
+  render_state: GraphRenderState,
   script_object: HTMLScriptElement,
   additional_html: object | null = null
 ) {
@@ -479,7 +486,7 @@ function do_load_graph_content(
     'request=' +
     encodeURIComponent(
       JSON.stringify({
-        ...context,
+        ...render_state,
         additional_html: additional_html
       })
     )
@@ -552,7 +559,7 @@ function delayed_graph_renderer() {
   while (i--) {
     const entry = g_delayed_graphs[i]
     if (is_in_viewport(entry.graph_load_container as HTMLElement)) {
-      do_load_graph_content(entry.context, entry.script_object, entry.additional_html)
+      do_load_graph_content(entry.render_state, entry.script_object, entry.additional_html)
       g_delayed_graphs.splice(i, 1)
     }
   }
@@ -562,8 +569,8 @@ function delayed_graph_renderer() {
 function update_delayed_graphs_timerange(start_time: number, end_time: number) {
   for (let i = 0, len = g_delayed_graphs.length; i < len; i++) {
     const entry = g_delayed_graphs[i]
-    entry.context.time_range.start = start_time
-    entry.context.time_range.end = end_time
+    entry.render_state.time_range.start = start_time
+    entry.render_state.time_range.end = end_time
   }
 }
 

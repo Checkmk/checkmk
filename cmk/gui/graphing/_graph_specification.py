@@ -222,7 +222,7 @@ class GraphRecipeWithOverrides:
 
     Keeps the core GraphRecipe (the serializable graph definition) separate
     from per-recipe settings (specification, time_range, render_options,
-    additional_html) that mirror the sibling fields in GraphContext without
+    additional_html) that mirror the sibling fields in GraphRenderState without
     polluting the recipe itself.
     """
 

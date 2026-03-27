@@ -1,0 +1,227 @@
+#!/bin/bash
+# deploy-docker: Build mk-oracle, copy it into a running Docker container, and run it.
+# Similar to deploy-run, but uses a locally running Docker container.
+#
+# Only tested with: ./tests/files/docker/run-db.sh -v 23
+#
+# Usage: ./deploy-docker [-o oracle-home] [-l mk-libdir] [-u user] <config-file> <container> [extra-args...]
+#
+#   -o path       Optional: ORACLE_HOME inside the container (auto-detected if omitted)
+#   -l path       Optional: sets MK_LIBDIR=<path> inside the container
+#   -u user       Optional: run as this container user (default: oracle)
+#   config-file   Local config file (shell variables expanded before copying)
+#   container     Docker container name or ID
+#   extra-args    Forwarded to mk-oracle
+#
+# Uses zigbuild to build with glibc 2.17 compatibility.
+#
+# Examples:
+#
+# Start a local Oracle 23 container (container name: docker-oracle-free-1):
+#   ./tests/files/docker/run-db.sh -v 23
+#
+# List all running Oracle instances inside the container (--detect-sids reads oratab + PMON):
+#   ./deploy-docker ./tests/files/test-local.yml docker-oracle-free-1 --detect-sids
+#
+# Print binary version:
+#   ./deploy-docker ./tests/files/test-local.yml docker-oracle-free-1 --version
+#
+# Force a specific ORACLE_HOME (auto-detected by default):
+#   ./deploy-docker -o /opt/oracle/product/26ai/dbhomeFree ./tests/files/test-local.yml docker-oracle-free-1
+#
+# Expand config variables before deploying:
+#   DB_PORT=1521 DB_SID=FREE DB_PASSWORD=oracle ./deploy-docker ./tests/files/test-template.yml docker-oracle-free-1
+
+set -euo pipefail
+
+GNU_TARGET="x86_64-unknown-linux-gnu"
+BUILD_TARGET="${GNU_TARGET}.2.17"
+BINARY_NAME="mk-oracle"
+CONTAINER_USER="oracle"
+ORACLE_HOME=""
+MK_LIBDIR=""
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+HOST_USER="${USER:-unknown}"
+CONTAINER_DEPLOY_DIR="/tmp/${HOST_USER}-${BINARY_NAME}-deploy"
+
+usage() {
+    cat >&2 <<EOF
+Usage: $0 [-o oracle-home] [-l mk-libdir] [-u user] <config-file> <container> [extra-args...]
+EOF
+    exit 1
+}
+
+die() {
+    echo "Error: $*" >&2
+    exit 1
+}
+
+require_cmd() {
+    command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
+}
+
+shell_quote_join() {
+    local out=""
+    local arg
+    for arg in "$@"; do
+        printf -v out '%s %q' "${out}" "${arg}"
+    done
+    printf '%s' "${out}"
+}
+
+# ---------------------------------------------------------------------------
+# Dependency checks
+# ---------------------------------------------------------------------------
+require_cmd docker
+require_cmd git
+require_cmd cargo
+require_cmd grep
+require_cmd basename
+require_cmd mktemp
+require_cmd envsubst
+
+# ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+while getopts ":o:l:u:h" opt; do
+    case "${opt}" in
+        o) ORACLE_HOME="${OPTARG}" ;;
+        l) MK_LIBDIR="${OPTARG}" ;;
+        u) CONTAINER_USER="${OPTARG}" ;;
+        h) usage ;;
+        :)
+            die "-${OPTARG} requires an argument."
+            ;;
+        ?)
+            die "unknown option -${OPTARG}."
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+[[ $# -ge 2 ]] || usage
+
+CONFIG_FILE="$1"
+CONTAINER="$2"
+shift 2
+EXTRA_ARGS=("$@")
+
+[[ -f "${CONFIG_FILE}" ]] || die "config file '${CONFIG_FILE}' not found."
+
+if ! WORKSPACE_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+    die "not inside a git repository."
+fi
+
+CONFIG_BASENAME="$(basename -- "${CONFIG_FILE}")"
+TMP_CONFIG="$(mktemp --suffix="-${CONFIG_BASENAME}")"
+trap 'rm -f "${TMP_CONFIG}"' EXIT
+
+BINARY_PATH="${WORKSPACE_ROOT}/target/${GNU_TARGET}/release/${BINARY_NAME}"
+
+# ---------------------------------------------------------------------------
+# Verify the container is running
+# ---------------------------------------------------------------------------
+CONTAINER_RUNNING="$(docker inspect --format '{{.State.Running}}' "${CONTAINER}" 2>/dev/null || true)"
+if [[ "${CONTAINER_RUNNING}" != "true" ]]; then
+    echo "Error: container '${CONTAINER}' is not running." >&2
+    echo "To start a local container with an Oracle database, run:" >&2
+    echo "    ${SCRIPT_DIR}/tests/files/docker/run-db.sh -v 23" >&2
+    exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Step 1: ensure cargo-zigbuild is available
+# ---------------------------------------------------------------------------
+if ! command -v cargo-zigbuild >/dev/null 2>&1; then
+    echo "==> [1/5] Installing cargo-zigbuild..."
+    cargo install cargo-zigbuild
+else
+    echo "==> [1/5] cargo-zigbuild already installed, skipping."
+fi
+
+# ---------------------------------------------------------------------------
+# Step 2: build binary targeting glibc 2.17 for maximum compatibility
+# ---------------------------------------------------------------------------
+echo "==> [2/5] Building binary (glibc 2.17)..."
+cargo zigbuild --release --target "${BUILD_TARGET}"
+
+[[ -f "${BINARY_PATH}" ]] || die "expected binary not found at '${BINARY_PATH}'."
+echo "    Binary: ${BINARY_PATH}"
+
+# ---------------------------------------------------------------------------
+# Step 3: copy binary into container
+# ---------------------------------------------------------------------------
+echo "==> [3/5] Copying binary into container '${CONTAINER}:${CONTAINER_DEPLOY_DIR}/'..."
+docker exec -u root "${CONTAINER}" mkdir -p "${CONTAINER_DEPLOY_DIR}"
+docker cp "${BINARY_PATH}" "${CONTAINER}:${CONTAINER_DEPLOY_DIR}/${BINARY_NAME}"
+
+# ---------------------------------------------------------------------------
+# Step 4: expand shell variables in config, copy expanded version into container
+# ---------------------------------------------------------------------------
+echo "==> [4/5] Expanding variables in '${CONFIG_FILE}' and copying into container..."
+
+raw_refs="$(grep -oE '\$\{[A-Za-z_][A-Za-z0-9_]*\}|\$[A-Za-z_][A-Za-z0-9_]*' "${CONFIG_FILE}" || true)"
+defined_vars=""
+
+if [[ -n "${raw_refs}" ]]; then
+    defined_vars="$(
+        printf '%s\n' "${raw_refs}" |
+            grep -oE '[A-Za-z_][A-Za-z0-9_]*' |
+            sort -u |
+            while IFS= read -r var_name; do
+                if [[ -v "${var_name}" ]]; then
+                    printf "\${%s}" "${var_name}"
+                fi
+            done
+    )"
+fi
+
+if [[ -n "${defined_vars}" ]]; then
+    echo "    Expanding: ${defined_vars}"
+else
+    echo "    No defined variables found to expand."
+fi
+
+envsubst "${defined_vars}" <"${CONFIG_FILE}" >"${TMP_CONFIG}"
+docker cp "${TMP_CONFIG}" "${CONTAINER}:${CONTAINER_DEPLOY_DIR}/${CONFIG_BASENAME}"
+
+# ---------------------------------------------------------------------------
+# Step 5: run binary inside container
+# ---------------------------------------------------------------------------
+CONTAINER_BINARY="${CONTAINER_DEPLOY_DIR}/${BINARY_NAME}"
+CONTAINER_CONFIG="${CONTAINER_DEPLOY_DIR}/${CONFIG_BASENAME}"
+
+if [[ -z "${ORACLE_HOME}" ]]; then
+    ORACLE_HOME="$(docker exec "${CONTAINER}" sh -c 'printf %s "${ORACLE_HOME:-}"' 2>/dev/null || true)"
+    if [[ -n "${ORACLE_HOME}" ]]; then
+        echo "    Auto-detected ORACLE_HOME: ${ORACLE_HOME}"
+    else
+        echo "    Warning: ORACLE_HOME not detected in container environment. Use -o to set it explicitly." >&2
+    fi
+fi
+
+ENV_ASSIGNMENTS=()
+[[ -n "${ORACLE_HOME}" ]] && ENV_ASSIGNMENTS+=("ORACLE_HOME=${ORACLE_HOME}")
+[[ -n "${MK_LIBDIR}" ]] && ENV_ASSIGNMENTS+=("MK_LIBDIR=${MK_LIBDIR}")
+
+echo "==> [5/6] Fixing ownership and permissions..."
+docker exec -u root "${CONTAINER}" \
+    sh -c "$(shell_quote_join chown "${CONTAINER_USER}" "${CONTAINER_BINARY}" "${CONTAINER_CONFIG}") && \
+           $(shell_quote_join chmod +x "${CONTAINER_BINARY}") && \
+           $(shell_quote_join chmod 644 "${CONTAINER_CONFIG}")"
+
+run_cmd=()
+if ((${#ENV_ASSIGNMENTS[@]})); then
+    run_cmd+=(env "${ENV_ASSIGNMENTS[@]}")
+fi
+run_cmd+=("${CONTAINER_BINARY}" -c "${CONTAINER_CONFIG}")
+if ((${#EXTRA_ARGS[@]})); then
+    run_cmd+=("${EXTRA_ARGS[@]}")
+fi
+
+echo "==> [6/6] Running in '${CONTAINER}' as '${CONTAINER_USER}':$(shell_quote_join "${run_cmd[@]}")"
+echo "--- output ---"
+
+docker exec -u "${CONTAINER_USER}" "${CONTAINER}" \
+    sh -c "$(shell_quote_join "${run_cmd[@]}")"

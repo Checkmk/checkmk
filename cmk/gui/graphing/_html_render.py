@@ -6,7 +6,7 @@
 import json
 import time
 import traceback
-from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import auto, Enum
 from typing import assert_never, Literal, override
@@ -29,7 +29,7 @@ from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
-from cmk.gui.i18n import _, _u
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import (
     load_user_file,
@@ -38,7 +38,6 @@ from cmk.gui.logged_in import (
     UserGraphTimeRangeFileName,
 )
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
-from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GraphTimerange, IconNames, SizePT, StaticIcon
 from cmk.gui.utils.html import HTML
@@ -47,7 +46,6 @@ from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
 from cmk.utils import paths
 from cmk.utils.jsontype import JsonSerializable
@@ -67,7 +65,6 @@ from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import (
     GraphDisplayConfigHTML,
-    GraphDisplayConfigImage,
     GraphRenderOptions,
 )
 from ._graph_metric_expressions import GraphMetricExpression
@@ -80,10 +77,8 @@ from ._graph_specification import (
     GraphTimeRange,
     parse_raw_graph_specification,
 )
-from ._graph_templates import (
-    get_template_graph_specification,
-    TemplateGraphSpecification,
-)
+from ._graph_templates import get_template_graph_specification
+from ._graph_title import iter_graph_title_elements
 from ._metric_backend_registry import (
     FetchTimeSeries,
     metric_backend_registry,
@@ -400,91 +395,6 @@ def _render_graph_html(
     )
 
 
-def _render_title_elements_plain(elements: Iterable[str]) -> str:
-    return " / ".join(_u(txt) for txt in elements if txt)
-
-
-# TODO: still relies on the global request object because painters also use this function.
-def render_plain_graph_title(
-    specification: GraphSpecification,
-    artwork: GraphArtwork,
-    display_config: GraphDisplayConfigHTML | GraphDisplayConfigImage,
-) -> str:
-    return _render_title_elements_plain(
-        element.text
-        for element in _render_graph_title_elements(request, specification, artwork, display_config)
-    )
-
-
-@dataclass(frozen=True, kw_only=True)
-class _TitleElement:
-    text: str
-    url: str | None
-
-
-def _render_graph_title_elements(
-    request: Request,
-    specification: GraphSpecification,
-    artwork: GraphArtwork,
-    display_config: GraphDisplayConfigHTML | GraphDisplayConfigImage,
-    explicit_title: str | None = None,
-) -> Iterator[_TitleElement]:
-    if not display_config.show_title:
-        return
-
-    # Hard override of the graph title. This is e.g. needed for the graph previews
-    if explicit_title is not None:
-        yield _TitleElement(text=explicit_title, url=None)
-        return
-
-    if display_config.title_format.plain and artwork.title:
-        yield _TitleElement(text=artwork.title, url=None)
-
-    # Only add host/service information for template based graphs
-    if not isinstance(specification, TemplateGraphSpecification):
-        return
-
-    if display_config.title_format.add_host_name:
-        yield _TitleElement(
-            text=specification.host_name,
-            url=makeuri_contextless(
-                request,
-                [("view_name", "hoststatus"), ("host", specification.host_name)],
-                filename="view.py",
-            ),
-        )
-
-    if display_config.title_format.add_host_alias:
-        yield _TitleElement(
-            text=get_alias_of_host(specification.site, specification.host_name),
-            url=makeuri_contextless(
-                request,
-                [
-                    ("view_name", "hoststatus"),
-                    ("host", specification.host_name),
-                ],
-                filename="view.py",
-            ),
-        )
-
-    if (
-        display_config.title_format.add_service_description
-        and specification.service_description != "_HOST_"
-    ):
-        yield _TitleElement(
-            text=specification.service_description,
-            url=makeuri_contextless(
-                request,
-                [
-                    ("view_name", "service"),
-                    ("host", specification.host_name),
-                    ("service", specification.service_description),
-                ],
-                filename="view.py",
-            ),
-        )
-
-
 def _show_graph_html_content(
     request: Request,
     recipe: GraphRecipe,
@@ -551,7 +461,7 @@ def _show_graph_html_content(
     title = text_with_links_to_user_translated_html(
         [
             (element.text, element.url)
-            for element in _render_graph_title_elements(
+            for element in iter_graph_title_elements(
                 request,
                 specification,
                 artwork,

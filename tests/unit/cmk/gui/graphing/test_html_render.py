@@ -15,27 +15,7 @@ from cmk.gui.graphing._artwork import (
     LayoutedCurveStack,
     Scalars,
 )
-from cmk.gui.graphing._html_render import (
-    _order_graph_curves_for_legend_and_mouse_hover,
-    _render_title_elements_plain,
-)
-
-
-@pytest.mark.parametrize(
-    "elements, result",
-    [
-        (
-            ["first", "second"],
-            "first / second",
-        ),
-        (
-            ["", "second"],
-            "second",
-        ),
-    ],
-)
-def test_render_title_elements_plain(elements: Sequence[str], result: str) -> None:
-    assert _render_title_elements_plain(elements) == result
+from cmk.gui.graphing._html_render import _order_graph_curves_for_legend_and_mouse_hover
 
 
 def test__order_graph_curves_for_legend_and_mouse_hover_curves() -> None:

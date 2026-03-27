@@ -46,6 +46,7 @@ from ._graph_templates import (
     GraphPluginChoice,
     TemplateGraphSpecification,
 )
+from ._graph_title import render_plain_graph_title
 from ._html_render import (
     GraphContext,
     GraphDestinations,
@@ -54,7 +55,6 @@ from ._html_render import (
     make_graph_time_range,
     render_deferred_graphs_html,
     render_graphs_html,
-    render_plain_graph_title,
 )
 from ._legacy import check_metrics, CheckMetricEntry
 from ._metric_backend_registry import FetchTimeSeries, metric_backend_registry

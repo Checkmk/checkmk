@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { copyToClipboard as copyToClipboardUtil } from '@/lib/utils'
@@ -20,6 +20,7 @@ const { _t } = usei18n()
 
 const props = defineProps<{
   text: string
+  copiedMessage?: string
 }>()
 
 const TOOLTIP_DISPLAY_DURATION = 3000
@@ -27,6 +28,7 @@ const TOOLTIP_ERROR_DISPLAY_DURATION = 8000
 
 const showMessage = ref(false)
 const errorMessage = ref('')
+const copiedTooltipText = computed(() => props.copiedMessage ?? _t('Copied to clipboard'))
 let tooltipTimeoutId: ReturnType<typeof setTimeout> | null = null
 
 async function copyToClipboard() {
@@ -78,7 +80,7 @@ const handlePointerDownOutside = () => {
           {{
             errorMessage
               ? _t('Copy to clipboard failed with error: ') + errorMessage
-              : _t('Copied to clipboard')
+              : copiedTooltipText
           }}
         </div>
       </CmkTooltipContent>

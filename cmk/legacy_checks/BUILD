@@ -16,7 +16,6 @@ py_library(
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugins:graylog",
         "//packages/cmk-plugins:lib",
-        "//packages/cmk-plugins/cmk/plugins/stulz",
         requirement("pydantic"),
         requirement("python-dateutil"),
     ],

@@ -2465,18 +2465,17 @@ class ABCEditRuleMode(WatoMode):
         if self._properties_raw_data:
             return self._properties_raw_data
 
-        return RawDiskData(
-            {
-                "properties": {
-                    "description": self._rule.rule_options.description,
-                    "comment": self._rule.rule_options.comment,
-                    "docu_url": self._rule.rule_options.docu_url,
-                    "disabled": self._rule.rule_options.disabled or False,
-                    "id": self._rule.id,
-                    "_name": self._rule.ruleset.name,
-                }
-            }
-        )
+        properties = {
+            "description": self._rule.rule_options.description,
+            "comment": self._rule.rule_options.comment,
+            "docu_url": self._rule.rule_options.docu_url,
+            "disabled": self._rule.rule_options.disabled or False,
+            "id": self._rule.id,
+            "_name": self._rule.ruleset.name,
+        }
+        if self._locked_conditions:
+            properties["source"] = self._locked_conditions.instance_id
+        return RawDiskData({"properties": properties})
 
     def _get_rule_conditions(self) -> RawDiskData | RawFrontendData:
         if self._conditions_raw_data:

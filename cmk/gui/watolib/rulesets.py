@@ -2139,7 +2139,8 @@ def _create_rule_properties_catalog_topic(
                         title=Title("Source"),
                         value=locked_conditions.instance_id,
                         label=Label("%s") % str(locked_conditions.render_link),
-                    )
+                    ),
+                    required=True,
                 )
             }
         )

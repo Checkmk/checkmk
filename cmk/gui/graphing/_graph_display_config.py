@@ -78,7 +78,7 @@ _DEFAULT_TITLE_FORMAT = GraphTitleFormat(
 )
 
 
-class GraphDisplayConfigBase(BaseModel):
+class _GraphDisplayConfigBase(BaseModel):
     font_size: SizePT = SizePT(8.0)
     show_graph_time: bool = True
     show_legend: bool = True
@@ -94,7 +94,7 @@ class GraphDisplayConfigBase(BaseModel):
         )
 
 
-class GraphDisplayConfigHTML(GraphDisplayConfigBase):
+class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
     color_gradient: float = 20.0
     editing: bool = False
     explicit_title: str | None = None
@@ -123,7 +123,7 @@ class GraphDisplayConfigHTML(GraphDisplayConfigBase):
         )
 
 
-class GraphDisplayConfigImage(GraphDisplayConfigBase):
+class GraphDisplayConfigImage(_GraphDisplayConfigBase):
     border_width: SizeMM = 0.05
     show_time_axis: bool = True
     show_title: bool = True

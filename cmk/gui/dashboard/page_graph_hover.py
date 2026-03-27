@@ -30,7 +30,7 @@ from cmk.gui.dashboard.token_util import (
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.graphing import get_temperature_unit, metric_backend_registry
 from cmk.gui.graphing._from_api import metrics_from_api
-from cmk.gui.graphing._graph_display_config import GraphDisplayConfigBase
+from cmk.gui.graphing._graph_display_config import GraphDisplayConfigHTML
 from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._html_render import (
     make_graph_time_range,
@@ -114,7 +114,7 @@ class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedPage):
             # Zoom/pan is disabled on shared dashboards so the step never changes after render.
             start_time, end_time = Timerange.compute_range(graph_dashlet_config["timerange"]).range
             height_in_ex = graph_dashlet_config.get("graph_render_options", {}).get(
-                "size", GraphDisplayConfigBase.model_fields["size"].default
+                "size", GraphDisplayConfigHTML.model_fields["size"].default
             )[1]
             time_range = make_graph_time_range((start_time, end_time), height_in_ex)
 

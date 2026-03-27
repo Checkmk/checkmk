@@ -1,0 +1,213 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import * as vscode from 'vscode'
+
+import { type CommandEntry, createStatusBar } from './build/buildStatus'
+import { type SettingsEntry, registerBuildCommands, updateContextKeys } from './build/settings'
+import { type ExtensionSets, getDisableSettings, loadConfig, writeSetting } from './core/config'
+import { log, notifyInfo, registerErrorHandlers } from './core/log'
+import { checkVersionMismatch } from './core/versionCheck'
+import { registerGerritPush } from './gerrit'
+import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
+import { createSite, registerOmd } from './omd/omd'
+import {
+  generatePrettierConfig,
+  registerPrettierConfigWatcher
+} from './profiles/frontend/prettierConfig'
+import { registerProfileDetector } from './profiles/profileDetector'
+import * as profileManager from './profiles/profileManager'
+import { registerBazelTestRunner } from './profiles/python/bazelTest'
+import { registerInterpreterResolver } from './profiles/python/interpreter'
+// Family-gated modules
+import {
+  generateAndWriteMypyConfig,
+  killAllDmypyDaemons,
+  registerMypyConfigWatcher
+} from './profiles/python/mypyConfig'
+import { registerSnippets } from './profiles/python/snippets'
+import { registerIdePickers } from './setup/idePicker'
+import { registerTemplates } from './setup/templates'
+import { refreshAll, registerSidebar } from './sidebar'
+
+function toggleSettings(disableSettings: Record<string, unknown>): vscode.Disposable {
+  ;(async () => {
+    try {
+      for (const [key, disabledValue] of Object.entries(disableSettings)) {
+        const dot = key.lastIndexOf('.')
+        let currentValue: unknown
+        if (dot > 0) {
+          const section = key.substring(0, dot)
+          const leaf = key.substring(dot + 1)
+          currentValue = vscode.workspace.getConfiguration(section).get(leaf)
+        } else {
+          currentValue = vscode.workspace.getConfiguration().get(key)
+        }
+        if (JSON.stringify(currentValue) === JSON.stringify(disabledValue)) {
+          await writeSetting(key, undefined)
+        }
+      }
+    } catch (err) {
+      console.error('CMK: Failed to remove disable-settings:', err)
+    }
+  })()
+  return {
+    dispose: () => {
+      ;(async () => {
+        try {
+          for (const [key, value] of Object.entries(disableSettings)) {
+            await writeSetting(key, value)
+          }
+        } catch (err) {
+          console.error('CMK: Failed to write disable-settings:', err)
+        }
+      })()
+    }
+  }
+}
+
+export function activate(context: vscode.ExtensionContext): void {
+  log('Extension activating')
+  registerErrorHandlers()
+  const commands = loadConfig<Record<string, CommandEntry>>('commands')
+  const extensionSets = loadConfig<ExtensionSets>('extensions')
+  const settingsSets = loadConfig<Record<string, SettingsEntry>>('settings')
+
+  // --- Always-on features ---
+
+  const cmkLogo = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 54)
+  cmkLogo.text = '$(cmk-logo)'
+  cmkLogo.tooltip = 'Checkmk — Dashboard'
+  cmkLogo.command = 'cmk.dashboard.environment.focus'
+  cmkLogo.color = new vscode.ThemeColor('cmk.logoColor')
+  cmkLogo.show()
+  context.subscriptions.push(cmkLogo)
+
+  createStatusBar(context, commands)
+  registerSidebar(context, commands)
+  registerTemplates(context)
+  registerBuildCommands(context, commands)
+  registerIdePickers(context, extensionSets, settingsSets)
+  registerGerritPush(context)
+  registerOmd(context, refreshAll)
+
+  // cmk-dev-site: create site command + update check
+  vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', isDevSiteInstalled())
+  context.subscriptions.push(
+    vscode.commands.registerCommand('cmk.omdCreateSite', () => {
+      log('Create OMD site')
+      return createSite()
+    })
+  )
+  checkForUpdates(context)
+
+  // Config regeneration commands
+  const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+  if (wsPath) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand('cmk.regenerateMypyConfig', async () => {
+        const changed = await generateAndWriteMypyConfig(wsPath)
+        if (changed) {
+          notifyInfo('CMK: Regenerated .vscode/.mypy.ini from pyproject.toml')
+        } else {
+          notifyInfo('CMK: .vscode/.mypy.ini is already up to date')
+        }
+      }),
+      vscode.commands.registerCommand('cmk.regeneratePrettierConfig', () => {
+        generatePrettierConfig(wsPath)
+        notifyInfo('CMK: Regenerated .vscode/.prettier.config.cjs')
+      })
+    )
+  }
+
+  updateContextKeys(extensionSets)
+  context.subscriptions.push(
+    vscode.extensions.onDidChange(() => {
+      updateContextKeys(extensionSets)
+      refreshAll()
+    })
+  )
+
+  // --- Family-gated features ---
+
+  const pythonDisable = getDisableSettings(extensionSets, 'python')
+  profileManager.register(
+    'python',
+    (ctx) => {
+      return [
+        ...registerMypyConfigWatcher(),
+        ...registerInterpreterResolver(ctx),
+        ...registerSnippets(ctx),
+        ...registerBazelTestRunner(ctx),
+        toggleSettings(pythonDisable),
+        { dispose: () => killAllDmypyDaemons() }
+      ]
+    },
+    pythonDisable
+  )
+
+  const frontendDisable = getDisableSettings(extensionSets, 'frontend')
+  profileManager.register(
+    'frontend',
+    () => {
+      return [...registerPrettierConfigWatcher(), toggleSettings(frontendDisable)]
+    },
+    frontendDisable
+  )
+
+  const rustDisable = getDisableSettings(extensionSets, 'rust')
+  profileManager.register(
+    'rust',
+    () => {
+      return [
+        toggleSettings(rustDisable),
+        {
+          dispose: () => {
+            vscode.commands.executeCommand('rust-analyzer.stopServer')
+          }
+        }
+      ]
+    },
+    rustDisable
+  )
+
+  profileManager.init(context)
+  registerProfileDetector(context)
+  checkVersionMismatch(context)
+
+  // --- First-run wizard ---
+  const SETUP_DONE_KEY = 'cmk.setupWizardDismissed'
+  if (!context.globalState.get(SETUP_DONE_KEY)) {
+    const config = vscode.workspace.getConfiguration(
+      undefined,
+      vscode.workspace.workspaceFolders?.[0]?.uri
+    )
+    const hasGeneralSettings =
+      config.inspect('editor.formatOnSave')?.workspaceFolderValue !== undefined
+    const hasBranchProtection =
+      config.inspect('git.branchProtection')?.workspaceFolderValue !== undefined
+
+    if (!hasGeneralSettings || !hasBranchProtection) {
+      vscode.window
+        .showInformationMessage(
+          'CMK: First time? Open the dashboard to get started with system setup, venv build, and IDE configuration.',
+          'Open Dashboard',
+          'Not Now',
+          "Don't Ask Again"
+        )
+        .then((choice) => {
+          if (choice === 'Open Dashboard') {
+            vscode.commands.executeCommand('cmk.dashboard.environment.focus')
+          } else if (choice === "Don't Ask Again") {
+            context.globalState.update(SETUP_DONE_KEY, true)
+          }
+        })
+    } else {
+      context.globalState.update(SETUP_DONE_KEY, true)
+    }
+  }
+}
+
+export function deactivate(): void {}

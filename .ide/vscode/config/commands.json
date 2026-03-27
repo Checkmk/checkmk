@@ -1,0 +1,33 @@
+{
+  "cmk.buildVenv": {
+    "name": "Build venv",
+    "command": "bazel run //:create_venv",
+    "postAction": "cmk.resolveInterpreter"
+  },
+  "cmk.buildSharedTyping": {
+    "name": "Build shared-typing",
+    "command": "bazel build //packages/cmk-shared-typing:cmk_shared_typing_ts //packages/cmk-shared-typing:cmk_shared_typing_py && ln -sfn $(bazel info bazel-bin)/packages/cmk-shared-typing packages/cmk-frontend-vue/node_modules/cmk-shared-typing",
+    "requires": "frontend"
+  },
+  "cmk.buildCmkFrontend": {
+    "name": "Build cmk-frontend",
+    "command": "bazel build //packages/cmk-frontend:dist && rm -rf packages/cmk-frontend/dist && ln -sfn $(bazel info bazel-bin)/packages/cmk-frontend/dist packages/cmk-frontend/dist",
+    "requires": "frontend"
+  },
+  "cmk.buildCmkFrontendVue": {
+    "name": "Build cmk-frontend-vue",
+    "command": "bazel build //packages/cmk-frontend-vue:dist",
+    "requires": "frontend"
+  },
+  "cmk.buildVitestDeps": {
+    "name": "Build Vitest dependencies & Refresh Vitests",
+    "command": "bazel build //packages/cmk-shared-typing:cmk_shared_typing_ts //packages/cmk-frontend:dist && ln -sfn $(bazel info bazel-bin)/packages/cmk-shared-typing packages/cmk-frontend-vue/node_modules/cmk-shared-typing && rm -rf packages/cmk-frontend/dist && ln -sfn $(bazel info bazel-bin)/packages/cmk-frontend/dist packages/cmk-frontend/dist",
+    "postAction": "testing.refreshTests",
+    "requires": "frontend"
+  },
+  "cmk.runUcl": {
+    "name": "Run UI Component Library",
+    "command": "cd packages/cmk-frontend-vue && ibazel run :vite -- --config vite.config.ucl.ts",
+    "requires": "frontend"
+  }
+}

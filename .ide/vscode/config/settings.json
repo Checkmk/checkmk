@@ -1,0 +1,200 @@
+{
+  "python": {
+    "folder": {
+      "[python]": {
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit",
+          "source.fixAll": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true
+      },
+      "python.analysis.exclude": [
+        "**/bazel*/",
+        "**/container_shadow_workspace_local/",
+        "**/*cache*/",
+        "**/packages/**/.venv/",
+        ".venv/",
+        "packages/"
+      ],
+      "python.testing.pytestEnabled": true,
+      "python.testing.cwd": "${workspaceFolder}",
+      "python.testing.autoTestDiscoverOnSaveEnabled": true,
+      "python.terminal.activateEnvInCurrentTerminal": true,
+      "python.testing.unittestEnabled": false,
+      "python.testing.pytestArgs": ["tests/unit"],
+      "python.analysis.indexing": true,
+      "python.analysis.autoImportCompletions": true,
+      "python.analysis.diagnosticMode": "openFilesOnly",
+      "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+      "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy",
+      "mypy.runUsingActiveInterpreter": true,
+      "mypy.configFile": ".vscode/.mypy.ini",
+      "mypy.targets": ["cmk"],
+      "mypy.extraArguments": ["--follow-imports=normal"],
+      "[html]": {
+        "editor.defaultFormatter": "monosans.djlint",
+        "editor.formatOnSave": true
+      },
+      "[jinja]": {
+        "editor.defaultFormatter": "monosans.djlint",
+        "editor.formatOnSave": true
+      },
+      "djlint.useVenv": true
+    },
+    "workspace": {
+      "ruff.nativeServer": "on",
+      "ruff.enable": true,
+      "ruff.path": ["${workspaceFolder}/.venv/bin/ruff"]
+    },
+    "user": {
+      "python.condaPath": "",
+      "python.poetryPath": "",
+      "python.pipenvPath": ""
+    }
+  },
+  "frontend": {
+    "folder": {
+      "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit",
+          "source.fixAll.eslint": "explicit",
+          "source.fixAll.stylelint": "explicit"
+        },
+        "editor.formatOnSave": true
+      },
+      "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit",
+          "source.fixAll.eslint": "explicit"
+        }
+      },
+      "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit",
+          "source.fixAll.eslint": "explicit"
+        }
+      },
+      "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      },
+      "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit",
+          "source.fixAll.stylelint": "explicit"
+        }
+      },
+      "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      },
+      "css.validate": false,
+      "scss.validate": false,
+      "less.validate": false,
+      "eslint.useFlatConfig": true,
+      "eslint.validate": ["javascript", "typescript", "vue"],
+      "stylelint.configFile": "",
+      "stylelint.enable": true,
+      "prettier.useEditorConfig": false,
+      "prettier.configPath": ".vscode/.prettier.config.cjs",
+      "prettier.prettierPath": "./node_modules/prettier",
+      "vitest.disableWorkspaceWarning": true,
+      "vitest.filesWatcherInclude": "packages/cmk-frontend-vue/**/*"
+    },
+    "workspace": {
+      "vitest.rootConfig": "${workspaceFolder}/packages/cmk-frontend-vue/vite.config.ts",
+      "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,**/*.d.ts,**/*bazel*/*}",
+      "js/ts.tsdk.path": "packages/cmk-frontend-vue/node_modules/typescript/lib"
+    }
+  },
+  "rust": {
+    "folder": {
+      "[rust]": {
+        "editor.formatOnSave": true
+      }
+    },
+    "workspace": {
+      "rust-analyzer.linkedProjects": [
+        "${workspaceFolder}/packages/check-cert/Cargo.toml",
+        "${workspaceFolder}/packages/check-http/Cargo.toml",
+        "${workspaceFolder}/packages/cmk-agent-ctl/Cargo.toml",
+        "${workspaceFolder}/packages/mk-oracle/Cargo.toml",
+        "${workspaceFolder}/packages/mk-sql/Cargo.toml"
+      ],
+      "rust-analyzer.check.command": "clippy"
+    }
+  },
+  "bazel": {
+    "folder": {
+      "bazel.buildifierExecutable": "${HOME}/go/bin/buildifier"
+    }
+  },
+  "general": {
+    "folder": {
+      "editor.formatOnSave": true,
+      "git.branchProtection": ["master", "main"],
+      "files.watcherExclude": {
+        "**/bazel-bin/**": true,
+        "**/bazel-out/**": true,
+        "**/bazel-testlogs/**": true,
+        "**/bazel-master/**": true,
+        "**/.venv/**": true,
+        "**/node_modules/**": true,
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/container_shadow_workspace_local/**": true,
+        "**/*cache*/**": true
+      },
+      "search.exclude": {
+        "**/bazel-bin": true,
+        "**/bazel-out": true,
+        "**/bazel-testlogs": true,
+        "**/bazel-master": true,
+        "**/.venv": true,
+        "**/node_modules": true,
+        "**/container_shadow_workspace_local": true,
+        "**/*cache*": true
+      }
+    }
+  },
+  "markdown": {
+    "folder": {
+      "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "cspell": {
+    "folder": {
+      "cSpell.autocorrect": true,
+      "cSpell.enabledNotifications": {
+        "Average Word Length too Long": true,
+        "Lines too Long": true,
+        "Maximum Word Length Exceeded": true
+      },
+      "cSpell.showAutocompleteDirectiveSuggestions": true,
+      "cSpell.enabled": true,
+      "cSpell.diagnosticLevel": "Information",
+      "cSpell.dictionaryDefinitions": [
+        {
+          "name": "checkmk",
+          "path": "./.vscode/.cspell/checkmk.dict.txt",
+          "addWords": true
+        }
+      ],
+      "cSpell.dictionaries": ["checkmk"]
+    },
+    "user": {
+      "cSpell.showStatus": true
+    }
+  }
+}

@@ -1,0 +1,382 @@
+{
+  "name": "cmk-vscode",
+  "displayName": "CMK Dev Tools for VS Code",
+  "description": "Build commands and helpers for Checkmk development",
+  "version": "0.1.12",
+  "publisher": "checkmk",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Checkmk/checkmk.git",
+    "directory": ".ide/vscode"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:.ide/vscode/package.json"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "colors": [
+      {
+        "id": "cmk.logoColor",
+        "description": "Color for the Checkmk logo in the status bar",
+        "defaults": {
+          "dark": "#15d1a0",
+          "light": "#15d1a0",
+          "highContrast": "#15d1a0"
+        }
+      }
+    ],
+    "icons": {
+      "cmk-logo": {
+        "description": "Checkmk logo",
+        "default": {
+          "fontPath": "icons/cmk-icons.woff2",
+          "fontCharacter": "\\F101"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cmk-dashboard",
+          "title": "Checkmk",
+          "icon": "icons/cmk-activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "cmk-dashboard": [
+        {
+          "type": "webview",
+          "id": "cmk.dashboard.environment",
+          "name": "Environment"
+        },
+        {
+          "type": "webview",
+          "id": "cmk.dashboard.omd",
+          "name": "OMD Sites",
+          "when": "cmk.omdAvailable || cmk.devSiteInstalled"
+        },
+        {
+          "type": "webview",
+          "id": "cmk.dashboard.ideHealth",
+          "name": "IDE Health",
+          "visibility": "collapsed"
+        },
+        {
+          "type": "webview",
+          "id": "cmk.dashboard.profiles",
+          "name": "Profiles",
+          "visibility": "hidden"
+        },
+        {
+          "id": "cmk.dashboard.badge",
+          "name": "Issues"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cmk.dashboard",
+        "title": "CMK ▸ Dashboard"
+      },
+      {
+        "command": "cmk.dashboard.refresh.environment",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cmk.dashboard.refresh.ideHealth",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cmk.dashboard.refresh.profiles",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cmk.dashboard.refresh.omd",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cmk.omdStart",
+        "title": "CMK ▸ OMD: Start Site"
+      },
+      {
+        "command": "cmk.omdStop",
+        "title": "CMK ▸ OMD: Stop Site"
+      },
+      {
+        "command": "cmk.omdRestart",
+        "title": "CMK ▸ OMD: Restart Site"
+      },
+      {
+        "command": "cmk.omdOpenBrowser",
+        "title": "CMK ▸ OMD: Open in Browser"
+      },
+      {
+        "command": "cmk.omdAuth",
+        "title": "CMK ▸ OMD: Authenticate sudo (YubiKey)"
+      },
+      {
+        "command": "cmk.omdCreateSite",
+        "title": "CMK ▸ OMD: Create Site",
+        "icon": "$(add)"
+      },
+      {
+        "command": "cmk.applySetting",
+        "title": "CMK ▸ IDE: Apply Setting"
+      },
+      {
+        "command": "cmk.installDevSite",
+        "title": "CMK ▸ OMD: Install cmk-dev-site"
+      },
+      {
+        "command": "cmk.buildVenv",
+        "title": "CMK ▸ Cmd: Build venv"
+      },
+      {
+        "command": "cmk.buildSharedTyping",
+        "title": "CMK ▸ Cmd: Build shared-typing"
+      },
+      {
+        "command": "cmk.buildCmkFrontend",
+        "title": "CMK ▸ Cmd: Build cmk-frontend"
+      },
+      {
+        "command": "cmk.buildCmkFrontendVue",
+        "title": "CMK ▸ Cmd: Build cmk-frontend-vue"
+      },
+      {
+        "command": "cmk.buildVitestDeps",
+        "title": "CMK ▸ Cmd: Build Vitest dependencies & Refresh Vitests"
+      },
+      {
+        "command": "cmk.runUcl",
+        "title": "CMK ▸ Cmd: Run UI Component Library"
+      },
+      {
+        "command": "cmk.installPicker",
+        "title": "CMK ▸ IDE: Install Extensions"
+      },
+      {
+        "command": "cmk.configurePicker",
+        "title": "CMK ▸ IDE: Configure Settings"
+      },
+      {
+        "command": "cmk.setupPicker",
+        "title": "CMK ▸ IDE: Setup (Install + Configure)"
+      },
+      {
+        "command": "cmk.newFromTemplate",
+        "title": "CMK ▸ New: Create from Template"
+      },
+      {
+        "command": "cmk.buildAllStale",
+        "title": "CMK ▸ Cmd: Build All Stale"
+      },
+      {
+        "command": "cmk.statusBarMenu",
+        "title": "CMK ▸ Cmd: Build Menu"
+      },
+      {
+        "command": "cmk.refreshBuildStatus",
+        "title": "CMK ▸ Cmd: Refresh Build Status"
+      },
+      {
+        "command": "cmk.regenerateMypyConfig",
+        "title": "CMK ▸ Cmd: Regenerate mypy config"
+      },
+      {
+        "command": "cmk.regeneratePrettierConfig",
+        "title": "CMK ▸ Cmd: Regenerate prettier config"
+      },
+      {
+        "command": "cmk.pushToGerrit",
+        "title": "CMK ▸ Push to Gerrit",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "cmk.bazelTestFile",
+        "title": "CMK ▸ Test: Run File (Bazel)"
+      },
+      {
+        "command": "cmk.bazelTestFunction",
+        "title": "CMK ▸ Test: Run Function at Cursor (Bazel)"
+      }
+    ],
+    "configuration": {
+      "title": "CMK Dev Tools",
+      "properties": {
+        "cmk.activeProfiles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "python",
+              "frontend",
+              "rust"
+            ]
+          },
+          "default": [
+            "python",
+            "frontend"
+          ],
+          "description": "Active family profiles. Toggle via the CMK status bar menu."
+        },
+        "cmk.profileDetector.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Suggest enabling/disabling language profiles based on file activity."
+        },
+        "cmk.profileDetector.inactivityMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "description": "Minutes of inactivity before suggesting to disable a profile."
+        }
+      }
+    },
+    "viewsWelcome": [
+      {
+        "view": "cmk.dashboard.badge",
+        "contents": "No issues found ✓"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "cmk.dashboard.refresh.environment",
+          "when": "view == cmk.dashboard.environment",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.dashboard.refresh.ideHealth",
+          "when": "view == cmk.dashboard.ideHealth",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.dashboard.refresh.profiles",
+          "when": "view == cmk.dashboard.profiles",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.dashboard.refresh.omd",
+          "when": "view == cmk.dashboard.omd",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.omdCreateSite",
+          "when": "view == cmk.dashboard.omd && cmk.devSiteInstalled",
+          "group": "navigation"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "cmk.pushToGerrit",
+          "group": "navigation",
+          "when": "gitOpenRepositoryCount > 0"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "cmk.bazelTestFile",
+          "group": "cmk@1",
+          "when": "resourceLangId == python && resourceFilename =~ /^test_/"
+        },
+        {
+          "command": "cmk.bazelTestFunction",
+          "group": "cmk@2",
+          "when": "resourceLangId == python && resourceFilename =~ /^test_/"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "cmk.buildVenv",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.buildSharedTyping",
+          "when": "cmk.frontendInstalled"
+        },
+        {
+          "command": "cmk.buildCmkFrontend",
+          "when": "cmk.frontendInstalled"
+        },
+        {
+          "command": "cmk.buildCmkFrontendVue",
+          "when": "cmk.frontendInstalled"
+        },
+        {
+          "command": "cmk.buildVitestDeps",
+          "when": "cmk.frontendInstalled"
+        },
+        {
+          "command": "cmk.runUcl",
+          "when": "cmk.frontendInstalled"
+        },
+        {
+          "command": "cmk.bazelTestFile",
+          "when": "resourceLangId == python"
+        },
+        {
+          "command": "cmk.bazelTestFunction",
+          "when": "resourceLangId == python"
+        },
+        {
+          "command": "cmk.omdStart",
+          "when": "cmk.omdAvailable"
+        },
+        {
+          "command": "cmk.omdStop",
+          "when": "cmk.omdAvailable"
+        },
+        {
+          "command": "cmk.omdRestart",
+          "when": "cmk.omdAvailable"
+        },
+        {
+          "command": "cmk.omdOpenBrowser",
+          "when": "cmk.omdAvailable"
+        },
+        {
+          "command": "cmk.omdAuth",
+          "when": "cmk.omdAvailable"
+        },
+        {
+          "command": "cmk.omdCreateSite"
+        },
+        {
+          "command": "cmk.applySetting",
+          "when": "false"
+        },
+        {
+          "command": "cmk.installDevSite",
+          "when": "false"
+        }
+      ]
+    }
+  },
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.27.4",
+    "typescript": "^6.0.2"
+  }
+}

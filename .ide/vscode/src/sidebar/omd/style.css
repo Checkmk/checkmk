@@ -1,0 +1,159 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+/* stylelint-disable custom-property-pattern */
+/* stylelint-disable selector-class-pattern */
+.omd-site {
+  margin-bottom: 4px;
+}
+
+.omd-site-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.1s;
+  font-size: 0.9em;
+  border: 1px solid transparent;
+}
+
+.omd-site-header:hover {
+  border-color: var(--vscode-list-hoverBackground);
+}
+
+.omd-site-header.ok .card-icon {
+  color: var(--cmk-green);
+}
+
+.omd-site-header.error .card-icon {
+  color: var(--cmk-red);
+}
+
+.omd-site-header.stale .card-icon {
+  color: var(--cmk-yellow);
+}
+
+.omd-site-header.unknown .card-icon {
+  color: var(--vscode-descriptionForeground);
+}
+
+.omd-site-name {
+  font-weight: 600;
+}
+
+.omd-detail {
+  flex: 1;
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.omd-badge-ok {
+  background: var(--cmk-green);
+  color: #000;
+}
+
+.omd-badge-error {
+  background: var(--cmk-red);
+  color: #fff;
+}
+
+.omd-badge-stale {
+  background: var(--cmk-yellow);
+  color: #000;
+}
+
+.omd-badge-unknown {
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.omd-site-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+  padding-left: 16px;
+}
+
+.omd-site.open .omd-site-body {
+  max-height: 1000px;
+}
+
+.omd-site.open .ext-chevron {
+  transform: rotate(90deg);
+}
+
+.svc-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-size: 0.85em;
+}
+
+.svc-icon {
+  width: 14px;
+  text-align: center;
+}
+
+.svc-running .svc-icon {
+  color: var(--cmk-green);
+}
+
+.svc-stopped .svc-icon {
+  color: var(--cmk-red);
+}
+
+.svc-name {
+  flex: 1;
+  font-family: var(--vscode-editor-font-family);
+}
+
+.svc-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.omd-site-actions {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--vscode-editorWidget-border, #333);
+  margin-top: 4px;
+}
+
+.btn-icon {
+  background: transparent;
+  color: var(--vscode-foreground);
+  padding: 2px 4px;
+  font-size: 0.9em;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-icon:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgb(90 93 94 / 31%));
+}
+
+.btn-danger:hover {
+  background: var(--cmk-red);
+  color: #fff;
+}
+
+.banner-info {
+  background: var(--vscode-editorInfo-background, rgb(0 120 212 / 10%));
+  padding: 8px;
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

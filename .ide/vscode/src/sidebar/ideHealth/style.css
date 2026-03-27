@@ -1,0 +1,121 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+/* stylelint-disable selector-class-pattern */
+/* stylelint-disable custom-property-pattern */
+.section-label {
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vscode-descriptionForeground);
+  padding: 0 8px;
+  margin: 12px 0 6px;
+}
+
+.section-label:first-child {
+  margin-top: 0;
+}
+
+.apply-wrapper {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--vscode-editorWidget-border, #333);
+  margin-bottom: 12px;
+}
+
+.apply-wrapper .btn {
+  width: 100%;
+  text-align: center;
+}
+
+.setting-row {
+  padding: 8px;
+  border-radius: var(--radius);
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-editorWidget-border, transparent);
+  margin-bottom: var(--gap);
+}
+
+.setting-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.setting-key {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.85em;
+  word-break: break-all;
+  font-weight: 600;
+}
+
+.btn-copy {
+  font-size: 0.8em;
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--vscode-foreground);
+}
+
+.btn-copy:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.setting-diff {
+  font-size: 0.8em;
+  margin-bottom: 4px;
+}
+
+.setting-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.setting-line {
+  padding: 1px 0;
+}
+
+.setting-expected {
+  color: var(--vscode-descriptionForeground);
+}
+
+.setting-actual {
+  color: var(--cmk-yellow);
+}
+
+.tag.scope-folder {
+  background: #15d1a033;
+  color: #15d1a0;
+}
+
+.tag.scope-workspace {
+  background: #4da6ff33;
+  color: #4da6ff;
+}
+
+.tag.scope-user {
+  background: #e0505033;
+  color: #e05050;
+}
+
+.apply-family-wrapper {
+  padding: 8px 8px 4px;
+}
+
+.apply-family-wrapper .btn {
+  width: 100%;
+  text-align: center;
+}
+
+code {
+  background: var(--vscode-textCodeBlock-background);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  word-break: break-all;
+}

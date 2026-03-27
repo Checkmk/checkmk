@@ -1,0 +1,21 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+/* stylelint-disable selector-class-pattern */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.card.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.card.loading .spinner {
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}

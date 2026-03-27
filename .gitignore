@@ -43,6 +43,7 @@
 artefacts/
 build/
 CLAUDE.md
+!.ide/vscode/CLAUDE.md
 ChangeLog
 check_mk-*.tar.gz
 check-mk-*.build

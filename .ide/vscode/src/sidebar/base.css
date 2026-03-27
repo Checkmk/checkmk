@@ -1,0 +1,298 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+/* stylelint-disable no-descending-specificity */
+/* stylelint-disable custom-property-pattern */
+/* stylelint-disable selector-class-pattern */
+:root {
+  --cmk-green: #15d1a0;
+  --cmk-green-dim: #15d1a033;
+  --cmk-yellow: #e5a00d;
+  --cmk-yellow-dim: #e5a00d22;
+  --cmk-red: #e05050;
+  --radius: 6px;
+  --gap: 6px;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  background: transparent;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-editorWidget-border, transparent);
+  margin-bottom: var(--gap);
+}
+
+.card.ok .card-icon {
+  color: var(--cmk-green);
+}
+
+.card.stale .card-icon {
+  color: var(--cmk-yellow);
+}
+
+.card-label {
+  flex: 1;
+  font-size: 0.9em;
+}
+
+.card.profile {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.card.profile:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.card.profile.active {
+  border-color: var(--cmk-green);
+  background: var(--cmk-green-dim);
+}
+
+.card.profile.active .card-icon {
+  color: var(--cmk-green);
+}
+
+.card.profile.inactive .card-icon {
+  color: var(--vscode-disabledForeground);
+}
+
+.card-badge {
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.card.profile.active .card-badge {
+  background: var(--cmk-green);
+  color: #000;
+}
+
+.cmd-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.1s;
+  font-size: 0.9em;
+}
+
+.cmd-row:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.cmd-row.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.cmd-row.disabled:hover {
+  background: none;
+}
+
+.cmd-name {
+  flex: 1;
+}
+
+.tag {
+  font-size: 0.7em;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.tag.required {
+  background: var(--cmk-yellow-dim);
+  color: var(--cmk-yellow);
+}
+
+.btn {
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  padding: 4px 10px;
+  font-size: 0.8em;
+  transition: background 0.15s;
+}
+
+.btn:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.btn-small {
+  padding: 3px 8px;
+  font-size: 0.75em;
+}
+
+.action-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.action-grid .btn {
+  text-align: center;
+  padding: 5px 10px;
+}
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--cmk-yellow-dim);
+  border: 1px solid var(--cmk-yellow);
+  margin-bottom: 8px;
+  font-size: 0.85em;
+}
+
+.banner .banner-icon {
+  color: var(--cmk-yellow);
+  font-size: 1.1em;
+  flex-shrink: 0;
+}
+
+.banner .banner-text {
+  flex: 1;
+}
+
+.env-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: 0.9em;
+}
+
+.env-label {
+  font-weight: 600;
+  min-width: 50px;
+}
+
+.env-value {
+  flex: 1;
+  font-family: var(--vscode-editor-font-family);
+  min-width: 0;
+}
+
+.env-detail {
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.85em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.ext-family {
+  margin-bottom: 4px;
+}
+
+.ext-family-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.1s;
+  font-size: 0.9em;
+  border: 1px solid transparent;
+}
+
+.ext-family-header:hover {
+  border-color: var(--vscode-list-hoverBackground);
+}
+
+.ext-family-header.ok .card-icon {
+  color: var(--cmk-green);
+}
+
+.ext-family-header.stale .card-icon {
+  color: var(--cmk-yellow);
+}
+
+.ext-family-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.ext-count {
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+}
+
+.ext-chevron {
+  transition: transform 0.15s;
+  color: var(--vscode-descriptionForeground);
+}
+
+.ext-family.open .ext-chevron {
+  transform: rotate(90deg);
+}
+
+.ext-family-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+  padding-left: 16px;
+}
+
+.ext-family.open .ext-family-body {
+  max-height: 500px;
+}
+
+.ext-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-size: 0.8em;
+  font-family: var(--vscode-editor-font-family);
+}
+
+.ext-icon {
+  width: 14px;
+  text-align: center;
+}
+
+.ext-ok .ext-icon {
+  color: var(--cmk-green);
+}
+
+.ext-missing .ext-icon {
+  color: var(--cmk-red);
+}
+
+.ext-id {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

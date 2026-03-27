@@ -1,0 +1,66 @@
+.section-divider {
+  border-top: 1px solid var(--vscode-editorWidget-border, #333);
+  margin: 8px 0;
+}
+.onboarding-banner {
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--cmk-green, #13d389);
+  border-radius: var(--radius, 4px);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.onboarding-title {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.9em;
+}
+.onboarding-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+}
+.onboarding-step.done {
+  opacity: 0.5;
+}
+.step-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-icon.done {
+  background: var(--cmk-green-dim, #13d38922);
+  color: var(--cmk-green, #13d389);
+}
+.step-icon.current {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+.step-icon.pending {
+  background: var(--vscode-editorWidget-border, #333);
+  color: var(--vscode-descriptionForeground);
+}
+.step-body {
+  flex: 1;
+  min-width: 0;
+}
+.step-label {
+  font-size: 0.85em;
+  font-weight: 600;
+}
+.step-desc {
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+  margin: 2px 0 4px 0;
+}

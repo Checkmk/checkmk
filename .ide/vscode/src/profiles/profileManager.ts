@@ -1,0 +1,270 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import * as vscode from 'vscode'
+
+import { writeSetting } from '../core/config'
+import { log, notifyInfo } from '../core/log'
+
+const PROFILE_LABELS: Record<string, string> = {
+  python: 'Py',
+  frontend: 'UI',
+  rust: 'Rs'
+}
+
+const PROFILE_NAMES: Record<string, string> = {
+  python: 'Python',
+  frontend: 'UI',
+  rust: 'Rust'
+}
+
+const PRIORITIES: Record<string, number> = {
+  python: 53,
+  frontend: 52,
+  rust: 51
+}
+
+const DEFAULT_ACTIVE = ['python', 'frontend']
+
+export type ActivateFn = (context: vscode.ExtensionContext) => vscode.Disposable[] | void
+
+export interface ProfileInfo {
+  name: string
+  active: boolean
+  loading: boolean
+  label: string
+  fullName: string
+}
+
+interface FamilyState {
+  activate: ActivateFn | null
+  disableSettings: Record<string, unknown>
+  disposables: vscode.Disposable[]
+  active: boolean
+  hasIssues: boolean
+  loading: boolean
+  statusBarItem: vscode.StatusBarItem | null
+}
+
+const families: Record<string, FamilyState> = {
+  python: {
+    activate: null,
+    disableSettings: {},
+    disposables: [],
+    active: false,
+    hasIssues: false,
+    loading: false,
+    statusBarItem: null
+  },
+  frontend: {
+    activate: null,
+    disableSettings: {},
+    disposables: [],
+    active: false,
+    hasIssues: false,
+    loading: false,
+    statusBarItem: null
+  },
+  rust: {
+    activate: null,
+    disableSettings: {},
+    disposables: [],
+    active: false,
+    hasIssues: false,
+    loading: false,
+    statusBarItem: null
+  }
+}
+
+let _context: vscode.ExtensionContext | null = null
+
+export function register(
+  name: string,
+  activateFn: ActivateFn,
+  disableSettings?: Record<string, unknown>
+): void {
+  if (families[name]) {
+    families[name].activate = activateFn
+    families[name].disableSettings = disableSettings || {}
+  }
+}
+
+export async function start(name: string): Promise<void> {
+  const family = families[name]
+  if (!family || family.active || !family.activate) return
+  log(`Enable profile: ${PROFILE_NAMES[name]}`)
+  family.loading = true
+  showLoading(name)
+  try {
+    family.disposables = family.activate(_context!) || []
+    family.active = true
+    await saveActiveProfiles()
+  } finally {
+    family.loading = false
+    updateStatusBarItem(name)
+  }
+  notifyInfo(`CMK: ${PROFILE_NAMES[name]} profile enabled`)
+}
+
+export async function stop(name: string): Promise<void> {
+  const family = families[name]
+  if (!family || !family.active) return
+  log(`Disable profile: ${PROFILE_NAMES[name]}`)
+  family.loading = true
+  showLoading(name)
+  try {
+    for (const d of family.disposables) {
+      try {
+        d.dispose()
+      } catch {
+        /* already disposed */
+      }
+    }
+    family.disposables = []
+    family.active = false
+    family.hasIssues = false
+    await saveActiveProfiles()
+  } finally {
+    family.loading = false
+    updateStatusBarItem(name)
+  }
+  notifyInfo(`CMK: ${PROFILE_NAMES[name]} profile disabled`)
+}
+
+export async function toggle(name: string): Promise<void> {
+  if (families[name]?.active) {
+    await stop(name)
+  } else {
+    await start(name)
+  }
+}
+
+export function isActive(name: string): boolean {
+  return families[name]?.active || false
+}
+
+export function getAll(): ProfileInfo[] {
+  return Object.keys(families).map((name) => ({
+    name,
+    active: families[name].active,
+    loading: families[name].loading,
+    label: PROFILE_LABELS[name] || name,
+    fullName: name.charAt(0).toUpperCase() + name.slice(1)
+  }))
+}
+
+export function setLoading(name: string, loading: boolean): void {
+  const family = families[name]
+  if (!family) return
+  family.loading = loading
+  if (loading) showLoading(name)
+  else updateStatusBarItem(name)
+}
+
+export function setIssues(name: string, hasIssues: boolean): void {
+  const family = families[name]
+  if (!family) return
+  if (family.hasIssues === hasIssues) return
+  family.hasIssues = hasIssues
+  updateStatusBarItem(name)
+}
+
+function showLoading(name: string): void {
+  const family = families[name]
+  if (!family.statusBarItem) return
+  const label = PROFILE_LABELS[name] || name
+  family.statusBarItem.text = `$(sync~spin) ${label}`
+  family.statusBarItem.tooltip = `CMK: ${PROFILE_NAMES[name]} profile switching…`
+  family.statusBarItem.color = undefined
+  family.statusBarItem.backgroundColor = undefined
+}
+
+function updateStatusBarItem(name: string): void {
+  const family = families[name]
+  if (!family.statusBarItem) return
+  const label = PROFILE_LABELS[name] || name
+
+  if (family.active && family.hasIssues) {
+    family.statusBarItem.text = `$(warning) ${label}`
+    family.statusBarItem.tooltip = `CMK: ${PROFILE_NAMES[name]} profile active — has stale build targets`
+    family.statusBarItem.color = undefined
+    family.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground')
+  } else if (family.active) {
+    family.statusBarItem.text = `$(check) ${label}`
+    family.statusBarItem.tooltip = `CMK: ${PROFILE_NAMES[name]} profile active — click to disable`
+    family.statusBarItem.color = new vscode.ThemeColor('terminal.ansiGreen')
+    family.statusBarItem.backgroundColor = undefined
+  } else {
+    family.statusBarItem.text = `$(circle-outline) ${label}`
+    family.statusBarItem.tooltip = `CMK: ${PROFILE_NAMES[name]} profile inactive — click to enable`
+    family.statusBarItem.color = undefined
+    family.statusBarItem.backgroundColor = undefined
+  }
+}
+
+export function getActiveProfiles(): string[] {
+  const config = vscode.workspace.getConfiguration('cmk')
+  const inspection = config.inspect<string[]>('activeProfiles')
+  return inspection?.workspaceValue ?? DEFAULT_ACTIVE
+}
+
+function saveActiveProfiles(): Thenable<void> {
+  const active = Object.keys(families).filter((name) => families[name].active)
+  const config = vscode.workspace.getConfiguration('cmk')
+  return config.update('activeProfiles', active, vscode.ConfigurationTarget.Workspace)
+}
+
+function createProfileStatusBarItems(context: vscode.ExtensionContext): void {
+  for (const name of Object.keys(families)) {
+    const family = families[name]
+    const item = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Left,
+      PRIORITIES[name] || 50
+    )
+    item.command = `cmk.toggleProfile.${name}`
+    family.statusBarItem = item
+    item.show()
+    context.subscriptions.push(item)
+
+    context.subscriptions.push(
+      vscode.commands.registerCommand(`cmk.toggleProfile.${name}`, () => {
+        toggle(name)
+      })
+    )
+  }
+}
+
+export function init(context: vscode.ExtensionContext): void {
+  _context = context
+  log('Profile manager init')
+
+  createProfileStatusBarItems(context)
+
+  const saved = getActiveProfiles()
+  log(`Restore profiles: ${JSON.stringify(saved)}`)
+  for (const name of Object.keys(families)) {
+    if (saved.includes(name) && families[name].activate) {
+      families[name].disposables = families[name].activate!(context) || []
+      families[name].active = true
+    }
+    updateStatusBarItem(name)
+  }
+
+  applyInactiveDisableSettings()
+}
+
+async function applyInactiveDisableSettings(): Promise<void> {
+  log('Apply inactive disable-settings')
+  for (const name of Object.keys(families)) {
+    if (families[name].active) continue
+    for (const [key, value] of Object.entries(families[name].disableSettings)) {
+      try {
+        await writeSetting(key, value)
+      } catch (err) {
+        log(`Disable-setting failed: ${name} ${key} — ${(err as Error).message}`)
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+# Checkmk custom dictionary for cSpell
+# One word per line
+axios
+collapser
+ctrls
+formspec
+hostaddress
+Hostalias
+htmllib
+hwsw
+inited
+makeuri
+Meraki
+Multitone
+nonfree
+passwordstore
+perfometer
+pingable
+robotmk
+searchprovider
+slideout
+snapin
+snapins
+snmp
+testhost
+unack
+usei
+uspr
+valuespec
+wato
+watolib
+werks
+xlarge
+xxlarge

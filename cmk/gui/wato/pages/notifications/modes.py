@@ -776,7 +776,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
         back_mode: HTTPVariables = []
         mode_from_vars = request.var("mode")
-        if mode_from_vars in ["analyze_notifications", "test_notifications"]:
+        if mode_from_vars:
             back_mode.append(("back_mode", mode_from_vars))
 
         def _delete_url() -> str:
@@ -4434,6 +4434,8 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
     def breadcrumb(self) -> Breadcrumb:
         with request.stashed_vars():
+            if request.var("back_mode") != ModeNotifications.name():
+                request.del_var("search")
             return super().breadcrumb()
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:

@@ -39,24 +39,28 @@ HTTP_STATUS_OK = 200
 
 MetaFileExtension = Literal["json", "csv"]
 
-DOWNLOAD_SERVER_BASE_URL = "https://download.checkmk.com/checkmk"
+
+def get_url(version: Version) -> str:
+    if version.release_candidate.value:
+        return f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version_rc_aware}"
+    return f"https://download.checkmk.com/checkmk/{version.version_rc_aware}"
 
 
 def hash_file(artifact_name: str) -> str:
     return f"{artifact_name}.hash"
 
 
-def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+def build_source_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        file_name = f"check-mk-{edition}-{args.version}.tar.gz"
+        file_name = f"check-mk-{edition}-{version.version_without_rc}.tar.gz"
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only
 
 
-def build_docker_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+def build_docker_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        file_name = f"check-mk-{edition}-docker-{args.version}.tar.gz"
+        file_name = f"check-mk-{edition}-docker-{version.version_without_rc}.tar.gz"
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only
@@ -138,12 +142,14 @@ def build_csv_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
     }
 
 
-def file_exists_on_download_server(filename: str, version: str, credentials: Credentials) -> bool:
-    url = f"{DOWNLOAD_SERVER_BASE_URL}/{version}/{filename}"
+def file_exists_on_download_server(
+    filename: str, version: Version, credentials: Credentials
+) -> bool:
+    url = f"{get_url(version)}/{filename}"
     sys.stdout.write(f"Checking for {url}...")
     if (
         requests.head(
-            f"{DOWNLOAD_SERVER_BASE_URL}/{version}/{filename}",
+            url,
             auth=(credentials.username, credentials.password),
             timeout=10,
         ).status_code
@@ -166,12 +172,9 @@ class AssertResult(NamedTuple):
 
 
 def assert_presence_on_download_server(
-    args: Args, internal_only: bool, artifact_name: str, credentials: Credentials
+    version: Version, internal_only: bool, artifact_name: str, credentials: Credentials
 ) -> AssertResult:
-    if (
-        not file_exists_on_download_server(artifact_name, args.version, credentials)
-        != internal_only
-    ):
+    if not file_exists_on_download_server(artifact_name, version, credentials) != internal_only:
         return AssertResult(
             assertion_ok=False,
             message=(
@@ -185,14 +188,15 @@ def assert_presence_on_download_server(
 
 
 def assert_hash_matches_package_content(
-    filename: str, version: str, credentials: Credentials
+    filename: str, version: Version, credentials: Credentials
 ) -> AssertResult:
     if filename.endswith("hash"):
         # Yes, we don't have hash file for hash files
         return AssertResult(assertion_ok=True, message="not applicable")
 
-    url = f"{DOWNLOAD_SERVER_BASE_URL}/{version}/{filename}"
-    hash_url = f"{DOWNLOAD_SERVER_BASE_URL}/{version}/{hash_file(filename)}"
+    base_url = get_url(version)
+    url = f"{base_url}/{filename}"
+    hash_url = f"{base_url}/{hash_file(filename)}"
 
     sys.stdout.write(f"Checking if {url}'s sha256sum matches {hash_url}...")
 
@@ -238,45 +242,39 @@ def _download_file(url, credentials, destination):
 
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
+    version = Version.from_str(args.version)
+
     if not args.skip_docker:
         registries = get_default_registries()
 
     results = []
-    for artifact_name, internal_only in build_source_artifacts(args, loaded_yaml):
+    for artifact_name, internal_only in build_source_artifacts(version, loaded_yaml):
         results.append(
-            assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+            assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
         if not internal_only:
-            results.append(
-                assert_hash_matches_package_content(artifact_name, args.version, credentials)
-            )
+            results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
     for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
         results.append(
-            assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+            assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
         if not internal_only:
-            results.append(
-                assert_hash_matches_package_content(artifact_name, args.version, credentials)
-            )
+            results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
     for artifact_name, internal_only in build_meta_artifacts(args, loaded_yaml):
         results.append(
-            assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+            assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
         if not internal_only:
-            results.append(
-                assert_hash_matches_package_content(artifact_name, args.version, credentials)
-            )
+            results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
-    for artifact_name, internal_only in build_docker_artifacts(args, loaded_yaml):
+    for artifact_name, internal_only in build_docker_artifacts(version, loaded_yaml):
         results.append(
-            assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+            assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
         if not internal_only:
-            results.append(
-                assert_hash_matches_package_content(artifact_name, args.version, credentials)
-            )
+            results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
     if not args.skip_docker:
         for image_name, edition, registry in build_docker_image_name_and_registry(

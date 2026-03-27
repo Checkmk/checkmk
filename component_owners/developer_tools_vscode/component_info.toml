@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Developer Tooling: VSCode"
+has_support_component = true
+members_required = 1
+description = """
+- VSCode settings and cmk-extension
+"""

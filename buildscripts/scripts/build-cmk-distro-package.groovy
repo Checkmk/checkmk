@@ -118,6 +118,7 @@ void main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
+                    force_build: env.DISABLE_JENKINS_CACHE == "true",
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,

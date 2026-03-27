@@ -65,6 +65,7 @@ void main() {
             ) {
                 smart_build(
                     use_upstream_build: true,
+                    force_build: env.DISABLE_JENKINS_CACHE == "true",
                     relative_job_name: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
                     build_params: job_parameters,
                     build_params_no_check: job_parameters_no_check,
@@ -81,6 +82,7 @@ void main() {
         ) {
             smart_build(
                 use_upstream_build: true,
+                force_build: env.DISABLE_JENKINS_CACHE == "true",
                 relative_job_name: "${branch_base_folder}/builders/build-cmk-relay-image",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,

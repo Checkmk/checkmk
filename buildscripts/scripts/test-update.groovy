@@ -21,7 +21,6 @@ void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def edition = params.EDITION;
-
     def all_distros = [];
     def selected_distros = [];
     def safe_branch_name = versioning.safe_branch_name();
@@ -108,6 +107,7 @@ void main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
+                    force_build: env.DISABLE_JENKINS_CACHE == "true",
                     relative_job_name: relative_job_name,
                     build_params: [
                         DISTRO: distro,

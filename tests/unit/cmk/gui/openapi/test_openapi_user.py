@@ -1270,6 +1270,7 @@ def test_openapi_create_user_edit_start_url(clients: ClientRegistry) -> None:
 @pytest.mark.parametrize(
     "field_value, expected_status_code",
     [
+        ("slideout_ask", 200),
         ("slideout", 200),
         ("full_page", 200),
         ("invalid", 400),

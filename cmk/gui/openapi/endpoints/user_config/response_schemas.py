@@ -103,7 +103,7 @@ class ConcreteUserInterfaceAttributes(BaseSchema):
     )
     navbar_changes_action = fields.String(
         description="The view mode for activating changes. Either the slideout or the full page view.",
-        enum=["slideout", "full_page"],
+        enum=["slideout_ask", "slideout", "full_page"],
         example="slideout",
     )
 

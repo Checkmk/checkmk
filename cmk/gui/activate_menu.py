@@ -16,7 +16,7 @@ from cmk.gui.main_menu_types import ConfigurableMainMenuItem, MainMenuItem, Main
 from cmk.gui.userdb.store import load_custom_attr
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.wato.pages.activate_changes import get_last_wato_snapshot_file
-from cmk.shared_typing.changes import ChangesProps
+from cmk.shared_typing.changes import ChangesProps, NavbarChangesActionChoices
 from cmk.shared_typing.main_menu import (
     ColorEnum,
     NavItemBadge,
@@ -52,6 +52,7 @@ def _get_changes_app(request: Request) -> NavItemVueApp:
                 user_has_activate_foreign=user.may("wato.activateforeign"),
                 new_installation=get_last_wato_snapshot_file(debug=False) is None,
                 user_name=user.ident,
+                navbar_changes_action=_get_navbar_changes_action(user),
             )
         ),
     )
@@ -65,13 +66,14 @@ def get_activate_changes_full_page_url(request: Request) -> str:
     )
 
 
-def _get_navbar_changes_action(user: LoggedInUser) -> str | None:
+def _get_navbar_changes_action(user: LoggedInUser) -> NavbarChangesActionChoices | None:
     assert user.id is not None
-    return load_custom_attr(
+    raw = load_custom_attr(
         user_id=user.id,
         key="navbar_changes_action",
         parser=lambda x: None if x == "None" else x,
     )
+    return NavbarChangesActionChoices(raw) if raw is not None else None
 
 
 def get_activate_changes_nav_item_instance(

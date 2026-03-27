@@ -31,14 +31,27 @@
         "activate_changes_url": { "type": "string" },
         "user_has_activate_foreign": { "type": "boolean" },
         "user_name": { "type": "string" },
-        "new_installation": { "type": "boolean" }
+        "new_installation": { "type": "boolean" },
+        "navbar_changes_action": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/navbar_changes_action_choices"
+            },
+            { "type": "null" }
+          ]
+        }
       },
       "required": [
         "activate_changes_url",
         "user_has_activate_foreign",
         "user_name",
-        "new_installation"
+        "new_installation",
+        "navbar_changes_action"
       ]
+    },
+    "navbar_changes_action_choices": {
+      "type": "string",
+      "enum": ["slideout", "full_page"]
     },
     "activation_phase": {
       "type": "string",

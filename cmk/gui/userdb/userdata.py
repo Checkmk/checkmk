@@ -132,7 +132,7 @@ class UserData:
     nav_hide_icons_title: Literal["hide"] | None | _MissingValueSentinel
     icons_per_item: Literal["entry"] | None | _MissingValueSentinel
     ui_sidebar_position: Literal["left"] | None  # I think None means right, which is the default?
-    navbar_changes_action: Literal["full_page"] | None
+    navbar_changes_action: Literal["slideout", "full_page"] | None
     ui_theme: Literal["modern-dark", "facelift"] | None
     # contextual_help_icon: NotRequired[Literal["hide_icon"] | None]
 

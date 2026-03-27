@@ -4407,6 +4407,11 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
                 )
             )
 
+        search = request.get_str_input("search", "")
+        back_mode = request.var("back_mode") or ModeNotifications.name()
+        # Don't forward the search parameter when coming from "test_notifications",
+        # so that we don't hide notifications when testing them.
+        forward_search = search and back_mode != ModeTestNotifications.name()
         html.vue_component(
             component_name="cmk-quick-setup",
             data={
@@ -4414,7 +4419,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
                 "mode": "guided" if self._new and self._clone_nr < 0 else "overview",
                 "toggle_enabled": True,
                 "object_id": self._object_id,
-                "search": request.get_str_input("search", ""),
+                "search": search if forward_search else "",
             },
         )
 

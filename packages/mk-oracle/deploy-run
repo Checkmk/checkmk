@@ -15,12 +15,15 @@
 # other commands
 # ./deploy-run -l /tmp/plugins ./tests/files/test-local.yml user@machine-with-oracle --detect-sids
 # ./deploy-run ./tests/files/test-local.yml user@machine-with-oracle --version
+# using file with some variables:
+# DB_PORT=1521 DB_SID=TEST23 DB_PASSWORD=$CI_ORA2_DB_TEST_PASSWORD ./deploy-run -o /opt/oracle23/u01/app/oracle/dbhome1 ./tests/files/test-template.yml rocky@ora-rocktest.dev.checkmk.net
+# DB_PORT=1522 DB_SID=TEST19 DB_PASSWORD=$CI_ORA2_DB_TEST_PASSWORD ./deploy-run -o /opt/oracle23/u01/app/oracle/dbhome1 ./tests/files/test-template.yml rocky@ora-rocktest.dev.checkmk.net
 
 set -euo pipefail
 
 GNU_TARGET="x86_64-unknown-linux-gnu"
 BINARY_NAME="mk-oracle"
-REMOTE_DEPLOY_DIR="/tmp/${USER}-mk-oracle/${BINARY_NAME}-deploy"
+REMOTE_DEPLOY_DIR="/tmp/${USER}-deploy-run/${BINARY_NAME}-check"
 
 # ---------------------------------------------------------------------------
 # Argument parsing
@@ -59,6 +62,8 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
 fi
 
 CONFIG_BASENAME="$(basename "${CONFIG_FILE}")"
+TMP_CONFIG="$(mktemp --suffix="-${CONFIG_BASENAME}")"
+trap 'rm -f "${TMP_CONFIG}"' EXIT
 
 # Resolve paths relative to this script, not the caller's cwd
 SCRIPT_DIR="$(cd -- "${BASH_SOURCE%/*}" && pwd)"
@@ -101,10 +106,22 @@ ssh "${SSH_OPTS[@]}" "${REMOTE_HOST}" "mkdir -p ${REMOTE_DEPLOY_DIR}"
 scp "${SSH_OPTS[@]}" "${BINARY_PATH}" "${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/${BINARY_NAME}"
 
 # ---------------------------------------------------------------------------
-# Step 4: copy config file to remote
+# Step 4: expand shell variables in config, copy expanded version to remote
 # ---------------------------------------------------------------------------
-echo "==> [4/5] Copying config '${CONFIG_FILE}' to ${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/..."
-scp "${SSH_OPTS[@]}" "${CONFIG_FILE}" "${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/${CONFIG_BASENAME}"
+echo "==> [4/5] Expanding variables in '${CONFIG_FILE}' and copying to ${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/..."
+# Collect only variables that are defined in the current environment so that
+# undefined references are left as-is rather than replaced with empty strings.
+# grep may return 1 (no matches) — that is not an error here.
+raw_refs=$(grep -oE '\$\{[A-Za-z_][A-Za-z0-9_]*\}|\$[A-Za-z_][A-Za-z0-9_]*' "${CONFIG_FILE}" || true)
+defined_vars=""
+if [[ -n "${raw_refs}" ]]; then
+    defined_vars=$(printf '%s\n' "${raw_refs}" |
+        grep -oE '[A-Za-z_][A-Za-z0-9_]*' | sort -u |
+        while IFS= read -r v; do if [[ -v "$v" ]]; then printf "\${%s}" "$v"; fi; done)
+fi
+[[ -n "${defined_vars}" ]] && echo "    Expanding: ${defined_vars}"
+envsubst "${defined_vars}" <"${CONFIG_FILE}" >"${TMP_CONFIG}"
+scp "${SSH_OPTS[@]}" "${TMP_CONFIG}" "${REMOTE_HOST}:${REMOTE_DEPLOY_DIR}/${CONFIG_BASENAME}"
 
 # ---------------------------------------------------------------------------
 # Step 5: run binary on remote

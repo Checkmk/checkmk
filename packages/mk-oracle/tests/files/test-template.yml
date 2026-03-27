@@ -1,0 +1,22 @@
+#
+# YOU MUST SETUP SOME ENVIRONMENT VARIABLE TO USE THIS FILE
+#
+# DB_PORT, DB_SID and DB_PASSWORD are expected to be set in the environment where this file is used
+# for example in CI/CD pipelines or local testing environments.
+# This template is designed to be flexible and can be adapted to various Oracle database configurations by modifying
+# the connection and authentication details as needed.
+---
+oracle:
+  main: # mandatory, to be used if no specific config
+    connection: # mandatory
+      hostname: localhost
+      port: $DB_PORT
+      sid: $DB_SID  # this works
+    authentication: # mandatory
+      username: system
+      password: $DB_PASSWORD # or CI_ORA2_DB_TEST_PASSWORD
+      type: standard
+    #  role: sysdba # it may be not enabled by Oracle DBA
+    # comment block below to see that detection works
+    discovery:
+      detect: no

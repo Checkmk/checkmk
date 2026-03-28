@@ -443,18 +443,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.storage.disks:*.type": {"title": _l("Type")},
         # this displayhint is for Attributes and NOT for above Table
         ".hardware.storage.disks.size": {"title": _l("Size"), "paint": "size"},
-        ".hardware.storage.redfish_drives:": {
-            "title": _l("Redfish drives"),
-            "keyorder": ["component", "manufacturer", "model", "serial", "firmware_version", "capacity_bytes", "media_type"],
-            "view": "invstorageredfishdrives",
-        },
-        ".hardware.storage.redfish_drives:*.component": {"title": _l("Component")},
-        ".hardware.storage.redfish_drives:*.manufacturer": {"title": _l("Manufacturer")},
-        ".hardware.storage.redfish_drives:*.model": {"title": _l("Model")},
-        ".hardware.storage.redfish_drives:*.serial": {"title": _l("Serial number")},
-        ".hardware.storage.redfish_drives:*.firmware_version": {"title": _l("Firmware version")},
-        ".hardware.storage.redfish_drives:*.capacity_bytes": {"title": _l("Capacity"), "paint": "size"},
-        ".hardware.storage.redfish_drives:*.media_type": {"title": _l("Media type")},
         ".hardware.volumes.": {"title": _l("Volumes")},
         ".hardware.volumes.physical_volumes:": {
             "title": _l("Physical volumes"),

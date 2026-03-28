@@ -90,8 +90,10 @@ def discovery_redfish_storage_battery(section: RedfishAPIData) -> DiscoveryResul
     for key in section:
         if section[key].get("Status", {}).get("State") == "UnavailableOffline":
             continue
-        battery_data = section[key].get("Oem", {}).get("Dell", {}).get("DellControllerBattery")
-        if battery_data:
+        battery_data = ((section[key].get("Oem") or {}).get("Dell") or {}).get(
+            "DellControllerBattery"
+        )
+        if battery_data is not None:
             yield Service(item=section[key]["Id"])
 
 
@@ -101,10 +103,11 @@ def check_redfish_storage_battery(item: str, section: RedfishAPIData) -> CheckRe
     if data is None:
         return
 
-    battery_data = data.get("Oem", {}).get("Dell", {}).get("DellControllerBattery", {})
+    battery_data = ((data.get("Oem") or {}).get("Dell") or {}).get("DellControllerBattery")
     if not battery_data:
         return
 
+    batt_name = battery_data.get("Name", "Controller Battery")
     primary_status = battery_data.get("PrimaryStatus", "Unknown")
     raid_state = battery_data.get("RAIDState", "Unknown")
 
@@ -112,7 +115,7 @@ def check_redfish_storage_battery(item: str, section: RedfishAPIData) -> CheckRe
     state = _battery_status_map.get(primary_status, State.CRIT)
     yield Result(
         state=state,
-        summary=f"Battery status: {primary_status}, RAID state: {raid_state}",
+        summary=f"{batt_name} state: {primary_status}, RAID Status: {raid_state}",
     )
 
 

@@ -21,6 +21,7 @@ void main() {
 
                 // the full list of python packages is based on Change-Id Ia88498098c77bf9199cf5ab9d8fb4d1e84133492
                 sh("""
+                    set -o pipefail
                     python --version
 
                     # taken from "check_mk/tests/agent-plugin-unit/Dockerfile"

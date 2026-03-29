@@ -100,6 +100,63 @@ py_library(
 )
 
 py_library(
+    name = "watolib",
+    srcs = glob(
+        include = ["watolib/**/*.py"],
+        exclude = ["watolib/icons.py"],
+    ),
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":framework",
+        "//cmk/automations",
+        "//cmk/bi",
+        "//cmk/checkengine",
+        "//cmk/diagnostics",
+        "//cmk/fields",
+        "//cmk/gui/valuespec",
+        "//cmk/inventory",
+        "//cmk/piggyback:hub",
+        "//cmk/server_side_calls_backend",
+        "//cmk/utils",
+        "//packages/cmk-ccc:archive",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-ccc:regex",
+        "//packages/cmk-ccc:resulttype",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:translations",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine:snmplib",
+        "//packages/cmk-crypto",
+        "//packages/cmk-ec",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        "//packages/cmk-messaging",
+        "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        requirement("cryptography"),
+        requirement("flask"),
+        requirement("marshmallow"),
+        requirement("pydantic"),
+        requirement("python-dateutil"),
+        requirement("redis"),
+        requirement("requests"),
+        requirement("setproctitle"),
+        requirement("urllib3"),
+    ],
+)
+
+py_library(
     name = "gui",
     srcs = glob(
         include = ["**/*.py"],
@@ -108,6 +165,7 @@ py_library(
             "livestatus_utils/**/*.py",
             "theme/**/*.py",
             "utils/**/*.py",
+            "watolib/**/*.py",
         ],
     ) + glob([
         # Files excluded from :framework because they import non-framework modules.
@@ -131,6 +189,7 @@ py_library(
     ],
     deps = [
         ":framework",
+        ":watolib",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/checkengine",

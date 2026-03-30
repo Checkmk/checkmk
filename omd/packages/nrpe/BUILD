@@ -1,10 +1,17 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
+
+set_runpath(
+    name = "check_nrpe_runpath",
+    srcs = ["@nrpe//:check_nrpe"],
+    rpaths = ["${ORIGIN}/../../../lib"],
+)
 
 pkg_files(
     name = "check_nrpe",
     srcs = [
-        "@nrpe//:check_nrpe",
+        ":check_nrpe_runpath",
     ],
     attributes = pkg_attributes(
         mode = "0755",

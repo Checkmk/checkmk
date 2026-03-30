@@ -11,6 +11,7 @@ import * as vscode from 'vscode'
 import { log } from '../core/log'
 import { safeExec } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
+import { promptSocketProxy, registerProxyCleanup } from './proxy'
 
 // ── Types ──
 
@@ -236,6 +237,8 @@ export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => v
   const available = sites.length > 0
   vscode.commands.executeCommand('setContext', 'cmk.omdAvailable', available)
 
+  registerProxyCleanup(context, onRefresh)
+
   if (!available) return
 
   try {
@@ -320,6 +323,15 @@ export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => v
       log(`OMD open browser: ${siteName}`)
       const url = `http://localhost:${port}/${siteName}/`
       vscode.env.openExternal(vscode.Uri.parse(url))
+    })
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('cmk.omdProxy', async () => {
+      const siteName = await pickSite(sites)
+      if (!siteName) return
+      await promptSocketProxy(siteName)
+      triggerRefresh()
     })
   )
 

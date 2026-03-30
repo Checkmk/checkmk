@@ -49,7 +49,9 @@ export function wrap(
   .codicon-chevron-right::before { content: "\\eab6"; }
   .codicon-wrench::before { content: "\\eb6d"; }
   .codicon-play::before { content: "\\eb2c"; }
-  .codicon-stop-circle::before { content: "\\eba5"; }
+  .codicon-debug-stop::before { content: "\\ead7"; }
+  .codicon-debug-restart::before { content: "\\ead2"; }
+  .codicon-debug-disconnect::before { content: "\\ead0"; }
   .codicon-add::before { content: "\\ea60"; }`
     : ''
   return `<!DOCTYPE html>
@@ -99,6 +101,9 @@ ${body}
       case 'omd-delete-site': vscode.postMessage({ type: 'omdDeleteSite', site: el.dataset.site }); break;
       case 'omd-create-site': vscode.postMessage({ type: 'omdCreateSite' }); break;
       case 'omd-install-devsite': vscode.postMessage({ type: 'omdInstallDevSite' }); break;
+      case 'omd-proxy-start': vscode.postMessage({ type: 'omdProxyStart', site: el.dataset.site, service: el.dataset.service }); break;
+      case 'omd-proxy-stop': vscode.postMessage({ type: 'omdProxyStop', site: el.dataset.site, service: el.dataset.service }); break;
+      case 'omd-proxy-site': vscode.postMessage({ type: 'omdProxySite', site: el.dataset.site }); break;
       case 'copy-setting': {
         const text = el.dataset.value;
         navigator.clipboard.writeText(text);

@@ -3,11 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { log } from '../../core/log'
 import { runCommand, waitForTask } from '../../core/tasks'
 import { createSite, omdServiceCommand } from '../../omd/omd'
+import { KNOWN_SOCKETS, promptAndStartProxy, promptSocketProxy, stopProxy } from '../../omd/proxy'
 import { esc, getNonce, wrap } from '../html'
 import type { SectionContext, StateCache, WebviewMessage } from '../types'
 import sectionCss from './style.css'
@@ -76,6 +78,25 @@ export async function handleMessage(
       }
       return true
     }
+    case 'omdProxyStart': {
+      const service = msg.service as string
+      const socketRel = KNOWN_SOCKETS[service]
+      if (!socketRel) return true
+      const socketPath = path.join('/omd/sites', msg.site as string, socketRel)
+      await promptAndStartProxy(msg.site as string, service, socketPath)
+      refreshAll()
+      return true
+    }
+    case 'omdProxyStop': {
+      stopProxy(msg.site as string, msg.service as string)
+      refreshAll()
+      return true
+    }
+    case 'omdProxySite': {
+      await promptSocketProxy(msg.site as string)
+      refreshAll()
+      return true
+    }
     case 'omdDeleteSite': {
       log(`OMD delete site: ${msg.site}`)
       const confirm = await vscode.window.showWarningMessage(
@@ -100,7 +121,7 @@ export async function handleMessage(
 
 export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: string): string {
   const nonce = getNonce()
-  const { omdSites, devSiteTools } = state
+  const { omdSites, activeProxies, devSiteTools } = state
 
   const devSiteBanner = !devSiteTools?.installed
     ? `<div class="banner banner-info">
@@ -150,23 +171,36 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         : ''
       const isRunning = o === 0 || o === 2
       const toggleAction = isRunning ? 'stop' : 'start'
-      const toggleIcon = isRunning ? 'codicon-stop-circle' : 'codicon-play'
+      const toggleIcon = isRunning ? 'codicon-debug-stop' : 'codicon-play'
       const toggleTitle = isRunning ? 'Stop site' : 'Start site'
       const toggleBtn =
         o !== -1
           ? `<button class="btn btn-small btn-icon" data-action="omd-site-action" data-omd-action="${toggleAction}" data-site="${esc(site.name)}" title="${toggleTitle}"><span class="codicon ${toggleIcon}"></span></button>`
           : ''
+      const proxyBtn = isRunning
+        ? `<button class="btn btn-small btn-icon" data-action="omd-proxy-site" data-site="${esc(site.name)}" title="Socket proxy"><span class="codicon codicon-debug-disconnect"></span></button>`
+        : ''
       const consoleBtn = `<button class="btn btn-small btn-icon" data-action="omd-console" data-site="${esc(site.name)}" title="Open site console"><span class="codicon codicon-terminal"></span></button>`
       const deleteBtn = `<button class="btn btn-small btn-icon btn-danger" data-action="omd-delete-site" data-site="${esc(site.name)}" title="Delete site"><span class="codicon codicon-trash"></span></button>`
       const svcRows = site.status.services
         .map((svc) => {
           const sIcon = svc.running ? '&#9679;' : '&#9675;'
           const sCls = svc.running ? 'svc-running' : 'svc-stopped'
+          const hasSocket = svc.name in KNOWN_SOCKETS
+          const proxy = activeProxies.find((p) => p.site === site.name && p.service === svc.name)
+          let proxyBtn = ''
+          if (svc.running && hasSocket) {
+            if (proxy) {
+              const badgeCls = proxy.ready ? 'proxy-badge' : 'proxy-badge proxy-badge-starting'
+              proxyBtn = `<button class="${badgeCls}" data-action="omd-proxy-stop" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="Stop proxy :${proxy.port}">:${proxy.port} <span class="codicon codicon-debug-stop"></span></button>`
+            } else {
+              proxyBtn = `<button class="btn btn-small btn-icon" data-action="omd-proxy-start" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="Socket proxy"><span class="codicon codicon-debug-disconnect"></span></button>`
+            }
+          }
           const actions = svc.running
-            ? `<button class="btn btn-small" data-action="omd-service-action" data-omd-action="stop" data-site="${esc(site.name)}" data-service="${esc(svc.name)}">Stop</button>
-           <button class="btn btn-small" data-action="omd-service-action" data-omd-action="restart" data-site="${esc(site.name)}" data-service="${esc(svc.name)}">Restart</button>`
-            : `<button class="btn btn-small" data-action="omd-service-action" data-omd-action="start" data-site="${esc(site.name)}" data-service="${esc(svc.name)}">Start</button>`
-          return `<div class="svc-row ${sCls}"><span class="svc-icon">${sIcon}</span><span class="svc-name">${esc(svc.name)}</span><span class="svc-actions">${actions}</span></div>`
+            ? `<button class="btn btn-small btn-icon" data-action="omd-service-action" data-omd-action="stop" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="Stop"><span class="codicon codicon-debug-stop"></span></button><button class="btn btn-small btn-icon" data-action="omd-service-action" data-omd-action="restart" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="Restart"><span class="codicon codicon-debug-restart"></span></button>`
+            : `<button class="btn btn-small btn-icon" data-action="omd-service-action" data-omd-action="start" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="Start"><span class="codicon codicon-play"></span></button>`
+          return `<div class="svc-row ${sCls}"><span class="svc-icon">${sIcon}</span><span class="svc-name">${esc(svc.name)}</span><span class="svc-actions">${proxyBtn}${actions}</span></div>`
         })
         .join('')
       const siteActions = `<div class="omd-site-actions">
@@ -182,6 +216,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         ${detail}
         ${badge}
         ${toggleBtn}
+        ${proxyBtn}
         ${consoleBtn}
         ${browserBtn}
         ${deleteBtn}

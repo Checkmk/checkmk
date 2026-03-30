@@ -13,6 +13,7 @@ import { runCommand, waitForTask } from './core/tasks'
 import { getVersionMismatch, rebuildExtension } from './core/versionCheck'
 import { getDevSiteToolsState } from './omd/devSiteTools'
 import { detectOmdSites, forceRefreshOmdStatusFiles, getOmdStatus } from './omd/omd'
+import { getActiveProxies } from './omd/proxy'
 import * as profileManager from './profiles/profileManager'
 import * as environmentSection from './sidebar/environment'
 import { renderLoading } from './sidebar/html'
@@ -64,6 +65,7 @@ function refreshStateCache(): StateCache {
     const status = getOmdStatus(site.name)
     return { ...site, status }
   })
+  const activeProxies = getActiveProxies()
   const devSiteTools = getDevSiteToolsState()
   const versionMismatch = _context ? getVersionMismatch(_context) : null
   const onboarding = environmentSection.getOnboardingState(environment, buildStatus, _context)
@@ -76,6 +78,7 @@ function refreshStateCache(): StateCache {
     extensionHealth,
     settingsMismatches,
     omdSites,
+    activeProxies,
     devSiteTools,
     versionMismatch,
     onboarding,

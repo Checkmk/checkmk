@@ -9,6 +9,7 @@ import type { BuildStatus } from '../build/buildStatus'
 import type { VersionMismatch } from '../core/versionCheck'
 import type { DevSiteToolsState } from '../omd/devSiteTools'
 import type { OmdSiteWithStatus } from '../omd/omd'
+import type { ProxyInfo } from '../omd/proxy'
 import type { ProfileInfo } from '../profiles/profileManager'
 
 export interface EnvironmentInfo {
@@ -62,6 +63,7 @@ export interface StateCache {
   extensionHealth: ExtensionFamily[]
   settingsMismatches: SettingsMismatch[]
   omdSites: OmdSiteWithStatus[]
+  activeProxies: ProxyInfo[]
   devSiteTools: DevSiteToolsState
   versionMismatch: VersionMismatch | null
   onboarding: OnboardingState

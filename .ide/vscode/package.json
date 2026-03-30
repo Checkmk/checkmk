@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.1.16",
+  "version": "0.1.21",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -142,6 +142,10 @@
       {
         "command": "cmk.installDevSite",
         "title": "CMK ▸ OMD: Install cmk-dev-site"
+      },
+      {
+        "command": "cmk.omdProxy",
+        "title": "CMK ▸ OMD: Socket Proxy"
       },
       {
         "command": "cmk.buildVenv",
@@ -353,6 +357,10 @@
         },
         {
           "command": "cmk.omdAuth",
+          "when": "cmk.omdAvailable"
+        },
+        {
+          "command": "cmk.omdProxy",
           "when": "cmk.omdAvailable"
         },
         {

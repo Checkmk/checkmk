@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import (
     RuleSetType,
     State,
 )
-from cmk.plugins.cmciii.lib import (
+from cmk.plugins.rittal.lib.cmciii import (
     CheckParams,
     discover_cmciii_sensors,
     discovery_default_parameters,

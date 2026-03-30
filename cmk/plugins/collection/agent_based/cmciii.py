@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.cmciii.lib import (
+from cmk.plugins.rittal.lib.cmciii import (
     CheckParams,
     Devices,
     discovery_default_parameters,

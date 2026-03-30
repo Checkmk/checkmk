@@ -10,14 +10,14 @@ from cmk.agent_based.v2 import (
     get_value_store,
     RuleSetType,
 )
-from cmk.plugins.cmciii.lib import (
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+from cmk.plugins.rittal.lib.cmciii import (
     discover_cmciii_sensors,
     discovery_default_parameters,
     DiscoveryParams,
     get_sensor,
     Section,
 )
-from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 
 def discover_cmciii_temp_in_out(params: DiscoveryParams, section: Section) -> DiscoveryResult:

@@ -14,7 +14,8 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.cmciii.lib import (
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+from cmk.plugins.rittal.lib.cmciii import (
     discovery_default_parameters,
     DiscoveryParams,
     get_item,
@@ -22,7 +23,6 @@ from cmk.plugins.cmciii.lib import (
     Section,
     Sensor,
 )
-from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 
 def discover_cmciii_temp(params: DiscoveryParams, section: Section) -> DiscoveryResult:

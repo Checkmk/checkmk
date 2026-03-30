@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, RuleSetType
-from cmk.plugins.cmciii.lib import (
+from cmk.plugins.lib.elphase import check_elphase, ElPhase
+from cmk.plugins.rittal.lib.cmciii import (
     CheckParams,
     discover_cmciii_sensors,
     discovery_default_parameters,
@@ -12,7 +13,6 @@ from cmk.plugins.cmciii.lib import (
     get_sensor,
     Section,
 )
-from cmk.plugins.lib.elphase import check_elphase, ElPhase
 
 
 def discover_cmciii_phase(params: DiscoveryParams, section: Section) -> DiscoveryResult:

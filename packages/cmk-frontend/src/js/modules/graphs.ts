@@ -80,6 +80,7 @@ export interface AjaxGraph {
   context: GraphRenderState
   error?: string
   warning?: string
+  preview_html?: string
   queries_reached_limit?: Record<string, any>[]
 }
 
@@ -333,9 +334,6 @@ export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: H
   container.className = 'graph_container'
   container.innerHTML = ajax_graph['html']
 
-  const embedded_script = document.createElement('script')
-  container.parentNode!.appendChild(embedded_script)
-
   // Now register and paint the graph
   ajax_context['graph_id'] = graph_id
   g_ajax_contexts[graph_id] = ajax_context
@@ -491,7 +489,7 @@ function do_load_graph_content(
       })
     )
 
-  call_ajax('ajax_render_graph_content.py', {
+  call_ajax('ajax_render_graph.py', {
     method: 'POST',
     post_data: post_data,
     response_handler: handle_load_graph_content,
@@ -501,7 +499,7 @@ function do_load_graph_content(
 }
 
 function handle_load_graph_content(script_object: HTMLOrSVGScriptElement, ajax_response: string) {
-  let response
+  let response: { result_code: number; result: AjaxGraph }
   try {
     response = JSON.parse(ajax_response)
   } catch (e) {
@@ -515,20 +513,37 @@ function handle_load_graph_content(script_object: HTMLOrSVGScriptElement, ajax_r
   }
 
   if (response.result_code != 0) {
-    handle_load_graph_content_error(script_object, response.result_code, response.result)
+    handle_load_graph_content_error(script_object, response.result_code, String(response.result))
     return
   }
 
-  // Create a temporary div node to load the response into the DOM.
-  // Then get the just loaded graph objects from the temporary div and
-  // add replace the placeholder with it.
-  const tmp_div = document.createElement('div')
-  /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-  tmp_div.innerHTML = response.result
+  const graph = response.result
+  const container = document.createElement('div')
+  show_ajax_graph_at_container(graph, container)
 
-  script_object.parentNode!.replaceChild(tmp_div, script_object.previousSibling!)
+  if (graph.preview_html) {
+    const wrapper = document.createElement('div')
+    wrapper.className = 'graph_with_timeranges'
+    wrapper.appendChild(container)
+    // Insert preview_html directly without an extra <div> wrapper so that
+    // table.timeranges becomes a direct child of graph_with_timeranges and the
+    // CSS inline-block side-by-side layout applies correctly.
+    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
+    wrapper.insertAdjacentHTML('beforeend', graph.preview_html)
+    script_object.parentNode!.replaceChild(wrapper, script_object.previousSibling!)
+    // Re-render the main graph: show_ajax_graph_at_container called render_graph
+    // while container was still detached, so document.getElementById returned null
+    // and rendering was skipped. The container is in the DOM now.
+    const registered_graph = g_graphs[container.id]
+    if (registered_graph) render_graph(registered_graph)
+    execute_javascript_by_object(wrapper)
+  } else {
+    script_object.parentNode!.replaceChild(container, script_object.previousSibling!)
+    // Same re-render fix for the non-preview path.
+    const registered_graph = g_graphs[container.id]
+    if (registered_graph) render_graph(registered_graph)
+  }
   script_object.parentNode!.removeChild(script_object)
-  execute_javascript_by_object(tmp_div)
 }
 
 function handle_load_graph_content_error(
@@ -1280,10 +1295,22 @@ function get_graph_container(obj: HTMLElement) {
   return newObj
 }
 
+// Given any element inside a timerange-preview graph, walk up the DOM to the
+// enclosing div.graph_with_timeranges and return its main graph container.
+//
+// The structure built by handle_load_graph_content is:
+//   div.graph_with_timeranges
+//     div.graph_container          ← main graph (childNodes[0])
+//     table.timeranges             ← preview graphs (childNodes[1])
+//       tbody > tr > td
+//         div.graph_container      ← one preview per cell
+//
+// We use ':scope > div.graph_container' rather than childNodes[0] so that the
+// selector stays correct by name even if the insertion order were to change.
 function get_main_graph_container(obj: HTMLElement) {
   let res: HTMLElement | null = obj
   while (res && !has_class(res, 'graph_with_timeranges')) res = res.parentNode as HTMLElement | null
-  return res!.childNodes[1] as HTMLElement
+  return res!.querySelector(':scope > div.graph_container') as HTMLElement
 }
 
 function get_graph_graph_node(obj: HTMLElement) {
@@ -1385,7 +1412,7 @@ function graph_mouse_resize(event: Event) {
 
   const graph = g_resizing_graph.graph
   const post_data =
-    'context=' +
+    'request=' +
     encodeURIComponent(JSON.stringify(g_ajax_contexts[graph.id])) +
     '&resize_x=' +
     delta_x +
@@ -1967,9 +1994,10 @@ function update_graph(
     range_to = graph.artwork.requested_y_range[1]
   }
 
-  // Recompute step
+  // Recompute step. Use Math.floor to produce an integer: the server model
+  // requires step to be int | str (forecast) and rejects fractional floats.
   const canvas = graph.canvas!
-  const step = (end_time - start_time) / canvas.width / 2
+  const step = Math.floor((end_time - start_time) / canvas.width / 2)
 
   // wenn er einmal grob wurde, nie wieder fein wird, auch wenn man in
   // einen Bereich draggt, der wieder fein vorhanden wäre? Evtl. müssen
@@ -1977,7 +2005,7 @@ function update_graph(
   // den ursprügnlichen Wunsch-Step anders als den vom RRD zurückgegebene.
 
   let post_data =
-    'context=' +
+    'request=' +
     encodeURIComponent(JSON.stringify(g_ajax_contexts[graph.id])) +
     '&start_time=' +
     encodeURIComponent(start_time) +
@@ -2019,7 +2047,7 @@ function start_graph_update(canvas: HTMLCanvasElement, post_data: string) {
   set_graph_update_cooldown()
   pause(g_page_update_delay)
 
-  call_ajax('ajax_graph.py', {
+  call_ajax('ajax_render_graph.py', {
     method: 'POST',
     //@ts-ignore
     response_handler: handle_graph_update,
@@ -2040,7 +2068,7 @@ function set_graph_update_cooldown() {
 }
 
 function handle_graph_update(graph_container: HTMLElement, ajax_response: string) {
-  let response: AjaxGraph
+  let response: { result_code: number; result: AjaxGraph }
   try {
     response = JSON.parse(ajax_response)
   } catch (e) {
@@ -2050,10 +2078,17 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
     g_graph_backoff.report_failure()
     return
   }
+  if (response.result_code != 0) {
+    show_graph_error(graph_container as HTMLDivElement, String(response.result))
+    g_graph_update_in_process = false
+    g_graph_backoff.report_failure()
+    return
+  }
+  const graph = response.result
   const container = graph_container as HTMLDivElement
 
-  if (response.error) {
-    show_graph_error(container, response.error)
+  if (graph.error) {
+    show_graph_error(container, graph.error)
     g_graph_update_in_process = false
     g_graph_backoff.report_failure()
     return
@@ -2061,31 +2096,31 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
     document.getElementById('error_container')?.remove()
   }
 
-  if (response.warning) {
-    show_graph_warning(container, response.warning)
+  if (graph.warning) {
+    show_graph_warning(container, graph.warning)
   } else {
     document.getElementById('warning_container')?.remove()
   }
 
-  // Structure of response:
+  // Structure of graph:
   // {
   //     "html" : html_code,
   //     "graph" : artwork,
   //     "context" : { "graph_id", "recipe", "time_range", "view", "display_id" }
   // }
-  if (!response.context) {
+  if (!graph.context) {
     console.error('Graph update response missing context')
     g_graph_update_in_process = false
     g_graph_backoff.report_failure()
     return
   }
-  const graph_id = response.context.graph_id
-  const new_artwork: GraphArtwork = response.graph
+  const graph_id = graph.context.graph_id
+  const new_artwork: GraphArtwork = graph.graph
   const existing = g_graphs[graph_id]
   const view: GraphInstance = {
     id: graph_id,
     canvas: existing?.canvas ?? null,
-    display_config: response.context.display_config,
+    display_config: graph.context.display_config,
     artwork: new_artwork,
     pin_time: new_artwork.pin_time,
     actual_time: { ...new_artwork.actual_time },
@@ -2094,14 +2129,14 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
     time_origin: existing?.time_origin ?? 0,
     vertical_origin: existing?.vertical_origin ?? 0
   }
-  g_ajax_contexts[graph_id] = response.context
+  g_ajax_contexts[graph_id] = graph.context
   g_graphs[graph_id] = view
   // replace eventual references
   if (g_dragging_graph && g_dragging_graph.graph.id === graph_id) g_dragging_graph.graph = view
   if (g_resizing_graph && g_resizing_graph.graph.id === graph_id) g_resizing_graph.graph = view
 
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-  graph_container.innerHTML = response['html']
+  graph_container.innerHTML = graph['html']
 
   render_graph_and_subgraphs(view)
   g_graph_update_in_process = false
@@ -2129,6 +2164,8 @@ export function change_graph_timerange(graph: GraphInstance, duration: number) {
 
   const main_graph_id = maingraph_container.id
   const main_graph = g_graphs[main_graph_id]
+
+  if (!main_graph) return
 
   const now = Math.floor(new Date().getTime() / 1000)
 
@@ -2191,7 +2228,7 @@ function set_graph_timerange(graph_id: string, start_time: number, end_time: num
   if (!graph) return
   const canvas = graph.canvas
   if (canvas) {
-    const step = (end_time - start_time) / canvas.width / 2
+    const step = Math.floor((end_time - start_time) / canvas.width / 2)
 
     // wenn er einmal grob wurde, nie wieder fein wird, auch wenn man in
     // einen Bereich draggt, der wieder fein vorhanden wäre? Evtl. müssen
@@ -2199,16 +2236,20 @@ function set_graph_timerange(graph_id: string, start_time: number, end_time: num
     // den ursprügnlichen Wunsch-Step anders als den vom RRD zurückgegebene.
 
     const post_data =
-      'context=' +
-      encodeURIComponent(JSON.stringify(g_ajax_contexts[graph.id])) +
-      '&start_time=' +
-      encodeURIComponent(start_time) +
-      '&end_time=' +
-      encodeURIComponent(end_time) +
-      '&step=' +
-      encodeURIComponent(step)
+      'request=' +
+      encodeURIComponent(
+        JSON.stringify({
+          ...g_ajax_contexts[graph.id],
+          time_range: {
+            ...g_ajax_contexts[graph.id].time_range,
+            start: start_time,
+            end: end_time,
+            step: step
+          }
+        })
+      )
 
-    call_ajax('ajax_graph.py', {
+    call_ajax('ajax_render_graph.py', {
       method: 'POST',
       post_data: post_data,
       //this is related to the third argument of the function, which I think is never used in ajax.ts

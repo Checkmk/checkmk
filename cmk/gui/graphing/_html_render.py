@@ -812,40 +812,8 @@ def _graph_margin_ex(
     )
 
 
-# NOTE
-# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
-# while these functions do not have that. In order to preserve the functionality of the JS side
-# of things, we keep it.
-# TODO: Migrate this to a real AjaxPage
-class AjaxGraph(Page):
-    def page(self, ctx: PageContext) -> PageResult:
-        """Registered as `ajax_graph`."""
-        response.set_content_type("application/json")
-        try:
-            context_var = ctx.request.get_str_input_mandatory("context")
-            render_state = GraphRenderState.model_validate(json.loads(context_var))
-            response_data = render_ajax_graph(
-                ctx.request,
-                render_state,
-                metrics_from_api,
-                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                backend_time_series_fetcher=metric_backend_registry[
-                    str(edition(paths.omd_root))
-                ].get_time_series_fetcher(),
-                show_titles_if_limit_reached=False,
-                converter=None,
-            )
-            response.set_data(json.dumps(response_data))
-        except Exception as e:
-            logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
-            if ctx.config.debug:
-                raise
-            response.set_data("ERROR: %s" % e)
-        return None
-
-
-@tracer.instrument("graphing.render_ajax_graph")
-def render_ajax_graph(
+@tracer.instrument("graphing.render_graph")
+def render_graph(
     request: Request,
     render_state: GraphRenderState,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -854,6 +822,8 @@ def render_ajax_graph(
     backend_time_series_fetcher: FetchTimeSeries | None,
     show_titles_if_limit_reached: bool,
     converter: Callable[[GraphMetricExpression], JsonSerializable] | None,
+    additional_html: AdditionalGraphHTML | None = None,
+    graph_timeranges: Sequence[GraphTimerange] | None = None,
 ) -> JsonSerializable:
     time_range = render_state.time_range
     display_config = render_state.display_config
@@ -967,7 +937,24 @@ def render_ajax_graph(
         time_range,
         display_config,
         ExpandableLegendAppearance.FOLDABLE,
+        additional_html,
     )
+
+    preview_html: str | None = None
+    if graph_timeranges is not None and display_config.show_time_range_previews:
+        preview_html = str(
+            _render_time_range_selection(
+                request,
+                recipe,
+                render_state.specification,
+                display_config,
+                graph_timeranges=graph_timeranges,
+                temperature_unit=temperature_unit,
+                backend_time_series_fetcher=backend_time_series_fetcher,
+                display_id=display_id,
+                expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
+            )
+        )
 
     return {
         "html": str(html_code),
@@ -982,6 +969,7 @@ def render_ajax_graph(
         ).model_dump(),
         "error": error_msg,
         "warning": warning_msg,
+        "preview_html": preview_html,
         "queries_reached_limit": (
             []
             if converter is None
@@ -1031,7 +1019,7 @@ class UserGraphTimeRangeStore:
         ).unlink(missing_ok=True)
 
 
-# cmk.graphs.load_graph_content will call ajax_render_graph_content() via JSON to finally load the graph
+# cmk.graphs.load_graph_content will call ajax_render_graph() via JSON to finally load the graph
 def _render_deferred_graph_html(
     render_state: GraphRenderState,
     *,
@@ -1076,7 +1064,7 @@ def render_deferred_graphs_html(
     *,
     display_id: str = "",
 ) -> HTML:
-    """Render async AJAX loading containers. JavaScript fills them via ajax_render_graph_content."""
+    """Render async AJAX loading containers. JavaScript fills them via ajax_render_graph."""
     try:
         recipes = graph_specification.recipes(env)
     except MKLivestatusNotFoundError:
@@ -1181,11 +1169,19 @@ def render_graphs_html(
     return output
 
 
-class AjaxRenderGraphContent(AjaxPage):
+class AjaxRenderGraph(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        # Called from javascript code via JSON to initially render a graph
-        """Registered as `ajax_render_graph_content`."""
+        """Registered as `ajax_render_graph`.
+
+        Handles both the initial deferred graph load and all subsequent
+        interaction updates (drag, zoom, pin, resize).  The JS side always
+        POSTs a ``request=<GraphRenderState JSON>`` body; extra interaction
+        parameters (``start_time``, ``end_time``, ``step``, ``range_from``,
+        ``range_to``, ``resize_x``, ``resize_y``, ``pin``,
+        ``consolidation_function``) are sent as additional POST fields and
+        consumed directly by :func:`render_graph` via the request object.
+        """
         api_request = ctx.request.get_request()
         render_state = GraphRenderState.model_validate(api_request)
         additional_html = (
@@ -1197,29 +1193,16 @@ class AjaxRenderGraphContent(AjaxPage):
         backend_time_series_fetcher = metric_backend_registry[
             str(edition(paths.omd_root))
         ].get_time_series_fetcher()
-        return _render_graph_content_html(
+        return render_graph(
             ctx.request,
-            render_state.recipe,
-            render_state.specification,
-            render_state.time_range,
-            render_state.display_config,
-            compute_graph_artwork(
-                render_state.recipe,
-                render_state.time_range,
-                render_state.display_config.size,
-                metrics_from_api,
-                temperature_unit=temperature_unit,
-                backend_time_series_fetcher=backend_time_series_fetcher,
-                pin_time=_load_graph_pin(),
-            ),
-            debug=ctx.config.debug,
-            graph_timeranges=ctx.config.graph_timeranges,
+            render_state,
+            metrics_from_api,
             temperature_unit=temperature_unit,
             backend_time_series_fetcher=backend_time_series_fetcher,
-            display_id=render_state.display_id,
-            expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
-            show_limits_if_reached=False,
+            show_titles_if_limit_reached=False,
+            converter=None,
             additional_html=additional_html,
+            graph_timeranges=ctx.config.graph_timeranges,
         )
 
 

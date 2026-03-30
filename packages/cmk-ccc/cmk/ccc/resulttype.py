@@ -32,8 +32,8 @@ E_co = TypeVar("E_co", covariant=True)
 F_co = TypeVar("F_co", covariant=True)
 
 
-# FIXME, should be Result[T_co, E_co](abc.ÄBC) but that changes the covariance behavior mypy detects in the children
-class Result(Generic[T_co, E_co], abc.ABC):
+# FIXME, should be Result[T_co, E_co](abc.ABC) but that changes the covariance behavior mypy detects in the children
+class Result(Generic[T_co, E_co], abc.ABC):  # noqa: UP046
     """Type/interface to the Result type.
 
     See Also:

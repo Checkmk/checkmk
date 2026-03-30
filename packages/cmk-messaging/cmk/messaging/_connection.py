@@ -11,7 +11,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Final, Generic, NoReturn, Protocol, Self, TypeVar
+from typing import Final, NoReturn, Protocol, Self, TypeVar
 
 import pika
 import pika.adapters.blocking_connection
@@ -73,9 +73,6 @@ class BindingKey:
 
 class CMKConnectionError(RuntimeError):
     pass
-
-
-_ModelT = TypeVar("_ModelT", bound=BaseModel)
 
 
 class ConnectionOK:
@@ -140,7 +137,7 @@ _ChannelT = TypeVar("_ChannelT", bound=ChannelP)
 class DeliveryTag(int): ...
 
 
-class Channel(Generic[_ModelT]):
+class Channel[ModelT: BaseModel]:
     """Wrapper for pika channel.
 
     Most of the methods are just wrappers around the corresponding pika methods.
@@ -158,7 +155,7 @@ class Channel(Generic[_ModelT]):
         self,
         app_name: AppName,
         pchannel: _ChannelT,
-        message_model: type[_ModelT],
+        message_model: type[ModelT],
     ) -> None:
         super().__init__()
         self.app_name: Final = app_name
@@ -209,7 +206,7 @@ class Channel(Generic[_ModelT]):
 
     def publish_locally(
         self,
-        message: _ModelT,
+        message: ModelT,
         routing: RoutingKey,
         properties: pika.BasicProperties | None = None,
     ) -> None:
@@ -223,7 +220,7 @@ class Channel(Generic[_ModelT]):
     def publish_for_site(
         self,
         site: str,
-        message: _ModelT,
+        message: ModelT,
         routing: RoutingKey,
         properties: pika.BasicProperties = pika.BasicProperties(),
     ) -> None:
@@ -241,7 +238,7 @@ class Channel(Generic[_ModelT]):
     def consume(
         self,
         queue: QueueName,
-        callback: Callable[[Self, DeliveryTag, _ModelT], object],
+        callback: Callable[[Self, DeliveryTag, ModelT], object],
         *,
         auto_ack: bool = False,
     ) -> NoReturn:
@@ -347,7 +344,7 @@ class Connection:
             # pika handles exceptions weirdly. We need repr, in order to see something.
             raise CMKConnectionError(repr(e)) from e
 
-    def channel(self, model: type[_ModelT]) -> Channel[_ModelT]:
+    def channel[ModelT: BaseModel](self, model: type[ModelT]) -> Channel[ModelT]:
         return Channel(self.app, self._pconnection.channel(), model)
 
     def __enter__(self) -> Self:

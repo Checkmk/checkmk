@@ -10,7 +10,7 @@ import pprint
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import cast, Generic, override, TypeAlias, TypeVar
+from typing import cast, override, TypeAlias
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -20,12 +20,8 @@ from cmk.gui.validation_utils import ConfigValidationError
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.utils import paths
 
-_G = TypeVar("_G")
-_T = TypeVar("_T")
-_D = TypeVar("_D", bound=Mapping)
 
-
-class WatoConfigFile(ABC, Generic[_G]):
+class WatoConfigFile[G](ABC):
     """Manage simple .mk config file
 
     The file handling logic is inherited from cmk.ccc.store.load_from_mk_file()
@@ -40,7 +36,7 @@ class WatoConfigFile(ABC, Generic[_G]):
         self._config_file_path = config_file_path
         self.spec_class = spec_class
 
-    def validate(self, raw: object) -> _G:
+    def validate(self, raw: object) -> G:
         try:
             # No performance impact - only called during cmk-update-config
             # astrein: disable=pydantic-type-adapter
@@ -52,17 +48,17 @@ class WatoConfigFile(ABC, Generic[_G]):
                 original_data=raw,
             ) from exc
 
-    def load_for_reading(self) -> _G:
+    def load_for_reading(self) -> G:
         return self._load_file(lock=False)
 
-    def load_for_modification(self) -> _G:
+    def load_for_modification(self) -> G:
         return self._load_file(lock=True)
 
     @abstractmethod
-    def _load_file(self, *, lock: bool) -> _G: ...
+    def _load_file(self, *, lock: bool) -> G: ...
 
     @abstractmethod
-    def save(self, cfg: _G, pprint_value: bool) -> None: ...
+    def save(self, cfg: G, pprint_value: bool) -> None: ...
 
     @property
     def name(self) -> str:
@@ -73,7 +69,7 @@ class WatoConfigFile(ABC, Generic[_G]):
 
 
 # NOTE: Variance is wrong, we confuse list <=> Sequence below.
-class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
+class WatoListConfigFile[G](WatoConfigFile[list[G]]):
     """Manage simple .mk config file containing a list of objects."""
 
     def __init__(
@@ -86,7 +82,7 @@ class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
         self._config_variable = config_variable
 
     @override
-    def _load_file(self, *, lock: bool) -> list[_G]:
+    def _load_file(self, *, lock: bool) -> list[G]:
         return store.load_from_mk_file(
             self._config_file_path,
             key=self._config_variable,
@@ -95,7 +91,7 @@ class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
         )
 
     @override
-    def save(self, cfg: list[_G], pprint_value: bool) -> None:
+    def save(self, cfg: list[G], pprint_value: bool) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             self._config_file_path,
@@ -107,7 +103,7 @@ class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
 
 # NOTE: This should actually have *two* type parameters, one for the key and one for the mapped
 # value. Furthermore, the variance should be fixed, so we don't confuse dict <=> Mapping.
-class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
+class WatoSingleConfigFile[D: Mapping](WatoConfigFile[D]):
     """Manage simple .mk config file containing a single dict variable which represents
     the overall configuration. The 1st level dict represents the configuration
     {base_url: ..., credentials: ...}
@@ -118,7 +114,7 @@ class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
         self._config_variable = config_variable
 
     @override
-    def _load_file(self, *, lock: bool) -> _D:
+    def _load_file(self, *, lock: bool) -> D:
         # NOTE: The typing is a lie...
         return store.load_from_mk_file(
             self._config_file_path,
@@ -128,17 +124,17 @@ class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
         )
 
     def save_for_snapshot(
-        self, omd_root_path: Path, work_dir: Path, cfg: _D, pprint_value: bool
+        self, omd_root_path: Path, work_dir: Path, cfg: D, pprint_value: bool
     ) -> None:
         self._save_to_path(
             work_dir / self._config_file_path.relative_to(omd_root_path), cfg, pprint_value
         )
 
     @override
-    def save(self, cfg: _D, pprint_value: bool) -> None:
+    def save(self, cfg: D, pprint_value: bool) -> None:
         self._save_to_path(self._config_file_path, cfg, pprint_value)
 
-    def _save_to_path(self, target_path: Path, cfg: _D, pprint_value: bool) -> None:
+    def _save_to_path(self, target_path: Path, cfg: D, pprint_value: bool) -> None:
         target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             target_path,
@@ -150,7 +146,7 @@ class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
 
 # NOTE: This should actually have *two* type parameters, one for the key and one for the mapped
 # value. Furthermore, the variance should be fixed, so we don't confuse dict <=> Mapping.
-class WatoSimpleConfigFile(WatoSingleConfigFile[dict[str, _T]], Generic[_T]):
+class WatoSimpleConfigFile[T](WatoSingleConfigFile[dict[str, T]]):
     """Manage simple .mk config file containing a single dict variable
     with nested entries. The 1st level dict encompasses those entries where each entry
     has its own configuration.
@@ -161,14 +157,14 @@ class WatoSimpleConfigFile(WatoSingleConfigFile[dict[str, _T]], Generic[_T]):
     def __init__(self, config_file_path: Path, config_variable: str, spec_class: TypeAlias) -> None:
         super().__init__(config_file_path, config_variable, dict[str, spec_class])
 
-    def filter_usable_entries(self, entries: dict[str, _T]) -> dict[str, _T]:
+    def filter_usable_entries(self, entries: dict[str, T]) -> dict[str, T]:
         return entries
 
-    def filter_editable_entries(self, entries: dict[str, _T]) -> dict[str, _T]:
+    def filter_editable_entries(self, entries: dict[str, T]) -> dict[str, T]:
         return entries
 
 
-class WatoMultiConfigFile(WatoConfigFile[_D], Generic[_D]):
+class WatoMultiConfigFile[D: Mapping](WatoConfigFile[D]):
     """Manage .mk config file with multiple keys.
 
     Use a typed dict to specify different types per field."""
@@ -177,7 +173,7 @@ class WatoMultiConfigFile(WatoConfigFile[_D], Generic[_D]):
         self,
         config_file_path: Path,
         spec_class: TypeAlias,
-        load_default: Callable[[], _D],
+        load_default: Callable[[], D],
     ) -> None:
         super().__init__(
             config_file_path=config_file_path,
@@ -186,16 +182,16 @@ class WatoMultiConfigFile(WatoConfigFile[_D], Generic[_D]):
         self.load_default = load_default
 
     @override
-    def _load_file(self, *, lock: bool) -> _D:
+    def _load_file(self, *, lock: bool) -> D:
         cfg = store.load_mk_file(
             self._config_file_path,
             default=self.load_default(),
             lock=lock,
         )
-        return cast(_D, cfg)
+        return cast(D, cfg)
 
     @override
-    def save(self, cfg: _D, pprint_value: bool) -> None:
+    def save(self, cfg: D, pprint_value: bool) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         output = wato_fileheader()
         for field, value in cfg.items():

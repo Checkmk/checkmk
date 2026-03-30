@@ -22,7 +22,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Final, Generic, Protocol, TypeVar
+from typing import Any, Final, Protocol
 
 import pydantic
 import requests
@@ -297,20 +297,17 @@ class ImplDatadogAPI:
         )
 
 
-_TID = TypeVar("_TID", str, int)
-
-
-class IDStore(Generic[_TID]):
+class IDStore[TID: (str, int)]:
     def __init__(self, path: Path):
         self.path: Final = path
 
-    def write(self, ids: Iterable[_TID]) -> None:
+    def write(self, ids: Iterable[TID]) -> None:
         save_text_to_file(
             self.path,
             json.dumps(list(ids)),
         )
 
-    def read(self) -> frozenset[_TID]:
+    def read(self) -> frozenset[TID]:
         return frozenset(
             json.loads(
                 load_text_from_file(

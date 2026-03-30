@@ -7,7 +7,7 @@
 
 import abc
 import enum
-from typing import final, Generic, Literal, TypeVar
+from typing import final, Literal
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKTimeout
@@ -28,15 +28,11 @@ class Mode(enum.Enum):
     FORCE_SECTIONS = enum.auto()
 
 
-TFetcher = TypeVar("TFetcher", bound="Fetcher")
-_TRawData = TypeVar("_TRawData")
-
-
-class Fetcher(Generic[_TRawData], abc.ABC):
+class Fetcher[TRawData](abc.ABC):
     """Interface to the data fetchers."""
 
     @final
-    def __enter__(self) -> "Fetcher[_TRawData]":
+    def __enter__(self) -> "Fetcher[TRawData]":
         return self
 
     @final
@@ -54,7 +50,7 @@ class Fetcher(Generic[_TRawData], abc.ABC):
         raise NotImplementedError()
 
     @final
-    def fetch(self, mode: Mode) -> result.Result[_TRawData, Exception]:
+    def fetch(self, mode: Mode) -> result.Result[TRawData, Exception]:
         """Return the data from the source, either cached or from IO."""
         try:
             self.open()
@@ -67,6 +63,6 @@ class Fetcher(Generic[_TRawData], abc.ABC):
             return result.Error(FetcherError(repr(exc) if any(exc.args) else type(exc).__name__))
 
     @abc.abstractmethod
-    def _fetch_from_io(self, mode: Mode) -> _TRawData:
+    def _fetch_from_io(self, mode: Mode) -> TRawData:
         """Override this method to contact the source and return the raw data."""
         raise NotImplementedError()

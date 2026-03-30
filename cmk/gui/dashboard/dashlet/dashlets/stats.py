@@ -9,7 +9,7 @@
 import abc
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Generic, NamedTuple, TypeVar
+from typing import NamedTuple
 
 from livestatus import MKLivestatusNotFoundError
 
@@ -274,10 +274,7 @@ class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         return ["host", "event"]
 
 
-S = TypeVar("S", bound=HostStats | ServiceStats | EventStats)
-
-
-class StatsDashletDataGenerator(Generic[S], abc.ABC):
+class StatsDashletDataGenerator[S: HostStats | ServiceStats | EventStats](abc.ABC):
     @classmethod
     def generate_response_data(
         cls,

@@ -10,7 +10,7 @@ from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import groupby
-from typing import Any, cast, Generic, TypeVar
+from typing import Any, cast
 
 from cmk.agent_based.v2 import StringTable
 
@@ -36,9 +36,7 @@ class Queue:
 SectionQueues = Mapping[str, Sequence[Queue]]
 SectionStatus = Mapping[str, BrokerStatus]
 SectionShovels = Mapping[str, Sequence[Shovel]]
-_Section = TypeVar("_Section", bound=Mapping[str, Any])
-_S = TypeVar("_S", bound=Queue | BrokerStatus | Shovel)
-SectionItem = tuple[str, _S]
+type SectionItem[S: Queue | BrokerStatus | Shovel] = tuple[str, S]
 
 
 _NODE_NAME_PREFIX = "rabbit-"
@@ -54,18 +52,18 @@ def node_to_site(node_name: str) -> str:
 class MKRabbitMQError(Exception): ...
 
 
-class Parser(Generic[_Section]):
+class Parser[Section: Mapping[str, Any]]:
     def __init__(self, callback: Callable[[dict[str, Any]], SectionItem], aggregate: bool) -> None:
         self._aggregate = aggregate
         self._callback = callback
 
-    def _init_data_structure(self) -> dict[str, _Section | list[_Section]]:
+    def _init_data_structure(self) -> dict[str, Section | list[Section]]:
         return defaultdict(list) if self._aggregate else {}
 
-    def _aggregate_data_structure(self, sections: Iterable[SectionItem]) -> _Section:
+    def _aggregate_data_structure(self, sections: Iterable[SectionItem]) -> Section:
         key_func = lambda k: k[0]
         return cast(
-            _Section,
+            Section,
             {
                 key: list(i[1] for i in items)
                 for key, items in groupby(sorted(sections, key=key_func), key=key_func)
@@ -81,12 +79,12 @@ class Parser(Generic[_Section]):
             for node in parsed_word:
                 yield self._callback(node)
 
-    def __call__(self, string_table: StringTable) -> _Section | None:
+    def __call__(self, string_table: StringTable) -> Section | None:
         iterator = self._parse(string_table)
         try:
             if self._aggregate:
                 return self._aggregate_data_structure(iterator)
 
-            return cast(_Section, {key: value for key, value in iterator})
+            return cast(Section, {key: value for key, value in iterator})
         except MKRabbitMQError:
             return None

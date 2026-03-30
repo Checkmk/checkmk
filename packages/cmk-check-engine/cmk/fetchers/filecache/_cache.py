@@ -56,7 +56,7 @@ import time
 from collections.abc import Sized
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
+from typing import Any, Final, NamedTuple, NoReturn
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -71,10 +71,6 @@ __all__ = [
     "MaxAge",
     "NoCache",
 ]
-
-
-TFileCache = TypeVar("TFileCache", bound="FileCache")
-_TRawData = TypeVar("_TRawData", bound=Sized)
 
 
 class MaxAge(NamedTuple):
@@ -104,7 +100,7 @@ class FileCacheMode(enum.IntFlag):
     READ_WRITE = READ | WRITE
 
 
-class FileCache(Generic[_TRawData], abc.ABC):
+class FileCache[TRawData: Sized](abc.ABC):
     def __init__(
         self,
         *,
@@ -143,12 +139,12 @@ class FileCache(Generic[_TRawData], abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def _from_cache_file(raw_data: bytes) -> _TRawData:
+    def _from_cache_file(raw_data: bytes) -> TRawData:
         raise NotImplementedError()
 
     @staticmethod
     @abc.abstractmethod
-    def _to_cache_file(raw_data: _TRawData) -> bytes:
+    def _to_cache_file(raw_data: TRawData) -> bytes:
         raise NotImplementedError()
 
     def _do_cache(self, mode: Mode) -> bool:
@@ -166,7 +162,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
 
         return True
 
-    def read(self, mode: Mode) -> _TRawData | None:
+    def read(self, mode: Mode) -> TRawData | None:
         self._logger.debug("Read from cache: %s", self.__class__.__name__)
         raw_data = self._read(mode)
         if raw_data is not None:
@@ -188,7 +184,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
         # creation, that's fine with me.
         return self.base_path / self.relative_path_template.format(mode=mode.name.lower())
 
-    def _read(self, mode: Mode) -> _TRawData | None:
+    def _read(self, mode: Mode) -> TRawData | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
@@ -222,7 +218,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
         self._logger.debug("Using data from cache file %s", path)
         return self._from_cache_file(cache_file)
 
-    def write(self, raw_data: _TRawData, mode: Mode) -> None:
+    def write(self, raw_data: TRawData, mode: Mode) -> None:
         if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
             return
         path = self._make_path(mode)
@@ -234,7 +230,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
             raise MKGeneralException(f"Cannot write cache file {path}: {e}")
 
 
-class NoCache(FileCache[_TRawData]):
+class NoCache[TRawData: Sized](FileCache[TRawData]):
     def __init__(self, *_args: object, **_kw: object) -> None:
         super().__init__(
             base_path=Path(os.devnull),
@@ -250,7 +246,7 @@ class NoCache(FileCache[_TRawData]):
         raise TypeError("NoCache")
 
     @staticmethod
-    def _to_cache_file(_raw_data: _TRawData) -> NoReturn:
+    def _to_cache_file(_raw_data: TRawData) -> NoReturn:
         raise TypeError("NoCache")
 
 

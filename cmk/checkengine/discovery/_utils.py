@@ -12,7 +12,7 @@ import enum
 import json
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import asdict, dataclass
-from typing import Final, Generic, Literal, Protocol, Self, TypedDict, TypeVar
+from typing import Final, Literal, Protocol, Self, TypedDict
 
 __all__ = ["DiscoveryMode", "QualifiedDiscovery", "DiscoverySettings"]
 
@@ -119,15 +119,12 @@ class _Discoverable(Protocol):
     def comparator(self) -> object: ...
 
 
-_DiscoveredItem = TypeVar("_DiscoveredItem", bound=_Discoverable)
-
-
 @dataclasses.dataclass
-class DiscoveredItem(Generic[_DiscoveredItem]):
-    previous: _DiscoveredItem | None
-    new: _DiscoveredItem | None
-    older: _DiscoveredItem = dataclasses.field(init=False)
-    newer: _DiscoveredItem = dataclasses.field(init=False)
+class DiscoveredItem[D: _Discoverable]:
+    previous: D | None
+    new: D | None
+    older: D = dataclasses.field(init=False)
+    newer: D = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
         older = self.new if self.previous is None else self.previous
@@ -138,14 +135,14 @@ class DiscoveredItem(Generic[_DiscoveredItem]):
         self.newer = newer
 
 
-class QualifiedDiscovery(Generic[_DiscoveredItem]):
+class QualifiedDiscovery[D: _Discoverable]:
     """Classify items into "new", "unchanged", "changed", and "vanished" ones."""
 
     def __init__(
         self,
         *,
-        preexisting: Sequence[_DiscoveredItem],
-        current: Sequence[_DiscoveredItem],
+        preexisting: Sequence[D],
+        current: Sequence[D],
     ) -> None:
         self.preexisting: Final = preexisting
         self.current: Final = current
@@ -181,27 +178,25 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         return cls(preexisting=(), current=())
 
     @property
-    def vanished(self) -> list[_DiscoveredItem]:
+    def vanished(self) -> list[D]:
         return [item.previous for item in self._vanished if item.previous is not None]
 
     @property
-    def old(self) -> list[_DiscoveredItem]:
+    def old(self) -> list[D]:
         return [item.previous for item in self._old if item.previous is not None]
 
     @property
-    def new(self) -> list[_DiscoveredItem]:
+    def new(self) -> list[D]:
         return [item.new for item in self._new if item.new is not None]
 
     @property
-    def present(self) -> list[_DiscoveredItem]:
+    def present(self) -> list[D]:
         # not quite like 'current'!
         return self.old + self.new
 
     def chain_with_transition(
         self,
-    ) -> Iterable[
-        tuple[Literal["vanished", "unchanged", "changed", "new"], DiscoveredItem[_DiscoveredItem]]
-    ]:
+    ) -> Iterable[tuple[Literal["vanished", "unchanged", "changed", "new"], DiscoveredItem[D]]]:
         yield from (("vanished", value) for value in self._vanished)
         yield from (("unchanged", value) for value in self.unchanged)
         yield from (("changed", value) for value in self.changed)

@@ -7,16 +7,13 @@ from __future__ import annotations
 
 import abc
 from collections.abc import Sized
-from typing import Generic, TypeVar
 
 from cmk.fetchers import Fetcher
 from cmk.fetchers.filecache import FileCache, FileCacheOptions
 from cmk.helper_interface import SourceInfo
 
-_TRawData = TypeVar("_TRawData", bound=Sized)
 
-
-class Source(Generic[_TRawData], abc.ABC):
+class Source[TRawData: Sized](abc.ABC):
     """Abstract source factory.
 
     Note:
@@ -32,9 +29,9 @@ class Source(Generic[_TRawData], abc.ABC):
     def source_info(self) -> SourceInfo: ...
 
     @abc.abstractmethod
-    def fetcher(self) -> Fetcher[_TRawData]: ...
+    def fetcher(self) -> Fetcher[TRawData]: ...
 
     @abc.abstractmethod
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
-    ) -> FileCache[_TRawData]: ...
+    ) -> FileCache[TRawData]: ...

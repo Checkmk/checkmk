@@ -6,7 +6,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Final, Generic, Protocol, TypedDict, TypeVar
+from typing import Final, Protocol, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.backup.targets.local import LocalTarget
@@ -23,10 +23,8 @@ from ..job import Job
 from . import TargetId
 from .local import LocalTargetParams
 
-TRemoteParams = TypeVar("TRemoteParams", bound=Mapping[str, object])
 
-
-class RemoteTargetParams(TypedDict, Generic[TRemoteParams]):
+class RemoteTargetParams[TRemoteParams: Mapping[str, object]](TypedDict):
     remote: TRemoteParams
     temp_folder: LocalTargetParams
 
@@ -45,10 +43,7 @@ class RemoteStorage(Protocol):
     def objects(self) -> Iterator[Path]: ...
 
 
-TRemoteStorage = TypeVar("TRemoteStorage", bound=RemoteStorage)
-
-
-class RemoteTarget(ABC, Generic[TRemoteParams, TRemoteStorage]):
+class RemoteTarget[TRemoteParams: Mapping[str, object], TRemoteStorage: RemoteStorage](ABC):
     def __init__(self, target_id: TargetId, params: RemoteTargetParams[TRemoteParams]) -> None:
         self.id: Final = target_id
         self.local_target: Final = LocalTarget(self.id, params["temp_folder"])

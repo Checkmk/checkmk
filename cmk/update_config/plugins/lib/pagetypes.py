@@ -7,7 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from logging import Logger
-from typing import Generic, override, Protocol, TypeVar
+from typing import override, Protocol
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
@@ -29,23 +29,21 @@ from cmk.update_config.registry import (
     UpdateAction,
 )
 
-_TOverridable_co = TypeVar("_TOverridable_co", bound=Overridable, covariant=True)
 
-
-class PagetypeUpdater(Protocol, Generic[_TOverridable_co]):
+class PagetypeUpdater[TOverridable_co: Overridable](Protocol):
     @property
-    def target_type(self) -> type[_TOverridable_co]: ...
+    def target_type(self) -> type[TOverridable_co]: ...
     def update_raw_page_dict(self, page_dict: dict[str, object]) -> dict[str, object]: ...
 
 
-class UpdatePagetypes(UpdateAction, Generic[_TOverridable_co]):
+class UpdatePagetypes[TOverridable_co: Overridable](UpdateAction):
     def __init__(
         self,
         *,
         name: str,
         title: str,
         sort_index: int,
-        updater: PagetypeUpdater[_TOverridable_co],
+        updater: PagetypeUpdater[TOverridable_co],
         continue_on_failure: bool = True,
     ):
         super().__init__(
@@ -64,7 +62,7 @@ class UpdatePagetypes(UpdateAction, Generic[_TOverridable_co]):
             for instance_id, raw_page_dict in self._updater.target_type.load_raw().items()
         }
 
-        instances = OverridableInstances[_TOverridable_co]()
+        instances = OverridableInstances[TOverridable_co]()
         for (user_id, name), raw_page_dict in updated_raw_page_dicts.items():
             instances.add_instance(
                 (user_id, name), self._updater.target_type.deserialize(raw_page_dict)
@@ -80,14 +78,14 @@ class UpdatePagetypes(UpdateAction, Generic[_TOverridable_co]):
             )
 
 
-class PreUpdatePagetypes(PreUpdateAction, Generic[_TOverridable_co]):
+class PreUpdatePagetypes[TOverridable_co: Overridable](PreUpdateAction):
     def __init__(
         self,
         *,
         name: str,
         title: str,
         sort_index: int,
-        updater: PagetypeUpdater[_TOverridable_co],
+        updater: PagetypeUpdater[TOverridable_co],
         element_name: str,
     ) -> None:
         super().__init__(

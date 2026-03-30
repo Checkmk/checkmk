@@ -8,7 +8,6 @@
 import dataclasses
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Generic, TypeVar
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -32,11 +31,9 @@ from cmk.plugins.ciena_ces.lib import (
     TceHealthStatus,
 )
 
-SNMPDataTypeVar = TypeVar("SNMPDataTypeVar", bound=SNMPEnum)
-
 
 @dataclasses.dataclass(frozen=True)
-class SNMPData(Generic[SNMPDataTypeVar]):
+class SNMPData[SNMPDataTypeVar: SNMPEnum]:
     display_name: str
     data_type: type[SNMPDataTypeVar]
     occurences: Mapping[SNMPDataTypeVar, int]

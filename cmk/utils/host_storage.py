@@ -17,7 +17,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from functools import cache, lru_cache
 from pathlib import Path
-from typing import Any, Generic, TypedDict, TypeVar
+from typing import Any, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
@@ -38,7 +38,6 @@ class GroupRuleType(TypedDict):
 
 
 HostsData = dict[str, Any]
-THostsReadData = TypeVar("THostsReadData")
 
 
 def host_storage_fileheader() -> str:
@@ -155,7 +154,7 @@ class HostsStorageFieldsGenerator:
         return macros
 
 
-class ABCHostsStorage(Generic[THostsReadData]):
+class ABCHostsStorage[THostsReadData]:
     def __init__(self, storage_format: StorageFormat) -> None:
         self._storage_format = storage_format
 
@@ -326,7 +325,7 @@ def apply_hosts_file_to_object(
             return
 
 
-class ABCHostsStorageLoader(abc.ABC, Generic[THostsReadData]):
+class ABCHostsStorageLoader[THostsReadData](abc.ABC):
     __slots__ = ["_storage"]
     """This is WIP class: minimal working functionality. OOP and more clear API is planned"""
 

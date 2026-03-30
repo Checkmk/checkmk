@@ -21,7 +21,7 @@ from collections.abc import (
 )
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, assert_never, Final, Generic, Literal, Protocol, TypeVar
+from typing import Any, assert_never, Final, Literal, Protocol
 
 import cmk.ccc.debug
 import cmk.utils.paths
@@ -55,9 +55,6 @@ class IPLookupOptional(Protocol):
         host_name: HostName,
         family: SupportedAddressFamily,
     ) -> HostAddress | None: ...
-
-
-_TErrHandler = TypeVar("_TErrHandler", bound=Callable[[HostName, Exception], None])
 
 
 @enum.unique
@@ -165,7 +162,7 @@ def make_lookup_ip_address(
     return _wrapped_lookup
 
 
-class ConfiguredIPLookup(Generic[_TErrHandler]):
+class ConfiguredIPLookup[TErrHandler: Callable[[HostName, Exception], None]]:
     def __init__(
         self,
         lookup: Callable[
@@ -174,10 +171,10 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
         ],
         *,
         allow_empty: Container[HostName],
-        error_handler: _TErrHandler,
+        error_handler: TErrHandler,
     ) -> None:
         self._lookup: Final = lookup
-        self.error_handler: Final[_TErrHandler] = error_handler
+        self.error_handler: Final[TErrHandler] = error_handler
         self._allow_empty: Final = allow_empty
 
     def __call__(

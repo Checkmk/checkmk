@@ -29,7 +29,7 @@ import json
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, replace
-from typing import Generic, Literal, override, Self, TypeVar
+from typing import Literal, override, Self
 
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -240,11 +240,9 @@ def register(
 #   |  or PageRenderer.                                                    |
 #   '----------------------------------------------------------------------'
 
-_T_BaseConfig = TypeVar("_T_BaseConfig", bound=BaseConfig)
 
-
-class Base(abc.ABC, Generic[_T_BaseConfig]):
-    def __init__(self, config: _T_BaseConfig) -> None:
+class Base[T_BaseConfig: BaseConfig](abc.ABC):
+    def __init__(self, config: T_BaseConfig) -> None:
         self.config = config
 
     @classmethod
@@ -380,49 +378,46 @@ class Base(abc.ABC, Generic[_T_BaseConfig]):
 #   |  Examples: views, dashboards, graphs collections                     |
 #   '----------------------------------------------------------------------'
 
-_T_OverridableConfig = TypeVar("_T_OverridableConfig", bound=OverridableConfig)
-_T = TypeVar("_T", bound="Overridable")
-
 InstanceId = tuple[UserId, str]
 
 
-class OverridableInstances(Generic[_T]):
+class OverridableInstances[T: Overridable]:
     def __init__(self) -> None:
-        self.__instances: dict[InstanceId, _T] = {}
+        self.__instances: dict[InstanceId, T] = {}
 
     def clear_instances(self) -> None:
         self.__instances = {}
 
-    def add_instance(self, key: InstanceId, instance: _T) -> None:
+    def add_instance(self, key: InstanceId, instance: T) -> None:
         self.__instances[key] = instance
 
     def remove_instance(self, key: InstanceId) -> None:
         del self.__instances[key]
 
-    def instances(self) -> list[_T]:
+    def instances(self) -> list[T]:
         """Return a list of all instances of this type"""
         return list(self.__instances.values())
 
-    def instance(self, key: InstanceId) -> _T:
+    def instance(self, key: InstanceId) -> T:
         return self.__instances[key]
 
     def has_instance(self, key: InstanceId) -> bool:
         return key in self.__instances
 
-    def instances_dict(self) -> dict[InstanceId, _T]:
+    def instances_dict(self) -> dict[InstanceId, T]:
         return self.__instances
 
-    def instances_sorted(self) -> list[_T]:
+    def instances_sorted(self) -> list[T]:
         return sorted(self.__instances.values(), key=lambda x: x.title())
 
-    def permitted_instances_sorted(self, user_permissions: UserPermissions) -> list[_T]:
+    def permitted_instances_sorted(self, user_permissions: UserPermissions) -> list[T]:
         return [i for i in self.instances_sorted() if i.is_permitted(user_permissions)]
 
-    def add_page(self, new_page: _T) -> None:
+    def add_page(self, new_page: T) -> None:
         self.add_instance((new_page.owner(), new_page.name()), new_page)
 
     @request_memoize(maxsize=4096)
-    def find_page(self, name: str, user_permissions: UserPermissions) -> _T | None:
+    def find_page(self, name: str, user_permissions: UserPermissions) -> T | None:
         """Find a page by name, implements shadowing and publishing und overriding by admins"""
         mine = None
         forced = None
@@ -454,13 +449,13 @@ class OverridableInstances(Generic[_T]):
             return foreign
         return None
 
-    def find_foreign_page(self, owner: UserId, name: str) -> _T | None:
+    def find_foreign_page(self, owner: UserId, name: str) -> T | None:
         try:
             return self.instance((UserId(owner), name))
         except KeyError:
             return None
 
-    def pages(self, user_permissions: UserPermissions) -> list[_T]:
+    def pages(self, user_permissions: UserPermissions) -> list[T]:
         """Return all pages visible to the user, implements shadowing etc."""
         pages = {}
 
@@ -494,7 +489,7 @@ class OverridableInstances(Generic[_T]):
         return [(page.name(), page.title()) for page in self.pages(user_permissions)]
 
 
-class Overridable(Base[_T_OverridableConfig]):
+class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConfig]):
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
@@ -867,7 +862,7 @@ class Overridable(Base[_T_OverridableConfig]):
             )
 
     @classmethod
-    def builtin_pages(cls) -> Mapping[str, _T_OverridableConfig]:
+    def builtin_pages(cls) -> Mapping[str, T_OverridableConfig]:
         return {}
 
     @classmethod
@@ -993,8 +988,8 @@ class Overridable(Base[_T_OverridableConfig]):
         return []
 
 
-class ListPage(Page, Generic[_T]):
-    def __init__(self, pagetype: type[_T]) -> None:
+class ListPage[T: Overridable](Page):
+    def __init__(self, pagetype: type[T]) -> None:
         self._type = pagetype
 
     @override
@@ -1119,8 +1114,8 @@ class ListPage(Page, Generic[_T]):
 
     @classmethod
     def _partition_instances(
-        cls, instances: OverridableInstances[_T], user_permissions: UserPermissions
-    ) -> tuple[list[_T], list[_T], list[_T]]:
+        cls, instances: OverridableInstances[T], user_permissions: UserPermissions
+    ) -> tuple[list[T], list[T], list[T]]:
         my_instances, foreign_instances, builtin_instances = [], [], []
 
         for instance in instances.instances_sorted():
@@ -1139,7 +1134,7 @@ class ListPage(Page, Generic[_T]):
         return my_instances, foreign_instances, builtin_instances
 
     def _bulk_delete_after_confirm(
-        self, instances: OverridableInstances[_T], user_permissions: UserPermissions
+        self, instances: OverridableInstances[T], user_permissions: UserPermissions
     ) -> None:
         to_delete: list[tuple[UserId, str]] = []
         for varname, _value in request.itervars(prefix="_c_"):
@@ -1165,8 +1160,8 @@ class ListPage(Page, Generic[_T]):
 
     def _show_table(
         self,
-        instances: OverridableInstances[_T],
-        scope_instances: Sequence[_T],
+        instances: OverridableInstances[T],
+        scope_instances: Sequence[T],
         user_permissions: UserPermissions,
         *,
         deletable: bool,
@@ -1246,8 +1241,8 @@ class ListPage(Page, Generic[_T]):
                 table.cell(_("Hidden"), _("yes") if instance.is_hidden() else _("no"))
 
 
-class EditPage(Page, Generic[_T_OverridableConfig, _T]):
-    def __init__(self, pagetype: type[_T]) -> None:
+class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
+    def __init__(self, pagetype: type[T]) -> None:
         self._type = pagetype
 
     @override
@@ -1739,12 +1734,10 @@ def ContactGroupChoice(with_foreign_groups: bool) -> DualListChoice:
 #   |  graphs.                                                             |
 #   '----------------------------------------------------------------------'
 
-_T_OverridableContainerConfig = TypeVar(
-    "_T_OverridableContainerConfig", bound=OverridableContainerConfig
-)
 
-
-class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
+class OverridableContainer[T_OverridableContainerConfig: OverridableContainerConfig](
+    Overridable[T_OverridableContainerConfig]
+):
     @classmethod
     @abc.abstractmethod
     def may_contain(cls, element_type_name: str) -> bool: ...
@@ -1881,10 +1874,10 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
 #   |  pages.                                                              |
 #   '----------------------------------------------------------------------'
 
-_T_PageRendererConfig = TypeVar("_T_PageRendererConfig", bound=PageRendererConfig)
 
-
-class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
+class PageRenderer[T_PageRendererConfig: PageRendererConfig](
+    OverridableContainer[T_PageRendererConfig]
+):
     # Stuff to be overridden by the implementation of actual page types
 
     # Attribute for identifying that page when building an URL to

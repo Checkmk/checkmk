@@ -6,17 +6,15 @@
 import logging
 from collections.abc import Callable, Mapping, MutableMapping
 from pathlib import Path
-from typing import Final, Generic, TypeVar
+from typing import Final
 
 import cmk.ccc.store as _store
 from cmk.checkengine.plugins import SectionName
 
 __all__ = ["SectionStore"]
 
-_T = TypeVar("_T")
 
-
-class SectionStore(Generic[_T]):
+class SectionStore[T]:
     def __init__(
         self,
         path: str | Path,
@@ -30,7 +28,7 @@ class SectionStore(Generic[_T]):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.path!r}, logger={self._logger!r})"
 
-    def store(self, sections: MutableMapping[SectionName, tuple[int, int, _T]]) -> None:
+    def store(self, sections: MutableMapping[SectionName, tuple[int, int, T]]) -> None:
         if not sections:
             self._logger.debug("No persisted sections")
             self.path.unlink(missing_ok=True)
@@ -43,19 +41,19 @@ class SectionStore(Generic[_T]):
         )
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
-    def load(self) -> MutableMapping[SectionName, tuple[int, int, _T]]:
+    def load(self) -> MutableMapping[SectionName, tuple[int, int, T]]:
         raw_sections_data = _store.load_object_from_pickle_file(self.path, default={})
         return {SectionName(k): v for k, v in raw_sections_data.items()}
 
     def update(
         self,
-        sections: Mapping[SectionName, _T],
+        sections: Mapping[SectionName, T],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
         lookup_persist: Mapping[SectionName, int | None],
         section_outdated: Callable[[int, int], bool],
         now: int,
         keep_outdated: bool,
-    ) -> Mapping[SectionName, _T]:
+    ) -> Mapping[SectionName, T]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
@@ -71,13 +69,13 @@ class SectionStore(Generic[_T]):
 
     def _update(
         self,
-        sections: Mapping[SectionName, _T],
+        sections: Mapping[SectionName, T],
         lookup_persist: Mapping[SectionName, int | None],
         section_outdated: Callable[[int, int], bool],
         *,
         now: int,
         keep_outdated: bool,
-    ) -> MutableMapping[SectionName, tuple[int, int, _T]]:
+    ) -> MutableMapping[SectionName, tuple[int, int, T]]:
         # TODO: This is not race condition free when modifying the data. Either remove
         # the possible write here and simply ignore the outdated sections or lock when
         # reading and unlock after writing
@@ -104,10 +102,10 @@ class SectionStore(Generic[_T]):
 
     def _add_persisted_sections(
         self,
-        sections: Mapping[SectionName, _T],
+        sections: Mapping[SectionName, T],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
-        persisted_sections: MutableMapping[SectionName, tuple[int, int, _T]],
-    ) -> Mapping[SectionName, _T]:
+        persisted_sections: MutableMapping[SectionName, tuple[int, int, T]],
+    ) -> Mapping[SectionName, T]:
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)

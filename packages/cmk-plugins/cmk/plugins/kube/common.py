@@ -84,7 +84,7 @@ def write_sections(items: Iterable[WriteableSection]) -> None:
 T_co = TypeVar("T_co", covariant=True, bound=IdentifiableSample)
 
 
-class Selector(Generic[T_co]):
+class Selector(Generic[T_co]):  # noqa: UP046 # TODO: Fix the interesting variance story...
     def __init__(
         self, metrics: Sequence[T_co], aggregator: Callable[[Sequence[T_co]], section.Section]
     ):

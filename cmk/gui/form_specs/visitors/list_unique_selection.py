@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import Generic, override, TypeVar
+from typing import override
 
 from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
 from cmk.gui.form_specs.unstable.list_unique_selection import (
@@ -29,14 +29,11 @@ from ._type_defs import (
 from ._utils import compute_validators, get_title_and_help, option_id
 from .validators import build_vue_validators
 
-T = TypeVar("T")
-
 _ParsedValueModel = Sequence[RawFrontendData | RawDiskData]
 _FallbackModel = Sequence[RawDiskData]
 
 
-class ListUniqueSelectionVisitor(
-    Generic[T],
+class ListUniqueSelectionVisitor[T](
     FormSpecVisitor[ListUniqueSelection[T], _ParsedValueModel, _FallbackModel],
 ):
     @override

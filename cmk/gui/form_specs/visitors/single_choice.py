@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Generic, override, TypeAlias, TypeGuard, TypeVar
+from typing import override, TypeGuard
 
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
@@ -32,34 +32,31 @@ from ._utils import (
 )
 from .validators import build_vue_validators
 
-T = TypeVar("T")
-
 NO_SELECTION = None
 
 
 @dataclass
-class _FallbackModel(Generic[T]):
+class _FallbackModel[T]:
     value: str | None
     available_elements: Sequence[SingleChoiceElementExtended[T]]
 
 
 @dataclass
-class _ToleratedValue(Generic[T]):
+class _ToleratedValue[T]:
     value: object
     available_elements: Sequence[SingleChoiceElementExtended[T]]
 
 
 @dataclass
-class _ValidValue(Generic[T]):
+class _ValidValue[T]:
     value: object
     available_elements: Sequence[SingleChoiceElementExtended[T]]
 
 
-_ParsedValueModel: TypeAlias = _ToleratedValue[T] | _ValidValue[T]
+type _ParsedValueModel[T] = _ToleratedValue[T] | _ValidValue[T]
 
 
-class SingleChoiceVisitor(
-    Generic[T],
+class SingleChoiceVisitor[T](
     FormSpecVisitor[SingleChoiceExtended[T], _ParsedValueModel[T], _FallbackModel[T]],
 ):
     @staticmethod

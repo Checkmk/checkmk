@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
@@ -27,12 +26,11 @@ class RawDiskData:
 
 
 IncomingData = RawFrontendData | RawDiskData | DefaultValue
-_ModelT = TypeVar("_ModelT")
 
 
 @dataclass
-class InvalidValue(Generic[_ModelT]):
-    fallback_value: _ModelT
+class InvalidValue[ModelT]:
+    fallback_value: ModelT
     reason: str
 
 

@@ -5,7 +5,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Generic, override, Protocol, runtime_checkable, TypeVar
+from typing import Any, override, Protocol, runtime_checkable
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -74,22 +74,19 @@ class ListOfStringsLayout(str, Enum):
     vertical = "vertical"
 
 
-T = TypeVar("T")
-
-
 @dataclass(frozen=True, kw_only=True)
 class ListExtended[ModelT](List[ModelT]):
     prefill: DefaultValue[Sequence[ModelT]]
 
 
 @dataclass(frozen=True, kw_only=True)
-class SingleChoiceElementExtended(Generic[T]):
+class SingleChoiceElementExtended[T]:
     name: T
     title: Title
 
 
 @dataclass(frozen=True, kw_only=True)
-class SingleChoiceExtended(Generic[T], FormSpec[T]):
+class SingleChoiceExtended[T](FormSpec[T]):
     # SingleChoice:
     elements: (
         Sequence[SingleChoiceElementExtended[T]]

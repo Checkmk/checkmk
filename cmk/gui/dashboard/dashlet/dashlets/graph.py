@@ -10,7 +10,7 @@
 
 import abc
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Generic, Literal, TypeVar
+from typing import Any, Literal
 
 import livestatus
 
@@ -135,11 +135,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         )
 
 
-T = TypeVar("T", bound=ABCGraphDashletConfig)
-TGraphSpec = TypeVar("TGraphSpec", bound=GraphSpecification)
-
-
-class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
+class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](Dashlet[T]):
     @classmethod
     def has_context(cls) -> bool:
         return True

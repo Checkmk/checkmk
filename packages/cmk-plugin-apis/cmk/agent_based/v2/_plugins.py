@@ -8,7 +8,7 @@ import functools
 import string
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Final, Generic, Literal, overload, TypeVar
+from typing import Any, Final, Literal, overload
 
 from cmk.agent_based.v1 import SNMPTree
 from cmk.agent_based.v1._detection import SNMPDetectSpecification  # sorry
@@ -22,15 +22,15 @@ from cmk.agent_based.v1.type_defs import (
     StringTable,
 )
 
-_Section = TypeVar("_Section", bound=object)  # yes, object.
-_TableTypeT = TypeVar("_TableTypeT", StringByteTable, StringTable)
-_HostLabelFunctionNoParams = Callable[[_Section], HostLabelGenerator]
-_HostLabelFunctionMergedParams = Callable[[Mapping[str, object], _Section], HostLabelGenerator]
-_HostLabelFunctionAllParams = Callable[
-    [Sequence[Mapping[str, object]], _Section], HostLabelGenerator
+type _HostLabelFunctionNoParams[Section: object] = Callable[[Section], HostLabelGenerator]
+type _HostLabelFunctionMergedParams[Section: object] = Callable[
+    [Mapping[str, object], Section], HostLabelGenerator
+]
+type _HostLabelFunctionAllParams[Section: object] = Callable[
+    [Sequence[Mapping[str, object]], Section], HostLabelGenerator
 ]
 
-AgentParseFunction = Callable[[StringTable], _Section | None]
+type AgentParseFunction[Section: object] = Callable[[StringTable], Section | None]
 InventoryFunction = Callable[..., InventoryResult]
 
 CheckFunction = Callable[..., CheckResult]
@@ -38,7 +38,7 @@ DiscoveryFunction = Callable[..., DiscoveryResult]
 
 
 @dataclass
-class AgentSection(Generic[_Section]):
+class AgentSection[Section: object]:
     """An AgentSection to plug into Checkmk
 
     Instances of this class will only be picked up by Checkmk if their names start with
@@ -92,12 +92,12 @@ class AgentSection(Generic[_Section]):
     """
 
     name: str
-    parse_function: AgentParseFunction[_Section]
+    parse_function: AgentParseFunction[Section]
     parsed_section_name: str | None = None
     host_label_function: (
-        _HostLabelFunctionNoParams[_Section]
-        | _HostLabelFunctionMergedParams[_Section]
-        | _HostLabelFunctionAllParams[_Section]
+        _HostLabelFunctionNoParams[Section]
+        | _HostLabelFunctionMergedParams[Section]
+        | _HostLabelFunctionAllParams[Section]
         | None
     ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
@@ -110,8 +110,8 @@ class AgentSection(Generic[_Section]):
         self,
         *,
         name: str,
-        parse_function: AgentParseFunction[_Section],
-        host_label_function: _HostLabelFunctionNoParams[_Section] | None = None,
+        parse_function: AgentParseFunction[Section],
+        host_label_function: _HostLabelFunctionNoParams[Section] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
@@ -124,8 +124,8 @@ class AgentSection(Generic[_Section]):
         self,
         *,
         name: str,
-        parse_function: AgentParseFunction[_Section],
-        host_label_function: _HostLabelFunctionMergedParams[_Section],
+        parse_function: AgentParseFunction[Section],
+        host_label_function: _HostLabelFunctionMergedParams[Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
         host_label_ruleset_type: Literal[RuleSetType.MERGED] = RuleSetType.MERGED,
@@ -138,8 +138,8 @@ class AgentSection(Generic[_Section]):
         self,
         *,
         name: str,
-        parse_function: Callable[[StringTable], _Section | None],
-        host_label_function: _HostLabelFunctionAllParams[_Section],
+        parse_function: Callable[[StringTable], Section | None],
+        host_label_function: _HostLabelFunctionAllParams[Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
         host_label_ruleset_type: Literal[RuleSetType.ALL],
@@ -151,12 +151,12 @@ class AgentSection(Generic[_Section]):
         self,
         *,
         name: str,
-        parse_function: Callable[[StringTable], _Section | None],
+        parse_function: Callable[[StringTable], Section | None],
         parsed_section_name: str | None = None,
         host_label_function: (
-            _HostLabelFunctionNoParams[_Section]
-            | _HostLabelFunctionMergedParams[_Section]
-            | _HostLabelFunctionAllParams[_Section]
+            _HostLabelFunctionNoParams[Section]
+            | _HostLabelFunctionMergedParams[Section]
+            | _HostLabelFunctionAllParams[Section]
             | None
         ) = None,
         host_label_default_parameters: Mapping[str, object] | None = None,
@@ -177,7 +177,7 @@ class AgentSection(Generic[_Section]):
 
 
 @dataclass
-class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
+class SimpleSNMPSection[TableTypeT: (StringByteTable, StringTable), Section: object]:
     """A SimpleSNMPSection to plug into Checkmk
 
     Instances of this class will only be picked up by Checkmk if their names start with
@@ -244,12 +244,12 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
     name: str
     detect: SNMPDetectSpecification
     fetch: Sequence[SNMPTree]
-    parse_function: Callable[[Sequence[_TableTypeT]], _Section | None]
+    parse_function: Callable[[Sequence[TableTypeT]], Section | None]
     parsed_section_name: str | None = None
     host_label_function: (
-        _HostLabelFunctionNoParams[_Section]
-        | _HostLabelFunctionMergedParams[_Section]
-        | _HostLabelFunctionAllParams[_Section]
+        _HostLabelFunctionNoParams[Section]
+        | _HostLabelFunctionMergedParams[Section]
+        | _HostLabelFunctionAllParams[Section]
         | None
     ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
@@ -259,12 +259,12 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
 
     @staticmethod
     def _wrap_in_upacker(
-        parse_function: Callable[[_TableTypeT], _Section | None],
-    ) -> Callable[[Sequence[_TableTypeT]], _Section | None]:
+        parse_function: Callable[[TableTypeT], Section | None],
+    ) -> Callable[[Sequence[TableTypeT]], Section | None]:
         @functools.wraps(parse_function)
         def unpacking_parse_function(
-            string_table: Sequence[_TableTypeT],
-        ) -> _Section | None:
+            string_table: Sequence[TableTypeT],
+        ) -> Section | None:
             return parse_function(string_table[0])
 
         return unpacking_parse_function
@@ -276,8 +276,8 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
-        parse_function: Callable[[_TableTypeT], _Section | None],
-        host_label_function: _HostLabelFunctionNoParams[_Section] | None = None,
+        parse_function: Callable[[TableTypeT], Section | None],
+        host_label_function: _HostLabelFunctionNoParams[Section] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
@@ -292,8 +292,8 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
-        parse_function: Callable[[_TableTypeT], _Section | None],
-        host_label_function: _HostLabelFunctionMergedParams[_Section],
+        parse_function: Callable[[TableTypeT], Section | None],
+        host_label_function: _HostLabelFunctionMergedParams[Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
         host_label_ruleset_type: Literal[RuleSetType.MERGED] = RuleSetType.MERGED,
@@ -308,8 +308,8 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
-        parse_function: Callable[[_TableTypeT], _Section | None],
-        host_label_function: _HostLabelFunctionAllParams[_Section],
+        parse_function: Callable[[TableTypeT], Section | None],
+        host_label_function: _HostLabelFunctionAllParams[Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
         host_label_ruleset_type: Literal[RuleSetType.ALL],
@@ -323,12 +323,12 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
-        parse_function: Callable[[_TableTypeT], _Section | None],
+        parse_function: Callable[[TableTypeT], Section | None],
         parsed_section_name: str | None = None,
         host_label_function: (
-            _HostLabelFunctionNoParams[_Section]
-            | _HostLabelFunctionMergedParams[_Section]
-            | _HostLabelFunctionAllParams[_Section]
+            _HostLabelFunctionNoParams[Section]
+            | _HostLabelFunctionMergedParams[Section]
+            | _HostLabelFunctionAllParams[Section]
             | None
         ) = None,
         host_label_default_parameters: Mapping[str, object] | None = None,
@@ -351,7 +351,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
 
 
 @dataclass
-class SNMPSection(Generic[_TableTypeT, _Section]):
+class SNMPSection[TableTypeT: (StringByteTable, StringTable), Section: object]:
     """An SNMPSection to plug into Checkmk
 
     Instances of this class will only be picked up by Checkmk if their names start with
@@ -415,12 +415,12 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
     name: str
     detect: SNMPDetectSpecification
     fetch: Sequence[SNMPTree]
-    parse_function: Callable[[Sequence[_TableTypeT]], _Section | None]
+    parse_function: Callable[[Sequence[TableTypeT]], Section | None]
     parsed_section_name: str | None = None
     host_label_function: (
-        _HostLabelFunctionNoParams[_Section]
-        | _HostLabelFunctionMergedParams[_Section]
-        | _HostLabelFunctionAllParams[_Section]
+        _HostLabelFunctionNoParams[Section]
+        | _HostLabelFunctionMergedParams[Section]
+        | _HostLabelFunctionAllParams[Section]
         | None
     ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
@@ -435,8 +435,8 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: Sequence[SNMPTree],
-        parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
-        host_label_function: _HostLabelFunctionNoParams[_Section] | None = None,
+        parse_function: Callable[[Sequence[TableTypeT]], Section | None],
+        host_label_function: _HostLabelFunctionNoParams[Section] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
@@ -451,8 +451,8 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: Sequence[SNMPTree],
-        parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
-        host_label_function: _HostLabelFunctionAllParams[_Section],
+        parse_function: Callable[[Sequence[TableTypeT]], Section | None],
+        host_label_function: _HostLabelFunctionAllParams[Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
         host_label_ruleset_type: Literal[RuleSetType.MERGED] = RuleSetType.MERGED,
@@ -467,8 +467,8 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: Sequence[SNMPTree],
-        parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
-        host_label_function: _HostLabelFunctionAllParams[_Section],
+        parse_function: Callable[[Sequence[TableTypeT]], Section | None],
+        host_label_function: _HostLabelFunctionAllParams[Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
         host_label_ruleset_type: Literal[RuleSetType.ALL],
@@ -482,12 +482,12 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: Sequence[SNMPTree],
-        parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
+        parse_function: Callable[[Sequence[TableTypeT]], Section | None],
         parsed_section_name: str | None = None,
         host_label_function: (
-            _HostLabelFunctionNoParams[_Section]
-            | _HostLabelFunctionMergedParams[_Section]
-            | _HostLabelFunctionAllParams[_Section]
+            _HostLabelFunctionNoParams[Section]
+            | _HostLabelFunctionMergedParams[Section]
+            | _HostLabelFunctionAllParams[Section]
             | None
         ) = None,
         host_label_default_parameters: Mapping[str, object] | None = None,

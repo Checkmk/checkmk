@@ -25,7 +25,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from io import TextIOWrapper
 from pathlib import Path
-from typing import assert_never, cast, Final, Generic, TypeVar
+from typing import assert_never, cast, Final
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
@@ -122,10 +122,9 @@ from cmk.utils.backup.targets.config import TargetConfig
 from cmk.utils.backup.targets.local import LocalTarget, LocalTargetParams
 from cmk.utils.backup.targets.protocol import Target as TargetProtocol
 from cmk.utils.backup.targets.remote_interface import (
+    RemoteStorage,
     RemoteTarget,
     RemoteTargetParams,
-    TRemoteParams,
-    TRemoteStorage,
 )
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
@@ -1061,17 +1060,14 @@ class PageEditBackupJob:
             html.hidden_fields()
 
 
-_TBackupJob = TypeVar("_TBackupJob", bound=MKBackupJob)
-
-
-class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
+class PageAbstractMKBackupJobState[TBackupJob: MKBackupJob](abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self) -> str: ...
 
     @property
     @abc.abstractmethod
-    def job(self) -> _TBackupJob: ...
+    def job(self) -> TBackupJob: ...
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
@@ -1303,7 +1299,9 @@ class BackupTargetLocal(ABCBackupTargetType):
         shutil.rmtree("{}/{}".format(self.parameters["path"], backup_ident))
 
 
-class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteStorage]):
+class ABCBackupTargetRemote[TRemoteParams: Mapping[str, object], TRemoteStorage: RemoteStorage](
+    ABCBackupTargetType
+):
     # align text fields with one valuespec nesting level with _OUTER_TEXT_FIELD_SIZE on the right
     _INNER_TEXT_FIELD_SIZE = 74
     # align password fields with one valuespec nesting level with _OUTER_TEXT_FIELD_SIZE on the
@@ -1624,7 +1622,7 @@ def _validate_local_write_access(path: Path) -> None:
             )
 
 
-def _validate_remote_target(
+def _validate_remote_target[TRemoteParams: Mapping[str, object], TRemoteStorage: RemoteStorage](
     remote_target: RemoteTarget[TRemoteParams, TRemoteStorage],
 ) -> None:
     _check_if_target_ready(remote_target)

@@ -5,11 +5,8 @@
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from ._utils import HostConfig, Secret
-
-_ParsedParameters = TypeVar("_ParsedParameters")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,7 +43,7 @@ class ActiveCheckCommand:
     command_arguments: Sequence[str | Secret]
 
 
-class ActiveCheckConfig(Generic[_ParsedParameters]):
+class ActiveCheckConfig[ParsedParameters]:
     """
     Defines an active check
 
@@ -106,8 +103,8 @@ class ActiveCheckConfig(Generic[_ParsedParameters]):
         self,
         *,
         name: str,
-        parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters],
-        commands_function: Callable[[_ParsedParameters, HostConfig], Iterable[ActiveCheckCommand]],
+        parameter_parser: Callable[[Mapping[str, object]], ParsedParameters],
+        commands_function: Callable[[ParsedParameters, HostConfig], Iterable[ActiveCheckCommand]],
     ):
         self.name = name
         self._parameter_parser = parameter_parser

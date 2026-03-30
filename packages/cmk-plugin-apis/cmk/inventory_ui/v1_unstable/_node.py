@@ -98,8 +98,12 @@ T = TypeVar("T", int, float, str)
 type OrderedMapping[T] = Mapping[T, Label | str]
 
 
+# NOTE: Using PEP 695 syntax here seems to trigger a Sphinx bug:
+#     WARNING: Cannot resolve forward reference in type annotations
+#     of "cmk.inventory_ui.v1_unstable.ChoiceField": name 'T' is not
+#     defined [sphinx_autodoc_typehints.forward_reference]
 @dataclass(frozen=True)
-class ChoiceField(Generic[T]):
+class ChoiceField(Generic[T]):  # noqa: UP046
     """
     Args:
         title: A title

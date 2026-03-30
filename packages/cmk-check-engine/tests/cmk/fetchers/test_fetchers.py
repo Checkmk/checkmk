@@ -10,7 +10,7 @@ import socket
 import time
 from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
-from typing import Any, cast, Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
+from typing import Any, cast, NamedTuple, NoReturn, TypeAlias
 
 import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped,unused-ignore]
@@ -206,28 +206,25 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert file_cache.read(mode) is None
 
 
-_TRawData = TypeVar("_TRawData", bound=Sized)
-
-
-class StubFileCache(Generic[_TRawData], FileCache[_TRawData]):
+class StubFileCache[TRawData: Sized](FileCache[TRawData]):
     """Holds the data to be cached in-memory for testing"""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.cache: _TRawData | None = None
+        self.cache: TRawData | None = None
 
     @staticmethod
-    def _from_cache_file(_raw_data: bytes) -> _TRawData:
+    def _from_cache_file(_raw_data: bytes) -> TRawData:
         assert 0, "unreachable"
 
     @staticmethod
-    def _to_cache_file(_raw_data: _TRawData) -> bytes:
+    def _to_cache_file(_raw_data: TRawData) -> bytes:
         assert 0, "unreachable"
 
-    def write(self, raw_data: _TRawData, _mode: Mode) -> None:
+    def write(self, raw_data: TRawData, _mode: Mode) -> None:
         self.cache = raw_data
 
-    def read(self, _mode: Mode) -> _TRawData | None:
+    def read(self, _mode: Mode) -> TRawData | None:
         return self.cache
 
 

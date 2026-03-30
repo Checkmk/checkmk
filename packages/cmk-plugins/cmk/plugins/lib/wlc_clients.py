@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Generic, Literal, TypeVar
+from typing import Literal
 
 VsResult = Mapping[Literal["levels", "levels_lower"], tuple[float, float]]
 
@@ -20,10 +20,7 @@ class ClientsTotal:
     total: int
 
 
-T = TypeVar("T", ClientsPerInterface, ClientsTotal)
-
-
 @dataclass
-class WlcClientsSection(Generic[T]):
+class WlcClientsSection[T: (ClientsPerInterface, ClientsTotal)]:
     total_clients: int = 0
     clients_per_ssid: dict[str, T] = field(default_factory=dict)

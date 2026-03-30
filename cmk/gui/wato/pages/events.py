@@ -7,7 +7,7 @@
 
 import abc
 from collections.abc import Callable, Sequence
-from typing import Generic, Literal, TypeVar
+from typing import Literal
 
 from livestatus import SiteConfigurations
 
@@ -37,10 +37,8 @@ from .._check_plugin_selection import CheckPluginSelection
 from .._group_selection import sorted_contact_group_choices, sorted_service_group_choices
 from ._match_conditions import common_host_rule_match_conditions, site_rule_match_condition
 
-_T_EventSpec = TypeVar("_T_EventSpec", bound=EventRule | dict)
 
-
-class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
+class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(
@@ -338,10 +336,10 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
 
     def _generic_rule_list_actions(
         self,
-        rules: Sequence[_T_EventSpec],
+        rules: Sequence[T_EventSpec],
         what: Literal["alert_handler", "notification"],
         what_title: str,
-        save_rules: Callable[[list[_T_EventSpec]], None],
+        save_rules: Callable[[list[T_EventSpec]], None],
         *,
         use_git: bool,
         site_configs: SiteConfigurations,

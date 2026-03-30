@@ -12,15 +12,12 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 from ssl import SSLCertVerificationError
-from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
 from cmk.messaging import AppName, Channel, CMKConnectionError, Connection, DeliveryTag, QueueName
 
 APP_NAME = AppName("piggyback-hub")
-
-_ModelT = TypeVar("_ModelT", bound=BaseModel)
 
 
 def make_log_and_exit(log: Callable[[str], None], message: str) -> Callable[[object, object], None]:
@@ -31,14 +28,14 @@ def make_log_and_exit(log: Callable[[str], None], message: str) -> Callable[[obj
     return log_and_exit
 
 
-class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
+class ReceivingProcess[ModelT: BaseModel](multiprocessing.Process):
     def __init__(
         self,
         logger: logging.Logger,
         omd_root: Path,
         site: str,
-        model: type[_ModelT],
-        callback: Callable[[Channel[_ModelT], DeliveryTag, _ModelT], None],
+        model: type[ModelT],
+        callback: Callable[[Channel[ModelT], DeliveryTag, ModelT], None],
         crash_report_callback: Callable[[], str],
         queue: QueueName,
         message_ttl: int | None,
@@ -64,7 +61,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
             while True:
                 with make_connection(self.omd_root, self.site, self.logger, self.task_name) as conn:
                     try:
-                        channel: Channel[_ModelT] = conn.channel(self.model)
+                        channel: Channel[ModelT] = conn.channel(self.model)
                         channel.queue_declare(queue=self.queue, message_ttl=self.message_ttl)
 
                         self.logger.debug("Consuming: %s", self.task_name)

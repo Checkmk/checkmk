@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
 from collections.abc import Callable, Sequence
-from typing import Any, final, Generic, TypeVar
+from typing import Any, final
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import FormSpec
@@ -17,13 +17,8 @@ from ._utils import (
     create_validation_error,
 )
 
-FormSpecModel = TypeVar("FormSpecModel", bound=FormSpec[Any])
 
-_ParsedValueModel = TypeVar("_ParsedValueModel")
-_FallbackDataModel = TypeVar("_FallbackDataModel")
-
-
-class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _FallbackDataModel]):
+class FormSpecVisitor[FormSpecModel: FormSpec[Any], ParsedValueModel, FallbackDataModel](abc.ABC):
     @final
     def __init__(self, form_spec: FormSpecModel, visitor_options: VisitorOptions) -> None:
         self.form_spec = form_spec
@@ -83,7 +78,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
     @abc.abstractmethod
     def _parse_value(
         self, raw_value: IncomingData
-    ) -> _ParsedValueModel | InvalidValue[_FallbackDataModel]:
+    ) -> ParsedValueModel | InvalidValue[FallbackDataModel]:
         """Handle the raw value from the form and return a parsed value.
 
         E.g., replaces DefaultValue sentinel with the actual default value
@@ -91,19 +86,17 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
 
     @abc.abstractmethod
     def _to_vue(
-        self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackDataModel]
+        self, parsed_value: ParsedValueModel | InvalidValue[FallbackDataModel]
     ) -> tuple[shared_type_defs.FormSpec, object]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 
     def _validators(self) -> Sequence[Callable[[Any], object]]:
         return compute_validators(self.form_spec)
 
-    def _validate(
-        self, parsed_value: _ParsedValueModel
-    ) -> list[shared_type_defs.ValidationMessage]:
+    def _validate(self, parsed_value: ParsedValueModel) -> list[shared_type_defs.ValidationMessage]:
         """Validates the nested values of this form spec"""
         return []
 
     @abc.abstractmethod
-    def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
+    def _to_disk(self, parsed_value: ParsedValueModel) -> object:
         """Transforms the value into a serializable format for disk storage."""

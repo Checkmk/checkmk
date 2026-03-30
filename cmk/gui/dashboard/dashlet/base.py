@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import abc
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import cast, Generic, Self, TypeVar
+from typing import cast, Self
 
 from cmk.gui import visuals
 from cmk.gui.i18n import _u
@@ -105,10 +104,7 @@ class ResponsiveLayoutConstraints:
         return cast(ResponsiveLayoutBreakpointConstraints, getattr(self, breakpoint_id))
 
 
-T = TypeVar("T", bound=DashletConfig)
-
-
-class Dashlet(abc.ABC, Generic[T]):
+class Dashlet[T: DashletConfig](abc.ABC):
     """Base class for all dashboard dashlet implementations"""
 
     @classmethod
@@ -223,5 +219,5 @@ class Dashlet(abc.ABC, Generic[T]):
         return _u(untranslated_title)
 
 
-class IFrameDashlet(Dashlet[T], abc.ABC):
+class IFrameDashlet[T: DashletConfig](Dashlet[T], abc.ABC):
     """Base class for all dashlet using an iframe"""

@@ -9,7 +9,7 @@ import dataclasses
 import itertools
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
-from typing import assert_never, Generic, Literal, TypeVar
+from typing import assert_never, Literal
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
@@ -111,17 +111,14 @@ _Transition = (
 )
 
 
-_L = TypeVar("_L", bound=str)
-
-
 @dataclasses.dataclass
-class ServicesTableEntry(Generic[_L]):
-    transition: _L
+class ServicesTableEntry[L: str]:
+    transition: L
     autocheck: DiscoveredItem[AutocheckEntry]
     hosts: list[HostName]
 
 
-ServicesTable = dict[ServiceID, ServicesTableEntry[_L]]
+type ServicesTable[L: str] = dict[ServiceID, ServicesTableEntry[L]]
 ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
 
 

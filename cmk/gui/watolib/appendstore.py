@@ -9,17 +9,14 @@ import os
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import Generic, TypeVar
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
-_VT = TypeVar("_VT")
 
-
-class ABCAppendStore(Generic[_VT], abc.ABC):
+class ABCAppendStore[VT](abc.ABC):
     """Managing a file with structured data that can be appended in a cheap way
 
     The file holds basic python structures separated by "\\0".
@@ -29,7 +26,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def _serialize(entry: _VT) -> object:
+    def _serialize(entry: VT) -> object:
         """Prepare _VT objects for serialization
 
         Note:
@@ -41,7 +38,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def _deserialize(raw: object) -> _VT:
+    def _deserialize(raw: object) -> VT:
         """Create _VT objects from serialized data
 
         Note:
@@ -57,7 +54,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
     def exists(self) -> bool:
         return self._path.exists()
 
-    def __read(self) -> list[_VT]:
+    def __read(self) -> list[VT]:
         """Parse the file and return the entries"""
         try:
             with self._path.open("rb") as f:
@@ -80,11 +77,11 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
                 % (str(self._path), e.text),
             )
 
-    def read(self) -> Sequence[_VT]:
+    def read(self) -> Sequence[VT]:
         with store.locked(self._path):
             return self.__read()
 
-    def append(self, entry: _VT) -> None:
+    def append(self, entry: VT) -> None:
         try:
             with (
                 store.locked(self._path),
@@ -101,7 +98,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
             raise MKGeneralException(_('Cannot write file "%s": %s') % (self._path, e)) from e
 
     @contextmanager
-    def mutable_view(self) -> Iterator[list[_VT]]:
+    def mutable_view(self) -> Iterator[list[VT]]:
         with store.locked(self._path):
             entries = self.__read()
             try:

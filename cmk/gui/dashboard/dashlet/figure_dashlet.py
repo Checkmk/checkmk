@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import abc
 
 from cmk.gui.type_defs import SingleInfos
 
-from .base import Dashlet, RelativeLayoutConstraints, T, WidgetSize
+from ..type_defs import DashletConfig
+from .base import Dashlet, RelativeLayoutConstraints, WidgetSize
 
 __all__ = ["ABCFigureDashlet"]
 
 
-class ABCFigureDashlet(Dashlet[T], abc.ABC):
+class ABCFigureDashlet[T: DashletConfig](Dashlet[T], abc.ABC):
     """Base class for cmk_figures based graphs
     Only contains the dashlet spec, the data generation is handled in the
     DataGenerator classes, to split visualization and data

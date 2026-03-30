@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from os import getgid, getuid
 from pathlib import Path
 from stat import S_IMODE, S_IWOTH
-from typing import Any, Final, Generic, Protocol, TypeVar
+from typing import Any, Final, Protocol
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -30,10 +30,8 @@ __all__ = [
     "TextSerializer",
 ]
 
-TObject = TypeVar("TObject")
 
-
-class Serializer(Protocol[TObject]):
+class Serializer[TObject](Protocol):
     def serialize(self, data: TObject) -> bytes: ...
 
     def deserialize(self, raw: bytes) -> TObject: ...
@@ -74,7 +72,7 @@ class DimSerializer:
         return literal_eval(raw.decode("utf-8"))
 
 
-class PickleSerializer(Generic[TObject]):
+class PickleSerializer[TObject]:
     """A dangerous serializer that uses pickle"""
 
     def serialize(self, data: TObject) -> bytes:
@@ -166,7 +164,7 @@ class RealIo:
                 release_lock(self.path)
 
 
-class ObjectStore(Generic[TObject]):
+class ObjectStore[TObject]:
     """Normally used to serialize data to and from the certain file.
     It can be used without touching IO: ObjectStore("hurz", TextSerializer, io=NoOpIo).
     where NoOpIo does nothing(see the testing)

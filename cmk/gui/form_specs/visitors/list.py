@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Generic, override, TypeVar
+from typing import override
 
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.rulesets.internal.form_specs import ListExtended
@@ -23,14 +23,11 @@ from ._type_defs import (
 from ._utils import compute_validators, get_title_and_help
 from .validators import build_vue_validators
 
-T = TypeVar("T")
-
 _ParsedValueModel = Sequence[IncomingData]
 _FallbackModel = Sequence[RawFrontendData]
 
 
-class ListVisitor(
-    Generic[T],
+class ListVisitor[T](
     FormSpecVisitor[ListExtended[T], _ParsedValueModel, _FallbackModel],
 ):
     @override

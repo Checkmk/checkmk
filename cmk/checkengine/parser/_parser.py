@@ -11,7 +11,7 @@ import abc
 import enum
 from collections.abc import Iterable, Mapping, Sequence
 from functools import partial
-from typing import Final, Generic, Protocol, TypeVar
+from typing import Final, Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
@@ -31,9 +31,6 @@ __all__ = [
     "SNMPParsedData",
 ]
 
-_Tin = TypeVar("_Tin")
-_Tout = TypeVar("_Tout", bound=Mapping[SectionName, Sequence])
-
 # Note that the inner Sequence[str] to AgentRawDataSectionElem
 # is only **artificially** different from AgentRawData and
 # obtained approximatively with `raw_data.decode("utf-8").split()`!
@@ -43,12 +40,12 @@ AgentRawDataSection = Mapping[SectionName, Sequence[AgentRawDataSectionElem]]
 type SNMPParsedData = Mapping[SectionName, SNMPRawDataElem]
 
 
-class HostSections(Generic[_Tout]):
+class HostSections[Tout: Mapping[SectionName, Sequence]]:
     """Host informations from the sources."""
 
     def __init__(
         self,
-        sections: _Tout,
+        sections: Tout,
         *,
         cache_info: Mapping[SectionName, tuple[int, int]] | None = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
@@ -89,11 +86,11 @@ SectionNameCollection = SelectionType | frozenset[SectionName]
 NO_SELECTION: Final = SelectionType.NONE
 
 
-class Parser(Generic[_Tin, _Tout], abc.ABC):
+class Parser[Tin, Tout: Mapping[SectionName, Sequence]](abc.ABC):
     """Parse raw data into host sections."""
 
     @abc.abstractmethod
-    def parse(self, raw_data: _Tin, *, selection: SectionNameCollection) -> HostSections[_Tout]:
+    def parse(self, raw_data: Tin, *, selection: SectionNameCollection) -> HostSections[Tout]:
         raise NotImplementedError
 
 

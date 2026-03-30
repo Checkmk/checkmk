@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-import typing as t
+from typing import Any, overload
 
 from flask import make_response, Response
 
@@ -22,12 +22,10 @@ def render_string_template(template_string: str, **kwargs: str) -> Response:
     return make_response(template_string.format(**kwargs))
 
 
-T = t.TypeVar("T")
-Self = t.TypeVar("Self", bound="dict_property")
-Inst = dict[str, t.Any]
+Inst = dict[str, Any]
 
 
-class dict_property(t.Generic[T]):
+class dict_property[T]:
     """A typed property (descriptor) which can be used on dict subclasses to type individual keys.
 
     NOTE:
@@ -70,20 +68,20 @@ class dict_property(t.Generic[T]):
     def __init__(self, default: T | undefined = undefined()) -> None:
         self.default = default
 
-    def __set_name__(self: Self, owner: Inst, name: str) -> None:
+    def __set_name__(self, owner: Inst, name: str) -> None:
         self.name: str = name
 
-    def __set__(self: Self, instance: Inst, value: T) -> None:
+    def __set__(self, instance: Inst, value: T) -> None:
         instance[self.name] = value
 
-    @t.overload
-    def __get__(self: Self, instance: None, owner: None = None) -> dict_property[T]: ...
+    @overload
+    def __get__(self, instance: None, owner: None = None) -> dict_property[T]: ...
 
-    @t.overload
-    def __get__(self: Self, instance: Inst, owner: type[dict] = ...) -> T: ...
+    @overload
+    def __get__(self, instance: Inst, owner: type[dict] = ...) -> T: ...
 
     def __get__(
-        self: Self, instance: Inst | None, owner: type[dict] | None = None
+        self, instance: Inst | None, owner: type[dict] | None = None
     ) -> dict_property[T] | T:
         if instance is None:
             return self
@@ -95,7 +93,7 @@ class dict_property(t.Generic[T]):
         except KeyError as exc:
             raise AttributeError(exc) from exc
 
-    def __delete__(self: Self, instance: Inst) -> None:
+    def __delete__(self, instance: Inst) -> None:
         try:
             del instance[self.name]
         except KeyError as exc:

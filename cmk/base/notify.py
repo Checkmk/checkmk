@@ -260,15 +260,6 @@ def mode_notify() -> Mode:
     )
 
 
-def automations_notify() -> list[Automation]:
-    return [
-        AUTOMATION_NOTIFICATION_REPLAY,
-        AUTOMATION_NOTIFICATION_ANALYSE,
-        AUTOMATION_NOTIFICATION_TEST,
-        AUTOMATION_NOTIFICATION_GET_BULKS,
-    ]
-
-
 def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | None:
     community_edition = app.edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:

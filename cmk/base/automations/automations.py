@@ -121,9 +121,6 @@ class Automations:
             {automation.ident: automation for automation in discovery_result.plugins.values()}
         )
 
-    def register(self, automation: Automation) -> None:
-        self._automations[automation.ident] = automation
-
     def execute(
         self,
         ctx: AutomationContext,

@@ -13,8 +13,7 @@ from cmk.utils.labels import get_builtin_host_labels
 from cmk.utils.paths import omd_root
 
 from . import diagnostics, localize
-from .automations.automations import Automation, Automations
-from .automations.check_mk import automations_common
+from .automations.automations import Automations
 from .base_app import CheckmkBaseApp
 from .core.nagios.factory import create_core
 from .modes.check_mk import general_options, modes_common
@@ -30,13 +29,8 @@ def make_app() -> CheckmkBaseApp:
             notify.mode_notify(),
         ]
     )
-    automations = _automations(
-        [
-            *automations_common(),
-            diagnostics.automation_create_diagnostics_dump(),
-            *notify.automations_notify(),
-        ]
-    )
+    automations = Automations()
+    automations.discover()
 
     return CheckmkBaseApp(
         edition=Edition.COMMUNITY,
@@ -61,10 +55,3 @@ def _modes(reg_modes: Sequence[Mode]) -> Modes:
         modes.register(mode)
 
     return modes
-
-
-def _automations(reg_automations: Sequence[Automation]) -> Automations:
-    automations = Automations()
-    for automation in reg_automations:
-        automations.register(automation)
-    return automations

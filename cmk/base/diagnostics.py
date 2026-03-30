@@ -110,10 +110,6 @@ class _DiagnosticsElement:
 SUFFIX = ".tar.gz"
 
 
-def automation_create_diagnostics_dump() -> Automation:
-    return AUTOMATION_CREATE_DIAGNOSTICS_DUMP
-
-
 def mode_create_diagnostics_dump(
     core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
 ) -> Mode:

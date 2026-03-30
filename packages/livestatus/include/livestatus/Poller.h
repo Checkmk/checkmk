@@ -56,8 +56,6 @@ public:
         }
         if (retval == 0) {
             errno = ETIMEDOUT;
-            const generic_error ge{"Polling failed"};
-            Debug(logger) << ge;
             return false;
         }
         if (!isFileDescriptorSet(fd, e)) {

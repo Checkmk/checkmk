@@ -2,11 +2,14 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Redfish storage drives inventory plugin.
+"""Redfish HW/SW inventory plugin.
 
-Extracts hardware component data from Redfish drive sections to build
-a consolidated inventory view of physical drives.
+Extracts hardware component data from multiple Redfish sections to build
+a consolidated inventory view.
 """
+
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.v2 import (
     InventoryPlugin,
@@ -15,49 +18,111 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.redfish.lib import RedfishAPIData
 
-
-def _extract_component_name(entry: RedfishAPIData) -> str:
-    """Build a component name from entry data."""
-    entry_id = str(entry.get("Id", ""))
-    name = str(entry.get("Name", ""))
-    if entry_id and name and entry_id != name:
-        return f"{entry_id}-{name}"
-    return name or entry_id or "Unknown"
+IDSET = set[tuple[str, str, str, str, str, str]]
 
 
-def inventorize_redfish_drives(section: RedfishAPIData) -> InventoryResult:
-    """Create inventory entries from Redfish drive data."""
-    for _key, entry in section.items():
-        if not isinstance(entry, dict):
+def _extract_odata_ids(
+    data: Any,
+    ids_set: IDSET,
+) -> IDSET:
+    if data is None or isinstance(data, (str, int, float, bool)):
+        return ids_set
+
+    if isinstance(data, Mapping):
+        for key, value in data.items():
+            if key == "@odata.id" and isinstance(value, str):
+                if "Oem" not in value:
+                    key_name = data.get("Name")
+                    if key_name:
+                        ids_set.add(
+                            (
+                                value,
+                                key_name,
+                                (data.get("SerialNumber") or "nothing set").strip(),
+                                (data.get("PartNumber") or "nothing set").strip(),
+                                (data.get("Manufacturer") or "nothing set").strip(),
+                                (data.get("Model") or "nothing set").strip(),
+                            )
+                        )
+            else:
+                ids_set = _extract_odata_ids(value, ids_set)
+    else:
+        for item in data:
+            ids_set = _extract_odata_ids(item, ids_set)
+
+    return ids_set
+
+
+def inventorize_redfish_data(
+    section_redfish_storage: RedfishAPIData | None,
+    section_redfish_processors: RedfishAPIData | None,
+    section_redfish_drives: RedfishAPIData | None,
+    section_redfish_memory: RedfishAPIData | None,
+    section_redfish_power: RedfishAPIData | None,
+    section_redfish_thermal: RedfishAPIData | None,
+    section_redfish_networkadapters: RedfishAPIData | None,
+) -> InventoryResult:
+    odata_ids_set: IDSET = set()
+    odata_ids_set = _extract_odata_ids(section_redfish_processors, odata_ids_set)
+    odata_ids_set = _extract_odata_ids(section_redfish_storage, odata_ids_set)
+    odata_ids_set = _extract_odata_ids(section_redfish_drives, odata_ids_set)
+    odata_ids_set = _extract_odata_ids(section_redfish_memory, odata_ids_set)
+    odata_ids_set = _extract_odata_ids(section_redfish_power, odata_ids_set)
+    odata_ids_set = _extract_odata_ids(section_redfish_thermal, odata_ids_set)
+    odata_ids_set = _extract_odata_ids(section_redfish_networkadapters, odata_ids_set)
+
+    for path, name, serial, part_number, manufacturer, model in odata_ids_set:
+        if (
+            serial in ("nothing set", "NOT AVAILABLE")
+            and part_number in ("nothing set", "NOT AVAILABLE")
+            and manufacturer == "nothing set"
+            and model == "nothing set"
+        ):
             continue
-        component_name = _extract_component_name(entry)
-
-        inventory_columns: dict[str, int | float | str | bool | None] = {}
-        if manufacturer := entry.get("Manufacturer"):
-            inventory_columns["manufacturer"] = manufacturer
-        if model := entry.get("Model"):
-            inventory_columns["model"] = model
-        if serial := entry.get("SerialNumber"):
-            inventory_columns["serial"] = serial
-        if firmware := entry.get("FirmwareVersion"):
-            inventory_columns["firmware_version"] = firmware
-        if capacity := entry.get("CapacityBytes"):
-            inventory_columns["capacity_bytes"] = capacity
-        if media_type := entry.get("MediaType"):
-            inventory_columns["media_type"] = media_type
-
-        if not inventory_columns:
+        if not path.startswith("/redfish/"):
             continue
 
+        segments = (
+            path.replace("#", "")
+            .replace(":", "-")
+            .replace(".", "_")
+            .replace("'", "")
+            .replace("(", "_")
+            .replace(")", "_")
+            .replace("%", "_")
+            .strip("/")
+            .split("/")
+        )
+        result_path = [element for element in segments if element]
+        item_id = result_path.pop()
+        if result_path[0] == "redfish":
+            result_path = result_path[1:]
+        if result_path[0] == "v1":
+            result_path = result_path[1:]
+        final_path = ["hardware"] + result_path
         yield TableRow(
-            path=["hardware", "storage", "redfish_drives"],
-            key_columns={"component": component_name},
-            inventory_columns=inventory_columns,
+            path=final_path,
+            key_columns={"id": item_id},
+            inventory_columns={
+                "name": name,
+                "serial": serial,
+                "part_number": part_number,
+                "manufacturer": manufacturer,
+                "model": model,
+            },
         )
 
 
-inventory_plugin_redfish_storage_inventory = InventoryPlugin(
-    name="redfish_storage_inventory",
-    sections=["redfish_drives"],
-    inventory_function=inventorize_redfish_drives,
+inventory_plugin_redfish_data = InventoryPlugin(
+    name="redfish_data",
+    sections=[
+        "redfish_storage",
+        "redfish_processors",
+        "redfish_drives",
+        "redfish_memory",
+        "redfish_power",
+        "redfish_thermal",
+        "redfish_networkadapters",
+    ],
+    inventory_function=inventorize_redfish_data,
 )

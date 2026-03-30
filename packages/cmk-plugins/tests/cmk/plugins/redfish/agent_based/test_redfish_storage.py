@@ -108,6 +108,7 @@ def test_check_battery_ok() -> None:
     ]
     assert results[0].state == State.OK
     assert "OK" in results[0].summary
+    assert "RAID Status: Ready" in results[0].summary
 
 
 def test_check_battery_degraded() -> None:
@@ -128,3 +129,20 @@ def test_check_battery_failed() -> None:
         r for r in check_redfish_storage_battery("RAID.Slot.3-1", parsed) if isinstance(r, Result)
     ]
     assert results[0].state == State.CRIT
+
+
+def test_check_battery_none_oem() -> None:
+    """Test that None Oem values don't crash."""
+    entry = json.dumps(
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1",
+            "@odata.type": "#Storage.v1_15_0.Storage",
+            "Id": "RAID.Slot.3-1",
+            "Name": "Storage",
+            "Oem": None,
+            "Status": {"Health": "OK", "State": "Enabled"},
+        }
+    )
+    parsed = parse_redfish_multiple(_make_string_table(entry))
+    results = list(check_redfish_storage_battery("RAID.Slot.3-1", parsed))
+    assert results == []

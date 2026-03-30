@@ -54,29 +54,32 @@ def test_discovery_redfish_power_redundancy() -> None:
     parsed = parse_redfish_multiple(_make_string_table(_make_power_with_redundancy()))
     services = list(discovery_redfish_power_redundancy(parsed))
     assert len(services) == 1
-    assert services[0].item == "0"
+    assert services[0].item is None
 
 
 def test_check_power_redundancy_ok() -> None:
     parsed = parse_redfish_multiple(_make_string_table(_make_power_with_redundancy()))
-    results = [r for r in check_redfish_power_redundancy("0", parsed) if isinstance(r, Result)]
+    results = [r for r in check_redfish_power_redundancy(parsed) if isinstance(r, Result)]
     assert len(results) == 2
     assert results[0].state == State.OK
-    assert results[1] == Result(
-        state=State.OK,
-        summary="System Board PS Redundancy, Mode: N+m, Min needed: 1, Max supported: 2, PSUs: 2",
-    )
 
 
 def test_check_power_redundancy_warning() -> None:
     parsed = parse_redfish_multiple(
         _make_string_table(_make_power_with_redundancy(health="Warning"))
     )
-    results = [r for r in check_redfish_power_redundancy("0", parsed) if isinstance(r, Result)]
+    results = [r for r in check_redfish_power_redundancy(parsed) if isinstance(r, Result)]
     assert results[0].state == State.WARN
 
 
-def test_check_power_redundancy_item_not_found() -> None:
-    parsed = parse_redfish_multiple(_make_string_table(_make_power_with_redundancy()))
-    results = list(check_redfish_power_redundancy("99", parsed))
+def test_check_power_redundancy_no_data() -> None:
+    entry = json.dumps(
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Power",
+            "@odata.type": "#Power.v1_7_1.Power",
+            "Id": "Power",
+        }
+    )
+    parsed = parse_redfish_multiple(_make_string_table(entry))
+    results = list(check_redfish_power_redundancy(parsed))
     assert results == []

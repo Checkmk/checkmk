@@ -10,18 +10,18 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.legacy_checks.pulse_secure_temp import (
+from cmk.plugins.lib.temperature import TempParamDict
+from cmk.plugins.pulse_secure.agent_based.pulse_secure_temp import (
     check_pulse_secure_temp,
     discover_pulse_secure_temp,
     parse_pulse_secure_temp,
 )
-from cmk.plugins.lib.temperature import TempParamDict
 
 
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.legacy_checks.pulse_secure_temp.get_value_store",
+        "cmk.plugins.pulse_secure.agent_based.pulse_secure_temp.get_value_store",
         lambda: {},
     )
 

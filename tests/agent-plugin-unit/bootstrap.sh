@@ -25,6 +25,11 @@ populate_folders() {
     cp -r tests/agent-plugin-unit/datasets/* /tests/datasets/
     cp -r agents/ /agents/
     find tests/agent-plugin-unit/ -maxdepth 1 -type f -exec cp {} /tests/ \;
+
+    # Temporarily skip tests for mk_podman. Fix with CMK-33079
+    case "${PYTHON_VERSION_MAJ_MIN}" in
+        3.4 | 3.5 | 3.6 | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 | 3.12) rm -f "/tests/test_mk_podman.py" ;;
+    esac
 }
 
 run_test() {

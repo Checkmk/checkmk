@@ -279,15 +279,9 @@ try {
         $pass = $env:CI_ORA2_DB_TEST_PASSWORD
         $env:CI_ORA2_DB_TEST = "ora-rocktest.dev.checkmk.net:system:${pass}:1521:TEST23::TEST23:_:_:"
         Write-Host "CI_ORA2_DB_TEST set from CI_ORA2_DB_TEST_PASSWORD" -ForegroundColor Green
-        # TODO(sk): remove this try catch block after the tests are excluded from the package build
-        try {
-            Write-Host "WE WILL IGNORE TESTS RESULT" -ForegroundColor Yellow
-            Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
-            Write-Host "Tests OK!" -ForegroundColor Green
-        }
-        catch {
-            Write-Host "Tests FAILED! But we continue..." -ForegroundColor Red
-        }
+
+        Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
+        Write-Host "Tests OK!" -ForegroundColor Green
     }
     if ($packDoc) {
         Invoke-Cargo-With-Explicit-Package "doc"

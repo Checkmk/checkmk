@@ -3,86 +3,117 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# Defined by customer, see SUP-1020
 
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple, TypedDict
 
-from typing import NamedTuple
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import contains, render, SNMPTree
-from cmk.legacy_includes.temperature import check_temperature
-
-check_info = {}
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    get_value_store,
+    render,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 
 class StateTemplate(NamedTuple):
     label: str
-    value: int
+    value: State
 
 
-radio_unknown = StateTemplate("not available", 3)
-radio_state_map = {"1": StateTemplate("up", 0), "2": StateTemplate("down", 2)}
+_RADIO_UNKNOWN = StateTemplate("not available", State.UNKNOWN)
+_RADIO_STATE_MAP = {"1": StateTemplate("up", State.OK), "2": StateTemplate("down", State.CRIT)}
 
-ap_unknown = StateTemplate("not available", 3)
-ap_state_map = {
-    "1": StateTemplate("Idle", 2),
-    "2": StateTemplate("Auto find", 1),
-    "3": StateTemplate("Type not match", 2),
-    "4": StateTemplate("Fault", 2),
-    "5": StateTemplate("Config", 2),
-    "6": StateTemplate("Config failed", 2),
-    "7": StateTemplate("Download", 1),
-    "8": StateTemplate("Normal", 0),
-    "9": StateTemplate("Committing", 2),
-    "10": StateTemplate("Commit failed", 2),
-    "11": StateTemplate("Standy", 1),
-    "12": StateTemplate("Version mismatch", 2),
-    "13": StateTemplate("Name conflicted", 2),
-    "14": StateTemplate("Invalid", 2),
-    "15": StateTemplate("Country code mismatch", 2),
+_AP_UNKNOWN = StateTemplate("not available", State.UNKNOWN)
+_AP_STATE_MAP = {
+    "1": StateTemplate("Idle", State.CRIT),
+    "2": StateTemplate("Auto find", State.WARN),
+    "3": StateTemplate("Type not match", State.CRIT),
+    "4": StateTemplate("Fault", State.CRIT),
+    "5": StateTemplate("Config", State.CRIT),
+    "6": StateTemplate("Config failed", State.CRIT),
+    "7": StateTemplate("Download", State.WARN),
+    "8": StateTemplate("Normal", State.OK),
+    "9": StateTemplate("Committing", State.CRIT),
+    "10": StateTemplate("Commit failed", State.CRIT),
+    "11": StateTemplate("Standy", State.WARN),
+    "12": StateTemplate("Version mismatch", State.CRIT),
+    "13": StateTemplate("Name conflicted", State.CRIT),
+    "14": StateTemplate("Invalid", State.CRIT),
+    "15": StateTemplate("Country code mismatch", State.CRIT),
 }
 
-# Defined by customer, see SUP-1020
+
+class RadioInfo(TypedDict):
+    radio_cmk_state: State
+    radio_readable_state: str
+    ch_usage: float
+    users_online: int
 
 
-def parse_huawei_wlc_aps(string_table):
-    parsed = {}
+ApInfo = TypedDict(
+    "ApInfo",
+    {
+        "cmk_status": State,
+        "state_readable": str,
+        "mem_used_percent": float,
+        "cpu_percent": float,
+        "temp": float | str,
+        "con_users": str,
+        "24ghz": RadioInfo,
+        "5ghz": RadioInfo,
+    },
+)
+
+Section = Mapping[str, ApInfo]
+
+
+class HuaweiWlcApsLevelsParams(TypedDict):
+    levels: tuple[float, float]
+
+
+def parse_huawei_wlc_aps(string_table: Sequence[StringTable]) -> Section:
+    parsed: dict[str, ApInfo] = {}
 
     aps_info1, aps_info2 = string_table
 
-    # Access-Points
     for idx, ap_info1 in enumerate(aps_info1):
-        # aps_info1 has general information about Access-point
-        # aps_info2 has band information about Access-point
-        # Every second line of aps_info1 matches aps_info2
-        # aps_info1             aps_info2
-        # [line]        -->     [2,4GHZ Info]
-        #               -->     [5GHz Info]
         status, mem, cpu, temp, con_users = ap_info1
         ap_id, radio_state_2GHz, ch_usage_2GHz, users_online_2GHz = aps_info2[2 * idx]
         _ap_id, radio_state_5GHz, ch_usage_5GHz, users_online_5GHz = aps_info2[2 * idx + 1]
 
-        if temp == "255":
-            temp = "invalid"
-        else:
-            temp = float(temp)
+        temp_value: float | str = "invalid" if temp == "255" else float(temp)
 
         parsed[ap_id] = {
-            "cmk_status": ap_state_map.get(status, ap_unknown).value,
-            "state_readable": ap_state_map.get(status, ap_unknown).label,
+            "cmk_status": _AP_STATE_MAP.get(status, _AP_UNKNOWN).value,
+            "state_readable": _AP_STATE_MAP.get(status, _AP_UNKNOWN).label,
             "mem_used_percent": float(mem),
             "cpu_percent": float(cpu),
-            "temp": temp,
+            "temp": temp_value,
             "con_users": con_users,
             "24ghz": {
-                "radio_cmk_state": radio_state_map.get(radio_state_2GHz, radio_unknown).value,
-                "radio_readable_state": radio_state_map.get(radio_state_2GHz, radio_unknown).label,
+                "radio_cmk_state": _RADIO_STATE_MAP.get(radio_state_2GHz, _RADIO_UNKNOWN).value,
+                "radio_readable_state": _RADIO_STATE_MAP.get(
+                    radio_state_2GHz, _RADIO_UNKNOWN
+                ).label,
                 "ch_usage": float(ch_usage_2GHz),
                 "users_online": int(users_online_2GHz),
             },
             "5ghz": {
-                "radio_cmk_state": radio_state_map.get(radio_state_5GHz, radio_unknown).value,
-                "radio_readable_state": radio_state_map.get(radio_state_5GHz, radio_unknown).label,
+                "radio_cmk_state": _RADIO_STATE_MAP.get(radio_state_5GHz, _RADIO_UNKNOWN).value,
+                "radio_readable_state": _RADIO_STATE_MAP.get(
+                    radio_state_5GHz, _RADIO_UNKNOWN
+                ).label,
                 "ch_usage": float(ch_usage_5GHz),
                 "users_online": int(users_online_5GHz),
             },
@@ -91,7 +122,7 @@ def parse_huawei_wlc_aps(string_table):
     return parsed
 
 
-check_info["huawei_wlc_aps"] = LegacyCheckDefinition(
+snmp_section_huawei_wlc_aps = SNMPSection(
     name="huawei_wlc_aps",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
     fetch=[
@@ -108,51 +139,46 @@ check_info["huawei_wlc_aps"] = LegacyCheckDefinition(
 )
 
 
-def discovery_huawei_wlc_aps_status(parsed):
-    for name, value in parsed.items():
-        if value["state_readable"] is not None:
-            yield name, {}
+def discovery_huawei_wlc_aps_status(section: Section) -> DiscoveryResult:
+    for name in section:
+        yield Service(item=name)
 
 
-def check_huawei_wlc_aps_status(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_huawei_wlc_aps_status(
+    item: str, params: HuaweiWlcApsLevelsParams, section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    # General AP Status
-    yield data["cmk_status"], "%s" % data["state_readable"]
 
-    # AP Connected users
-    yield 0, "Connected users: %s" % data["con_users"]
+    yield Result(state=data["cmk_status"], summary=data["state_readable"])
+    yield Result(state=State.OK, summary=f"Connected users: {data['con_users']}")
 
-    # Band-dependent metrics
-    for metric, band in (("24ghz", "2,4GHz"), ("5ghz", "5GHz")):
-        # Number of users online
-        users_online = data[metric]["users_online"]
-        yield check_levels(
-            users_online,
-            "%s_clients" % metric,
-            (None, None),
-            human_readable_func=lambda x: "%d" % x,
-            infoname="Users online [%s]" % band,
+    for radio, metric, band in (
+        (data["24ghz"], "24ghz", "2,4GHz"),
+        (data["5ghz"], "5ghz", "5GHz"),
+    ):
+        yield from check_levels(
+            radio["users_online"],
+            metric_name=f"{metric}_clients",
+            render_func=lambda x: "%d" % x,
+            label=f"Users online [{band}]",
         )
 
-        # Radio state
-        radio_state = data[metric]["radio_cmk_state"]
-        radio_readable = data[metric]["radio_readable_state"]
-        yield radio_state, f"Radio state [{band}]: {radio_readable}"
+        yield Result(
+            state=radio["radio_cmk_state"],
+            summary=f"Radio state [{band}]: {radio['radio_readable_state']}",
+        )
 
-        # Channel usage
-        ch_usage = data[metric]["ch_usage"]
-        ch_usage_lev = params["levels"]
-        yield check_levels(
-            ch_usage,
-            "channel_utilization_%s" % metric,
-            ch_usage_lev,
-            human_readable_func=render.percent,
-            infoname="Channel usage [%s]" % band,
+        yield from check_levels(
+            radio["ch_usage"],
+            levels_upper=params["levels"],
+            metric_name=f"channel_utilization_{metric}",
+            render_func=render.percent,
+            label=f"Channel usage [{band}]",
         )
 
 
-check_info["huawei_wlc_aps.status"] = LegacyCheckDefinition(
+check_plugin_huawei_wlc_aps_status = CheckPlugin(
     name="huawei_wlc_aps_status",
     service_name="AP %s Status",
     sections=["huawei_wlc_aps"],
@@ -162,23 +188,27 @@ check_info["huawei_wlc_aps.status"] = LegacyCheckDefinition(
 )
 
 
-def discovery_huawei_wlc_aps_cpu(parsed):
-    for name, value in parsed.items():
-        if value["cpu_percent"] is not None:
-            yield name, {}
+def discovery_huawei_wlc_aps_cpu(section: Section) -> DiscoveryResult:
+    for name in section:
+        yield Service(item=name)
 
 
-def check_huawei_wlc_aps_cpu(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_huawei_wlc_aps_cpu(
+    item: str, params: HuaweiWlcApsLevelsParams, section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    lev = params["levels"]
-    val = data["cpu_percent"]
-    yield check_levels(
-        val, "cpu_percent", lev, human_readable_func=render.percent, infoname="Usage"
+
+    yield from check_levels(
+        data["cpu_percent"],
+        levels_upper=params["levels"],
+        metric_name="cpu_percent",
+        render_func=render.percent,
+        label="Usage",
     )
 
 
-check_info["huawei_wlc_aps.cpu"] = LegacyCheckDefinition(
+check_plugin_huawei_wlc_aps_cpu = CheckPlugin(
     name="huawei_wlc_aps_cpu",
     service_name="AP %s CPU",
     sections=["huawei_wlc_aps"],
@@ -188,27 +218,27 @@ check_info["huawei_wlc_aps.cpu"] = LegacyCheckDefinition(
 )
 
 
-def discovery_huawei_wlc_aps_mem(parsed):
-    for name, value in parsed.items():
-        if value["mem_used_percent"] is not None:
-            yield name, {}
+def discovery_huawei_wlc_aps_mem(section: Section) -> DiscoveryResult:
+    for name in section:
+        yield Service(item=name)
 
 
-def check_huawei_wlc_aps_mem(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_huawei_wlc_aps_mem(
+    item: str, params: HuaweiWlcApsLevelsParams, section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    lev = params["levels"]
-    val = data["mem_used_percent"]
-    yield check_levels(
-        val,
-        "mem_used_percent",
-        lev,
-        human_readable_func=render.percent,
-        infoname="Used",
+
+    yield from check_levels(
+        data["mem_used_percent"],
+        levels_upper=params["levels"],
+        metric_name="mem_used_percent",
+        render_func=render.percent,
+        label="Used",
     )
 
 
-check_info["huawei_wlc_aps.mem"] = LegacyCheckDefinition(
+check_plugin_huawei_wlc_aps_mem = CheckPlugin(
     name="huawei_wlc_aps_mem",
     service_name="AP %s Memory",
     sections=["huawei_wlc_aps"],
@@ -218,28 +248,33 @@ check_info["huawei_wlc_aps.mem"] = LegacyCheckDefinition(
 )
 
 
-def discovery_huawei_wlc_aps_temp(parsed):
-    yield from ((name, {}) for name in parsed)
+def discovery_huawei_wlc_aps_temp(section: Section) -> DiscoveryResult:
+    yield from (Service(item=name) for name in section)
 
 
-def check_huawei_wlc_aps_temp(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_huawei_wlc_aps_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    # AP Temp
-    temp = data["temp"]
 
-    # "invalid" corresponds to 255 and should *not be* alaramed as per customer's requirements
+    temp = data["temp"]
+    # "invalid" corresponds to 255 and should *not be* alarmed as per customer's requirements
     # See SUP-1020 for details
     if isinstance(temp, float):
-        yield check_temperature(temp, {}, "AP %s Temperature" % item)
+        yield from check_temperature(
+            reading=temp,
+            params=params,
+            unique_name=f"AP {item} Temperature",
+            value_store=get_value_store(),
+        )
     else:
-        yield 0, "%s" % temp
+        yield Result(state=State.OK, summary=str(temp))
 
 
-check_info["huawei_wlc_aps.temp"] = LegacyCheckDefinition(
+check_plugin_huawei_wlc_aps_temp = CheckPlugin(
     name="huawei_wlc_aps_temp",
     service_name="AP %s Temperature",
     sections=["huawei_wlc_aps"],
     discovery_function=discovery_huawei_wlc_aps_temp,
     check_function=check_huawei_wlc_aps_temp,
+    check_default_parameters={"levels": (70.0, 75.0)},
 )

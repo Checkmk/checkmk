@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 
+CSSSpec = list[str]
+
 
 @dataclass
 class RequireConfirmation:

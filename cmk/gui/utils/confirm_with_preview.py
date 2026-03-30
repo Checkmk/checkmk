@@ -8,9 +8,9 @@ import json
 from typing import Literal
 
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.type_defs import CSSSpec
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.speaklater import LazyString

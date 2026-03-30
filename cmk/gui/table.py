@@ -25,11 +25,12 @@ from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
+from cmk.gui.htmllib.type_defs import CSSSpec
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
-from cmk.gui.type_defs import CSSSpec, IconNames, StaticIcon
+from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML

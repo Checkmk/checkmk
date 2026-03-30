@@ -12,7 +12,7 @@ from cmk.gui.htmllib.tag_rendering import (
     render_end_tag,
     render_start_tag,
 )
-from cmk.gui.type_defs import CSSSpec
+from cmk.gui.htmllib.type_defs import CSSSpec
 from cmk.gui.utils.html import HTML
 
 

@@ -36,7 +36,6 @@ from cmk.gui.type_defs import (
     ChoiceGroup,
     ChoiceId,
     ChoiceText,
-    CSSSpec,
     DynamicIcon,
     DynamicIconName,
     GroupedChoices,
@@ -64,7 +63,7 @@ from .tag_rendering import (
     render_end_tag,
     render_start_tag,
 )
-from .type_defs import RequireConfirmation
+from .type_defs import CSSSpec, RequireConfirmation
 
 
 class _Manifest(typing.NamedTuple):

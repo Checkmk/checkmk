@@ -47,7 +47,6 @@ HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
 PermissionName = str
 RoleName = str
-CSSSpec = list[str]
 ChoiceText = str
 ChoiceId = str | None
 Choice = tuple[ChoiceId, ChoiceText]

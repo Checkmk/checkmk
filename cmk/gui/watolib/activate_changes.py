@@ -83,6 +83,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_configs_dir, topology_settings_lookup
+from cmk.gui.ntop import ntop_connection
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
@@ -97,7 +98,6 @@ from cmk.gui.userdb import get_user_attributes, load_users, user_sync_default_co
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils import escaping
-from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import (
     UserPermissions,
@@ -2860,7 +2860,7 @@ def _activate_local_rabbitmq_changes() -> None:
 def _add_extensions_for_license_usage() -> None:
     save_extensions(
         LicenseUsageExtensions(
-            ntop=is_ntop_configured(),
+            ntop=ntop_connection().is_configured(),
         ),
         licensing_dir=paths.licensing_dir,
     )

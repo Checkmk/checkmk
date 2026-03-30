@@ -35,6 +35,7 @@ from cmk.gui.ldap_integration.register import register as ldap_registration
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
+from cmk.gui.ntop import ntop_connection_registry, NtopConnectionStub
 from cmk.gui.openapi import (
     endpoint_family_registry,
     endpoint_registry,
@@ -207,6 +208,7 @@ def register(edition: Edition) -> None:
         )
     )
     customer_api_registry.register(CustomerAPIStub(str(edition)))
+    ntop_connection_registry.register(NtopConnectionStub(str(edition)))
     visuals.register(
         page_registry,
         visual_info_registry,

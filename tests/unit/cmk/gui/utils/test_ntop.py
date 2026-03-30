@@ -10,21 +10,17 @@ from typing import Any
 
 import pytest
 
-from cmk.gui.utils.ntop import (
-    get_ntop_misconfiguration_reason,
-    is_ntop_available,
-    is_ntop_configured,
-)
+from cmk.gui.ntop import ntop_connection
 
 
 @pytest.mark.usefixtures("load_config")
 def test_is_ntop_available() -> None:
-    assert not is_ntop_available()
+    assert not ntop_connection().is_available()
 
 
 @pytest.mark.usefixtures("load_config")
 @pytest.mark.parametrize(
-    "ntop_connection, custom_user, answer, reason",
+    "ntop_connection_spec, custom_user, answer, reason",
     [
         (
             {"is_activated": False},
@@ -57,10 +53,13 @@ def test_is_ntop_available() -> None:
     ],
 )
 def test_is_ntop_configured_and_reason(
-    ntop_connection: dict[str, Any],
+    ntop_connection_spec: dict[str, Any],
     custom_user: str,
     answer: bool,
     reason: str,
 ) -> None:
-    assert not is_ntop_configured()
-    assert get_ntop_misconfiguration_reason() == "ntopng integration is only available in CEE"
+    assert not ntop_connection().is_configured()
+    assert (
+        ntop_connection().get_misconfiguration_reason()
+        == "ntopng integration is only available in CEE"
+    )

@@ -18,11 +18,11 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.ntop import get_ntop_connection
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.visuals import visual_page_breadcrumb
@@ -143,7 +143,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
         "available_layouts": available_layouts,
         "available_features": {
             "dashboard_features": dashboard_features,
-            "ntop_active": bool((ntop := get_ntop_connection()) and ntop["is_activated"]),
+            "ntop_active": ntop_connection().is_active(),
         },
         "logged_in_user": user.id,
     }

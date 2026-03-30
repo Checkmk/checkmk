@@ -14,6 +14,7 @@ import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from typing import cast, Literal, overload
 
+from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
@@ -30,6 +31,7 @@ from cmk.gui.i18n import _, _u, get_language_alias, get_languages, ungettext
 from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.ntop import ntop_connection
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
@@ -70,10 +72,6 @@ from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyn
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.ntop import (
-    get_ntop_connection_by_site,
-    is_ntop_available,
-)
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
@@ -94,6 +92,7 @@ from cmk.gui.valuespec import (
     UserID,
 )
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.config_sync import get_site_globals
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
@@ -111,6 +110,16 @@ from cmk.gui.watolib.users import (
 )
 from cmk.utils import paths, render
 from cmk.utils.notify_types import EventRule
+
+
+def _iter_ntop_connections() -> Iterator[dict]:
+    seen = {
+        site_id: get_site_globals(site_id, site_config).get("ntop_connection", {})
+        for site_id, site_config in active_config.sites.items()
+    } | {omd_site(): ntop_connection().get_connection()}
+    for conn in seen.values():
+        if conn:
+            yield conn
 
 
 def register(_mode_registry: ModeRegistry) -> None:
@@ -1012,16 +1021,11 @@ class ModeEditUser(WatoMode):
                 del user_attrs["authorized_sites"]
 
         # ntopng
-        if is_ntop_available():
-            ntop_connections = get_ntop_connection_by_site()
-            for _site_id, ntop_connection in ntop_connections.items():
-                if not ntop_connection:
-                    continue
+        if ntop_connection().is_available():
+            for ntop_conn in _iter_ntop_connections():
                 # ntop_username_attribute will be the name of the custom attribute or false
                 # see corresponding Setup rule
-                ntop_username_attribute = ntop_connection.get(
-                    "use_custom_attribute_as_ntop_username"
-                )
+                ntop_username_attribute = ntop_conn.get("use_custom_attribute_as_ntop_username")
                 if ntop_username_attribute:
                     # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
                     user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
@@ -1336,16 +1340,11 @@ class ModeEditUser(WatoMode):
         self._show_custom_user_attributes(custom_user_attr_topics.get("ident", []))
 
         # ntopng
-        if is_ntop_available():
-            ntop_connections = get_ntop_connection_by_site()
+        if ntop_connection().is_available():
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding Setup rule
-            for site_id, ntop_connection in ntop_connections.items():
-                if not ntop_connection:
-                    continue
-                ntop_username_attribute = ntop_connection.get(
-                    "use_custom_attribute_as_ntop_username"
-                )
+            for ntop_conn in _iter_ntop_connections():
+                ntop_username_attribute = ntop_conn.get("use_custom_attribute_as_ntop_username")
                 if ntop_username_attribute:
                     forms.section(_("ntopng username"))
                     self._lockable_input(ntop_username_attribute, "")

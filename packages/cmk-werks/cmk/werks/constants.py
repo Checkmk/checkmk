@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 NON_WERK_FILES_IN_WERK_FOLDER = {
+    "BUILD",
+    "BUILD.bazel",
     "config",
     "config.json",
     "first_free",

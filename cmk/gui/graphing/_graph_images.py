@@ -177,7 +177,7 @@ def _answer_graph_image_request(
             num_graphs,
         ):
             graphs.append(
-                base64.b64encode(render_graph_image(result.artwork, display_config)).decode("ascii")
+                base64.b64encode(render_graph_png(result.artwork, display_config)).decode("ascii")
             )
 
         response.set_data(json.dumps(graphs))
@@ -223,11 +223,8 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
     return graph_render_options
 
 
-@tracer.instrument("graphing.render_graph_image")
-def render_graph_image(
-    artwork: GraphArtwork,
-    display_config: GraphDisplayConfigImage,
-) -> bytes:
+@tracer.instrument("graphing.render_graph_png")
+def render_graph_png(artwork: GraphArtwork, display_config: GraphDisplayConfigImage) -> bytes:
     width_ex, height_ex = display_config.size
     mm_per_ex = get_mm_per_ex(display_config.font_size)
 

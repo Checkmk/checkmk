@@ -17,7 +17,7 @@ from ._graph_display_config import (
     GraphDisplayConfigImage,
     GraphRenderOptions,
 )
-from ._graph_images import graph_spec_from_request, GraphSpec
+from ._graph_images import graph_spec_from_request, GraphSpec, render_graph_png
 from ._graph_metric_expressions import (
     GraphConsolidationFunction,
     GraphMetricConstant,
@@ -166,6 +166,7 @@ __all__ = [
     "perfometers_from_api",
     "registered_metric_ids_and_titles",
     "render_graph_pdf",
+    "render_graph_png",
     "render_deferred_graphs_html",
     "render_graphs_html",
     "render_plain_graph_title",

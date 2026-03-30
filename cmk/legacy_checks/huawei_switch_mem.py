@@ -6,20 +6,23 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    render,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    StringTable,
 )
-from cmk.agent_based.v2 import OIDEnd, render, SNMPTree, StringTable
 from cmk.plugins.huawei.lib import (
     DETECT_HUAWEI_SWITCH,
     parse_huawei_physical_entity_values,
     Section,
 )
-
-check_info = {}
 
 
 def parse_huawei_switch_mem(string_table: Sequence[StringTable]) -> Section:
@@ -27,9 +30,9 @@ def parse_huawei_switch_mem(string_table: Sequence[StringTable]) -> Section:
 
 
 def check_huawei_switch_mem(
-    item: str, params: Mapping[str, tuple[float, float]], parsed: Section
-) -> LegacyCheckResult:
-    if not (item_data := parsed.get(item)):
+    item: str, params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
+    if not (item_data := section.get(item)):
         return
 
     # TODO: this weird. Either we should not discover in this case, or let it crash during checking.
@@ -40,20 +43,20 @@ def check_huawei_switch_mem(
     except TypeError:
         return
 
-    yield check_levels(
+    yield from check_levels(
         mem,
-        "mem_used_percent",
-        params.get("levels", (None, None)),
-        infoname="Usage",
-        human_readable_func=render.percent,
+        levels_upper=params.get("levels"),
+        metric_name="mem_used_percent",
+        render_func=render.percent,
+        label="Usage",
     )
 
 
-def discover_huawei_switch_mem(section: Section) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item in section)
+def discover_huawei_switch_mem(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["huawei_switch_mem"] = LegacyCheckDefinition(
+snmp_section_huawei_switch_mem = SNMPSection(
     name="huawei_switch_mem",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
@@ -67,6 +70,11 @@ check_info["huawei_switch_mem"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_huawei_switch_mem,
+)
+
+
+check_plugin_huawei_switch_mem = CheckPlugin(
+    name="huawei_switch_mem",
     service_name="Memory %s",
     discovery_function=discover_huawei_switch_mem,
     check_function=check_huawei_switch_mem,

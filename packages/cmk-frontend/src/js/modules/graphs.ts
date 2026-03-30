@@ -1778,7 +1778,7 @@ function update_graph_hover_popup(event: Event, graph: GraphInstance): boolean |
 
   let post_data = 'hover_time=' + encodeURIComponent(Math.trunc(hover_timestamp))
 
-  let endpoint = 'ajax_graph_hover.py'
+  let endpoint = 'ajax_graph_values_at_time.py'
 
   if (cmk_token) {
     // Shared dashboard: use token-auth endpoint. Recipe and step are built server-side.

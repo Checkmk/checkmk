@@ -155,7 +155,7 @@ def test_registered_pages() -> None:
         "wato_ajax_profile_repl",
         "welcome",
         "werk",
-        "ajax_graph_hover",
+        "ajax_graph_values_at_time",
         "ajax_render_graph",
         "ajax_initial_view_filters",
         "ajax_initial_topology_filters",

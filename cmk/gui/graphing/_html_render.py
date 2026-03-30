@@ -1434,9 +1434,9 @@ def estimate_graph_step_for_html(
 # while these functions do not have that. In order to preserve the functionality of the JS side
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
-class AjaxGraphHover(Page):
+class AjaxGraphValuesAtTime(Page):
     def page(self, ctx: PageContext) -> PageResult:
-        """Registered as `ajax_graph_hover`."""
+        """Registered as `ajax_graph_values_at_time`."""
         render_state = GraphRenderState.model_validate(
             json.loads(ctx.request.get_str_input_mandatory("context"))
         )
@@ -1497,7 +1497,9 @@ def render_graph_hover_for_recipe(
             )
         )
     except Exception as e:
-        logger.error("Ajax call ajax_graph_hover failed: %s\n%s", e, traceback.format_exc())
+        logger.error(
+            "Ajax call ajax_graph_values_at_time failed: %s\n%s", e, traceback.format_exc()
+        )
         if debug:
             raise
         response.set_data("ERROR: %s" % e)

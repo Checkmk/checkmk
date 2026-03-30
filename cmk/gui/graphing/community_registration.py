@@ -20,7 +20,7 @@ from ._graph_metric_expressions import (
 )
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import TemplateGraphSpecification
-from ._html_render import AjaxGraphHover, AjaxRenderGraph
+from ._html_render import AjaxGraphValuesAtTime, AjaxRenderGraph
 from ._metric_backend_registry import (
     metric_backend_registry,
     MetricBackend,
@@ -35,7 +35,7 @@ def register(
     config_variable_registry: ConfigVariableRegistry,
     autocompleter_registry: AutocompleterRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_graph_hover", AjaxGraphHover()))
+    page_registry.register(PageEndpoint("ajax_graph_values_at_time", AjaxGraphValuesAtTime()))
     page_registry.register(PageEndpoint("ajax_graph_images", AjaxGraphImagesForNotifications()))
     page_registry.register(PageEndpoint("ajax_render_graph", AjaxRenderGraph()))
     page_registry.register(PageEndpoint("ajax_vs_unit_resolver", PageVsAutocomplete()))

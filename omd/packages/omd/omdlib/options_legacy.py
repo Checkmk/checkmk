@@ -14,7 +14,7 @@ from typing import Final, NamedTuple
 
 from omdlib.global_options import GlobalOptions
 from omdlib.options import ExecOtherOmd, RmCommand, SuCommand
-from omdlib.version_utils import werk_18891_error
+from omdlib.version_utils import werk_18891_warning
 
 
 class Option(NamedTuple):
@@ -757,9 +757,9 @@ def parse_arguments_dispatcher(  # pylint: disable=too-many-branches
             return ExecOtherOmd(version=target_version)
         case "setversion":
             # No vulnerability, but allows changing to vulnerable version.
-            return DispatcherError(message=werk_18891_error(target_version, False))
+            return DispatcherError(message=werk_18891_warning(target_version))
         case "restore":
-            return DispatcherError(message=werk_18891_error(target_version, True))
+            return DispatcherError(message=werk_18891_warning(target_version))
         case (
             "create"
             | "init"
@@ -773,7 +773,7 @@ def parse_arguments_dispatcher(  # pylint: disable=too-many-branches
             # These commands cannot be correctly executed after root privileges are dropped.
             # And we can't use the vulnerable versions omd these commands without dropping the
             # privileges first.
-            return DispatcherError(message=werk_18891_error(target_version, False))
+            return DispatcherError(message=werk_18891_warning(target_version))
         case "rm":
             if args_before_site_name_count >= len(args):
                 sys.exit("omd: please specify site.")
@@ -803,7 +803,7 @@ def parse_arguments_dispatcher(  # pylint: disable=too-many-branches
             if args_before_site_name_count >= len(args):
                 if command.needs_site == 2:
                     # Invoking `omd -V 2.3.0p24 start` as root is not allowed.
-                    return DispatcherError(message=werk_18891_error(target_version, False))
+                    return DispatcherError(message=werk_18891_warning(target_version))
                 sys.exit("omd: please specify site.")
             target_site = args[args_before_site_name_count]
             return ArgsToDispatch(

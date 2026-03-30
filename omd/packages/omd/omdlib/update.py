@@ -50,7 +50,7 @@ def get_edition(
 ]:
     """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
     # TODO: Needs to be able to deal with 2.4 edition names in 2.5. Can be removed with 2.6
-    match omd_version.split(".")[-1]:
+    match omd_version.rsplit(".", maxsplit=1)[-1]:
         case "community" | "pro" | "ultimate" | "ultimatemt" | "cloud" as new_edition:
             return new_edition, new_edition
         case "cre":

@@ -51,7 +51,7 @@ def _parse_speed(v: str) -> float | None:  # into Hz (float)
 def _parse_voltage(v: str) -> float | None:
     if not v or v == "Unknown":
         return None
-    return float(v.split()[0])
+    return float(v.split(maxsplit=1)[0])
 
 
 def parse_win_cpuinfo(string_table: StringTable) -> _Section:

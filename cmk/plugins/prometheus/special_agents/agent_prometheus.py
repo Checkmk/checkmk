@@ -870,7 +870,7 @@ class ApiData:
 
     @staticmethod
     def _get_node_piggyback_host_name(node_name: str) -> str:
-        return node_name.split(":")[0]
+        return node_name.split(":", maxsplit=1)[0]
 
 
 def _extract_config_args(config: dict[str, Any]) -> dict[str, Any]:

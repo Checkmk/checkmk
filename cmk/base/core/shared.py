@@ -126,7 +126,7 @@ def host_check_command(
 
 
 def autodetect_plugin(command_line: str) -> str:
-    plugin_name = command_line.split()[0]
+    plugin_name = command_line.split(maxsplit=1)[0]
     if command_line[0] in ["$", "/"]:
         return command_line
 

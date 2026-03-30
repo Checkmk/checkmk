@@ -107,7 +107,7 @@ Section = dict[str, PrinterSupply]
 
 def _get_oid_end_last_index(oid_end: str) -> str:
     # return last number of OID_END
-    return oid_end.split(".")[-1]
+    return oid_end.rsplit(".", maxsplit=1)[-1]
 
 
 def _get_supply_unit(raw_unit: str) -> Unit:

@@ -261,10 +261,10 @@ class PackageManagerDEB(ABCPackageManager):
         return cls(distro_name)
 
     def package_name(self, edition: TypeCMKEditions, version: str) -> str:
-        return f"check-mk-{edition.long}-{version.split('-rc')[0]}_0.{self.distro_name}_amd64.deb"
+        return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}_0.{self.distro_name}_amd64.deb"
 
     def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
-        return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
+        return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}"
 
     def get_edition(self, package_path: Path) -> TypeCMKEdition:
         package_name = package_path.name
@@ -313,10 +313,10 @@ class ABCPackageManagerRPM(ABCPackageManager):
         return PackageManagerRHEL(distro_name)
 
     def package_name(self, edition: TypeCMKEditions, version: str) -> str:
-        return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name}-38.x86_64.rpm"
+        return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}-{self.distro_name}-38.x86_64.rpm"
 
     def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
-        return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
+        return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}"
 
     def get_edition(self, package_path: Path) -> TypeCMKEdition:
         package_name = package_path.name
@@ -369,10 +369,10 @@ class PackageManagerCMA(PackageManagerDEB):
         return cls(distro_name)
 
     def package_name(self, edition: TypeCMKEditions, version: str) -> str:
-        return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name.split('-')[1]}-x86_64.cma"
+        return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}-{self.distro_name.split('-')[1]}-x86_64.cma"
 
     def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
-        return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
+        return f"check-mk-{edition.long}-{version.split('-rc', maxsplit=1)[0]}"
 
     def get_edition(self, package_path: Path) -> TypeCMKEdition:
         package_name = package_path.name

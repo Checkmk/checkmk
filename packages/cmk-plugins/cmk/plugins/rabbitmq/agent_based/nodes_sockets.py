@@ -60,7 +60,8 @@ def discover_rabbitmq_nodes_sockets(
         section_rabbitmq_cluster is None
         or (cluster_version := section_rabbitmq_cluster.get("info", {}).get("rabbitmq_version"))
         is None
-        or int(cluster_version.split(".")[0]) < int(RMQ_IO_METRICS_DROPPED_VERSION.split(".")[0])
+        or int(cluster_version.split(".")[0])
+        < int(RMQ_IO_METRICS_DROPPED_VERSION.split(".", maxsplit=1)[0])
     ):
         yield from discover_key("sockets")(section_rabbitmq_nodes)
 

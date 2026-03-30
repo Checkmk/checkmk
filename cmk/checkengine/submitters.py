@@ -76,7 +76,7 @@ def _extract_check_command(infotext: str) -> str | None:
     Currently this is used only by mrpe.
     """
     marker = "Check command used in metric system: "
-    return infotext.split(marker, 1)[1].split("\n")[0] if marker in infotext else None
+    return infotext.split(marker, 1)[1].split("\n", maxsplit=1)[0] if marker in infotext else None
 
 
 def get_submitter(

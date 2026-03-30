@@ -67,17 +67,17 @@ def _parse_gcp_links(links_message: str) -> Sequence[str]:
 def _parse_error_message(exc_type: str, exc_message: str) -> str:
     match exc_type:
         case "PermissionDenied" if exc_message.startswith("403 Cloud Asset API"):
-            return exc_message.split(" [links {")[0]
+            return exc_message.split(" [links {", maxsplit=1)[0]
         case "PermissionDenied" if exc_message.startswith("403 Request denied by Cloud IAM"):
-            main_message = exc_message.split(" [links {")[0]
+            main_message = exc_message.split(" [links {", maxsplit=1)[0]
             link_infos = _parse_gcp_links(exc_message.removeprefix(main_message))
             return f"{main_message} {'. '.join(link_infos)}"
         case "PermissionDenied" if exc_message.startswith("403 Permission monitoring"):
             return exc_message
         case "Unauthenticated":
-            return exc_message.split(" [reason:")[0]
+            return exc_message.split(" [reason:", maxsplit=1)[0]
         case "HttpError":
-            return exc_message.split('returned "')[1].split('". Details')[0]
+            return exc_message.split('returned "')[1].split('". Details', maxsplit=1)[0]
     return exc_message
 
 

@@ -231,7 +231,9 @@ def _strip_ascii_suffix(version: str) -> str:
 def generate_product_version(version: str, *, revision_text: str) -> str:
     major, minor, build = "1", "0", "0"
     try:
-        major, minor, build = (x.lstrip("0") for x in version.split("-")[0].split(".")[:3])
+        major, minor, build = (
+            x.lstrip("0") for x in version.split("-", maxsplit=1)[0].split(".")[:3]
+        )
         minor = minor or "0"
         build = build or "0"
         if len(major) > 3:

@@ -34,7 +34,7 @@ def check_redfish_memory_summary(item: str, section: SectionSystem) -> CheckResu
     if len(section) == 1:
         result = list(section.values())[0].get("MemorySummary", {})
     else:
-        systemid = item.split(" ")[-1]
+        systemid = item.rsplit(" ", maxsplit=1)[-1]
         result = section.get(systemid, {}).get("MemorySummary", {})
     if not result:
         return

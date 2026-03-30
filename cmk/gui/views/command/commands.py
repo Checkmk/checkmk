@@ -1936,7 +1936,7 @@ class CommandScheduleDowntimesForm:
             if (recurse := included_from_html.get("_include_children")) is not None:
                 specs = [spec] + self._get_child_hosts(row["site"], [spec], recurse=recurse)
         elif request.var("_down_host"):  # set on hosts instead of services
-            specs = [spec.split(";")[0]]
+            specs = [spec.split(";", maxsplit=1)[0]]
             cmdtag = "HOST"
             # We do not want to count the services but the affected hosts in this case.
             # Since we can not get actual host rows here, we use one row per affected host

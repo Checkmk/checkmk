@@ -250,7 +250,7 @@ def compute_foldertree() -> dict[str, FolderEntry]:
         folder = tree.folder(path)
         return FolderEntry(
             {
-                "title": folder.title() or path.split("/")[-1],
+                "title": folder.title() or path.rsplit("/", maxsplit=1)[-1],
                 ".path": path,
                 ".num_hosts": num,
                 ".folders": {},

@@ -1692,7 +1692,7 @@ def _format_piggybacked_objects_sections(piggy_data: Mapping[str, Sequence[str]]
 
 def convert_hostname(hostname: str, opt: argparse.Namespace) -> str:
     if opt.spaces == "cut":
-        return hostname.split()[0]
+        return hostname.split(maxsplit=1)[0]
     return hostname.replace(" ", "_")
 
 

@@ -168,7 +168,7 @@ def _get_connection(index: int, data: list[list[str]]) -> tuple[int, Connection]
 def _get_spool(index: int, data: list[list[str]]) -> tuple[int, Spool]:
     def _split_parse_date(value: str) -> int | None:
         try:
-            return int(value.split()[0])
+            return int(value.split(maxsplit=1)[0])
         except (ValueError, IndexError):
             return None
 

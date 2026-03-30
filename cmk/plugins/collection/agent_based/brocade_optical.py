@@ -350,7 +350,7 @@ def _check_light(
         reading,
         "%s Light%s"
         % (
-            metric_name.split("_")[0].upper(),
+            metric_name.split("_", maxsplit=1)[0].upper(),
             lane_num is not None and " (Lane %d)" % lane_num or "",
         ),
         "dBm",

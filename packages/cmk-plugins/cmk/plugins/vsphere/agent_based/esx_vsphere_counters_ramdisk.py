@@ -35,7 +35,7 @@ ESX_VSPHERE_COUNTERS_RAMDISK_SIZES: Final = {
 
 def _instance_to_item(instance: str) -> str | None:
     return (
-        instance.split("/")[-1]
+        instance.rsplit("/", maxsplit=1)[-1]
         if instance.startswith("host/system/kernel/kmanaged/visorfs/")
         else None
     )

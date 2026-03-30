@@ -398,7 +398,7 @@ def _check_brocade_fcport(
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     for if_entry in section:
-        if int(item.split()[0]) + 1 == if_entry["index"]:
+        if int(item.split(maxsplit=1)[0]) + 1 == if_entry["index"]:
             found_entry = if_entry
             break
     else:

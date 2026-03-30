@@ -182,7 +182,7 @@ class CheckSftp:
         """Normalize the paths and append the src file name to the destination directory."""
         return (
             os.path.normpath(src_file),
-            os.path.normpath(f"{dst_dir}/{src_file.split('/')[-1]}"),
+            os.path.normpath(f"{dst_dir}/{src_file.rsplit('/', maxsplit=1)[-1]}"),
         )
 
     def process_put_options(

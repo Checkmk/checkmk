@@ -110,7 +110,7 @@ def _capacity_params_to_level(params: Mapping[str, tuple], key: str) -> LevelsT:
 
 def aws_dynamodb_capacity_get_metric_name_and_unit(metric_id: str) -> tuple[str, str]:
     if metric_id.startswith("Sum"):
-        metric_id = metric_id.split("_")[-1]
+        metric_id = metric_id.rsplit("_", maxsplit=1)[-1]
     metric_lower = (
         metric_id.lower().replace("readcapacityunits", "_rcu").replace("writecapacityunits", "_wcu")
     )

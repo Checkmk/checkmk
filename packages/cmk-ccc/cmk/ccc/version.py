@@ -41,7 +41,7 @@ class Edition(enum.Enum):
 
     @classmethod
     def from_version_string(cls, raw: str) -> Edition:
-        return cls.from_long_edition(raw.split(".")[-1])
+        return cls.from_long_edition(raw.rsplit(".", maxsplit=1)[-1])
 
     @classmethod
     def from_long_edition(cls, long: str) -> Edition:

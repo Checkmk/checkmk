@@ -441,7 +441,7 @@ def _elbv2_load_balancer_arn_to_dim(arn: str) -> str:
 
 
 def _elbv2_target_group_arn_to_dim(arn: str) -> str:
-    return arn.split(":")[-1]
+    return arn.rsplit(":", maxsplit=1)[-1]
 
 
 def _get_table_names(client: BaseClient, get_response_content: Callable) -> Iterable[str]:

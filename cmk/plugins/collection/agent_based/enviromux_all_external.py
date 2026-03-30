@@ -28,7 +28,7 @@ from cmk.plugins.enviromux.lib import (
 
 def _parse_value(token: str) -> float | None:
     try:
-        return float(token.split()[0])
+        return float(token.split(maxsplit=1)[0])
     except ValueError:
         return None
 

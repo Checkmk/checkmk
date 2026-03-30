@@ -551,7 +551,7 @@ def _patch_template_file(
                 sys.stdout.write("Installed default file (with site name %s).\n" % new_site.name)
                 break
             elif choice == "shell":
-                relname = src.split("/")[-1]
+                relname = src.rsplit("/", maxsplit=1)[-1]
                 sys.stdout.write(" %-35s the half-converted file\n" % (relname,))
                 sys.stdout.write(" %-35s your original version\n" % (relname + ".orig"))
                 sys.stdout.write(" %-35s the failed parts of the patch\n" % (relname + ".rej"))
@@ -675,7 +675,7 @@ def merge_update_file(
                 sys.stdout.write("File %s not found.\n" % reject_file)
 
         elif choice == "shell":
-            relname = relpath.split("/")[-1]
+            relname = relpath.rsplit("/", maxsplit=1)[-1]
             sys.stdout.write(" %-25s: the current half-merged file\n" % relname)
             sys.stdout.write(
                 " %-25s: the default version of %s\n" % (relname + "." + old_version, old_version)

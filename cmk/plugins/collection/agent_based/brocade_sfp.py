@@ -182,7 +182,7 @@ def check_brocade_sfp_temp(item: str, params: TempParamDict, section: Section) -
     # TODO: Move this magical plucking apart of the
     #       item to brocade.include and do the same
     #       for brocade.fcport.
-    port_index = int(item.split()[0]) + 1
+    port_index = int(item.split(maxsplit=1)[0]) + 1
     if (port := section.get(port_index)) is None:
         return
 
@@ -223,7 +223,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
     # TODO: Move this magical plucking apart of the
     #       item to brocade.include and do the same
     #       for brocade.fcport.
-    port_index = int(item.split()[0]) + 1
+    port_index = int(item.split(maxsplit=1)[0]) + 1
 
     if (port := section.get(port_index)) is None:
         return

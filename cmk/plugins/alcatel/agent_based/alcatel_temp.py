@@ -42,7 +42,7 @@ def check_alcatel_temp(item: str, params: TempParamType, section: Section) -> Ch
     else:
         slot = int(item.split()[1])
         slot_index = slot - 1
-    sensor = item.split()[-1]
+    sensor = item.rsplit(maxsplit=1)[-1]
     items = {"Board": 0, "CPU": 1}
     try:
         # If multiple switches are stacked and one of them is

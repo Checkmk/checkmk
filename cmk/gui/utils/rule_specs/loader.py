@@ -170,7 +170,7 @@ def _get_edition_only(plugin_module: str) -> Edition:
     >>> _get_edition_only('cmk.plugins.family.rulesets.cce')  # doctest: +SKIP
     <Edition.ULTIMATE: _EditionValue(short='ultimate', long='ultimate', title='Checkmk Ultimate')>
     """
-    edition_folder = plugin_module.split(".")[-1]
+    edition_folder = plugin_module.rsplit(".", maxsplit=1)[-1]
     for edition in Edition:
         if edition_folder == edition.short:
             return edition

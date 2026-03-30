@@ -424,7 +424,7 @@ def get_region_from_item(item: str) -> str:
     >>> get_region_from_item("my_python_test_function [eu-central-1]")
     'eu-central-1'
     """
-    return item.split(" ")[-1].strip("[]")
+    return item.rsplit(" ", maxsplit=1)[-1].strip("[]")
 
 
 @dataclass

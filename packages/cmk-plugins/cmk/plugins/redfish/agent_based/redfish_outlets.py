@@ -70,7 +70,7 @@ def check_redfish_outlets(
         section_id = item
     elif "-" in item and len(item.split("-")) == 2:
         # Handle label format (e.g., "1-MyOutlet" -> "1")
-        section_id = item.split("-")[0]
+        section_id = item.split("-", maxsplit=1)[0]
     else:
         # Handle alphanumeric IDs (e.g., "L3_F2_30" common for three-phase PDU outlets)
         section_id = item

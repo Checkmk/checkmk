@@ -51,7 +51,7 @@ def worst_service_state(*states: int, default: int) -> int:
 
 
 def section_name_of(check_plugin_name: str) -> str:
-    return check_plugin_name.split(".")[0]
+    return check_plugin_name.split(".", maxsplit=1)[0]
 
 
 def maincheckify(subcheck_name: str) -> str:

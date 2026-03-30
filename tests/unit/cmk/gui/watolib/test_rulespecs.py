@@ -278,7 +278,7 @@ def test_rulespec_get_all_groups() -> None:
 
 def _is_dynamically_generated_group(group_name: str) -> bool:
     # generated for the RulesetAPI v1
-    return group_name.split("/")[-1].startswith(GENERATED_GROUP_PREFIX)
+    return group_name.rsplit("/", maxsplit=1)[-1].startswith(GENERATED_GROUP_PREFIX)
 
 
 def test_rulespec_get_host_groups() -> None:

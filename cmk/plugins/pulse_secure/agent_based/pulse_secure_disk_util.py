@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TypedDict
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
@@ -24,6 +24,10 @@ Section = Mapping[str, int]
 METRIC_PULSE_SECURE_DISK = "disk_utilization"
 
 
+class PulseSecureDiskUtilParams(TypedDict, total=False):
+    upper_levels: tuple[float, float]
+
+
 def parse_pulse_secure_disk_util(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, METRIC_PULSE_SECURE_DISK)
 
@@ -33,7 +37,9 @@ def discover_pulse_secure_disk_util(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-def check_pulse_secure_disk_util(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_pulse_secure_disk_util(
+    params: PulseSecureDiskUtilParams, section: Section
+) -> CheckResult:
     if not section:
         return
 

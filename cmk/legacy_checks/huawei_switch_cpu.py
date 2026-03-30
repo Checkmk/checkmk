@@ -3,36 +3,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
 
-
+import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    OIDEnd,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    StringTable,
 )
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
-from cmk.legacy_includes.cpu_util import check_cpu_util
 from cmk.plugins.huawei.lib import (
     DETECT_HUAWEI_SWITCH,
     parse_huawei_physical_entity_values,
     Section,
 )
-
-check_info = {}
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 
 def parse_huawei_switch_cpu(string_table: Sequence[StringTable]) -> Section:
     return parse_huawei_physical_entity_values(string_table)
 
 
-def check_huawei_switch_cpu(
-    item: str, params: Mapping[str, Any], parsed: Section
-) -> LegacyCheckResult:
-    if not (item_data := parsed.get(item)):
+def check_huawei_switch_cpu(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (item_data := section.get(item)):
         return
 
     # TODO: this weird. Either we should not discover in this case, or let it crash during checking.
@@ -42,14 +42,20 @@ def check_huawei_switch_cpu(
         util = float(item_data.value)
     except TypeError:
         return
-    yield from check_cpu_util(util, params, cores=[("core1", util)])
+    yield from check_cpu_util(
+        util=util,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+        cores=[("core1", util)],
+    )
 
 
-def discover_huawei_switch_cpu(section: Section) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item in section)
+def discover_huawei_switch_cpu(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["huawei_switch_cpu"] = LegacyCheckDefinition(
+snmp_section_huawei_switch_cpu = SNMPSection(
     name="huawei_switch_cpu",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
@@ -63,6 +69,11 @@ check_info["huawei_switch_cpu"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_huawei_switch_cpu,
+)
+
+
+check_plugin_huawei_switch_cpu = CheckPlugin(
+    name="huawei_switch_cpu",
     service_name="CPU utilization %s",
     discovery_function=discover_huawei_switch_cpu,
     check_function=check_huawei_switch_cpu,

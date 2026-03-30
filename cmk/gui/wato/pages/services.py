@@ -732,7 +732,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             with foldable_container(
                 treename="service_discovery",
                 id_="options",
-                isopen=False,
+                isopen=user.get_tree_state("service_discovery", "options", False),
                 title=_("Job details"),
                 indent=False,
             ):

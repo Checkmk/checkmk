@@ -3881,7 +3881,11 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                 foldable_container(
                     treename="foldable_cascading_dropdown",
                     id_=hashlib.sha256(repr(value).encode()).hexdigest(),
-                    isopen=False,
+                    isopen=user.get_tree_state(
+                        "foldable_cascading_dropdown",
+                        hashlib.sha256(repr(value).encode()).hexdigest(),
+                        False,
+                    ),
                     title=choice.title,
                     indent=False,
                 ),
@@ -6559,7 +6563,7 @@ class Foldable[T](ValueSpec[T]):
         with foldable_container(
             treename="valuespec_foldable",
             id_=varprefix,
-            isopen=False,
+            isopen=user.get_tree_state("valuespec_foldable", varprefix, False),
             title=self._get_title(varprefix, value),
             indent=False,
         ):

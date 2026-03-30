@@ -287,7 +287,21 @@ class ABCTopologyPage(Page):
         breadcrumb.append(make_current_page_breadcrumb_item(str(visual_spec["title"])))
         page_menu = PageMenu(breadcrumb=breadcrumb)
         self._extend_display_dropdown(menu=page_menu, page_name=visual_spec["name"])
-        make_header(html, title, breadcrumb, page_menu)
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            page_menu,
+            debug=active_config.debug,
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
     def show_topology(
         self,

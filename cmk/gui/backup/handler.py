@@ -36,7 +36,7 @@ from cmk.crypto.password import Password as PasswordType
 from cmk.crypto.pem import PEMDecodingError
 from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.form_specs import (
     DisplayMode,
@@ -57,6 +57,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -2370,7 +2371,21 @@ class PageBackupRestore:
         # Special handling for Checkmk / CMA differences
         title = _("Insert passphrase")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_setup(), title)
-        make_header(html, title, breadcrumb, PageMenu(dropdowns=[], breadcrumb=breadcrumb))
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            PageMenu(dropdowns=[], breadcrumb=breadcrumb),
+            debug=active_config.debug,
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         html.show_user_errors()
         html.p(

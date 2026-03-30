@@ -138,7 +138,15 @@ class GUIViewRenderer(ABCViewRenderer):
 
         # Show/hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
-            html.body_start(view_title(view_spec, self.view.context))
+            html.body_start(
+                view_title(view_spec, self.view.context),
+                lang=user.language,
+                inject_js_profiling_code=active_config.inject_js_profiling_code,
+                load_frontend_vue=active_config.load_frontend_vue,
+                custom_style_sheet=active_config.custom_style_sheet,
+                screenshotmode=active_config.screenshotmode,
+                inline_help_as_text=user.inline_help_as_text,
+            )
 
         if display_options.enabled(display_options.T):
             breadcrumb = self.view.breadcrumb()
@@ -150,6 +158,8 @@ class GUIViewRenderer(ABCViewRenderer):
                 page_menu=self._page_menu(rows, show_filters, user_permissions),
                 browser_reload=html.browser_reload,
                 debug=debug,
+                hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+                user_role_ids=user.role_ids,
             )
             html.begin_page_content()
 

@@ -334,7 +334,7 @@ def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
         with foldable_container(
             treename=tree_id,
             id_="/" + folder[".path"],
-            isopen=False,
+            isopen=user.get_tree_state(tree_id, "/" + folder[".path"], False),
             title=title,
             padding=6,
         ):

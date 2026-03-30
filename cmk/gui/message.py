@@ -277,7 +277,21 @@ def page_message(ctx: PageContext) -> None:
     title = _("Send user message")
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_setup(), title)
     menu = _page_menu(breadcrumb)
-    make_header(html, title, breadcrumb, menu)
+    make_header(
+        html,
+        title,
+        breadcrumb,
+        menu,
+        debug=ctx.config.debug,
+        lang=user.language,
+        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+        load_frontend_vue=ctx.config.load_frontend_vue,
+        custom_style_sheet=ctx.config.custom_style_sheet,
+        screenshotmode=ctx.config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
+    )
 
     recipients = _get_users_from_multisite_config(ctx.config)
     flat_catalog = create_flat_catalog_from_dictionary(_message_spec(recipients))

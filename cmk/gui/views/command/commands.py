@@ -1645,7 +1645,7 @@ class CommandScheduleDowntimesForm:
         with foldable_container(
             treename="advanced_down_options",
             id_="adv_down_opts",
-            isopen=False,
+            isopen=user.get_tree_state("advanced_down_options", "adv_down_opts", False),
             title=_("Advanced options"),
             indent=False,
         ):

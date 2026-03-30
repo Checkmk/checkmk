@@ -28,6 +28,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request as request_
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.sites import live
@@ -171,6 +172,15 @@ def page_graph(ctx: PageContext) -> None:
         html,
         _("Prediction for %s - %s - %s") % (host_name, service_name, metric_name),
         breadcrumb,
+        debug=ctx.config.debug,
+        lang=user.language,
+        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+        load_frontend_vue=ctx.config.load_frontend_vue,
+        custom_style_sheet=ctx.config.custom_style_sheet,
+        screenshotmode=ctx.config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
     )
 
     selected_predictions = _select_prediction(

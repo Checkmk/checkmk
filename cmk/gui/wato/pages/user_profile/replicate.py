@@ -45,7 +45,21 @@ class UserProfileReplicate(Page):
 
         title = _("Replicate user profile")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), title)
-        make_header(html, title, breadcrumb, self._page_menu(ctx.request, breadcrumb))
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            self._page_menu(ctx.request, breadcrumb),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously

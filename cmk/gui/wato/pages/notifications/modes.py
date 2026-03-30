@@ -583,7 +583,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                     with foldable_container(
                         treename="rule_%s_%d" % (userid, nr),
                         id_=str(nr),
-                        isopen=False,
+                        isopen=user.get_tree_state("rule_%s_%d" % (userid, nr), str(nr), False),
                         title=title,
                         indent=False,
                     ):
@@ -4114,7 +4114,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 with foldable_container(
                     treename="parameter_{nr}",
                     id_=str(nr),
-                    isopen=False,
+                    isopen=user.get_tree_state("parameter_{nr}", str(nr), False),
                     title=title,
                     indent=False,
                 ):

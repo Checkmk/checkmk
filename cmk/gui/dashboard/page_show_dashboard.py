@@ -105,7 +105,15 @@ def page_dashboard_app(ctx: PageContext) -> None:
             },
         }
 
-    html.body_start(title)
+    html.body_start(
+        title,
+        lang=user.language,
+        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+        load_frontend_vue=ctx.config.load_frontend_vue,
+        custom_style_sheet=ctx.config.custom_style_sheet,
+        screenshotmode=ctx.config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+    )
     html.begin_page_content(enable_scrollbar=True)
 
     _may_show_license_messages(ctx.request)

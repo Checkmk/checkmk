@@ -19,6 +19,7 @@ from urllib.parse import unquote
 
 from cmk.ccc.user import UserId
 from cmk.gui import forms
+from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -170,7 +171,21 @@ def page_edit_visual(
         form_name="visual",
         visualname=visualname,
     )
-    make_header(html, title, breadcrumb, page_menu)
+    make_header(
+        html,
+        title,
+        breadcrumb,
+        page_menu,
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
+    )
 
     # A few checkboxes concerning the visibility of the visual. These will
     # appear as boolean-keys directly in the visual dict, but encapsulated

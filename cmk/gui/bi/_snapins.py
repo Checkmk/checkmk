@@ -13,6 +13,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.sidebar import bulletlink, SidebarSnapin, SnapinRegistry
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 
@@ -92,7 +93,9 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
                 with foldable_container(
                     treename="bi_aggregation_group_trees",
                     id_=aggr_group_tree,
-                    isopen=False,
+                    isopen=user.get_tree_state(
+                        "bi_aggregation_group_trees", aggr_group_tree, False
+                    ),
                     title=HTMLWriter.render_a(
                         group,
                         href=fetch_url,

@@ -9,7 +9,6 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 from cmk.gui.htmllib.html import html
-from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.html import HTML
 
@@ -38,7 +37,6 @@ def foldable_container(
     padding: int = 15,
     save_state: bool = True,
 ) -> Iterator[bool]:
-    isopen = user.get_tree_state(treename, id_, isopen)
     onclick = foldable_container_onclick(treename, id_, fetch_url, save_state)
     img_id = foldable_container_img_id(treename, id_)
     container_id = foldable_container_id(treename, id_)

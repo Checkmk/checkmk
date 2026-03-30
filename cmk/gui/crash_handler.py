@@ -16,6 +16,7 @@ from cmk.ccc.crash_reporting import (
 )
 from cmk.ccc.site import omd_site
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -171,7 +172,20 @@ def _show_crash_dump_message(
     if fail_silently:
         return
 
-    make_header(html, title, Breadcrumb())
+    make_header(
+        html,
+        title,
+        Breadcrumb(),
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
+    )
     html.show_error(message)
     html.footer()
 

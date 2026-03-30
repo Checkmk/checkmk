@@ -204,7 +204,20 @@ class ClearFailedNotificationPage(Page):
                 breadcrumb = make_simple_page_breadcrumb(
                     main_menu_registry.menu_monitoring(), title
                 )
-                make_header(html, title, breadcrumb)
+                make_header(
+                    html,
+                    title,
+                    breadcrumb,
+                    debug=ctx.config.debug,
+                    lang=user.language,
+                    inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+                    load_frontend_vue=ctx.config.load_frontend_vue,
+                    custom_style_sheet=ctx.config.custom_style_sheet,
+                    screenshotmode=ctx.config.screenshotmode,
+                    inline_help_as_text=user.inline_help_as_text,
+                    hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+                    user_role_ids=user.role_ids,
+                )
 
                 for message in get_flashed_messages():
                     html.show_message(message.msg)
@@ -225,7 +238,21 @@ class ClearFailedNotificationPage(Page):
 
         page_menu = self._page_menu(request, acktime, failed_notifications, breadcrumb)
 
-        make_header(html, title, breadcrumb, page_menu)
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            page_menu,
+            debug=active_config.debug,
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         self._show_notification_table(failed_notifications)
 

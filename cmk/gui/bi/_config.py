@@ -306,7 +306,7 @@ class ABCBIMode(WatoMode):
             with foldable_container(
                 treename="bi_rule_trees",
                 id_=f"{tree_prefix}{tree_path}",
-                isopen=False,
+                isopen=user.get_tree_state("bi_rule_trees", f"{tree_prefix}{tree_path}", False),
                 title=title,
                 title_url=edit_url,
             ):

@@ -263,7 +263,7 @@ def _show_topic(treename: str, topic: NavItemTopic, show_item_icons: bool) -> No
     with foldable_container(
         treename=treename,
         id_=topic.id,
-        isopen=False,
+        isopen=user.get_tree_state(treename, topic.id, False),
         title=topic.title,
         indent=True,
     ):

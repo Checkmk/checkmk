@@ -685,7 +685,7 @@ class PageMenuRenderer:
 
         if dropdown.any_show_more_entries:
             html.open_div(class_=["more_container"])
-            html.more_button(id_, dom_levels_up=2)
+            html.more_button(id_, dom_levels_up=2, show_mode=user.show_mode)
             html.close_div()
 
         for topic in dropdown.topics:

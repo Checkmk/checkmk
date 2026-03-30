@@ -23,7 +23,7 @@ from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -273,7 +273,20 @@ class LoginPage(Page):
     def _show_login_page(self, request: Request, config: Config) -> None:
         html.render_headfoot = False
         html.add_body_css_class("login")
-        make_header(html, get_page_heading(config), Breadcrumb())
+        make_header(
+            html,
+            get_page_heading(config),
+            Breadcrumb(),
+            debug=active_config.debug,
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         default_origtarget = (
             "index.py"

@@ -44,6 +44,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.token_auth import handle_token_page, MKTokenExpiredOrRevokedException
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wsgi.applications.utils import (
@@ -108,6 +109,15 @@ def _page_not_found(ctx: pages.PageContext) -> Response:
                     ),
                 ]
             ),
+            debug=active_config.debug,
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
         )
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
@@ -129,7 +139,20 @@ def _render_exception(e: Exception, title: str) -> Response:
         )
 
     if not fail_silently():
-        make_header(html, title, Breadcrumb())
+        make_header(
+            html,
+            title,
+            Breadcrumb(),
+            debug=active_config.debug,
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
         html.open_ts_container(
             container="div",
             function_name="insert_before",

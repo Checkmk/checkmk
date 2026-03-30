@@ -8,6 +8,7 @@ from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry, PageResult
 
@@ -20,6 +21,15 @@ class GuiTimingsPage(Page):
             html,
             "GUI timings",
             breadcrumb=breadcrumb,
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
         )
 
         html.open_div(id_="info_title")

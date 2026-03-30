@@ -353,7 +353,7 @@ class Table:
                 container = foldable_container(
                     treename="table",
                     id_=self.id,
-                    isopen=self.isopen,
+                    isopen=user.get_tree_state("table", self.id, self.isopen),
                     indent=False,
                     title=HTMLWriter.render_h3(self.title, class_=["treeangle", "title"]),
                     save_state=self.options["foldable"] == Foldable.FOLDABLE_SAVE_STATE,

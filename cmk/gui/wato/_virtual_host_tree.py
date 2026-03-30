@@ -157,7 +157,7 @@ class VirtualHostTree(SidebarSnapin):
                 container = foldable_container(
                     treename="tag-tree",
                     id_=".".join(map(str, path)),
-                    isopen=False,
+                    isopen=user.get_tree_state("tag-tree", ".".join(map(str, path)), False),
                     title=bullet + title,
                 )
 

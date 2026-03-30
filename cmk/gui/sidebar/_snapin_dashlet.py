@@ -65,7 +65,13 @@ class SnapinWidgetIFramePage(Page):
         )
 
         html.browser_reload = False
-        html.html_head(_("Sidebar element"))
+        html.html_head(
+            _("Sidebar element"),
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+        )
         html.open_body(class_="side", data_theme=theme.get())
         with self._scrollbar():
             html.open_div(id_="side_content")

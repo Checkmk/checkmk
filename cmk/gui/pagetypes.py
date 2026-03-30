@@ -1045,7 +1045,21 @@ class ListPage(Page, Generic[_T]):
         doc_reference_to_page_menu(
             page_menu, self._type.type_name(), self._type.phrase("title_plural")
         )
-        make_header(html, title_plural, breadcrumb, page_menu)
+        make_header(
+            html,
+            title_plural,
+            breadcrumb,
+            page_menu,
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         for message in get_flashed_messages():
             html.show_message(message.msg)
@@ -1303,7 +1317,21 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
             visualname=page_name,
         )
 
-        make_header(html, title, breadcrumb, page_menu)
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            page_menu,
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         parameters, keys_by_topic = self._collect_parameters(mode, user_permissions)
 

@@ -67,7 +67,21 @@ class PageUserMessage(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), _("Messages"))
-        make_header(html, _("Your messages"), breadcrumb, self.page_menu(breadcrumb))
+        make_header(
+            html,
+            _("Your messages"),
+            breadcrumb,
+            self.page_menu(breadcrumb),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         for flashed_msg in get_flashed_messages():
             html.show_message(flashed_msg.msg)

@@ -23,6 +23,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -93,7 +94,21 @@ def show_log_list(request: Request, *, debug: bool) -> None:
     """Shows a list of all problematic logfiles grouped by host"""
     title = _("All problematic log files")
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
-    make_header(html, title, breadcrumb, _log_list_page_menu(request, breadcrumb))
+    make_header(
+        html,
+        title,
+        breadcrumb,
+        _log_list_page_menu(request, breadcrumb),
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
+    )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
         do_log_ack(request, site=None, host_name=None, file_name=None)
@@ -201,7 +216,19 @@ def show_host_log_list(
     title = _("Log files of host %s") % host_name
     breadcrumb = _host_log_list_breadcrumb(host_name, title, user_permissions)
     make_header(
-        html, title, breadcrumb, _host_log_list_page_menu(request, breadcrumb, site, host_name)
+        html,
+        title,
+        breadcrumb,
+        _host_log_list_page_menu(request, breadcrumb, site, host_name),
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
     )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
@@ -342,6 +369,15 @@ def show_file(
         title,
         breadcrumb,
         _show_file_page_menu(request, breadcrumb, site, host_name, int_filename),
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
     )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):

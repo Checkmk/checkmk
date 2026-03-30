@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu
 
 # TODO: Refactor to context handler or similar?
@@ -38,6 +40,15 @@ def wato_html_head(
         page_menu=page_menu,
         show_body_start=show_body_start,
         show_top_heading=show_top_heading,
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
     )
     html.open_div(class_="wato")
 

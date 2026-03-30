@@ -438,7 +438,14 @@ class SidebarRenderer:
         # In both cases this method would only render the sidebar
         # content afterwards.
 
-        html.html_head(title or _("Checkmk Sidebar"), main_javascript="side")
+        html.html_head(
+            title or _("Checkmk Sidebar"),
+            main_javascript="side",
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+        )
 
         self._show_body_start(
             screenshot_mode=screenshot_mode, sidebar_notify_interval=sidebar_notify_interval
@@ -636,7 +643,7 @@ class SidebarRenderer:
                 class_=["moresnapin"]
                 + (["hidden"] if snapin.visible == SnapinVisibility.CLOSED else [""])
             )
-            html.more_button(more_id, dom_levels_up=4)
+            html.more_button(more_id, dom_levels_up=4, show_mode=user.show_mode)
             html.close_span()
             html.close_div()
 
@@ -907,7 +914,21 @@ def page_add_snapin(ctx: PageContext) -> None:
 
     title = _("Add sidebar element")
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_customize(), title)
-    make_header(html, title, breadcrumb, _add_snapins_page_menu(breadcrumb))
+    make_header(
+        html,
+        title,
+        breadcrumb,
+        _add_snapins_page_menu(breadcrumb),
+        debug=ctx.config.debug,
+        lang=user.language,
+        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+        load_frontend_vue=ctx.config.load_frontend_vue,
+        custom_style_sheet=ctx.config.custom_style_sheet,
+        screenshotmode=ctx.config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
+    )
 
     used_snapins = _used_snapins(ctx.config, user_permissions)
 

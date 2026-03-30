@@ -74,7 +74,7 @@ class MasterControlSnapin(SidebarSnapin):
                 foldable_container(
                     treename="master_control",
                     id_=site_id,
-                    isopen=True,
+                    isopen=user.get_tree_state("master_control", site_id, True),
                     title=site_alias,
                 )
                 if not site_config.is_single_local_site(config.sites)

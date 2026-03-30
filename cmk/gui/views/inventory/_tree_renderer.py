@@ -24,6 +24,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.http import request as http_request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme as gui_theme
@@ -591,7 +592,7 @@ class TreeRenderer:
         with foldable_container(
             treename=f"inv_{self._host_name}{tree_id}",
             id_=raw_path,
-            isopen=False,
+            isopen=user.get_tree_state(f"inv_{self._host_name}{tree_id}", raw_path, False),
             title=title,
             fetch_url=makeuri_contextless(
                 self._request,

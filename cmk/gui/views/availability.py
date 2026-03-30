@@ -35,6 +35,7 @@ from cmk.gui.availability import (
     AVTimeRange,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -291,7 +292,16 @@ def show_availability_page(
         return
 
     if display_options.enabled(display_options.H):
-        html.body_start(title, force=True)
+        html.body_start(
+            title,
+            force=True,
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+        )
 
     if display_options.enabled(display_options.T):
         top_heading(
@@ -308,6 +318,8 @@ def show_availability_page(
             ),
             browser_reload=html.browser_reload,
             debug=debug,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
         )
         html.begin_page_content()
 
@@ -820,7 +832,15 @@ def show_bi_availability(
         title = _("Availability of") + " " + title
 
     if html.output_format != "csv_export":
-        html.body_start(title)
+        html.body_start(
+            title,
+            lang=user.language,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+        )
 
         breadcrumb = view.breadcrumb()
         assert breadcrumb[-1].url is not None
@@ -875,6 +895,8 @@ def show_bi_availability(
             page_menu,
             browser_reload=html.browser_reload,
             debug=debug,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
         )
 
         avoptions = availability.get_availability_options_from_request("bi")
@@ -1201,7 +1223,15 @@ def _edit_annotation(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     if service:
         title += "/" + service
 
-    html.body_start(title)
+    html.body_start(
+        title,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+    )
 
     breadcrumb = _edit_annotation_breadcrumb(breadcrumb, title)
     top_heading(
@@ -1212,6 +1242,8 @@ def _edit_annotation(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
         _edit_annotation_page_menu(breadcrumb),
         browser_reload=html.browser_reload,
         debug=debug,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
     )
 
     with html.form_context("editanno", method="GET"):

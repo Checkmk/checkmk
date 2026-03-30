@@ -12,6 +12,7 @@ from cmk.gui.config import Config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import footnotelinks, PageHandlers, SidebarSnapin
 
@@ -139,7 +140,7 @@ class NagVisMaps(SidebarSnapin):
                 with foldable_container(
                     treename="nagvis",
                     id_=map_name,
-                    isopen=False,
+                    isopen=user.get_tree_state("nagvis", map_name, False),
                     title=map_cfg["alias"],
                     title_url=map_cfg["url"],
                     title_target="main",

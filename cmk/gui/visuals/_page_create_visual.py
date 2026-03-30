@@ -10,11 +10,13 @@
 from collections.abc import Sequence
 
 from cmk.gui import forms
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu
 from cmk.gui.type_defs import SingleInfos, VisualTypeName
 from cmk.gui.utils.transaction_manager import transactions
@@ -46,6 +48,15 @@ def page_create_visual(
             button_name="_save",
             save_title=_("Continue"),
         ),
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
     )
 
     html.open_p()

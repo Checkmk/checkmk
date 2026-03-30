@@ -23,13 +23,11 @@ from flask import current_app, session
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.gui import log, utils
-from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.dynamic_icon import resolve_icon_name
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme
@@ -75,12 +73,6 @@ class _Manifest(typing.NamedTuple):
     stage1: str
 
 
-def inject_js_profiling_code() -> bool:
-    return active_config.inject_js_profiling_code or html.request.has_var(
-        "inject_js_profiling_code"
-    )
-
-
 EncType = typing.Literal[
     "application/x-url-encoded",
     "application/x-www-form-urlencoded",
@@ -110,10 +102,9 @@ class HTMLGenerator(HTMLWriter):
 
         self.request = request
 
-    @property
-    def screenshotmode(self) -> bool:
+    def _screenshotmode(self, default: bool) -> bool:
         """Enabling the screenshot mode omits the fancy background and makes it white instead."""
-        return bool(self.request.var("screenshotmode", "1" if active_config.screenshotmode else ""))
+        return bool(self.request.var("screenshotmode", "1" if default else ""))
 
     def set_focus(self, varname: str) -> None:
         self.final_javascript(
@@ -227,11 +218,19 @@ class HTMLGenerator(HTMLWriter):
             )
         )
 
-    def _head(self, title: str, javascripts: Sequence[str] | None = None) -> None:
+    def _head(
+        self,
+        title: str,
+        javascripts: Sequence[str] | None = None,
+        *,
+        inject_js_profiling_code: bool,
+        load_frontend_vue: str,
+        custom_style_sheet: str | None,
+    ) -> None:
         javascripts = javascripts if javascripts else []
 
         self.open_head()
-        if inject_js_profiling_code():
+        if inject_js_profiling_code or self.request.has_var("inject_js_profiling_code"):
             self._inject_profiling_code()
 
         self.default_html_headers()
@@ -252,7 +251,7 @@ class HTMLGenerator(HTMLWriter):
         self.stylesheet(HTMLGenerator._append_cache_busting_query(font_css_filepath))
         self.stylesheet(HTMLGenerator._append_cache_busting_query(css_filepath))
 
-        self._add_custom_style_sheet()
+        self._add_custom_style_sheet(custom_style_sheet)
 
         # Load all scripts
         for js in javascripts:
@@ -262,7 +261,7 @@ class HTMLGenerator(HTMLWriter):
                 HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
             self.javascript_file(js_url)
 
-        self._inject_vue_frontend()
+        self._inject_vue_frontend(load_frontend_vue)
 
         self.set_js_csrf_token()
 
@@ -282,9 +281,9 @@ class HTMLGenerator(HTMLWriter):
         stage1 = f"cmk-frontend-vue/{manifest['src/stage1.ts']['file']}"
         return _Manifest(main, main_stylesheets, stage1)
 
-    def _inject_vue_frontend(self) -> None:
+    def _inject_vue_frontend(self, load_frontend_vue: str) -> None:
         manifest = self._load_vue_manifest()
-        if active_config.load_frontend_vue == "inject":
+        if load_frontend_vue == "inject":
             # stage1 will try to load the hot reloading files. if this fails,
             # an error will be shown and the fallback files will be loaded.
             self.js_entrypoint(
@@ -325,15 +324,12 @@ class HTMLGenerator(HTMLWriter):
             "var global_csrf_token = %s;" % (json.dumps(session.session_info.csrf_token))
         )
 
-    def _add_custom_style_sheet(self) -> None:
+    def _add_custom_style_sheet(self, custom_style_sheet: str | None) -> None:
         for css in HTMLGenerator._plugin_stylesheets():
             self._write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
-        if active_config.custom_style_sheet:
-            self._write(
-                '<link rel="stylesheet" type="text/css" href="%s">\n'
-                % active_config.custom_style_sheet
-            )
+        if custom_style_sheet:
+            self._write('<link rel="stylesheet" type="text/css" href="%s">\n' % custom_style_sheet)
 
     @staticmethod
     def _plugin_stylesheets() -> Iterable[str]:
@@ -365,12 +361,23 @@ class HTMLGenerator(HTMLWriter):
         title: str,
         main_javascript: str = "main",
         force: bool = False,
+        *,
+        lang: str,
+        inject_js_profiling_code: bool,
+        load_frontend_vue: str,
+        custom_style_sheet: str | None,
     ) -> None:
         javascript_files = [main_javascript]
         if force or not self._header_sent:
             self.write_html(HTML.without_escaping("<!DOCTYPE HTML>\n"))
-            self.open_html(lang=user.language)
-            self._head(title, javascript_files)
+            self.open_html(lang=lang)
+            self._head(
+                title,
+                javascript_files,
+                inject_js_profiling_code=inject_js_profiling_code,
+                load_frontend_vue=load_frontend_vue,
+                custom_style_sheet=custom_style_sheet,
+            )
             self._header_sent = True
 
     def body_start(
@@ -378,15 +385,33 @@ class HTMLGenerator(HTMLWriter):
         title: str = "",
         main_javascript: Literal["main", "side"] = "main",
         force: bool = False,
+        *,
+        lang: str,
+        inject_js_profiling_code: bool,
+        load_frontend_vue: str,
+        custom_style_sheet: str | None,
+        screenshotmode: bool,
+        inline_help_as_text: bool,
     ) -> None:
-        self.html_head(title, main_javascript, force)
-        self.open_body(class_=self._get_body_css_classes(), data_theme=theme.get())
+        self.html_head(
+            title,
+            main_javascript,
+            force,
+            lang=lang,
+            inject_js_profiling_code=inject_js_profiling_code,
+            load_frontend_vue=load_frontend_vue,
+            custom_style_sheet=custom_style_sheet,
+        )
+        self.open_body(
+            class_=self._get_body_css_classes(screenshotmode, inline_help_as_text),
+            data_theme=theme.get(),
+        )
 
-    def _get_body_css_classes(self) -> list[str]:  # TODO: Sequence!
+    def _get_body_css_classes(self, screenshotmode: bool, inline_help_as_text: bool) -> list[str]:
         classes = self._body_classes[:]
-        if self.screenshotmode:
+        if self._screenshotmode(screenshotmode):
             classes += ["screenshotmode"]
-        if user.inline_help_as_text:
+        if inline_help_as_text:
             classes += ["inline_help_as_text"]
         return classes
 
@@ -1464,9 +1489,15 @@ class HTMLGenerator(HTMLWriter):
         self.static_icon(StaticIcon(IconNames.trans))
 
     def more_button(
-        self, id_: str, dom_levels_up: int, additional_js: str = "", with_text: bool = False
+        self,
+        id_: str,
+        dom_levels_up: int,
+        additional_js: str = "",
+        with_text: bool = False,
+        *,
+        show_mode: str,
     ) -> None:
-        if user.show_mode == "enforce_show_more":
+        if show_mode == "enforce_show_more":
             return
 
         self.open_a(

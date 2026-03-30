@@ -141,7 +141,21 @@ class PageCrash(Page):
         breadcrumb = self._breadcrumb(ctx.request, title, permissions)
 
         page_menu = self._page_menu(ctx.request, breadcrumb, report.info, report.site_id)
-        make_header(html, title, breadcrumb, page_menu)
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            page_menu,
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information

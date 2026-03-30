@@ -305,7 +305,7 @@ class Bookmarks(SidebarSnapin):
             with foldable_container(
                 treename="bookmarks",
                 id_=topic,
-                isopen=False,
+                isopen=user.get_tree_state("bookmarks", topic, False),
                 title=topic,
                 indent=False,
             ):

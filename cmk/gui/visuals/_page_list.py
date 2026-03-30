@@ -9,6 +9,7 @@ import json
 from collections.abc import Callable, Iterable
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -131,7 +132,21 @@ def page_list(
 
     _add_doc_references(page_menu, what, visual_plural_title)
 
-    make_header(html, title, breadcrumb, page_menu)
+    make_header(
+        html,
+        title,
+        breadcrumb,
+        page_menu,
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
+    )
 
     for message in get_flashed_messages():
         html.show_message(message.msg)

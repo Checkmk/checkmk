@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import forms, visuals
+from cmk.gui.config import active_config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu
 from cmk.gui.pages import PageContext
 from cmk.gui.utils.transaction_manager import transactions
@@ -51,6 +53,15 @@ def show_create_view_dialog(next_url: str | None = None) -> None:
             button_name="_save",
             save_title=_("Continue"),
         ),
+        debug=active_config.debug,
+        lang=user.language,
+        inject_js_profiling_code=active_config.inject_js_profiling_code,
+        load_frontend_vue=active_config.load_frontend_vue,
+        custom_style_sheet=active_config.custom_style_sheet,
+        screenshotmode=active_config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
     )
 
     if request.var("_save") and transactions.check_transaction():

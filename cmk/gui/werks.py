@@ -144,6 +144,15 @@ class ChangeLogPage(Page):
             _("Change log (Werks)"),
             breadcrumb,
             self._page_menu(ctx.request, breadcrumb, werk_table_options),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
         )
 
         for message in get_flashed_messages():
@@ -296,7 +305,21 @@ def page_werk(ctx: PageContext) -> None:
         )
     )
     breadcrumb.append(make_current_page_breadcrumb_item(title))
-    make_header(html, title, breadcrumb, _page_menu_werk(ctx.request, breadcrumb, werk))
+    make_header(
+        html,
+        title,
+        breadcrumb,
+        _page_menu_werk(ctx.request, breadcrumb, werk),
+        debug=ctx.config.debug,
+        lang=user.language,
+        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+        load_frontend_vue=ctx.config.load_frontend_vue,
+        custom_style_sheet=ctx.config.custom_style_sheet,
+        screenshotmode=ctx.config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+        user_role_ids=user.role_ids,
+    )
 
     html.open_table(class_=["data", "headerleft", "werks"])
 

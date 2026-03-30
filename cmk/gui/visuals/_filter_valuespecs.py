@@ -258,7 +258,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.open_div(
             id_=filter_list_id, class_=["popup_filter_list", ("more" if show_more else "less")]
         )
-        html.more_button(filter_list_id, 1)
+        html.more_button(filter_list_id, 1, show_mode=user.show_mode)
         for group in self._grouped_choices:
             if not group.choices:
                 continue
@@ -270,7 +270,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
             with foldable_container(
                 treename="filter_group_title",
                 id_=group_id,
-                isopen=True,
+                isopen=user.get_tree_state("filter_group_title", group_id, True),
                 title=group.title,
                 indent=None,
             ):

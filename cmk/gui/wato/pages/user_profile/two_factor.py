@@ -585,7 +585,21 @@ class UserTwoFactorOverview(Page):
         )
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
-        make_header(html, title, breadcrumb, self._page_menu(ctx.request, breadcrumb))
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            self._page_menu(ctx.request, breadcrumb),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         if transactions.check_transaction():
             try:
@@ -765,7 +779,21 @@ class UserTwoFactorEnforce(Page):
         )
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
-        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            self._page_menu(breadcrumb),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         if transactions.check_transaction():
             try:
@@ -933,7 +961,21 @@ class RegisterTotpSecret(Page):
         )
         title = self._page_title()
         breadcrumb = self._breadcrumb()
-        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            self._page_menu(breadcrumb),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         if transactions.check_transaction():
             try:
@@ -1047,7 +1089,21 @@ class EditCredentialAlias(Page):
         )
         title = self._page_title()
         breadcrumb = self._breadcrumb()
-        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
+        make_header(
+            html,
+            title,
+            breadcrumb,
+            self._page_menu(breadcrumb),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         if transactions.check_transaction():
             try:
@@ -1327,7 +1383,20 @@ class UserLoginTwoFactor(Page):
         html.render_headfoot = False
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
-        make_header(html, _("Two-factor authentication"), Breadcrumb())
+        make_header(
+            html,
+            _("Two-factor authentication"),
+            Breadcrumb(),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))

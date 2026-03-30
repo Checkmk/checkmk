@@ -408,7 +408,14 @@ class ViewWidgetIFramePage(Page):
         except MKUserError as e:
             # a linked view used by a widget can be (intentionally) deleted,
             # so we need to handle this gracefully so that the rest of the dashboard still works
-            html.body_start()
+            html.body_start(
+                lang=user.language,
+                inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+                load_frontend_vue=ctx.config.load_frontend_vue,
+                custom_style_sheet=ctx.config.custom_style_sheet,
+                screenshotmode=ctx.config.screenshotmode,
+                inline_help_as_text=user.inline_help_as_text,
+            )
             html.write_html(html.render_error(str(e)))
             return
 
@@ -652,7 +659,14 @@ class ViewWidgetEditPage(Page):
                 )
                 return  # we're done, stop rendering the rest
 
-        html.body_start()  # include CSS to render the view editor properly
+        html.body_start(
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+        )  # include CSS to render the view editor properly
         # remove the 10px padding that body.main adds
         html.open_div(style="margin-left: -10px;")
         if error:

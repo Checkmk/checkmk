@@ -197,6 +197,15 @@ class PageFetchAgentOutput(AgentOutputPage):
                 title,
                 user_permissions := UserPermissions.from_config(ctx.config, permission_registry),
             ),
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
         )
 
         self._action(user_permissions)

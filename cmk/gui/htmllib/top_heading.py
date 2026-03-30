@@ -5,12 +5,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
 from cmk.gui.type_defs import IconNames, StaticIcon
@@ -32,8 +33,10 @@ def top_heading(
     *,
     browser_reload: float,
     debug: bool,
+    hide_suggestions: bool,
+    user_role_ids: Sequence[str],
 ) -> None:
-    _may_show_license_expiry(writer)
+    _may_show_license_expiry(writer, user_role_ids)
 
     writer.open_div(id_="top_heading")
     writer.open_div(class_="titlebar")
@@ -61,7 +64,7 @@ def top_heading(
         browser_reload=browser_reload,
     )
 
-    _may_show_license_banner(writer)
+    _may_show_license_banner(writer, user_role_ids)
 
     if page_state:
         PageStateRenderer().show(page_state)
@@ -71,7 +74,7 @@ def top_heading(
     if page_menu:
         PageMenuRenderer().show(
             page_menu,
-            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            hide_suggestions=hide_suggestions,
         )
 
     writer.close_div()  # top_heading
@@ -86,7 +89,7 @@ def top_heading(
         )
 
 
-def _may_show_license_expiry(writer: HTMLWriter) -> None:
+def _may_show_license_expiry(writer: HTMLWriter, user_role_ids: Sequence[str]) -> None:
     if (
         header_effect := get_licensing_user_effect(
             paths.omd_root,
@@ -94,11 +97,11 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
                 _request, [("mode", "licensing")], filename="wato.py"
             ),
         ).header
-    ) and (set(header_effect.roles).intersection(user.role_ids)):
+    ) and (set(header_effect.roles).intersection(user_role_ids)):
         writer.show_warning(HTML.without_escaping(header_effect.message_html))
 
 
-def _may_show_license_banner(writer: HTMLWriter) -> None:
+def _may_show_license_banner(writer: HTMLWriter, user_role_ids: Sequence[str]) -> None:
     if (
         header_effect := get_licensing_user_effect(
             paths.omd_root,
@@ -106,7 +109,7 @@ def _may_show_license_banner(writer: HTMLWriter) -> None:
                 _request, [("mode", "licensing")], filename="wato.py"
             ),
         ).banner
-    ) and (set(header_effect.roles).intersection(user.role_ids)):
+    ) and (set(header_effect.roles).intersection(user_role_ids)):
         writer.write_html(HTML.without_escaping(header_effect.message_html))
 
 

@@ -117,7 +117,9 @@ def _table_head(
     html.write_text_permissive(title)
     html.help(help_text)
     if show_more_toggle:
-        html.more_button("foldable_" + id_, dom_levels_up=4, with_text=True)
+        html.more_button(
+            "foldable_" + id_, dom_levels_up=4, with_text=True, show_mode=user.show_mode
+        )
     html.close_td()
     html.close_tr()
     html.close_thead()

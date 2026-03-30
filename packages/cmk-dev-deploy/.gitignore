@@ -1,0 +1,9 @@
+*.pyc
+/.cache/
+/.mypy_cache/
+/.pytest_cache/
+/.venv/
+/*.egg-info/
+/build/
+/cmk/dev_deploy/manifest/deploy_manifest.json
+/cmk/dev_deploy/manifest/.manifest_hash

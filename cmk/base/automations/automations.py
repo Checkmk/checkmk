@@ -77,7 +77,7 @@ class AutomationContext:
     get_builtin_host_labels: Callable[[SiteId], Labels]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Automation:
     ident: AutomationID
     handler: Callable[
@@ -89,6 +89,7 @@ class Automation:
         ],
         ABCAutomationResult,
     ]
+    result: type[ABCAutomationResult]
 
     # This property is needed for compatibility with the plugin discovery mechanism
     @property

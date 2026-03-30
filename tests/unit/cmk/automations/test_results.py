@@ -15,14 +15,12 @@ from cmk.automations.results import (
     DiagSpecialAgentInput,
     Gateway,
     GatewayResult,
-    result_type_registry,
     ScanParentsResult,
     SerializedResult,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
 from cmk.automations.types import AutomationID
-from cmk.base.app import make_app
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreviewEntry
@@ -31,15 +29,6 @@ from cmk.checkengine.plugins import SectionName
 from cmk.password_store.v1_unstable import Secret
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import HostLabel
-
-
-def test_result_type_registry_completeness() -> None:
-    # ensures that all automation calls registered in cmk.base have a corresponding result type
-    # registered in cmk.automations
-    automations_missing = {"bake-agents", "notify"}
-    assert set(result_type_registry) - automations_missing == set(
-        make_app(cmk_version.Edition.COMMUNITY).automations._automations
-    )
 
 
 @dataclass

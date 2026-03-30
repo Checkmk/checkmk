@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Create or update the Confluence page mirroring .vscode/README.md.
+"""Create or update the Confluence page mirroring .ide/vscode/ci_parity.md.
 
 Confluence location:
     Developer Documentation > IDE > VSCode > "VSCode & Bazel: Local vs CI Parity"
@@ -35,7 +35,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 CONFLUENCE_URL = os.environ.get("CONFLUENCE_URL", "https://wiki.lan.checkmk.net")
-README_PATH = Path(__file__).resolve().parent.parent.parent / "README.md"
+README_PATH = Path(__file__).resolve().parent.parent / "ci_parity.md"
 PAGE_TITLE = "VSCode & Bazel: Local vs CI Parity"
 PAGE_ID = "190555122"
 
@@ -265,7 +265,9 @@ def _update_page(page_id: str, title: str, body_xhtml: str, version: int) -> dic
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Update Confluence page from .vscode/README.md")
+    parser = argparse.ArgumentParser(
+        description="Update Confluence page from .ide/vscode/ci_parity.md"
+    )
     parser.add_argument(
         "--dry-run", action="store_true", help="Print XHTML without calling the API"
     )

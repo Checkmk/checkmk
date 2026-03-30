@@ -255,13 +255,13 @@ Each site header shows conditional icon buttons:
 
 ### Confluence sync
 
-The file `.vscode/README.md` (VSCode & Bazel: Local vs CI Parity) is mirrored to Confluence at:
+The file `.ide/vscode/ci_parity.md` (VSCode & Bazel: Local vs CI Parity) is mirrored to Confluence at:
 
 - **Space**: DEV (Developer Documentation > IDE > VSCode)
 - **Page ID**: 190555122
 - **URL**: <https://wiki.lan.checkmk.net/pages/viewpage.action?pageId=190555122>
 
-When `.vscode/README.md` changes, update the Confluence page by running:
+When `.ide/vscode/ci_parity.md` changes, update the Confluence page by running:
 
 ```sh
 CONFLUENCE_TOKEN=<token> python .ide/vscode/scripts/update_confluence_vscode_page.py

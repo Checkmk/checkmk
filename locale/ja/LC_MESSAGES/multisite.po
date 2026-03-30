@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-27 18:46+0000\n"
+"PO-Revision-Date: 2026-03-30 14:46+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -1712,6 +1712,16 @@ msgid ""
 "some cases the container IDs can change. Therefore this option can cause "
 "piggyback host names to change.</tt></li></ul>"
 msgstr ""
+"<p>コンテナのピギーバックホスト名の付け方を選択します。以下の選択肢から選べま"
+"す：</p><ul><li><tt>コンテナ名を使用：mycontainername</tt></li><li><tt>ホスト"
+"名とコンテナ名を組み合わせる（デフォルト）"
+"：\"mypodmanhost_mycontainername\"という形式の名前が生成されます。ホスト名が"
+"利用できない場合は、コンテナユーザーの名前が使用されます。これは、名前付けの"
+"競合を防ぐために推奨されます。例えば、異なるPodmanホスト上に「mycontainer」と"
+"いう名前のコンテナが複数存在する場合などです。</tt></li><li><tt>コンテナ名と"
+"IDを組み合わせる：\"mycontainername_containerID\"。コンテナIDが変更される場合"
+"があることにご注意ください。そのため、このオプションを選択すると、"
+"ピギーバックホスト名が変更される可能性があります。</tt></li></ul>"
 
 msgid ""
 "<p>The Apache has a number of maximum processes it may start in case of high "
@@ -2419,7 +2429,7 @@ msgid ""
 "A scheduler job is an object in an Oracle database which could be compared "
 "to a cronjob on Unix."
 msgstr ""
-"スケジューラージョブは、ORACLEデータベース内のオブジェクトであり、Unixのcron"
+"スケジューラージョブは、Oracle データベース内のオブジェクトであり、Unixのcron"
 "ジョブに相当するものです。"
 
 msgid ""
@@ -10536,7 +10546,7 @@ msgid "CISCO Digital Optical Monitoring (DOM)"
 msgstr "CISCOデジタルオプティカルモニタリング(DOM)"
 
 msgid "CLI (podman command)"
-msgstr ""
+msgstr "CLI（podman コマンド）"
 
 msgid "CLOSED"
 msgstr "閉まっている"
@@ -18742,13 +18752,12 @@ msgid "Deploy the agent plug-in <tt>citrix_xenapp</tt> on your target system."
 msgstr ""
 "エージェントプラグイン <tt>zorp</tt>をターゲットシステムにデプロイします。"
 
-#, fuzzy
 msgid ""
 "Deploy the agent plug-in <tt>mk_postgres</tt>. This will create information "
 "necessary for all <tt>postgres_*</tt> checks."
 msgstr ""
 "エージェントプラグイン<tt> mk_postgres </tt>をデプロイします。これにより、す"
-"べての<tt> postgres _ * </tt>チェックに必要な情報が作成されます"
+"べての<tt> postgres _ * </tt>チェックに必要な情報が作成されます。"
 
 msgid "Deploy the agent plug-in <tt>mk_sshd_config</tt>."
 msgstr "エージェントプラグイン <tt>mk_sshd_config </tt> をデプロイする。"
@@ -55600,6 +55609,10 @@ msgid ""
 "invokes the <tt>podman</tt> command directly and works without a running "
 "Podman socket service."
 msgstr ""
+"エージェントプラグインがPodmanと通信する方法を選択します。 <b>API</b> 方式は"
+"Unixソケット経由で接続し、これがデフォルトの設定です。 <b>CLI</b> 方式は <tt>"
+"podman</tt> コマンドを直接呼び出すため、Podmanソケットサービスが実行されてい"
+"なくても動作します。"
 
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
@@ -64471,6 +64484,12 @@ msgid ""
 "Collector only receives cumulative metrics or if you are unsure about the "
 "aggregation temporality of your metrics, you can safely ignore this."
 msgstr ""
+"delta-to-cumulativeプロセッサは、タイムゾーンを累積集計の時間軸に変換します。"
+"これは累積メトリクスのみをサポートするCheckmkのメトリクスバックエンドとの互換"
+"性を確保するために必要です。コレクターがdelta集計の時間軸でメトリクスを受信し"
+"ている場合このプロセッサを設定することで、Checkmkでそれらのメトリクスを利用で"
+"きるようになります。コレクターが累積メトリクスのみを受信している場合、または"
+"メトリクスの集計時間軸が不明な場合は、この設定を無視しても問題ありません。"
 
 msgid ""
 "The description is optional and can be used for explanations or documentation"
@@ -66492,6 +66511,8 @@ msgid ""
 "The relay '%s' is registered to site '%s', but this host belongs to site "
 "'%s'. Please select a relay registered to site '%s'."
 msgstr ""
+"リレー「%s」はサイト「%s」に登録済ですが、このホストはサイト「%s」に属してい"
+"ます。サイト「%s」に登録されているリレーを選択してください。"
 
 msgid ""
 "The renaming of hosts is a complex operation since a host's name is being "
@@ -68689,6 +68710,11 @@ msgid ""
 "setting a threshold of 4 means that Checkmk will alert if the <b>last</b> 4 "
 "of 8 attempts have consecutively failed."
 msgstr ""
+"このチェックはWindowsタイムサービス内の８ビット「Reachability」レジスタを監視"
+"することで、直近８回の試行における、連続した同期失敗をチェックします。 <b>連"
+"続した失敗回数</b> が定義されたしきい値を超えた場合、警告または重大なアラート"
+"がトリガーされます。例えばしきい値を４に設定すると、 <b>直近</b> の８回の試行"
+"のうち４回が連続して失敗した場合に、Checkmkがアラートを発します。"
 
 msgid ""
 "This checks consecutive sync failures within the last 8 attempts by "
@@ -68698,6 +68724,11 @@ msgid ""
 "threshold of 4 means that Checkmk will alert if <b>any</b> 4 of the last 8 "
 "attempts have failed."
 msgstr ""
+"これは、Windows タイム サービス内の 8 ビット「Reachability」レジスタを監視す"
+"ることで、直近 8 回の試行における連続した同期失敗をチェックします。 <b>失敗し"
+"た試行の総数</b> が定義された閾値を超えた場合、警告または重大なアラートが"
+"トリガーされます。たとえば、閾値を 4 に設定すると、直近 8 回の試行のうち <b>"
+"いずれか</b> 4 回が失敗した場合に、Checkmk がアラートを発します。"
 
 msgid "This collection"
 msgstr "このコレクション"
@@ -78543,6 +78574,9 @@ msgid ""
 "without any socket configuration and is recommended when the Podman socket "
 "service is not available."
 msgstr ""
+"すべてのクエリには、<tt>podman</tt> CLIを使用してください。これはソケットの設"
+"定を一切行わなくてもそのまま動作し、Podmanソケットサービスが利用できない場合"
+"に推奨されます。"
 
 #, fuzzy
 msgid "Use the Checkmk username as ntopng username"
@@ -87591,6 +87625,8 @@ msgid ""
 "Ensure all output generated is carefully reviewed and checked by a human for "
 "factual correctness before being used in any way. "
 msgstr ""
+"生成されたすべての出力は、何らかの形で使用される前に、事実関係が正しいかどう"
+"かを人間が慎重に確認・点検するようにしてください。 "
 
 msgid "For further information visit our "
 msgstr "...に関する情報を取得しています "
@@ -87623,9 +87659,8 @@ msgstr "収縮…"
 msgid "Please review to ensure factual correctness."
 msgstr "事実関係が正しいことを確認してください。"
 
-#, fuzzy
 msgid "Copy answer"
-msgstr "コピー失敗。"
+msgstr "回答をコピー"
 
 msgid ""
 "This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
@@ -88990,6 +89025,9 @@ msgid ""
 "Public dashboards are view-only and don't support runtime filters.nRemove "
 "runtime filters or convert them to default filters to continue."
 msgstr ""
+"公開ダッシュボードは閲覧専用であり、実行時のフィルダーはサポートされていませ"
+"ん、n続行するには、実行時フィルターを削除するか、デフォルトフィルターに変換し"
+"てください。"
 
 #, fuzzy
 msgid "Review filters"
@@ -89216,6 +89254,8 @@ msgstr "バーの表示"
 msgid ""
 "A preview of ntop widgets is not available due to the widget size limitation"
 msgstr ""
+"ウィジェットのサイズ制限のため、ntopウィジェットのプレビューはご利用いただけ"
+"ません"
 
 #, fuzzy
 msgid "Ntop alerts"
@@ -89324,7 +89364,7 @@ msgid "Link to view: %{viewName}"
 msgstr "表示するためのリンク"
 
 msgid "New view based on: %{datasource}"
-msgstr ""
+msgstr "%{datasource}に基づいた新しいレビュー"
 
 #, fuzzy
 msgid "Copy existing view: %{viewName}"
@@ -89379,7 +89419,7 @@ msgid "Enter regex (pattern match)"
 msgstr "パターン一致を試す"
 
 msgid "Enter plain text (single match)"
-msgstr ""
+msgstr "プレーンテキストを入力（１つのみ一致）"
 
 #, fuzzy
 msgid "show preview"
@@ -89393,9 +89433,12 @@ msgid ""
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
 msgstr ""
+"利用可能なマクロ： <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, <tt>"
+"$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, <tt>"
+"$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
 
 msgid "The time window used to aggregate data for each point on the chart.<ul>"
-msgstr ""
+msgstr "グラフ上の各ポイントのデータを集計するために使用される時間範囲。<ul>"
 
 #, fuzzy
 msgid "Aggregation lookback"
@@ -89438,7 +89481,7 @@ msgid "Graph options"
 msgstr "グラフオプション"
 
 msgid "Graph lines (OpenTelemetry)"
-msgstr ""
+msgstr "グラフの線（OpenTelemetry）"
 
 msgid "of"
 msgstr "の"
@@ -89526,9 +89569,11 @@ msgstr "内部エラー"
 
 msgid "This creates a special agent rule based on the selected custom graph. "
 msgstr ""
+"これにより、選択したカスタムグラフに基づいて特別なエージェントルールが作成さ"
+"れます。 "
 
 msgid "Dismiss"
-msgstr ""
+msgstr "閉じる"
 
 msgid "Graph metrics with all zero values"
 msgstr "すべての値がゼロのグラフメトリクス"
@@ -89564,10 +89609,10 @@ msgid "Digits"
 msgstr "ディジット"
 
 msgid "Ctrl"
-msgstr ""
+msgstr "Ctrl"
 
 msgid "Shift"
-msgstr ""
+msgstr "Shift"
 
 #, fuzzy
 msgid "Alt"
@@ -89575,9 +89620,11 @@ msgstr "アラート"
 
 msgid "Copy failed: this might be due to browser security restrictions."
 msgstr ""
+"コピーに失敗しました：これはブラウザのセキュリティ制限が原因である可能性があ"
+"ります。"
 
 msgid "Copy failed: no text was selected."
-msgstr ""
+msgstr "コピーに失敗しました：テキストが選択されていません。"
 
 #, fuzzy
 msgid "Failed to copy to clipboard"
@@ -89595,7 +89642,7 @@ msgid "Activation of changes failed"
 msgstr "変更事項のアクティベートが完了しました"
 
 msgid "Open the full activation page for more details."
-msgstr ""
+msgstr "詳細については、アクティベーションページを開いてください。"
 
 #, fuzzy
 msgid "No changes available for activation"
@@ -89605,6 +89652,9 @@ msgid ""
 "Successfully activated %{numberOfChanges} pending %{changeWord} on %"
 "{numberOfSuccessfullyActivatedSites} %{siteWord}"
 msgstr ""
+"%{numberOfChanges}件の変更が正常に有効化されました。%"
+"{numberOfSuccessfullyActivatedSites}件の%{siteWord}で、%{changeWord}が保留中"
+"です"
 
 #, fuzzy
 msgid "change"
@@ -89624,16 +89674,19 @@ msgid ""
 "and adjust them safely.\n"
 "              Click 'Activate pending changes' to apply them."
 msgstr ""
+"変更内容はライブモニタリングに影響を与えることなく保存されるため、安全に確認"
+"や調整を行うことができます。\n"
+"              「保留中の変更を有効にする」をクリックして適用してください。"
 
 #, fuzzy
 msgid "Everything is up to date"
 msgstr "同期状態の取得"
 
 msgid "Problems detected during activation"
-msgstr ""
+msgstr "アクティベーション中に問題が検出されました"
 
 msgid "Some things may not be monitored properly."
-msgstr ""
+msgstr "一部の事項については、適切に監視されていない可能性があります。"
 
 #, fuzzy
 msgid "Activating changes on "
@@ -89644,10 +89697,10 @@ msgid "Activating changes... "
 msgstr "変更のアクティブ化: "
 
 msgid "You can safely navigate away - we'll keep working in the background"
-msgstr ""
+msgstr "安心して他のページに移動してください―バックグラウンドで処理を続けます"
 
 msgid "This may take up to 30 seconds when a site restart is required."
-msgstr ""
+msgstr "サイトの再起動が必要な場合、最大30秒ほどかかることがあります。"
 
 #, fuzzy
 msgid "Pending change(s)"
@@ -89682,6 +89735,8 @@ msgstr "アクティベーションが必要"
 
 msgid "Activation blocked by missing permissions for foreign changes"
 msgstr ""
+"外部の変更に対する権限が不足しているため、アクティベーションがブロックされま"
+"した"
 
 #, fuzzy
 msgid "Activation blocked by site problems"
@@ -89702,6 +89757,8 @@ msgid ""
 "In complex environments, activation issues are more common and may require "
 "closer review.n"
 msgstr ""
+"複雑な環境では、アクティベーションに関する問題がより頻繁に発生するため、より"
+"詳細な確認が必要になる場合があります"
 
 #, fuzzy
 msgid "Keep quick activation"
@@ -89712,20 +89769,20 @@ msgid "Set full activation page as default"
 msgstr "ルールのアクティブ化"
 
 msgid "Applying user setting..."
-msgstr ""
+msgstr "ユーザー設定を適用しています..."
 
 #, fuzzy
 msgid "Preference saved."
 msgstr "ライセンスが保存されました。"
 
 msgid "Clicking on 'Changes' will continue to open the quick activation."
-msgstr ""
+msgstr "「変更」をクリックすると、クイックアクティベーションが引き続き開きます。"
 
 msgid "You can change this at any time in your profile settings."
 msgstr "ユーザーは個人設定でこの属性を変更できます。"
 
 msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
-msgstr ""
+msgstr "「変更」をクリックすると、「変更を有効にする」ページが開くようになりました"
 
 #, fuzzy
 msgid "Open full activation page"
@@ -89745,10 +89802,10 @@ msgid "Sidebar"
 msgstr "サイドバー"
 
 msgid "Key hints"
-msgstr ""
+msgstr "重要なヒント"
 
 msgid "Ctrl + Alt"
-msgstr ""
+msgstr "Ctrl + Alt"
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -89762,6 +89819,8 @@ msgid ""
 "Connection failed, enter new hostname to check again or download and install "
 "the Checkmk agent."
 msgstr ""
+"接続に失敗しました。再度確認するには新しいホスト名を入力するか、Checkmk"
+"エージェントをダウンロードしてインストールしてください。"
 
 #, fuzzy
 msgid "Please enter a hostname to test Checkmk agent connection"
@@ -89813,6 +89872,8 @@ msgid ""
 "The agent has been installed on the target system but is not providing a TLS "
 "connection."
 msgstr ""
+"エージェントはターゲットシステムにインストールされていますが、TLS接続を提供し"
+"ていません。"
 
 #, fuzzy
 msgid "Provide TLS connection"
@@ -89829,6 +89890,12 @@ msgid ""
 "agent and check the connectivity.\n"
 "If not, you can ignore this message."
 msgstr ""
+"これにはいくつかの原因が考えられます。Checkmkエージェントがインストールされて"
+"いないか、ファイアウォールやネットワーク設定によって通信がブロックされている"
+"可能性があります。\n"
+"このホストをエージェント経由で監視する必要がある場合は、エージェントを"
+"ダウンロードしてインストールし、接続を確認してください。\n"
+"そうでない場合は、このメッセージを無視して構いません。"
 
 msgid "Download & install agent"
 msgstr "ダウンロード済・インストール済のエージェント"
@@ -89882,11 +89949,15 @@ msgid ""
 "Agent registration is only possible for hosts that already exist in Checkmk "
 "(they don’t need to be activated yet)."
 msgstr ""
+"エージェントの登録は、Checkmkにすでに存在するホストに対してのみ可能です（その"
+"ホストがまだ有効化されていなくても構いません）。"
 
 msgid ""
 "Could not save host \"${hostName}\". Close the slideout and review your "
 "input."
 msgstr ""
+"ホスト「${hostName}」を保存できませんでした。スライドアウトを閉じ、入力内容を"
+"確認してください。"
 
 #, fuzzy
 msgid "Host \"${hostName}\" exists"
@@ -89912,6 +89983,8 @@ msgid ""
 "To securely fetch the latest agent package via the command line, you must "
 "first generate a temporary authentication token. "
 msgstr ""
+"コマンドラインから最新のエージェントパッケージを安全に取得するには、まず一時"
+"的な認証トークンを生成する必要があります。 "
 
 #, fuzzy
 msgid "Download agent"
@@ -89929,6 +90002,8 @@ msgid ""
 "Test if you have configured everything correctly with pasting the following\n"
 "                  command into the CLI of the target system."
 msgstr ""
+"対象システムのCLIに以次のコマンドを貼り付けて、\n"
+"                  すべての設定が正しく行われているか確認してください。"
 
 #, fuzzy
 msgid "Install the legacy Checkmk agent"
@@ -89939,54 +90014,79 @@ msgid ""
 "agent. Please make sure to run these commands with sufficient permissions "
 "(e.g. \"Run as Administrator\")"
 msgstr ""
+"Windows ホストで以下のコマンドを実行し、Checkmk エージェントをダウンロードし"
+"てインストールしてください。これらのコマンドを実行する際は、十分な権限（例："
+"「管理者として実行」）を持っていることを確認してください"
 
 msgid ""
 "After you have downloaded the agent, run this command on your Windows host "
 "to register the Checkmk agent controller. Please make sure to run this "
 "command with sufficient permissions (e.g. \"Run as Administrator\")."
 msgstr ""
+"エージェントのダウンロードが完了したら、Windows ホストで次のコマンドを実行し"
+"、Checkmk エージェントコントローラーを登録してください。このコマンドを実行す"
+"る際は、十分な権限（例：「管理者として実行」）を持っていることを確認してくだ"
+"さい。"
 
 msgid ""
 "Run this command on your Linux host to download and install the Checkmk "
 "agent."
 msgstr ""
+"Linuxホストでこのコマンドを実行して、Checkmkエージェントをダウンロードし、"
+"インストールしてください。"
 
 msgid ""
 "If you want to install the Checkmk agent on Linux, please read how to "
 "install the legacy agent"
 msgstr ""
+"LinuxにCheckmkエージェントをインストールする場合は、レガシーエージェントの"
+"インストール方法をご確認ください"
 
 msgid ""
 "After you have downloaded the agent, run this command on your Linux host to "
 "register the Checkmk agent controller."
 msgstr ""
+"エージェントをダウンロードしたら、Linuxホストで次のコマンドを実行して、"
+"Checkmkエージェントコントローラーを登録してください。"
 
 msgid "Run this command on your Solaris host to download the Checkmk agent."
 msgstr ""
+"Solaris ホストで次のコマンドを実行して、Checkmk エージェントをダウンロードし"
+"てください。"
 
 msgid ""
 "If you want to install the Checkmk agent on Solaris, please read how to "
 "install the legacy agent"
 msgstr ""
+"SolarisにCheckmkエージェントをインストールする場合は、レガシーエージェントの"
+"インストール方法をご確認ください"
 
 msgid ""
 "After you have downloaded the agent, run this command on your Solaris host "
 "to install the Checkmk agent."
 msgstr ""
+"エージェントをダウンロードしたら、Solaris ホストで次のコマンドを実行して、"
+"Checkmk エージェントをインストールしてください。"
 
 msgid ""
 "Run this command on your AIX host to download and install the Checkmk agent."
 msgstr ""
+"AIXホストでこのコマンドを実行し、Checkmkエージェントをダウンロードして"
+"インストールしてください。"
 
 msgid ""
 "If you want to install the Checkmk agent on AIX, please read how to install "
 "the legacy agent"
 msgstr ""
+"AIXにCheckmkエージェントをインストールする場合は、レガシーエージェントの"
+"インストール方法をご確認ください"
 
 msgid ""
 "After you have downloaded the agent, run this command on your AIX host to "
 "register the Checkmk agent controller."
 msgstr ""
+"エージェントをダウンロードしたら、AIXホストで次のコマンドを実行して、Checkmk"
+"エージェントコントローラーを登録してください。"
 
 msgid ""
 "To monitor systems like Linux or Windows with Checkmk, you need to install "
@@ -89994,6 +90094,10 @@ msgid ""
 "           This agent acts as a small program that collects data about the "
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
+"CheckmkでLinuxやWindowsなどのシステムを監視するには、これらのシステムに"
+"エージェントをインストールする必要があります。\n"
+"           このエージェントは、ストレージの使用量やCPU負荷など、システムの状"
+"態に関するデータを収集する小さなプログラムとして機能します。"
 
 #, fuzzy
 msgid "%{n} second"
@@ -90016,7 +90120,7 @@ msgid_plural "%{n} days"
 msgstr[0] "%d日間"
 
 msgid "This token remains valid for %{duration}."
-msgstr ""
+msgstr "このトークンの有効期間は %{duration} です。"
 
 #, fuzzy
 msgid "Generate one-time token"
@@ -90027,19 +90131,22 @@ msgid "Generating one-time token"
 msgstr "一般的なオプション"
 
 msgid "Error generating one-time token: ${ottError.message}"
-msgstr ""
+msgstr "ワンタイムトークンの生成中にエラーが発生しました：${ottError.message}"
 
 #, fuzzy
 msgid "Successfully generated one-time token"
 msgstr "トークンを生成しました"
 
 msgid "(Expires: ${ottExpiry?.toLocaleString() || 'never'})"
-msgstr ""
+msgstr "(有効期限: ${ottExpiry?.toLocaleString() || 'never'})"
 
 msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
 "                    on the host and the Agent Receiver on the Checkmk server."
 msgstr ""
+"エージェントの登録により、ホスト上のエージェントコントローラーと\n"
+"                    Checkmkサーバー上のエージェントレシーバーとの間に信頼関係"
+"が確立されます。"
 
 #, fuzzy
 msgid "This requires the generation of a registration token."
@@ -90050,18 +90157,26 @@ msgid ""
 "command uses the default port (8000). Adjust the --server port if your site "
 "uses a different agent receiver port."
 msgstr ""
+"リモートサイトからエージェント受信ポートを特定できませんでした。このコマンド"
+"ではデフォルトのポート（8000）が使用されます。お使いのサイトで異なる"
+"エージェント受信ポートを使用している場合は、--server ポートを調整してください"
+"。"
 
 msgid "Run this command to register the Checkmk agent controller."
 msgstr ""
+"Checkmkエージェントコントローラーを登録するには、このコマンドを実行してくださ"
+"い。"
 
 msgid ""
 "Troubleshooting registration issues: Authenticate with the registration user"
-msgstr ""
+msgstr "登録に関する問題のトラブルシューティング：登録ユーザーで認証を行う"
 
 msgid ""
 "Registration fails if the token cannot be authorized. In this case,\n"
 "              authenticate using the"
 msgstr ""
+"トークンの認証に失敗した場合、登録は失敗します。その場合は\n"
+"              これを使用して認証を行ってください"
 
 #, fuzzy
 msgid "agent_registration"
@@ -90077,23 +90192,32 @@ msgid ""
 "                agent_registration user. Copy the 'Automation secret for "
 "machine accounts' from the "
 msgstr ""
+"ターミナルでこのコマンドを実行すると、agent_registration ユーザーのパスワード"
+"の入力を\n"
+"                求められます。「マシンアカウントの自動化の秘密」をコピーして"
+"ください "
 
 #, fuzzy
 msgid "agent_registration user"
 msgstr "エージェント登録ユーザー"
 
 msgid "and paste it into the terminal to continue the registration."
-msgstr ""
+msgstr "それをターミナルに貼り付けて、登録を続行してください。"
 
 msgid ""
 "Maximum number of ping attempts reached.\n"
 "        After ${(remainingTime / 1000).toFixed(0)} seconds the next ping "
 "attempt will be made automatically."
 msgstr ""
+"pingの試行回数の上限に達しました。\n"
+"        ${(remainingTime / 1000).toFixed(0)} 秒後に、自動的に次のping試行が行"
+"われます。"
 
 msgid ""
 "Unexpected response from server please check your crash reports and logs."
 msgstr ""
+"サーバーから予期しない応答が返されました。クラッシュレポートとログを確認して"
+"ください。"
 
 msgid ""
 "Cannot reach host. Host is resolvable via DNS but not pingable.\n"
@@ -90105,7 +90229,7 @@ msgstr ""
 "アドレス」セクションでで’No IP'を設定してください。"
 
 msgid "Unknown status code received from server."
-msgstr ""
+msgstr "サーバーから不明なステータスコードが返されました。"
 
 #, fuzzy
 msgid "SNMP connection test running"
@@ -90147,9 +90271,11 @@ msgid ""
 "Could not connect to the host via SNMP. Check that the SNMP credentials are "
 "correct and that the host is reachable via SNMP."
 msgstr ""
+"SNMP 経由でホストに接続できませんでした。SNMP の認証情報が正しいこと、および "
+"SNMP 経由でホストに到達できることを確認してください。"
 
 msgid "Please fix the validation errors and try again."
-msgstr ""
+msgstr "検証エラーを修正してから、もう一度お試しください。"
 
 #, fuzzy
 msgid "Failed to save OAuth2 connection"
@@ -90162,15 +90288,14 @@ msgid "Your login was not successful. Please try again."
 msgstr "ログインに失敗しました。もういちどお試しください。"
 
 msgid "Please copy the code, then you can close this tab."
-msgstr ""
+msgstr "コードをコピーしてください。その後、このタブを閉じることができます。"
 
 #, fuzzy
 msgid "You can now close this tab."
 msgstr "このルールを保存することはできません。"
 
-#, fuzzy
 msgid "Copy code to clipboard"
-msgstr "コードをクリップボードにコピーする"
+msgstr "コードをクリップボードにコピー"
 
 #, fuzzy
 msgid "Tenant ID is required."
@@ -90181,12 +90306,14 @@ msgid "Client ID is required."
 msgstr "ユニークIDですが必須。"
 
 msgid "Copy app IDs"
-msgstr ""
+msgstr "アプリIDをコピー"
 
 msgid ""
 "Navigate to the app overview (Essentials). Copy the Application (client) ID "
 "and Directory (tenant) ID into the fields below."
 msgstr ""
+"アプリの概要（Essentials）に移動します。アプリケーション（クライアント）IDと"
+"ディレクトリ（テナント）IDを、以下のフィールドにコピーしてください。"
 
 #, fuzzy
 msgid "Add app permissions"
@@ -90195,10 +90322,10 @@ msgstr "役割と権限"
 msgid ""
 "Navigate to API permissions and add the following Microsoft Graph "
 "permissions."
-msgstr ""
+msgstr "「API 権限」に移動し、以下の Microsoft Graph 権限を追加してください。"
 
 msgid "(only required if used for Check email delivery)"
-msgstr ""
+msgstr "（メール配信を確認（Check email delivery）機能を使用する場合にのみ必要）"
 
 #, fuzzy
 msgid "Authorize the connection"
@@ -90208,6 +90335,8 @@ msgid ""
 "A new tab will be opened and you will need to log in to Microsoft Azure to "
 "authorize the application. The process has to be completed within 5 minutes."
 msgstr ""
+"新しいタブが開きます。アプリケーションを承認するために、Microsoft Azureに"
+"ログインする必要があります。この手順は５分以内に完了させる必要があります。"
 
 msgid ""
 "Since you have configured a distributed site for the redirect, the "
@@ -90215,18 +90344,23 @@ msgid ""
 "              Click \"Copy authorization URL to clipboard\" and open the "
 "copied URL into a browser on the remote site to start the authorization"
 msgstr ""
+"リダイレクト用に分散サイトが設定されているため、認証プロセスは自動的に開始さ"
+"れません。\n"
+"              「認証URLをクリップボードにコピー」をクリックし、コピーしたURL"
+"をリモートサイトのブラウザで開いて、認証を開始してください"
 
-#, fuzzy
 msgid "Copy authorization URL to clipboard"
-msgstr "秘密をクリップボードにコピーする"
+msgstr "認証URLをクリップボードにコピー"
 
 msgid ""
 "Authorization code: To be copied from the redirect authorization URL page by "
 "clicking \"Copy code to clipboard\" button"
 msgstr ""
+"認証コード：「コードをクリップボードにコピー」ボタンをクリックして、"
+"リダイレクト先の認証URLページからコピーしてください"
 
 msgid "Paste the code from the redirect page here"
-msgstr ""
+msgstr "リダイレクトページのコードをここに貼り付けてください"
 
 #, fuzzy
 msgid "Start authorization"
@@ -90249,15 +90383,18 @@ msgid ""
 "Checkmk. Please copy the client secret immediately, because it will not be "
 "shown again."
 msgstr ""
+"「Certificates & secrets」に移動します。新しいクライアントシークレットを作成"
+"し、Checkmkにコピーしてください。クライアントシークレットは二度と表示されない"
+"ため、すぐにコピーしてください。"
 
 msgid "Open or register Microsoft Azure Entra ID app"
-msgstr ""
+msgstr "Microsoft Azure Entra ID アプリを開くか、登録する"
 
 msgid "Open Microsoft Azure and navigate to Microsoft Entra ID."
-msgstr ""
+msgstr "Microsoft Azure を開き、Microsoft Entra ID に移動します。"
 
 msgid "Open registered app or add a new app registration."
-msgstr ""
+msgstr "登録済みのアプリを開くか、新しいアプリ登録を追加します。"
 
 #, fuzzy
 msgid "Add redirect URI"
@@ -90267,11 +90404,15 @@ msgid ""
 "Open the Redirect URIs or navigate to the Authentication settings and "
 "register the following Web redirect URI"
 msgstr ""
+"「リダイレクト URI」を開くか、「認証」設定に移動し、以下のWebリダイレクトURI"
+"を登録してください"
 
 msgid ""
 "Only valid redirect URIs starting with https:// or http://localhost can be "
 "used. Please check if either of these two options can be applied."
 msgstr ""
+"https:// または http://localhost で始まるリダイレクト URI のみが有効です。こ"
+"れら 2 つのいずれかが適用可能かどうかご確認ください。"
 
 #, fuzzy
 msgid "Verifying the authorization..."
@@ -90295,6 +90436,11 @@ msgid ""
 "secret ID to Checkmk.\n"
 "            "
 msgstr ""
+"クライアントシークレットが無効です。クライアントシークレットが Microsoft "
+"Azure に\n"
+"            保存されていることを確認し、Checkmk にはシークレット ID ではなく"
+"シークレットの値を入力していることをご確認ください。\n"
+"            "
 
 #, fuzzy
 msgid "${res.message}"
@@ -90305,7 +90451,7 @@ msgid "Failed to request and save access token"
 msgstr "Adressbookファイルへのリクエストの失敗"
 
 msgid "${e}"
-msgstr ""
+msgstr "${e}"
 
 msgid "Authorization was not completed. Please try again."
 msgstr "認証が完了していません。もう一度お試しください。"
@@ -90332,16 +90478,16 @@ msgid "Enter the Checkmk display title for this connection."
 msgstr "この接続のCheckmk表示タイトルを入力してください。"
 
 msgid "You can then"
-msgstr ""
+msgstr "その後、"
 
 msgid "save"
-msgstr ""
+msgstr "保存する"
 
 msgid "and use the connection."
 msgstr "その接続を利用します。"
 
 msgid "Saving this connection will create three entries in the password store."
-msgstr ""
+msgstr "この接続を保存すると、パスワードストアに3つのエントリが作成されます。"
 
 #, fuzzy
 msgid "Saving OAuth2 connection"
@@ -90369,6 +90515,8 @@ msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
 msgstr ""
+"このサイトでは、OpenTelemetry の設定がすでに完了しています。別のサイトを選択"
+"するか、既存の設定を更新してください。"
 
 #, fuzzy
 msgid "Configure OpenTelemetry Collector"
@@ -90393,6 +90541,8 @@ msgid ""
 "Prometheus is already configured for this site. Select another site or "
 "update the existing configuration."
 msgstr ""
+"このサイトについては、Prometheusの設定がすでに完了しています。別のサイトを選"
+"択するか、既存の設定を更新してください。"
 
 #, fuzzy
 msgid "Configure scraper"
@@ -90414,17 +90564,17 @@ msgid "Your input is not a valid host name or IP address."
 msgstr "入力された内容は、有効なホスト名またはIPアドレスではありません。"
 
 msgid "GRPC"
-msgstr ""
+msgstr "GRPC"
 
 msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
-msgstr ""
+msgstr "OpenTelemetry データを収集する GRPC ベースの OTLP レシーバーを設定します。"
 
 msgid "0.0.0.0"
-msgstr ""
+msgstr "0.0.0.0"
 
 msgid "4317"
-msgstr ""
+msgstr "4317"
 
 #, fuzzy
 msgid "Select password"
@@ -90448,10 +90598,10 @@ msgstr "サービス名"
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
-msgstr ""
+msgstr "OpenTelemetry データを収集する HTTP ベースの OTLP レシーバーを設定します。"
 
 msgid "4318"
-msgstr ""
+msgstr "4318"
 
 #, fuzzy
 msgid "Failed to load sites. Please try again."
@@ -90482,7 +90632,7 @@ msgid "Select the folder your host(s) will be created in."
 msgstr "ホストが作成される場所を指定してください。"
 
 msgid "Enter a name for your job."
-msgstr ""
+msgstr "ジョブの名前を入力してください。"
 
 #, fuzzy
 msgid "Metrics path is required but not specified."
@@ -90509,12 +90659,12 @@ msgid "IP address or hostname"
 msgstr "IPアドレスまたはホスト名"
 
 msgid "Run the installation script"
-msgstr ""
+msgstr "インストールスクリプトを実行する"
 
 msgid ""
 "On the machine on which the Relay will be running, run the command below to "
 "execute "
-msgstr ""
+msgstr "Relay を実行するマシンで、次のコマンドを実行してください "
 
 msgid "Note that the installation requires root privileges."
 msgstr "インストールにはroot権限が必要ですので、ご注意ください。"
@@ -90527,11 +90677,15 @@ msgid ""
 "Before deploying the Relay, ensure that Podman is installed on the machine "
 "on which the Relay will be running. "
 msgstr ""
+"Relay をデプロイする前に、Relay を実行するマシンに Podman がインストールされ"
+"ていることを確認してください。 "
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
 "switching this Checkmk site to HTTPS. "
 msgstr ""
+"セキュリティ保護されていない接続が検出されました（HTTP）。セキュリティを強化"
+"するため、このCheckmkサイトをHTTPSに切り替えることをお勧めします。 "
 
 #, fuzzy
 msgid "Download the Relay installation script"
@@ -90541,6 +90695,8 @@ msgid ""
 "Run the command below to make the Relay installation script available to the "
 "machine on which the Relay will be running."
 msgstr ""
+"Relayが実行されるマシンでRelayのインストールスクリプトを利用できるようにする"
+"には、以下のコマンドを実行してください。"
 
 #, fuzzy
 msgid "Download relay install script command"
@@ -90566,6 +90722,8 @@ msgid ""
 "This alias will be used to identify your Relay. It will automatically be "
 "inserted into the command shown in the next steps."
 msgstr ""
+"このエイリアスは、Relayを識別するために使用されます。これは、次の手順で示す"
+"コマンドに自動的に挿入されます。"
 
 #, fuzzy
 msgid "Registration results"
@@ -90575,12 +90733,14 @@ msgid ""
 "The Registration of the Relay to the Checkmk site has been checked. Results "
 "are displayed here."
 msgstr ""
+"Checkmkサイトへのリレーの登録状況を確認しました。結果はここに表示されています"
+"。"
 
 msgid "In case of problems, read the "
 msgstr "問題発生時にお読みください "
 
 msgid " for help with troubleshooting."
-msgstr ""
+msgstr " トラブルシューティングに関するヘルプ。"
 
 msgid "Verifying the registration..."
 msgstr "登録を確認中…"
@@ -90589,7 +90749,7 @@ msgid "Relay registered and saved successfully!"
 msgstr "リレーの登録と保存に成功しました！"
 
 msgid "Registration failed and Relay couldn't be saved."
-msgstr ""
+msgstr "登録に失敗し、Relayを保存できませんでした。"
 
 #, fuzzy
 msgid "Continue to add host"
@@ -90605,13 +90765,13 @@ msgstr "プラン構成"
 
 msgid ""
 "The Relay is officially supported to run on the following operating systems:"
-msgstr ""
+msgstr "Relayは、以下のオペレーティングシステムでの動作が公式にサポートされています："
 
 msgid "Help us improve Checkmk with product usage analytics"
-msgstr ""
+msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
 
 msgid "We want to understand how you use Checkmk."
-msgstr ""
+msgstr "皆様がCheckmkをどのようにご利用されているか、お伺いしたいと考えています。"
 
 msgid ""
 "Product usage analytics allows us to make data-driven decisions and focus "
@@ -90619,9 +90779,13 @@ msgid ""
 "            The data you share will help us prioritize the features that "
 "matter most to you."
 msgstr ""
+"製品の利用状況分析により、データに基づいた意思決定を行い、Checkmkのどの機能が"
+"日常的に利用されているかに焦点を当てて開発を進めることができます。 \n"
+"            皆様からご提供いただくデータは、皆様にとって最も重要な機能を優先"
+"的に開発する上で役立ちます。"
 
 msgid "What data are we collecting?"
-msgstr ""
+msgstr "どのようなデータを収集していますか？"
 
 msgid "We collect: "
 msgstr "収集する: "
@@ -90630,6 +90794,8 @@ msgid ""
 "data about the general usage of features and configuration options (e.g., "
 "counts of hosts, folders, plug-ins, MKPs, and services)."
 msgstr ""
+"機能や設定オプションの一般的な利用状況に関するデータ（例：ホスト、フォルダ、"
+"プラグイン、MKP、サービスの数など）。"
 
 msgid "We do NOT collect: "
 msgstr "収集しない: "
@@ -90639,6 +90805,9 @@ msgid ""
 "identifiers about your environment (e.g., hostnames, file paths, service "
 "names)."
 msgstr ""
+"ユーザーやその行動に関するデータ（例：個人を特定できる情報（PII））や、お客様"
+"の環境に関する機密性の高い識別子（例：ホスト名、ファイルパス、サービス名）な"
+"ど。"
 
 msgid "Important: "
 msgstr "重要: "
@@ -90653,9 +90822,17 @@ msgid ""
 "            Do not enable product usage analytics if you do not wish to "
 "share this information."
 msgstr ""
+"カスタムチェックプラグイン（社内で開発されたもの、またはCheckmk Exchangeから"
+"MKPとしてインストールされたもの）の名称は、製品利用データの一部として収集され"
+"ます。 \n"
+"            MKPをご利用の場合は、オプトインする前にデータダウンロード機能を通"
+"じて内容を慎重に確認し、機密情報が含まれていないことを確認することをお勧めし"
+"ます。 \n"
+"            この情報の共有を希望されない場合は、製品利用分析機能を有効にしな"
+"いでください。"
 
 msgid "Product usage analytics is turned off by default. "
-msgstr ""
+msgstr "製品の利用状況分析は、デフォルトで無効になっています。 "
 
 msgid ""
 "We believe in only receiving data you explicitly choose to share. You can "
@@ -90663,9 +90840,14 @@ msgid ""
 "            If you do not wish to be reminded, please manage your "
 "preferences in global settings."
 msgstr ""
+"当社は、お客様が明示的に共有を選択されたデータのみを受け取ることを原則として"
+"います。分析データの共有は、いつでもグローバル設定から有効にすることができま"
+"す \n"
+"            リマインダーを受け取りたくない場合は、グローバル設定で設定を変更"
+"してください。"
 
 msgid "Remind me again in 30 days"
-msgstr ""
+msgstr "30日後にまたリマインドしてください"
 
 #, fuzzy
 msgid "Manage in global settings"
@@ -90682,6 +90864,12 @@ msgid ""
 "connectivity.\n"
 "If not, you can ignore this message."
 msgstr ""
+"これにはいくつかの原因が考えられます。Checkmkエージェントがインストールされて"
+"いないか、ファイアウォールやネットワーク設定によって通信がブロックされている"
+"可能性があります。\n"
+"このホストをエージェント経由で監視する必要がある場合は、インストール状況と接"
+"続状態を確認してください。\n"
+"そうでない場合は、このメッセージを無視して構いません。"
 
 #, fuzzy
 msgid "Already registered the Checkmk agent?"
@@ -90706,10 +90894,10 @@ msgid "Close & run service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
 msgid "Add snapin ${props.name}"
-msgstr ""
+msgstr "スナップイン ${props.name} を追加"
 
 msgid "Add \"${props.title}\" to sidebar"
-msgstr ""
+msgstr "サイドバーに${props.title}を追加する"
 
 #, fuzzy
 msgid "No data recieved"
@@ -90760,7 +90948,7 @@ msgid "Use security token"
 msgstr "セキュリティトークン"
 
 msgid "OTP Digit %{count}"
-msgstr ""
+msgstr "OTPの桁数：%{count}"
 
 #, fuzzy
 msgid "Authenticate using authenticator app"
@@ -90805,6 +90993,8 @@ msgid ""
 "Try a different backup code or contact your Checkmk admin to restore your "
 "account."
 msgstr ""
+"別のバックアップコードを試すか、Checkmkの管理者に連絡してアカウントを復元して"
+"ください。"
 
 #, fuzzy
 msgid "Please try again."
@@ -90825,6 +91015,8 @@ msgid ""
 "${text}. A Checkmk administrator may have a look at var/log/web.log to get "
 "additional information."
 msgstr ""
+"${text}。Checkmkの管理者は、var/log/web.log を確認することで、詳細情報を得る"
+"ことができます。"
 
 #, fuzzy
 msgid "Security Error"
@@ -90834,6 +91026,8 @@ msgid ""
 "Can not enable two-factor authentication. You have to use HTTPS and access "
 "the GUI through a valid domain name (See #13325 for further information)."
 msgstr ""
+"二要素認証を有効にできません。HTTPSを使用し、有効なドメイン名を通じてGUIに"
+"アクセスする必要があります（詳細については#13325を参照してください）。"
 
 msgid "Possible reasons are:"
 msgstr "考えられる理由は次の通りです:"
@@ -90843,15 +91037,17 @@ msgid "- You have aborted the registration"
 msgstr "ホストとリージョンを設定"
 
 msgid "- Your browser does not support the WebAuthn standard"
-msgstr ""
+msgstr "- お使いのブラウザはWebAuthn規格に対応していません"
 
 msgid "- The browser configuration has disabled WebAuthn"
-msgstr ""
+msgstr "- ブラウザの設定により、WebAuthnが無効になっています"
 
 msgid ""
 "The given authenticator is not usable. This may be due to the repeated use "
 "of an already registered authenticator."
 msgstr ""
+"指定された認証コードは使用できません。これは、すでに登録済みの認証コードが繰"
+"り返し使用されたことが原因である可能性があります。"
 
 #, fuzzy
 msgid "An unknown error occurred"
@@ -90869,13 +91065,13 @@ msgid "Login failed"
 msgstr "ログインが無効です"
 
 msgid "Your WebAuthn authentication could not be verified."
-msgstr ""
+msgstr "WebAuthnによる認証を確認できませんでした。"
 
 msgid "2FA not possible (See #13325 for details)"
-msgstr ""
+msgstr "2段階認証が利用できません（詳細は#13325を参照）"
 
 msgid "No filters can be applied to your current search query."
-msgstr ""
+msgstr "現在の検索クエリにはフィルターを適用できません。"
 
 msgid ""
 "Search with regular expressions for menu entries, hosts, services or host "
@@ -90885,13 +91081,13 @@ msgstr ""
 "検索します。"
 
 msgid "Note that for simplicity '*' will be substituted with '.*'."
-msgstr ""
+msgstr "なお、簡略化のため、「*」は「.*」に置き換えられます。"
 
 msgid "Search across Checkmk – Type '/' for search operators"
-msgstr ""
+msgstr "Checkmk全体を検索 – 検索演算子を使用するには「/」と入力してください"
 
 msgid "Search in monitoring – Type '/' for search operators"
-msgstr ""
+msgstr "監視対象を検索 – 検索演算子を使用するには「/」を入力してください"
 
 #, fuzzy
 msgid "Search in customize"
@@ -90902,17 +91098,17 @@ msgid "Search in setup"
 msgstr "セットアップで検索"
 
 msgid "Only available for 'Monitoring' and 'All'"
-msgstr ""
+msgstr "「Monitoring」および「All」でのみ利用可能です"
 
 msgid "Type \"/\" to use search operator"
-msgstr ""
+msgstr "検索演算子を使用するには「/」と入力してください"
 
 #, fuzzy
 msgid "Search in ${provider}"
 msgstr "ボディで検索"
 
 msgid "¯\\_(ツ)_/¯"
-msgstr ""
+msgstr "¯\\_(ツ)_/¯"
 
 msgid "No results found for your search"
 msgstr "お探しの結果が見つかりませんでした"
@@ -90922,25 +91118,27 @@ msgid "Reset search"
 msgstr "検索を絞り込む"
 
 msgid "Find services, hosts, dashboards, ..."
-msgstr ""
+msgstr "見つける：サービス、ホスト、ダッシュボード…"
 
 #, fuzzy
 msgid "Find customization options"
 msgstr "フィルタリングと計算のオプション"
 
 msgid "Find rules, hosts, settings ..."
-msgstr ""
+msgstr "見つける：ルール、ホスト、設定…"
 
 msgid "Find rules, hosts, dashboards, settings ..."
-msgstr ""
+msgstr "見つける：ルール、ホスト、ダッシュボード、設定…"
 
 msgid "Tip: Press"
-msgstr ""
+msgstr "ヒント：押してください"
 
 msgid ""
 "to view all search operator and, e.g., find all hosts with the same host "
 "label (hl:)"
 msgstr ""
+"すべての検索演算子を表示し、例えば、同じホストラベルを持つすべてのホストを検"
+"索するには（hl:）"
 
 #, fuzzy
 msgid "Recently viewed"
@@ -90974,7 +91172,7 @@ msgid "This requires the generation of a download token."
 msgstr "この権限は、任意の既存ホストの登録を許可する。"
 
 msgid "View your newly added host"
-msgstr ""
+msgstr "新しく追加されたホストを表示する"
 
 #, fuzzy
 msgid "View hosts"
@@ -91001,6 +91199,8 @@ msgstr ""
 
 msgid "Run this command to install the Checkmk agent on your workstation."
 msgstr ""
+"ワークステーションにCheckmkエージェントをインストールするには、このコマンドを"
+"実行してください。"
 
 #, fuzzy
 msgid "RPM"
@@ -91008,16 +91208,18 @@ msgstr "RAM"
 
 msgid ""
 "Run this command to trigger the download of the Checkmk agent onto your "
-msgstr ""
+msgstr "このコマンドを実行して、Checkmkエージェントのダウンロードを開始してください "
 
 msgid ""
 "Run this command in PowerShell as an administrator to trigger the "
 "installation"
 msgstr ""
+"インストールを開始するには、PowerShell を管理者として実行し、このコマンドを実"
+"行してください"
 
 msgid ""
 "A couple of minutes after the installation, the agent will start reporting"
-msgstr ""
+msgstr "インストール完了から数分後、エージェントが報告を開始します"
 
 #, fuzzy
 msgid "Further topics"
@@ -91026,11 +91228,11 @@ msgstr "トピックごと"
 msgid ""
 "Structure hosts with folders, labels, tags, parent relationships, and host "
 "groups"
-msgstr ""
+msgstr "フォルダ、ラベル、タグ、親関係、およびホストグループによるホストの管理"
 
 msgid ""
 "Organize your hosts to enable clear, scalable, and easy to manage monitoring."
-msgstr ""
+msgstr "ホストを整理し、明確で拡張性が高く、管理しやすい監視環境を実現しましょう。"
 
 #, fuzzy
 msgid "Set up backup"
@@ -91040,13 +91242,15 @@ msgid ""
 "No backup, no mercy! Protect your configuration and data with automated "
 "backups."
 msgstr ""
+"バックアップなしなら、容赦なし！自動バックアップで設定とデータを保護しましょ"
+"う。"
 
 #, fuzzy
 msgid "Learn how to scale your monitoring"
 msgstr "フェイルオーバー監視"
 
 msgid "Add more hosts, sites, or distributed setups as your environment grows."
-msgstr ""
+msgstr "環境の拡大に合わせて、ホスト、サイト、または分散構成を追加してください。"
 
 #, fuzzy
 msgid "Fine-tune your monitoring"
@@ -91056,6 +91260,8 @@ msgid ""
 "Dive deep into the details and learn how to optimize checks, thresholds, and "
 "notifications."
 msgstr ""
+"詳細をじっくりと確認し、チェック、しきい値、通知を最適化する方法について学び"
+"ましょう。"
 
 #, fuzzy
 msgid "License your site"
@@ -91065,17 +91271,22 @@ msgid ""
 "It’s time to enjoy the full experience! Set up automated licensing for a "
 "smooth experience."
 msgstr ""
+"すべての機能をお楽しみください！スムーズな利用体験のために、ライセンスの自動"
+"設定を行って下さい。"
 
 msgid "Choose a different start page"
-msgstr ""
+msgstr "別のスタートページを選択してください"
 
 msgid ""
 "Use the 'Start URL to display in main frame' option in your profile to "
 "define which page, dashboard or custom URL is shown when you log in."
 msgstr ""
+"プロファイルの「メインフレームに表示する開始URL」オプションを使用して、"
+"ログイン時に表示するページ、ダッシュボード、またはカスタムURLを設定してくくだ"
+"さい。"
 
 msgid "Topics to explore"
-msgstr ""
+msgstr "検討すべきトピック"
 
 #, fuzzy
 msgid "Resources"
@@ -91087,7 +91298,7 @@ msgstr "ビギナーズガイド"
 
 msgid ""
 "A step-by-step introduction to help you get started quickly and confidently."
-msgstr ""
+msgstr "すぐに自信をもって始められるよう、ステップバイステップで解説しています。"
 
 #, fuzzy
 msgid "Discover best practices"
@@ -91097,33 +91308,41 @@ msgid ""
 "Explore proven best practices, helpful tips, and practical tricks to get the "
 "most out of your monitoring setup."
 msgstr ""
+"監視環境を最大限に活用するための、実績のあるベストプラクティス、役立つヒント"
+"、そして実用的なテクニックをご紹介します。"
 
 msgid "Learn Checkmk via expert training"
-msgstr ""
+msgstr "エキスパートによるトレーニングでCheckmkを学ぶ"
 
 msgid ""
 "Build a solid foundation and deepen your knowledge in our official, "
 "instructor-led Checkmk trainings."
 msgstr ""
+"当社の公式インストラクター指導型Checkmkトレーニングで、確かな基礎を築き、知識"
+"を深めましょう。"
 
 msgid "Attend a free webinar"
-msgstr ""
+msgstr "無料ウェビナーにご参加ください"
 
 msgid ""
 "Watch our on-demand or live webinars to master the configuration and use of "
 "Checkmk."
 msgstr ""
+"Checkmkの設定と使い方をマスターするには、オンデマンドまたはライブのウェビナー"
+"をご覧ください。"
 
 #, fuzzy
 msgid "Join the community"
 msgstr "プレーンテキストによる通信"
 
 msgid "Connect with other users and ask questions in our active forum."
-msgstr ""
+msgstr "活発なフォーラムで他のユーザーと交流し、質問をしてみてください。"
 
 msgid ""
 "Your assistant for Checkmk - ask anything from setup to troubleshooting."
 msgstr ""
+"Checkmkのサポート担当です。セットアップからトラブルシューティングまで、なんで"
+"もお気軽にご相談ください。"
 
 #, fuzzy
 msgid "All steps completed"
@@ -91145,7 +91364,7 @@ msgid "Activate Changes"
 msgstr "変更をアクティブにする"
 
 msgid "1 Step | Takes 1-3 min"
-msgstr ""
+msgstr "１ステップ｜所要時間1～3分"
 
 msgid ""
 "In Checkmk, configuration changes are first saved as pending and do not "
@@ -91156,6 +91375,13 @@ msgid ""
 "activate the pending changes are they transferred\n"
 "          to the live monitoring system as a single bundle."
 msgstr ""
+"Checkmkでは、設定の変更はまず「保留中」として保存され、直ちに稼働中の監視に影"
+"響を与えることはありません。\n"
+"           これにより、ホストの追加、サービスの調整、しきい値の微調整など、複"
+"数の変更を準備・確認した上で、\n"
+"          それらを一括して適用することができます。保留中の変更は、有効化され"
+"た時点で初めて、\n"
+"          単一のバンドルとして稼働中の監視システムに反映されます。"
 
 #, fuzzy
 msgid "Spotting pending changes"
@@ -91166,6 +91392,9 @@ msgid ""
 "menu item in the main navigation,\n"
 "      reminding you that your setup is not yet active."
 msgstr ""
+"未反映の変更がある場合、メインナビゲーションの「変更」メニュー項目に黄色の"
+"バッジが表示され、\n"
+"      設定がまだ有効になっていないことをお知らせします。"
 
 #, fuzzy
 msgid "Open all pending changes"
@@ -91176,7 +91405,7 @@ msgid "Mark as done"
 msgstr "PGs 未完了"
 
 msgid "2 Steps | Takes 7-10 min"
-msgstr ""
+msgstr "２ステップ｜所要時間7～10分"
 
 msgid ""
 "In Checkmk, a host is any standalone physical or virtual system that is "
@@ -91186,6 +91415,12 @@ msgid ""
 "The service discovery of Checkmk automatically detects these services.\n"
 "This allows monitoring to start with minimal configuration effort."
 msgstr ""
+"Checkmkにおいて、ホストとは、監視対象となる独立した物理システムまたは仮想"
+"システムを指します。\n"
+"各ホストには、CPU使用率、ディスク容量、プロセス、ハードウェアセンサーなど、監"
+"視対象となる項目を表すサービスが設定されています。\n"
+"Checkmkはサービス検出機能を使用してこれらのサービスを自動的に検知します。\n"
+"これにより、最小限の設定作業で監視を監視を開始することができます。"
 
 #, fuzzy
 msgid "Set up basic folder structure"
@@ -91200,6 +91435,13 @@ msgid ""
 "through inheritance. Learn more about\n"
 "            folders and inheritance in the"
 msgstr ""
+"Checkmkにおいて、フォルダはホストを整理し、設定を一貫して適用するための基盤と"
+"なります。\n"
+"            最初のホストを追加する前にフォルダ（またはフォルダ構造）を作成し"
+"ておくと、\n"
+"            最初から整理整頓された状態を保て、後々、継承機能を通じて類似した"
+"ホストの管理が容易になります。\n"
+"            フォルダと継承の詳細については、以下"
 
 msgid "documentation."
 msgstr "ドキュメント。"
@@ -91217,7 +91459,7 @@ msgid "Network devices and SNMP"
 msgstr "ネットワークスキャン"
 
 msgid "Checkmk Relay (objects behind a firewall)"
-msgstr ""
+msgstr "Checkmkリレー（ファイアウォール内のオブジェクト）"
 
 #, fuzzy
 msgid "Cloud platforms"
@@ -91239,7 +91481,7 @@ msgid "Adjust service thresholds"
 msgstr "すべてのサービス"
 
 msgid "3 Steps | Takes 5-7 min"
-msgstr ""
+msgstr "３ステップ｜所要時間5～7分"
 
 msgid ""
 "Each service in Checkmk comes with default parameter values.\n"
@@ -91249,6 +91491,12 @@ msgid ""
 "            To find the right ruleset for a service,\n"
 "            start with the Service discovery page of a host."
 msgstr ""
+"Checkmkの各サービスには、デフォルトのパラメータ値が設定されています。\n"
+"            監視の要件に合わせてこれらをカスタマイズできます。\n"
+"            最も一般的な方法は、ルールを使用してWARNおよびCRIT状態のしきい値"
+"を設定することです。\n"
+"            サービスに適したルールセットを見つけるには、\n"
+"            ホストの「サービス検出」ページから確認してください。"
 
 #, fuzzy
 msgid "Before adjusting thresholds"
@@ -91262,6 +91510,13 @@ msgid ""
 "problems,\n"
 "          and reduces trust in the monitoring system."
 msgstr ""
+"監視データが何を示しているのかを確実に把握してください。\n"
+"          サービスから問題が報告された場合は、まず実際の問題を確認し、修正し"
+"てください。\n"
+"          しきい値は実際の問題を検出するためにしてください。問題を隠蔽するも"
+"のではありません。\n"
+"          しきい値の設定が不適切だと、誤検知や問題の隠蔽を招き\n"
+"          監視システムへの信頼を失うことになります。"
 
 #, fuzzy
 msgid "Open and run service discovery"
@@ -91269,6 +91524,8 @@ msgstr "サービスディスカバリの実行と保存"
 
 msgid "To adjust parameters for a host, start by running a service discovery."
 msgstr ""
+"ホストのパラメータを調整するには、まずサービスディスカバリを実行してください"
+"。"
 
 #, fuzzy
 msgid "In the host table, click on the"
@@ -91286,19 +91543,21 @@ msgid "Open the ruleset for a check parameter"
 msgstr "このチェックタイプのパラメータルールセットを編集する"
 
 msgid "In the Service Discovery view, find the service you want to configure."
-msgstr ""
+msgstr "サービス検出ビューで設定したいサービスを探します。"
 
 #, fuzzy
 msgid "Click the"
 msgstr "URLを確認する"
 
 msgid "-icon next to it to open the corresponding ruleset."
-msgstr ""
+msgstr "その横にあるアイコンをクリックして、対応するルールセットを開きます。"
 
 msgid ""
 "This icon is only visible after the service has been added to monitoring and "
 "is listed under <b>Monitored services</b>"
 msgstr ""
+"このアイコンは、サービスが監視対象に追加された後にのみ表示され、 <b>監視対象"
+"のサービス</b> の下に一覧表示されます"
 
 #, fuzzy
 msgid "Create a check parameter rule"
@@ -91308,10 +91567,14 @@ msgid ""
 "In the ruleset view, click \"Add rule for current host\" to create a rule "
 "that applies specifically to the selected host."
 msgstr ""
+"ルールセットビューで、「現在のホストにルールを追加」をクリックし、選択したjp"
+"氏gpにのみ適用されるルー作成します。"
 
 msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
+"しきい値やその他のチェック設定など、カスタムパラメータを定義できるようになり"
+"ました。"
 
 #, fuzzy
 msgid "Assign responsibilities with contact groups"
@@ -91324,9 +91587,14 @@ msgid ""
 "making them a flexible\n"
 "            and scalable tool for defining who is responsible for what."
 msgstr ""
+"Checkmkで責任範囲を管理する推奨方法は、コンタクトグループを使用することです"
+"。\n"
+"            コンタクトグループはユーザー、ホスト、サービスに割り当てることが"
+"でき、誰が何を担当するかをていぎするための柔軟で\n"
+"            拡張性の高いツールとなります。"
 
 msgid "Before adding more users and assigning responsibilities"
-msgstr ""
+msgstr "ユーザーを追加し、役割を割り当てる前に"
 
 msgid ""
 "Make sure your monitoring setup is stable and already useful. Only once "
@@ -91337,6 +91605,13 @@ msgid ""
 "more about working with multiple\n"
 "          users in the"
 msgstr ""
+"監視環境が安定しており、すでに実用的な状態であることを確認してください。"
+"ホスト、サービス、\n"
+"          および構成が整って初めて、ユーザーを追加し、役割を割り当てる意味が"
+"あります\n"
+"          そうしなければ、不必要な複雑さや混乱を招く恐れがあります。複数"
+"ユーザーでの運用に関する詳細は、\n"
+"          以下の"
 
 #, fuzzy
 msgid "Create a contact group"
@@ -91345,6 +91620,8 @@ msgstr "連絡先グループと一致する"
 msgid ""
 "By default, there is one contact group available, called \"Everything\"."
 msgstr ""
+"デフォルトでは、「Everything」という名前の連絡先グループが1つ用意されています"
+"。"
 
 msgid "Go to Setup > Users > Contact groups to create or edit contact groups."
 msgstr ""
@@ -91360,6 +91637,9 @@ msgid ""
 "contact groups in the \"Contact groups\" section when editing or creating a "
 "user."
 msgstr ""
+"各ユーザーは複数の連絡先グループに所属させることができます。ユーザーを編集ま"
+"たは作成する際、「連絡先グループ」セクションで、ユーザーを連絡先グループに割"
+"り当てることができます。"
 
 #, fuzzy
 msgid "Assign hosts to a contact group"
@@ -91370,11 +91650,13 @@ msgid ""
 "Either make a direct assignment when creating or editing hosts, or use a "
 "rule."
 msgstr ""
+"ホストを連絡先グループに割り当てるには、2つの方法があります。ホストの作成また"
+"は編集時に直接割り当てるか、ルールを使用する方法です。"
 
 msgid ""
 "We recommend using the latter, as rules can adapt more easily to changes in "
 "your environment."
-msgstr ""
+msgstr "環境の変化に柔軟に対応できるため、後者の使用をお勧めします。"
 
 #, fuzzy
 msgid "Create a dashboard"
@@ -91388,6 +91670,13 @@ msgid ""
 "            You can create your own or explore the list of all dashboards to "
 "find useful presets."
 msgstr ""
+"自分にとって最も重要な情報を強調表示するカスタムダッシュボードを作成して、\n"
+"            監視環境を自分好みにカスタマイズしましょう。\n"
+"            特定のホスト、サービス、メトリクスを追跡する場合でも、\n"
+"            ダッシュボードを活用すれば、作業に集中し、効率的に進めることがで"
+"きます。.\n"
+"            独自のダッシュボードを作成することも、すべてのダッシュボード一覧"
+"から便利なプリセットを探すこともできます。"
 
 #, fuzzy
 msgid "Explore the Checkmk built-in dashboards"
@@ -91397,6 +91686,8 @@ msgid ""
 "Explore all of the built-in dashboards available in Checkmk. You can also "
 "clone and modify them to suit your needs."
 msgstr ""
+"Checkmkで利用可能なすべての組み込みダッシュボードをご覧ください。また、必要に"
+"応じてダッシュボードを複製し、カスタマイズすることもできます。"
 
 #, fuzzy
 msgid "View list of all dashboards"
@@ -91410,6 +91701,8 @@ msgid ""
 "Now it's time to create your own customized dashboard so you can see what "
 "matters at a glance."
 msgstr ""
+"さあ、重要な情報を一目で確認できるように、自分だけのダッシュボードを作成しま"
+"しょう。"
 
 #, fuzzy
 msgid "Add custom dashboard"
@@ -91419,7 +91712,7 @@ msgid "Enable notifications"
 msgstr "通知を有効にする"
 
 msgid "2 Steps | Takes 5-7 min"
-msgstr ""
+msgstr "２ステップ｜所要時間5～7分"
 
 msgid ""
 "Notifications help you to stay on top of problems without having to "
@@ -91428,6 +91721,11 @@ msgid ""
 "notification system that evolves alongside\n"
 "            your environment."
 msgstr ""
+"通知機能を使えば、常にインターフェースを確認しなくても、問題をいち早く把握す"
+"ることができます。.\n"
+"            Checkmkでは、通知はルールに基づいて動作するため、環境の変化に合わ"
+"せて\n"
+"            柔軟に拡張できる通知システムを構築できます。"
 
 #, fuzzy
 msgid "Learn more about notifications in the"
@@ -91448,10 +91746,21 @@ msgid ""
 "stay meaningful and don’t get\n"
 "          lost in the noise."
 msgstr ""
+"通知は強力なツールですが、導入が早すぎると、すぐにアラート疲れを引き起こす恐"
+"れがあります。\n"
+"          まずは監視システムについてしっかりと理解を深めましょう。その後、限"
+"られたユーザーに対してメール通知を有効にするという\n"
+"          小規模な試験運用から始めてください。これにより、全ユーザーに展開す"
+"る前に、\n"
+"          ルールや閾値を微調整することができます。段階的な導入を行うことで、"
+"通知が常に有意義なものとして機能し、\n"
+"          雑音に埋もれてしまうことを防げます。"
 
 msgid ""
 "Tip: To use email notifications, make sure an email server is configured."
 msgstr ""
+"ヒント：メール通知を利用するには、メールサーバーが設定されていることを確認し"
+"てください。"
 
 #, fuzzy
 msgid "Create a notification rule"
@@ -91461,6 +91770,8 @@ msgid ""
 "Follow the step-by-step guide in Setup > Notifications to set up "
 "notification rules."
 msgstr ""
+"「設定」＞「通知」にあるステップバイステップの手順に従って、通知ルールを設定"
+"してください。"
 
 #, fuzzy
 msgid "Send a test notification"
@@ -91470,6 +91781,8 @@ msgid ""
 "After creation, test your notification rule to make sure alerts reach you "
 "the way you expect."
 msgstr ""
+"作成後、通知ルールをテストして、アラートが想定どおりに届くことを確認してくだ"
+"さい。"
 
 #, fuzzy
 msgid "Topics explored"
@@ -91484,14 +91797,14 @@ msgstr "Checkmk へようこそ!"
 
 msgid ""
 "Explore essential concepts of Checkmk and begin your monitoring journey."
-msgstr ""
+msgstr "Checkmkの基本概念を学び、監視の第一歩を踏み出しましょう。"
 
 msgid "Show welcome page on start"
-msgstr ""
+msgstr "起動時にウェルカムページを表示します"
 
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
-msgstr ""
+msgstr "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
 
 #, python-format
 #~ msgid "%s section"

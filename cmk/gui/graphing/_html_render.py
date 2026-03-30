@@ -1440,7 +1440,7 @@ class AjaxGraphValuesAtTime(Page):
         render_state = GraphRenderState.model_validate(
             json.loads(ctx.request.get_str_input_mandatory("context"))
         )
-        render_graph_hover_for_recipe(
+        render_graph_hover(
             render_state.recipe,
             render_state.time_range,
             metrics_from_api,
@@ -1454,8 +1454,8 @@ class AjaxGraphValuesAtTime(Page):
         return None
 
 
-@tracer.instrument("graphing.render_graph_hover_for_recipe")
-def render_graph_hover_for_recipe(
+@tracer.instrument("graphing.render_graph_hover")
+def render_graph_hover(
     recipe: GraphRecipe,
     time_range: GraphTimeRange,
     registered_metrics: Mapping[str, RegisteredMetric],

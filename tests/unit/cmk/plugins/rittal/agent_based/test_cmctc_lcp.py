@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, StringTable
-from cmk.plugins.cmctc.agent_based import cmctc_lcp
-from cmk.plugins.cmctc.agent_based.cmctc_lcp import (
+from cmk.plugins.rittal.agent_based import cmctc_lcp
+from cmk.plugins.rittal.agent_based.cmctc_lcp import (
     check_cmctc_lcp_temp,
     discover_cmctc_lcp_access,
     discover_cmctc_lcp_current,

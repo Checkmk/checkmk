@@ -20,8 +20,12 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.cmctc.lib import cmctc_translate_status, cmctc_translate_status_text, DETECT_CMCTC
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
+from cmk.plugins.rittal.lib.cmctc import (
+    cmctc_translate_status,
+    cmctc_translate_status_text,
+    DETECT_CMCTC,
+)
 
 Params: TypeAlias = Any
 

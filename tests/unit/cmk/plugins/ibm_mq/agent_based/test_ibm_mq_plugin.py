@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.ibm_mq_plugin import (
+from cmk.plugins.ibm_mq.agent_based.ibm_mq_plugin import (
     check_ibm_mq_plugin,
     discover_ibm_mq_plugin,
     parse_ibm_mq_plugin,

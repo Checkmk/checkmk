@@ -3,18 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping
 
 import pytest
 
-from .checktestlib import Check
-from .test_ibm_mq_include import parse_info
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.legacy_checks.ibm_mq_plugin import (
+    check_ibm_mq_plugin,
+    discover_ibm_mq_plugin,
+    parse_ibm_mq_plugin,
+)
 
 pytestmark = pytest.mark.checks
 
 CHECK_NAME = "ibm_mq_plugin"
+
+
+def parse_info(lines: str, separator: str | None = None) -> list[list[str]]:
+    result = []
+    for line in lines.splitlines():
+        line = line.strip()
+        result.append(line.split(separator))
+    return result
 
 
 def test_parse() -> None:
@@ -24,14 +34,29 @@ dspmq: OK
 runmqsc: Not executable
 """
     section = parse_info(lines, chr(58))
-    check = Check(CHECK_NAME)
-    actual = check.run_parse(section)
+    actual = parse_ibm_mq_plugin(section)
     expected = {
         "version": "2.0.4",
         "dspmq": "OK",
         "runmqsc": "Not executable",
     }
     assert actual == expected
+
+
+def test_discover() -> None:
+    parsed = {
+        "version": "2.0.4",
+        "dspmq": "OK",
+        "runmqsc": "OK",
+    }
+    discovery = list(discover_ibm_mq_plugin(parsed))
+    assert len(discovery) == 1
+    assert Service() in discovery
+
+
+def test_discover_empty() -> None:
+    discovery = list(discover_ibm_mq_plugin({}))
+    assert discovery == []
 
 
 @pytest.mark.parametrize(
@@ -45,9 +70,9 @@ runmqsc: Not executable
                 "runmqsc": "OK",
             },
             [
-                (0, "Plugin version: 2.0.4"),
-                (0, "dspmq: OK"),
-                (0, "runmqsc: OK"),
+                Result(state=State.OK, summary="Plugin version: 2.0.4"),
+                Result(state=State.OK, summary="dspmq: OK"),
+                Result(state=State.OK, summary="runmqsc: OK"),
             ],
             id="all_ok",
         ),
@@ -59,9 +84,9 @@ runmqsc: Not executable
                 "runmqsc": "Not found",
             },
             [
-                (0, "Plugin version: 2.0.4"),
-                (0, "dspmq: OK"),
-                (2, "runmqsc: Not found"),
+                Result(state=State.OK, summary="Plugin version: 2.0.4"),
+                Result(state=State.OK, summary="dspmq: OK"),
+                Result(state=State.CRIT, summary="runmqsc: Not found"),
             ],
             id="one_tool_not_found",
         ),
@@ -72,9 +97,9 @@ runmqsc: Not executable
                 "runmqsc": "Not found",
             },
             [
-                (0, "Plugin version: 2.0.4"),
-                (3, "dspmq: No agent info"),
-                (2, "runmqsc: Not found"),
+                Result(state=State.OK, summary="Plugin version: 2.0.4"),
+                Result(state=State.UNKNOWN, summary="dspmq: No agent info"),
+                Result(state=State.CRIT, summary="runmqsc: Not found"),
             ],
             id="tool_not_in_agent",
         ),
@@ -86,17 +111,18 @@ runmqsc: Not executable
                 "runmqsc": "Not found",
             },
             [
-                (2, "Plugin version: 2.0.4 (should be at least 2.1)"),
-                (0, "dspmq: OK"),
-                (2, "runmqsc: Not found"),
+                Result(state=State.CRIT, summary="Plugin version: 2.0.4 (should be at least 2.1)"),
+                Result(state=State.OK, summary="dspmq: OK"),
+                Result(state=State.CRIT, summary="runmqsc: Not found"),
             ],
             id="version_mismatch",
         ),
     ],
 )
 def test_check(
-    params: Mapping[str, object], parsed: Mapping[str, str], expected: list[tuple[int, str]]
+    params: Mapping[str, object],
+    parsed: dict[str, str],
+    expected: list[Result],
 ) -> None:
-    check = Check(CHECK_NAME)
-    actual = list(check.run_check(None, params, parsed))
+    actual = list(check_ibm_mq_plugin(params, parsed))
     assert actual == expected

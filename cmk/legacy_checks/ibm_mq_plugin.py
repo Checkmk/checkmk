@@ -3,14 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.ibm_mq import ibm_mq_check_version
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.ibm_mq.lib import ibm_mq_check_version
 
 # <<<ibm_mq_plugin:sep(58)>>>
 # version|2.0.4
@@ -18,7 +25,7 @@ check_info = {}
 # runmqsc|Not executable
 
 
-def parse_ibm_mq_plugin(string_table):
+def parse_ibm_mq_plugin(string_table: StringTable) -> dict[str, str]:
     parsed = {}
     for line in string_table:
         key = line[0].strip()
@@ -27,37 +34,42 @@ def parse_ibm_mq_plugin(string_table):
     return parsed
 
 
-def discover_ibm_mq_plugin(parsed):
-    if parsed:
-        return [(None, {})]
-    return []
+def discover_ibm_mq_plugin(section: dict[str, str]) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_tool(tool_name, parsed):
+def check_tool(tool_name: str, parsed: dict[str, str]) -> Result:
     if tool_name not in parsed:
-        return 3, "%s: No agent info" % tool_name
+        return Result(state=State.UNKNOWN, summary=f"{tool_name}: No agent info")
 
-    status, text = 0, parsed[tool_name]
-    if text != "OK":
-        status = 2
-    return status, f"{tool_name}: {text}"
+    text = parsed[tool_name]
+    state = State.OK if text == "OK" else State.CRIT
+    return Result(state=state, summary=f"{tool_name}: {text}")
 
 
-def check_ibm_mq_plugin(_no_item, params, parsed):
-    if not parsed:
+def check_ibm_mq_plugin(params: Mapping[str, Any], section: dict[str, str]) -> CheckResult:
+    if not section:
         return
 
-    actual_version = parsed.get("version")
-    yield ibm_mq_check_version(actual_version, params, "Plugin version")
-    yield check_tool("dspmq", parsed)
-    yield check_tool("runmqsc", parsed)
+    actual_version = section.get("version")
+    version_state, version_summary = ibm_mq_check_version(actual_version, params, "Plugin version")
+    yield Result(state=State(version_state), summary=version_summary)
+    yield check_tool("dspmq", section)
+    yield check_tool("runmqsc", section)
 
 
-check_info["ibm_mq_plugin"] = LegacyCheckDefinition(
+agent_section_ibm_mq_plugin = AgentSection(
     name="ibm_mq_plugin",
     parse_function=parse_ibm_mq_plugin,
+)
+
+
+check_plugin_ibm_mq_plugin = CheckPlugin(
+    name="ibm_mq_plugin",
     service_name="IBM MQ Plugin",
     discovery_function=discover_ibm_mq_plugin,
     check_function=check_ibm_mq_plugin,
     check_ruleset_name="ibm_mq_plugin",
+    check_default_parameters={},
 )

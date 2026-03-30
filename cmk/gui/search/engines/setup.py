@@ -416,7 +416,7 @@ class IndexSearcher:
         self, query: SearchQuery
     ) -> dict[str, list[_SearchResultWithVisibilityCheck]]:
         if not IndexBuilder.index_is_built(self._redis_client):
-            self._launch_index_building_in_background_job(self._config)
+            self._launch_index_building_in_background_job()
             raise IndexNotFoundException
 
         query_preprocessed = f"*{query.lower().replace(' ', '*')}*"
@@ -445,14 +445,14 @@ class IndexSearcher:
             for topic in chain(results_localization_independent, results_localization_dependent)
         }
 
-    def _launch_index_building_in_background_job(self, config: Config) -> None:
+    def _launch_index_building_in_background_job(self) -> None:
         build_job = SearchIndexBackgroundJob()
         build_job.start(
             JobTarget(
                 callable=_index_building_in_background_job,
                 args=SearchIndexBackgroundJobArgs(
                     user_permission_config=UserPermissionSerializableConfig.from_global_config(
-                        config
+                        self._config
                     ),
                 ),
             ),

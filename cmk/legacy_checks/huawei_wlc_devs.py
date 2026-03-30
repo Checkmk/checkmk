@@ -3,33 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Defined by customer, see SUP-1020
 
+from collections.abc import Mapping
+from typing import TypedDict
 
-# mypy: disable-error-code="var-annotated"
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import contains, render, SNMPTree
-
-check_info = {}
+Section = Mapping[str, Mapping[str, float]]
 
 
-def parse_huawei_wlc_devs(string_table):
-    parsed = {}
+class HuaweiWlcDevsLevelsParams(TypedDict, total=False):
+    levels: tuple[float, float]
 
-    # Devices
+
+def parse_huawei_wlc_devs(string_table: StringTable) -> Section:
+    parsed: dict[str, dict[str, float]] = {}
     for name, cpu_perc, mem_perc in string_table:
         if name:
-            parsed[name] = {}
-            for metric, value in (("cpu_percent", cpu_perc), ("mem_used_percent", mem_perc)):
-                parsed[name][metric] = float(value)
-
+            parsed[name] = {
+                "cpu_percent": float(cpu_perc),
+                "mem_used_percent": float(mem_perc),
+            }
     return parsed
 
 
-check_info["huawei_wlc_devs"] = LegacyCheckDefinition(
+snmp_section_huawei_wlc_devs = SimpleSNMPSection(
     name="huawei_wlc_devs",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
     fetch=SNMPTree(
@@ -40,28 +50,28 @@ check_info["huawei_wlc_devs"] = LegacyCheckDefinition(
 )
 
 
-def discovery_huawei_wlc_devs_mem(parsed):
-    for name, dev in parsed.items():
-        if dev["mem_used_percent"] is not None:
-            yield name, {}
+def discovery_huawei_wlc_devs_mem(section: Section) -> DiscoveryResult:
+    for name, dev in section.items():
+        if dev.get("mem_used_percent") is not None:
+            yield Service(item=name)
 
 
-def check_huawei_wlc_devs_mem(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_huawei_wlc_devs_mem(
+    item: str, params: HuaweiWlcDevsLevelsParams, section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    lev = params.get("levels")
-    val = data.get("%s" % "mem_used_percent")
 
-    yield check_levels(
-        val,
-        "mem_used_percent",
-        lev,
-        human_readable_func=render.percent,
-        infoname="Used",
+    yield from check_levels(
+        data["mem_used_percent"],
+        levels_upper=params.get("levels"),
+        metric_name="mem_used_percent",
+        render_func=render.percent,
+        label="Used",
     )
 
 
-check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
+check_plugin_huawei_wlc_devs_mem = CheckPlugin(
     name="huawei_wlc_devs_mem",
     service_name="Device %s Memory",
     sections=["huawei_wlc_devs"],
@@ -71,24 +81,28 @@ check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
 )
 
 
-def discovery_huawei_wlc_devs_cpu(parsed):
-    for name, dev in parsed.items():
-        if dev["cpu_percent"] is not None:
-            yield name, {}
+def discovery_huawei_wlc_devs_cpu(section: Section) -> DiscoveryResult:
+    for name, dev in section.items():
+        if dev.get("cpu_percent") is not None:
+            yield Service(item=name)
 
 
-def check_huawei_wlc_devs_cpu(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_huawei_wlc_devs_cpu(
+    item: str, params: HuaweiWlcDevsLevelsParams, section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    lev = params.get("levels")
-    val = data.get("%s" % "cpu_percent")
 
-    yield check_levels(
-        val, "cpu_percent", lev, human_readable_func=render.percent, infoname="Usage"
+    yield from check_levels(
+        data["cpu_percent"],
+        levels_upper=params.get("levels"),
+        metric_name="cpu_percent",
+        render_func=render.percent,
+        label="Usage",
     )
 
 
-check_info["huawei_wlc_devs.cpu"] = LegacyCheckDefinition(
+check_plugin_huawei_wlc_devs_cpu = CheckPlugin(
     name="huawei_wlc_devs_cpu",
     service_name="Device %s CPU",
     sections=["huawei_wlc_devs"],

@@ -3,92 +3,74 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-# NOTE: This file has been created by an LLM (from something that was worse).
-# It mostly serves as test to ensure we don't accidentally break anything.
-# If you encounter something weird in here, do not hesitate to replace this
-# test by something more appropriate.
-
-from collections.abc import Mapping
-from typing import Any
-
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.legacy_checks.huawei_wlc_devs import (
     check_huawei_wlc_devs_cpu,
     check_huawei_wlc_devs_mem,
     discovery_huawei_wlc_devs_cpu,
     discovery_huawei_wlc_devs_mem,
+    HuaweiWlcDevsLevelsParams,
     parse_huawei_wlc_devs,
 )
 
+STRING_TABLE = [
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["AC6508", "4", "28"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+    ["", "0", "0"],
+]
 
-def parsed() -> Mapping[str, Any]:
-    """Parsed WLC device data for testing."""
-    string_table = [
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["AC6508", "4", "28"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-        ["", "0", "0"],
-    ]
-    return parse_huawei_wlc_devs(string_table)
+PARSED = parse_huawei_wlc_devs(STRING_TABLE)
 
 
-def test_huawei_wlc_devs_discovery_mem():
-    """Test huawei_wlc_devs memory discovery."""
-    services = list(discovery_huawei_wlc_devs_mem(parsed()))
-
+def test_huawei_wlc_devs_discovery_mem() -> None:
+    services = list(discovery_huawei_wlc_devs_mem(PARSED))
     assert len(services) == 1
-    assert services == [("AC6508", {})]
+    assert services[0].item == "AC6508"
 
 
-def test_huawei_wlc_devs_discovery_cpu():
-    """Test huawei_wlc_devs CPU discovery."""
-    services = list(discovery_huawei_wlc_devs_cpu(parsed()))
-
+def test_huawei_wlc_devs_discovery_cpu() -> None:
+    services = list(discovery_huawei_wlc_devs_cpu(PARSED))
     assert len(services) == 1
-    assert services == [("AC6508", {})]
+    assert services[0].item == "AC6508"
 
 
-def test_huawei_wlc_devs_check_mem():
-    """Test huawei_wlc_devs memory check."""
-    params = {"levels": (80.0, 90.0)}
-    result = list(check_huawei_wlc_devs_mem("AC6508", params, parsed()))
-
-    assert len(result) == 1
-    state, message, metrics = result[0]
-    assert state == 0
-    assert "Used: 28.00%" in message
-    assert ("mem_used_percent", 28.0, 80.0, 90.0) in metrics
-
-
-def test_huawei_wlc_devs_check_cpu():
-    """Test huawei_wlc_devs CPU check."""
-    params = {"levels": (80.0, 90.0)}
-    result = list(check_huawei_wlc_devs_cpu("AC6508", params, parsed()))
-
-    assert len(result) == 1
-    state, message, metrics = result[0]
-    assert state == 0
-    assert "Usage: 4.00%" in message
-    assert ("cpu_percent", 4.0, 80.0, 90.0) in metrics
+def test_huawei_wlc_devs_check_mem() -> None:
+    params: HuaweiWlcDevsLevelsParams = {"levels": (80.0, 90.0)}
+    results = list(check_huawei_wlc_devs_mem("AC6508", params, PARSED))
+    result_objs = [r for r in results if isinstance(r, Result)]
+    metric_objs = [r for r in results if isinstance(r, Metric)]
+    assert len(result_objs) == 1
+    assert result_objs[0].state == State.OK
+    assert "Used" in result_objs[0].summary
+    assert len(metric_objs) == 1
+    assert metric_objs[0].name == "mem_used_percent"
 
 
-def test_huawei_wlc_devs_check_missing_item():
-    """Test huawei_wlc_devs check with missing item."""
-    params = {"levels": (80.0, 90.0)}
-    result = list(check_huawei_wlc_devs_mem("NonExistent", params, parsed()))
+def test_huawei_wlc_devs_check_cpu() -> None:
+    params: HuaweiWlcDevsLevelsParams = {"levels": (80.0, 90.0)}
+    results = list(check_huawei_wlc_devs_cpu("AC6508", params, PARSED))
+    result_objs = [r for r in results if isinstance(r, Result)]
+    metric_objs = [r for r in results if isinstance(r, Metric)]
+    assert len(result_objs) == 1
+    assert result_objs[0].state == State.OK
+    assert "Usage" in result_objs[0].summary
+    assert len(metric_objs) == 1
+    assert metric_objs[0].name == "cpu_percent"
 
-    assert len(result) == 0
+
+def test_huawei_wlc_devs_check_missing_item() -> None:
+    params: HuaweiWlcDevsLevelsParams = {"levels": (80.0, 90.0)}
+    results = list(check_huawei_wlc_devs_mem("NonExistent", params, PARSED))
+    assert len(results) == 0

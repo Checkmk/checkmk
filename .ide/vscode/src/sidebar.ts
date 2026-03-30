@@ -45,6 +45,9 @@ const _providers: Record<string, SectionViewProvider> = {}
 // ── State cache ──
 
 function refreshStateCache(): StateCache {
+  _extensionsConfig = loadConfig<ExtensionSets>('extensions')
+  _settingsConfig = loadConfig<Record<string, SettingsEntry>>('settings')
+
   const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
   const buildStatus = wsPath ? checkBuildStatus(wsPath) : {}
   const profiles = profileManager.getAll()
@@ -252,6 +255,13 @@ export function registerSidebar(
     settingsWatcher.onDidChange(() => refreshAll())
     settingsWatcher.onDidCreate(() => refreshAll())
     context.subscriptions.push(settingsWatcher)
+
+    const configWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(wsPath, '.ide/vscode/config/*.json')
+    )
+    configWatcher.onDidChange(() => refreshAll())
+    configWatcher.onDidCreate(() => refreshAll())
+    context.subscriptions.push(configWatcher)
   }
 
   let configDebounce: ReturnType<typeof setTimeout> | null = null

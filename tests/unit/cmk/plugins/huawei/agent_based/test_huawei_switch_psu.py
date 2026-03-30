@@ -8,7 +8,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.legacy_checks.huawei_switch_psu import (
+from cmk.plugins.huawei.agent_based.huawei_switch_psu import (
     check_huawei_switch_psu,
     discover_huawei_switch_psu,
     parse_huawei_switch_psu,

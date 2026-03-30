@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
 import argparse
 import configparser
 import json
@@ -12,18 +14,19 @@ import shlex
 import socket
 import subprocess
 import sys
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from shutil import which
-from typing import Any, Literal, TypedDict, TypeVar, Union
+from typing import Any, Callable, Literal, TypedDict, TypeVar, Union  # noqa: UP035
+
+_F = TypeVar("_F", bound=Callable[..., object])
 
 # override decorator is only available in Python 3.12+
 try:
     from typing import override
 except ImportError:
-    _F = TypeVar("_F", bound=Callable[..., object])
 
     def override(func: _F, /) -> _F:
         return func
@@ -34,7 +37,7 @@ __version__ = "2.5.0b5"
 LOGGER = logging.getLogger(__name__)
 
 
-def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="mk_podman", description="Checkmk Podman agent plugin")
     parser.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
     parser.add_argument(
@@ -185,7 +188,7 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
 
 def get_socket_owner(socket_path: Path) -> Union[str, None]:
     try:
-        return socket_path.owner()
+        return pwd.getpwuid(os.stat(socket_path).st_uid).pw_name
     except (OSError, KeyError):
         return None
 

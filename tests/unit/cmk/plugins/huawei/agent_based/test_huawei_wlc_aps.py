@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.huawei_wlc_aps import (
+from cmk.plugins.huawei.agent_based.huawei_wlc_aps import (
     check_huawei_wlc_aps_cpu,
     check_huawei_wlc_aps_mem,
     check_huawei_wlc_aps_status,
@@ -125,7 +125,7 @@ def test_huawei_wlc_aps_check_mem() -> None:
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.legacy_checks.huawei_wlc_aps.get_value_store",
+        "cmk.plugins.huawei.agent_based.huawei_wlc_aps.get_value_store",
         lambda: {},
     )
 

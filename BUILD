@@ -56,6 +56,29 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+filegroup(
+    name = ".git",
+    srcs = [
+        ".git/HEAD",
+        ".git/config",
+    ] + glob(
+        include = [
+            ".git/packed-refs",  # buildifier: disable=constant-glob
+            ".git/refs/**",
+            ".git/objects/**",
+            ".git/refs/**",
+            ".git/info/**",
+            ".git/logs/**",
+        ],
+        allow_empty = True,
+        exclude = [
+            ".git/COMMIT_EDITMSG",
+            ".git/index",
+        ],
+    ),
+    visibility = ["//:__subpackages__"],
+)
+
 npm_link_all_packages(name = "node_modules")
 
 copy_to_directory(

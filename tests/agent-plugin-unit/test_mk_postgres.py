@@ -382,7 +382,9 @@ class TestWindows:
             mk_postgres.PostgresWin,
             "_call_wmic_logicaldisk",
             staticmethod(
-                lambda: "DeviceID  \r\r\nC:        \r\r\nD:        \r\r\nH:        \r\r\nI:        \r\r\nR:        \r\r\n\r\r\n"
+                lambda: (
+                    "DeviceID  \r\r\nC:        \r\r\nD:        \r\r\nH:        \r\r\nI:        \r\r\nR:        \r\r\n\r\r\n"
+                )
             ),
         )
 

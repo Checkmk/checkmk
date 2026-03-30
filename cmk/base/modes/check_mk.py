@@ -1653,8 +1653,10 @@ def mode_update(app: CheckmkBaseApp) -> None:
                 ),
                 duplicates=sorted(
                     hosts_config.duplicates(
-                        lambda hn: loading_result.config_cache.is_active(hn)
-                        and loading_result.config_cache.is_online(hn)
+                        lambda hn: (
+                            loading_result.config_cache.is_active(hn)
+                            and loading_result.config_cache.is_online(hn)
+                        )
                     )
                 ),
                 bake_on_restart=bake_on_restart,
@@ -1756,8 +1758,10 @@ def mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         discovery_rules=loaded_config.discovery_rules,
         duplicates=sorted(
             hosts_config.duplicates(
-                lambda hn: loading_result.config_cache.is_active(hn)
-                and loading_result.config_cache.is_online(hn)
+                lambda hn: (
+                    loading_result.config_cache.is_active(hn)
+                    and loading_result.config_cache.is_online(hn)
+                )
             )
         ),
         bake_on_restart=app.make_bake_on_restart(loading_result, hosts_config.hosts),
@@ -1853,8 +1857,10 @@ def mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         discovery_rules=loaded_config.discovery_rules,
         duplicates=sorted(
             hosts_config.duplicates(
-                lambda hn: loading_result.config_cache.is_active(hn)
-                and loading_result.config_cache.is_online(hn)
+                lambda hn: (
+                    loading_result.config_cache.is_active(hn)
+                    and loading_result.config_cache.is_online(hn)
+                )
             ),
         ),
         bake_on_restart=app.make_bake_on_restart(loading_result, hosts_config.hosts),

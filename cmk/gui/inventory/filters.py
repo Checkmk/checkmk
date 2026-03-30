@@ -809,8 +809,9 @@ class FilterInvtableAdminStatus(FilterOption):
                     ("-1", _("(ignore)")),
                 ],
                 filter_code=lambda x: "",
-                filter_row=lambda selection, row: str(row.get("invinterface_admin_status", ""))
-                == selection,
+                filter_row=lambda selection, row: (
+                    str(row.get("invinterface_admin_status", "")) == selection
+                ),
             ),
             group=FilterGroup.INVENTORY,
         )
@@ -830,8 +831,9 @@ class FilterInvtableAvailable(FilterOption):
                     ("", _("(ignore)")),
                 ],
                 filter_code=lambda x: "",
-                filter_row=lambda selection, row: (selection == "yes")
-                == row.get("invinterface_available"),
+                filter_row=lambda selection, row: (
+                    (selection == "yes") == row.get("invinterface_available")
+                ),
             ),
             group=FilterGroup.INVENTORY,
         )

@@ -1012,9 +1012,11 @@ def _write_sections_based_on_api_data(
                 sorted(
                     [api_jobs[uid] for uid in api_cron_job.job_uids],
                     key=(
-                        lambda job: job.metadata.creation_timestamp
-                        if job.metadata.creation_timestamp is not None
-                        else api.Timestamp(0.0)
+                        lambda job: (
+                            job.metadata.creation_timestamp
+                            if job.metadata.creation_timestamp is not None
+                            else api.Timestamp(0.0)
+                        )
                     ),
                 ),
                 host_settings=checkmk_host_settings,

@@ -51,8 +51,8 @@ class AllValueStoresStore:
         log_debug: Callable[[str], object] | None = None,
     ) -> None:
         self.path: Final = path
-        self._log_debug: Final = (
-            lambda x: logger.debug("value store: %s", x) if log_debug is None else log_debug
+        self._log_debug: Final = lambda x: (
+            logger.debug("value store: %s", x) if log_debug is None else log_debug
         )
         self._last_known_state: None | _LastState = None
 

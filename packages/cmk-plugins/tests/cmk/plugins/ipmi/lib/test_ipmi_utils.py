@@ -519,11 +519,13 @@ SECTION = {
         ),
         (
             {},
-            lambda txt: State.CRIT
-            if "Failure detected" in txt
-            else State.WARN
-            if "State Deasserted" in txt
-            else State.OK,
+            lambda txt: (
+                State.CRIT
+                if "Failure detected" in txt
+                else State.WARN
+                if "State Deasserted" in txt
+                else State.OK
+            ),
             [
                 Metric("ambient_temp", 18.5),
                 Result(state=State.OK, summary="10 sensors in total"),

@@ -41,9 +41,12 @@ ignore = [
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
+  "PLC0207", # String is split more times than necessary
+  "PLW0108", # Lambda may be unnecessary; consider inlining inner function
   "PLW1641", # Object does not implement `__hash__` method
   "UP031",   # Use format specifiers instead of percent format
   "UP040",   # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
+  "UP042",   # Class FOO inherits from both `str` and `enum.Enum`
   "UP046",   # Generic class `FOO` uses `Generic` subclass instead of type parameters (NOTE: fixable via --fix --unsafe-fixes)
   "UP047",   # Generic function `FOO` should use type parameters (NOTE: fixable via --fix --unsafe-fixes)
 ]

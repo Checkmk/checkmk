@@ -302,8 +302,9 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
         options,
         args,
         define_servicegroups=config.define_servicegroups,
-        host_parameters_cb=lambda hostname,
-        plugin: loading_result.config_cache.notification_plugin_parameters(hostname, plugin),
+        host_parameters_cb=lambda hostname, plugin: (
+            loading_result.config_cache.notification_plugin_parameters(hostname, plugin)
+        ),
         rules=config.notification_rules,
         parameters=config.notification_parameter,
         get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),

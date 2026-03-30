@@ -7247,7 +7247,7 @@ class UploadOrPasteTextFile(Alternative):
         # Alternative
         elements: Iterable[ValueSpec] = (),
         # NOTE: Match defaut is different!
-        match: Callable[[Any], int] | None = lambda val: (0 if isinstance(val, tuple) else 1),
+        match: Callable[[Any], int] | None = lambda val: 0 if isinstance(val, tuple) else 1,
         show_alternative_title: bool = False,
         on_change: str | None = None,
         orientation: Literal["horizontal", "vertical"] = "vertical",
@@ -7336,7 +7336,7 @@ class TextOrRegExp(Alternative):
                 vs_text,
                 Transform(
                     valuespec=vs_regex,
-                    to_valuespec=lambda v: (None if v is None else v[1:]),  # strip off "~"
+                    to_valuespec=lambda v: None if v is None else v[1:],  # strip off "~"
                     from_valuespec=lambda v: "~" + v,  # add "~"
                 ),
             ],

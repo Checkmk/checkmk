@@ -3106,9 +3106,11 @@ def _execute_diag_special_agent(
                     name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                     for name, raw in diag_special_agent_input.http_proxies.items()
                 },
-                password_lookup=lambda s_id: None
-                if (s := diag_special_agent_input.passwords.get(s_id)) is None
-                else s.reveal(),
+                password_lookup=lambda s_id: (
+                    None
+                    if (s := diag_special_agent_input.passwords.get(s_id)) is None
+                    else s.reveal()
+                ),
             ),
             {
                 ident: config_processing.OAuth2Connection(**entry)

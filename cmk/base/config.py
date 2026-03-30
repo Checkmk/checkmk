@@ -586,8 +586,10 @@ def load(
         hosts_config = loading_result.config_cache.hosts_config
         if duplicates := sorted(
             hosts_config.duplicates(
-                lambda hn: loading_result.config_cache.is_active(hn)
-                and loading_result.config_cache.is_online(hn)
+                lambda hn: (
+                    loading_result.config_cache.is_active(hn)
+                    and loading_result.config_cache.is_online(hn)
+                )
             )
         ):
             # TODO: Raise an exception
@@ -1752,8 +1754,9 @@ class ConfigCache:
             ip_stack_config=self.ip_stack_config,
             is_snmp_host=lambda host_name: self.computed_datasources(host_name).is_snmp,
             is_snmp_management=lambda host_name: self.management_protocol(host_name) == "snmp",
-            is_use_walk_host=lambda host_name: self.get_snmp_backend(host_name)
-            is SNMPBackendEnum.STORED_WALK,
+            is_use_walk_host=lambda host_name: (
+                self.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
+            ),
             default_address_family=self.default_address_family,
             management_address=self.management_address,
             is_dyndns_host=self.is_dyndns_host,
@@ -3748,12 +3751,17 @@ def make_parser_config(
         ),
         # Note: this is a reproduction of the logic we had before.
         # I think this can be simplified, fixing CMK-25914
-        piggyback_max_cache_age_callbacks=lambda piggybacked_host_name: piggyback_backend.Config(
-            piggybacked_host_name,
-            guess_piggybacked_hosts_time_settings(
-                loaded_config, ruleset_matcher, label_manager.labels_of_host, piggybacked_host_name
-            ),
-        ).max_cache_age,
+        piggyback_max_cache_age_callbacks=lambda piggybacked_host_name: (
+            piggyback_backend.Config(
+                piggybacked_host_name,
+                guess_piggybacked_hosts_time_settings(
+                    loaded_config,
+                    ruleset_matcher,
+                    label_manager.labels_of_host,
+                    piggybacked_host_name,
+                ),
+            ).max_cache_age
+        ),
     )
 
 

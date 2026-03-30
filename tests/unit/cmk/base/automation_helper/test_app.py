@@ -147,8 +147,10 @@ def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
         assert now > current_last_reload_at
         cache.store_last_detected_change(now)
         wait_until(
-            lambda: HealthCheckResponse.model_validate(client.get("/health").json()).last_reload_at
-            > current_last_reload_at,
+            lambda: (
+                HealthCheckResponse.model_validate(client.get("/health").json()).last_reload_at
+                > current_last_reload_at
+            ),
             timeout=0.25,
             interval=0.025,
         )

@@ -441,9 +441,7 @@ def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFrom
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_column(row, hint),
         export_for_python=lambda row, cell: row.get(hint.name),
-        export_for_csv=lambda row, cell: (
-            "" if (data := row.get(hint.name)) is None else str(data)
-        ),
+        export_for_csv=lambda row, cell: "" if (data := row.get(hint.name)) is None else str(data),
         export_for_json=lambda row, cell: row.get(hint.name),
     )
 
@@ -526,8 +524,8 @@ def node_painter_from_hint(
         load_inv=True,
         sorter=hint.name,
         paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
-        export_for_python=lambda row, cell: (
-            serialize_tree(_compute_node_painter_data(row, hint.path))
+        export_for_python=lambda row, cell: serialize_tree(
+            _compute_node_painter_data(row, hint.path)
         ),
         export_for_csv=lambda row, cell: _export_node_for_csv(),
         export_for_json=lambda row, cell: serialize_tree(

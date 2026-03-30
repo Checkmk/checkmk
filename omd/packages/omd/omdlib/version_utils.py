@@ -33,20 +33,11 @@ def version_from_site_dir(site_dir: Path) -> str | None:
         return None
 
 
-def werk_18891_error(version: str, restore: bool) -> str:
-    if restore:
-        return (
-            f"ERROR: Refusing to execute vulnerable omd version '{version}'.\n\n"
-            f"For your security, automatic version switching to older version is blocked.\n"
-            f"For more details on this vulnerability and the required updates, see:\n"
-            f"https://checkmk.com/werk/18891\n\n"
-            "Restoring your site is still possible. Please follow the instructions on the linked page."
-        )
+def werk_18891_warning(version: str) -> str:
     return (
-        f"ERROR: Refusing to execute vulnerable omd version '{version}'.\n\n"
-        f"For your security, automatic version switching to older version is blocked.\n"
+        f"WARNING: Executing vulnerable omd version '{version}'.\n"
         f"For more details on this vulnerability and the required updates, see:\n"
-        f"https://checkmk.com/werk/18891"
+        f"https://checkmk.com/werk/18891\n"
     )
 
 

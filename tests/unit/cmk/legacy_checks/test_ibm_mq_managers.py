@@ -3,20 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from typing import Any
 
 import pytest
 
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.legacy_checks.ibm_mq_managers import check_ibm_mq_managers, discover_ibm_mq_managers
 from cmk.plugins.ibm.agent_based.ibm_mq_managers import parse_ibm_mq_managers
-
-from .checktestlib import Check
-from .test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks
 
 CHECK_NAME = "ibm_mq_managers"
+
+
+def parse_info(lines: str, separator: str | None = None) -> list[list[str]]:
+    result = []
+    for line in lines.splitlines():
+        line = line.strip()
+        result.append(line.split(separator))
+    return result
 
 
 def test_parse() -> None:
@@ -55,7 +60,6 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
    INSTANCE(sb112233) MODE(ACTIVE)
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
     manager = parsed["THE.LOCAL.ONE"]
@@ -63,12 +67,12 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     assert manager.attributes["STATUS"] == "RUNNING"
 
     params: dict[str, Any] = {}
-    actual = list(check.run_check("THE.LOCAL.ONE", params, parsed))
+    actual = list(check_ibm_mq_managers("THE.LOCAL.ONE", params, parsed))
     expected = [
-        (0, "Status: RUNNING"),
-        (0, "Version: 8.0.0.6"),
-        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
-        (0, "Single-Instance: sb112233=ACTIVE"),
+        Result(state=State.OK, summary="Status: RUNNING"),
+        Result(state=State.OK, summary="Version: 8.0.0.6"),
+        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
+        Result(state=State.OK, summary="Single-Instance: sb112233=ACTIVE"),
     ]
     assert expected == actual
 
@@ -80,7 +84,6 @@ QMNAME(THE.RDQM.ONE)                                      STATUS(RUNNING) DEFAUL
 QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHERE) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(9.2.0.0) HA(REPLICATED) DRROLE()
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
     manager = parsed["THE.RDQM.ONE"]
@@ -88,12 +91,12 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
     assert manager.attributes["STATUS"] == "RUNNING"
 
     params: dict[str, Any] = {}
-    actual = list(check.run_check("THE.RDQM.ONE", params, parsed))
+    actual = list(check_ibm_mq_managers("THE.RDQM.ONE", params, parsed))
     expected = [
-        (0, "Status: RUNNING"),
-        (0, "Version: 9.1.0.4"),
-        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
-        (0, "High availability: replicated, Instance: sb008877"),
+        Result(state=State.OK, summary="Status: RUNNING"),
+        Result(state=State.OK, summary="Version: 9.1.0.4"),
+        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
+        Result(state=State.OK, summary="High availability: replicated, Instance: sb008877"),
     ]
     assert expected == actual
 
@@ -103,15 +106,14 @@ def test_ended_preemtively() -> None:
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
     params: dict[str, Any] = {}
-    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
+    actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
     expected = [
-        (1, "Status: ENDED PREEMPTIVELY"),
-        (0, "Version: 7.5.0.2"),
-        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
+        Result(state=State.WARN, summary="Status: ENDED PREEMPTIVELY"),
+        Result(state=State.OK, summary="Version: 7.5.0.2"),
+        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
@@ -119,14 +121,13 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIV
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.1)
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
-    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
+    actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
     expected = [
-        (1, "Status: ENDED PRE-EMPTIVELY"),
-        (0, "Version: 8.0.0.1"),
-        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
+        Result(state=State.WARN, summary="Status: ENDED PRE-EMPTIVELY"),
+        Result(state=State.OK, summary="Version: 8.0.0.1"),
+        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
@@ -136,26 +137,25 @@ def test_status_wato_override() -> None:
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
     # Factory defaults
     params: dict[str, Any] = {}
-    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
+    actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
     expected = [
-        (1, "Status: ENDED PRE-EMPTIVELY"),
-        (0, "Version: 7.5.0.2"),
-        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
+        Result(state=State.WARN, summary="Status: ENDED PRE-EMPTIVELY"),
+        Result(state=State.OK, summary="Version: 7.5.0.2"),
+        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
     # Override factory defaults
     params = {"mapped_states": [("ended_pre_emptively", 2)]}
-    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
+    actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
     expected = [
-        (2, "Status: ENDED PRE-EMPTIVELY"),
-        (0, "Version: 7.5.0.2"),
-        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
+        Result(state=State.CRIT, summary="Status: ENDED PRE-EMPTIVELY"),
+        Result(state=State.OK, summary="Version: 7.5.0.2"),
+        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
@@ -164,11 +164,11 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
         "mapped_states": [("running_as_standby", 2)],
         "mapped_states_default": 3,
     }
-    actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
+    actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
     expected = [
-        (3, "Status: ENDED PRE-EMPTIVELY"),
-        (0, "Version: 7.5.0.2"),
-        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
+        Result(state=State.UNKNOWN, summary="Status: ENDED PRE-EMPTIVELY"),
+        Result(state=State.OK, summary="Version: 7.5.0.2"),
+        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
 
@@ -178,15 +178,25 @@ def test_version_mismatch() -> None:
 QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
     params: dict[str, Any] = {}
     params.update({"version": (("at_least", "8.0"), 2)})
-    actual = list(check.run_check("THE.RUNNING.ONE", params, parsed))
+    actual = list(check_ibm_mq_managers("THE.RUNNING.ONE", params, parsed))
     expected = [
-        (0, "Status: RUNNING"),
-        (2, "Version: 7.5.0.2 (should be at least 8.0)"),
-        (0, "Installation: /opt/mqm (Installation1), Default: NO"),
+        Result(state=State.OK, summary="Status: RUNNING"),
+        Result(state=State.CRIT, summary="Version: 7.5.0.2 (should be at least 8.0)"),
+        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
     ]
     assert expected == actual
+
+
+def test_discovery() -> None:
+    parsed = {
+        "QM1": {"STATUS": "RUNNING"},
+        "QM2": {"STATUS": "ENDED NORMALLY"},
+    }
+    discovery = list(discover_ibm_mq_managers(parsed))
+    assert len(discovery) == 2
+    assert Service(item="QM1") in discovery
+    assert Service(item="QM2") in discovery

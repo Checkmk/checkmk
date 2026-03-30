@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
 from cmk.legacy_includes.ibm_mq import ibm_mq_check_version
-
-check_info = {}
 
 # <<<ibm_mq_managers:sep(10)>>>
 # QMNAME(QMIMIQ11) STATUS(RUNNING) DEFAULT(NO) STANDBY(PERMITTED) INSTNAME(Installation1) INSTPATH(/usr/mqm) INSTVER(8.0.0.5)
@@ -49,7 +54,7 @@ _DEFAULT_STATUS_MAP = {
 }
 
 
-def map_ibm_mq_manager_status(status, params):
+def map_ibm_mq_manager_status(status: str, params: Mapping[str, Any]) -> int:
     wato_key, check_state = _DEFAULT_STATUS_MAP.get(status, ("unknown", 3))
     if "mapped_states" in params:
         mapped_states = dict(params["mapped_states"])
@@ -60,13 +65,13 @@ def map_ibm_mq_manager_status(status, params):
     return check_state
 
 
-def discover_ibm_mq_managers(parsed):
-    for item in parsed:
-        yield item, {}
+def discover_ibm_mq_managers(section: Any) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
 
-def check_ibm_mq_managers(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_ibm_mq_managers(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+    if not (data := section.get(item)):
         return
 
     attrs = data.attributes
@@ -77,47 +82,60 @@ def check_ibm_mq_managers(item, params, parsed):
     instversion = attrs["INSTVER"]
 
     check_state = map_ibm_mq_manager_status(status, params)
-    yield check_state, "Status: %s" % status
-    yield ibm_mq_check_version(instversion, params, "Version")
-    yield 0, f"Installation: {instpath} ({instname}), Default: {default}"
+    yield Result(state=State(check_state), summary=f"Status: {status}")
+    version_state, version_summary = ibm_mq_check_version(instversion, params, "Version")
+    yield Result(state=State(version_state), summary=version_summary)
+    yield Result(
+        state=State.OK, summary=f"Installation: {instpath} ({instname}), Default: {default}"
+    )
 
     standby = attrs["STANDBY"]
     instances = data.instances
     ha = attrs.get("HA")
     if ha == "REPLICATED":
         if len(instances) > 0:
-            yield 0, f"High availability: replicated, Instance: {instances[0][0]}"
+            yield Result(
+                state=State.OK,
+                summary=f"High availability: replicated, Instance: {instances[0][0]}",
+            )
         else:
-            yield 0, "High availability: replicated"
+            yield Result(state=State.OK, summary="High availability: replicated")
     elif standby == "PERMITTED":
         if len(instances) == 2:
-            yield (
-                0,
-                f"Multi-Instance: {instances[0][0]}={instances[0][1]} and {instances[1][0]}={instances[1][1]}",
+            yield Result(
+                state=State.OK,
+                summary=f"Multi-Instance: {instances[0][0]}={instances[0][1]} and {instances[1][0]}={instances[1][1]}",
             )
         elif len(instances) == 1:
-            yield (
-                2,
-                f"Multi-Instance: {instances[0][0]}={instances[0][1]} and missing partner",
+            yield Result(
+                state=State.CRIT,
+                summary=f"Multi-Instance: {instances[0][0]}={instances[0][1]} and missing partner",
             )
         else:
-            yield 2, "Multi-Instance: unknown instances (%s)" % instances
+            yield Result(
+                state=State.CRIT, summary="Multi-Instance: unknown instances (%s)" % instances
+            )
     elif standby == "NOT PERMITTED":
         if len(instances) == 1:
-            yield 0, f"Single-Instance: {instances[0][0]}={instances[0][1]}"
+            yield Result(
+                state=State.OK, summary=f"Single-Instance: {instances[0][0]}={instances[0][1]}"
+            )
         else:
-            yield 2, "Single-Instance: unknown instances (%s)" % instances
+            yield Result(
+                state=State.CRIT, summary="Single-Instance: unknown instances (%s)" % instances
+            )
     elif standby == "NOT APPLICABLE":
         if len(instances) != 0:
-            yield 2, "Unknown instance setup (%s)" % instances
+            yield Result(state=State.CRIT, summary="Unknown instance setup (%s)" % instances)
     else:
-        yield 2, "Unknown STANDBY state (%s)" % standby
+        yield Result(state=State.CRIT, summary="Unknown STANDBY state (%s)" % standby)
 
 
-check_info["ibm_mq_managers"] = LegacyCheckDefinition(
+check_plugin_ibm_mq_managers = CheckPlugin(
     name="ibm_mq_managers",
     service_name="IBM MQ Manager %s",
     discovery_function=discover_ibm_mq_managers,
     check_function=check_ibm_mq_managers,
     check_ruleset_name="ibm_mq_managers",
+    check_default_parameters={},
 )

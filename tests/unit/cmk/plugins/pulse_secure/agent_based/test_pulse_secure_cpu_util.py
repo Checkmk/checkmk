@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.legacy_checks.pulse_secure_cpu_util import (
+from cmk.plugins.pulse_secure.agent_based.pulse_secure_cpu_util import (
     check_pulse_secure_cpu,
     discover_pulse_secure_cpu_util,
     parse_pulse_secure_cpu_util,
@@ -20,7 +20,7 @@ from cmk.legacy_checks.pulse_secure_cpu_util import (
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.legacy_checks.pulse_secure_cpu_util.get_value_store",
+        "cmk.plugins.pulse_secure.agent_based.pulse_secure_cpu_util.get_value_store",
         lambda: {},
     )
 

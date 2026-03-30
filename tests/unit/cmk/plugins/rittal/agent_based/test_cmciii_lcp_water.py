@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Service, StringTable
-from cmk.legacy_checks.cmciii_lcp_water import (
+from cmk.plugins.rittal.agent_based.cmciii_lcp_water import (
     check_cmciii_lcp_water,
     discover_cmciii_lcp_water,
     parse_cmciii_lcp_water,

@@ -172,9 +172,13 @@ def _merge_if_counters_sections(
             case "default" | "broadcast_domain_only":
                 interface["failover_ports"] = ";".join(el for el in fail_ports)
             case "home_node_only":
-                interface["failover_ports"] = ";".join(
-                    el for el in fail_ports if el.split("|")[0] == interface["home-node"]
-                )
+                # Only failover to ports on the same node within the same broadcast domain.
+                # If the port has no broadcast domain, fail_ports is empty and filtered will be
+                # empty: failover_ports is left unset, and the check will raise CRIT via the
+                # missing_broadcast_domain flag set in merge_if_sections.
+                filtered = [el for el in fail_ports if el.split("|")[0] == interface["home-node"]]
+                if filtered:
+                    interface["failover_ports"] = ";".join(filtered)
             case "home_port_only":
                 interface["failover_ports"] = failover_home_port
             case _:

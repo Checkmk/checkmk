@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
 import json
 from typing import TypedDict
 
@@ -47,7 +45,11 @@ def read_and_remove_update_requests() -> UpdateRequests:
 
 def _read_update_requests() -> UpdateRequests:
     try:
-        return json.loads(_PATH_UPDATE_REQUESTS.read_text())
-    except (json.JSONDecodeError, FileNotFoundError):
+        data = json.loads(_PATH_UPDATE_REQUESTS.read_text())
+        return {
+            "rebuild": bool(data["rebuild"]),
+            "change_actions": [str(action) for action in data["change_actions"]],
+        }
+    except (json.JSONDecodeError, FileNotFoundError, KeyError):
         # missing (unlikely, b/c it's locked), empty, or somehow corrupted: start from scratch
         return {"rebuild": False, "change_actions": []}

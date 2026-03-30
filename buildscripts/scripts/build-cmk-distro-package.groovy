@@ -122,6 +122,7 @@ def main() {
                         VERSION: version,
                         EDITION: edition,
                         DISABLE_CACHE: disable_cache,
+                        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: docker_tag,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

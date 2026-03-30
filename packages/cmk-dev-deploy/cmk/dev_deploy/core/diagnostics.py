@@ -181,7 +181,7 @@ def _collect_environment(repo_root: Path | None) -> dict[str, Any]:
             )
             if dirty.returncode == 0:
                 env["git_dirty_count"] = len(
-                    [l for l in dirty.stdout.strip().splitlines() if l]
+                    [line for line in dirty.stdout.strip().splitlines() if line]
                 )
         except (subprocess.TimeoutExpired, OSError):
             pass

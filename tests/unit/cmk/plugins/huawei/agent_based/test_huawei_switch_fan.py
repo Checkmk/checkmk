@@ -8,7 +8,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.huawei_switch_fan import (
+from cmk.plugins.huawei.agent_based.huawei_switch_fan import (
     check_huawei_switch_fan,
     discover_huawei_switch_fan,
     HuaweiFanParams,

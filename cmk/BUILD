@@ -253,6 +253,7 @@ py_wheel(
     visibility = ["//visibility:public"],
     deps = select({
         "@cmk//edition:cloud": [
+            "//cmk/base/cee:plugins-bakery-cee",
             "//cmk/base/nonfree:bakery_api",
             "//cmk/base/nonfree:cloud",
             "//cmk/base/nonfree:pro",
@@ -282,6 +283,7 @@ py_wheel(
             "//cmk/utils:community",
         ],
         "@cmk//edition:pro": [
+            "//cmk/base/cee:plugins-bakery-cee",
             "//cmk/base/nonfree:bakery_api",
             "//cmk/base/nonfree:pro",
             "//cmk/core_client/nonfree/pro",
@@ -295,6 +297,7 @@ py_wheel(
             "//non-free/packages/cmc-protocols:py_state_proto",
         ],
         "@cmk//edition:ultimate": [
+            "//cmk/base/cee:plugins-bakery-cee",
             "//cmk/base/nonfree:bakery_api",
             "//cmk/base/nonfree:pro",
             "//cmk/base/nonfree:ultimate",
@@ -318,6 +321,7 @@ py_wheel(
             "//non-free/packages/cmc-protocols:py_state_proto",
         ],
         "@cmk//edition:ultimatemt": [
+            "//cmk/base/cee:plugins-bakery-cee",
             "//cmk/base/nonfree:bakery_api",
             "//cmk/base/nonfree:pro",
             "//cmk/base/nonfree:ultimate",
@@ -367,7 +371,6 @@ py_wheel(
         "//cmk/base/api",
         "//cmk/base/automation_helper:automation-helper",
         "//cmk/base/automations",
-        "//cmk/base/cee:plugins-bakery-cee",
         "//cmk/base/configlib",
         "//cmk/base/core",
         "//cmk/base/core:host-check-template",

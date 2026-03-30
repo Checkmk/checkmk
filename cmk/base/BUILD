@@ -74,21 +74,6 @@ py_library(
 )
 
 py_library(
-    name = "plugins-bakery",
-    srcs = [],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__pkg__",
-        "//cmk/base:__subpackages__",
-        "//non-free/packages/cmk-bakery:__pkg__",
-    ],
-    deps = [
-        "//cmk/base/cee:plugins-bakery-cee",
-        "//cmk/base/plugins:plugins-bakery",
-    ],
-)
-
-py_library(
     name = "config",
     srcs = ["config.py"],
     imports = ["../.."],
@@ -377,7 +362,6 @@ py_library(
         ":localize",
         ":notify",
         ":parent-scan",
-        ":plugins-bakery",
         ":snmp-plugin-store",
         ":utils",
         "//cmk/base/api",
@@ -390,6 +374,7 @@ py_library(
         "//cmk/base/errorhandling",
         "//cmk/base/modes",
         "//cmk/base/modes:modes-registry",
+        "//cmk/base/plugins:plugins-bakery",
         "//cmk/base/sources",
     ],
 )

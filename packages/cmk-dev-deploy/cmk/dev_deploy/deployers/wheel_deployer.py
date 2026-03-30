@@ -106,9 +106,7 @@ class _StepRecorder:
 
     def record(self, name: str, file_count: int = 0) -> None:
         now = time.monotonic()
-        self.steps.append(
-            StepTiming(name=name, elapsed=now - self._start, file_count=file_count)
-        )
+        self.steps.append(StepTiming(name=name, elapsed=now - self._start, file_count=file_count))
         self._start = now
 
     def freeze(self) -> tuple[StepTiming, ...]:
@@ -170,9 +168,7 @@ def _deploy_targeted(
             dst = dest_base / inner
             shutil.copy2(src, dst)
     except OSError as e:
-        output.warn(
-            f"Targeted copy failed for {current_file}: {e}, falling back to full copy"
-        )
+        output.warn(f"Targeted copy failed for {current_file}: {e}, falling back to full copy")
         return None
     rec.record("copy", file_count=len(filtered))
 
@@ -189,9 +185,7 @@ def _deploy_targeted(
         if result.returncode != 0:
             output.error(f"compileall reported errors:\n{result.stderr.strip()}")
     else:
-        output.error(
-            f"Site Python not found at {site_python} -- bytecode compilation skipped."
-        )
+        output.error(f"Site Python not found at {site_python} -- bytecode compilation skipped.")
     rec.record("py_compile", file_count=len(filtered))
 
     return rec.freeze()
@@ -394,9 +388,7 @@ def _generate_dist_info(
 
     # METADATA
     metadata = dist_info_dir / "METADATA"
-    metadata.write_text(
-        f"Metadata-Version: 2.1\nName: {distribution_name}\nVersion: {version}\n"
-    )
+    metadata.write_text(f"Metadata-Version: 2.1\nName: {distribution_name}\nVersion: {version}\n")
 
     # WHEEL
     wheel = dist_info_dir / "WHEEL"
@@ -529,9 +521,7 @@ def _deploy_single_distribution(
     protected_children: frozenset[str] = frozenset(),
 ) -> list[Path]:
     """Deploy a single distribution: clean -> copy -> .dist-info."""
-    effective_dist_info_root = (
-        dist_info_root if dist_info_root is not None else file_root
-    )
+    effective_dist_info_root = dist_info_root if dist_info_root is not None else file_root
     normalized = dist_info.distribution_name.replace("-", "_")
     dist_info_glob = f"{normalized}-*.dist-info"
 
@@ -852,9 +842,7 @@ def _expand_co_dependents(
         return candidates
 
     return tuple(
-        s
-        for s in all_specs
-        if s.package in candidate_packages or s.package in extra_packages
+        s for s in all_specs if s.package in candidate_packages or s.package in extra_packages
     )
 
 
@@ -953,10 +941,7 @@ def deploy_wheels(
             skipped_count += 1
             # Use the first result's reason for the skip message
             first_result = skip_results[0]
-            if (
-                first_result.paths_checked == ()
-                and "HEAD fallback" in first_result.reason
-            ):
+            if first_result.paths_checked == () and "HEAD fallback" in first_result.reason:
                 output.verbose(f"{spec.package}: using global check (no source paths)")
             output.verbose(f"{spec.package}: skipped ({first_result.reason})")
             continue
@@ -965,9 +950,7 @@ def deploy_wheels(
         pkg_info = _build_package_info_from_spec(spec, repo_root)
 
         if pkg_info is None:
-            output.warn(
-                f"Could not resolve deployment info for {spec.package} -- skipping"
-            )
+            output.warn(f"Could not resolve deployment info for {spec.package} -- skipping")
             skipped_missing += 1
             continue
 
@@ -1005,9 +988,7 @@ def deploy_wheels(
         # Filter the full changeset (build_commit..working tree) to only
         # .py files within this package's deployed source_subdirs.
         classify_reason = ""
-        deployed_dir_prefixes = tuple(
-            prefix + sd for sd in spec.source_subdirs if sd.endswith("/")
-        )
+        deployed_dir_prefixes = tuple(prefix + sd for sd in spec.source_subdirs if sd.endswith("/"))
         deployed_file_entries = frozenset(
             prefix + sd for sd in spec.source_subdirs if sd.endswith(".py")
         )
@@ -1024,9 +1005,7 @@ def deploy_wheels(
                 classify_reason = f"non-Python change in deployed path: {f}"
                 break
 
-        eligible, _reason = _can_use_targeted(
-            pkg_modified, classify_reason, dest_base, prefix
-        )
+        eligible, _reason = _can_use_targeted(pkg_modified, classify_reason, dest_base, prefix)
         if eligible:
             # Skip if another spec for the same package was already targeted
             if spec.package in targeted_packages:
@@ -1044,27 +1023,21 @@ def deploy_wheels(
 
     # Filter out targeted packages from full deploy list
     to_deploy_full = [
-        (spec, pkg_info)
-        for spec, pkg_info in to_deploy
-        if spec.package not in targeted_packages
+        (spec, pkg_info) for spec, pkg_info in to_deploy if spec.package not in targeted_packages
     ]
 
     # Merge specs with the same package into a single deploy operation to
     # avoid race conditions when multiple wheel targets share a source dir
     # (e.g. cmk-livestatus-client has :cmk-livestatus-client_whl and :livestatus_whl
     # both deploying into cmk/livestatus_client/).
-    merged_deploy: dict[
-        str, tuple[WheelDeploySpec, _PackageInfo, list[WheelDeploySpec]]
-    ] = {}
+    merged_deploy: dict[str, tuple[WheelDeploySpec, _PackageInfo, list[WheelDeploySpec]]] = {}
     for spec, pkg_info in to_deploy_full:
         if spec.package in merged_deploy:
             existing_spec, existing_info, extra_specs = merged_deploy[spec.package]
             # Deduplicate distributions by name
             existing_names = {d.distribution_name for d in existing_info.distributions}
             new_dists = tuple(
-                d
-                for d in pkg_info.distributions
-                if d.distribution_name not in existing_names
+                d for d in pkg_info.distributions if d.distribution_name not in existing_names
             )
             merged_info = _PackageInfo(
                 distributions=existing_info.distributions + new_dists,
@@ -1114,9 +1087,7 @@ def deploy_wheels(
                 all_specs = [spec] + extra_specs
                 for s in all_specs:
                     for dist_key, dist_prefixes in _deployer_keys(s):
-                        dist_dirty = compute_dirty_hashes(
-                            repo_root, path_prefixes=dist_prefixes
-                        )
+                        dist_dirty = compute_dirty_hashes(repo_root, path_prefixes=dist_prefixes)
                         per_package_states[dist_key] = DeployerState(
                             deployer=dist_key,
                             git_commit=head,
@@ -1128,9 +1099,7 @@ def deploy_wheels(
     for spec, _pkg_info in to_deploy:
         if spec.package in targeted_packages:
             for dist_key, dist_prefixes in _deployer_keys(spec):
-                dist_dirty = compute_dirty_hashes(
-                    repo_root, path_prefixes=dist_prefixes
-                )
+                dist_dirty = compute_dirty_hashes(repo_root, path_prefixes=dist_prefixes)
                 per_package_states[dist_key] = DeployerState(
                     deployer=dist_key,
                     git_commit=head,
@@ -1142,9 +1111,7 @@ def deploy_wheels(
     # Only touches files within known wheel subdirs to avoid removing
     # site config or user data.
     if changes is not None and changes.deleted_files:
-        _remove_deleted_files(
-            changes.deleted_files, list(get_wheel_specs()), site_packages, site
-        )
+        _remove_deleted_files(changes.deleted_files, list(get_wheel_specs()), site_packages, site)
 
     # 5. Run compileall ONCE on all deployed dirs
     if all_compiled_dirs:
@@ -1203,9 +1170,7 @@ def _deploy_and_report(
         )
     except Exception as exc:
         subdirs = [d.source_subdirs for d in pkg_info.distributions]
-        raise type(exc)(
-            f"{spec.package} ({spec.deploy_mode}): {exc} [subdirs={subdirs}]"
-        ) from exc
+        raise type(exc)(f"{spec.package} ({spec.deploy_mode}): {exc} [subdirs={subdirs}]") from exc
 
     pkg_elapsed = time.monotonic() - pkg_start
 

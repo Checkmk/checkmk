@@ -155,9 +155,7 @@ class TestVersionParsing:
         result = self._make_completed_process(
             stderr="iBazel - Version v0.28.0\n\nA file watcher for Bazel."
         )
-        with patch(
-            "cmk.dev_deploy.frontend.ibazel_manager.subprocess.run", return_value=result
-        ):
+        with patch("cmk.dev_deploy.frontend.ibazel_manager.subprocess.run", return_value=result):
             assert _get_ibazel_version("/usr/bin/ibazel") == "v0.28.0"
 
     def test_ignores_stdout(self) -> None:
@@ -166,9 +164,7 @@ class TestVersionParsing:
         result = self._make_completed_process(
             stdout="iBazel - Version v0.28.0", stderr="no version here"
         )
-        with patch(
-            "cmk.dev_deploy.frontend.ibazel_manager.subprocess.run", return_value=result
-        ):
+        with patch("cmk.dev_deploy.frontend.ibazel_manager.subprocess.run", return_value=result):
             assert _get_ibazel_version("/usr/bin/ibazel") is None
 
     def test_handles_nonzero_exit_code(self) -> None:
@@ -178,9 +174,7 @@ class TestVersionParsing:
         result = self._make_completed_process(
             stderr="iBazel - Version v0.28.0\nUsage: ...", returncode=1
         )
-        with patch(
-            "cmk.dev_deploy.frontend.ibazel_manager.subprocess.run", return_value=result
-        ):
+        with patch("cmk.dev_deploy.frontend.ibazel_manager.subprocess.run", return_value=result):
             assert _get_ibazel_version("/usr/bin/ibazel") == "v0.28.0"
 
     def test_returns_none_on_timeout(self) -> None:
@@ -213,12 +207,8 @@ class TestVersionParsing:
     def test_returns_none_on_no_match(self) -> None:
         from cmk.dev_deploy.frontend.ibazel_manager import _get_ibazel_version
 
-        result = self._make_completed_process(
-            stderr="Some random output\nNo version here"
-        )
-        with patch(
-            "cmk.dev_deploy.frontend.ibazel_manager.subprocess.run", return_value=result
-        ):
+        result = self._make_completed_process(stderr="Some random output\nNo version here")
+        with patch("cmk.dev_deploy.frontend.ibazel_manager.subprocess.run", return_value=result):
             assert _get_ibazel_version("/usr/bin/ibazel") is None
 
 
@@ -233,9 +223,7 @@ class TestSystemDetection:
     def test_not_on_path_returns_none(self) -> None:
         from cmk.dev_deploy.frontend.ibazel_manager import _detect_system_ibazel
 
-        with patch(
-            "cmk.dev_deploy.frontend.ibazel_manager.shutil.which", return_value=None
-        ):
+        with patch("cmk.dev_deploy.frontend.ibazel_manager.shutil.which", return_value=None):
             assert _detect_system_ibazel() is None
 
     def test_exact_version_match_returns_path(self) -> None:
@@ -409,9 +397,7 @@ class TestCorruptCacheError:
             ),
             patch("cmk.dev_deploy.frontend.ibazel_manager.output"),
         ):
-            with pytest.raises(
-                IBazelError, match="failed SHA256 verification"
-            ) as exc_info:
+            with pytest.raises(IBazelError, match="failed SHA256 verification") as exc_info:
                 ensure_ibazel()
             assert exc_info.value.recovery is not None
             assert "rm" in exc_info.value.recovery
@@ -426,15 +412,11 @@ class TestCorruptCacheError:
 class TestDownloadAndVerify:
     """_download_and_verify handles download, SHA256 check, and atomic rename."""
 
-    def _make_mock_response(
-        self, content: bytes, content_length: int | None = None
-    ) -> MagicMock:
+    def _make_mock_response(self, content: bytes, content_length: int | None = None) -> MagicMock:
         """Create a mock HTTP response."""
         response = MagicMock()
         response.headers = MagicMock()
-        response.headers.get.return_value = (
-            str(content_length) if content_length else None
-        )
+        response.headers.get.return_value = str(content_length) if content_length else None
         response.read.side_effect = [content, b""]
         response.close.return_value = None
         return response
@@ -497,9 +479,7 @@ class TestDownloadAndVerify:
             ),
             patch(
                 "cmk.dev_deploy.frontend.ibazel_manager._CHECKSUMS",
-                MappingProxyType(
-                    {"linux_amd64": "expected_hash_that_wont_match" + "0" * 40}
-                ),
+                MappingProxyType({"linux_amd64": "expected_hash_that_wont_match" + "0" * 40}),
             ),
             patch(
                 "cmk.dev_deploy.frontend.ibazel_manager.urllib.request.urlopen",
@@ -509,9 +489,7 @@ class TestDownloadAndVerify:
             patch("cmk.dev_deploy.frontend.ibazel_manager.sys.stderr") as mock_stderr,
         ):
             mock_stderr.isatty.return_value = False
-            with pytest.raises(
-                IBazelError, match="SHA256 checksum mismatch"
-            ) as exc_info:
+            with pytest.raises(IBazelError, match="SHA256 checksum mismatch") as exc_info:
                 _download_and_verify()
             assert exc_info.value.recovery is not None
             assert "supply chain attack" in exc_info.value.recovery
@@ -621,9 +599,7 @@ class TestDownloadAndVerify:
                 _download_and_verify()
 
             # Verify temp file was cleaned up
-            remaining = [
-                f for f in tmp_path.iterdir() if f.name.startswith(".ibazel-download-")
-            ]
+            remaining = [f for f in tmp_path.iterdir() if f.name.startswith(".ibazel-download-")]
             assert remaining == []
 
     def test_executable_bit_set_after_verify(self, tmp_path: Path) -> None:
@@ -755,9 +731,7 @@ class TestCacheDirectory:
         from cmk.dev_deploy.frontend.ibazel_manager import _ensure_cache_dir
 
         cache_dir = tmp_path / "cache" / "cmk-dev-deploy"
-        with patch(
-            "cmk.dev_deploy.frontend.ibazel_manager._cache_dir", return_value=cache_dir
-        ):
+        with patch("cmk.dev_deploy.frontend.ibazel_manager._cache_dir", return_value=cache_dir):
             result = _ensure_cache_dir()
             assert result == cache_dir
             assert cache_dir.exists()
@@ -773,9 +747,7 @@ class TestCacheDirectory:
             ),
             patch.object(Path, "mkdir", side_effect=OSError("Permission denied")),
         ):
-            with pytest.raises(
-                IBazelError, match="Cannot create cache directory"
-            ) as exc_info:
+            with pytest.raises(IBazelError, match="Cannot create cache directory") as exc_info:
                 _ensure_cache_dir()
             assert exc_info.value.recovery is not None
             assert str(cache_dir) in str(exc_info.value)
@@ -798,9 +770,7 @@ class TestEnsureIbazel:
                 "cmk.dev_deploy.frontend.ibazel_manager._detect_system_ibazel",
                 return_value=system_path,
             ),
-            patch(
-                "cmk.dev_deploy.frontend.ibazel_manager._download_and_verify"
-            ) as mock_download,
+            patch("cmk.dev_deploy.frontend.ibazel_manager._download_and_verify") as mock_download,
             patch("cmk.dev_deploy.frontend.ibazel_manager.output"),
         ):
             result = ensure_ibazel()
@@ -826,9 +796,7 @@ class TestEnsureIbazel:
                 "cmk.dev_deploy.frontend.ibazel_manager._verify_sha256",
                 return_value=True,
             ),
-            patch(
-                "cmk.dev_deploy.frontend.ibazel_manager._download_and_verify"
-            ) as mock_download,
+            patch("cmk.dev_deploy.frontend.ibazel_manager._download_and_verify") as mock_download,
             patch("cmk.dev_deploy.frontend.ibazel_manager.output"),
         ):
             result = ensure_ibazel()
@@ -880,9 +848,7 @@ class TestEnsureIbazel:
                 "cmk.dev_deploy.frontend.ibazel_manager._verify_sha256",
                 return_value=True,
             ),
-            patch(
-                "cmk.dev_deploy.frontend.ibazel_manager._download_and_verify"
-            ) as mock_download,
+            patch("cmk.dev_deploy.frontend.ibazel_manager._download_and_verify") as mock_download,
             patch("cmk.dev_deploy.frontend.ibazel_manager.output"),
         ):
             result = ensure_ibazel()

@@ -61,9 +61,7 @@ def _make_subprocess_result(
     stdout: str = "",
     stderr: str = "",
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.CompletedProcess(
-        args=[], returncode=returncode, stdout=stdout, stderr=stderr
-    )
+    return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
 
 
 # ---------------------------------------------------------------------------
@@ -91,10 +89,7 @@ class TestRequiredEditionForFile:
         assert _required_edition_for_file("non-free/baz.py") == "pro"
 
     def test_nested_path(self) -> None:
-        assert (
-            _required_edition_for_file("packages/cmk-agent/nonfree/cloud/agent.py")
-            == "cloud"
-        )
+        assert _required_edition_for_file("packages/cmk-agent/nonfree/cloud/agent.py") == "cloud"
 
     def test_empty_string(self) -> None:
         assert _required_edition_for_file("") is None
@@ -145,9 +140,7 @@ class TestCheckBranchMismatch:
         """When build_commit is ancestor of current branch, no warning."""
         calls: list[list[str]] = []
 
-        def fake_run(
-            *args: object, **kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def fake_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
             cmd = args[0] if args else kwargs.get("args", [])
             assert isinstance(cmd, list)
             calls.append(cmd)
@@ -166,9 +159,7 @@ class TestCheckBranchMismatch:
         """When build_commit is NOT ancestor, returns warning string."""
         call_count = 0
 
-        def fake_run(
-            *args: object, **kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def fake_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
             nonlocal call_count
             cmd = args[0] if args else kwargs.get("args", [])
             assert isinstance(cmd, list)
@@ -193,9 +184,7 @@ class TestCheckBranchMismatch:
     ) -> None:
         """When build branch cannot be found, shows commit hash instead."""
 
-        def fake_run(
-            *args: object, **kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def fake_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
             cmd = args[0] if args else kwargs.get("args", [])
             assert isinstance(cmd, list)
             if "rev-parse" in cmd:
@@ -216,9 +205,7 @@ class TestCheckBranchMismatch:
     def test_timeout_on_rev_parse_returns_none(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        def fake_run(
-            *_args: object, **_kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def fake_run(*_args: object, **_kwargs: object) -> subprocess.CompletedProcess[str]:
             raise subprocess.TimeoutExpired(cmd="git", timeout=5)
 
         monkeypatch.setattr("cmk.dev_deploy.site.warnings.subprocess.run", fake_run)
@@ -229,9 +216,7 @@ class TestCheckBranchMismatch:
     ) -> None:
         call_count = 0
 
-        def fake_run(
-            *args: object, **kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def fake_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
             nonlocal call_count
             call_count += 1
             cmd = args[0] if args else kwargs.get("args", [])
@@ -248,9 +233,7 @@ class TestCheckBranchMismatch:
     def test_oserror_on_rev_parse_returns_none(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        def fake_run(
-            *_args: object, **_kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def fake_run(*_args: object, **_kwargs: object) -> subprocess.CompletedProcess[str]:
             raise OSError("git not found")
 
         monkeypatch.setattr("cmk.dev_deploy.site.warnings.subprocess.run", fake_run)

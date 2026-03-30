@@ -61,9 +61,7 @@ def specs_for_changed_files(
 # ---------------------------------------------------------------------------
 
 
-def _resolve_mode(
-    entry_mode: str, spec_mode: int | None, file_chmod: str | None
-) -> int | None:
+def _resolve_mode(entry_mode: str, spec_mode: int | None, file_chmod: str | None) -> int | None:
     """Resolve the effective file mode from entry, spec, and chmod override."""
     mode = int(entry_mode, 8) if entry_mode else spec_mode
     if file_chmod is not None:
@@ -71,9 +69,7 @@ def _resolve_mode(
     return mode
 
 
-def _copy_dir(
-    source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path
-) -> None:
+def _copy_dir(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path) -> None:
     """Copy a config/data directory to the site using the Bazel-derived file list.
 
     Uses individual file copy when ``spec.files`` is non-empty (with optional
@@ -147,9 +143,7 @@ def _copy_dir(
                     os.chmod(f, chmod_val)
 
 
-def _install_files(
-    source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path
-) -> int:
+def _install_files(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path) -> int:
     """Install individual files from source to dest with explicit permissions."""
     dest.mkdir(parents=True, exist_ok=True)
     count = 0
@@ -177,9 +171,7 @@ def _install_files(
     return count
 
 
-def _compile_and_deploy_locale(
-    source: Path, dest: Path, spec: ConfigDeploySpec
-) -> tuple[int, int]:
+def _compile_and_deploy_locale(source: Path, dest: Path, spec: ConfigDeploySpec) -> tuple[int, int]:
     """Compile .po -> .mo via msgfmt, then install per-language directories."""
     po_compiled = 0
 
@@ -266,9 +258,7 @@ def _compile_and_deploy_locale(
 # ---------------------------------------------------------------------------
 
 
-def deploy_config(
-    changes: ChangeSet | None, repo_root: Path, site: SiteInfo
-) -> ConfigDeployResult:
+def deploy_config(changes: ChangeSet | None, repo_root: Path, site: SiteInfo) -> ConfigDeployResult:
     """Deploy config/data files to the OMD site.
 
     Deploys all specs when ``changes`` is None, otherwise only specs

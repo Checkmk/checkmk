@@ -19,15 +19,9 @@ class DeployerInfo:
 
 
 _REGISTRY: tuple[DeployerInfo, ...] = (
-    DeployerInfo(
-        step_name="config_deploy", deployer_name="config_spec", display_name="config"
-    ),
-    DeployerInfo(
-        step_name="bazel_build", deployer_name="install_spec", display_name="bazel"
-    ),
-    DeployerInfo(
-        step_name="wheel_deploy", deployer_name="wheel_spec", display_name="wheels"
-    ),
+    DeployerInfo(step_name="config_deploy", deployer_name="config_spec", display_name="config"),
+    DeployerInfo(step_name="bazel_build", deployer_name="install_spec", display_name="bazel"),
+    DeployerInfo(step_name="wheel_deploy", deployer_name="wheel_spec", display_name="wheels"),
 )
 
 # Pre-built lookup dicts (immutable after module load)
@@ -41,9 +35,7 @@ DEPLOYER_DISPLAY_NAMES: dict[str, str] = {
     info.deployer_name: info.display_name for info in _REGISTRY
 }
 
-STEP_DISPLAY_NAMES: dict[str, str] = {
-    info.step_name: info.display_name for info in _REGISTRY
-}
+STEP_DISPLAY_NAMES: dict[str, str] = {info.step_name: info.display_name for info in _REGISTRY}
 
 
 def step_display_name(step_name: str) -> str:

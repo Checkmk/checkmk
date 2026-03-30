@@ -97,12 +97,8 @@ def detect_changes(
     _validate_commit(build_commit, repo_root)
     if target_commit is not None:
         _validate_commit(target_commit, repo_root)
-    changed_files = _git_diff_files(
-        build_commit, repo_root, target_commit=target_commit
-    )
-    deleted_files = _git_diff_deleted(
-        build_commit, repo_root, target_commit=target_commit
-    )
+    changed_files = _git_diff_files(build_commit, repo_root, target_commit=target_commit)
+    deleted_files = _git_diff_deleted(build_commit, repo_root, target_commit=target_commit)
 
     if not changed_files and not deleted_files:
         return ChangeSet(
@@ -119,9 +115,7 @@ def detect_changes(
         categorized.setdefault(cat, []).append(file_path)
 
     # Convert to frozen structure
-    frozen_categories = {
-        cat: tuple(sorted(paths)) for cat, paths in categorized.items()
-    }
+    frozen_categories = {cat: tuple(sorted(paths)) for cat, paths in categorized.items()}
 
     return ChangeSet(
         build_commit=build_commit,

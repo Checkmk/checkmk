@@ -191,11 +191,7 @@ def _cleanup_orphaned_port(port: int) -> None:
                         if f"socket:[{inode}]" in target_str:
                             # Found the PID -- verify it's Bazel/Java
                             try:
-                                cmdline = (
-                                    Path(f"/proc/{pid_candidate}/cmdline")
-                                    .read_text()
-                                    .lower()
-                                )
+                                cmdline = Path(f"/proc/{pid_candidate}/cmdline").read_text().lower()
                                 if "bazel" in cmdline or "java" in cmdline:
                                     output.warn(
                                         f"Killing orphaned Bazel process on port {port} "
@@ -441,7 +437,9 @@ class FrontendSupervisor:
         if not self._wait_until_ready():
             crash_lines = self.get_crash_report()
             self.stop()
-            msg = f"iBazel frontend supervisor failed to start within {self._config.startup_timeout}s"
+            msg = (
+                f"iBazel frontend supervisor failed to start within {self._config.startup_timeout}s"
+            )
             if crash_lines:
                 stderr_tail = "\n".join(crash_lines[-10:])
                 msg += f"\n\nLast stderr output:\n{stderr_tail}"
@@ -489,9 +487,7 @@ class FrontendSupervisor:
         # 5. Verify port is free; nuclear fallback if not
         time.sleep(0.2)  # Brief pause for OS to release port
         if _check_port("127.0.0.1", self._config.port):
-            output.warn(
-                f"Port {self._config.port} still in use after stop -- attempting cleanup"
-            )
+            output.warn(f"Port {self._config.port} still in use after stop -- attempting cleanup")
             _cleanup_orphaned_port(self._config.port)
 
         self._proc = None

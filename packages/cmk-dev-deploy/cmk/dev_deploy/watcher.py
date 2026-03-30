@@ -126,9 +126,7 @@ def _get_content_hash(build_commit: str | None, repo_root: Path) -> str:
     all_files = sorted(
         {
             line
-            for line in (unstaged.stdout + staged.stdout + untracked_output)
-            .strip()
-            .splitlines()
+            for line in (unstaged.stdout + staged.stdout + untracked_output).strip().splitlines()
             if line
         }
     )
@@ -265,9 +263,7 @@ def watch_loop(
             # Exit code 2 (deployed but services failed) is non-fatal — code
             # IS deployed, services just need a manual kick.
             if result.exit_code == 1 and supervisor is not None:
-                output.error(
-                    "[deploy] Deploy cycle failed. Stopping frontend supervisor."
-                )
+                output.error("[deploy] Deploy cycle failed. Stopping frontend supervisor.")
                 supervisor.stop()
                 return 1
 

@@ -61,9 +61,7 @@ def resolve_site(cli_site: str | None, repo_root: Path, cwd: Path) -> SiteInfo:
         available = _list_sites()
         raise SiteNotFoundError(
             f"Site directory does not exist: {site_root}",
-            recovery=(
-                f"Available sites: {available}\nCreate with: omd create {site_name}"
-            ),
+            recovery=(f"Available sites: {available}\nCreate with: omd create {site_name}"),
         )
 
     edition, version_string = _read_edition(site_root)
@@ -245,7 +243,5 @@ def _list_sites() -> str:
         check=False,
     )
     if result.returncode == 0 and result.stdout.strip():
-        return ", ".join(
-            s.strip() for s in result.stdout.strip().splitlines() if s.strip()
-        )
+        return ", ".join(s.strip() for s in result.stdout.strip().splitlines() if s.strip())
     return "(none found)"

@@ -230,11 +230,7 @@ class TestResolveBazelTargets:
         """Rust files are resolved via manifest prefix matching."""
         monkeypatch.setattr(
             "cmk.dev_deploy.execution.bazel_resolver.get_install_specs",
-            lambda: (
-                _make_install_spec(
-                    "packages/check-cert", "//omd/packages/check-cert:pkg"
-                ),
-            ),
+            lambda: (_make_install_spec("packages/check-cert", "//omd/packages/check-cert:pkg"),),
         )
 
         cs = _make_changeset(RUST=("packages/check-cert/src/main.rs",))
@@ -250,9 +246,7 @@ class TestResolveBazelTargets:
         """Manifest-based resolution doesn't call subprocess at all."""
         monkeypatch.setattr(
             "cmk.dev_deploy.execution.bazel_resolver.get_install_specs",
-            lambda: (
-                _make_install_spec("packages/neb", "//packages/neb:neb_shared_files"),
-            ),
+            lambda: (_make_install_spec("packages/neb", "//packages/neb:neb_shared_files"),),
         )
 
         cs = _make_changeset(CPP=("packages/neb/src/NebCore.cc",))
@@ -276,11 +270,7 @@ class TestResolveBazelTargets:
         """Both queryable files and BUILD changes produce merged results."""
         monkeypatch.setattr(
             "cmk.dev_deploy.execution.bazel_resolver.get_install_specs",
-            lambda: (
-                _make_install_spec(
-                    "packages/check-cert", "//omd/packages/check-cert:pkg"
-                ),
-            ),
+            lambda: (_make_install_spec("packages/check-cert", "//omd/packages/check-cert:pkg"),),
         )
 
         cs = _make_changeset(

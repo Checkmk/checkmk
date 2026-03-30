@@ -392,13 +392,9 @@ class TestOrphanDetection:
             patch("os.kill"),  # Process alive (no exception)
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: (
-                    mock_cmdline_path if "/proc/" in str(p) else Path(p)
-                ),
+                side_effect=lambda p: mock_cmdline_path if "/proc/" in str(p) else Path(p),
             ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._find_bazel_children",
                 return_value=[],
@@ -427,9 +423,7 @@ class TestOrphanDetection:
                 return_value=pid_file,
             ),
             patch("os.kill", side_effect=ProcessLookupError),  # Process gone
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._cleanup_orphaned_port"
             ) as mock_port_cleanup,
@@ -461,13 +455,9 @@ class TestOrphanDetection:
             patch("os.kill"),  # Process alive
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: (
-                    mock_cmdline_path if "/proc/" in str(p) else Path(p)
-                ),
+                side_effect=lambda p: mock_cmdline_path if "/proc/" in str(p) else Path(p),
             ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
         ):
             supervisor._cleanup_orphaned_ibazel()  # noqa: SLF001
             mock_kill.assert_not_called()
@@ -493,13 +483,9 @@ class TestOrphanDetection:
             patch("os.kill"),  # Process alive
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: (
-                    mock_cmdline_path if "/proc/" in str(p) else Path(p)
-                ),
+                side_effect=lambda p: mock_cmdline_path if "/proc/" in str(p) else Path(p),
             ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._find_bazel_children",
                 return_value=[10001, 10002],
@@ -561,9 +547,7 @@ class TestFindBazelChildren:
         with (
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: Path(
-                    str(p).replace("/proc/", str(tmp_path / "proc") + "/")
-                ),
+                side_effect=lambda p: Path(str(p).replace("/proc/", str(tmp_path / "proc") + "/")),
             ),
         ):
             result = _find_bazel_children(1000)
@@ -584,9 +568,7 @@ class TestFindBazelChildren:
         with (
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: Path(
-                    str(p).replace("/proc/", str(tmp_path / "proc") + "/")
-                ),
+                side_effect=lambda p: Path(str(p).replace("/proc/", str(tmp_path / "proc") + "/")),
             ),
         ):
             result = _find_bazel_children(1000)
@@ -620,9 +602,7 @@ class TestFindBazelChildren:
         with (
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor.Path",
-                side_effect=lambda p: Path(
-                    str(p).replace("/proc/", str(tmp_path / "proc") + "/")
-                ),
+                side_effect=lambda p: Path(str(p).replace("/proc/", str(tmp_path / "proc") + "/")),
             ),
         ):
             result = _find_bazel_children(1000)
@@ -646,9 +626,7 @@ class TestCleanupOrphanedPort:
                 "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
                 return_value=False,
             ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
         ):
             _cleanup_orphaned_port(5173)
             mock_kill.assert_not_called()
@@ -690,18 +668,14 @@ class TestCleanupOrphanedPort:
                         splitlines=tcp_content.splitlines,
                     )
                     if str(p) == "/proc/net/tcp"
-                    else MagicMock(
-                        read_text=MagicMock(return_value="/usr/bin/bazel\x00build\x00")
-                    )
+                    else MagicMock(read_text=MagicMock(return_value="/usr/bin/bazel\x00build\x00"))
                     if "/cmdline" in str(p)
                     else MagicMock(iterdir=MagicMock(return_value=[mock_pid_entry]))
                     if str(p) == "/proc"
                     else MagicMock()
                 ),
             ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch("cmk.dev_deploy.frontend.frontend_supervisor.output"),
         ):
             _cleanup_orphaned_port(5173)
@@ -743,9 +717,7 @@ class TestCleanupOrphanedPort:
                     )
                     if str(p) == "/proc/net/tcp"
                     else MagicMock(
-                        read_text=MagicMock(
-                            return_value="/usr/bin/apache2\x00-k\x00start\x00"
-                        )
+                        read_text=MagicMock(return_value="/usr/bin/apache2\x00-k\x00start\x00")
                     )
                     if "/cmdline" in str(p)
                     else MagicMock(iterdir=MagicMock(return_value=[mock_pid_entry]))
@@ -753,9 +725,7 @@ class TestCleanupOrphanedPort:
                     else MagicMock()
                 ),
             ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch("cmk.dev_deploy.frontend.frontend_supervisor.output"),
         ):
             _cleanup_orphaned_port(5173)
@@ -910,9 +880,7 @@ class TestImmediateKill:
         supervisor._proc = mock_proc  # noqa: SLF001
 
         with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
                 return_value=[],
@@ -958,9 +926,7 @@ class TestStopFullCleanup:
                 "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
                 return_value=[100, 200],
             ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
                 return_value=False,
@@ -1111,9 +1077,7 @@ class TestStopFullCleanup:
                 "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
                 return_value=[100],
             ),
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._check_port",
                 return_value=False,
@@ -1139,9 +1103,7 @@ class TestStopFullCleanup:
         # _proc is None by default
 
         with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._pid_file",
                 return_value=tmp_path / "test.pid",
@@ -1186,12 +1148,8 @@ class TestShutdownParity:
                 "cmk.dev_deploy.frontend.frontend_supervisor.FrontendSupervisor",
                 return_value=mock_supervisor,
             ),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -1220,12 +1178,8 @@ class TestShutdownParity:
                 "cmk.dev_deploy.frontend.frontend_supervisor.FrontendSupervisor",
                 return_value=mock_supervisor,
             ),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -1259,12 +1213,8 @@ class TestShutdownParity:
                 "cmk.dev_deploy.__main__.watch_loop",
                 side_effect=KeyboardInterrupt,
             ),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -1284,9 +1234,7 @@ class TestWaitUntilReady:
     def test_returns_true_when_port_available(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        config = FrontendConfig(
-            project_path=tmp_path, repo_root=tmp_path, startup_timeout=5.0
-        )
+        config = FrontendConfig(project_path=tmp_path, repo_root=tmp_path, startup_timeout=5.0)
         supervisor = FrontendSupervisor(config, repo_root=tmp_path)
         mock_proc = MagicMock()
         mock_proc.poll.return_value = None  # process alive
@@ -1306,9 +1254,7 @@ class TestWaitUntilReady:
     def test_returns_false_on_timeout(self, tmp_path: Path) -> None:
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        config = FrontendConfig(
-            project_path=tmp_path, repo_root=tmp_path, startup_timeout=2.0
-        )
+        config = FrontendConfig(project_path=tmp_path, repo_root=tmp_path, startup_timeout=2.0)
         supervisor = FrontendSupervisor(config, repo_root=tmp_path)
         mock_proc = MagicMock()
         mock_proc.poll.return_value = None
@@ -1329,9 +1275,7 @@ class TestWaitUntilReady:
         """Race condition defense: port check succeeds but process has exited."""
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        config = FrontendConfig(
-            project_path=tmp_path, repo_root=tmp_path, startup_timeout=5.0
-        )
+        config = FrontendConfig(project_path=tmp_path, repo_root=tmp_path, startup_timeout=5.0)
         supervisor = FrontendSupervisor(config, repo_root=tmp_path)
         mock_proc = MagicMock()
         mock_proc.poll.return_value = 1  # process dead
@@ -1352,9 +1296,7 @@ class TestWaitUntilReady:
         """Startup message says 'build output' instead of 'this may take a minute'."""
         from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
 
-        config = FrontendConfig(
-            project_path=tmp_path, repo_root=tmp_path, startup_timeout=5.0
-        )
+        config = FrontendConfig(project_path=tmp_path, repo_root=tmp_path, startup_timeout=5.0)
         supervisor = FrontendSupervisor(config, repo_root=tmp_path)
         mock_proc = MagicMock()
         mock_proc.poll.return_value = None
@@ -1518,9 +1460,7 @@ class TestFrontendSupervisorLifecycle:
         supervisor._proc = mock_proc  # noqa: SLF001
 
         with (
-            patch(
-                "cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group"
-            ) as mock_kill,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._kill_process_group") as mock_kill,
             patch(
                 "cmk.dev_deploy.frontend.frontend_supervisor._collect_descendant_pids",
                 return_value=[],
@@ -1601,9 +1541,7 @@ class TestPreFlightChecks:
 
         config = FrontendConfig(project_path=tmp_path, repo_root=tmp_path)
         supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True
-        ):
+        with patch("cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True):
             with pytest.raises(FrontendError, match="Port 5173 is already in use"):
                 supervisor._check_port_available()  # noqa: SLF001
 
@@ -1612,9 +1550,7 @@ class TestPreFlightChecks:
 
         config = FrontendConfig(project_path=tmp_path, repo_root=tmp_path)
         supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True
-        ):
+        with patch("cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True):
             with pytest.raises(FrontendError) as exc_info:
                 supervisor._check_port_available()  # noqa: SLF001
             assert exc_info.value.recovery is not None
@@ -1635,9 +1571,7 @@ class TestSimplifiedPortError:
 
         config = FrontendConfig(project_path=tmp_path, repo_root=tmp_path)
         supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True
-        ):
+        with patch("cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True):
             with pytest.raises(FrontendError) as exc_info:
                 supervisor._check_port_available()  # noqa: SLF001
             # Simple message without PID
@@ -1651,9 +1585,7 @@ class TestSimplifiedPortError:
 
         config = FrontendConfig(project_path=tmp_path, repo_root=tmp_path)
         supervisor = FrontendSupervisor(config, repo_root=tmp_path)
-        with patch(
-            "cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True
-        ):
+        with patch("cmk.dev_deploy.frontend.frontend_supervisor._check_port", return_value=True):
             with pytest.raises(FrontendError) as exc_info:
                 supervisor._check_port_available()  # noqa: SLF001
             assert exc_info.value.recovery is not None
@@ -1689,12 +1621,8 @@ class TestRunFrontend:
         mock_site = self._make_mock_site(tmp_path)
         with (
             patch("cmk.dev_deploy.__main__.output"),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -1720,12 +1648,8 @@ class TestRunFrontend:
                 "cmk.dev_deploy.frontend.frontend_supervisor.FrontendSupervisor",
                 return_value=mock_supervisor,
             ),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -1753,12 +1677,8 @@ class TestRunFrontend:
                 "cmk.dev_deploy.frontend.frontend_supervisor.FrontendSupervisor",
                 return_value=mock_supervisor,
             ),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -1788,12 +1708,8 @@ class TestRunFrontend:
                 "cmk.dev_deploy.frontend.frontend_supervisor.FrontendSupervisor",
                 return_value=mock_supervisor,
             ),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -1821,12 +1737,8 @@ class TestRunFrontend:
                 "cmk.dev_deploy.frontend.frontend_supervisor.FrontendSupervisor",
                 return_value=mock_supervisor,
             ),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -1834,14 +1746,10 @@ class TestRunFrontend:
 
         assert result == 0
         # Verify startup banner
-        mock_output.success.assert_any_call(
-            "Frontend supervisor active -- watching for changes"
-        )
+        mock_output.success.assert_any_call("Frontend supervisor active -- watching for changes")
         # Verify target and URL info lines
         info_calls = [c[0][0] for c in mock_output.info.call_args_list]
-        target_lines = [
-            c for c in info_calls if "//packages/cmk-frontend-vue:vite" in c
-        ]
+        target_lines = [c for c in info_calls if "//packages/cmk-frontend-vue:vite" in c]
         assert len(target_lines) >= 1
         url_lines = [c for c in info_calls if "http://localhost:5173/" in c]
         assert len(url_lines) >= 1
@@ -1870,16 +1778,12 @@ class TestRunFrontend:
 
 def _make_changeset(**kwargs: object) -> ChangeSet:
     """Create a ChangeSet with sensible defaults for testing."""
-    defaults: dict[str, object] = dict(
-        build_commit="abc123def456", files=(), categories={}
-    )
+    defaults: dict[str, object] = dict(build_commit="abc123def456", files=(), categories={})
     defaults.update(kwargs)
     return ChangeSet(**defaults)  # type: ignore[arg-type]
 
 
-def _make_install_spec(
-    package: str, *, frontend_supervised: bool = False
-) -> InstallSpec:
+def _make_install_spec(package: str, *, frontend_supervised: bool = False) -> InstallSpec:
     """Create a minimal InstallSpec for filter tests."""
     return InstallSpec(
         package=package,
@@ -2307,12 +2211,8 @@ class TestRunFrontendWatch:
                 return_value=mock_supervisor,
             ),
             patch("cmk.dev_deploy.__main__.watch_loop", return_value=0) as mock_watch,
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -2335,12 +2235,8 @@ class TestRunFrontendWatch:
 
         with (
             patch("cmk.dev_deploy.__main__.output"),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -2370,12 +2266,8 @@ class TestRunFrontendWatch:
                 "cmk.dev_deploy.frontend.frontend_supervisor.FrontendSupervisor",
                 return_value=mock_supervisor,
             ),
-            patch(
-                "cmk.dev_deploy.site.site_config.check_site_running", return_value=True
-            ),
-            patch(
-                "cmk.dev_deploy.site.site_config.is_stale_override", return_value=False
-            ),
+            patch("cmk.dev_deploy.site.site_config.check_site_running", return_value=True),
+            patch("cmk.dev_deploy.site.site_config.is_stale_override", return_value=False),
             patch("cmk.dev_deploy.site.site_config.write_override", return_value=True),
             patch("cmk.dev_deploy.site.site_config.remove_override", return_value=True),
         ):
@@ -2431,9 +2323,7 @@ class TestMainCombinedMode:
             patch("cmk.dev_deploy.__main__.find_repo_root", return_value=Path("/repo")),
             patch("cmk.dev_deploy.__main__.resolve_site"),
             patch("cmk.dev_deploy.manifest.staleness.ensure_manifest"),
-            patch(
-                "cmk.dev_deploy.core.preflight.preflight_bazel_check", return_value=[]
-            ),
+            patch("cmk.dev_deploy.core.preflight.preflight_bazel_check", return_value=[]),
             patch("cmk.dev_deploy.site.overlay.is_overlay_active", return_value=True),
             patch("cmk.dev_deploy.site.overlay.ensure_overlay"),
             patch("cmk.dev_deploy.site.overlay.teardown_overlay"),
@@ -2468,9 +2358,7 @@ class TestMainCombinedMode:
             patch("cmk.dev_deploy.__main__.find_repo_root", return_value=Path("/repo")),
             patch("cmk.dev_deploy.__main__.resolve_site"),
             patch("cmk.dev_deploy.manifest.staleness.ensure_manifest"),
-            patch(
-                "cmk.dev_deploy.core.preflight.preflight_bazel_check", return_value=[]
-            ),
+            patch("cmk.dev_deploy.core.preflight.preflight_bazel_check", return_value=[]),
             patch("cmk.dev_deploy.site.overlay.is_overlay_active", return_value=True),
             patch("cmk.dev_deploy.site.overlay.ensure_overlay"),
             patch("cmk.dev_deploy.site.overlay.teardown_overlay"),
@@ -2478,9 +2366,7 @@ class TestMainCombinedMode:
             patch(
                 "cmk.dev_deploy.__main__._run_deploy_cycle", return_value=ok_result
             ) as mock_deploy,
-            patch(
-                "cmk.dev_deploy.__main__._run_frontend_watch", return_value=0
-            ) as mock_fw,
+            patch("cmk.dev_deploy.__main__._run_frontend_watch", return_value=0) as mock_fw,
         ):
             result = main(["--frontend", "--watch"])
 

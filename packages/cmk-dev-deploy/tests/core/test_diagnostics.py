@@ -47,9 +47,7 @@ class TestCollectEnvironment:
 
     def test_basic_fields_present(self) -> None:
         """Collect basic Python and platform info without repo_root."""
-        with patch(
-            "cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=OSError
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=OSError):
             env = _collect_environment(None)
         assert "python_version" in env
         assert "platform" in env
@@ -58,9 +56,7 @@ class TestCollectEnvironment:
     def test_bazel_version_collected(self) -> None:
         """Bazel version is collected when bazel is available."""
         mock_result = MagicMock(returncode=0, stdout="bazel 7.4.0\n")
-        with patch(
-            "cmk.dev_deploy.core.diagnostics.subprocess.run", return_value=mock_result
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics.subprocess.run", return_value=mock_result):
             env = _collect_environment(None)
         assert env["bazel_version"] == "bazel 7.4.0"
 
@@ -73,9 +69,7 @@ class TestCollectEnvironment:
                 raise TimeoutExpired(cmd, 3)
             return MagicMock(returncode=1)
 
-        with patch(
-            "cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=_side_effect
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=_side_effect):
             env = _collect_environment(None)
         assert env["bazel_version"] == "unavailable"
 
@@ -96,9 +90,7 @@ class TestCollectEnvironment:
                 return MagicMock(returncode=0, stdout="file1.py\nfile2.py\n")
             return MagicMock(returncode=1)
 
-        with patch(
-            "cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=_side_effect
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=_side_effect):
             env = _collect_environment(tmp_path)
         assert env["git_branch"] == "my-branch"
         assert env["git_commit"] == "abc1234"
@@ -106,9 +98,7 @@ class TestCollectEnvironment:
 
     def test_no_env_vars_captured(self) -> None:
         """Environment variables must NOT be captured (security requirement)."""
-        with patch(
-            "cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=OSError
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=OSError):
             env = _collect_environment(None)
         # No os.environ keys should appear
         for key in ("PATH", "HOME", "USER", "GITHUB_TOKEN", "BAZEL_REMOTE_CACHE_TOKEN"):
@@ -128,9 +118,7 @@ class TestCollectBazelState:
 
     def test_collects_output_base(self, tmp_path: Path) -> None:
         mock_result = MagicMock(returncode=0, stdout=str(tmp_path) + "\n")
-        with patch(
-            "cmk.dev_deploy.core.diagnostics.subprocess.run", return_value=mock_result
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics.subprocess.run", return_value=mock_result):
             state = _collect_bazel_state(tmp_path)
         assert state["output_base"] == str(tmp_path)
         assert state["output_base_exists"] is True
@@ -154,9 +142,7 @@ class TestCollectBazelState:
                 return MagicMock(returncode=0, stdout="12345\n")
             return MagicMock(returncode=0, stdout=str(tmp_path) + "\n")
 
-        with patch(
-            "cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=_side_effect
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=_side_effect):
             state = _collect_bazel_state(tmp_path)
         assert state["server_pid"] == 12345
 
@@ -175,9 +161,7 @@ class TestCollectBazelState:
 
         # Direct test of the /proc parsing via the real function
         # with a mocked /proc path
-        with patch(
-            "cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=_side_effect
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=_side_effect):
             state = _collect_bazel_state(tmp_path)
         # server_pid should be collected even if /proc doesn't exist for the test PID
         assert state["server_pid"] == 42
@@ -193,18 +177,14 @@ class TestCollectManifestState:
 
     def test_manifest_not_found(self, tmp_path: Path) -> None:
         missing = tmp_path / "nonexistent.json"
-        with patch(
-            "cmk.dev_deploy.manifest.reader.manifest_path", return_value=missing
-        ):
+        with patch("cmk.dev_deploy.manifest.reader.manifest_path", return_value=missing):
             state = _collect_manifest_state()
         assert state["manifest_exists"] is False
 
     def test_manifest_found(self, tmp_path: Path) -> None:
         manifest = tmp_path / "deploy_manifest.json"
         manifest.write_text(json.dumps({"wheel_specs": [1, 2, 3], "config_specs": [1]}))
-        with patch(
-            "cmk.dev_deploy.manifest.reader.manifest_path", return_value=manifest
-        ):
+        with patch("cmk.dev_deploy.manifest.reader.manifest_path", return_value=manifest):
             state = _collect_manifest_state()
         assert state["manifest_exists"] is True
         assert state["manifest_spec_count"]["wheel_specs"] == 3
@@ -227,9 +207,7 @@ class TestCollectDeployState:
         mock_state.deployers = {"a": 1, "b": 2}
         mock_state.diff_base_commit = "abc123"
         mock_state.branch = "main"
-        with patch(
-            "cmk.dev_deploy.state.deploy_state.load_state", return_value=mock_state
-        ):
+        with patch("cmk.dev_deploy.state.deploy_state.load_state", return_value=mock_state):
             state = _collect_deploy_state(MagicMock())
         assert state["state_file_exists"] is True
         assert state["deployer_count"] == 2
@@ -282,9 +260,7 @@ class TestReadLogTail:
         log_file = tmp_path / "deploy.log"
         lines = [f"line {i}" for i in range(300)]
         log_file.write_text("\n".join(lines))
-        with patch(
-            "cmk.dev_deploy.core.output.get_log_file_path", return_value=log_file
-        ):
+        with patch("cmk.dev_deploy.core.output.get_log_file_path", return_value=log_file):
             tail = _read_log_tail()
         assert tail is not None
         assert tail.startswith("line 100")
@@ -293,17 +269,13 @@ class TestReadLogTail:
     def test_handles_empty_log(self, tmp_path: Path) -> None:
         log_file = tmp_path / "deploy.log"
         log_file.write_text("")
-        with patch(
-            "cmk.dev_deploy.core.output.get_log_file_path", return_value=log_file
-        ):
+        with patch("cmk.dev_deploy.core.output.get_log_file_path", return_value=log_file):
             tail = _read_log_tail()
         assert tail == ""
 
     def test_handles_missing_file(self, tmp_path: Path) -> None:
         missing = tmp_path / "nonexistent.log"
-        with patch(
-            "cmk.dev_deploy.core.output.get_log_file_path", return_value=missing
-        ):
+        with patch("cmk.dev_deploy.core.output.get_log_file_path", return_value=missing):
             assert _read_log_tail() is None
 
 
@@ -317,9 +289,7 @@ class TestWriteBundle:
 
     def test_writes_valid_json(self, tmp_path: Path) -> None:
         bundle = {"test": "data", "number": 42}
-        with patch(
-            "cmk.dev_deploy.core.diagnostics._diagnostics_dir", return_value=tmp_path
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics._diagnostics_dir", return_value=tmp_path):
             path = _write_bundle(bundle)
         assert path is not None
         assert path.exists()
@@ -330,9 +300,7 @@ class TestWriteBundle:
         """Keep max 20 crash files, prune oldest."""
         for i in range(25):
             (tmp_path / f"crash-2026010{i:02d}-000000.json").write_text("{}")
-        with patch(
-            "cmk.dev_deploy.core.diagnostics._diagnostics_dir", return_value=tmp_path
-        ):
+        with patch("cmk.dev_deploy.core.diagnostics._diagnostics_dir", return_value=tmp_path):
             _write_bundle({"new": True})
         crash_files = list(tmp_path.glob("crash-*.json"))
         assert len(crash_files) <= 21  # 20 old kept + 1 new
@@ -341,9 +309,7 @@ class TestWriteBundle:
         """Returns None and warns when directory is not writable."""
         bad_dir = tmp_path / "nonexistent" / "deep" / "path"
         with (
-            patch(
-                "cmk.dev_deploy.core.diagnostics._diagnostics_dir", return_value=bad_dir
-            ),
+            patch("cmk.dev_deploy.core.diagnostics._diagnostics_dir", return_value=bad_dir),
             patch.object(Path, "mkdir", side_effect=OSError),
             patch("cmk.dev_deploy.core.diagnostics._print_write_warning") as mock_warn,
         ):
@@ -360,9 +326,7 @@ class TestWriteBundle:
 class TestJsonErrors:
     """Tests for --json-errors stdout output."""
 
-    def test_json_output_on_flag(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_json_output_on_flag(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """When json_errors=True, valid JSON is printed to stdout."""
         error = DeployError("test error")
         with (
@@ -370,9 +334,7 @@ class TestJsonErrors:
                 "cmk.dev_deploy.core.diagnostics._diagnostics_dir",
                 return_value=tmp_path,
             ),
-            patch(
-                "cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=OSError
-            ),
+            patch("cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=OSError),
             patch("cmk.dev_deploy.core.output.get_log_file_path", return_value=None),
             patch(
                 "cmk.dev_deploy.manifest.reader.manifest_path",
@@ -385,9 +347,7 @@ class TestJsonErrors:
         assert data["error"]["type"] == "DeployError"
         assert data["error"]["message"] == "test error"
 
-    def test_no_json_without_flag(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_no_json_without_flag(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """When json_errors=False (default), no JSON on stdout."""
         error = DeployError("test error")
         with (
@@ -395,9 +355,7 @@ class TestJsonErrors:
                 "cmk.dev_deploy.core.diagnostics._diagnostics_dir",
                 return_value=tmp_path,
             ),
-            patch(
-                "cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=OSError
-            ),
+            patch("cmk.dev_deploy.core.diagnostics.subprocess.run", side_effect=OSError),
             patch("cmk.dev_deploy.core.output.get_log_file_path", return_value=None),
             patch(
                 "cmk.dev_deploy.manifest.reader.manifest_path",
@@ -427,9 +385,7 @@ class TestClipboardCommand:
         assert "xclip -selection clipboard" in captured.err
         assert str(crash_path) in captured.err
 
-    def test_no_clipboard_when_no_path(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_no_clipboard_when_no_path(self, capsys: pytest.CaptureFixture[str]) -> None:
         _print_error_output(DeployError("test"), None)
         captured = capsys.readouterr()
         assert "xclip" not in captured.err

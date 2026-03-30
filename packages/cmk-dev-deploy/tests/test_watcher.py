@@ -34,17 +34,11 @@ def _make_subprocess_mock(
         **_kwargs: object,
     ) -> subprocess.CompletedProcess[str]:
         if "ls-files" in cmd:
-            return subprocess.CompletedProcess(
-                args=cmd, returncode=0, stdout=untracked, stderr=""
-            )
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=untracked, stderr="")
         if "--staged" in cmd:
-            return subprocess.CompletedProcess(
-                args=cmd, returncode=0, stdout=staged, stderr=""
-            )
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=staged, stderr="")
         # Default: unstaged diff
-        return subprocess.CompletedProcess(
-            args=cmd, returncode=0, stdout=unstaged, stderr=""
-        )
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=unstaged, stderr="")
 
     return _mock_run
 

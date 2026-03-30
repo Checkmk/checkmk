@@ -49,9 +49,7 @@ from cmk.dev_deploy.errors import IBazelError
 
 _IBAZEL_VERSION = "v0.28.0"
 
-_GITHUB_RELEASES_URL = (
-    "https://github.com/bazelbuild/bazel-watcher/releases/download/v0.28.0"
-)
+_GITHUB_RELEASES_URL = "https://github.com/bazelbuild/bazel-watcher/releases/download/v0.28.0"
 
 
 def _cache_dir() -> Path:
@@ -320,9 +318,7 @@ def _download_and_verify() -> Path:
     output.info(f"Downloading iBazel {_IBAZEL_VERSION}...")
 
     # Temp file in same dir as final path (avoids cross-device rename)
-    fd = tempfile.NamedTemporaryFile(
-        dir=cache_dir, prefix=".ibazel-download-", delete=False
-    )
+    fd = tempfile.NamedTemporaryFile(dir=cache_dir, prefix=".ibazel-download-", delete=False)
     tmp_path = Path(fd.name)
     try:
         fd.close()  # Close fd so _download_with_progress can open the file

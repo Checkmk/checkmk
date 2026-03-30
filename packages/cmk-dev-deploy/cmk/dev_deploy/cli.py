@@ -128,8 +128,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     if args.purge:
         for flag in ("full", "dry_run", "watch", "info", "frontend"):
             if getattr(args, flag, False):
-                parser.error(
-                    f"--purge and --{flag.replace('_', '-')} cannot be used together"
-                )
+                parser.error(f"--purge and --{flag.replace('_', '-')} cannot be used together")
 
     return args

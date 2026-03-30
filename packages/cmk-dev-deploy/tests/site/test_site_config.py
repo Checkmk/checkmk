@@ -35,9 +35,7 @@ class TestOverrideMkPath:
     def test_returns_correct_path(self) -> None:
         site_root = Path("/omd/sites/mysite")
         result = override_mk_path(site_root)
-        assert result == Path(
-            "/omd/sites/mysite/etc/check_mk/multisite.d/zzz_dev_inject.mk"
-        )
+        assert result == Path("/omd/sites/mysite/etc/check_mk/multisite.d/zzz_dev_inject.mk")
 
     def test_zzz_prefix_sorts_after_wato(self) -> None:
         """zzz_ prefix sorts lexicographically after wato (z > w)."""
@@ -79,17 +77,13 @@ class TestCheckSiteRunning:
     def test_running_site_returns_true(self) -> None:
         mock_result = MagicMock()
         mock_result.returncode = 0
-        with patch(
-            "cmk.dev_deploy.site.site_config.run_as_site_user", return_value=mock_result
-        ):
+        with patch("cmk.dev_deploy.site.site_config.run_as_site_user", return_value=mock_result):
             assert check_site_running("v260", SSHState()) is True
 
     def test_stopped_site_returns_false(self) -> None:
         mock_result = MagicMock()
         mock_result.returncode = 1
-        with patch(
-            "cmk.dev_deploy.site.site_config.run_as_site_user", return_value=mock_result
-        ):
+        with patch("cmk.dev_deploy.site.site_config.run_as_site_user", return_value=mock_result):
             assert check_site_running("v260", SSHState()) is False
 
     def test_exception_returns_false(self) -> None:
@@ -192,9 +186,7 @@ class TestIsStaleOverride:
         mk_path.write_text("override")
         pid_file = tmp_path / "ibazel.pid"
         pid_file.write_text("12345")
-        with patch(
-            "cmk.dev_deploy.site.site_config.os.kill", side_effect=ProcessLookupError
-        ):
+        with patch("cmk.dev_deploy.site.site_config.os.kill", side_effect=ProcessLookupError):
             assert is_stale_override(mk_path, pid_file, "v260", SSHState()) is True
 
     def test_mk_exists_alive_pid_not_stale(self, tmp_path: Path) -> None:

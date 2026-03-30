@@ -144,9 +144,7 @@ def test_resolve_site_name_from_omd_sites_multiple(
         _resolve_site_name(None, tmp_path, tmp_path)
 
 
-def test_resolve_site_name_no_site_found(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_resolve_site_name_no_site_found(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """When no site can be detected, SiteNotFoundError includes recovery steps."""
     monkeypatch.setattr(
         "cmk.dev_deploy.site.site_resolver.subprocess.run",
@@ -157,9 +155,7 @@ def test_resolve_site_name_no_site_found(
         _resolve_site_name(None, tmp_path, tmp_path)
 
 
-def test_resolve_site_name_from_env_var(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_resolve_site_name_from_env_var(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """SITE env var is used as fallback (with deprecation warning to stderr)."""
     monkeypatch.setenv("SITE", "envsite")
     result = _resolve_site_name(None, tmp_path, tmp_path)
@@ -171,9 +167,7 @@ def test_resolve_site_name_from_env_var(
 # ---------------------------------------------------------------------------
 
 
-def test_resolve_site_full_pipeline(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_resolve_site_full_pipeline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """resolve_site wires name resolution, validation, edition, and commit reading."""
     # Mock all internals so resolve_site assembles a SiteInfo without real /omd/sites.
     with (
@@ -199,9 +193,7 @@ def test_resolve_site_full_pipeline(
         monkeypatch.setattr(
             Path,
             "is_dir",
-            lambda self: (
-                True if str(self) == "/omd/sites/testsite" else original_is_dir(self)
-            ),
+            lambda self: True if str(self) == "/omd/sites/testsite" else original_is_dir(self),
         )
 
         result = resolve_site("testsite", tmp_path, tmp_path)

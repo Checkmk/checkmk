@@ -50,15 +50,9 @@ def _make_state(
     if deployers is None:
         commit = "a" * 40
         deployers = {
-            "config_spec": _make_deployer_state(
-                deployer="config_spec", git_commit=commit
-            ),
-            "install_spec": _make_deployer_state(
-                deployer="install_spec", git_commit=commit
-            ),
-            "wheel_spec": _make_deployer_state(
-                deployer="wheel_spec", git_commit=commit
-            ),
+            "config_spec": _make_deployer_state(deployer="config_spec", git_commit=commit),
+            "install_spec": _make_deployer_state(deployer="install_spec", git_commit=commit),
+            "wheel_spec": _make_deployer_state(deployer="wheel_spec", git_commit=commit),
         }
     return DeployState(
         schema_version=STATE_SCHEMA_VERSION,
@@ -110,15 +104,11 @@ class TestPathAwareSkipIntegration:
         head = "a" * 40
         skip_result = _make_skip_result(should_skip=True)
 
-        with patch(
-            "cmk.dev_deploy.__main__.check_skip", return_value=skip_result
-        ) as mock_check:
+        with patch("cmk.dev_deploy.__main__.check_skip", return_value=skip_result) as mock_check:
             # Simulate the skip check loop from _run_deploy_cycle
             skip_results: dict[str, SkipResult] = {}
             for deployer_name in ("config_spec", "install_spec"):
-                result = mock_check(
-                    deployer_name, Path("/repo"), Path("/site"), state, head
-                )
+                result = mock_check(deployer_name, Path("/repo"), Path("/site"), state, head)
                 skip_results[deployer_name] = result
 
             assert mock_check.call_count == 2
@@ -304,9 +294,7 @@ class TestPartialFailureStateSave:
         loaded = load_state(tmp_path)
         assert loaded is not None
         for name in pipeline_deployers:
-            assert loaded.deployers[name].git_commit == "e" * 40, (
-                f"{name} should have new commit"
-            )
+            assert loaded.deployers[name].git_commit == "e" * 40, f"{name} should have new commit"
 
     def test_save_no_previous_state(self, tmp_path: Path) -> None:
         """previous_state=None -> only install_spec appears in saved state."""

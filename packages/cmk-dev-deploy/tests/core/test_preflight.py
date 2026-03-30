@@ -84,9 +84,7 @@ class TestOutputBaseHealthy:
         def _mock_run(_cmd: list[str], **_kwargs: object) -> MagicMock:
             return MagicMock(returncode=0, stdout=str(read_only) + "\n")
 
-        with patch(
-            "cmk.dev_deploy.core.preflight.subprocess.run", side_effect=_mock_run
-        ):
+        with patch("cmk.dev_deploy.core.preflight.subprocess.run", side_effect=_mock_run):
             # Make the health check file write fail
             with patch.object(Path, "write_text", side_effect=OSError("Read-only")):
                 result = _output_base_healthy(tmp_path)
@@ -176,9 +174,7 @@ class TestPreflightBazelCheck:
                 return MagicMock(returncode=1)
             return MagicMock(returncode=0, stdout=str(tmp_path) + "\n")
 
-        with patch(
-            "cmk.dev_deploy.core.preflight.subprocess.run", side_effect=_side_effect
-        ):
+        with patch("cmk.dev_deploy.core.preflight.subprocess.run", side_effect=_side_effect):
             warnings = preflight_bazel_check(tmp_path)
         blocking = [w for w in warnings if w.blocking]
         assert len(blocking) == 1

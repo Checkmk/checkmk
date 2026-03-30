@@ -21,23 +21,21 @@ if TYPE_CHECKING:
 
 # Maps deployer state names to the change categories they handle.
 # Used by restart gating to filter which changes trigger service restarts.
-DEPLOYER_CATEGORIES: MappingProxyType[str, frozenset[ChangeCategory]] = (
-    MappingProxyType(
-        {
-            "config_spec": frozenset({ChangeCategory.CONFIG, ChangeCategory.DATA}),
-            "install_spec": frozenset(
-                {
-                    ChangeCategory.CPP,
-                    ChangeCategory.RUST,
-                    ChangeCategory.VUE,
-                    ChangeCategory.FRONTEND,
-                }
-            ),
-            "wheel_spec": frozenset(
-                {ChangeCategory.PYTHON}
-            ),  # cmk/ tree deployed as wheel; Python file changes trigger service restarts
-        }
-    )
+DEPLOYER_CATEGORIES: MappingProxyType[str, frozenset[ChangeCategory]] = MappingProxyType(
+    {
+        "config_spec": frozenset({ChangeCategory.CONFIG, ChangeCategory.DATA}),
+        "install_spec": frozenset(
+            {
+                ChangeCategory.CPP,
+                ChangeCategory.RUST,
+                ChangeCategory.VUE,
+                ChangeCategory.FRONTEND,
+            }
+        ),
+        "wheel_spec": frozenset(
+            {ChangeCategory.PYTHON}
+        ),  # cmk/ tree deployed as wheel; Python file changes trigger service restarts
+    }
 )
 
 
@@ -208,9 +206,7 @@ def restart_services(
         except subprocess.TimeoutExpired:
             from cmk.dev_deploy.core import output
 
-            output.warn(
-                f"omd {action.value} {service.value}: timed out after {timeout}s"
-            )
+            output.warn(f"omd {action.value} {service.value}: timed out after {timeout}s")
             failed += 1
             failures.append(service.value)
             continue
@@ -220,11 +216,7 @@ def restart_services(
         else:
             from cmk.dev_deploy.core import output
 
-            detail = (
-                result.stderr.strip()
-                or result.stdout.strip()
-                or f"exit {result.returncode}"
-            )
+            detail = result.stderr.strip() or result.stdout.strip() or f"exit {result.returncode}"
             output.verbose(
                 f"omd {action.value} {service.value} failed (exit {result.returncode}): {detail}"
             )

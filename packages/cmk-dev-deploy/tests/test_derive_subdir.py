@@ -10,9 +10,7 @@ from cmk.dev_deploy.manifest.update import _derive_subdirs_from_paths
 
 
 def test_top_level_file() -> None:
-    assert _derive_subdirs_from_paths(["cmk_update_agent.py"]) == {
-        "cmk_update_agent.py"
-    }
+    assert _derive_subdirs_from_paths(["cmk_update_agent.py"]) == {"cmk_update_agent.py"}
 
 
 def test_depth2_namespace_file() -> None:

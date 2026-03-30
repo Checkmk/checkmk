@@ -130,9 +130,7 @@ def _patch_specs(
 class TestResolveServicesDefaults:
     """When changes is None, return safe defaults."""
 
-    def test_changes_none_returns_defaults(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_changes_none_returns_defaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(monkeypatch)
         result = resolve_services(None, None, _site())
         assert (Service.APACHE, ServiceAction.RELOAD) in result
@@ -143,9 +141,7 @@ class TestResolveServicesDefaults:
 class TestResolveServicesFileMatching:
     """File path matching against service specs."""
 
-    def test_no_specs_match_returns_empty(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_no_specs_match_returns_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(
             monkeypatch,
             service_specs=[
@@ -206,9 +202,7 @@ class TestResolveServicesDedup:
 class TestResolveServicesEditionGating:
     """Edition-gated services (CMC, DCD) filtered on community."""
 
-    def test_edition_gated_filtered_on_community(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_edition_gated_filtered_on_community(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(
             monkeypatch,
             service_specs=[
@@ -223,9 +217,7 @@ class TestResolveServicesEditionGating:
         result = resolve_services(changes, None, _site(Edition.COMMUNITY))
         assert result == []
 
-    def test_edition_gated_included_on_pro(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_edition_gated_included_on_pro(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(
             monkeypatch,
             service_specs=[
@@ -244,9 +236,7 @@ class TestResolveServicesEditionGating:
 class TestResolveServicesOrdering:
     """Results follow SERVICE_RESTART_ORDER."""
 
-    def test_ordering_follows_restart_order(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_ordering_follows_restart_order(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(
             monkeypatch,
             service_specs=[
@@ -263,17 +253,13 @@ class TestResolveServicesOrdering:
         changes = _changeset(files=("cmk/gui/views.py",))
         result = resolve_services(changes, None, _site())
         services = [svc for svc, _ in result]
-        assert services.index(Service.APACHE) < services.index(
-            Service.AUTOMATION_HELPER
-        )
+        assert services.index(Service.APACHE) < services.index(Service.AUTOMATION_HELPER)
 
 
 class TestResolveServicesDeployedDeployers:
     """deployed_deployers restricts which file categories are checked."""
 
-    def test_deployed_deployers_restricts_categories(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_deployed_deployers_restricts_categories(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(
             monkeypatch,
             service_specs=[
@@ -293,9 +279,7 @@ class TestResolveServicesDeployedDeployers:
         )
         # Only config_spec deployed -> only CONFIG/DATA categories checked
         # PYTHON category is not in config_spec's categories, so no files match
-        result = resolve_services(
-            changes, None, _site(), deployed_deployers={"config_spec"}
-        )
+        result = resolve_services(changes, None, _site(), deployed_deployers={"config_spec"})
         assert result == []
 
     def test_deployed_deployers_includes_matching_category(
@@ -318,9 +302,7 @@ class TestResolveServicesDeployedDeployers:
             },
         )
         # wheel_spec handles PYTHON -> file is checked
-        result = resolve_services(
-            changes, None, _site(), deployed_deployers={"wheel_spec"}
-        )
+        result = resolve_services(changes, None, _site(), deployed_deployers={"wheel_spec"})
         assert result == [(Service.APACHE, ServiceAction.RELOAD)]
 
 
@@ -363,9 +345,7 @@ class TestResolveServicesBazelTargets:
         )
         changes = _changeset()
         # Only wheel_spec deployed -> install_spec not in deployed_deployers -> targets skipped
-        result = resolve_services(
-            changes, targets, _site(), deployed_deployers={"wheel_spec"}
-        )
+        result = resolve_services(changes, targets, _site(), deployed_deployers={"wheel_spec"})
         assert result == []
 
     def test_bazel_target_included_when_install_spec_deployed(
@@ -385,9 +365,7 @@ class TestResolveServicesBazelTargets:
             targets=(_bazel_target("packages/livestatus"),),
         )
         changes = _changeset()
-        result = resolve_services(
-            changes, targets, _site(), deployed_deployers={"install_spec"}
-        )
+        result = resolve_services(changes, targets, _site(), deployed_deployers={"install_spec"})
         assert result == [(Service.CMC, ServiceAction.RESTART)]
 
 
@@ -399,9 +377,7 @@ class TestResolveServicesBazelTargets:
 class TestWheelConventionDefault:
     """Wheel packages auto-derive apache:reload when no explicit spec matches."""
 
-    def test_wheel_convention_apache_reload(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_wheel_convention_apache_reload(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """File under a wheel prefix with no explicit service spec -> apache:reload."""
         _patch_specs(
             monkeypatch,
@@ -411,9 +387,7 @@ class TestWheelConventionDefault:
         result = resolve_services(changes, None, _site())
         assert result == [(Service.APACHE, ServiceAction.RELOAD)]
 
-    def test_explicit_overrides_wheel_convention(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_explicit_overrides_wheel_convention(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Explicit service spec takes precedence over wheel convention."""
         _patch_specs(
             monkeypatch,
@@ -430,9 +404,7 @@ class TestWheelConventionDefault:
         result = resolve_services(changes, None, _site())
         assert result == [(Service.MKEVENTD, ServiceAction.RESTART)]
 
-    def test_sub_path_override_within_wheel(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_sub_path_override_within_wheel(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Sub-path explicit spec wins over wheel convention for the cmk/ wheel."""
         _patch_specs(
             monkeypatch,
@@ -450,9 +422,7 @@ class TestWheelConventionDefault:
         # Explicit spec wins — only automation-helper, no apache:reload from wheel
         assert result == [(Service.AUTOMATION_HELPER, ServiceAction.RESTART)]
 
-    def test_no_default_for_unmatched_file(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_no_default_for_unmatched_file(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """File not under any wheel or config spec -> no services."""
         _patch_specs(
             monkeypatch,
@@ -462,9 +432,7 @@ class TestWheelConventionDefault:
         result = resolve_services(changes, None, _site())
         assert result == []
 
-    def test_wheel_convention_deduplicates(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_wheel_convention_deduplicates(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Multiple files under different wheels still produce single apache:reload."""
         _patch_specs(
             monkeypatch,
@@ -482,9 +450,7 @@ class TestWheelConventionDefault:
         result = resolve_services(changes, None, _site())
         assert result == [(Service.APACHE, ServiceAction.RELOAD)]
 
-    def test_wheel_convention_for_bazel_targets(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_wheel_convention_for_bazel_targets(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Bazel target matching also falls through to wheel convention."""
         _patch_specs(
             monkeypatch,
@@ -512,9 +478,7 @@ class TestWheelConventionDefault:
             },
         )
         # config_spec deployed -> PYTHON not in its categories -> file not checked
-        result = resolve_services(
-            changes, None, _site(), deployed_deployers={"config_spec"}
-        )
+        result = resolve_services(changes, None, _site(), deployed_deployers={"config_spec"})
         assert result == []
 
 
@@ -536,9 +500,7 @@ class TestConfigSpecServicesAnnotation:
         result = resolve_services(changes, None, _site())
         assert result == [(Service.APACHE, ServiceAction.RELOAD)]
 
-    def test_config_spec_without_services_no_restart(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_config_spec_without_services_no_restart(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Config spec without services annotation does not trigger restarts."""
         _patch_specs(
             monkeypatch,
@@ -548,9 +510,7 @@ class TestConfigSpecServicesAnnotation:
         result = resolve_services(changes, None, _site())
         assert result == []
 
-    def test_explicit_spec_overrides_config_spec(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_explicit_spec_overrides_config_spec(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Explicit service spec takes precedence over config spec annotation."""
         _patch_specs(
             monkeypatch,
@@ -593,7 +553,5 @@ class TestConfigSpecServicesAnnotation:
             },
         )
         # wheel_spec deployed -> CONFIG not in its categories -> file not checked
-        result = resolve_services(
-            changes, None, _site(), deployed_deployers={"wheel_spec"}
-        )
+        result = resolve_services(changes, None, _site(), deployed_deployers={"wheel_spec"})
         assert result == []

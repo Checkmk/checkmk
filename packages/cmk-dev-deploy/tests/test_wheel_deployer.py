@@ -168,9 +168,7 @@ class TestDeriveTopLevelPackages:
         assert _derive_top_level_packages(("livestatus/",)) == ("livestatus",)
 
     def test_flat_py_file(self) -> None:
-        assert _derive_top_level_packages(("cmk_update_agent.py",)) == (
-            "cmk_update_agent",
-        )
+        assert _derive_top_level_packages(("cmk_update_agent.py",)) == ("cmk_update_agent",)
 
     def test_mixed_namespaces(self) -> None:
         """cmk/livestatus_client/ + livestatus/ yields both top-levels."""
@@ -300,9 +298,7 @@ class TestDistInfoGeneration:
 
         _generate_dist_info(site_packages, "cmk-ccc", "1.0.0", ["cmk"], [])
 
-        wheel_content = (
-            site_packages / "cmk_ccc-1.0.0.dist-info" / "WHEEL"
-        ).read_text()
+        wheel_content = (site_packages / "cmk_ccc-1.0.0.dist-info" / "WHEEL").read_text()
         assert "Generator: cmk-dev-deploy" in wheel_content
         assert "Root-Is-Purelib: true" in wheel_content
 
@@ -334,9 +330,7 @@ class TestDistInfoGeneration:
         # Verify hash format: sha256=<urlsafe_base64_nopadding>
         assert hash_field.startswith("sha256=")
         digest = hashlib.sha256(content).digest()
-        expected_hash = (
-            "sha256=" + base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
-        )
+        expected_hash = "sha256=" + base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
         assert hash_field == expected_hash
 
         # Verify size
@@ -407,9 +401,7 @@ class TestCleanPackage:
         flat_file = site_packages / "cmk_update_agent.py"
         flat_file.write_text("# update agent")
 
-        _clean_package(
-            site_packages, ["cmk_update_agent.py"], "cmk_update_agent-*.dist-info"
-        )
+        _clean_package(site_packages, ["cmk_update_agent.py"], "cmk_update_agent-*.dist-info")
 
         assert not flat_file.exists()
 
@@ -556,9 +548,7 @@ class TestPathAwareSkipIntegration:
                 should_skip=True,
                 reason="no changes in packages/cmk-livestatus-client/cmk/livestatus_client",
                 deployer="wheel:packages/cmk-livestatus-client",
-                paths_checked=(
-                    "packages/cmk-livestatus-client/cmk/livestatus_client/",
-                ),
+                paths_checked=("packages/cmk-livestatus-client/cmk/livestatus_client/",),
             ),
         }
 
@@ -683,9 +673,7 @@ class TestSpecsForChangedFiles:
         """packages/cmk-ec-stuff/ does NOT match packages/cmk-ec (trailing slash)."""
         specs = (
             _make_wheel_spec(package="packages/cmk-ec", source_subdirs=("cmk/ec/",)),
-            _make_wheel_spec(
-                package="packages/cmk-events", source_subdirs=("cmk/events/",)
-            ),
+            _make_wheel_spec(package="packages/cmk-events", source_subdirs=("cmk/events/",)),
         )
         # This file is in a hypothetical cmk-ec-stuff package, NOT cmk-ec
         changed = ("packages/cmk-ec-stuff/foo.py",)
@@ -845,9 +833,7 @@ class TestParallelDeployment:
             return [], 0.0
 
         # check_skip returns should_skip=False (deploy all)
-        deploy_result = _make_skip_result(
-            should_skip=False, reason="first deploy (no baseline)"
-        )
+        deploy_result = _make_skip_result(should_skip=False, reason="first deploy (no baseline)")
 
         with (
             patch(
@@ -914,9 +900,7 @@ class TestParallelDeployment:
             return [], 0.0
 
         # check_skip returns should_skip=False (deploy)
-        deploy_result = _make_skip_result(
-            should_skip=False, reason="first deploy (no baseline)"
-        )
+        deploy_result = _make_skip_result(should_skip=False, reason="first deploy (no baseline)")
 
         with (
             patch(
@@ -966,9 +950,7 @@ class TestParallelDeployment:
         ccc_dir = repo_root / "packages" / "cmk-ccc" / "cmk" / "ccc"
         ccc_dir.mkdir(parents=True)
         (ccc_dir / "__init__.py").write_text("# init")
-        mknotifyd_dir = (
-            repo_root / "non-free" / "packages" / "cmk-mknotifyd" / "cmk" / "mknotifyd"
-        )
+        mknotifyd_dir = repo_root / "non-free" / "packages" / "cmk-mknotifyd" / "cmk" / "mknotifyd"
         mknotifyd_dir.mkdir(parents=True)
         (mknotifyd_dir / "__init__.py").write_text("# init")
 
@@ -980,9 +962,7 @@ class TestParallelDeployment:
             ),
             _make_wheel_spec(
                 package="non-free/packages/cmk-mknotifyd",
-                edition_constraint=frozenset(
-                    {"pro", "ultimate", "ultimatemt", "cloud"}
-                ),
+                edition_constraint=frozenset({"pro", "ultimate", "ultimatemt", "cloud"}),
                 source_subdirs=("cmk/mknotifyd/",),
             ),
         )
@@ -1001,9 +981,7 @@ class TestParallelDeployment:
             return [], 0.0
 
         # check_skip returns should_skip=False (deploy)
-        deploy_result = _make_skip_result(
-            should_skip=False, reason="first deploy (no baseline)"
-        )
+        deploy_result = _make_skip_result(should_skip=False, reason="first deploy (no baseline)")
 
         with (
             patch(

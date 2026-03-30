@@ -56,9 +56,7 @@ class TestHasRevertedDirtyFiles:
         """Returns True when a previously-dirty file is now clean."""
         state = _make_state(
             deployers={
-                "install_spec": _make_deployer(
-                    dirty={"a.cc": "hash1", "b.cc": "hash2"}
-                ),
+                "install_spec": _make_deployer(dirty={"a.cc": "hash1", "b.cc": "hash2"}),
             }
         )
         with patch(
@@ -73,9 +71,7 @@ class TestHasRevertedDirtyFiles:
         """Returns False when all state-recorded dirty files are still dirty."""
         state = _make_state(
             deployers={
-                "install_spec": _make_deployer(
-                    dirty={"a.cc": "hash1", "b.cc": "hash2"}
-                ),
+                "install_spec": _make_deployer(dirty={"a.cc": "hash1", "b.cc": "hash2"}),
             }
         )
         with patch(
@@ -116,12 +112,8 @@ class TestHasRevertedDirtyFiles:
         """Checks dirty files across all deployers."""
         state = _make_state(
             deployers={
-                "install_spec": _make_deployer(
-                    name="install_spec", dirty={"a.cc": "hash1"}
-                ),
-                "config_spec": _make_deployer(
-                    name="config_spec", dirty={"b.cfg": "hash2"}
-                ),
+                "install_spec": _make_deployer(name="install_spec", dirty={"a.cc": "hash1"}),
+                "config_spec": _make_deployer(name="config_spec", dirty={"b.cfg": "hash2"}),
             }
         )
         # a.cc still dirty, b.cfg reverted

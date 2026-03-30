@@ -14,7 +14,4 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
-[tool.ruff.lint.per-file-ignores]
-"cmk/dev_deploy/__main__.py" = ["T201"] # CLI tool uses print() for user output
-
 [tool.bandit]

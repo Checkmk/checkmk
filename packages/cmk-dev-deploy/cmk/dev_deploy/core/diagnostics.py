@@ -324,9 +324,7 @@ def _collect_error_info(error: BaseException, phase: str) -> dict[str, Any]:
     info: dict[str, Any] = {
         "type": type(error).__name__,
         "message": str(error.message) if isinstance(error, DeployError) else str(error),
-        "traceback": traceback.format_exception(
-            type(error), error, error.__traceback__
-        ),
+        "traceback": traceback.format_exception(type(error), error, error.__traceback__),
         "phase": phase,
     }
     if isinstance(error, DeployError) and error.recovery:
@@ -372,9 +370,7 @@ def _write_bundle(bundle: dict[str, Any]) -> Path | None:
 
     # Prune old crash files (keep max _MAX_CRASH_FILES)
     try:
-        crash_files = sorted(
-            _diagnostics_dir().glob("crash-*.json"), key=lambda p: p.name
-        )
+        crash_files = sorted(_diagnostics_dir().glob("crash-*.json"), key=lambda p: p.name)
         for old in crash_files[:-_MAX_CRASH_FILES]:
             old.unlink(missing_ok=True)
     except OSError:

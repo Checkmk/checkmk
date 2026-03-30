@@ -81,9 +81,7 @@ def _discover_build_files_walk(repo_root: Path) -> list[str]:
 
     for dirpath, dirnames, filenames in os.walk(repo_root, followlinks=False):
         dirnames[:] = [
-            d
-            for d in dirnames
-            if not any(d.startswith(prefix) for prefix in _IGNORED_PREFIXES)
+            d for d in dirnames if not any(d.startswith(prefix) for prefix in _IGNORED_PREFIXES)
         ]
 
         rel_dir = os.path.relpath(dirpath, repo_root)
@@ -147,9 +145,7 @@ def save_manifest_hashes(repo_root: Path) -> None:
     t0 = time.monotonic()
     current = _compute_file_hashes(repo_root)
     hash_path().write_text(json.dumps({"files": current}, indent=2) + "\n")
-    output.verbose(
-        f"Manifest: saved {len(current)} file hashes in {time.monotonic() - t0:.2f}s"
-    )
+    output.verbose(f"Manifest: saved {len(current)} file hashes in {time.monotonic() - t0:.2f}s")
 
 
 def is_manifest_stale(repo_root: Path) -> bool:
@@ -192,13 +188,7 @@ def _rebuild_manifest(repo_root: Path) -> None:
     """Invoke update_manifest.py and update the hash file."""
     t0 = time.monotonic()
     script = (
-        repo_root
-        / "packages"
-        / "cmk-dev-deploy"
-        / "cmk"
-        / "dev_deploy"
-        / "manifest"
-        / "update.py"
+        repo_root / "packages" / "cmk-dev-deploy" / "cmk" / "dev_deploy" / "manifest" / "update.py"
     )
     run_checked(
         [sys.executable, str(script)],

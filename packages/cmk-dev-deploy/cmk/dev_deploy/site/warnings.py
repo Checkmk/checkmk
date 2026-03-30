@@ -140,9 +140,7 @@ def _find_branch_for_commit(commit: str, repo_root: Path) -> str | None:
     return result.stdout.strip().splitlines()[0].strip()
 
 
-def check_edition_mismatch(
-    changes: ChangeSet | None, site: SiteInfo | None
-) -> str | None:
+def check_edition_mismatch(changes: ChangeSet | None, site: SiteInfo | None) -> str | None:
     """Check whether changed files require a higher edition than the target site.
 
     Args:

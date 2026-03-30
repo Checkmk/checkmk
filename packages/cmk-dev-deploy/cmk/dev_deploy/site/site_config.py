@@ -110,9 +110,7 @@ def _mk_file_exists(mk_path: Path, site_name: str, state: SSHState) -> bool:
         return False
 
 
-def is_stale_override(
-    mk_path: Path, pid_file: Path, site_name: str, state: SSHState
-) -> bool:
+def is_stale_override(mk_path: Path, pid_file: Path, site_name: str, state: SSHState) -> bool:
     """Return True if the ``.mk`` override file exists but the frontend process is dead.
 
     Uses the PID file for liveness detection:

@@ -172,9 +172,7 @@ class TestWheelSourceSubdirs:
         )
 
         with patch(f"{_MANIFEST_PREFIX}.get_wheel_specs", return_value=(spec,)):
-            result = resolve_source_paths(
-                "wheel:packages/cmk-shared-typing", Path("/repo")
-            )
+            result = resolve_source_paths("wheel:packages/cmk-shared-typing", Path("/repo"))
 
         assert result == ("packages/cmk-shared-typing/",)
 
@@ -200,9 +198,7 @@ class TestWheelSourceSubdirs:
         )
 
         with patch(f"{_MANIFEST_PREFIX}.get_wheel_specs", return_value=(spec,)):
-            result = resolve_source_paths(
-                "wheel:packages/cmk-check-engine", Path("/repo")
-            )
+            result = resolve_source_paths("wheel:packages/cmk-check-engine", Path("/repo"))
 
         assert result is not None
         for path in result:

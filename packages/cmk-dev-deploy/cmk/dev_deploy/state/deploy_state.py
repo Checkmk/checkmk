@@ -99,9 +99,7 @@ def save_state(state: DeployState, site_root: Path) -> None:
         },
     }
     # Atomic write: write to temp file in same directory, then rename
-    fd, tmp_path = tempfile.mkstemp(
-        dir=str(path.parent), suffix=".tmp", prefix=".deploy_state_"
-    )
+    fd, tmp_path = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp", prefix=".deploy_state_")
     try:
         with os.fdopen(fd, "w") as f:
             json.dump(data, f, indent=2, sort_keys=True)

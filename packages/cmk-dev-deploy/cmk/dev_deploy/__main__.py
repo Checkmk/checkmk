@@ -83,10 +83,7 @@ from cmk.dev_deploy.watcher import watch_loop
 def _has_config_data_changes(changes: ChangeSet | None) -> bool:
     if changes is None:
         return True
-    return (
-        ChangeCategory.CONFIG in changes.categories
-        or ChangeCategory.DATA in changes.categories
-    )
+    return ChangeCategory.CONFIG in changes.categories or ChangeCategory.DATA in changes.categories
 
 
 def _has_wheel_changes(changes: ChangeSet | None) -> bool:
@@ -105,9 +102,7 @@ def _has_wheel_changes_with_deps(
         for dep in expanded_deps:
             dep_stripped = dep.rstrip("/")
             for spec in get_wheel_specs():
-                if dep_stripped == spec.package or spec.package.startswith(
-                    dep_stripped
-                ):
+                if dep_stripped == spec.package or spec.package.startswith(dep_stripped):
                     return True
     return False
 
@@ -210,12 +205,7 @@ def _run_deploy_cycle(
 
     # Branch switch detection
     current_branch = get_current_branch(repo_root)
-    if (
-        state is not None
-        and state.branch
-        and current_branch
-        and state.branch != current_branch
-    ):
+    if state is not None and state.branch and current_branch and state.branch != current_branch:
         output.warn(
             f"Branch changed: {state.branch} -> {current_branch}. "
             "Clearing state and performing full deploy."
@@ -281,16 +271,12 @@ def _run_deploy_cycle(
                     output.info("Dirty files reverted -- redeploying clean state.")
                     changes = None  # full deploy to restore clean versions
                 else:
-                    output.success(
-                        "Nothing to deploy -- dirty files unchanged since last deploy."
-                    )
+                    output.success("Nothing to deploy -- dirty files unchanged since last deploy.")
                     return _make_result(0, all_skipped=True)
 
         if changes is not None:
             output.print_change_summary(changes)
-            output.print_verbose_changes(
-                changes, frontend_supervised=frontend_supervised
-            )
+            output.print_verbose_changes(changes, frontend_supervised=frontend_supervised)
             # Hint about --frontend when Vue files changed (noop when no VUE
             # files or when frontend_supervised is already active)
             _maybe_print_frontend_hint(changes, frontend_supervised)
@@ -482,9 +468,7 @@ def _run_deploy_cycle(
             elif wheel_result.wheels_skipped > 0:
                 _wheel_all_skipped = True
                 skipped_names.append("wheels")
-                skipped_reasons["wheels"] = (
-                    f"all {wheel_result.wheels_skipped} packages up to date"
-                )
+                skipped_reasons["wheels"] = f"all {wheel_result.wheels_skipped} packages up to date"
                 output.print_deployer_skipped_line(
                     "wheels",
                     f"all {wheel_result.wheels_skipped} packages up to date",
@@ -542,9 +526,7 @@ def _run_deploy_cycle(
         if dep_name in successful_deployers:
             paths = resolve_source_paths(dep_name, repo_root)
             if paths is not None and len(paths) > 0:
-                _deployer_dirty[dep_name] = compute_dirty_hashes(
-                    repo_root, path_prefixes=paths
-                )
+                _deployer_dirty[dep_name] = compute_dirty_hashes(repo_root, path_prefixes=paths)
             else:
                 # No source paths: use global dirty hashes (backward compat)
                 _deployer_dirty[dep_name] = compute_dirty_hashes(repo_root)
@@ -552,9 +534,7 @@ def _run_deploy_cycle(
     # Check for deploy failures (before service restarts)
     failed = [r for r in results if not r.success]
     if failed:
-        output.error(
-            f"{len(failed)} deploy step(s) failed: " + ", ".join(r.name for r in failed)
-        )
+        output.error(f"{len(failed)} deploy step(s) failed: " + ", ".join(r.name for r in failed))
         _total_elapsed = _time.monotonic() - _cycle_start
         output.print_deploy_total(_total_elapsed, success=False)
         # Still save state for successful deployers (partial failure recovery).
@@ -573,9 +553,7 @@ def _run_deploy_cycle(
         return _make_result(1)
 
     # Service restart gating: only consider services for deployers that ran
-    services = resolve_services(
-        changes, targets, site, deployed_deployers=successful_deployers
-    )
+    services = resolve_services(changes, targets, site, deployed_deployers=successful_deployers)
 
     svc_count = 0
     svc_elapsed = 0.0
@@ -893,9 +871,7 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
         output.info("Detected site:")
         output.print_site_info(site)
     else:
-        output.info(
-            f"Site: {output.BOLD}{site.name}{output.RESET} ({site.edition.value})"
-        )
+        output.info(f"Site: {output.BOLD}{site.name}{output.RESET} ({site.edition.value})")
 
     if args.commit:
         output.info(f"Deploying state at commit {args.commit}")

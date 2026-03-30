@@ -401,9 +401,7 @@ def verbose(msg: str) -> None:
 # --- Per-deployer one-line summary (default verbosity) ---
 
 
-def print_deployer_deployed(
-    deployer_name: str, elapsed: float, detail: str = ""
-) -> None:
+def print_deployer_deployed(deployer_name: str, elapsed: float, detail: str = "") -> None:
     """Print a per-deployer deployed line."""
     detail_str = f"  {DIM}({detail}){RESET}" if detail else ""
     _print_locked(
@@ -519,9 +517,7 @@ def print_all_skipped() -> None:
 @_verbose_only
 def print_fallback_note(deployer_name: str) -> None:
     """Print a note when a deployer falls back to global HEAD check."""
-    _print_locked(
-        f"  {DIM}{deployer_name}: using global check (no source paths){RESET}"
-    )
+    _print_locked(f"  {DIM}{deployer_name}: using global check (no source paths){RESET}")
 
 
 def print_restart_skipped() -> None:
@@ -603,13 +599,9 @@ def print_wheel_result(result: WheelDeployResult) -> None:
     if result.wheels_skipped > 0:
         _print_locked(f"  Packages skipped: {result.wheels_skipped} (unchanged)")
     if result.wheels_skipped_edition > 0:
-        info(
-            f"Skipped {result.wheels_skipped_edition} spec(s) not matching site edition"
-        )
+        info(f"Skipped {result.wheels_skipped_edition} spec(s) not matching site edition")
     if result.wheels_skipped_missing > 0:
-        info(
-            f"Skipped {result.wheels_skipped_missing} spec(s) with missing source dirs"
-        )
+        info(f"Skipped {result.wheels_skipped_missing} spec(s) with missing source dirs")
 
 
 # --- Service management display ---
@@ -699,8 +691,7 @@ def print_dry_run_plan(
             _print_locked(f"    build  {target.label}")
 
     if changes is None or (
-        ChangeCategory.CONFIG in changes.categories
-        or ChangeCategory.DATA in changes.categories
+        ChangeCategory.CONFIG in changes.categories or ChangeCategory.DATA in changes.categories
     ):
         _print_locked("  Would deploy: config/data files")
 
@@ -756,9 +747,7 @@ def print_frontend_hint(changes: ChangeSet) -> None:
 
     prefixes = get_frontend_supervised_prefixes()
     if any(f.startswith(p) for f in vue_files for p in prefixes):
-        _print_locked(
-            f"  {DIM}Tip: use --frontend for subsecond Vue feedback via Vite HMR{RESET}"
-        )
+        _print_locked(f"  {DIM}Tip: use --frontend for subsecond Vue feedback via Vite HMR{RESET}")
 
 
 def print_frontend_skip(package_name: str) -> None:
@@ -791,9 +780,7 @@ def print_dep_expansion(expanded: set[str], original: set[str]) -> None:
 
 def print_watch_waiting(site_name: str) -> None:
     """Display watch mode waiting message."""
-    _print_locked(
-        f"\n{BOLD}Watching for changes...{RESET} (site: {site_name}, Ctrl-C to stop)"
-    )
+    _print_locked(f"\n{BOLD}Watching for changes...{RESET} (site: {site_name}, Ctrl-C to stop)")
 
 
 def print_watch_cycle_header(cycle: int) -> None:
@@ -815,9 +802,7 @@ def print_watch_cycle_complete(cycle: int, exit_code: int, elapsed: float) -> No
         warn(f"Cycle #{cycle} failed (exit code {exit_code}) in {elapsed:.1f}s")
 
 
-def print_watch_cycle_summary(
-    cycle: int, result: DeployCycleResult, elapsed: float
-) -> None:
+def print_watch_cycle_summary(cycle: int, result: DeployCycleResult, elapsed: float) -> None:
     """Display a one-line watch cycle summary with deployed/skipped deployers."""
     parts: list[str] = []
     if result.deployed:
@@ -832,9 +817,7 @@ def print_watch_cycle_summary(
 
 def print_watch_all_skipped(cycle: int, elapsed: float) -> None:
     """Display a dim one-liner when all deployers were skipped."""
-    _print_locked(
-        f"{_deploy_prefix()}  {DIM}Cycle #{cycle}: all skipped ({elapsed:.1f}s){RESET}"
-    )
+    _print_locked(f"{_deploy_prefix()}  {DIM}Cycle #{cycle}: all skipped ({elapsed:.1f}s){RESET}")
 
 
 @_verbose_only
@@ -862,9 +845,7 @@ def print_watch_resume() -> None:
 def print_watch_heartbeat(idle_polls: int) -> None:
     """Display dim heartbeat to confirm watcher is alive during idle polling."""
     minutes = idle_polls // 60
-    _print_locked(
-        f"{_deploy_prefix()}{DIM}  ... still watching ({minutes}m idle){RESET}"
-    )
+    _print_locked(f"{_deploy_prefix()}{DIM}  ... still watching ({minutes}m idle){RESET}")
 
 
 # --- Batched targeted deploy summary (consolidates per-spec output) ---
@@ -932,9 +913,7 @@ def print_parallel_timeline(
 
     # Services run sequentially after all deployers complete.
     if services_elapsed > 0:
-        entries.append(
-            ("services", post_deployer_end, post_deployer_end + services_elapsed)
-        )
+        entries.append(("services", post_deployer_end, post_deployer_end + services_elapsed))
 
     if not entries:
         return
@@ -954,6 +933,4 @@ def print_parallel_timeline(
         col_start = int(start / span * width)
         col_end = max(col_start + 1, int(end / span * width))
         bar = "░" * col_start + "█" * (col_end - col_start) + "░" * (width - col_end)
-        _print_locked(
-            f"{dp}  {display:<10s} {bar}  {DIM}{start:.1f}-{end:.1f}s ({pct}%){RESET}"
-        )
+        _print_locked(f"{dp}  {display:<10s} {bar}  {DIM}{start:.1f}-{end:.1f}s ({pct}%){RESET}")

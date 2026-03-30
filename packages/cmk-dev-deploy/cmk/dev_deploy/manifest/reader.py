@@ -33,14 +33,7 @@ def _manifest_dir() -> Path:
     """Return the manifest directory, using BUILD_WORKSPACE_DIRECTORY when under bazel run."""
     workspace = os.environ.get("BUILD_WORKSPACE_DIRECTORY")
     if workspace:
-        return (
-            Path(workspace)
-            / "packages"
-            / "cmk-dev-deploy"
-            / "cmk"
-            / "dev_deploy"
-            / "manifest"
-        )
+        return Path(workspace) / "packages" / "cmk-dev-deploy" / "cmk" / "dev_deploy" / "manifest"
     return Path(__file__).parent
 
 
@@ -91,8 +84,7 @@ def _parse_config_spec(raw: dict[str, Any]) -> ConfigDeploySpec:
     """Convert a manifest config_spec dict to a ConfigDeploySpec dataclass."""
     mode_raw = raw["mode"]
     files = tuple(
-        ConfigFileEntry(src=f["src"], dest=f["dest"], mode=f["mode"])
-        for f in raw.get("files", [])
+        ConfigFileEntry(src=f["src"], dest=f["dest"], mode=f["mode"]) for f in raw.get("files", [])
     )
     services = tuple(_parse_service_pair(s) for s in raw.get("services", []))
     return ConfigDeploySpec(
@@ -165,9 +157,7 @@ def get_service_specs() -> tuple[ServiceSpec, ...]:
 
 def get_frontend_supervised_prefixes() -> frozenset[str]:
     """Return path prefixes for frontend-supervised install specs."""
-    return frozenset(
-        spec.package + "/" for spec in get_install_specs() if spec.frontend_supervised
-    )
+    return frozenset(spec.package + "/" for spec in get_install_specs() if spec.frontend_supervised)
 
 
 def get_deploy_deps() -> dict[str, tuple[str, ...]]:

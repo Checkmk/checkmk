@@ -36,9 +36,7 @@ from cmk.dev_deploy.manifest.staleness import save_manifest_hashes
 
 logger = logging.getLogger(__name__)
 
-MANIFEST_REPO_PATH = (
-    "packages/cmk-dev-deploy/cmk/dev_deploy/manifest/deploy_manifest.json"
-)
+MANIFEST_REPO_PATH = "packages/cmk-dev-deploy/cmk/dev_deploy/manifest/deploy_manifest.json"
 
 
 def specs_path() -> Path:
@@ -131,9 +129,7 @@ def _load_specs_from_toml(
     for entry in raw.get("service", []):
         package_target = entry["package_target"]
         # Derive source_prefix from package_target when not explicitly set
-        source_prefix = entry.get("source_prefix") or _label_to_package_path(
-            package_target
-        )
+        source_prefix = entry.get("source_prefix") or _label_to_package_path(package_target)
         service_specs.append(
             {
                 "editions": _derive_editions(source_prefix, package_target),
@@ -220,11 +216,7 @@ def _discover_wheel_specs(
     for pkg_path, target_names in sorted(wheel_targets_map.items()):
         # Build the full label for the first (or only) wheel target
         for tname in target_names:
-            label = (
-                f"//{pkg_path}{tname}"
-                if tname.startswith(":")
-                else f"//{pkg_path}:{tname}"
-            )
+            label = f"//{pkg_path}{tname}" if tname.startswith(":") else f"//{pkg_path}:{tname}"
 
             # Derive source_prefix
             source_prefix = _label_to_package_path(label)
@@ -284,10 +276,7 @@ def _classify_config_method(source_prefix: str, package_target: str) -> str:
     - Everything else → copy_dir
     """
     for prefix, method in _CONFIG_METHOD_RULES.items():
-        if (
-            source_prefix.startswith(prefix + "/")
-            or source_prefix.rstrip("/") == prefix
-        ):
+        if source_prefix.startswith(prefix + "/") or source_prefix.rstrip("/") == prefix:
             return method
         # Also check the package_target label
         if f"//{prefix}:" in package_target or f"/{prefix}:" in package_target:
@@ -642,9 +631,7 @@ def _query_py_wheel_targets(repo_root: Path) -> dict[str, list[str]]:
         Dict mapping package path (e.g. ``"packages/cmk-ccc"``) to sorted list
         of target names (e.g. ``[":wheel"]``).  Empty dict on query failure.
     """
-    query = (
-        'kind("py_wheel rule", //cmk:* + //packages/...:* + //non-free/packages/...:*)'
-    )
+    query = 'kind("py_wheel rule", //cmk:* + //packages/...:* + //non-free/packages/...:*)'
     result = _run_bazel_query(
         ["bazel", "query", query, "--output=label", "--keep_going"],
         repo_root,
@@ -923,11 +910,7 @@ def _query_wheel_source_subdirs(
     all_labels: list[str] = []
     for pkg_path, target_names in wheel_targets_map.items():
         for tname in target_names:
-            label = (
-                f"//{pkg_path}{tname}"
-                if tname.startswith(":")
-                else f"//{pkg_path}:{tname}"
-            )
+            label = f"//{pkg_path}{tname}" if tname.startswith(":") else f"//{pkg_path}:{tname}"
             all_labels.append(label)
 
     if not all_labels:
@@ -1171,9 +1154,7 @@ def _enrich_wheel_specs(
             # Only reclassify if ALL wheel targets have generated sources
             if any_generated and all(
                 wheel_source_info.get(
-                    f"//{source_prefix}{t}"
-                    if t.startswith(":")
-                    else f"//{source_prefix}:{t}",
+                    f"//{source_prefix}{t}" if t.startswith(":") else f"//{source_prefix}:{t}",
                     {},
                 ).get("has_generated_sources", False)
                 for t in whl_targets
@@ -1207,8 +1188,7 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
     if unresolved:
         raise RuntimeError(
             "Enrichment failed to resolve source_prefix for the following specs "
-            "(empty source_prefix causes downstream git diff failures):\n"
-            + "\n".join(unresolved)
+            "(empty source_prefix causes downstream git diff failures):\n" + "\n".join(unresolved)
         )
 
     unresolved_dest: list[str] = []
@@ -1269,9 +1249,7 @@ def _compute_deploy_deps(
             if prefix:
                 all_prefixes.add(prefix)
                 stripped = prefix.rstrip("/")
-                if stripped.startswith("packages/") or stripped.startswith(
-                    "non-free/packages/"
-                ):
+                if stripped.startswith("packages/") or stripped.startswith("non-free/packages/"):
                     deployable_packages.add(stripped)
 
     if not deployable_packages:
@@ -1448,9 +1426,7 @@ def main(spinner: Spinner | None = None) -> int:
         _enrich_install_specs(manual.get("install_specs", []), pkg_data)
         _done(lbl, t0)
 
-        wheel_specs = _discover_wheel_specs(
-            wheel_targets_map, repo_root, is_nonfree_checkout
-        )
+        wheel_specs = _discover_wheel_specs(wheel_targets_map, repo_root, is_nonfree_checkout)
         lbl = "Enriching wheel specs"
         t0 = _begin(lbl)
         _enrich_wheel_specs(wheel_specs, wheel_targets_map, repo_root)
@@ -1499,8 +1475,7 @@ def main(spinner: Spinner | None = None) -> int:
     )
     total_elapsed = _time.monotonic() - total_start
     output.info(
-        f"Manifest generated in {total_elapsed:.1f}s "
-        f"({n_specs} specs, {len(computed_deps)} deps)"
+        f"Manifest generated in {total_elapsed:.1f}s ({n_specs} specs, {len(computed_deps)} deps)"
     )
 
     return 0

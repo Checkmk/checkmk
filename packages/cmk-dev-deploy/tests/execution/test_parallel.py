@@ -148,20 +148,15 @@ class TestOutputOrdering:
             return action
 
         steps = [
-            DeployStep(name=f"step_{label}", action=make_action(label))
-            for label in ("A", "B", "C")
+            DeployStep(name=f"step_{label}", action=make_action(label)) for label in ("A", "B", "C")
         ]
 
-        with patch(
-            "builtins.print", side_effect=lambda msg, **_kw: printed_lines.append(msg)
-        ):
+        with patch("builtins.print", side_effect=lambda msg, **_kw: printed_lines.append(msg)):
             execute_parallel(steps, max_workers=3)
 
         # Verify each step's lines appear contiguously
         for label in ("A", "B", "C"):
-            indices = [
-                i for i, line in enumerate(printed_lines) if f"{label}-line-" in line
-            ]
+            indices = [i for i, line in enumerate(printed_lines) if f"{label}-line-" in line]
             assert len(indices) == 3, (
                 f"Expected 3 lines for step {label}, found {len(indices)} in: {printed_lines}"
             )
@@ -192,14 +187,10 @@ class TestOutputOrdering:
         steps = [
             DeployStep(name="step_a", action=make_action("A")),
             DeployStep(name="step_b", action=make_action("B")),
-            DeployStep(
-                name="step_c", action=make_action("C"), depends_on=("step_a", "step_b")
-            ),
+            DeployStep(name="step_c", action=make_action("C"), depends_on=("step_a", "step_b")),
         ]
 
-        with patch(
-            "builtins.print", side_effect=lambda msg, **_kw: printed_lines.append(msg)
-        ):
+        with patch("builtins.print", side_effect=lambda msg, **_kw: printed_lines.append(msg)):
             execute_parallel(steps, max_workers=1)
 
         # Find indices for each step's output
@@ -282,14 +273,10 @@ class TestWaveFlushOrdering:
         steps = [
             DeployStep(name="step_a", action=make_action("A")),
             DeployStep(name="step_b", action=make_action("B")),
-            DeployStep(
-                name="step_c", action=make_action("C"), depends_on=("step_a", "step_b")
-            ),
+            DeployStep(name="step_c", action=make_action("C"), depends_on=("step_a", "step_b")),
         ]
 
-        with patch(
-            "builtins.print", side_effect=lambda msg, **_kw: printed_lines.append(msg)
-        ):
+        with patch("builtins.print", side_effect=lambda msg, **_kw: printed_lines.append(msg)):
             execute_parallel(steps, max_workers=3)
 
         # Find the last wave-1 line and first wave-2 line
@@ -298,9 +285,7 @@ class TestWaveFlushOrdering:
             for i, line in enumerate(printed_lines)
             if "wave-A-output" in line or "wave-B-output" in line
         ]
-        wave2_indices = [
-            i for i, line in enumerate(printed_lines) if "wave-C-output" in line
-        ]
+        wave2_indices = [i for i, line in enumerate(printed_lines) if "wave-C-output" in line]
 
         assert wave1_indices, f"Expected wave 1 output, got: {printed_lines}"
         assert wave2_indices, f"Expected wave 2 output, got: {printed_lines}"

@@ -187,9 +187,7 @@ def _materialize_symlinks(site_root: Path) -> None:
     upper = _upper_dir(site_root)
     version_dir = _version_dir(site_root)
     if version_dir is None:
-        output.warn(
-            "Could not determine version directory, skipping symlink materialization"
-        )
+        output.warn("Could not determine version directory, skipping symlink materialization")
         return
 
     version_string = version_dir.name
@@ -285,9 +283,7 @@ def _materialize_symlinks(site_root: Path) -> None:
 
     if materialized:
         names = ", ".join(f"{name}/" for name, _, _ in materialized)
-        output.info(
-            f"Materialized {len(materialized)} symlink(s) in {total_elapsed:.1f}s: {names}"
-        )
+        output.info(f"Materialized {len(materialized)} symlink(s) in {total_elapsed:.1f}s: {names}")
 
         # Set default ACLs so directories created by the deployer (after
         # _clean_package removes and rsync recreates them) inherit write

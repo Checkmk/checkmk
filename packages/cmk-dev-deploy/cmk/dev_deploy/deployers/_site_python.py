@@ -70,9 +70,7 @@ def _glob_python_lib_dir(site_root: Path) -> Path | None:
     if not candidates:
         return None
     if len(candidates) > 1:
-        output.warn(
-            f"Multiple Python lib dirs found: {candidates}, using {candidates[-1]}"
-        )
+        output.warn(f"Multiple Python lib dirs found: {candidates}, using {candidates[-1]}")
     return candidates[-1]
 
 

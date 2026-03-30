@@ -94,9 +94,7 @@ class TestPathFilteredSkip:
 
     def test_skip_when_no_files_changed_in_paths(self) -> None:
         """Deployer has paths, state has old commit, git diff returns empty -> skip."""
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/",)),
@@ -112,9 +110,7 @@ class TestPathFilteredSkip:
 
     def test_deploy_when_files_changed_in_paths(self) -> None:
         """git diff returns changed files -> deploy."""
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/",)),
@@ -122,9 +118,7 @@ class TestPathFilteredSkip:
             patch(_VALIDATE_COMMIT, return_value=None),
             patch(
                 _SUBPROCESS,
-                return_value=_completed_process(
-                    stdout="cmk/gui/views.py\ncmk/gui/models.py\n"
-                ),
+                return_value=_completed_process(stdout="cmk/gui/views.py\ncmk/gui/models.py\n"),
             ),
         ):
             result = check_skip("config_spec", REPO, SITE, state, HEAD)
@@ -139,9 +133,7 @@ class TestPathFilteredSkip:
         This is the KEY v1.3 scenario: unrelated commit moves HEAD but deployer paths unchanged.
         """
         new_head = "f" * 40  # HEAD moved forward from OLD_COMMIT
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/",)),
@@ -157,9 +149,7 @@ class TestPathFilteredSkip:
     def test_deploy_related_commit(self) -> None:
         """HEAD moved forward, git diff filtered to deployer's paths returns files -> deploy."""
         new_head = "f" * 40
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/",)),
@@ -177,9 +167,7 @@ class TestPathFilteredSkip:
 
     def test_result_contains_paths_checked(self) -> None:
         """Verify paths_checked field in SkipResult matches the source paths used."""
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/", "cmk/base/")),
@@ -193,9 +181,7 @@ class TestPathFilteredSkip:
 
     def test_result_contains_deployer_name(self) -> None:
         """Verify deployer field in SkipResult matches the deployer name."""
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("agents/",)),
@@ -222,9 +208,7 @@ class TestDirtyHashScoping:
         The dirty hash scoping ensures files outside the deployer's paths
         do not trigger a redeploy.
         """
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/",)),
@@ -240,9 +224,7 @@ class TestDirtyHashScoping:
 
     def test_deploy_when_dirty_file_inside_paths(self) -> None:
         """Dirty file in cmk/gui/foo.py AND deployer watches cmk/gui/ -> deploy."""
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/",)),
@@ -507,18 +489,14 @@ class TestGitFailures:
 
     def test_git_diff_failure_raises_error(self) -> None:
         """run_checked raises RuntimeError on non-zero git diff exit."""
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/",)),
             patch(_VALIDATE_COMMIT, return_value=None),
             patch(
                 _SUBPROCESS,
-                side_effect=RuntimeError(
-                    "git diff failed (exit 128): fatal: bad object"
-                ),
+                side_effect=RuntimeError("git diff failed (exit 128): fatal: bad object"),
             ),
             pytest.raises(RuntimeError, match="git diff failed"),
         ):
@@ -526,17 +504,13 @@ class TestGitFailures:
 
     def test_missing_old_commit_raises_error(self) -> None:
         """git cat-file -e for old commit fails -> RuntimeError raised."""
-        state = _make_state(
-            deployers={"config_spec": _make_deployer_state(deployer="config_spec")}
-        )
+        state = _make_state(deployers={"config_spec": _make_deployer_state(deployer="config_spec")})
 
         with (
             patch(_RESOLVE, return_value=("cmk/gui/",)),
             patch(
                 _VALIDATE_COMMIT,
-                side_effect=RuntimeError(
-                    f"Commit {OLD_COMMIT[:12]} no longer exists in repo"
-                ),
+                side_effect=RuntimeError(f"Commit {OLD_COMMIT[:12]} no longer exists in repo"),
             ),
             pytest.raises(RuntimeError, match="no longer exists"),
         ):

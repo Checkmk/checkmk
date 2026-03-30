@@ -159,7 +159,5 @@ class TestExtractChangedDirs:
         """Only files matching a key are included; others silently ignored."""
         deps: dict[str, list[str]] = {"cmk/gui/": []}
         with patch(_GET_DEPLOY_DEPS, return_value=deps):
-            result = extract_changed_dirs(
-                ("cmk/gui/views.py", "README.md", "tests/conftest.py")
-            )
+            result = extract_changed_dirs(("cmk/gui/views.py", "README.md", "tests/conftest.py"))
         assert result == {"cmk/gui/"}

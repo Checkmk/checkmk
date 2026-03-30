@@ -166,9 +166,7 @@ def _find_artifact_cquery(
     )
 
 
-def _find_artifact_bazel_bin(
-    package: str, output_basename: str, bazel_bin: Path
-) -> Path:
+def _find_artifact_bazel_bin(package: str, output_basename: str, bazel_bin: Path) -> Path:
     """Locate a Rust binary or Vue dist directory in ``bazel-bin``."""
     artifact = bazel_bin / package / output_basename
     if not artifact.exists():
@@ -394,9 +392,7 @@ def build_and_install(
         # Locate artifact: try bazel-bin first (Rust, Vue/frontend),
         # fall back to cquery (C++ shared libs with non-trivial output paths)
         try:
-            source = _find_artifact_bazel_bin(
-                spec.package, spec.output_basename, bazel_bin
-            )
+            source = _find_artifact_bazel_bin(spec.package, spec.output_basename, bazel_bin)
         except BazelBuildError:
             source = _find_artifact_cquery(
                 spec.package_target,

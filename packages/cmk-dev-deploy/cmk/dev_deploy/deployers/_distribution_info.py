@@ -63,9 +63,7 @@ def build_package_info_from_spec(
                 DistributionInfo(
                     distribution_name=dist_name,
                     source_subdirs=(),
-                    top_level_packages=(
-                        "cmk",
-                    ),  # All generated packages are under cmk/
+                    top_level_packages=("cmk",),  # All generated packages are under cmk/
                     deploy_mode=WheelDeployMode.GENERATED,
                     bazel_target=bazel_target,
                 ),

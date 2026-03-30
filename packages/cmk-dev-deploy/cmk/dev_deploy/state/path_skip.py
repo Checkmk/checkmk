@@ -84,9 +84,7 @@ def check_skip(
         )
 
     # Step 2b: Path-aware skip
-    return _check_skip_path_aware(
-        deployer_name, paths, repo_root, site_root, state, head_commit
-    )
+    return _check_skip_path_aware(deployer_name, paths, repo_root, site_root, state, head_commit)
 
 
 def _check_skip_head_fallback(
@@ -151,9 +149,7 @@ def _diff_and_dirty(
     return changed_files, current_dirty
 
 
-def _combine_changed(
-    changed_files: list[str], current_dirty: dict[str, str]
-) -> tuple[str, ...]:
+def _combine_changed(changed_files: list[str], current_dirty: dict[str, str]) -> tuple[str, ...]:
     """Merge committed changes and dirty files into a single list."""
     all_changed: list[str] = list(changed_files)
     for dirty_file in current_dirty:
@@ -173,9 +169,7 @@ def _check_skip_path_aware(
     """Path-aware skip logic for deployers with known source paths."""
     if state is None or deployer_name not in state.deployers:
         # First deploy: determine baseline from site build commit
-        return _check_skip_first_deploy(
-            deployer_name, paths, repo_root, site_root, head_commit
-        )
+        return _check_skip_first_deploy(deployer_name, paths, repo_root, site_root, head_commit)
 
     # Deployer has previous state
     ds = state.deployers[deployer_name]
@@ -184,9 +178,7 @@ def _check_skip_path_aware(
     # Validate the old commit still exists
     _validate_commit_exists(old_commit, repo_root)
 
-    changed_files, current_dirty = _diff_and_dirty(
-        old_commit, head_commit, paths, repo_root
-    )
+    changed_files, current_dirty = _diff_and_dirty(old_commit, head_commit, paths, repo_root)
     dirty_changed = current_dirty != ds.dirty_file_hashes
 
     if not changed_files and not dirty_changed:
@@ -205,9 +197,7 @@ def _check_skip_path_aware(
         reason = f"dirty files changed in {_format_short_paths(paths)}"
 
     all_changed = (
-        _combine_changed(changed_files, current_dirty)
-        if dirty_changed
-        else tuple(changed_files)
+        _combine_changed(changed_files, current_dirty) if dirty_changed else tuple(changed_files)
     )
 
     return SkipResult(
@@ -239,9 +229,7 @@ def _check_skip_first_deploy(
             changed_files=(),
         )
 
-    changed_files, current_dirty = _diff_and_dirty(
-        old_commit, head_commit, paths, repo_root
-    )
+    changed_files, current_dirty = _diff_and_dirty(old_commit, head_commit, paths, repo_root)
 
     return SkipResult(
         should_skip=False,

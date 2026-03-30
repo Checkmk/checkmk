@@ -66,9 +66,7 @@ def resolve_bazel_targets(
     Returns:
         A :class:`BazelTargetSet` with resolved targets and metadata.
     """
-    queryable_files = _get_bazel_queryable_files(
-        changes, frontend_supervised=frontend_supervised
-    )
+    queryable_files = _get_bazel_queryable_files(changes, frontend_supervised=frontend_supervised)
     build_packages = _get_build_file_packages(changes)
 
     if not queryable_files and not build_packages:

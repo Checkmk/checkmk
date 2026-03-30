@@ -72,9 +72,7 @@ class TestEditionsToRemove:
             ),
         ],
     )
-    def test_editions_to_remove(
-        self, edition: Edition, expected_removed: frozenset[str]
-    ) -> None:
+    def test_editions_to_remove(self, edition: Edition, expected_removed: frozenset[str]) -> None:
         assert editions_to_remove(edition) == expected_removed
 
 
@@ -97,9 +95,7 @@ def _create_edition_tree(root: Path) -> None:
 
 
 class TestFilterEditions:
-    def test_cloud_keeps_pro_ultimate_cloud_removes_ultimatemt(
-        self, tmp_path: Path
-    ) -> None:
+    def test_cloud_keeps_pro_ultimate_cloud_removes_ultimatemt(self, tmp_path: Path) -> None:
         _create_edition_tree(tmp_path)
 
         removed = filter_editions(tmp_path, Edition.CLOUD)
@@ -117,9 +113,7 @@ class TestFilterEditions:
         removed = filter_editions(tmp_path, Edition.COMMUNITY)
 
         for name in ("pro", "ultimate", "cloud", "ultimatemt"):
-            assert not (tmp_path / "nonfree" / name).exists(), (
-                f"{name} should be removed"
-            )
+            assert not (tmp_path / "nonfree" / name).exists(), f"{name} should be removed"
         assert len(removed) == 4
 
     def test_nested_structure(self, tmp_path: Path) -> None:

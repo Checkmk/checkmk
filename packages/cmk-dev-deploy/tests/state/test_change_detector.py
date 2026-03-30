@@ -267,9 +267,7 @@ class TestDetectChanges:
         """detect_changes returns empty ChangeSet when git diff produces no output."""
         call_count = {"n": 0}
 
-        def _mock_run(
-            cmd: list[str], **_kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def _mock_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
             call_count["n"] += 1
             if "cat-file" in cmd:
                 # Validate commit succeeds
@@ -277,13 +275,9 @@ class TestDetectChanges:
                     args=cmd, returncode=0, stdout="commit\n", stderr=""
                 )
             # git diff returns empty output
-            return subprocess.CompletedProcess(
-                args=cmd, returncode=0, stdout="", stderr=""
-            )
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
 
-        monkeypatch.setattr(
-            "cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run
-        )
+        monkeypatch.setattr("cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run)
 
         commit = "a" * 40
         result = detect_changes(commit, tmp_path)
@@ -299,9 +293,7 @@ class TestDetectChanges:
     ) -> None:
         """detect_changes returns ChangeSet with categorized files when changes exist."""
 
-        def _mock_run(
-            cmd: list[str], **_kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def _mock_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
             if "cat-file" in cmd:
                 return subprocess.CompletedProcess(
                     args=cmd, returncode=0, stdout="commit\n", stderr=""
@@ -314,9 +306,7 @@ class TestDetectChanges:
                 stderr="",
             )
 
-        monkeypatch.setattr(
-            "cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run
-        )
+        monkeypatch.setattr("cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run)
 
         commit = "a" * 40
         result = detect_changes(commit, tmp_path)
@@ -331,14 +321,10 @@ class TestDetectChanges:
         assert result.categories[ChangeCategory.PYTHON] == ("cmk/gui/views.py",)
         assert result.categories[ChangeCategory.TEST] == ("tests/unit/test_foo.py",)
 
-    def test_git_diff_failure_raises(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
+    def test_git_diff_failure_raises(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         """detect_changes raises ChangeDetectionError when git diff fails."""
 
-        def _mock_run(
-            cmd: list[str], **_kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def _mock_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
             if "cat-file" in cmd:
                 return subprocess.CompletedProcess(
                     args=cmd, returncode=0, stdout="commit\n", stderr=""
@@ -348,9 +334,7 @@ class TestDetectChanges:
                 args=cmd, returncode=1, stderr="fatal: error", stdout=""
             )
 
-        monkeypatch.setattr(
-            "cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run
-        )
+        monkeypatch.setattr("cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run)
 
         with pytest.raises(ChangeDetectionError, match="git diff failed"):
             detect_changes("a" * 40, tmp_path)
@@ -367,14 +351,10 @@ class TestDetectChanges:
         with pytest.raises(ChangeDetectionError, match="not found"):
             detect_changes("a" * 40, tmp_path)
 
-    def test_files_are_sorted(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
+    def test_files_are_sorted(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         """detect_changes returns files in sorted order."""
 
-        def _mock_run(
-            cmd: list[str], **_kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def _mock_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
             if "cat-file" in cmd:
                 return subprocess.CompletedProcess(
                     args=cmd, returncode=0, stdout="commit\n", stderr=""
@@ -386,9 +366,7 @@ class TestDetectChanges:
                 stderr="",
             )
 
-        monkeypatch.setattr(
-            "cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run
-        )
+        monkeypatch.setattr("cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run)
 
         result = detect_changes("a" * 40, tmp_path)
         assert result is not None
@@ -399,9 +377,7 @@ class TestDetectChanges:
     ) -> None:
         """Empty lines in git diff output are filtered out."""
 
-        def _mock_run(
-            cmd: list[str], **_kwargs: object
-        ) -> subprocess.CompletedProcess[str]:
+        def _mock_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
             if "cat-file" in cmd:
                 return subprocess.CompletedProcess(
                     args=cmd, returncode=0, stdout="commit\n", stderr=""
@@ -413,9 +389,7 @@ class TestDetectChanges:
                 stderr="",
             )
 
-        monkeypatch.setattr(
-            "cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run
-        )
+        monkeypatch.setattr("cmk.dev_deploy.state.change_detector.subprocess.run", _mock_run)
 
         result = detect_changes("a" * 40, tmp_path)
         assert result is not None

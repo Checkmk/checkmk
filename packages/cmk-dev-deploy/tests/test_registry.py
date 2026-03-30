@@ -42,15 +42,9 @@ def _mock_specs(
         spec.package = pkg
         wheel_specs.append(spec)
 
-    monkeypatch.setattr(
-        "cmk.dev_deploy.manifest.registry.get_install_specs", lambda: install_specs
-    )
-    monkeypatch.setattr(
-        "cmk.dev_deploy.manifest.registry.get_config_specs", lambda: config_specs
-    )
-    monkeypatch.setattr(
-        "cmk.dev_deploy.manifest.registry.get_wheel_specs", lambda: wheel_specs
-    )
+    monkeypatch.setattr("cmk.dev_deploy.manifest.registry.get_install_specs", lambda: install_specs)
+    monkeypatch.setattr("cmk.dev_deploy.manifest.registry.get_config_specs", lambda: config_specs)
+    monkeypatch.setattr("cmk.dev_deploy.manifest.registry.get_wheel_specs", lambda: wheel_specs)
 
 
 # ---------------------------------------------------------------------------

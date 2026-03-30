@@ -37,9 +37,7 @@ def execute_parallel(
 
     # Build dependency graph and action lookup
     graph: dict[str, set[str]] = {step.name: set(step.depends_on) for step in steps}
-    actions: dict[str, Callable[[], str | None]] = {
-        step.name: step.action for step in steps
-    }
+    actions: dict[str, Callable[[], str | None]] = {step.name: step.action for step in steps}
 
     ts = TopologicalSorter(graph)
     ts.prepare()  # raises CycleError if circular
@@ -81,9 +79,7 @@ def execute_parallel(
                         ts.done(name)
                     else:
                         spinner.add_label(name)
-                        futures[
-                            pool.submit(_run_step, name, actions[name], cycle_start)
-                        ] = name
+                        futures[pool.submit(_run_step, name, actions[name], cycle_start)] = name
 
                 # Wait for all futures in this wave
                 wave_results: list[StepResult] = []
@@ -113,9 +109,7 @@ def execute_parallel(
     return results
 
 
-def _run_step(
-    name: str, action: Callable[[], str | None], cycle_start: float
-) -> StepResult:
+def _run_step(name: str, action: Callable[[], str | None], cycle_start: float) -> StepResult:
     """Execute a single step action, capturing timing, output, and exceptions."""
     from cmk.dev_deploy.core.output import flush_buffer, start_buffering
 

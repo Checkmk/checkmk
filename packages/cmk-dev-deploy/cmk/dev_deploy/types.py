@@ -32,9 +32,7 @@ class Edition(str, Enum):
             return cls(suffix)
         except ValueError:
             valid = ", ".join(e.value for e in cls)
-            raise ValueError(
-                f"Unknown edition suffix: {suffix!r}. Valid editions: {valid}"
-            )
+            raise ValueError(f"Unknown edition suffix: {suffix!r}. Valid editions: {valid}")
 
     def matches(self, constraint: Collection[str] | None) -> bool:
         """Return True if this edition satisfies *constraint* (None = all match)."""
@@ -87,8 +85,7 @@ class ChangeSet:
         deployable = {
             cat
             for cat in self.categories
-            if cat
-            not in (ChangeCategory.TEST, ChangeCategory.OTHER, ChangeCategory.BUILD)
+            if cat not in (ChangeCategory.TEST, ChangeCategory.OTHER, ChangeCategory.BUILD)
         }
         return deployable == {ChangeCategory.PYTHON} or len(deployable) == 0
 

@@ -80,9 +80,7 @@ _TEST_SERVICE_SPECS: tuple[ServiceSpec, ...] = (
         ],
     ),
     _make_service_spec("agents/", [(Service.CRONTAB, ServiceAction.RELOAD)]),
-    _make_service_spec(
-        "packages/livestatus", [(Service.NAGIOS, ServiceAction.RESTART)]
-    ),
+    _make_service_spec("packages/livestatus", [(Service.NAGIOS, ServiceAction.RESTART)]),
 )
 
 
@@ -144,9 +142,7 @@ class TestResolveServicesWithDeployedDeployers:
             },
         )
         site = _make_site()
-        result = resolve_services(
-            changes, None, site, deployed_deployers={"wheel_spec"}
-        )
+        result = resolve_services(changes, None, site, deployed_deployers={"wheel_spec"})
         services = {svc for svc, _ in result}
         # cmk/foo.py is PYTHON -> apache (wheel_spec handles PYTHON category)
         assert Service.APACHE in services
@@ -165,9 +161,7 @@ class TestResolveServicesWithDeployedDeployers:
             },
         )
         site = _make_site()
-        result = resolve_services(
-            changes, None, site, deployed_deployers={"config_spec"}
-        )
+        result = resolve_services(changes, None, site, deployed_deployers={"config_spec"})
         services = {svc for svc, _ in result}
         # agents/bar.cfg is CONFIG -> crontab
         assert Service.CRONTAB in services
@@ -186,9 +180,7 @@ class TestResolveServicesWithDeployedDeployers:
         )
         targets = _make_targets(("packages/livestatus",))
         site = _make_site()
-        result = resolve_services(
-            changes, targets, site, deployed_deployers={"install_spec"}
-        )
+        result = resolve_services(changes, targets, site, deployed_deployers={"install_spec"})
         services = {svc for svc, _ in result}
         assert Service.NAGIOS in services
 
@@ -205,9 +197,7 @@ class TestResolveServicesWithDeployedDeployers:
         )
         targets = _make_targets(("packages/livestatus",))
         site = _make_site()
-        result = resolve_services(
-            changes, targets, site, deployed_deployers={"wheel_spec"}
-        )
+        result = resolve_services(changes, targets, site, deployed_deployers={"wheel_spec"})
         services = {svc for svc, _ in result}
         # wheel_spec ran -> apache from cmk/foo.py
         assert Service.APACHE in services

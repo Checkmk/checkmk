@@ -190,3 +190,45 @@ def test_merge_if_counters_sections() -> None:
     assert result[1]["interface2"]["failover_ports"] == [
         {"node": "node_name", "port": "port2", "link-status": "down"}
     ]
+
+
+@pytest.mark.parametrize(
+    "failover_policy",
+    [
+        pytest.param("default", id="default policy"),
+        pytest.param("broadcast_domain_only", id="broadcast_domain_only policy"),
+        pytest.param("home_node_only", id="home_node_only policy"),
+    ],
+)
+def test_missing_broadcast_domain_sets_flag(failover_policy: str) -> None:
+    """Interfaces whose port has no broadcast domain get missing_broadcast_domain=True
+    and no failover_ports entry (for policies that rely on the broadcast domain.)"""
+    port_no_bd = PortModelFactory.build(
+        port_type="physical",
+        uuid="uuid-no-bd",
+        node_name="node1",
+        name="e0b",
+        state="up",
+        speed=1000,
+        mac_address="00:0c:29:12:34:59",
+        broadcast_domain=None,
+    )
+    iface_no_bd = IpInterfaceModelFactory.build(
+        name="lif_no_bd",
+        uuid="uuid-lif-no-bd",
+        state="up",
+        enabled=True,
+        node_name="node1",
+        port_name="e0b",
+        failover=failover_policy,
+        home_node="node1",
+        home_port="e0b",
+        is_home=True,
+    )
+
+    (_, extra_data) = _merge_if_counters_sections(
+        {iface_no_bd.name: iface_no_bd}, {port_no_bd.item_name(): port_no_bd}, None, 0.0
+    )
+
+    assert extra_data["lif_no_bd"].get("missing_broadcast_domain") is True
+    assert "failover_ports" not in extra_data["lif_no_bd"]

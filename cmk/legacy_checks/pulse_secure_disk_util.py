@@ -3,16 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+from collections.abc import Mapping
+from typing import Any
 
-from collections.abc import Iterable, Mapping
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.pulse_secure import lib as pulse_secure
-
-check_info = {}
 
 Section = Mapping[str, int]
 
@@ -23,26 +28,25 @@ def parse_pulse_secure_disk_util(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, METRIC_PULSE_SECURE_DISK)
 
 
-def discover_pulse_secure_disk_util(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_pulse_secure_disk_util(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_pulse_secure_disk_util(item, params, parsed):
-    if not parsed:
-        return None
+def check_pulse_secure_disk_util(params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not section:
+        return
 
-    yield check_levels(
-        parsed[METRIC_PULSE_SECURE_DISK],
-        METRIC_PULSE_SECURE_DISK,
-        params.get("upper_levels"),
-        infoname="Percentage of disk space used",
-        human_readable_func=render.percent,
+    yield from check_levels(
+        section[METRIC_PULSE_SECURE_DISK],
+        levels_upper=params.get("upper_levels"),
+        metric_name=METRIC_PULSE_SECURE_DISK,
+        render_func=render.percent,
+        label="Percentage of disk space used",
     )
-    return None
 
 
-check_info["pulse_secure_disk_util"] = LegacyCheckDefinition(
+snmp_section_pulse_secure_disk_util = SimpleSNMPSection(
     name="pulse_secure_disk_util",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
@@ -50,6 +54,11 @@ check_info["pulse_secure_disk_util"] = LegacyCheckDefinition(
         oids=["25"],
     ),
     parse_function=parse_pulse_secure_disk_util,
+)
+
+
+check_plugin_pulse_secure_disk_util = CheckPlugin(
+    name="pulse_secure_disk_util",
     service_name="Pulse Secure disk utilization",
     discovery_function=discover_pulse_secure_disk_util,
     check_function=check_pulse_secure_disk_util,

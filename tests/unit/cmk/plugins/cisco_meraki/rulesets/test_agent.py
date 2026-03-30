@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_rulespec
 from cmk.gui.watolib.rulespecs import Rulespec
 from cmk.plugins.cisco_meraki.rulesets.agent import (
     _check_for_duplicates,

@@ -7,7 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
+from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,

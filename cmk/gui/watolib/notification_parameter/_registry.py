@@ -25,7 +25,7 @@ from cmk.gui.form_specs.unstable import Topic as TopicExtended
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
-from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
+from cmk.gui.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.valuespec import Migrate as ValueSpecMigrate
 from cmk.gui.watolib.notification_parameter._base import NotificationParameter
@@ -62,7 +62,7 @@ class NotificationParameterRegistry(Registry[NotificationParameter | Notificatio
                 )
             )
         else:
-            from cmk.gui.utils.rule_specs.registering import register_plugin
+            from cmk.gui.rule_specs.registering import register_plugin
 
             # legacy NotificationParameter with new FormSpec
             # We create a v1 RuleSpec around the FormSpec that gets converted to a legacy RuleSpec

@@ -11,7 +11,7 @@ from functools import lru_cache
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.gui.utils.rule_specs import legacy_converter
+from cmk.gui.rule_specs import legacy_converter
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.plugins.emailchecks.rulesets.active_check_mail import rule_spec_mail

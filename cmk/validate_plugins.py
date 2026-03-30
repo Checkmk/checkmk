@@ -40,7 +40,7 @@ from cmk.gui.form_specs import (  # astrein: disable=cmk-module-layer-violation
     RawDiskData,
     VisitorOptions,
 )
-from cmk.gui.utils.rule_specs.types import RuleSpec  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.rule_specs.types import RuleSpec  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.utils.script_helpers import gui_context  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.watolib.rulespecs import (  # astrein: disable=cmk-module-layer-violation
     FormSpecNotImplementedError,

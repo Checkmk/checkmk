@@ -27,8 +27,7 @@ from cmk.gui.form_specs.unstable import (
 )
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
-from cmk.gui.utils.rule_specs.legacy_converter import (
+from cmk.gui.rule_specs.legacy_converter import (
     _convert_to_custom_group,
     _convert_to_legacy_levels,
     _convert_to_legacy_rulespec_group,
@@ -36,7 +35,8 @@ from cmk.gui.utils.rule_specs.legacy_converter import (
     convert_to_legacy_rulespec,
     convert_to_legacy_valuespec,
 )
-from cmk.gui.utils.rule_specs.types import RuleSpec as APIV1RuleSpec
+from cmk.gui.rule_specs.types import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import LegacyBinaryUnit, LegacyDataSize
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups

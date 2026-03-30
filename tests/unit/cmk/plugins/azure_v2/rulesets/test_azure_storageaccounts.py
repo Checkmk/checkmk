@@ -5,7 +5,7 @@
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_rulespec
 from cmk.plugins.azure_v2.rulesets.azure_storageaccounts import (
     rule_spec_azure_storageaccounts_flow,
     rule_spec_azure_storageaccounts_performance,

@@ -9,9 +9,9 @@ from pathlib import Path
 from cmk.ccc.debug import enabled as debug_enabled
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_rulespec
+from cmk.gui.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.utils import add_failed_plugin
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
-from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.watolib.rulespecs import RulespecRegistry
 
 

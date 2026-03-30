@@ -6,7 +6,7 @@ from typing import Final
 
 import cmk.plugins.azure_deprecated.rulesets.azure as azure_ruleset
 from cmk.ccc.version import Edition
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
 AZURE_VS_RULESET_VALUE: Final = {
     "authority": "global",

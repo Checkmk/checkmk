@@ -68,6 +68,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
+from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.search import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -102,7 +103,6 @@ from cmk.gui.utils.notifications import (
     SUPPORT_NOTIFICATIONS_ENTRIES,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (

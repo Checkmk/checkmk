@@ -35,12 +35,12 @@ from cmk.gui.form_specs.visitors.recomposers.oauth2_connection import (
 from cmk.gui.graphing import MetricName
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
+from cmk.gui.rule_specs.types import RuleSpec as APIV1RuleSpec
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
 from cmk.gui.utils.autocompleter_config import (
     AutocompleterConfig,
     ContextAutocompleterConfig,
 )
-from cmk.gui.utils.rule_specs.types import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary

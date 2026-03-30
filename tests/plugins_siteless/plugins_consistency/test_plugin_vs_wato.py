@@ -19,7 +19,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, InventoryPlu
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
-from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
+from cmk.gui.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
 from cmk.gui.wato import RulespecGroupDiscoveryCheckParameters
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,

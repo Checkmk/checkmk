@@ -67,6 +67,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, PermissionRegistry
+from cmk.gui.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
 from cmk.gui.search import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -88,7 +89,6 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,

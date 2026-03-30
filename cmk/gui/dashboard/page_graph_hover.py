@@ -34,7 +34,7 @@ from cmk.gui.graphing._graph_display_config import GraphDisplayConfigHTML
 from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._html_render import (
     make_graph_time_range,
-    render_graph_hover,
+    render_graph_hover_html,
 )
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
@@ -118,7 +118,7 @@ class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedPage):
             )[1]
             time_range = make_graph_time_range((start_time, end_time), height_in_ex)
 
-            render_graph_hover(
+            render_graph_hover_html(
                 recipes[0].recipe,
                 time_range,
                 metrics_from_api,

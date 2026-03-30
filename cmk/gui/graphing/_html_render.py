@@ -812,8 +812,8 @@ def _graph_margin_ex(
     )
 
 
-@tracer.instrument("graphing.render_graph")
-def render_graph(
+@tracer.instrument("graphing.render_graph_html")
+def render_graph_html(
     request: Request,
     render_state: GraphRenderState,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -1180,7 +1180,7 @@ class AjaxRenderGraph(AjaxPage):
         parameters (``start_time``, ``end_time``, ``step``, ``range_from``,
         ``range_to``, ``resize_x``, ``resize_y``, ``pin``,
         ``consolidation_function``) are sent as additional POST fields and
-        consumed directly by :func:`render_graph` via the request object.
+        consumed directly by :func:`render_graph_html` via the request object.
         """
         api_request = ctx.request.get_request()
         render_state = GraphRenderState.model_validate(api_request)
@@ -1193,7 +1193,7 @@ class AjaxRenderGraph(AjaxPage):
         backend_time_series_fetcher = metric_backend_registry[
             str(edition(paths.omd_root))
         ].get_time_series_fetcher()
-        return render_graph(
+        return render_graph_html(
             ctx.request,
             render_state,
             metrics_from_api,
@@ -1440,7 +1440,7 @@ class AjaxGraphValuesAtTime(Page):
         render_state = GraphRenderState.model_validate(
             json.loads(ctx.request.get_str_input_mandatory("context"))
         )
-        render_graph_hover(
+        render_graph_hover_html(
             render_state.recipe,
             render_state.time_range,
             metrics_from_api,
@@ -1454,8 +1454,8 @@ class AjaxGraphValuesAtTime(Page):
         return None
 
 
-@tracer.instrument("graphing.render_graph_hover")
-def render_graph_hover(
+@tracer.instrument("graphing.render_graph_hover_html")
+def render_graph_hover_html(
     recipe: GraphRecipe,
     time_range: GraphTimeRange,
     registered_metrics: Mapping[str, RegisteredMetric],

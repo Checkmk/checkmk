@@ -205,8 +205,12 @@ const itemPropState = ref(createPanelState(itemPanelConfig))
       </CmkAccordion>
 
       <template #properties>
-        <UclPropertiesPanel v-model="propState" :config="panelConfig" />
-        <UclPropertiesPanel v-model="itemPropState" :config="itemPanelConfig" />
+        <UclPropertiesPanel v-model="propState" title="CmkAccordion" :config="panelConfig" />
+        <UclPropertiesPanel
+          v-model="itemPropState"
+          title="CmkAccordionItem"
+          :config="itemPanelConfig"
+        />
       </template>
     </UclDetailPageComponent>
 

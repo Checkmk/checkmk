@@ -20,7 +20,7 @@ import CmkSwitch from '@/components/CmkSwitch.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
-const props = defineProps<{ config: PanelConfig }>()
+const { config, title = 'Properties' } = defineProps<{ config: PanelConfig; title?: string }>()
 
 const state = defineModel<PanelState>({ required: true })
 
@@ -31,7 +31,7 @@ const route = useRoute()
 
 const stringArrayInputs = ref<Record<string, string>>(
   Object.fromEntries(
-    Object.entries(props.config)
+    Object.entries(config)
       .filter(([, def]) => def.type === 'string-array')
       .map(([key, def]) => [key, formatStringArray(def.initialState as string[])])
   )
@@ -55,7 +55,7 @@ function handleStringArrayInput(key: string, raw: string) {
 
 const url = computed(() => {
   const urlQuery: Record<string, string | string[]> = {}
-  for (const [configKey, configValue] of Object.entries(props.config)) {
+  for (const [configKey, configValue] of Object.entries(config)) {
     const stateValue = state.value[configKey]
     if (configValue.initialState !== stateValue && stateValue !== undefined) {
       if (typeof stateValue === 'boolean') {
@@ -78,7 +78,7 @@ const url = computed(() => {
 })
 
 onMounted(() => {
-  for (const [configKey, configValue] of Object.entries(props.config)) {
+  for (const [configKey, configValue] of Object.entries(config)) {
     const urlValue = route.query[configKey]
     if (urlValue !== undefined && urlValue !== null) {
       if (configValue.type === 'boolean') {
@@ -101,7 +101,7 @@ onMounted(() => {
 
 <template>
   <div class="ucl-properties-panel__properties-panel">
-    <CmkHeading type="h4">Properties</CmkHeading>
+    <CmkHeading type="h4">{{ title }}</CmkHeading>
 
     <div class="ucl-properties-panel__copy">
       <CmkCopy :text="url">

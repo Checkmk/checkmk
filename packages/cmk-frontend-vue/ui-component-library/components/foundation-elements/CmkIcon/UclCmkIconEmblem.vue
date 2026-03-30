@@ -107,8 +107,12 @@ const iconPropState = ref(createPanelState(iconPanelConfig))
       </CmkIconEmblem>
 
       <template #properties>
-        <UclPropertiesPanel v-model="emblemPropState" :config="emblemPanelConfig" />
-        <UclPropertiesPanel v-model="iconPropState" :config="iconPanelConfig" />
+        <UclPropertiesPanel
+          v-model="emblemPropState"
+          title="CmkIconEmblem"
+          :config="emblemPanelConfig"
+        />
+        <UclPropertiesPanel v-model="iconPropState" title="CmkIcon" :config="iconPanelConfig" />
       </template>
     </UclDetailPageComponent>
 

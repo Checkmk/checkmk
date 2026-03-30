@@ -716,6 +716,10 @@ table.data.availability {
   td.state span {
     font-weight: $font-weight-default;
   }
+
+  td.number span {
+    border: none !important;
+  }
 }
 
 table.data td.flapping,

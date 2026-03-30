@@ -259,9 +259,8 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   const versionBanner = versionMismatch
     ? `<div class="banner">
         <span class="banner-icon">&#9888;</span>
-        <span class="banner-text">Update available: <b>v${esc(versionMismatch.installed)}</b> → <b>v${esc(versionMismatch.workspace)}</b>
-          <br><button class="btn btn-small" data-action="exec" data-id="cmk.rebuildExtension">Rebuild &amp; Install</button>
-        </span>
+        <span class="banner-text">Update available: <b>v${esc(versionMismatch.installed)}</b> → <b>v${esc(versionMismatch.workspace)}</b></span>
+        <button class="btn btn-small" data-action="exec" data-id="cmk.rebuildExtension"><span class="codicon codicon-package"></span> Install</button>
       </div>`
     : ''
 
@@ -281,9 +280,9 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   }
   let settingsHtml: string
   if (settingsMismatches.length === 0) {
-    settingsHtml = `<div class="card ok"><span class="card-icon">&#10003;</span><span class="card-label">All settings match</span></div>`
+    settingsHtml = `<div class="build-row ok"><span class="card-icon">&#10003;</span><span class="build-name">All settings match</span></div>`
   } else {
-    const applyBtn = `<div class="apply-wrapper"><button class="btn" data-action="apply-all-mismatches">Apply All (${settingsMismatches.length})</button></div>`
+    const applyBtn = `<div class="apply-wrapper"><button class="btn" data-action="apply-all-mismatches"><span class="codicon codicon-wrench"></span> Apply All (${settingsMismatches.length})</button></div>`
     const grouped = new Map<string, SettingsMismatch[]>()
     for (const m of settingsMismatches) {
       const key = m.family
@@ -319,7 +318,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         </div>`
           })
           .join('')
-        const applyFamilyBtn = `<div class="apply-family-wrapper"><button class="btn btn-small" data-action="apply-family-mismatches" data-family="${esc(family)}">Apply ${family} (${mismatches.length})</button></div>`
+        const applyFamilyBtn = `<div class="apply-family-wrapper"><button class="btn btn-small" data-action="apply-family-mismatches" data-family="${esc(family)}"><span class="codicon codicon-wrench"></span> Apply ${family} (${mismatches.length})</button></div>`
         return `<div class="ext-family">
         <div class="ext-family-header stale" data-action="toggle-accordion">
           <span class="card-icon">&#9888;</span>
@@ -345,7 +344,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
           const eCls = e.installed ? 'ext-ok' : 'ext-missing'
           const installBtn = e.installed
             ? ''
-            : `<button class="btn btn-small" data-action="install-ext" data-id="${e.id}">Install</button>`
+            : `<button class="btn btn-small" data-action="install-ext" data-id="${e.id}"><span class="codicon codicon-package"></span> Install</button>`
           return `<div class="ext-row ${eCls}"><span class="ext-icon">${eIcon}</span><span class="ext-id">${e.id}</span>${installBtn}</div>`
         })
         .join('')

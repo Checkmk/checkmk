@@ -52,7 +52,15 @@ export function wrap(
   .codicon-debug-stop::before { content: "\\ead7"; }
   .codicon-debug-restart::before { content: "\\ead2"; }
   .codicon-debug-disconnect::before { content: "\\ead0"; }
-  .codicon-add::before { content: "\\ea60"; }`
+  .codicon-add::before { content: "\\ea60"; }
+  .codicon-settings-gear::before { content: "\\eb51"; }
+  .codicon-package::before { content: "\\eb29"; }
+  .codicon-shield::before { content: "\\eb53"; }
+  .codicon-tools::before { content: "\\eb6d"; }
+  .codicon-sync::before { content: "\\ea77"; }
+  .codicon-gear::before { content: "\\eaf8"; }
+  .codicon-symbol-property::before { content: "\\eb65"; }
+  .codicon-run-all::before { content: "\\eb9e"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">

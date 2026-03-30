@@ -46,16 +46,32 @@ export function rebuildExtension(): void {
       `code --profile "${profile}" --install-extension ${VSIX_PATH} --force`
   )
   terminal.show()
+
+  const disposable = vscode.window.onDidCloseTerminal((closedTerm) => {
+    if (closedTerm === terminal) {
+      disposable.dispose()
+      vscode.window
+        .showInformationMessage(
+          'CMK Extension updated. Reload window to activate the new version.',
+          'Reload Window'
+        )
+        .then((choice) => {
+          if (choice === 'Reload Window') {
+            vscode.commands.executeCommand('workbench.action.reloadWindow')
+          }
+        })
+    }
+  })
 }
 
 function promptRebuild(installedVersion: string, wsVersion: string): void {
   vscode.window
     .showWarningMessage(
       `CMK Extension: installed v${installedVersion} ≠ workspace v${wsVersion}`,
-      'Rebuild & Install'
+      'Install'
     )
     .then((choice) => {
-      if (choice === 'Rebuild & Install') {
+      if (choice === 'Install') {
         rebuildExtension()
       }
     })

@@ -72,7 +72,7 @@ export function updateIssues(
     items.push({
       label: 'CMK Extension',
       description: `v${versionMismatch.installed} → v${versionMismatch.workspace}`,
-      tooltip: `Installed v${versionMismatch.installed} ≠ workspace v${versionMismatch.workspace}. Click to rebuild & install.`,
+      tooltip: `Installed v${versionMismatch.installed} ≠ workspace v${versionMismatch.workspace}. Click to install.`,
       icon: 'extensions',
       iconColor: warnColor,
       command: 'cmk.rebuildExtension'

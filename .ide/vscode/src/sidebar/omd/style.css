@@ -99,6 +99,7 @@
   border: 1px solid transparent;
   transition: border-color 0.1s;
 }
+
 .svc-row:hover {
   border-color: var(--vscode-list-hoverBackground);
 }
@@ -161,6 +162,7 @@
   background: var(--cmk-yellow-dim);
   border-color: var(--cmk-yellow);
 }
+
 .proxy-badge {
   display: inline-flex;
   align-items: center;
@@ -176,22 +178,27 @@
   cursor: pointer;
   border: none;
 }
+
 .proxy-badge:hover {
   background: var(--cmk-red);
   color: #fff;
 }
+
 .proxy-badge .codicon {
   font-size: 12px;
 }
+
 @keyframes proxy-pulse {
   0%,
   100% {
     opacity: 0.4;
   }
+
   50% {
     opacity: 1;
   }
 }
+
 .proxy-badge-starting {
   animation: proxy-pulse 1.5s ease-in-out infinite;
   color: var(--vscode-descriptionForeground);

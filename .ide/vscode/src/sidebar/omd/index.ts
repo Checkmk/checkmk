@@ -126,13 +126,13 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   const devSiteBanner = !devSiteTools?.installed
     ? `<div class="banner banner-info">
         <span>cmk-dev-site not installed — required for site creation.</span>
-        <button class="btn btn-small" data-action="omd-install-devsite">Install</button>
+        <button class="btn btn-small" data-action="omd-install-devsite"><span class="codicon codicon-package"></span> Install</button>
       </div>`
     : ''
 
   if (!omdSites || omdSites.length === 0) {
     const createBtn = devSiteTools?.installed
-      ? `<div style="margin-top:8px"><button class="btn btn-small" data-action="omd-create-site">Create Site</button></div>`
+      ? `<div style="margin-top:8px"><button class="btn btn-small" data-action="omd-create-site"><span class="codicon codicon-add"></span> Create Site</button></div>`
       : ''
     return wrap(
       nonce,
@@ -149,7 +149,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   const authBanner = needsAuth
     ? `<div class="banner banner-warn">
         <span>sudo credentials not cached — service status unavailable.</span>
-        <button class="btn btn-small" data-action="omd-auth">Authenticate (YubiKey)</button>
+        <button class="btn btn-small" data-action="omd-auth"><span class="codicon codicon-shield"></span> Authenticate (YubiKey)</button>
        </div>`
     : ''
 
@@ -204,9 +204,9 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         })
         .join('')
       const siteActions = `<div class="omd-site-actions">
-      <button class="btn btn-small" data-action="omd-site-action" data-omd-action="start" data-site="${esc(site.name)}">Start All</button>
-      <button class="btn btn-small" data-action="omd-site-action" data-omd-action="stop" data-site="${esc(site.name)}">Stop All</button>
-      <button class="btn btn-small" data-action="omd-site-action" data-omd-action="restart" data-site="${esc(site.name)}">Restart All</button>
+      <button class="btn btn-small" data-action="omd-site-action" data-omd-action="start" data-site="${esc(site.name)}"><span class="codicon codicon-run-all"></span> Start All</button>
+      <button class="btn btn-small" data-action="omd-site-action" data-omd-action="stop" data-site="${esc(site.name)}"><span class="codicon codicon-debug-stop"></span> Stop All</button>
+      <button class="btn btn-small" data-action="omd-site-action" data-omd-action="restart" data-site="${esc(site.name)}"><span class="codicon codicon-debug-restart"></span> Restart All</button>
     </div>`
       const detail = `<span class="omd-detail">${esc(site.version)}${site.core ? ' · ' + esc(site.core) : ''}</span>`
       return `<div class="omd-site">

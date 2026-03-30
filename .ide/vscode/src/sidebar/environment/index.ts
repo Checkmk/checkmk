@@ -117,7 +117,7 @@ export async function handleMessage(
   }
 }
 
-export function render(state: StateCache): string {
+export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: string): string {
   const nonce = getNonce()
   const { buildStatus, environment, onboarding, onboardingDismissed } = state
 
@@ -130,7 +130,7 @@ export function render(state: StateCache): string {
         description: 'Install bazel, pyenv, docker, gcc via <code>make setup</code>',
         done: onboarding.systemDone,
         action: 'run-make-setup',
-        actionLabel: 'Run make setup',
+        actionLabel: '<span class="codicon codicon-play"></span> Run make setup',
         actionId: ''
       },
       {
@@ -139,7 +139,7 @@ export function render(state: StateCache): string {
         description: 'Create the Python virtual environment',
         done: onboarding.venvDone,
         action: 'exec',
-        actionLabel: 'Build .venv',
+        actionLabel: '<span class="codicon codicon-wrench"></span> Build .venv',
         actionId: 'cmk.buildVenv'
       },
       {
@@ -148,7 +148,7 @@ export function render(state: StateCache): string {
         description: 'Install extensions and configure settings',
         done: onboarding.ideDone,
         action: 'exec',
-        actionLabel: 'Configure IDE',
+        actionLabel: '<span class="codicon codicon-settings-gear"></span> Configure IDE',
         actionId: 'cmk.setupPicker'
       }
     ]
@@ -160,7 +160,7 @@ export function render(state: StateCache): string {
           ? '<span class="step-icon done">&#10003;</span>'
           : `<span class="step-icon ${isCurrent ? 'current' : 'pending'}">${i + 1}</span>`
         const actionBtn = isCurrent
-          ? `<button class="btn btn-small" data-action="${s.action}" data-id="${s.actionId}">${s.actionLabel}</button>`
+          ? `<button class="btn btn-small btn-ghost" data-action="${s.action}" data-id="${s.actionId}">${s.actionLabel}</button>`
           : ''
         return `<div class="onboarding-step ${s.done ? 'done' : ''} ${isCurrent ? 'current' : ''}">
         ${icon}
@@ -203,7 +203,7 @@ export function render(state: StateCache): string {
     <div class="env-row">
       <span class="env-label">${r.label}</span>
       <span class="env-value">${r.value}${'detail' in r && r.detail ? ` <span class="env-detail" title="${r.detail}">${r.detail}</span>` : ''}</span>
-      ${'action' in r && r.action ? `<button class="btn btn-small" data-action="${r.action}" data-id="${r.actionId}">${r.actionLabel}</button>` : ''}
+      ${'action' in r && r.action ? `<button class="btn btn-small btn-icon" data-action="${r.action}" data-id="${r.actionId}" title="${r.actionLabel}"><span class="codicon codicon-sync"></span></button>` : ''}
     </div>`
     )
     .join('')
@@ -211,18 +211,26 @@ export function render(state: StateCache): string {
   const configCommands = new Set(['cmk.regenerateMypyConfig', 'cmk.regeneratePrettierConfig'])
   const buildCards = Object.entries(buildStatus)
     .map(([, s]) => {
-      const icon = s.ok ? '&#10003;' : '&#9888;'
+      const icon = s.ok ? '&#10003;' : '&#10007;'
       const cls = s.ok ? 'ok' : 'stale'
-      const btnLabel = configCommands.has(s.commandId) ? 'Regenerate' : 'Build'
-      return `<div class="card ${cls}">
+      const isRegen = configCommands.has(s.commandId)
+      const btnIcon = 'codicon-sync'
+      const btnTitle = isRegen ? 'Regenerate' : 'Build'
+      return `<div class="build-row ${cls}">
       <span class="card-icon">${icon}</span>
-      <span class="card-label">${s.label}</span>
-      <button class="btn btn-small" data-action="exec" data-id="${s.commandId}">${btnLabel}</button>
+      <span class="build-name">${s.label}</span>
+      <button class="btn btn-small btn-icon" data-action="exec" data-id="${s.commandId}" title="${btnTitle}"><span class="codicon ${btnIcon}"></span></button>
     </div>`
     })
     .join('')
 
   const divider = buildCards ? '<div class="section-divider"></div>' : ''
 
-  return wrap(nonce, sectionCss, `${onboardingHtml}${envRows}${divider}${buildCards}`)
+  return wrap(
+    nonce,
+    sectionCss,
+    `${onboardingHtml}${envRows}${divider}${buildCards}`,
+    codiconUri,
+    cspSource
+  )
 }

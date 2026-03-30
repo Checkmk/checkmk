@@ -3,16 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 from cmk.plugins.pulse_secure import lib as pulse_secure
-
-check_info = {}
 
 
 def parse_pulse_secure_temp(string_table: StringTable) -> Mapping[str, int] | None:
@@ -21,18 +25,25 @@ def parse_pulse_secure_temp(string_table: StringTable) -> Mapping[str, int] | No
 
 # no get_parsed_item_data because the temperature can be exactly 0 for some devices, which would
 # result in "UNKN - Item not found in SNMP data", because parsed[item] evaluates to False
-def check_pulse_secure_temp(item, params, parsed):
-    if not parsed:
-        return None
+def check_pulse_secure_temp(
+    item: str, params: TempParamType, section: Mapping[str, int]
+) -> CheckResult:
+    if not section:
+        return
 
-    return check_temperature(parsed[item], params, "pulse_secure_ive_temperature")
+    yield from check_temperature(
+        reading=float(section[item]),
+        params=params,
+        unique_name=f"pulse_secure_ive_temperature_{item}",
+        value_store=get_value_store(),
+    )
 
 
-def discover_pulse_secure_temp(section):
-    yield from ((item, {}) for item in section)
+def discover_pulse_secure_temp(section: Mapping[str, int]) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["pulse_secure_temp"] = LegacyCheckDefinition(
+snmp_section_pulse_secure_temp = SimpleSNMPSection(
     name="pulse_secure_temp",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
@@ -40,6 +51,11 @@ check_info["pulse_secure_temp"] = LegacyCheckDefinition(
         oids=["42"],
     ),
     parse_function=parse_pulse_secure_temp,
+)
+
+
+check_plugin_pulse_secure_temp = CheckPlugin(
+    name="pulse_secure_temp",
     service_name="Pulse Secure %s Temperature",
     discovery_function=discover_pulse_secure_temp,
     check_function=check_pulse_secure_temp,

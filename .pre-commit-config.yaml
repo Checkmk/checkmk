@@ -131,10 +131,12 @@ repos:
             require_serial: true
             verbose: true
             stages: [pre-commit, manual]
-          # Bazel files only changed: lint warnings (format already handled above)
+          # Bazel files only changed: fix lint issues (load ordering, unused loads, etc.)
+          # Uses //:buildifier which embeds --lint=fix, going beyond the formatting-only
+          # pass already done by the format hook above.
           - id: buildifier_lint
             name: Lint bazel files
-            entry: bazel run //bazel/tools:buildifier -- --lint=warn
+            entry: bazel run //:buildifier
             language: system
             types: ["bazel", "file", "non-executable", "text"]
             verbose: true

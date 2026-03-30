@@ -39,5 +39,5 @@ fi
 mapfile -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | sort -u)
 
 pushd "${REPO_PATH}" >/dev/null
-bazel lint --fixes=false -- "${PACKAGES[@]}"
+bazel lint -- "${PACKAGES[@]}"
 popd >/dev/null

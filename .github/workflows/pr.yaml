@@ -22,7 +22,7 @@ jobs:
         timeout-minutes: 90
         strategy:
             matrix:
-                os: [ubuntu-latest-m]
+                os: [ubuntu-24.04]
         steps:
             - name: Remove unnecessary build tools
               run: |

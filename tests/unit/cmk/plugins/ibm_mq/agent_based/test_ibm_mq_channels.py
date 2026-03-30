@@ -3,24 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Result, Service, State
-from cmk.legacy_checks.ibm_mq_channels import (
+from cmk.plugins.ibm.agent_based.ibm_mq_channels import parse_ibm_mq_channels
+from cmk.plugins.ibm_mq.agent_based.ibm_mq_channels import (
     check_ibm_mq_channels,
     discover_ibm_mq_channels,
 )
-from cmk.plugins.ibm.agent_based.ibm_mq_channels import parse_ibm_mq_channels
-
-from .test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks
 
 CHECK_NAME = "ibm_mq_channels"
+
+
+def parse_info(lines: str, separator: str | None = None) -> list[list[str]]:
+    result = []
+    for line in lines.splitlines():
+        line = line.strip()
+        result.append(line.split(separator))
+    return result
 
 
 def test_parse() -> None:
@@ -66,7 +70,7 @@ All valid MQSC commands were processed.
 
     attrs = parsed["MY.TEST"]
     assert attrs["STATUS"] == "RUNNING"
-    assert attrs["NOW"] != ""
+    assert attrs.get("NOW") is not None
 
     attrs = parsed["MY.TEST:HERE.TO.THERE.TWO"]
     assert attrs["CHLTYPE"] == "SDR"

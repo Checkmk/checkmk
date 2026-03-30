@@ -8,26 +8,9 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.plugins.ibm_mq.lib import is_ibm_mq_service_vanished
 
-
-def is_ibm_mq_service_vanished(item: str, parsed: Mapping[str, Any]) -> bool:
-    """
-    Returns true if queue or channel is not contained anymore in the agent
-    output but queue manager is known as RUNNING. Throws MKCounterWrapped to
-    mark service as STALE if QMGR is not RUNNING.
-    """
-    if item in parsed:
-        return False
-
-    qmgr_name = item.split(":", 1)[0]
-    qmgr_status = "RUNNING"
-    if qmgr_name in parsed:
-        qmgr_status = parsed[qmgr_name]["STATUS"]
-
-    if qmgr_status == "RUNNING":
-        return True
-    raise IgnoreResultsError("Stale because queue manager %s" % qmgr_status)
+__all__ = ["is_ibm_mq_service_vanished", "ibm_mq_check_version"]
 
 
 def ibm_mq_check_version(

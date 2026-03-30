@@ -454,6 +454,56 @@ INTERFACE = interfaces.InterfaceWithCounters(
             [],
             id="Check non existent",
         ),
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": True,
+                        "failover_policy": "default",
+                        "missing_broadcast_domain": True,
+                    }
+                )
+            },
+            [
+                Result(state=State.OK, summary="Failover policy: system-defined"),
+                Result(state=State.OK, summary="Current Port: e0a (is home port)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Port has no broadcast domain assigned; failover group cannot be determined",
+                ),
+            ],
+            id="missing broadcast domain raises CRIT",
+        ),
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": True,
+                        "failover_policy": "home_node_only",
+                        "missing_broadcast_domain": True,
+                    }
+                )
+            },
+            [
+                Result(state=State.OK, summary="Failover policy: local-only"),
+                Result(state=State.OK, summary="Current Port: e0a (is home port)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Port has no broadcast domain assigned; failover group cannot be determined",
+                ),
+            ],
+            id="home_node_only missing broadcast domain raises CRIT",
+        ),
     ],
 )
 def test_check_home_port_status(

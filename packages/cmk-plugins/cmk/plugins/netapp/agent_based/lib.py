@@ -44,6 +44,7 @@ class NICExtraInfo(TypedDict, total=False):
     is_home: bool
     failover_ports: Sequence[Mapping[str, str]]
     failover_policy: str
+    missing_broadcast_domain: bool
 
 
 ExtraInfo = Mapping[str, NICExtraInfo]
@@ -344,7 +345,9 @@ def merge_if_sections(
                         oper_status = "1"
                         break
 
-        if "failover_ports" in values and values["failover_ports"] != "none":
+        # Failover ports can be unset or empty when the failover policy is "home_port_only"
+        # or when no broadcast domain is assigned to the port (rare and wrong, but possible)
+        if "failover_ports" in values and values["failover_ports"] not in ("none", "", None):
             extra_info.setdefault(nic_name, {})["failover_ports"] = [
                 {
                     "node": node,
@@ -392,6 +395,17 @@ def merge_if_sections(
                 }
             )
 
+            # home_port_only does not use the broadcast domain for failover (it targets
+            # the home port directly), so a missing broadcast domain is not an issue there.
+            # For all other policies the broadcast domain is the basis for building the
+            # failover group, so flag it as CRIT when it is absent.
+            if not values.get("broadcast_domain") and values.get("failover") in (
+                "default",
+                "broadcast_domain_only",
+                "home_node_only",
+            ):
+                extra_info[nic_name]["missing_broadcast_domain"] = True
+
     return nics, extra_info
 
 
@@ -435,6 +449,12 @@ def _check_netapp_interfaces(
             yield Result(
                 state=State(mon_state),
                 summary="Current Port: {} ({})".format(vif["home_port"], home_attribute),
+            )
+
+        if vif.get("missing_broadcast_domain"):
+            yield Result(
+                state=State.CRIT,
+                summary="Port has no broadcast domain assigned; failover group cannot be determined",
             )
 
         if "failover_ports" in vif:

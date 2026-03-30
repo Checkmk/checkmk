@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 import { type CommandEntry, createStatusBar } from './build/buildStatus'
 import { type SettingsEntry, registerBuildCommands, updateContextKeys } from './build/settings'
 import { type ExtensionSets, getDisableSettings, loadConfig, writeSetting } from './core/config'
-import { log, notifyInfo, registerErrorHandlers } from './core/log'
+import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
 import { checkVersionMismatch } from './core/versionCheck'
 import { registerGerritPush } from './gerrit'
 import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
@@ -50,7 +50,7 @@ function toggleSettings(disableSettings: Record<string, unknown>): vscode.Dispos
         }
       }
     } catch (err) {
-      console.error('CMK: Failed to remove disable-settings:', err)
+      error(`Failed to remove disable-settings: ${(err as Error).message}`)
     }
   })()
   return {
@@ -61,7 +61,7 @@ function toggleSettings(disableSettings: Record<string, unknown>): vscode.Dispos
             await writeSetting(key, value)
           }
         } catch (err) {
-          console.error('CMK: Failed to write disable-settings:', err)
+          error(`Failed to write disable-settings: ${(err as Error).message}`)
         }
       })()
     }

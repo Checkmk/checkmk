@@ -6,19 +6,8 @@
 import * as vscode from 'vscode'
 
 import { writeSetting } from '../core/config'
+import { FAMILY_DISPLAY, PROFILE_LABELS } from '../core/constants'
 import { log, notifyInfo } from '../core/log'
-
-const PROFILE_LABELS: Record<string, string> = {
-  python: 'Py',
-  frontend: 'UI',
-  rust: 'Rs'
-}
-
-const PROFILE_NAMES: Record<string, string> = {
-  python: 'Python',
-  frontend: 'UI',
-  rust: 'Rust'
-}
 
 const PRIORITIES: Record<string, number> = {
   python: 53,
@@ -94,7 +83,7 @@ export function register(
 export async function start(name: string): Promise<void> {
   const family = families[name]
   if (!family || family.active || !family.activate) return
-  log(`Enable profile: ${PROFILE_NAMES[name]}`)
+  log(`Enable profile: ${FAMILY_DISPLAY[name]}`)
   family.loading = true
   showLoading(name)
   try {
@@ -105,13 +94,13 @@ export async function start(name: string): Promise<void> {
     family.loading = false
     updateStatusBarItem(name)
   }
-  notifyInfo(`CMK: ${PROFILE_NAMES[name]} profile enabled`)
+  notifyInfo(`CMK: ${FAMILY_DISPLAY[name]} profile enabled`)
 }
 
 export async function stop(name: string): Promise<void> {
   const family = families[name]
   if (!family || !family.active) return
-  log(`Disable profile: ${PROFILE_NAMES[name]}`)
+  log(`Disable profile: ${FAMILY_DISPLAY[name]}`)
   family.loading = true
   showLoading(name)
   try {
@@ -130,7 +119,7 @@ export async function stop(name: string): Promise<void> {
     family.loading = false
     updateStatusBarItem(name)
   }
-  notifyInfo(`CMK: ${PROFILE_NAMES[name]} profile disabled`)
+  notifyInfo(`CMK: ${FAMILY_DISPLAY[name]} profile disabled`)
 }
 
 export async function toggle(name: string): Promise<void> {
@@ -176,7 +165,7 @@ function showLoading(name: string): void {
   if (!family.statusBarItem) return
   const label = PROFILE_LABELS[name] || name
   family.statusBarItem.text = `$(sync~spin) ${label}`
-  family.statusBarItem.tooltip = `CMK: ${PROFILE_NAMES[name]} profile switching…`
+  family.statusBarItem.tooltip = `CMK: ${FAMILY_DISPLAY[name]} profile switching…`
   family.statusBarItem.color = undefined
   family.statusBarItem.backgroundColor = undefined
 }
@@ -188,17 +177,17 @@ function updateStatusBarItem(name: string): void {
 
   if (family.active && family.hasIssues) {
     family.statusBarItem.text = `$(warning) ${label}`
-    family.statusBarItem.tooltip = `CMK: ${PROFILE_NAMES[name]} profile active — has stale build targets`
+    family.statusBarItem.tooltip = `CMK: ${FAMILY_DISPLAY[name]} profile active — has stale build targets`
     family.statusBarItem.color = undefined
     family.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground')
   } else if (family.active) {
     family.statusBarItem.text = `$(check) ${label}`
-    family.statusBarItem.tooltip = `CMK: ${PROFILE_NAMES[name]} profile active — click to disable`
+    family.statusBarItem.tooltip = `CMK: ${FAMILY_DISPLAY[name]} profile active — click to disable`
     family.statusBarItem.color = new vscode.ThemeColor('terminal.ansiGreen')
     family.statusBarItem.backgroundColor = undefined
   } else {
     family.statusBarItem.text = `$(circle-outline) ${label}`
-    family.statusBarItem.tooltip = `CMK: ${PROFILE_NAMES[name]} profile inactive — click to enable`
+    family.statusBarItem.tooltip = `CMK: ${FAMILY_DISPLAY[name]} profile inactive — click to enable`
     family.statusBarItem.color = undefined
     family.statusBarItem.backgroundColor = undefined
   }

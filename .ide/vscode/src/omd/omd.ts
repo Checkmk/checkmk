@@ -3,13 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { execSync } from 'child_process'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { log } from '../core/log'
+import { safeExec } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 
 // ── Types ──
@@ -38,14 +38,6 @@ export interface OmdSiteWithStatus extends OmdSite {
 }
 
 // ── Helpers ──
-
-function safeExec(cmd: string, timeout = 5000): string {
-  try {
-    return execSync(cmd, { encoding: 'utf-8', timeout }).trim()
-  } catch {
-    return ''
-  }
-}
 
 const STATUS_DIR = path.join(os.tmpdir(), 'cmk-omd-status')
 
@@ -135,7 +127,7 @@ export function getOmdStatus(siteName: string): OmdStatus {
     /* ignore */
   }
 
-  const raw = safeExec(`sudo -n omd status --bare "${siteName}" 2>/dev/null`, 1000)
+  const raw = safeExec(`sudo -n omd status --bare "${siteName}" 2>/dev/null`, { timeout: 1000 })
   return parseOmdStatusBare(raw)
 }
 
@@ -143,7 +135,7 @@ export async function forceRefreshOmdStatusFiles(): Promise<void> {
   const sites = detectOmdSites()
   let anySucceeded = false
   for (const site of sites) {
-    const raw = safeExec(`sudo -n omd status --bare "${site.name}" 2>/dev/null`, 1000)
+    const raw = safeExec(`sudo -n omd status --bare "${site.name}" 2>/dev/null`, { timeout: 1000 })
     if (raw) {
       const statusFile = path.join(STATUS_DIR, `${site.name}.status`)
       try {

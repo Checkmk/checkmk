@@ -6,6 +6,7 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { FAMILY_DISPLAY } from '../core/constants'
 import { log } from '../core/log'
 import * as profileManager from './profileManager'
 
@@ -30,12 +31,6 @@ const PROFILE_EXTENSIONS: Record<string, Set<string>> = {
   python: new Set(['.py', '.pyi']),
   frontend: new Set(['.vue', '.ts', '.js', '.tsx', '.jsx', '.css', '.scss']),
   rust: new Set(['.rs'])
-}
-
-const PROFILE_DISPLAY: Record<string, string> = {
-  python: 'Python',
-  frontend: 'UI',
-  rust: 'Rust'
 }
 
 // ── Thresholds ──
@@ -113,7 +108,7 @@ function suggestEnable(profile: string): void {
   if (!canSuggest(profile)) return
   markSuggested(profile)
 
-  const name = PROFILE_DISPLAY[profile]
+  const name = FAMILY_DISPLAY[profile]
   log(`Suggest enable profile: ${name}`)
   vscode.window
     .showInformationMessage(
@@ -139,7 +134,7 @@ function suggestDisable(profile: string): void {
   if (!canSuggest(profile)) return
   markSuggested(profile)
 
-  const name = PROFILE_DISPLAY[profile]
+  const name = FAMILY_DISPLAY[profile]
   const mins = getInactivityMinutes()
   log(`Suggest disable profile: ${name}`)
   vscode.window

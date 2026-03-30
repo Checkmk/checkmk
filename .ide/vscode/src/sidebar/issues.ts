@@ -5,18 +5,9 @@
  */
 import * as vscode from 'vscode'
 
+import { FAMILY_DISPLAY } from '../core/constants'
 import * as profileManager from '../profiles/profileManager'
 import type { StateCache } from './types'
-
-const FAMILY_DISPLAY: Record<string, string> = {
-  python: 'Python',
-  frontend: 'UI',
-  rust: 'Rust',
-  bazel: 'Bazel',
-  general: 'General',
-  markdown: 'Markdown',
-  cspell: 'Spelling'
-}
 
 const DISPLAY_TO_FAMILY = Object.fromEntries(Object.entries(FAMILY_DISPLAY).map(([k, v]) => [v, k]))
 

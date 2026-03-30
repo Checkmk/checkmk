@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 
 import { type SettingsEntry, buildEffectiveSettings } from '../../build/settings'
 import { type ExtensionSets, loadConfig, resolveVariables } from '../../core/config'
+import { FAMILY_DISPLAY } from '../../core/constants'
 import { log, notifyInfo, notifyWarn } from '../../core/log'
 import * as profileManager from '../../profiles/profileManager'
 import { esc, getNonce, wrap } from '../html'
@@ -18,16 +19,6 @@ import type {
   WebviewMessage
 } from '../types'
 import sectionCss from './style.css'
-
-const FAMILY_DISPLAY: Record<string, string> = {
-  python: 'Python',
-  frontend: 'UI',
-  rust: 'Rust',
-  bazel: 'Bazel',
-  general: 'General',
-  markdown: 'Markdown',
-  cspell: 'Spelling'
-}
 
 export function getExtensionHealth(extensionsConfig?: ExtensionSets | null): ExtensionFamily[] {
   const extensionSets: ExtensionSets = extensionsConfig || loadConfig<ExtensionSets>('extensions')

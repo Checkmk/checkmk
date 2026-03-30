@@ -148,12 +148,10 @@
 
 .banner-info {
   background: var(--vscode-editorInfo-background, rgb(0 120 212 / 10%));
-  padding: 8px;
-  border-radius: var(--radius);
-  margin-bottom: 8px;
-  font-size: 0.85em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  border-color: var(--vscode-editorInfo-foreground, rgb(0 120 212 / 50%));
+}
+
+.banner-warn {
+  background: var(--cmk-yellow-dim);
+  border-color: var(--cmk-yellow);
 }

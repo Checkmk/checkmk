@@ -3,7 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { execSync } from 'child_process'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
@@ -11,6 +10,7 @@ import * as vscode from 'vscode'
 
 import type { BuildStatus } from '../../build/buildStatus'
 import { log } from '../../core/log'
+import { safeExec } from '../../core/shell'
 import { getNonce, wrap } from '../html'
 import type {
   EnvironmentInfo,
@@ -20,14 +20,6 @@ import type {
   WebviewMessage
 } from '../types'
 import sectionCss from './style.css'
-
-function safeExec(cmd: string, wsPath?: string): string {
-  try {
-    return execSync(cmd, { cwd: wsPath, encoding: 'utf-8', timeout: 5000 }).trim()
-  } catch {
-    return ''
-  }
-}
 
 export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
   const env: EnvironmentInfo = {
@@ -43,14 +35,15 @@ export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
   }
   const venvPython = wsPath ? path.join(wsPath, '.venv', 'bin', 'python') : ''
   if (venvPython && fs.existsSync(venvPython)) {
-    env.python = safeExec(`"${venvPython}" --version`, wsPath).replace('Python ', '') + ' (venv)'
+    env.python =
+      safeExec(`"${venvPython}" --version`, { cwd: wsPath }).replace('Python ', '') + ' (venv)'
     env.pythonPath = path.join(wsPath!, '.venv')
   } else {
-    const sysPython = safeExec('python3 --version', wsPath).replace('Python ', '')
+    const sysPython = safeExec('python3 --version', { cwd: wsPath }).replace('Python ', '')
     env.python = sysPython ? `${sysPython} (system)` : 'not found'
     env.pythonPath = ''
   }
-  env.node = safeExec('node --version', wsPath).replace('v', '')
+  env.node = safeExec('node --version', { cwd: wsPath }).replace('v', '')
   if (wsPath) {
     try {
       env.bazel = fs.readFileSync(path.join(wsPath, '.bazelversion'), 'utf-8').trim()
@@ -60,15 +53,15 @@ export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
   } else {
     env.bazel = 'not found'
   }
-  const bazeliskRaw = safeExec('bazelisk version', wsPath)
+  const bazeliskRaw = safeExec('bazelisk version', { cwd: wsPath })
   const bazeliskMatch = bazeliskRaw.match(/Bazelisk version:\s*(\S+)/)
   env.bazelisk = bazeliskMatch ? bazeliskMatch[1] : 'not found'
   env.docker =
-    safeExec('docker --version', wsPath)
+    safeExec('docker --version', { cwd: wsPath })
       .replace(/Docker version\s+/, '')
       .replace(/,.*/, '') || 'not found'
   env.gcc =
-    safeExec('gcc --version', wsPath)
+    safeExec('gcc --version', { cwd: wsPath })
       .split('\n')[0]
       .replace(/.*\)\s*/, '') || 'not found'
   env.pyenv = fs.existsSync(path.join(os.homedir(), '.pyenv', 'bin', 'pyenv'))

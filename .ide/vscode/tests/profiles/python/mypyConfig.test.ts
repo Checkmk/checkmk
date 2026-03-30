@@ -5,11 +5,8 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import {
-  buildMypyIniContent,
-  parseVersion,
-  versionAtLeast
-} from '../../../src/profiles/python/mypyConfig'
+import { parseVersion, versionAtLeast } from '../../../src/core/version'
+import { buildMypyIniContent } from '../../../src/profiles/python/mypyConfig'
 
 describe('parseVersion', () => {
   it('parses three-part version', () => {

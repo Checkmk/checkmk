@@ -9,6 +9,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { notifyInfo } from '../../core/log'
+import { versionAtLeast } from '../../core/version'
 
 interface MypyConfig {
   mypy_path?: string
@@ -32,19 +33,6 @@ function getMypyVersion(wsPath: string): Promise<string | null> {
       resolve(match ? match[1] : null)
     })
   })
-}
-
-export function parseVersion(ver: string): { major: number; minor: number; patch: number } {
-  const parts = ver.split('.').map(Number)
-  return { major: parts[0] || 0, minor: parts[1] || 0, patch: parts[2] || 0 }
-}
-
-export function versionAtLeast(ver: string, minVer: string): boolean {
-  const v = parseVersion(ver)
-  const m = parseVersion(minVer)
-  if (v.major !== m.major) return v.major > m.major
-  if (v.minor !== m.minor) return v.minor > m.minor
-  return v.patch >= m.patch
 }
 
 const VERSION_GATED_OPTIONS: Record<string, string> = {

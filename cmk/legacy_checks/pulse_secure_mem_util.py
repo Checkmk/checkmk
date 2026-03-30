@@ -3,16 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+from collections.abc import Mapping
+from typing import Any
 
-from collections.abc import Iterable, Mapping
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.pulse_secure import lib as pulse_secure
-
-check_info = {}
 
 Section = Mapping[str, int]
 
@@ -26,27 +31,27 @@ def parse_pulse_secure_mem(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, *METRICS_INFO_NAMES_PULSE_SECURE_MEM[0])
 
 
-def discover_pulse_secure_mem_util(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_pulse_secure_mem_util(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_pulse_secure_mem(item, params, parsed):
-    if not parsed:
+def check_pulse_secure_mem(params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not section:
         return
 
     for metric, info_name in zip(*METRICS_INFO_NAMES_PULSE_SECURE_MEM):
-        if metric in parsed:
-            yield check_levels(
-                parsed[metric],
-                metric,
-                params.get(metric),
-                infoname=info_name,
-                human_readable_func=render.percent,
+        if metric in section:
+            yield from check_levels(
+                section[metric],
+                levels_upper=params.get(metric),
+                metric_name=metric,
+                render_func=render.percent,
+                label=info_name,
             )
 
 
-check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
+snmp_section_pulse_secure_mem_util = SimpleSNMPSection(
     name="pulse_secure_mem_util",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
@@ -54,6 +59,11 @@ check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
         oids=["11", "24"],
     ),
     parse_function=parse_pulse_secure_mem,
+)
+
+
+check_plugin_pulse_secure_mem_util = CheckPlugin(
+    name="pulse_secure_mem_util",
     service_name="Pulse Secure IVE memory utilization",
     discovery_function=discover_pulse_secure_mem_util,
     check_function=check_pulse_secure_mem,

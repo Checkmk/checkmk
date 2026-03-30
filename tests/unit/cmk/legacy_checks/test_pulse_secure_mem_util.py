@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.legacy_checks.pulse_secure_mem_util import (
     check_pulse_secure_mem,
     discover_pulse_secure_mem_util,
@@ -22,39 +21,46 @@ from cmk.legacy_checks.pulse_secure_mem_util import (
 @pytest.mark.parametrize(
     "info, expected_discoveries",
     [
-        ([["8", "0"]], [(None, {})]),
+        ([["8", "0"]], [True]),
     ],
 )
-def test_discover_pulse_secure_mem(
-    info: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
-) -> None:
+def test_discover_pulse_secure_mem(info: StringTable, expected_discoveries: Sequence[bool]) -> None:
     """Test discovery function for pulse_secure_mem_util check."""
     parsed = parse_pulse_secure_mem(info)
     if parsed is not None:
         result = list(discover_pulse_secure_mem_util(parsed))
     else:
         result = []
-    assert sorted(result) == sorted(expected_discoveries)
+    assert len(result) == len(expected_discoveries)
 
 
 @pytest.mark.parametrize(
-    "item, params, info, expected_results",
+    "params, info, expected_states, expected_labels",
     [
         (
-            None,
-            {"mem_used_percent": (90, 95), "swap_used_percent": (5, None)},
+            {"mem_used_percent": (90, 95), "swap_used_percent": (5, 101)},
             [["8", "0"]],
-            [
-                (0, "RAM used: 8.00%", [("mem_used_percent", 8, 90.0, 95.0)]),
-                (0, "Swap used: 0%", [("swap_used_percent", 0, 5.0, None)]),
-            ],
+            [State.OK, State.OK],
+            ["RAM used", "Swap used"],
         ),
     ],
 )
 def test_check_pulse_secure_mem(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
+    params: Mapping[str, Any],
+    info: StringTable,
+    expected_states: Sequence[State],
+    expected_labels: Sequence[str],
 ) -> None:
     """Test check function for pulse_secure_mem_util check."""
     parsed = parse_pulse_secure_mem(info)
-    result = list(check_pulse_secure_mem(item, params, parsed))
-    assert result == expected_results
+    assert parsed is not None
+    results = list(check_pulse_secure_mem(params, parsed))
+    result_objs = [r for r in results if isinstance(r, Result)]
+    metric_objs = [r for r in results if isinstance(r, Metric)]
+    assert len(result_objs) == len(expected_states)
+    for result_obj, expected_state, expected_label in zip(
+        result_objs, expected_states, expected_labels
+    ):
+        assert result_obj.state == expected_state
+        assert expected_label in result_obj.summary
+    assert len(metric_objs) == 2

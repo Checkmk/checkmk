@@ -1,7 +1,6 @@
 [project]
 name = "cmk-dev-deploy"
 version = "1.0.0"
-requires-python = ">=3.12"
 dynamic = ["dependencies"]
 
 [project.scripts]

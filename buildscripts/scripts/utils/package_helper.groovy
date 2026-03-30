@@ -43,6 +43,7 @@ static LinkedHashMap<String, List> dependency_paths_mapping() {
             "agents",
             "packages/cmk-agent-ctl",
             "packages/mk-sql",
+            "packages/mk-oracle",
             "Cargo.toml",
             "Cargo.lock",
             ".cargo",

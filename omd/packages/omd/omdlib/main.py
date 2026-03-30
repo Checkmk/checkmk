@@ -140,7 +140,7 @@ from omdlib.version_utils import (
     verify_security,
     version_exists,
     version_from_site_dir,
-    werk_18891_error,
+    werk_18891_warning,
 )
 
 from cmk.ccc.exceptions import MKTerminate
@@ -1776,7 +1776,7 @@ def main_setversion(
     if version == default_version(versions_path):
         sys.exit("The given version is already default.")
     if not verify_security(version):
-        sys.exit(werk_18891_error(version, False))
+        sys.stderr.write(werk_18891_warning(version))
 
     # Special handling for debian based distros which use update-alternatives
     # to control the path to the omd binary, manpage and so on
@@ -3124,8 +3124,8 @@ def _restore_backup_from_tar_root(
     # Ensure the restore is done with the sites version
     if version != omdlib.__version__:
         if verify_security(version) or not is_root():
-            exec_other_omd(version)
-        sys.exit(werk_18891_error(version, True))
+            sys.stderr.write(werk_18891_warning(version))
+        exec_other_omd(version)
 
     if not version_exists(version, Path("/omd/versions/")):
         sys.exit(
@@ -3534,7 +3534,8 @@ def _escape_to_site_context(version: str, args: Sequence[str]) -> NoReturn:
             main_rm(VersionInfo(), target_site, global_opts, object(), command_options)
             sys.exit(0)
         case DispatcherError(message):
-            sys.exit(message)
+            sys.stderr.write(message)
+            exec_other_omd(version)
 
 
 def main_finalize_restore(args: Restore) -> int:

@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
 from cmk.legacy_includes.ibm_mq import is_ibm_mq_service_vanished
-
-check_info = {}
 
 # <<<ibm_mq_channels:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
@@ -42,7 +47,7 @@ _DEFAULT_STATUS_MAP = {
 }
 
 
-def map_ibm_mq_channel_status(status, params):
+def map_ibm_mq_channel_status(status: str, params: Mapping[str, Any]) -> int:
     wato_key, check_state = _DEFAULT_STATUS_MAP.get(status, ("unknown", 3))
     if "mapped_states" in params:
         mapped_states = dict(params["mapped_states"])
@@ -53,12 +58,12 @@ def map_ibm_mq_channel_status(status, params):
     return check_state
 
 
-def discover_ibm_mq_channels(parsed):
-    for service_name in parsed:
+def discover_ibm_mq_channels(section: Any) -> DiscoveryResult:
+    for service_name in section:
         if ":" not in service_name:
             # Do not show queue manager entry in inventory
             continue
-        yield service_name, {}
+        yield Service(item=service_name)
 
 
 #
@@ -66,23 +71,24 @@ def discover_ibm_mq_channels(parsed):
 # or search for 'inactive channels' in 'display chstatus' command manual
 # to learn more about INACTIVE status of channels
 #
-def check_ibm_mq_channels(item, params, parsed):
-    if is_ibm_mq_service_vanished(item, parsed):
+def check_ibm_mq_channels(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+    if is_ibm_mq_service_vanished(item, section):
         return
-    data = parsed[item]
+    data = section[item]
     status = data.get("STATUS", "INACTIVE")
     check_state = map_ibm_mq_channel_status(status, params)
     chltype = data.get("CHLTYPE")
     infotext = f"Status: {status}, Type: {chltype}"
     if "XMITQ" in data:
-        infotext += ", Xmitq: %s" % data["XMITQ"]
-    yield check_state, infotext, []
+        infotext += f", Xmitq: {data['XMITQ']}"
+    yield Result(state=State(check_state), summary=infotext)
 
 
-check_info["ibm_mq_channels"] = LegacyCheckDefinition(
+check_plugin_ibm_mq_channels = CheckPlugin(
     name="ibm_mq_channels",
     service_name="IBM MQ Channel %s",
     discovery_function=discover_ibm_mq_channels,
     check_function=check_ibm_mq_channels,
     check_ruleset_name="ibm_mq_channels",
+    check_default_parameters={},
 )

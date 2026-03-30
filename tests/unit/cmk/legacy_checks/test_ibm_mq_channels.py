@@ -9,10 +9,13 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.agent_based.v2 import IgnoreResultsError, Result, Service, State
+from cmk.legacy_checks.ibm_mq_channels import (
+    check_ibm_mq_channels,
+    discover_ibm_mq_channels,
+)
 from cmk.plugins.ibm.agent_based.ibm_mq_channels import parse_ibm_mq_channels
 
-from .checktestlib import Check
 from .test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks
@@ -106,20 +109,18 @@ All valid MQSC commands were processed.
 
 
 def test_discovery_qmgr_not_included() -> None:
-    check = Check(CHECK_NAME)
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:CHAN1": {"CHLTYPE": "SDR", "STATUS": "RETRYING", "XMITQ": "MY.XMIT.Q"},
         "QM1:CHAN2": {"CHLTYPE": "RCVR", "STATUS": "STOPPED"},
         "QM1:CHAN3": {"CHLTYPE": "SVRCONN"},
     }
-    discovery = list(check.run_discovery(parsed))
+    discovery = list(discover_ibm_mq_channels(parsed))
     assert len(discovery) == 3
-    assert ("QM1:CHAN2", {}) in discovery
+    assert Service(item="QM1:CHAN2") in discovery
 
 
 def test_check() -> None:
-    check = Check(CHECK_NAME)
     params: dict[str, Any] = {}
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
@@ -128,19 +129,16 @@ def test_check() -> None:
         "QM1:CHAN3": {"CHLTYPE": "SVRCONN"},
     }
 
-    actual = list(check.run_check("QM1:CHAN1", params, parsed))
-    expected: list[tuple[int, str, list[Any]]] = [
-        (1, "Status: RETRYING, Type: SDR, Xmitq: MY.XMIT.Q", [])
+    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
+    assert actual == [
+        Result(state=State.WARN, summary="Status: RETRYING, Type: SDR, Xmitq: MY.XMIT.Q")
     ]
-    assert actual == expected
 
-    actual = list(check.run_check("QM1:CHAN2", params, parsed))
-    expected = [(2, "Status: STOPPED, Type: RCVR", [])]
-    assert actual == expected
+    actual = list(check_ibm_mq_channels("QM1:CHAN2", params, parsed))
+    assert actual == [Result(state=State.CRIT, summary="Status: STOPPED, Type: RCVR")]
 
-    actual = list(check.run_check("QM1:CHAN3", params, parsed))
-    expected = [(0, "Status: INACTIVE, Type: SVRCONN", [])]
-    assert actual == expected
+    actual = list(check_ibm_mq_channels("QM1:CHAN3", params, parsed))
+    assert actual == [Result(state=State.OK, summary="Status: INACTIVE, Type: SVRCONN")]
 
 
 def test_no_xmit_queue_defined() -> None:
@@ -149,7 +147,6 @@ def test_no_xmit_queue_defined() -> None:
     is a misconfiguration on the queue manager, but the monitoring should
     not choke on this.
     """
-    check = Check(CHECK_NAME)
     params: dict[str, Any] = {}
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
@@ -158,32 +155,28 @@ def test_no_xmit_queue_defined() -> None:
         "QM1:CHAN3": {"CHLTYPE": "SVRCONN"},
         "MQZZZPPPP:FOO.TO.RESA": {"CHLTYPE": "SDR"},
     }
-    actual = list(check.run_check("MQZZZPPPP:FOO.TO.RESA", params, parsed))
-    expected: list[tuple[int, str, list[Any]]] = [(0, "Status: INACTIVE, Type: SDR", [])]
-    assert actual == expected
+    actual = list(check_ibm_mq_channels("MQZZZPPPP:FOO.TO.RESA", params, parsed))
+    assert actual == [Result(state=State.OK, summary="Status: INACTIVE, Type: SDR")]
 
 
 def test_stale_service_for_not_running_qmgr() -> None:
-    check = Check(CHECK_NAME)
     params: dict[str, Any] = {}
     parsed = {"QM1": {"STATUS": "ENDED NORMALLY"}}
     with pytest.raises(IgnoreResultsError, match=r"Stale because queue manager ENDED NORMALLY"):
-        list(check.run_check("QM1:CHAN2", params, parsed))
+        list(check_ibm_mq_channels("QM1:CHAN2", params, parsed))
 
 
 def test_vanished_service_for_running_qmgr() -> None:
-    check = Check(CHECK_NAME)
     params: dict[str, Any] = {}
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:CHAN1": {"CHLTYPE": "SVRCONN"},
     }
-    actual = list(check.run_check("QM1:VANISHED", params, parsed))
+    actual = list(check_ibm_mq_channels("QM1:VANISHED", params, parsed))
     assert len(actual) == 0
 
 
 def test_status_wato_override() -> None:
-    check = Check(CHECK_NAME)
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:CHAN1": {"CHLTYPE": "SVRCONN", "STATUS": "STOPPED"},
@@ -191,21 +184,18 @@ def test_status_wato_override() -> None:
 
     # Factory defaults
     params: dict[str, Any] = {}
-    actual = list(check.run_check("QM1:CHAN1", params, parsed))
-    expected: list[tuple[int, str, list[Any]]] = [(2, "Status: STOPPED, Type: SVRCONN", [])]
-    assert actual == expected
+    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
+    assert actual == [Result(state=State.CRIT, summary="Status: STOPPED, Type: SVRCONN")]
 
     # Override factory defaults
     params = {"mapped_states": [("stopped", 1)]}
-    actual = list(check.run_check("QM1:CHAN1", params, parsed))
-    expected = [(1, "Status: STOPPED, Type: SVRCONN", [])]
-    assert actual == expected
+    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
+    assert actual == [Result(state=State.WARN, summary="Status: STOPPED, Type: SVRCONN")]
 
     # Override-does-not-match configuration
     params = {
         "mapped_states": [("retrying", 1)],
         "mapped_states_default": 3,
     }
-    actual = list(check.run_check("QM1:CHAN1", params, parsed))
-    expected = [(3, "Status: STOPPED, Type: SVRCONN", [])]
-    assert actual == expected
+    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
+    assert actual == [Result(state=State.UNKNOWN, summary="Status: STOPPED, Type: SVRCONN")]

@@ -6,6 +6,7 @@
 import type * as vscode from 'vscode'
 
 import type { BuildStatus } from '../build/buildStatus'
+import type { VersionMismatch } from '../core/versionCheck'
 import type { DevSiteToolsState } from '../omd/devSiteTools'
 import type { OmdSiteWithStatus } from '../omd/omd'
 import type { ProfileInfo } from '../profiles/profileManager'
@@ -62,6 +63,7 @@ export interface StateCache {
   settingsMismatches: SettingsMismatch[]
   omdSites: OmdSiteWithStatus[]
   devSiteTools: DevSiteToolsState
+  versionMismatch: VersionMismatch | null
   onboarding: OnboardingState
   onboardingDismissed: boolean
 }

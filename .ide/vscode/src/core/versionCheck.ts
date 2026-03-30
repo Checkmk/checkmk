@@ -38,6 +38,16 @@ else:
 ")`
 }
 
+export function rebuildExtension(): void {
+  const terminal = vscode.window.createTerminal('CMK Extension Update')
+  const profile = resolveProfile()
+  terminal.sendText(
+    `bazel build ${BAZEL_TARGET} && ` +
+      `code --profile "${profile}" --install-extension ${VSIX_PATH} --force`
+  )
+  terminal.show()
+}
+
 function promptRebuild(installedVersion: string, wsVersion: string): void {
   vscode.window
     .showWarningMessage(
@@ -46,15 +56,23 @@ function promptRebuild(installedVersion: string, wsVersion: string): void {
     )
     .then((choice) => {
       if (choice === 'Rebuild & Install') {
-        const terminal = vscode.window.createTerminal('CMK Extension Update')
-        const profile = resolveProfile()
-        terminal.sendText(
-          `bazel build ${BAZEL_TARGET} && ` +
-            `code --profile "${profile}" --install-extension ${VSIX_PATH} --force`
-        )
-        terminal.show()
+        rebuildExtension()
       }
     })
+}
+
+export interface VersionMismatch {
+  installed: string
+  workspace: string
+}
+
+export function getVersionMismatch(context: vscode.ExtensionContext): VersionMismatch | null {
+  const installed: string = context.extension.packageJSON.version
+  const workspace = getWorkspaceVersion()
+  if (workspace && workspace !== installed) {
+    return { installed, workspace }
+  }
+  return null
 }
 
 export function checkVersionMismatch(context: vscode.ExtensionContext): void {

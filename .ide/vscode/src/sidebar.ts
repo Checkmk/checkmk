@@ -10,6 +10,7 @@ import type { SettingsEntry } from './build/settings'
 import { type ExtensionSets, loadConfig } from './core/config'
 import { log, notifyInfo, notifyWarn } from './core/log'
 import { runCommand, waitForTask } from './core/tasks'
+import { getVersionMismatch, rebuildExtension } from './core/versionCheck'
 import { getDevSiteToolsState } from './omd/devSiteTools'
 import { detectOmdSites, forceRefreshOmdStatusFiles, getOmdStatus } from './omd/omd'
 import * as profileManager from './profiles/profileManager'
@@ -64,6 +65,7 @@ function refreshStateCache(): StateCache {
     return { ...site, status }
   })
   const devSiteTools = getDevSiteToolsState()
+  const versionMismatch = _context ? getVersionMismatch(_context) : null
   const onboarding = environmentSection.getOnboardingState(environment, buildStatus, _context)
   _stateCache = {
     buildStatus,
@@ -75,6 +77,7 @@ function refreshStateCache(): StateCache {
     settingsMismatches,
     omdSites,
     devSiteTools,
+    versionMismatch,
     onboarding,
     onboardingDismissed: _onboardingDismissed
   }
@@ -232,6 +235,12 @@ export function registerSidebar(
         refreshAll()
       }
     )
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('cmk.rebuildExtension', () => {
+      rebuildExtension()
+    })
   )
 
   context.subscriptions.push(

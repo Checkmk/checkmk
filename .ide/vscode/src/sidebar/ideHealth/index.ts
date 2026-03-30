@@ -253,7 +253,26 @@ export async function handleMessage(
 
 export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: string): string {
   const nonce = getNonce()
-  const { pythonEnvsActive, extensionHealth, settingsMismatches } = state
+  const { pythonEnvsActive, extensionHealth, settingsMismatches, versionMismatch } = state
+
+  const installedVersion = vscode.extensions.getExtension('checkmk.cmk-vscode')?.packageJSON
+    ?.version as string | undefined
+
+  const versionHtml = installedVersion
+    ? `<div class="env-row">
+        <span class="env-label">Extension</span>
+        <span class="env-value">v${esc(installedVersion)}</span>
+      </div>`
+    : ''
+
+  const versionBanner = versionMismatch
+    ? `<div class="banner">
+        <span class="banner-icon">&#9888;</span>
+        <span class="banner-text">Update available: <b>v${esc(versionMismatch.installed)}</b> → <b>v${esc(versionMismatch.workspace)}</b>
+          <br><button class="btn btn-small" data-action="exec" data-id="cmk.rebuildExtension">Rebuild &amp; Install</button>
+        </span>
+      </div>`
+    : ''
 
   const pyEnvsBanner = pythonEnvsActive
     ? `
@@ -355,7 +374,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   return wrap(
     nonce,
     sectionCss,
-    `${pyEnvsBanner}` +
+    `${versionHtml}${versionBanner}${pyEnvsBanner}` +
       `<div class="section-label">Settings</div>${settingsHtml}` +
       `<div class="section-label">Extensions</div>${extFamilies}`,
     codiconUri,

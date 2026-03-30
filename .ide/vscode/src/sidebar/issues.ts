@@ -65,11 +65,28 @@ export function updateIssues(
 ): void {
   if (!issuesView || !issuesProvider) return
 
-  const { buildStatus, settingsMismatches, extensionHealth, pythonEnvsActive, devSiteTools } =
-    stateCache
+  const {
+    buildStatus,
+    settingsMismatches,
+    extensionHealth,
+    pythonEnvsActive,
+    devSiteTools,
+    versionMismatch
+  } = stateCache
   const items: IssueItem[] = []
   const warnColor = new vscode.ThemeColor('charts.yellow')
   const errorColor = new vscode.ThemeColor('charts.red')
+
+  if (versionMismatch) {
+    items.push({
+      label: 'CMK Extension',
+      description: `v${versionMismatch.installed} → v${versionMismatch.workspace}`,
+      tooltip: `Installed v${versionMismatch.installed} ≠ workspace v${versionMismatch.workspace}. Click to rebuild & install.`,
+      icon: 'extensions',
+      iconColor: warnColor,
+      command: 'cmk.rebuildExtension'
+    })
+  }
 
   for (const [, s] of Object.entries(buildStatus)) {
     if (s.ok) continue

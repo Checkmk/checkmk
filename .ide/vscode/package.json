@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -134,6 +134,10 @@
       {
         "command": "cmk.applySetting",
         "title": "CMK ▸ IDE: Apply Setting"
+      },
+      {
+        "command": "cmk.rebuildExtension",
+        "title": "CMK ▸ Rebuild & Install Extension"
       },
       {
         "command": "cmk.installDevSite",
@@ -353,6 +357,10 @@
         },
         {
           "command": "cmk.omdCreateSite"
+        },
+        {
+          "command": "cmk.rebuildExtension",
+          "when": "false"
         },
         {
           "command": "cmk.applySetting",

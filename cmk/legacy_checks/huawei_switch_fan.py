@@ -6,27 +6,35 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
 )
-from cmk.agent_based.v2 import OIDEnd, render, SNMPTree, StringTable
 from cmk.plugins.huawei.lib import (
     DETECT_HUAWEI_SWITCH,
     huawei_item_dict_from_entities,
 )
-
-check_info = {}
 
 
 @dataclass(frozen=True)
 class HuaweiFanData:
     fan_present: bool
     fan_speed: float
+
+
+class HuaweiFanParams(TypedDict, total=False):
+    levels: tuple[float, float]
+    levels_lower: tuple[float, float]
 
 
 type Section = Mapping[str, HuaweiFanData]
@@ -50,22 +58,26 @@ def parse_huawei_switch_fan(string_table: StringTable) -> Section:
     return huawei_item_dict_from_entities(entities_per_member)
 
 
-def discover_huawei_switch_fan(section: Section) -> LegacyDiscoveryResult:
+def discover_huawei_switch_fan(section: Section) -> DiscoveryResult:
     for item, item_data in section.items():
         if item_data.fan_present:
-            yield (item, {})
+            yield Service(item=item)
 
 
-def check_huawei_switch_fan(
-    item: str, params: Mapping[str, Any], section: Section
-) -> LegacyCheckResult:
+def check_huawei_switch_fan(item: str, params: HuaweiFanParams, section: Section) -> CheckResult:
     if not (item_data := section.get(item)):
         return
-    levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
-    yield check_levels(item_data.fan_speed, "fan_perc", levels, human_readable_func=render.percent)
+
+    yield from check_levels(
+        item_data.fan_speed,
+        levels_upper=params.get("levels"),
+        levels_lower=params.get("levels_lower"),
+        metric_name="fan_perc",
+        render_func=render.percent,
+    )
 
 
-check_info["huawei_switch_fan"] = LegacyCheckDefinition(
+snmp_section_huawei_switch_fan = SimpleSNMPSection(
     name="huawei_switch_fan",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=SNMPTree(
@@ -73,8 +85,14 @@ check_info["huawei_switch_fan"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "5", "6"],
     ),
     parse_function=parse_huawei_switch_fan,
+)
+
+
+check_plugin_huawei_switch_fan = CheckPlugin(
+    name="huawei_switch_fan",
     service_name="Fan %s",
     discovery_function=discover_huawei_switch_fan,
     check_function=check_huawei_switch_fan,
     check_ruleset_name="hw_fans_perc",
+    check_default_parameters={},
 )

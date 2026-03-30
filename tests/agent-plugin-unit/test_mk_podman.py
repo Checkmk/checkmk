@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -105,8 +106,8 @@ def test_get_piggyback_host(
     container_id: str,
     container_name: str,
     piggyback_name_method: PiggybackNameMethod,
-    nodename: str | None,
-    expected: str | None,
+    nodename: Optional[str],
+    expected: Optional[str],
 ) -> None:
     with patch("os.uname", return_value=("", "fakehost", "", "", "")):
         result = get_piggyback_host(container_id, container_name, piggyback_name_method, nodename)

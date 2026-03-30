@@ -65,10 +65,10 @@ populate_folders() {
         cp "${src}" "${STAGE_DIR?}/${src}"
     done
 
-    # Temporarily skip tests for mk_podman. Fix with CMK-33079
+    # mk_podman requires Python 3.8+ (walrus operator, dataclasses, etc.)
     podman_test="${STAGE_DIR?}/tests/agent-plugin-unit/test_mk_podman.py"
     case "${PYTHON_VERSION_MAJ_MIN?}" in
-        3.4 | 3.5 | 3.6 | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 | 3.12) rm "${podman_test}" ;;
+        3.4 | 3.5 | 3.6 | 3.7) rm "${podman_test}" ;;
     esac
 }
 

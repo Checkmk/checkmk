@@ -7,11 +7,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
-
-from .checktestlib import Check
-
-pytestmark = pytest.mark.checks
+from cmk.agent_based.v2 import Service, StringTable
+from cmk.legacy_checks.cmciii_lcp_water import (
+    check_cmciii_lcp_water,
+    discover_cmciii_lcp_water,
+    parse_cmciii_lcp_water,
+    Section,
+)
 
 
 @pytest.mark.parametrize(
@@ -151,14 +153,14 @@ pytestmark = pytest.mark.checks
         )
     ],
 )
-def test_parse_cmciii_lcp_water(string_table: StringTable, section: StringTable) -> None:
-    parsed = Check("cmciii_lcp_water").run_parse(string_table)
+def test_parse_cmciii_lcp_water(string_table: StringTable, section: Section) -> None:
+    parsed = parse_cmciii_lcp_water(string_table)
     assert isinstance(parsed, list)
     assert parsed == section
 
 
 @pytest.mark.parametrize(
-    "string_table, discovered_item",
+    "section, discovered_items",
     [
         pytest.param(
             [],
@@ -167,15 +169,12 @@ def test_parse_cmciii_lcp_water(string_table: StringTable, section: StringTable)
         )
     ],
 )
-def test_discover_cmciii_lcp_water(
-    string_table: StringTable, discovered_item: Sequence[object]
-) -> None:
-    check = Check("cmciii_lcp_water")
-    assert list(check.run_discovery(string_table)) == discovered_item
+def test_discover_cmciii_lcp_water(section: Section, discovered_items: Sequence[Service]) -> None:
+    assert list(discover_cmciii_lcp_water(section)) == discovered_items
 
 
 @pytest.mark.parametrize(
-    "string_table, discovered_items",
+    "section, discovered_items",
     [
         pytest.param(
             [],
@@ -184,6 +183,5 @@ def test_discover_cmciii_lcp_water(
         )
     ],
 )
-def test_check_cmciii_lcp_water(string_table: StringTable, discovered_items: Sequence[str]) -> None:
-    check = Check("cmciii_lcp_water")
-    assert list(check.run_check("bla", {}, string_table)) == discovered_items
+def test_check_cmciii_lcp_water(section: Section, discovered_items: Sequence[object]) -> None:
+    assert list(check_cmciii_lcp_water("bla", {}, section)) == discovered_items

@@ -3,18 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Iterable
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 from cmk.plugins.rittal.lib.cmciii import DETECT_CMCIII_LCP
-
-check_info = {}
 
 # Note: The CMCIII checks for Water IN/OUT and similar stuff are
 # deep and fundamentally broken (such as the implementation of
@@ -65,53 +67,54 @@ def parse_cmciii_lcp_water(string_table: StringTable) -> Section:
     return []
 
 
-def discover_cmciii_lcp_water(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_cmciii_lcp_water(section: Section) -> DiscoveryResult:
     if section:
-        yield "IN", {}
-        yield "OUT", {}
+        yield Service(item="IN")
+        yield Service(item="OUT")
 
 
-def check_cmciii_lcp_water(item, params, parsed):
-    # New check: This sensor is handled by cmciii.temp
-    if not parsed:
+def _parse_status(status_name: str) -> State:
+    match status_name.lower():
+        case "ok":
+            return State.OK
+        case "warning":
+            return State.WARN
+        case _:
+            return State.CRIT
+
+
+def check_cmciii_lcp_water(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if not section:
         return
 
-    def parse_status(status_name):
-        if status_name.lower() == "ok":
-            return 0
-        if status_name.lower() == "warning":
-            return 1
-        return 2
-
-    unit_status_name = parsed[2]
-    yield parse_status(unit_status_name), "Unit: %s" % unit_status_name
+    unit_status_name = section[2]
+    yield Result(state=_parse_status(unit_status_name), summary=f"Unit: {unit_status_name}")
 
     if item == "IN":
-        lines = parsed[5:12]
+        lines = section[5:12]
     else:
-        lines = parsed[14:21]
+        lines = section[14:21]
 
     # ['18.2 \xb0C', '50.0 \xb0C', '40.0 \xb0C', '13.0 \xb0C', '10.0 \xb0C', '3 %', 'OK']
 
     temperatures = [float(x.split()[0]) for x in lines[0:5]]
     temp = temperatures[0]
     limits = temperatures[1:]
-    status_name = lines[-1]
+    status = _parse_status(lines[-1])
 
-    status, info_text, perf_data = check_temperature(
+    yield from check_temperature(
         temp,
         params,
-        "cmciii_lcp_water_" + item,
+        unique_name=f"cmciii_lcp_water_{item}",
+        value_store=get_value_store(),
         dev_levels=(limits[1], limits[0]),
         dev_levels_lower=(limits[2], limits[3]),
-        dev_status=parse_status(status_name),
-        dev_status_name=status_name,
+        dev_status=status.value,
+        dev_status_name=status.name,
     )
 
-    yield status, "Temperature: " + info_text, perf_data
 
-
-check_info["cmciii_lcp_water"] = LegacyCheckDefinition(
+snmp_section_cmciii_lcp_water = SimpleSNMPSection(
     name="cmciii_lcp_water",
     detect=DETECT_CMCIII_LCP,
     fetch=SNMPTree(
@@ -119,8 +122,14 @@ check_info["cmciii_lcp_water"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     parse_function=parse_cmciii_lcp_water,
+)
+
+
+check_plugin_cmciii_lcp_water = CheckPlugin(
+    name="cmciii_lcp_water",
     service_name="Temperature Water LCP %s",
     discovery_function=discover_cmciii_lcp_water,
     check_function=check_cmciii_lcp_water,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )

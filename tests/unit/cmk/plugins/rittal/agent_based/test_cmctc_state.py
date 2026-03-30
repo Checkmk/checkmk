@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cmctc_state import (
+from cmk.plugins.rittal.agent_based.cmctc_state import (
     check_cmctc_state,
     discover_cmctc_state,
     parse_cmctc_state,

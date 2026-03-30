@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.collection.agent_based import (
+from cmk.plugins.rittal.agent_based import (
     cmciii,
     cmciii_access,
     cmciii_can_current,
@@ -40,11 +40,11 @@ from cmk.plugins.rittal.lib.cmciii import SensorType, Variable
 @pytest.fixture(name="empty_value_store")
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.cmciii_temp_in_out.get_value_store",
+        "cmk.plugins.rittal.agent_based.cmciii_temp_in_out.get_value_store",
         lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
     )
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.cmciii_temp.get_value_store",
+        "cmk.plugins.rittal.agent_based.cmciii_temp.get_value_store",
         lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
     )
 

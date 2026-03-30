@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cmciii_lcp_waterflow import (
+from cmk.plugins.rittal.agent_based.cmciii_lcp_waterflow import (
     check_cmciii_lcp_waterflow,
     discover_cmciii_lcp_waterflow,
     parse_cmciii_lcp_waterflow,

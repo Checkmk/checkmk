@@ -4,14 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Reversible
-from typing import TypeVar
-
-_T = TypeVar("_T")
 
 
-def merge_parameters(
-    parameters: Reversible[Mapping[str, _T]], default: Mapping[str, _T]
-) -> Mapping[str, _T]:
+def merge_parameters[T](
+    parameters: Reversible[Mapping[str, T]], default: Mapping[str, T]
+) -> Mapping[str, T]:
     """
     Merge dictionary based parameters.
 

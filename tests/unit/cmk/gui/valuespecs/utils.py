@@ -8,7 +8,6 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import TypeVar
 from unittest.mock import patch
 
 import pytest
@@ -26,22 +25,19 @@ def request_var(
         yield
 
 
-T = TypeVar("T")
-
-
-def validate(valuespec: vs.ValueSpec[T], value: T) -> None:
+def validate[T](valuespec: vs.ValueSpec[T], value: T) -> None:
     valuespec.validate_datatype(value, "varprefix")
     valuespec.validate_value(value, "varprefix")
 
 
-def expect_validate_failure(
+def expect_validate_failure[T](
     valuespec: vs.ValueSpec[T], value: T, *, match: str | None = None
 ) -> None:
     with pytest.raises(MKUserError, match=match):
         validate(valuespec, value)
 
 
-def expect_validate_success(valuespec: vs.ValueSpec[T], value: T) -> None:
+def expect_validate_success[T](valuespec: vs.ValueSpec[T], value: T) -> None:
     validate(valuespec, value)
 
 

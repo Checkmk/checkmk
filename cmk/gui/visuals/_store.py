@@ -71,7 +71,7 @@ def save[TVisual: Visual](
     _CombinedVisualsCache(what).invalidate_cache()
 
 
-def load(
+def load[TVisual: Visual](
     what: VisualTypeName,
     builtin_visuals: dict[VisualName, TVisual],
     internal_to_runtime_transformer: Callable[[dict[str, Any]], TVisual],

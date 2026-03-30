@@ -20,7 +20,7 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from dataclasses import dataclass
 from html import escape as html_escape
 from pathlib import Path
-from typing import Any, cast, Literal, overload, override, TypeVar
+from typing import Any, cast, Literal, overload, override
 
 from livestatus import (
     LocalConnection,
@@ -2245,10 +2245,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return found_packs
 
 
-T = TypeVar("T")
-
-
-def _deref(x: T | Callable[[], T]) -> T:
+def _deref[T](x: T | Callable[[], T]) -> T:
     return x() if callable(x) else x
 
 

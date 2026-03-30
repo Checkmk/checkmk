@@ -7,7 +7,7 @@
 
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, TypeGuard, TypeVar
+from typing import Any, Literal, TypeGuard
 
 from livestatus import OnlySites
 
@@ -829,10 +829,9 @@ class PainterEventPid(Painter):
 
 
 # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
-T = TypeVar("T")
 
 
-def _deref(x: T | Callable[[], T]) -> T:
+def _deref[T](x: T | Callable[[], T]) -> T:
     return x() if callable(x) else x
 
 

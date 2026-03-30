@@ -14,7 +14,7 @@ import json
 import logging
 import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Any, TypeVar
+from typing import Any
 
 import requests
 
@@ -240,14 +240,11 @@ class CouchbaseClient:
         return self._get_suburi("/buckets/%s/stats" % bucket)
 
 
-_TRawData = TypeVar("_TRawData")
-
-
-def _get_dump(
+def _get_dump[TRawData](
     node_name: str,
-    raw_data: Mapping[str, _TRawData],
+    raw_data: Mapping[str, TRawData],
     filter_keys: Iterable[str],
-    process: Callable[[_TRawData], object] = lambda x: x,
+    process: Callable[[TRawData], object] = lambda x: x,
 ) -> dict[str, object]:
     data: dict[str, object] = {"name": node_name}
     for key in filter_keys:

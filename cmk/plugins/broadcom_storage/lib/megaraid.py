@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Final, NamedTuple, TypeVar
+from typing import Final, NamedTuple
 
 from cmk.agent_based.v2 import Result, State
 
@@ -81,10 +81,7 @@ class PDisk(NamedTuple):
 SectionPDisks = Mapping[str, PDisk]
 
 
-_T = TypeVar("_T")
-
-
-def check_state(mismatch_state: State, label: str, actual: _T, expected: _T) -> Result:
+def check_state[T](mismatch_state: State, label: str, actual: T, expected: T) -> Result:
     """
     >>> check_state(State.WARN, "socks", "white", "black")
     Result(state=<State.WARN: 1>, summary='Socks: white (expected: black)')

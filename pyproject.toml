@@ -58,7 +58,6 @@ ignore = [
   "UP040",   # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
   "UP042",   # Class FOO inherits from both `str` and `enum.Enum`
   "UP046",   # Generic class `FOO` uses `Generic` subclass instead of type parameters (NOTE: fixable via --fix --unsafe-fixes)
-  "UP047",   # Generic function `expect_validate_success` should use type parameters
 ]
 
 [tool.ruff.lint.per-file-ignores]

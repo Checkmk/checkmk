@@ -21,7 +21,6 @@ import subprocess
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import TypeVar
 
 DEFAULT_DOC = Path("bandit-exclusions.md")
 ID_LEN = 6
@@ -121,10 +120,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-T = TypeVar("T")
-
-
-def _partition(
+def _partition[T](
     predicate: Callable[[T], bool], input_list: Sequence[T]
 ) -> tuple[Sequence[T], Sequence[T]]:
     yes, no = [], []

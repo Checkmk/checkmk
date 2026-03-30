@@ -8,10 +8,10 @@ import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from cmk.gui.htmllib.html import html
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.html import HTML
 
+from .html import html
 from .tag_rendering import HTMLContent
 
 __all__ = [

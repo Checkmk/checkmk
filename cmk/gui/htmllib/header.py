@@ -7,9 +7,10 @@
 from collections.abc import Sequence
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.htmllib.html import HTMLGenerator
-from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.page_menu import PageMenu
+
+from .html import HTMLGenerator
+from .top_heading import top_heading
 
 
 def make_header(

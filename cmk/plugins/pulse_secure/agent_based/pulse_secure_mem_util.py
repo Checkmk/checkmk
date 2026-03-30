@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TypedDict
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
@@ -21,14 +21,16 @@ from cmk.plugins.pulse_secure import lib as pulse_secure
 
 Section = Mapping[str, int]
 
-METRICS_INFO_NAMES_PULSE_SECURE_MEM = (
-    ["mem_used_percent", "swap_used_percent"],
-    ["RAM used", "Swap used"],
-)
+_METRIC_KEYS = ("mem_used_percent", "swap_used_percent")
+
+
+class PulseSecureMemUtilParams(TypedDict, total=False):
+    mem_used_percent: tuple[float, float]
+    swap_used_percent: tuple[float, float]
 
 
 def parse_pulse_secure_mem(string_table: StringTable) -> Section | None:
-    return pulse_secure.parse_pulse_secure(string_table, *METRICS_INFO_NAMES_PULSE_SECURE_MEM[0])
+    return pulse_secure.parse_pulse_secure(string_table, *_METRIC_KEYS)
 
 
 def discover_pulse_secure_mem_util(section: Section) -> DiscoveryResult:
@@ -36,19 +38,26 @@ def discover_pulse_secure_mem_util(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-def check_pulse_secure_mem(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_pulse_secure_mem(params: PulseSecureMemUtilParams, section: Section) -> CheckResult:
     if not section:
         return
 
-    for metric, info_name in zip(*METRICS_INFO_NAMES_PULSE_SECURE_MEM):
-        if metric in section:
-            yield from check_levels(
-                section[metric],
-                levels_upper=params.get(metric),
-                metric_name=metric,
-                render_func=render.percent,
-                label=info_name,
-            )
+    if "mem_used_percent" in section:
+        yield from check_levels(
+            section["mem_used_percent"],
+            levels_upper=params.get("mem_used_percent"),
+            metric_name="mem_used_percent",
+            render_func=render.percent,
+            label="RAM used",
+        )
+    if "swap_used_percent" in section:
+        yield from check_levels(
+            section["swap_used_percent"],
+            levels_upper=params.get("swap_used_percent"),
+            metric_name="swap_used_percent",
+            render_func=render.percent,
+            label="Swap used",
+        )
 
 
 snmp_section_pulse_secure_mem_util = SimpleSNMPSection(

@@ -5,16 +5,16 @@
 
 # mypy: disable-error-code="misc"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.legacy_checks.pulse_secure_mem_util import (
+from cmk.plugins.pulse_secure.agent_based.pulse_secure_mem_util import (
     check_pulse_secure_mem,
     discover_pulse_secure_mem_util,
     parse_pulse_secure_mem,
+    PulseSecureMemUtilParams,
 )
 
 
@@ -46,7 +46,7 @@ def test_discover_pulse_secure_mem(info: StringTable, expected_discoveries: Sequ
     ],
 )
 def test_check_pulse_secure_mem(
-    params: Mapping[str, Any],
+    params: PulseSecureMemUtilParams,
     info: StringTable,
     expected_states: Sequence[State],
     expected_labels: Sequence[str],

@@ -187,7 +187,7 @@
       "cSpell.dictionaryDefinitions": [
         {
           "name": "checkmk",
-          "path": "./.vscode/.cspell/checkmk.dict.txt",
+          "path": "./.ide/vscode/config/checkmk.dict.txt",
           "addWords": true
         }
       ],

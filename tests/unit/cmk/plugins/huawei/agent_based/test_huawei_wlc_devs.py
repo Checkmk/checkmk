@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.huawei_wlc_devs import (
+from cmk.plugins.huawei.agent_based.huawei_wlc_devs import (
     check_huawei_wlc_devs_cpu,
     check_huawei_wlc_devs_mem,
     discovery_huawei_wlc_devs_cpu,

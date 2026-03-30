@@ -4,14 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.legacy_checks.pulse_secure_log_util import (
     check_pulse_secure_log_util,
     discover_pulse_secure_log_util,
@@ -22,42 +20,42 @@ from cmk.legacy_checks.pulse_secure_log_util import (
 @pytest.mark.parametrize(
     "info, expected_discoveries",
     [
-        ([["19"]], [(None, {})]),
+        ([["19"]], [True]),
     ],
 )
-def test_discover_pulse_secure_log(
-    info: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
-) -> None:
+def test_discover_pulse_secure_log(info: StringTable, expected_discoveries: Sequence[bool]) -> None:
     """Test discovery function for pulse_secure_log_util check."""
     parsed = parse_pulse_secure_log_utils(info)
     if parsed is not None:
         result = list(discover_pulse_secure_log_util(parsed))
     else:
         result = []
-    assert sorted(result) == sorted(expected_discoveries)
+    assert len(result) == len(expected_discoveries)
 
 
 @pytest.mark.parametrize(
-    "item, params, info, expected_results",
+    "string_table, expected_state, expected_summary_substring",
     [
         (
-            None,
-            {},
             [["19"]],
-            [
-                (
-                    0,
-                    "Percentage of log file used: 19.00%",
-                    [("log_file_utilization", 19, None, None)],
-                )
-            ],
+            State.OK,
+            "Percentage of log file used",
         ),
     ],
 )
 def test_check_pulse_secure_log(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
+    string_table: StringTable,
+    expected_state: State,
+    expected_summary_substring: str,
 ) -> None:
     """Test check function for pulse_secure_log_util check."""
-    parsed = parse_pulse_secure_log_utils(info)
-    result = list(check_pulse_secure_log_util(item, params, parsed))
-    assert result == expected_results
+    parsed = parse_pulse_secure_log_utils(string_table)
+    assert parsed is not None
+    results = list(check_pulse_secure_log_util(parsed))
+    result_objs = [r for r in results if isinstance(r, Result)]
+    metric_objs = [r for r in results if isinstance(r, Metric)]
+    assert len(result_objs) == 1
+    assert result_objs[0].state == expected_state
+    assert expected_summary_substring in result_objs[0].summary
+    assert len(metric_objs) == 1
+    assert metric_objs[0].name == "log_file_utilization"

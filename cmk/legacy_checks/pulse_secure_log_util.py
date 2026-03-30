@@ -3,16 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+from collections.abc import Mapping
 
-from collections.abc import Iterable, Mapping
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.pulse_secure import lib as pulse_secure
-
-check_info = {}
 
 Section = Mapping[str, int]
 
@@ -23,25 +27,24 @@ def parse_pulse_secure_log_utils(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, METRIC_PULSE_SECURE_LOG)
 
 
-def discover_pulse_secure_log_util(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_pulse_secure_log_util(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_pulse_secure_log_util(_no_item, _no_params, parsed):
-    if not parsed:
+def check_pulse_secure_log_util(section: Section) -> CheckResult:
+    if not section:
         return
 
-    yield check_levels(
-        parsed[METRIC_PULSE_SECURE_LOG],
-        METRIC_PULSE_SECURE_LOG,
-        None,
-        infoname="Percentage of log file used",
-        human_readable_func=render.percent,
+    yield from check_levels(
+        section[METRIC_PULSE_SECURE_LOG],
+        metric_name=METRIC_PULSE_SECURE_LOG,
+        render_func=render.percent,
+        label="Percentage of log file used",
     )
 
 
-check_info["pulse_secure_log_util"] = LegacyCheckDefinition(
+snmp_section_pulse_secure_log_util = SimpleSNMPSection(
     name="pulse_secure_log_util",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
@@ -49,6 +52,11 @@ check_info["pulse_secure_log_util"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     parse_function=parse_pulse_secure_log_utils,
+)
+
+
+check_plugin_pulse_secure_log_util = CheckPlugin(
+    name="pulse_secure_log_util",
     service_name="Pulse Secure log file utilization",
     discovery_function=discover_pulse_secure_log_util,
     check_function=check_pulse_secure_log_util,

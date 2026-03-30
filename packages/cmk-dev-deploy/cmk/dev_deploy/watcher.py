@@ -124,13 +124,13 @@ def _get_content_hash(build_commit: str | None, repo_root: Path) -> str:
 
     # Deduplicate and sort for deterministic hashing (Pitfall 1)
     all_files = sorted(
-        set(
+        {
             line
             for line in (unstaged.stdout + staged.stdout + untracked_output)
             .strip()
             .splitlines()
             if line
-        )
+        }
     )
 
     # Build hash: filename list + per-file content hashes

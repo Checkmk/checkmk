@@ -15,7 +15,8 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.legacy_includes.ibm_mq import ibm_mq_check_version
+from cmk.plugins.ibm.agent_based.ibm_mq_managers import Section
+from cmk.plugins.ibm_mq.lib import ibm_mq_check_version
 
 # <<<ibm_mq_managers:sep(10)>>>
 # QMNAME(QMIMIQ11) STATUS(RUNNING) DEFAULT(NO) STANDBY(PERMITTED) INSTNAME(Installation1) INSTPATH(/usr/mqm) INSTVER(8.0.0.5)
@@ -65,12 +66,12 @@ def map_ibm_mq_manager_status(status: str, params: Mapping[str, Any]) -> int:
     return check_state
 
 
-def discover_ibm_mq_managers(section: Any) -> DiscoveryResult:
+def discover_ibm_mq_managers(section: Section) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
 
-def check_ibm_mq_managers(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+def check_ibm_mq_managers(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if not (data := section.get(item)):
         return
 

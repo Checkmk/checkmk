@@ -8,8 +8,11 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.ibm_mq_managers import check_ibm_mq_managers, discover_ibm_mq_managers
-from cmk.plugins.ibm.agent_based.ibm_mq_managers import parse_ibm_mq_managers
+from cmk.plugins.ibm.agent_based.ibm_mq_managers import ManagerInfo, parse_ibm_mq_managers
+from cmk.plugins.ibm_mq.agent_based.ibm_mq_managers import (
+    check_ibm_mq_managers,
+    discover_ibm_mq_managers,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -51,7 +54,7 @@ QMNAME(THE.CRASHED.ONE)                                   STATUS(ENDED UNEXPECTE
     assert manager.attributes["QMNAME"] == "THE.CRASHED.ONE"
     assert manager.attributes["STATUS"] == "ENDED UNEXPECTEDLY"
     assert manager.attributes["STANDBY"] == "NOT APPLICABLE"
-    assert len(manager.instances) == 0
+    assert manager.instances == []
 
 
 def test_check_single_instance_running() -> None:
@@ -62,9 +65,9 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     section = parse_info(lines, chr(10))
     parsed = parse_ibm_mq_managers(section)
 
-    manager = parsed["THE.LOCAL.ONE"]
-    assert manager.attributes["QMNAME"] == "THE.LOCAL.ONE"
-    assert manager.attributes["STATUS"] == "RUNNING"
+    attrs = parsed["THE.LOCAL.ONE"].attributes
+    assert attrs["QMNAME"] == "THE.LOCAL.ONE"
+    assert attrs["STATUS"] == "RUNNING"
 
     params: dict[str, Any] = {}
     actual = list(check_ibm_mq_managers("THE.LOCAL.ONE", params, parsed))
@@ -86,9 +89,9 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
     section = parse_info(lines, chr(10))
     parsed = parse_ibm_mq_managers(section)
 
-    manager = parsed["THE.RDQM.ONE"]
-    assert manager.attributes["QMNAME"] == "THE.RDQM.ONE"
-    assert manager.attributes["STATUS"] == "RUNNING"
+    attrs = parsed["THE.RDQM.ONE"].attributes
+    assert attrs["QMNAME"] == "THE.RDQM.ONE"
+    assert attrs["STATUS"] == "RUNNING"
 
     params: dict[str, Any] = {}
     actual = list(check_ibm_mq_managers("THE.RDQM.ONE", params, parsed))
@@ -193,8 +196,8 @@ QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAUL
 
 def test_discovery() -> None:
     parsed = {
-        "QM1": {"STATUS": "RUNNING"},
-        "QM2": {"STATUS": "ENDED NORMALLY"},
+        "QM1": ManagerInfo(attributes={"STATUS": "RUNNING"}, instances=[]),
+        "QM2": ManagerInfo(attributes={"STATUS": "ENDED NORMALLY"}, instances=[]),
     }
     discovery = list(discover_ibm_mq_managers(parsed))
     assert len(discovery) == 2

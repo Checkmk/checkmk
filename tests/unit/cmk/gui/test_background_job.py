@@ -420,8 +420,10 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
         terminate_signal_file.touch()
         try:
             wait_until(
-                lambda: job.get_status().state
-                not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
+                lambda: (
+                    job.get_status().state
+                    not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING]
+                ),
                 timeout=20,
                 interval=0.1,
             )

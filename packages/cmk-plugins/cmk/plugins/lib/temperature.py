@@ -209,17 +209,19 @@ def _check_trend(
         levels_upper=levels_upper_trend,
         levels_lower=levels_lower_trend,
         label="Temperature trend",
-        render_func=lambda trend: render_temp(
-            trend,
-            output_unit,
-            relative=True,
-            sign=True,
-        )
-        + " "
-        + temp_unitsym[output_unit]
-        + " per "
-        + str(trend_range_min)
-        + " min",
+        render_func=lambda trend: (
+            render_temp(
+                trend,
+                output_unit,
+                relative=True,
+                sign=True,
+            )
+            + " "
+            + temp_unitsym[output_unit]
+            + " per "
+            + str(trend_range_min)
+            + " min"
+        ),
     )
 
     if "trend_timeleft" not in params:

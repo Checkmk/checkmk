@@ -170,13 +170,15 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | 
         # wait for a dump being returned successfully, which may not work immediately
         # after starting the agent controller, so we retry for some time
         wait_until(
-            lambda: execute(
-                [ctl_path.as_posix(), "dump"],
-                sudo=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            ).wait()
-            == 0,
+            lambda: (
+                execute(
+                    [ctl_path.as_posix(), "dump"],
+                    sudo=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                ).wait()
+                == 0
+            ),
             timeout=30,
             interval=0.1,
         )
@@ -218,11 +220,13 @@ def wait_until_host_receives_data(
 ) -> None:
     try:
         wait_until(
-            lambda: not site.execute(
-                ["cmk", "-d", hostname],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            ).wait(),
+            lambda: (
+                not site.execute(
+                    ["cmk", "-d", hostname],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                ).wait()
+            ),
             timeout=timeout,
             interval=interval,
         )

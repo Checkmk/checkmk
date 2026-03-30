@@ -364,23 +364,19 @@ def main():
 
         conn.register_callback(
             IPConnection.CALLBACK_ENUMERATE,
-            lambda uid,
-            connected_uid,
-            position,
-            hardware_version,
-            firmware_version,
-            device_identifier,
-            enumeration_type: enumerate_callback(
-                conn,
-                device_handlers,
-                settings,
-                uid,
-                connected_uid,
-                position,
-                hardware_version,
-                firmware_version,
-                device_identifier,
-                enumeration_type,
+            lambda uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type: (
+                enumerate_callback(
+                    conn,
+                    device_handlers,
+                    settings,
+                    uid,
+                    connected_uid,
+                    position,
+                    hardware_version,
+                    firmware_version,
+                    device_identifier,
+                    enumeration_type,
+                )
             ),
         )
         conn.enumerate()

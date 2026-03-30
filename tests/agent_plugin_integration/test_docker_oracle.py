@@ -315,8 +315,10 @@ class OracleDatabase:
             ]
             try:
                 wait_until(
-                    lambda: self.checkmk is not None
-                    and self.checkmk.container.exec_run(cmk_dump_cmd)[0] == 0,
+                    lambda: (
+                        self.checkmk is not None
+                        and self.checkmk.container.exec_run(cmk_dump_cmd)[0] == 0
+                    ),
                     timeout=300,
                     interval=20,
                 )

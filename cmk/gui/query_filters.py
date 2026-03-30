@@ -173,7 +173,7 @@ class TristateQuery(SingleOptionQuery):
             ident=ident,
             filter_code=lambda pick: filter_code(pick == "1"),
             filter_row=(
-                lambda pick, row: (filter_row(pick == "1", row) if filter_row is not None else True)
+                lambda pick, row: filter_row(pick == "1", row) if filter_row is not None else True
             ),
             options=options or default_tri_state_options(),
         )

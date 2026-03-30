@@ -64,8 +64,8 @@ def _check_common(
                     counters[counter_key],
                 ),
                 levels_upper=params.get(counter_key),
-                render_func=lambda v, n=node_name, t=title: (
-                    "{}{}: {:.1f}/s".format(n and "[%s] " % n, t, v)
+                render_func=lambda v, n=node_name, t=title: "{}{}: {:.1f}/s".format(
+                    n and "[%s] " % n, t, v
                 ),
                 metric_name=counter_key.replace("/sec", "_per_second"),
                 boundaries=(0, None),

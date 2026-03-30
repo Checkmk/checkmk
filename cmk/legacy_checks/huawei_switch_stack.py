@@ -3,58 +3,70 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping, Sequence
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.huawei.lib import DETECT_HUAWEI_SWITCH
 
-check_info = {}
+_UNKNOWN_ROLE = "unknown"
 
-huawei_switch_stack_unknown_role = "unknown"
+_STACK_ROLE_NAMES = {
+    "1": "master",
+    "2": "standby",
+    "3": "slave",
+}
+
+Section = Mapping[str, str]
 
 
-def parse_huawei_switch_stack(string_table):
-    stack_role_names = {
-        "1": "master",
-        "2": "standby",
-        "3": "slave",
-    }
+class HuaweiSwitchStackParams(TypedDict):
+    expected_role: str
 
+
+def parse_huawei_switch_stack(string_table: Sequence[StringTable]) -> Section:
     stack_enabled_info, stack_role_info = string_table
     if not stack_enabled_info or stack_enabled_info[0][0] != "1":
         return {}
 
-    parsed = {}
-    for line in stack_role_info:
-        member_number = line[0]
-        stack_role = stack_role_names.get(line[1], huawei_switch_stack_unknown_role)
-        parsed[member_number] = stack_role
-
-    return parsed
+    return {line[0]: _STACK_ROLE_NAMES.get(line[1], _UNKNOWN_ROLE) for line in stack_role_info}
 
 
-def discover_huawei_switch_stack(parsed):
-    for item, role in parsed.items():
-        yield (item, {"expected_role": role})
+def discover_huawei_switch_stack(section: Section) -> DiscoveryResult:
+    for item, role in section.items():
+        yield Service(item=item, parameters={"expected_role": role})
 
 
-def check_huawei_switch_stack(item, params, parsed):
-    if not (item_data := parsed.get(item)):
+def check_huawei_switch_stack(
+    item: str, params: HuaweiSwitchStackParams, section: Section
+) -> CheckResult:
+    if not (item_data := section.get(item)):
         return
 
-    if item_data == huawei_switch_stack_unknown_role:
-        yield 2, item_data
-
+    if item_data == _UNKNOWN_ROLE:
+        yield Result(state=State.CRIT, summary=item_data)
     elif item_data == params["expected_role"]:
-        yield 0, item_data
-
+        yield Result(state=State.OK, summary=item_data)
     else:
-        yield 2, "Unexpected role: {} (Expected: {})".format(item_data, params["expected_role"])
+        yield Result(
+            state=State.CRIT,
+            summary=f"Unexpected role: {item_data} (Expected: {params['expected_role']})",
+        )
 
 
-check_info["huawei_switch_stack"] = LegacyCheckDefinition(
+snmp_section_huawei_switch_stack = SNMPSection(
     name="huawei_switch_stack",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
@@ -68,7 +80,13 @@ check_info["huawei_switch_stack"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_huawei_switch_stack,
+)
+
+
+check_plugin_huawei_switch_stack = CheckPlugin(
+    name="huawei_switch_stack",
     service_name="Stack role %s",
     discovery_function=discover_huawei_switch_stack,
     check_function=check_huawei_switch_stack,
+    check_default_parameters={"expected_role": "unknown"},
 )

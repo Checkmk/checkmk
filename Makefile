@@ -72,6 +72,7 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	    --exclude check-mk-$(EDITION)-$(VERSION) \
 	    --exclude non-free \
 	    --exclude tests/qa-test-data \
+	    --exclude remote.bazelrc \
 	    $$EXCLUDES \
 	    * .werks | tar x -C check-mk-$(EDITION)-$(VERSION)
 	if [ -f COMMIT ]; then \

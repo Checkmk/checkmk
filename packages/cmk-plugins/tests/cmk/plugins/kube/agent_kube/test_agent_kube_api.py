@@ -54,6 +54,11 @@ def test_pod_deployment_allocation_within_cluster() -> None:
 ONE_KiB = 1024
 ONE_MiB = 1024 * ONE_KiB
 
+_UNSET_RESOURCES = api.ResourceRequirements(
+    limits=api.ResourceRequirement(),
+    requests=api.ResourceRequirement(),
+)
+
 
 def container_spec(
     request_cpu: float | None = 1.0,
@@ -69,47 +74,156 @@ def container_spec(
     )
 
 
+def _pod_with_container(spec: api.ContainerSpec) -> api.Pod:
+    return APIPodFactory.build(
+        spec=PodSpecFactory.build(containers=[spec], resources=_UNSET_RESOURCES)
+    )
+
+
 def test_aggregate_resources_summed_request_cpu() -> None:
-    container_specs = [container_spec(request_cpu=request) for request in [None, 1.0, 1.0]]
-    result = aggregate_resources("cpu", container_specs)
+    pods = [_pod_with_container(container_spec(request_cpu=r)) for r in [None, 1.0, 1.0]]
+    result = aggregate_resources("cpu", pods)
     assert result.request == 2.0
     assert result.count_unspecified_requests == 1
 
 
 def test_aggregate_resources_summed_request_memory() -> None:
-    container_specs = [
-        container_spec(request_memory=request) for request in [None, 1.0 * ONE_MiB, 1.0 * ONE_MiB]
+    pods = [
+        _pod_with_container(container_spec(request_memory=r))
+        for r in [None, 1.0 * ONE_MiB, 1.0 * ONE_MiB]
     ]
-    result = aggregate_resources("memory", container_specs)
+    result = aggregate_resources("memory", pods)
     assert result.request == 2.0 * ONE_MiB
     assert result.count_unspecified_requests == 1
 
 
 def test_aggregate_resources_summed_limit_cpu() -> None:
-    container_specs = [container_spec(limit_cpu=limit) for limit in [None, 1.0, 1.0]]
-    result = aggregate_resources("cpu", container_specs)
+    pods = [_pod_with_container(container_spec(limit_cpu=l)) for l in [None, 1.0, 1.0]]
+    result = aggregate_resources("cpu", pods)
     assert result.limit == 2.0
     assert result.count_unspecified_limits == 1
 
 
 def test_aggregate_resources_summed_limit_memory() -> None:
-    container_specs = [
-        container_spec(limit_memory=limit) for limit in [None, 1.0 * ONE_MiB, 1.0 * ONE_MiB]
+    pods = [
+        _pod_with_container(container_spec(limit_memory=l))
+        for l in [None, 1.0 * ONE_MiB, 1.0 * ONE_MiB]
     ]
-    result = aggregate_resources("memory", container_specs)
+    result = aggregate_resources("memory", pods)
     assert result.limit == 2.0 * ONE_MiB
 
 
 def test_aggregate_resources_with_only_zeroed_limit_cpu() -> None:
-    container_specs = [container_spec(limit_cpu=limit) for limit in [0.0, 0.0]]
-    result = aggregate_resources("cpu", container_specs)
+    pods = [_pod_with_container(container_spec(limit_cpu=l)) for l in [0.0, 0.0]]
+    result = aggregate_resources("cpu", pods)
     assert result.count_zeroed_limits == 2
 
 
 def test_aggregate_resources_with_only_zeroed_limit_memory() -> None:
-    container_specs = [container_spec(limit_memory=limit) for limit in [0.0, 0.0]]
-    result = aggregate_resources("memory", container_specs)
+    pods = [_pod_with_container(container_spec(limit_memory=l)) for l in [0.0, 0.0]]
+    result = aggregate_resources("memory", pods)
     assert result.count_zeroed_limits == 2
+
+
+@pytest.mark.parametrize(
+    "pod_cpu_resources,expected_request,expected_limit,expected_pod_level_request,expected_pod_level_limit,expected_total_requests,expected_total_limits",
+    [
+        pytest.param(
+            api.ResourceRequirements(
+                requests=api.ResourceRequirement(cpu=3.0),
+                limits=api.ResourceRequirement(),
+            ),
+            3.0,
+            2.0,
+            1,
+            0,
+            0,
+            1,
+            id="pod-level request, container limit",
+        ),
+        pytest.param(
+            api.ResourceRequirements(
+                requests=api.ResourceRequirement(),
+                limits=api.ResourceRequirement(cpu=5.0),
+            ),
+            1.0,
+            5.0,
+            0,
+            1,
+            1,
+            0,
+            id="container request, pod-level limit",
+        ),
+        pytest.param(
+            api.ResourceRequirements(
+                requests=api.ResourceRequirement(cpu=3.0),
+                limits=api.ResourceRequirement(cpu=5.0),
+            ),
+            3.0,
+            5.0,
+            1,
+            1,
+            0,
+            0,
+            id="both pod-level",
+        ),
+        pytest.param(
+            api.ResourceRequirements(
+                requests=api.ResourceRequirement(cpu=0.0),
+                limits=api.ResourceRequirement(cpu=0.0),
+            ),
+            1.0,
+            2.0,
+            0,
+            0,
+            1,
+            1,
+            id="when pod-level are 0, use container-level",
+        ),
+    ],
+)
+def test_aggregate_resources_pod_level_cpu(
+    pod_cpu_resources: api.ResourceRequirements,
+    expected_request: float,
+    expected_limit: float,
+    expected_pod_level_request: int,
+    expected_pod_level_limit: int,
+    expected_total_requests: int,
+    expected_total_limits: int,
+) -> None:
+    pod = APIPodFactory.build(
+        spec=PodSpecFactory.build(
+            containers=[container_spec(request_cpu=1.0, limit_cpu=2.0)],
+            resources=pod_cpu_resources,
+        )
+    )
+    result = aggregate_resources("cpu", [pod])
+    assert result.request == expected_request
+    assert result.limit == expected_limit
+    assert result.count_pods_pod_level_request == expected_pod_level_request
+    assert result.count_pods_pod_level_limit == expected_pod_level_limit
+    assert result.count_total_requests == expected_total_requests
+    assert result.count_total_limits == expected_total_limits
+
+
+def test_aggregate_resources_mixed_pod_and_container_level_cpu() -> None:
+    pod_level = APIPodFactory.build(
+        spec=PodSpecFactory.build(
+            containers=[container_spec(request_cpu=1.0, limit_cpu=2.0)],
+            resources=api.ResourceRequirements(
+                requests=api.ResourceRequirement(cpu=3.0),
+                limits=api.ResourceRequirement(cpu=5.0),
+            ),
+        )
+    )
+    container_level = _pod_with_container(container_spec(request_cpu=1.0, limit_cpu=2.0))
+    result = aggregate_resources("cpu", [pod_level, container_level])
+    assert result.request == 4.0  # 3.0 pod-level + 1.0 container
+    assert result.limit == 7.0  # 5.0 pod-level + 2.0 container
+    assert result.count_pods_pod_level_request == 1
+    assert result.count_pods_pod_level_limit == 1
+    assert result.count_total_requests == 1
+    assert result.count_total_limits == 1
 
 
 @pytest.mark.parametrize("pods_count", [0, 5])
@@ -211,7 +325,8 @@ def test_collect_workload_resources_from_api_pods(pods_count: int) -> None:
                             limits=requirements, requests=requirements
                         )
                     )
-                ]
+                ],
+                resources=_UNSET_RESOURCES,
             )
         )
         for _ in range(pods_count)
@@ -228,7 +343,10 @@ def test_collect_workload_resources_from_api_pods(pods_count: int) -> None:
         count_unspecified_limits=0,
         count_unspecified_requests=0,
         count_zeroed_limits=0,
-        count_total=pods_count,
+        count_total_requests=pods_count,
+        count_total_limits=pods_count,
+        count_pods_pod_level_request=0,
+        count_pods_pod_level_limit=0,
     )
 
     assert cpu_resources == section.Resources(
@@ -237,7 +355,10 @@ def test_collect_workload_resources_from_api_pods(pods_count: int) -> None:
         count_unspecified_limits=0,
         count_unspecified_requests=0,
         count_zeroed_limits=0,
-        count_total=pods_count,
+        count_total_requests=pods_count,
+        count_total_limits=pods_count,
+        count_pods_pod_level_request=0,
+        count_pods_pod_level_limit=0,
     )
 
 
@@ -254,7 +375,8 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
                             limits=limits, requests=requests
                         )
                     )
-                ]
+                ],
+                resources=_UNSET_RESOURCES,
             )
         )
         for _ in range(pods_count)
@@ -271,7 +393,10 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
         count_unspecified_limits=0,
         count_unspecified_requests=0,
         count_zeroed_limits=0,
-        count_total=pods_count,
+        count_total_requests=pods_count,
+        count_total_limits=pods_count,
+        count_pods_pod_level_request=0,
+        count_pods_pod_level_limit=0,
     )
 
     assert cpu_resources == section.Resources(
@@ -280,7 +405,10 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
         count_unspecified_limits=0,
         count_unspecified_requests=0,
         count_zeroed_limits=0,
-        count_total=pods_count,
+        count_total_requests=pods_count,
+        count_total_limits=pods_count,
+        count_pods_pod_level_request=0,
+        count_pods_pod_level_limit=0,
     )
 
 
@@ -295,7 +423,10 @@ def test_collect_workload_resources_from_agent_pods_no_pods_in_cluster() -> None
         count_unspecified_limits=0,
         count_unspecified_requests=0,
         count_zeroed_limits=0,
-        count_total=0,
+        count_total_requests=0,
+        count_total_limits=0,
+        count_pods_pod_level_request=0,
+        count_pods_pod_level_limit=0,
     )
 
     assert memory_resources == empty_section

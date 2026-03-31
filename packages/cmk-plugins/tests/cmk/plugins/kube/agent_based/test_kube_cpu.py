@@ -46,10 +46,13 @@ PARAMS = kube_resources.Params(
 RESOURCES_SECTION = Resources(
     request=0.18,
     limit=0.36,
-    count_total=2,
     count_zeroed_limits=0,
     count_unspecified_limits=0,
     count_unspecified_requests=0,
+    count_total_requests=2,
+    count_total_limits=2,
+    count_pods_pod_level_request=0,
+    count_pods_pod_level_limit=0,
 )
 
 

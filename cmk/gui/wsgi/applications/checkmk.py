@@ -34,6 +34,7 @@ from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
     MKConfigError,
+    MKHTTPException,
     MKMethodNotAllowed,
     MKNotFound,
     MKUnauthenticatedException,
@@ -127,8 +128,11 @@ def _page_not_found(ctx: pages.PageContext) -> Response:
 
 
 def _render_exception(e: Exception, title: str) -> Response:
+    status_code: int | None = e.status if isinstance(e, MKHTTPException) else None
     if _is_ajax_request():
-        return _json_error_response(f"{title}: {e}" if title else str(e))
+        return _json_error_response(
+            f"{title}: {e}" if title else str(e), status_code=status_code if status_code else 200
+        )
 
     if plain_error():
         return Response(
@@ -136,6 +140,7 @@ def _render_exception(e: Exception, title: str) -> Response:
                 "{}{}\n".format(("%s: " % title) if title else "", e),
             ],
             mimetype="text/plain",
+            status=status_code,
         )
 
     if not fail_silently():

@@ -43,6 +43,64 @@ jenkins_build_data.py <url> --download "<artifact>" --download-dir /tmp/jenkins-
 
 Prefer `jq` over `python3` commands.
 
+# Playwright trace analysis for failed GUI E2E tests
+
+When a GUI E2E test fails, a Playwright trace zip is often available as a build artifact.
+
+## 1. Find and download the trace
+
+List artifacts to locate the trace (look for files matching `*trace*` or `*.zip`):
+
+```bash
+jenkins_build_data.py <url> --include=artifacts
+```
+
+Download it:
+
+```bash
+jenkins_build_data.py <url> --download "<artifact-path>" --download-dir /tmp/jenkins-artifacts
+```
+
+## 2. Analyze the trace with playwright-trace-analyzer
+
+`playwright-trace-analyzer` is a CLI tool that inspects trace zips without a browser.
+
+Before using it, verify it is installed:
+
+```bash
+playwright-trace-analyzer --version
+```
+
+If the command is not found, ask the user to install it:
+
+```
+uv tool install playwright-trace-analyzer
+```
+
+Get a high-level overview first:
+
+```bash
+playwright-trace-analyzer summary /tmp/jenkins-artifacts/<trace>.zip
+```
+
+Then drill into the actions to find where it failed:
+
+```bash
+playwright-trace-analyzer actions /tmp/jenkins-artifacts/<trace>.zip
+```
+
+Check network requests if the failure may be API-related:
+
+```bash
+playwright-trace-analyzer network /tmp/jenkins-artifacts/<trace>.zip
+```
+
+Check browser console errors:
+
+```bash
+playwright-trace-analyzer console /tmp/jenkins-artifacts/<trace>.zip
+```
+
 # In case the commands jenkins_build_data.py is missing
 
 Ask the user to clone the zeug_cmk git repository and add it to their PATH.

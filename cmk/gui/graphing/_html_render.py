@@ -224,12 +224,10 @@ def make_graph_time_range_html(
     factor: int,
     height_in_ex: float,
 ) -> GraphTimeRange:
-    steps_per_ex = _HTML_SIZE_PER_EX * 4
-    number_of_steps = height_in_ex * steps_per_ex
     return GraphTimeRange(
         start=start,
         end=end,
-        step=factor * int((end - start) / number_of_steps),
+        step=factor * int((end - start) / (height_in_ex * _HTML_SIZE_PER_EX * 4)),
     )
 
 

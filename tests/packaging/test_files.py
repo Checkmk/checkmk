@@ -466,6 +466,7 @@ def test_src_does_not_contain_dev_files(
             "bazel-out",
             "bazel-testlogs",
             "bazel-checkout",
+            "remote.bazelrc",
         }
     ]
     assert not unwanted_files, (

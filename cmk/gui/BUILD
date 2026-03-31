@@ -165,6 +165,54 @@ py_library(
     ],
 )
 
+py_library(
+    name = "http",
+    srcs = ["http.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":ctx_stack",
+        ":exceptions",
+        ":i18n",
+        "//cmk/utils",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:site",
+        requirement("flask"),
+        requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "permissions",
+    srcs = ["permissions.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":speaklater",
+        ":type_defs",
+        "//packages/cmk-ccc:plugin-registry",
+    ],
+)
+
+py_library(
+    name = "user_connection_config_types",
+    srcs = ["user_connection_config_types.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":type_defs",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -177,12 +225,15 @@ py_library(
             "exceptions.py",
             "features.py",
             "hooks.py",
+            "http.py",
             "i18n.py",
             "log.py",
             "num_split.py",
+            "permissions.py",
             "role_types.py",
             "site_config.py",
             "type_defs.py",
+            "user_connection_config_types.py",
             "utils/speaklater.py",
         ],
     ) + ["wsgi/applications/index.wsgi"],
@@ -201,13 +252,16 @@ py_library(
         ":exceptions",
         ":features",
         ":hooks",
+        ":http",
         ":i18n",
         ":log",
         ":num_split",
+        ":permissions",
         ":role_types",
         ":site_config",
         ":speaklater",
         ":type_defs",
+        ":user_connection_config_types",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/checkengine",

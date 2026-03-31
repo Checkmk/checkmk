@@ -39,6 +39,7 @@ from cmk.utils import paths
 
 from ._artwork import (
     GraphArtwork,
+    GraphArtworkAnnotations,
     iter_graph_artworks,
 )
 from ._fetch_time_series import fetch_augmented_time_series
@@ -161,7 +162,7 @@ def _answer_graph_image_request(
             debug=debug,
         )
         graphs = []
-        for _rwo, result in itertools.islice(
+        for rwo, result in itertools.islice(
             iter_graph_artworks(
                 get_template_graph_specification(
                     site_id=SiteId(site) if site else None,
@@ -177,7 +178,14 @@ def _answer_graph_image_request(
             num_graphs,
         ):
             graphs.append(
-                base64.b64encode(render_graph_png(result.artwork, display_config)).decode("ascii")
+                base64.b64encode(
+                    render_graph_png(
+                        result.artwork,
+                        result.annotations,
+                        rwo.recipe.title,
+                        display_config,
+                    )
+                ).decode("ascii")
             )
 
         response.set_data(json.dumps(graphs))
@@ -224,7 +232,12 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
 
 
 @tracer.instrument("graphing.render_graph_png")
-def render_graph_png(artwork: GraphArtwork, display_config: GraphDisplayConfigImage) -> bytes:
+def render_graph_png(
+    artwork: GraphArtwork,
+    annotations: GraphArtworkAnnotations,
+    title: str,
+    display_config: GraphDisplayConfigImage,
+) -> bytes:
     width_ex, height_ex = display_config.size
     mm_per_ex = get_mm_per_ex(display_config.font_size)
 
@@ -243,6 +256,8 @@ def render_graph_png(artwork: GraphArtwork, display_config: GraphDisplayConfigIm
     render_graph_pdf(
         doc,
         artwork,
+        annotations,
+        title,
         display_config,
         pos_left=0.0,
         pos_top=0.0,

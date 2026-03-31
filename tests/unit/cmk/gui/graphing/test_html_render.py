@@ -9,6 +9,7 @@ import pytest
 
 from cmk.gui.graphing._artwork import (
     Curve,
+    CurveAnnotations,
     LayoutedCurve,
     LayoutedCurveArea,
     LayoutedCurveLine,
@@ -18,56 +19,73 @@ from cmk.gui.graphing._artwork import (
 from cmk.gui.graphing._html_render import _order_graph_curves_for_legend_and_mouse_hover
 
 
+def _curve_annotation() -> CurveAnnotations:
+    return CurveAnnotations(
+        scalars=Scalars(
+            pin=(None, ""),
+            first=(None, ""),
+            last=(None, ""),
+            max=(None, ""),
+            min=(None, ""),
+            average=(None, ""),
+        ),
+        attributes={},
+    )
+
+
 def test__order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
     rendered_value = (123.456, "123.456")
-    assert list(
-        _order_graph_curves_for_legend_and_mouse_hover(
-            [
-                Curve(
-                    line_type="line",
-                    color="",
-                    title="1",
-                    rendered_value=rendered_value,
-                ),
-                Curve(
-                    line_type="ref",
-                    color="",
-                    title="2",
-                    rendered_value=rendered_value,
-                ),
-                Curve(
-                    line_type="-area",
-                    color="",
-                    title="3",
-                    rendered_value=rendered_value,
-                ),
-                Curve(
-                    line_type="stack",
-                    color="",
-                    title="4",
-                    rendered_value=rendered_value,
-                ),
-                Curve(
-                    line_type="area",
-                    color="",
-                    title="5",
-                    rendered_value=rendered_value,
-                ),
-                Curve(
-                    line_type="-stack",
-                    color="",
-                    title="6",
-                    rendered_value=rendered_value,
-                ),
-                Curve(
-                    line_type="stack",
-                    color="",
-                    title="7",
-                    rendered_value=rendered_value,
-                ),
-            ]
+    curves = [
+        Curve(
+            line_type="line",
+            color="",
+            title="1",
+            rendered_value=rendered_value,
+        ),
+        Curve(
+            line_type="ref",
+            color="",
+            title="2",
+            rendered_value=rendered_value,
+        ),
+        Curve(
+            line_type="-area",
+            color="",
+            title="3",
+            rendered_value=rendered_value,
+        ),
+        Curve(
+            line_type="stack",
+            color="",
+            title="4",
+            rendered_value=rendered_value,
+        ),
+        Curve(
+            line_type="area",
+            color="",
+            title="5",
+            rendered_value=rendered_value,
+        ),
+        Curve(
+            line_type="-stack",
+            color="",
+            title="6",
+            rendered_value=rendered_value,
+        ),
+        Curve(
+            line_type="stack",
+            color="",
+            title="7",
+            rendered_value=rendered_value,
+        ),
+    ]
+    assert [
+        c
+        for c, _ in _order_graph_curves_for_legend_and_mouse_hover(
+            curves,
+            [_curve_annotation() for _ in range(len(curves))],
         )
-    ) == [
+    ] == [
         Curve(
             color="",
             line_type="line",
@@ -122,45 +140,18 @@ def test__order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     line_type="stack",
                     color="",
                     title="1",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
                     line_type="stack",
                     color="",
                     title="2",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveLine(
                     line_type="line",
                     color="",
                     title="3",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
             ],
@@ -169,45 +160,18 @@ def test__order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     line_type="line",
                     color="",
                     title="3",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
                     line_type="stack",
                     color="",
                     title="2",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
                     line_type="stack",
                     color="",
                     title="1",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
             ],
@@ -219,90 +183,36 @@ def test__order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     line_type="-stack",
                     color="",
                     title="1",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveArea(
                     line_type="-area",
                     color="",
                     title="2",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveLine(
                     line_type="-line",
                     color="",
                     title="3",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
                     line_type="stack",
                     color="",
                     title="4",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveArea(
                     line_type="area",
                     color="",
                     title="5",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveLine(
                     line_type="line",
                     color="",
                     title="6",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
             ],
@@ -311,90 +221,36 @@ def test__order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
                     line_type="line",
                     color="",
                     title="6",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveArea(
                     line_type="area",
                     color="",
                     title="5",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
                     line_type="stack",
                     color="",
                     title="4",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveStack(
                     line_type="-stack",
                     color="",
                     title="1",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveArea(
                     line_type="-area",
                     color="",
                     title="2",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
                 LayoutedCurveLine(
                     line_type="-line",
                     color="",
                     title="3",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     points=[],
                 ),
             ],
@@ -405,4 +261,10 @@ def test__order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
 def test__order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
     curves: Sequence[LayoutedCurve], result: Sequence[LayoutedCurve]
 ) -> None:
-    assert list(_order_graph_curves_for_legend_and_mouse_hover(curves)) == result
+    assert [
+        c
+        for c, _ in _order_graph_curves_for_legend_and_mouse_hover(
+            curves,
+            [_curve_annotation() for _ in range(len(curves))],
+        )
+    ] == result

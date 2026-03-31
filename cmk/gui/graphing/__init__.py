@@ -3,7 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._artwork import compute_graph_artwork, GraphArtwork, iter_graph_artworks
+from ._artwork import (
+    compute_graph_artwork,
+    GraphArtwork,
+    GraphArtworkAnnotations,
+    iter_graph_artworks,
+)
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     graphs_from_api,
@@ -106,6 +111,7 @@ __all__ = [
     "ExplicitGraphSpecification",
     "FetchTimeSeries",
     "GraphArtwork",
+    "GraphArtworkAnnotations",
     "GraphConsolidationFunction",
     "GraphRenderState",
     "GraphTimeRange",

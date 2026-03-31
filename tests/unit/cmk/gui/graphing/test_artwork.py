@@ -21,7 +21,6 @@ from cmk.gui.graphing._artwork import (
     AxisTick,
     LayoutedCurve,
     LayoutedCurveLine,
-    Scalars,
     XAxis,
 )
 from cmk.gui.graphing._graph_specification import (
@@ -108,15 +107,6 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
                 LayoutedCurveLine(
                     color="",
                     title="",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     line_type="line",
                     points=[-5.0, 10.0],
                 )
@@ -132,15 +122,6 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
                 LayoutedCurveLine(
                     color="",
                     title="",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     line_type="line",
                     points=[-5.0, 10.0],
                 )
@@ -196,15 +177,6 @@ def test__compute_v_axis_min_max(
                 LayoutedCurveLine(
                     color="",
                     title="",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     line_type="line",
                     points=[-600.0, 2000.0],
                 )
@@ -219,15 +191,6 @@ def test__compute_v_axis_min_max(
                 LayoutedCurveLine(
                     color="",
                     title="",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     line_type="line",
                     points=[-250.0, 500.0],
                 )
@@ -242,15 +205,6 @@ def test__compute_v_axis_min_max(
                 LayoutedCurveLine(
                     color="",
                     title="",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     line_type="line",
                     points=[-1000.0, 2000.0],
                 )
@@ -265,15 +219,6 @@ def test__compute_v_axis_min_max(
                 LayoutedCurveLine(
                     color="",
                     title="",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     line_type="line",
                     points=[1000.0, 2000.0],
                 )
@@ -295,15 +240,6 @@ def test__compute_v_axis_min_max(
                 LayoutedCurveLine(
                     color="",
                     title="",
-                    scalars=Scalars(
-                        pin=(None, "n/a"),
-                        first=(None, "n/a"),
-                        last=(None, "n/a"),
-                        max=(None, "n/a"),
-                        min=(None, "n/a"),
-                        average=(None, "n/a"),
-                    ),
-                    attributes={},
                     line_type="line",
                     points=[-500.0, 1000.0],
                 )
@@ -420,72 +356,74 @@ def test_fringe(
             1668516720,
             70,
             60,
-            {
-                "labels": [
-                    AxisTick(
-                        position=1668502800.0,
-                        text="10:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668504000.0,
-                        text="10:20",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668505200.0,
-                        text="10:40",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668506400.0,
-                        text="11:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668507600.0,
-                        text="11:20",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668508800.0,
-                        text="11:40",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668510000.0,
-                        text="12:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668511200.0,
-                        text="12:20",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668512400.0,
-                        text="12:40",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668513600.0,
-                        text="13:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668514800.0,
-                        text="13:20",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668516000.0,
-                        text="13:40",
-                        line_width=2,
-                    ),
-                ],
-                "range": (1668502380, 1668516660),
-                "title": "2022-11-15 @ 1m",
-            },
+            (
+                {
+                    "labels": [
+                        AxisTick(
+                            position=1668502800.0,
+                            text="10:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668504000.0,
+                            text="10:20",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668505200.0,
+                            text="10:40",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668506400.0,
+                            text="11:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668507600.0,
+                            text="11:20",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668508800.0,
+                            text="11:40",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668510000.0,
+                            text="12:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668511200.0,
+                            text="12:20",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668512400.0,
+                            text="12:40",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668513600.0,
+                            text="13:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668514800.0,
+                            text="13:20",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668516000.0,
+                            text="13:40",
+                            line_width=2,
+                        ),
+                    ],
+                    "range": (1668502380, 1668516660),
+                },
+                "2022-11-15 @ 1m",
+            ),
             id="4h",
         ),
         pytest.param(
@@ -493,42 +431,44 @@ def test_fringe(
             1668516600,
             70,
             300,
-            {
-                "labels": [
-                    AxisTick(
-                        position=1668438000.0,
-                        text="Mon 16:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668452400.0,
-                        text="Mon 20:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668466800.0,
-                        text="Tue 00:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668481200.0,
-                        text="Tue 04:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668495600.0,
-                        text="Tue 08:00",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668510000.0,
-                        text="Tue 12:00",
-                        line_width=2,
-                    ),
-                ],
-                "range": (1668426900, 1668516300),
-                "title": "2022-11-14 — 2022-11-15 @ 5m",
-            },
+            (
+                {
+                    "labels": [
+                        AxisTick(
+                            position=1668438000.0,
+                            text="Mon 16:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668452400.0,
+                            text="Mon 20:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668466800.0,
+                            text="Tue 00:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668481200.0,
+                            text="Tue 04:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668495600.0,
+                            text="Tue 08:00",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668510000.0,
+                            text="Tue 12:00",
+                            line_width=2,
+                        ),
+                    ],
+                    "range": (1668426900, 1668516300),
+                },
+                "2022-11-14 \u2014 2022-11-15 @ 5m",
+            ),
             id="25h",
         ),
         pytest.param(
@@ -536,92 +476,94 @@ def test_fringe(
             1668517200,
             70,
             1800,
-            {
-                "labels": [
-                    AxisTick(
-                        position=1667862000.0,
-                        text=None,
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1667905200.0,
-                        text="08",
-                        line_width=0,
-                    ),
-                    AxisTick(
-                        position=1667948400.0,
-                        text=None,
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1667991600.0,
-                        text="09",
-                        line_width=0,
-                    ),
-                    AxisTick(
-                        position=1668034800.0,
-                        text=None,
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668078000.0,
-                        text="10",
-                        line_width=0,
-                    ),
-                    AxisTick(
-                        position=1668121200.0,
-                        text=None,
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668164400.0,
-                        text="11",
-                        line_width=0,
-                    ),
-                    AxisTick(
-                        position=1668207600.0,
-                        text=None,
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668250800.0,
-                        text="12",
-                        line_width=0,
-                    ),
-                    AxisTick(
-                        position=1668294000.0,
-                        text=None,
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668337200.0,
-                        text="13",
-                        line_width=0,
-                    ),
-                    AxisTick(
-                        position=1668380400.0,
-                        text=None,
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668423600.0,
-                        text="14",
-                        line_width=0,
-                    ),
-                    AxisTick(
-                        position=1668466800.0,
-                        text=None,
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668510000.0,
-                        text=None,
-                        line_width=0,
-                    ),
-                ],
-                "range": (1667827800, 1668515400),
-                "title": "2022-11-07 — 2022-11-15 @ 30m",
-            },
+            (
+                {
+                    "labels": [
+                        AxisTick(
+                            position=1667862000.0,
+                            text=None,
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1667905200.0,
+                            text="08",
+                            line_width=0,
+                        ),
+                        AxisTick(
+                            position=1667948400.0,
+                            text=None,
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1667991600.0,
+                            text="09",
+                            line_width=0,
+                        ),
+                        AxisTick(
+                            position=1668034800.0,
+                            text=None,
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668078000.0,
+                            text="10",
+                            line_width=0,
+                        ),
+                        AxisTick(
+                            position=1668121200.0,
+                            text=None,
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668164400.0,
+                            text="11",
+                            line_width=0,
+                        ),
+                        AxisTick(
+                            position=1668207600.0,
+                            text=None,
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668250800.0,
+                            text="12",
+                            line_width=0,
+                        ),
+                        AxisTick(
+                            position=1668294000.0,
+                            text=None,
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668337200.0,
+                            text="13",
+                            line_width=0,
+                        ),
+                        AxisTick(
+                            position=1668380400.0,
+                            text=None,
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668423600.0,
+                            text="14",
+                            line_width=0,
+                        ),
+                        AxisTick(
+                            position=1668466800.0,
+                            text=None,
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668510000.0,
+                            text=None,
+                            line_width=0,
+                        ),
+                    ],
+                    "range": (1667827800, 1668515400),
+                },
+                "2022-11-07 \u2014 2022-11-15 @ 30m",
+            ),
             id="8d",
         ),
         pytest.param(
@@ -629,67 +571,69 @@ def test_fringe(
             1668519000,
             70,
             9000,
-            {
-                "labels": [
-                    AxisTick(
-                        position=1665698400.0,
-                        text="10-14",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1665957600.0,
-                        text="10-17",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1666216800.0,
-                        text="10-20",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1666476000.0,
-                        text="10-23",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1666735200.0,
-                        text="10-26",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1666994400.0,
-                        text="10-29",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1667257200.0,
-                        text="11-01",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1667516400.0,
-                        text="11-04",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1667775600.0,
-                        text="11-07",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668034800.0,
-                        text="11-10",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1668294000.0,
-                        text="11-13",
-                        line_width=2,
-                    ),
-                ],
-                "range": (1665495000, 1668510000),
-                "title": "2022-10-11 — 2022-11-15 @ 2h",
-            },
+            (
+                {
+                    "labels": [
+                        AxisTick(
+                            position=1665698400.0,
+                            text="10-14",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1665957600.0,
+                            text="10-17",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1666216800.0,
+                            text="10-20",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1666476000.0,
+                            text="10-23",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1666735200.0,
+                            text="10-26",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1666994400.0,
+                            text="10-29",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1667257200.0,
+                            text="11-01",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1667516400.0,
+                            text="11-04",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1667775600.0,
+                            text="11-07",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668034800.0,
+                            text="11-10",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1668294000.0,
+                            text="11-13",
+                            line_width=2,
+                        ),
+                    ],
+                    "range": (1665495000, 1668510000),
+                },
+                "2022-10-11 \u2014 2022-11-15 @ 2h",
+            ),
             id="35d",
         ),
         pytest.param(
@@ -697,42 +641,44 @@ def test_fringe(
             1668470400,
             70,
             86400,
-            {
-                "labels": [
-                    AxisTick(
-                        position=1638313200.0,
-                        text="2021-12-01",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1643670000.0,
-                        text="2022-02-01",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1648764000.0,
-                        text="2022-04-01",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1654034400.0,
-                        text="2022-06-01",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1659304800.0,
-                        text="2022-08-01",
-                        line_width=2,
-                    ),
-                    AxisTick(
-                        position=1664575200.0,
-                        text="2022-10-01",
-                        line_width=2,
-                    ),
-                ],
-                "range": (1633996800, 1668384000),
-                "title": "2021-10-12 — 2022-11-14 @ 1d",
-            },
+            (
+                {
+                    "labels": [
+                        AxisTick(
+                            position=1638313200.0,
+                            text="2021-12-01",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1643670000.0,
+                            text="2022-02-01",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1648764000.0,
+                            text="2022-04-01",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1654034400.0,
+                            text="2022-06-01",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1659304800.0,
+                            text="2022-08-01",
+                            line_width=2,
+                        ),
+                        AxisTick(
+                            position=1664575200.0,
+                            text="2022-10-01",
+                            line_width=2,
+                        ),
+                    ],
+                    "range": (1633996800, 1668384000),
+                },
+                "2021-10-12 \u2014 2022-11-14 @ 1d",
+            ),
             id="400d",
         ),
     ],
@@ -742,7 +688,7 @@ def test_compute_graph_t_axis(
     end_time: int,
     width: int,
     step: int,
-    expected_result: XAxis,
+    expected_result: tuple[XAxis, str],
 ) -> None:
     with time_machine.travel(datetime(2024, 1, 1, tzinfo=ZoneInfo("Europe/Berlin"))):
         assert (

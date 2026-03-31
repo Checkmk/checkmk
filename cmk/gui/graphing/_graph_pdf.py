@@ -17,7 +17,13 @@ from cmk.gui.log import logger
 from cmk.gui.pdf import Document
 from cmk.gui.type_defs import RGBColor, SizeMM
 
-from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea, LayoutedCurveStack
+from ._artwork import (
+    GraphArtwork,
+    GraphArtworkAnnotations,
+    LayoutedCurve,
+    LayoutedCurveArea,
+    LayoutedCurveStack,
+)
 from ._graph_display_config import GraphDisplayConfigImage
 from ._graph_specification import GraphTimeRange
 
@@ -28,13 +34,15 @@ tracer = trace.get_tracer()
 def render_graph_pdf(
     pdf_document: Document,
     artwork: GraphArtwork,
+    annotations: GraphArtworkAnnotations,
+    title: str,
     display_config: GraphDisplayConfigImage,
     pos_left: SizeMM | None = None,
     pos_top: SizeMM | None = None,
     total_width: SizeMM | None = None,
     total_height: SizeMM | None = None,
 ) -> None:
-    logger.debug("  Render graph %r", artwork.title)
+    logger.debug("  Render graph %r", title)
 
     if pos_left is None:  # floating element
         pdf_document.margin(2.5)
@@ -114,7 +122,7 @@ def render_graph_pdf(
             top - title_height,
             width,
             title_height,
-            artwork.title,
+            title,
             align="left",
             bold=True,
             color=foreground_color,
@@ -230,7 +238,7 @@ def render_graph_pdf(
             title_top,
             width,
             _mm_per_ex_by_render_options(display_config) * 2,
-            artwork.title,
+            title,
             align="center",
             bold=True,
             color=foreground_color,
@@ -243,7 +251,7 @@ def render_graph_pdf(
             title_top,
             width,
             _mm_per_ex_by_render_options(display_config) * 2,
-            artwork.x_axis["title"],
+            annotations.x_axis_title,
             align="right",
             bold=True,
             color=foreground_color,
@@ -380,15 +388,15 @@ def render_graph_pdf(
         )
         pdf_document.render_line(t_orig, legend_top, t_orig + t_mm, legend_top)
 
-        for curve in artwork.curves:
+        for curve, curve_ann in zip(artwork.curves, annotations.curves):
             legend_top -= legend_lineskip
             paint_legend_line(
                 parse_color(curve["color"]),
                 column_value=str(curve["title"]),
-                column_min=curve["scalars"]["min"][1],
-                column_max=curve["scalars"]["max"][1],
-                column_average=curve["scalars"]["average"][1],
-                column_last=curve["scalars"]["last"][1],
+                column_min=curve_ann.scalars["min"][1],
+                column_max=curve_ann.scalars["max"][1],
+                column_average=curve_ann.scalars["average"][1],
+                column_last=curve_ann.scalars["last"][1],
             )
 
         if artwork.horizontal_rules:

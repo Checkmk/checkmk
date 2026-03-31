@@ -74,11 +74,21 @@ class Scalars(TypedDict):
     average: tuple[float | None, str]
 
 
+@dataclass(frozen=True)
+class CurveAnnotations:
+    scalars: Scalars
+    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
+
+
+@dataclass(frozen=True)
+class GraphArtworkAnnotations:
+    x_axis_title: str
+    curves: Sequence[CurveAnnotations]
+
+
 class _LayoutedCurveBase(TypedDict):
     color: str
     title: str
-    scalars: Scalars
-    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
 
 
 class LayoutedCurveLine(_LayoutedCurveBase):
@@ -119,7 +129,6 @@ class YAxis(TypedDict):
 class XAxis(TypedDict):
     labels: Sequence[AxisTick]
     range: tuple[int, int]
-    title: str
 
 
 class Curve(TypedDict):
@@ -130,10 +139,8 @@ class Curve(TypedDict):
 
 
 class GraphArtwork(BaseModel):
-    # Labelling, size, layout
-    title: str
     # Actual data and axes
-    curves: list[LayoutedCurve]
+    curves: Sequence[LayoutedCurve]
     horizontal_rules: Sequence[HorizontalRule]
     y_axis: YAxis
     x_axis: XAxis
@@ -214,7 +221,7 @@ def _layout_graph_curves(
     unit_renderer: Callable[[float], str],
     pin_time: int | None,
     augmented_time_series_of_graph_metrics: Sequence[AugmentedTimeSeriesOfGraphMetric],
-) -> tuple[list[LayoutedCurve], bool]:
+) -> tuple[Sequence[LayoutedCurve], Sequence[CurveAnnotations], bool]:
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
@@ -226,6 +233,7 @@ def _layout_graph_curves(
     # For lines simply the values. For mirrored values from is >= to.
 
     layouted_curves: list[LayoutedCurve] = []
+    curve_annotations: list[CurveAnnotations] = []
     for augmented_time_series_of_metric in augmented_time_series_of_graph_metrics:
         for augmented_time_series in augmented_time_series_of_metric.time_series:
             if (
@@ -248,15 +256,12 @@ def _layout_graph_curves(
             else:
                 stack_nr = 1
 
+            scalars = _compute_scalars(unit_renderer, pin_time, augmented_time_series.time_series)
             match augmented_time_series.line_type:
                 case "line" | "-line":
                     layouted_curve: LayoutedCurve = LayoutedCurveLine(
                         color=augmented_time_series.color,
                         title=augmented_time_series.title,
-                        scalars=_compute_scalars(
-                            unit_renderer, pin_time, augmented_time_series.time_series
-                        ),
-                        attributes=augmented_time_series.attributes,
                         line_type=augmented_time_series.line_type,
                         points=raw_points,
                     )
@@ -264,10 +269,6 @@ def _layout_graph_curves(
                     layouted_curve = LayoutedCurveArea(
                         color=augmented_time_series.color,
                         title=augmented_time_series.title,
-                        scalars=_compute_scalars(
-                            unit_renderer, pin_time, augmented_time_series.time_series
-                        ),
-                        attributes=augmented_time_series.attributes,
                         line_type=augmented_time_series.line_type,
                         points=_areastack(raw_points, []),
                     )
@@ -276,23 +277,26 @@ def _layout_graph_curves(
                     layouted_curve = LayoutedCurveStack(
                         color=augmented_time_series.color,
                         title=augmented_time_series.title,
-                        scalars=_compute_scalars(
-                            unit_renderer, pin_time, augmented_time_series.time_series
-                        ),
-                        attributes=augmented_time_series.attributes,
                         line_type=augmented_time_series.line_type,
                         points=_areastack(raw_points, stacks[stack_nr] or []),
                     )
                     stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
 
             layouted_curves.append(layouted_curve)
+            curve_annotations.append(
+                CurveAnnotations(
+                    scalars=scalars,
+                    attributes=augmented_time_series.attributes,
+                )
+            )
 
-    return layouted_curves, mirrored
+    return layouted_curves, curve_annotations, mirrored
 
 
 @dataclass(frozen=True)
 class GraphArtworkOrErrors:
     artwork: GraphArtwork
+    annotations: GraphArtworkAnnotations
     errors: Sequence[QueryDataError]
     graph_metric_limits_reached: Sequence[GraphMetricLimit]
 
@@ -358,7 +362,7 @@ def compute_graph_artwork(
             errors.append(result.error)
 
     # do stacking, mirroring
-    layouted_curves, mirrored = _layout_graph_curves(
+    layouted_curves, curve_annotations, mirrored = _layout_graph_curves(
         recipe, unit_spec.formatter.render, pin_time, augmented_time_series_of_graph_metrics
     )
     width, height = size
@@ -369,11 +373,10 @@ def compute_graph_artwork(
     except IndexError:  # Empty graph
         start_time, end_time, step = time_range.start, time_range.end, 60
 
+    x_axis, x_axis_title = _compute_graph_t_axis(start_time, end_time, width, step)
+
     return GraphArtworkOrErrors(
         GraphArtwork(
-            # Labelling, size, layout
-            title=recipe.title,
-            # Actual data and axes
             curves=layouted_curves,
             horizontal_rules=recipe.horizontal_rules,
             y_axis=_compute_graph_v_axis(
@@ -384,9 +387,8 @@ def compute_graph_artwork(
                 layouted_curves,
                 mirrored,
             ),
-            x_axis=_compute_graph_t_axis(start_time, end_time, width, step),
+            x_axis=x_axis,
             mark_requested_end_time=mark_requested_end_time,
-            # Displayed range
             actual_time=ActualTimeRange(start=int(start_time), end=int(end_time), step=int(step)),
             requested_time=RequestedTimeRange(
                 start=time_range.start,
@@ -394,6 +396,10 @@ def compute_graph_artwork(
             ),
             requested_y_range=time_range.vertical_range,
             pin_time=pin_time,
+        ),
+        GraphArtworkAnnotations(
+            x_axis_title=x_axis_title,
+            curves=curve_annotations,
         ),
         errors,
         graph_metric_limits_reached,
@@ -749,7 +755,9 @@ def _remove_useless_zeroes(label: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
-def _compute_graph_t_axis(start_time: int, end_time: int, width: float, step: int) -> XAxis:
+def _compute_graph_t_axis(
+    start_time: int, end_time: int, width: float, step: int
+) -> tuple[XAxis, str]:
     # Depending on which time range is being shown we have different
     # steps of granularity
 
@@ -841,10 +849,9 @@ def _compute_graph_t_axis(start_time: int, end_time: int, width: float, step: in
             )
         )
 
-    return XAxis(
-        labels=labels,
-        range=(start_time, end_time),
-        title=_add_step_to_title(title_label, step),
+    return (
+        XAxis(labels=labels, range=(start_time, end_time)),
+        _add_step_to_title(title_label, step),
     )
 
 

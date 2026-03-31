@@ -55,8 +55,10 @@ from ._artwork import (
     compute_curves_at_timestamp,
     compute_graph_artwork,
     Curve,
+    CurveAnnotations,
     get_step_label,
     GraphArtwork,
+    GraphArtworkAnnotations,
     GraphArtworkOrErrors,
     LayoutedCurve,
 )
@@ -136,7 +138,8 @@ def _save_graph_pin(request: Request) -> None:
 
 def _order_graph_curves_for_legend_and_mouse_hover[TCurveType: (LayoutedCurve, Curve)](
     curves: Sequence[TCurveType],
-) -> list[TCurveType]:
+    curve_annotations: Sequence[CurveAnnotations],
+) -> Sequence[tuple[TCurveType, CurveAnnotations]]:
     """
     CMK-22181
     Graph(
@@ -193,12 +196,12 @@ def _order_graph_curves_for_legend_and_mouse_hover[TCurveType: (LayoutedCurve, C
     - lower-simple-2
     - Sum of lower-compound-1 & lower-compound-2
     """
-    lines: list[TCurveType] = []
-    areas: list[TCurveType] = []
-    mirrored_lines: list[TCurveType] = []
-    mirrored_areas: list[TCurveType] = []
-    refs: list[TCurveType] = []
-    for curve in curves:
+    lines: list[tuple[TCurveType, CurveAnnotations]] = []
+    areas: list[tuple[TCurveType, CurveAnnotations]] = []
+    mirrored_lines: list[tuple[TCurveType, CurveAnnotations]] = []
+    mirrored_areas: list[tuple[TCurveType, CurveAnnotations]] = []
+    refs: list[tuple[TCurveType, CurveAnnotations]] = []
+    for curve, curve_annotation in zip(curves, curve_annotations):
         match line_type := curve["line_type"]:
             case "line":
                 target = lines
@@ -212,7 +215,7 @@ def _order_graph_curves_for_legend_and_mouse_hover[TCurveType: (LayoutedCurve, C
                 target = refs
             case _:
                 raise ValueError(line_type)
-        target.append(curve)
+        target.append((curve, curve_annotation))
     return lines[::-1] + areas[::-1] + mirrored_areas + mirrored_lines + refs
 
 
@@ -320,6 +323,7 @@ def _collect_graph_html(
     request: Request,
     render_state: GraphRenderState,
     artwork: GraphArtwork,
+    annotations: GraphArtworkAnnotations,
     expandable_legend_appearance: ExpandableLegendAppearance,
     additional_html: AdditionalGraphHTML | None = None,
 ) -> HTML:
@@ -364,7 +368,7 @@ def _collect_graph_html(
         graph_width: float = display_config.size[0] * _HTML_SIZE_PER_EX
         time_text: str | None = None
         if display_config.show_graph_time and not display_config.preview:
-            time_text = artwork.x_axis["title"] or ""
+            time_text = annotations.x_axis_title or ""
 
         title = text_with_links_to_user_translated_html(
             [
@@ -372,7 +376,7 @@ def _collect_graph_html(
                 for element in iter_graph_title_elements(
                     request,
                     render_state.specification,
-                    artwork,
+                    render_state.recipe.title,
                     display_config,
                     explicit_title=display_config.explicit_title,
                 )
@@ -407,7 +411,11 @@ def _collect_graph_html(
         # Note: due to "omit_zero_metrics" the graph might not have any curves
         if display_config.show_legend and artwork.curves:
             _show_graph_legend(
-                render_state.recipe, artwork, display_config, expandable_legend_appearance
+                render_state.recipe,
+                artwork,
+                annotations,
+                display_config,
+                expandable_legend_appearance,
             )
 
         if additional_html:
@@ -426,6 +434,7 @@ def _create_javascript_graph(
     request: Request,
     render_state: GraphRenderState,
     artwork: GraphArtwork,
+    annotations: GraphArtworkAnnotations,
     expandable_legend_appearance: ExpandableLegendAppearance,
     additional_html: AdditionalGraphHTML | None = None,
 ) -> HTML:
@@ -438,6 +447,7 @@ def _create_javascript_graph(
                         request,
                         render_state,
                         artwork,
+                        annotations,
                         expandable_legend_appearance,
                         additional_html,
                     )
@@ -494,20 +504,22 @@ def _render_time_range_selection(
             }
         )
 
+        artwork_or_errors = compute_graph_artwork(
+            render_state.recipe,
+            time_range,
+            preview_config.size,
+            metrics_from_api,
+            temperature_unit=temperature_unit,
+            backend_time_series_fetcher=backend_time_series_fetcher,
+            pin_time=_load_graph_pin(),
+        )
         rows.append(
             HTMLWriter.render_td(
                 _create_javascript_graph(
                     request,
                     preview_state,
-                    compute_graph_artwork(
-                        render_state.recipe,
-                        time_range,
-                        preview_config.size,
-                        metrics_from_api,
-                        temperature_unit=temperature_unit,
-                        backend_time_series_fetcher=backend_time_series_fetcher,
-                        pin_time=_load_graph_pin(),
-                    ).artwork,
+                    artwork_or_errors.artwork,
+                    artwork_or_errors.annotations,
                     expandable_legend_appearance,
                 ),
                 title=_("Change graph time range to: %s") % timerange_attrs["title"],
@@ -595,6 +607,7 @@ def _render_graph_content_html(
             request,
             render_state,
             artwork_or_errors.artwork,
+            artwork_or_errors.annotations,
             expandable_legend_appearance,
             additional_html,
         )
@@ -901,6 +914,7 @@ def _render_attributes(
 def _show_graph_legend(
     recipe: GraphRecipe,
     artwork: GraphArtwork,
+    annotations: GraphArtworkAnnotations,
     display_config: GraphDisplayConfigHTML,
     expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> None:
@@ -912,6 +926,7 @@ def _show_graph_legend(
     if display_config.legend_max_height_px is not None:
         legend_container_styles.append("max-height:%dpx" % display_config.legend_max_height_px)
         legend_container_styles.append("overflow-y:auto")
+
     html.open_div(class_=["legend_container"], style=legend_container_styles or None)
     html.open_table(class_="legend", style=graph_legend_styles)
     html.open_thead()
@@ -951,14 +966,16 @@ def _show_graph_legend(
 
     # Render the curve related rows
     html.open_tbody()
-    for curve in _order_graph_curves_for_legend_and_mouse_hover(artwork.curves):
+    for curve, curve_ann in _order_graph_curves_for_legend_and_mouse_hover(
+        artwork.curves, annotations.curves
+    ):
         html.open_tr()
 
         table_uuid_str = str(uuid4())
         attributes = [
             _Attribute(name=name, value=value, type=_readable_attribute_type(ty))
             for ty, attrs in sorted(
-                curve["attributes"].items(), key=lambda t: _sort_attributes_by_type(t[0])
+                curve_ann.attributes.items(), key=lambda t: _sort_attributes_by_type(t[0])
             )
             for name, value in attrs.items()
         ]
@@ -992,7 +1009,7 @@ def _show_graph_legend(
             if legend_title.inactive and artwork.actual_time.step != 60:
                 classes.append("inactive")
 
-            html.td(curve["scalars"][legend_title.type][1], class_=classes, style=font_size_style)
+            html.td(curve_ann.scalars[legend_title.type][1], class_=classes, style=font_size_style)
 
         html.close_tr()
 
@@ -1186,6 +1203,7 @@ def render_graph_html(
                 request,
                 render_state,
                 artwork_or_errors.artwork,
+                artwork_or_errors.annotations,
                 ExpandableLegendAppearance.FOLDABLE,
                 additional_html,
             )
@@ -1355,8 +1373,9 @@ def render_graph_values_at_time(
             json.dumps(
                 {
                     "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
-                    "curves": list(
-                        _order_graph_curves_for_legend_and_mouse_hover(
+                    "curves": [
+                        c
+                        for c, _a in _order_graph_curves_for_legend_and_mouse_hover(
                             compute_curves_at_timestamp(
                                 [
                                     result.ok
@@ -1373,9 +1392,10 @@ def render_graph_values_at_time(
                                     recipe.unit_spec, temperature_unit
                                 ).formatter.render,
                                 hover_time,
-                            )
+                            ),
+                            [],
                         )
-                    ),
+                    ],
                 }
             )
         )

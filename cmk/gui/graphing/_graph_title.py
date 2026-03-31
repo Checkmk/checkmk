@@ -11,7 +11,6 @@ from cmk.gui.i18n import _u
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.utils.urls import makeuri_contextless
 
-from ._artwork import GraphArtwork
 from ._graph_display_config import GraphDisplayConfigHTML, GraphDisplayConfigImage
 from ._graph_specification import GraphSpecification
 from ._graph_templates import TemplateGraphSpecification
@@ -30,19 +29,21 @@ def _render_title_elements_plain(elements: Iterable[str]) -> str:
 # TODO: still relies on the global request object because painters also use this function.
 def render_plain_graph_title(
     specification: GraphSpecification,
-    artwork: GraphArtwork,
+    graph_title: str,
     display_config: GraphDisplayConfigHTML | GraphDisplayConfigImage,
 ) -> str:
     return _render_title_elements_plain(
         element.text
-        for element in iter_graph_title_elements(request, specification, artwork, display_config)
+        for element in iter_graph_title_elements(
+            request, specification, graph_title, display_config
+        )
     )
 
 
 def iter_graph_title_elements(
     request: Request,
     specification: GraphSpecification,
-    artwork: GraphArtwork,
+    graph_title: str,
     display_config: GraphDisplayConfigHTML | GraphDisplayConfigImage,
     explicit_title: str | None = None,
 ) -> Iterator[TitleElement]:
@@ -54,8 +55,8 @@ def iter_graph_title_elements(
         yield TitleElement(text=explicit_title, url=None)
         return
 
-    if display_config.title_format.plain and artwork.title:
-        yield TitleElement(text=artwork.title, url=None)
+    if display_config.title_format.plain and graph_title:
+        yield TitleElement(text=graph_title, url=None)
 
     # Only add host/service information for template based graphs
     if not isinstance(specification, TemplateGraphSpecification):

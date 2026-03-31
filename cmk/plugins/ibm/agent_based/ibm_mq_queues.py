@@ -4,28 +4,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
 from cmk.plugins.ibm.lib_mq import parse_ibm_mq
 
-Section = Mapping[str, Any]
+Section = Mapping[str, Mapping[str, str]]
 
 
 def parse_ibm_mq_queues(string_table: StringTable) -> Section:
     queue_status = parse_ibm_mq(string_table, "QSTATUS")
     queue = parse_ibm_mq(string_table, "QUEUE")
-    return _deep_merge_sections(queue, queue_status)
+    return _merge_sections(queue, queue_status)
 
 
-def _deep_merge_sections(priority_section: Section, additional_section: Section) -> Section:
-    """Merge two dictionaries deeply, combining nested dictionaries."""
-    result = dict(additional_section)
+def _merge_sections(
+    priority_section: Mapping[str, Mapping[str, str]],
+    additional_section: Mapping[str, Mapping[str, str]],
+) -> Mapping[str, Mapping[str, str]]:
+    """Merge two queue-attribute mappings; priority_section wins on key conflicts."""
+    result: dict[str, dict[str, str]] = {k: dict(v) for k, v in additional_section.items()}
     for key, value in priority_section.items():
-        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-            result[key] = _deep_merge_sections(value, result[key])
+        if key in result:
+            result[key] = {**result[key], **value}
         else:
-            result[key] = value
+            result[key] = dict(value)
     return result
 
 

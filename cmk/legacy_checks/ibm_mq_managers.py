@@ -69,20 +69,21 @@ def check_ibm_mq_managers(item, params, parsed):
     if not (data := parsed.get(item)):
         return
 
-    status = data["STATUS"]
-    default = data["DEFAULT"]
-    instname = data["INSTNAME"]
-    instpath = data["INSTPATH"]
-    instversion = data["INSTVER"]
+    attrs = data.attributes
+    status = attrs["STATUS"]
+    default = attrs["DEFAULT"]
+    instname = attrs["INSTNAME"]
+    instpath = attrs["INSTPATH"]
+    instversion = attrs["INSTVER"]
 
     check_state = map_ibm_mq_manager_status(status, params)
     yield check_state, "Status: %s" % status
     yield ibm_mq_check_version(instversion, params, "Version")
     yield 0, f"Installation: {instpath} ({instname}), Default: {default}"
 
-    standby = data["STANDBY"]
-    instances = data.get("INSTANCES", [])
-    ha = data.get("HA")
+    standby = attrs["STANDBY"]
+    instances = data.instances
+    ha = attrs.get("HA")
     if ha == "REPLICATED":
         if len(instances) > 0:
             yield 0, f"High availability: replicated, Instance: {instances[0][0]}"

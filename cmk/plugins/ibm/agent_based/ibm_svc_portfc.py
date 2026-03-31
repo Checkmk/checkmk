@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any
+from collections.abc import Mapping
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -44,7 +44,7 @@ from cmk.plugins.ibm.lib_svc import parse_ibm_svc_with_header
 # 10:3:3:fc:N/A:2:node2:50050768030C2127:000000:inactive_unconfigured:none:local_partner
 # 11:4:4:fc:N/A:2:node2:5005076803102127:000000:inactive_unconfigured:none:local_partner
 
-Section = dict[str, Any]
+Section = dict[str, Mapping[str, str]]
 
 
 def parse_ibm_svc_portfc(string_table: StringTable) -> Section:

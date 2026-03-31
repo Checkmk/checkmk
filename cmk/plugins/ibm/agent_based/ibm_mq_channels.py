@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
 from cmk.plugins.ibm.lib_mq import parse_ibm_mq
 
-Section = Mapping[str, Any]
+Section = Mapping[str, Mapping[str, str]]
 
 
 def parse_ibm_mq_channels(string_table: StringTable) -> Section:

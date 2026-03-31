@@ -35,18 +35,18 @@ QMNAME(THE.CRASHED.ONE)                                   STATUS(ENDED UNEXPECTE
     parsed = parse_ibm_mq_managers(section)
     assert len(parsed) == 5
 
-    attrs = parsed["THE.LOCAL.ONE"]
-    assert attrs["STATUS"] == "RUNNING"
-    assert [("sb112233", "ACTIVE")] == attrs["INSTANCES"]
+    manager = parsed["THE.LOCAL.ONE"]
+    assert manager.attributes["STATUS"] == "RUNNING"
+    assert [("sb112233", "ACTIVE")] == manager.instances
 
-    attrs = parsed["THE.MULTI.INSTANCE.ONE"]
-    assert [("sb112233", "ACTIVE"), ("sb112255", "STANDBY")] == attrs["INSTANCES"]
+    manager = parsed["THE.MULTI.INSTANCE.ONE"]
+    assert [("sb112233", "ACTIVE"), ("sb112255", "STANDBY")] == manager.instances
 
-    attrs = parsed["THE.CRASHED.ONE"]
-    assert attrs["QMNAME"] == "THE.CRASHED.ONE"
-    assert attrs["STATUS"] == "ENDED UNEXPECTEDLY"
-    assert attrs["STANDBY"] == "NOT APPLICABLE"
-    assert "INSTANCES" not in attrs
+    manager = parsed["THE.CRASHED.ONE"]
+    assert manager.attributes["QMNAME"] == "THE.CRASHED.ONE"
+    assert manager.attributes["STATUS"] == "ENDED UNEXPECTEDLY"
+    assert manager.attributes["STANDBY"] == "NOT APPLICABLE"
+    assert len(manager.instances) == 0
 
 
 def test_check_single_instance_running() -> None:
@@ -58,9 +58,9 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
-    attrs = parsed["THE.LOCAL.ONE"]
-    assert attrs["QMNAME"] == "THE.LOCAL.ONE"
-    assert attrs["STATUS"] == "RUNNING"
+    manager = parsed["THE.LOCAL.ONE"]
+    assert manager.attributes["QMNAME"] == "THE.LOCAL.ONE"
+    assert manager.attributes["STATUS"] == "RUNNING"
 
     params: dict[str, Any] = {}
     actual = list(check.run_check("THE.LOCAL.ONE", params, parsed))
@@ -83,9 +83,9 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
     check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
-    attrs = parsed["THE.RDQM.ONE"]
-    assert attrs["QMNAME"] == "THE.RDQM.ONE"
-    assert attrs["STATUS"] == "RUNNING"
+    manager = parsed["THE.RDQM.ONE"]
+    assert manager.attributes["QMNAME"] == "THE.RDQM.ONE"
+    assert manager.attributes["STATUS"] == "RUNNING"
 
     params: dict[str, Any] = {}
     actual = list(check.run_check("THE.RDQM.ONE", params, parsed))

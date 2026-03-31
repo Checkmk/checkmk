@@ -3,17 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 import re
 from collections.abc import Mapping
-from typing import Any
+from typing import NamedTuple
 
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
 
-Section = Mapping[str, Mapping[str, Any]]
-
 RE_ATTRIBUTES = re.compile(r"[()]")
+
+
+class ManagerInfo(NamedTuple):
+    attributes: Mapping[str, str]
+    instances: list[tuple[str, str]]
+
+
+Section = Mapping[str, ManagerInfo]
 
 
 def parse_ibm_mq_managers(string_table: StringTable) -> Section:
@@ -24,16 +28,15 @@ def parse_ibm_mq_managers(string_table: StringTable) -> Section:
             data[key.strip()] = value.strip()
         return data
 
-    parsed: dict[str, dict[str, Any]] = {}
+    parsed: dict[str, ManagerInfo] = {}
     qmname: str | None = None
     for line in string_table:
         data = get_data_of_line(line[0])
         if "QMNAME" in data:
             qmname = data["QMNAME"]
-            parsed[qmname] = data
+            parsed[qmname] = ManagerInfo(attributes=data, instances=[])
         elif "INSTANCE" in data and qmname is not None:
-            instances: list[tuple[str, str]] = parsed[qmname].setdefault("INSTANCES", [])
-            instances.append((data["INSTANCE"], data["MODE"]))
+            parsed[qmname].instances.append((data["INSTANCE"], data["MODE"]))
     return parsed
 
 
@@ -44,7 +47,8 @@ agent_section_ibm_mq_managers = AgentSection(
 
 
 def inventorize_ibm_mq_managers(section: Section) -> InventoryResult:
-    for item, attrs in section.items():
+    for item, manager in section.items():
+        attrs = manager.attributes
         yield TableRow(
             path=["software", "applications", "ibm_mq", "managers"],
             key_columns={

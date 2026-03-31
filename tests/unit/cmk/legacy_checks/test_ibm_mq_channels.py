@@ -63,7 +63,7 @@ All valid MQSC commands were processed.
 
     attrs = parsed["MY.TEST"]
     assert attrs["STATUS"] == "RUNNING"
-    assert attrs["NOW"] is not None
+    assert attrs["NOW"] != ""
 
     attrs = parsed["MY.TEST:HERE.TO.THERE.TWO"]
     assert attrs["CHLTYPE"] == "SDR"

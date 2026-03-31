@@ -60,7 +60,7 @@ All valid MQSC commands were processed.
 
     attrs = parsed["MY.TEST"]
     assert attrs["STATUS"] == "RUNNING"
-    assert attrs["NOW"] is not None
+    assert attrs["NOW"] != ""
 
     attrs = parsed["MY.TEST:MY.QUEUE.TWO"]
     assert attrs["CURDEPTH"] == "1400"

@@ -7,7 +7,11 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, TableRow
-from cmk.plugins.ibm.agent_based.ibm_mq_managers import inventorize_ibm_mq_managers, Section
+from cmk.plugins.ibm.agent_based.ibm_mq_managers import (
+    inventorize_ibm_mq_managers,
+    ManagerInfo,
+    Section,
+)
 
 
 @pytest.mark.parametrize(
@@ -16,19 +20,25 @@ from cmk.plugins.ibm.agent_based.ibm_mq_managers import inventorize_ibm_mq_manag
         ({}, []),
         (
             {
-                "name1": {
-                    "INSTVER": "instver",
-                    "INSTNAME": "instname",
-                    "HA": "ha",
-                    "STANDBY": "standby",
-                    "STATUS": "status",
-                },
-                "name2": {
-                    "INSTVER": "instver",
-                    "INSTNAME": "instname",
-                    "STANDBY": "standby",
-                    "STATUS": "status",
-                },
+                "name1": ManagerInfo(
+                    attributes={
+                        "INSTVER": "instver",
+                        "INSTNAME": "instname",
+                        "HA": "ha",
+                        "STANDBY": "standby",
+                        "STATUS": "status",
+                    },
+                    instances=[],
+                ),
+                "name2": ManagerInfo(
+                    attributes={
+                        "INSTVER": "instver",
+                        "INSTNAME": "instname",
+                        "STANDBY": "standby",
+                        "STATUS": "status",
+                    },
+                    instances=[],
+                ),
             },
             [
                 TableRow(

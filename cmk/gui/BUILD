@@ -104,6 +104,67 @@ py_library(
     ],
 )
 
+py_library(
+    name = "speaklater",
+    srcs = ["utils/speaklater.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+)
+
+py_library(
+    name = "type_defs",
+    srcs = ["type_defs.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":exceptions",
+        ":speaklater",
+        "//cmk/inventory",
+        "//cmk/utils",
+        "//packages/cmk-ccc:cpu-tracking",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-crypto",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "i18n",
+    srcs = ["i18n.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":ctx_stack",
+        ":hooks",
+        ":speaklater",
+        "//cmk/utils",
+    ],
+)
+
+py_library(
+    name = "num_split",
+    srcs = ["num_split.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":hooks",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -116,9 +177,13 @@ py_library(
             "exceptions.py",
             "features.py",
             "hooks.py",
+            "i18n.py",
             "log.py",
+            "num_split.py",
             "role_types.py",
             "site_config.py",
+            "type_defs.py",
+            "utils/speaklater.py",
         ],
     ) + ["wsgi/applications/index.wsgi"],
     imports = ["../.."],
@@ -136,9 +201,13 @@ py_library(
         ":exceptions",
         ":features",
         ":hooks",
+        ":i18n",
         ":log",
+        ":num_split",
         ":role_types",
         ":site_config",
+        ":speaklater",
+        ":type_defs",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/checkengine",

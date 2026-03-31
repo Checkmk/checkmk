@@ -70,8 +70,8 @@ pkg_files(
         ":cmk-monitor-mknotifyd",
         ":cmk-monitor-otel-collector",
         ":cmk-passwd.py",
-        ":cmk-piggyback",
-        ":cmk-piggyback-hub",
+        ":cmk-piggyback.py",
+        ":cmk-piggyback-hub.py",
         ":cmk-pwstore",
         ":cmk-transform-inventory-trees",
         ":cmk-ui-job-scheduler.py",
@@ -97,6 +97,8 @@ pkg_files(
         "cmk-cert.py": "cmk-cert",
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-passwd.py": "cmk-passwd",
+        "cmk-piggyback-hub.py": "cmk-piggyback-hub",
+        "cmk-piggyback.py": "cmk-piggyback",
         "cmk-ui-job-scheduler.py": "cmk-ui-job-scheduler",
         "cmk-update-license-usage.py": "cmk-update-license-usage",
         "cmk-validate-config.py": "cmk-validate-config",
@@ -205,6 +207,31 @@ py_library(
     srcs = ["cmk-broker-test.py"],
     imports = ["."],
     tags = ["no-mypy"],
+)
+
+py_library(
+    name = "cmk_piggyback_hub_py",
+    srcs = ["cmk-piggyback-hub.py"],
+    imports = ["."],
+    deps = [
+        "//cmk/piggyback:hub",
+        "//cmk/utils",
+        "//packages/cmk-ccc:crash-reporting",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:version",
+    ],
+)
+
+py_library(
+    name = "cmk_piggyback_py",
+    srcs = ["cmk-piggyback.py"],
+    imports = ["."],
+    deps = [
+        "//cmk/piggyback:backend",
+        "//cmk/utils",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-livestatus-client:py_livestatus",
+    ],
 )
 
 py_library(

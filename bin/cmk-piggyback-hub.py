@@ -7,12 +7,21 @@ import sys
 import traceback
 from typing import Literal
 
-from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore, make_crash_report_base_path
-from cmk.ccc.hostaddress import HostNameValidationError
-from cmk.ccc.version import get_general_version_infos
-from cmk.piggyback.hub import main
-from cmk.utils.security_event import InputValidationFailureEvent, log_security_event
-from cmk.utils.paths import omd_root
+from cmk.ccc.crash_reporting import (  # astrein: disable=cmk-module-layer-violation
+    ABCCrashReport,
+    CrashReportStore,
+    make_crash_report_base_path,
+)
+from cmk.ccc.hostaddress import (  # astrein: disable=cmk-module-layer-violation
+    HostNameValidationError,
+)
+from cmk.ccc.version import get_general_version_infos  # astrein: disable=cmk-module-layer-violation
+from cmk.piggyback.hub import main  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.paths import omd_root  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.security_event import (  # astrein: disable=cmk-module-layer-violation
+    InputValidationFailureEvent,
+    log_security_event,
+)
 
 
 class PiggybackHubCrashReport(ABCCrashReport[None]):

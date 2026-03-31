@@ -18,10 +18,17 @@ from collections.abc import Callable
 
 from livestatus import LocalConnection, MKLivestatusSocketError, Query
 
-from cmk.livestatus_client.queries import Query as LQuery
-from cmk.livestatus_client.tables import Hosts as HostsLTable
-from cmk.piggyback.backend import get_piggybacked_host_with_sources, watch_new_messages
-from cmk.utils.paths import omd_root
+from cmk.livestatus_client.queries import (  # astrein: disable=cmk-module-layer-violation
+    Query as LQuery,
+)
+from cmk.livestatus_client.tables import (  # astrein: disable=cmk-module-layer-violation
+    Hosts as HostsLTable,
+)
+from cmk.piggyback.backend import (  # astrein: disable=cmk-module-layer-violation
+    get_piggybacked_host_with_sources,
+    watch_new_messages,
+)
+from cmk.utils.paths import omd_root  # astrein: disable=cmk-module-layer-violation
 
 _SECTION_TEMPLATE = '<<<<{host}>>>>\n<<<local>>>\n0 "{service}" - Agent data created at {time}'
 

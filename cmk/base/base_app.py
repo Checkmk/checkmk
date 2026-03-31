@@ -55,7 +55,6 @@ class CheckmkBaseApp:
                 HostAddress,
                 Callable[[HostAddress], ObjectAttributes],
                 Callable[[HostAddress], float],
-                bool,
             ],
             Fetcher[AgentRawData] | None,
         ],

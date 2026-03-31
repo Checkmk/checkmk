@@ -784,7 +784,6 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
                 hostname,
                 config_cache.explicit_host_attributes,
                 config_cache.check_mk_check_interval,
-                loaded_config.monitoring_core == "cmc",
             ),
         ):
             source_info = source.source_info()
@@ -2191,7 +2190,6 @@ def mode_check_discovery(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
     parser = CMKParser(
@@ -2576,7 +2574,6 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
     for hostname in sorted(
@@ -2840,7 +2837,6 @@ def run_checking(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
     parser = CMKParser(
@@ -3150,7 +3146,6 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
     parser = CMKParser(
@@ -3477,7 +3472,6 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
 

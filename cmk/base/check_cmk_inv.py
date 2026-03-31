@@ -230,7 +230,6 @@ def _inventory_as_check(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
     parser = CMKParser(

@@ -144,7 +144,6 @@ def dump_host(
             HostAddress,
             Callable[[HostAddress], ObjectAttributes],
             Callable[[HostAddress], float],
-            bool,
         ],
         Fetcher[AgentRawData] | None,
     ],
@@ -310,7 +309,6 @@ def dump_host(
                     hostname,
                     config_cache.explicit_host_attributes,
                     config_cache.check_mk_check_interval,
-                    loaded_config.monitoring_core == "cmc",
                 ),
             )
         ]

@@ -118,7 +118,6 @@ def _make_sources(
             hostname,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            config_cache._loaded_config.monitoring_core == "cmc",
         ),
     )
 

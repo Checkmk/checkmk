@@ -440,7 +440,6 @@ def automation_service_discovery(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
     # sort clusters last, to have them operate with the new nodes host labels.
@@ -701,7 +700,6 @@ def automation_discovery_preview(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
     hosts_config = config.make_hosts_config(loaded_config)
@@ -1264,7 +1262,6 @@ def _execute_autodiscovery(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
-            loaded_config.monitoring_core == "cmc",
         ),
     )
     section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
@@ -3717,7 +3714,6 @@ class AutomationDiagHost:
                 host_name,
                 config_cache.explicit_host_attributes,
                 config_cache.check_mk_check_interval,
-                loaded_config.monitoring_core == "cmc",
             ),
         ):
             source_info = source.source_info()
@@ -4346,7 +4342,6 @@ def automation_get_agent_output(
                     hostname,
                     config_cache.explicit_host_attributes,
                     config_cache.check_mk_check_interval,
-                    loaded_config.monitoring_core == "cmc",
                 ),
             ):
                 source_info = source.source_info()

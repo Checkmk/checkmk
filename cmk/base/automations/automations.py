@@ -70,7 +70,6 @@ class AutomationContext:
             HostAddress,
             Callable[[HostAddress], config.ObjectAttributes],
             Callable[[HostAddress], float],
-            bool,
         ],
         Fetcher[AgentRawData] | None,
     ]

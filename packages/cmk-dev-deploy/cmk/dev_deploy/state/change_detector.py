@@ -6,77 +6,93 @@
 
 from __future__ import annotations
 
+import json
+import logging
 import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cmk.dev_deploy.core.timeouts import GIT_QUICK
 from cmk.dev_deploy.errors import ChangeDetectionError
-from cmk.dev_deploy.types import ChangeCategory, ChangeSet
+from cmk.dev_deploy.manifest.reader import get_categorization_rules
+from cmk.dev_deploy.types import CategorizationRule, ChangeCategory, ChangeSet
 
 if TYPE_CHECKING:
     from cmk.dev_deploy.state.deploy_state import DeployState
 
-# Categorization rules: ordered tuple of (prefix, extension_filter, category).
-# First match wins. Extension filter is None for "match any file in this prefix".
-# Derived from .f12 script analysis and repository directory structure.
-_CATEGORIZATION_RULES: tuple[tuple[str, frozenset[str] | None, ChangeCategory], ...] = (
-    # Python fast path: .py files under cmk/ (main source tree)
-    ("cmk/", frozenset({".py"}), ChangeCategory.PYTHON),
-    # C++ sources
-    ("packages/livestatus/", frozenset({".cc", ".h", ".hpp"}), ChangeCategory.CPP),
-    ("packages/neb/", frozenset({".cc", ".h", ".hpp"}), ChangeCategory.CPP),
-    ("packages/unixcat/", frozenset({".cc", ".h"}), ChangeCategory.CPP),
-    (
-        "non-free/packages/cmc/",
-        frozenset({".cc", ".h", ".hpp", ".proto"}),
-        ChangeCategory.CPP,
-    ),
-    # Rust sources
-    ("packages/check-cert/", frozenset({".rs"}), ChangeCategory.RUST),
-    ("packages/check-http/", frozenset({".rs"}), ChangeCategory.RUST),
-    ("packages/cmk-agent-ctl/", frozenset({".rs"}), ChangeCategory.RUST),
-    ("packages/mk-oracle/", frozenset({".rs"}), ChangeCategory.RUST),
-    ("packages/mk-sql/", frozenset({".rs"}), ChangeCategory.RUST),
-    # Vue/Frontend
-    (
-        "packages/cmk-frontend-vue/",
-        frozenset({".vue", ".ts", ".tsx", ".js"}),
-        ChangeCategory.VUE,
-    ),
-    ("packages/cmk-shared-typing/", frozenset({".ts"}), ChangeCategory.VUE),
-    (
-        "packages/cmk-frontend/",
-        frozenset({".js", ".css", ".scss"}),
-        ChangeCategory.FRONTEND,
-    ),
-    # Python packages (after specific C++/Rust/Vue rules so those match first)
-    ("packages/", frozenset({".py"}), ChangeCategory.PYTHON),
-    ("non-free/packages/", frozenset({".py"}), ChangeCategory.PYTHON),
-    # Config/Data (no extension filter -- deploy all files in these dirs)
-    ("agents/", None, ChangeCategory.CONFIG),
-    ("notifications/", None, ChangeCategory.CONFIG),
-    ("active_checks/", None, ChangeCategory.CONFIG),
-    ("locale/", None, ChangeCategory.DATA),
-    ("doc/", None, ChangeCategory.DATA),
-    ("omd/", None, ChangeCategory.CONFIG),
-    # Build system files
-    ("MODULE.bazel", None, ChangeCategory.BUILD),
-    ("bazel/", None, ChangeCategory.BUILD),
-    # Tests
-    ("tests/", None, ChangeCategory.TEST),
+logger = logging.getLogger(__name__)
+
+# Structural rules: not derivable from manifest, always present.
+# These match disjoint path prefixes (tests/, MODULE.bazel, bazel/)
+# that do not overlap with any manifest-derived prefix.
+#
+# Note: "MODULE.bazel" as a prefix also matches "MODULE.bazel.lock" via
+# startswith(). This is a pre-existing false positive inherited from the
+# original hardcoded rules. Both files are build-system files, so the
+# miscategorization is harmless in practice.
+_STRUCTURAL_RULES: tuple[CategorizationRule, ...] = (
+    CategorizationRule("tests/", None, ChangeCategory.TEST),
+    CategorizationRule("MODULE.bazel", None, ChangeCategory.BUILD),
+    CategorizationRule("bazel/", None, ChangeCategory.BUILD),
 )
+
+# Cached combined rules: computed once on first call, reset by reset_categorization_cache().
+_cached_rules: tuple[CategorizationRule, ...] | None = None
+
+
+def _load_rules() -> tuple[CategorizationRule, ...]:
+    """Load categorization rules: structural rules + manifest-derived rules.
+
+    The combined result is cached in the module-level _cached_rules variable
+    to avoid repeated tuple concatenation on every categorize_file() call.
+
+    Structural rules have unconditional priority (applied first). They match
+    disjoint path prefixes (tests/, MODULE.bazel, bazel/) that never overlap
+    with manifest-derived prefixes (packages/, cmk/, agents/, etc.), so the
+    ordering between the two groups does not affect correctness.
+
+    Within manifest-derived rules, ordering is longest-prefix-first.
+    """
+    global _cached_rules
+    if _cached_rules is not None:
+        return _cached_rules
+
+    try:
+        manifest_rules = get_categorization_rules()
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        logger.warning(
+            "Manifest unavailable or missing categorization_rules -- "
+            "using structural-only fallback (all files categorize as OTHER). "
+            "Run with --rebuild-manifest to regenerate."
+        )
+        _cached_rules = _STRUCTURAL_RULES
+        return _cached_rules
+
+    _cached_rules = _STRUCTURAL_RULES + manifest_rules
+    return _cached_rules
+
+
+def reset_categorization_cache() -> None:
+    """Reset the cached combined rules (called after manifest rebuild).
+
+    This is a public function (no underscore prefix) because it is called
+    from staleness.py after a manifest rebuild.  Naming it without an
+    underscore avoids the convention violation of importing a private name
+    across module boundaries.
+    """
+    global _cached_rules
+    _cached_rules = None
 
 
 def categorize_file(path: str) -> ChangeCategory:
     """Categorize a file path using first-match-wins against ordered rules."""
-    for prefix, ext_filter, category in _CATEGORIZATION_RULES:
-        if path.startswith(prefix):
-            if ext_filter is None:
-                return category
+    for rule in _load_rules():
+        if path.startswith(rule.prefix):
+            if rule.extensions is None:
+                return rule.category
             suffix = "." + path.rsplit(".", 1)[-1] if "." in path else ""
-            if suffix in ext_filter:
-                return category
+            if suffix in rule.extensions:
+                return rule.category
     return ChangeCategory.OTHER
 
 
@@ -157,8 +173,13 @@ def _git_diff_files(
     *,
     target_commit: str | None = None,
 ) -> list[str]:
-    """Return changed file paths between build_commit and a target."""
-    cmd = ["git", "diff", "--name-only", "--no-renames", build_commit]
+    """Return changed (non-deleted) file paths between build_commit and a target.
+
+    Excludes deleted files (--diff-filter=d) since those are tracked separately
+    by _git_diff_deleted().  Without this filter, deleted files appear in
+    ChangeSet.files and the wheel deployer crashes trying to copy them.
+    """
+    cmd = ["git", "diff", "--name-only", "--no-renames", "--diff-filter=d", build_commit]
     if target_commit is not None:
         cmd.append(target_commit)
     result = subprocess.run(

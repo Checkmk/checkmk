@@ -17,6 +17,51 @@
 #   explicitly set (for sub-path overrides within a target).
 
 # =============================================================================
+# Supplementary categorization rules
+# =============================================================================
+# Packages and directories that need categorization rules but have no
+# install/wheel/config spec in the manifest.  Install, wheel, and config
+# specs derive categorization automatically; only entries here are needed
+# for directories outside of that coverage.
+#
+# Fields:
+#   prefix:     path prefix for first-match-wins matching (include trailing /)
+#   category:   one of: python, cpp, rust, vue, frontend, config, data
+#   extensions:  list of file extensions to match (omit for "all files")
+
+# Agent-side Rust binaries (rust_binary, no install spec)
+[[categorization]]
+prefix = "packages/cmk-agent-ctl/"
+category = "rust"
+extensions = [".rs"]
+
+[[categorization]]
+prefix = "packages/mk-sql/"
+category = "rust"
+extensions = [".rs"]
+
+# Catch-all: notification scripts (no per-file spec)
+[[categorization]]
+prefix = "notifications/"
+category = "config"
+
+# Catch-all: doc directory
+[[categorization]]
+prefix = "doc/"
+category = "data"
+
+# Catch-all: .py files in packages without their own wheel spec
+[[categorization]]
+prefix = "packages/"
+category = "python"
+extensions = [".py"]
+
+[[categorization]]
+prefix = "non-free/packages/"
+category = "python"
+extensions = [".py"]
+
+# =============================================================================
 # Config deploy overrides (for specs that need extra metadata not in Bazel)
 # =============================================================================
 # Auto-discovered config specs may need overrides for includes, delete_extra,

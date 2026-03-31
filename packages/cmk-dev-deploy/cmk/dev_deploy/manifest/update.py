@@ -33,6 +33,7 @@ from typing import Any
 from cmk.dev_deploy.core import output
 from cmk.dev_deploy.core.output import Spinner
 from cmk.dev_deploy.manifest.staleness import save_manifest_hashes
+from cmk.dev_deploy.types import CategorizationRule, ChangeCategory, DeployMethod
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,43 @@ _CONFIG_METHOD_RULES: MappingProxyType[str, str] = MappingProxyType(
         "locale": "locale_compile",
     }
 )
+
+# ---------------------------------------------------------------------------
+# Categorization rule derivation
+# ---------------------------------------------------------------------------
+
+# Extension-to-category priority: checked in order, first match wins.
+# Used by _extensions_to_category() to derive a ChangeCategory from the set
+# of file extensions found in a Bazel target's source files.
+_EXTENSION_CATEGORY_PRIORITY: tuple[tuple[frozenset[str], ChangeCategory], ...] = (
+    (frozenset({".rs"}), ChangeCategory.RUST),
+    (frozenset({".cc", ".h", ".hpp", ".proto"}), ChangeCategory.CPP),
+    (frozenset({".vue"}), ChangeCategory.VUE),
+    (frozenset({".js", ".ts", ".tsx", ".css", ".scss"}), ChangeCategory.FRONTEND),
+)
+
+
+def _load_supplementary_rules(toml_path: Path) -> tuple[CategorizationRule, ...]:
+    """Load supplementary categorization rules from deploy_specs.toml.
+
+    These cover packages and directories that have no install/wheel/config
+    spec in the manifest but still need categorization rules (e.g., agent-side
+    Rust binaries, catch-all directory prefixes).
+    """
+    with open(toml_path, "rb") as f:
+        raw = tomllib.load(f)
+
+    rules: list[CategorizationRule] = []
+    for entry in raw.get("categorization", []):
+        prefix = entry["prefix"]
+        category_str = entry["category"]
+        extensions_raw = entry.get("extensions")
+
+        category = ChangeCategory(category_str)
+        extensions = frozenset(extensions_raw) if extensions_raw is not None else None
+        rules.append(CategorizationRule(prefix, extensions, category))
+
+    return tuple(rules)
 
 
 def _derive_editions(source_prefix: str, package_target: str) -> Sequence[str]:
@@ -1215,6 +1253,259 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Categorization rule computation
+# ---------------------------------------------------------------------------
+
+
+def _query_install_spec_extensions(
+    install_specs: list[dict[str, Any]],
+    repo_root: Path,
+) -> dict[str, frozenset[str]]:
+    """Query Bazel for source file extensions of install spec targets.
+
+    Runs a single batched ``labels(srcs, deps(TARGETS))`` query covering all
+    install spec ``package_target`` labels, then groups the returned source
+    file labels by their owning install spec (matching on ``source_prefix``).
+
+    Args:
+        install_specs: List of install spec dicts (must be enriched, i.e.
+            ``source_prefix`` already populated).
+        repo_root: Absolute path to the git repository root.
+
+    Returns:
+        Dict mapping ``source_prefix`` (without trailing slash) to the
+        frozenset of file extensions found in that package's sources.
+        Only includes extensions from source files whose path starts with
+        the spec's ``source_prefix``.
+    """
+    # Collect package_targets and build prefix lookup
+    targets: list[str] = []
+    prefix_map: dict[str, str] = {}  # source_prefix -> package_target
+    for spec in install_specs:
+        pt = spec.get("package_target", "")
+        sp = spec.get("source_prefix", "").rstrip("/")
+        if pt and sp:
+            targets.append(pt)
+            prefix_map[sp] = pt
+
+    if not targets:
+        return {}
+
+    # Single batched query for all install spec source files
+    union_expr = " + ".join(sorted(set(targets)))
+    srcs_query = f"labels(srcs, deps({union_expr}))"
+    result = _run_bazel_query(
+        ["bazel", "query", srcs_query, "--output=label", "--keep_going"],
+        repo_root,
+    )
+    if result is None:
+        logger.warning(
+            "Bazel srcs query for install specs failed; falling back to supplementary rules"
+        )
+        return {}
+
+    # Parse labels and group extensions by source_prefix
+    all_labels = [
+        line.strip()
+        for line in result.stdout.strip().splitlines()
+        if line.strip() and line.strip().startswith("//")
+    ]
+
+    # For each label, convert to a file path and match against source prefixes
+    prefix_extensions: dict[str, set[str]] = {sp: set() for sp in prefix_map}
+    sorted_prefixes = sorted(prefix_map.keys(), key=len, reverse=True)
+
+    for label in all_labels:
+        # Skip external deps
+        if label.startswith("@"):
+            continue
+        # Convert label to path: //pkg:target -> pkg/target
+        path = label[2:]  # strip //
+        if ":" in path:
+            pkg, name = path.split(":", 1)
+            path = f"{pkg}/{name}"
+
+        # Match against install spec source prefixes (longest first)
+        for sp in sorted_prefixes:
+            if path.startswith(sp + "/") or path.startswith(sp + ":"):
+                # Extract extension
+                if "." in path.rsplit("/", 1)[-1]:
+                    ext = "." + path.rsplit(".", 1)[-1]
+                    prefix_extensions[sp].add(ext)
+                break
+
+    return {sp: frozenset(exts) for sp, exts in prefix_extensions.items() if exts}
+
+
+def _extensions_to_category(
+    extensions: frozenset[str],
+    *,
+    frontend_supervised: bool = False,
+) -> ChangeCategory | None:
+    """Derive a ChangeCategory from a set of file extensions.
+
+    Uses ``_EXTENSION_CATEGORY_PRIORITY``: the first category whose marker
+    extensions intersect with *extensions* wins.
+
+    The ``frontend_supervised`` flag forces VUE regardless of extensions,
+    matching the deploy_specs.toml convention for the cmk-frontend-vue package.
+
+    Returns None if no category can be determined.
+    """
+    if frontend_supervised:
+        return ChangeCategory.VUE
+
+    for marker_exts, category in _EXTENSION_CATEGORY_PRIORITY:
+        if extensions & marker_exts:
+            return category
+    return None
+
+
+def _compute_categorization_rules(
+    manifest_data: dict[str, Any],
+    install_spec_extensions: dict[str, frozenset[str]],
+    supplementary_rules: tuple[CategorizationRule, ...] = (),
+) -> list[dict[str, Any]]:
+    """Derive categorization rules from manifest specs.
+
+    Produces rules from four sources:
+    1. install_specs: compiled artifacts (C++, Rust, Vue, Frontend) with
+       extensions derived from the Bazel build graph
+    2. wheel_specs: Python packages
+    3. config_specs: config/data directories
+    4. supplementary_rules: from deploy_specs.toml [[categorization]] entries
+
+    Args:
+        manifest_data: The full manifest dict (with enriched specs).
+        install_spec_extensions: Mapping of source_prefix to frozenset of
+            file extensions, as returned by ``_query_install_spec_extensions``.
+
+    Returns a list of JSON-serializable rule dicts, ordered longest-prefix-first.
+    Within the same prefix length, rules with non-null extensions come before
+    null-extension rules, then sorted alphabetically by category name.
+    """
+    seen: set[tuple[str, frozenset[str] | None, str]] = set()
+    rules: list[CategorizationRule] = []
+
+    def _add(rule: CategorizationRule) -> None:
+        """Add rule if not an exact duplicate."""
+        key = (rule.prefix, rule.extensions, rule.category.value)
+        if key not in seen:
+            seen.add(key)
+            rules.append(rule)
+
+    # --- From install_specs (extensions from Bazel build graph) ---
+    for spec in manifest_data.get("install_specs", []):
+        source_prefix = spec.get("source_prefix", "").rstrip("/")
+        if not source_prefix:
+            continue
+
+        extensions = install_spec_extensions.get(source_prefix, frozenset())
+        if not extensions:
+            logger.debug(
+                "No source extensions found for install spec %s (%s); skipping",
+                spec.get("name", "?"),
+                source_prefix,
+            )
+            continue
+
+        category = _extensions_to_category(
+            extensions,
+            frontend_supervised=spec.get("frontend_supervised", False),
+        )
+        if category is None:
+            logger.debug(
+                "Cannot determine category for install spec %s (extensions: %s); skipping",
+                spec.get("name", "?"),
+                extensions,
+            )
+            continue
+
+        _add(
+            CategorizationRule(
+                prefix=source_prefix + "/",
+                extensions=extensions,
+                category=category,
+            )
+        )
+
+    # --- From wheel_specs ---
+    for spec in manifest_data.get("wheel_specs", []):
+        source_prefix = spec.get("source_prefix", "").rstrip("/")
+        if not source_prefix:
+            continue
+
+        # Ensure trailing slash for prefix matching
+        prefix = source_prefix + "/"
+
+        _add(
+            CategorizationRule(
+                prefix=prefix,
+                extensions=frozenset({".py"}),
+                category=ChangeCategory.PYTHON,
+            )
+        )
+
+        # Special case: cmk-shared-typing .ts files are consumed by cmk-frontend-vue
+        if source_prefix == "packages/cmk-shared-typing":
+            _add(
+                CategorizationRule(
+                    prefix=prefix,
+                    extensions=frozenset({".ts"}),
+                    category=ChangeCategory.VUE,
+                )
+            )
+
+    # --- From config_specs ---
+    for spec in manifest_data.get("config_specs", []):
+        source_prefix = spec.get("source_prefix", "")
+        if not source_prefix:
+            continue
+
+        # Ensure trailing slash
+        if not source_prefix.endswith("/"):
+            source_prefix += "/"
+
+        method = spec.get("method", "")
+        if method == DeployMethod.LOCALE_COMPILE:
+            category = ChangeCategory.DATA
+        else:
+            category = ChangeCategory.CONFIG
+
+        _add(
+            CategorizationRule(
+                prefix=source_prefix,
+                extensions=None,
+                category=category,
+            )
+        )
+
+    # --- Supplementary rules (from deploy_specs.toml) ---
+    for rule in supplementary_rules:
+        _add(rule)
+
+    # --- Sort: longest prefix first; within same length, extensions-not-None
+    # first, then alphabetically by category name ---
+    rules.sort(
+        key=lambda r: (
+            -len(r.prefix),
+            0 if r.extensions is not None else 1,
+            r.category.value,
+        )
+    )
+
+    # Convert to JSON-serializable dicts
+    return [
+        {
+            "prefix": r.prefix,
+            "extensions": sorted(r.extensions) if r.extensions is not None else None,
+            "category": r.category.value,
+        }
+        for r in rules
+    ]
+
+
+# ---------------------------------------------------------------------------
 # deploy_deps computation
 # ---------------------------------------------------------------------------
 
@@ -1432,6 +1723,14 @@ def main(spinner: Spinner | None = None) -> int:
         _enrich_wheel_specs(wheel_specs, wheel_targets_map, repo_root)
         _done(lbl, t0, f"{len(wheel_specs)} specs")
 
+        # Query source file extensions for install specs (for categorization)
+        lbl = "Querying install spec extensions"
+        t0 = _begin(lbl)
+        install_spec_extensions = _query_install_spec_extensions(
+            manual.get("install_specs", []), repo_root
+        )
+        _done(lbl, t0, f"{len(install_spec_extensions)} packages")
+
     except Exception as exc:
         return _abort(exc)
 
@@ -1448,6 +1747,16 @@ def main(spinner: Spinner | None = None) -> int:
         _validate_manifest(manifest_data)
     except RuntimeError as exc:
         return _abort(exc)
+
+    # 3.5 Compute categorization rules from enriched specs + TOML supplementary
+    lbl = "Computing categorization rules"
+    t0 = _begin(lbl)
+    supplementary_rules = _load_supplementary_rules(specs_path())
+    categorization_rules = _compute_categorization_rules(
+        manifest_data, install_spec_extensions, supplementary_rules
+    )
+    manifest_data["categorization_rules"] = categorization_rules
+    _done(lbl, t0, f"{len(categorization_rules)} rules")
 
     # 4. Compute deploy_deps
     lbl = "Computing deploy_deps"

@@ -66,6 +66,19 @@ class ChangeCategory(str, Enum):
 
 
 @dataclass(frozen=True)
+class CategorizationRule:
+    """A single file categorization rule derived from the deploy manifest.
+
+    Used by change_detector to classify files by path prefix and extension.
+    Rules with extensions=None match any file under the prefix.
+    """
+
+    prefix: str
+    extensions: frozenset[str] | None
+    category: ChangeCategory
+
+
+@dataclass(frozen=True)
 class ChangeSet:
     """Result of change detection between site build commit and working tree."""
 

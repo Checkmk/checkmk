@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import functools
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Any
 
 from cmk.dev_deploy.types import (
+    CategorizationRule,
+    ChangeCategory,
     ConfigDeploySpec,
     ConfigFileEntry,
     DeployMethod,
@@ -27,6 +30,8 @@ from cmk.dev_deploy.types import (
     WheelDeployMode,
     WheelDeploySpec,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _manifest_dir() -> Path:
@@ -128,6 +133,32 @@ def _parse_service_spec(raw: dict[str, Any]) -> ServiceSpec:
     )
 
 
+def _parse_categorization_rule(raw: dict[str, Any]) -> CategorizationRule | None:
+    """Convert a manifest categorization rule dict to a CategorizationRule.
+
+    Returns None if the category string is not a valid ChangeCategory member
+    (forward compatibility: new categories added later are silently skipped).
+    """
+    try:
+        category = ChangeCategory(raw["category"])
+    except ValueError:
+        logger.warning(
+            "Skipping categorization rule with unknown category %r (prefix: %s)",
+            raw["category"],
+            raw.get("prefix", "?"),
+        )
+        return None
+
+    extensions_raw = raw["extensions"]
+    extensions = frozenset(extensions_raw) if extensions_raw is not None else None
+
+    return CategorizationRule(
+        prefix=raw["prefix"],
+        extensions=extensions,
+        category=category,
+    )
+
+
 # --- Public getters ---
 
 
@@ -164,3 +195,18 @@ def get_deploy_deps() -> dict[str, tuple[str, ...]]:
     """Return deploy dependency mapping from the manifest."""
     data = _load_raw()
     return {k: tuple(v) for k, v in data.get("deploy_deps", {}).items()}
+
+
+def get_categorization_rules() -> tuple[CategorizationRule, ...]:
+    """Return categorization rules from the manifest, ordered longest-prefix-first.
+
+    Follows the same pattern as get_install_specs() etc.: calls _load_raw()
+    (which is LRU-cached) and parses the result on each call.
+
+    Raises FileNotFoundError if manifest doesn't exist.
+    Raises KeyError if 'categorization_rules' key is missing (old manifest).
+    Invalid category strings in individual rules are logged and skipped.
+    """
+    data = _load_raw()
+    parsed = [_parse_categorization_rule(r) for r in data["categorization_rules"]]
+    return tuple(r for r in parsed if r is not None)

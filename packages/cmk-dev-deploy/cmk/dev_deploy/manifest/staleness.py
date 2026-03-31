@@ -25,6 +25,7 @@ from cmk.dev_deploy.manifest.reader import (
     hash_path,
     manifest_path,
 )
+from cmk.dev_deploy.state.change_detector import reset_categorization_cache
 
 # Directories to skip when scanning for BUILD / .bzl files.
 # These are bazel output symlinks, caches, and non-source directories.
@@ -204,6 +205,7 @@ def _rebuild_manifest(repo_root: Path) -> None:
     # again here to capture the state as seen by the parent process.
     save_manifest_hashes(repo_root)
     clear_cache()
+    reset_categorization_cache()
     elapsed = time.monotonic() - t0
     output.info(f"Manifest: rebuilt in {elapsed:.1f}s")
 

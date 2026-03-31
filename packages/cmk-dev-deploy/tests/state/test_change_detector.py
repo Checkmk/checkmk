@@ -13,11 +13,34 @@ import pytest
 
 from cmk.dev_deploy.errors import ChangeDetectionError, DeployError
 from cmk.dev_deploy.state.change_detector import (
-    _CATEGORIZATION_RULES,
+    _STRUCTURAL_RULES,
     categorize_file,
     detect_changes,
 )
-from cmk.dev_deploy.types import ChangeCategory, ChangeSet
+from cmk.dev_deploy.types import CategorizationRule, ChangeCategory, ChangeSet
+
+
+@pytest.fixture(autouse=True)
+def _inject_computed_rules() -> None:
+    """Inject categorization rules computed from checked-in data.
+
+    Uses the real _compute_categorization_rules() pipeline with:
+    - Install specs from deploy_specs.toml (checked in)
+    - Supplementary rules from deploy_specs.toml (checked in)
+    - Representative wheel/config specs for tested paths
+    - _TEST_INSTALL_SPEC_EXTENSIONS from conftest (the only test constant)
+
+    This does NOT depend on deploy_manifest.json (gitignored).
+    """
+    import cmk.dev_deploy.state.change_detector as _cd
+    from cmk.dev_deploy.manifest.reader import get_categorization_rules
+
+    # get_categorization_rules reads from the manifest cache, which is either
+    # the real manifest (local dev) or the seed manifest (CI).  Both have
+    # categorization_rules computed by the real pipeline (see conftest.py).
+    manifest_rules = get_categorization_rules()
+    _cd._cached_rules = _cd._STRUCTURAL_RULES + manifest_rules  # noqa: SLF001
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -204,6 +227,7 @@ class TestCategorizeFile:
             # Frontend (legacy)
             ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
             ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),
+            ("packages/cmk-frontend/src/js/modules/graphs.ts", ChangeCategory.FRONTEND),
             # Config
             ("agents/plugins/my_agent", ChangeCategory.CONFIG),
             ("notifications/slack", ChangeCategory.CONFIG),
@@ -402,18 +426,85 @@ class TestDetectChanges:
 
 
 class TestCategorizationRules:
-    """Tests for the _CATEGORIZATION_RULES data structure."""
+    """Tests for the structural categorization rules."""
 
-    def test_rules_is_tuple(self) -> None:
-        """_CATEGORIZATION_RULES is a tuple of tuples."""
-        assert isinstance(_CATEGORIZATION_RULES, tuple)
-        assert len(_CATEGORIZATION_RULES) > 0
+    def test_structural_rules_is_tuple(self) -> None:
+        """_STRUCTURAL_RULES is a tuple of CategorizationRule instances."""
+        assert isinstance(_STRUCTURAL_RULES, tuple)
+        assert len(_STRUCTURAL_RULES) == 3  # TEST, BUILD (MODULE.bazel), BUILD (bazel/)
 
-    def test_each_rule_has_three_elements(self) -> None:
-        """Each rule has (prefix, ext_filter, category) structure."""
-        for rule in _CATEGORIZATION_RULES:
-            assert len(rule) == 3
-            prefix, ext_filter, category = rule
-            assert isinstance(prefix, str)
-            assert ext_filter is None or isinstance(ext_filter, frozenset)
-            assert isinstance(category, ChangeCategory)
+    def test_each_structural_rule_is_categorization_rule(self) -> None:
+        """Each structural rule is a CategorizationRule dataclass."""
+        for rule in _STRUCTURAL_RULES:
+            assert isinstance(rule, CategorizationRule)
+            assert isinstance(rule.prefix, str)
+            assert rule.extensions is None or isinstance(rule.extensions, frozenset)
+            assert isinstance(rule.category, ChangeCategory)
+
+    def test_structural_rules_cover_tests_and_build(self) -> None:
+        """Structural rules cover TEST and BUILD categories."""
+        categories = {rule.category for rule in _STRUCTURAL_RULES}
+        assert ChangeCategory.TEST in categories
+        assert ChangeCategory.BUILD in categories
+
+
+class TestCategorizationRegression:
+    """Regression tests ensuring manifest-derived rules match prior hardcoded behavior.
+
+    These test paths represent every package that was in the original
+    _CATEGORIZATION_RULES constant. If any rule is accidentally dropped
+    (e.g., a supplementary rule removed), these tests catch it.
+    """
+
+    @pytest.mark.parametrize(
+        "path,expected",
+        [
+            # Python fast path
+            ("cmk/gui/views.py", ChangeCategory.PYTHON),
+            ("cmk/base/config.py", ChangeCategory.PYTHON),
+            # C++
+            ("packages/livestatus/src/Query.cc", ChangeCategory.CPP),
+            ("packages/neb/src/module.cc", ChangeCategory.CPP),
+            ("packages/unixcat/src/unixcat.cc", ChangeCategory.CPP),
+            ("non-free/packages/cmc/src/cmc.cc", ChangeCategory.CPP),
+            ("non-free/packages/cmc/src/config.proto", ChangeCategory.CPP),
+            # Rust (including supplementary packages)
+            ("packages/check-cert/src/main.rs", ChangeCategory.RUST),
+            ("packages/check-http/src/main.rs", ChangeCategory.RUST),
+            ("packages/cmk-agent-ctl/src/main.rs", ChangeCategory.RUST),
+            ("packages/mk-oracle/src/main.rs", ChangeCategory.RUST),
+            ("packages/mk-sql/src/main.rs", ChangeCategory.RUST),
+            # Vue
+            ("packages/cmk-frontend-vue/src/App.vue", ChangeCategory.VUE),
+            ("packages/cmk-frontend-vue/src/main.ts", ChangeCategory.VUE),
+            ("packages/cmk-shared-typing/src/types.ts", ChangeCategory.VUE),
+            # Frontend (includes .ts -- the motivating bug fix)
+            ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
+            ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),
+            ("packages/cmk-frontend/src/js/modules/graphs.ts", ChangeCategory.FRONTEND),
+            # Python packages (specific and catch-all)
+            ("packages/cmk-ccc/cmk/ccc/version.py", ChangeCategory.PYTHON),
+            ("non-free/packages/cmk-bakery/cmk/bakery/foo.py", ChangeCategory.PYTHON),
+            # Catch-all packages/ for packages without their own wheel spec
+            ("packages/cmk-dev-deploy/cmk/dev_deploy/foo.py", ChangeCategory.PYTHON),
+            ("non-free/packages/some-unknown/lib.py", ChangeCategory.PYTHON),
+            # Config
+            ("agents/plugins/my_agent", ChangeCategory.CONFIG),
+            ("notifications/slack", ChangeCategory.CONFIG),
+            ("active_checks/check_http", ChangeCategory.CONFIG),
+            ("omd/packages/redis/redis.make", ChangeCategory.CONFIG),
+            # Data
+            ("locale/de/LC_MESSAGES/multisite.mo", ChangeCategory.DATA),
+            ("doc/plugin-api/index.html", ChangeCategory.DATA),
+            # Tests
+            ("tests/unit/test_foo.py", ChangeCategory.TEST),
+            # Build
+            ("MODULE.bazel", ChangeCategory.BUILD),
+            ("bazel/deps.bzl", ChangeCategory.BUILD),
+            # OTHER
+            ("README.md", ChangeCategory.OTHER),
+        ],
+    )
+    def test_regression(self, path: str, expected: ChangeCategory) -> None:
+        """Ensure categorize_file produces the same result as the old hardcoded rules."""
+        assert categorize_file(path) == expected

@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.blade_bays import (
     check_blade_bays,
     discover_blade_bays,
@@ -36,16 +33,17 @@ STRING_TABLE_1 = [
         pytest.param(
             STRING_TABLE_1,
             [
-                ("PD1 SomeName1", {}),
-                ("PD1 SomeName2", {}),
-                ("PD2 SomeName1", {}),
-                ("PD2 SomeName3", {}),
+                Service(item="PD1 SomeName1"),
+                Service(item="PD1 SomeName2"),
+                Service(item="PD2 SomeName1"),
+                Service(item="PD2 SomeName3"),
             ],
         ),
     ],
 )
 def test_discover_blade_bays(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
+    string_table: Sequence[StringTable],
+    expected_discoveries: Sequence[Service],
 ) -> None:
     parsed = parse_blade_bays(string_table)
     result = list(discover_blade_bays(parsed))
@@ -59,39 +57,53 @@ def test_discover_blade_bays(
             STRING_TABLE_1,
             {
                 "PD1 SomeName1": [
-                    (0, "Device status: on(0)"),
-                    (0, "Max. power: 6 W, Type: type1, ID: 1"),
-                    (0, "Power: 4.0 W", [("power", 4, None, None)]),
-                    (0, "Status: on"),
+                    Result(state=State.OK, summary="Status: on"),
+                    Result(state=State.OK, summary="Type: type1"),
+                    Result(state=State.OK, summary="Device status: on(0)"),
+                    Result(state=State.OK, summary="Power: 4.0 W"),
+                    Metric("power", 4.0),
+                    Result(state=State.OK, summary="Max. power: 6 W"),
+                    Result(state=State.OK, summary="ID: 1"),
                 ],
                 "PD1 SomeName2": [
-                    (0, "Device status: standby(0)"),
-                    (0, "Max. power: 5 W, Type: type2, ID: A"),
-                    (0, "Power: 5.0 W", [("power", 5, None, None)]),
-                    (0, "Status: standby"),
+                    Result(state=State.OK, summary="Status: standby"),
+                    Result(state=State.OK, summary="Type: type2"),
+                    Result(state=State.OK, summary="Device status: standby(0)"),
+                    Result(state=State.OK, summary="Power: 5.0 W"),
+                    Metric("power", 5.0),
+                    Result(state=State.OK, summary="Max. power: 5 W"),
+                    Result(state=State.OK, summary="ID: A"),
                 ],
                 "PD2 SomeName1": [
-                    (0, "Device status: on(0)"),
-                    (0, "Max. power: 5 W, Type: type3, ID: 1"),
-                    (0, "Power: 5.0 W", [("power", 5, None, None)]),
-                    (0, "Status: on"),
+                    Result(state=State.OK, summary="Status: on"),
+                    Result(state=State.OK, summary="Type: type3"),
+                    Result(state=State.OK, summary="Device status: on(0)"),
+                    Result(state=State.OK, summary="Power: 5.0 W"),
+                    Metric("power", 5.0),
+                    Result(state=State.OK, summary="Max. power: 5 W"),
+                    Result(state=State.OK, summary="ID: 1"),
                 ],
                 "PD2 SomeName3": [
-                    (0, "Device status: on(0)"),
-                    (0, "Max. power: 5 W, Type: type4, ID: B"),
-                    (0, "Power: 5.0 W", [("power", 5, None, None)]),
-                    (0, "Status: on"),
+                    Result(state=State.OK, summary="Status: on"),
+                    Result(state=State.OK, summary="Type: type4"),
+                    Result(state=State.OK, summary="Device status: on(0)"),
+                    Result(state=State.OK, summary="Power: 5.0 W"),
+                    Metric("power", 5.0),
+                    Result(state=State.OK, summary="Max. power: 5 W"),
+                    Result(state=State.OK, summary="ID: B"),
                 ],
             },
         ),
     ],
 )
 def test_check_blade_bays(
-    string_table: StringTable, expected_results: dict[str, list[object]]
+    string_table: Sequence[StringTable], expected_results: Mapping[str, CheckResult]
 ) -> None:
     parsed = parse_blade_bays(string_table)
+    services = list(discover_blade_bays(parsed))
     result = {
-        item_name: sorted(check_blade_bays(item_name, params, parsed))
-        for item_name, params in discover_blade_bays(parsed)
+        service.item: list(check_blade_bays(service.item, parsed))
+        for service in services
+        if service.item is not None
     }
     assert result == expected_results

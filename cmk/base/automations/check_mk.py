@@ -142,13 +142,15 @@ from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
 from cmk.checkengine.discovery import (
     autodiscovery,
-    automation_discovery,
     CheckPreview,
     CheckPreviewEntry,
     DiscoveryReport,
     DiscoverySettings,
     get_check_preview,
     set_autochecks_for_effective_host,
+)
+from cmk.checkengine.discovery import (
+    automation_discovery as _automation_discovery,
 )
 from cmk.checkengine.fetcher import FetcherFunction
 from cmk.checkengine.parameters import TimespecificParameters
@@ -306,7 +308,7 @@ def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]
     return False, args
 
 
-def automation_service_discovery(
+def _automation_service_discovery(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -458,7 +460,7 @@ def automation_service_discovery(
                 rtc_package=None,
             )
 
-        results[hostname] = automation_discovery(
+        results[hostname] = _automation_discovery(
             hostname,
             is_cluster=is_cluster,
             cluster_nodes=config_cache.nodes(hostname),
@@ -505,7 +507,7 @@ def automation_service_discovery(
     return ServiceDiscoveryResult(results)
 
 
-def automation_special_agent_discovery_preview(
+def _automation_special_agent_discovery_preview(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -588,7 +590,7 @@ def automation_special_agent_discovery_preview(
     return preview
 
 
-def automation_discovery_preview(
+def _automation_discovery_preview(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -1092,7 +1094,7 @@ def _warn_service_name_conflicts(host_name: HostName, check_preview: CheckPrevie
         )
 
 
-def automation_autodiscovery(
+def _automation_autodiscovery(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -1501,7 +1503,7 @@ def _make_get_effective_host_of_autocheck_callback(
 # This is an incompatibly changed version of the set-autochecks command.
 # The last version to support the old 'set-autochecks' was 2.4
 # Consider changing the name back to 'set-autochecks' in 2.6
-def automation_set_autochecks_v2(
+def _automation_set_autochecks_v2(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -1573,7 +1575,7 @@ def automation_set_autochecks_v2(
     return SetAutochecksV2Result()
 
 
-def automation_update_host_labels(
+def _automation_update_host_labels(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -1977,7 +1979,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{oldregex};/\1 NOTIFICATION: \2;{newname}
         return name.replace(".", "[.]")
 
 
-def automation_get_service_labels(
+def _automation_get_service_labels(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -2024,7 +2026,7 @@ def automation_get_service_labels(
     )
 
 
-def automation_get_service_name(
+def _automation_get_service_name(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -2366,7 +2368,7 @@ class AutomationAnalyseServices:
                 return
 
 
-def automation_analyse_host(
+def _automation_analyse_host(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -2390,7 +2392,7 @@ def automation_analyse_host(
     )
 
 
-def automation_analyze_host_rule_matches(
+def _automation_analyze_host_rule_matches(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -2426,7 +2428,7 @@ def automation_analyze_host_rule_matches(
     )
 
 
-def automation_analyze_service_rule_matches(
+def _automation_analyze_service_rule_matches(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -2472,7 +2474,7 @@ def automation_analyze_service_rule_matches(
     )
 
 
-def automation_analyze_host_rule_effectiveness(
+def _automation_analyze_host_rule_effectiveness(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -2874,7 +2876,7 @@ def _execute_silently(
         )
 
 
-def automation_get_configuration(
+def _automation_get_configuration(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -2908,7 +2910,7 @@ def automation_get_configuration(
     return GetConfigurationResult(result)
 
 
-def automation_get_check_information(
+def _automation_get_check_information(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -2954,7 +2956,7 @@ def _get_man_page_title(man_page_path_map: Mapping[str, Path], plugin_name: Chec
         raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
 
 
-def automation_get_section_information(
+def _automation_get_section_information(
     ctx: AutomationContext,
     args: object,
     plugins: AgentBasedPlugins | None,
@@ -2981,7 +2983,7 @@ def automation_get_section_information(
     return GetSectionInformationResult(section_infos)
 
 
-def automation_scan_parents(
+def _automation_scan_parents(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -3093,7 +3095,7 @@ def get_special_agent_commandline(
     yield from special_agent.iter_special_agent_commands(agent_name, params)
 
 
-def automation_diag_special_agent(
+def _automation_diag_special_agent(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -3174,7 +3176,7 @@ def _execute_diag_special_agent(
             )
 
 
-def automation_ping_host(
+def _automation_ping_host(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -3217,7 +3219,7 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
     return 0, completed_process.stdout
 
 
-def automation_diag_cmk_agent(
+def _automation_diag_cmk_agent(
     ctx: AutomationContext,
     args: list[str],
     _plugins: AgentBasedPlugins | None,
@@ -3304,7 +3306,7 @@ def automation_diag_cmk_agent(
     return DiagCmkAgentResult(state, output)
 
 
-def automation_diag_snmp(
+def _automation_diag_snmp(
     ctx: AutomationContext,
     args: list[str],
     _plugins: AgentBasedPlugins | None,
@@ -4096,7 +4098,7 @@ class AutomationActiveCheck:
             return 3, "UNKNOWN - Cannot execute command: %s" % e
 
 
-def automation_update_passwords_merged_file(
+def _automation_update_passwords_merged_file(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -4114,7 +4116,7 @@ def automation_update_passwords_merged_file(
     return UpdatePasswordsMergedFileResult()
 
 
-def automation_update_dns_cache(
+def _automation_update_dns_cache(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -4171,7 +4173,7 @@ def _execute_snmp_walk(snmp_config: SNMPHostConfig, backend: SNMPBackend) -> tup
     return b"".join(lines), error_output
 
 
-def automation_get_agent_output(
+def _automation_get_agent_output(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -4438,7 +4440,7 @@ def automation_get_agent_output(
     )
 
 
-def automation_find_unknown_check_parameter_rule_sets(
+def _automation_find_unknown_check_parameter_rule_sets(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
@@ -4459,153 +4461,153 @@ def automation_find_unknown_check_parameter_rule_sets(
     )
 
 
-AUTOMATION_SERVICE_DISCOVERY = Automation(
+automation_service_discovery = Automation(
     name=AutomationID("service-discovery"),
-    handler=automation_service_discovery,
+    handler=_automation_service_discovery,
     result=ServiceDiscoveryResult,
 )
-AUTOMATION_SPECIAL_AGENT_DISCOVERY_PREVIEW = Automation(
+automation_special_agent_discovery_preview = Automation(
     name=AutomationID("special-agent-discovery-preview"),
-    handler=automation_special_agent_discovery_preview,
+    handler=_automation_special_agent_discovery_preview,
     result=ServiceDiscoveryPreviewResult,
 )
-AUTOMATION_SERVICE_DISCOVERY_PREVIEW = Automation(
+automation_service_discovery_preview = Automation(
     name=AutomationID("service-discovery-preview"),
-    handler=automation_discovery_preview,
+    handler=_automation_discovery_preview,
     result=ServiceDiscoveryPreviewResult,
 )
-AUTOMATION_AUTODISCOVERY = Automation(
+automation_autodiscovery = Automation(
     name=AutomationID("autodiscovery"),
-    handler=automation_autodiscovery,
+    handler=_automation_autodiscovery,
     result=AutodiscoveryResult,
 )
-AUTOMATION_SET_AUTOCHECKS_V2 = Automation(
+automation_set_autochecks_v2 = Automation(
     name=AutomationID("set-autochecks-v2"),
-    handler=automation_set_autochecks_v2,
+    handler=_automation_set_autochecks_v2,
     result=SetAutochecksV2Result,
 )
-AUTOMATION_UPDATE_HOST_LABELS = Automation(
+automation_update_host_labels = Automation(
     name=AutomationID("update-host-labels"),
-    handler=automation_update_host_labels,
+    handler=_automation_update_host_labels,
     result=UpdateHostLabelsResult,
 )
-AUTOMATION_RENAME_HOSTS = Automation(
+automation_rename_hosts = Automation(
     name=AutomationID("rename-hosts"),
     handler=AutomationRenameHosts().execute,
     result=RenameHostsResult,
 )
-AUTOMATION_GET_SERVICES_LABELS = Automation(
+automation_get_services_labels = Automation(
     name=AutomationID("get-services-labels"),
-    handler=automation_get_service_labels,
+    handler=_automation_get_service_labels,
     result=GetServicesLabelsResult,
 )
-AUTOMATION_GET_SERVICE_NAME = Automation(
+automation_get_service_name = Automation(
     name=AutomationID("get-service-name"),
-    handler=automation_get_service_name,
+    handler=_automation_get_service_name,
     result=GetServiceNameResult,
 )
-AUTOMATION_ANALYSE_SERVICE = Automation(
+automation_analyse_service = Automation(
     name=AutomationID("analyse-service"),
     handler=AutomationAnalyseServices().execute,
     result=AnalyseServiceResult,
 )
-AUTOMATION_ANALYSE_HOST = Automation(
-    name=AutomationID("analyse-host"), handler=automation_analyse_host, result=AnalyseHostResult
+automation_analyse_host = Automation(
+    name=AutomationID("analyse-host"), handler=_automation_analyse_host, result=AnalyseHostResult
 )
-AUTOMATION_ANALYZE_HOST_RULE_MATCHES = Automation(
+automation_analyze_host_rule_matches = Automation(
     name=AutomationID("analyze-host-rule-matches"),
-    handler=automation_analyze_host_rule_matches,
+    handler=_automation_analyze_host_rule_matches,
     result=AnalyzeHostRuleMatchesResult,
 )
-AUTOMATION_ANALYZE_SERVICE_RULE_MATCHES = Automation(
+automation_analyze_service_rule_matches = Automation(
     name=AutomationID("analyze-service-rule-matches"),
-    handler=automation_analyze_service_rule_matches,
+    handler=_automation_analyze_service_rule_matches,
     result=AnalyzeServiceRuleMatchesResult,
 )
-AUTOMATION_ANALYZE_HOST_RULE_EFFECTIVENESS = Automation(
+automation_analyze_host_rule_effectiveness = Automation(
     name=AutomationID("analyze-host-rule-effectiveness"),
-    handler=automation_analyze_host_rule_effectiveness,
+    handler=_automation_analyze_host_rule_effectiveness,
     result=AnalyzeHostRuleEffectivenessResult,
 )
-AUTOMATION_DELETE_HOSTS = Automation(
+automation_delete_hosts = Automation(
     name=AutomationID("delete-hosts"),
     handler=AutomationDeleteHosts().execute,
     result=DeleteHostsResult,
 )
-AUTOMATION_DELETE_HOSTS_KNOWN_REMOTE = Automation(
+automation_delete_hosts_known_remote = Automation(
     name=AutomationID("delete-hosts-known-remote"),
     handler=AutomationDeleteHostsKnownRemote().execute,
     result=DeleteHostsKnownRemoteResult,
 )
-AUTOMATION_RESTART = Automation(
+automation_restart = Automation(
     name=AutomationID("restart"), handler=AutomationRestart().execute, result=RestartResult
 )
-AUTOMATION_RELOAD = Automation(
+automation_reload = Automation(
     name=AutomationID("reload"), handler=AutomationReload().execute, result=ReloadResult
 )
-AUTOMATION_GET_CONFIGURATION = Automation(
+automation_get_configuration = Automation(
     name=AutomationID("get-configuration"),
-    handler=automation_get_configuration,
+    handler=_automation_get_configuration,
     result=GetConfigurationResult,
 )
-AUTOMATION_GET_CHECK_INFORMATION = Automation(
+automation_get_check_information = Automation(
     name=AutomationID("get-check-information"),
-    handler=automation_get_check_information,
+    handler=_automation_get_check_information,
     result=GetCheckInformationResult,
 )
-AUTOMATION_GET_SECTION_INFORMATION = Automation(
+automation_get_section_information = Automation(
     name=AutomationID("get-section-information"),
-    handler=automation_get_section_information,
+    handler=_automation_get_section_information,
     result=GetSectionInformationResult,
 )
-AUTOMATION_SCAN_PARENTS = Automation(
-    name=AutomationID("scan-parents"), handler=automation_scan_parents, result=ScanParentsResult
+automation_scan_parents = Automation(
+    name=AutomationID("scan-parents"), handler=_automation_scan_parents, result=ScanParentsResult
 )
-AUTOMATION_DIAG_SPECIAL_AGENT = Automation(
+automation_diag_special_agent = Automation(
     name=AutomationID("diag-special-agent"),
-    handler=automation_diag_special_agent,
+    handler=_automation_diag_special_agent,
     result=DiagSpecialAgentResult,
 )
-AUTOMATION_PING_HOST = Automation(
-    name=AutomationID("ping-host"), handler=automation_ping_host, result=PingHostResult
+automation_ping_host = Automation(
+    name=AutomationID("ping-host"), handler=_automation_ping_host, result=PingHostResult
 )
-AUTOMATION_DIAG_CMK_AGENT = Automation(
+automation_diag_cmk_agent = Automation(
     name=AutomationID("diag-cmk-agent"),
-    handler=automation_diag_cmk_agent,
+    handler=_automation_diag_cmk_agent,
     result=DiagCmkAgentResult,
 )
-AUTOMATION_DIAG_SNMP = Automation(
+automation_diag_snmp = Automation(
     name=AutomationID("diag-snmp"),
-    handler=automation_diag_snmp,
+    handler=_automation_diag_snmp,
     result=DiagSnmpResult,
 )
-AUTOMATION_DIAG_HOST = Automation(
+automation_diag_host = Automation(
     name=AutomationID("diag-host"),
     handler=AutomationDiagHost().execute,
     result=DiagHostResult,
 )
-AUTOMATION_ACTIVE_CHECK = Automation(
+automation_active_check = Automation(
     name=AutomationID("active-check"),
     handler=AutomationActiveCheck().execute,
     result=ActiveCheckResult,
 )
-AUTOMATION_UPDATE_PASSWORDS_MERGED_FILE = Automation(
+automation_update_passwords_merged_file = Automation(
     name=AutomationID("update-passwords-merged-file"),
-    handler=automation_update_passwords_merged_file,
+    handler=_automation_update_passwords_merged_file,
     result=UpdatePasswordsMergedFileResult,
 )
-AUTOMATION_UPDATE_DNS_CACHE = Automation(
+automation_update_dns_cache = Automation(
     name=AutomationID("update-dns-cache"),
-    handler=automation_update_dns_cache,
+    handler=_automation_update_dns_cache,
     result=UpdateDNSCacheResult,
 )
-AUTOMATION_GET_AGENT_OUTPUT = Automation(
+automation_get_agent_output = Automation(
     name=AutomationID("get-agent-output"),
-    handler=automation_get_agent_output,
+    handler=_automation_get_agent_output,
     result=GetAgentOutputResult,
 )
-AUTOMATION_FIND_UNKNOWN_CHECK_PARAMETER_RULE_SETS = Automation(
+automation_find_unknown_check_parameter_rule_sets = Automation(
     name=AutomationID("find-unknown-check-parameter-rule-sets"),
-    handler=automation_find_unknown_check_parameter_rule_sets,
+    handler=_automation_find_unknown_check_parameter_rule_sets,
     result=UnknownCheckParameterRuleSetsResult,
 )

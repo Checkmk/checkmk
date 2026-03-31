@@ -18,10 +18,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.automations.results import (
-    AnalyzeHostRuleEffectivenessResult,
-    AnalyzeHostRuleMatchesResult,
-)
+from cmk.automations.results import ABCAutomationResult
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
@@ -736,7 +733,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
     def analyze_with_matcher(
         h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> AnalyzeHostRuleMatchesResult:
+    ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
         ts.add_host(HostName("foobar456"), host_path="/wato/regex_check/hosts.mk")
@@ -748,7 +745,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches(
+            return automation_analyze_host_rule_matches.handler(
                 AutomationContext(
                     edition=(app := make_app(version.Edition.COMMUNITY)).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
@@ -897,7 +894,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
 
     def analyze_host_rule_effectiveness(
         r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> AnalyzeHostRuleEffectivenessResult:
+    ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         config_cache = ts.apply(monkeypatch)
@@ -908,7 +905,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_effectiveness(
+            return automation_analyze_host_rule_effectiveness.handler(
                 AutomationContext(
                     edition=(app := make_app(version.Edition.COMMUNITY)).edition,
                     make_bake_on_restart=app.make_bake_on_restart,

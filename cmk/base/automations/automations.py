@@ -98,7 +98,7 @@ class Automations:
 
     def discover(self) -> None:
         discovery_result = discover_plugins_from_modules(
-            plugin_prefixes={Automation: "AUTOMATION_"},
+            plugin_prefixes={Automation: "automation_"},
             module_names_by_priority=[
                 # TODO: We need to get rid of this hard-coded list
                 "cmk.base.automations.check_mk",

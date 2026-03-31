@@ -16,7 +16,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from cmk.automations.results import AnalyzeHostRuleMatchesResult
+from cmk.automations.results import ABCAutomationResult
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
@@ -221,9 +221,9 @@ def fixture_mock_analyze_host_rule_matches_automation(
 
     def analyze_with_matcher(
         h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> AnalyzeHostRuleMatchesResult:
+    ) -> ABCAutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return automation_analyze_host_rule_matches(
+            return automation_analyze_host_rule_matches.handler(
                 AutomationContext(
                     edition=(app := make_app(Edition.COMMUNITY)).edition,
                     make_bake_on_restart=app.make_bake_on_restart,

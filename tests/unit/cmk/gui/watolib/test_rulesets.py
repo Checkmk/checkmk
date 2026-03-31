@@ -11,10 +11,7 @@ from io import StringIO
 
 import pytest
 
-from cmk.automations.results import (
-    AnalyzeHostRuleMatchesResult,
-    AnalyzeServiceRuleMatchesResult,
-)
+from cmk.automations.results import ABCAutomationResult
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
@@ -40,7 +37,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
     def analyze_with_matcher(
         h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> AnalyzeHostRuleMatchesResult:
+    ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         ts.add_host(HostName("dong"))
@@ -48,7 +45,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches(
+            return automation_analyze_host_rule_matches.handler(
                 AutomationContext(
                     edition=(app := make_app(Edition.COMMUNITY)).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
@@ -177,14 +174,14 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         rules: Sequence[Sequence[RuleSpec]],
         *,
         debug: bool,
-    ) -> AnalyzeServiceRuleMatchesResult:
+    ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
-            return automation_analyze_service_rule_matches(
+            return automation_analyze_service_rule_matches.handler(
                 AutomationContext(
                     edition=(app := make_app(Edition.COMMUNITY)).edition,
                     make_bake_on_restart=app.make_bake_on_restart,

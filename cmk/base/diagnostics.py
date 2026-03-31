@@ -257,7 +257,7 @@ def handler(
         )
 
 
-AUTOMATION_CREATE_DIAGNOSTICS_DUMP = Automation(
+automation_create_diagnostics_dump = Automation(
     name=AutomationID("create-diagnostics-dump"),
     handler=handler,
     result=CreateDiagnosticsDumpResult,

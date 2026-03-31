@@ -1030,22 +1030,22 @@ def _automation_get_bulks(
     )
 
 
-AUTOMATION_NOTIFICATION_REPLAY = Automation(
+automation_notification_replay = Automation(
     name=AutomationID("notification-replay"),
     handler=_automation_notification_replay,
     result=NotificationReplayResult,
 )
-AUTOMATION_NOTIFICATION_ANALYSE = Automation(
+automation_notification_analyse = Automation(
     name=AutomationID("notification-analyse"),
     handler=_automation_notification_analyse,
     result=NotificationAnalyseResult,
 )
-AUTOMATION_NOTIFICATION_TEST = Automation(
+automation_notification_test = Automation(
     name=AutomationID("notification-test"),
     handler=_automation_notification_test,
     result=NotificationTestResult,
 )
-AUTOMATION_NOTIFICATION_GET_BULKS = Automation(
+automation_notification_get_bulks = Automation(
     name=AutomationID("notification-get-bulks"),
     handler=_automation_get_bulks,
     result=NotificationGetBulksResult,

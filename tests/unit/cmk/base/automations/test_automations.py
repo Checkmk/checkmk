@@ -39,7 +39,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         "cmk/site": "discovered",
         "explicit": "explicit",
     }
-    assert automations.automation_analyse_host(
+    assert automations.automation_analyse_host.handler(
         AutomationContext(
             edition=(app := make_app(Edition.COMMUNITY)).edition,
             make_bake_on_restart=app.make_bake_on_restart,
@@ -88,7 +88,7 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
     )
     config_cache = ts.apply(monkeypatch)
 
-    assert automations.automation_get_service_labels(
+    assert automations.automation_get_services_labels.handler(
         AutomationContext(
             edition=(app := make_app(Edition.COMMUNITY)).edition,
             make_bake_on_restart=app.make_bake_on_restart,

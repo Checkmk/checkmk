@@ -9,8 +9,8 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from typing import NamedTuple
 
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars

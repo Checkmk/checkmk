@@ -18,7 +18,7 @@ import cmk.utils.log
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import hooks, http, main_modules
-from cmk.gui.utils.script_helpers import session_wsgi_app
+from cmk.gui.script_helpers import session_wsgi_app
 
 from .web_test_app import WebTestAppForCMK
 

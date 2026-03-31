@@ -11,6 +11,11 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui import login
+from cmk.gui.script_helpers import (
+    application_and_request_context,
+    request_context,
+    session_wsgi_app,
+)
 from cmk.gui.session import session
 from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils.flashed_messages import (
@@ -22,11 +27,6 @@ from cmk.gui.utils.flashed_messages import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.script_helpers import (
-    application_and_request_context,
-    request_context,
-    session_wsgi_app,
-)
 
 
 @pytest.fixture(name="user_id")

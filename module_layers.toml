@@ -468,7 +468,7 @@ allows = [
   "cmk.gui.main_modules",
   "cmk.gui.session",
   "cmk.gui.site_config",
-  "cmk.gui.utils.script_helpers",
+  "cmk.gui.script_helpers",
   "cmk.gui.watolib.attributes",
   "cmk.gui.watolib.config_sync",
   "cmk.gui.watolib.host_attributes",
@@ -1492,6 +1492,7 @@ allows = [
   "@ccc",
   "cmk.base.config",
   "cmk.gui.main_modules",
+  "cmk.gui.script_helpers",
   "cmk.gui.utils",
   "cmk.utils.paths",
 ]

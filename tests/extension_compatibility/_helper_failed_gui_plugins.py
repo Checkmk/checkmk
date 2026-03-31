@@ -8,8 +8,8 @@ import sys
 
 from cmk.ccc.version import edition
 from cmk.gui import main_modules
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.utils import get_failed_plugins
-from cmk.gui.utils.script_helpers import gui_context
 from cmk.utils import paths
 
 main_modules.register(edition(paths.omd_root))

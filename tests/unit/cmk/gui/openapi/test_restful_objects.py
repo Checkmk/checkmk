@@ -21,7 +21,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
     object_collection,
 )
 from cmk.gui.openapi.restful_objects.type_defs import StatusCode, StatusCodeInt
-from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.script_helpers import application_and_request_context
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 

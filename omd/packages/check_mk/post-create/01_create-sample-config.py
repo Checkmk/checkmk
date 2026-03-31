@@ -11,8 +11,8 @@ import sys
 
 from cmk.ccc.version import edition
 from cmk.gui import main_modules
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.sample_config import init_wato_datastructures
 from cmk.utils import log, paths
 

@@ -19,8 +19,8 @@ from cmk.discover_plugins import discover_plugins_from_modules, discover_submodu
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
 # the moment we need to deal with it.
 from cmk.gui import main_modules
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE

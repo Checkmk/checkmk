@@ -7,7 +7,7 @@ import logging
 import pytest
 
 from cmk.gui.config import active_config
-from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, HostsAndFoldersConfig
 from cmk.gui.watolib.rulesets import AllRulesets, Rule
 from cmk.update_config.plugins.lib.azure_storage import AzureStorageMigration

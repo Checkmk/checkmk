@@ -5,7 +5,7 @@
 
 
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.script_helpers import application_and_request_context
 
 
 def test_registered_pagetype_topics() -> None:

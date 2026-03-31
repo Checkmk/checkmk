@@ -102,7 +102,7 @@ class MoveRuleTo(OneOfSchema):
 
     Examples:
 
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.script_helpers import application_and_request_context
 
         >>> schema = MoveRuleTo()
         >>> from cmk.gui.livestatus_utils.testing import mock_site
@@ -810,7 +810,7 @@ class RuleExtensions(base.BaseSchema):
         Examples:
 
             >>> ext = RuleExtensions()
-            >>> from cmk.gui.utils.script_helpers import application_and_request_context
+            >>> from cmk.gui.script_helpers import application_and_request_context
             >>> from cmk.gui.livestatus_utils.testing import mock_site
             >>> with mock_site(), application_and_request_context():
             ...     ext.load({
@@ -898,7 +898,7 @@ class UpdateRuleObject(base.BaseSchema):
     Examples:
 
         >>> s = UpdateRuleObject()
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.script_helpers import application_and_request_context
         >>> from cmk.gui.livestatus_utils.testing import mock_site
         >>> with mock_site(), application_and_request_context():
         ...     rv = s.load({
@@ -983,7 +983,7 @@ class InputRuleObject(UpdateRuleObject):
     Examples:
 
         >>> s = InputRuleObject()
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.script_helpers import application_and_request_context
         >>> from cmk.gui.livestatus_utils.testing import mock_site
         >>> with mock_site(), application_and_request_context():
         ...     rv = s.load({

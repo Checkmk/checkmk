@@ -21,8 +21,8 @@ from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.log import init_logging, logger
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import gui_context
 from cmk.utils import paths
 from cmk.utils.redis import disable_redis
 

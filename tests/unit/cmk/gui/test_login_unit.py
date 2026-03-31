@@ -24,6 +24,7 @@ from cmk.gui import auth, http, login
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
+from cmk.gui.script_helpers import application_and_request_context
 from cmk.gui.session import session
 from cmk.gui.type_defs import (
     SessionStateMachine,
@@ -36,7 +37,6 @@ from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils import saveint
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.users import create_and_destroy_user
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK

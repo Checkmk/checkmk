@@ -10,8 +10,8 @@
 import pytest
 
 import cmk.utils.paths
+from cmk.gui.script_helpers import application_and_request_context
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib import groups_io
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 

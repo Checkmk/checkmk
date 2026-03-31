@@ -16,7 +16,7 @@ from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.script_helpers import application_and_request_context
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.parent_scan import (
     ParentScanBackgroundJob,

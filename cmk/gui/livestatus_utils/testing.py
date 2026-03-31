@@ -12,8 +12,8 @@ from livestatus import MultiSiteConnection
 
 from cmk.ccc.site import omd_site
 from cmk.gui import sites
+from cmk.gui.script_helpers import application_and_request_context
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.livestatus_client.testing import (
     MatchType,
     mock_livestatus_communication,

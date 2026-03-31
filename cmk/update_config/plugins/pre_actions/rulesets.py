@@ -18,8 +18,8 @@ from cmk.ccc.regex import regex, RegexFutureWarning
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.groups import GroupSpec
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError

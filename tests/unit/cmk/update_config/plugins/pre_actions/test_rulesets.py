@@ -8,7 +8,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import (
     AllRulesets,

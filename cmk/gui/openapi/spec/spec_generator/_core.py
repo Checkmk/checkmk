@@ -425,8 +425,8 @@ from cmk.gui.openapi.spec.spec_generator._doc_marshmallow import marshmallow_doc
 from cmk.gui.openapi.spec.spec_generator._doc_pydantic import pydantic_endpoint_to_doc_endpoint
 from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint
 from cmk.gui.openapi.spec.utils import spec_path
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import gui_context
 from cmk.utils.paths import omd_root
 
 Ident = tuple[str, str]

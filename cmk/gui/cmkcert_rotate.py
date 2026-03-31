@@ -31,7 +31,7 @@ from cmk.ccc.site import SiteId
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.gui import main_modules
 from cmk.gui.config import Config, load_config
-from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.automations import (
     do_remote_automation,

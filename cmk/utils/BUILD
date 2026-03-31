@@ -27,15 +27,9 @@ py_library(
     ],
     visibility = [
         "//cmk:__subpackages__",
-        "//non-free/packages/cmk-bakery:__pkg__",
-        "//non-free/packages/cmk-dcd:__pkg__",
-        "//non-free/packages/cmk-licensing-nonfree:__pkg__",
-        "//non-free/packages/cmk-liveproxyd:__pkg__",
-        "//non-free/packages/cmk-metric-backend:__pkg__",
-        "//non-free/packages/cmk-notification-plugins-nonfree:__pkg__",
-        "//non-free/packages/cmk-robotmk:__pkg__",
+        "//non-free/packages:__subpackages__",
         "//omd/packages:__subpackages__",
-        "//packages/cmk-notification-plugins:__pkg__",
+        "//packages:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [

@@ -78,11 +78,9 @@ py_library(
     srcs = ["config.py"],
     imports = ["../.."],
     visibility = [
-        "//cmk:__pkg__",
-        "//cmk/base:__subpackages__",
-        "//cmk/product_usage:__pkg__",
-        "//cmk/update_config:__pkg__",
-        "//non-free/packages/cmk-bakery:__pkg__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//packages:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [

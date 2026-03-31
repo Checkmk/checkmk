@@ -6,26 +6,26 @@
 import argparse
 import sys
 
-from cmk.ccc.site import omd_site
-from cmk.ccc.version import Edition, edition
-from cmk.utils import paths
-from cmk.licensing.active_metric_series_retriever_registry import (
+from cmk.ccc.site import omd_site  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.version import Edition, edition  # astrein: disable=cmk-module-layer-violation
+from cmk.licensing.active_metric_series_retriever_registry import (  # astrein: disable=cmk-module-layer-violation
     active_metric_series_retriever_registry,
 )
-from cmk.licensing.helper import (
+from cmk.licensing.helper import (  # astrein: disable=cmk-module-layer-violation
     get_instance_id_file_path,
     get_licensing_dir,
     hash_site_id,
     init_logging,
     load_instance_id,
 )
-from cmk.licensing.usage import (
+from cmk.licensing.usage import (  # astrein: disable=cmk-module-layer-violation
     create_sample,
     get_next_run_file_path,
     Now,
     try_update_license_usage,
 )
-from cmk.utils.paths import omd_root
+from cmk.utils import paths  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.paths import omd_root  # astrein: disable=cmk-module-layer-violation
 
 
 def _parse_arguments() -> argparse.Namespace:
@@ -45,10 +45,10 @@ def _parse_arguments() -> argparse.Namespace:
 
 def average_active_metric_series_retriever() -> int | None:
     # Note: these type hints are needed to avoid breaking Github actions.
-    from cmk.metric_backend.query.query_client import (  # type: ignore[import-untyped, unused-ignore]
+    from cmk.metric_backend.query.query_client import (  # type: ignore[import-untyped, unused-ignore]  # astrein: disable=cmk-module-layer-violation
         RetryingQueryClient,
     )
-    from cmk.metric_backend.retrying_client import (  # type: ignore[import-untyped, unused-ignore]
+    from cmk.metric_backend.retrying_client import (  # type: ignore[import-untyped, unused-ignore]  # astrein: disable=cmk-module-layer-violation
         RetryingClient,
     )
 

@@ -76,7 +76,7 @@ pkg_files(
         ":cmk-transform-inventory-trees",
         ":cmk-ui-job-scheduler",
         ":cmk-ui-job-scheduler-health",
-        ":cmk-update-license-usage",
+        ":cmk-update-license-usage.py",
         ":cmk-validate-config",
         ":cmk-validate-plugins",
         ":init-redis.py",
@@ -91,6 +91,7 @@ pkg_files(
     ),
     prefix = "bin",
     renames = {
+        "cmk-update-license-usage.py": "cmk-update-license-usage",
         "init-redis.py": "init-redis",
         "mkbackup.py": "mkbackup",
     },
@@ -166,6 +167,13 @@ py_library(
     srcs = ["cmk-create-rrd.py"],
     imports = ["."],
     deps = ["//cmk/rrd"],
+)
+
+py_library(
+    name = "cmk_update_license_usage_py",
+    srcs = ["cmk-update-license-usage.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
 )
 
 py_library(

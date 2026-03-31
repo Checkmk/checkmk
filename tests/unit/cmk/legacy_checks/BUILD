@@ -15,7 +15,7 @@ py_pytest_main(
 py_test(
     name = "legacy_checks",
     # https://bazel.build/reference/be/common-definitions#test.size
-    size = "small",
+    size = "medium",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
         "--config-file=$(location @//:pyproject.toml)",

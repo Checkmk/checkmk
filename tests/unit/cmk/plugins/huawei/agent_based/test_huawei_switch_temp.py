@@ -8,7 +8,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.huawei_switch_temp import (
+from cmk.plugins.huawei.agent_based.huawei_switch_temp import (
     check_huawei_switch_temp,
     discover_huawei_switch_temp,
     parse_huawei_switch_temp,
@@ -53,7 +53,7 @@ STRING_TABLE: list[StringTable] = [
 @pytest.fixture()
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.legacy_checks.huawei_switch_temp.get_value_store",
+        "cmk.plugins.huawei.agent_based.huawei_switch_temp.get_value_store",
         lambda: {},
     )
 

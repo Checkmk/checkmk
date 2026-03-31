@@ -13,7 +13,7 @@
 import pytest
 
 from cmk.agent_based.v2 import GetRateError, Service
-from cmk.legacy_checks import varnish
+from cmk.plugins.varnish.agent_based import varnish
 
 
 @pytest.fixture

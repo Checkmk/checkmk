@@ -315,7 +315,7 @@ def _connection_args(connection: Connection, host_config: HostConfig) -> Iterato
     if (user_agent := connection.user_agent) is not None:
         yield from _user_agent_args(replace_macros(user_agent, host_config.macros))
     if (add_headers := connection.add_headers) is not None:
-        yield from _send_header_args(add_headers)
+        yield from _send_header_args(add_headers, host_config.macros)
 
 
 def _auth_args(
@@ -448,10 +448,12 @@ def _user_agent_args(user_agent: str) -> Iterator[str]:
     yield user_agent
 
 
-def _send_header_args(headers: Sequence[HeaderSpec]) -> Iterator[str]:
+def _send_header_args(headers: Sequence[HeaderSpec], macros: Mapping[str, str]) -> Iterator[str]:
     for header_spec in headers:
         yield "--header"
-        yield f"{header_spec.header_name}:{header_spec.header_value}"
+        name = replace_macros(header_spec.header_name, macros)
+        value = replace_macros(header_spec.header_value, macros)
+        yield f"{name}:{value}"
 
 
 def _response_time_arguments(response_time: FloatLevels) -> Iterator[str]:

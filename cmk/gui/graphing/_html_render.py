@@ -411,15 +411,6 @@ def _render_time_range_selection(
             step=2 * estimate_graph_step_for_html(timerange, preview_config.size[1]),
         )
 
-        artwork = compute_graph_artwork(
-            recipe,
-            time_range,
-            preview_config.size,
-            metrics_from_api,
-            temperature_unit=temperature_unit,
-            backend_time_series_fetcher=backend_time_series_fetcher,
-            pin_time=_load_graph_pin(),
-        ).artwork
         rows.append(
             HTMLWriter.render_td(
                 _create_javascript_graph(
@@ -427,7 +418,15 @@ def _render_time_range_selection(
                     recipe,
                     specification,
                     display_id,
-                    artwork,
+                    compute_graph_artwork(
+                        recipe,
+                        time_range,
+                        preview_config.size,
+                        metrics_from_api,
+                        temperature_unit=temperature_unit,
+                        backend_time_series_fetcher=backend_time_series_fetcher,
+                        pin_time=_load_graph_pin(),
+                    ).artwork,
                     time_range,
                     preview_config,
                     expandable_legend_appearance,
@@ -437,7 +436,8 @@ def _render_time_range_selection(
             )
         )
     return HTMLWriter.render_table(
-        HTML.empty().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
+        HTML.empty().join(HTMLWriter.render_tr(content) for content in rows),
+        class_="timeranges",
     )
 
 

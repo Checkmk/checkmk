@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from pathlib import Path
+from struct import pack
 from unittest.mock import ANY
 
 import pytest
 
-from cmk.piggyback.backend._inotify import Cookie, Event, INotify, Masks, Watchee
+from cmk.piggyback.backend._inotify import _EventParser, Cookie, Event, INotify, Masks, Watchee
 
 
 @pytest.mark.skip(reason="CMK-26458")
@@ -100,3 +99,14 @@ def test_basic_event_observing(tmp_path: Path) -> None:
         ]
         assert isinstance(actual[4].cookie, Cookie)
         assert actual[3].cookie == actual[4].cookie
+
+
+def test_overflow_event_does_not_crash() -> None:
+    """IN_Q_OVERFLOW must not cause a KeyError regardless of the watch descriptor value."""
+    parser = _EventParser()
+    # Raw inotify event: wd=-1, mask=IN_Q_OVERFLOW (0x4000), cookie=0, name_len=0
+    data = pack("iIII", -1, 0x4000, 0, 0)
+    (event,) = parser.iterate_parsed_events(data)
+
+    assert event.type & Masks.Q_OVERFLOW
+    assert event.watchee == Watchee(-1, Path())

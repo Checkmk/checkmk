@@ -101,7 +101,7 @@ def _parse_arguments(argv: list[str]) -> Arguments:
 
 
 def _setup_logging(args: Arguments) -> logging.Logger:
-    logger = getLogger(__name__)
+    logger = getLogger("cmk.piggyback")
     handler: logging.StreamHandler | WatchedFileHandler = (
         logging.StreamHandler(stream=sys.stderr)
         if args.foreground

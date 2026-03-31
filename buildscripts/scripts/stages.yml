@@ -175,12 +175,16 @@ STAGES:
         - "CI_TEST_SQL_DB_ENDPOINT"
       ENV_VARS:
         BAZEL_TEST_LOGS_DEST: "../results/unit"
+        BAZEL_EXTRA_TAG_FILTERS: "-cpp"
       DIR: "tests"
       COMMAND: |
-          set +e
-          ../buildscripts/scripts/bazel_test_non_cpp.sh
-          make_rc=$?
-          set -e
+          make_rc=0
+          ../buildscripts/scripts/bazel_test_ci.sh \
+              --test_verbose_timeout_warnings \
+              --test_env=TZ='America/Chicago' \
+              --cmk_edition=ultimate \
+              -- \
+              //... || make_rc=$?
           ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
           exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1
@@ -194,19 +198,15 @@ STAGES:
       TEXT_ON_SKIP: "No C++ files changed"
       ENV_VARS:
         BAZEL_TEST_LOGS_DEST: "../results/cpp"
+        BAZEL_EXTRA_TAG_FILTERS: "cpp"
       COMMAND: |
-        set +e
-        bazel test \
-            --test_verbose_timeout_warnings \
-            --test_env=TZ="America/Chicago" \
-            --test_tag_filters=cpp \
-            --keep_going \
-            --//:use_faked_artifacts=True \
-            --cmk_edition=ultimate \
-            --run_under="$(which valgrind) --quiet --num-callers=30 --error-exitcode=42" \
-            -- //...
-        make_rc=$?
-        set -e
+        make_rc=0
+        ../buildscripts/scripts/bazel_test_ci.sh \
+              --test_verbose_timeout_warnings \
+              --test_env=TZ='America/Chicago' \
+              --cmk_edition=ultimate \
+              -- \
+              //... || make_rc=$?
         ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
         exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1

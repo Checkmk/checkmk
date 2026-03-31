@@ -948,36 +948,20 @@ def render_graph_html(
     else:
         warning_msg = ""
 
-    html_code = _collect_graph_html(
-        request,
-        recipe,
-        render_state.specification,
-        display_id,
-        artwork_or_errors.artwork,
-        time_range,
-        display_config,
-        ExpandableLegendAppearance.FOLDABLE,
-        additional_html,
-    )
-
-    preview_html: str | None = None
-    if graph_timeranges is not None and display_config.show_time_range_previews:
-        preview_html = str(
-            _render_time_range_selection(
+    return {
+        "html": str(
+            _collect_graph_html(
                 request,
                 recipe,
                 render_state.specification,
+                display_id,
+                artwork_or_errors.artwork,
+                time_range,
                 display_config,
-                graph_timeranges=graph_timeranges,
-                temperature_unit=temperature_unit,
-                backend_time_series_fetcher=backend_time_series_fetcher,
-                display_id=display_id,
-                expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
+                ExpandableLegendAppearance.FOLDABLE,
+                additional_html,
             )
-        )
-
-    return {
-        "html": str(html_code),
+        ),
         "graph": artwork_or_errors.artwork.model_dump(),
         "context": GraphRenderState(
             graph_id=render_state.graph_id,
@@ -989,7 +973,23 @@ def render_graph_html(
         ).model_dump(),
         "error": error_msg,
         "warning": warning_msg,
-        "preview_html": preview_html,
+        "preview_html": (
+            str(
+                _render_time_range_selection(
+                    request,
+                    recipe,
+                    render_state.specification,
+                    display_config,
+                    graph_timeranges=graph_timeranges,
+                    temperature_unit=temperature_unit,
+                    backend_time_series_fetcher=backend_time_series_fetcher,
+                    display_id=display_id,
+                    expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
+                )
+            )
+            if graph_timeranges is not None and display_config.show_time_range_previews
+            else None
+        ),
         "queries_reached_limit": (
             []
             if converter is None

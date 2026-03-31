@@ -791,6 +791,7 @@ class _LegendTitle:
     type: Literal["min", "max", "average", "last", "pin"]
     title: str
     inactive: bool
+    description: str
 
 
 def _compute_legend_titles(
@@ -799,24 +800,52 @@ def _compute_legend_titles(
     display_config: GraphDisplayConfigHTML,
 ) -> Generator[_LegendTitle]:
     consolidation_function = recipe.consolidation_function
+    step = artwork.actual_time.step
+
+    def _inactive_descr(scalar_type: str) -> str:
+        if consolidation_function is None or step == 60:
+            return ""
+        return (
+            _(
+                'This graph is based on data consolidated with the function "%s". The '
+                'values in this column are the "%s" values of the "%s" values '
+                "aggregated in %s steps. Assuming a check interval of 1 minute, the %s "
+                "values here are based on the %s value out of %d raw values."
+            )
+            % (
+                consolidation_function,
+                scalar_type,
+                consolidation_function,
+                get_step_label(step),
+                scalar_type,
+                consolidation_function,
+                (step / 60),
+            )
+            + "\n\n"
+            + _('Click here to change the graphs consolidation function to "%s".') % scalar_type
+        )
+
     yield _LegendTitle(
         "min",
         _("Minimum"),
         consolidation_function is not None and consolidation_function != "min",
+        _inactive_descr("min"),
     )
     yield _LegendTitle(
         "max",
         _("Maximum"),
         consolidation_function is not None and consolidation_function != "max",
+        _inactive_descr("max"),
     )
     yield _LegendTitle(
         "average",
         _("Average"),
         consolidation_function is not None and consolidation_function != "average",
+        _inactive_descr("average"),
     )
-    yield _LegendTitle("last", _("Last"), False)
+    yield _LegendTitle("last", _("Last"), False, "")
     if _show_pin_time(artwork, display_config):
-        yield _LegendTitle("pin", _render_pin_time_label(artwork), False)
+        yield _LegendTitle("pin", _render_pin_time_label(artwork), False, "")
 
 
 def _compute_graph_legend_styles(display_config: GraphDisplayConfigHTML) -> Iterator[str]:
@@ -911,6 +940,35 @@ def _render_attributes(
         return HTML.without_escaping(output_funnel.drain())
 
 
+@dataclass(frozen=True)
+class _LegendCurveRow:
+    curve: LayoutedCurve
+    curve_ann: CurveAnnotations
+    attributes: Sequence[_Attribute]
+    table_uuid: str
+
+
+def _compute_legend_curve_rows(
+    artwork: GraphArtwork,
+    annotations: GraphArtworkAnnotations,
+) -> Iterator[_LegendCurveRow]:
+    for curve, curve_ann in _order_graph_curves_for_legend_and_mouse_hover(
+        artwork.curves, annotations.curves
+    ):
+        yield _LegendCurveRow(
+            curve=curve,
+            curve_ann=curve_ann,
+            attributes=[
+                _Attribute(name=name, value=value, type=_readable_attribute_type(ty))
+                for ty, attrs in sorted(
+                    curve_ann.attributes.items(), key=lambda t: _sort_attributes_by_type(t[0])
+                )
+                for name, value in attrs.items()
+            ],
+            table_uuid=str(uuid4()),
+        )
+
+
 def _show_graph_legend(
     recipe: GraphRecipe,
     artwork: GraphArtwork,
@@ -922,83 +980,59 @@ def _show_graph_legend(
     legend_titles = list(_compute_legend_titles(recipe, artwork, display_config))
     graph_legend_styles = list(_compute_graph_legend_styles(display_config))
 
-    legend_container_styles: list[str] = []
-    if display_config.legend_max_height_px is not None:
-        legend_container_styles.append("max-height:%dpx" % display_config.legend_max_height_px)
-        legend_container_styles.append("overflow-y:auto")
-
-    html.open_div(class_=["legend_container"], style=legend_container_styles or None)
+    html.open_div(
+        class_=["legend_container"],
+        style=(
+            [
+                f"max-height: {display_config.legend_max_height_px}px",
+                "overflow-y: auto",
+            ]
+            if display_config.legend_max_height_px
+            else []
+        ),
+    )
     html.open_table(class_="legend", style=graph_legend_styles)
     html.open_thead()
     html.open_tr()
     html.th("")
     for legend_title in legend_titles:
         classes = ["scalar", legend_title.type]
-        if legend_title.inactive and artwork.actual_time.step != 60:
-            descr = _(
-                'This graph is based on data consolidated with the function "%s". The '
-                'values in this column are the "%s" values of the "%s" values '
-                "aggregated in %s steps. Assuming a check interval of 1 minute, the %s "
-                "values here are based on the %s value out of %d raw values."
-            ) % (
-                recipe.consolidation_function,
-                legend_title.type,
-                recipe.consolidation_function,
-                get_step_label(artwork.actual_time.step),
-                legend_title.type,
-                recipe.consolidation_function,
-                (artwork.actual_time.step / 60),
-            )
-
-            descr += (
-                "\n\n"
-                + _('Click here to change the graphs consolidation function to "%s".')
-                % legend_title.type
-            )
-
+        if legend_title.inactive:
             classes.append("inactive")
-        else:
-            descr = ""
-
-        html.th(legend_title.title, class_=classes, style=font_size_style, title=descr)
+        html.th(
+            legend_title.title,
+            class_=classes,
+            style=font_size_style,
+            title=legend_title.description,
+        )
     html.close_tr()
     html.close_thead()
 
     # Render the curve related rows
     html.open_tbody()
-    for curve, curve_ann in _order_graph_curves_for_legend_and_mouse_hover(
-        artwork.curves, annotations.curves
-    ):
+    for row in _compute_legend_curve_rows(artwork, annotations):
         html.open_tr()
 
-        table_uuid_str = str(uuid4())
-        attributes = [
-            _Attribute(name=name, value=value, type=_readable_attribute_type(ty))
-            for ty, attrs in sorted(
-                curve_ann.attributes.items(), key=lambda t: _sort_attributes_by_type(t[0])
-            )
-            for name, value in attrs.items()
-        ]
-        if attributes:
+        if row.attributes:
             match expandable_legend_appearance:
                 case ExpandableLegendAppearance.POP_UP:
                     html.open_td(
                         style=[font_size_style],
                         class_=["with_attributes"],
-                        onmouseover=f"cmk.graphs.showAttributes(event, '{curve['title']}', {json.dumps([_('Name'), _('Value'), _('Type')])}, {json.dumps([asdict(attr) for attr in attributes])})",
+                        onmouseover=f"cmk.graphs.showAttributes(event, '{row.curve['title']}', {json.dumps([_('Name'), _('Value'), _('Type')])}, {json.dumps([asdict(attr) for attr in row.attributes])})",
                         onmouseleave="cmk.graphs.hideAttributes()",
                     )
                 case ExpandableLegendAppearance.FOLDABLE:
                     html.open_td(
                         style=[font_size_style],
                         class_=["with_attributes"],
-                        onclick=f"const el = document.getElementById('{table_uuid_str}'); el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';",
+                        onclick=f"const el = document.getElementById('{row.table_uuid}'); el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';",
                     )
         else:
             html.open_td(style=[font_size_style])
 
-        html.write_html(render_color_icon(curve["color"]))
-        html.write_text_permissive(curve["title"])
+        html.write_html(render_color_icon(row.curve["color"]))
+        html.write_text_permissive(row.curve["title"])
         html.close_td()
 
         for legend_title in legend_titles:
@@ -1006,17 +1040,21 @@ def _show_graph_legend(
                 continue
 
             classes = ["scalar"]
-            if legend_title.inactive and artwork.actual_time.step != 60:
+            if legend_title.inactive:
                 classes.append("inactive")
 
-            html.td(curve_ann.scalars[legend_title.type][1], class_=classes, style=font_size_style)
+            html.td(
+                row.curve_ann.scalars[legend_title.type][1],
+                class_=classes,
+                style=font_size_style,
+            )
 
         html.close_tr()
 
-        if attributes and expandable_legend_appearance is ExpandableLegendAppearance.FOLDABLE:
+        if row.attributes and expandable_legend_appearance is ExpandableLegendAppearance.FOLDABLE:
             html.open_tr()
             html.open_td(style=font_size_style, colspan=len(legend_titles) + 1)
-            html.write_html(_render_attributes(table_uuid_str, graph_legend_styles, attributes))
+            html.write_html(_render_attributes(row.table_uuid, graph_legend_styles, row.attributes))
             html.close_td()
             html.close_tr()
 

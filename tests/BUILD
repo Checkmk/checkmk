@@ -140,21 +140,6 @@ py_library(
 )
 
 py_library(
-    name = "agent-plugin-unit",
-    testonly = True,
-    srcs = glob(
-        include = ["agent-plugin-unit/**/*.py"],
-    ),
-    imports = [".."],
-    deps = [
-        ":testlib",
-        requirement("pytest"),
-        requirement("pymongo"),
-        "//agents/plugins:agent-plugins-python",
-    ],
-)
-
-py_library(
     name = "bandit-nosec-markers",
     testonly = True,
     srcs = glob(

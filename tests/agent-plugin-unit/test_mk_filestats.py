@@ -426,30 +426,30 @@ _TEST_DIR_PATH = os.path.abspath(
             [_TEST_DIR_PATH],
             [],
             [
-                "/tests/datasets/mk_filestats/testfile1.txt",
-                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+                "%s/testfile1.txt" % _TEST_DIR_PATH,
+                "%s/subdir/testfile2.html" % _TEST_DIR_PATH,
             ],
         ),
         pytest.param(
             [_TEST_DIR_PATH + "/*"],
             [],
             [
-                "/tests/datasets/mk_filestats/testfile1.txt",
-                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+                "%s/testfile1.txt" % _TEST_DIR_PATH,
+                "%s/subdir/testfile2.html" % _TEST_DIR_PATH,
             ],
         ),
         pytest.param(
             [_TEST_DIR_PATH],
             [mk_filestats.RegexFilter(".*html")],
             [
-                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+                "%s/subdir/testfile2.html" % _TEST_DIR_PATH,
             ],
         ),
         pytest.param(
             [_TEST_DIR_PATH],
             [mk_filestats.RegexFilter(".*txt")],
             [
-                "/tests/datasets/mk_filestats/testfile1.txt",
+                "%s/testfile1.txt" % _TEST_DIR_PATH,
             ],
         ),
         pytest.param(
@@ -459,21 +459,21 @@ _TEST_DIR_PATH = os.path.abspath(
                 mk_filestats.InverseRegexFilter(".*html"),
             ],
             [
-                "/tests/datasets/mk_filestats/testfile1.txt",
+                "%s/testfile1.txt" % _TEST_DIR_PATH,
             ],
         ),
         pytest.param(
             [_TEST_DIR_PATH + "/*"],
             [mk_filestats.RegexFilter(".*txt")],
             [
-                "/tests/datasets/mk_filestats/testfile1.txt",
+                "%s/testfile1.txt" % _TEST_DIR_PATH,
             ],
         ),
         pytest.param(
             [_TEST_DIR_PATH + "/*"],
             [mk_filestats.RegexFilter(".*html")],
             [
-                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+                "%s/subdir/testfile2.html" % _TEST_DIR_PATH,
             ],
         ),
         pytest.param(
@@ -483,7 +483,7 @@ _TEST_DIR_PATH = os.path.abspath(
                 mk_filestats.InverseRegexFilter(".*txt"),
             ],
             [
-                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+                "%s/subdir/testfile2.html" % _TEST_DIR_PATH,
             ],
         ),
     ],

@@ -926,4 +926,4 @@ def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
 
 def test_main(tmpdir, mocker):
     mocker.patch.object(lw, "MK_VARDIR", str(tmpdir))
-    lw.main()
+    lw.main(argv=[])

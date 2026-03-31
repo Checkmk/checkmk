@@ -1062,7 +1062,7 @@ const graphDesignerContentAsJson = computed(() => {
           />
           <img
             :title="_t('Move this entry')"
-            src="themes/modern-dark/images/icon_drag.svg"
+            :src="_themedIcon('icon_drag.svg')"
             class="icon iconbutton"
             @dragstart="dragStart"
             @drag="dragElement"

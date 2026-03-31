@@ -15,7 +15,7 @@
 #   pre-commit  checks + format / lint / mypy / tests scoped to changed packages
 #   pre-push    (nothing — all checks run at pre-commit)
 #   manual      full CI-equivalent checks across all packages
-#               run via: pre-commit run --hook-stage manual [--all-files]
+#               run via: pre-commit run --hook-stage manual
 #
 default_stages:
     - pre-commit
@@ -98,7 +98,7 @@ repos:
             language: system
             pass_filenames: true
             require_serial: true
-            stages: [pre-commit, manual]
+            stages: [pre-commit]
 
           # ------------------------------------------------------------------ #
           # pre-commit: Bazel lint / mypy / tests scoped to changed packages  #
@@ -113,7 +113,7 @@ repos:
             language: script
             pass_filenames: true
             require_serial: true
-            stages: [pre-commit, manual]
+            stages: [pre-commit]
           - id: mypy
             name: Check types in changed packages
             entry: scripts/run-mypy-bazel
@@ -121,7 +121,7 @@ repos:
             types: [file, python]
             pass_filenames: true
             require_serial: true
-            stages: [pre-commit, manual]
+            stages: [pre-commit]
           - id: unittest
             name: Unit tests for changed packages
             entry: scripts/run-unittests-bazel
@@ -130,7 +130,7 @@ repos:
             pass_filenames: true
             require_serial: true
             verbose: true
-            stages: [pre-commit, manual]
+            stages: [pre-commit]
           # Bazel files only changed: fix lint issues (load ordering, unused loads, etc.)
           # Uses //:buildifier which embeds --lint=fix, going beyond the formatting-only
           # pass already done by the format hook above.
@@ -169,6 +169,14 @@ repos:
             language: system
             pass_filenames: false
             require_serial: true
+            stages: [manual]
+          - id: unittest-full
+            name: Unit tests full repository
+            entry: bazel test ...
+            language: system
+            pass_filenames: false
+            require_serial: true
+            verbose: true
             stages: [manual]
           - id: sphinx
             name: Sphinx Documentation

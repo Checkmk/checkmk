@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.blade_bx_powerfan import (
     check_blade_bx_powerfan,
     discover_blade_bx_powerfan,
@@ -32,17 +30,17 @@ STRING_TABLE_1 = [
         pytest.param(
             STRING_TABLE_1,
             [
-                ("Fan-1", {}),
-                ("Fan-2", {}),
-                ("Fan-3", {}),
-                ("Fan-5", {}),
-                ("Fan-6", {}),
+                Service(item="Fan-1"),
+                Service(item="Fan-2"),
+                Service(item="Fan-3"),
+                Service(item="Fan-5"),
+                Service(item="Fan-6"),
             ],
         ),
     ],
 )
 def test_discover_blade_bx_powerfan(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     parsed = parse_blade_bx_powerfan(string_table)
     result = list(discover_blade_bx_powerfan(parsed))
@@ -55,42 +53,50 @@ def test_discover_blade_bx_powerfan(
         pytest.param(
             STRING_TABLE_1,
             {
-                "Fan-1": (
-                    0,
-                    "Speed at 500 RPM, 50.0% of max",
-                    [("perc", 50.0, 30, 20, "0", "100"), ("rpm", "500")],
-                ),
-                "Fan-2": (
-                    1,
-                    "Speed at 250 RPM, 25.0% of max (warn/crit below 30.0%/20.0%)",
-                    [("perc", 25.0, 30, 20, "0", "100"), ("rpm", "250")],
-                ),
-                "Fan-3": (
-                    2,
-                    "Speed at 900 RPM, 90.0% of max (warn/crit at 80.0%/90.0%)",
-                    [("perc", 90.0, 30, 20, "0", "100"), ("rpm", "900")],
-                ),
-                "Fan-5": (
-                    2,
-                    "Status: fail",
-                    [("perc", 50.0, 30, 20, "0", "100"), ("rpm", "500")],
-                ),
-                "Fan-6": (
-                    2,
-                    "Fan not present or poweroff",
-                    [("perc", 50.0, 30, 20, "0", "100"), ("rpm", "500")],
-                ),
+                "Fan-1": [
+                    Result(state=State.OK, summary="Speed at 500 RPM: 50.0%"),
+                    Metric("perc", 50.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                    Metric("rpm", 500.0),
+                ],
+                "Fan-2": [
+                    Result(
+                        state=State.WARN,
+                        summary="Speed at 250 RPM: 25.0% (warn/crit below 30.0%/20.0%)",
+                    ),
+                    Metric("perc", 25.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                    Metric("rpm", 250.0),
+                ],
+                "Fan-3": [
+                    Result(
+                        state=State.CRIT,
+                        summary="Speed at 900 RPM: 90.0% (warn/crit at 80.0%/90.0%)",
+                    ),
+                    Metric("perc", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                    Metric("rpm", 900.0),
+                ],
+                "Fan-5": [
+                    Result(state=State.CRIT, summary="Status: fail"),
+                    Metric("perc", 50.0, boundaries=(0.0, 100.0)),
+                    Metric("rpm", 500.0),
+                ],
+                "Fan-6": [
+                    Result(state=State.CRIT, summary="Fan not present or poweroff"),
+                    Metric("perc", 50.0, boundaries=(0.0, 100.0)),
+                    Metric("rpm", 500.0),
+                ],
             },
         ),
     ],
 )
 def test_check_blade_bx_powerfan(
-    string_table: StringTable, expected_results: dict[str, list[object]]
+    string_table: StringTable, expected_results: Mapping[str, CheckResult]
 ) -> None:
     parsed = parse_blade_bx_powerfan(string_table)
+    services = list(discover_blade_bx_powerfan(parsed))
     params = {"levels": (80, 90), "levels_lower": (30, 20)}
     result = {
-        item_name: check_blade_bx_powerfan(item_name, params, parsed)
-        for item_name, _params in discover_blade_bx_powerfan(parsed)
+        service.item: list(check_blade_bx_powerfan(service.item, params, parsed))
+        for service in services
+        if service.item is not None
     }
     assert result == expected_results

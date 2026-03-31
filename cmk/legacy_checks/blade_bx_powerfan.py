@@ -3,15 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.blade.agent_based.detection import DETECT_BLADE_BX
 
-check_info = {}
-
-blade_bx_status = {
+_BLADE_BX_STATUS = {
     "1": "unknown",
     "2": "disabled",
     "3": "ok",
@@ -23,71 +32,64 @@ blade_bx_status = {
     "9": "not-available",
 }
 
-
-def discover_blade_bx_powerfan(info):
-    for status, descr, _rpm, _max_speed, _speed, _ctrlstate in info:
-        if status != "8":
-            yield descr, {}
-
-
-def check_blade_bx_powerfan(item, params, info):
-    if isinstance(params, dict):
-        warn_perc_lower, crit_perc_lower = params["levels_lower"]
-        warn_perc, crit_perc = params["levels"]
-    else:
-        warn_perc_lower, crit_perc_lower = params
-        warn_perc, crit_perc = None, None
-
-    for status, descr, rpm, max_speed, _speed, ctrlstate in info:
-        if descr == item:
-            speed_perc = float(rpm) * 100 / float(max_speed)
-            perfdata = [
-                ("perc", speed_perc, warn_perc_lower, crit_perc_lower, "0", "100"),
-                ("rpm", rpm),
-            ]
-
-            if ctrlstate != "2":
-                return 2, "Fan not present or poweroff", perfdata
-            if status != "3":
-                return 2, "Status: %s" % blade_bx_status[status], perfdata
-
-            state = 0
-            infotext = f"Speed at {rpm} RPM, {speed_perc:.1f}% of max"
-            levels_text = ""
-            if speed_perc < crit_perc_lower:
-                state = 2
-                levels_text = f" (warn/crit below {warn_perc_lower:.1f}%/{crit_perc_lower:.1f}%)"
-            elif speed_perc < warn_perc_lower:
-                state = 1
-                levels_text = f" (warn/crit below {warn_perc_lower:.1f}%/{crit_perc_lower:.1f}%)"
-
-            if warn_perc:
-                if speed_perc >= crit_perc:
-                    state = 2
-                    levels_text = f" (warn/crit at {warn_perc:.1f}%/{crit_perc:.1f}%)"
-                elif speed_perc >= warn_perc:
-                    state = 1
-                    levels_text = f" (warn/crit at {warn_perc:.1f}%/{crit_perc:.1f}%)"
-
-            if state > 0:
-                infotext += levels_text
-
-            return state, infotext, perfdata
-    return None
+Params = Mapping[str, tuple[float, float]]
 
 
 def parse_blade_bx_powerfan(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["blade_bx_powerfan"] = LegacyCheckDefinition(
+def discover_blade_bx_powerfan(section: StringTable) -> DiscoveryResult:
+    for status, descr, _rpm, _max_speed, _speed, _ctrlstate in section:
+        if status != "8":
+            yield Service(item=descr)
+
+
+def check_blade_bx_powerfan(item: str, params: Params, section: StringTable) -> CheckResult:
+    for status, descr, rpm, max_speed, _speed, ctrlstate in section:
+        if descr != item:
+            continue
+
+        speed_perc = float(rpm) * 100 / float(max_speed)
+
+        if ctrlstate != "2":
+            yield Result(state=State.CRIT, summary="Fan not present or poweroff")
+            yield Metric("perc", speed_perc, boundaries=(0, 100))
+            yield Metric("rpm", float(rpm))
+            return
+
+        if status != "3":
+            yield Result(state=State.CRIT, summary=f"Status: {_BLADE_BX_STATUS[status]}")
+            yield Metric("perc", speed_perc, boundaries=(0, 100))
+            yield Metric("rpm", float(rpm))
+            return
+
+        yield from check_levels_v1(
+            speed_perc,
+            levels_lower=params["levels_lower"],
+            levels_upper=params.get("levels"),
+            metric_name="perc",
+            render_func=lambda v: f"{v:.1f}%",
+            label=f"Speed at {rpm} RPM",
+            boundaries=(0, 100),
+        )
+        yield Metric("rpm", float(rpm))
+        return
+
+
+snmp_section_blade_bx_powerfan = SimpleSNMPSection(
     name="blade_bx_powerfan",
-    parse_function=parse_blade_bx_powerfan,
     detect=DETECT_BLADE_BX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.3.1.1",
         oids=["2", "3", "4", "5", "6", "7"],
     ),
+    parse_function=parse_blade_bx_powerfan,
+)
+
+
+check_plugin_blade_bx_powerfan = CheckPlugin(
+    name="blade_bx_powerfan",
     service_name="Blade Cooling %s",
     discovery_function=discover_blade_bx_powerfan,
     check_function=check_blade_bx_powerfan,

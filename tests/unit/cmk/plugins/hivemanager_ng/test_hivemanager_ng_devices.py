@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Service, StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.hivemanager_ng_devices import (
     check_hivemanager_ng_devices,
     discover_hivemanager_ng_devices,
@@ -44,8 +42,8 @@ STRING_TABLE_1 = [
         pytest.param(
             STRING_TABLE_1,
             [
-                ("Host-1", {}),
-                ("Host-2", {}),
+                Service(item="Host-1"),
+                Service(item="Host-2"),
             ],
         ),
     ],
@@ -65,20 +63,22 @@ def test_discover_hivemanager_ng_devices(
             STRING_TABLE_1,
             {
                 "Host-1": [
-                    (0, "Connected: True"),
-                    (0, "active clients: 0", [("connections", 0, 12, 22)]),
-                    (0, "IP address: 10.8.92.100"),
-                    (0, "serial ID: 00000000000001"),
-                    (0, "OS version: 8.1.2.1"),
-                    (0, "last updated: 2017-11-08T10:01:43.674Z"),
+                    Result(state=State.OK, summary="Connected: True"),
+                    Result(state=State.OK, summary="active clients: 0"),
+                    Metric("connections", 0.0, levels=(12.0, 22.0)),
+                    Result(state=State.OK, summary="IP address: 10.8.92.100"),
+                    Result(state=State.OK, summary="serial ID: 00000000000001"),
+                    Result(state=State.OK, summary="OS version: 8.1.2.1"),
+                    Result(state=State.OK, summary="last updated: 2017-11-08T10:01:43.674Z"),
                 ],
                 "Host-2": [
-                    (0, "Connected: True"),
-                    (1, "active clients: 14 (warn/crit at 12/22)", [("connections", 14, 12, 22)]),
-                    (0, "IP address: 10.8.92.130"),
-                    (0, "serial ID: 00000000000002"),
-                    (0, "OS version: 8.1.2.1"),
-                    (0, "last updated: 2017-11-08T10:01:44.056Z"),
+                    Result(state=State.OK, summary="Connected: True"),
+                    Result(state=State.WARN, summary="active clients: 14 (warn/crit at 12/22)"),
+                    Metric("connections", 14.0, levels=(12.0, 22.0)),
+                    Result(state=State.OK, summary="IP address: 10.8.92.130"),
+                    Result(state=State.OK, summary="serial ID: 00000000000002"),
+                    Result(state=State.OK, summary="OS version: 8.1.2.1"),
+                    Result(state=State.OK, summary="last updated: 2017-11-08T10:01:44.056Z"),
                 ],
             },
         ),
@@ -92,7 +92,8 @@ def test_check_hivemanager_ng_devices(
         "max_clients": (12, 22),
     }
     result = {
-        item_name: list(check_hivemanager_ng_devices(item_name, params, parsed))
-        for item_name, _params in discover_hivemanager_ng_devices(parsed)
+        service.item: list(check_hivemanager_ng_devices(service.item, params, parsed))
+        for service in discover_hivemanager_ng_devices(parsed)
+        if service.item is not None
     }
     assert result == expected_results

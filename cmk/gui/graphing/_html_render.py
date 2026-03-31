@@ -661,123 +661,101 @@ def _collect_graph_html(
     expandable_legend_appearance: ExpandableLegendAppearance,
     additional_html: AdditionalGraphHTML | None = None,
 ) -> HTML:
-    """Capture _show_graph_html_content output as an HTML fragment."""
     with output_funnel.plugged():
-        _show_graph_html_content(
-            request,
-            render_state,
-            artwork,
-            expandable_legend_appearance,
-            additional_html,
-        )
-        return HTML.without_escaping(output_funnel.drain())
-
-
-def _show_graph_html_content(
-    request: Request,
-    render_state: GraphRenderState,
-    artwork: GraphArtwork,
-    expandable_legend_appearance: ExpandableLegendAppearance,
-    additional_html: AdditionalGraphHTML | None = None,
-) -> None:
-    """Render the HTML code of a graph without its container
-
-    That is a canvas object for drawing the actual graph and also legend, buttons, resize handle,
-    etc.
-    """
-    display_config = render_state.display_config
-    html.open_div(
-        class_=["graph"]
-        + (["preview"] if display_config.preview else [])
-        + (["with_margin"] if display_config.show_margin else []),
-        style=f"font-size: {display_config.font_size:.1f}pt;",
-    )
-
-    if display_config.show_controls:
-        # Data will be transferred via URL and Javascript magic eventually
-        # to our function popup_add_element (htdocs/reporting.py)
-        # argument report_name --> provided by popup system
-        # further arguments:
-        html.popup_trigger(
-            content=html.render_static_icon(StaticIcon(IconNames.menu), title=_("Add to ...")),
-            ident="add_visual",
-            method=MethodAjax(endpoint="add_visual", url_vars=[("add_type", "pnpgraph")]),
-            data=[
-                "pnpgraph",
-                None,
-                render_state.model_dump(),
-            ],
-            style="z-index:2",
-        )  # Ensures that graph canvas does not cover it
-
-    v_axis_label = artwork.y_axis["unit_label"]
-    if v_axis_label:
-        html.div(v_axis_label, class_="v_axis_label")
-
-    if display_config.show_controls and display_config.resizable:
-        html.img(src=theme.detect_icon_path("resize_graph", prefix=""), class_="resize")
-
-    # Render title and time info together so they can be laid out without overlapping.
-    # The canvas pixel width is computed here so the header div can carry an explicit width,
-    # which is the only reliable way to constrain a flex container inside an inline-block and
-    # thus allow the title to wrap when title + time info would exceed the canvas width.
-    is_inline = display_config.show_title == "inline"
-    graph_width: float = display_config.size[0] * html_size_per_ex
-    time_text: str | None = None
-    if display_config.show_graph_time and not display_config.preview:
-        time_text = artwork.x_axis["title"] or ""
-
-    title = text_with_links_to_user_translated_html(
-        [
-            (element.text, element.url)
-            for element in iter_graph_title_elements(
-                request,
-                render_state.specification,
-                artwork,
-                display_config,
-                explicit_title=display_config.explicit_title,
-            )
-        ],
-        separator=HTML.without_escaping(" / "),
-    )
-
-    if title or time_text is not None:
-        # For the inline variant the width is already constrained by CSS (left:0; right:18px).
-        # For the non-inline variant we must set it explicitly so the flex container has a
-        # definite size and the title can wrap instead of stretching the parent inline-block.
-        header_style = None if is_inline else f"width: {int(graph_width)}px;"
+        display_config = render_state.display_config
         html.open_div(
-            class_=["graph_header"] + (["inline"] if is_inline else []),
-            style=header_style,
-        )
-        if title:
-            html.div(title, class_="title")
-        if time_text is not None:
-            html.div(time_text, class_="time")
-        html.close_div()
-
-    # Create canvas where actual graph will be rendered
-    graph_height: float = display_config.size[1] * html_size_per_ex
-    html.canvas(
-        "",
-        style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
-        width=str(graph_width * 2),
-        height=str(graph_height * 2),
-    )
-
-    # Note: due to "omit_zero_metrics" the graph might not have any curves
-    if display_config.show_legend and artwork.curves:
-        _show_graph_legend(
-            render_state.recipe, artwork, display_config, expandable_legend_appearance
+            class_=["graph"]
+            + (["preview"] if display_config.preview else [])
+            + (["with_margin"] if display_config.show_margin else []),
+            style=f"font-size: {display_config.font_size:.1f}pt;",
         )
 
-    if additional_html:
-        html.open_div(align="center")
-        html.h2(additional_html.title)
-        html.write_html(HTML.without_escaping(additional_html.html))
-        html.close_div()
+        if display_config.show_controls:
+            # Data will be transferred via URL and Javascript magic eventually
+            # to our function popup_add_element (htdocs/reporting.py)
+            # argument report_name --> provided by popup system
+            # further arguments:
+            html.popup_trigger(
+                content=html.render_static_icon(StaticIcon(IconNames.menu), title=_("Add to ...")),
+                ident="add_visual",
+                method=MethodAjax(endpoint="add_visual", url_vars=[("add_type", "pnpgraph")]),
+                data=[
+                    "pnpgraph",
+                    None,
+                    render_state.model_dump(),
+                ],
+                style="z-index:2",
+            )  # Ensures that graph canvas does not cover it
 
-    html.close_div()
+        v_axis_label = artwork.y_axis["unit_label"]
+        if v_axis_label:
+            html.div(v_axis_label, class_="v_axis_label")
+
+        if display_config.show_controls and display_config.resizable:
+            html.img(src=theme.detect_icon_path("resize_graph", prefix=""), class_="resize")
+
+        # Render title and time info together so they can be laid out without overlapping.
+        # The canvas pixel width is computed here so the header div can carry an explicit width,
+        # which is the only reliable way to constrain a flex container inside an inline-block and
+        # thus allow the title to wrap when title + time info would exceed the canvas width.
+        is_inline = display_config.show_title == "inline"
+        graph_width: float = display_config.size[0] * html_size_per_ex
+        time_text: str | None = None
+        if display_config.show_graph_time and not display_config.preview:
+            time_text = artwork.x_axis["title"] or ""
+
+        title = text_with_links_to_user_translated_html(
+            [
+                (element.text, element.url)
+                for element in iter_graph_title_elements(
+                    request,
+                    render_state.specification,
+                    artwork,
+                    display_config,
+                    explicit_title=display_config.explicit_title,
+                )
+            ],
+            separator=HTML.without_escaping(" / "),
+        )
+
+        if title or time_text is not None:
+            # For the inline variant the width is already constrained by CSS (left:0; right:18px).
+            # For the non-inline variant we must set it explicitly so the flex container has a
+            # definite size and the title can wrap instead of stretching the parent inline-block.
+            header_style = None if is_inline else f"width: {int(graph_width)}px;"
+            html.open_div(
+                class_=["graph_header"] + (["inline"] if is_inline else []),
+                style=header_style,
+            )
+            if title:
+                html.div(title, class_="title")
+            if time_text is not None:
+                html.div(time_text, class_="time")
+            html.close_div()
+
+        # Create canvas where actual graph will be rendered
+        graph_height: float = display_config.size[1] * html_size_per_ex
+        html.canvas(
+            "",
+            style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
+            width=str(graph_width * 2),
+            height=str(graph_height * 2),
+        )
+
+        # Note: due to "omit_zero_metrics" the graph might not have any curves
+        if display_config.show_legend and artwork.curves:
+            _show_graph_legend(
+                render_state.recipe, artwork, display_config, expandable_legend_appearance
+            )
+
+        if additional_html:
+            html.open_div(align="center")
+            html.h2(additional_html.title)
+            html.write_html(HTML.without_escaping(additional_html.html))
+            html.close_div()
+
+        html.close_div()
+        return HTML.without_escaping(output_funnel.drain())
 
 
 def _show_pin_time(artwork: GraphArtwork, config: GraphDisplayConfigHTML) -> bool:

@@ -217,6 +217,26 @@ def _order_graph_curves_for_legend_and_mouse_hover[TCurveType: (LayoutedCurve, C
     return lines[::-1] + areas[::-1] + mirrored_areas + mirrored_lines + refs
 
 
+def estimate_graph_step_for_html(
+    time_range: tuple[int, int],
+    height_in_ex: float,
+) -> int:
+    steps_per_ex = html_size_per_ex * 4
+    number_of_steps = height_in_ex * steps_per_ex
+    return int((time_range[1] - time_range[0]) / number_of_steps)
+
+
+def make_graph_time_range(
+    time_range: tuple[int, int],
+    height_in_ex: float,
+) -> GraphTimeRange:
+    return GraphTimeRange(
+        start=time_range[0],
+        end=time_range[1],
+        step=estimate_graph_step_for_html(time_range, height_in_ex),
+    )
+
+
 #   .--HTML-Graphs---------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |
 #   |                     | | | |_   _|  \/  | |                           |
@@ -277,12 +297,6 @@ def host_service_graph_popup_cmk(
             show_time_range_previews=False,
         ),
     )
-
-    time_range = make_graph_time_range(
-        ((end_time := int(time.time())) - 8 * 3600, end_time),
-        display_config.size[1],
-    )
-
     html.write_html(
         render_graphs_html(
             get_template_graph_specification(
@@ -290,7 +304,10 @@ def host_service_graph_popup_cmk(
                 host_name=host_name,
                 service_name=service_description,
             ),
-            time_range,
+            make_graph_time_range(
+                ((end_time := int(time.time())) - 8 * 3600, end_time),
+                display_config.size[1],
+            ),
             display_config,
             GraphEnvironment(
                 registered_metrics=registered_metrics,
@@ -1104,108 +1121,6 @@ def render_deferred_graphs_html(
     return output
 
 
-@tracer.instrument("graphing.render_graphs_html")
-def render_graphs_html(
-    graph_specification: GraphSpecification,
-    time_range: GraphTimeRange,
-    display_config: GraphDisplayConfigHTML,
-    env: GraphEnvironment,
-    *,
-    graph_timeranges: Sequence[GraphTimerange],
-    display_id: str = "",
-) -> HTML:
-    """Render graph content synchronously without AJAX."""
-    try:
-        recipes = graph_specification.recipes(env)
-    except MKLivestatusNotFoundError:
-        return render_graph_error_html(
-            title=_("Cannot calculate graph recipes"),
-            msg_or_exc=(
-                "%s\n\n%s: %r"
-                % (
-                    _("Cannot fetch data via Livestatus"),
-                    _("The graph specification is"),
-                    graph_specification,
-                )
-            ),
-            debug=env.debug,
-        )
-    except Exception as e:
-        return render_graph_error_html(
-            title=_("Cannot calculate graph recipes"),
-            msg_or_exc=e,
-            debug=env.debug,
-        )
-
-    output = HTML.empty()
-    for recipe_with_overrides in recipes:
-        effective_time_range = recipe_with_overrides.time_range or time_range
-        effective_config = display_config.update_from_options(recipe_with_overrides.render_options)
-        output += _render_graph_content_html(
-            request,
-            recipe_with_overrides.recipe,
-            recipe_with_overrides.specification,
-            effective_time_range,
-            effective_config,
-            compute_graph_artwork(
-                recipe_with_overrides.recipe,
-                effective_time_range,
-                effective_config.size,
-                metrics_from_api,
-                temperature_unit=env.temperature_unit,
-                backend_time_series_fetcher=env.backend_time_series_fetcher,
-                pin_time=_load_graph_pin(),
-                mark_requested_end_time=recipe_with_overrides.mark_requested_end_time,
-            ),
-            debug=env.debug,
-            graph_timeranges=graph_timeranges,
-            temperature_unit=env.temperature_unit,
-            backend_time_series_fetcher=env.backend_time_series_fetcher,
-            display_id=display_id,
-            expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
-            show_limits_if_reached=False,
-            additional_html=recipe_with_overrides.additional_html,
-        )
-    return output
-
-
-class AjaxRenderGraph(AjaxPage):
-    @override
-    def page(self, ctx: PageContext) -> PageResult:
-        """Registered as `ajax_render_graph`.
-
-        Handles both the initial deferred graph load and all subsequent
-        interaction updates (drag, zoom, pin, resize).  The JS side always
-        POSTs a ``request=<GraphRenderState JSON>`` body; extra interaction
-        parameters (``start_time``, ``end_time``, ``step``, ``range_from``,
-        ``range_to``, ``resize_x``, ``resize_y``, ``pin``,
-        ``consolidation_function``) are sent as additional POST fields and
-        consumed directly by :func:`render_graph_html` via the request object.
-        """
-        api_request = ctx.request.get_request()
-        render_state = GraphRenderState.model_validate(api_request)
-        additional_html = (
-            None
-            if (raw_additional_html := api_request.get("additional_html")) is None
-            else AdditionalGraphHTML.model_validate(raw_additional_html)
-        )
-        temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
-        backend_time_series_fetcher = metric_backend_registry[
-            str(edition(paths.omd_root))
-        ].get_time_series_fetcher()
-        return render_graph_html(
-            ctx.request,
-            render_state,
-            metrics_from_api,
-            temperature_unit=temperature_unit,
-            backend_time_series_fetcher=backend_time_series_fetcher,
-            show_titles_if_limit_reached=False,
-            converter=None,
-            additional_html=additional_html,
-            graph_timeranges=ctx.config.graph_timeranges,
-        )
-
-
 def _render_graph_content_html(
     request: Request,
     recipe: GraphRecipe,
@@ -1325,6 +1240,108 @@ def _render_graph_content_html(
         )
 
 
+@tracer.instrument("graphing.render_graphs_html")
+def render_graphs_html(
+    graph_specification: GraphSpecification,
+    time_range: GraphTimeRange,
+    display_config: GraphDisplayConfigHTML,
+    env: GraphEnvironment,
+    *,
+    graph_timeranges: Sequence[GraphTimerange],
+    display_id: str = "",
+) -> HTML:
+    """Render graph content synchronously without AJAX."""
+    try:
+        recipes = graph_specification.recipes(env)
+    except MKLivestatusNotFoundError:
+        return render_graph_error_html(
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=(
+                "%s\n\n%s: %r"
+                % (
+                    _("Cannot fetch data via Livestatus"),
+                    _("The graph specification is"),
+                    graph_specification,
+                )
+            ),
+            debug=env.debug,
+        )
+    except Exception as e:
+        return render_graph_error_html(
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=e,
+            debug=env.debug,
+        )
+
+    output = HTML.empty()
+    for recipe_with_overrides in recipes:
+        effective_time_range = recipe_with_overrides.time_range or time_range
+        effective_config = display_config.update_from_options(recipe_with_overrides.render_options)
+        output += _render_graph_content_html(
+            request,
+            recipe_with_overrides.recipe,
+            recipe_with_overrides.specification,
+            effective_time_range,
+            effective_config,
+            compute_graph_artwork(
+                recipe_with_overrides.recipe,
+                effective_time_range,
+                effective_config.size,
+                metrics_from_api,
+                temperature_unit=env.temperature_unit,
+                backend_time_series_fetcher=env.backend_time_series_fetcher,
+                pin_time=_load_graph_pin(),
+                mark_requested_end_time=recipe_with_overrides.mark_requested_end_time,
+            ),
+            debug=env.debug,
+            graph_timeranges=graph_timeranges,
+            temperature_unit=env.temperature_unit,
+            backend_time_series_fetcher=env.backend_time_series_fetcher,
+            display_id=display_id,
+            expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
+            show_limits_if_reached=False,
+            additional_html=recipe_with_overrides.additional_html,
+        )
+    return output
+
+
+class AjaxRenderGraph(AjaxPage):
+    @override
+    def page(self, ctx: PageContext) -> PageResult:
+        """Registered as `ajax_render_graph`.
+
+        Handles both the initial deferred graph load and all subsequent
+        interaction updates (drag, zoom, pin, resize).  The JS side always
+        POSTs a ``request=<GraphRenderState JSON>`` body; extra interaction
+        parameters (``start_time``, ``end_time``, ``step``, ``range_from``,
+        ``range_to``, ``resize_x``, ``resize_y``, ``pin``,
+        ``consolidation_function``) are sent as additional POST fields and
+        consumed directly by :func:`render_graph_html` via the request object.
+        """
+        api_request = ctx.request.get_request()
+        render_state = GraphRenderState.model_validate(api_request)
+        additional_html = (
+            None
+            if (raw_additional_html := api_request.get("additional_html")) is None
+            else AdditionalGraphHTML.model_validate(raw_additional_html)
+        )
+        temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
+        backend_time_series_fetcher = metric_backend_registry[
+            str(edition(paths.omd_root))
+        ].get_time_series_fetcher()
+        return render_graph_html(
+            ctx.request,
+            render_state,
+            metrics_from_api,
+            temperature_unit=temperature_unit,
+            backend_time_series_fetcher=backend_time_series_fetcher,
+            show_titles_if_limit_reached=False,
+            converter=None,
+            additional_html=additional_html,
+            graph_timeranges=ctx.config.graph_timeranges,
+        )
+
+
 def _render_time_range_selection(
     request: Request,
     recipe: GraphRecipe,
@@ -1393,26 +1410,6 @@ def _render_time_range_selection(
     return HTMLWriter.render_table(
         HTML.empty().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
     )
-
-
-def make_graph_time_range(
-    time_range: tuple[int, int],
-    height_in_ex: float,
-) -> GraphTimeRange:
-    return GraphTimeRange(
-        start=time_range[0],
-        end=time_range[1],
-        step=estimate_graph_step_for_html(time_range, height_in_ex),
-    )
-
-
-def estimate_graph_step_for_html(
-    time_range: tuple[int, int],
-    height_in_ex: float,
-) -> int:
-    steps_per_ex = html_size_per_ex * 4
-    number_of_steps = height_in_ex * steps_per_ex
-    return int((time_range[1] - time_range[0]) / number_of_steps)
 
 
 # .

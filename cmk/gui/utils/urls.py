@@ -14,6 +14,7 @@ from flask import session
 
 from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
+from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
@@ -200,6 +201,13 @@ def requested_file_with_query(request: Request) -> str:
     file_name = requested_file_name(request)
     query = request.query_string.decode("utf-8")
     return f"{file_name}.py?{query}"
+
+
+def append_site_from_request(url_vars: HTTPVariables) -> HTTPVariables:
+    """Append the current request's site parameter to URL variables if present."""
+    if site := _request.var("site"):
+        return url_vars + [("site", site)]
+    return url_vars
 
 
 def makeuri(

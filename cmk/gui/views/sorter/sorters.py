@@ -10,7 +10,6 @@ from collections.abc import Mapping, Sequence
 from functools import partial
 from typing import Any, Literal
 
-from cmk.gui import utils
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
@@ -18,8 +17,9 @@ from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.painter.v0.painters import _get_docker_container_status_outputs
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
 from cmk.gui.type_defs import ColumnSpec, Row
+from cmk.gui.utils.misc import savefloat
 from cmk.gui.valuespec import Dictionary, DropdownChoice
-from cmk.gui.view_utils import get_labels
+from cmk.gui.view_utils import cmp_service_name_equiv, get_labels
 
 from .base import ParameterizedSorter, Sorter
 from .helpers import (
@@ -438,8 +438,8 @@ SorterServiceLabels = Sorter(
 
 
 def cmp_service_name(column: str, r1: Row, r2: Row) -> int:
-    return (utils.cmp_service_name_equiv(r1[column]) > utils.cmp_service_name_equiv(r2[column])) - (
-        utils.cmp_service_name_equiv(r1[column]) < utils.cmp_service_name_equiv(r2[column])
+    return (cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) - (
+        cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])
     ) or cmp_num_split(column, r1, r2)
 
 
@@ -452,8 +452,8 @@ def _sort_service_perf_val(
     request: Request,
     num: int,
 ) -> int:
-    v1 = utils.savefloat(get_perfdata_nth_value(r1, num - 1, True))
-    v2 = utils.savefloat(get_perfdata_nth_value(r2, num - 1, True))
+    v1 = savefloat(get_perfdata_nth_value(r1, num - 1, True))
+    v2 = savefloat(get_perfdata_nth_value(r2, num - 1, True))
     return (v1 > v2) - (v1 < v2)
 
 

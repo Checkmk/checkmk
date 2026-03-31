@@ -7,15 +7,16 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.gui import utils, visuals
+from cmk.gui import visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.graphing import TranslatedMetric
 from cmk.gui.i18n import _, _u
+from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.painter.v0 import painter_registry, register_painter
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
 from cmk.gui.type_defs import Perfdata, VisualLinkSpec
-from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
+from cmk.gui.view_utils import cmp_service_name_equiv, get_labels, render_labels, render_tag_groups
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
@@ -38,10 +39,10 @@ multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
 
 def register() -> None:
     _register_pre_21_plugin_api()
-    utils.load_web_plugins("views", globals())
+    load_web_plugins("views", globals())
     inventory.register_inv_paint_functions(globals())
 
-    utils.load_web_plugins("icons", globals())
+    load_web_plugins("icons", globals())
 
     register_legacy_icons()
 
@@ -157,7 +158,7 @@ def _register_pre_21_plugin_api() -> None:
     ):
         api_module.__dict__[name] = sorter.__dict__[name]
 
-    api_module.__dict__["cmp_service_name_equiv"] = utils.cmp_service_name_equiv
+    api_module.__dict__["cmp_service_name_equiv"] = cmp_service_name_equiv
 
     for name in (
         "get_permitted_views",

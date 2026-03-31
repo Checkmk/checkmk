@@ -18,7 +18,6 @@ from unittest.mock import patch
 
 import pytest
 
-import cmk.gui.utils
 from cmk.automations.results import (
     AnalyzeHostRuleEffectivenessResult,
     AnalyzeHostRuleMatchesResult,
@@ -39,6 +38,7 @@ from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_loc
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import password_store, rulesets
+from cmk.gui.watolib import rulesets as gui_rulesets_module
 from cmk.gui.watolib.configuration_bundle_store import BundleId
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
@@ -65,7 +65,7 @@ def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> No
         GEN_ID_COUNT["c"] += 1
         return str(GEN_ID_COUNT["c"])
 
-    monkeypatch.setattr(cmk.gui.utils, "gen_id", _gen_id)
+    monkeypatch.setattr(gui_rulesets_module, "gen_id", _gen_id)
 
 
 @pytest.mark.parametrize(

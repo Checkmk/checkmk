@@ -31,6 +31,21 @@ from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
 
+def cmp_service_name_equiv(r: str) -> int:
+    # TODO: Find a better place without introducing any cycles.
+    if r == "Check_MK":
+        return -6
+    if r == "Check_MK Agent":
+        return -5
+    if r == "Check_MK Discovery":
+        return -4
+    if r == "Check_MK inventory":
+        return -3  # FIXME: Remove old name one day
+    if r == "Check_MK HW/SW Inventory":
+        return -2
+    return 0
+
+
 class PythonExportError(Exception):
     pass
 

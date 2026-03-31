@@ -597,6 +597,7 @@ allows = []
 allows = [
   "@ccc",
   "cmk.gui.community_registration",
+  "cmk.gui.legacy_plugins",
   "cmk.gui.nonfree",
   "cmk.gui.utils",
   "cmk.utils.paths",
@@ -1491,6 +1492,7 @@ allows = [
 allows = [
   "@ccc",
   "cmk.base.config",
+  "cmk.gui.legacy_plugins",
   "cmk.gui.main_modules",
   "cmk.gui.script_helpers",
   "cmk.gui.utils",

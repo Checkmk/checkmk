@@ -32,10 +32,11 @@ import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui import background_job, forms, gui_background_job, sites, userdb, utils, watolib, weblib
+from cmk.gui import background_job, forms, gui_background_job, sites, userdb, watolib, weblib
 from cmk.gui.hooks import register_hook as register_hook
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.log import logger
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.permissions import Permission, permission_registry
@@ -186,4 +187,4 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
 def register() -> None:
-    utils.load_web_plugins("wato", globals())
+    load_web_plugins("wato", globals())

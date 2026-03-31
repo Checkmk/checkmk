@@ -24,7 +24,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.version import Edition, edition
-from cmk.gui import hooks, utils
+from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
@@ -54,6 +54,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoiceEntries
 from cmk.gui.watolib.check_mk_automations import (
@@ -1258,7 +1259,7 @@ class Rule:
     @classmethod
     def from_ruleset(cls, folder: Folder, ruleset: Ruleset, value: object) -> Rule:
         return Rule(
-            utils.gen_id(),
+            gen_id(),
             folder,
             ruleset,
             RuleConditions(folder.path()),
@@ -1293,7 +1294,7 @@ class Rule:
 
     def clone(self, preserve_id: bool = False) -> Rule:
         return Rule(
-            self.id if preserve_id else utils.gen_id(),
+            self.id if preserve_id else gen_id(),
             self.folder,
             self.ruleset,
             self.conditions.clone(),
@@ -1331,7 +1332,7 @@ class Rule:
         # cmk-update-config uses this to load rules from the config file for rewriting them To make
         # this possible, we need to accept missing "id" fields here. During runtime this is not
         # needed anymore, since cmk-update-config has updated all rules from the user configuration.
-        id_ = rule_config["id"] if "id" in rule_config else utils.gen_id()
+        id_ = rule_config["id"] if "id" in rule_config else gen_id()
         assert isinstance(id_, str)
 
         rule_options = rule_config.get("options", {})

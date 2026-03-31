@@ -42,7 +42,7 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.utils import gen_id
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.valuespec import (

@@ -30,6 +30,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
@@ -41,7 +42,6 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import load_custom_attr
-from cmk.gui.utils import load_web_plugins
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel

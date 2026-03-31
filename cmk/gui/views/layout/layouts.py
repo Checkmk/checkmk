@@ -15,7 +15,6 @@ from collections.abc import Callable, Hashable, Iterator, Sequence
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui import utils
 from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.exporter import output_csv_headers
@@ -30,6 +29,7 @@ from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.misc import saveint
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visual_link import render_link_to_view
 
@@ -228,9 +228,9 @@ class GroupedBoxesLayout(Layout):
             odd = "even" if odd == "odd" else "odd"
 
             # state = row.get("service_state", row.get("aggr_state"))
-            state = utils.saveint(row.get("service_state"))
+            state = saveint(row.get("service_state"))
             if state is None:
-                state = utils.saveint(row.get("host_state", 0))
+                state = saveint(row.get("host_state", 0))
                 if state > 0:
                     state += 1  # 1 is critical for hosts
 

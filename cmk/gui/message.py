@@ -18,7 +18,7 @@ from pydantic import TypeAdapter
 import cmk.utils.paths
 from cmk.ccc.store import DimSerializer, ObjectStore
 from cmk.ccc.user import UserId
-from cmk.gui import userdb, utils
+from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.cron import CronJob, CronJobRegistry
@@ -52,6 +52,7 @@ from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import AnnotatedUserId, IconNames, StaticIcon
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import AbsoluteDate
 from cmk.rulesets.v1 import Help, Label, Title
@@ -108,7 +109,7 @@ def create_message(
         dest=dest,
         methods=methods,
         valid_till=valid_till,
-        id=utils.gen_id(),
+        id=gen_id(),
         time=int(time_time()) if time is None else time,
         security=security,
         acknowledged=False,

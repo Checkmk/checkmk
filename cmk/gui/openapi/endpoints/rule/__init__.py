@@ -35,9 +35,9 @@ from cmk.gui.openapi.utils import (
     RestAPIRequestDataValidationException,
     serve_json,
 )
-from cmk.gui.utils import gen_id
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import (

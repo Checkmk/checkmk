@@ -22,13 +22,13 @@ from datetime import datetime
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
-from cmk.gui import utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
+from cmk.gui.utils.misc import gen_id
 from cmk.utils.local_secrets import AuthenticationSecret
 
 from ._two_factor import is_two_factor_login_enabled
@@ -128,7 +128,7 @@ def active_sessions(
 
 def create_session_id() -> str:
     """Creates a random session id for the user and returns it."""
-    return utils.gen_id()
+    return gen_id()
 
 
 def save_session_infos(username: UserId, session_infos: dict[str, SessionInfo]) -> None:

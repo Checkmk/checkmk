@@ -51,7 +51,6 @@ from livestatus import BrokerConnections, SiteConfiguration, SiteConfigurations
 
 import cmk.bi.filesystem
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
-import cmk.gui.utils
 import cmk.gui.watolib.automations
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
@@ -98,6 +97,7 @@ from cmk.gui.userdb import get_user_attributes, load_users, user_sync_default_co
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils import escaping
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import (
     UserPermissions,
@@ -1773,7 +1773,7 @@ class ActivateChangesManager:
         return running
 
     def _new_activation_id(self) -> ActivationId:
-        return cmk.gui.utils.gen_id()
+        return gen_id()
 
     def _verify_requested_sites(
         self, requested_sites: Sequence[SiteId], activation_site_ids: Sequence[SiteId]

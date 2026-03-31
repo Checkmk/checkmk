@@ -19,7 +19,7 @@ from cmk.gui.form_specs import (
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
-from cmk.gui.utils import gen_id
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import (
     create_rule_catalog,

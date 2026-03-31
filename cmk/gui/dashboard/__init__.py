@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.ccc.version as cmk_version
-from cmk.gui import utils, visuals
+from cmk.gui import visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
+from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission, permission_registry
 from cmk.utils import paths
 
@@ -62,7 +63,7 @@ def register() -> None:
 
     # Load plug-ins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
-    utils.load_web_plugins("dashboard", globals())
+    load_web_plugins("dashboard", globals())
 
     visuals.declare_visual_permissions("dashboards", _("dashboards"))
 

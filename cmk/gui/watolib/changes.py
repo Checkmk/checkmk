@@ -8,7 +8,6 @@ import time
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 
-import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 from cmk.ccc.site import SiteId
@@ -17,6 +16,7 @@ from cmk.gui.config import active_config
 from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.watolib.audit_log import log_audit, LogMessage
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -134,7 +134,7 @@ class ActivateChangesWriter:
             )
 
     def _new_change_id(self) -> str:
-        return cmk.gui.utils.gen_id()
+        return gen_id()
 
     def _add_change_to_site(
         self,

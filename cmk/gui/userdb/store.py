@@ -33,7 +33,7 @@ from cmk.ccc.store import (
 from cmk.ccc.user import UserId
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
-from cmk.gui import hooks, utils
+from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
@@ -50,6 +50,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils.htpasswd import Htpasswd
+from cmk.gui.utils.misc import saveint
 from cmk.gui.utils.roles import AutomationUserFile
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
@@ -207,9 +208,9 @@ def _load_users(lock: bool = False) -> Users:
             Callable,
         ]
     ] = [
-        ("num_failed_logins", utils.saveint),
-        ("last_pw_change", utils.saveint),
-        ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
+        ("num_failed_logins", saveint),
+        ("last_pw_change", saveint),
+        ("enforce_pw_change", lambda x: bool(saveint(x))),
         ("idle_timeout", convert_idle_timeout),
         ("session_info", convert_session_info),
         ("start_url", _convert_start_url),
@@ -304,7 +305,7 @@ def _add_serials(users: Users) -> Users:
             if ":" in line:
                 user_id, serial = line.split(":")[:2]
                 if (user_id := UserId(user_id)) in users:
-                    users[user_id]["serial"] = utils.saveint(serial)
+                    users[user_id]["serial"] = saveint(serial)
     except OSError:  # file not found
         pass
 

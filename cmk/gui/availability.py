@@ -58,7 +58,6 @@ from cmk.gui.type_defs import (
     ViewProcessTracking,
     VisualContext,
 )
-from cmk.gui.utils import cmp_service_name_equiv
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
@@ -75,7 +74,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.view_utils import CSSClass
+from cmk.gui.view_utils import cmp_service_name_equiv, CSSClass
 from cmk.gui.watolib.groups_io import all_groups
 from cmk.utils import dateutils
 from cmk.utils.servicename import ServiceName

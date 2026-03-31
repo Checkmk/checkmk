@@ -16,7 +16,8 @@ import urllib3
 
 from livestatus import LocalConnection, SiteConfiguration, SiteConfigurations
 
-import cmk.gui.utils
+import cmk.utils.paths
+import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -1149,7 +1150,9 @@ class ACTestBrokenGUIExtension(ACTest):
         return True
 
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        errors = cmk.gui.utils.get_failed_plugins()
+        from cmk.gui.legacy_plugins import get_failed_plugins
+
+        errors = get_failed_plugins()
         if not errors:
             yield ACSingleResult(
                 state=ACResultState.OK,

@@ -11,10 +11,10 @@ from cmk.gui import (
     dashboard,
     graphing_main,
     hooks,
-    utils,
     views,
     wato,
 )
+from cmk.gui.legacy_plugins import add_failed_plugin, load_web_plugins
 from cmk.gui.log import logger
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
@@ -27,7 +27,7 @@ def register() -> None:
     _load_plugins("visuals")
     _load_plugins("sidebar")
 
-    utils.load_web_plugins("pages", globals())
+    load_web_plugins("pages", globals())
 
     hooks.unregister_plugin_hooks()
 
@@ -46,7 +46,7 @@ def register() -> None:
 def _load_plugins(plugin_namespace: str) -> None:
     for plugin_name, exc in load_plugins_with_exceptions(f"cmk.gui.plugins.{plugin_namespace}"):
         logger.error("  Error in %s plug-in '%s'\n", plugin_namespace, plugin_name, exc_info=exc)
-        utils.add_failed_plugin(
+        add_failed_plugin(
             Path(traceback.extract_tb(exc.__traceback__)[-1].filename),
             plugin_namespace,
             plugin_name,

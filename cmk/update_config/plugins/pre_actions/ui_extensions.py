@@ -13,7 +13,7 @@ from cmk.discover_plugins import discover_all_plugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils import remove_failed_plugin
+from cmk.gui.legacy_plugins import remove_failed_plugin
 from cmk.mkp_tool import Manifest, PackageID
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import (

@@ -22,7 +22,7 @@ from flask import current_app, session
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.gui import log, utils
+from cmk.gui import log
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.dynamic_icon import resolve_icon_name
 from cmk.gui.exceptions import MKUserError
@@ -46,6 +46,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils import escaping
 from cmk.gui.utils.dataclasses import asdict_strip_none
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import transactions
@@ -706,7 +707,7 @@ class HTMLGenerator(HTMLWriter):
             href += "&_transid=%s" % transactions.get()
 
         if not obj_id:
-            obj_id = utils.gen_id()
+            obj_id = gen_id()
 
         # Same API as other elements: class_ can be a list or string/None
         css_classes = ["button", "buttonlink"]

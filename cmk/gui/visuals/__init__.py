@@ -6,8 +6,9 @@
 from collections.abc import Callable
 
 from cmk.ccc import store
-from cmk.gui import hooks, utils
+from cmk.gui import hooks
 from cmk.gui.config import Config
+from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
@@ -133,7 +134,7 @@ def register(
     )
 
     _register_pre_21_plugin_api()
-    utils.load_web_plugins("visuals", globals())
+    load_web_plugins("visuals", globals())
 
 
 def _register_pre_21_plugin_api() -> None:

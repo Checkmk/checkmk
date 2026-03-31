@@ -21,10 +21,11 @@ from typing import Any, Final
 import cmk.ccc.version as cmk_version
 import cmk.utils.tags
 from cmk import trace
-from cmk.gui import log, utils
+from cmk.gui import log
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
+from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.plugins.config.base import (  # astrein: disable=cmk-module-layer-violation
     CREConfig,
 )
@@ -268,7 +269,7 @@ def get_default_config() -> dict[str, Any]:
 def _get_default_config_from_legacy_plugins() -> dict[str, Any]:
     """Plug-ins from local/share/check_mk/web/plugins/config are loaded here"""
     default_config: dict[str, Any] = {}
-    utils.load_web_plugins("config", default_config)
+    load_web_plugins("config", default_config)
     return default_config
 
 

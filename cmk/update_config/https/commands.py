@@ -16,7 +16,7 @@ from typing import NamedTuple
 from cmk.ccc.version import edition
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
-from cmk.gui.utils import gen_id
+from cmk.gui.utils.misc import gen_id
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.update_config.https.arguments import SearchArgs

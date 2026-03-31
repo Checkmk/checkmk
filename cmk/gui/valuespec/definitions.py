@@ -67,7 +67,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
 from cmk.crypto import certificate, keys
-from cmk.gui import forms, site_config, user_sites, utils
+from cmk.gui import forms, site_config, user_sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -105,6 +105,7 @@ from cmk.gui.utils.labels import (
     parse_label_groups_from_http_vars,
     parse_labels_value,
 )
+from cmk.gui.utils.misc import savefloat
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.speaklater import LazyString
@@ -2863,7 +2864,7 @@ class Float(ValueSpec[float]):
         self._renderer.render_input(varprefix, self._render_value(value))
 
     def _render_value(self, value: float) -> str:
-        return self._display_format % utils.savefloat(value)
+        return self._display_format % savefloat(value)
 
     def from_html_vars(self, varprefix: str) -> float:
         return request.get_float_input_mandatory(varprefix)

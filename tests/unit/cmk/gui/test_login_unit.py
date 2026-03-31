@@ -35,7 +35,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.userdb import is_two_factor_login_enabled
 from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr, save_two_factor_credentials
-from cmk.gui.utils import saveint
+from cmk.gui.utils.misc import saveint
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.users import create_and_destroy_user

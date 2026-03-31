@@ -51,7 +51,6 @@ ignore = [
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
-  "PLW0108", # Lambda may be unnecessary; consider inlining inner function
   "PLW1641", # Object does not implement `__hash__` method
   "UP031",   # Use format specifiers instead of percent format
   "UP040",   # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword

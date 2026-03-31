@@ -729,8 +729,8 @@ def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
 
 @dataclass(frozen=True)
 class _RelatedLegacyHints:
-    for_node: InventoryHintSpec = field(default_factory=lambda: InventoryHintSpec())
-    for_table: InventoryHintSpec = field(default_factory=lambda: InventoryHintSpec())
+    for_node: InventoryHintSpec = field(default_factory=InventoryHintSpec)
+    for_table: InventoryHintSpec = field(default_factory=InventoryHintSpec)
     by_column: dict[str, InventoryHintSpec] = field(default_factory=dict)
     by_key: dict[str, InventoryHintSpec] = field(default_factory=dict)
 

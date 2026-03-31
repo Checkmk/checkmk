@@ -78,7 +78,7 @@ class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
 
 
 def make_product_usage_analytics_config_variable(
-    hint: Callable[[], HTML] = lambda: HTML.empty(),
+    hint: Callable[[], HTML] = HTML.empty,
 ) -> ConfigVariable:
     return ConfigVariable(
         group=ConfigVariableGroupProductUsageAnalytics,

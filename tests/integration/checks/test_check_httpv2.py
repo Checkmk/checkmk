@@ -37,7 +37,7 @@ def base_cmd(site: Site) -> list[str]:
 @pytest.mark.parametrize(
     "args",
     [
-        pytest.param(lambda site: base_cmd(site), id="url"),
+        pytest.param(base_cmd, id="url"),
         pytest.param(lambda site: base_cmd(site) + ["--server", site.http_address], id="server-ip"),
         pytest.param(lambda site: base_cmd(site) + ["--server", "localhost"], id="server-name"),
     ],

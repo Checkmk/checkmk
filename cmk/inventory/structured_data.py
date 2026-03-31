@@ -452,8 +452,8 @@ class _MutableTable:
 @dataclass(frozen=True, kw_only=True)
 class MutableTree:
     path: SDPath = ()
-    attributes: _MutableAttributes = field(default_factory=lambda: _MutableAttributes())
-    table: _MutableTable = field(default_factory=lambda: _MutableTable())
+    attributes: _MutableAttributes = field(default_factory=_MutableAttributes)
+    table: _MutableTable = field(default_factory=_MutableTable)
     nodes_by_name: dict[SDNodeName, MutableTree] = field(default_factory=dict)
 
     def __len__(self) -> int:

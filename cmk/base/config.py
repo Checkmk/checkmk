@@ -1705,9 +1705,7 @@ class ConfigCache:
             check_plugins,
             _make_service_description_cb(passive_service_name_config, check_plugins),
             self.effective_host,
-            lambda host_name, service_name, discovered_labels: self.label_manager.labels_of_service(
-                host_name, service_name, discovered_labels
-            ),
+            self.label_manager.labels_of_service,
         )
 
     def fetcher_factory(

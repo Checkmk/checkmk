@@ -412,7 +412,7 @@ def test_match_item_generator_rules() -> None:
         HostRulespec(
             name="some_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextInput(),
+            valuespec=TextInput,
             title=lambda: "Title",
         )
     )
@@ -420,7 +420,7 @@ def test_match_item_generator_rules() -> None:
         HostRulespec(
             name="some_deprecated_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextInput(),
+            valuespec=TextInput,
             title=lambda: "Title",
             is_deprecated=True,
         )

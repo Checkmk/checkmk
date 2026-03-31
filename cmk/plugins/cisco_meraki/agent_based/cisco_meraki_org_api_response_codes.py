@@ -85,7 +85,7 @@ def check_response_code_count_levels(value: int | None, *, code: int) -> Iterabl
     return check_levels(
         value=value,
         label=f"Code {code}xx",
-        render_func=lambda v: str(v),
+        render_func=str,
         metric_name=f"api_code_{code}xx",
         notice_only=True,
     )

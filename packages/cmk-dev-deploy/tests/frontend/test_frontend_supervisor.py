@@ -2072,7 +2072,7 @@ class TestWatchLoopSupervisor:
             result = watch_loop(
                 site,
                 Path("/repo"),
-                lambda: self._make_deploy_result(),
+                self._make_deploy_result,
                 supervisor=supervisor,
             )
 
@@ -2130,7 +2130,7 @@ class TestWatchLoopSupervisor:
             result = watch_loop(
                 site,
                 Path("/repo"),
-                lambda: self._make_deploy_result(),
+                self._make_deploy_result,
                 supervisor=supervisor,
             )
 

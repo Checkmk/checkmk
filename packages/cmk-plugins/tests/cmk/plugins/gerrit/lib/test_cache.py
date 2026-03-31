@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import random
+from collections.abc import Sized
 from pathlib import Path
 
 import pytest
@@ -48,15 +49,18 @@ class TestCacheTTL:
         assert fn(x=1, y=1) != fn(1, 1)
 
     def test_fetcher_with_no_arguments_cache_hit(self, storage: Storage) -> None:
-        fn = cache_ttl(storage, ttl=60)(lambda: random.random())
+        fn = cache_ttl(storage, ttl=60)(random.random)
         assert fn() == fn()
 
     def test_fetcher_with_no_arguments_cache_miss(self, storage: Storage) -> None:
-        fn = cache_ttl(storage, ttl=0)(lambda: random.random())
+        fn = cache_ttl(storage, ttl=0)(random.random)
         assert fn() != fn()
 
     def test_function_with_unhashable_arguments(self, storage: Storage) -> None:
-        fn = cache_ttl(storage, ttl=60)(lambda items: len(items))
+        def len_items(items: Sized) -> int:
+            return len(items)
+
+        fn = cache_ttl(storage, ttl=60)(len_items)
 
         with pytest.raises(ValueError):
             fn({1, 2, 3})

@@ -271,7 +271,7 @@ class NotExprSchema(BaseSchema):
 
     op = base.String(description="The operator. In this case `not`.")
     expr = base.Nested(
-        lambda: ExprSchema(),
+        lambda: ExprSchema(),  # noqa: PLW0108 # forward ref
         description="The query expression to negate.",
     )
 
@@ -283,7 +283,7 @@ class LogicalExprSchema(BaseSchema):
     # many=True does not work here for some reason.
     expr = base.List(
         base.Nested(
-            lambda *a, **kw: ExprSchema(*a, **kw),
+            lambda *a, **kw: ExprSchema(*a, **kw),  # noqa: PLW0108 # forward ref
             description="A list of query expressions to combine.",
         )
     )

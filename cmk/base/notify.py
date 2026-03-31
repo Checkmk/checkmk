@@ -304,9 +304,7 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
         options,
         args,
         define_servicegroups=config.define_servicegroups,
-        host_parameters_cb=lambda hostname, plugin: (
-            loading_result.config_cache.notification_plugin_parameters(hostname, plugin)
-        ),
+        host_parameters_cb=loading_result.config_cache.notification_plugin_parameters,
         rules=config.notification_rules,
         parameters=config.notification_parameter,
         get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
@@ -929,9 +927,7 @@ def _automation_notification_replay(
 
     nr = args[0]
     _notification_replay_backlog(
-        lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
-            hostname, plugin
-        ),
+        loading_result.config_cache.notification_plugin_parameters,
         http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         int(nr),
@@ -970,9 +966,7 @@ def _automation_notification_analyse(
     nr = args[0]
     return NotificationAnalyseResult(
         _notification_analyse_backlog(
-            lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
-                hostname, plugin
-            ),
+            loading_result.config_cache.notification_plugin_parameters,
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
@@ -1015,9 +1009,7 @@ def _automation_notification_test(
     return NotificationTestResult(
         _notification_test(
             context,
-            lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
-                hostname, plugin
-            ),
+            loading_result.config_cache.notification_plugin_parameters,
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             ensure_nagios,
             rules=config.notification_rules,

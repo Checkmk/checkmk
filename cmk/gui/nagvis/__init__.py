@@ -78,7 +78,9 @@ def _register_hooks() -> None:
                 "activate-changes", (users := userdb.load_users()), _make_user_permissions(users)
             ),
         ),
-        ("tags-saved", lambda x: _hosttags._export_hosttags_to_php(x)),
+        # FIXME: We do some funky monkeypatching in test_tag_config_save(),
+        # so the evaluation needs to be delayed. :-/
+        ("tags-saved", lambda x: _hosttags._export_hosttags_to_php(x)),  # noqa: PLW0108
     )
     for name, func in args:
         hooks.register_builtin(name, func)

@@ -62,8 +62,8 @@ class OutputConfig:
     """All mutable output state consolidated in one place."""
 
     # Import-time baked values (now overridable via reset())
-    use_color: bool = dataclasses.field(default_factory=lambda: sys.stdout.isatty())
-    is_tty: bool = dataclasses.field(default_factory=lambda: sys.stderr.isatty())
+    use_color: bool = dataclasses.field(default_factory=sys.stdout.isatty)
+    is_tty: bool = dataclasses.field(default_factory=sys.stderr.isatty)
     # Runtime-mutable state
     verbosity: Verbosity = Verbosity.DEFAULT
     combined_mode: bool = False

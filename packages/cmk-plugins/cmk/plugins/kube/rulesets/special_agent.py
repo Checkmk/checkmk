@@ -263,7 +263,7 @@ def _migrate_import_annotations(p: object) -> tuple[str, object]:
 
 def _valuespec_special_agents_kube() -> Dictionary:
     return Dictionary(
-        migrate=lambda v: migrate_and_transform(v),
+        migrate=migrate_and_transform,
         title=Title("Kubernetes"),
         elements={
             "cluster_name": DictElement(

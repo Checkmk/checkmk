@@ -336,7 +336,7 @@ class ConfigVariable:
         need_apache_reload: bool = False,
         allow_reset: bool = True,
         in_global_settings: bool = True,
-        hint: Callable[[], HTML] = lambda: HTML.empty(),
+        hint: Callable[[], HTML] = HTML.empty,
         domain_hint: HTML | None = None,
     ) -> None:
         self._group = group

@@ -115,14 +115,14 @@ def check_audiocodes_calls_testable(
             value=section.active_calls_in,
             label="Active calls in",
             metric_name="audiocodes_active_calls_in",
-            render_func=lambda x: str(x),
+            render_func=str,
         )
     if section.active_calls_out is not None:
         yield from check_levels(
             value=section.active_calls_out,
             label="Active calls out",
             metric_name="audiocodes_active_calls_out",
-            render_func=lambda x: str(x),
+            render_func=str,
         )
     if section.established_calls_rate_in is not None:
         yield from check_levels(
@@ -163,7 +163,7 @@ def check_audiocodes_calls_testable(
             value=section.abnormal_terminated_calls_in_total,
             label="Abnormal terminated calls in",
             metric_name="audiocodes_abnormal_terminated_calls_in_total",
-            render_func=lambda x: str(x),
+            render_func=str,
             notice_only=True,
         )
     if section.abnormal_terminated_calls_out_total is not None:
@@ -171,7 +171,7 @@ def check_audiocodes_calls_testable(
             value=section.abnormal_terminated_calls_out_total,
             label="Abnormal terminated calls out",
             metric_name="audiocodes_abnormal_terminated_calls_out_total",
-            render_func=lambda x: str(x),
+            render_func=str,
             notice_only=True,
         )
 

@@ -28,8 +28,25 @@ const isPublicDashboard = useInjectIsPublicDashboard()
 <style scoped>
 .db-content-static-text__wrapper {
   position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  container-type: size;
+}
+
+.db-content-static-text__text {
   padding: var(--spacing);
-  padding-bottom: 0;
+}
+
+/* this is calc(var(--spacing) * 2 + 1lh) */
+@container (height < 35px) {
+  /* if the text is only one line, we can center it vertically and reduce the padding */
+  .db-content-static-text__text:not(:has(br)) {
+    padding: 0 var(--spacing);
+    margin: auto 0;
+  }
 }
 
 .db-content-static-text__click-shield {

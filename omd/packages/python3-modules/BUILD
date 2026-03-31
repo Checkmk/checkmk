@@ -95,9 +95,10 @@ genrule(
         sed -i -z "s|^#\\!/bin/sh\\n.*exec.*python3[^\\n]*\\n[^\\n]*|#\\!/usr/bin/env python3|" python3-modules/bin/[!_]*
 
         # Fix rpath for all .so libs
+        PATCHELF=$$PWD/$(execpath @patchelf)
         cd python3-modules/lib/
         for F in $$(find -name "*.so");
-            do patchelf --set-rpath \\
+            do $$PATCHELF --set-rpath \\
             $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
         done
         cd -
@@ -107,6 +108,7 @@ genrule(
 	tar cf $@ -C python3-modules .
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
     tags = ["manual"],
+    tools = ["@patchelf"],
     visibility = ["//omd:__subpackages__"],
 )
 

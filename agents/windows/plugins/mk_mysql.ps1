@@ -53,7 +53,10 @@ function ReplaceSqlExeForMysql {
     param (
         [string]$cmd
     )
-    return $cmd -replace "mysqld(?:-nt)?\.exe", "mysql.exe"
+    # Replaces {mysqld,mysqld-nt}[.exe] with mysql.exe
+    # Only matches when followed by a quote, whitespace, or end of string
+    # Used to turn a MySQL server command into a mysql client command
+    return $cmd -replace 'mysqld(?:-nt)?(?:\.exe)?(?="|[\s]|$)', 'mysql.exe'
 }
 
 function BuildPrintDefaultsCmd {
@@ -70,14 +73,26 @@ function GetSqlExePathFromCmd {
         [string]$inputCmd
     )
 
-    if ($inputCmd -match '("[^"]*mysql.exe")') {
-        $exePath = $matches[1]
-    }
-    elseif ($inputCmd -match '([^"]*mysql.exe)') {
-        $exePath = $matches[1]
+    if ($inputCmd -match '("[^"]*mysql\.exe")') {
+        # Quoted path: "C:\some path with spaces\bin\mysql.exe"
+        # Captured with surrounding quotes so the caller can pass it directly to cmd.exe.
+        return $matches[1]
     }
 
-    return $exePath
+    if ($inputCmd -match '([^\s"]*mysql\.exe)') {
+        # Unquoted path: C:\bin\mysql.exe
+        # Use [^\s"] (non-whitespace, non-quote) instead of the broader [^"] so the
+        # match stops at the first space after the binary and does not greedily swallow
+        # subsequent arguments or flag values that happen to contain "mysql.exe".
+        # Example:
+        # $inputCmd = 'C:\MySQL\bin\mysql.exe -u root -p'
+        # Match: C:\MySQL\bin\mysql.exe        
+        return $matches[1]
+    }
+
+    # Return empty string if binary could not be located in the command string.
+    # Thus the caller can detect and report the failure explicitly
+    return ""
 }
 
 function GetCfgDir {
@@ -323,6 +338,16 @@ function OutputInfosForTheInstance {
     $replacedInstanceCmd = ReplaceSqlExeForMysql $instanceCmd
     $connArgs = GetConnectionArgsForTheInstance $instanceName $replacedInstanceCmd
     $cmd = GetSqlExePathFromCmd $replacedInstanceCmd
+
+    if (-not $cmd) {
+        # GetSqlExePathFromCmd found no mysql.exe in the service command — this
+        # happens when the daemon is registered under an unexpected name or path
+        # that our substitution did not cover.
+        Write-Output "<<<mysql>>>"
+        Write-Output "[[$instanceName]]"
+        Write-Output "ERROR: could not determine mysql.exe path from service command: $instanceCmd"
+        return
+    }
 
     if ($is_admin -and ($SKIP_MYSQL_SECURITY_CHECK -ne 1)) {
         # administrators should use only safe binary

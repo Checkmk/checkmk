@@ -1083,8 +1083,13 @@ def _derive_subdirs_from_paths(rel_paths: list[str]) -> set[str]:
             continue
 
         if len(parts) == 2:
-            # e.g. cmk/check_helper_protocol.py
-            subdirs.add(path)
+            if dir_path in init_dirs:
+                # Parent is a real package — group here (e.g. legacy_checks/foo.py
+                # when legacy_checks/__init__.py exists)
+                subdirs.add(dir_path)
+            else:
+                # Standalone file in a namespace: e.g. check_helper_protocol.py
+                subdirs.add(path)
             continue
 
         # Default: depth 2 (e.g. cmk/ccc/)

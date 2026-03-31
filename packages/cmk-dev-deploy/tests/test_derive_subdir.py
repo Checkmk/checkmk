@@ -82,6 +82,26 @@ def test_shallow_file_in_namespace() -> None:
     assert _derive_subdirs_from_paths(paths) == {"cmk/plugins/"}
 
 
+def test_depth2_files_with_init_grouped() -> None:
+    """Depth-2 files whose parent has __init__.py are grouped under the directory."""
+    paths = [
+        "legacy_checks/__init__.py",
+        "legacy_checks/huawei_osn_fan.py",
+        "legacy_checks/huawei_osn_laser.py",
+        "legacy_checks/huawei_osn_power.py",
+    ]
+    # All files grouped under legacy_checks/ because it has __init__.py
+    assert _derive_subdirs_from_paths(paths) == {"legacy_checks/"}
+
+
+def test_depth2_files_without_init_individual() -> None:
+    """Depth-2 files whose parent has no __init__.py stay individual."""
+    paths = [
+        "check_helper_protocol.py",
+    ]
+    assert _derive_subdirs_from_paths(paths) == {"check_helper_protocol.py"}
+
+
 def test_notification_plugins_flat_files() -> None:
     """cmk/notification_plugins/ with only flat .py files (no subdirs, no init)."""
     paths = [

@@ -553,6 +553,10 @@ def _deploy_single_distribution(
         source = repo_root / package_dir / subdir.rstrip("/")
         dest = file_root / subdir.rstrip("/")
 
+        if not source.exists():
+            output.warn(f"Source not found: {source} (stale manifest?) — skipping")
+            continue
+
         if subdir.endswith(".py"):
             # Flat file case: copy single file
             dest.parent.mkdir(parents=True, exist_ok=True)

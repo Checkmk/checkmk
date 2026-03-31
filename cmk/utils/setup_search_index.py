@@ -46,10 +46,10 @@ def read_and_remove_update_requests() -> UpdateRequests:
 def _read_update_requests() -> UpdateRequests:
     try:
         data = json.loads(_PATH_UPDATE_REQUESTS.read_text())
-        return {
-            "rebuild": bool(data["rebuild"]),
-            "change_actions": [str(action) for action in data["change_actions"]],
-        }
+        return UpdateRequests(
+            rebuild=bool(data["rebuild"]),
+            change_actions=[str(action) for action in data["change_actions"]],
+        )
     except (json.JSONDecodeError, FileNotFoundError, KeyError):
         # missing (unlikely, b/c it's locked), empty, or somehow corrupted: start from scratch
-        return {"rebuild": False, "change_actions": []}
+        return UpdateRequests(rebuild=False, change_actions=[])

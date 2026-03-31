@@ -237,6 +237,43 @@ def make_graph_time_range(
     )
 
 
+def _user_graph_time_range_file_name(custom_graph_id: str) -> UserGraphTimeRangeFileName:
+    if "../" in custom_graph_id:
+        raise ValueError("../ in graph id")
+    return UserGraphTimeRangeFileName(f"graph_range_{custom_graph_id}")
+
+
+class UserGraphTimeRangeStore:
+    def __init__(self, user_id: UserId) -> None:
+        self.user_id = user_id
+
+    def save(self, custom_graph_id: str, time_range: GraphTimeRange) -> None:
+        save_user_file(
+            _user_graph_time_range_file_name(custom_graph_id),
+            time_range.model_dump(),
+            self.user_id,
+        )
+
+    def load(self, custom_graph_id: str) -> GraphTimeRange | None:
+        return (
+            GraphTimeRange.model_validate(raw_range)
+            if (
+                raw_range := load_user_file(
+                    _user_graph_time_range_file_name(custom_graph_id),
+                    self.user_id,
+                    deflt=None,
+                    lock=False,
+                )
+            )
+            else None
+        )
+
+    def remove(self, custom_graph_id: str) -> None:
+        (
+            profile_dir / self.user_id / f"{_user_graph_time_range_file_name(custom_graph_id)}.mk"
+        ).unlink(missing_ok=True)
+
+
 #   .--HTML-Graphs---------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |
 #   |                     | | | |_   _|  \/  | |                           |
@@ -1000,43 +1037,6 @@ def render_graph_html(
             ]
         ),
     }
-
-
-def _user_graph_time_range_file_name(custom_graph_id: str) -> UserGraphTimeRangeFileName:
-    if "../" in custom_graph_id:
-        raise ValueError("../ in graph id")
-    return UserGraphTimeRangeFileName(f"graph_range_{custom_graph_id}")
-
-
-class UserGraphTimeRangeStore:
-    def __init__(self, user_id: UserId) -> None:
-        self.user_id = user_id
-
-    def save(self, custom_graph_id: str, time_range: GraphTimeRange) -> None:
-        save_user_file(
-            _user_graph_time_range_file_name(custom_graph_id),
-            time_range.model_dump(),
-            self.user_id,
-        )
-
-    def load(self, custom_graph_id: str) -> GraphTimeRange | None:
-        return (
-            GraphTimeRange.model_validate(raw_range)
-            if (
-                raw_range := load_user_file(
-                    _user_graph_time_range_file_name(custom_graph_id),
-                    self.user_id,
-                    deflt=None,
-                    lock=False,
-                )
-            )
-            else None
-        )
-
-    def remove(self, custom_graph_id: str) -> None:
-        (
-            profile_dir / self.user_id / f"{_user_graph_time_range_file_name(custom_graph_id)}.mk"
-        ).unlink(missing_ok=True)
 
 
 # cmk.graphs.load_graph_content will call ajax_render_graph() via JSON to finally load the graph

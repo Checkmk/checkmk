@@ -215,7 +215,7 @@ body {
 
 .banner {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   padding: 8px 10px;
   border-radius: var(--radius);
@@ -223,6 +223,10 @@ body {
   border: 1px solid var(--cmk-yellow);
   margin-bottom: 8px;
   font-size: 0.85em;
+}
+
+.banner > span {
+  flex: 1;
 }
 
 .banner .banner-icon {

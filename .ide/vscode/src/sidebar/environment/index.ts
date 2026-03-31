@@ -209,6 +209,14 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     .join('')
 
   const configCommands = new Set(['cmk.regenerateMypyConfig', 'cmk.regeneratePrettierConfig'])
+  const staleTargets = Object.values(buildStatus).filter((s) => !s.ok)
+  const staleBanner =
+    staleTargets.length > 0
+      ? `<div class="banner banner-warn">
+        <span>${staleTargets.length} build target(s) need updating: ${staleTargets.map((s) => s.label).join(', ')}</span>
+        <button class="btn btn-small" data-action="exec" data-id="cmk.buildAllStale"><span class="codicon codicon-run-all"></span> Build All</button>
+      </div>`
+      : ''
   const buildCards = Object.entries(buildStatus)
     .map(([, s]) => {
       const icon = s.ok ? '&#10003;' : '&#10007;'
@@ -229,7 +237,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   return wrap(
     nonce,
     sectionCss,
-    `${onboardingHtml}${envRows}${divider}${buildCards}`,
+    `${onboardingHtml}${envRows}${divider}${staleBanner}${buildCards}`,
     codiconUri,
     cspSource
   )

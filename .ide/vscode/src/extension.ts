@@ -85,8 +85,8 @@ export function activate(context: vscode.ExtensionContext): void {
   cmkLogo.show()
   context.subscriptions.push(cmkLogo)
 
-  createStatusBar(context, commands)
-  registerSidebar(context, commands)
+  const { refreshStatus } = createStatusBar(context, commands, refreshAll)
+  registerSidebar(context, commands, refreshStatus)
   registerTemplates(context)
   registerBuildCommands(context, commands)
   registerIdePickers(context, extensionSets, settingsSets)

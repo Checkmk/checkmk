@@ -42,6 +42,7 @@ let _stateCache: StateCache | null = null
 let _commands: Record<string, unknown> | null = null
 let _issuesView: vscode.TreeView<IssueItem> | null = null
 let _issuesProvider: IssuesProvider | null = null
+let _refreshStatusBar: (() => void) | null = null
 const _providers: Record<string, SectionViewProvider> = {}
 
 // ── State cache ──
@@ -190,15 +191,18 @@ export function refreshAll(): void {
   for (const p of Object.values(_providers)) {
     p.refresh()
   }
+  _refreshStatusBar?.()
 }
 
 export function registerSidebar(
   context: vscode.ExtensionContext,
-  commands: Record<string, unknown>
+  commands: Record<string, unknown>,
+  refreshStatusBar?: () => void
 ): void {
   _context = context
   _onboardingDismissed = context.globalState.get('cmk.onboardingDismissed', false) as boolean
   _commands = commands
+  _refreshStatusBar = refreshStatusBar ?? null
   _extensionsConfig = loadConfig<ExtensionSets>('extensions')
   _settingsConfig = loadConfig<Record<string, SettingsEntry>>('settings')
 

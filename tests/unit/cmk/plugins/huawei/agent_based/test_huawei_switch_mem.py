@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.huawei_switch_mem import (
+from cmk.plugins.huawei.agent_based.huawei_switch_mem import (
     check_huawei_switch_mem,
     discover_huawei_switch_mem,
     parse_huawei_switch_mem,

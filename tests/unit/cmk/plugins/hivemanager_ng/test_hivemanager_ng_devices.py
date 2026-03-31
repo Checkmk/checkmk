@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.hivemanager_ng_devices import (
+from cmk.plugins.hivemanager_ng.agent_based.hivemanager_ng_devices import (
     check_hivemanager_ng_devices,
     discover_hivemanager_ng_devices,
     parse_hivemanager_ng_devices,

@@ -5,7 +5,9 @@
 
 from logging import getLogger
 
-from cmk.utils.setup_search_index import request_index_rebuild
+from cmk.utils.setup_search_index import (  # astrein: disable=cmk-module-layer-violation
+    request_index_rebuild,
+)
 
 
 def main() -> None:

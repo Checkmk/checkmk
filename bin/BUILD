@@ -79,10 +79,10 @@ pkg_files(
         ":cmk-update-license-usage",
         ":cmk-validate-config",
         ":cmk-validate-plugins",
-        ":init-redis",
+        ":init-redis.py",
         ":livedump",
         ":message-broker-certs",
-        ":mkbackup",
+        ":mkbackup.py",
         ":mkevent",
         ":mkp",
     ],
@@ -90,6 +90,10 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    renames = {
+        "init-redis.py": "init-redis",
+        "mkbackup.py": "mkbackup",
+    },
 )
 
 pkg_files(
@@ -162,6 +166,20 @@ py_library(
     srcs = ["cmk-create-rrd.py"],
     imports = ["."],
     deps = ["//cmk/rrd"],
+)
+
+py_library(
+    name = "init_redis_py",
+    srcs = ["init-redis.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "mkbackup_py",
+    srcs = ["mkbackup.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
 )
 
 sh_library(

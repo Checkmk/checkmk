@@ -22,19 +22,28 @@ from contextlib import contextmanager, ExitStack
 from pathlib import Path
 from typing import IO, NamedTuple, NoReturn
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import daemon
-from cmk.ccc.exceptions import MKGeneralException, MKTerminate
-from cmk.utils import render, schedule
-from cmk.utils.backup.config import Config
-from cmk.utils.backup.job import Job
-from cmk.utils.backup.targets import TargetId
-from cmk.utils.backup.targets.aws_s3_bucket import S3Target
-from cmk.utils.backup.targets.azure_blob_storage import BlobStorageTarget
-from cmk.utils.backup.targets.local import LocalTarget
-from cmk.utils.backup.targets.protocol import Target
-from cmk.utils.backup.type_defs import SiteBackupInfo
-from cmk.utils.backup.utils import (
+import cmk.ccc.version as cmk_version  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc import daemon  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.exceptions import (  # astrein: disable=cmk-module-layer-violation
+    MKGeneralException,
+    MKTerminate,
+)
+from cmk.utils import render, schedule  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.backup.config import Config  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.backup.job import Job  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.backup.targets import TargetId  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.backup.targets.aws_s3_bucket import (  # astrein: disable=cmk-module-layer-violation
+    S3Target,
+)
+from cmk.utils.backup.targets.azure_blob_storage import (  # astrein: disable=cmk-module-layer-violation
+    BlobStorageTarget,
+)
+from cmk.utils.backup.targets.local import (  # astrein: disable=cmk-module-layer-violation
+    LocalTarget,
+)
+from cmk.utils.backup.targets.protocol import Target  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.backup.type_defs import SiteBackupInfo  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.backup.utils import (  # astrein: disable=cmk-module-layer-violation
     current_site_id,
     do_site_backup,
     do_site_restore,
@@ -46,7 +55,7 @@ from cmk.utils.backup.utils import (
     SITE_BACKUP_MARKER,
     State,
 )
-from cmk.utils.paths import mkbackup_lock_dir
+from cmk.utils.paths import mkbackup_lock_dir  # astrein: disable=cmk-module-layer-violation
 
 ################
 # Utility Code #

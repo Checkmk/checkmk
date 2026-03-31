@@ -368,7 +368,7 @@ def _collect_graph_html(
 
 # Render the complete HTML code of a graph - including its <div> container.
 # Later updates will just replace the content of that container.
-def _render_graph_html(
+def _create_javascript_graph(
     request: Request,
     recipe: GraphRecipe,
     specification: GraphSpecification,
@@ -381,21 +381,24 @@ def _render_graph_html(
     *,
     onclick: str | None = None,
 ) -> HTML:
-    html_code = _collect_graph_html(
-        request,
-        recipe,
-        specification,
-        display_id,
-        artwork,
-        time_range,
-        display_config,
-        expandable_legend_appearance,
-        additional_html,
-    )
     return HTMLWriter.render_javascript(
         "cmk.graphs.create_graph(%s, %s, %s);"
         % (
-            json.dumps(str(html_code)),
+            json.dumps(
+                str(
+                    _collect_graph_html(
+                        request,
+                        recipe,
+                        specification,
+                        display_id,
+                        artwork,
+                        time_range,
+                        display_config,
+                        expandable_legend_appearance,
+                        additional_html,
+                    )
+                )
+            ),
             json.dumps(artwork.model_dump()),
             json.dumps(
                 GraphRenderState(
@@ -1193,7 +1196,7 @@ def _render_graph_content_html(
         )
 
     try:
-        output += _render_graph_html(
+        output += _create_javascript_graph(
             request,
             recipe,
             specification,
@@ -1393,7 +1396,7 @@ def _render_time_range_selection(
         ).artwork
         rows.append(
             HTMLWriter.render_td(
-                _render_graph_html(
+                _create_javascript_graph(
                     request,
                     recipe,
                     specification,

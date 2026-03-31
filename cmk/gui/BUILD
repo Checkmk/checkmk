@@ -9,117 +9,9 @@ exports_files([
 ])
 
 py_library(
-    name = "exceptions",
-    srcs = ["exceptions.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//packages/cmk-ccc:exceptions",
-        requirement("werkzeug"),
-    ],
-)
-
-py_library(
-    name = "ctx_stack",
-    srcs = ["ctx_stack.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        requirement("flask"),
-        requirement("werkzeug"),
-    ],
-)
-
-py_library(
-    name = "log",
-    srcs = ["log.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/utils",
-        "//packages/cmk-trace",
-    ],
-)
-
-py_library(
-    name = "hooks",
-    srcs = ["hooks.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-trace",
-    ],
-)
-
-py_library(
-    name = "role_types",
-    srcs = ["role_types.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-)
-
-py_library(
-    name = "site_config",
-    srcs = ["site_config.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/utils",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-livestatus-client",
-    ],
-)
-
-py_library(
-    name = "features",
-    srcs = ["features.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//packages/cmk-ccc:plugin-registry",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:version",
-    ],
-)
-
-# Monolithic target which we extract smaller targets from. As long as we are in the in place
-# extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
-# will be cleaned up when we move the pieces into their future python module structure.
-py_library(
     name = "gui",
     srcs = glob(
         include = ["**/*.py"],
-        exclude = [
-            "ctx_stack.py",
-            "exceptions.py",
-            "features.py",
-            "hooks.py",
-            "log.py",
-            "role_types.py",
-            "site_config.py",
-        ],
     ) + ["wsgi/applications/index.wsgi"],
     imports = ["../.."],
     visibility = [
@@ -132,13 +24,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":ctx_stack",
-        ":exceptions",
-        ":features",
-        ":hooks",
-        ":log",
-        ":role_types",
-        ":site_config",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/checkengine",
@@ -156,7 +41,6 @@ py_library(
         "//packages/cmk-ccc:archive",
         "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:config-path",
-        "//packages/cmk-ccc:cpu-tracking",
         "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
@@ -179,7 +63,6 @@ py_library(
         "//packages/cmk-ec:event",
         "//packages/cmk-ec:syslog",
         "//packages/cmk-events",
-        "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-messaging",

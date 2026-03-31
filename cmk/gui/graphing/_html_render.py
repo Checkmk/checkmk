@@ -1429,33 +1429,8 @@ class AjaxRenderGraph(AjaxPage):
 #   '----------------------------------------------------------------------'
 
 
-# NOTE
-# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
-# while these functions do not have that. In order to preserve the functionality of the JS side
-# of things, we keep it.
-# TODO: Migrate this to a real AjaxPage
-class AjaxGraphValuesAtTime(Page):
-    def page(self, ctx: PageContext) -> PageResult:
-        """Registered as `ajax_graph_values_at_time`."""
-        render_state = GraphRenderState.model_validate(
-            json.loads(ctx.request.get_str_input_mandatory("context"))
-        )
-        render_graph_hover_html(
-            render_state.recipe,
-            render_state.time_range,
-            metrics_from_api,
-            debug=ctx.config.debug,
-            hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
-            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
-            ].get_time_series_fetcher(),
-        )
-        return None
-
-
-@tracer.instrument("graphing.render_graph_hover_html")
-def render_graph_hover_html(
+@tracer.instrument("graphing.render_graph_values_at_time")
+def render_graph_values_at_time(
     recipe: GraphRecipe,
     time_range: GraphTimeRange,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -1503,6 +1478,31 @@ def render_graph_hover_html(
         if debug:
             raise
         response.set_data("ERROR: %s" % e)
+
+
+# NOTE
+# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
+# while these functions do not have that. In order to preserve the functionality of the JS side
+# of things, we keep it.
+# TODO: Migrate this to a real AjaxPage
+class AjaxGraphValuesAtTime(Page):
+    def page(self, ctx: PageContext) -> PageResult:
+        """Registered as `ajax_graph_values_at_time`."""
+        render_state = GraphRenderState.model_validate(
+            json.loads(ctx.request.get_str_input_mandatory("context"))
+        )
+        render_graph_values_at_time(
+            render_state.recipe,
+            render_state.time_range,
+            metrics_from_api,
+            debug=ctx.config.debug,
+            hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
+            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
+            backend_time_series_fetcher=metric_backend_registry[
+                str(edition(paths.omd_root))
+            ].get_time_series_fetcher(),
+        )
+        return None
 
 
 # .

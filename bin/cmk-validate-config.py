@@ -5,17 +5,17 @@
 
 import sys
 
-from cmk.base import config
-from cmk.base.app import make_app
-from cmk.ccc.version import edition
-from cmk.checkengine.plugin_backend import (
+from cmk.base import config  # astrein: disable=cmk-module-layer-violation
+from cmk.base.app import make_app  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.version import edition  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.plugin_backend import (  # astrein: disable=cmk-module-layer-violation
     extract_known_discovery_rulesets,
 )
-from cmk.gui import main_modules
-from cmk.gui.script_helpers import gui_context
-from cmk.utils import paths
-from cmk.utils.redis import disable_redis
-from cmk.validate_config import validate_mk_files
+from cmk.gui import main_modules  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.script_helpers import gui_context  # astrein: disable=cmk-module-layer-violation
+from cmk.utils import paths  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.redis import disable_redis  # astrein: disable=cmk-module-layer-violation
+from cmk.validate_config import validate_mk_files  # astrein: disable=cmk-module-layer-violation
 
 
 def main() -> int:

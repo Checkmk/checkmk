@@ -5,7 +5,10 @@
 
 import sys
 
-from cmk.gui.job_scheduler.main import default_crash_report_callback, main
+from cmk.gui.job_scheduler.main import (  # astrein: disable=cmk-module-layer-violation
+    default_crash_report_callback,
+    main,
+)
 
 if __name__ == "__main__":
     sys.exit(main(default_crash_report_callback))

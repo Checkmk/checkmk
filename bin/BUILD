@@ -74,10 +74,10 @@ pkg_files(
         ":cmk-piggyback-hub",
         ":cmk-pwstore",
         ":cmk-transform-inventory-trees",
-        ":cmk-ui-job-scheduler",
+        ":cmk-ui-job-scheduler.py",
         ":cmk-ui-job-scheduler-health",
         ":cmk-update-license-usage.py",
-        ":cmk-validate-config",
+        ":cmk-validate-config.py",
         ":cmk-validate-plugins",
         ":init-redis.py",
         ":livedump",
@@ -92,7 +92,9 @@ pkg_files(
     prefix = "bin",
     renames = {
         "cmk-broker-test.py": "cmk-broker-test",
+        "cmk-ui-job-scheduler.py": "cmk-ui-job-scheduler",
         "cmk-update-license-usage.py": "cmk-update-license-usage",
+        "cmk-validate-config.py": "cmk-validate-config",
         "init-redis.py": "init-redis",
         "mkbackup.py": "mkbackup",
     },
@@ -180,6 +182,20 @@ py_library(
 py_library(
     name = "cmk_broker_test_py",
     srcs = ["cmk-broker-test.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "cmk_ui_job_scheduler_py",
+    srcs = ["cmk-ui-job-scheduler.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "cmk_validate_config_py",
+    srcs = ["cmk-validate-config.py"],
     imports = ["."],
     tags = ["no-mypy"],
 )

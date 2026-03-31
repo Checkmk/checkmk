@@ -1026,6 +1026,10 @@ PLUGINS_EXECUTABLE_EXCEPTIONS = {
     "lib/python3/cmk/plugins/oracle/agents/mk-oracle.aix",
     "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe",
     "lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris",
+    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.faked",
+    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.aix.faked",
+    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe.faked",
+    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris.faked",
 }
 
 

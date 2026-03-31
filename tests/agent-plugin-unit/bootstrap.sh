@@ -27,8 +27,9 @@ populate_folders() {
     find tests/agent-plugin-unit/ -maxdepth 1 -type f -exec cp {} /tests/ \;
 
     # Temporarily skip tests for mk_podman. Fix with CMK-33079
+    podman_test="/tests/test_mk_podman.py"
     case "${PYTHON_VERSION_MAJ_MIN}" in
-        3.4 | 3.5 | 3.6 | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 | 3.12) rm -f "/tests/test_mk_podman.py" ;;
+        3.4 | 3.5 | 3.6 | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 | 3.12) rm "${podman_test}" ;;
     esac
 }
 
@@ -38,22 +39,12 @@ run_test() {
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        '-a' | '--all')
-            install_packages
+        '-p' | '--populate')
             populate_folders
-            run_test
             shift
-            ;;
-        '-h' | '--help')
-            echo "Choose from '--all' to run all steps, '--install' to install all Python packages, '--populate' to populate the required folders, '--help' to show this help"
-            exit 0
             ;;
         '-i' | '--install')
             install_packages
-            shift
-            ;;
-        '-p' | '--populate')
-            populate_folders
             shift
             ;;
         '-r' | '--run')

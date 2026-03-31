@@ -128,7 +128,7 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 		-e "PYTHON_VERSION_MAJ_MIN=$$PYTHON_VERSION" \
 		-e "PYTHONPATH=/agents/plugins" \
 		${DOCKER_REGISTRY_NO_HTTPS}/python:$$PYTHON_VERSION \
-		tests/agent-plugin-unit/bootstrap.sh --all
+		tests/agent-plugin-unit/bootstrap.sh --populate --install --run
 
 prepare-playwright:
 	$(UVENV) playwright install-deps "chromium";

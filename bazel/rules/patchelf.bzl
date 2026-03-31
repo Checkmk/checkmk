@@ -39,7 +39,7 @@ set_runpath = rule(
         ),
         "_patchelf": attr.label(
             cfg = "exec",
-            default = "@patchelf//:patchelf",
+            default = "@patchelf",
             executable = True,
         ),
     },
@@ -85,9 +85,53 @@ set_soname = rule(
         ),
         "_patchelf": attr.label(
             cfg = "exec",
-            default = "@patchelf//:patchelf",
+            default = "@patchelf",
             executable = True,
         ),
     },
     doc = "Sets the SONAME of the given ELF files",
+)
+
+def _set_runpath_tree_impl(ctx):
+    """Patches ELF .so files within a TreeArtifact with depth-relative RUNPATH."""
+    patchelf = ctx.executable._patchelf
+    tool = ctx.executable._tool
+    src = ctx.file.src
+    out = ctx.actions.declare_directory(ctx.label.name)
+
+    ctx.actions.run(
+        outputs = [out],
+        inputs = [src],
+        tools = [patchelf],
+        executable = tool,
+        arguments = [src.path, out.path, patchelf.path, ctx.attr.rpath],
+        mnemonic = "SetRunpathTree",
+        progress_message = "Patching ELF files in %s with depth-relative RUNPATH" % src.basename,
+    )
+    return [DefaultInfo(files = depset([out]))]
+
+set_runpath_tree = rule(
+    implementation = _set_runpath_tree_impl,
+    attrs = {
+        "rpath": attr.string(
+            doc = "RUNPATH for files at the top level of the tree. Deeper files get extra '..' segments appended.",
+            mandatory = True,
+        ),
+        "src": attr.label(
+            allow_single_file = True,
+            doc = "TreeArtifact directory whose ELF .so files will be patched",
+            mandatory = True,
+        ),
+        "_patchelf": attr.label(
+            cfg = "exec",
+            default = "@patchelf",
+            executable = True,
+        ),
+        "_tool": attr.label(
+            cfg = "exec",
+            default = "//bazel/rules:set_runpath_tree",
+            executable = True,
+        ),
+    },
+    doc = "Sets the RUNPATH of all ELF .so files within a directory TreeArtifact to depth-relative paths",
 )

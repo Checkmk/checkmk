@@ -126,10 +126,3 @@ configure_make(
         "@python",
     ],
 )
-
-filegroup(
-    name = "gen_dir",
-    srcs = [":net-snmp"],
-    output_group = "gen_dir",
-    visibility = ["//visibility:public"],
-)

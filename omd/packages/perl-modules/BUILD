@@ -91,8 +91,15 @@ genrule(
 
         chmod +w -R perl-modules
 
+        $(execpath //bazel/rules:set_runpath_tree) perl-modules perl-modules \
+            $(execpath @patchelf) '$$ORIGIN'
+
         tar cf $@ -C perl-modules .
     """,
     tags = ["manual"],
+    tools = [
+        "//bazel/rules:set_runpath_tree",
+        "@patchelf",
+    ],
     visibility = ["//visibility:public"],
 )

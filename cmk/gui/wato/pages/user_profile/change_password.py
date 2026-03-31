@@ -31,7 +31,10 @@ from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
+from cmk.gui.wato.pages._user_security_message import (
+    SecurityNotificationEvent,
+    send_security_message,
+)
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import (
     get_enabled_remote_sites_for_logged_in_user,

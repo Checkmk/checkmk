@@ -82,7 +82,6 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
 )
-from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import (
     Alternative,
     DualListChoice,
@@ -110,6 +109,11 @@ from cmk.gui.watolib.users import (
 )
 from cmk.utils import paths, render
 from cmk.utils.notify_types import EventRule
+
+from ._user_security_message import (
+    SecurityNotificationEvent,
+    send_security_message,
+)
 
 
 def _iter_ntop_connections() -> Iterator[dict]:

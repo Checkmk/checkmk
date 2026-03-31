@@ -107,8 +107,11 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
+from cmk.gui.wato.pages._user_security_message import (
+    SecurityNotificationEvent,
+    send_security_message,
+)
 from cmk.gui.watolib.mode import redirect
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.security_event import log_security_event

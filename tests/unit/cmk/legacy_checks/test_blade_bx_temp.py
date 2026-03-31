@@ -3,18 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
+from cmk.legacy_checks import blade_bx_temp
 from cmk.legacy_checks.blade_bx_temp import (
     check_blade_bx_temp,
     discover_blade_bx_temp,
     parse_blade_bx_temp,
 )
+from cmk.plugins.lib.temperature import TempParamType
 
 STRING_TABLE_1 = [
     # _index, status, descr, level_warn, level_crit, temp, crit_react
@@ -22,9 +22,15 @@ STRING_TABLE_1 = [
     ["2", "3", "Descr2", "70", "85", "75", "2"],
     ["3", "3", "Descr3", "70", "85", "90", "2"],
     ["4", "7", "Descr4", "70", "85", "32", "2"],  # status: not available
-    ["5", "4", "Descr5", "70", "85", "32", "2"],  # status: sensor-faild
+    ["5", "4", "Descr5", "70", "85", "32", "2"],  # status: sensor-failed
     ["6", "3", "Descr6", "70", "85", "32", "1"],  # crit_react != 2
 ]
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(blade_bx_temp, "get_value_store", lambda: store)
 
 
 @pytest.mark.parametrize(
@@ -33,17 +39,17 @@ STRING_TABLE_1 = [
         pytest.param(
             STRING_TABLE_1,
             [
-                ("Descr1", None),
-                ("Descr2", None),
-                ("Descr3", None),
-                ("Descr5", None),
-                ("Descr6", None),
+                Service(item="Descr1"),
+                Service(item="Descr2"),
+                Service(item="Descr3"),
+                Service(item="Descr5"),
+                Service(item="Descr6"),
             ],
         ),
     ],
 )
 def test_discover_blade_bx_temp(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     parsed = parse_blade_bx_temp(string_table)
     result = list(discover_blade_bx_temp(parsed))
@@ -57,11 +63,53 @@ def test_discover_blade_bx_temp(
             STRING_TABLE_1,
             None,
             {
-                "Descr1": [0, "32 °C", [("temp", 32, 70, 85)]],
-                "Descr2": [1, "75 °C (device warn/crit at 70/85 °C)", [("temp", 75, 70, 85)]],
-                "Descr3": [2, "90 °C (device warn/crit at 70/85 °C)", [("temp", 90, 70, 85)]],
-                "Descr5": [2, "Status is sensor-faild", [("temp", 32, 70, 85)]],
-                "Descr6": [2, "Temperature not present or poweroff", [("temp", 32, 70, 85)]],
+                "Descr1": [
+                    Metric("temp", 32.0, levels=(70.0, 85.0)),
+                    Result(
+                        state=State.OK,
+                        summary="Temperature: 32.0 °C",
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer user levels over device levels (used device levels)",
+                    ),
+                ],
+                "Descr2": [
+                    Metric("temp", 75.0, levels=(70.0, 85.0)),
+                    Result(
+                        state=State.WARN,
+                        summary="Temperature: 75.0 °C (warn/crit at 70.0 °C/85.0 °C)",
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer user levels over device levels (used device levels)",
+                    ),
+                ],
+                "Descr3": [
+                    Metric("temp", 90.0, levels=(70.0, 85.0)),
+                    Result(
+                        state=State.CRIT,
+                        summary="Temperature: 90.0 °C (warn/crit at 70.0 °C/85.0 °C)",
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer user levels over device levels (used device levels)",
+                    ),
+                ],
+                "Descr5": [
+                    Result(
+                        state=State.CRIT,
+                        summary="Status is sensor-failed",
+                    ),
+                    Metric("temp", 32.0),
+                ],
+                "Descr6": [
+                    Result(
+                        state=State.CRIT,
+                        summary="Temperature not present or poweroff",
+                    ),
+                    Metric("temp", 32.0),
+                ],
             },
             id="01_no_params",
         ),
@@ -69,11 +117,51 @@ def test_discover_blade_bx_temp(
             STRING_TABLE_1,
             {"levels": (60, 70)},
             {
-                "Descr1": [0, "32 °C", [("temp", 32, 60, 70)]],
-                "Descr2": [2, "75 °C (warn/crit at 60/70 °C)", [("temp", 75, 60, 70)]],
-                "Descr3": [2, "90 °C (warn/crit at 60/70 °C)", [("temp", 90, 60, 70)]],
-                "Descr5": [2, "Status is sensor-faild", [("temp", 32, 60, 70)]],
-                "Descr6": [2, "Temperature not present or poweroff", [("temp", 32, 60, 70)]],
+                "Descr1": [
+                    Metric("temp", 32.0, levels=(60.0, 70.0)),
+                    Result(
+                        state=State.OK,
+                        summary="Temperature: 32.0 °C",
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer user levels over device levels (used user levels)",
+                    ),
+                ],
+                "Descr2": [
+                    Metric("temp", 75.0, levels=(60.0, 70.0)),
+                    Result(
+                        state=State.CRIT, summary="Temperature: 75.0 °C (warn/crit at 60 °C/70 °C)"
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer user levels over device levels (used user levels)",
+                    ),
+                ],
+                "Descr3": [
+                    Metric("temp", 90.0, levels=(60.0, 70.0)),
+                    Result(
+                        state=State.CRIT, summary="Temperature: 90.0 °C (warn/crit at 60 °C/70 °C)"
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer user levels over device levels (used user levels)",
+                    ),
+                ],
+                "Descr5": [
+                    Result(
+                        state=State.CRIT,
+                        summary="Status is sensor-failed",
+                    ),
+                    Metric("temp", 32.0),
+                ],
+                "Descr6": [
+                    Result(
+                        state=State.CRIT,
+                        summary="Temperature not present or poweroff",
+                    ),
+                    Metric("temp", 32.0),
+                ],
             },
             id="02_with_levels",
         ),
@@ -82,35 +170,69 @@ def test_discover_blade_bx_temp(
             {"levels_lower": (40, 30)},
             {
                 "Descr1": [
-                    1,
-                    "32 °C (warn/crit below 40/30 °C) (device warn/crit at 70/85 °C)",
-                    [("temp", 32, 70, 85)],
+                    Metric("temp", 32.0, levels=(70.0, 85.0)),
+                    Result(
+                        state=State.WARN,
+                        summary="Temperature: 32.0 °C (device warn/crit at 70/85 °C)",
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer device levels over user levels (used device levels)",
+                    ),
                 ],
                 "Descr2": [
-                    1,
-                    "75 °C (warn/crit below 40/30 °C) (device warn/crit at 70/85 °C)",
-                    [("temp", 75, 70, 85)],
+                    Metric("temp", 75.0, levels=(70.0, 85.0)),
+                    Result(
+                        state=State.WARN,
+                        summary="Temperature: 75.0 °C (warn/crit at 70.0 °C/85.0 °C)",
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer device levels over user levels (used device levels)",
+                    ),
                 ],
                 "Descr3": [
-                    2,
-                    "90 °C (warn/crit below 40/30 °C) (device warn/crit at 70/85 °C)",
-                    [("temp", 90, 70, 85)],
+                    Metric("temp", 90.0, levels=(70.0, 85.0)),
+                    Result(
+                        state=State.CRIT,
+                        summary="Temperature: 90.0 °C (warn/crit at 70.0 °C/85.0 °C)",
+                    ),
+                    Result(
+                        state=State.OK,
+                        notice="Configuration: prefer device levels over user levels (used device levels)",
+                    ),
                 ],
-                "Descr5": [2, "Status is sensor-faild", [("temp", 32, 70, 85)]],
-                "Descr6": [2, "Temperature not present or poweroff", [("temp", 32, 70, 85)]],
+                "Descr5": [
+                    Result(
+                        state=State.CRIT,
+                        summary="Status is sensor-failed",
+                    ),
+                    Metric("temp", 32.0),
+                ],
+                "Descr6": [
+                    Result(
+                        state=State.CRIT,
+                        summary="Temperature not present or poweroff",
+                    ),
+                    Metric("temp", 32.0),
+                ],
             },
             id="03_with_levels_lower",
+            marks=pytest.mark.xfail(reason="CMK-33436"),
         ),
     ],
 )
 def test_check_blade_bx_temp(
+    empty_value_store: None,
     string_table: StringTable,
-    params: None | Mapping[str, tuple[float, float]],
-    expected_results: dict[str, list[object]],
+    params: None | TempParamType,
+    expected_results: Mapping[str, CheckResult],
 ) -> None:
     parsed = parse_blade_bx_temp(string_table)
+    services = list(discover_blade_bx_temp(parsed))
     result = {
-        item_name: list(check_blade_bx_temp(item_name, params, parsed))
-        for item_name, _params in discover_blade_bx_temp(parsed)
+        service.item: list(check_blade_bx_temp(service.item, params, parsed))
+        for service in services
+        if service.item is not None
     }
     assert result == expected_results

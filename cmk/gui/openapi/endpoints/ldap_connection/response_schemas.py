@@ -5,6 +5,7 @@
 
 from typing import Any
 
+from marshmallow import post_dump
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui import fields as gui_fields
@@ -545,6 +546,27 @@ class LDAPGroupsToRoles(LDAPCheckbox):
     guest = fields.List(fields.Nested(LDAPRoleElement))
     user = fields.List(fields.Nested(LDAPRoleElement))
 
+    @post_dump(pass_original=True)
+    def _include_other_user_roles(
+        self,
+        result_data: dict[str, Any],
+        original_data: dict[str, Any],
+        *,
+        many: bool = False,
+    ) -> dict[str, Any]:
+        for field in self.fields:
+            original_data.pop(field, None)
+
+        if not original_data:
+            return result_data
+
+        userroles = UserRolesConfigFile().load_for_reading()
+        for role, value in original_data.items():
+            if role in userroles:
+                result_data[role] = value
+
+        return result_data
+
 
 def ldap_group_to_roles_schema() -> type[LDAPGroupsToRoles]:
     return LDAPGroupsToRoles.from_dict(
@@ -639,7 +661,7 @@ class LDAPSyncPlugins(BaseSchema):
         "group in LDAP. The specified group name must match the common name (CN) of the LDAP group.",
     )
     groups_to_roles = fields.Nested(
-        ldap_group_to_roles_schema(),
+        LDAPGroupsToRoles,
         description="Configures the roles of the user depending on its group memberships in LDAP.",
     )
 

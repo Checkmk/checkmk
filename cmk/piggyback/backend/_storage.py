@@ -72,21 +72,42 @@ class PiggybackMessage:
 def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
     """Yields piggyback messages as they come in."""
 
+    host_folder_mask = Masks.MOVED_TO | Masks.DELETE_SELF
+
     with INotify() as inotify:
         watch_for_new_piggybacked_hosts = inotify.add_watch(payload_dir(omd_root), Masks.CREATE)
         watch_for_deleted_status_files = inotify.add_watch(
             source_status_dir(omd_root), Masks.DELETE
         )
         for folder in _get_piggybacked_host_folders(omd_root):
-            inotify.add_watch(folder, Masks.MOVED_TO)
+            inotify.add_watch(folder, host_folder_mask)
+
+        _last_processed_time: int = int(time.time())
 
         for event in inotify.read_forever():
+            if event.type & Masks.Q_OVERFLOW:
+                logger.warning(
+                    "Too many messages for the piggyback-hub to progress at once, rescanning data. "
+                    "Consider raising /proc/sys/fs/inotify/max_queued_events."
+                )
+                # check if any data was missed when the event queue overflowed
+                for source_file in _get_source_state_files(omd_root):
+                    if (
+                        mtime := _get_mtime(source_file)
+                    ) is not None and mtime >= _last_processed_time:
+                        source = HostName(source_file.name)
+                        for piggybacked_host in _get_piggybacked_hosts_for_source(omd_root, source):
+                            yield from get_messages_for(HostAddress(piggybacked_host), omd_root)
+                _last_processed_time = int(time.time())
+                continue
+
             # check if a new piggybacked host folder was created
             if event.watchee == watch_for_new_piggybacked_hosts:
                 if event.type & Masks.CREATE:
-                    inotify.add_watch(event.watchee.path / event.name, Masks.MOVED_TO)
+                    inotify.add_watch(event.watchee.path / event.name, host_folder_mask)
                     # Handle all files already in the folder (we rather have duplicates than missing files)
                     yield from get_messages_for(HostAddress(event.name), omd_root)
+                _last_processed_time = int(time.time())
                 continue
             if event.watchee == watch_for_deleted_status_files:
                 if event.type & Masks.DELETE:
@@ -101,9 +122,15 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
                             ),
                             b"",
                         )
+                _last_processed_time = int(time.time())
+                continue
+
+            if event.type & Masks.DELETE_SELF:
+                inotify.rm_watch(event.watchee)
                 continue
 
             if message := _make_message_from_event(event, omd_root):
+                _last_processed_time = int(time.time())
                 yield message
 
 

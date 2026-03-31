@@ -14,6 +14,7 @@ As this is currently only needed for the piggyback hub, we put it here.
 """
 
 import enum
+import errno
 import os
 from collections.abc import Iterator, Sequence
 from ctypes import c_int, CDLL, get_errno
@@ -109,6 +110,10 @@ class _EventParser:
             ].split(b"\x00", 1)[0]
             offset = offset + self._FIXED_EVENT_PART_LEN + bytes_remaining
 
+            if raw_event_type & Masks.Q_OVERFLOW:
+                yield Event(Watchee(-1, Path()), Masks(raw_event_type), Cookie(0), "")
+                continue
+
             yield Event(
                 Watchee(int(raw_watch_descriptor), self._wd_map[raw_watch_descriptor]),
                 Masks(raw_event_type),
@@ -173,7 +178,13 @@ class INotify:
         return Watchee(watch_descriptor, path)
 
     def rm_watch(self, watchee: Watchee) -> None:
-        self._libc.rm_watch(self._fileio.fileno(), watchee.wd)
+        try:
+            self._libc.rm_watch(self._fileio.fileno(), watchee.wd)
+        except OSError as e:
+            # EINVAL means the watch was already removed (e.g. the watched file/directory
+            # was deleted), so we can safely ignore it. Re-raise any other OS error.
+            if e.errno != errno.EINVAL:
+                raise
         self._parser.drop(watchee.wd)
 
     def read_forever(self) -> Iterator[Event]:

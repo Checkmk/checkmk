@@ -791,7 +791,8 @@ class PostgresLinux(PostgresBase):
         # type: (str, str, str, bool, bool) -> str
         base_cmd_list = [
             "su",
-            "-",
+            "-s",
+            "/bin/sh",
             self.db_user,
             "-c",
             r"""PGPASSFILE=%s %s -X %s -A0 -F'%s' -f %s""",

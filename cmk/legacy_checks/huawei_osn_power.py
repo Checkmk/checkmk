@@ -3,52 +3,64 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.huawei.lib import DETECT_HUAWEI_OSN
-
-check_info = {}
 
 # The typical OSN power unit delivers 750 W max
 
 
-def discover_huawei_osn_power(info):
-    for line in info:
-        yield (line[0], None)
+class HuaweiOsnPowerParams(TypedDict):
+    levels: tuple[int, int]
 
 
-def check_huawei_osn_power(item, params, info):
-    for line in info:
+def discover_huawei_osn_power(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        yield Service(item=line[0])
+
+
+def check_huawei_osn_power(
+    item: str, params: HuaweiOsnPowerParams, section: StringTable
+) -> CheckResult:
+    for line in section:
         if item == line[0]:
-            state = 0
             reading = int(line[1])
-            warn, crit = params["levels"]
-
-            yield 0, "Current reading: %s W" % reading, [("power", reading, warn, crit, 0)]
-
-            if reading >= crit:
-                state = 2
-            elif reading >= warn:
-                state = 1
-
-            if state:
-                yield state, f"(warn/crit at {warn}/{crit} W)"
+            yield from check_levels(
+                reading,
+                levels_upper=("fixed", params["levels"]),
+                metric_name="power",
+                label="Current reading",
+                render_func=lambda v: f"{int(v)} W",
+            )
 
 
 def parse_huawei_osn_power(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["huawei_osn_power"] = LegacyCheckDefinition(
+snmp_section_huawei_osn_power = SimpleSNMPSection(
     name="huawei_osn_power",
-    parse_function=parse_huawei_osn_power,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.4.70.20.20.10.1",
         oids=["1", "2"],
     ),
+    parse_function=parse_huawei_osn_power,
+)
+
+
+check_plugin_huawei_osn_power = CheckPlugin(
+    name="huawei_osn_power",
     service_name="Unit %s (Power)",
     discovery_function=discover_huawei_osn_power,
     check_function=check_huawei_osn_power,

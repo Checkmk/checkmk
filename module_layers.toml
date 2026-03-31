@@ -627,7 +627,9 @@ allows = [
   "cmk.gui",
   "cmk.inventory",
   "cmk.utils.dateutils",
+  "cmk.utils.mrpe_config",
   "cmk.utils.paths",
+  "cmk.utils.render",
   "cmk.utils.rulesets",
   "cmk.utils.tags",
 ]

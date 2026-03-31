@@ -24,6 +24,7 @@ tracer = trace.get_tracer()
 @tracer.instrument("plugins.register")
 def register() -> None:
     """Loads plugins"""
+    # deliberately not loading legacy_bakery_rulesets here.
     _load_plugins("visuals")
     _load_plugins("sidebar")
 

@@ -22,6 +22,11 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
+from cmk.gui.agent_bakery import (
+    RulespecGroupMonitoringAgentsAgentPlugins,
+    RulespecGroupMonitoringAgentsLinuxUnixAgent,
+    RulespecGroupMonitoringAgentsWindowsAgent,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable import (
     LegacyValueSpec,
@@ -59,7 +64,6 @@ from cmk.gui.watolib.rulespecs import (
     FormSpecDefinition,
     ManualCheckParameterRulespec,
     rulespec_group_registry,
-    RulespecSubGroup,
 )
 from cmk.rulesets import internal as ruleset_api_internal
 from cmk.rulesets import v1 as ruleset_api_v1
@@ -77,21 +81,6 @@ from cmk.rulesets.internal.form_specs import (
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils.http_proxy_config import ProxyAuthSpec, ProxyConfigSpec
 from cmk.utils.rulesets.definition import RuleGroup
-
-RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
-RulespecGroupMonitoringAgentsLinuxUnixAgent: type[RulespecSubGroup] | None
-RulespecGroupMonitoringAgentsWindowsAgent: type[RulespecSubGroup] | None
-
-try:
-    from cmk.gui.nonfree.pro.agent_bakery import (  # type: ignore[no-redef, import-not-found, import-untyped, unused-ignore]  # astrein: disable=cmk-module-layer-violation
-        RulespecGroupMonitoringAgentsAgentPlugins,
-        RulespecGroupMonitoringAgentsLinuxUnixAgent,
-        RulespecGroupMonitoringAgentsWindowsAgent,
-    )
-except ImportError:
-    RulespecGroupMonitoringAgentsAgentPlugins = None
-    RulespecGroupMonitoringAgentsLinuxUnixAgent = None
-    RulespecGroupMonitoringAgentsWindowsAgent = None
 
 
 @dataclass(frozen=True)
@@ -450,44 +439,29 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupDatasourcePrograms:
                 return legacy_rulespec_groups.RulespecGroupDatasourceProgramsApps
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(legacy_main_group, "Applications", localizer)
         case ruleset_api_v1.rule_specs.Topic.CACHING_MESSAGE_QUEUES:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(
                 legacy_main_group, "Caching / Message Queues", localizer
             )
         case ruleset_api_v1.rule_specs.Topic.CLOUD:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupDatasourcePrograms:
                 return legacy_rulespec_groups.RulespecGroupVMCloudContainer
             return _to_generated_builtin_sub_group(legacy_main_group, "Cloud", localizer)
         case ruleset_api_v1.rule_specs.Topic.CONFIGURATION_DEPLOYMENT:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(
                 legacy_main_group, "Configuration & Deployment", localizer
             )
         case ruleset_api_v1.rule_specs.Topic.DATABASES:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(legacy_main_group, "Databases", localizer)
         case ruleset_api_v1.rule_specs.Topic.GENERAL:
@@ -503,10 +477,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupCheckParametersDiscovery
             return _to_generated_builtin_sub_group(legacy_main_group, "General", localizer)
         case ruleset_api_v1.rule_specs.Topic.ENVIRONMENTAL:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupCheckParametersEnvironment
@@ -514,17 +485,11 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesEnvironment
             return _to_generated_builtin_sub_group(legacy_main_group, "Environmental", localizer)
         case ruleset_api_v1.rule_specs.Topic.LINUX:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsLinuxUnixAgent is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsLinuxUnixAgent
             return _to_generated_builtin_sub_group(legacy_main_group, "Linux", localizer)
         case ruleset_api_v1.rule_specs.Topic.NETWORKING:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupCheckParametersNetworking
@@ -532,17 +497,11 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesNetworking
             return _to_generated_builtin_sub_group(legacy_main_group, "Networking", localizer)
         case ruleset_api_v1.rule_specs.Topic.MIDDLEWARE:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(legacy_main_group, "Middleware", localizer)
         case ruleset_api_v1.rule_specs.Topic.NOTIFICATIONS:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupMonitoringConfigurationNotifications
@@ -550,10 +509,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupHostsMonitoringRulesNotifications
             return _to_generated_builtin_sub_group(legacy_main_group, "Notifications", localizer)
         case ruleset_api_v1.rule_specs.Topic.OPERATING_SYSTEM:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupCheckParametersOperatingSystem
@@ -563,10 +519,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupDatasourceProgramsOS
             return _to_generated_builtin_sub_group(legacy_main_group, "Operating System", localizer)
         case ruleset_api_v1.rule_specs.Topic.PERIPHERALS:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupCheckParametersPrinters
@@ -574,10 +527,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
         case ruleset_api_v1.rule_specs.Topic.POWER:
             return _to_generated_builtin_sub_group(legacy_main_group, "Power", localizer)
         case ruleset_api_v1.rule_specs.Topic.SERVER_HARDWARE:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupCheckParametersHardware
@@ -587,10 +537,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupDatasourceProgramsHardware
             return _to_generated_builtin_sub_group(legacy_main_group, "Server hardware", localizer)
         case ruleset_api_v1.rule_specs.Topic.STORAGE:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupCheckParametersStorage
@@ -598,19 +545,13 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesStorage
             return _to_generated_builtin_sub_group(legacy_main_group, "Storage", localizer)
         case ruleset_api_v1.rule_specs.Topic.SYNTHETIC_MONITORING:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             return _to_generated_builtin_sub_group(
                 legacy_main_group, "Synthetic Monitoring", localizer
             )
         case ruleset_api_v1.rule_specs.Topic.VIRTUALIZATION:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsAgentPlugins is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsAgentPlugins
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupCheckParametersVirtualization
@@ -620,10 +561,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
                 return legacy_rulespec_groups.RulespecGroupDatasourceProgramsContainer
             return _to_generated_builtin_sub_group(legacy_main_group, "Virtualization", localizer)
         case ruleset_api_v1.rule_specs.Topic.WINDOWS:
-            if (
-                legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsWindowsAgent is not None
-            ):
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return RulespecGroupMonitoringAgentsWindowsAgent
             return _to_generated_builtin_sub_group(legacy_main_group, "Windows", localizer)
         case other:
@@ -639,10 +577,7 @@ def _custom_to_builtin_legacy_group(
     if custom_topic_to_convert == ruleset_api_v1.rule_specs.CustomTopic(
         ruleset_api_v1.Title("Linux/UNIX agent options")
     ):
-        if (
-            legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-            and RulespecGroupMonitoringAgentsLinuxUnixAgent is not None
-        ):
+        if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
             return RulespecGroupMonitoringAgentsLinuxUnixAgent
     return None
 

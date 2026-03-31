@@ -91,12 +91,12 @@ def load_api_v1_rule_specs(
         case Edition.PRO:
             not_yet_moved_plugins = _discover_modules_from(
                 "cmk.gui.plugins.wato.check_parameters",
-                "cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs",
+                "cmk.gui.plugins.legacy_bakery_rulesets",
             )
         case Edition.ULTIMATE | Edition.ULTIMATEMT | Edition.CLOUD:
             not_yet_moved_plugins = _discover_modules_from(
                 "cmk.gui.plugins.wato.check_parameters",
-                "cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs",
+                "cmk.gui.plugins.legacy_bakery_rulesets",
                 "cmk.gui.nonfree.ultimate.plugins.wato.check_parameters",
             )
 

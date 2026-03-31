@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.huawei_switch_cpu import (
+from cmk.plugins.huawei.agent_based.huawei_switch_cpu import (
     check_huawei_switch_cpu,
     discover_huawei_switch_cpu,
     parse_huawei_switch_cpu,
@@ -54,7 +54,7 @@ STRING_TABLE: Sequence[StringTable] = [
 @pytest.fixture()
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.legacy_checks.huawei_switch_cpu.get_value_store",
+        "cmk.plugins.huawei.agent_based.huawei_switch_cpu.get_value_store",
         lambda: {},
     )
 

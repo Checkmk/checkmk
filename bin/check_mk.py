@@ -24,26 +24,33 @@ if not os.environ.get("OMD_SITE"):
     sys.stderr.write("Checkmk can be used only as site user.\n")
     sys.exit(1)
 
-import cmk.base.utils
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
-import cmk.utils.log
-import cmk.utils.paths
-from cmk import trace
-from cmk.base import profiling
-from cmk.base.app import make_app
-from cmk.base.modes.call import call
-from cmk.ccc.crash_reporting import (
+import cmk.base.utils  # astrein: disable=cmk-module-layer-violation
+import cmk.ccc.debug  # astrein: disable=cmk-module-layer-violation
+import cmk.ccc.version as cmk_version  # astrein: disable=cmk-module-layer-violation
+import cmk.utils.log  # astrein: disable=cmk-module-layer-violation
+import cmk.utils.paths  # astrein: disable=cmk-module-layer-violation
+from cmk import trace  # astrein: disable=cmk-module-layer-violation
+from cmk.base import profiling  # astrein: disable=cmk-module-layer-violation
+from cmk.base.app import make_app  # astrein: disable=cmk-module-layer-violation
+from cmk.base.modes.call import call  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.crash_reporting import (  # astrein: disable=cmk-module-layer-violation
     ABCCrashReport,
     BaseDetails,
     CrashReportStore,
     make_crash_report_base_path,
     VersionInfo,
 )
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
-from cmk.ccc.site import get_omd_config, omd_site
-from cmk.trace.export import exporter_from_config, init_span_processor
-from cmk.utils.log import console
+from cmk.ccc.exceptions import (  # astrein: disable=cmk-module-layer-violation
+    MKBailOut,
+    MKGeneralException,
+    MKTerminate,
+)
+from cmk.ccc.site import get_omd_config, omd_site  # astrein: disable=cmk-module-layer-violation
+from cmk.trace.export import (  # astrein: disable=cmk-module-layer-violation
+    exporter_from_config,
+    init_span_processor,
+)
+from cmk.utils.log import console  # astrein: disable=cmk-module-layer-violation
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")

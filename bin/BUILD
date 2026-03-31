@@ -53,8 +53,8 @@ pkg_files(
 pkg_files(
     name = "bin_755",
     srcs = [
-        ":check_mk",
-        ":cmk-automation-helper",
+        ":check_mk.py",
+        ":cmk-automation-helper.py",
         ":cmk-broker-test.py",
         ":cmk-cert",
         ":cmk-config-anonymizer",
@@ -91,6 +91,8 @@ pkg_files(
     ),
     prefix = "bin",
     renames = {
+        "check_mk.py": "check_mk",
+        "cmk-automation-helper.py": "cmk-automation-helper",
         "cmk-broker-test.py": "cmk-broker-test",
         "cmk-ui-job-scheduler.py": "cmk-ui-job-scheduler",
         "cmk-update-license-usage.py": "cmk-update-license-usage",
@@ -175,6 +177,20 @@ py_library(
 py_library(
     name = "cmk_update_license_usage_py",
     srcs = ["cmk-update-license-usage.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "check_mk_py",
+    srcs = ["check_mk.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "cmk_automation_helper_py",
+    srcs = ["cmk-automation-helper.py"],
     imports = ["."],
     tags = ["no-mypy"],
 )

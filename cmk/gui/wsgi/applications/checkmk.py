@@ -28,6 +28,7 @@ from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
     MKConfigError,
+    MKHTTPException,
     MKNotFound,
     MKUnauthenticatedException,
     MKUserError,
@@ -112,12 +113,14 @@ def _page_not_found() -> Response:
 
 
 def _render_exception(e: Exception, title: str) -> Response:
+    status_code: int | None = e.status if isinstance(e, MKHTTPException) else None
     if plain_error():
         return Response(
             response=[
                 "{}{}\n".format(("%s: " % title) if title else "", e),
             ],
             mimetype="text/plain",
+            status=status_code,
         )
 
     if not fail_silently():

@@ -7,9 +7,11 @@ description:
  This check shows the CPU usage of a Kubernetes object, its requests utilization and its limits
  utilization.
 
- Requests utilization is the CPU usage divided by the sum of all configured container CPU
- requests. Limits utilization is computed in the same manner. The utilization percentage values are
- omitted if any of the associated request/limit value are not configured. Moreover, limits
+ Requests utilization is the CPU usage divided by the configured CPU requests of the Kubernetes
+ object. For pods without pod-level requests, the sum of container requests is used. For pods with
+ pod-level requests, the pod-level value takes precedence so long as the pod-level value is
+ non-zero. Limits utilization is computed in the same manner. The utilization percentage values
+ are omitted if any of the associated request/limit values are not configured. Moreover, limits
  utilization is omitted if any container has a limit of zero. The reason for omission is displayed
  in the check's details.
 

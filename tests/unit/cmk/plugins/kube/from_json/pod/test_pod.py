@@ -2,7 +2,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.unit.cmk.plugins.kube.data.kube_1_34 import pod_missing_creation_timestamp
+from tests.unit.cmk.plugins.kube.data.kube_1_34 import (
+    pod_missing_creation_timestamp,
+    pod_with_pod_level_and_container_resources,
+)
 
 from cmk.plugins.kube.from_json.pod.pod import pod_from_client
 from cmk.plugins.kube.schemata.api import (
@@ -42,3 +45,11 @@ def test_pod_from_client() -> None:
     pvc_vol = next(v for v in pod.spec.volumes if v.name == "mypvc")
     assert pvc_vol.persistent_volume_claim is not None
     assert pvc_vol.persistent_volume_claim.claim_name == "test-pvc"
+
+
+def test_pod_from_client_pod_level_resources() -> None:
+    pod = pod_from_client(pod_with_pod_level_and_container_resources.DATA, controllers=[])  # type: ignore[arg-type]
+    assert pod.spec.resources.requests.cpu == 0.5  # 500m
+    assert pod.spec.resources.requests.memory == 512 * 1024 * 1024  # 512Mi
+    assert pod.spec.resources.limits.cpu == 1.0  # 1
+    assert pod.spec.resources.limits.memory == 1024 * 1024 * 1024  # 1Gi

@@ -767,6 +767,7 @@ class PodSpec(BaseModel):
     priority_class_name: str | None = None
     active_deadline_seconds: int | None = None
     volumes: Sequence[Volume] | None = None
+    resources: ResourceRequirements
 
 
 @enum.unique

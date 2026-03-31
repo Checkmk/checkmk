@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import Literal
+
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
@@ -14,7 +16,7 @@ from cmk.plugins.kube.schemata.section import (
     PerformanceUsage,
     Resources,
 )
-from cmk.plugins.lib.kube_resources import DEFAULT_PARAMS, Params
+from cmk.plugins.lib.kube_resources import count_overview, DEFAULT_PARAMS, Params
 
 
 def test_discovery() -> None:
@@ -24,7 +26,10 @@ def test_discovery() -> None:
         count_unspecified_limits=0,
         count_zeroed_limits=0,
         count_unspecified_requests=0,
-        count_total=0,
+        count_total_requests=0,
+        count_total_limits=0,
+        count_pods_pod_level_request=0,
+        count_pods_pod_level_limit=0,
     )
     assert list(discovery_kube_memory(None, resources, None))
 
@@ -39,7 +44,10 @@ def test_discovery() -> None:
                 count_unspecified_limits=0,
                 count_zeroed_limits=0,
                 count_unspecified_requests=0,
-                count_total=2,
+                count_total_requests=2,
+                count_total_limits=2,
+                count_pods_pod_level_request=0,
+                count_pods_pod_level_limit=0,
             ),
             None,
             (
@@ -59,7 +67,10 @@ def test_discovery() -> None:
                 count_unspecified_limits=0,
                 count_zeroed_limits=2,
                 count_unspecified_requests=0,
-                count_total=2,
+                count_total_requests=2,
+                count_total_limits=2,
+                count_pods_pod_level_request=0,
+                count_pods_pod_level_limit=0,
             ),
             PerformanceUsage(resource=Memory(usage=18120704.0)),
             (
@@ -87,7 +98,10 @@ def test_discovery() -> None:
                 count_unspecified_limits=1,
                 count_zeroed_limits=0,
                 count_unspecified_requests=1,
-                count_total=2,
+                count_total_requests=2,
+                count_total_limits=2,
+                count_pods_pod_level_request=0,
+                count_pods_pod_level_limit=0,
             ),
             PerformanceUsage(resource=Memory(usage=18120704.0)),
             (
@@ -124,7 +138,10 @@ def test_discovery() -> None:
                 count_unspecified_limits=1,
                 count_zeroed_limits=1,
                 count_unspecified_requests=2,
-                count_total=3,
+                count_total_requests=3,
+                count_total_limits=3,
+                count_pods_pod_level_request=0,
+                count_pods_pod_level_limit=0,
             ),
             PerformanceUsage(resource=Memory(usage=18120704.0)),
             (
@@ -164,7 +181,10 @@ def test_discovery() -> None:
                 count_unspecified_limits=0,
                 count_zeroed_limits=0,
                 count_unspecified_requests=0,
-                count_total=2,
+                count_total_requests=2,
+                count_total_limits=2,
+                count_pods_pod_level_request=0,
+                count_pods_pod_level_limit=0,
             ),
             PerformanceUsage(resource=Memory(usage=18120704.0)),
             (
@@ -207,7 +227,10 @@ def test_discovery() -> None:
                 count_unspecified_limits=0,
                 count_zeroed_limits=0,
                 count_unspecified_requests=0,
-                count_total=2,
+                count_total_requests=2,
+                count_total_limits=2,
+                count_pods_pod_level_request=0,
+                count_pods_pod_level_limit=0,
             ),
             PerformanceUsage(resource=Memory(usage=27120704.0)),
             (
@@ -292,3 +315,96 @@ def test_crashes_if_no_resources(
                 AllocatableResource(context="node", value=35917989.0),
             )
         )
+
+
+@pytest.mark.parametrize(
+    "resources,requirement,expected",
+    [
+        pytest.param(
+            Resources(
+                request=3.0,
+                limit=0.0,
+                count_unspecified_requests=0,
+                count_total_requests=0,
+                count_pods_pod_level_request=1,
+                count_unspecified_limits=0,
+                count_zeroed_limits=0,
+                count_total_limits=0,
+                count_pods_pod_level_limit=0,
+            ),
+            "request",
+            "1 pod with pod-level requests",
+            id="only pod-level",
+        ),
+        pytest.param(
+            Resources(
+                request=4.0,
+                limit=0.0,
+                count_unspecified_requests=0,
+                count_total_requests=1,
+                count_pods_pod_level_request=1,
+                count_unspecified_limits=0,
+                count_zeroed_limits=0,
+                count_total_limits=0,
+                count_pods_pod_level_limit=0,
+            ),
+            "request",
+            "1/1 containers with requests, 1 pod with pod-level requests",
+            id="mixed",
+        ),
+        pytest.param(
+            Resources(
+                request=7.0,
+                limit=0.0,
+                count_unspecified_requests=0,
+                count_total_requests=1,
+                count_pods_pod_level_request=2,
+                count_unspecified_limits=0,
+                count_zeroed_limits=0,
+                count_total_limits=0,
+                count_pods_pod_level_limit=0,
+            ),
+            "request",
+            "1/1 containers with requests, 2 pods with pod-level requests",
+            id="plural pods",
+        ),
+        pytest.param(
+            Resources(
+                request=0.0,
+                limit=5.0,
+                count_unspecified_requests=0,
+                count_total_requests=0,
+                count_pods_pod_level_request=0,
+                count_unspecified_limits=0,
+                count_zeroed_limits=0,
+                count_total_limits=0,
+                count_pods_pod_level_limit=1,
+            ),
+            "limit",
+            "1 pod with pod-level limits",
+            id="only pod-level limits",
+        ),
+        pytest.param(
+            Resources(
+                request=0.0,
+                limit=8.0,
+                count_unspecified_requests=0,
+                count_total_requests=0,
+                count_pods_pod_level_request=0,
+                count_unspecified_limits=0,
+                count_zeroed_limits=1,
+                count_total_limits=2,
+                count_pods_pod_level_limit=2,
+            ),
+            "limit",
+            "1/2 containers with limits, 2 pods with pod-level limits",
+            id="mixed limits",
+        ),
+    ],
+)
+def test_count_overview_pod_level(
+    resources: Resources,
+    requirement: Literal["request", "limit", "allocatable"],
+    expected: str,
+) -> None:
+    assert count_overview(resources, requirement) == expected

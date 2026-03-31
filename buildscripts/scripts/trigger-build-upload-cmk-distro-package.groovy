@@ -39,6 +39,12 @@ void main() {
     def setup_values = single_tests.common_prepare(version: "daily", docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
     def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud", params.EDITION].unique().sort();
 
+    def trigger_fips_chain = false;
+    // The time 11-12 has been chose to not collide with the CI maintenance window.
+    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 11..12) {
+        trigger_fips_chain = true;
+    }
+
     print(
         """
         |===== CONFIGURATION ===============================
@@ -158,6 +164,23 @@ void main() {
                 stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                 stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
                 stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+            ],
+            wait: false,
+        );
+    }
+
+    smart_stage(
+        name: "Trigger trigger-fips-chain",
+        condition: trigger_fips_chain && currentBuild.result == "SUCCESS",
+    ) {
+        build(
+            job: "${branch_base_folder}/trigger-fips-chain",
+            parameters: [
+                stringParam(name: "EDITION", value: "pro"),
+                stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: ""),
+                stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                stringParam(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
             ],
             wait: false,
         );

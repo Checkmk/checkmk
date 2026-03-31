@@ -12353,10 +12353,6 @@ msgstr "Compatibilité"
 msgid "Capabilities supported"
 msgstr "Compatibilité"
 
-#, fuzzy
-msgid "Capacity"
-msgstr "Capacité de l'ASI"
-
 msgid "Capacity providers per cluster"
 msgstr "Fournisseurs de capacité par groupe"
 
@@ -27047,10 +27043,6 @@ msgstr "Firmware"
 
 #, fuzzy
 msgid "Firmware Versions"
-msgstr "Version du noyau"
-
-#, fuzzy
-msgid "Firmware version"
 msgstr "Version du noyau"
 
 msgid "First"
@@ -42950,10 +42942,6 @@ msgstr "Erreurs d'intégrité des médias et des données"
 msgid "Media connectivity check failure"
 msgstr "Échec de la vérification de la connectivité des médias"
 
-#, fuzzy
-msgid "Media type"
-msgstr "Type de correspondance"
-
 #, python-format
 msgid "Median %s"
 msgstr "Médiane %s"
@@ -55716,10 +55704,6 @@ msgid "Redfish Volume discovery"
 msgstr "Découverte du compteur MSSQL"
 
 #, fuzzy
-msgid "Redfish drives"
-msgstr "Découverte du compteur MSSQL"
-
-#, fuzzy
 msgid "Redfish outlet discovery"
 msgstr "Découverte du compteur MSSQL"
 
@@ -60379,13 +60363,6 @@ msgstr "Service"
 msgid "Service %s"
 msgstr "Service %s"
 
-msgid "Service (exact match)"
-msgstr "Service (correspondance exacte)"
-
-#, fuzzy
-msgid "Service (regex)"
-msgstr "Service Regex"
-
 msgid "Service Checks"
 msgstr "Chèques de service"
 
@@ -60730,6 +60707,14 @@ msgstr ""
 
 msgid "Service name"
 msgstr "Nom du service"
+
+#, fuzzy
+msgid "Service name (exact match)"
+msgstr "Nom d'hôte (correspondance exacte)"
+
+#, fuzzy
+msgid "Service name (regex)"
+msgstr "Service Regex"
 
 msgid "Service name: "
 msgstr "Nom du service : "
@@ -93805,12 +93790,12 @@ msgstr "Démarrer la restauration"
 msgid "Cancel and go back"
 msgstr ""
 
-msgid "AI-generated answer"
-msgstr ""
-
 #, fuzzy
 msgid "Generating response..."
 msgstr "Générer des rapports..."
+
+msgid "AI-generated answer"
+msgstr ""
 
 #, fuzzy
 msgid "Thinking..."
@@ -93820,8 +93805,12 @@ msgid "Please review to ensure factual correctness."
 msgstr ""
 
 #, fuzzy
-msgid "Copy answer"
-msgstr "Connexion désactivée"
+msgid "Copied!"
+msgstr "Code Taille"
+
+#, fuzzy
+msgid "Copy response"
+msgstr "Temps de réponse des hop"
 
 msgid ""
 "This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
@@ -93856,12 +93845,12 @@ msgstr "Fermé"
 msgid "Toggle %{ title }"
 msgstr "Basculer les entrées du journal"
 
-msgid "Copy to clipboard failed with error: "
-msgstr ""
-
 #, fuzzy
 msgid "Copied to clipboard"
 msgstr "Copie du secret dans le presse-papiers"
+
+msgid "Copy to clipboard failed with error: "
+msgstr ""
 
 #, fuzzy
 msgid "selected"
@@ -96180,9 +96169,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Windows host "
-"to register the Checkmk agent controller. Please make sure to run this "
-"command with sufficient permissions (e.g. \"Run as Administrator\")."
+"After you have installed the agent, run this command on your Windows host to "
+"register the Checkmk agent controller. Please make sure to run this command "
+"with sufficient permissions (e.g. \"Run as Administrator\")."
 msgstr ""
 
 msgid ""
@@ -96196,7 +96185,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Linux host to "
+"After you have installed the agent, run this command on your Linux host to "
 "register the Checkmk agent controller."
 msgstr ""
 
@@ -96209,8 +96198,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Solaris host "
-"to install the Checkmk agent."
+"After you have installed the agent, run this command on your Solaris host to "
+"register the Checkmk agent."
 msgstr ""
 
 msgid ""
@@ -96223,7 +96212,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your AIX host to "
+"After you have installed the agent, run this command on your AIX host to "
 "register the Checkmk agent controller."
 msgstr ""
 
@@ -97771,6 +97760,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Capacity"
+#~ msgstr "Capacité de l'ASI"
+
+#, fuzzy
+#~ msgid "Firmware version"
+#~ msgstr "Version du noyau"
+
+#, fuzzy
+#~ msgid "Media type"
+#~ msgstr "Type de correspondance"
+
+#, fuzzy
+#~ msgid "Redfish drives"
+#~ msgstr "Découverte du compteur MSSQL"
+
+#~ msgid "Service (exact match)"
+#~ msgstr "Service (correspondance exacte)"
+
+#, fuzzy
+#~ msgid "Copy answer"
+#~ msgstr "Connexion désactivée"
 
 #, fuzzy, python-format
 #~ msgid "%s section"

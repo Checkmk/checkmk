@@ -12293,10 +12293,6 @@ msgstr "Compatibilitate"
 msgid "Capabilities supported"
 msgstr "Compatibilitate"
 
-#, fuzzy
-msgid "Capacity"
-msgstr "Capacitate UPS"
-
 msgid "Capacity providers per cluster"
 msgstr "Furnizori de capacitate per cluster"
 
@@ -26891,10 +26887,6 @@ msgstr "Firmware"
 
 #, fuzzy
 msgid "Firmware Versions"
-msgstr "Versiunea Kernel"
-
-#, fuzzy
-msgid "Firmware version"
 msgstr "Versiunea Kernel"
 
 msgid "First"
@@ -42692,10 +42684,6 @@ msgstr "Erori de integritate a mediilor și a datelor"
 msgid "Media connectivity check failure"
 msgstr "Eșecul verificării conectivității media"
 
-#, fuzzy
-msgid "Media type"
-msgstr "Tipul de meci"
-
 #, python-format
 msgid "Median %s"
 msgstr "Median %s"
@@ -55353,10 +55341,6 @@ msgid "Redfish Volume discovery"
 msgstr "Descoperirea contorului MSSQL"
 
 #, fuzzy
-msgid "Redfish drives"
-msgstr "Descoperirea contorului MSSQL"
-
-#, fuzzy
 msgid "Redfish outlet discovery"
 msgstr "Descoperirea contorului MSSQL"
 
@@ -59963,12 +59947,6 @@ msgstr "Serviciul"
 msgid "Service %s"
 msgstr "Serviciul %s"
 
-msgid "Service (exact match)"
-msgstr "Serviciu (potrivire exactă)"
-
-msgid "Service (regex)"
-msgstr "Serviciu (regex)"
-
 msgid "Service Checks"
 msgstr "Verificări de serviciu"
 
@@ -60320,6 +60298,14 @@ msgstr ""
 
 msgid "Service name"
 msgstr "Denumirea serviciului"
+
+#, fuzzy
+msgid "Service name (exact match)"
+msgstr "Numele gazdei (potrivire exactă)"
+
+#, fuzzy
+msgid "Service name (regex)"
+msgstr "Serviciu (regex)"
 
 #, fuzzy
 msgid "Service name: "
@@ -93109,12 +93095,12 @@ msgstr "Începeți restaurarea"
 msgid "Cancel and go back"
 msgstr ""
 
-msgid "AI-generated answer"
-msgstr ""
-
 #, fuzzy
 msgid "Generating response..."
 msgstr "Generarea de rapoarte..."
+
+msgid "AI-generated answer"
+msgstr ""
 
 #, fuzzy
 msgid "Thinking..."
@@ -93124,8 +93110,12 @@ msgid "Please review to ensure factual correctness."
 msgstr ""
 
 #, fuzzy
-msgid "Copy answer"
-msgstr "Login dezactivat"
+msgid "Copied!"
+msgstr "Coduri copiate"
+
+#, fuzzy
+msgid "Copy response"
+msgstr "Timpii de răspuns la hopuri"
 
 msgid ""
 "This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
@@ -93162,12 +93152,12 @@ msgstr "Închis"
 msgid "Toggle %{ title }"
 msgstr "Comutarea intrărilor din jurnal"
 
-msgid "Copy to clipboard failed with error: "
-msgstr ""
-
 #, fuzzy
 msgid "Copied to clipboard"
 msgstr "Secret copiat în clipboard"
+
+msgid "Copy to clipboard failed with error: "
+msgstr ""
 
 #, fuzzy
 msgid "selected"
@@ -95482,9 +95472,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Windows host "
-"to register the Checkmk agent controller. Please make sure to run this "
-"command with sufficient permissions (e.g. \"Run as Administrator\")."
+"After you have installed the agent, run this command on your Windows host to "
+"register the Checkmk agent controller. Please make sure to run this command "
+"with sufficient permissions (e.g. \"Run as Administrator\")."
 msgstr ""
 
 msgid ""
@@ -95498,7 +95488,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Linux host to "
+"After you have installed the agent, run this command on your Linux host to "
 "register the Checkmk agent controller."
 msgstr ""
 
@@ -95511,8 +95501,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Solaris host "
-"to install the Checkmk agent."
+"After you have installed the agent, run this command on your Solaris host to "
+"register the Checkmk agent."
 msgstr ""
 
 msgid ""
@@ -95525,7 +95515,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your AIX host to "
+"After you have installed the agent, run this command on your AIX host to "
 "register the Checkmk agent controller."
 msgstr ""
 
@@ -97084,6 +97074,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Capacity"
+#~ msgstr "Capacitate UPS"
+
+#, fuzzy
+#~ msgid "Firmware version"
+#~ msgstr "Versiunea Kernel"
+
+#, fuzzy
+#~ msgid "Media type"
+#~ msgstr "Tipul de meci"
+
+#, fuzzy
+#~ msgid "Redfish drives"
+#~ msgstr "Descoperirea contorului MSSQL"
+
+#~ msgid "Service (exact match)"
+#~ msgstr "Serviciu (potrivire exactă)"
+
+#, fuzzy
+#~ msgid "Copy answer"
+#~ msgstr "Login dezactivat"
 
 #, fuzzy, python-format
 #~ msgid "%s section"

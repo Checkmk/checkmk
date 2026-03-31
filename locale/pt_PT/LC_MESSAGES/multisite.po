@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-29 17:46+0000\n"
+"PO-Revision-Date: 2026-03-31 15:32+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -12290,10 +12290,6 @@ msgstr "Compatibilidade"
 #, fuzzy
 msgid "Capabilities supported"
 msgstr "Compatibilidade"
-
-#, fuzzy
-msgid "Capacity"
-msgstr "Capacidade da UPS"
 
 msgid "Capacity providers per cluster"
 msgstr "Fornecedores de capacidade por cluster"
@@ -26840,10 +26836,6 @@ msgstr "Firmware"
 
 #, fuzzy
 msgid "Firmware Versions"
-msgstr "Versão Kernel"
-
-#, fuzzy
-msgid "Firmware version"
 msgstr "Versão Kernel"
 
 msgid "First"
@@ -42628,10 +42620,6 @@ msgstr "Erros de integridade da mídia e dos dados"
 msgid "Media connectivity check failure"
 msgstr "Falha na Verificação da Conectividade da Mídia"
 
-#, fuzzy
-msgid "Media type"
-msgstr "Tipo de jogo"
-
 #, python-format
 msgid "Median %s"
 msgstr "Mediana %s"
@@ -55267,10 +55255,6 @@ msgid "Redfish Volume discovery"
 msgstr "Descoberta do contador MSSQL"
 
 #, fuzzy
-msgid "Redfish drives"
-msgstr "Descoberta do contador MSSQL"
-
-#, fuzzy
 msgid "Redfish outlet discovery"
 msgstr "Descoberta do contador MSSQL"
 
@@ -59892,12 +59876,6 @@ msgstr "Serviço"
 msgid "Service %s"
 msgstr "Serviço %s"
 
-msgid "Service (exact match)"
-msgstr "Serviço (correspondência exacta)"
-
-msgid "Service (regex)"
-msgstr "Serviço (regex)"
-
 msgid "Service Checks"
 msgstr "Verificações de serviço"
 
@@ -60237,6 +60215,14 @@ msgstr ""
 
 msgid "Service name"
 msgstr "Nome do serviço"
+
+#, fuzzy
+msgid "Service name (exact match)"
+msgstr "Nome do anfitrião (correspondência exacta)"
+
+#, fuzzy
+msgid "Service name (regex)"
+msgstr "Serviço (regex)"
 
 #, fuzzy
 msgid "Service name: "
@@ -92875,12 +92861,12 @@ msgstr "Comece a restaurar"
 msgid "Cancel and go back"
 msgstr ""
 
-msgid "AI-generated answer"
-msgstr ""
-
 #, fuzzy
 msgid "Generating response..."
 msgstr "A gerar relatório..."
+
+msgid "AI-generated answer"
+msgstr ""
 
 #, fuzzy
 msgid "Thinking..."
@@ -92890,8 +92876,12 @@ msgid "Please review to ensure factual correctness."
 msgstr ""
 
 #, fuzzy
-msgid "Copy answer"
-msgstr "Login desactivado"
+msgid "Copied!"
+msgstr "Código Tamanho"
+
+#, fuzzy
+msgid "Copy response"
+msgstr "Tempos de resposta do lúpulo"
 
 msgid ""
 "This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
@@ -92926,12 +92916,12 @@ msgstr "Fechado"
 msgid "Toggle %{ title }"
 msgstr "Alternar entradas de log"
 
-msgid "Copy to clipboard failed with error: "
-msgstr ""
-
 #, fuzzy
 msgid "Copied to clipboard"
 msgstr "Segredo copiado para a área de transferência"
+
+msgid "Copy to clipboard failed with error: "
+msgstr ""
 
 #, fuzzy
 msgid "selected"
@@ -95237,9 +95227,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Windows host "
-"to register the Checkmk agent controller. Please make sure to run this "
-"command with sufficient permissions (e.g. \"Run as Administrator\")."
+"After you have installed the agent, run this command on your Windows host to "
+"register the Checkmk agent controller. Please make sure to run this command "
+"with sufficient permissions (e.g. \"Run as Administrator\")."
 msgstr ""
 
 msgid ""
@@ -95253,7 +95243,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Linux host to "
+"After you have installed the agent, run this command on your Linux host to "
 "register the Checkmk agent controller."
 msgstr ""
 
@@ -95266,8 +95256,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Solaris host "
-"to install the Checkmk agent."
+"After you have installed the agent, run this command on your Solaris host to "
+"register the Checkmk agent."
 msgstr ""
 
 msgid ""
@@ -95280,7 +95270,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your AIX host to "
+"After you have installed the agent, run this command on your AIX host to "
 "register the Checkmk agent controller."
 msgstr ""
 
@@ -96826,6 +96816,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Capacity"
+#~ msgstr "Capacidade da UPS"
+
+#, fuzzy
+#~ msgid "Firmware version"
+#~ msgstr "Versão Kernel"
+
+#, fuzzy
+#~ msgid "Media type"
+#~ msgstr "Tipo de jogo"
+
+#, fuzzy
+#~ msgid "Redfish drives"
+#~ msgstr "Descoberta do contador MSSQL"
+
+#~ msgid "Service (exact match)"
+#~ msgstr "Serviço (correspondência exacta)"
+
+#, fuzzy
+#~ msgid "Copy answer"
+#~ msgstr "Login desactivado"
 
 #, fuzzy, python-format
 #~ msgid "%s section"

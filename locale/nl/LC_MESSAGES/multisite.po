@@ -12273,10 +12273,6 @@ msgstr "Verenigbaarheid"
 msgid "Capabilities supported"
 msgstr "Verenigbaarheid"
 
-#, fuzzy
-msgid "Capacity"
-msgstr "UPS-capaciteit"
-
 msgid "Capacity providers per cluster"
 msgstr "Capaciteitsleveranciers per cluster"
 
@@ -26834,10 +26830,6 @@ msgstr "Firmware"
 
 #, fuzzy
 msgid "Firmware Versions"
-msgstr "Kernel Versie"
-
-#, fuzzy
-msgid "Firmware version"
 msgstr "Kernel Versie"
 
 msgid "First"
@@ -42615,10 +42607,6 @@ msgstr "Fouten in de integriteit van media en gegevens"
 msgid "Media connectivity check failure"
 msgstr "Media connectiviteitscontrole mislukt"
 
-#, fuzzy
-msgid "Media type"
-msgstr "Wedstrijd type"
-
 #, python-format
 msgid "Median %s"
 msgstr "Mediaan %s"
@@ -55278,10 +55266,6 @@ msgid "Redfish Volume discovery"
 msgstr "MSSQL teller ontdekking"
 
 #, fuzzy
-msgid "Redfish drives"
-msgstr "MSSQL teller ontdekking"
-
-#, fuzzy
 msgid "Redfish outlet discovery"
 msgstr "MSSQL teller ontdekking"
 
@@ -59883,13 +59867,6 @@ msgstr "Dienst"
 msgid "Service %s"
 msgstr "Dienst %s"
 
-msgid "Service (exact match)"
-msgstr "Dienst (exacte match)"
-
-#, fuzzy
-msgid "Service (regex)"
-msgstr "Dienst Regex"
-
 msgid "Service Checks"
 msgstr "Service Controles"
 
@@ -60229,6 +60206,14 @@ msgstr ""
 
 msgid "Service name"
 msgstr "Naam van de dienst"
+
+#, fuzzy
+msgid "Service name (exact match)"
+msgstr "Hostnaam (exacte match)"
+
+#, fuzzy
+msgid "Service name (regex)"
+msgstr "Dienst Regex"
 
 #, fuzzy
 msgid "Service name: "
@@ -92977,12 +92962,12 @@ msgstr "Herstel starten"
 msgid "Cancel and go back"
 msgstr ""
 
-msgid "AI-generated answer"
-msgstr ""
-
 #, fuzzy
 msgid "Generating response..."
 msgstr "Het genereren van rapport..."
+
+msgid "AI-generated answer"
+msgstr ""
 
 #, fuzzy
 msgid "Thinking..."
@@ -92992,8 +92977,12 @@ msgid "Please review to ensure factual correctness."
 msgstr ""
 
 #, fuzzy
-msgid "Copy answer"
-msgstr "Inloggen uitgeschakeld"
+msgid "Copied!"
+msgstr "Code Grootte"
+
+#, fuzzy
+msgid "Copy response"
+msgstr "Hop responstijden"
 
 msgid ""
 "This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
@@ -93026,12 +93015,12 @@ msgstr "Gesloten"
 msgid "Toggle %{ title }"
 msgstr "Logboekvermeldingen wijzigen"
 
-msgid "Copy to clipboard failed with error: "
-msgstr ""
-
 #, fuzzy
 msgid "Copied to clipboard"
 msgstr "Geheim gekopieerd naar klembord"
+
+msgid "Copy to clipboard failed with error: "
+msgstr ""
 
 #, fuzzy
 msgid "selected"
@@ -95342,9 +95331,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Windows host "
-"to register the Checkmk agent controller. Please make sure to run this "
-"command with sufficient permissions (e.g. \"Run as Administrator\")."
+"After you have installed the agent, run this command on your Windows host to "
+"register the Checkmk agent controller. Please make sure to run this command "
+"with sufficient permissions (e.g. \"Run as Administrator\")."
 msgstr ""
 
 msgid ""
@@ -95358,7 +95347,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Linux host to "
+"After you have installed the agent, run this command on your Linux host to "
 "register the Checkmk agent controller."
 msgstr ""
 
@@ -95371,8 +95360,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your Solaris host "
-"to install the Checkmk agent."
+"After you have installed the agent, run this command on your Solaris host to "
+"register the Checkmk agent."
 msgstr ""
 
 msgid ""
@@ -95385,7 +95374,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"After you have downloaded the agent, run this command on your AIX host to "
+"After you have installed the agent, run this command on your AIX host to "
 "register the Checkmk agent controller."
 msgstr ""
 
@@ -96927,6 +96916,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Capacity"
+#~ msgstr "UPS-capaciteit"
+
+#, fuzzy
+#~ msgid "Firmware version"
+#~ msgstr "Kernel Versie"
+
+#, fuzzy
+#~ msgid "Media type"
+#~ msgstr "Wedstrijd type"
+
+#, fuzzy
+#~ msgid "Redfish drives"
+#~ msgstr "MSSQL teller ontdekking"
+
+#~ msgid "Service (exact match)"
+#~ msgstr "Dienst (exacte match)"
+
+#, fuzzy
+#~ msgid "Copy answer"
+#~ msgstr "Inloggen uitgeschakeld"
 
 #, fuzzy, python-format
 #~ msgid "%s section"

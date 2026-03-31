@@ -147,6 +147,58 @@ const latestAiElement = computed<IAiConversationElement | null>(() => {
 const latestAiItems = computed(() =>
   Array.isArray(latestAiElement.value?.content) ? latestAiElement.value.content : []
 )
+
+const HOST_STATE_LABEL: Record<string, string> = {
+  up: 'UP',
+  down: 'DOWN',
+  unreachable: 'UNREACH'
+}
+
+function hostStateLabel(state: string): string {
+  return HOST_STATE_LABEL[state.toLowerCase()] ?? state.toUpperCase()
+}
+
+function hostStateClass(state: string): string {
+  switch (state.toLowerCase()) {
+    case 'up':
+      return 'hstate hstate0'
+    case 'down':
+      return 'hstate hstate1'
+    case 'unreachable':
+      return 'hstate hstate2'
+    default:
+      return 'hstate hstate3'
+  }
+}
+
+const SERVICE_STATE_LABEL: Record<string, string> = {
+  ok: 'OK',
+  warning: 'WARN',
+  critical: 'CRIT',
+  unknown: 'UNKN',
+  pending: 'PEND'
+}
+
+function serviceStateLabel(state: string): string {
+  return SERVICE_STATE_LABEL[state.toLowerCase()] ?? state.toUpperCase()
+}
+
+function serviceStateClass(state: string): string {
+  switch (state.toLowerCase()) {
+    case 'ok':
+      return 'svcstate state0'
+    case 'warning':
+      return 'svcstate state1'
+    case 'critical':
+      return 'svcstate state2'
+    case 'unknown':
+      return 'svcstate state3'
+    case 'pending':
+      return 'svcstate statep stale'
+    default:
+      return 'svcstate state3'
+  }
+}
 const isHeaderLoading = computed(
   () => Boolean(latestAiElement.value?.streaming) && latestAiItems.value.length === 0
 )
@@ -352,6 +404,67 @@ watch(
             :streaming="props.streaming"
             @done="onContentDone"
           />
+          <div
+            v-else-if="cnt.content_type === 'system_context'"
+            class="ai-conversation-element__system-context"
+          >
+            <div class="ai-conversation-element__system-context-card">
+              <div class="ai-conversation-element__system-context-card-icon">
+                <div class="ai-conversation-element__system-context-card-icon-wrapper">
+                  <CmkIcon name="folder" size="large" />
+                </div>
+              </div>
+
+              <div class="ai-conversation-element__system-context-card-header">
+                <span class="ai-conversation-element__system-context-card-label">{{
+                  _t('Host')
+                }}</span>
+                <div class="ai-conversation-element__system-context-card-body">
+                  <span
+                    :class="[
+                      'state',
+                      'ai-conversation-element__system-context-state',
+                      hostStateClass(cnt.host_state)
+                    ]"
+                    ><span class="state_rounded_fill">{{
+                      hostStateLabel(cnt.host_state)
+                    }}</span></span
+                  >
+                  <span class="ai-conversation-element__system-context-name">{{
+                    cnt.host_name
+                  }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="cnt.service_name" class="ai-conversation-element__system-context-card">
+              <div class="ai-conversation-element__system-context-card-icon">
+                <div class="ai-conversation-element__system-context-card-icon-wrapper">
+                  <CmkIcon name="services" size="large" />
+                </div>
+              </div>
+              <div class="ai-conversation-element__system-context-card-header">
+                <span class="ai-conversation-element__system-context-card-label">{{
+                  _t('Service')
+                }}</span>
+                <div class="ai-conversation-element__system-context-card-body">
+                  <span
+                    :class="[
+                      'state',
+                      'ai-conversation-element__system-context-state',
+                      serviceStateClass(cnt.service_state ?? ''),
+                      { stale: cnt.is_stale }
+                    ]"
+                    ><span class="state_rounded_fill">{{
+                      serviceStateLabel(cnt.service_state ?? '')
+                    }}</span></span
+                  >
+                  <span class="ai-conversation-element__system-context-name">{{
+                    cnt.service_name
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </template>
         <div v-if="showExtraButtons" class="ai-conversation-element__controls">
           <CmkCopy :text="copyableAnswerText" :copied-message="_t('Copied!')">
@@ -418,8 +531,6 @@ watch(
   .ai-conversation-element__text {
     padding: var(--dimension-4);
     background: var(--default-form-element-bg-color);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--default-border-color);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -484,22 +595,67 @@ watch(
     }
   }
 
-  &.ai-conversation-element--system {
-    width: auto;
-
-    .ai-conversation-element__text {
-      border: 1px solid var(--default-border-color);
-      border-radius: var(--border-radius);
-      padding-left: var(--dimension-7);
-      padding-right: var(--dimension-7);
-      box-sizing: border-box;
-    }
-  }
-
   .ai-conversation-element__text-skeleton {
     width: 70%;
     height: 100px;
     margin-bottom: var(--dimension-10);
+  }
+
+  .ai-conversation-element__system-context {
+    display: flex;
+    flex-direction: row;
+    gap: calc(2 * var(--dimension-11));
+    border-bottom: 1px solid var(--default-border-color);
+    padding-bottom: var(--dimension-8);
+    border-radius: var(--dimension-2);
+
+    .ai-conversation-element__system-context-card {
+      display: flex;
+      flex-direction: row;
+      padding: var(--dimension-4);
+    }
+
+    .ai-conversation-element__system-context-card-icon {
+      padding: 0 var(--dimension-4);
+
+      .ai-conversation-element__system-context-card-icon-wrapper {
+        background-color: var(--default-form-element-bg-color);
+        border: 1px solid var(--default-border-color);
+        border-radius: var(--dimension-3);
+        padding: var(--dimension-4);
+      }
+    }
+
+    .ai-conversation-element__system-context-card-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--dimension-4);
+      font-weight: bold;
+    }
+
+    .ai-conversation-element__system-context-card-body {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--dimension-3);
+
+      .ai-conversation-element__system-context-state > span {
+        display: inline-block;
+        min-width: var(--dimension-11);
+        white-space: nowrap;
+        text-align: center;
+        border: 1px solid var(--default-border-color);
+        border-radius: var(--dimension-2);
+        text-transform: uppercase;
+        padding: var(--dimension-1) var(--dimension-2);
+      }
+    }
+
+    .ai-conversation-element__system-context-name {
+      padding-left: var(--dimension-2);
+      font-weight: normal;
+    }
   }
 }
 </style>

@@ -52,7 +52,7 @@ from ._html_render import (
     GraphRenderState,
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
-    make_graph_time_range,
+    make_graph_time_range_html,
     render_deferred_graphs_html,
     render_graphs_html,
 )
@@ -155,7 +155,7 @@ __all__ = [
     "host_service_graph_popup_cmk",
     "id_from_unit_spec",
     "lookup_metric_translations_for_check_command",
-    "make_graph_time_range",
+    "make_graph_time_range_html",
     "metric_backend_registry",
     "metrics_from_api",
     "metrics_of_query",

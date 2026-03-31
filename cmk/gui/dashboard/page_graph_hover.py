@@ -33,7 +33,7 @@ from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_display_config import GraphDisplayConfigHTML
 from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._html_render import (
-    make_graph_time_range,
+    make_graph_time_range_html,
     render_graph_values_at_time,
 )
 from cmk.gui.logged_in import user
@@ -113,9 +113,10 @@ class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedPage):
             # Time range and step both come from the stored widget config (server-side).
             # Zoom/pan is disabled on shared dashboards so the step never changes after render.
             start_time, end_time = Timerange.compute_range(graph_dashlet_config["timerange"]).range
-            time_range = make_graph_time_range(
+            time_range = make_graph_time_range_html(
                 start=start_time,
                 end=end_time,
+                factor=1,
                 height_in_ex=graph_dashlet_config.get("graph_render_options", {}).get(
                     "size", GraphDisplayConfigHTML.model_fields["size"].default
                 )[1],

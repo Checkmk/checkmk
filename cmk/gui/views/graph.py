@@ -24,7 +24,7 @@ from cmk.gui.graphing import (
     GraphEnvironment,
     GraphRenderOptions,
     graphs_from_api,
-    make_graph_time_range,
+    make_graph_time_range_html,
     metric_backend_registry,
     metrics_from_api,
     RegisteredMetric,
@@ -230,9 +230,10 @@ def _paint_time_graph_cmk(
     if painter_option_pnp_timerange is not None:
         raw_time_range = get_graph_timerange_from_painter_options()
 
-    time_range = make_graph_time_range(
+    time_range = make_graph_time_range_html(
         start=raw_time_range[0],
         end=raw_time_range[1],
+        factor=1,
         height_in_ex=display_config.size[1],
     )
 

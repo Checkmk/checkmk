@@ -217,27 +217,19 @@ def _order_graph_curves_for_legend_and_mouse_hover[TCurveType: (LayoutedCurve, C
     return lines[::-1] + areas[::-1] + mirrored_areas + mirrored_lines + refs
 
 
-def estimate_graph_step_for_html(
+def make_graph_time_range_html(
     *,
     start: int,
     end: int,
-    height_in_ex: float,
-) -> int:
-    steps_per_ex = html_size_per_ex * 4
-    number_of_steps = height_in_ex * steps_per_ex
-    return int((end - start) / number_of_steps)
-
-
-def make_graph_time_range(
-    *,
-    start: int,
-    end: int,
+    factor: int,
     height_in_ex: float,
 ) -> GraphTimeRange:
+    steps_per_ex = html_size_per_ex * 4
+    number_of_steps = height_in_ex * steps_per_ex
     return GraphTimeRange(
         start=start,
         end=end,
-        step=estimate_graph_step_for_html(start=start, end=end, height_in_ex=height_in_ex),
+        step=factor * int((end - start) / number_of_steps),
     )
 
 
@@ -386,17 +378,11 @@ def _render_time_range_selection(
         )
 
         start, end = now - duration, now
-        time_range = GraphTimeRange(
+        time_range = make_graph_time_range_html(
             start=start,
             end=end,
-            step=(
-                2
-                * estimate_graph_step_for_html(
-                    start=start,
-                    end=end,
-                    height_in_ex=preview_config.size[1],
-                )
-            ),
+            factor=2,
+            height_in_ex=preview_config.size[1],
         )
 
         preview_state = render_state.model_copy(
@@ -627,6 +613,7 @@ def host_service_graph_popup_cmk(
     backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> None:
     end_time = int(time.time())
+    start_time = end_time - 8 * 3600
     display_config = GraphDisplayConfigHTML.from_user_context_and_options(
         user,
         theme.get(),
@@ -647,9 +634,10 @@ def host_service_graph_popup_cmk(
                 host_name=host_name,
                 service_name=service_description,
             ),
-            make_graph_time_range(
-                start=end_time - 8 * 3600,
+            make_graph_time_range_html(
+                start=start_time,
                 end=end_time,
+                factor=1,
                 height_in_ex=display_config.size[1],
             ),
             display_config,
@@ -1547,9 +1535,10 @@ def host_service_graph_dashlet_cmk(
         start_time, end_time = Timerange.compute_range(time_range).range
 
     try:
-        graph_time_range = make_graph_time_range(
+        graph_time_range = make_graph_time_range_html(
             start=start_time,
             end=end_time,
+            factor=1,
             height_in_ex=display_config.size[1],
         )
     except ZeroDivisionError:

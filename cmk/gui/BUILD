@@ -213,6 +213,54 @@ py_library(
     ],
 )
 
+py_library(
+    name = "flask_app",
+    srcs = ["flask_app.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":features",
+        ":http",
+        requirement("flask"),
+    ],
+)
+
+py_library(
+    name = "theme",
+    srcs = glob(include = ["theme/**/*.py"]),
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":ctx_stack",
+        ":exceptions",
+        ":hooks",
+        ":i18n",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+    ],
+)
+
+py_library(
+    name = "dynamic_icon",
+    srcs = ["dynamic_icon.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":theme",
+        ":type_defs",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -222,8 +270,10 @@ py_library(
         include = ["**/*.py"],
         exclude = [
             "ctx_stack.py",
+            "dynamic_icon.py",
             "exceptions.py",
             "features.py",
+            "flask_app.py",
             "hooks.py",
             "http.py",
             "i18n.py",
@@ -232,6 +282,7 @@ py_library(
             "permissions.py",
             "role_types.py",
             "site_config.py",
+            "theme/**/*.py",
             "type_defs.py",
             "user_connection_config_types.py",
             "utils/speaklater.py",
@@ -249,8 +300,10 @@ py_library(
     ],
     deps = [
         ":ctx_stack",
+        ":dynamic_icon",
         ":exceptions",
         ":features",
+        ":flask_app",
         ":hooks",
         ":http",
         ":i18n",
@@ -260,6 +313,7 @@ py_library(
         ":role_types",
         ":site_config",
         ":speaklater",
+        ":theme",
         ":type_defs",
         ":user_connection_config_types",
         "//cmk/automations",

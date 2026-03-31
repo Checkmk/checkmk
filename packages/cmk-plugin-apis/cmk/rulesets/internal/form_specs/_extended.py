@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any, override, Protocol, runtime_checkable
 
 from cmk.rulesets.v1 import Label, Message, Title
@@ -63,13 +63,13 @@ class Autocompleter(Protocol):
     def fetch_method(self) -> FetchMethod | None: ...
 
 
-class DictionaryGroupLayout(str, Enum):
+class DictionaryGroupLayout(StrEnum):
     horizontal = "horizontal"
     vertical = "vertical"
     two_columns = "two_columns"
 
 
-class ListOfStringsLayout(str, Enum):
+class ListOfStringsLayout(StrEnum):
     horizontal = "horizontal"
     vertical = "vertical"
 
@@ -101,7 +101,7 @@ class SingleChoiceExtended[T](FormSpec[T]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MultipleChoiceExtendedLayout(str, Enum):
+class MultipleChoiceExtendedLayout(StrEnum):
     auto = "auto"
     dual_list = "dual_list"
     checkbox_list = "checkbox_list"

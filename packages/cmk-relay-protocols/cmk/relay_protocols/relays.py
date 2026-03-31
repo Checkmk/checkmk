@@ -2,14 +2,14 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated
 
 from cryptography import x509
 from pydantic import BaseModel, Field, field_validator
 
 
-class RelayState(str, Enum):
+class RelayState(StrEnum):
     """State of a relay in the system."""
 
     CONFIGURED = "configured"

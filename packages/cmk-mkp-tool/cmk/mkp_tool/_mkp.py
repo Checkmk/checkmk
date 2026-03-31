@@ -26,7 +26,7 @@ _logger = logging.getLogger(__name__)
 
 
 @enum.unique
-class PackagePart(str, enum.Enum):
+class PackagePart(enum.StrEnum):
     # We have to inherit str to make the (de)serialization work as expected.
     # It's a shame, but other approaches don't work or are worse.
     CMK_PLUGINS = "cmk_plugins"

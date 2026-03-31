@@ -46,7 +46,7 @@ def get_editor() -> str:
     return editor
 
 
-class SiteDistributedSetup(str, enum.Enum):
+class SiteDistributedSetup(enum.StrEnum):
     DISTRIBUTED_REMOTE = "distributed_remote"
     NOT_DISTRIBUTED = "not_distributed"
     UNKNOWN = "unknown"

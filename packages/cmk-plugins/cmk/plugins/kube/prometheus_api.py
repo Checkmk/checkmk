@@ -15,12 +15,12 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 Labels = NewType("Labels", Mapping[str, str])
 
 
-class Status(str, enum.Enum):
+class Status(enum.StrEnum):
     success = "success"
     error = "error"
 
 
-class ErrorType(str, enum.Enum):
+class ErrorType(enum.StrEnum):
     none = ""
     timeout = "timeout"
     canceled = "canceled"
@@ -31,7 +31,7 @@ class ErrorType(str, enum.Enum):
     not_found = "not_found"
 
 
-class ValueType(str, enum.Enum):
+class ValueType(enum.StrEnum):
     vector = "vector"
     scalar = "scalar"
     matrix = "matrix"

@@ -28,7 +28,7 @@ AGENT_NAME: Final = "agent_kube"
 ContainerName = NewType("ContainerName", str)
 
 
-class UsedMetric(str, enum.Enum):
+class UsedMetric(enum.StrEnum):
     container_memory_working_set_bytes = "container_memory_working_set_bytes"
     container_cpu_usage_seconds_total = "container_cpu_usage_seconds_total"
 

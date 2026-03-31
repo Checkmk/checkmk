@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Collection
 from dataclasses import dataclass
-from enum import Enum, StrEnum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from cmk.dev_deploy.state.deploy_state import DeployerState
 
 
-class Edition(str, Enum):
+class Edition(StrEnum):
     """Checkmk edition identifiers matching version symlink suffixes."""
 
     COMMUNITY = "community"
@@ -50,7 +50,7 @@ class SiteInfo:
     build_commit: str | None
 
 
-class ChangeCategory(str, Enum):
+class ChangeCategory(StrEnum):
     """Categories of changed files, determining deployment strategy."""
 
     PYTHON = "python"
@@ -103,7 +103,7 @@ class ChangeSet:
         return deployable == {ChangeCategory.PYTHON} or len(deployable) == 0
 
 
-class BazelTargetKind(str, Enum):
+class BazelTargetKind(StrEnum):
     """Kind of Bazel target, determining build and install strategy."""
 
     CC_BINARY = "cc_binary"
@@ -155,7 +155,7 @@ class BazelTargetSet:
         return tuple(t.label for t in self.targets)
 
 
-class PostInstallAction(str, Enum):
+class PostInstallAction(StrEnum):
     """Post-install actions to apply to a deployed artifact."""
 
     SETCAP_NET_RAW = "setcap_net_raw"

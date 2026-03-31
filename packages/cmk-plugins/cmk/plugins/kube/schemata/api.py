@@ -381,7 +381,7 @@ class ResourceQuota(BaseModel):
     spec: ResourceQuotaSpec
 
 
-class NodeConditionStatus(str, enum.Enum):
+class NodeConditionStatus(enum.StrEnum):
     TRUE = "True"
     FALSE = "False"
     UNKNOWN = "Unknown"
@@ -664,7 +664,7 @@ class StatefulSet(BaseModel):
     pods: Sequence[PodUID]
 
 
-class Phase(str, enum.Enum):
+class Phase(enum.StrEnum):
     RUNNING = "running"
     PENDING = "pending"
     SUCCEEDED = "succeeded"
@@ -726,7 +726,7 @@ class PodSpec(BaseModel):
 
 
 @enum.unique
-class ContainerStateType(str, enum.Enum):
+class ContainerStateType(enum.StrEnum):
     running = "running"
     waiting = "waiting"
     terminated = "terminated"
@@ -765,7 +765,7 @@ class ContainerStatus(BaseModel):
     restart_count: int
 
 
-class ConditionType(str, enum.Enum):
+class ConditionType(enum.StrEnum):
     """
     DISRUPTIONTARGET
         * condition is only present if the pod is actually disrupted by one of listed

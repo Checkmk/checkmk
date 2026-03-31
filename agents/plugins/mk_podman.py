@@ -75,15 +75,8 @@ CLI_TIMEOUT_SECONDS = 30
 PODMAN_API_VERSION = "v4.0.0"
 
 
-# The checks below result in agent sections being created. This
-# is a way to end the plugin in case it is being executed on a non-podman host
-if (
-    not os.path.isdir("/var/lib/podman")
-    and not os.path.isdir("/run/podman")
-    and not which("podman")
-):
-    sys.stderr.write("mk_podman.py: Does not seem to be a podman host. Terminating.\n")
-    sys.exit(1)
+def _is_podman_host() -> bool:
+    return os.path.isdir("/var/lib/podman") or os.path.isdir("/run/podman") or bool(which("podman"))
 
 
 class ConnectionMethod(Enum):
@@ -311,16 +304,10 @@ try:
     from requests.adapters import HTTPAdapter
     from urllib3.connection import HTTPConnection
     from urllib3.connectionpool import HTTPConnectionPool
+
+    _HAS_REQUESTS = True
 except ImportError:
-    write_section(
-        Error(
-            label="Missing Python dependency: requests.",
-            message="Import error: No module named 'requests'. "
-            "Install the OS package (for example: python3-requests on RHEL/Rocky via EPEL) "
-            "or the pip package 'requests'. ",
-        )
-    )
-    sys.exit(0)
+    _HAS_REQUESTS = False
 
 
 # This was taken from cmk.utils.unixsocket_http
@@ -774,6 +761,19 @@ def _get_piggyback_name_method(config: Union[PodmanConfig, None]) -> PiggybackNa
 
 
 def main() -> None:
+    if not _is_podman_host():
+        sys.stderr.write("mk_podman.py: Does not seem to be a podman host. Terminating.\n")
+        sys.exit(1)
+    if not _HAS_REQUESTS:
+        write_section(
+            Error(
+                label="Missing Python dependency: requests.",
+                message="Import error: No module named 'requests'. "
+                "Install the OS package (for example: python3-requests on RHEL/Rocky via EPEL) "
+                "or the pip package 'requests'. ",
+            )
+        )
+        sys.exit(0)
     parse_arguments()
     config = load_cfg()
     piggyback_name_method = _get_piggyback_name_method(config)

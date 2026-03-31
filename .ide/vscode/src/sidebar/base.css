@@ -225,10 +225,6 @@ body {
   font-size: 0.85em;
 }
 
-.banner > span {
-  flex: 1;
-}
-
 .banner .banner-icon {
   color: var(--cmk-yellow);
   font-size: 1.1em;

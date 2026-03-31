@@ -58,9 +58,11 @@ Always run all three steps together. Never skip the version bump or install step
 
 `activate(context)` registers:
 
-1. **Always-on**: status bar logo, dashboard, build status bar, templates, build commands, IDE pickers, Gerrit push, OMD
+1. **Always-on**: status bar logo, dashboard, build status bar, templates, build commands, IDE pickers, Gerrit push, OMD, cmk-dev-site (create site + update check)
 2. **Family-gated**: Python, Frontend, Rust — each wrapped in `profileManager.register()` with disable-settings
 3. **Version check**: Compares installed vs workspace version, prompts "Rebuild & Install" on mismatch
+4. **First-run wizard**: Detects missing workspace settings and offers to open the dashboard
+5. **Profile detector**: Monitors file activity and suggests enabling/disabling profiles
 
 ### Config Loading (`src/core/config.ts`)
 
@@ -110,8 +112,11 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `sidebar/ideHealth/`                  | IDE Health section (render, messages, data helpers, CSS)                 |
 | `sidebar/omd/`                        | OMD Sites section (render, messages, CSS)                                |
 | `core/config.ts`                      | JSON config loading (workspace-first), variable resolution, shell escape |
+| `core/constants.ts`                   | Display names for families (`FAMILY_DISPLAY`) and profile labels         |
+| `core/shell.ts`                       | `safeExec()` wrapper around `execSync`, returns empty string on failure  |
 | `core/tasks.ts`                       | Shell task execution helpers (`runCommand`, `waitForTask`)               |
 | `core/log.ts`                         | Logging and error handling utilities                                     |
+| `core/version.ts`                     | Semver parsing, `versionNewer()`, `versionAtLeast()` comparisons         |
 | `core/versionCheck.ts`                | Version mismatch detection + "Rebuild & Install" prompt                  |
 | `profiles/profileManager.ts`          | Language profile lifecycle (Py/UI/Rs)                                    |
 | `profiles/profileDetector.ts`         | Auto-suggest profiles from file activity                                 |
@@ -122,8 +127,9 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `profiles/frontend/prettierConfig.ts` | Auto-generate `.prettier.config.cjs`                                     |
 | `build/buildStatus.ts`                | Build target staleness detection, status bar                             |
 | `build/settings.ts`                   | Settings mismatch detection, apply logic, context keys                   |
-| `omd/omd.ts`                          | OMD site discovery, status, auth, service commands                       |
-| `omd/devSiteTools.ts`                 | cmk-dev-site install/update detection                                    |
+| `omd/omd.ts`                          | OMD site discovery, status, auth, service commands, site creation        |
+| `omd/devSiteTools.ts`                 | cmk-dev-site install/update detection, PyPI update check                 |
+| `omd/proxy.ts`                        | Unix socket → TCP proxy via socat (livestatus, Redis, etc.)              |
 | `setup/idePicker.ts`                  | Multi-select QuickPick for IDE setup families                            |
 | `setup/templates.ts`                  | File template creation                                                   |
 | `gerrit.ts`                           | Gerrit push integration                                                  |
@@ -246,6 +252,24 @@ Each site header shows conditional icon buttons:
 - **Browser** — opens `http://localhost:<port>/<site>/` (only if port is configured)
 - **Trash** — deletes the site (with confirmation modal)
 
+### OMD Socket Proxy (`src/omd/proxy.ts`)
+
+Exposes OMD Unix sockets as TCP ports on localhost via `socat`. This allows external
+tools to connect to site services (livestatus, Redis, mkeventd, rrdcached) without sudo.
+
+**Known sockets** are defined in `KNOWN_SOCKETS` with default TCP ports in `DEFAULT_PORTS`.
+The `cmk.omdProxy` command opens a QuickPick to select site + service, then spawns a
+background `socat` process. Active proxies are tracked in the `activeProxies` field of
+`StateCache` and displayed in the OMD sidebar section.
+
+Proxy processes are cleaned up on extension deactivation via `registerProxyCleanup()`.
+
+### cmk-dev-site Integration (`src/omd/devSiteTools.ts`)
+
+- **Create Site** (`cmk.omdCreateSite`): Available when `cmk-dev-site` is on PATH. The `+` button in the OMD section title bar triggers site creation.
+- **Update check**: On activation, checks PyPI for a newer `cmk-dev-site` version (once per 24h). Prompts to upgrade via `pipx upgrade cmk-dev-site`.
+- **Context key**: `cmk.devSiteInstalled` controls visibility of the create-site button.
+
 ## Documentation
 
 - **Keep `README.md` in sync** with the current state of the extension. When adding or removing features, update the README accordingly.
@@ -291,7 +315,7 @@ operation begins. The spinner remains until `refreshAll()` re-renders the sectio
 
 ## Key Patterns
 
-- **`safeExec(cmd, timeout)`**: `execSync` wrapper that returns empty string on failure
+- **`safeExec(cmd, opts)`** (`core/shell.ts`): `execSync` wrapper that returns empty string on failure
 - **`runCommand(name, cmd)`**: Creates a VS Code `ShellExecution` task shown in the terminal panel
 - **`waitForTask(exec)`**: Returns a promise that resolves with the exit code when the task finishes
 - **`refreshAll()`**: Refreshes state cache + all section providers. Exported from `sidebar.ts` and passed to `registerOmd()` as callback.

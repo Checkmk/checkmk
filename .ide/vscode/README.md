@@ -10,6 +10,7 @@ Checkmk uses Bazel as its build system. Some packages (`cmk-shared-typing`, `cmk
 - Exposing Bazel build commands in the command palette and status bar
 - Auto-detecting stale build targets and notifying you
 - Automating extension installation and settings configuration per language/domain
+- Managing OMD development sites and exposing Unix sockets via TCP proxies
 - Providing code snippets and file templates for common Checkmk patterns
 
 ## Getting Started
@@ -19,14 +20,14 @@ Checkmk uses Bazel as its build system. Some packages (`cmk-shared-typing`, `cmk
 **Via Bazel** (recommended):
 
 ```sh
-bazel build //.vscode/cmk-extension:vsix
-code --install-extension bazel-bin/.vscode/cmk-extension/cmk-vscode.vsix --force
+bazel build //.ide/vscode:vsix
+code --install-extension bazel-bin/.ide/vscode/cmk-vscode.vsix --force
 ```
 
 **Manual** (from source):
 
 ```sh
-cd .vscode/cmk-extension
+cd .ide/vscode
 npx @vscode/vsce package --no-dependencies -o cmk-vscode.vsix
 code --install-extension cmk-vscode.vsix --force
 ```
@@ -77,7 +78,16 @@ Profiles are persisted in `cmk.activeProfiles` in `.vscode/settings.json` and re
 
 **Default state:** Python and UI are enabled by default on first use. Rust is disabled by default.
 
-### 2. Build Status Detection
+### 2. Profile Detector
+
+The extension monitors which files you edit and suggests enabling or disabling language profiles based on your activity. For example, if you haven't touched a Python file in 30 minutes, it suggests disabling the Python profile to free resources. Conversely, opening a `.py` file while the Python profile is off triggers an enable suggestion.
+
+Configurable via:
+
+- `cmk.profileDetector.enabled` — toggle the detector on/off (default: on)
+- `cmk.profileDetector.inactivityMinutes` — inactivity threshold before suggesting disable (default: 30)
+
+### 3. Build Status Detection
 
 The extension monitors build targets and shows their status in the status bar:
 
@@ -97,9 +107,9 @@ The extension monitors build targets and shows their status in the status bar:
 
 **Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, `requirements*.txt`, and git branch switches (`.git/HEAD`).
 
-Click the status bar item to see stale targets and build commands in a QuickPick.
+Click the status bar item to see stale targets and build commands in a QuickPick. When stale targets exist, a warning banner also appears at the top of the Environment sidebar section with a **Build All Stale** button.
 
-### 3. Build Commands (`CMK ▸ Cmd:`)
+### 4. Build Commands (`CMK ▸ Cmd:`)
 
 Available via the command palette (F1) or by clicking the status bar. Build commands are only visible when the required extension family is installed.
 
@@ -113,18 +123,21 @@ Available via the command palette (F1) or by clicking the status bar. Build comm
 | `Build cmk-frontend-vue`                      | Builds `cmk-frontend-vue` via Bazel.                                                                                                       |
 | `Build Vitest dependencies & Refresh Vitests` | Builds shared-typing (TS) + cmk-frontend, creates symlinks, then refreshes the VSCode test explorer.                                       |
 | `Run UI Component Library`                    | Starts the UI Component Library dev server via `ibazel`.                                                                                   |
+| `Build All Stale`                             | Builds all targets that are currently stale, in sequence.                                                                                  |
 | `Build Menu`                                  | Opens the QuickPick with all build commands (same as clicking the status bar).                                                             |
 | `Refresh Build Status`                        | Manually re-checks all build targets.                                                                                                      |
 | `Regenerate mypy config`                      | Regenerates `.vscode/.mypy.ini` from `pyproject.toml`, stripping options unsupported by the installed mypy version.                        |
 | `Regenerate prettier config`                  | Regenerates `.vscode/.prettier.config.cjs` from `bazel/tools/prettier.config.cjs`, replacing `require()` with string-based plugin loading. |
 
-### 4. Dashboard
+### 5. Dashboard
 
 The sidebar dashboard groups related information into collapsible webview sections.
 
 #### Environment
 
-Shows Python, Node.js, and Bazel versions, plus build target status. The Python row has a **Rebuild** button. Stale build targets are listed below with Build/Regenerate buttons.
+Shows system tool versions (Python, Node.js, Bazel, Bazelisk, Docker, GCC) and build target status. Includes a system readiness indicator that checks for required tools and pyenv. The Python row has a **Rebuild** button. Stale build targets are listed below with Build/Regenerate buttons.
+
+On first use, an **onboarding checklist** guides you through the initial setup steps: system prerequisites, venv build, and IDE configuration.
 
 #### OMD Sites
 
@@ -136,6 +149,10 @@ Displays all detected OMD sites with live status. Each site header shows:
 - **Delete** button — removes the site (with confirmation)
 
 Expanding a site shows individual service status with per-service start/stop/restart controls.
+
+**Create Site:** If `cmk-dev-site` is installed, a **+** button in the OMD section title bar lets you create new sites. The extension also checks PyPI daily for `cmk-dev-site` updates and prompts to upgrade when a newer version is available.
+
+**Socket Proxy:** F1 → `CMK ▸ OMD: Socket Proxy` exposes OMD Unix sockets (livestatus, Redis, mkeventd, rrdcached) as TCP ports on localhost via `socat`. This allows external tools (database clients, monitoring dashboards) to connect to site sockets without sudo. Active proxies are shown in the OMD section with their assigned ports.
 
 **Authentication:** OMD commands require sudo. Click "Authenticate (YubiKey)" to cache credentials. A background keepalive extends the sudo cache for up to 1 hour.
 
@@ -152,7 +169,9 @@ Clicking an item navigates to the relevant dashboard section or opens the approp
 
 #### IDE Health
 
-Combined view of settings mismatches and extension health per family.
+Combined view of settings mismatches, extension health per family, and extension version info.
+
+**Version info** shows the installed extension version. When the workspace contains a newer version (e.g. after a branch switch), an update banner prompts to rebuild and install.
 
 **Settings** are grouped by plugin family in collapsible accordion sections. Each family group shows:
 
@@ -161,9 +180,11 @@ Combined view of settings mismatches and extension health per family.
 - Per-setting **Copy** icon — copy the full JSON key+value to clipboard
 - **Apply All** button at the top — fix all mismatches across all families at once
 
+If no workspace configuration files are found in `.ide/vscode/config/`, a warning banner is shown advising to evaluate extensions and settings independently.
+
 **Extensions** are listed below with install status per family and per-extension install buttons.
 
-### 5. IDE Setup (`CMK ▸ IDE:`)
+### 6. IDE Setup (`CMK ▸ IDE:`)
 
 Three unified commands with a family picker (multi-select QuickPick):
 
@@ -202,7 +223,7 @@ The configure command shows a QuickPick with all new/changed settings where you 
 | **Rust**    | rust-analyzer (linked projects for check-cert, check-http, cmk-agent-ctl, mk-oracle, mk-sql; clippy), format-on-save. Requires matching Rust toolchains installed via `rustup`.               |
 | **cSpell**  | Spell checker with Checkmk-specific dictionary (`.vscode/.cspell/checkmk.dict.txt`), auto-copied on configure                                                                                 |
 
-### 6. Code Snippets
+### 7. Code Snippets
 
 Type the prefix in a Python file to insert boilerplate:
 
@@ -216,7 +237,7 @@ Type the prefix in a Python file to insert boilerplate:
 
 All snippets include the Checkmk license header with the current year.
 
-### 7. File Templates (`CMK ▸ New:`)
+### 8. File Templates (`CMK ▸ New:`)
 
 F1 → `CMK ▸ New: Create from Template` — scaffolds new files with boilerplate:
 
@@ -228,7 +249,7 @@ F1 → `CMK ▸ New: Create from Template` — scaffolds new files with boilerpl
 
 Prompts for the plugin name, creates the directory structure, and opens the first file.
 
-### 8. Bazel Test Runner
+### 9. Bazel Test Runner
 
 Run Python tests via Bazel directly from the editor:
 
@@ -239,7 +260,7 @@ Run Python tests via Bazel directly from the editor:
 
 The test runner finds the Bazel target by walking up the directory tree for BUILD files. If no target is found locally, it falls back to `bazel query`. Results are shown in the terminal panel. Only available when the Python profile is active.
 
-### 9. Gerrit Push
+### 10. Gerrit Push
 
 F1 → `CMK ▸ Push to Gerrit` pushes commits for Gerrit code review. It:
 
@@ -249,6 +270,10 @@ F1 → `CMK ▸ Push to Gerrit` pushes commits for Gerrit code review. It:
 - Shows the number of commits to be pushed before confirming
 
 Also available from the Tools section in the dashboard sidebar.
+
+### 11. First-Run Wizard
+
+On first activation, the extension detects whether basic workspace settings (e.g. `editor.formatOnSave`, `git.branchProtection`) are configured. If not, it shows an info notification offering to open the dashboard to get started with system setup, venv build, and IDE configuration. The prompt can be permanently dismissed via "Don't Ask Again".
 
 ## Typical workflows
 

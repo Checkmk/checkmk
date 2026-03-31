@@ -29,6 +29,7 @@ import lightIconActionPng from '~cmk-frontend/themes/facelift/images/icon_action
 import lightIconActivatePng from '~cmk-frontend/themes/facelift/images/icon_activate.png?url&no-inline'
 import lightIconAddPng from '~cmk-frontend/themes/facelift/images/icon_add.png?url&no-inline'
 import lightIconAddDashletPng from '~cmk-frontend/themes/facelift/images/icon_add_dashlet.png?url&no-inline'
+import lightIconAddRuleSvg from '~cmk-frontend/themes/facelift/images/icon_add_rule.svg?url&no-inline'
 import lightIconAgentOutputPng from '~cmk-frontend/themes/facelift/images/icon_agent_output.png?url&no-inline'
 import lightIconAgentRegistrationSvg from '~cmk-frontend/themes/facelift/images/icon_agent_registration.svg?url&no-inline'
 import lightIconAgentsSvg from '~cmk-frontend/themes/facelift/images/icon_agents.svg?url&no-inline'
@@ -638,6 +639,7 @@ import lightStatusReportPng from '~cmk-frontend/themes/facelift/images/status_re
 import darkDashletCloneSvg from '~cmk-frontend/themes/modern-dark/images/dashlet_clone.svg?url&no-inline'
 import darkDashletDeleteSvg from '~cmk-frontend/themes/modern-dark/images/dashlet_delete.svg?url&no-inline'
 import darkDashletEditSvg from '~cmk-frontend/themes/modern-dark/images/dashlet_edit.svg?url&no-inline'
+import darkIconAddRuleSvg from '~cmk-frontend/themes/modern-dark/images/icon_add_rule.svg?url&no-inline'
 import darkIconAgentRegistrationSvg from '~cmk-frontend/themes/modern-dark/images/icon_agent_registration.svg?url&no-inline'
 import darkIconAnalyzeSvg from '~cmk-frontend/themes/modern-dark/images/icon_analyze.svg?url&no-inline'
 import darkIconAssignSvg from '~cmk-frontend/themes/modern-dark/images/icon_assign.svg?url&no-inline'
@@ -1382,6 +1384,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
 
 export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
   light: {
+    'add-rule': lightIconAddRuleSvg,
     'agent-registration': lightIconAgentRegistrationSvg,
     analyze: lightIconAnalyzeSvg,
     assign: lightIconAssignSvg,
@@ -1457,6 +1460,7 @@ export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
     ux: lightIconUXSvg
   },
   dark: {
+    'add-rule': darkIconAddRuleSvg,
     'agent-registration': darkIconAgentRegistrationSvg,
     analyze: darkIconAnalyzeSvg,
     assign: darkIconAssignSvg,

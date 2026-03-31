@@ -21,6 +21,7 @@ import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import useDragging from '@/lib/useDragging'
+import { useTheme } from '@/lib/useTheme'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
@@ -66,6 +67,12 @@ import type { Topic } from './type_defs'
 const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const { _t } = usei18n()
+const { theme } = useTheme()
+
+function _themedIcon(name: string): string {
+  const themeDir = theme.value === 'facelift' ? 'facelift' : 'modern-dark'
+  return `themes/${themeDir}/images/${name}`
+}
 
 const props = defineProps<{
   graph_id: string
@@ -1075,7 +1082,7 @@ const graphDesignerContentAsJson = computed(() => {
             "
             :title="_t('Add rule: Metric backend (Custom query)')"
             :aria-label="_t('Add rule: Metric backend (Custom query)')"
-            src="themes/facelift/images/icon_move.png"
+            :src="_themedIcon('icon_add_rule.svg')"
             class="icon iconbutton"
             @click="openSlideIn(graphLine)"
           />

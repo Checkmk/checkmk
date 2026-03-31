@@ -115,6 +115,7 @@
         "activate",
         "add",
         "add-dashlet",
+        "add-rule",
         "agent-output",
         "agent-registration",
         "agents",

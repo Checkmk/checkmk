@@ -37,7 +37,7 @@ from cmk.crypto.password import Password
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.openapi_session import AgentReceiverApiSession, CMKOpenApiSession
+from tests.testlib.openapi_session import AgentReceiverApiSession, APIVersion, CMKOpenApiSession
 from tests.testlib.package_manager import ABCPackageManager
 from tests.testlib.version import (
     CMKPackageInfo,
@@ -305,7 +305,7 @@ class CheckmkApp:
         self.password = password
         self.port = 5000
         self.agent_receiver_port = 8000
-        self.api_version = "1.0"
+        self.api_version = APIVersion.V1
         self.api_user = "cmkapi"
         self.api_secret = Password.random(24).raw
 

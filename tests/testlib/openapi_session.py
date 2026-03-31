@@ -36,6 +36,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
+from enum import StrEnum
 from typing import Any, NamedTuple
 
 import requests
@@ -111,6 +112,11 @@ class Relay(NamedTuple):
     log_level: str | None
 
 
+class APIVersion(StrEnum):
+    V1 = "1.0"
+    INTERNAL = "internal"
+
+
 class CMKOpenApiSession(requests.Session):
     def __init__(
         self,
@@ -121,7 +127,7 @@ class CMKOpenApiSession(requests.Session):
         site_edition: TypeCMKEdition,
         port: int = 80,
         site: str = "heute",
-        api_version: str = "1.0",
+        api_version: APIVersion = APIVersion.V1,
     ):
         super().__init__()
         self.host = host
@@ -157,18 +163,43 @@ class CMKOpenApiSession(requests.Session):
         self.event_console = EventConsoleAPI(self)
         self.saml2 = Saml2API(self)
         self.relays = RelayAPI(self)
-        self.relays_internal = InternalRelayAPI(self)
         self.relay_registration_tokens = RelayRegistrationTokenAPI(self)
         self.metric_backend = MetricBackendAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
+    def get(  # type: ignore[override]
+        self, url: str, api_version: APIVersion | None = None, **kwargs: Any
+    ) -> requests.Response:
+        return self.request("GET", url, api_version=api_version, **kwargs)
+
+    def post(  # type: ignore[override]
+        self,
+        url: str,
+        api_version: APIVersion | None = None,
+        data: Any = None,
+        json: Any = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        return self.request("POST", url, api_version=api_version, data=data, json=json, **kwargs)
+
+    def put(  # type: ignore[override]
+        self, url: str, api_version: APIVersion | None = None, data: Any = None, **kwargs: Any
+    ) -> requests.Response:
+        return self.request("PUT", url, api_version=api_version, data=data, **kwargs)
+
+    def delete(  # type: ignore[override]
+        self, url: str, api_version: APIVersion | None = None, **kwargs: Any
+    ) -> requests.Response:
+        return self.request("DELETE", url, api_version=api_version, **kwargs)
+
     def request(  # type: ignore[override]
         self,
         method: str | bytes,
         url: str | bytes,
         *args: Any,
+        api_version: APIVersion | None = None,
         timeout: float | tuple[float, float] | tuple[float, None] | None = 300.0,
         **kwargs: Any,
     ) -> requests.Response:
@@ -181,7 +212,10 @@ class CMKOpenApiSession(requests.Session):
         kwargs["timeout"] = timeout
 
         if not url.startswith("http://"):
-            url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"
+            url = (
+                f"http://{self.host}:{self.port}/{self.site}/check_mk/api/"
+                f"{api_version or self.api_version}/{url.strip('/')}"
+            )
 
         logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
         response = super().request(method, url, *args, **kwargs)
@@ -1313,10 +1347,6 @@ class MetricBackendDCDConnectionAttributeFilter:
 
 
 class DcdAPI(BaseAPI):
-    def __init__(self, session: CMKOpenApiSession):
-        super().__init__(session)
-        self._base_url_internal = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
-
     def create_piggyback_connection(
         self,
         dcd_id: str,
@@ -1380,7 +1410,8 @@ class DcdAPI(BaseAPI):
     ) -> None:
         """Create a DCD connection via REST API."""
         response = self.session.post(
-            f"{self._base_url_internal}/domain-types/dcd_metric_backend/collections/all",
+            "domain-types/dcd_metric_backend/collections/all",
+            api_version=APIVersion.INTERNAL,
             json={
                 "dcd_id": dcd_id,
                 "title": title,
@@ -1661,15 +1692,11 @@ class LicenseAPI(BaseAPI):
 
 
 class OtelCollectorAPI(BaseAPI):
-    def __init__(self, session: CMKOpenApiSession) -> None:
-        super().__init__(session)
-        # Hack to use the "internal" version of the API endpoint
-        self.base_url = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
-
     def get_receivers(self, expect_ok: bool = True) -> requests.Response:
         """Get all OpenTelemetry collector receivers via REST API."""
         response = self.session.get(
-            url=self.base_url + "/domain-types/otel_collector_config_receivers/collections/all",
+            "domain-types/otel_collector_config_receivers/collections/all",
+            api_version=APIVersion.INTERNAL,
         )
         if expect_ok and response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -1678,7 +1705,8 @@ class OtelCollectorAPI(BaseAPI):
     def get_prom_scrapers(self, expect_ok: bool = True) -> requests.Response:
         """Get all OpenTelemetry collector prometheus scrapiers via REST API."""
         response = self.session.get(
-            url=self.base_url + "/domain-types/otel_collector_config_prom_scrape/collections/all",
+            "domain-types/otel_collector_config_prom_scrape/collections/all",
+            api_version=APIVersion.INTERNAL,
         )
         if expect_ok and response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -1707,7 +1735,8 @@ class OtelCollectorAPI(BaseAPI):
             body["receiver_protocol_http"] = receiver_protocol_http
 
         response = self.session.post(
-            url=self.base_url + "/domain-types/otel_collector_config_receivers/collections/all",
+            "domain-types/otel_collector_config_receivers/collections/all",
+            api_version=APIVersion.INTERNAL,
             json=body,
         )
         if expect_ok and response.status_code != 200:
@@ -1733,9 +1762,9 @@ class OtelCollectorAPI(BaseAPI):
         if prometheus_scrape_configs:
             body["prometheus_scrape_configs"] = prometheus_scrape_configs
 
-        # hack to use the "internal" version of the API endpoint
         response = self.session.post(
-            url=self.base_url + "/domain-types/otel_collector_config_prom_scrape/collections/all",
+            "domain-types/otel_collector_config_prom_scrape/collections/all",
+            api_version=APIVersion.INTERNAL,
             json=body,
         )
         if expect_ok and response.status_code != 200:
@@ -1767,7 +1796,8 @@ class OtelCollectorAPI(BaseAPI):
             body["receiver_protocol_http"] = receiver_protocol_http
 
         response = self.session.put(
-            url=self.base_url + f"/objects/otel_collector_config_receivers/{ident}",
+            f"objects/otel_collector_config_receivers/{ident}",
+            api_version=APIVersion.INTERNAL,
             json=body,
         )
         if expect_ok and response.status_code != 200:
@@ -1796,7 +1826,8 @@ class OtelCollectorAPI(BaseAPI):
             body["prometheus_scrape_configs"] = prometheus_scrape_configs
 
         response = self.session.put(
-            url=self.base_url + f"/objects/otel_collector_config_prom_scrape/{ident}",
+            f"objects/otel_collector_config_prom_scrape/{ident}",
+            api_version=APIVersion.INTERNAL,
             json=body,
         )
         if expect_ok and response.status_code != 200:
@@ -1806,7 +1837,7 @@ class OtelCollectorAPI(BaseAPI):
     def delete_receivers(self, ident: str, expect_ok: bool = True) -> requests.Response:
         """Delete an OpenTelemetry collector receiver via REST API."""
         response = self.session.delete(
-            self.base_url + f"/objects/otel_collector_config_receivers/{ident}"
+            f"objects/otel_collector_config_receivers/{ident}", api_version=APIVersion.INTERNAL
         )
         if expect_ok and response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
@@ -1815,7 +1846,7 @@ class OtelCollectorAPI(BaseAPI):
     def delete_prom_scrape(self, ident: str, expect_ok: bool = True) -> requests.Response:
         """Delete an OpenTelemetry collector prometheus scraping via REST API."""
         response = self.session.delete(
-            self.base_url + f"/objects/otel_collector_config_prom_scrape/{ident}"
+            f"objects/otel_collector_config_prom_scrape/{ident}", api_version=APIVersion.INTERNAL
         )
         if expect_ok and response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
@@ -1823,7 +1854,8 @@ class OtelCollectorAPI(BaseAPI):
 
     def disable(self, site_id: str) -> requests.Response:
         response = self.session.put(
-            url=self.base_url + "/domain-types/otel_collector/actions/update/invoke",
+            "domain-types/otel_collector/actions/update/invoke",
+            api_version=APIVersion.INTERNAL,
             json={"site_id": site_id, "activation": {"mode": "disabled"}},
         )
         if not response.ok:
@@ -1832,7 +1864,8 @@ class OtelCollectorAPI(BaseAPI):
 
     def enable(self, site_id: str) -> requests.Response:
         response = self.session.put(
-            url=self.base_url + "/domain-types/otel_collector/actions/update/invoke",
+            "domain-types/otel_collector/actions/update/invoke",
+            api_version=APIVersion.INTERNAL,
             json={"site_id": site_id, "activation": {"mode": "enabled"}},
         )
         if not response.ok:
@@ -1914,16 +1947,14 @@ class Saml2API(BaseAPI):
             raise UnexpectedResponse.from_response(response)
 
 
-class _BaseRelayAPI(BaseAPI):
-    _domain_url = "/domain-types/relay/collections/all"
+class RelayAPI(BaseAPI):
+    _domain_url = "domain-types/relay/collections/all"
     _headers = {"Content-Type": "application/json"}
 
     @staticmethod
     def _object_url(relay_id: str) -> str:
         return f"/objects/relay/{relay_id}"
 
-
-class InternalRelayAPI(_BaseRelayAPI):
     def create(
         self,
         relay_id: str,
@@ -1933,7 +1964,8 @@ class InternalRelayAPI(_BaseRelayAPI):
         log_level: str = "INFO",
     ) -> None:
         response = self.session.post(
-            url=self._domain_url,
+            self._domain_url,
+            api_version=APIVersion.INTERNAL,
             headers=self._headers,
             json={
                 "relay_id": relay_id,
@@ -1947,8 +1979,6 @@ class InternalRelayAPI(_BaseRelayAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-
-class RelayAPI(_BaseRelayAPI):
     def get(self, relay_id: str) -> tuple[Relay, str]:
         response = self.session.get(
             url=self._object_url(relay_id),
@@ -2026,13 +2056,10 @@ class RelayRegistrationTokenAPI(BaseAPI):
 
 
 class MetricBackendAPI(BaseAPI):
-    def __init__(self, session: CMKOpenApiSession):
-        super().__init__(session)
-        self._base_url_internal = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
-
     def disable(self, site_id: str) -> None:
         response = self.session.put(
-            url=self._config_endpoint_url(),
+            "domain-types/metric_backend/actions/update/invoke",
+            api_version=APIVersion.INTERNAL,
             json={
                 "site_id": site_id,
                 "config": {
@@ -2046,7 +2073,8 @@ class MetricBackendAPI(BaseAPI):
 
     def enable(self, site_id: str) -> None:
         response = self.session.put(
-            url=self._config_endpoint_url(),
+            "domain-types/metric_backend/actions/update/invoke",
+            api_version=APIVersion.INTERNAL,
             json={
                 "site_id": site_id,
                 "config": {
@@ -2057,9 +2085,6 @@ class MetricBackendAPI(BaseAPI):
 
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
-
-    def _config_endpoint_url(self) -> str:
-        return f"{self._base_url_internal}/domain-types/metric_backend/actions/update/invoke"
 
 
 class AgentReceiverRelayAPI(ARBaseAPI):

@@ -148,16 +148,6 @@ class Site:
             site_version=self._package.version,
             site_edition=self._package.edition,
         )
-        self.openapi_internal = CMKOpenApiSession(
-            host=self.http_address,
-            port=self.apache_port if self.exists() else 80,
-            user=ADMIN_USER,
-            password=self.admin_password,
-            site=self.id,
-            site_version=self._package.version,
-            site_edition=self._package.edition,
-            api_version="internal",
-        )
         self.openapi_agent_receiver = AgentReceiverApiSession(
             openapi_session=self.openapi,
         )

@@ -257,7 +257,7 @@ class SecurityNotificationEvent(Enum):
     )
 
 
-def user_friendly_gui_message(event: SecurityNotificationEvent) -> str:
+def _user_friendly_gui_message(event: SecurityNotificationEvent) -> str:
     advice_message = _(
         " If this action was not triggered by you, contact your administrator for further investigation."
     )
@@ -344,7 +344,7 @@ def _send_gui(user_id: UserId, event: SecurityNotificationEvent, event_time: dat
     duration = int(config.active_config.user_security_notification_duration["max_duration"])
     send_message(
         create_message(
-            text=MessageText(content_type="text", content=user_friendly_gui_message(event)),
+            text=MessageText(content_type="text", content=_user_friendly_gui_message(event)),
             dest=("list", [user_id]),
             methods=["gui_hint"],
             valid_till=timestamp + duration,  # 1 week

@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.blade_bx_powerfan import (
+from cmk.plugins.blade.agent_based.blade_bx_powerfan import (
     check_blade_bx_powerfan,
     discover_blade_bx_powerfan,
     parse_blade_bx_powerfan,

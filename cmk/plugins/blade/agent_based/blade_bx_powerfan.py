@@ -18,7 +18,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.blade.agent_based.detection import DETECT_BLADE_BX
+
+from .detection import DETECT_BLADE_BX
 
 _BLADE_BX_STATUS = {
     "1": "unknown",

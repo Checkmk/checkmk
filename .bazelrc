@@ -53,7 +53,6 @@ common --enable_bzlmod
 # Do not upload artifacts other than from CI, see below, CMK-18656
 common --remote_upload_local_results=false
 common --lockfile_mode=error
-common --test_summary=detailed
 
 # Required for tools using java such as plantuml
 common --java_runtime_version=remotejdk_21
@@ -73,16 +72,19 @@ common --flag_alias=cmk_distro=@cmk//distro
 common --copt="-DRE2_ON_VALGRIND"
 
 clean --async
-# all bazel-created temporary and build output files
-# clean --expunge
-# run ...
-common --test_output=all
 
 # Try with our proxy first and fall back to public proxy when fetching go modules.
 common --repo_env=GOPROXY="https://bazel-registry.lan.checkmk.net/proxy.golang.org/|https://proxy.golang.org|direct"
 
 # Configure gazelle to use the ~/go/pkg/mod folder for downloaded artifacts.
 common --repo_env=GO_REPOSITORY_USE_HOST_MODCACHE=1
+
+# Control test verbosity
+common --test_output=summary
+common --test_summary=short
+
+common:ci --test_output=errors
+common:ci --test_summary=terse
 
 # Flags for CI builds
 # Definition of "bazel x --config=ci -- ..."

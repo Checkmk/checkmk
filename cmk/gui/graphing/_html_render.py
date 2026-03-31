@@ -327,16 +327,10 @@ def render_graph_error_html(*, title: str, msg_or_exc: Exception | str, debug: b
 # Later updates will just replace the content of that container.
 def _create_javascript_graph(
     request: Request,
-    recipe: GraphRecipe,
-    specification: GraphSpecification,
-    display_id: str,
+    render_state: GraphRenderState,
     artwork: GraphArtwork,
-    time_range: GraphTimeRange,
-    display_config: GraphDisplayConfigHTML,
     expandable_legend_appearance: ExpandableLegendAppearance,
     additional_html: AdditionalGraphHTML | None = None,
-    *,
-    onclick: str | None = None,
 ) -> HTML:
     return HTMLWriter.render_javascript(
         "cmk.graphs.create_graph(%s, %s, %s);"
@@ -345,42 +339,26 @@ def _create_javascript_graph(
                 str(
                     _collect_graph_html(
                         request,
-                        recipe,
-                        specification,
-                        display_id,
+                        render_state,
                         artwork,
-                        time_range,
-                        display_config,
                         expandable_legend_appearance,
                         additional_html,
                     )
                 )
             ),
             json.dumps(artwork.model_dump()),
-            json.dumps(
-                GraphRenderState(
-                    recipe=recipe,
-                    specification=specification,
-                    time_range=time_range,
-                    display_config=display_config,
-                    display_id=display_id,
-                    onclick=onclick,
-                ).model_dump()
-            ),
+            json.dumps(render_state.model_dump()),
         )
     )
 
 
 def _render_time_range_selection(
     request: Request,
-    recipe: GraphRecipe,
-    specification: GraphSpecification,
-    display_config: GraphDisplayConfigHTML,
+    render_state: GraphRenderState,
     *,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
-    display_id: str,
     expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> HTML:
     now = int(time.time())
@@ -389,7 +367,7 @@ def _render_time_range_selection(
         duration = timerange_attrs["duration"]
         assert isinstance(duration, int)
 
-        preview_config = display_config.model_copy(
+        preview_config = render_state.display_config.model_copy(
             update={
                 "size": (20, 4),
                 "font_size": SizePT(6.0),
@@ -402,7 +380,6 @@ def _render_time_range_selection(
                 "interaction": False,
             }
         )
-        onclick = "cmk.graphs.change_graph_timerange(graph, %d)" % duration
 
         timerange = now - duration, now
         time_range = GraphTimeRange(
@@ -411,15 +388,21 @@ def _render_time_range_selection(
             step=2 * estimate_graph_step_for_html(timerange, preview_config.size[1]),
         )
 
+        preview_state = render_state.model_copy(
+            update={
+                "time_range": time_range,
+                "display_config": preview_config,
+                "onclick": "cmk.graphs.change_graph_timerange(graph, %d)" % duration,
+            }
+        )
+
         rows.append(
             HTMLWriter.render_td(
                 _create_javascript_graph(
                     request,
-                    recipe,
-                    specification,
-                    display_id,
+                    preview_state,
                     compute_graph_artwork(
-                        recipe,
+                        render_state.recipe,
                         time_range,
                         preview_config.size,
                         metrics_from_api,
@@ -427,10 +410,7 @@ def _render_time_range_selection(
                         backend_time_series_fetcher=backend_time_series_fetcher,
                         pin_time=_load_graph_pin(),
                     ).artwork,
-                    time_range,
-                    preview_config,
                     expandable_legend_appearance,
-                    onclick=onclick,
                 ),
                 title=_("Change graph time range to: %s") % timerange_attrs["title"],
             )
@@ -443,28 +423,26 @@ def _render_time_range_selection(
 
 def _render_graph_content_html(
     request: Request,
-    recipe: GraphRecipe,
-    specification: GraphSpecification,
-    time_range: GraphTimeRange,
-    display_config: GraphDisplayConfigHTML,
+    render_state: GraphRenderState,
     artwork_or_errors: GraphArtworkOrErrors,
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
-    display_id: str = "",
     expandable_legend_appearance: ExpandableLegendAppearance,
     show_limits_if_reached: bool,
     additional_html: AdditionalGraphHTML | None = None,
 ) -> HTML:
+    display_config = render_state.display_config
+
     if artwork_or_errors.errors:
-        if url := specification.url():
+        if url := render_state.specification.url():
             output = HTMLWriter.render_div(
                 _(
                     "Cannot render complete graph. See graph '<a href='%s'>%s</a>' for further details."
                 )
-                % (url, recipe.title),
+                % (url, render_state.recipe.title),
                 class_="error",
             )
         else:
@@ -479,7 +457,7 @@ def _render_graph_content_html(
         output = HTML.empty()
 
     if show_limits_if_reached and artwork_or_errors.graph_metric_limits_reached:
-        if url := specification.url():
+        if url := render_state.specification.url():
             output += HTMLWriter.render_div(
                 _(
                     "The result of your query hit the maximum number of %s time series."
@@ -492,7 +470,7 @@ def _render_graph_content_html(
                         for limit in artwork_or_errors.graph_metric_limits_reached
                     ),
                     url,
-                    recipe.title,
+                    render_state.recipe.title,
                 ),
                 class_="warning",
             )
@@ -512,15 +490,13 @@ def _render_graph_content_html(
             update={"size": (display_config.size[0], display_config.size[1] - 8)}
         )
 
+    render_state = render_state.model_copy(update={"display_config": display_config})
+
     try:
         output += _create_javascript_graph(
             request,
-            recipe,
-            specification,
-            display_id,
+            render_state,
             artwork_or_errors.artwork,
-            time_range,
-            display_config,
             expandable_legend_appearance,
             additional_html,
         )
@@ -529,13 +505,10 @@ def _render_graph_content_html(
                 output
                 + _render_time_range_selection(
                     request,
-                    recipe,
-                    specification,
-                    display_config,
+                    render_state,
                     graph_timeranges=graph_timeranges,
                     temperature_unit=temperature_unit,
                     backend_time_series_fetcher=backend_time_series_fetcher,
-                    display_id=display_id,
                     expandable_legend_appearance=expandable_legend_appearance,
                 ),
                 class_="graph_with_timeranges",
@@ -599,10 +572,13 @@ def render_graphs_html(
         effective_config = display_config.update_from_options(recipe_with_overrides.render_options)
         output += _render_graph_content_html(
             request,
-            recipe_with_overrides.recipe,
-            recipe_with_overrides.specification,
-            effective_time_range,
-            effective_config,
+            GraphRenderState(
+                recipe=recipe_with_overrides.recipe,
+                specification=recipe_with_overrides.specification,
+                time_range=effective_time_range,
+                display_config=effective_config,
+                display_id=display_id,
+            ),
             compute_graph_artwork(
                 recipe_with_overrides.recipe,
                 effective_time_range,
@@ -617,7 +593,6 @@ def render_graphs_html(
             graph_timeranges=graph_timeranges,
             temperature_unit=env.temperature_unit,
             backend_time_series_fetcher=env.backend_time_series_fetcher,
-            display_id=display_id,
             expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
             show_limits_if_reached=False,
             additional_html=recipe_with_overrides.additional_html,
@@ -680,12 +655,8 @@ def host_service_graph_popup_cmk(
 
 def _collect_graph_html(
     request: Request,
-    recipe: GraphRecipe,
-    specification: GraphSpecification,
-    display_id: str,
+    render_state: GraphRenderState,
     artwork: GraphArtwork,
-    time_range: GraphTimeRange,
-    display_config: GraphDisplayConfigHTML,
     expandable_legend_appearance: ExpandableLegendAppearance,
     additional_html: AdditionalGraphHTML | None = None,
 ) -> HTML:
@@ -693,12 +664,8 @@ def _collect_graph_html(
     with output_funnel.plugged():
         _show_graph_html_content(
             request,
-            recipe,
-            specification,
-            display_id,
+            render_state,
             artwork,
-            time_range,
-            display_config,
             expandable_legend_appearance,
             additional_html,
         )
@@ -707,12 +674,8 @@ def _collect_graph_html(
 
 def _show_graph_html_content(
     request: Request,
-    recipe: GraphRecipe,
-    specification: GraphSpecification,
-    display_id: str,
+    render_state: GraphRenderState,
     artwork: GraphArtwork,
-    time_range: GraphTimeRange,
-    display_config: GraphDisplayConfigHTML,
     expandable_legend_appearance: ExpandableLegendAppearance,
     additional_html: AdditionalGraphHTML | None = None,
 ) -> None:
@@ -721,6 +684,7 @@ def _show_graph_html_content(
     That is a canvas object for drawing the actual graph and also legend, buttons, resize handle,
     etc.
     """
+    display_config = render_state.display_config
     html.open_div(
         class_=["graph"]
         + (["preview"] if display_config.preview else [])
@@ -740,13 +704,7 @@ def _show_graph_html_content(
             data=[
                 "pnpgraph",
                 None,
-                GraphRenderState(
-                    recipe=recipe,
-                    specification=specification,
-                    time_range=time_range,
-                    display_config=display_config,
-                    display_id=display_id,
-                ).model_dump(),
+                render_state.model_dump(),
             ],
             style="z-index:2",
         )  # Ensures that graph canvas does not cover it
@@ -773,7 +731,7 @@ def _show_graph_html_content(
             (element.text, element.url)
             for element in iter_graph_title_elements(
                 request,
-                specification,
+                render_state.specification,
                 artwork,
                 display_config,
                 explicit_title=display_config.explicit_title,
@@ -808,7 +766,9 @@ def _show_graph_html_content(
 
     # Note: due to "omit_zero_metrics" the graph might not have any curves
     if display_config.show_legend and artwork.curves:
-        _show_graph_legend(recipe, artwork, display_config, expandable_legend_appearance)
+        _show_graph_legend(
+            render_state.recipe, artwork, display_config, expandable_legend_appearance
+        )
 
     if additional_html:
         html.open_div(align="center")
@@ -1189,12 +1149,14 @@ def render_graph_html(
         assert user.id is not None
         UserGraphTimeRangeStore(user.id).save(render_state.specification.id, time_range)
 
-    display_id = render_state.display_id
+    render_state = render_state.model_copy(
+        update={"recipe": recipe, "time_range": time_range, "display_config": display_config}
+    )
 
     artwork_or_errors = compute_graph_artwork(
-        recipe,
-        time_range,
-        display_config.size,
+        render_state.recipe,
+        render_state.time_range,
+        render_state.display_config.size,
         registered_metrics,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
@@ -1243,42 +1205,28 @@ def render_graph_html(
         "html": str(
             _collect_graph_html(
                 request,
-                recipe,
-                render_state.specification,
-                display_id,
+                render_state,
                 artwork_or_errors.artwork,
-                time_range,
-                display_config,
                 ExpandableLegendAppearance.FOLDABLE,
                 additional_html,
             )
         ),
         "graph": artwork_or_errors.artwork.model_dump(),
-        "context": GraphRenderState(
-            graph_id=render_state.graph_id,
-            recipe=recipe,
-            specification=render_state.specification,
-            time_range=time_range,
-            display_config=display_config,
-            display_id=display_id,
-        ).model_dump(),
+        "context": render_state.model_dump(),
         "error": error_msg,
         "warning": warning_msg,
         "preview_html": (
             str(
                 _render_time_range_selection(
                     request,
-                    recipe,
-                    render_state.specification,
-                    display_config,
+                    render_state,
                     graph_timeranges=graph_timeranges,
                     temperature_unit=temperature_unit,
                     backend_time_series_fetcher=backend_time_series_fetcher,
-                    display_id=display_id,
                     expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
                 )
             )
-            if graph_timeranges is not None and display_config.show_time_range_previews
+            if graph_timeranges is not None and render_state.display_config.show_time_range_previews
             else None
         ),
         "queries_reached_limit": (
@@ -1639,16 +1587,18 @@ def host_service_graph_dashlet_cmk(
 
     return _render_graph_content_html(
         request,
-        recipe,
-        recipe_with_overrides.specification,
-        recipe_with_overrides.time_range or graph_time_range,
-        display_config.update_from_options(recipe_with_overrides.render_options),
+        GraphRenderState(
+            recipe=recipe,
+            specification=recipe_with_overrides.specification,
+            time_range=recipe_with_overrides.time_range or graph_time_range,
+            display_config=display_config.update_from_options(recipe_with_overrides.render_options),
+            display_id=display_id,
+        ),
         artwork_or_errors,
         debug=debug,
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
-        display_id=display_id,
         expandable_legend_appearance=ExpandableLegendAppearance.POP_UP,
         show_limits_if_reached=True,
     )

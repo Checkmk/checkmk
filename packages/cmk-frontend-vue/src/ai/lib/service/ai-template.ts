@@ -47,6 +47,16 @@ export interface BaseConversationElementContent {
   noAnimation?: boolean | undefined
 }
 
+export interface SystemContextConversationElementContent extends BaseConversationElementContent {
+  content_type: 'system_context'
+  host_name: string
+  host_state: ExplainThisIssueData['host_state']
+  service_name?: string
+  service_state?: ExplainThisIssueData['service_state']
+  is_stale?: boolean
+  [key: string]: unknown
+}
+
 export interface AlertConversationElementContent extends BaseConversationElementContent {
   content_type: 'alert'
   text: string
@@ -93,6 +103,7 @@ export type TAiConversationElementContent =
   | ListConversationElementContent
   | MarkdownConversationElementContent
   | TextConversationElementContent
+  | SystemContextConversationElementContent
 
 export interface IAiConversationElement {
   role: AiRole
@@ -187,22 +198,17 @@ export class AiTemplateService extends ServiceBase {
   }
 
   public addContext() {
-    const context = this.toSentenceCase(this.templateId.replace(/-/g, ' '))
-    const contextData: string[] = []
-
-    if (typeof this.context_data === 'object' && this.context_data) {
-      for (const [key, value] of Object.entries(this.context_data)) {
-        const keyName = this.toSentenceCase(key.replace(/_/g, ' '))
-        contextData.push(`- ${keyName}: **${value}**`)
-      }
-    }
-
+    const { is_stale: isStale } = this.context_data as ExplainThisIssueData & { is_stale?: boolean }
     this.addElement({
       role: AiRole.system,
       content: [
         {
-          content_type: 'markdown',
-          content: `### Context:  **${context}**\n${contextData.join('\n')}`
+          content_type: 'system_context',
+          host_name: this.context_data.host_name,
+          host_state: this.context_data.host_state,
+          service_name: this.context_data.service_name,
+          service_state: this.context_data.service_state,
+          ...(isStale !== undefined && { is_stale: isStale })
         }
       ],
       noAnimation: true,
@@ -287,9 +293,22 @@ export class AiTemplateService extends ServiceBase {
       displayed: true
     }
 
+    const {
+      host_name: hostName,
+      host_state: hostState,
+      service_name: serviceName,
+      service_state: serviceState
+    } = this.context_data
+    const contextForAi = {
+      host_name: hostName,
+      host_state: hostState,
+      service_name: serviceName,
+      ...(serviceState !== 'Pending' && { service_state: serviceState })
+    }
+
     void this.api.streamInference(
       action,
-      this.context_data,
+      contextForAi,
       (event: StreamEvent) => {
         if (!event?.type) {
           return

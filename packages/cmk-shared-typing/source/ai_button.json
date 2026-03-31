@@ -43,8 +43,9 @@
         "service_name": { "type": "string" },
         "host_state": { "enum": ["Up", "Down", "Unreachable"] },
         "service_state": {
-          "enum": ["Unknown", "Critical", "Warning", "OK"]
-        }
+          "enum": ["Unknown", "Critical", "Warning", "OK", "Pending"]
+        },
+        "is_stale": { "type": "boolean" }
       },
       "required": ["host_name", "host_state", "service_name", "service_state"]
     }

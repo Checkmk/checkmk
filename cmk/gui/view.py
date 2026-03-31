@@ -28,7 +28,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import append_site_from_request, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
 from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
@@ -306,6 +306,7 @@ class View:
             request_vars += list(
                 visuals.get_singlecontext_vars(self.context, self.spec["single_infos"]).items()
             )
+            request_vars = append_site_from_request(request_vars)
 
             breadcrumb = make_topic_breadcrumb(
                 main_menu_registry.menu_monitoring(),
@@ -355,7 +356,12 @@ class View:
                     title=view_title(self.spec, self.context),
                     url=makeuri_contextless(
                         request,
-                        [("view_name", self.name), ("host", str(host_name))],
+                        append_site_from_request(
+                            [
+                                ("view_name", self.name),
+                                ("host", str(host_name)),
+                            ]
+                        ),
                     ),
                 )
             )
@@ -375,11 +381,13 @@ class View:
                 title=view_title(self.spec, self.context),
                 url=makeuri_contextless(
                     request,
-                    [
-                        ("view_name", self.name),
-                        ("host", str(host_name)),
-                        ("service", self.context["service"]["service"]),
-                    ],
+                    append_site_from_request(
+                        [
+                            ("view_name", self.name),
+                            ("host", str(host_name)),
+                            ("service", self.context["service"]["service"]),
+                        ]
+                    ),
                 ),
             )
         )

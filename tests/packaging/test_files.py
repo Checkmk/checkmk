@@ -458,7 +458,7 @@ def test_src_does_not_contain_dev_files(
         for line in subprocess.check_output(
             ["tar", "tvf", package_path], encoding="utf-8"
         ).splitlines()
-        if (path := Path(line.split()[5])).name in {".f12", "OWNERS"}
+        if (path := Path(line.split()[5])).name in {".f12", "OWNERS", "remote.bazelrc"}
     ]
     assert not unwanted_files, (
         f"Found files in {package_path} which should not be there:"

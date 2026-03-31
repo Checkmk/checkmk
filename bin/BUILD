@@ -55,7 +55,7 @@ pkg_files(
     srcs = [
         ":check_mk",
         ":cmk-automation-helper",
-        ":cmk-broker-test",
+        ":cmk-broker-test.py",
         ":cmk-cert",
         ":cmk-config-anonymizer",
         ":cmk-convert-rrds",
@@ -91,6 +91,7 @@ pkg_files(
     ),
     prefix = "bin",
     renames = {
+        "cmk-broker-test.py": "cmk-broker-test",
         "cmk-update-license-usage.py": "cmk-update-license-usage",
         "init-redis.py": "init-redis",
         "mkbackup.py": "mkbackup",
@@ -172,6 +173,13 @@ py_library(
 py_library(
     name = "cmk_update_license_usage_py",
     srcs = ["cmk-update-license-usage.py"],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "cmk_broker_test_py",
+    srcs = ["cmk-broker-test.py"],
     imports = ["."],
     tags = ["no-mypy"],
 )

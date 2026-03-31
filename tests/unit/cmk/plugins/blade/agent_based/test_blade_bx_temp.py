@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks import blade_bx_temp
-from cmk.legacy_checks.blade_bx_temp import (
+from cmk.plugins.blade.agent_based import blade_bx_temp
+from cmk.plugins.blade.agent_based.blade_bx_temp import (
     check_blade_bx_temp,
     discover_blade_bx_temp,
     parse_blade_bx_temp,

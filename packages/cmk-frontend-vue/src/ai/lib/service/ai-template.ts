@@ -198,7 +198,7 @@ export class AiTemplateService extends ServiceBase {
   }
 
   public addContext() {
-    const { is_stale } = this.context_data as ExplainThisIssueData & { is_stale?: boolean }
+    const { is_stale: isStale } = this.context_data as ExplainThisIssueData & { is_stale?: boolean }
     this.addElement({
       role: AiRole.system,
       content: [
@@ -208,7 +208,7 @@ export class AiTemplateService extends ServiceBase {
           host_state: this.context_data.host_state,
           service_name: this.context_data.service_name,
           service_state: this.context_data.service_state,
-          ...(is_stale !== undefined && { is_stale })
+          ...(isStale !== undefined && { is_stale: isStale })
         }
       ],
       noAnimation: true,
@@ -293,12 +293,17 @@ export class AiTemplateService extends ServiceBase {
       displayed: true
     }
 
-    const { host_name, host_state, service_name, service_state } = this.context_data
+    const {
+      host_name: hostName,
+      host_state: hostState,
+      service_name: serviceName,
+      service_state: serviceState
+    } = this.context_data
     const contextForAi = {
-      host_name,
-      host_state,
-      service_name,
-      ...(service_state !== 'Pending' && { service_state })
+      host_name: hostName,
+      host_state: hostState,
+      service_name: serviceName,
+      ...(serviceState !== 'Pending' && { service_state: serviceState })
     }
 
     void this.api.streamInference(

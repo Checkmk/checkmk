@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="type-arg"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -15,7 +12,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import GetRateError
+from cmk.agent_based.v2 import GetRateError, Service
 from cmk.legacy_checks import varnish
 
 
@@ -33,7 +30,7 @@ def _create_parsed_varnish(
     fetch_values: dict[str, int] | None = None,
     objects_values: dict[str, int] | None = None,
     worker_values: dict[str, int] | None = None,
-) -> dict:
+) -> dict[str, object]:
     """Create parsed Varnish data with all subchecks metrics."""
     backend_values = backend_values or {}
     cache_values = cache_values or {}
@@ -43,7 +40,7 @@ def _create_parsed_varnish(
     objects_values = objects_values or {}
     worker_values = worker_values or {}
 
-    parsed_data = {}
+    parsed_data: dict[str, object] = {}
 
     # Backend counters
     if backend_values:
@@ -349,7 +346,7 @@ class TestVarnishBackendMonitoring:
 
         discovery_result = list(varnish.discover_varnish_backend(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     def test_discovery_without_required_metrics(self) -> None:
         """Test discovery when required backend metrics are missing."""
@@ -375,7 +372,7 @@ class TestVarnishBackendMonitoring:
 
         # First call will raise GetRateError as expected
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_backend(None, {}, parsed))
+            list(varnish.check_varnish_backend({}, parsed))
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_backend_check_missing_metrics(self) -> None:
@@ -390,7 +387,7 @@ class TestVarnishBackendMonitoring:
 
         # First call will raise GetRateError as expected
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_backend(None, {}, parsed))
+            list(varnish.check_varnish_backend({}, parsed))
 
     @pytest.mark.parametrize(
         "backend_values,expected_metrics",
@@ -415,7 +412,7 @@ class TestVarnishBackendMonitoring:
 
         # First call will raise GetRateError as expected
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_backend(None, {}, parsed))
+            list(varnish.check_varnish_backend({}, parsed))
 
 
 class TestVarnishCacheMonitoring:
@@ -428,7 +425,7 @@ class TestVarnishCacheMonitoring:
 
         discovery_result = list(varnish.discover_varnish_cache(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     def test_discovery_without_cache_metrics(self) -> None:
         """Test discovery when cache_miss metric is missing."""
@@ -453,7 +450,7 @@ class TestVarnishCacheMonitoring:
 
         # First call will raise GetRateError as expected
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_cache(None, {}, parsed))
+            list(varnish.check_varnish_cache({}, parsed))
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_cache_check_high_miss_rate(self) -> None:
@@ -470,7 +467,7 @@ class TestVarnishCacheMonitoring:
 
         # First call will raise GetRateError as expected
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_cache(None, {}, parsed))
+            list(varnish.check_varnish_cache({}, parsed))
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_cache_check_only_hits(self) -> None:
@@ -487,7 +484,7 @@ class TestVarnishCacheMonitoring:
 
         # First call will raise GetRateError as expected
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_cache(None, {}, parsed))
+            list(varnish.check_varnish_cache({}, parsed))
 
     @pytest.mark.parametrize(
         "cache_values,description",
@@ -503,7 +500,7 @@ class TestVarnishCacheMonitoring:
         # Cache check - using direct function calls
         parsed = _create_parsed_varnish(backend_values={}, cache_values=cache_values)
 
-        results = list(varnish.check_varnish_objects(None, {}, parsed))
+        results = list(varnish.check_varnish_objects({}, parsed))
         assert isinstance(results, list | tuple)
 
 
@@ -522,15 +519,18 @@ class TestVarnishDataParsing:
 
         parsed = varnish.parse_varnish(agent_output)
 
-        assert "client_conn" in parsed
-        assert parsed["client_conn"]["value"] == 13687134
-        assert parsed["client_conn"]["descr"] == "connections accepted"
+        client_conn = parsed["client_conn"]
+        assert isinstance(client_conn, dict)
+        assert client_conn["value"] == 13687134
+        assert client_conn["descr"] == "connections accepted"
 
-        assert "cache_hit" in parsed
-        assert parsed["cache_hit"]["value"] == 3678
+        cache_hit = parsed["cache_hit"]
+        assert isinstance(cache_hit, dict)
+        assert cache_hit["value"] == 3678
 
-        assert "backend_conn" in parsed
-        assert parsed["backend_conn"]["value"] == 6870153
+        backend_conn = parsed["backend_conn"]
+        assert isinstance(backend_conn, dict)
+        assert backend_conn["value"] == 6870153
 
     def test_parse_hierarchical_keys(self) -> None:
         """Test parsing of hierarchical Varnish keys."""
@@ -542,13 +542,15 @@ class TestVarnishDataParsing:
 
         parsed = varnish.parse_varnish(agent_output)
 
-        assert "LCK" in parsed
-        assert "sms" in parsed["LCK"]
-        assert parsed["LCK"]["sms"]["creat"]["value"] == 1
+        lck = parsed["LCK"]
+        assert isinstance(lck, dict)
+        assert "sms" in lck
+        assert lck["sms"]["creat"]["value"] == 1
 
-        assert "VBE" in parsed
-        assert "default(127.0.0.1,,81)" in parsed["VBE"]
-        assert parsed["VBE"]["default(127.0.0.1,,81)"]["happy"]["value"] == 0
+        vbe = parsed["VBE"]
+        assert isinstance(vbe, dict)
+        assert "default(127.0.0.1,,81)" in vbe
+        assert vbe["default(127.0.0.1,,81)"]["happy"]["value"] == 0
 
     def test_parse_main_prefix_handling(self) -> None:
         """Test parsing with MAIN prefix keys."""
@@ -561,14 +563,18 @@ class TestVarnishDataParsing:
         parsed = varnish.parse_varnish(agent_output)
 
         # MAIN prefix should be stripped
-        assert "cache_hit" in parsed
-        assert parsed["cache_hit"]["value"] == 1000
-        assert "cache_miss" in parsed
-        assert parsed["cache_miss"]["value"] == 200
+        cache_hit = parsed["cache_hit"]
+        assert isinstance(cache_hit, dict)
+        assert cache_hit["value"] == 1000
+
+        cache_miss = parsed["cache_miss"]
+        assert isinstance(cache_miss, dict)
+        assert cache_miss["value"] == 200
 
         # Non-prefixed keys should remain
-        assert "cache_hitpass" in parsed
-        assert parsed["cache_hitpass"]["value"] == 50
+        cache_hitpass = parsed["cache_hitpass"]
+        assert isinstance(cache_hitpass, dict)
+        assert cache_hitpass["value"] == 50
 
 
 class TestVarnishIntegration:
@@ -612,10 +618,10 @@ class TestVarnishIntegration:
 
         # First run raises GetRateError for rate-based checks
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_backend(None, {}, parsed))
+            list(varnish.check_varnish_backend({}, parsed))
 
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_cache(None, {}, parsed))
+            list(varnish.check_varnish_cache({}, parsed))
 
 
 class TestVarnishClientMonitoring:
@@ -634,7 +640,7 @@ class TestVarnishClientMonitoring:
 
         discovery_result = list(varnish.discover_varnish_client(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_client_check_normal_operation(self) -> None:
@@ -650,7 +656,7 @@ class TestVarnishClientMonitoring:
 
         # First run raises GetRateError for rate-based checks
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_client(None, {}, parsed))
+            list(varnish.check_varnish_client({}, parsed))
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_client_check_with_drops(self) -> None:
@@ -664,7 +670,7 @@ class TestVarnishClientMonitoring:
             }
         )
 
-        results = list(varnish.check_varnish_objects(None, {}, parsed))
+        results = list(varnish.check_varnish_objects({}, parsed))
         assert isinstance(results, list | tuple)
 
 
@@ -677,7 +683,7 @@ class TestVarnishESIMonitoring:
 
         discovery_result = list(varnish.discover_varnish_esi(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_esi_check_no_errors(self) -> None:
@@ -689,7 +695,7 @@ class TestVarnishESIMonitoring:
             }
         )
 
-        results = list(varnish.check_varnish_objects(None, {}, parsed))
+        results = list(varnish.check_varnish_objects({}, parsed))
         assert isinstance(results, list | tuple)
 
     @pytest.mark.usefixtures("empty_value_store")
@@ -702,7 +708,7 @@ class TestVarnishESIMonitoring:
             }
         )
 
-        results = list(varnish.check_varnish_objects(None, {}, parsed))
+        results = list(varnish.check_varnish_objects({}, parsed))
         assert isinstance(results, list | tuple)
 
 
@@ -723,7 +729,7 @@ class TestVarnishFetchMonitoring:
 
         discovery_result = list(varnish.discover_varnish_fetch(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_fetch_check_normal_operation(self) -> None:
@@ -745,7 +751,7 @@ class TestVarnishFetchMonitoring:
             }
         )
 
-        results = list(varnish.check_varnish_objects(None, {}, parsed))
+        results = list(varnish.check_varnish_objects({}, parsed))
         assert isinstance(results, list | tuple)
 
     @pytest.mark.usefixtures("empty_value_store")
@@ -760,7 +766,7 @@ class TestVarnishFetchMonitoring:
             }
         )
 
-        results = list(varnish.check_varnish_objects(None, {}, parsed))
+        results = list(varnish.check_varnish_objects({}, parsed))
         assert isinstance(results, list | tuple)
 
 
@@ -779,7 +785,7 @@ class TestVarnishObjectsMonitoring:
 
         discovery_result = list(varnish.discover_varnish_objects(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_objects_check_normal_lifecycle(self) -> None:
@@ -794,7 +800,7 @@ class TestVarnishObjectsMonitoring:
 
         # First run raises GetRateError for rate-based checks
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_objects(None, {}, parsed))
+            list(varnish.check_varnish_objects({}, parsed))
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_objects_check_with_lru_pressure(self) -> None:
@@ -809,7 +815,7 @@ class TestVarnishObjectsMonitoring:
 
         # First run raises GetRateError for rate-based checks
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_objects(None, {}, parsed))
+            list(varnish.check_varnish_objects({}, parsed))
 
 
 class TestVarnishWorkerMonitoring:
@@ -831,7 +837,7 @@ class TestVarnishWorkerMonitoring:
 
         discovery_result = list(varnish.discover_varnish_worker(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_worker_check_healthy_pool(self) -> None:
@@ -850,7 +856,7 @@ class TestVarnishWorkerMonitoring:
 
         # First run raises GetRateError for rate-based checks
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_worker(None, {}, parsed))
+            list(varnish.check_varnish_worker({}, parsed))
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_worker_check_thread_issues(self) -> None:
@@ -869,7 +875,7 @@ class TestVarnishWorkerMonitoring:
 
         # First run raises GetRateError for rate-based checks
         with pytest.raises(GetRateError):
-            list(varnish.check_varnish_worker(None, {}, parsed))
+            list(varnish.check_varnish_worker({}, parsed))
 
 
 class TestVarnishRatioChecks:
@@ -887,7 +893,7 @@ class TestVarnishRatioChecks:
 
         discovery_result = list(varnish.discover_varnish_backend_success_ratio(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_backend_success_ratio_high_success(self) -> None:
@@ -900,7 +906,7 @@ class TestVarnishRatioChecks:
             }
         )
 
-        results = list(varnish.check_varnish_objects(None, {}, parsed))
+        results = list(varnish.check_varnish_objects({}, parsed))
         assert isinstance(results, list | tuple)
 
     def test_cache_hit_ratio_discovery(self) -> None:
@@ -914,7 +920,7 @@ class TestVarnishRatioChecks:
 
         discovery_result = list(varnish.discover_varnish_cache_hit_ratio(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_cache_hit_ratio_good_performance(self) -> None:
@@ -926,7 +932,7 @@ class TestVarnishRatioChecks:
             }
         )
 
-        results = list(varnish.check_varnish_objects(None, {}, parsed))
+        results = list(varnish.check_varnish_objects({}, parsed))
         assert isinstance(results, list | tuple)
 
     def test_worker_thread_ratio_discovery(self) -> None:
@@ -940,7 +946,7 @@ class TestVarnishRatioChecks:
 
         discovery_result = list(varnish.discover_varnish_worker_thread_ratio(parsed))
         assert len(discovery_result) == 1
-        assert discovery_result[0] == (None, {})
+        assert discovery_result[0] == Service()
 
     @pytest.mark.usefixtures("empty_value_store")
     def test_worker_thread_ratio_normal_usage(self) -> None:
@@ -953,6 +959,6 @@ class TestVarnishRatioChecks:
         )
 
         results = list(
-            varnish.check_varnish_worker_thread_ratio(None, {"levels_lower": (70.0, 60.0)}, parsed)
+            varnish.check_varnish_worker_thread_ratio({"levels_lower": (70.0, 60.0)}, parsed)
         )
         assert isinstance(results, list | tuple)

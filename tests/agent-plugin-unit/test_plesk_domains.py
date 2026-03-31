@@ -4,20 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="no-untyped-call"
 
 import pytest
-from _pytest.capture import CaptureFixture
+from _pytest.capture import CaptureFixture  # python 3.4 ...
+
+from agents.plugins.plesk_domains import main
 
 
 def test_import_module(capfd: CaptureFixture) -> None:
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        import agents.plugins.plesk_domains as pd
-
-        _pd = pd  # make ruff happy
+    with pytest.raises(SystemExit) as exc:
+        main()
     out, _ = capfd.readouterr()
     assert (
         out
         == "<<<plesk_domains>>>\nNo module named 'MySQLdb'. Please install missing module via `pip install mysqlclient`.\n"
     )
-    assert pytest_wrapped_e.type is SystemExit
-    assert pytest_wrapped_e.value.code == 0
+    assert exc.value.code == 0

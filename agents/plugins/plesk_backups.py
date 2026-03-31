@@ -26,17 +26,17 @@ try:
 except ImportError:
     pass
 
-try:
-    import MySQLdb  # type: ignore[import-untyped]
-except ImportError as e:
-    sys.stdout.write(
-        "<<<plesk_backups>>>\n%s. Please install missing module via `pip install mysqlclient`.\n"
-        % e
-    )
-    sys.exit(0)
-
 
 def connect():
+    try:
+        import MySQLdb  # type: ignore[import-untyped]
+    except ImportError as e:
+        sys.stdout.write(
+            "<<<plesk_backups>>>\n%s. Please install missing module via `pip install mysqlclient`.\n"
+            % e
+        )
+        sys.exit(0)
+
     try:
         return MySQLdb.connect(
             host="localhost",
@@ -50,7 +50,7 @@ def connect():
         sys.exit(1)
 
 
-def get_domains():
+def get_domains(db):
     cursor = db.cursor()
     cursor2 = db.cursor()
 
@@ -69,86 +69,85 @@ def get_domains():
     return domain_collection
 
 
-#
-# MAIN
-#
+def main():
+    db = connect()
 
-db = connect()
+    # 1. Virtual Hosts / Domains auflisten
+    # 2. Backupkonfiguration herausfinden
+    domains = get_domains(db)
 
-# 1. Virtual Hosts / Domains auflisten
-# 2. Backupkonfiguration herausfinden
-domains = get_domains()
+    # 3. Per FTP verbinden
+    #   4. Alter und Größe der neuesten Datei herausfinden
+    #   5. Größe aller Dateien in Summe herausfinden
+    #
+    # 6. Neuer Monat?
+    #   7. Auf FTP neues Verzeichnis anlegen: <kunde>_2012<monat>
+    #   8. Konfiguration in Plesk anpassen
+    output = ["<<<plesk_backups>>>"]
+    for domain, p in domains.items():
+        try:
+            if not p:
+                output.append("%s 4" % domain)  # Backup nicht konfiguriert
+                continue
 
-# 3. Per FTP verbinden
-#   4. Alter und Größe der neuesten Datei herausfinden
-#   5. Größe aller Dateien in Summe herausfinden
-#
-# 6. Neuer Monat?
-#   7. Auf FTP neues Verzeichnis anlegen: <kunde>_2012<monat>
-#   8. Konfiguration in Plesk anpassen
-output = ["<<<plesk_backups>>>"]
-for domain, p in domains.items():
-    try:
-        if not p:
-            output.append("%s 4" % domain)  # Backup nicht konfiguriert
-            continue
-
-        ftp = FTP(  # nosec B321 # BNS:97f639
-            p["backup_ftp_settinghost"],
-            p["backup_ftp_settinglogin"],
-            p["backup_ftp_settingpassword"],
-        )
-
-        # Zeilen holen
-        files = []  # type: list[str]
-        ftp.retrlines("LIST %s" % p["backup_ftp_settingdirectory"], callback=files.append)
-        # example line:
-        # -rw----r--   1 b091045  cust     13660160 Dec  3 01:50 bla_v8_bla-v8.bla0.net_1212030250.tar
-
-        # Zeilen formatieren
-        last_backup = None
-        backups = []
-        for line in files:
-            parts = line.split()
-            if parts[-1].endswith(".tar"):
-                dt = datetime.datetime(*time.strptime(parts[-1][-14:-4], "%y%m%d%H%M")[0:5])
-                backup = (parts[-1], dt, int(parts[-5]))
-
-                if not last_backup or dt > last_backup[1]:
-                    last_backup = backup
-                backups.append(backup)
-
-        if not backups:
-            output.append("%s 5" % domain)  # Keine Sicherungen vorhanden
-            continue
-
-        # Get total size of all files on FTP
-        f = []  # type: list[Any]
-
-        def get_size(ftp_conn, base_dir, l=None):
-            if l and l.split()[-1] in [".", ".."]:
-                return 0
-
-            size = 0
-            if not l or l[0] == "d":
-                subdir = "/" + l.split()[-1] if l else ""
-                dir_files = []  # type: list[str]
-                ftp_conn.retrlines("LIST %s%s" % (base_dir, subdir), callback=dir_files.append)
-                for ln in dir_files:
-                    size += get_size(ftp_conn, "%s%s" % (base_dir, subdir), ln)
-            else:
-                size += int(l.split()[-5])
-            return size
-
-        total_size = get_size(ftp, "")
-        if last_backup:
-            output.append(
-                "%s 0 %s %d %d"
-                % (domain, last_backup[1].strftime("%s"), last_backup[2], total_size)
+            ftp = FTP(  # nosec B321 # BNS:97f639
+                p["backup_ftp_settinghost"],
+                p["backup_ftp_settinglogin"],
+                p["backup_ftp_settingpassword"],
             )
 
-    except Exception as e:
-        output.append("%s 2 %s" % (domain, e))
+            # Zeilen holen
+            files = []  # type: list[str]
+            ftp.retrlines("LIST %s" % p["backup_ftp_settingdirectory"], callback=files.append)
+            # example line:
+            # -rw----r--   1 b091045  cust     13660160 Dec  3 01:50 bla_v8_bla-v8.bla0.net_1212030250.tar
 
-# Write cache and output
-sys.stdout.write("%s\n" % "\n".join(output))
+            # Zeilen formatieren
+            last_backup = None
+            backups = []
+            for line in files:
+                parts = line.split()
+                if parts[-1].endswith(".tar"):
+                    dt = datetime.datetime(*time.strptime(parts[-1][-14:-4], "%y%m%d%H%M")[0:5])
+                    backup = (parts[-1], dt, int(parts[-5]))
+
+                    if not last_backup or dt > last_backup[1]:
+                        last_backup = backup
+                    backups.append(backup)
+
+            if not backups:
+                output.append("%s 5" % domain)  # Keine Sicherungen vorhanden
+                continue
+
+            # Get total size of all files on FTP
+            def get_size(ftp_conn, base_dir, l=None):
+                if l and l.split()[-1] in [".", ".."]:
+                    return 0
+
+                size = 0
+                if not l or l[0] == "d":
+                    subdir = "/" + l.split()[-1] if l else ""
+                    dir_files = []  # type: list[str]
+                    ftp_conn.retrlines("LIST %s%s" % (base_dir, subdir), callback=dir_files.append)
+                    for ln in dir_files:
+                        size += get_size(ftp_conn, "%s%s" % (base_dir, subdir), ln)
+                else:
+                    size += int(l.split()[-5])
+                return size
+
+            total_size = get_size(ftp, "")
+            if last_backup:
+                output.append(
+                    "%s 0 %s %d %d"
+                    % (domain, last_backup[1].strftime("%s"), last_backup[2], total_size)
+                )
+
+        except Exception as e:
+            output.append("%s 2 %s" % (domain, e))
+
+    # Write cache and output
+    sys.stdout.write("%s\n" % "\n".join(output))
+
+
+if __name__ == "__main__":
+    main()

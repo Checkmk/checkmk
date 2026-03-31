@@ -11,8 +11,8 @@ cd "$(git rev-parse --show-toplevel)" || exit $?
 # shellcheck disable=SC2046  # we want word splitting here
 bazel run //:format $(git diff --name-only) || exit $?
 
-LIBS="//cmk/legacy_checks/... //cmk/legacy_includes/... //cmk/plugins/..."
-TESTS="//tests/unit:plugins //tests/unit:plugins_ultimate //tests/unit:legacy_checks //tests/unit:legacy_includes"
+LIBS="//cmk/plugins/... //cmk/legacy_checks/... //cmk/legacy_includes/..."
+TESTS="//tests/unit/cmk/plugins/... //tests/unit/cmk/legacy_checks/... //tests/unit/cmk/legacy_includes/..."
 
 # shellcheck disable=SC2086  # we want word splitting here
 bazel lint --fix $LIBS $TESTS || exit $?

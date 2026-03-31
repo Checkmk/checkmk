@@ -682,21 +682,20 @@ def render_graphs_html(
 
     output = HTML.empty()
     for recipe_with_overrides in recipes:
-        effective_time_range = recipe_with_overrides.time_range or time_range
-        effective_config = display_config.update_from_options(recipe_with_overrides.render_options)
+        render_state = GraphRenderState(
+            recipe=recipe_with_overrides.recipe,
+            specification=recipe_with_overrides.specification,
+            time_range=recipe_with_overrides.time_range or time_range,
+            display_config=display_config.update_from_options(recipe_with_overrides.render_options),
+            display_id=display_id,
+        )
         output += _render_graph_content_html(
             request,
-            GraphRenderState(
-                recipe=recipe_with_overrides.recipe,
-                specification=recipe_with_overrides.specification,
-                time_range=effective_time_range,
-                display_config=effective_config,
-                display_id=display_id,
-            ),
+            render_state,
             compute_graph_artwork(
-                recipe_with_overrides.recipe,
-                effective_time_range,
-                effective_config.size,
+                render_state.recipe,
+                render_state.time_range,
+                render_state.display_config.size,
                 metrics_from_api,
                 temperature_unit=env.temperature_unit,
                 backend_time_series_fetcher=env.backend_time_series_fetcher,
@@ -1356,25 +1355,21 @@ class AjaxRenderGraph(AjaxPage):
         consumed directly by :func:`render_graph_html` via the request object.
         """
         api_request = ctx.request.get_request()
-        render_state = GraphRenderState.model_validate(api_request)
-        additional_html = (
-            None
-            if (raw_additional_html := api_request.get("additional_html")) is None
-            else AdditionalGraphHTML.model_validate(raw_additional_html)
-        )
-        temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
-        backend_time_series_fetcher = metric_backend_registry[
-            str(edition(paths.omd_root))
-        ].get_time_series_fetcher()
         return render_graph_html(
             ctx.request,
-            render_state,
+            GraphRenderState.model_validate(api_request),
             metrics_from_api,
-            temperature_unit=temperature_unit,
-            backend_time_series_fetcher=backend_time_series_fetcher,
+            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
+            backend_time_series_fetcher=metric_backend_registry[
+                str(edition(paths.omd_root))
+            ].get_time_series_fetcher(),
             show_titles_if_limit_reached=False,
             converter=None,
-            additional_html=additional_html,
+            additional_html=(
+                None
+                if (raw_additional_html := api_request.get("additional_html")) is None
+                else AdditionalGraphHTML.model_validate(raw_additional_html)
+            ),
             graph_timeranges=ctx.config.graph_timeranges,
         )
 
@@ -1528,7 +1523,6 @@ def host_service_graph_dashlet_cmk(
 
     if recipes:
         recipe_with_overrides = recipes[0]
-        recipe = recipe_with_overrides.recipe
     else:
         raise MKGraphRecipeNotFoundError(_("Failed to calculate a graph recipe."))
 
@@ -1562,7 +1556,7 @@ def host_service_graph_dashlet_cmk(
         return HTML("", escape=False)
 
     artwork_or_errors = compute_graph_artwork(
-        recipe,
+        recipe_with_overrides.recipe,
         graph_time_range,
         display_config.size,
         registered_metrics,
@@ -1611,7 +1605,7 @@ def host_service_graph_dashlet_cmk(
     return _render_graph_content_html(
         request,
         GraphRenderState(
-            recipe=recipe,
+            recipe=recipe_with_overrides.recipe,
             specification=recipe_with_overrides.specification,
             time_range=recipe_with_overrides.time_range or graph_time_range,
             display_config=display_config.update_from_options(recipe_with_overrides.render_options),

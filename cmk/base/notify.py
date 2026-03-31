@@ -1031,22 +1031,22 @@ def _automation_get_bulks(
 
 
 AUTOMATION_NOTIFICATION_REPLAY = Automation(
-    ident=AutomationID("notification-replay"),
+    name=AutomationID("notification-replay"),
     handler=_automation_notification_replay,
     result=NotificationReplayResult,
 )
 AUTOMATION_NOTIFICATION_ANALYSE = Automation(
-    ident=AutomationID("notification-analyse"),
+    name=AutomationID("notification-analyse"),
     handler=_automation_notification_analyse,
     result=NotificationAnalyseResult,
 )
 AUTOMATION_NOTIFICATION_TEST = Automation(
-    ident=AutomationID("notification-test"),
+    name=AutomationID("notification-test"),
     handler=_automation_notification_test,
     result=NotificationTestResult,
 )
 AUTOMATION_NOTIFICATION_GET_BULKS = Automation(
-    ident=AutomationID("notification-get-bulks"),
+    name=AutomationID("notification-get-bulks"),
     handler=_automation_get_bulks,
     result=NotificationGetBulksResult,
 )

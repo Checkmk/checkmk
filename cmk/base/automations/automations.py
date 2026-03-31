@@ -79,7 +79,7 @@ class AutomationContext:
 
 @dataclass(frozen=True)
 class Automation:
-    ident: AutomationID
+    name: AutomationID
     handler: Callable[
         [
             AutomationContext,
@@ -90,11 +90,6 @@ class Automation:
         ABCAutomationResult,
     ]
     result: type[ABCAutomationResult]
-
-    # This property is needed for compatibility with the plugin discovery mechanism
-    @property
-    def name(self) -> str:
-        return self.ident
 
 
 class Automations:
@@ -118,7 +113,7 @@ class Automations:
         )
         assert not discovery_result.errors
         self._automations.update(
-            {automation.ident: automation for automation in discovery_result.plugins.values()}
+            {automation.name: automation for automation in discovery_result.plugins.values()}
         )
 
     def execute(

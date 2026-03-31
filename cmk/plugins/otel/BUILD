@@ -11,6 +11,7 @@ py_library(
     }),
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-telemetry:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

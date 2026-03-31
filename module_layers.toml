@@ -41,6 +41,8 @@ trace = ["cmk.trace"]
 
 metric_backend = ["cmk.metric_backend"]
 
+telemetry = ["cmk.telemetry"]
+
 livestatus_client = ["cmk.livestatus_client"]
 
 relay_protocols = ["cmk.relay_protocols"]
@@ -307,14 +309,6 @@ allows = []
 [components."cmk.base.api.bakery"]
 allows = ["@ccc", "cmk.bakery", "cmk.utils"]
 
-[components."cmk.base.nonfree.ultimate.metric_backend_fetcher"]
-allows = [
-  "@ccc",
-  "cmk.base.config",
-  "cmk.fetchers",
-  "cmk.metric_backend.fetcher.agent_otel",
-  "cmk.utils.paths",
-]
 
 [components."cmk.base.nonfree.notify_automation"]
 allows = [
@@ -384,6 +378,7 @@ allows = [
   "cmk.licensing.nonfree",
   "cmk.multi_tenancy.shared",
   "cmk.server_side_calls_backend",
+  "cmk.telemetry",
   "cmk.utils",
 ]
 
@@ -541,7 +536,7 @@ allows = [
   "cmk.check_helper_protocol",
   "cmk.fetchers",
   "cmk.helper_interface",
-  "cmk.metric_backend.fetcher.agent_otel",
+  "cmk.telemetry.fetcher.agent_otel",
   "cmk.relay_fetcher_trigger",
   "cmk.relay_trigger_protocol",
   "cmk.snmplib",
@@ -566,6 +561,16 @@ allows = ["@ccc", "@messaging", "cmk.utils"]
 
 [components."cmk.metric_backend"]
 allows = ["@ccc", "@plugin_apis", "cmk.discover_plugins"]
+
+[components."cmk.telemetry"]
+allows = [
+  "@ccc",
+  "cmk.base.config",
+  "cmk.discover_plugins",
+  "cmk.fetchers",
+  "cmk.metric_backend",
+  "cmk.utils.paths",
+]
 
 [components."cmk.mkp_tool"]
 allows = []

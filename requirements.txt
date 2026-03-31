@@ -3660,6 +3660,7 @@ pydantic==2.12.5 \
     #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r non-free/packages/cmk-robotmk/requirements.in
+    #   -r non-free/packages/cmk-telemetry/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in

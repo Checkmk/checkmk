@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import * as fs from 'fs'
+import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { checkBuildStatus } from './build/buildStatus'
@@ -83,7 +85,12 @@ function refreshStateCache(): StateCache {
     devSiteTools,
     versionMismatch,
     onboarding,
-    onboardingDismissed: _onboardingDismissed
+    onboardingDismissed: _onboardingDismissed,
+    configInWorkspace: (() => {
+      if (!wsPath) return false
+      const configDir = path.join(wsPath, '.ide', 'vscode', 'config')
+      return fs.existsSync(configDir) && fs.readdirSync(configDir).some((f) => f.endsWith('.json'))
+    })()
   }
 
   updateIssues(_issuesView, _issuesProvider, _stateCache)

@@ -141,6 +141,17 @@ export function updateIssues(
     })
   }
 
+  if (!stateCache.configInWorkspace) {
+    items.push({
+      label: 'No config recommendations',
+      description: 'evaluate extensions & settings independently',
+      tooltip:
+        'No workspace configuration files found in .ide/vscode/config/. Please evaluate extensions and settings independently.',
+      icon: 'warning',
+      iconColor: warnColor
+    })
+  }
+
   if (devSiteTools && !devSiteTools.installed) {
     items.push({
       label: 'cmk-dev-site',

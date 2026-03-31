@@ -68,6 +68,7 @@ export interface StateCache {
   versionMismatch: VersionMismatch | null
   onboarding: OnboardingState
   onboardingDismissed: boolean
+  configInWorkspace: boolean
 }
 
 export interface SectionContext {

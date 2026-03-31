@@ -244,7 +244,13 @@ export async function handleMessage(
 
 export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: string): string {
   const nonce = getNonce()
-  const { pythonEnvsActive, extensionHealth, settingsMismatches, versionMismatch } = state
+  const {
+    pythonEnvsActive,
+    extensionHealth,
+    settingsMismatches,
+    versionMismatch,
+    configInWorkspace
+  } = state
 
   const installedVersion = vscode.extensions.getExtension('checkmk.cmk-vscode')?.packageJSON
     ?.version as string | undefined
@@ -272,6 +278,13 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         <br><button class="btn btn-small" data-action="exec" data-id="cmk.disableExtension">Show Extension</button>
       </span>
     </div>`
+    : ''
+
+  const noConfigBanner = !configInWorkspace
+    ? `<div class="banner">
+        <span class="banner-icon">&#9888;</span>
+        <span class="banner-text">No configuration recommendations found. Please evaluate extensions and settings independently.</span>
+      </div>`
     : ''
 
   const truncate = (v: unknown, max = 60) => {
@@ -364,7 +377,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   return wrap(
     nonce,
     sectionCss,
-    `${versionHtml}${versionBanner}${pyEnvsBanner}` +
+    `${versionHtml}${versionBanner}${pyEnvsBanner}${noConfigBanner}` +
       `<div class="section-label">Settings</div>${settingsHtml}` +
       `<div class="section-label">Extensions</div>${extFamilies}`,
     codiconUri,

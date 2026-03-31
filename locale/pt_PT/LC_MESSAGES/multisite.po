@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-03-27 18:47+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -6206,6 +6206,9 @@ msgid "Allow all users to refer to rules contained in this pack"
 msgstr ""
 "Permitir que todos os usuários consultem as regras contidas neste pacote"
 
+msgid "Allow collection and transmission of product usage data"
+msgstr ""
+
 #, fuzzy
 msgid "Allow growing here"
 msgstr "Versões Mobileiron"
@@ -11713,10 +11716,6 @@ msgstr "Não é possível escrever o ficheiro de configuração \"%s\": %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Não é possível escrever o ficheiro \"%s\": %s"
 
-#, fuzzy
-msgid "Capacity"
-msgstr "Capacidade da UPS"
-
 msgid "Capacity providers per cluster"
 msgstr "Fornecedores de capacidade por cluster"
 
@@ -15316,6 +15315,13 @@ msgstr ""
 
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
+
+msgid ""
+"Consent to product usage analytics data collection. By default, this is "
+"disabled, the user will be asked for consent via pop-up. Run  <tt>cmk-"
+"product-usage --dry-run</tt> in the command line to see a preview of the "
+"data."
 msgstr ""
 
 msgid "Consider alerts for Prism Central only"
@@ -20091,6 +20097,10 @@ msgstr "Serviços para deficientes físicos"
 msgid "Disabled via master control"
 msgstr "Desactivar o controlador"
 
+#, fuzzy
+msgid "Disabled. Reminder scheduled"
+msgstr "Verificações ativas para deficientes"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -20748,6 +20758,9 @@ msgstr "Verificar um endereço"
 
 msgid "Do not check the node"
 msgstr "Não verificar o nó"
+
+msgid "Do not collect product usage data"
+msgstr ""
 
 msgid "Do not configure Windows Firewall"
 msgstr "Não configure o Windows Firewall"
@@ -22910,6 +22923,10 @@ msgstr "Permitir o processamento de resultados de verificação passiva"
 
 msgid "Enable processing of perfdata"
 msgstr "Habilitar o processamento de perfdados"
+
+#, fuzzy
+msgid "Enable product usage analytics"
+msgstr "Habilitar notificações periódicas"
 
 msgid "Enable profiling by request"
 msgstr "Habilitar a criação de perfis por pedido"
@@ -25795,10 +25812,6 @@ msgstr "Firmware"
 
 #, fuzzy
 msgid "Firmware Versions"
-msgstr "Versão Kernel"
-
-#, fuzzy
-msgid "Firmware version"
 msgstr "Versão Kernel"
 
 msgid "First"
@@ -41207,10 +41220,6 @@ msgstr "Falha na Verificação da Conectividade da Mídia"
 msgid "Media and data integrity errors"
 msgstr "Erros de integridade da mídia e dos dados"
 
-#, fuzzy
-msgid "Media type"
-msgstr "Tipo de jogo"
-
 #, python-format
 msgid "Median %s"
 msgstr "Mediana %s"
@@ -52078,6 +52087,9 @@ msgstr "Processador Max. Capacidade"
 msgid "Product"
 msgstr "Produto"
 
+msgid "Product usage analytics"
+msgstr ""
+
 msgid "Profile"
 msgstr "Perfil"
 
@@ -53443,10 +53455,6 @@ msgstr "Desactivar o controlador"
 
 #, fuzzy
 msgid "Redfish Volume discovery"
-msgstr "Descoberta do contador MSSQL"
-
-#, fuzzy
-msgid "Redfish drives"
 msgstr "Descoberta do contador MSSQL"
 
 #, fuzzy
@@ -88467,7 +88475,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -88968,7 +88975,6 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -90409,6 +90415,22 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Capacity"
+#~ msgstr "Capacidade da UPS"
+
+#, fuzzy
+#~ msgid "Firmware version"
+#~ msgstr "Versão Kernel"
+
+#, fuzzy
+#~ msgid "Media type"
+#~ msgstr "Tipo de jogo"
+
+#, fuzzy
+#~ msgid "Redfish drives"
+#~ msgstr "Descoberta do contador MSSQL"
 
 #~ msgid "Capacity filled"
 #~ msgstr "Capacidade preenchida"

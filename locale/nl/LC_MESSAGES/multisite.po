@@ -6197,6 +6197,9 @@ msgstr "Toegang toestaan via TCP"
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "Sta alle gebruikers toe om te verwijzen naar regels in dit pakket"
 
+msgid "Allow collection and transmission of product usage data"
+msgstr ""
+
 #, fuzzy
 msgid "Allow growing here"
 msgstr "Mobileiron versies"
@@ -11707,10 +11710,6 @@ msgstr "Kan configuratiebestand \"%s\" niet schrijven: %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kan bestand \"%s\" niet schrijven: %s"
 
-#, fuzzy
-msgid "Capacity"
-msgstr "UPS-capaciteit"
-
 msgid "Capacity providers per cluster"
 msgstr "Capaciteitsleveranciers per cluster"
 
@@ -15323,6 +15322,13 @@ msgstr ""
 
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
+
+msgid ""
+"Consent to product usage analytics data collection. By default, this is "
+"disabled, the user will be asked for consent via pop-up. Run  <tt>cmk-"
+"product-usage --dry-run</tt> in the command line to see a preview of the "
+"data."
 msgstr ""
 
 msgid "Consider alerts for Prism Central only"
@@ -20102,6 +20108,10 @@ msgstr "Diensten voor gehandicapten"
 msgid "Disabled via master control"
 msgstr "Controller uitschakelen"
 
+#, fuzzy
+msgid "Disabled. Reminder scheduled"
+msgstr "Uitgeschakelde actieve controles"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -20749,6 +20759,9 @@ msgstr "Een adres zoeken"
 
 msgid "Do not check the node"
 msgstr "Controleer het knooppunt niet"
+
+msgid "Do not collect product usage data"
+msgstr ""
 
 msgid "Do not configure Windows Firewall"
 msgstr "Windows Firewall niet configureren"
@@ -22920,6 +22933,10 @@ msgstr "Verwerking van passieve controleresultaten mogelijk maken"
 
 msgid "Enable processing of perfdata"
 msgstr "Verwerking van perfomatiegegevens inschakelen"
+
+#, fuzzy
+msgid "Enable product usage analytics"
+msgstr "Periodieke meldingen inschakelen"
 
 msgid "Enable profiling by request"
 msgstr "Profilering op verzoek inschakelen"
@@ -25801,10 +25818,6 @@ msgstr "Firmware"
 
 #, fuzzy
 msgid "Firmware Versions"
-msgstr "Kernel Versie"
-
-#, fuzzy
-msgid "Firmware version"
 msgstr "Kernel Versie"
 
 msgid "First"
@@ -41216,10 +41229,6 @@ msgstr "Media connectiviteitscontrole mislukt"
 msgid "Media and data integrity errors"
 msgstr "Fouten in de integriteit van media en gegevens"
 
-#, fuzzy
-msgid "Media type"
-msgstr "Wedstrijd type"
-
 #, python-format
 msgid "Median %s"
 msgstr "Mediaan %s"
@@ -52114,6 +52123,9 @@ msgstr "Processor Max. Capaciteit"
 msgid "Product"
 msgstr "Product"
 
+msgid "Product usage analytics"
+msgstr ""
+
 msgid "Profile"
 msgstr "Profiel"
 
@@ -53482,10 +53494,6 @@ msgstr "Controller uitschakelen"
 
 #, fuzzy
 msgid "Redfish Volume discovery"
-msgstr "MSSQL teller ontdekking"
-
-#, fuzzy
-msgid "Redfish drives"
 msgstr "MSSQL teller ontdekking"
 
 #, fuzzy
@@ -90522,6 +90530,22 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Capacity"
+#~ msgstr "UPS-capaciteit"
+
+#, fuzzy
+#~ msgid "Firmware version"
+#~ msgstr "Kernel Versie"
+
+#, fuzzy
+#~ msgid "Media type"
+#~ msgstr "Wedstrijd type"
+
+#, fuzzy
+#~ msgid "Redfish drives"
+#~ msgstr "MSSQL teller ontdekking"
 
 #~ msgid "Capacity filled"
 #~ msgstr "Capaciteit gevuld"

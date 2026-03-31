@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-26 18:46+0000\n"
+"PO-Revision-Date: 2026-03-30 20:45+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -6062,6 +6062,9 @@ msgstr "Zugriff über TCP erlauben"
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "Benutzern erlauben, die Regeln aus diesem Paket zu referenzieren"
 
+msgid "Allow collection and transmission of product usage data"
+msgstr ""
+
 msgid "Allow growing here"
 msgstr "Hier Wachsen erlauben"
 
@@ -11336,9 +11339,6 @@ msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kann Datei \"%s\" nicht schreiben: %s"
 
-msgid "Capacity"
-msgstr "Kapazität"
-
 msgid "Capacity providers per cluster"
 msgstr "Capacity providers pro Cluster"
 
@@ -14877,6 +14877,13 @@ msgstr "Vermittler: Sammlung der OpenTelemetry-Hosts auf der Instanz \"%s\""
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr "Vermittler: Sammlung der Piggyback-Hosts auf der Instanz \"%s\""
+
+msgid ""
+"Consent to product usage analytics data collection. By default, this is "
+"disabled, the user will be asked for consent via pop-up. Run  <tt>cmk-"
+"product-usage --dry-run</tt> in the command line to see a preview of the "
+"data."
+msgstr ""
 
 msgid "Consider alerts for Prism Central only"
 msgstr "Nur Alerts für Prism Central berücksichtigen"
@@ -19485,6 +19492,10 @@ msgstr "Deaktivierte Services"
 msgid "Disabled via master control"
 msgstr "Durch Master Control deaktiviert"
 
+#, fuzzy
+msgid "Disabled. Reminder scheduled"
+msgstr "Deaktivierte aktive Checks"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -20129,6 +20140,9 @@ msgstr "Nicht auf eine Adresse prüfen"
 msgid "Do not check the node"
 msgstr "Diesen Knoten nicht prüfen"
 
+msgid "Do not collect product usage data"
+msgstr ""
+
 msgid "Do not configure Windows Firewall"
 msgstr "Windows-Firewall nicht konfigurieren"
 
@@ -20614,7 +20628,7 @@ msgid "Documentation URL"
 msgstr "URL zur Dokumentation"
 
 msgid "Documentation files"
-msgstr "Dokumentation Dateien"
+msgstr "Dateien der Dokumentation"
 
 msgid "Documents fragmentation"
 msgstr "Dokumentation Fragmentation"
@@ -22192,6 +22206,10 @@ msgstr "Verarbeitung von passiven Checkergebnissen einschalten"
 msgid "Enable processing of perfdata"
 msgstr "Verarbeitung von Metriken ein"
 
+#, fuzzy
+msgid "Enable product usage analytics"
+msgstr "Periodische Benachrichtigungen ein"
+
 msgid "Enable profiling by request"
 msgstr "Profiling pro Anfrage aktivieren"
 
@@ -22281,6 +22299,8 @@ msgid ""
 "Enable/Disable logging to Windows debugging interface. Off by default. View "
 "with <i>WinDbg</i>"
 msgstr ""
+"Protokollierung an die Windows-Debugging-Schnittstelle aktivieren/"
+"deaktivieren. Standardmäßig deaktiviert. Anzeigen mit <i>WinDbg</i>"
 
 msgid "Enable/Disable passive checks"
 msgstr "Passive Checks aktivieren/deaktivieren"
@@ -25038,9 +25058,6 @@ msgstr "Firmware"
 
 msgid "Firmware Versions"
 msgstr "Firmware-Versionen"
-
-msgid "Firmware version"
-msgstr "Firmware-Version"
 
 msgid "First"
 msgstr "Erste/r/s"
@@ -32151,7 +32168,7 @@ msgid ""
 msgstr ""
 "Wenn Sie während der Konfiguration Hilfe benötigen, dann finden Sie diese in "
 "der <a target=\"_blank\" href=\"http://checkmk.com/"
-"checkmk_multisite_ldap_integration.html\">LDAP Dokumentation</a>."
+"checkmk_multisite_ldap_integration.html\">LDAP-Dokumentation</a>."
 
 msgid ""
 "If you omit this setting then the configured IP address of that host will be "
@@ -39811,9 +39828,6 @@ msgstr "Fehler der Medienverbindungsprüfung"
 
 msgid "Media and data integrity errors"
 msgstr "Medien- und Datenintegritätsfehler"
-
-msgid "Media type"
-msgstr "Medientyp"
 
 #, python-format
 msgid "Median %s"
@@ -50118,6 +50132,9 @@ msgstr "Prozessor max. Kapazität"
 msgid "Product"
 msgstr "Produkt"
 
+msgid "Product usage analytics"
+msgstr ""
+
 msgid "Profile"
 msgstr "Profil"
 
@@ -51413,9 +51430,6 @@ msgstr "Redfish Speicher-Controller"
 
 msgid "Redfish Volume discovery"
 msgstr "Erkennung des Redfish Volumes"
-
-msgid "Redfish drives"
-msgstr "Redfish-Laufwerke"
 
 msgid "Redfish outlet discovery"
 msgstr "Erkennung der Redfish Ausgänge"
@@ -53370,7 +53384,7 @@ msgid "Rollovers Asserts"
 msgstr "Rollovers Asserts"
 
 msgid "Rollup check only"
-msgstr ""
+msgstr "Nur Rollup-Check"
 
 msgid "Root CA"
 msgstr "Root CA"
@@ -58974,6 +58988,14 @@ msgid ""
 "\n"
 " Rollup: Only report overall health state"
 msgstr ""
+"Geben Sie an, wie der Speichercontroller überprüft werden soll:\n"
+"\n"
+"\n"
+" Vollständig: Detaillierten Controller-Status einschließlich RAID-Levels und "
+"Geräteprotokollen melden\n"
+"\n"
+"\n"
+" Rollup: Nur den allgemeinen Gesundheitszustand melden"
 
 msgid ""
 "Specify how to name drives during discovery:\n"
@@ -58983,6 +59005,15 @@ msgid ""
 " Controller ID: Use a structured format from the OData path (e.g., '0:1:4' "
 "for system:storage:drive)"
 msgstr ""
+"Geben Sie an, wie Laufwerke bei der Erkennung benannt werden sollen:\n"
+"\n"
+"\n"
+" Klassisch: Laufwerks-ID und den Namen verwenden (z. B. '0-1,2 TB 12G SAS "
+"HDD')\n"
+"\n"
+"\n"
+" Controller-ID: strukturiertes Format aus dem OData-Pfad verwenden (z. B. "
+"'0:1:4' für system:storage:drive)"
 
 msgid ""
 "Specify how to name the outlets during discovery:\n"
@@ -78400,7 +78431,7 @@ msgid "Use the name specified in the ESX system"
 msgstr "Benutze den Namen, der im ESX System festgelegt ist"
 
 msgid "Use the new service name"
-msgstr "Den neuen Service-Namen verwenden"
+msgstr "Neue Service-Namen verwenden"
 
 msgid ""
 "Use the new service name. Disabling this option does not work for services "
@@ -82231,9 +82262,8 @@ msgstr "Optionen des Windows-Agenten"
 msgid "Windows authentication"
 msgstr "Windows-Authentifizierung"
 
-#, fuzzy
 msgid "Windows debugging"
-msgstr "Protokollierung Windows Agent"
+msgstr "Windows-Fehlerbehebung"
 
 msgid "Windows files"
 msgstr "Windows Dateien"
@@ -87494,6 +87524,18 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Capacity"
+#~ msgstr "Kapazität"
+
+#~ msgid "Firmware version"
+#~ msgstr "Firmware-Version"
+
+#~ msgid "Media type"
+#~ msgstr "Medientyp"
+
+#~ msgid "Redfish drives"
+#~ msgstr "Redfish-Laufwerke"
 
 #~ msgid "Capacity filled"
 #~ msgstr "Gefüllte Papiermenge"

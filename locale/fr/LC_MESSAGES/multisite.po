@@ -6254,6 +6254,9 @@ msgstr ""
 "Permettre à tous les utilisateurs de se référer aux règles contenues dans ce "
 "pack"
 
+msgid "Allow collection and transmission of product usage data"
+msgstr ""
+
 #, fuzzy
 msgid "Allow growing here"
 msgstr "Versions Mobileiron"
@@ -11793,10 +11796,6 @@ msgstr "Impossible d'écrire le fichier de configuration \"%s\" : %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Impossible d'écrire le fichier \"%s\" : %s"
 
-#, fuzzy
-msgid "Capacity"
-msgstr "Capacité de l'ASI"
-
 msgid "Capacity providers per cluster"
 msgstr "Fournisseurs de capacité par groupe"
 
@@ -15439,6 +15438,13 @@ msgstr ""
 
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
+
+msgid ""
+"Consent to product usage analytics data collection. By default, this is "
+"disabled, the user will be asked for consent via pop-up. Run  <tt>cmk-"
+"product-usage --dry-run</tt> in the command line to see a preview of the "
+"data."
 msgstr ""
 
 msgid "Consider alerts for Prism Central only"
@@ -20258,6 +20264,10 @@ msgstr "Services désactivés"
 msgid "Disabled via master control"
 msgstr "Désactiver le contrôleur"
 
+#, fuzzy
+msgid "Disabled. Reminder scheduled"
+msgstr "Contrôles actifs désactivés"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -20922,6 +20932,9 @@ msgstr "Recherche d'une adresse"
 
 msgid "Do not check the node"
 msgstr "Ne pas vérifier le nœud"
+
+msgid "Do not collect product usage data"
+msgstr ""
 
 msgid "Do not configure Windows Firewall"
 msgstr "Ne pas configurer le Pare-feu Windows"
@@ -23118,6 +23131,10 @@ msgstr "Permettre le traitement des résultats des contrôles passifs"
 
 msgid "Enable processing of perfdata"
 msgstr "Activer le traitement des données de perforation"
+
+#, fuzzy
+msgid "Enable product usage analytics"
+msgstr "Activer les notifications périodiques"
 
 msgid "Enable profiling by request"
 msgstr "Activer le profilage par demande"
@@ -26022,10 +26039,6 @@ msgstr "Firmware"
 
 #, fuzzy
 msgid "Firmware Versions"
-msgstr "Version du noyau"
-
-#, fuzzy
-msgid "Firmware version"
 msgstr "Version du noyau"
 
 msgid "First"
@@ -41558,10 +41571,6 @@ msgstr "Échec de la vérification de la connectivité des médias"
 msgid "Media and data integrity errors"
 msgstr "Erreurs d'intégrité des médias et des données"
 
-#, fuzzy
-msgid "Media type"
-msgstr "Type de correspondance"
-
 #, python-format
 msgid "Median %s"
 msgstr "Médiane %s"
@@ -52560,6 +52569,9 @@ msgstr "Processeur Capacité max. Capacité"
 msgid "Product"
 msgstr "Produit"
 
+msgid "Product usage analytics"
+msgstr ""
+
 msgid "Profile"
 msgstr "Profil"
 
@@ -53931,10 +53943,6 @@ msgstr "Désactiver le contrôleur"
 
 #, fuzzy
 msgid "Redfish Volume discovery"
-msgstr "Découverte du compteur MSSQL"
-
-#, fuzzy
-msgid "Redfish drives"
 msgstr "Découverte du compteur MSSQL"
 
 #, fuzzy
@@ -91392,6 +91400,22 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid "Capacity"
+#~ msgstr "Capacité de l'ASI"
+
+#, fuzzy
+#~ msgid "Firmware version"
+#~ msgstr "Version du noyau"
+
+#, fuzzy
+#~ msgid "Media type"
+#~ msgstr "Type de correspondance"
+
+#, fuzzy
+#~ msgid "Redfish drives"
+#~ msgstr "Découverte du compteur MSSQL"
 
 #~ msgid "Capacity filled"
 #~ msgstr "Capacité remplie"

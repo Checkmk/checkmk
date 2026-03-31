@@ -6213,6 +6213,9 @@ msgstr ""
 "Permiteți tuturor utilizatorilor să se refere la regulile conținute în acest "
 "pachet"
 
+msgid "Allow collection and transmission of product usage data"
+msgstr ""
+
 msgid "Allow growing here"
 msgstr "Permiteți creșterea aici"
 
@@ -11736,10 +11739,6 @@ msgstr "Nu se poate scrie fișierul de configurare \"%s\": %s."
 msgid "Cannot write file \"%s\": %s"
 msgstr "Nu se poate scrie fișierul \"%s\": %s."
 
-#, fuzzy
-msgid "Capacity"
-msgstr "Capacitate UPS"
-
 msgid "Capacity providers per cluster"
 msgstr "Furnizori de capacitate per cluster"
 
@@ -15336,6 +15335,13 @@ msgstr ""
 
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
+
+msgid ""
+"Consent to product usage analytics data collection. By default, this is "
+"disabled, the user will be asked for consent via pop-up. Run  <tt>cmk-"
+"product-usage --dry-run</tt> in the command line to see a preview of the "
+"data."
 msgstr ""
 
 msgid "Consider alerts for Prism Central only"
@@ -20124,6 +20130,10 @@ msgstr "Servicii pentru persoane cu handicap"
 msgid "Disabled via master control"
 msgstr "Dezactivați controlerul"
 
+#, fuzzy
+msgid "Disabled. Reminder scheduled"
+msgstr "Controale active dezactivate"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -20789,6 +20799,9 @@ msgstr "Verificați o adresă"
 
 msgid "Do not check the node"
 msgstr "Nu verificați nodul"
+
+msgid "Do not collect product usage data"
+msgstr ""
 
 msgid "Do not configure Windows Firewall"
 msgstr "Nu configurați Windows Firewall"
@@ -22964,6 +22977,10 @@ msgstr "Activarea procesării rezultatelor verificărilor pasive"
 
 msgid "Enable processing of perfdata"
 msgstr "Activați procesarea datelor de performanță"
+
+#, fuzzy
+msgid "Enable product usage analytics"
+msgstr "Activați notificările periodice"
 
 msgid "Enable profiling by request"
 msgstr "Activați profilarea la cerere"
@@ -25854,10 +25871,6 @@ msgstr "Firmware"
 
 #, fuzzy
 msgid "Firmware Versions"
-msgstr "Versiunea Kernel"
-
-#, fuzzy
-msgid "Firmware version"
 msgstr "Versiunea Kernel"
 
 msgid "First"
@@ -41274,10 +41287,6 @@ msgstr "Eșecul verificării conectivității media"
 msgid "Media and data integrity errors"
 msgstr "Erori de integritate a mediilor și a datelor"
 
-#, fuzzy
-msgid "Media type"
-msgstr "Tipul de meci"
-
 #, python-format
 msgid "Median %s"
 msgstr "Median %s"
@@ -52185,6 +52194,9 @@ msgstr "Procesor Max. Capacitate"
 msgid "Product"
 msgstr "Produs"
 
+msgid "Product usage analytics"
+msgstr ""
+
 msgid "Profile"
 msgstr "Profil"
 
@@ -53553,10 +53565,6 @@ msgstr "Dezactivați controlerul"
 
 #, fuzzy
 msgid "Redfish Volume discovery"
-msgstr "Descoperirea contorului MSSQL"
-
-#, fuzzy
-msgid "Redfish drives"
 msgstr "Descoperirea contorului MSSQL"
 
 #, fuzzy
@@ -90728,6 +90736,22 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Capacity"
+#~ msgstr "Capacitate UPS"
+
+#, fuzzy
+#~ msgid "Firmware version"
+#~ msgstr "Versiunea Kernel"
+
+#, fuzzy
+#~ msgid "Media type"
+#~ msgstr "Tipul de meci"
+
+#, fuzzy
+#~ msgid "Redfish drives"
+#~ msgstr "Descoperirea contorului MSSQL"
 
 #~ msgid "Capacity filled"
 #~ msgstr "Capacitate umplută"

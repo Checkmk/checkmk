@@ -200,10 +200,17 @@ class Resources(Section):
 
     request: float
     limit: float
+
+    # requests
     count_unspecified_requests: int
+    count_total_requests: int
+    count_pods_pod_level_request: int
+
+    # limits
     count_unspecified_limits: int
     count_zeroed_limits: int
-    count_total: int
+    count_total_limits: int
+    count_pods_pod_level_limit: int
 
 
 class AllocatableResource(Section):

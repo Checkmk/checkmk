@@ -8,7 +8,10 @@ from cmk.plugins.kube.schemata.api import (
     Phase,
     PodUID,
 )
-from tests.cmk.plugins.kube.data.kube_1_34 import pod_missing_creation_timestamp
+from tests.cmk.plugins.kube.data.kube_1_34 import (
+    pod_missing_creation_timestamp,
+    pod_with_pod_level_and_container_resources,
+)
 
 
 def test_pod_from_client() -> None:
@@ -41,3 +44,11 @@ def test_pod_from_client() -> None:
     pvc_vol = next(v for v in pod.spec.volumes if v.name == "mypvc")
     assert pvc_vol.persistent_volume_claim is not None
     assert pvc_vol.persistent_volume_claim.claim_name == "test-pvc"
+
+
+def test_pod_from_client_pod_level_resources() -> None:
+    pod = pod_from_client(pod_with_pod_level_and_container_resources.DATA, controllers=[])  # type: ignore[arg-type]
+    assert pod.spec.resources.requests.cpu == 0.5  # 500m
+    assert pod.spec.resources.requests.memory == 512 * 1024 * 1024  # 512Mi
+    assert pod.spec.resources.limits.cpu == 1.0  # 1
+    assert pod.spec.resources.limits.memory == 1024 * 1024 * 1024  # 1Gi

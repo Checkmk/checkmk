@@ -46,10 +46,15 @@ def test_pod_owner_memory_resources() -> None:
         requests=api.ResourceRequirement(memory=1.0 * 1024),
     )
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
-    api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
+    unset_resources = api.ResourceRequirements(
+        limits=api.ResourceRequirement(), requests=api.ResourceRequirement()
+    )
+    api_pod = APIPodFactory.build(
+        spec=PodSpecFactory.build(containers=[container_spec], resources=unset_resources)
+    )
     pod_owner = PodOwner(pods=[api_pod])
     memory_resources = pod_owner.memory_resources()
-    assert memory_resources.count_total == 1
+    assert memory_resources.count_total_requests == 1
     assert memory_resources.limit == 2.0 * 1024
     assert memory_resources.request == 1.0 * 1024
 
@@ -60,8 +65,13 @@ def test_pod_owner_cpu_resources() -> None:
         requests=api.ResourceRequirement(cpu=1.0),
     )
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
-    api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
+    unset_resources = api.ResourceRequirements(
+        limits=api.ResourceRequirement(), requests=api.ResourceRequirement()
+    )
+    api_pod = APIPodFactory.build(
+        spec=PodSpecFactory.build(containers=[container_spec], resources=unset_resources)
+    )
     pod_owner = PodOwner(pods=[api_pod])
     cpu_resources = pod_owner.cpu_resources()
-    assert cpu_resources.count_total == 1
+    assert cpu_resources.count_total_requests == 1
     assert cpu_resources.limit == 2.0

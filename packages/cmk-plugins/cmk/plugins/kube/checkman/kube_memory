@@ -7,11 +7,13 @@ description:
  This check shows the memory usage of a Kubernetes object, its requests utilization and its limits
  utilization.
 
- Requests utilization is the memory usage divided by the sum of all configured container memory
- requests. Limit utilization is computed in the same manner. The utilization percentage values are
- omitted if any of the associated request/limit value are not configured. Moreover, limits
- utilization is omitted if any container has a limit of zero. The reason for omission is displayed
- in the check's details.
+ Requests utilization is the memory usage divided by the configured memory requests of the
+ Kubernetes object. For pods without pod-level requests, the sum of container requests is used.
+ For pods with pod-level requests, the pod-level value takes precedence so long as the pod-level
+ value is non-zero. Limits utilization is computed in the same manner. The utilization percentage
+ values are omitted if any of the  associated request/limit values are not configured. Moreover,
+ limits utilization is omitted if any container has a limit of zero. The reason for omission is
+ displayed in the check's details.
 
  The primary metric driving Kubernetes' memory-based restart decisions is
  container_memory_working_set_bytes. The plug-in reports this metric under the label "Usage".
@@ -33,7 +35,7 @@ description:
  The check requires that the special agent kube is configured.
 
  For the Checkmk Openshift monitoring, the reported metric values will differ from the values
- reported on the Openshift dashboard as as the included values describe a different quantity.
+ reported on the Openshift dashboard as the included values describe a different quantity.
 
 discovery:
  One service is created per Kubernetes object.

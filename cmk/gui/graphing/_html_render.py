@@ -25,7 +25,6 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.color import render_color_icon
-from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
@@ -621,14 +620,36 @@ def _render_graph_content_html(
             debug=debug,
         )
 
-    except MKMissingDataError as e:
-        return html.render_message(str(e))
-
     except Exception as e:
         return render_graph_error_html(
             title=_("Cannot create graph"),
             msg_or_exc=e,
             debug=debug,
+        )
+
+
+def _compute_recipes(
+    graph_specification: GraphSpecification,
+    env: GraphEnvironment,
+) -> Sequence[GraphRecipeWithOverrides] | HTML:
+    try:
+        return graph_specification.recipes(env)
+    except MKLivestatusNotFoundError:
+        return render_graph_error_html(
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc="%s\n\n%s: %r"
+            % (
+                _("Cannot fetch data via Livestatus"),
+                _("The graph specification is"),
+                graph_specification,
+            ),
+            debug=env.debug,
+        )
+    except Exception as e:
+        return render_graph_error_html(
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=e,
+            debug=env.debug,
         )
 
 
@@ -643,27 +664,8 @@ def render_graphs_html(
     display_id: str = "",
 ) -> HTML:
     """Render graph content synchronously without AJAX."""
-    try:
-        recipes = graph_specification.recipes(env)
-    except MKLivestatusNotFoundError:
-        return render_graph_error_html(
-            title=_("Cannot calculate graph recipes"),
-            msg_or_exc=(
-                "%s\n\n%s: %r"
-                % (
-                    _("Cannot fetch data via Livestatus"),
-                    _("The graph specification is"),
-                    graph_specification,
-                )
-            ),
-            debug=env.debug,
-        )
-    except Exception as e:
-        return render_graph_error_html(
-            title=_("Cannot calculate graph recipes"),
-            msg_or_exc=e,
-            debug=env.debug,
-        )
+    if isinstance(recipes := _compute_recipes(graph_specification, env), HTML):
+        return recipes
 
     output = HTML.empty()
     for recipe_with_overrides in recipes:
@@ -1264,27 +1266,8 @@ def render_deferred_graphs_html(
     display_id: str = "",
 ) -> HTML:
     """Render async AJAX loading containers. JavaScript fills them via ajax_render_graph."""
-    try:
-        recipes = graph_specification.recipes(env)
-    except MKLivestatusNotFoundError:
-        return render_graph_error_html(
-            title=_("Cannot calculate graph recipes"),
-            msg_or_exc=(
-                "%s\n\n%s: %r"
-                % (
-                    _("Cannot fetch data via Livestatus"),
-                    _("The graph specification is"),
-                    graph_specification,
-                )
-            ),
-            debug=env.debug,
-        )
-    except Exception as e:
-        return render_graph_error_html(
-            title=_("Cannot calculate graph recipes"),
-            msg_or_exc=e,
-            debug=env.debug,
-        )
+    if isinstance(recipes := _compute_recipes(graph_specification, env), HTML):
+        return recipes
 
     output = HTML.empty()
     for recipe_with_overrides in recipes:

@@ -89,18 +89,10 @@ NEEDED_AUTOMATIONS: Final = [
 
 
 def test_registered_automations() -> None:
-    # Given how the test environment is configured,
-    # the discovery will always find this one automation that doesn't belong into the community edition.
-    # If this assertion fails: Congratulations, you can remove 'notify' from this list.
-    assert sorted(NEEDED_AUTOMATIONS + ["notify"]) == sorted(
-        make_app(EDITION).automations._automations.keys()
-    )
+    assert sorted(NEEDED_AUTOMATIONS) == sorted(make_app(EDITION).automations._automations.keys())
 
 
 def test_discovered_automations() -> None:
     a = Automations()
     a.discover()
-    # Given how the test environment is configured,
-    # the discovery will always find this one automation that doesn't belong into the community edition.
-    # If this assertion fails: Congratulations, you can remove 'notify' from this list.
-    assert sorted(NEEDED_AUTOMATIONS + ["notify"]) == sorted(a._automations.keys())
+    assert sorted(NEEDED_AUTOMATIONS) == sorted(a._automations.keys())

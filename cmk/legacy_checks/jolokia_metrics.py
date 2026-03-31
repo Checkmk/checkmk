@@ -15,6 +15,9 @@ import time
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
+    check_levels as check_levels_v2,
+)
+from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
     GetRateError,
@@ -243,12 +246,13 @@ def check_jolokia_metrics_app_sess(item, params, info):
         app.get("Sessions", app.get("maxActiveSessions", app.get("OpenSessionsCurrentCount")))
     )
 
-    yield check_levels(
+    yield from check_levels_v2(
         sess,
-        "sessions",
-        (params["levels_upper"] or (None, None)) + (params["levels_lower"] or (None, None)),
-        human_readable_func=str,
-        infoname="Sessions",
+        metric_name="sessions",
+        levels_upper=params["levels_upper"],
+        levels_lower=params["levels_lower"],
+        render_func=str,
+        label="Sessions",
     )
 
     if maxActive and maxActive > 0:
@@ -342,8 +346,8 @@ check_info["jolokia_metrics.app_sess"] = LegacyCheckDefinition(
     check_function=check_jolokia_metrics_app_sess,
     check_ruleset_name="jvm_sessions",
     check_default_parameters={
-        "levels_lower": (-1, -1),
-        "levels_upper": (800, 1000),
+        "levels_lower": ("no_levels", None),
+        "levels_upper": ("fixed", (800, 1000)),
     },
 )
 
@@ -398,8 +402,8 @@ check_info["jolokia_metrics.bea_sess"] = LegacyCheckDefinition(
     check_function=check_jolokia_metrics_app_sess,
     check_ruleset_name="jvm_sessions",
     check_default_parameters={
-        "levels_lower": (-1, -1),
-        "levels_upper": (800, 1000),
+        "levels_lower": ("no_levels", None),
+        "levels_upper": ("fixed", (800, 1000)),
     },
 )
 

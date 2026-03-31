@@ -11,12 +11,9 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.conversion import (
-    # Temporary compatibility layer untile we migrate the corresponding ruleset.
-    check_levels_legacy_compatible as check_levels,
-)
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -55,18 +52,23 @@ def check_appdynamics_sessions(
 
             yield from check_levels(
                 active,
-                "running_sessions",
-                (params["levels_upper"] or (None, None)) + (params["levels_lower"] or (None, None)),
-                human_readable_func=str,
-                infoname="Running sessions",
+                metric_name="running_sessions",
+                levels_upper=params.get("levels_upper"),
+                levels_lower=params.get("levels_lower"),
+                render_func=str,
+                label="Running sessions",
             )
 
             yield from check_levels(
-                counter_rate, None, None, human_readable_func=lambda x: f"{x}/sec"
+                counter_rate,
+                render_func=lambda x: f"{x}/sec",
             )
 
             yield from check_levels(
-                rejected, "rejected_sessions", None, human_readable_func=str, infoname="Rejected"
+                rejected,
+                metric_name="rejected_sessions",
+                render_func=str,
+                label="Rejected",
             )
 
             yield Result(state=State.OK, summary=f"Maximum active: {max_active}")
@@ -89,7 +91,7 @@ check_plugin_appdynamics_sessions = CheckPlugin(
     check_function=check_appdynamics_sessions,
     check_ruleset_name="jvm_sessions",
     check_default_parameters={
-        "levels_lower": None,
-        "levels_upper": None,
+        "levels_lower": ("no_levels", None),
+        "levels_upper": ("no_levels", None),
     },
 )

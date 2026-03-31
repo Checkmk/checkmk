@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.hivemanager_devices import (
+from cmk.plugins.hivemanager.agent_based.hivemanager_devices import (
     check_hivemanager_devices,
     discover_hivemanager_devices,
     parse_hivemanager_devices,

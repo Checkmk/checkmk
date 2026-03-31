@@ -449,3 +449,50 @@ def test_ldap_connection_endpoints_return_404_in_cse_edition(clients: ClientRegi
 
     resp = clients.LdapConnection.delete(ldap_connection_id="LDAP_1", expect_ok=False)
     resp.assert_status_code(404)
+
+
+def test_create_with_custom_user_role(clients: ClientRegistry) -> None:
+    clients.UserRole.clone(body={"role_id": "admin"})
+    resp = clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_3"},
+            },
+            "sync_plugins": {
+                "groups_to_roles": {
+                    "state": "enabled",
+                    "admin": [
+                        {
+                            "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                            "search_in": "this_connection",
+                        }
+                    ],
+                    "user": [
+                        {
+                            "group_dn": "CN=cmk_AD_users,ou=Gruppen,dc=corp,dc=de",
+                            "search_in": "this_connection",
+                        }
+                    ],
+                    "adminx": [
+                        {
+                            "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                            "search_in": "this_connection",
+                        }
+                    ],
+                    "handle_nested": True,
+                },
+            },
+        }
+    )
+
+    assert resp.json["extensions"]["sync_plugins"]["groups_to_roles"]["adminx"] == [
+        {
+            "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+            "search_in": "this_connection",
+        }
+    ]

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from typing import TypeAlias
 
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import HostKey
@@ -13,8 +12,8 @@ from cmk.checkengine.parser import AgentRawDataSection, group_by_host, HostSecti
 from cmk.checkengine.plugins import SectionName
 from cmk.helper_interface import SourceType
 
-HS: TypeAlias = HostSections[AgentRawDataSection]
-TRAW: TypeAlias = list[tuple[str, str]]
+HS = HostSections[AgentRawDataSection]
+type TRAW = list[tuple[str, str]]
 
 
 def parse(raw: TRAW) -> dict[SectionName, list[list[str]]]:

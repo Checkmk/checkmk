@@ -6,7 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Container, Iterable, Mapping, Sequence
-from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict
+from typing import Any, Final, Literal, SupportsInt, TypedDict
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import RediscoveryParameters
@@ -34,8 +34,8 @@ _ContactgroupName = str
 # TODO: Remove the duplication with cmk.base.config
 _ALL_HOSTS: Final = ["@all"]  # physical and cluster hosts
 _NEGATE: Final = "@negate"  # negation in boolean lists
-_HostgroupName: TypeAlias = str
-_ServicegroupName: TypeAlias = str
+type _HostgroupName = str
+type _ServicegroupName = str
 
 monitoring_core: Literal["nagios", "cmc"] = "nagios"
 mkeventd_enabled = False  # Set by OMD hook

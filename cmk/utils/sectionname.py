@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, MutableMapping
-from typing import NewType, TypeAlias, TypeVar
+from typing import NewType, TypeVar
 
 __all__ = ["SectionName", "SectionMap"]
 
@@ -15,7 +15,7 @@ SectionName = NewType("SectionName", str)
 
 
 _T_co = TypeVar("_T_co", covariant=True)
-SectionMap: TypeAlias = Mapping[SectionName, _T_co]
+type SectionMap[_T_co] = Mapping[SectionName, _T_co]
 
 _T = TypeVar("_T")
-MutableSectionMap: TypeAlias = MutableMapping[SectionName, _T]
+type MutableSectionMap[_T] = MutableMapping[SectionName, _T]

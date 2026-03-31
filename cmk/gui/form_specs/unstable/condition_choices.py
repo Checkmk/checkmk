@@ -5,21 +5,21 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, TypeAlias
+from typing import Literal
 
 from cmk.rulesets.v1 import Label
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing.vue_formspec_components import Condition as Condition
 from cmk.shared_typing.vue_formspec_components import ConditionGroup as ConditionGroup
 
-ConditionID: TypeAlias = str
-ConditionGroupID: TypeAlias = str
-_IsCondition: TypeAlias = ConditionID
-_IsNotCondition: TypeAlias = Mapping[Literal["$ne"], ConditionID]
-_OrCondition: TypeAlias = Mapping[Literal["$or"], Sequence[ConditionID]]
-_NorCondition: TypeAlias = Mapping[Literal["$nor"], Sequence[ConditionID]]
-ConditionTypeDisk: TypeAlias = _OrCondition | _NorCondition | _IsNotCondition | _IsCondition
-ConditionsTypeDisk: TypeAlias = Mapping[ConditionGroupID, ConditionTypeDisk]
+type ConditionID = str
+type ConditionGroupID = str
+type _IsCondition = ConditionID
+type _IsNotCondition = Mapping[Literal["$ne"], ConditionID]
+type _OrCondition = Mapping[Literal["$or"], Sequence[ConditionID]]
+type _NorCondition = Mapping[Literal["$nor"], Sequence[ConditionID]]
+type ConditionTypeDisk = _OrCondition | _NorCondition | _IsNotCondition | _IsCondition
+type ConditionsTypeDisk = Mapping[ConditionGroupID, ConditionTypeDisk]
 
 
 @dataclass(frozen=True, kw_only=True)

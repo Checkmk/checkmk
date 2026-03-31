@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import assert_never, get_args, NewType, overload, override, TypeAlias, TypeGuard
+from typing import assert_never, get_args, NewType, overload, override, TypeGuard
 
 import cryptography.exceptions
 from cryptography.hazmat.primitives import serialization
@@ -37,7 +37,7 @@ class PublicKeyPEM(_PEMData):
 Signature = NewType("Signature", bytes)
 
 
-PublicKeyType: TypeAlias = (
+PublicKeyType = (
     ed25519.Ed25519PublicKey | ed448.Ed448PublicKey | rsa.RSAPublicKey | ec.EllipticCurvePublicKey
 )
 
@@ -47,7 +47,7 @@ def is_supported_public_key_type(key: types.PublicKeyTypes) -> TypeGuard[PublicK
     return isinstance(key, get_args(PublicKeyType))
 
 
-PrivateKeyType: TypeAlias = (
+PrivateKeyType = (
     ed25519.Ed25519PrivateKey
     | ed448.Ed448PrivateKey
     | rsa.RSAPrivateKey

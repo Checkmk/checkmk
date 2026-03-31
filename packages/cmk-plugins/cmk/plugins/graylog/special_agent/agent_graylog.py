@@ -15,7 +15,6 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from typing import TypeAlias
 
 import requests
 import urllib3
@@ -26,7 +25,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 PASSWORD_OPTION = "password"
 
-JsonSerializable: TypeAlias = (
+type JsonSerializable = (
     Mapping[str, "JsonSerializable"]
     | Sequence["JsonSerializable"]
     | str

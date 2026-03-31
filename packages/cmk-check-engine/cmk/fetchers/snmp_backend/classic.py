@@ -5,7 +5,7 @@
 
 import subprocess
 from collections.abc import Iterable
-from typing import assert_never, Literal, TypeAlias
+from typing import assert_never, Literal
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
@@ -16,7 +16,7 @@ from ._utils import strip_snmp_value
 
 __all__ = ["ClassicSNMPBackend"]
 
-CommandType: TypeAlias = Literal["snmpget", "snmpgetnext", "snmpwalk"]
+type CommandType = Literal["snmpget", "snmpgetnext", "snmpwalk"]
 
 
 def _sanitize_tuple(tuple_: object) -> str:

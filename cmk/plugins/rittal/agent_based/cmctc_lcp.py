@@ -5,7 +5,7 @@
 
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, NamedTuple, TypeAlias
+from typing import Any, NamedTuple
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -27,7 +27,7 @@ from cmk.plugins.rittal.lib.cmctc import (
     DETECT_CMCTC,
 )
 
-Params: TypeAlias = Any
+type Params = Any
 
 
 class Sensor(NamedTuple):

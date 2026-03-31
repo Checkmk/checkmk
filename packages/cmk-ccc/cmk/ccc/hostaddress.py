@@ -11,7 +11,7 @@ import re
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
-from typing import Final, Self, TypeAlias
+from typing import Final, Self
 
 __all__ = ["HostAddress", "Hosts", "HostName", "HostNameValidationError"]
 
@@ -105,4 +105,4 @@ class HostAddress(str):
 
 # Let us be honest here, we do not actually make a difference
 # between HostAddress and HostName in our code.
-HostName: TypeAlias = HostAddress
+HostName = HostAddress

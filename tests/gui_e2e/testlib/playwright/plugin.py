@@ -31,7 +31,7 @@ CLI_ARGUMENT_GUI_TIMEOUT = "--gui-timeout"
 CLI_ARGUMENT_TRACING = "--tracing"
 
 
-PageGetter: t.TypeAlias = Callable[[BrowserContext], Page]
+type PageGetter = Callable[[BrowserContext], Page]
 
 
 def positive_integer(value: str) -> int:

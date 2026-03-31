@@ -19,7 +19,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Any, TypeAlias, TypedDict
+from typing import Any, TypedDict
 
 import cmk.utils.paths
 from cmk.gui.i18n import _u
@@ -31,7 +31,7 @@ class UserScriptInfo(TypedDict):
     title: str
 
 
-NotificationUserScripts: TypeAlias = dict[str, UserScriptInfo]
+type NotificationUserScripts = dict[str, UserScriptInfo]
 
 
 def load_user_scripts(what: str) -> NotificationUserScripts:

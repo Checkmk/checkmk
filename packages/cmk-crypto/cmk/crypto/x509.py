@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
-from typing import TypeAlias
 from uuid import UUID
 
 from cryptography import x509 as pyca_x509
@@ -18,7 +17,7 @@ from cryptography import x509 as pyca_x509
 from cmk.ccc.regex import REGEX_ID
 from cmk.ccc.site import SiteId
 
-X509NameOid: TypeAlias = pyca_x509.oid.NameOID
+X509NameOid = pyca_x509.oid.NameOID
 
 
 @dataclass

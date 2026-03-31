@@ -5,7 +5,7 @@
 
 from collections.abc import Collection, Iterator, KeysView, Mapping, MutableMapping, Sequence
 from re import Pattern
-from typing import Any, Literal, NewType, TypeAlias, TypedDict
+from typing import Any, Literal, NewType, TypedDict
 
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.translations import TranslationOptions
@@ -105,7 +105,7 @@ class ContactGroups(TypedDict):
 
 
 # number of second with an optional timzone offest from UTC in hours
-ExpectInterval: TypeAlias = int | tuple[int, int]
+type ExpectInterval = int | tuple[int, int]
 
 
 class Expect(TypedDict):

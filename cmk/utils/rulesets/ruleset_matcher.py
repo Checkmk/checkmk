@@ -11,7 +11,7 @@ import contextlib
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from re import Pattern
-from typing import Any, cast, NotRequired, TypeAlias, TypedDict, TypeGuard
+from typing import Any, cast, NotRequired, TypedDict, TypeGuard
 
 import cmk.trace
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -80,7 +80,7 @@ type TagsOfHosts = Mapping[HostName | HostAddress, Mapping[TagGroupID, TagID]]
 
 LabelGroupsCacheId = tuple[tuple[AndOrNotLiteral, tuple[tuple[AndOrNotLiteral, str], ...]], ...]
 
-PreprocessedPattern: TypeAlias = tuple[bool, Pattern[str]]
+type PreprocessedPattern = tuple[bool, Pattern[str]]
 
 type _PreprocessedServiceRule[TRuleValue] = tuple[
     TRuleValue,
@@ -357,7 +357,7 @@ class RulesetMatcher:
 
 
 # TODO: improve and cleanup types
-_ConditionCacheID: TypeAlias = tuple[
+type _ConditionCacheID = tuple[
     tuple[str, ...],
     tuple[tuple[TagGroupID, object], ...],
     LabelGroupsCacheId,

@@ -16,7 +16,7 @@ import functools
 import json
 import re
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, NamedTuple, TypeAlias
+from typing import Any, cast, NamedTuple
 
 import jinja2
 from apispec import APISpec
@@ -353,7 +353,7 @@ def _transform_params(
     }
 
 
-JsonObject: TypeAlias = dict[str, JsonSerializable]
+type JsonObject = dict[str, JsonSerializable]
 
 
 def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str]) -> list[str]:

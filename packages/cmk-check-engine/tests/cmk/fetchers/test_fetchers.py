@@ -10,7 +10,7 @@ import socket
 import time
 from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
-from typing import Any, cast, NamedTuple, NoReturn, TypeAlias
+from typing import Any, cast, NamedTuple, NoReturn
 
 import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped,unused-ignore]
@@ -965,7 +965,7 @@ class TestFetcherCaching:
 
 
 class TestFetcherTimeout:
-    T: TypeAlias = tuple[None]
+    type T = tuple[None]
 
     class TimeoutFetcher(Fetcher[T]):
         def open(self) -> None:

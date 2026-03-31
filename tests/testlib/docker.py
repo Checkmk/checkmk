@@ -24,7 +24,7 @@ from collections.abc import Iterator
 from contextlib import suppress
 from pathlib import Path
 from socket import SocketIO
-from typing import Any, Final, Literal, Self, TypeAlias, TypedDict
+from typing import Any, Final, Literal, Self, TypedDict
 
 import docker.client
 import docker.errors
@@ -47,7 +47,7 @@ from tests.testlib.version import (
 
 logger = logging.getLogger()
 
-JSON: TypeAlias = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
+type JSON = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
 
 build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"

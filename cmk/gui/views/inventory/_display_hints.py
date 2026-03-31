@@ -24,7 +24,7 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass, field
-from typing import assert_never, Literal, TypeAlias
+from typing import assert_never, Literal
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
@@ -1209,8 +1209,8 @@ _ALLOWED_KEYS: Sequence[
 ]
 
 
-OrderedAttributeDisplayHints: TypeAlias = Mapping[SDKey, AttributeDisplayHint]
-OrderedColumnDisplayHints: TypeAlias = Mapping[SDKey, ColumnDisplayHint]
+type OrderedAttributeDisplayHints = Mapping[SDKey, AttributeDisplayHint]
+type OrderedColumnDisplayHints = Mapping[SDKey, ColumnDisplayHint]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1218,7 +1218,7 @@ class Table:
     columns: OrderedColumnDisplayHints
 
 
-OrderedColumnDisplayHintsOfView: TypeAlias = Mapping[SDKey, ColumnDisplayHintOfView]
+type OrderedColumnDisplayHintsOfView = Mapping[SDKey, ColumnDisplayHintOfView]
 
 
 @dataclass(frozen=True, kw_only=True)

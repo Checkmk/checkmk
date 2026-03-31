@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TypeAlias, TypedDict
+from typing import TypedDict
 
 __all__ = [
     "allow_host_label_conditions",
@@ -24,13 +24,13 @@ HostOrServiceConditionRegex = TypedDict(
     "HostOrServiceConditionRegex",
     {"$regex": str},
 )
-HostOrServiceConditionsSimple: TypeAlias = list[HostOrServiceConditionRegex | str]
+type HostOrServiceConditionsSimple = list[HostOrServiceConditionRegex | str]
 HostOrServiceConditionsNegated = TypedDict(
     "HostOrServiceConditionsNegated",
     {"$nor": HostOrServiceConditionsSimple},
 )
 
-HostOrServiceConditions: TypeAlias = HostOrServiceConditionsSimple | HostOrServiceConditionsNegated
+type HostOrServiceConditions = HostOrServiceConditionsSimple | HostOrServiceConditionsNegated
 
 
 def allow_label_conditions(rulespec_name: str) -> bool:

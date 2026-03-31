@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from os import environ
 from pathlib import Path
-from typing import NamedTuple, Self, TypeAlias
+from typing import NamedTuple, Self
 from urllib.parse import urlparse
 
 import docker
@@ -28,8 +28,8 @@ from tests.testlib.common.utils2 import (
 
 # FQIN -> Fully Qualified Image Name
 # The format is: registryhost[:port]/repository/imagename[:tag]
-FQIN: TypeAlias = str
-DockerTag: TypeAlias = str
+type FQIN = str
+type DockerTag = str
 
 
 class Credentials(NamedTuple):

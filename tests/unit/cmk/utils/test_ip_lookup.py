@@ -7,7 +7,7 @@
 import socket
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Final, TypeAlias
+from typing import Final
 
 import pytest
 from pytest import MonkeyPatch
@@ -20,10 +20,8 @@ from cmk.utils.caching import cache_manager
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-_IPLookupCacheMapping: TypeAlias = dict[
-    ip_lookup.IPLookupCacheId, HostAddress | MKIPAddressLookupError
-]
-_PersistedCache: TypeAlias = dict[ip_lookup.IPLookupCacheId, str | None]
+type _IPLookupCacheMapping = dict[ip_lookup.IPLookupCacheId, HostAddress | MKIPAddressLookupError]
+type _PersistedCache = dict[ip_lookup.IPLookupCacheId, str | None]
 
 
 @pytest.fixture(autouse=True)

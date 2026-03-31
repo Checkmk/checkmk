@@ -6,7 +6,7 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast, Literal, TypeAlias
+from typing import cast, Literal
 
 from livestatus import SiteConfigurations
 
@@ -44,9 +44,9 @@ from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.security_event import log_security_event
 
-_UserAssociatedSitesFn: TypeAlias = Callable[[UserSpec], Sequence[SiteId] | None]
+type _UserAssociatedSitesFn = Callable[[UserSpec], Sequence[SiteId] | None]
 
-_AffectedSites: TypeAlias = set[SiteId] | Literal["all"]
+type _AffectedSites = set[SiteId] | Literal["all"]
 
 
 def default_sites(_user: UserSpec) -> Sequence[SiteId] | None:

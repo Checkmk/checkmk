@@ -445,6 +445,9 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("scripts/gerrit_api/scrape_werks.py"),
         Path("scripts/gerrit_api/werks.py"),
     },
+    ImportName("bep_to_junit"): {
+        Path("buildscripts/scripts/bep_to_junit/__main__.py"),
+    },
 }
 
 KNOWN_UNDECLAREABLE_DEPENDENCIES = {

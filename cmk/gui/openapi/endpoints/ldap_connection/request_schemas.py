@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import MutableMapping
 from typing import Any
 
-from marshmallow import post_load, ValidationError
+from marshmallow import INCLUDE, post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui.fields import LDAPConnectionID, Timestamp
@@ -721,20 +722,14 @@ class LDAPGroupsToRolesRequest(LDAPCheckboxEnabledRequest):
         required=False,
     )
 
-
-def ldap_group_to_roles_request_schema() -> type[LDAPGroupsToRolesRequest]:
-    return LDAPGroupsToRolesRequest.from_dict(
-        {
-            name: fields.Nested(LDAPRoleElementRequest, many=True, required=False)
-            for name in UserRolesConfigFile().load_for_reading()
-        },
-        name="LDAPGroupsToRolesRequestWithCustomRoles",
-    )
+    @pre_load
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        return {k: v for k, v in data.items() if k in self.fields}
 
 
 class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
     type_schemas = {
-        "enabled": ldap_group_to_roles_request_schema(),
+        "enabled": LDAPGroupsToRolesRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
 
@@ -838,10 +833,58 @@ class LDAPSyncPluginsRequest(BaseSchema):
     )
     groups_to_roles = fields.Nested(
         LDAPGroupsToRolesSelector,
+        unknown=INCLUDE,
         description="Configures the roles of the user depending on its group memberships in LDAP. "
         "Please note: Additionally the user is assigned to the Default Roles. Deactivate them if unwanted.",
         load_default={"state": "disabled"},
     )
+
+    @post_load(pass_original=True)
+    def _validate_extra_attributes(
+        self,
+        result_data: dict[str, Any],
+        original_data: MutableMapping[str, Any],
+        **_unused_args: Any,
+    ) -> dict[str, Any]:
+        if custom_userroles := {
+            k: v
+            for k, v in original_data.get("groups_to_roles", {}).items()
+            if k not in LDAPGroupsToRolesRequest().fields
+        }:
+            roles = UserRolesConfigFile().load_for_reading()
+            test_field = fields.Nested(LDAPRoleElementRequest, many=True, required=False)
+            for custom_userrole, roledata in custom_userroles.items():
+                if custom_userrole not in roles:
+                    raise ValidationError(f"Unknown user role: {custom_userrole!r}")
+                try:
+                    test_field.deserialize(roledata)
+                except ValidationError as e:
+                    raise ValidationError(f"Invalid value for {custom_userrole!r}: {e.messages}")
+
+                result_data["groups_to_roles"][custom_userrole] = roledata
+
+        for field in self.fields:
+            original_data.pop(field, None)
+
+        if not original_data:
+            return result_data
+
+        custom_user_attributes = load_custom_attrs_from_mk_file(lock=False)["user"]
+        test_field = fields.Nested(LDAPSyncPluginCustomSelector, required=False)
+
+        for name, value in original_data.items():
+            if name not in {attr["title"] for attr in custom_user_attributes}:
+                raise ValidationError(f"Unknown custom user attribute: {name!r}")
+
+            try:
+                test_field.deserialize(value)
+
+            except ValidationError as e:
+                raise ValidationError(f"Invalid value for {name!r}: {e.messages}")
+
+            result_data[name] = value
+
+        return result_data
 
 
 class LDAPSyncPluginCustomRequest(LDAPCheckboxEnabledRequest):

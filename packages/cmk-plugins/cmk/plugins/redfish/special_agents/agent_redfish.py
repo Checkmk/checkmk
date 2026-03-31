@@ -503,6 +503,17 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     chassis_url = redfishobj.base_data.get("Chassis", {}).get("@odata.id")
     systems_url = redfishobj.base_data.get("Systems", {}).get("@odata.id")
 
+    # Some BMCs (e.g. LITEON) don't advertise Systems/Chassis in the service root
+    # but still serve the endpoints. Try the standard paths before giving up.
+    if not systems_url:
+        probe = redfishobj.redfish_connection.get("/redfish/v1/Systems", None)
+        if probe.status == 200:
+            systems_url = "/redfish/v1/Systems"
+    if not chassis_url:
+        probe = redfishobj.redfish_connection.get("/redfish/v1/Chassis", None)
+        if probe.status == 200:
+            chassis_url = "/redfish/v1/Chassis"
+
     if not systems_url or not chassis_url:
         raise CannotRecover(
             "ERROR: probably not a Redfish computer system - missing Systems or Chassis information"

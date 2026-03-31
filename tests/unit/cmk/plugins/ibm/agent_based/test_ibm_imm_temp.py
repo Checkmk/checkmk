@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.ibm_imm_temp import (
+from cmk.plugins.ibm.agent_based.ibm_imm_temp import (
     _check_ibm_imm_temp,
     discover_ibm_imm_temp,
     parse_ibm_imm_temp,

@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, TableRow
-from cmk.plugins.collection.agent_based.ibm_mq_channels import inventorize_ibm_mq_channels, Section
+from cmk.plugins.ibm.agent_based.ibm_mq_channels import inventorize_ibm_mq_channels, Section
 
 from .utils_inventory import sort_inventory_result
 

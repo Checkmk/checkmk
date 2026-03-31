@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import ibm_storage_ts as plugin
+from cmk.plugins.ibm.agent_based import ibm_storage_ts as plugin
 
 STRING_TABLE_OK = [
     [["TS3100", "IBM", "F.01"]],

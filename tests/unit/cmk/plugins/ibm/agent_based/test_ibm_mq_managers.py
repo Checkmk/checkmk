@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, TableRow
-from cmk.plugins.collection.agent_based.ibm_mq_managers import inventorize_ibm_mq_managers, Section
+from cmk.plugins.ibm.agent_based.ibm_mq_managers import inventorize_ibm_mq_managers, Section
 
 
 @pytest.mark.parametrize(

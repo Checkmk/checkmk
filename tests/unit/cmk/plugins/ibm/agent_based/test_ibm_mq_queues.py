@@ -7,9 +7,8 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, TableRow
-from cmk.plugins.collection.agent_based.ibm_mq_queues import inventorize_ibm_mq_queues, Section
-
-from .utils_inventory import sort_inventory_result
+from cmk.plugins.ibm.agent_based.ibm_mq_queues import inventorize_ibm_mq_queues, Section
+from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_inventory_result
 
 
 @pytest.mark.parametrize(

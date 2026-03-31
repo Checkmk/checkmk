@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError
-from cmk.plugins.collection.agent_based.ibm_mq_channels import parse_ibm_mq_channels
+from cmk.plugins.ibm.agent_based.ibm_mq_channels import parse_ibm_mq_channels
 
 from .checktestlib import Check
 from .test_ibm_mq_include import parse_info

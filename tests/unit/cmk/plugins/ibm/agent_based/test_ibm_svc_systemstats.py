@@ -11,8 +11,8 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import ibm_svc_systemstats
-from cmk.plugins.collection.agent_based.ibm_svc_systemstats import (
+from cmk.plugins.ibm.agent_based import ibm_svc_systemstats
+from cmk.plugins.ibm.agent_based.ibm_svc_systemstats import (
     check_ibm_svc_systemstats_cache,
     check_ibm_svc_systemstats_cpu,
     check_ibm_svc_systemstats_disk_latency,

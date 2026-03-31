@@ -26,7 +26,7 @@ class CreateRelay(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to 'Add Relay configuration' page")
-        self.main_menu.setup_menu("Relays").click()
+        self.main_menu.setup_menu("Relays", show_more=True).click()
         _url_pattern: str = quote_plus("wato.py?mode=relays")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.main_area.get_suggestion("Add Relay configuration").click()

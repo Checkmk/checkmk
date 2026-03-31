@@ -57,6 +57,7 @@ pushd "${REPO_PATH}" >/dev/null
 set +e
 bazel test \
     --test_verbose_timeout_warnings \
+    --test_output=errors \
     --test_env=TZ='America/Chicago' \
     --test_tag_filters=-component,-cpp \
     --keep_going \

@@ -231,8 +231,9 @@ def _paint_time_graph_cmk(
         raw_time_range = get_graph_timerange_from_painter_options()
 
     time_range = make_graph_time_range(
-        raw_time_range,
-        display_config.size[1],
+        start=raw_time_range[0],
+        end=raw_time_range[1],
+        height_in_ex=display_config.size[1],
     )
 
     if is_mobile(request, response):

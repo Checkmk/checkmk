@@ -113,10 +113,13 @@ class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedPage):
             # Time range and step both come from the stored widget config (server-side).
             # Zoom/pan is disabled on shared dashboards so the step never changes after render.
             start_time, end_time = Timerange.compute_range(graph_dashlet_config["timerange"]).range
-            height_in_ex = graph_dashlet_config.get("graph_render_options", {}).get(
-                "size", GraphDisplayConfigHTML.model_fields["size"].default
-            )[1]
-            time_range = make_graph_time_range((start_time, end_time), height_in_ex)
+            time_range = make_graph_time_range(
+                start=start_time,
+                end=end_time,
+                height_in_ex=graph_dashlet_config.get("graph_render_options", {}).get(
+                    "size", GraphDisplayConfigHTML.model_fields["size"].default
+                )[1],
+            )
 
             render_graph_values_at_time(
                 recipes[0].recipe,

@@ -224,7 +224,7 @@ def make_graph_time_range_html(
     factor: int,
     height_in_ex: float,
 ) -> GraphTimeRange:
-    steps_per_ex = html_size_per_ex * 4
+    steps_per_ex = _HTML_SIZE_PER_EX * 4
     number_of_steps = height_in_ex * steps_per_ex
     return GraphTimeRange(
         start=start,
@@ -294,12 +294,12 @@ class UserGraphTimeRangeStore:
 # TODO: This is not acurate! Rendering of the graphs is wrong especially when the font size is changed
 # this does not lead to correct results. We should find a way to fix this. Otherwise the font size
 # chaning of the graph rendering options won't work as expected.
-html_size_per_ex = 11.0
-min_resize_width = 50
-min_resize_height = 6
+_HTML_SIZE_PER_EX = 11.0
+_MIN_RESIZE_WIDTH = 50
+_MIN_RESIZE_HEIGHT = 6
 
 # Minimum canvas height below which a widget is too small to render a graph with legend.
-min_widget_height_ex = 11
+_MIN_WIDGET_HEIGHT_EX = 11
 
 
 def render_graph_error_html(*, title: str, msg_or_exc: Exception | str, debug: bool) -> HTML:
@@ -364,7 +364,7 @@ def _collect_graph_html(
         # which is the only reliable way to constrain a flex container inside an inline-block and
         # thus allow the title to wrap when title + time info would exceed the canvas width.
         is_inline = display_config.show_title == "inline"
-        graph_width: float = display_config.size[0] * html_size_per_ex
+        graph_width: float = display_config.size[0] * _HTML_SIZE_PER_EX
         time_text: str | None = None
         if display_config.show_graph_time and not display_config.preview:
             time_text = artwork.x_axis["title"] or ""
@@ -399,7 +399,7 @@ def _collect_graph_html(
             html.close_div()
 
         # Create canvas where actual graph will be rendered
-        graph_height: float = display_config.size[1] * html_size_per_ex
+        graph_height: float = display_config.size[1] * _HTML_SIZE_PER_EX
         html.canvas(
             "",
             style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
@@ -808,7 +808,7 @@ def _compute_legend_titles(
 
 def _compute_graph_legend_styles(display_config: GraphDisplayConfigHTML) -> Iterator[str]:
     """Render legend that describe the metrics"""
-    graph_width = display_config.size[0] * html_size_per_ex
+    graph_width = display_config.size[0] * _HTML_SIZE_PER_EX
 
     if display_config.show_vertical_axis or display_config.show_controls:
         legend_margin_left = 49
@@ -1047,10 +1047,10 @@ def _graph_margin_ex(
 ) -> Bounds:
     return (
         Bounds(
-            top=int(round(top / html_size_per_ex)),
-            right=int(round(right / html_size_per_ex)),
-            bottom=int(round(bottom / html_size_per_ex)),
-            left=int(round(left / html_size_per_ex)),
+            top=int(round(top / _HTML_SIZE_PER_EX)),
+            right=int(round(right / _HTML_SIZE_PER_EX)),
+            bottom=int(round(bottom / _HTML_SIZE_PER_EX)),
+            left=int(round(left / _HTML_SIZE_PER_EX)),
         )
         if show_margin
         else Bounds(
@@ -1096,8 +1096,8 @@ def render_graph_html(
 
     if resize_x_var is not None and resize_y_var is not None:
         render_opt_x, render_opt_y = display_config.size
-        size_x = max(min_resize_width, float(resize_x_var) / html_size_per_ex + render_opt_x)
-        size_y = max(min_resize_height, float(resize_y_var) / html_size_per_ex + render_opt_y)
+        size_x = max(_MIN_RESIZE_WIDTH, float(resize_x_var) / _HTML_SIZE_PER_EX + render_opt_x)
+        size_y = max(_MIN_RESIZE_HEIGHT, float(resize_y_var) / _HTML_SIZE_PER_EX + render_opt_y)
         user.save_file("graph_size", (size_x, size_y))
         display_config = display_config.model_copy(update={"size": (size_x, size_y)})
 
@@ -1230,8 +1230,8 @@ def _render_deferred_graph_html(
     # this does calculate the size of the canvas area and does not take e.g. the legend
     # into account. We would need the artwork to calculate that, but this is something
     # we don't have in this early stage.
-    graph_width = render_state.display_config.size[0] * html_size_per_ex
-    graph_height = render_state.display_config.size[1] * html_size_per_ex
+    graph_width = render_state.display_config.size[0] * _HTML_SIZE_PER_EX
+    graph_height = render_state.display_config.size[1] * _HTML_SIZE_PER_EX
 
     content = HTMLWriter.render_div("", class_="title") + HTMLWriter.render_div(
         "", class_="content", style="width:%dpx;height:%dpx" % (graph_width, graph_height)
@@ -1476,10 +1476,10 @@ def host_service_graph_dashlet_cmk(
     time_range: TimerangeValue = None,
 ) -> HTML:
     width_var = request.get_float_input_mandatory("width", 0.0)
-    width = width_var / html_size_per_ex
+    width = width_var / _HTML_SIZE_PER_EX
 
     height_var = request.get_float_input_mandatory("height", 0.0)
-    height = height_var / html_size_per_ex
+    height = height_var / _HTML_SIZE_PER_EX
 
     bounds = _graph_margin_ex(display_config.show_margin)
     if display_config.show_title not in [False, "inline"]:
@@ -1538,7 +1538,7 @@ def host_service_graph_dashlet_cmk(
     # handles legend overflow, so we skip the height reduction.
     is_preview = display_id.endswith("-preview")
     if display_config.show_legend and artwork_or_errors.artwork.curves and not is_preview:
-        if height <= min_widget_height_ex:
+        if height <= _MIN_WIDGET_HEIGHT_EX:
             raise MKGraphWidgetTooSmallError(
                 _("Either increase the widget height or disable the graph legend.")
             )
@@ -1546,7 +1546,7 @@ def host_service_graph_dashlet_cmk(
         # Estimates the height of the graph legend in ex units. TODO: This is
         # not accurate! Especially when the font size is changed this does not
         # lead to correct results. But this is a more generic problem of the
-        # html_size_per_ex which is hard coded instead of relying on the font
+        # _HTML_SIZE_PER_EX which is hard coded instead of relying on the font
         # as it should.
         estimated_legend_height_ex = int(
             3.0
@@ -1557,15 +1557,15 @@ def host_service_graph_dashlet_cmk(
             * 1.5
         )
         # Give the legend at most a third of the available height and ensure
-        # the graph keeps at least min_widget_height_ex. When the legend
+        # the graph keeps at least _MIN_WIDGET_HEIGHT_EX. When the legend
         # exceeds the budget, its container becomes scrollable.
-        max_legend_height_ex = min(height // 3, max(height - min_widget_height_ex, 0))
+        max_legend_height_ex = min(height // 3, max(height - _MIN_WIDGET_HEIGHT_EX, 0))
         legend_height_ex = min(estimated_legend_height_ex, max_legend_height_ex)
         height -= legend_height_ex
         display_config = display_config.model_copy(
             update={
                 "size": (width, height),
-                "legend_max_height_px": int(legend_height_ex * html_size_per_ex),
+                "legend_max_height_px": int(legend_height_ex * _HTML_SIZE_PER_EX),
             }
         )
 

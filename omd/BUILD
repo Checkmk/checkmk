@@ -397,7 +397,7 @@ pkg_files(
                "//omd/packages/monitoring-plugins",
                "//omd/packages/msitools",
                "//omd/packages/nagios",
-               "//omd/packages/net-snmp:net-snmp_tar",
+               "//omd/packages/net-snmp",
                "//omd/packages/nrpe",
                "//omd/packages/omd",
                "//omd/packages/openssl:openssl_tar",

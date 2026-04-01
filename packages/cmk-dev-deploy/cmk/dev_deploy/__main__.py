@@ -869,6 +869,9 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
     else:
         output.info(f"Site: {output.BOLD}{site.name}{output.RESET} ({site.edition.value})")
 
+    if args.info:
+        return 0
+
     if args.commit:
         output.info(f"Deploying state at commit {args.commit}")
 
@@ -896,9 +899,6 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
     branch_warning = check_branch_mismatch(site.build_commit, repo_root)
     if branch_warning:
         output.warn(branch_warning)
-
-    if args.info:
-        return 0
 
     # Combined --frontend --watch mode
     if args.frontend and args.watch:

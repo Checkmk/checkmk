@@ -43,13 +43,17 @@ const linkEnabled = computed({
 const isError = computed(() => props.linkValidation.length > 0)
 const dashboardTargets = ref<Suggestion[]>([])
 
-watch(linkType, async (newLinkType: string | null) => {
-  if (newLinkType === 'dashboards') {
-    dashboardTargets.value = await fetchDashboards()
-  } else {
-    dashboardTargets.value = []
-  }
-})
+watch(
+  linkType,
+  async (newLinkType: string | null) => {
+    if (newLinkType === 'dashboards') {
+      dashboardTargets.value = await fetchDashboards()
+    } else {
+      dashboardTargets.value = []
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

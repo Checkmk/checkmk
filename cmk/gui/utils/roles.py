@@ -6,14 +6,20 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast, Final, get_args, Literal
+from typing import cast, Final, get_args, Literal, Protocol
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config, Config
 from cmk.gui.permissions import Permission
 from cmk.gui.role_types import BuiltInUserRole, BuiltInUserRoleID, CustomUserRole
+from cmk.gui.type_defs import UserSpec
 from cmk.utils import paths
+
+
+class SupportsUserPermissionConfig(Protocol):
+    roles: dict[str, BuiltInUserRole | CustomUserRole]
+    multisite_users: dict[str, UserSpec]
+    default_user_profile: UserSpec
 
 
 @dataclass(frozen=True)
@@ -25,7 +31,9 @@ class UserPermissionSerializableConfig:
     default_user_profile_roles: Sequence[str]
 
     @classmethod
-    def from_global_config(cls, config: Config) -> "UserPermissionSerializableConfig":
+    def from_global_config(
+        cls, config: SupportsUserPermissionConfig
+    ) -> "UserPermissionSerializableConfig":
         return cls(
             roles=config.roles,
             user_roles={user_id: user["roles"] for user_id, user in config.multisite_users.items()},
@@ -50,7 +58,7 @@ class UserPermissions:
 
     @classmethod
     def from_config(
-        cls, config: Config, permissions: Mapping[str, Permission]
+        cls, config: SupportsUserPermissionConfig, permissions: Mapping[str, Permission]
     ) -> "UserPermissions":
         return cls(
             roles=config.roles,
@@ -170,16 +178,6 @@ def builtin_role_id_from_str(role_id: str) -> BuiltInUserRoleID:
     if role_id not in get_args(BuiltInUserRoleID):
         raise ValueError("Invalid built-in role ID: {role_id}")
     return cast(BuiltInUserRoleID, role_id)
-
-
-def is_two_factor_required(user_permissions: UserPermissions, user_id: UserId) -> bool:
-    users_roles = user_permissions.roles_of_user(user_id)
-
-    return any(
-        active_config.roles[role_id].get("two_factor", False)
-        for role_id in users_roles
-        if role_id in active_config.roles
-    )
 
 
 def is_user_with_publish_permissions(

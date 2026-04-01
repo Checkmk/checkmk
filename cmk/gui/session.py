@@ -44,7 +44,6 @@ from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInterna
 from cmk.gui.type_defs import AuthType, SessionInfo, SessionState, SessionStateMachine
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
-from cmk.gui.utils import roles
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
@@ -332,8 +331,13 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             self.session_info.flashes.append(tuple_to_add)
 
     def two_factor_enforced(self, user: UserId, user_permissions: UserPermissions) -> bool:
-        return config.active_config.require_two_factor_all_users or roles.is_two_factor_required(
-            user_permissions, user
+        if config.active_config.require_two_factor_all_users:
+            return True
+        users_roles = user_permissions.roles_of_user(user)
+        return any(
+            config.active_config.roles[role_id].get("two_factor", False)
+            for role_id in users_roles
+            if role_id in config.active_config.roles
         )
 
 

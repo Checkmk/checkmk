@@ -148,11 +148,7 @@ export function renderLoading(): string {
   const nonce = getNonce()
   return wrap(
     nonce,
-    `
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader { display: flex; align-items: center; gap: 8px; padding: 8px; font-size: 0.9em; color: var(--vscode-descriptionForeground); }
-    .loader-icon { display: inline-block; animation: spin 0.8s linear infinite; }
-  `,
-    `<div class="loader"><span class="loader-icon">&#8635;</span> Refreshing…</div>`
+    '',
+    `<div class="loader"><span class="spinner">&#8635;</span> Refreshing…</div>`
   )
 }

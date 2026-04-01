@@ -352,3 +352,25 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Spinner / loader ── */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  font-size: 0.9em;
+  color: var(--vscode-descriptionForeground);
+}

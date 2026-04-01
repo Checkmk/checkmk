@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
+import type { ExplainThisIssueData, Legal } from 'cmk-shared-typing/typescript/ai_button'
 import { type Ref, nextTick, reactive, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -137,7 +137,8 @@ export class AiTemplateService extends ServiceBase {
     public templateId: string,
     public userId: string,
     public context_data: ExplainThisIssueData,
-    siteName: string
+    siteName: string,
+    public legal: Legal
   ) {
     super(templateId, new KeyShortcutService(window))
 

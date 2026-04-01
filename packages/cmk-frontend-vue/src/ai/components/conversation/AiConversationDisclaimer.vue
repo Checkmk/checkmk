@@ -17,6 +17,7 @@ import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
 
 const { _t } = usei18n()
 const aiTemplate = getInjectedAiTemplate()
+const legal = aiTemplate.value!.legal
 const disclaimerActive = ref<boolean>(false)
 const consentTriggered = ref<boolean>(false)
 const startButtonDisabled = ref<boolean>(false)
@@ -27,15 +28,9 @@ function loadAiInfo() {
     return
   }
 
-  aiInfo.value =
-    _t(
-      `The feature "Explain with AI" uses a Large Language Model (LLM) [${aiTemplate.value.info.models.join(', ')}] of [${aiTemplate.value.info.provider}] to generate its output. `
-    ) +
-    _t('Generated content (output) may contain errors or inaccuracies. ') +
-    _t(
-      'Ensure all output generated is carefully reviewed and checked by a human for factual correctness before being used in any way. '
-    ) +
-    _t('For further information visit our ')
+  aiInfo.value = legal.disclaimer_body_template
+    .replace(/\{models\}/g, aiTemplate.value.info.models.join(', '))
+    .replace(/\{provider\}/g, aiTemplate.value.info.provider)
 }
 
 onMounted(async () => {
@@ -66,7 +61,7 @@ function onConsent() {
     :class="{ 'ai-conversation-disclaimer--triggered': consentTriggered }"
   >
     <CmkHeading type="h1" class="ai-conversation-disclaimer__header">
-      {{ _t('Checkmk AI feature usage notice') }}
+      {{ legal.disclaimer_title }}
     </CmkHeading>
     <div class="ai-conversation-disclaimer__element">
       {{ aiInfo }}

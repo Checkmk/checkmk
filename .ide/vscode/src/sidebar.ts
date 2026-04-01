@@ -155,7 +155,10 @@ class SectionViewProvider implements vscode.WebviewViewProvider {
   showLoadingThenRefresh(): void {
     if (!this._view) return
     this._view.webview.html = renderLoading()
-    setTimeout(() => this.refresh(), 400)
+    setTimeout(() => {
+      _stateCache = null
+      this.refresh()
+    }, 400)
   }
 
   showLoading(): void {
@@ -322,7 +325,6 @@ export function registerSidebar(
           environmentSection.invalidateEnvironmentCache()
         }
         p.showLoadingThenRefresh()
-        setTimeout(() => refreshStateCache(), 200)
       })
     )
   }

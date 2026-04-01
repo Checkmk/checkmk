@@ -6,6 +6,7 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { shellEscape } from '../../core/config'
 import { log } from '../../core/log'
 import { waitForTask } from '../../core/tasks'
 import { createSite, omdServiceCommand } from '../../omd/omd'
@@ -55,7 +56,7 @@ export async function handleMessage(
       log(`OMD console: ${msg.site}`)
       const term = vscode.window.createTerminal({ name: `OMD: ${msg.site}` })
       term.show()
-      term.sendText(`sudo omd su "${msg.site}"`)
+      term.sendText(`sudo omd su ${shellEscape(msg.site as string)}`)
       return true
     }
     case 'omdAuth':

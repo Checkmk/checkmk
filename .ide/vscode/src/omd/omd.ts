@@ -8,6 +8,7 @@ import * as os from 'os'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { shellEscape } from '../core/config'
 import { log } from '../core/log'
 import { safeExec } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
@@ -128,7 +129,9 @@ export function getOmdStatus(siteName: string): OmdStatus {
     /* ignore */
   }
 
-  const raw = safeExec(`sudo -n omd status --bare "${siteName}" 2>/dev/null`, { timeout: 1000 })
+  const raw = safeExec(`sudo -n omd status --bare ${shellEscape(siteName)} 2>/dev/null`, {
+    timeout: 1000
+  })
   return parseOmdStatusBare(raw)
 }
 
@@ -136,7 +139,9 @@ export async function forceRefreshOmdStatusFiles(): Promise<void> {
   const sites = detectOmdSites()
   let anySucceeded = false
   for (const site of sites) {
-    const raw = safeExec(`sudo -n omd status --bare "${site.name}" 2>/dev/null`, { timeout: 1000 })
+    const raw = safeExec(`sudo -n omd status --bare ${shellEscape(site.name)} 2>/dev/null`, {
+      timeout: 1000
+    })
     if (raw) {
       const statusFile = path.join(STATUS_DIR, `${site.name}.status`)
       try {
@@ -152,7 +157,7 @@ export async function forceRefreshOmdStatusFiles(): Promise<void> {
   const statusCmds = sites
     .map(
       (s) =>
-        `sudo omd status --bare "${s.name}" > "${path.join(STATUS_DIR, `${s.name}.status`)}" 2>/dev/null`
+        `sudo omd status --bare ${shellEscape(s.name)} > ${shellEscape(path.join(STATUS_DIR, `${s.name}.status`))} 2>/dev/null`
     )
     .join(' ; ')
   const exec = runCommand('OMD Status Refresh', statusCmds)
@@ -245,9 +250,9 @@ export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => v
   }
 
   const cmds: [string, (site: string) => string][] = [
-    ['cmk.omdStart', (site) => `sudo omd start "${site}"`],
-    ['cmk.omdStop', (site) => `sudo omd stop "${site}"`],
-    ['cmk.omdRestart', (site) => `sudo omd restart "${site}"`]
+    ['cmk.omdStart', (site) => `sudo omd start ${shellEscape(site)}`],
+    ['cmk.omdStop', (site) => `sudo omd stop ${shellEscape(site)}`],
+    ['cmk.omdRestart', (site) => `sudo omd restart ${shellEscape(site)}`]
   ]
 
   for (const [id, cmdFn] of cmds) {
@@ -288,7 +293,7 @@ export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => v
       const statusCmds = detectOmdSites()
         .map(
           (s) =>
-            `sudo omd status --bare "${s.name}" > "${path.join(STATUS_DIR, `${s.name}.status`)}" 2>/dev/null`
+            `sudo omd status --bare ${shellEscape(s.name)} > ${shellEscape(path.join(STATUS_DIR, `${s.name}.status`))} 2>/dev/null`
         )
         .join(' ; ')
 
@@ -363,9 +368,9 @@ export function omdServiceCommand(
   const target = serviceName ? `${serviceName} (${siteName})` : siteName
   const label = `OMD ${action} ${target}`
   const baseCmd = serviceName
-    ? `sudo omd ${action} "${siteName}" "${serviceName}"`
-    : `sudo omd ${action} "${siteName}"`
+    ? `sudo omd ${action} ${shellEscape(siteName)} ${shellEscape(serviceName)}`
+    : `sudo omd ${action} ${shellEscape(siteName)}`
   const statusFile = path.join(STATUS_DIR, `${siteName}.status`)
-  const cmd = `${baseCmd} ; sudo omd status --bare "${siteName}" > "${statusFile}" 2>/dev/null`
+  const cmd = `${baseCmd} ; sudo omd status --bare ${shellEscape(siteName)} > ${shellEscape(statusFile)} 2>/dev/null`
   return runCommand(label, cmd)
 }

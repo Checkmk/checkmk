@@ -7,6 +7,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { versionNewer } from './version'
+
 const IDE_EXTENSION_DIR = path.join('.ide', 'vscode')
 const BAZEL_TARGET = `//${IDE_EXTENSION_DIR}:vsix`
 const VSIX_PATH = `bazel-bin/${IDE_EXTENSION_DIR}/cmk-vscode.vsix`
@@ -85,7 +87,7 @@ export interface VersionMismatch {
 export function getVersionMismatch(context: vscode.ExtensionContext): VersionMismatch | null {
   const installed: string = context.extension.packageJSON.version
   const workspace = getWorkspaceVersion()
-  if (workspace && workspace !== installed) {
+  if (workspace && versionNewer(workspace, installed)) {
     return { installed, workspace }
   }
   return null
@@ -95,7 +97,7 @@ export function checkVersionMismatch(context: vscode.ExtensionContext): void {
   const installedVersion: string = context.extension.packageJSON.version
   const wsVersion = getWorkspaceVersion()
 
-  if (wsVersion && wsVersion !== installedVersion) {
+  if (wsVersion && versionNewer(wsVersion, installedVersion)) {
     promptRebuild(installedVersion, wsVersion)
   }
 
@@ -107,7 +109,7 @@ export function checkVersionMismatch(context: vscode.ExtensionContext): void {
     )
     watcher.onDidChange(() => {
       const newWsVersion = getWorkspaceVersion()
-      if (newWsVersion && newWsVersion !== installedVersion) {
+      if (newWsVersion && versionNewer(newWsVersion, installedVersion)) {
         promptRebuild(installedVersion, newWsVersion)
       }
     })

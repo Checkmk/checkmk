@@ -120,9 +120,9 @@ class QuicksearchSnapin(SidebarSnapin):
         if not search_objects:
             return
 
-        QuicksearchResultRenderer().show(
-            quicksearch_manager._evaluate_results(search_objects), query
-        )
+        results = quicksearch_manager._evaluate_results(search_objects)
+
+        QuicksearchResultRenderer().show(results, query)
 
     def _page_search_open(self, ctx: PageContext) -> None:
         """Generate the URL to the view that is opened when confirming the search field"""
@@ -135,11 +135,10 @@ class QuicksearchSnapin(SidebarSnapin):
             search_order=ctx.config.quicksearch_search_order,
         )
 
-        raise HTTPRedirect(
-            quicksearch_manager.generate_search_url(
-                query, UserPermissions.from_config(ctx.config, permission_registry)
-            )
-        )
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        search_url = quicksearch_manager.generate_search_url(query, user_permissions)
+
+        raise HTTPRedirect(search_url)
 
 
 class QuicksearchResultRenderer:

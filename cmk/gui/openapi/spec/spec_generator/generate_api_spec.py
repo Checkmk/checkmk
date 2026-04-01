@@ -8,6 +8,7 @@ This is intended to be used from Bazel from command line to generate the OpenAPI
 
 import argparse
 import sys
+import warnings
 from pathlib import Path
 from typing import Literal
 
@@ -94,6 +95,8 @@ def process_version(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore", category=UserWarning, module="apispec")
+
     parser = argparse.ArgumentParser()
 
     subparsers = parser.add_subparsers(help="Available commands")

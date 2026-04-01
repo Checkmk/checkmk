@@ -10,7 +10,9 @@ load("@npm//:vue3-gettext/package_json.bzl", vue_gettext_bin = "bin")
 load("@npm//packages/cmk-frontend-vue:vite/package_json.bzl", vite_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
+load("//bazel/rules:vue_library.bzl", "vue_library")
 
 exports_files([
     "package.json",
@@ -76,21 +78,10 @@ filegroup(
     ],
 )
 
-# aspect_rules_lint's stylelint aspect only visits filegroup targets
-# (via filegroup_tags), not js_library. Separate filegroups let stylelint
-# lint .vue <style> blocks while js_library handles eslint/TS.
-filegroup(
-    name = "src_vue_files",
-    srcs = glob(["src/**/*.vue"]),
-    tags = ["stylelint"],
-)
-
-js_library(
+vue_library(
     name = "src_vue",
-    srcs = [
-        ":src_vue_files",
-        ":tsconfig",
-    ],
+    srcs = glob(["src/**/*.vue"]),
+    data = [":tsconfig"],
     deps = [
         ":src_ts",
         "//:node_modules/vue",
@@ -102,34 +93,24 @@ js_library(
     srcs = glob(["src/**/*.ts"]) + [":tsconfig"],
 )
 
-filegroup(
+css_library(
     name = "src_css",
     srcs = glob(["src/**/*.css"]),
-    tags = ["stylelint"],
 )
 
-filegroup(
-    name = "demo_vue_files",
-    srcs = glob(["ui-component-library/**/*.vue"]),
-    tags = ["stylelint"],
-)
-
-js_library(
+vue_library(
     name = "demo_vue",
-    srcs = [
-        ":demo_vue_files",
-        ":tsconfig",
-    ],
+    srcs = glob(["ui-component-library/**/*.vue"]),
+    data = [":tsconfig"],
     deps = [
         ":demo_ts",
         "//:node_modules/vue",
     ],
 )
 
-filegroup(
+css_library(
     name = "demo_css",
     srcs = glob(["ui-component-library/**/*.css"]),
-    tags = ["stylelint"],
 )
 
 js_library(
@@ -249,9 +230,10 @@ SRCS = [
     "ui-component-library/public/*",
 ])
 
-js_library(
+vue_library(
     name = "test_vue",
-    srcs = glob(["tests/**/*.vue"]) + [":tsconfig"],
+    srcs = glob(["tests/**/*.vue"]),
+    data = [":tsconfig"],
     deps = [
         ":src_ts",
         ":test_ts",

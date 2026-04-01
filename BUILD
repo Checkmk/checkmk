@@ -32,6 +32,7 @@ exports_files(
         "host.Cargo.lock.bazel",
         ".cargo/config.toml",
         "module_layers.toml",
+        "defines.make",
     ],
     visibility = ["//:__subpackages__"],
 )

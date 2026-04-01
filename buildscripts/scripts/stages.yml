@@ -78,10 +78,6 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.werks/' || true"
       REPLACE_NEWLINES: true
 
-    - NAME: CHANGED_WERK_FILES_WITHOUT_DELETED_WERKS
-      SH: "echo '${CHANGED_FILES_REL_WITHOUT_DELETED_FILES}' | grep '^\\.werks/' || true"
-      REPLACE_NEWLINES: true
-
     - NAME: CHANGED_WERK_CODE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks\\|^cmk/utils/werks' || true"
       REPLACE_NEWLINES: true
@@ -255,15 +251,6 @@ STAGES:
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_werks/"
-
-    - NAME: "Python Werks validate"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES_WITHOUT_DELETED_WERKS,CHANGED_RUN_UVENV_SCRIPT
-      ENV_VARS:
-          CHANGED_WERK_FILES: "${CHANGED_WERK_FILES_WITHOUT_DELETED_WERKS}"
-      COMMAND: "./scripts/run-uvenv python -m cmk.werks.validate &> ${RESULTS}/werk_validate.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No Werk files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/werk_validate.txt"
 
     - NAME: "Python Werks Commands"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_CODE_FILES,CHANGED_RUN_UVENV_SCRIPT

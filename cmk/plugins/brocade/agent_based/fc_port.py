@@ -27,7 +27,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.legacy_includes.fc_port import fc_parse_counter
+from cmk.plugins.brocade.lib import fc_parse_counter
 
 # Taken from connUnitPortState
 # user selected state of the port hardware

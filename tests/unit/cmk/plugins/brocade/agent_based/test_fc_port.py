@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.legacy_includes.fc_port import fc_parse_counter
+from cmk.plugins.brocade.lib import fc_parse_counter
 
 pytestmark = pytest.mark.checks
 

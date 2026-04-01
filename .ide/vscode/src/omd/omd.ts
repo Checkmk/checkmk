@@ -31,7 +31,7 @@ export interface OmdService {
 }
 
 export interface OmdStatus {
-  overall: number // 0=running, 1=stopped, 2=partial, -1=unknown
+  overall: number // 0=running, 1=stopped, 2=partial, 3=disabled, -1=unknown
   services: OmdService[]
 }
 
@@ -42,6 +42,13 @@ export interface OmdSiteWithStatus extends OmdSite {
 // ── Helpers ──
 
 const STATUS_DIR = path.join(os.tmpdir(), 'cmk-omd-status')
+
+/** Build a `sudo sh -c "..."` command. Arguments are NOT shell-escaped
+ *  inside the inner string — callers must only pass safe values (alphanumeric
+ *  site names, controlled paths). */
+function sudoSh(inner: string): string {
+  return `sudo sh -c "${inner.replace(/"/g, '\\"')}"`
+}
 
 // ── Site discovery (no sudo required) ──
 
@@ -97,6 +104,7 @@ export function detectOmdSites(): OmdSite[] {
 function parseOmdStatusBare(raw: string): OmdStatus {
   const services: OmdService[] = []
   if (!raw) return { overall: -1, services }
+  if (raw.includes('site is disabled')) return { overall: 3, services }
 
   for (const line of raw.split('\n')) {
     const parts = line.trim().split(/\s+/)
@@ -137,30 +145,15 @@ export function getOmdStatus(siteName: string): OmdStatus {
 
 export async function forceRefreshOmdStatusFiles(): Promise<void> {
   const sites = detectOmdSites()
-  let anySucceeded = false
-  for (const site of sites) {
-    const raw = safeExec(`sudo -n omd status --bare ${shellEscape(site.name)} 2>/dev/null`, {
-      timeout: 1000
-    })
-    if (raw) {
-      const statusFile = path.join(STATUS_DIR, `${site.name}.status`)
-      try {
-        fs.writeFileSync(statusFile, raw)
-      } catch {
-        /* ignore */
-      }
-      anySucceeded = true
-    }
-  }
-  if (anySucceeded) return
+  if (sites.length === 0) return
 
-  const statusCmds = sites
+  const statusInner = sites
     .map(
       (s) =>
-        `sudo omd status --bare ${shellEscape(s.name)} > ${shellEscape(path.join(STATUS_DIR, `${s.name}.status`))} 2>/dev/null`
+        `omd status --bare ${s.name} > ${path.join(STATUS_DIR, `${s.name}.status`)} 2>&1 || true`
     )
     .join(' ; ')
-  const exec = runCommand('OMD Status Refresh', statusCmds)
+  const exec = runCommand('OMD Status Refresh', sudoSh(statusInner))
   if (exec) await waitForTask(exec)
 }
 
@@ -296,15 +289,17 @@ export function registerOmd(
       _keepaliveTerm = term
       term.show()
 
-      const statusCmds = detectOmdSites()
+      const sites = detectOmdSites()
+      const statusInner = sites
         .map(
           (s) =>
-            `sudo omd status --bare ${shellEscape(s.name)} > ${shellEscape(path.join(STATUS_DIR, `${s.name}.status`))} 2>/dev/null`
+            `omd status --bare ${s.name} > ${path.join(STATUS_DIR, `${s.name}.status`)} 2>&1 || true`
         )
         .join(' ; ')
+      const statusCmds = sudoSh(statusInner)
 
       const loopCmd = [
-        `sudo -v && ${statusCmds}`,
+        `${statusCmds}`,
         `echo "✓ sudo authenticated — keepalive running (2 min interval, 1h)"`,
         `for i in $(seq 1 30); do sleep 120 && sudo -v && ${statusCmds} && echo "✓ sudo refreshed ($i/30)"; done`,
         `echo "keepalive expired" && exit`
@@ -363,7 +358,15 @@ async function pickSite(sites: OmdSite[]): Promise<string | undefined> {
 
 // ── Service-level commands ──
 
-const ALLOWED_OMD_ACTIONS = new Set(['start', 'stop', 'restart', 'rm', 'status'])
+const ALLOWED_OMD_ACTIONS = new Set([
+  'start',
+  'stop',
+  'restart',
+  'rm',
+  'status',
+  'enable',
+  'disable'
+])
 
 export function omdServiceCommand(
   action: string,
@@ -373,10 +376,18 @@ export function omdServiceCommand(
   if (!ALLOWED_OMD_ACTIONS.has(action)) return
   const target = serviceName ? `${serviceName} (${siteName})` : siteName
   const label = `OMD ${action} ${target}`
-  const baseCmd = serviceName
-    ? `sudo omd ${action} ${shellEscape(siteName)} ${shellEscape(serviceName)}`
-    : `sudo omd ${action} ${shellEscape(siteName)}`
+  let omdAction: string
+  if (action === 'enable') {
+    omdAction = `omd enable ${siteName}`
+  } else if (action === 'disable') {
+    omdAction = `omd disable ${siteName}`
+  } else if (serviceName) {
+    omdAction = `omd ${action} ${siteName} ${serviceName}`
+  } else {
+    omdAction = `omd ${action} ${siteName}`
+  }
   const statusFile = path.join(STATUS_DIR, `${siteName}.status`)
-  const cmd = `${baseCmd} ; sudo omd status --bare ${shellEscape(siteName)} > ${shellEscape(statusFile)} 2>/dev/null`
+  const inner = `${omdAction} ; omd status --bare ${siteName} > ${statusFile} 2>&1 || true`
+  const cmd = sudoSh(inner)
   return runCommand(label, cmd)
 }

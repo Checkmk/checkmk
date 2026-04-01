@@ -60,7 +60,9 @@ export function wrap(
   .codicon-sync::before { content: "\\ea77"; }
   .codicon-gear::before { content: "\\eaf8"; }
   .codicon-symbol-property::before { content: "\\eb65"; }
-  .codicon-run-all::before { content: "\\eb9e"; }`
+  .codicon-run-all::before { content: "\\eb9e"; }
+  .codicon-empty-window::before { content: "\\eae4"; }
+  .codicon-circle-slash::before { content: "\\eabd"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">

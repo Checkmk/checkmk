@@ -145,11 +145,27 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     : ''
 
   const statusLabel = (o: number) =>
-    o === 0 ? 'running' : o === 1 ? 'stopped' : o === 2 ? 'partial' : 'unknown'
+    o === 0
+      ? 'running'
+      : o === 1
+        ? 'stopped'
+        : o === 2
+          ? 'partial'
+          : o === 3
+            ? 'disabled'
+            : 'unknown'
   const statusIcon = (o: number) =>
-    o === 0 ? '&#10003;' : o === 1 ? '&#10007;' : o === 2 ? '&#9888;' : '&#63;'
+    o === 0
+      ? '&#10003;'
+      : o === 1
+        ? '&#10007;'
+        : o === 2
+          ? '&#9888;'
+          : o === 3
+            ? '&#8709;'
+            : '&#63;'
   const statusCls = (o: number) =>
-    o === 0 ? 'ok' : o === 1 ? 'error' : o === 2 ? 'stale' : 'unknown'
+    o === 0 ? 'ok' : o === 1 ? 'error' : o === 2 ? 'stale' : o === 3 ? 'disabled' : 'unknown'
 
   const sites = omdSites
     .map((site) => {
@@ -157,17 +173,24 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
       const cls = statusCls(o)
       const icon = statusIcon(o)
       const badge = `<span class="card-badge omd-badge-${cls}">${statusLabel(o)}</span>`
-      const browserBtn = site.port
-        ? `<button class="btn btn-small btn-icon" data-action="omd-open-browser" data-url="http://localhost:${esc(site.port)}/${esc(site.name)}/" title="Open in browser"><span class="codicon codicon-link-external"></span></button>`
-        : ''
       const isRunning = o === 0 || o === 2
-      const toggleAction = isRunning ? 'stop' : 'start'
-      const toggleIcon = isRunning ? 'codicon-debug-stop' : 'codicon-play'
-      const toggleTitle = isRunning ? 'Stop site' : 'Start site'
-      const toggleBtn =
-        o !== -1
-          ? `<button class="btn btn-small btn-icon" data-action="omd-site-action" data-omd-action="${toggleAction}" data-site="${esc(site.name)}" title="${toggleTitle}"><span class="codicon ${toggleIcon}"></span></button>`
+      const browserBtn =
+        site.port && isRunning
+          ? `<button class="btn btn-small btn-icon" data-action="omd-open-browser" data-url="http://localhost:${esc(site.port)}/${esc(site.name)}/" title="Open in browser"><span class="codicon codicon-link-external"></span></button>`
           : ''
+      const isDisabled = o === 3
+      let toggleBtn = ''
+      if (isDisabled) {
+        toggleBtn = `<button class="btn btn-small btn-icon" data-action="omd-site-action" data-omd-action="enable" data-site="${esc(site.name)}" title="Enable site"><span class="codicon codicon-empty-window"></span></button>`
+      } else if (o !== -1) {
+        const toggleAction = isRunning ? 'stop' : 'start'
+        const toggleIcon = isRunning ? 'codicon-debug-stop' : 'codicon-play'
+        const toggleTitle = isRunning ? 'Stop site' : 'Start site'
+        toggleBtn = `<button class="btn btn-small btn-icon" data-action="omd-site-action" data-omd-action="${toggleAction}" data-site="${esc(site.name)}" title="${toggleTitle}"><span class="codicon ${toggleIcon}"></span></button>`
+        if (o === 1) {
+          toggleBtn += `<button class="btn btn-small btn-icon" data-action="omd-site-action" data-omd-action="disable" data-site="${esc(site.name)}" title="Disable site"><span class="codicon codicon-circle-slash"></span></button>`
+        }
+      }
       const proxyBtn = isRunning
         ? `<button class="btn btn-small btn-icon" data-action="omd-proxy-site" data-site="${esc(site.name)}" title="Socket proxy"><span class="codicon codicon-debug-disconnect"></span></button>`
         : ''

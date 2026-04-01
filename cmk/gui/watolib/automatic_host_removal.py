@@ -29,7 +29,7 @@ from cmk.gui.site_config import (
     sites_ready_for_remote_automation,
 )
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
-from cmk.gui.watolib.activate_changes import ActivateChangesManager
+from cmk.gui.watolib.activate_changes import ActivateChangesManager, STATE_SUCCESS
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
@@ -295,9 +295,9 @@ def _activate_changes(
 
         for site_id in sites:
             state = manager.get_site_state(site_id)
-            if state and state["_state"] != "success":
+            if state["_state"] != STATE_SUCCESS:
                 _LOGGER_BACKGROUND_JOB.error(
-                    "Activation of site %s failed: %s", site_id, state.get("_status_details")
+                    "Activation of site %s failed: %s", site_id, state["_status_details"]
                 )
 
         _LOGGER_BACKGROUND_JOB.info("Activation finished")

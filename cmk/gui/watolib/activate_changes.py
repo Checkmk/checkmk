@@ -42,7 +42,7 @@ from html import unescape
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
-from typing import Any, assert_never, Literal, NamedTuple, TypedDict
+from typing import Any, assert_never, Final, Literal, NamedTuple, TypedDict
 from urllib.parse import urlparse
 
 from pydantic import BaseModel
@@ -154,8 +154,12 @@ from cmk.licensing.registry import get_licensing_user_effect, is_free
 from cmk.licensing.usage import save_extensions
 from cmk.messaging import rabbitmq
 from cmk.shared_typing.changes import (
+    ActivationPhase,
     OnlineStatus,
     StatusPerSiteResponse,
+)
+from cmk.shared_typing.changes import (
+    ActivationState as ActivationStateEnum,
 )
 from cmk.shared_typing.changes import (
     PendingChange as PendingChangeSummary,
@@ -172,21 +176,29 @@ from cmk.utils.paths import configuration_lockfile
 from cmk.utils.visuals import invalidate_visuals_cache
 
 # TODO: Make private
-Phase = str  # TODO: Make dedicated type
-PHASE_INITIALIZED = "initialized"  # Process has been initialized (not in thread yet)
-PHASE_QUEUED = "queued"  # Process queued by site scheduler
-PHASE_STARTED = "started"  # Process just started, nothing happened yet
-PHASE_SYNC = "sync"  # About to sync
-PHASE_ACTIVATE = "activate"  # sync done activating changes
-PHASE_FINISHING = "finishing"  # Remote work done, finalizing local state
-PHASE_DONE = "done"  # Done (with good or bad result)
+Phase = Literal[
+    "initialized",
+    "queued",
+    "started",
+    "sync",
+    "activate",
+    "finishing",
+    "done",
+]
+PHASE_INITIALIZED: Final = "initialized"  # Process has been initialized (not in thread yet)
+PHASE_QUEUED: Final = "queued"  # Process queued by site scheduler
+PHASE_STARTED: Final = "started"  # Process just started, nothing happened yet
+PHASE_SYNC: Final = "sync"  # About to sync
+PHASE_ACTIVATE: Final = "activate"  # sync done activating changes
+PHASE_FINISHING: Final = "finishing"  # Remote work done, finalizing local state
+PHASE_DONE: Final = "done"  # Done (with good or bad result)
 
 # PHASE_DONE can have these different states:
 
-State = str  # TODO: Make dedicated type
-STATE_SUCCESS = "success"  # Everything is ok
-STATE_ERROR = "error"  # Something went really wrong
-STATE_WARNING = "warning"  # e.g. in case of core config warnings
+State = Literal["success", "error", "warning"]
+STATE_SUCCESS: Final = "success"  # Everything is ok
+STATE_ERROR: Final = "error"  # Something went really wrong
+STATE_WARNING: Final = "warning"  # e.g. in case of core config warnings
 
 # Available activation time keys
 
@@ -205,10 +217,30 @@ GENERAL_DIR_EXCLUDE = "__pycache__"
 ConfigWarnings = dict[ConfigDomainName, list[str]]
 ActivationId = str  # UUID
 
-SiteActivationState = dict[str, Any]
-ActivationState = dict[str, SiteActivationState]
-FileFilterFunc = Callable[[str], bool] | None
 ActivationSource = Literal["GUI", "REST API", "INTERNAL"]
+
+
+class SiteActivationState(TypedDict):
+    _site_id: SiteId
+    _activation_id: ActivationId
+    _phase: Phase | None
+    _state: State | None
+    _status_text: str | None
+    _status_details: str | None
+    _time_started: float
+    _time_updated: float | None
+    _time_ended: float | None
+    _expected_duration: float
+    _pid: int
+    _user_id: UserId | None
+    _source: ActivationSource | None
+
+
+class ActivationState(TypedDict):
+    sites: dict[SiteId, SiteActivationState]
+
+
+FileFilterFunc = Callable[[str], bool] | None
 
 tracer = trace.get_tracer()
 
@@ -395,10 +427,10 @@ def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
         timeout -= 0.5
 
     state = manager.get_site_state(site_id)
-    if state and state["_state"] != "success":
+    if state["_state"] != STATE_SUCCESS:
         logger.error(
             _("Remote automation tried to sync pending changes but failed: %s"),
-            state.get("_status_details"),
+            state["_status_details"],
         )
 
 
@@ -601,7 +633,7 @@ def update_activation_time(site_id: SiteId, time_key: str, duration: float) -> N
 
 def _calc_status_details(
     time_started: float,
-    time_ended: float,
+    time_ended: float | None,
     expected_duration: float,
     phase: Phase,
     status_details: str | None,
@@ -615,7 +647,10 @@ def _calc_status_details(
         value = _("Not started.")
 
     if phase == PHASE_DONE:
-        value += _(" Finished at: %s.") % render.time_of_day(time_ended)
+        if time_ended is not None:
+            value += _(" Finished at: %s.") % render.time_of_day(time_ended)
+        else:
+            value += _(" Finished.")
     elif phase != PHASE_QUEUED:
         assert isinstance(time_started, int | float)
         estimated_time_left = expected_duration - (time.time() - time_started)
@@ -649,6 +684,12 @@ def _set_result(
     current_state["_phase"] = phase
     current_state["_status_text"] = status_text
 
+    # Update _time_ended before passing it to _calc_status_details
+    current_state["_time_updated"] = time.time()
+    if phase == PHASE_DONE:
+        current_state["_time_ended"] = current_state["_time_updated"]
+        current_state["_state"] = state
+
     if phase != PHASE_INITIALIZED:
         current_state["_status_details"] = _calc_status_details(
             current_state["_time_started"],
@@ -657,11 +698,6 @@ def _set_result(
             phase,
             status_details,
         )
-
-    current_state["_time_updated"] = time.time()
-    if phase == PHASE_DONE:
-        current_state["_time_ended"] = current_state["_time_updated"]
-        current_state["_state"] = state
 
     _save_state(current_state["_activation_id"], current_state["_site_id"], current_state)
 
@@ -1284,8 +1320,23 @@ class ActivateChanges:
 
     def last_activation_state(self, site_id: SiteId) -> SiteActivationState:
         """This function returns the last known persisted activation state"""
-        return store.load_object_from_file(
+        raw_state = store.load_object_from_file(
             Path(ActivateChangesManager.persisted_site_state_path(site_id)), default={}
+        )
+        return SiteActivationState(
+            _site_id=raw_state.get("_site_id", site_id),
+            _activation_id=raw_state.get("_activation_id", ""),
+            _phase=raw_state.get("_phase"),
+            _state=raw_state.get("_state"),
+            _status_text=raw_state.get("_status_text"),
+            _status_details=raw_state.get("_status_details"),
+            _time_started=raw_state.get("_time_started", 0.0),
+            _time_updated=raw_state.get("_time_updated"),
+            _time_ended=raw_state.get("_time_ended"),
+            _expected_duration=raw_state.get("_expected_duration", 0.0),
+            _pid=raw_state.get("_pid", 0),
+            _user_id=raw_state.get("_user_id"),
+            _source=raw_state.get("_source"),
         )
 
     def get_last_change_id(self) -> str:
@@ -1376,8 +1427,10 @@ class ActivateChanges:
                 )
             else:
                 last_state = self.last_activation_state(site_id)
-            if last_state and "_state" in last_state and "_phase" in last_state:
-                raw_status_details = last_state.get("_status_details")
+            phase = last_state["_phase"]
+            state = last_state["_state"]
+            if phase is not None and state is not None:
+                raw_status_details = last_state["_status_details"]
                 # Apply the same HTML stripping and unescaping as
                 # in activation_attributes_for_rest_api_response:
                 clean_status_details = (
@@ -1388,12 +1441,12 @@ class ActivateChanges:
 
                 return StatusPerSite(
                     site=site_id,
-                    phase=last_state["_phase"],
-                    state=last_state["_state"],
-                    status_text=last_state.get("_status_text", ""),
+                    phase=phase,
+                    state=state,
+                    status_text=last_state["_status_text"] or "",
                     status_details=clean_status_details,
-                    start_time=last_state.get("_time_started", 0),
-                    end_time=last_state.get("_time_ended", 0),
+                    start_time=last_state["_time_started"],
+                    end_time=last_state["_time_ended"],
                 )
             return None
 
@@ -1410,8 +1463,16 @@ class ActivateChanges:
                     get_status_for_site(site_id, site).get("state", "unknown")
                 ),
                 loggedIn=self.site_is_logged_in(site_id, site),
-                lastActivationStatus=StatusPerSiteResponse(**asdict(last_status))
-                if last_status
+                lastActivationStatus=StatusPerSiteResponse(
+                    site=last_status.site,
+                    phase=ActivationPhase(last_status.phase),
+                    state=ActivationStateEnum(last_status.state),
+                    status_text=last_status.status_text,
+                    status_details=last_status.status_details,
+                    start_time=last_status.start_time,
+                    end_time=last_status.end_time if last_status.end_time is not None else 0.0,
+                )
+                if last_status and last_status.phase is not None and last_status.state is not None
                 else None,
             )
 
@@ -1794,17 +1855,18 @@ class ActivateChangesManager:
 
         # The site_state file may be missing/empty, if the operation has started recently.
         # However, if the file is still missing after a considerable amount
-        # of time, we consider this site activation as dead
+        # of time, we consider this site activation as dead.
+        # _phase is None when the state file has not been written yet.
         seconds_since_start = time.time() - self._time_started
-        if site_state == {} and seconds_since_start > Request.request_timeout - 10:
+        if site_state["_phase"] is None and seconds_since_start > Request.request_timeout - 10:
             return False
 
-        if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:
+        if site_state["_phase"] is None or site_state["_phase"] == PHASE_INITIALIZED:
             # Just been initialized. Treat as running as it has not been
             # started and could not lock the site stat file yet.
             return True
 
-        if site_state["_phase"] in PHASE_DONE:
+        if site_state["_phase"] == PHASE_DONE:
             return False
 
         return True
@@ -2083,8 +2145,24 @@ class ActivateChangesManager:
     def get_site_state(self, site_id: SiteId) -> SiteActivationState:
         if self._activation_id is None:
             raise Exception("activation ID is not set")
-        return store.load_object_from_file(
-            Path(ActivateChangesManager.site_state_path(self._activation_id, site_id)), default={}
+        raw_state = store.load_object_from_file(
+            Path(ActivateChangesManager.site_state_path(self._activation_id, site_id)),
+            default={},
+        )
+        return SiteActivationState(
+            _site_id=raw_state.get("_site_id", site_id),
+            _activation_id=raw_state.get("_activation_id", self._activation_id),
+            _phase=raw_state.get("_phase"),
+            _state=raw_state.get("_state"),
+            _status_text=raw_state.get("_status_text"),
+            _status_details=raw_state.get("_status_details"),
+            _time_started=raw_state.get("_time_started", 0.0),
+            _time_updated=raw_state.get("_time_updated"),
+            _time_ended=raw_state.get("_time_ended"),
+            _expected_duration=raw_state.get("_expected_duration", 0.0),
+            _pid=raw_state.get("_pid", 0),
+            _user_id=raw_state.get("_user_id"),
+            _source=raw_state.get("_source"),
         )
 
     @staticmethod
@@ -2242,7 +2320,25 @@ def _handle_distributed_sites_in_free(
         _handle_activation_changes_exception(
             logger.getChild(f"site[{start_site_id}]"),
             exc,
-            {"_site_id": start_site_id, "_time_started": time_started},
+            SiteActivationState(
+                _site_id=start_site_id,
+                # No real activation is running here: we are only recording the error so the
+                # sidebar can display it. An empty activation_id suppresses the ephemeral state
+                # file write in _save_state, avoiding orphaned temp directories under
+                # ACTIVATION_TMP_BASE_DIR.
+                _activation_id="",
+                _phase=None,
+                _state=None,
+                _status_text=None,
+                _status_details=None,
+                _time_started=time_started,
+                _time_updated=None,
+                _time_ended=None,
+                _expected_duration=0.0,
+                _pid=os.getpid(),
+                _user_id=user.id,
+                _source="INTERNAL",
+            ),
         )
     return any(distributed_sites_in_free)
 
@@ -2255,22 +2351,21 @@ def _initialize_site_activation_state(
     time_started: float,
     source: ActivationSource,
 ) -> SiteActivationState:
-    site_activation_state = {
-        "_site_id": site_id,
-        "_activation_id": activation_id,
-        "_phase": None,
-        "_state": None,
-        "_status_text": None,
-        "_status_details": None,
-        "_time_started": time_started,
-        "_time_updated": None,
-        "_time_ended": None,
-        "_expected_duration": _load_expected_duration(site_id, site_config, activate_changes),
-        "_pid": os.getpid(),
-        "_user_id": user.id,
-        "_source": source,
-    }
-    return site_activation_state
+    return SiteActivationState(
+        _site_id=site_id,
+        _activation_id=activation_id,
+        _phase=None,
+        _state=None,
+        _status_text=None,
+        _status_details=None,
+        _time_started=time_started,
+        _time_updated=None,
+        _time_ended=None,
+        _expected_duration=_load_expected_duration(site_id, site_config, activate_changes),
+        _pid=os.getpid(),
+        _user_id=user.id,
+        _source=source,
+    )
 
 
 def _get_config_sync_file_infos_per_inode(
@@ -2852,6 +2947,11 @@ def _render_warnings(configuration_warnings: ConfigWarnings) -> str:
 
 
 def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivationState) -> None:
+    # An empty activation_id means there is no real activation in progress (e.g. the Free-edition
+    # distributed-site error path). Skip the ephemeral write to avoid creating orphaned directories
+    # under ACTIVATION_TMP_BASE_DIR that won't be cleaned up.
+    if not activation_id:
+        return
     store.save_object_to_file(
         Path(ActivateChangesManager.site_state_path(activation_id, site_id)), state
     )
@@ -3707,12 +3807,12 @@ class ActivationChange:
 @dataclass
 class StatusPerSite:
     site: SiteId
-    phase: Literal["initialized", "queued", "started", "sync", "activate", "finishing", "done"]
-    state: Literal["success", "error", "warning"]
+    phase: Phase | None
+    state: State | None
     status_text: str
     status_details: str
     start_time: float
-    end_time: float
+    end_time: float | None
 
 
 @dataclass
@@ -3776,13 +3876,13 @@ def activation_attributes_for_rest_api_response(
                 site=SiteId(site),
                 phase=status_dict["_phase"],
                 state=status_dict["_state"],
-                status_text=status_dict["_status_text"],
-                status_details=re.sub(r"<.*?>", "", unescape(status_dict["_status_details"])),
+                status_text=status_dict["_status_text"] or "",
+                status_details=re.sub(r"<.*?>", "", unescape(status_dict["_status_details"] or "")),
                 start_time=status_dict["_time_started"],
                 end_time=status_dict["_time_ended"],
             )
             for site, status_dict in manager.get_state()["sites"].items()
-            if status_dict
+            if status_dict["_phase"] is not None
         ],
     )
 

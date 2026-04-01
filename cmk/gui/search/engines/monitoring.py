@@ -521,18 +521,9 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 class QuicksearchManager:
     """Producing the results for the given search query"""
 
-    def __init__(
-        self, raise_too_many_rows_error: bool = True, row_limit: int | None = None
-    ) -> None:
-        self.raise_too_many_rows_error = raise_too_many_rows_error
-        # NOTE: we cannot access the active_config at initialization as this would lead to a
-        # traceback during registration. Therefore, performing this fallback mechanism in a
-        # dedicated method.
+    def __init__(self, *, row_limit: int, raise_too_many_rows_error: bool = True) -> None:
         self._row_limit = row_limit
-
-    def _get_row_limit(self) -> int:
-        # TODO: look into whether we want to add protection here against very large limit values.
-        return self._row_limit or active_config.quicksearch_dropdown_limit
+        self.raise_too_many_rows_error = raise_too_many_rows_error
 
     def generate_results(
         self, query: SearchQuery, user_permissions: UserPermissions
@@ -586,7 +577,6 @@ class QuicksearchManager:
         livestatus based search plugins.
         """
 
-        row_limit = self._get_row_limit()
         found_filters = self._find_search_object_expressions(query)
 
         if found_filters:
@@ -596,7 +586,7 @@ class QuicksearchManager:
                 LivestatusQuicksearchConductor(
                     used_filters,
                     FilterBehaviour.CONTINUE,
-                    row_limit,
+                    self._row_limit,
                 )
             ]
 
@@ -657,13 +647,12 @@ class QuicksearchManager:
         filter_behaviour: FilterBehaviour,
         user_permissions: UserPermissions,
     ) -> ABCQuicksearchConductor:
-        row_limit = self._get_row_limit()
         plugin = match_plugin_registry[filter_name]
         if isinstance(plugin, ABCLivestatusMatchPlugin):
-            return LivestatusQuicksearchConductor(used_filters, filter_behaviour, row_limit)
+            return LivestatusQuicksearchConductor(used_filters, filter_behaviour, self._row_limit)
 
         return BasicPluginQuicksearchConductor(
-            used_filters, filter_behaviour, user_permissions, row_limit
+            used_filters, filter_behaviour, user_permissions, self._row_limit
         )
 
     def _conduct_search(self, search_objects: list[ABCQuicksearchConductor]) -> None:
@@ -674,20 +663,19 @@ class QuicksearchManager:
            depending on the configured filter behavior.
         """
         total_rows = 0
-        row_limit = self._get_row_limit()
 
         for idx, search_object in enumerate(search_objects):
             search_object.do_query()
             total_rows += search_object.num_rows()
 
-            if total_rows > row_limit:
-                search_object.remove_rows_from_end(total_rows - row_limit)
+            if total_rows > self._row_limit:
+                search_object.remove_rows_from_end(total_rows - self._row_limit)
                 if self.raise_too_many_rows_error:
-                    raise TooManyRowsError(_("More than %d results") % row_limit)
+                    raise TooManyRowsError(_("More than %d results") % self._row_limit)
 
             if search_object.row_limit_exceeded():
                 if self.raise_too_many_rows_error:
-                    raise TooManyRowsError(_("More than %d results") % row_limit)
+                    raise TooManyRowsError(_("More than %d results") % self._row_limit)
 
             if (
                 search_object.num_rows() > 0
@@ -696,7 +684,7 @@ class QuicksearchManager:
                 if search_object.filter_behaviour is FilterBehaviour.FINISHED_DISTINCT:
                     # Discard all data of previous filters and break
                     for i in range(idx - 1, -1, -1):
-                        search_objects[i].remove_rows_from_end(row_limit)
+                        search_objects[i].remove_rows_from_end(self._row_limit)
                 break
 
     def _evaluate_results(
@@ -1402,8 +1390,8 @@ match_plugin_registry.register(MonitorMenuMatchPlugin())
 class MonitoringSearchEngine:
     def __init__(self, *, user_permissions: UserPermissions, row_limit: int) -> None:
         self._legacy_engine = QuicksearchManager(
-            raise_too_many_rows_error=False,
             row_limit=row_limit,
+            raise_too_many_rows_error=False,
         )
         self._user_permissions = user_permissions
 

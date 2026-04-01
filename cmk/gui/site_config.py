@@ -65,6 +65,17 @@ def distributed_setup_remote_sites(site_configs: SiteConfigurations) -> SiteConf
     )
 
 
+def sites_ready_for_remote_automation(site_configs: SiteConfigurations) -> SiteConfigurations:
+    """Remote sites that have replication enabled and a login secret configured."""
+    return SiteConfigurations(
+        {
+            site_id: s
+            for site_id, s in distributed_setup_remote_sites(site_configs).items()
+            if "secret" in s
+        }
+    )
+
+
 def site_is_local(site_config: SiteConfiguration) -> bool:
     socket_info = site_config["socket"]
     if isinstance(socket_info, str):

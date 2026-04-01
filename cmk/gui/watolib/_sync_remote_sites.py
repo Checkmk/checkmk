@@ -20,7 +20,7 @@ from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import Request
 from cmk.gui.log import logger
-from cmk.gui.site_config import distributed_setup_remote_sites, is_distributed_setup_remote_site
+from cmk.gui.site_config import is_distributed_setup_remote_site, sites_ready_for_remote_automation
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import (
@@ -325,20 +325,14 @@ def _execute_sync_remote_sites(config: Config) -> None:
     if is_distributed_setup_remote_site(config.sites):
         return
 
-    if not (
-        remote_site_configs := [
-            (site_id, site_config)
-            for site_id, site_config in distributed_setup_remote_sites(config.sites).items()
-            if "secret" in site_config
-        ]
-    ):
+    if not (remote_site_configs := sites_ready_for_remote_automation(config.sites)):
         logger.debug("Job shall not start")
         return
 
     SyncRemoteSitesJob().do_execute(
         sites=[
             (site_id, remote_automation_config_from_site_config(site_config))
-            for site_id, site_config in remote_site_configs
+            for site_id, site_config in remote_site_configs.items()
         ],
         debug=config.debug,
     )

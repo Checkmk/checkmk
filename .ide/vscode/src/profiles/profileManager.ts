@@ -88,12 +88,12 @@ export function register(
 
 export async function start(name: string): Promise<void> {
   const family = families[name]
-  if (!family || family.active || !family.activate) return
+  if (!family || family.active || !family.activate || !_context) return
   log(`Enable profile: ${FAMILY_DISPLAY[name]}`)
   family.loading = true
   showLoading(name)
   try {
-    family.disposables = family.activate(_context!) || []
+    family.disposables = family.activate(_context) || []
     family.active = true
     await saveActiveProfiles()
   } finally {

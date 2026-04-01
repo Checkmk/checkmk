@@ -462,6 +462,7 @@ def _automation_service_discovery(
 
         results[hostname] = _automation_discovery(
             hostname,
+            omd_root=cmk.utils.paths.omd_root,
             is_cluster=is_cluster,
             cluster_nodes=config_cache.nodes(hostname),
             active_hosts={
@@ -983,6 +984,7 @@ def _execute_discovery(
         passive_check_preview = get_check_preview(
             host_name,
             ip_address,
+            omd_root=cmk.utils.paths.omd_root,
             is_cluster=is_cluster,
             cluster_nodes=config_cache.nodes(host_name),
             parser=parser,
@@ -1346,6 +1348,7 @@ def _execute_autodiscovery(
                     hosts_config = config_cache.hosts_config
                     autodiscovery_result = autodiscovery(
                         host_name,
+                        omd_root=cmk.utils.paths.omd_root,
                         cluster_nodes=config_cache.nodes(host_name),
                         active_hosts={
                             hn

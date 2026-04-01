@@ -6,9 +6,9 @@
 import itertools
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
-import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -86,6 +86,7 @@ def get_check_preview(
     host_name: HostName,
     ip_address: HostAddress | None,
     *,
+    omd_root: Path,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
     parser: ParserFunction,
@@ -114,7 +115,7 @@ def get_check_preview(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
         console.debug,
     )
-    store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
+    store_piggybacked_sections(host_sections_by_host, omd_root)
     providers = make_providers(
         host_sections_by_host,
         section_plugins,

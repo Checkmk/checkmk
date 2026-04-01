@@ -153,6 +153,7 @@ def test_checks_executor(
         LOGGER.debug("check_plugins found: %s\n\n", list(check_plugins))
         _ = execute_checkmk_checks(
             hostname=HOSTNAME,
+            omd_root=Path(""),
             fetched=[(source_info, get_raw_data(DUMPS_DIR / agent_data_filename))],
             parser=parser(parser_config),
             summarizer=summarizer(HOSTNAME),

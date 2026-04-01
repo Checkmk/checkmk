@@ -7,9 +7,9 @@
 import itertools
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import NamedTuple
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.resulttype import Result
@@ -71,6 +71,7 @@ class ABCCheckingConfig(ABC):
 def execute_checkmk_checks(
     *,
     hostname: HostName,
+    omd_root: Path,
     fetched: Iterable[
         tuple[
             SourceInfo,
@@ -97,7 +98,7 @@ def execute_checkmk_checks(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
         console.debug,
     )
-    store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
+    store_piggybacked_sections(host_sections_by_host, omd_root)
     providers = make_providers(
         host_sections_by_host,
         section_plugins,
@@ -121,6 +122,7 @@ def execute_checkmk_checks(
     if run_plugin_names is EVERYTHING:
         _do_inventory_actions_during_checking_for(
             hostname,
+            omd_root=omd_root,
             inventory_parameters=inventory_parameters,
             inventory_plugins=inventory_plugins,
             params=params,
@@ -142,12 +144,13 @@ def execute_checkmk_checks(
 def _do_inventory_actions_during_checking_for(
     host_name: HostName,
     *,
+    omd_root: Path,
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     params: HWSWInventoryParameters,
     providers: Mapping[HostKey, Provider],
 ) -> None:
-    inv_store = InventoryStore(cmk.utils.paths.omd_root)
+    inv_store = InventoryStore(omd_root)
 
     if not params.status_data_inventory:
         # includes cluster case

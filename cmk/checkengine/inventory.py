@@ -20,10 +20,10 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, assert_never
 
 import cmk.ccc.debug
-import cmk.utils.paths
 from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
@@ -120,6 +120,7 @@ class CheckInventoryTreeResult:
 def inventorize_host(
     host_name: HostName,
     *,
+    omd_root: Path,
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
@@ -138,7 +139,7 @@ def inventorize_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
         console.debug,
     )
-    store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
+    store_piggybacked_sections(host_sections_by_host, omd_root)
 
     providers = make_providers(
         host_sections_by_host,
@@ -171,7 +172,7 @@ def inventorize_host(
     processing_failed = any(
         host_section.is_error() for _source, host_section in host_sections
     ) or bool(parsing_errors)
-    no_data_or_files = _no_data_or_files(host_name, host_sections_by_host.values())
+    no_data_or_files = _no_data_or_files(host_name, host_sections_by_host.values(), omd_root)
 
     return CheckInventoryTreeResult(
         processing_failed=processing_failed,
@@ -228,11 +229,13 @@ def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
     return tree
 
 
-def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]) -> bool:
+def _no_data_or_files(
+    host_name: HostName, host_sections: Iterable[HostSections], omd_root: Path
+) -> bool:
     if any(hs.sections or hs.piggybacked_raw_data for hs in host_sections):
         return False
 
-    inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
+    inv_paths = InventoryPaths(omd_root)
     if (
         inv_paths.inventory_tree(host_name).path.exists()
         or inv_paths.inventory_tree(host_name).legacy.exists()

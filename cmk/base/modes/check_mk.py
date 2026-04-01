@@ -2224,6 +2224,8 @@ def mode_check_discovery(
         with CPUTracker(console.debug) as tracker:
             check_results = execute_check_discovery(
                 hostname,
+                omd_root=cmk.utils.paths.omd_root,
+                autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
                 is_cluster=hostname in config_cache.hosts_config.clusters,
                 cluster_nodes=config_cache.nodes(hostname),
                 params=config_cache.discovery_check_parameters(hostname),
@@ -2900,6 +2902,7 @@ def run_checking(
         with CPUTracker(console.debug) as tracker:
             checks_result = execute_checkmk_checks(
                 hostname=hostname,
+                omd_root=cmk.utils.paths.omd_root,
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
                 summarizer=summarizer,
@@ -3201,6 +3204,7 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
             else:
                 check_results = inventory.inventorize_host(
                     hostname,
+                    omd_root=cmk.utils.paths.omd_root,
                     fetcher=fetcher,
                     parser=parser,
                     summarizer=summarizer,
@@ -3282,6 +3286,7 @@ def execute_active_check_inventory(
     else:
         result = inventory.inventorize_host(
             host_name,
+            omd_root=cmk.utils.paths.omd_root,
             fetcher=fetcher,
             parser=parser,
             summarizer=summarizer,

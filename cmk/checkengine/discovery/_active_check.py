@@ -9,10 +9,10 @@ import enum
 import itertools
 from collections import Counter
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.resulttype as result
-import cmk.utils.paths
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -90,6 +90,8 @@ class _Transition(enum.Enum):
 def execute_check_discovery(
     host_name: HostName,
     *,
+    omd_root: Path,
+    autodiscovery_dir: Path,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
     params: DiscoveryCheckParameters,
@@ -116,7 +118,7 @@ def execute_check_discovery(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
         console.debug,
     )
-    store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
+    store_piggybacked_sections(host_sections_by_host, omd_root)
     providers = make_providers(
         host_sections_by_host,
         section_plugins,
@@ -198,6 +200,7 @@ def execute_check_discovery(
             [
                 _schedule_rediscovery(
                     host_name,
+                    autodiscovery_dir=autodiscovery_dir,
                     is_cluster=is_cluster,
                     cluster_nodes=cluster_nodes,
                     sources_failed=bool(failed_sources),
@@ -397,6 +400,7 @@ def _make_labels_result(
 def _schedule_rediscovery(
     host_name: HostName,
     *,
+    autodiscovery_dir: Path,
     is_cluster: bool,
     cluster_nodes: Iterable[HostName],
     sources_failed: bool,
@@ -412,7 +416,7 @@ def _schedule_rediscovery(
         )
         return ActiveCheckResult(state=1, summary=error_message)
 
-    autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
+    autodiscovery_queue = AutoQueue(autodiscovery_dir)
     if is_cluster:
         for nodename in cluster_nodes:
             autodiscovery_queue.add(nodename)

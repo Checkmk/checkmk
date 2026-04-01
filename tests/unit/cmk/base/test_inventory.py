@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Literal
 
 import pytest
@@ -1273,6 +1274,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
 
     check_results = inventorize_host(
         hostname,
+        omd_root=Path(""),
         fetcher=fetcher,
         parser=parser,
         summarizer=lambda *args, **kwargs: [],
@@ -1303,6 +1305,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
     hostname = HostName("my-host")
     check_results = inventorize_host(
         hostname,
+        omd_root=Path(""),
         # no data!
         fetcher=lambda *args, **kwargs: [],
         parser=lambda *args, **kwargs: [],

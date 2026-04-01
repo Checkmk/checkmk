@@ -9,6 +9,7 @@ import dataclasses
 import itertools
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import assert_never, Literal
 
 import cmk.ccc.debug
@@ -33,7 +34,6 @@ from cmk.checkengine.summarize import SummarizerFunction
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, merge_cluster_labels
 from cmk.utils.log import console, section
-from cmk.utils.paths import omd_root
 from cmk.utils.servicename import ServiceName
 
 from ._autochecks import (
@@ -129,6 +129,7 @@ ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
 def automation_discovery(
     host_name: HostName,
     *,
+    omd_root: Path,
     # in the bulk discovery case, we might be dealing with a cluster
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
@@ -455,6 +456,7 @@ class AutodiscoveryResult:
 def autodiscovery(
     host_name: HostName,
     *,
+    omd_root: Path,
     cluster_nodes: Sequence[HostName],
     active_hosts: Container[HostName],
     clear_ruleset_matcher_caches: Callable[[], object],
@@ -485,6 +487,7 @@ def autodiscovery(
 
     result = automation_discovery(
         host_name,
+        omd_root=omd_root,
         is_cluster=False,
         cluster_nodes=cluster_nodes,
         active_hosts=active_hosts,

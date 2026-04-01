@@ -59,11 +59,15 @@ Point = tuple[datetime.datetime, float]
 class Scalar(ParseModel):
     type_: Literal[ValueType.scalar] = Field(alias="resultType")
     result: Point
+    analysis: Mapping[str, object] | None = None
+    warnings: Sequence[str] = []
 
 
 class String(ParseModel):
     type_: Literal[ValueType.string] = Field(alias="resultType")
     result: tuple[datetime.datetime, str]
+    analysis: Mapping[str, object] | None = None
+    warnings: Sequence[str] = []
 
 
 class Sample(ParseModel):
@@ -74,6 +78,8 @@ class Sample(ParseModel):
 class Vector(ParseModel):
     type_: Literal[ValueType.vector] = Field(alias="resultType")
     result: Sequence[Sample]
+    analysis: Mapping[str, object] | None = None
+    warnings: Sequence[str] = []
 
 
 class Series(ParseModel):
@@ -84,6 +90,8 @@ class Series(ParseModel):
 class Matrix(ParseModel):
     type_: Literal[ValueType.matrix] = Field(alias="resultType")
     result: Sequence[Series]
+    analysis: Mapping[str, object] | None = None
+    warnings: Sequence[str] = []
 
 
 class ResponseSuccess(ParseModel):

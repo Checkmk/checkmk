@@ -24,13 +24,13 @@ from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
+from cmk.gui.saml2_login import show_saml2_login
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
@@ -219,7 +219,9 @@ def page_login(config: Config) -> None:
         html.button("_login", _("Login"))
 
         if user_errors and not saml2_user_error:
-            show_user_errors("login_error")
+            html.open_div(id_="login_error")
+            html.show_user_errors()
+            html.close_div()
 
         html.set_focus("_username")
     html.open_div(id_="loginfoot")

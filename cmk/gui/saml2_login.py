@@ -47,7 +47,9 @@ def show_saml2_login(
                     + str(HTMLWriter.render_p(_("Please contact your administrator."))),
                 )
             )
-            show_user_errors(id_="login_error_saml2")
+            html.open_div(id_="login_error_saml2")
+            html.show_user_errors()
+            html.close_div()
 
     if saml_connections:
         html.open_h2(class_=["login_separator"])
@@ -55,9 +57,3 @@ def show_saml2_login(
         html.close_h2()
 
     return saml2_user_error
-
-
-def show_user_errors(id_: str) -> None:
-    html.open_div(id_=id_)
-    html.show_user_errors()
-    html.close_div()

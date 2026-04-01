@@ -28,7 +28,14 @@ defineProps<StepsHeaderProps>()
 
 <template>
   <div class="db-steps-header__container">
-    <div v-if="!hideBackButton" @click="emit('back')">
+    <button
+      v-if="!hideBackButton"
+      class="db-steps-header__back-button"
+      name="back"
+      type="button"
+      :aria-label="_t('Back')"
+      @click="emit('back')"
+    >
       <CmkMultitoneIcon
         name="back"
         :title="_t('Back')"
@@ -36,7 +43,7 @@ defineProps<StepsHeaderProps>()
         primary-color="font"
         class="db-steps-header__icon"
       />
-    </div>
+    </button>
     <div class="db-steps-header__label">
       <div class="db-steps-header__title-block">
         <CmkHeading type="h1">
@@ -45,7 +52,13 @@ defineProps<StepsHeaderProps>()
       </div>
       <CmkLabel v-if="subtitle" variant="subtitle">{{ subtitle }}</CmkLabel>
     </div>
-    <button v-if="closeButton" type="button" class="db-steps-header__close" @click="emit('back')">
+    <button
+      v-if="closeButton"
+      name="close"
+      type="button"
+      class="db-steps-header__close"
+      @click="emit('back')"
+    >
       <CmkIcon :aria-label="_t('Close')" name="close" size="xsmall" />
     </button>
   </div>
@@ -81,5 +94,13 @@ defineProps<StepsHeaderProps>()
   border: none;
   margin: 0;
   padding: 0;
+}
+
+.db-steps-header__back-button {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 </style>

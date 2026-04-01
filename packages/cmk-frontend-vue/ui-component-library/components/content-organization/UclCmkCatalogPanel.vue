@@ -3,30 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
-
-import UclCmkCatalogPanelDev from './UclCmkCatalogPanelDev.vue'
-
-type CatalogPanelVariant = 'default' | 'padded'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkCatalogPanel = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -42,8 +22,7 @@ const a11yDataCmkCatalogPanel = [
       'When the header button is focused, pressing Enter or Space toggles the visibility of the panel content.'
   }
 ]
-
-const codeExampleCmkCatalogPanel = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 <${'/'}script>
 
@@ -53,7 +32,9 @@ ${'import'} CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
   </CmkCatalogPanel>
 </template>`
 
-const panelConfig = {
+type CatalogPanelVariant = 'default' | 'padded'
+
+export const panelConfig = {
   title: { type: 'string', title: 'Panel Title', initialState: 'Catalog Panel' },
   variant: {
     type: 'list',
@@ -62,10 +43,30 @@ const panelConfig = {
       { title: 'Default', name: 'default' },
       { title: 'Padded', name: 'padded' }
     ] satisfies Options<CatalogPanelVariant>[],
-    initialState: 'default' as const
+    initialState: 'default' as CatalogPanelVariant
   },
   open: { type: 'boolean', title: 'Open', initialState: true }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
+
+import UclCmkCatalogPanelDev from './UclCmkCatalogPanelDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -89,9 +90,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkCatalogPanel" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkCatalogPanel" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkCatalogPanelDev :screenshot-mode="screenshotMode" />

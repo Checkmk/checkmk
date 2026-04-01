@@ -3,32 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkAccordion from '@/components/CmkAccordion/CmkAccordion.vue'
-import CmkAccordionItem from '@/components/CmkAccordion/CmkAccordionItem.vue'
-import CmkAccordionItemStateIndicator from '@/components/CmkAccordion/CmkAccordionItemStateIndicator.vue'
-import CmkIcon from '@/components/CmkIcon'
-import type { HeadingType } from '@/components/typography/CmkHeading.vue'
+import { type HeadingType } from '@/components/typography/CmkHeading.vue'
 
-import UclCmkAccordionDev from './UclCmkAccordionDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkAccordion = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves keyboard focus to the accordion header.'
@@ -43,8 +23,7 @@ const a11yDataCmkAccordion = [
     description: 'Toggles the expansion state of the focused accordion item.'
   }
 ]
-
-const codeExampleCmkAccordion = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkAccordion from '@/components/CmkAccordion/CmkAccordion.vue'
 ${'import'} CmkAccordionItem from '@/components/CmkAccordion/CmkAccordionItem.vue'
@@ -96,8 +75,7 @@ const openedItems = ref(['item-1'])
 
   </CmkAccordion>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   minOpen: {
     type: 'number',
     title: 'minOpen',
@@ -117,10 +95,7 @@ const panelConfig = {
     help: 'Type: string[]. IDs must match the value prop of each CmkAccordionItem. In the UCL app, enter one ID per line in the textarea, e.g.:item-1 item-2 item-3'
   }
 } satisfies PanelConfig
-
-const propState = ref(createPanelState(panelConfig))
-
-const itemPanelConfig = {
+export const itemPanelConfig = {
   headerAs: {
     type: 'list',
     title: 'headerAs',
@@ -140,6 +115,31 @@ const itemPanelConfig = {
     help: 'Disables all items in the accordion.'
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkAccordion from '@/components/CmkAccordion/CmkAccordion.vue'
+import CmkAccordionItem from '@/components/CmkAccordion/CmkAccordionItem.vue'
+import CmkAccordionItemStateIndicator from '@/components/CmkAccordion/CmkAccordionItemStateIndicator.vue'
+import CmkIcon from '@/components/CmkIcon'
+
+import UclCmkAccordionDev from './UclCmkAccordionDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
+const propState = ref(createPanelState(panelConfig))
 
 const itemPropState = ref(createPanelState(itemPanelConfig))
 </script>
@@ -214,9 +214,9 @@ const itemPropState = ref(createPanelState(itemPanelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkAccordion" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkAccordion" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkAccordionDev :screenshot-mode="screenshotMode" />

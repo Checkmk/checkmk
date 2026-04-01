@@ -3,26 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
-import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkIndent from '@/components/CmkIndent.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkAccordionStepPanel = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves keyboard focus to the step panel.'
@@ -36,8 +20,7 @@ const a11yDataCmkAccordionStepPanel = [
     description: 'Toggles the expansion state of the focused accordion item.'
   }
 ]
-
-const codeExampleCmkAccordionStepPanel = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
 ${'import'} CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
@@ -67,8 +50,7 @@ const openSteps = ref(['step-2'])
     </CmkAccordionStepPanelItem>
   </CmkAccordionStepPanel>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   openSteps: {
     type: 'string-array',
     title: 'openSteps',
@@ -76,10 +58,7 @@ const panelConfig = {
     help: "Type: string[]. IDs are auto-generated as step-{n} from each item's step prop. In the UCL app, enter one ID per line in the textarea, e.g.:step-1 step-2 step-3"
   }
 } satisfies PanelConfig
-
-const propState = ref(createPanelState(panelConfig))
-
-const itemPanelConfig = {
+export const itemPanelConfig = {
   accomplished: {
     type: 'boolean',
     title: 'accomplished',
@@ -93,6 +72,27 @@ const itemPanelConfig = {
     help: 'Disables all items, preventing them from being expanded.'
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
+import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import CmkIndent from '@/components/CmkIndent.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
+const propState = ref(createPanelState(panelConfig))
 
 const itemPropState = ref(createPanelState(itemPanelConfig))
 </script>
@@ -152,8 +152,8 @@ const itemPropState = ref(createPanelState(itemPanelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkAccordionStepPanel" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkAccordionStepPanel" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

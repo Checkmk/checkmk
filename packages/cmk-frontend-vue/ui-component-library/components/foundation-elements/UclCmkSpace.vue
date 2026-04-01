@@ -3,26 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkButton from '@/components/CmkButton.vue'
-import CmkSpace, { type CmkSpaceVariants } from '@/components/CmkSpace.vue'
+import { type CmkSpaceVariants } from '@/components/CmkSpace.vue'
 
-defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkSpace = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkButton from '@/components/CmkButton.vue'
 ${'import'} CmkSpace from '@/components/CmkSpace.vue'
 <${'/'}script>
@@ -32,8 +18,7 @@ ${'import'} CmkSpace from '@/components/CmkSpace.vue'
   <CmkSpace direction="horizontal" size="medium" />
   <CmkButton variant="primary">Second Element</CmkButton>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   direction: {
     type: 'list',
     title: 'Direction',
@@ -53,6 +38,24 @@ const panelConfig = {
     initialState: 'medium' as const
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -71,7 +74,7 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkSpace" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>

@@ -3,28 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import type { CmkIconVariants, IconSizeNames, SimpleIcons } from '@/components/CmkIcon'
-import CmkIcon from '@/components/CmkIcon'
+import { type CmkIconVariants, type IconSizeNames, type SimpleIcons } from '@/components/CmkIcon'
 
-import UclCmkIconDev from './UclCmkIconDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkIcon = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkIcon from '@/components/CmkIcon'
 <${'/'}script>
 
@@ -36,8 +20,7 @@ ${'import'} CmkIcon from '@/components/CmkIcon'
     title="Get Help"
   />
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   name: { type: 'string', title: 'Icon Name', initialState: 'main-help' },
   variant: {
     type: 'list',
@@ -67,6 +50,26 @@ const panelConfig = {
   title: { type: 'string', title: 'Title (Tooltip/Alt)', initialState: 'Help Icon' },
   rotate: { type: 'number', title: 'Rotation (Degrees)', initialState: 0 }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkIcon from '@/components/CmkIcon'
+
+import UclCmkIconDev from './UclCmkIconDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -90,7 +93,7 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkIcon" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
 

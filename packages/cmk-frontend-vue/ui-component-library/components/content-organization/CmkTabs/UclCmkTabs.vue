@@ -3,28 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkIcon from '@/components/CmkIcon'
-import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkTabs = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves keyboard focus to the Tab.'
@@ -42,8 +24,7 @@ const a11yDataCmkTabs = [
     description: 'Move to the first and last tabs respectively.'
   }
 ]
-
-const codeExampleCmkTabs = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 ${'import'} CmkIcon from '@/components/CmkIcon'
@@ -83,7 +64,7 @@ const activeTab = ref('tab-1')
 
 type TabId = 'tab-1' | 'tab-2' | 'tab-3'
 
-const panelConfig = {
+export const panelConfig = {
   modelValue: {
     type: 'list',
     title: 'Active Tab',
@@ -95,6 +76,26 @@ const panelConfig = {
     initialState: 'tab-1' as TabId
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkIcon from '@/components/CmkIcon'
+import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -132,8 +133,8 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkTabs" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkTabs" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

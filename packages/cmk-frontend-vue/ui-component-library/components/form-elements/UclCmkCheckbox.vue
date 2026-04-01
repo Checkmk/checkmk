@@ -3,28 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-
-import UclCmkCheckboxDev from './UclCmkCheckboxDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkCheckbox = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -39,8 +21,7 @@ const a11yDataCmkCheckbox = [
     description: 'Toggles the checkbox state between checked and unchecked.'
   }
 ]
-
-const codeExampleCmkCheckbox = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
@@ -57,7 +38,7 @@ const isChecked = ref(false)
 
 type CheckboxPadding = 'both' | 'top' | 'bottom'
 
-const panelConfig = {
+export const panelConfig = {
   modelValue: {
     type: 'boolean',
     title: 'Checked',
@@ -86,6 +67,7 @@ const panelConfig = {
       { title: 'Top', name: 'top' },
       { title: 'Bottom', name: 'bottom' }
     ] satisfies Options<CheckboxPadding>[],
+
     initialState: 'both' as const
   },
   dots: {
@@ -99,6 +81,26 @@ const panelConfig = {
     initialState: ''
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import UclCmkCheckboxDev from './UclCmkCheckboxDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -123,9 +125,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkCheckbox" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkCheckbox" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkCheckboxDev :screenshot-mode="screenshotMode" />

@@ -3,20 +3,8 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout
-} from '@ucl/_ucl/components/detail-page'
-
-import CmkZebra from '@/components/CmkZebra.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkZebra = `<script setup lang="ts">
+<script lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkZebra from '@/components/CmkZebra.vue'
 
 const items = [
@@ -33,6 +21,20 @@ const items = [
 </template>`
 </script>
 
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout
+} from '@ucl/_ucl/components/detail-page'
+
+import CmkZebra from '@/components/CmkZebra.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+</script>
+
 <template>
   <UclDetailPageLayout>
     <UclDetailPageHeader>CmkZebra</UclDetailPageHeader>
@@ -45,11 +47,12 @@ const items = [
       </div>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkZebra" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
+
 <style scoped>
 .ucl-cmk-zebra__container {
   display: flex;

@@ -3,31 +3,13 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { computed, ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkDropdown from '@/components/CmkDropdown'
-import type { ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
-import type { Suggestions } from '@/components/CmkSuggestions'
-import { Response } from '@/components/CmkSuggestions/suggestions'
+import { type ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
+import { type Suggestions } from '@/components/CmkSuggestions'
 
-import UclCmkDropdownDev from './UclCmkDropdownDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkDropdown = [
+export const a11yData = [
   {
     keys: ['Enter', 'Space'],
     description: 'Selects the currently highlighted suggestion and triggers the update.'
@@ -52,8 +34,7 @@ const a11yDataCmkDropdown = [
       'Moves the active highlight to the next selectable suggestion in the list, scrolling it into view if necessary.'
   }
 ]
-
-const codeExampleCmkDropdown = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown'
@@ -79,8 +60,7 @@ const options: Suggestions = {
     required
   />
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   optionsType: {
     type: 'list',
     title: 'Options Type',
@@ -118,6 +98,27 @@ const panelConfig = {
     initialState: ''
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { computed, ref } from 'vue'
+
+import CmkDropdown from '@/components/CmkDropdown'
+import { Response } from '@/components/CmkSuggestions/suggestions'
+
+import UclCmkDropdownDev from './UclCmkDropdownDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 
@@ -175,9 +176,9 @@ const dynamicOptions = computed<Suggestions>(() => {
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkDropdown" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkDropdown" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkDropdownDev :screenshot-mode="screenshotMode" />

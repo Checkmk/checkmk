@@ -3,39 +3,17 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref, watch } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import usei18n from '@/lib/i18n'
-
-import CmkSpace from '@/components/CmkSpace.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-
-import translatedStringFromTS from './_ts_file_using_i18n'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const { _t, _tn, switchLanguage, translationLoading } = usei18n()
-
-const a11yDataI18n = [
+export const a11yData = [
   {
     keys: ['HTML Lang Attribute'],
     description:
       'When switching languages dynamically, ensure the root `<html>` element’s `lang` attribute is updated (e.g., `lang="de"`). This is critical for screen readers to load the correct pronunciation dictionary.'
   }
 ]
-
-const codeExampleI18n = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import usei18n from '@/lib/i18n'
 ${'import'} CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
@@ -45,8 +23,7 @@ const { _t, _tn } = usei18n()
 <template>
   <CmkParagraph>{{ _t('Hello %{name}!', { name: 'Alice' }) }}</CmkParagraph>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   language: {
     type: 'list',
     title: 'Active Language',
@@ -75,6 +52,30 @@ const panelConfig = {
     initialState: '0'
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref, watch } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import CmkSpace from '@/components/CmkSpace.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
+import translatedStringFromTS from './_ts_file_using_i18n'
+
+defineProps<{ screenshotMode: boolean }>()
+
+const { _t, _tn, switchLanguage, translationLoading } = usei18n()
 
 const propState = ref(createPanelState(panelConfig))
 
@@ -127,8 +128,8 @@ watch(
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleI18n" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataI18n" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

@@ -3,30 +3,13 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { computed, ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
 import { type ButtonVariants } from '@/components/CmkButton.vue'
-import type { DismissalButtonKey } from '@/components/CmkDialog.vue'
-import CmkDialog from '@/components/CmkDialog.vue'
+import { type DismissalButtonKey } from '@/components/CmkDialog.vue'
 
-import UclCmkDialogDev from './UclCmkDialogDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkDialog = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -45,8 +28,7 @@ const a11yDataCmkDialog = [
     description: 'Activates the focused action or dismissal button within the dialog.'
   }
 ]
-
-const codeExampleCmkDialog = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkDialog from '@/components/CmkDialog.vue'
 
 function handleAction() {
@@ -68,7 +50,7 @@ function handleAction() {
 
 type DialogVariant = 'info' | 'error' | 'success' | 'warning' | 'loading'
 
-const panelConfig = {
+export const panelConfig = {
   variant: {
     type: 'list',
     title: 'Variant',
@@ -90,6 +72,26 @@ const panelConfig = {
   buttons: { type: 'boolean', title: 'Buttons', initialState: true },
   dismissal_button: { type: 'boolean', title: 'Dismissal Button', initialState: false }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { computed, ref } from 'vue'
+
+import CmkDialog from '@/components/CmkDialog.vue'
+
+import UclCmkDialogDev from './UclCmkDialogDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 
@@ -131,9 +133,9 @@ const dialogProps = computed(() => ({
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkDialog" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkDialog" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkDialogDev :screenshot-mode="screenshotMode" />

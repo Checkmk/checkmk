@@ -3,34 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { computed, ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkWizard, {
-  CmkWizardButton,
-  CmkWizardModeToggle,
-  CmkWizardStep
-} from '@/components/CmkWizard'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
-
-import UclCmkWizardDev from './UclCmkWizardDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkWizard = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves keyboard focus to the next wizard button or interactive element.'
@@ -44,8 +20,7 @@ const a11yDataCmkWizard = [
     description: 'Activates the focused Previous or Next button.'
   }
 ]
-
-const codeExampleCmkWizard = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkWizard, { CmkWizardStep, CmkWizardButton, CmkWizardModeToggle } from '@/components/CmkWizard'
 
@@ -82,8 +57,7 @@ const mode = ref<'guided' | 'overview'>('guided')
     </CmkWizardStep>
   </CmkWizard>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   mode: {
     type: 'list',
     title: 'Wizard Mode',
@@ -104,6 +78,32 @@ const panelConfig = {
     initialState: '1'
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { computed, ref } from 'vue'
+
+import CmkWizard, {
+  CmkWizardButton,
+  CmkWizardModeToggle,
+  CmkWizardStep
+} from '@/components/CmkWizard'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
+import UclCmkWizardDev from './UclCmkWizardDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 
@@ -176,9 +176,9 @@ const wizardMode = computed({
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkWizard" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkWizard" />
+    <UclDetailPageAccessibility :data="a11yData" />
     <UclDetailPageDeveloperPlayground>
       <UclCmkWizardDev :screenshot-mode="screenshotMode" />
     </UclDetailPageDeveloperPlayground>

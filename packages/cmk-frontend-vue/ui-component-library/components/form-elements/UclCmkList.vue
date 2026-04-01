@@ -3,41 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkList from '@/components/CmkList/CmkList.vue'
-
-import UclCmkListDev from './UclCmkListDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const listData = ref({
-  titles: ['Primary Server', 'Backup Database', 'Cache Node']
-})
-
-const tryDelete = (_index: number) => {
-  return true
-}
-
-const tryAdd = () => {
-  listData.value.titles.push(`New Node ${listData.value.titles.length + 1}`)
-  return true
-}
-
-const a11yDataCmkList = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -52,8 +21,7 @@ const a11yDataCmkList = [
     description: 'Deletes the focused item from the list.'
   }
 ]
-
-const codeExampleCmkList = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkList from '@/components/CmkList/CmkList.vue'
 
@@ -90,7 +58,7 @@ const handleDelete = (index: number) => {
 
 type ListOrientation = 'vertical' | 'horizontal'
 
-const panelConfig = {
+export const panelConfig = {
   orientation: {
     type: 'list',
     title: 'Orientation',
@@ -111,6 +79,39 @@ const panelConfig = {
     initialState: false
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkList from '@/components/CmkList/CmkList.vue'
+
+import UclCmkListDev from './UclCmkListDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
+const listData = ref({
+  titles: ['Primary Server', 'Backup Database', 'Cache Node']
+})
+
+const tryDelete = (_index: number) => {
+  return true
+}
+
+const tryAdd = () => {
+  listData.value.titles.push(`New Node ${listData.value.titles.length + 1}`)
+  return true
+}
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -137,9 +138,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkList" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkList" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkListDev :screenshot-mode="screenshotMode" />

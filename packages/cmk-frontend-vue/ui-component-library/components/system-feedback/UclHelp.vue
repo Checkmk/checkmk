@@ -3,24 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkHelpText from '@/components/CmkHelpText.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkHelpText = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -39,16 +25,14 @@ const a11yDataCmkHelpText = [
     description: 'Closes the tooltip if it is currently open.'
   }
 ]
-
-const codeExampleCmkHelpText = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkHelpText from '@/components/CmkHelpText.vue'
 <${'/'}script>
 
 <template>
     <CmkHelpText help="Enter the fully qualified domain name (FQDN) of the server." />
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   help: {
     type: 'string',
     title: 'Help',
@@ -60,6 +44,23 @@ const panelConfig = {
     initialState: 'Help regarding this setting'
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkHelpText from '@/components/CmkHelpText.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -77,8 +78,8 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkHelpText" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkHelpText" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

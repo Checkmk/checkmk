@@ -3,30 +3,16 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
-import type {
-  CmkMultitoneIconColor,
-  CmkMultitoneIconNames,
-  IconSizeNames
+import {
+  type CmkMultitoneIconColor,
+  type CmkMultitoneIconNames,
+  type IconSizeNames
 } from '@/components/CmkIcon/types.ts'
 
-defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkMultitoneIcon = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 <${'/'}script>
 
@@ -39,21 +25,7 @@ ${'import'} CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
     title="Service Status"
   />
 </template>`
-
-const toneOptions = [
-  { name: 'success', title: 'Success (Green)' },
-  { name: 'danger', title: 'Danger (Red)' },
-  { name: 'warning', title: 'Warning (Yellow)' },
-  { name: 'info', title: 'Info (Blue)' },
-  { name: 'hosts', title: 'Hosts (Cyan)' },
-  { name: 'services', title: 'Services (Orange)' },
-  { name: 'specialAgents', title: 'Special Agents (Purple)' },
-  { name: 'users', title: 'Users (Pink)' },
-  { name: 'customization', title: 'Customization (Brown)' },
-  { name: 'others', title: 'Others (Grey)' }
-] satisfies Options<CmkMultitoneIconColor>[]
-
-const panelConfig = {
+export const panelConfig = {
   name: {
     type: 'list',
     title: 'Icon Name',
@@ -87,13 +59,35 @@ const panelConfig = {
   primaryColor: {
     type: 'list',
     title: 'Primary Color',
-    options: toneOptions,
+    options: [
+      { name: 'success', title: 'Success (Green)' },
+      { name: 'danger', title: 'Danger (Red)' },
+      { name: 'warning', title: 'Warning (Yellow)' },
+      { name: 'info', title: 'Info (Blue)' },
+      { name: 'hosts', title: 'Hosts (Cyan)' },
+      { name: 'services', title: 'Services (Orange)' },
+      { name: 'specialAgents', title: 'Special Agents (Purple)' },
+      { name: 'users', title: 'Users (Pink)' },
+      { name: 'customization', title: 'Customization (Brown)' },
+      { name: 'others', title: 'Others (Grey)' }
+    ] satisfies Options<CmkMultitoneIconColor>[],
     initialState: 'success' as const
   },
   secondaryColor: {
     type: 'list',
     title: 'Secondary Color',
-    options: toneOptions,
+    options: [
+      { name: 'success', title: 'Success (Green)' },
+      { name: 'danger', title: 'Danger (Red)' },
+      { name: 'warning', title: 'Warning (Yellow)' },
+      { name: 'info', title: 'Info (Blue)' },
+      { name: 'hosts', title: 'Hosts (Cyan)' },
+      { name: 'services', title: 'Services (Orange)' },
+      { name: 'specialAgents', title: 'Special Agents (Purple)' },
+      { name: 'users', title: 'Users (Pink)' },
+      { name: 'customization', title: 'Customization (Brown)' },
+      { name: 'others', title: 'Others (Grey)' }
+    ] satisfies Options<CmkMultitoneIconColor>[],
     initialState: 'warning' as const
   },
   rotate: {
@@ -108,6 +102,23 @@ const panelConfig = {
     initialState: 'Demo Multitone Icon'
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -131,7 +142,7 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkMultitoneIcon" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>

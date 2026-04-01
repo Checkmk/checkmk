@@ -3,31 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon'
-import CmkTooltip, {
-  CmkTooltipContent,
-  CmkTooltipProvider,
-  CmkTooltipTrigger
-} from '@/components/CmkTooltip'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkTooltip = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -46,8 +25,7 @@ const a11yDataCmkTooltip = [
     description: 'Closes the tooltip if it is currently open.'
   }
 ]
-
-const codeExampleCmkTooltip = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 
 ${'import'} CmkButton from '@/components/CmkButton.vue'
@@ -81,7 +59,7 @@ const isTooltipOpen = ref(false)
 type SideOptions = 'top' | 'right' | 'bottom' | 'left'
 type AlignOptions = 'start' | 'center' | 'end'
 
-const panelConfig = {
+export const panelConfig = {
   open: { type: 'boolean', title: 'Open', initialState: false },
   disableClosingTrigger: { type: 'boolean', title: 'Disable Closing Trigger', initialState: false },
   side: {
@@ -106,6 +84,29 @@ const panelConfig = {
     initialState: 'center' as AlignOptions
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon'
+import CmkTooltip, {
+  CmkTooltipContent,
+  CmkTooltipProvider,
+  CmkTooltipTrigger
+} from '@/components/CmkTooltip'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -143,8 +144,8 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkTooltip" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkTooltip" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

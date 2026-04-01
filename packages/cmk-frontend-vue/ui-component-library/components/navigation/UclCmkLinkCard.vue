@@ -3,32 +3,16 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import type { SimpleIcons } from '@/components/CmkIcon'
-import CmkLinkCard from '@/components/CmkLinkCard'
-import type {
-  CmkLinkCardBorders,
-  CmkLinkCardContrast
+import { type SimpleIcons } from '@/components/CmkIcon'
+import {
+  type CmkLinkCardBorders,
+  type CmkLinkCardContrast
 } from '@/components/CmkLinkCard/CmkLinkCard.vue'
 
-import UclCmkLinkCardDev from './UclCmkLinkCardDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkLinkCard = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -43,8 +27,7 @@ const a11yDataCmkLinkCard = [
     description: 'Activates the link card, following the URL or triggering the callback.'
   }
 ]
-
-const codeExampleCmkLinkCard = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkLinkCard from '@/components/CmkLinkCard'
 <${'/'}script>
 
@@ -58,8 +41,7 @@ ${'import'} CmkLinkCard from '@/components/CmkLinkCard'
     :open-in-new-tab="true"
   />
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   borders: {
     type: 'list',
     title: 'Borders',
@@ -98,6 +80,26 @@ const panelConfig = {
   openInNewTab: { type: 'boolean', title: 'Open in New Tab', initialState: true },
   disabled: { type: 'boolean', title: 'Disabled', initialState: false }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkLinkCard from '@/components/CmkLinkCard'
+
+import UclCmkLinkCardDev from './UclCmkLinkCardDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -133,9 +135,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkLinkCard" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkLinkCard" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkLinkCardDev :screenshot-mode="screenshotMode" />

@@ -3,25 +3,11 @@ Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import type { TwoFactorAuth as TwoFactorAuthType } from 'cmk-shared-typing/typescript/two_factor_auth'
-import { computed, ref } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type TwoFactorAuth as TwoFactorAuthType } from 'cmk-shared-typing/typescript/two_factor_auth'
 
-import TwoFactorAuth from '@/two-factor-auth/TwoFactorAuthApp.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataTwoFactorAuth = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves keyboard focus to the different elements.'
@@ -35,8 +21,7 @@ const a11yDataTwoFactorAuth = [
     description: 'Submits the form when focused within the input fields.'
   }
 ]
-
-const codeExampleTwoFactorAuth = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import type { TwoFactorAuth as TwoFactorAuthType } from 'cmk-shared-typing/typescript/two_factor_auth'
 ${'import'} TwoFactorAuth from '@/two-factor-auth/TwoFactorAuthApp.vue'
 
@@ -50,12 +35,28 @@ const methods: TwoFactorAuthType = {
 <template>
   <TwoFactorAuth :available-methods="methods" />
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   totp: { type: 'boolean', title: 'Enable TOTP', initialState: true },
   webauthn: { type: 'boolean', title: 'Enable WebAuthn', initialState: true },
   backup: { type: 'boolean', title: 'Enable Backup Codes', initialState: true }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { computed, ref } from 'vue'
+
+import TwoFactorAuth from '@/two-factor-auth/TwoFactorAuthApp.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 
@@ -81,8 +82,8 @@ const dynamicAvailableMethods = computed<TwoFactorAuthType>(() => ({
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleTwoFactorAuth" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataTwoFactorAuth" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

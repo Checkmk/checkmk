@@ -3,9 +3,30 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+
+export const codeExample = `<script setup lang="ts">
+import { ref } from 'vue'
+${'import'} CmkSwitch from '@/components/CmkSwitch.vue'
+
+const isEnabled = ref(false)
+<${'/'}script>
+
+<template>
+  <CmkSwitch v-model:data="isEnabled" />
+</template>`
+export const panelConfig = {
+  data: {
+    type: 'boolean',
+    title: 'Checked State',
+    initialState: false
+  }
+} satisfies PanelConfig
+</script>
+
 <script setup lang="ts">
 import {
-  type PanelConfig,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
@@ -19,25 +40,6 @@ import { ref } from 'vue'
 import CmkSwitch from '@/components/CmkSwitch.vue'
 
 defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkSwitch = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkSwitch from '@/components/CmkSwitch.vue'
-
-const isEnabled = ref(false)
-<${'/'}script>
-
-<template>
-  <CmkSwitch v-model:data="isEnabled" />
-</template>`
-
-const panelConfig = {
-  data: {
-    type: 'boolean',
-    title: 'Checked State',
-    initialState: false
-  }
-} satisfies PanelConfig
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -54,7 +56,7 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkSwitch" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>

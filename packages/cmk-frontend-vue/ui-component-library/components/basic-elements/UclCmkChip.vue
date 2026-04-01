@@ -3,28 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkChip, { type Colors, type Sizes, type Variants } from '@/components/CmkChip.vue'
+import { type Colors, type Sizes, type Variants } from '@/components/CmkChip.vue'
 
-import UclCmkChipDev from './UclCmkChipDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkChip = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves focus to the chip if it is rendered as a button and is not disabled.'
@@ -38,8 +22,7 @@ const a11yDataCmkChip = [
     description: 'Triggers the click event if the chip is rendered as an interactive button.'
   }
 ]
-
-const codeExampleCmkChip = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkChip from '@/components/CmkChip.vue'
 <${'/'}script>
 
@@ -52,8 +35,7 @@ ${'import'} CmkChip from '@/components/CmkChip.vue'
     Demo Chip
   </CmkChip>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   size: {
     type: 'list',
     title: 'Size',
@@ -93,6 +75,26 @@ const panelConfig = {
   asDiv: { type: 'boolean', title: 'Render as Div', initialState: false },
   disabled: { type: 'boolean', title: 'Disabled', initialState: false }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkChip from '@/components/CmkChip.vue'
+
+import UclCmkChipDev from './UclCmkChipDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -117,9 +119,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkChip" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkChip" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkChipDev :screenshot-mode="screenshotMode" />

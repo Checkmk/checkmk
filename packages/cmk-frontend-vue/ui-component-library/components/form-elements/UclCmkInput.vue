@@ -3,26 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkInput from '@/components/user-input/CmkInput.vue'
-import type { inputSizes } from '@/components/user-input/sizes'
+import { type inputSizes } from '@/components/user-input/sizes'
 
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkInput = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves keyboard focus to the input field.'
@@ -40,8 +26,7 @@ const a11yDataCmkInput = [
     description: 'Moves the cursor to the end of the input content.'
   }
 ]
-
-const codeExampleCmkInput = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkInput from '@/components/user-input/CmkInput.vue'
 
@@ -58,7 +43,7 @@ const username = ref('')
 
 type InputType = 'text' | 'number' | 'date' | 'time' | 'password'
 
-const panelConfig = {
+export const panelConfig = {
   modelValue: {
     type: 'string',
     title: 'Value',
@@ -104,6 +89,23 @@ const panelConfig = {
     initialState: ''
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkInput from '@/components/user-input/CmkInput.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -127,8 +129,8 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkInput" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkInput" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

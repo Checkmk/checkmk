@@ -3,31 +3,12 @@ Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkButton from '@/components/CmkButton.vue'
-import CmkSlideIn, { type SlideInVariants } from '@/components/CmkSlideIn'
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+import { type SlideInVariants } from '@/components/CmkSlideIn'
 
-import UclCmkSlideInDev from './UclCmkSlideInDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkSlideIn = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves keyboard focus to container.'
@@ -45,8 +26,7 @@ const a11yDataCmkSlideIn = [
     description: 'When the button is focused, pressing Enter or Space opens the slide-in.'
   }
 ]
-
-const codeExampleCmkSlideIn = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkButton from '@/components/CmkButton.vue'
 ${'import'} CmkSlideIn from '@/components/CmkSlideIn'
@@ -71,8 +51,7 @@ const isOpen = ref(false)
     </div>
   </CmkSlideIn>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   open: { type: 'boolean', title: 'Is Open', initialState: false },
   size: {
     type: 'list',
@@ -85,6 +64,29 @@ const panelConfig = {
   },
   ariaLabel: { type: 'string', title: 'Aria Label', initialState: 'Demo Slide-In' }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkSlideIn from '@/components/CmkSlideIn'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
+import UclCmkSlideInDev from './UclCmkSlideInDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -134,9 +136,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkSlideIn" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkSlideIn" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkSlideInDev :screenshot-mode="screenshotMode" />

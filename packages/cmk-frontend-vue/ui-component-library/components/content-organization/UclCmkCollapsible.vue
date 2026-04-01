@@ -3,28 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
-import CmkIndent from '@/components/CmkIndent.vue'
-
-import UclCmkCollapsibleDev from './UclCmkCollapsibleDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkCollapsible = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -40,8 +22,7 @@ const a11yDataCmkCollapsible = [
       'When the title button is focused, pressing Enter or Space opens the collapsible content.'
   }
 ]
-
-const codeExampleCmkCollapsible = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 ${'import'} CmkIndent from '@/components/CmkIndent.vue'
@@ -64,13 +45,33 @@ const isOpen = ref(false)
     </CmkIndent>
   </CmkCollapsible>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   open: { type: 'boolean', title: 'Open', initialState: false },
   title: { type: 'string', title: 'Title Text', initialState: 'Collapsible Section' },
   sideTitle: { type: 'string', title: 'Side Title', initialState: 'Details' },
   helpText: { type: 'string', title: 'Help Text', initialState: 'Click to expand' }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
+import CmkIndent from '@/components/CmkIndent.vue'
+
+import UclCmkCollapsibleDev from './UclCmkCollapsibleDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -100,9 +101,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkCollapsible" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkCollapsible" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkCollapsibleDev :screenshot-mode="screenshotMode" />

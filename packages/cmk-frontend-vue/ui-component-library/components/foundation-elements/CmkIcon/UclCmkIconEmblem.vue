@@ -3,10 +3,23 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+
+import { type IconEmblems, type IconSizeNames, type SimpleIcons } from '@/components/CmkIcon/types'
+
+export const codeExample = `<script setup lang="ts">
+${'import'} CmkIcon from '@/components/CmkIcon'
+${'import'} CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
+<${'/'}script>
+
+<template>
+  <CmkIconEmblem emblem="warning"><CmkIcon name="filter" size="medium" /></CmkIconEmblem>
+</template>`
+</script>
+
 <script setup lang="ts">
 import {
-  type Options,
-  type PanelConfig,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
@@ -20,20 +33,10 @@ import { ref } from 'vue'
 
 import CmkIcon from '@/components/CmkIcon'
 import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
-import type { IconEmblems, IconSizeNames, SimpleIcons } from '@/components/CmkIcon/types'
 
 import UclCmkIconEmblemDev from './UclCmkIconEmblemDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkIconEmblem = `<script setup lang="ts">
-${'import'} CmkIcon from '@/components/CmkIcon'
-${'import'} CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
-<${'/'}script>
-
-<template>
-  <CmkIconEmblem emblem="warning"><CmkIcon name="filter" size="medium" /></CmkIconEmblem>
-</template>`
 
 const emblemPanelConfig = {
   emblem: {
@@ -116,7 +119,7 @@ const iconPropState = ref(createPanelState(iconPanelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkIconEmblem" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
 

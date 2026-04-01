@@ -3,28 +3,10 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkButton from '@/components/CmkButton.vue'
-import CmkCopy from '@/components/CmkCopy.vue'
-
-import UclCmkCopyDev from './UclCmkCopyDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkCopy = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -44,8 +26,7 @@ const a11yDataCmkCopy = [
     description: 'Dismisses the active tooltip if it is currently visible.'
   }
 ]
-
-const codeExample = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkButton from '@/components/CmkButton.vue'
 ${'import'} CmkCopy from '@/components/CmkCopy.vue'
 <${'/'}script>
@@ -55,10 +36,30 @@ ${'import'} CmkCopy from '@/components/CmkCopy.vue'
     <CmkButton variant="secondary">Copy</CmkButton>
   </CmkCopy>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   text: { type: 'string', title: 'Text to Copy', initialState: 'cmk --check myhost' }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkCopy from '@/components/CmkCopy.vue'
+
+import UclCmkCopyDev from './UclCmkCopyDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -81,7 +82,7 @@ const propState = ref(createPanelState(panelConfig))
 
     <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkCopy" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkCopyDev :screenshot-mode="screenshotMode" />

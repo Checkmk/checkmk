@@ -3,27 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkButton from '@/components/CmkButton.vue'
-import type { SimpleIcons } from '@/components/CmkIcon'
-import CmkPopupDialog from '@/components/CmkPopupDialog.vue'
+import { type SimpleIcons } from '@/components/CmkIcon'
 
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkPopupDialog = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -42,8 +27,7 @@ const a11yDataCmkPopupDialog = [
     description: 'Closes the dialog.'
   }
 ]
-
-const codeExampleCmkPopupDialog = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 
 ${'import'} CmkButton from '@/components/CmkButton.vue'
@@ -66,8 +50,7 @@ const isOpen = ref(false)
     @close="isOpen = false"
   />
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   open: { type: 'boolean', title: 'Open', initialState: false },
   title: { type: 'string', title: 'Title', initialState: 'System Notification' },
   text: {
@@ -89,6 +72,24 @@ const panelConfig = {
   okButtonText: { type: 'string', title: 'OK Button Text', initialState: 'Close' },
   stayOpenOverlayClick: { type: 'boolean', title: 'Prevent Overlay Close', initialState: false }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkPopupDialog from '@/components/CmkPopupDialog.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -115,8 +116,8 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkPopupDialog" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkPopupDialog" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

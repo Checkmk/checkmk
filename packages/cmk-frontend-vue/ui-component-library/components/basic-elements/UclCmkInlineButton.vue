@@ -3,28 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import type { SimpleIcons } from '@/components/CmkIcon'
-import CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
+import { type SimpleIcons } from '@/components/CmkIcon'
 
-import UclCmkInlineButtonDev from './UclCmkInlineButtonDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkInlineButton = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -39,8 +23,7 @@ const a11yDataCmkInlineButton = [
     description: 'Activates the button and emits the click event.'
   }
 ]
-
-const codeExampleCmkInlineButton = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
 
 const handleClick = () => {
@@ -53,8 +36,7 @@ const handleClick = () => {
     Add item
   </CmkInlineButton>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   icon: {
     type: 'string',
     title: 'Icon',
@@ -67,6 +49,26 @@ const panelConfig = {
     initialState: false
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
+
+import UclCmkInlineButtonDev from './UclCmkInlineButtonDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -88,9 +90,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkInlineButton" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkInlineButton" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkInlineButtonDev :screenshot-mode="screenshotMode" />

@@ -3,25 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkHeading, { type HeadingType } from '@/components/typography/CmkHeading.vue'
+import { type HeadingType } from '@/components/typography/CmkHeading.vue'
 
-defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkHeading = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkHeading from '@/components/typography/CmkHeading.vue'
 <${'/'}script>
 
@@ -31,8 +18,7 @@ ${'import'} CmkHeading from '@/components/typography/CmkHeading.vue'
     Make Clickable
   </CmkHeading>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   type: {
     type: 'list',
     title: 'type',
@@ -56,6 +42,23 @@ const panelConfig = {
     help: 'When enabled, passes a click handler to the heading.'
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkHeading from '@/components/typography/CmkHeading.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 
@@ -78,7 +81,7 @@ function onHeadingClick() {
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkHeading" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>

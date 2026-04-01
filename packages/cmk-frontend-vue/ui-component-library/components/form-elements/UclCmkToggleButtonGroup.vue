@@ -3,38 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkToggleButtonGroup, {
-  type ToggleButtonOption
-} from '@/components/CmkToggleButtonGroup.vue'
+import { type ToggleButtonOption } from '@/components/CmkToggleButtonGroup.vue'
 
-defineProps<{ screenshotMode: boolean }>()
-
-const demoOptions: ToggleButtonOption[] = [
-  { label: 'List View', value: 'list', tooltip: 'Display items in a vertical list' },
-  { label: 'Grid View', value: 'grid', tooltip: 'Display items in a grid layout' },
-  {
-    label: 'Map View',
-    value: 'map',
-    disabled: true,
-    disabledTooltip: 'Requires Checkmk Pro edition'
-  }
-]
-
-const a11yDataCmkToggleButtonGroup = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -49,8 +23,7 @@ const a11yDataCmkToggleButtonGroup = [
     description: 'Selects the currently focused toggle option.'
   }
 ]
-
-const codeExampleCmkToggleButtonGroup = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 import { ref } from 'vue'
 ${'import'} CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
@@ -69,8 +42,7 @@ const viewOptions = [
     :options="viewOptions"
   />
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   modelValue: {
     type: 'list',
     title: 'Selected Value',
@@ -82,6 +54,34 @@ const panelConfig = {
     initialState: 'list' as const
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
+const demoOptions: ToggleButtonOption[] = [
+  { label: 'List View', value: 'list', tooltip: 'Display items in a vertical list' },
+  { label: 'Grid View', value: 'grid', tooltip: 'Display items in a grid layout' },
+  {
+    label: 'Map View',
+    value: 'map',
+    disabled: true,
+    disabledTooltip: 'Requires Checkmk Pro edition'
+  }
+]
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -98,8 +98,8 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkToggleButtonGroup" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkToggleButtonGroup" />
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

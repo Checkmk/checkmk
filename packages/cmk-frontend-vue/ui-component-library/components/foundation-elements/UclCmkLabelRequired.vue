@@ -3,10 +3,40 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+
+export const codeExample = `<script setup lang="ts">
+${'import'} CmkLabel from '@/components/CmkLabel.vue'
+${'import'} CmkInput from '@/components/user-input/CmkInput.vue'
+${'import'} CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
+<${'/'}script>
+
+<template>
+  <CmkLabel>
+    Username
+    <CmkLabelRequired space="before" />
+  </CmkLabel>
+  <CmkInput type="text" required />
+</template>`
+export const panelConfig = {
+  show: { type: 'boolean', title: 'Show Required Label', initialState: true },
+  space: {
+    type: 'list',
+    title: 'space',
+    options: [
+      { title: 'null', name: '' },
+      { title: 'Before', name: 'before' },
+      { title: 'After', name: 'after' },
+      { title: 'Both', name: 'both' }
+    ] satisfies Options<'' | 'before' | 'after' | 'both'>[],
+    initialState: '' as '' | 'before' | 'after' | 'both'
+  }
+} satisfies PanelConfig
+</script>
+
 <script setup lang="ts">
 import {
-  type Options,
-  type PanelConfig,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
@@ -22,35 +52,6 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkLabelRequired = `<script setup lang="ts">
-${'import'} CmkLabel from '@/components/CmkLabel.vue'
-${'import'} CmkInput from '@/components/user-input/CmkInput.vue'
-${'import'} CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
-<${'/'}script>
-
-<template>
-  <CmkLabel>
-    Username
-    <CmkLabelRequired space="before" />
-  </CmkLabel>
-  <CmkInput type="text" required />
-</template>`
-
-const panelConfig = {
-  show: { type: 'boolean', title: 'Show Required Label', initialState: true },
-  space: {
-    type: 'list',
-    title: 'space',
-    options: [
-      { title: 'null', name: '' },
-      { title: 'Before', name: 'before' },
-      { title: 'After', name: 'after' },
-      { title: 'Both', name: 'both' }
-    ] satisfies Options<'' | 'before' | 'after' | 'both'>[],
-    initialState: '' as '' | 'before' | 'after' | 'both'
-  }
-} satisfies PanelConfig
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -71,7 +72,7 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkLabelRequired" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>

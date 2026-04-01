@@ -3,28 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
+import { type ButtonVariants } from '@/components/CmkButton.vue'
 
-import UclCmkButtonDev from './UclCmkButtonDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const a11yDataCmkButton = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description:
@@ -40,8 +24,7 @@ const a11yDataCmkButton = [
       'Activates the button. If rendered as a link (via the href prop), Enter follows the link.'
   }
 ]
-
-const codeExampleCmkButton = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkButton from '@/components/CmkButton.vue'
 
 const handleClick = () => {
@@ -54,8 +37,7 @@ const handleClick = () => {
     Click Me
   </CmkButton>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   variant: {
     type: 'list',
     title: 'Variant',
@@ -98,6 +80,26 @@ const panelConfig = {
     initialState: ''
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkButton from '@/components/CmkButton.vue'
+
+import UclCmkButtonDev from './UclCmkButtonDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -122,9 +124,9 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkButton" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="a11yDataCmkButton" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkButtonDev :screenshot-mode="screenshotMode" />

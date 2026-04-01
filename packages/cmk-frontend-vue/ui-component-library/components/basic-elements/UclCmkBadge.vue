@@ -3,33 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import CmkBadge, {
-  type Colors,
-  type Shapes,
-  type Sizes,
-  type Types
-} from '@/components/CmkBadge.vue'
+import { type Colors, type Shapes, type Sizes, type Types } from '@/components/CmkBadge.vue'
 
-import UclCmkBadgeDev from './UclCmkBadgeDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const codeExampleCmkBadge = `<script setup lang="ts">
+export const codeExample = `<script setup lang="ts">
 ${'import'} CmkBadge from '@/components/CmkBadge.vue'
 <${'/'}script>
 
@@ -43,8 +22,7 @@ ${'import'} CmkBadge from '@/components/CmkBadge.vue'
     99
   </CmkBadge>
 </template>`
-
-const panelConfig = {
+export const panelConfig = {
   size: {
     type: 'list',
     title: 'Size',
@@ -85,6 +63,26 @@ const panelConfig = {
     initialState: 'default' as const
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkBadge from '@/components/CmkBadge.vue'
+
+import UclCmkBadgeDev from './UclCmkBadgeDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -108,7 +106,7 @@ const propState = ref(createPanelState(panelConfig))
       </template>
     </UclDetailPageComponent>
 
-    <UclDetailPageCodeExample :code="codeExampleCmkBadge" />
+    <UclDetailPageCodeExample :code="codeExample" />
 
     <UclDetailPageAccessibility :data="[]" />
 

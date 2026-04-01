@@ -239,6 +239,149 @@ py_library(
     ],
 )
 
+py_library(
+    name = "output_funnel",
+    srcs = ["output_funnel.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:ctx_stack",
+        requirement("flask"),
+    ],
+)
+
+py_library(
+    name = "user_errors",
+    srcs = ["user_errors.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:ctx_stack",
+        "//cmk/gui:exceptions",
+    ],
+)
+
+py_library(
+    name = "escaping",
+    srcs = ["escaping.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":html",
+        ":speaklater",
+        "//cmk/utils",
+    ],
+)
+
+py_library(
+    name = "mobile",
+    srcs = ["mobile.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:hooks",
+        "//cmk/gui:http",
+    ],
+)
+
+py_library(
+    name = "timeout_manager",
+    srcs = ["timeout_manager.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:ctx_stack",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:i18n",
+    ],
+)
+
+py_library(
+    name = "language_cookie",
+    srcs = ["language_cookie.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:http",
+    ],
+)
+
+py_library(
+    name = "filter",
+    srcs = ["filter.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:http",
+        "//cmk/gui:type_defs",
+    ],
+)
+
+py_library(
+    name = "product_usage_analytics_popup_cookie",
+    srcs = ["product_usage_analytics_popup_cookie.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:http",
+        "//packages/cmk-ccc:site",
+    ],
+)
+
+py_library(
+    name = "user_frontend_settings_cookie",
+    srcs = ["user_frontend_settings_cookie.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:http",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
+    name = "flashed_messages",
+    srcs = ["flashed_messages.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":escaping",
+        ":html",
+        requirement("flask"),
+    ],
+)
+
 # The remaining utils files are tightly coupled with the monolithic cmk/gui:gui target
 # (circular imports). They are exported as a filegroup so gui can include them in its srcs
 # as a temporary measure and boiled down by following steps.
@@ -253,11 +396,18 @@ filegroup(
             "compatibility.py",
             "dataclasses.py",
             "encrypter.py",
+            "escaping.py",
+            "filter.py",
+            "flashed_messages.py",
             "html.py",
             "htpasswd.py",
             "json.py",
+            "language_cookie.py",
             "misc.py",
+            "mobile.py",
+            "output_funnel.py",
             "permission_verification.py",
+            "product_usage_analytics_popup_cookie.py",
             "request_context.py",
             "security_log_events.py",
             "selection_id.py",
@@ -265,7 +415,10 @@ filegroup(
             "speaklater.py",
             "temperate_unit.py",
             "time.py",
+            "timeout_manager.py",
             "transaction_manager.py",
+            "user_errors.py",
+            "user_frontend_settings_cookie.py",
         ],
     ),
     visibility = ["//cmk/gui:__pkg__"],

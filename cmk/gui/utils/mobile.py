@@ -13,7 +13,7 @@ from cmk.gui.http import Request, Response
 @request_memoize()
 def is_mobile(request: Request, response: Response) -> bool:
     if "mobile" in request.args:
-        mobile = request.args.get("mobile", type=bool, default=False)
+        mobile: bool = request.args.get("mobile", type=bool, default=False)
         # Persist the explicitly set state in a cookie to have it maintained through further requests
         response.set_http_cookie("mobile", str(int(mobile)), secure=request.is_secure)
         return mobile

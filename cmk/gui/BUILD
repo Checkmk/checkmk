@@ -379,6 +379,103 @@ py_library(
     ],
 )
 
+py_library(
+    name = "ntop",
+    srcs = ["ntop.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":hooks",
+        ":i18n",
+        ":type_defs",
+        "//cmk/utils",
+        "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-ccc:version",
+    ],
+)
+
+py_library(
+    name = "legacy_plugins",
+    srcs = ["legacy_plugins.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":log",
+        "//cmk/utils",
+    ],
+)
+
+py_library(
+    name = "pdf",
+    srcs = ["pdf.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":exceptions",
+        ":http",
+        ":i18n",
+        ":type_defs",
+        "//cmk/utils",
+        requirement("reportlab"),
+    ],
+)
+
+py_library(
+    name = "job_scheduler_client",
+    srcs = ["job_scheduler_client.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":i18n",
+        "//cmk/utils",
+        "//packages/cmk-ccc:resulttype",
+        requirement("requests"),
+    ],
+)
+
+py_library(
+    name = "icons",
+    srcs = ["icons.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":i18n",
+        ":theme",
+        "//cmk/utils",
+    ],
+)
+
+py_library(
+    name = "global_config",
+    srcs = ["global_config.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":log",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+        requirement("pydantic"),
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -395,13 +492,19 @@ py_library(
             "features.py",
             "figures.py",
             "flask_app.py",
+            "global_config.py",
             "groups.py",
             "hooks.py",
             "http.py",
             "i18n.py",
+            "icons.py",
             "ifaceoper.py",
+            "job_scheduler_client.py",
+            "legacy_plugins.py",
             "log.py",
+            "ntop.py",
             "num_split.py",
+            "pdf.py",
             "permissions.py",
             "pseudo_users.py",
             "role_types.py",
@@ -437,13 +540,19 @@ py_library(
         ":features",
         ":figures",
         ":flask_app",
+        ":global_config",
         ":groups",
         ":hooks",
         ":http",
         ":i18n",
+        ":icons",
         ":ifaceoper",
+        ":job_scheduler_client",
+        ":legacy_plugins",
         ":log",
+        ":ntop",
         ":num_split",
+        ":pdf",
         ":permissions",
         ":pseudo_users",
         ":role_types",
@@ -467,11 +576,18 @@ py_library(
         "//cmk/gui/utils:compatibility",
         "//cmk/gui/utils:dataclasses",
         "//cmk/gui/utils:encrypter",
+        "//cmk/gui/utils:escaping",
+        "//cmk/gui/utils:filter",
+        "//cmk/gui/utils:flashed_messages",
         "//cmk/gui/utils:html",
         "//cmk/gui/utils:htpasswd",
         "//cmk/gui/utils:json",
+        "//cmk/gui/utils:language_cookie",
         "//cmk/gui/utils:misc",
+        "//cmk/gui/utils:mobile",
+        "//cmk/gui/utils:output_funnel",
         "//cmk/gui/utils:permission_verification",
+        "//cmk/gui/utils:product_usage_analytics_popup_cookie",
         "//cmk/gui/utils:request_context",
         "//cmk/gui/utils:security_log_events",
         "//cmk/gui/utils:selection_id",
@@ -479,7 +595,10 @@ py_library(
         "//cmk/gui/utils:speaklater",
         "//cmk/gui/utils:temperate_unit",
         "//cmk/gui/utils:time",
+        "//cmk/gui/utils:timeout_manager",
         "//cmk/gui/utils:transaction_manager",
+        "//cmk/gui/utils:user_errors",
+        "//cmk/gui/utils:user_frontend_settings_cookie",
         "//cmk/inventory",
         "//cmk/piggyback:backend",
         "//cmk/piggyback:hub",

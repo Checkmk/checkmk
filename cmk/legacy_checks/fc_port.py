@@ -3,63 +3,65 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="arg-type"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
-
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_average,
     get_rate,
     get_value_store,
+    Metric,
     not_exists,
     OIDBytes,
     render,
+    Result,
+    Service,
+    SimpleSNMPSection,
     SNMPTree,
     startswith,
+    State,
     StringTable,
 )
 from cmk.legacy_includes.fc_port import fc_parse_counter
 
-check_info = {}
-
 # Taken from connUnitPortState
 # user selected state of the port hardware
-fc_port_admstates = {
-    1: ("unknown", 1),
-    2: ("online", 0),
-    3: ("offline", 0),
-    4: ("bypassed", 1),
-    5: ("diagnostics", 1),
+fc_port_admstates: dict[int, tuple[str, State]] = {
+    1: ("unknown", State.WARN),
+    2: ("online", State.OK),
+    3: ("offline", State.OK),
+    4: ("bypassed", State.WARN),
+    5: ("diagnostics", State.WARN),
 }
 # Taken from connUnitPortStatus
 # operational status for the port
-fc_port_opstates = {
-    1: ("unknown", 1),
-    2: ("unused", 1),
-    3: ("ready", 0),
-    4: ("warning", 1),
-    5: ("failure", 2),
-    6: ("not participating", 1),
-    7: ("initializing", 1),
-    8: ("bypass", 1),
-    9: ("ols", 0),
+fc_port_opstates: dict[int, tuple[str, State]] = {
+    1: ("unknown", State.WARN),
+    2: ("unused", State.WARN),
+    3: ("ready", State.OK),
+    4: ("warning", State.WARN),
+    5: ("failure", State.CRIT),
+    6: ("not participating", State.WARN),
+    7: ("initializing", State.WARN),
+    8: ("bypass", State.WARN),
+    9: ("ols", State.OK),
 }
 # Taken from connUnitPortHWState
 # hardware detected state of the port
-fc_port_phystates = {
-    1: ("unknown", 1),
-    2: ("failed", 2),
-    3: ("bypassed", 1),
-    4: ("active", 0),
-    5: ("loopback", 1),
-    6: ("txfault", 1),
-    7: ("no media", 1),
-    8: ("link down", 2),
+fc_port_phystates: dict[int, tuple[str, State]] = {
+    1: ("unknown", State.WARN),
+    2: ("failed", State.CRIT),
+    3: ("bypassed", State.WARN),
+    4: ("active", State.OK),
+    5: ("loopback", State.WARN),
+    6: ("txfault", State.WARN),
+    7: ("no media", State.WARN),
+    8: ("link down", State.CRIT),
 }
 
 # taken from connUnitPortType
@@ -89,13 +91,13 @@ porttype_list = (
 # settings for inventory: which ports should not be inventorized
 fc_port_no_inventory_types = [3]
 fc_port_no_inventory_admstates = [1, 3]
-fc_port_no_inventory_opstates = []
-fc_port_no_inventory_phystates = []
+fc_port_no_inventory_opstates: list[int] = []
+fc_port_no_inventory_phystates: list[int] = []
 fc_port_inventory_use_portname = False  # use connUnitPortName as service name
 
 
 # Helper function for computing item from port number
-def fc_port_getitem(num_ports, index, portname):
+def fc_port_getitem(num_ports: int, index: int, portname: str) -> str:
     fmt = "%%0%dd" % len(str(num_ports))  # number of digits for index
     itemname = fmt % (index - 1)  # leading zeros
     if portname.strip() and fc_port_inventory_use_portname:
@@ -103,8 +105,8 @@ def fc_port_getitem(num_ports, index, portname):
     return itemname
 
 
-def discover_fc_port(info):
-    for line in info:
+def discover_fc_port(section: StringTable) -> DiscoveryResult:
+    for line in section:
         try:
             index = int(line[0])
             porttype = int(line[1])
@@ -124,16 +126,22 @@ def discover_fc_port(info):
         if phystate in fc_port_no_inventory_phystates:
             continue
 
-        item = fc_port_getitem(len(info), index, portname)
-        yield item, {}
+        item = fc_port_getitem(len(section), index, portname)
+        yield Service(item=item)
 
 
-def check_fc_port(item, params, info):
+def _make_levels(warn: float | None, crit: float | None) -> tuple[float, float] | None:
+    if warn is not None and crit is not None:
+        return (warn, crit)
+    return None
+
+
+def check_fc_port(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
     value_store = get_value_store()
 
     # Accept item, even if port name has changed
-    item_index = int(item.split()[0])
-    portinfo = [line for line in info if int(line[0]) == item_index + 1]
+    item_index = int(item.split(maxsplit=1)[0])
+    portinfo = [line for line in section if int(line[0]) == item_index + 1]
     index = int(portinfo[0][0])
     porttype = int(portinfo[0][1])
     admstate = int(portinfo[0][2])
@@ -148,12 +156,10 @@ def check_fc_port(item, params, info):
         c3discards,
         rxcrcs,
         rxencoutframes,
-    ) = map(fc_parse_counter, portinfo[0][7:])
+    ) = map(fc_parse_counter, portinfo[0][7:])  # type: ignore[arg-type]  # OIDBytes
 
     summarystate = 0
-    output = []
-    perfdata = []
-    perfaverages = []
+    output: list[str] = []
 
     try:
         wirespeed = float(portinfo[0][4]) * 1000.0  # speed in Bytes/sec
@@ -171,15 +177,15 @@ def check_fc_port(item, params, info):
     this_time = time.time()
 
     in_bytes = get_rate(
-        get_value_store(),
-        "fc_port.rxelements.%s" % index,
+        value_store,
+        f"fc_port.rxelements.{index}",
         this_time,
         rxelements,
         raise_overflow=True,
     )
     out_bytes = get_rate(
-        get_value_store(),
-        "fc_port.txelements.%s" % index,
+        value_store,
+        f"fc_port.txelements.{index}",
         this_time,
         txelements,
         raise_overflow=True,
@@ -203,46 +209,43 @@ def check_fc_port(item, params, info):
         else:  # in MB
             crit_bytes = crit * 1048576.0
 
+    bw_levels = _make_levels(warn_bytes, crit_bytes)
+
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
         output.append(f"{what}: {render.iobandwidth(value)}")
-        perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+        yield Metric(what.lower(), value, levels=bw_levels, boundaries=(0, wirespeed))
 
         # average turned on: use averaged traffic values instead of current ones
         if average:
             value = get_average(
                 value_store, f"fc_port.{what}.{item}.avg", this_time, value, average
             )
-            output.append("Avg(%dmin): %s" % (average, render.iobandwidth(value)))
-            perfaverages.append(
-                ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed)
-            )
+            output.append(f"Avg({average}min): {render.iobandwidth(value)}")
+            yield Metric(f"{what.lower()}_avg", value, levels=bw_levels, boundaries=(0, wirespeed))
 
         # handle levels for in/out
         if crit_bytes is not None and value >= crit_bytes:
             summarystate = 2
-            output.append(" >= %s(!!)" % (render.iobandwidth(crit_bytes)))
+            output.append(f" >= {render.iobandwidth(crit_bytes)}(!!)")
         elif warn_bytes is not None and value >= warn_bytes:
             summarystate = max(1, summarystate)
-            output.append(" >= %s(!!)" % (render.iobandwidth(warn_bytes)))
-
-    # put perfdata of averages after perfdata for in and out in order not to confuse the perfometer
-    perfdata.extend(perfaverages)
+            output.append(f" >= {render.iobandwidth(warn_bytes)}(!!)")
 
     # R X O B J E C T S & T X O B J E C T S
     # Put number of objects into performance data (honor averaging)
     rxobjects_rate = get_rate(
-        get_value_store(), "fc_port.rxobjects.%s" % index, this_time, rxobjects, raise_overflow=True
+        value_store, f"fc_port.rxobjects.{index}", this_time, rxobjects, raise_overflow=True
     )
     txobjects_rate = get_rate(
-        get_value_store(), "fc_port.txobjects.%s" % index, this_time, txobjects, raise_overflow=True
+        value_store, f"fc_port.txobjects.{index}", this_time, txobjects, raise_overflow=True
     )
     for what, value in [("rxobjects", rxobjects_rate), ("txobjects", txobjects_rate)]:
-        perfdata.append((what, value))
+        yield Metric(what, value)
         if average:
             value = get_average(
                 value_store, f"fc_port.{what}.{item}.avg", this_time, value, average
             )
-            perfdata.append(("%s_avg" % what, value))
+            yield Metric(f"{what}_avg", value)
 
     # E R R O R C O U N T E R S
     # handle levels on error counters
@@ -274,21 +277,21 @@ def check_fc_port(item, params, info):
         ),
     ]:
         per_sec = get_rate(
-            get_value_store(),
+            value_store,
             f"fc_port.{counter}.{index}",
             this_time,
             value,
             raise_overflow=True,
         )
 
-        perfdata.append((counter, per_sec))
+        yield Metric(counter, per_sec)
 
         # if averaging is on, compute average and apply levels to average
         if average:
             per_sec_avg = get_average(
                 value_store, f"fc_port.{counter}.{item}.avg", this_time, per_sec, average
             )
-            perfdata.append(("%s_avg" % counter, per_sec_avg))
+            yield Metric(f"{counter}_avg", per_sec_avg)
 
         # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
         if ref > 0 or per_sec > 0:
@@ -315,27 +318,26 @@ def check_fc_port(item, params, info):
             text += "(!)"
             output.append(text)
 
-    yield summarystate, ", ".join(output), perfdata
+    yield Result(state=State(summarystate), summary=", ".join(output))
 
-    statetxt, state = fc_port_admstates.get(int(admstate), ("unknown", 3))
-    yield state, statetxt
+    statetxt, state = fc_port_admstates.get(int(admstate), ("unknown", State.UNKNOWN))
+    yield Result(state=state, summary=statetxt)
 
-    statetxt, state = fc_port_opstates.get(int(opstate), ("unknown", 3))
-    yield state, statetxt
+    statetxt, state = fc_port_opstates.get(int(opstate), ("unknown", State.UNKNOWN))
+    yield Result(state=state, summary=statetxt)
 
-    statetxt, state = fc_port_phystates.get(int(phystate), ("unknown", 3))
-    yield state, statetxt
+    statetxt, state = fc_port_phystates.get(int(phystate), ("unknown", State.UNKNOWN))
+    yield Result(state=state, summary=statetxt)
 
-    yield 0, porttype_list[int(porttype)]
+    yield Result(state=State.OK, summary=porttype_list[int(porttype)])
 
 
 def parse_fc_port(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["fc_port"] = LegacyCheckDefinition(
+snmp_section_fc_port = SimpleSNMPSection(
     name="fc_port",
-    parse_function=parse_fc_port,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         not_exists(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*"),
@@ -351,43 +353,21 @@ check_info["fc_port"] = LegacyCheckDefinition(
             "1.10.1.17",
             "1.10.1.23",
             OIDBytes("4.5.1.4"),
-            # The number of frames/packets/IOs/etc that have been transmitted
-            # by this port. Note: A Fibre Channel frame starts with SOF and
-            # ends with EOF. FC loop devices should not count frames passed
-            # through. This value represents the sum total for all other Tx
             OIDBytes("4.5.1.5"),
-            # The number of frames/packets/IOs/etc that have been received
-            # by this port. Note: A Fibre Channel frame starts with SOF and
-            # ends with EOF. FC loop devices should not count frames passed
-            # through. This value represents the sum total for all other Rx
             OIDBytes("4.5.1.6"),
-            # The number of octets or bytes that have been transmitted
-            # by this port. One second periodic polling of the port. This
-            # value is saved and compared with the next polled value to
-            # compute net throughput. Note, for Fibre Channel, ordered
-            # sets are not included in the count.
             OIDBytes("4.5.1.7"),
-            # The number of octets or bytes that have been received.
-            # by this port. One second periodic polling of the port. This
-            # value is saved and compared with the next polled value to
-            # compute net throughput. Note, for Fibre Channel, ordered
-            # sets are not included in the count.
             OIDBytes("4.5.1.8"),
-            # Count of transitions in/out of BBcredit zero state.
-            # The other side is not providing any credit.
             OIDBytes("4.5.1.28"),
-            # Count of Class 3 Frames that were discarded upon reception
-            # at this port.  There is no FBSY or FRJT generated for Class 3
-            # Frames.  They are simply discarded if they cannot be delivered.
             OIDBytes("4.5.1.40"),
-            # Count of frames received with invalid CRC. This count is
-            # part of the Link Error Status Block (LESB). (FC-PH 29.8). Loop
-            # ports should not count CRC errors passing through when
-            # monitoring.
             OIDBytes("4.5.1.50"),
-            # Count of disparity errors received at this port.
         ],
     ),
+    parse_function=parse_fc_port,
+)
+
+
+check_plugin_fc_port = CheckPlugin(
+    name="fc_port",
     service_name="FC Interface %s",
     discovery_function=discover_fc_port,
     check_function=check_fc_port,

@@ -233,13 +233,10 @@ let _onRefresh: (() => void) | null = null
 export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => void): void {
   _onRefresh = onRefresh
 
-  const sites = detectOmdSites()
-  const available = sites.length > 0
-  vscode.commands.executeCommand('setContext', 'cmk.omdAvailable', available)
+  const initialSites = detectOmdSites()
+  vscode.commands.executeCommand('setContext', 'cmk.omdAvailable', initialSites.length > 0)
 
   registerProxyCleanup(context, onRefresh)
-
-  if (!available) return
 
   try {
     fs.mkdirSync(STATUS_DIR, { recursive: true })
@@ -257,7 +254,7 @@ export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => v
     context.subscriptions.push(
       vscode.commands.registerCommand(id, async (siteName?: string) => {
         if (!siteName) {
-          const pick = await pickSite(sites)
+          const pick = await pickSite(detectOmdSites())
           if (!pick) return
           siteName = pick
         }
@@ -288,7 +285,7 @@ export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => v
       _keepaliveTerm = term
       term.show()
 
-      const statusCmds = sites
+      const statusCmds = detectOmdSites()
         .map(
           (s) =>
             `sudo omd status --bare "${s.name}" > "${path.join(STATUS_DIR, `${s.name}.status`)}" 2>/dev/null`
@@ -328,7 +325,7 @@ export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => v
 
   context.subscriptions.push(
     vscode.commands.registerCommand('cmk.omdProxy', async () => {
-      const siteName = await pickSite(sites)
+      const siteName = await pickSite(detectOmdSites())
       if (!siteName) return
       await promptSocketProxy(siteName)
       triggerRefresh()

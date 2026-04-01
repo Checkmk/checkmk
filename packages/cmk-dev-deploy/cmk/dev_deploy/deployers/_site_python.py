@@ -21,12 +21,6 @@ from cmk.dev_deploy.types import SiteInfo
 _SYSCONFIG_TIMEOUT: int = 10
 
 
-def get_site_python(site: SiteInfo) -> Path | None:
-    """Return the site's ``bin/python3`` path, or ``None`` if missing."""
-    python = site.root / "bin" / "python3"
-    return python if python.exists() else None
-
-
 def get_site_packages(site: SiteInfo) -> Path:
     """Discover the site-packages path for an OMD site's Python (cached)."""
     return _discover_site_packages_cached(str(site.root))
@@ -48,20 +42,6 @@ def _discover_site_packages_cached(site_root_str: str) -> Path:
             recovery="Ensure the OMD site is properly set up.",
         )
     return lib_dir / "site-packages"
-
-
-def get_python_lib_dir(site: SiteInfo) -> Path:
-    """Discover the Python lib directory (parent of site-packages)."""
-    site_python = get_site_python(site)
-    if site_python is not None:
-        return _discover_purelib(site_python).parent
-
-    # No bin/python3 — try glob before falling back to legacy path
-    lib_dir = _glob_python_lib_dir(site.root)
-    if lib_dir is not None:
-        return lib_dir
-
-    return site.root / "lib" / "python3"
 
 
 def _glob_python_lib_dir(site_root: Path) -> Path | None:

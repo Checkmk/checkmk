@@ -17,7 +17,6 @@ from pathlib import Path
 from cmk.dev_deploy.core.timeouts import GIT_QUICK
 
 STATE_FILE_NAME = "deploy_state.json"
-STATE_DIR_NAME = "cmk-dev-deploy"
 STATE_SCHEMA_VERSION = 2
 
 

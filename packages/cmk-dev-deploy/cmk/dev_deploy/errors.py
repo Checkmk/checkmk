@@ -37,24 +37,6 @@ class ChangeDetectionError(DeployError):
     """Raised when git-based change detection fails."""
 
 
-class BazelQueryError(DeployError):
-    """Raised when bazel query fails or returns unexpected output.
-
-    Args:
-        is_timeout: True when the error was caused by a subprocess timeout.
-    """
-
-    def __init__(
-        self,
-        message: str,
-        recovery: str | None = None,
-        *,
-        is_timeout: bool = False,
-    ) -> None:
-        super().__init__(message, recovery)
-        self.is_timeout: bool = is_timeout
-
-
 class BazelBuildError(DeployError):
     """Raised when bazel build, patchelf, or setcap fails."""
 
@@ -65,10 +47,6 @@ class ConfigDeployError(DeployError):
 
 class WheelDeployError(DeployError):
     """Raised when wheel build or extraction fails."""
-
-
-class ServiceRestartError(DeployError):
-    """Raised when a service restart/reload command fails."""
 
 
 class FrontendError(DeployError):

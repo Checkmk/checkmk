@@ -476,19 +476,3 @@ def teardown_overlay(site_root: Path) -> None:
     if site_overlay_dir.exists():
         run_as_root(["rm", "-rf", str(site_overlay_dir)])
         output.info(f"Overlay data removed: {site_overlay_dir}")
-
-
-def overlay_upper_size(site_root: Path) -> str | None:
-    """Return the disk usage of the overlay upper directory, or None."""
-    upper = _upper_dir(site_root)
-    if not upper.exists():
-        return None
-    result = subprocess.run(
-        ["du", "-sh", str(upper)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode == 0:
-        return result.stdout.split()[0]
-    return None

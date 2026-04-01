@@ -26,7 +26,6 @@ from cmk.dev_deploy.deployers.wheel_deployer import (
     specs_for_changed_files,
 )
 from cmk.dev_deploy.errors import (
-    BazelQueryError,
     ChangeDetectionError,
     DeployError,
     ManifestBuildError,
@@ -646,12 +645,12 @@ def _setup_frontend_supervisor(
         remove_override(site.name, mk_path, ssh_state)
 
     try:
-        project_path = detect_frontend_project(repo_root)
+        detect_frontend_project(repo_root)
     except FrontendError as e:
         output.error(str(e))
         return 1
 
-    config = FrontendConfig(project_path=project_path, repo_root=repo_root)
+    config = FrontendConfig()
     supervisor = FrontendSupervisor(config, repo_root)
 
     output.info("Starting frontend supervisor (iBazel)...")
@@ -760,19 +759,16 @@ def _infer_phase(error: BaseException) -> str:
         ConfigDeployError,
         FrontendError,
         IBazelError,
-        ServiceRestartError,
         WheelDeployError,
     )
 
     phase_map: dict[type, str] = {
         ManifestBuildError: "manifest_build",
-        BazelQueryError: "bazel_query",
         ChangeDetectionError: "change_detection",
         OverlayError: "overlay",
         BazelBuildError: "bazel_build",
         ConfigDeployError: "config_deploy",
         WheelDeployError: "wheel_deploy",
-        ServiceRestartError: "service_restart",
         FrontendError: "frontend",
         IBazelError: "ibazel",
     }

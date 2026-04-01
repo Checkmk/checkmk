@@ -487,28 +487,6 @@ def _run_bazel_query(
     return result
 
 
-def query_direct_dep_packages(target: str, repo_root: Path) -> set[str]:
-    """Query Bazel for direct (depth-1) dependencies of *target*.
-
-    Returns the set of package paths, excluding external dependencies.
-    """
-    query = f"deps({target}, 1)"
-
-    result = _run_bazel_query(
-        ["bazel", "query", query, "--output", "package", "--keep_going"],
-        repo_root,
-    )
-    if result is None:
-        return set()
-
-    packages: set[str] = set()
-    for line in result.stdout.strip().splitlines():
-        stripped = line.strip()
-        if stripped and not stripped.startswith("@"):
-            packages.add(stripped)
-    return packages
-
-
 # ---------------------------------------------------------------------------
 # XML attribute extraction helpers (used for bazel query --output=xml
 # enrichment queries, NOT for initial spec loading)

@@ -34,16 +34,12 @@ from cmk.dev_deploy.types import ChangeCategory
 if TYPE_CHECKING:
     from cmk.dev_deploy.types import (
         BazelTargetSet,
-        BuildResult,
         ChangeSet,
-        ConfigDeployResult,
         DeployCycleResult,
         Service,
         ServiceAction,
-        ServiceResult,
         SiteInfo,
         StepResult,
-        WheelDeployResult,
     )
 
 
@@ -154,11 +150,6 @@ def set_verbosity(level: int) -> None:
 
 def get_verbosity() -> Verbosity:
     return _config.verbosity
-
-
-def is_tty() -> bool:
-    """Return whether stderr is a TTY (used for progress streaming decisions)."""
-    return _config.is_tty
 
 
 # --- Combined mode (frontend interleaving) ---
@@ -430,32 +421,6 @@ def print_deploy_total(elapsed: float, *, success: bool = True) -> None:
 # --- Targeted deploy output ---
 
 
-def print_targeted_deploy_summary(
-    targeted_files: tuple[str, ...],
-    elapsed: float,
-) -> None:
-    """Print targeted deploy summary with individual file paths."""
-    dp = _deploy_prefix()
-    _print_locked(
-        f"{dp}  {BOLD}python{' ' * 6}{RESET} {GREEN}{BOLD}deployed{RESET}  "
-        f"{DIM}{elapsed:.1f}s{RESET}  {BOLD}[targeted]{RESET} {len(targeted_files)} file(s)"
-    )
-    for filepath in targeted_files:
-        _print_locked(f"{dp}    {DIM}{filepath}{RESET}")
-
-
-def print_full_deploy_indicator(elapsed: float, fallback_reason: str = "") -> None:
-    """Print full deploy indicator with optional fallback reason."""
-    if not fallback_reason:
-        return
-    dp = _deploy_prefix()
-    _print_locked(
-        f"{dp}  {BOLD}python{' ' * 6}{RESET} {GREEN}{BOLD}deployed{RESET}  "
-        f"{DIM}{elapsed:.1f}s{RESET}  {BOLD}[full]{RESET}"
-    )
-    _print_locked(f"{dp}    {DIM}Fallback: {fallback_reason}{RESET}")
-
-
 # --- Site info display ---
 
 
@@ -570,40 +535,6 @@ def print_build_path(build_path: str) -> None:
 # --- Build result display ---
 
 
-@_verbose_only
-def print_build_result(result: BuildResult) -> None:
-    """Display Bazel build and install results."""
-    success(f"Bazel build complete in {result.elapsed:.1f}s")
-    _print_locked(f"  Targets built: {result.targets_built}")
-    _print_locked(f"  Artifacts installed: {result.artifacts_installed}")
-    if result.skipped_edition > 0:
-        info(f"Skipped {result.skipped_edition} spec(s) not matching site edition")
-
-
-@_verbose_only
-def print_config_result(result: ConfigDeployResult) -> None:
-    """Display config/data deployment results."""
-    success(f"Config deployment complete in {result.elapsed:.1f}s")
-    _print_locked(f"  Specs deployed: {result.specs_deployed}")
-    if result.files_installed > 0:
-        _print_locked(f"  Files installed: {result.files_installed}")
-    if result.locale_compiled > 0:
-        _print_locked(f"  Locale files compiled: {result.locale_compiled}")
-
-
-@_verbose_only
-def print_wheel_result(result: WheelDeployResult) -> None:
-    """Display wheel deployment results."""
-    success(f"Wheel deployment complete in {result.elapsed:.1f}s")
-    _print_locked(f"  Packages deployed: {result.wheels_deployed}")
-    if result.wheels_skipped > 0:
-        _print_locked(f"  Packages skipped: {result.wheels_skipped} (unchanged)")
-    if result.wheels_skipped_edition > 0:
-        info(f"Skipped {result.wheels_skipped_edition} spec(s) not matching site edition")
-    if result.wheels_skipped_missing > 0:
-        info(f"Skipped {result.wheels_skipped_missing} spec(s) with missing source dirs")
-
-
 # --- Service management display ---
 
 
@@ -624,20 +555,6 @@ def print_service_preview(
         info(f"Restarting {len(services)} service(s):")
     for svc, action in services:
         _print_locked(f"  {action.value:8s} {svc.value}")
-
-
-def print_service_result(result: ServiceResult) -> None:
-    """Display the outcome of service restart/reload operations."""
-    if result.services_failed == 0:
-        success(f"Service restarts complete in {result.elapsed:.1f}s")
-    else:
-        warn(
-            f"Service restarts complete in {result.elapsed:.1f}s ({result.services_failed} failed)"
-        )
-        for name in result.failures:
-            _print_locked(f"  {YELLOW}failed{RESET}  {name}")
-        _print_locked(f"  {DIM}Run 'omd restart <service>' manually to retry{RESET}")
-    _print_locked(f"  Services restarted: {result.services_restarted}")
 
 
 # --- Parallel execution display ---

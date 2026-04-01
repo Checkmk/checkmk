@@ -975,7 +975,6 @@ def deploy_wheels(
     # Considers ALL changes not yet deployed: both committed (HEAD vs
     # build_commit) and uncommitted (working tree vs HEAD), filtered to
     # each package's deployed source_subdirs.
-    step_timings: tuple[StepTiming, ...] = ()
     targeted_packages: set[str] = set()
 
     targeted_batch: list[tuple[str, tuple[str, ...], float]] = []
@@ -1018,7 +1017,6 @@ def deploy_wheels(
                 pkg_modified, repo_root / spec.package, dest_base, site, prefix
             )
             if timings is not None:
-                step_timings = timings
                 targeted_packages.add(spec.package)
                 targeted_batch.append(
                     (spec.package, tuple(pkg_modified), sum(t.elapsed for t in timings))
@@ -1142,7 +1140,6 @@ def deploy_wheels(
         wheels_skipped_missing=skipped_missing,
         elapsed=elapsed,
         per_package_states=per_package_states,
-        step_timings=step_timings,
     )
 
 

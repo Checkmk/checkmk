@@ -34,7 +34,6 @@ if "cmk.dev_deploy.site.overlay" not in sys.modules:
     _overlay_stub.is_overlay_active = MagicMock(return_value=True)  # type: ignore[attr-defined]
     _overlay_stub.ensure_overlay = MagicMock()  # type: ignore[attr-defined]
     _overlay_stub.teardown_overlay = MagicMock()  # type: ignore[attr-defined]
-    _overlay_stub.overlay_upper_size = MagicMock(return_value=None)  # type: ignore[attr-defined]
     sys.modules["cmk.dev_deploy.site.overlay"] = _overlay_stub
 
 if "cmk.dev_deploy.site.privilege" not in sys.modules:

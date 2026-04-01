@@ -205,7 +205,6 @@ class ConfigFileEntry:
     """A single file entry from the Bazel pkg_files build graph."""
 
     src: str
-    dest: str
     mode: str
 
 
@@ -306,7 +305,6 @@ class WheelDeployResult:
     wheels_skipped_missing: int
     elapsed: float
     per_package_states: dict[str, DeployerState]
-    step_timings: tuple[object, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -358,8 +356,6 @@ class DeployCycleResult:
 class FrontendConfig:
     """Configuration for the iBazel frontend supervisor."""
 
-    project_path: Path
-    repo_root: Path
     port: int = 5173
 
     startup_timeout: float = 300.0

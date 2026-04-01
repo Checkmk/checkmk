@@ -34,11 +34,6 @@ from cmk.dev_deploy.deployers.wheel_deployer import (
     deploy_wheels,
     specs_for_changed_files,
 )
-from cmk.dev_deploy.state.deploy_state import (
-    DeployerState,
-    DeployState,
-    STATE_SCHEMA_VERSION,
-)
 from cmk.dev_deploy.types import (
     Edition,
     SiteInfo,
@@ -71,34 +66,6 @@ def _make_wheel_spec(
     )
 
 
-def _make_deploy_state(
-    deployers: dict[str, DeployerState] | None = None,
-    branch: str = "master",
-) -> DeployState:
-    """Create a DeployState with sensible defaults for testing."""
-    return DeployState(
-        schema_version=STATE_SCHEMA_VERSION,
-        branch=branch,
-        deployers=deployers or {},
-        created_at=1000.0,
-    )
-
-
-def _make_deployer_state(
-    deployer: str = "wheel:packages/cmk-ccc",
-    git_commit: str = "a" * 40,
-    dirty_file_hashes: dict[str, str] | None = None,
-    deployed_at: float = 1000.0,
-) -> DeployerState:
-    """Create a DeployerState with sensible defaults for testing."""
-    return DeployerState(
-        deployer=deployer,
-        git_commit=git_commit,
-        dirty_file_hashes=dirty_file_hashes or {},
-        deployed_at=deployed_at,
-    )
-
-
 def _make_site(tmp_path: Path, edition: Edition = Edition.PRO) -> SiteInfo:
     """Create a SiteInfo pointing at tmp_path as the site root."""
     return SiteInfo(
@@ -108,27 +75,6 @@ def _make_site(tmp_path: Path, edition: Edition = Edition.PRO) -> SiteInfo:
         version_string="2.6.0-2026.02.13.pro",
         build_commit="b" * 40,
     )
-
-
-def _make_mock_run(
-    returncode: int = 0,
-    stdout: str = "",
-    stderr: str = "",
-) -> object:
-    """Create a callable returning a mock CompletedProcess."""
-
-    def _mock_run(
-        cmd: list[str],
-        **_kwargs: object,
-    ) -> subprocess.CompletedProcess[str]:
-        return subprocess.CompletedProcess(
-            args=cmd,
-            returncode=returncode,
-            stdout=stdout,
-            stderr=stderr,
-        )
-
-    return _mock_run
 
 
 def _make_skip_result(

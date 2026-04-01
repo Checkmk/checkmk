@@ -23,19 +23,7 @@ from cmk.dev_deploy.core.diagnostics import (
     _write_bundle,
     capture_diagnostic_bundle,
 )
-from cmk.dev_deploy.errors import BazelQueryError, DeployError
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _make_diagnostics_dir(tmp_path: Path) -> Path:
-    """Create a temporary diagnostics directory."""
-    diag_dir = tmp_path / "diagnostics"
-    diag_dir.mkdir()
-    return diag_dir
-
+from cmk.dev_deploy.errors import DeployError
 
 # ---------------------------------------------------------------------------
 # T1: _collect_environment
@@ -228,9 +216,9 @@ class TestCollectErrorInfo:
     """Tests for error detail collection."""
 
     def test_deploy_error_fields(self) -> None:
-        err = BazelQueryError("query failed", recovery="Try bazel clean")
+        err = DeployError("query failed", recovery="Try bazel clean")
         info = _collect_error_info(err, "bazel_query")
-        assert info["type"] == "BazelQueryError"
+        assert info["type"] == "DeployError"
         assert info["message"] == "query failed"
         assert info["phase"] == "bazel_query"
         assert info["recovery_hint"] == "Try bazel clean"

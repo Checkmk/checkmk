@@ -36,8 +36,3 @@ DEPLOYER_DISPLAY_NAMES: dict[str, str] = {
 }
 
 STEP_DISPLAY_NAMES: dict[str, str] = {info.step_name: info.display_name for info in _REGISTRY}
-
-
-def step_display_name(step_name: str) -> str:
-    """Return the human-readable display name for a step, or the step name itself."""
-    return STEP_DISPLAY_NAMES.get(step_name, step_name)

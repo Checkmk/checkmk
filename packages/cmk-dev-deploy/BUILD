@@ -19,7 +19,6 @@ py_library(
         "cmk/dev_deploy/core/__init__.py",
         "cmk/dev_deploy/core/diagnostics.py",
         "cmk/dev_deploy/core/output.py",
-        "cmk/dev_deploy/core/preflight.py",
         "cmk/dev_deploy/core/subprocess_utils.py",
         "cmk/dev_deploy/core/timeouts.py",
         "cmk/dev_deploy/deployers/__init__.py",
@@ -87,6 +86,7 @@ py_test(
     deps = [
         ":__test__",
         ":cmk-dev-deploy",
+        requirement("coverage"),
         requirement("pytest"),
     ],
 )

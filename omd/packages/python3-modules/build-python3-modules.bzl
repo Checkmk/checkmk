@@ -132,6 +132,8 @@ build_cmd = """
       --isolated \\
       --ignore-installed \\
       --no-warn-script-location \\
+      --root-user-action=ignore \\
+      --disable-pip-version-check \\
       --prefix="$$HOME/$$MODULE_NAME" \\
       {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 

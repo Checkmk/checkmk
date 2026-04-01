@@ -74,6 +74,11 @@ jobs:
                       ~/.cache/bazel
                   restore-keys: |
                       ${{ matrix.os }}-bazel-
+            - name: Reset bazel downloader config
+              # Bazel would try to download files from the internal mirror and report many errors but would not fail
+              shell: bash
+              run: |
+                  echo -n "" > bazel_downloader.cfg
             - name: Setup Environment
               run: |
                   # ksh: Needed for some "unit test" (test_mk_errpt_aix).

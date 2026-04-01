@@ -56,6 +56,8 @@ import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 
+from livestatus import LivestatusResponse
+
 import cmk.ccc.plugin_registry
 import cmk.ccc.regex
 import cmk.utils.log
@@ -67,7 +69,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
 from cmk.crypto import certificate, keys
-from cmk.gui import forms, site_config, user_sites
+from cmk.gui import forms, site_config, sites, user_sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -7449,11 +7451,25 @@ class Labels(ValueSpec[LabelsModel]):
 
     @classmethod
     def get_labels(cls, world: "Labels.World", search_label: str) -> Sequence[tuple[str, str]]:
+        def _query_livestatus(query: str) -> LivestatusResponse:
+            try:
+                sites.live().set_auth_domain("labels")
+                with sites.only_sites(
+                    list(
+                        user.authorized_sites(
+                            unfiltered_sites=site_config.enabled_sites(active_config.sites)
+                        ).keys()
+                    )
+                ):
+                    return sites.live().query(query)
+            finally:
+                sites.live().set_auth_domain("read")
+
         if world is cls.World.CONFIG:
-            return get_labels_from_config(LabelType.ALL, search_label)
+            return get_labels_from_config(LabelType.ALL, search_label, _query_livestatus)
 
         if world is cls.World.CORE:
-            return get_labels_from_core(LabelType.ALL, search_label)
+            return get_labels_from_core(LabelType.ALL, search_label, _query_livestatus)
 
         raise NotImplementedError()
 

@@ -61,7 +61,7 @@ def fixture_livestatus_test_config(
     [
         pytest.param(
             LabelType.ALL,
-            "GET labels\nColumns: name value",
+            "GET labels\nCache: reload\nColumns: name value",
             {
                 ("cmk/os_family", "linux"),
                 ("cmk/docker_object", "node"),
@@ -72,7 +72,7 @@ def fixture_livestatus_test_config(
         ),
         pytest.param(
             LabelType.HOST,
-            "GET hosts\nColumns: labels",
+            "GET hosts\nCache: reload\nColumns: labels",
             {
                 ("cmk/os_family", "linux"),
                 ("cmk/docker_object", "node"),
@@ -83,7 +83,7 @@ def fixture_livestatus_test_config(
         ),
         pytest.param(
             LabelType.SERVICE,
-            "GET services\nColumns: labels",
+            "GET services\nCache: reload\nColumns: labels",
             {
                 ("test", "servicelabel"),
                 ("test2", "servicelabel"),
@@ -101,7 +101,7 @@ def test_collect_labels_from_livestatus_rows(
 ) -> None:
     with live(expect_status_query=False):
         live.expect_query(expected_query)
-        all_labels = _get_labels_from_livestatus(label_type)
+        all_labels = _get_labels_from_livestatus(label_type, sites.live().query)
 
     assert all_labels == expected_labels
 

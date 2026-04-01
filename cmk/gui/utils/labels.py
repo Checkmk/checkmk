@@ -10,20 +10,19 @@ from __future__ import annotations
 
 import enum
 import json
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Literal, NamedTuple
 
 from livestatus import LivestatusResponse, lqencode, quote_dict
 
 from cmk.ccc.site import SiteId
-from cmk.gui import sites
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
-from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import FilterHTTPVariables
 from cmk.utils.labels import AndOrNotLiteral, BaseLabel, LabelGroups, single_label_group_from_labels
+
+# Callback that executes a livestatus query with proper site filtering and auth domain
+_QueryLivestatus = Callable[[str], LivestatusResponse]
 
 
 class Label(NamedTuple):
@@ -197,18 +196,26 @@ def label_help_text() -> str:
     )
 
 
-def get_labels_from_config(label_type: LabelType, search_label: str) -> Sequence[tuple[str, str]]:
+def get_labels_from_config(
+    label_type: LabelType,
+    search_label: str,
+    query_livestatus: _QueryLivestatus,
+) -> Sequence[tuple[str, str]]:
     # TODO: Until we have a config specific implementation we now use the labels known to the
     # core. This is not optimal, but better than doing nothing.
     # To implement a setup specific search, we need to decide which occurrences of labels we
     # want to search: hosts / folders, rules, ...?
-    return get_labels_from_core(label_type, search_label)
+    return get_labels_from_core(label_type, search_label, query_livestatus)
 
 
 def get_labels_from_core(
-    label_type: LabelType, search_label: str | None = None
+    label_type: LabelType,
+    search_label: str | None = None,
+    query_livestatus: _QueryLivestatus | None = None,
 ) -> Sequence[tuple[str, str]]:
-    all_labels = _get_labels_from_livestatus(label_type)
+    if query_livestatus is None:
+        raise ValueError("query_livestatus is required")
+    all_labels = _get_labels_from_livestatus(label_type, query_livestatus)
     if search_label is None:
         return list(all_labels)
     return [
@@ -218,6 +225,7 @@ def get_labels_from_core(
 
 def _get_labels_from_livestatus(
     label_type: LabelType,
+    query_livestatus: _QueryLivestatus,
 ) -> set[tuple[str, str]]:
     if label_type == LabelType.HOST:
         query = "GET hosts\nCache: reload\nColumns: labels\n"
@@ -228,14 +236,7 @@ def _get_labels_from_livestatus(
     else:
         raise ValueError("Unsupported livestatus query")
 
-    try:
-        sites.live().set_auth_domain("labels")
-        with sites.only_sites(
-            list(user.authorized_sites(unfiltered_sites=enabled_sites(active_config.sites)).keys())
-        ):
-            label_rows = sites.live().query(query)
-    finally:
-        sites.live().set_auth_domain("read")
+    label_rows = query_livestatus(query)
 
     if label_type == LabelType.ALL:
         return {(str(label[0]), str(label[1])) for label in label_rows}

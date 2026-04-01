@@ -10,7 +10,7 @@ import * as vscode from 'vscode'
 import { type BuildStatus, checkBuildStatus } from './build/buildStatus'
 import type { SettingsEntry } from './build/settings'
 import { type ExtensionSets, loadConfig } from './core/config'
-import { log, notifyInfo, notifyWarn } from './core/log'
+import { error, log, notifyInfo, notifyWarn } from './core/log'
 import { runCommand, waitForTask } from './core/tasks'
 import { getVersionMismatch, rebuildExtension } from './core/versionCheck'
 import { getDevSiteToolsState } from './omd/devSiteTools'
@@ -50,52 +50,91 @@ const _providers: Record<string, SectionViewProvider> = {}
 // ── State cache ──
 
 function refreshStateCache(): StateCache {
-  _extensionsConfig = loadConfig<ExtensionSets>('extensions')
-  _settingsConfig = loadConfig<Record<string, SettingsEntry>>('settings')
+  try {
+    _extensionsConfig = loadConfig<ExtensionSets>('extensions')
+    _settingsConfig = loadConfig<Record<string, SettingsEntry>>('settings')
 
-  const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-  const buildStatus = wsPath ? checkBuildStatus(wsPath) : {}
-  const profiles = profileManager.getAll()
-  const pyEnvsExt = vscode.extensions.getExtension('ms-python.vscode-python-envs')
-  const pythonEnvsActive = !!pyEnvsExt && pyEnvsExt.isActive
-  const environment = environmentSection.getEnvironmentInfo(wsPath)
-  const extensionHealth = ideHealthSection.getExtensionHealth(_extensionsConfig)
-  const settingsMismatches = ideHealthSection.getSettingsMismatches(
-    _settingsConfig,
-    _extensionsConfig
-  )
-  const omdSites = detectOmdSites().map((site) => {
-    const status = getOmdStatus(site.name)
-    return { ...site, status }
-  })
-  const activeProxies = getActiveProxies()
-  const devSiteTools = getDevSiteToolsState()
-  const versionMismatch = _context ? getVersionMismatch(_context) : null
-  const onboarding = environmentSection.getOnboardingState(environment, buildStatus, _context)
-  _stateCache = {
-    buildStatus,
-    profiles,
-    commands: _commands || {},
-    pythonEnvsActive,
-    environment,
-    extensionHealth,
-    settingsMismatches,
-    omdSites,
-    activeProxies,
-    devSiteTools,
-    versionMismatch,
-    onboarding,
-    onboardingDismissed: _onboardingDismissed,
-    configInWorkspace: (() => {
-      if (!wsPath) return false
-      const configDir = path.join(wsPath, '.ide', 'vscode', 'config')
-      return fs.existsSync(configDir) && fs.readdirSync(configDir).some((f) => f.endsWith('.json'))
-    })()
+    const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+    const buildStatus = wsPath ? checkBuildStatus(wsPath) : {}
+    const profiles = profileManager.getAll()
+    const pyEnvsExt = vscode.extensions.getExtension('ms-python.vscode-python-envs')
+    const pythonEnvsActive = !!pyEnvsExt && pyEnvsExt.isActive
+    const environment = environmentSection.getEnvironmentInfo(wsPath)
+    const extensionHealth = ideHealthSection.getExtensionHealth(_extensionsConfig)
+    const settingsMismatches = ideHealthSection.getSettingsMismatches(
+      _settingsConfig,
+      _extensionsConfig
+    )
+    const omdSites = detectOmdSites().map((site) => {
+      const status = getOmdStatus(site.name)
+      return { ...site, status }
+    })
+    const activeProxies = getActiveProxies()
+    const devSiteTools = getDevSiteToolsState()
+    const versionMismatch = _context ? getVersionMismatch(_context) : null
+    const onboarding = environmentSection.getOnboardingState(environment, buildStatus, _context)
+    _stateCache = {
+      buildStatus,
+      profiles,
+      commands: _commands || {},
+      pythonEnvsActive,
+      environment,
+      extensionHealth,
+      settingsMismatches,
+      omdSites,
+      activeProxies,
+      devSiteTools,
+      versionMismatch,
+      onboarding,
+      onboardingDismissed: _onboardingDismissed,
+      configInWorkspace: (() => {
+        if (!wsPath) return false
+        const configDir = path.join(wsPath, '.ide', 'vscode', 'config')
+        return (
+          fs.existsSync(configDir) && fs.readdirSync(configDir).some((f) => f.endsWith('.json'))
+        )
+      })()
+    }
+
+    updateIssues(_issuesView, _issuesProvider, _stateCache)
+
+    return _stateCache
+  } catch (err) {
+    error(`refreshStateCache failed: ${(err as Error).message}`)
+    if (_stateCache) return _stateCache
+    return {
+      buildStatus: {},
+      profiles: [],
+      commands: _commands || {},
+      pythonEnvsActive: false,
+      environment: {
+        python: '',
+        pythonPath: '',
+        node: '',
+        bazel: '',
+        bazelisk: '',
+        docker: '',
+        gcc: '',
+        pyenv: false,
+        systemReady: false
+      },
+      extensionHealth: [],
+      settingsMismatches: [],
+      omdSites: [],
+      activeProxies: [],
+      devSiteTools: { installed: false },
+      versionMismatch: null,
+      onboarding: {
+        systemDone: false,
+        venvDone: false,
+        ideDone: false,
+        currentStep: null,
+        allDone: false
+      },
+      onboardingDismissed: _onboardingDismissed,
+      configInWorkspace: false
+    }
   }
-
-  updateIssues(_issuesView, _issuesProvider, _stateCache)
-
-  return _stateCache
 }
 
 // ── Section view provider ──

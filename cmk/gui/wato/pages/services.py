@@ -31,6 +31,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, omd_version, Version
 from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.gui.agent_commands import get_agent_slideout, get_server_per_site
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config, Config
@@ -56,7 +57,6 @@ from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_en
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.agent_commands import get_agent_slideout, get_server_per_site
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML

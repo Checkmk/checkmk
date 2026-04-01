@@ -32,6 +32,10 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_agent_receiver_port, omd_site, SiteId
 from cmk.ccc.version import omd_version
 from cmk.gui import forms, user_sites
+from cmk.gui.agent_commands import (
+    get_agent_slideout,
+    get_server_per_site,
+)
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -53,10 +57,6 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.agent_commands import (
-    get_agent_slideout,
-    get_server_per_site,
-)
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.loading_transition import LoadingTransition

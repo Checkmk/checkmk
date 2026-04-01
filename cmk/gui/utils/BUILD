@@ -527,52 +527,20 @@ py_library(
     ],
 )
 
-# The remaining utils files are tightly coupled with the monolithic cmk/gui:gui target
-# (circular imports). They are exported as a filegroup so gui can include them in its srcs
-# as a temporary measure and boiled down by following steps.
-filegroup(
-    name = "gui_srcs",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = [
-            "agent.py",
-            "agent_registration.py",
-            "autocompleter_config.py",
-            "compatibility.py",
-            "confirm_with_preview.py",
-            "csrf_token.py",
-            "dataclasses.py",
-            "encrypter.py",
-            "escaping.py",
-            "filter.py",
-            "flashed_messages.py",
-            "html.py",
-            "htpasswd.py",
-            "loading_transition.py",
-            "json.py",
-            "language_cookie.py",
-            "misc.py",
-            "mobile.py",
-            "output_funnel.py",
-            "permission_verification.py",
-            "popups.py",
-            "product_usage_analytics_popup_cookie.py",
-            "regex.py",
-            "rendering.py",
-            "request_context.py",
-            "roles.py",
-            "security_log_events.py",
-            "selection_id.py",
-            "sort.py",
-            "speaklater.py",
-            "temperate_unit.py",
-            "time.py",
-            "timeout_manager.py",
-            "transaction_manager.py",
-            "urls.py",
-            "user_errors.py",
-            "user_frontend_settings_cookie.py",
-        ],
-    ),
-    visibility = ["//cmk/gui:__pkg__"],
+py_library(
+    name = "labels",
+    srcs = ["labels.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:exceptions",
+        "//cmk/gui:i18n",
+        "//cmk/gui:type_defs",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-livestatus-client",
+    ],
 )

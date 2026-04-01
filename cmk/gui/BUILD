@@ -559,7 +559,6 @@ py_library(
         ],
     ) + [
         "wsgi/applications/index.wsgi",
-        "//cmk/gui/utils:gui_srcs",
     ],
     imports = ["../.."],
     visibility = [
@@ -632,6 +631,7 @@ py_library(
         "//cmk/gui/utils:html",
         "//cmk/gui/utils:htpasswd",
         "//cmk/gui/utils:json",
+        "//cmk/gui/utils:labels",
         "//cmk/gui/utils:language_cookie",
         "//cmk/gui/utils:loading_transition",
         "//cmk/gui/utils:misc",

@@ -40,7 +40,6 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -56,6 +55,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
+from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import FilterHeader, HTTPVariables, IconNames, Rows, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive

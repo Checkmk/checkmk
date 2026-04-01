@@ -34,9 +34,9 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.debug_vars import debug_vars
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import ContentDispositionType, Request, request, response

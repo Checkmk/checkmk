@@ -22,7 +22,6 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.html import html
-from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
@@ -43,6 +42,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import HTTPVariables, IconNames, InfoName, Rows, StaticIcon, ViewSpec
 from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML

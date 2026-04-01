@@ -17,7 +17,7 @@ from cmk.ccc.crash_reporting import (
 from cmk.ccc.site import omd_site
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, get_current_language

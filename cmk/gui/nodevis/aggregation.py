@@ -19,7 +19,7 @@ from cmk.gui import bi as bi
 from cmk.gui.bi import bi_config_aggregation_function_registry
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user

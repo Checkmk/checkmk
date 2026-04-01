@@ -45,9 +45,9 @@ from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.header import make_header
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, _l, _u

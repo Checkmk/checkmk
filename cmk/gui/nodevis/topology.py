@@ -36,8 +36,8 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.header import make_header
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l

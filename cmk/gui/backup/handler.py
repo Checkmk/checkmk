@@ -52,8 +52,8 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _

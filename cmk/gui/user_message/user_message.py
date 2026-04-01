@@ -13,7 +13,7 @@ from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.dashboard.token_util import (
     DashboardTokenAuthenticatedJsonPage,
 )
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext

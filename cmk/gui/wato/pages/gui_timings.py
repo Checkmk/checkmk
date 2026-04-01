@@ -5,7 +5,7 @@
 from typing import override
 
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

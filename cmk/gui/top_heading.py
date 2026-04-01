@@ -8,7 +8,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
+from cmk.gui.htmllib.debug_vars import debug_vars
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
@@ -19,9 +21,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.utils import paths
-
-from .debug_vars import debug_vars
-from .generator import HTMLWriter
 
 
 def top_heading(

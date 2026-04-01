@@ -22,7 +22,7 @@ from cmk.gui import forms
 from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _

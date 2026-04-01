@@ -40,7 +40,7 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _

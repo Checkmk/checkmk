@@ -7,7 +7,7 @@ from cmk.gui import forms, visuals
 from cmk.gui.config import active_config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _

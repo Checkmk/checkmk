@@ -33,8 +33,8 @@ from cmk.gui.form_specs.generators.dict_to_catalog import (
     create_flat_catalog_from_dictionary,
 )
 from cmk.gui.form_specs.unstable import LegacyValueSpec, OptionalChoice
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger

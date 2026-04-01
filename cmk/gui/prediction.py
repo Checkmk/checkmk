@@ -24,7 +24,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request as request_
 from cmk.gui.i18n import _

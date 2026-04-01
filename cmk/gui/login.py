@@ -25,8 +25,8 @@ from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
 from cmk.gui.i18n import _, ungettext

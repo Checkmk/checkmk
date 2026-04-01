@@ -48,7 +48,7 @@ from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
 from cmk.gui.i18n import _

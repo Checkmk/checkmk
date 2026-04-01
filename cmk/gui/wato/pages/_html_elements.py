@@ -5,7 +5,7 @@
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu

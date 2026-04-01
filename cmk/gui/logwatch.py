@@ -25,8 +25,8 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _

@@ -31,7 +31,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _

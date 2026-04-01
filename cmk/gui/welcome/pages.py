@@ -7,7 +7,7 @@ from dataclasses import asdict
 from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user

@@ -11,7 +11,7 @@ from collections.abc import Callable, Iterable
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.htmllib.header import make_header
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request

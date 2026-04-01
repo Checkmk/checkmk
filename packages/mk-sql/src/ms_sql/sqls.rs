@@ -171,13 +171,16 @@ WHERE object_name NOT LIKE '%Deprecated%'
 
     pub const DATABASE_NAMES_ALL: &str = "SELECT name FROM sys.databases";
 
-    /// skips not readable databases in secondary replicas as participating in availability groups
+    /// Skips secondary replica databases participating in availability groups
+    /// sys.fn_hadr_is_primary_replica(d.name) returns
+    /// 1 for primary replica
+    /// 0 for secondary replica
+    /// NULL for databases not participating in availability groups
     pub const DATABASE_NAMES_ACTIVE: &str = r#"SELECT d.name
 FROM sys.databases AS d
 WHERE
     sys.fn_hadr_is_primary_replica(d.name) IS NULL
-    OR sys.fn_hadr_is_primary_replica(d.name) = 1
-    OR COALESCE(CAST(DATABASEPROPERTYEX(d.name, 'Updateability') AS nvarchar(60)), '') = 'READ_ONLY';"#;
+    OR sys.fn_hadr_is_primary_replica(d.name) = 1;"#;
 
     /// Executes `sp_spaceused` for each database parsing output AS resuult set
     /// Requires NVARCHAR support

@@ -773,6 +773,10 @@ impl SqlInstance {
         query: &str,
         sep: char,
     ) -> String {
+        if databases.is_empty() {
+            log::warn!("No active databases, skip section {}", section.name());
+            return String::new();
+        }
         let chunks = if databases.len() >= 64 {
             let max_chunk = databases.len().div_ceil(4usize);
             let min_chunk = 16usize;

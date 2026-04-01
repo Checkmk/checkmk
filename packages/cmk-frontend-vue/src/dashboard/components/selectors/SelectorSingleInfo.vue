@@ -104,9 +104,9 @@ watch(allowedIds, () => {
 .db-selector-single-info__has-errors
   /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
   :deep(
-    .cmk-dual-list__body
-      .cmk-dual-list__single-list:first-child
-      .cmk-searchable-list__container
+    .cmk-dual-list__body /* stylelint-disable-line checkmk/vue-bem-naming-convention */
+      .cmk-dual-list__single-list:first-child /* stylelint-disable-line checkmk/vue-bem-naming-convention */
+      .cmk-searchable-list__container /* stylelint-disable-line checkmk/vue-bem-naming-convention */
       select
   ) {
   border: 1px solid var(--button-danger-border-color);

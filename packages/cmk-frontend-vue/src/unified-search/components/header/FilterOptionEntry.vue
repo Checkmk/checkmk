@@ -69,6 +69,7 @@ li {
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &:hover,
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.active {
       color: var(--success);
     }

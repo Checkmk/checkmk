@@ -340,6 +340,7 @@ watch(
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .dropdown-loading,
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .dropdown-empty {
   padding: var(--dimension-6);
   text-align: center;

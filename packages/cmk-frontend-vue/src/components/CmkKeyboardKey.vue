@@ -151,6 +151,7 @@ function getKeyClass(): string {
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.arrow-left,
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.arrow-right {
     padding-left: 0;
     padding-right: 0;

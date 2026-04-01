@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # .
 #   .--Status--------------------------------------------------------------.
 #   |                    ____  _        _                                  |
@@ -18,41 +16,58 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.legacy.conversion import (
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    all_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    exists,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 
-def discover_entersekt(info):
-    if info:
-        yield None, {}
+def discover_entersekt(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_entersekt_status(item, params, info):
-    status = 3
-    infotext = "Item not found in SNMP output"
-    if info[0][0] == "true":
-        status = 0
-        infotext = "Server is running"
+def check_entersekt_status(section: StringTable) -> CheckResult:
+    if section[0][0] == "true":
+        yield Result(state=State.OK, summary="Server is running")
     else:
-        status = 2
-        infotext = "Server is NOT running"
-    yield int(status), infotext
+        yield Result(state=State.CRIT, summary="Server is NOT running")
 
 
 def parse_entersekt(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["entersekt"] = LegacyCheckDefinition(
+snmp_section_entersekt = SimpleSNMPSection(
     name="entersekt",
-    parse_function=parse_entersekt,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.38235.2.3.1.0")),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.38235.2",
         oids=["3.1.0", "3.4.0", "3.8.0", "3.9.0", "17.1.0"],
     ),
+    parse_function=parse_entersekt,
+)
+
+
+check_plugin_entersekt = CheckPlugin(
+    name="entersekt",
     service_name="Entersekt Server Status",
     discovery_function=discover_entersekt,
     check_function=check_entersekt_status,
@@ -76,38 +91,38 @@ check_info["entersekt"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def discover_entersekt_emrerrors(info):
-    if info:
-        yield None, {}
+def discover_entersekt_emrerrors(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_entersekt_emrerrors(item, params, info):
+def check_entersekt_emrerrors(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     if params:
         (warn, crit) = params["levels"]
     else:
         (warn, crit) = (100, 200)
-    status = 3
-    infotext = "Item not found in SNMP output"
-    if int(info[0][1]) > crit:
-        status = 2
-        infotext = f"Number of errors is {int(info[0][1])} which is higher than {crit}"
-    elif int(info[0][1]) > warn:
-        status = 1
-        infotext = f"Number of errors is {int(info[0][1])} which is higher than {warn}"
+    errors = int(section[0][1])
+    if errors > crit:
+        yield Result(
+            state=State.CRIT, summary=f"Number of errors is {errors} which is higher than {crit}"
+        )
+    elif errors > warn:
+        yield Result(
+            state=State.WARN, summary=f"Number of errors is {errors} which is higher than {warn}"
+        )
     else:
-        status = 0
-        infotext = "Number of errors is %s " % (info[0][1])
-    perfdata = [("Errors", int(info[0][1]), warn, crit)]
-    yield int(status), infotext, perfdata
+        yield Result(state=State.OK, summary=f"Number of errors is {errors}")
+    yield Metric("Errors", errors, levels=(warn, crit))
 
 
-check_info["entersekt.emrerrors"] = LegacyCheckDefinition(
+check_plugin_entersekt_emrerrors = CheckPlugin(
     name="entersekt_emrerrors",
     service_name="Entersekt http EMR Errors",
     sections=["entersekt"],
     discovery_function=discover_entersekt_emrerrors,
     check_function=check_entersekt_emrerrors,
     check_ruleset_name="entersekt_emrerrors",
+    check_default_parameters={},
 )
 
 # .
@@ -129,38 +144,38 @@ check_info["entersekt.emrerrors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_entersekt_ecerterrors(info):
-    if info:
-        yield None, {}
+def discover_entersekt_ecerterrors(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_entersekt_ecerterrors(item, params, info):
+def check_entersekt_ecerterrors(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     if params:
         (warn, crit) = params["levels"]
     else:
         (warn, crit) = (100, 200)
-    status = 3
-    infotext = "Item not found in SNMP output"
-    if int(info[0][2]) > crit:
-        status = 2
-        infotext = f"Number of errors is {int(info[0][2])} which is higher than {crit}"
-    elif int(info[0][2]) > warn:
-        status = 1
-        infotext = f"Number of errors is {int(info[0][2])} which is higher than {warn}"
+    errors = int(section[0][2])
+    if errors > crit:
+        yield Result(
+            state=State.CRIT, summary=f"Number of errors is {errors} which is higher than {crit}"
+        )
+    elif errors > warn:
+        yield Result(
+            state=State.WARN, summary=f"Number of errors is {errors} which is higher than {warn}"
+        )
     else:
-        status = 0
-        infotext = "Number of errors is %s " % (info[0][2])
-    perfdata = [("Errors", int(info[0][2]), warn, crit)]
-    yield int(status), infotext, perfdata
+        yield Result(state=State.OK, summary=f"Number of errors is {errors}")
+    yield Metric("Errors", errors, levels=(warn, crit))
 
 
-check_info["entersekt.ecerterrors"] = LegacyCheckDefinition(
+check_plugin_entersekt_ecerterrors = CheckPlugin(
     name="entersekt_ecerterrors",
     service_name="Entersekt http Ecert Errors",
     sections=["entersekt"],
     discovery_function=discover_entersekt_ecerterrors,
     check_function=check_entersekt_ecerterrors,
     check_ruleset_name="entersekt_ecerterrors",
+    check_default_parameters={},
 )
 
 
@@ -181,14 +196,14 @@ check_info["entersekt.ecerterrors"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def discover_entersekt_soaperrors(info):
-    if info:
-        yield None, {}
+def discover_entersekt_soaperrors(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_entersekt_soaperrors(_no_item, params, info):
-    yield check_levels(
-        value=int(info[0][3]),
+def check_entersekt_soaperrors(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    yield from check_levels(
+        value=int(section[0][3]),
         dsname="Errors",
         params=params["levels"],
         human_readable_func=str,
@@ -196,13 +211,14 @@ def check_entersekt_soaperrors(_no_item, params, info):
     )
 
 
-check_info["entersekt.soaperrors"] = LegacyCheckDefinition(
+check_plugin_entersekt_soaperrors = CheckPlugin(
     name="entersekt_soaperrors",
     service_name="Entersekt Soap Service Errors",
     sections=["entersekt"],
     discovery_function=discover_entersekt_soaperrors,
     check_function=check_entersekt_soaperrors,
     check_ruleset_name="entersekt_soaperrors",
+    check_default_parameters={},
 )
 
 # .
@@ -230,38 +246,38 @@ check_info["entersekt.soaperrors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_entersekt_certexpiry(info):
-    if info:
-        yield None, {}
+def discover_entersekt_certexpiry(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_entersekt_certexpiry(item, params, info):
+def check_entersekt_certexpiry(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     if params:
         (warn, crit) = params["levels"]
     else:
         (warn, crit) = (20, 10)
-    status = 3
-    infotext = "Item not found in SNMP output"
-    if int(info[0][4]) < warn:
-        status = 1
-        infotext = f"Number of days until expiration is {int(info[0][4])} which is less than {warn}"
-        if int(info[0][4]) < crit:
-            status = 2
-            infotext = (
-                f"Number of days until expiration is {int(info[0][4])} which is less than {crit}"
-            )
+    days = int(section[0][4])
+    if days < crit:
+        yield Result(
+            state=State.CRIT,
+            summary=f"Number of days until expiration is {days} which is less than {crit}",
+        )
+    elif days < warn:
+        yield Result(
+            state=State.WARN,
+            summary=f"Number of days until expiration is {days} which is less than {warn}",
+        )
     else:
-        status = 0
-        infotext = "Number of days is %s " % (info[0][4])
-    perfdata = [("Days", int(info[0][4]), warn, crit)]
-    yield int(status), infotext, perfdata
+        yield Result(state=State.OK, summary=f"Number of days is {days}")
+    yield Metric("Days", days, levels=(warn, crit))
 
 
-check_info["entersekt.certexpiry"] = LegacyCheckDefinition(
+check_plugin_entersekt_certexpiry = CheckPlugin(
     name="entersekt_certexpiry",
     service_name="Entersekt Certificate Expiration",
     sections=["entersekt"],
     discovery_function=discover_entersekt_certexpiry,
     check_function=check_entersekt_certexpiry,
     check_ruleset_name="entersekt_certexpiry",
+    check_default_parameters={},
 )

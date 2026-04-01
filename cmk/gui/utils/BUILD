@@ -383,6 +383,62 @@ py_library(
 )
 
 py_library(
+    name = "loading_transition",
+    srcs = ["loading_transition.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":html",
+        ":output_funnel",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/htmllib:html",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
+    name = "rendering",
+    srcs = ["rendering.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":escaping",
+        ":html",
+        "//cmk/gui:i18n",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/htmllib:html",
+        "//cmk/utils",
+    ],
+)
+
+py_library(
+    name = "confirm_with_preview",
+    srcs = ["confirm_with_preview.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":html",
+        ":mobile",
+        ":speaklater",
+        ":transaction_manager",
+        ":urls",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/htmllib:type_defs",
+    ],
+)
+
+py_library(
     name = "urls",
     srcs = ["urls.py"],
     imports = ["../../.."],
@@ -429,6 +485,7 @@ filegroup(
             "agent_registration.py",
             "autocompleter_config.py",
             "compatibility.py",
+            "confirm_with_preview.py",
             "dataclasses.py",
             "encrypter.py",
             "escaping.py",
@@ -436,6 +493,7 @@ filegroup(
             "flashed_messages.py",
             "html.py",
             "htpasswd.py",
+            "loading_transition.py",
             "json.py",
             "language_cookie.py",
             "misc.py",
@@ -444,6 +502,7 @@ filegroup(
             "permission_verification.py",
             "popups.py",
             "product_usage_analytics_popup_cookie.py",
+            "rendering.py",
             "request_context.py",
             "security_log_events.py",
             "selection_id.py",

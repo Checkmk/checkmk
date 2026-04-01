@@ -25,16 +25,11 @@ py_binary(
 sh_library(
     name = "scripts_sh",
     srcs = [
-        "check-cmk-namespace",
         "check-current-commit",
-        "check-licence",
-        "check-qa-test-data",
         "create_cognito_config_cloud.sh",
         "fake-artifacts",
         "find-python-files",
         "find-shell-files",
-        "lib-precommit",
-        "run-doctests",
         "run-groovy-lint",
         "run-in-docker.sh",
         "run-mypy",

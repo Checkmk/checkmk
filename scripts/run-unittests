@@ -7,9 +7,6 @@
 #
 set -e
 
-# shellcheck source=scripts/lib-precommit
-source "$(dirname "$0")/lib-precommit"
-
 # We only care for unittests
 declare -a TESTFILES
 

@@ -56,13 +56,13 @@ repos:
           - id: check-cmk-namespace
             name: Check cmk namespace package
             language: script
-            entry: scripts/check-cmk-namespace
+            entry: .pre-commit-scripts/check-cmk-namespace
             types: [file, python]
             require_serial: true
             stages: [pre-commit, manual]
           - id: omd-python-modules
             name: Check Python modules in OMD
-            entry: scripts/check-omd-python-modules
+            entry: .pre-commit-scripts/check-omd-python-modules
             language: script
             files: omd/packages/python3?-modules
             types: [file]
@@ -70,14 +70,14 @@ repos:
             stages: [pre-commit, manual]
           - id: licence
             name: Check licence headers
-            entry: scripts/check-licence
+            entry: .pre-commit-scripts/check-licence
             language: script
             types: [file, python]
             require_serial: true
             stages: [pre-commit, manual]
           - id: qa-test-data submodule
             name: Check qa-test-data submodule commit-id is not updated
-            entry: scripts/check-qa-test-data
+            entry: .pre-commit-scripts/check-qa-test-data
             language: script
             stages: [pre-commit, manual]
           - id: requirements-locking
@@ -109,14 +109,14 @@ repos:
           # ------------------------------------------------------------------ #
           - id: lint
             name: Lint changed packages
-            entry: scripts/run-lint-bazel
+            entry: .pre-commit-scripts/run-lint-bazel
             language: script
             pass_filenames: true
             require_serial: true
             stages: [pre-commit]
           - id: mypy
             name: Check types in changed packages
-            entry: scripts/run-mypy-bazel
+            entry: .pre-commit-scripts/run-mypy-bazel
             language: script
             types: [file, python]
             pass_filenames: true
@@ -124,7 +124,7 @@ repos:
             stages: [pre-commit]
           - id: unittest
             name: Unit tests for changed packages
-            entry: scripts/run-unittests-bazel
+            entry: .pre-commit-scripts/run-unittests-bazel
             language: script
             types: [file, python]
             pass_filenames: true
@@ -189,7 +189,7 @@ repos:
             stages: [manual]
           - id: doctest
             name: Doctests
-            entry: scripts/run-doctests
+            entry: .pre-commit-scripts/run-doctests
             language: script
             types: [file, python]
             verbose: true

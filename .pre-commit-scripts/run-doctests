@@ -7,7 +7,7 @@
 #
 set -e
 
-# shellcheck source=scripts/lib-precommit
+# shellcheck source=.pre-commit-scripts/lib-precommit
 source "$(dirname "$0")/lib-precommit"
 
 # Filter out files that break doctest collection:

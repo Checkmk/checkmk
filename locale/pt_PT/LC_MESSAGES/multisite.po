@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-27 18:47+0000\n"
+"PO-Revision-Date: 2026-04-01 05:35+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -1407,6 +1407,15 @@ msgstr ""
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr "<b>Cuidado:</b> Isso deixará seu ambiente em um estado indefinido."
 
+#, python-format
+msgid ""
+"<b>Consent Requirement: </b>You must request and receive permission from "
+"each customer before enabling the collection of product analytics data. Do "
+"not activate data collection for any site unless the customer has agreed to "
+"data transmission. For configuration options specifically for multi-tenant "
+"sites, please visit the %s."
+msgstr ""
+
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
@@ -1607,6 +1616,17 @@ msgstr "<li>Não é possível excluir hosts na pasta %s: %s</li>"
 #, python-format
 msgid "<li>Cannot move hosts from folder %s: %s</li>"
 msgstr "<li>Não é possível mover hosts da pasta %s: %s</li>"
+
+msgid ""
+"<p><b>Network Configuration: </b>To transmit analytics data, ensure your "
+"firewall permits outbound traffic to <tt>https://analytics.checkmk.com/"
+"upload</tt> on port <tt>443</tt>. If you are using a proxy, please verify "
+"that it allows connections to this destination.</p><p><b>Per-Site "
+"Configuration: </b>You have to ensure connectivity for <b>each site "
+"individually</b>. As every site collects and transmits data independently, "
+"please verify that your firewall rules permit traffic from every site to "
+"prevent local transmission errors.</p>"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -6413,6 +6433,9 @@ msgstr ""
 msgid "Allows to view and edit %s created by other users."
 msgstr "Permite visualizar e editar %s criadas por outros usuários."
 
+msgid "Allows users to download the product usage data as a JSON file."
+msgstr ""
+
 msgid ""
 "Allows users to perform commands on hosts and services in the views. If no "
 "further permissions are granted, actions can only be done on objects one is "
@@ -6526,7 +6549,7 @@ msgid "Always bulk"
 msgstr "Sempre a granel"
 
 #, fuzzy
-msgid "Always compute the rate"
+msgid "Always compute the rate (excluding histograms)"
 msgstr "Reclassificar o estado completo"
 
 msgid "Always install Python with agent"
@@ -21517,6 +21540,10 @@ msgstr "Descarregar o agente Checkmk genérico para a pasta %s"
 msgid "Download license usage report"
 msgstr "Download do relatório de uso da licença"
 
+#, fuzzy
+msgid "Download product usage data"
+msgstr "Habilitar notificações periódicas"
+
 msgid "Download snmp walk"
 msgstr "Descarregar o snmp walk"
 
@@ -28232,6 +28259,10 @@ msgid "Help text"
 msgstr "Texto de Ajuda"
 
 #, fuzzy
+msgid "Help us improve Checkmk with product usage analytics"
+msgstr "Habilitar notificações periódicas"
+
+#, fuzzy
 msgid "Helper usage"
 msgstr "Utilização do auxiliar CMK"
 
@@ -33884,6 +33915,10 @@ msgstr ""
 "dados que foram deixados em modo de backup. (alterar o ficheiro de dados da "
 "base de dados ... iniciar a cópia de segurança;) "
 
+#, fuzzy
+msgid "Important: "
+msgstr "Importar"
+
 #, python-format
 msgid "Imported %d hosts into the current folder."
 msgstr "Anfitriões %d importados para a pasta actual."
@@ -34919,6 +34954,13 @@ msgstr "Inserts"
 
 msgid "Inside unique MACs"
 msgstr "Dentro de MACs únicos"
+
+#, python-format
+msgid ""
+"Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site "
+"user, or %s. This allows you to review the data locally; it does not enable "
+"the feature or transmit any information."
+msgstr ""
 
 #, fuzzy
 msgid "Install Python automatically when configured plug-ins need it"
@@ -40066,6 +40108,10 @@ msgid "Manage hard- and software inventory related rule sets"
 msgstr ""
 "Gerir conjuntos de regras relacionadas com o inventário de hardware e "
 "software"
+
+#, fuzzy
+msgid "Manage in global settings"
+msgstr "Editar cenário global"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr "Gerenciar tarefas mais longas na GUI Checkmk"
@@ -52090,6 +52136,19 @@ msgstr "Produto"
 msgid "Product usage analytics"
 msgstr ""
 
+msgid ""
+"Product usage analytics allows us to make data-driven decisions and focus "
+"development on what parts of Checkmk you regularly use. The data you share "
+"will help us prioritize the features that matter most to you."
+msgstr ""
+
+msgid "Product usage analytics is turned off by default. "
+msgstr ""
+
+#, fuzzy
+msgid "Product usage analytics manifest"
+msgstr "Habilitar notificações periódicas"
+
 msgid "Profile"
 msgstr "Perfil"
 
@@ -53945,6 +54004,9 @@ msgstr "Reajustar estados de regras de alerta"
 
 msgid "Remap states"
 msgstr "Estados Remap"
+
+msgid "Remind me again in 30 days"
+msgstr ""
 
 msgid "Remote Contacted Ports (as Client)"
 msgstr "Portos de Contacto Remoto (como Cliente)"
@@ -60709,7 +60771,12 @@ msgid ""
 "rate in case the metric is a monotonic counter. This is of course just a "
 "heuristic and might not work for all metrics: The uptime, for example, would "
 "be reported as '1.0 s/s', which is not too useful. You can override the "
-"default behavior here."
+"default behavior here.<br><br>Histogram and exponential histogram metrics "
+"are not affected by this setting. They always report the average of observed "
+"values within an interval: for delta temporality this is sum / count of the "
+"current reporting interval, and for cumulative temporality this is the "
+"average of new observations since the last check cycle (delta sum / delta "
+"count)."
 msgstr ""
 
 msgid ""
@@ -65212,7 +65279,7 @@ msgid ""
 "The Inotify (Inode notify) is a Linux kernel subsystem that acts to extend "
 "filesystems to notice changes to the filesystem. The Inotify plug-in "
 "collects these changes and reports them back to the monitoring system. You "
-"also need to install the pynotify python plug-in onto the target system."
+"also need to install the pyinotify Python plug-in onto the target system."
 msgstr ""
 "O Inotificar (Inode notify) é um subsistema do kernel Linux que atua para "
 "estender os sistemas de arquivos para notar alterações no sistema de "
@@ -67919,6 +67986,15 @@ msgstr "O nome que será usado na descrição do serviço"
 #, fuzzy
 msgid "The name will be used in the service name"
 msgstr "O nome será usado na descrição do serviço"
+
+msgid ""
+"The names of custom check plug-ins (either developed internally or installed "
+"as an MKP from the Checkmk Exchange) will be collected as part of the "
+"product usage data. If you use MKPs, we recommend you inspect the data "
+"carefully via the data download option to verify the content before opting "
+"in, to ensure no sensitive data is included. Do not enable product usage "
+"analytics if you do not wish to share this information."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -83829,6 +83905,20 @@ msgstr ""
 "de origem têm de ser definidos no campo de condição <i>Explicit hosts</i>."
 
 msgid ""
+"We believe in only receiving data you explicitly choose to share. You can "
+"enable sharing analytics data any time from global settings. If you do not "
+"wish to be reminded, please manage your preferences in global settings."
+msgstr ""
+
+#, fuzzy
+msgid "We collect: "
+msgstr "Adicionar colecção"
+
+#, fuzzy
+msgid "We do NOT collect: "
+msgstr "Tamanho dos ficheiros de registo"
+
+msgid ""
 "We highly recommend solving this issue already in your installation by "
 "updating the extension package. Otherwise the extension package will be "
 "deactivated after an upgrade."
@@ -83840,6 +83930,9 @@ msgid ""
 msgstr ""
 
 msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
+
+msgid "We want to understand how you use Checkmk."
 msgstr ""
 
 msgid "Weak"
@@ -83955,6 +84048,9 @@ msgstr "Trabalhos relativos apenas ao %s"
 
 msgid "Wh"
 msgstr "Wh"
+
+msgid "What data are we collecting?"
+msgstr ""
 
 msgid "What is the occasion?"
 msgstr ""
@@ -88266,6 +88362,12 @@ msgstr " e %s '%s'"
 msgid "any"
 msgstr "qualquer"
 
+msgid ""
+"any data about users or their behavior (e.g., PII) or possibly sensitive "
+"identifiers about your environment (e.g., hostnames, file paths, service "
+"names)."
+msgstr ""
+
 msgid "any node"
 msgstr "qualquer nódulo"
 
@@ -88475,6 +88577,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -88546,6 +88649,11 @@ msgstr "painel de instrumentos"
 
 msgid "dashboards"
 msgstr "painéis de bordo"
+
+msgid ""
+"data about the general usage of features and configuration options (e.g., "
+"counts of hosts, folders, plug-ins, MKPs, and services)."
+msgstr ""
 
 msgid "day"
 msgstr "dia"
@@ -88675,6 +88783,10 @@ msgstr "inativo"
 
 msgid "down"
 msgstr "abaixo"
+
+#, fuzzy
+msgid "download the full JSON report"
+msgstr "Baixar este relatório"
 
 msgid "e.g. 'My_Project/Closed'"
 msgstr "por exemplo, 'Meu_Projecto/Fechado'"
@@ -88975,6 +89087,7 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

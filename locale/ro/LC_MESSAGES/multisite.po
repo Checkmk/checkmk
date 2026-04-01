@@ -1420,6 +1420,15 @@ msgstr ""
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr "<b>Atenție:</b> Acest lucru vă va lăsa mediul într-o stare nedefinită."
 
+#, python-format
+msgid ""
+"<b>Consent Requirement: </b>You must request and receive permission from "
+"each customer before enabling the collection of product analytics data. Do "
+"not activate data collection for any site unless the customer has agreed to "
+"data transmission. For configuration options specifically for multi-tenant "
+"sites, please visit the %s."
+msgstr ""
+
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
@@ -1625,6 +1634,17 @@ msgstr "<li>Nu se pot șterge gazdele din folderul %s: %s</li>"
 #, python-format
 msgid "<li>Cannot move hosts from folder %s: %s</li>"
 msgstr "<li>Nu se pot muta gazdele din folderul %s: %s</li>"
+
+msgid ""
+"<p><b>Network Configuration: </b>To transmit analytics data, ensure your "
+"firewall permits outbound traffic to <tt>https://analytics.checkmk.com/"
+"upload</tt> on port <tt>443</tt>. If you are using a proxy, please verify "
+"that it allows connections to this destination.</p><p><b>Per-Site "
+"Configuration: </b>You have to ensure connectivity for <b>each site "
+"individually</b>. As every site collects and transmits data independently, "
+"please verify that your firewall rules permit traffic from every site to "
+"prevent local transmission errors.</p>"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -6417,6 +6437,9 @@ msgstr ""
 msgid "Allows to view and edit %s created by other users."
 msgstr "Permite vizualizarea și editarea %s create de alți utilizatori."
 
+msgid "Allows users to download the product usage data as a JSON file."
+msgstr ""
+
 msgid ""
 "Allows users to perform commands on hosts and services in the views. If no "
 "further permissions are granted, actions can only be done on objects one is "
@@ -6530,7 +6553,7 @@ msgid "Always bulk"
 msgstr "Întotdeauna în vrac"
 
 #, fuzzy
-msgid "Always compute the rate"
+msgid "Always compute the rate (excluding histograms)"
 msgstr "Reclasificarea statului complet"
 
 msgid "Always install Python with agent"
@@ -21558,6 +21581,10 @@ msgstr "Descărcați Checkmk Agent generic pentru folderul %s."
 msgid "Download license usage report"
 msgstr "Descărcați raportul de utilizare a licențelor"
 
+#, fuzzy
+msgid "Download product usage data"
+msgstr "Activați notificările periodice"
+
 msgid "Download snmp walk"
 msgstr "Descărcați snmp walk"
 
@@ -28263,6 +28290,10 @@ msgstr "Ajutor"
 msgid "Help text"
 msgstr "Text de ajutor"
 
+#, fuzzy
+msgid "Help us improve Checkmk with product usage analytics"
+msgstr "Activați notificările periodice"
+
 msgid "Helper usage"
 msgstr "Utilizarea ajutorului"
 
@@ -33963,6 +33994,10 @@ msgstr ""
 "de date care au fost lăsate în modul de backup. (alter database datafile ... "
 "begin backup;) "
 
+#, fuzzy
+msgid "Important: "
+msgstr "Import"
+
 #, python-format
 msgid "Imported %d hosts into the current folder."
 msgstr "A importat gazdele %d în folderul curent."
@@ -35017,6 +35052,13 @@ msgstr "Inserții"
 
 msgid "Inside unique MACs"
 msgstr "În interiorul unor MAC-uri unice"
+
+#, python-format
+msgid ""
+"Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site "
+"user, or %s. This allows you to review the data locally; it does not enable "
+"the feature or transmit any information."
+msgstr ""
 
 #, fuzzy
 msgid "Install Python automatically when configured plug-ins need it"
@@ -40147,6 +40189,10 @@ msgstr "Gestionarea pachetelor de extensie (MKP)"
 #, fuzzy
 msgid "Manage hard- and software inventory related rule sets"
 msgstr "Gestionați seturile de reguli legate de inventarul hard și software"
+
+#, fuzzy
+msgid "Manage in global settings"
+msgstr "Editarea setării globale"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr "Gestionați sarcinile care rulează mai mult timp în Checkmk GUI"
@@ -52197,6 +52243,19 @@ msgstr "Produs"
 msgid "Product usage analytics"
 msgstr ""
 
+msgid ""
+"Product usage analytics allows us to make data-driven decisions and focus "
+"development on what parts of Checkmk you regularly use. The data you share "
+"will help us prioritize the features that matter most to you."
+msgstr ""
+
+msgid "Product usage analytics is turned off by default. "
+msgstr ""
+
+#, fuzzy
+msgid "Product usage analytics manifest"
+msgstr "Activați notificările periodice"
+
 msgid "Profile"
 msgstr "Profil"
 
@@ -54046,6 +54105,9 @@ msgstr "Reamplasarea stărilor regulilor de alertă"
 
 msgid "Remap states"
 msgstr "Stări de remaniere"
+
+msgid "Remind me again in 30 days"
+msgstr ""
 
 msgid "Remote Contacted Ports (as Client)"
 msgstr "Porturi contactate de la distanță (ca și client)"
@@ -60861,7 +60923,12 @@ msgid ""
 "rate in case the metric is a monotonic counter. This is of course just a "
 "heuristic and might not work for all metrics: The uptime, for example, would "
 "be reported as '1.0 s/s', which is not too useful. You can override the "
-"default behavior here."
+"default behavior here.<br><br>Histogram and exponential histogram metrics "
+"are not affected by this setting. They always report the average of observed "
+"values within an interval: for delta temporality this is sum / count of the "
+"current reporting interval, and for cumulative temporality this is the "
+"average of new observations since the last check cycle (delta sum / delta "
+"count)."
 msgstr ""
 
 msgid ""
@@ -65383,7 +65450,7 @@ msgid ""
 "The Inotify (Inode notify) is a Linux kernel subsystem that acts to extend "
 "filesystems to notice changes to the filesystem. The Inotify plug-in "
 "collects these changes and reports them back to the monitoring system. You "
-"also need to install the pynotify python plug-in onto the target system."
+"also need to install the pyinotify Python plug-in onto the target system."
 msgstr ""
 "Inotify (Inode notify) este un subsistem al nucleului Linux care acționează "
 "pentru a extinde sistemele de fișiere pentru a observa modificările aduse "
@@ -68125,6 +68192,15 @@ msgstr "Numele care va fi utilizat în descrierea serviciului"
 #, fuzzy
 msgid "The name will be used in the service name"
 msgstr "Numele va fi folosit în descrierea serviciului"
+
+msgid ""
+"The names of custom check plug-ins (either developed internally or installed "
+"as an MKP from the Checkmk Exchange) will be collected as part of the "
+"product usage data. If you use MKPs, we recommend you inspect the data "
+"carefully via the data download option to verify the content before opting "
+"in, to ensure no sensitive data is included. Do not enable product usage "
+"analytics if you do not wish to share this information."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -84090,6 +84166,20 @@ msgstr ""
 "trebuie să fie setate în câmpul de condiție <i>Explicit hosts</i>."
 
 msgid ""
+"We believe in only receiving data you explicitly choose to share. You can "
+"enable sharing analytics data any time from global settings. If you do not "
+"wish to be reminded, please manage your preferences in global settings."
+msgstr ""
+
+#, fuzzy
+msgid "We collect: "
+msgstr "Adăugați colecția"
+
+#, fuzzy
+msgid "We do NOT collect: "
+msgstr "Dimensiunea fișierelor jurnal"
+
+msgid ""
 "We highly recommend solving this issue already in your installation by "
 "updating the extension package. Otherwise the extension package will be "
 "deactivated after an upgrade."
@@ -84101,6 +84191,9 @@ msgid ""
 msgstr ""
 
 msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
+
+msgid "We want to understand how you use Checkmk."
 msgstr ""
 
 msgid "Weak"
@@ -84216,6 +84309,9 @@ msgstr "Lucrări doar în ceea ce privește %s."
 
 msgid "Wh"
 msgstr "Wh"
+
+msgid "What data are we collecting?"
+msgstr ""
 
 msgid "What is the occasion?"
 msgstr "Care este ocazia?"
@@ -88576,6 +88672,12 @@ msgstr " și %s '%s'"
 msgid "any"
 msgstr "orice"
 
+msgid ""
+"any data about users or their behavior (e.g., PII) or possibly sensitive "
+"identifiers about your environment (e.g., hostnames, file paths, service "
+"names)."
+msgstr ""
+
 msgid "any node"
 msgstr "orice nod"
 
@@ -88855,6 +88957,11 @@ msgstr "tabloul de bord"
 msgid "dashboards"
 msgstr "tablouri de bord"
 
+msgid ""
+"data about the general usage of features and configuration options (e.g., "
+"counts of hosts, folders, plug-ins, MKPs, and services)."
+msgstr ""
+
 msgid "day"
 msgstr "zi"
 
@@ -88981,6 +89088,10 @@ msgstr "în stare latentă"
 
 msgid "down"
 msgstr "în jos"
+
+#, fuzzy
+msgid "download the full JSON report"
+msgstr "Descărcați acest raport"
 
 msgid "e.g. 'My_Project/Closed'"
 msgstr "de exemplu 'My_Project/Closed'"

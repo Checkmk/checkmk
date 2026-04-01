@@ -1400,6 +1400,15 @@ msgstr ""
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr "<b>Cuidado:</b> Esto dejará tu entorno en un estado indefinido."
 
+#, python-format
+msgid ""
+"<b>Consent Requirement: </b>You must request and receive permission from "
+"each customer before enabling the collection of product analytics data. Do "
+"not activate data collection for any site unless the customer has agreed to "
+"data transmission. For configuration options specifically for multi-tenant "
+"sites, please visit the %s."
+msgstr ""
+
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
@@ -1606,6 +1615,17 @@ msgstr "<li>No se pueden borrar los hosts en la carpeta %s: %s</li>"
 #, python-format
 msgid "<li>Cannot move hosts from folder %s: %s</li>"
 msgstr "<li>No es posible mover los hosts desde la carpeta %s: %s</li>"
+
+msgid ""
+"<p><b>Network Configuration: </b>To transmit analytics data, ensure your "
+"firewall permits outbound traffic to <tt>https://analytics.checkmk.com/"
+"upload</tt> on port <tt>443</tt>. If you are using a proxy, please verify "
+"that it allows connections to this destination.</p><p><b>Per-Site "
+"Configuration: </b>You have to ensure connectivity for <b>each site "
+"individually</b>. As every site collects and transmits data independently, "
+"please verify that your firewall rules permit traffic from every site to "
+"prevent local transmission errors.</p>"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -6450,6 +6470,9 @@ msgstr ""
 msgid "Allows to view and edit %s created by other users."
 msgstr "Permite ver y editar %s creados por otros usuarios."
 
+msgid "Allows users to download the product usage data as a JSON file."
+msgstr ""
+
 msgid ""
 "Allows users to perform commands on hosts and services in the views. If no "
 "further permissions are granted, actions can only be done on objects one is "
@@ -6564,7 +6587,7 @@ msgid "Always bulk"
 msgstr "Siempre en masa"
 
 #, fuzzy
-msgid "Always compute the rate"
+msgid "Always compute the rate (excluding histograms)"
 msgstr "Reclasificar el estado completo"
 
 msgid "Always install Python with agent"
@@ -21680,6 +21703,10 @@ msgstr "Descarga genérica del agente Checkmk para la carpeta %s"
 msgid "Download license usage report"
 msgstr "Descargar el informe de uso de licencias"
 
+#, fuzzy
+msgid "Download product usage data"
+msgstr "Activar las notificaciones periódicas"
+
 msgid "Download snmp walk"
 msgstr "Descargar snmp walk"
 
@@ -28445,6 +28472,10 @@ msgid "Help text"
 msgstr "Texto de ayuda"
 
 #, fuzzy
+msgid "Help us improve Checkmk with product usage analytics"
+msgstr "Activar las notificaciones periódicas"
+
+#, fuzzy
 msgid "Helper usage"
 msgstr "Uso de la ayuda CMK"
 
@@ -34148,6 +34179,10 @@ msgstr ""
 "datos que se dejaron en modo de copia de seguridad. (alter database "
 "datafile ... begin backup;) "
 
+#, fuzzy
+msgid "Important: "
+msgstr "Importar"
+
 #, python-format
 msgid "Imported %d hosts into the current folder."
 msgstr "Se han importado %d hosts a la carpeta actual."
@@ -35189,6 +35224,13 @@ msgstr "Insertos"
 
 msgid "Inside unique MACs"
 msgstr "Dentro de los MAC únicos"
+
+#, python-format
+msgid ""
+"Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site "
+"user, or %s. This allows you to review the data locally; it does not enable "
+"the feature or transmit any information."
+msgstr ""
 
 #, fuzzy
 msgid "Install Python automatically when configured plug-ins need it"
@@ -40381,6 +40423,10 @@ msgid "Manage hard- and software inventory related rule sets"
 msgstr ""
 "Gestionar los conjuntos de reglas relacionadas con el inventario de hardware "
 "y software"
+
+#, fuzzy
+msgid "Manage in global settings"
+msgstr "Editar la configuración global"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr ""
@@ -52528,6 +52574,19 @@ msgstr "Producto"
 msgid "Product usage analytics"
 msgstr ""
 
+msgid ""
+"Product usage analytics allows us to make data-driven decisions and focus "
+"development on what parts of Checkmk you regularly use. The data you share "
+"will help us prioritize the features that matter most to you."
+msgstr ""
+
+msgid "Product usage analytics is turned off by default. "
+msgstr ""
+
+#, fuzzy
+msgid "Product usage analytics manifest"
+msgstr "Activar las notificaciones periódicas"
+
 msgid "Profile"
 msgstr "Perfil"
 
@@ -54389,6 +54448,9 @@ msgstr "Reasignar los estados de las reglas de alerta"
 
 msgid "Remap states"
 msgstr "Estados de reajuste"
+
+msgid "Remind me again in 30 days"
+msgstr ""
 
 msgid "Remote Contacted Ports (as Client)"
 msgstr "Puertos remotos contactados (como cliente)"
@@ -61236,7 +61298,12 @@ msgid ""
 "rate in case the metric is a monotonic counter. This is of course just a "
 "heuristic and might not work for all metrics: The uptime, for example, would "
 "be reported as '1.0 s/s', which is not too useful. You can override the "
-"default behavior here."
+"default behavior here.<br><br>Histogram and exponential histogram metrics "
+"are not affected by this setting. They always report the average of observed "
+"values within an interval: for delta temporality this is sum / count of the "
+"current reporting interval, and for cumulative temporality this is the "
+"average of new observations since the last check cycle (delta sum / delta "
+"count)."
 msgstr ""
 
 msgid ""
@@ -65787,7 +65854,7 @@ msgid ""
 "The Inotify (Inode notify) is a Linux kernel subsystem that acts to extend "
 "filesystems to notice changes to the filesystem. The Inotify plug-in "
 "collects these changes and reports them back to the monitoring system. You "
-"also need to install the pynotify python plug-in onto the target system."
+"also need to install the pyinotify Python plug-in onto the target system."
 msgstr ""
 "El Inotify (Inode notify) es un subsistema del kernel de Linux que actúa "
 "para extender los sistemas de archivos para notar los cambios en el sistema "
@@ -68518,6 +68585,15 @@ msgstr "El nombre que se utilizará en la descripción del servicio"
 #, fuzzy
 msgid "The name will be used in the service name"
 msgstr "El nombre se utilizará en la descripción del servicio"
+
+msgid ""
+"The names of custom check plug-ins (either developed internally or installed "
+"as an MKP from the Checkmk Exchange) will be collected as part of the "
+"product usage data. If you use MKPs, we recommend you inspect the data "
+"carefully via the data download option to verify the content before opting "
+"in, to ensure no sensitive data is included. Do not enable product usage "
+"analytics if you do not wish to share this information."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -84580,6 +84656,20 @@ msgstr ""
 "explícitos</i>."
 
 msgid ""
+"We believe in only receiving data you explicitly choose to share. You can "
+"enable sharing analytics data any time from global settings. If you do not "
+"wish to be reminded, please manage your preferences in global settings."
+msgstr ""
+
+#, fuzzy
+msgid "We collect: "
+msgstr "Añadir colección"
+
+#, fuzzy
+msgid "We do NOT collect: "
+msgstr "Tamaño de los archivos de registro"
+
+msgid ""
 "We highly recommend solving this issue already in your installation by "
 "updating the extension package. Otherwise the extension package will be "
 "deactivated after an upgrade."
@@ -84591,6 +84681,9 @@ msgid ""
 msgstr ""
 
 msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
+
+msgid "We want to understand how you use Checkmk."
 msgstr ""
 
 msgid "Weak"
@@ -84706,6 +84799,9 @@ msgstr "Trabaja sólo en lo que respecta a la %s"
 
 msgid "Wh"
 msgstr "Wh"
+
+msgid "What data are we collecting?"
+msgstr ""
 
 msgid "What is the occasion?"
 msgstr "¿Cuál es la ocasión?"
@@ -89066,6 +89162,12 @@ msgstr " y %s '%s'"
 msgid "any"
 msgstr "cualquier"
 
+msgid ""
+"any data about users or their behavior (e.g., PII) or possibly sensitive "
+"identifiers about your environment (e.g., hostnames, file paths, service "
+"names)."
+msgstr ""
+
 msgid "any node"
 msgstr "cualquier nodo"
 
@@ -89350,6 +89452,11 @@ msgstr "tablero de mandos"
 msgid "dashboards"
 msgstr "cuadros de mando"
 
+msgid ""
+"data about the general usage of features and configuration options (e.g., "
+"counts of hosts, folders, plug-ins, MKPs, and services)."
+msgstr ""
+
 msgid "day"
 msgstr "día"
 
@@ -89479,6 +89586,10 @@ msgstr "inactivo"
 
 msgid "down"
 msgstr "abajo"
+
+#, fuzzy
+msgid "download the full JSON report"
+msgstr "Descargar este informe"
 
 msgid "e.g. 'My_Project/Closed'"
 msgstr "Por ejemplo, \"Mi_proyecto/Cerrado\""

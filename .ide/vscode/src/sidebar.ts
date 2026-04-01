@@ -306,6 +306,9 @@ export function registerSidebar(
           refreshAll()
           return
         }
+        if (section === 'environment') {
+          environmentSection.invalidateEnvironmentCache()
+        }
         p.showLoadingThenRefresh()
         setTimeout(() => refreshStateCache(), 200)
       })

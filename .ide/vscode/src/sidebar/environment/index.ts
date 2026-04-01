@@ -21,7 +21,17 @@ import type {
 } from '../types'
 import sectionCss from './style.css'
 
+let _envCache: { info: EnvironmentInfo; timestamp: number } | null = null
+const ENV_CACHE_TTL = 5 * 60 * 1000
+
+export function invalidateEnvironmentCache(): void {
+  _envCache = null
+}
+
 export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
+  if (_envCache && Date.now() - _envCache.timestamp < ENV_CACHE_TTL) {
+    return _envCache.info
+  }
   const env: EnvironmentInfo = {
     python: '',
     pythonPath: '',
@@ -67,6 +77,7 @@ export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
   env.pyenv = fs.existsSync(path.join(os.homedir(), '.pyenv', 'bin', 'pyenv'))
   env.systemReady =
     env.bazel !== 'not found' && env.docker !== 'not found' && env.gcc !== 'not found' && env.pyenv
+  _envCache = { info: env, timestamp: Date.now() }
   return env
 }
 

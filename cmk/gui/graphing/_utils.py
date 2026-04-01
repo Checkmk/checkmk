@@ -28,48 +28,6 @@ class MKGraphWidgetTooSmallError(MKHTTPException):
 SizeEx = NewType("SizeEx", float)
 
 
-# TODO: Refactor to some namespace object
-
-KB = 1024
-MB = KB * 1024
-GB = MB * 1024
-TB = GB * 1024
-PB = TB * 1024
-
-m = 0.001
-K = 1000
-M = K * 1000
-G = M * 1000
-T = G * 1000
-P = T * 1000
-
-scale_symbols = {
-    m: "m",
-    1: "",
-    KB: "k",
-    MB: "M",
-    GB: "G",
-    TB: "T",
-    PB: "P",
-    K: "k",
-    M: "M",
-    G: "G",
-    T: "T",
-    P: "P",
-}
-
-MAX_CORES = 128
-
-MAX_NUMBER_HOPS = 45  # the amount of hop metrics, graphs and perfometers to create
-
-skype_mobile_devices = [
-    ("android", "Android", "33/a"),
-    ("iphone", "iPhone", "42/a"),
-    ("ipad", "iPad", "45/a"),
-    ("mac", "Mac", "23/a"),
-]
-
-
 @dataclass(frozen=True, kw_only=True)
 class Linear:
     slope: float

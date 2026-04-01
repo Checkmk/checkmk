@@ -143,7 +143,6 @@ __all__ = [
     "_reverse_translate_into_all_potentially_relevant_metrics_cached",
     "all_rrd_columns_potentially_relevant_for_metric",
     "check_metrics",
-    "check_metrics",
     "compute_graph_artwork",
     "iter_graph_artworks",
     "compute_pdf_graph_time_range",

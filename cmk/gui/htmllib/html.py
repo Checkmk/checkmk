@@ -27,7 +27,7 @@ from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.dynamic_icon import resolve_icon_name
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, get_current_language
 from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme
@@ -184,7 +184,7 @@ class HTMLGenerator(HTMLWriter):
             for match in matches:
                 try:
                     doc_ref: DocReference = DocReference(match[1])
-                    urls.append(doc_reference_url(doc_ref=doc_ref))
+                    urls.append(doc_reference_url(get_current_language(), doc_ref=doc_ref))
                 except ValueError:
                     urls.append(None)
 

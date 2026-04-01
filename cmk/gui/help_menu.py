@@ -74,7 +74,7 @@ def default_learning_entries() -> list[NavItemTopicEntry]:
         NavItemTopicEntry(
             id="beginners_guide",
             title=_("Beginner's Guide"),
-            url=doc_reference_url(DocReference.INTRO_SETUP),
+            url=doc_reference_url(user.language, DocReference.INTRO_SETUP),
             target="_blank",
             sort_index=20,
             icon=DefaultIcon(id=IconNames.learning_beginner),
@@ -82,7 +82,7 @@ def default_learning_entries() -> list[NavItemTopicEntry]:
         NavItemTopicEntry(
             id="user_manual",
             title=_("User Guide"),
-            url=doc_reference_url(),
+            url=doc_reference_url(user.language),
             target="_blank",
             sort_index=30,
             icon=DefaultIcon(id=IconNames.learning_guide),
@@ -131,7 +131,7 @@ def default_developer_entries() -> list[NavItemTopicEntry]:
         NavItemTopicEntry(
             id="plugin_api_introduction",
             title=_("Check plug-in API introduction"),
-            url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+            url=doc_reference_url(user.language, DocReference.DEVEL_CHECK_PLUGINS),
             target="_blank",
             sort_index=10,
             icon=EmblemIcon(
@@ -164,7 +164,7 @@ def rest_api_menu_items() -> NavItemTopicEntry:
             NavItemTopicEntry(
                 id="rest_api_introduction",
                 title=_("Introduction"),
-                url=doc_reference_url(DocReference.REST_API),
+                url=doc_reference_url(user.language, DocReference.REST_API),
                 target="_blank",
                 sort_index=10,
                 icon=EmblemIcon(

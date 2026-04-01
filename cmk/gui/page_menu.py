@@ -396,7 +396,7 @@ class PageMenu:
             PageMenuEntry(
                 title=title,
                 icon_name=DynamicIconName("manual"),
-                item=make_external_link(doc_reference_url(doc_ref)),
+                item=make_external_link(doc_reference_url(user.language, doc_ref)),
             )
         )
 
@@ -496,7 +496,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                     PageMenuEntry(
                         title=_("The official Checkmk User Guide"),
                         icon_name=DynamicIconName("manual"),
-                        item=make_external_link(doc_reference_url()),
+                        item=make_external_link(doc_reference_url(user.language)),
                     ),
                 ],
             ),

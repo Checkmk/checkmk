@@ -360,7 +360,9 @@ class ModeDiagnostics(WatoMode):
                                     )
                                     % html.render_a(
                                         "user manual",
-                                        href=doc_reference_url(DocReference.DIAGNOSTICS_CLI),
+                                        href=doc_reference_url(
+                                            user.language, DocReference.DIAGNOSTICS_CLI
+                                        ),
                                         target="_blank",
                                     ),
                                     default_value=timeout_default,

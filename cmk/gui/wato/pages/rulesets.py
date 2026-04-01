@@ -2786,7 +2786,7 @@ class VSExplicitConditions(Transform):
                     _("documentation"),
                     # TODO: change this doc reference from "labels#views" to "labels#conditions" once
                     #       the corresponding article is updated to the new label group conditions
-                    href=doc_reference_url(DocReference.WATO_RULES_LABELS),
+                    href=doc_reference_url(user.language, DocReference.WATO_RULES_LABELS),
                     target="blank",
                 )
             )

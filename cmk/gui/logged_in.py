@@ -23,7 +23,6 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import __version__, Edition, edition, Version
 from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
@@ -511,15 +510,6 @@ class LoggedInUser:
             return (self.confdir / (name + ".mk")).stat().st_mtime
         except FileNotFoundError:
             return 0
-
-    def get_docs_base_url(self) -> str:
-        version = (
-            "saas"
-            if edition(cmk.utils.paths.omd_root) == Edition.CLOUD
-            else Version.from_str(__version__).version_base or "master"
-        )
-        language = "de" if self.language == "de" else "en"
-        return f"https://docs.checkmk.com/{version}/{language}"
 
 
 # Login a user that has all permissions. This is needed for making

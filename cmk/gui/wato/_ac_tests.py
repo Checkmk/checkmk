@@ -28,6 +28,7 @@ from cmk.gui.backup.handler import BackupConfig
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
@@ -1320,7 +1321,7 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
             "/".join(local_agent_based_plugins_dir.parts[-4:]),
             werk_reference_url(WerkReference.DECOMMISSION_V1_API),
             WerkReference.DECOMMISSION_V1_API.ref(),
-            doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+            doc_reference_url(user.language, DocReference.DEVEL_CHECK_PLUGINS),
         )
 
     def _get_files(self) -> Sequence[Path]:
@@ -1368,7 +1369,7 @@ class ACTestDeprecatedCheckPlugins(ACTest):
             " More information can be found in our <a href='%s'>User Guide</a>."
         ) % (
             "/".join(local_checks_dir.parts[-4:]),
-            doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+            doc_reference_url(user.language, DocReference.DEVEL_CHECK_PLUGINS),
         )
 
     def _get_files(self) -> Sequence[Path]:

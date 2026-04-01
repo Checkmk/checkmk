@@ -12,6 +12,7 @@ from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
+    get_docs_base_url,
     makeuri_contextless,
     urlencode,
     urlencode_vars,
@@ -57,12 +58,14 @@ def test_urlencode(inp: str | None, out: str) -> None:
 
 
 def test_empty_doc_reference(request_context: None) -> None:
-    doc_reference_url_without_origin = doc_reference_url().replace("?origin=checkmk", "")
-    assert doc_reference_url_without_origin == user.get_docs_base_url()
+    doc_reference_url_without_origin = doc_reference_url(user.language).replace(
+        "?origin=checkmk", ""
+    )
+    assert doc_reference_url_without_origin == get_docs_base_url(user.language)
 
 
 def test_doc_references(request_context: None) -> None:
-    assert [doc_reference_url(r) for r in DocReference]
+    assert [doc_reference_url(user.language, r) for r in DocReference]
 
 
 def test_makeuri_contextless() -> None:

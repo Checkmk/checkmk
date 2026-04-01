@@ -12,11 +12,12 @@ from typing import assert_never, Literal
 
 from flask import session
 
+import cmk.utils.paths
+from cmk.ccc.version import __version__, Edition, edition, Version
 from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.transaction_manager import TransactionManager
@@ -482,8 +483,18 @@ class DocReference(Enum):
         return key in cls._member_names_
 
 
-def doc_reference_url(doc_ref: DocReference | None = None) -> str:
-    base = user.get_docs_base_url()
+def get_docs_base_url(language: str) -> str:
+    version = (
+        "saas"
+        if edition(cmk.utils.paths.omd_root) == Edition.CLOUD
+        else Version.from_str(__version__).version_base or "master"
+    )
+    lang = "de" if language == "de" else "en"
+    return f"https://docs.checkmk.com/{version}/{lang}"
+
+
+def doc_reference_url(language: str, doc_ref: DocReference | None = None) -> str:
+    base = get_docs_base_url(language)
     origin = "?origin=checkmk"
     if doc_ref is None:
         return base + origin

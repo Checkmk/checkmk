@@ -152,8 +152,10 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
             ),
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
-            checkmk_docs=doc_reference_url(DocReference.INTRO_GUI),
-            checkmk_best_practices=doc_reference_url(DocReference.INTRO_BESTPRACTICE),
+            checkmk_docs=doc_reference_url(user.language, DocReference.INTRO_GUI),
+            checkmk_best_practices=doc_reference_url(
+                user.language, DocReference.INTRO_BESTPRACTICE
+            ),
             checkmk_trainings="https://checkmk.com/trainings/schedule",
             checkmk_webinars="https://checkmk.com/webinars",
             create_contactgroups=_make_url(
@@ -176,14 +178,16 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 filename="wato.py",
                 is_snapin=is_snapin,
             ),
-            setup_folder_structure=doc_reference_url(DocReference.HOSTS_STRUCTURE),
+            setup_folder_structure=doc_reference_url(user.language, DocReference.HOSTS_STRUCTURE),
             start_page=_make_url(
                 addvars=[],
                 filename="user_profile.py",
                 is_snapin=is_snapin,
             ),
-            scale_monitoring=doc_reference_url(DocReference.DISTRIBUTED_MONITORING),
-            fine_tune_monitoring=doc_reference_url(DocReference.FINETUNING_MONITORING),
+            scale_monitoring=doc_reference_url(user.language, DocReference.DISTRIBUTED_MONITORING),
+            fine_tune_monitoring=doc_reference_url(
+                user.language, DocReference.FINETUNING_MONITORING
+            ),
             license_site=_make_url_or_callback_from_registry(
                 is_snapin=is_snapin,
                 identifier="license_your_site",
@@ -304,8 +308,8 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 addvars=[],
                 filename="ajax_get_welcome_page_stage_information.py",
             ),
-            intro_users=doc_reference_url(DocReference.INTRO_USERS),
-            intro_notifications=doc_reference_url(DocReference.INTRO_NOTIFICATIONS),
+            intro_users=doc_reference_url(user.language, DocReference.INTRO_USERS),
+            intro_notifications=doc_reference_url(user.language, DocReference.INTRO_NOTIFICATIONS),
         ),
         is_start_url=user.start_url == "welcome.py",
         stage_information=StageInformation(

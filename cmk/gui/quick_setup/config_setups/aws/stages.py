@@ -12,6 +12,7 @@ from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionar
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
@@ -239,7 +240,7 @@ def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequenc
                     )
                     % HTMLWriter.render_a(
                         _("documentation"),
-                        href=doc_reference_url(DocReference.AWS_MANUAL_VM),
+                        href=doc_reference_url(user.language, DocReference.AWS_MANUAL_VM),
                     )
                 )
             )

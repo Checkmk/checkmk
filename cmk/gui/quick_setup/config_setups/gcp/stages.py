@@ -11,6 +11,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -211,7 +212,7 @@ class _GCERecapMessage:
             "Hosts for virtual machines need to be created manually, please check the %s."
         ) % HTMLWriter.render_a(
             _("documentation"),
-            href=doc_reference_url(DocReference.GCP_MANUAL_VM),
+            href=doc_reference_url(user.language, DocReference.GCP_MANUAL_VM),
         )
 
     message: Callable[[], str] = _cre_message

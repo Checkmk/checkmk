@@ -11,7 +11,6 @@ except the python standard library or pydantic.
 """
 
 import enum
-import json
 from collections.abc import Mapping, Sequence
 from typing import assert_never, Literal, NewType
 
@@ -622,7 +621,6 @@ class HardResourceRequirement(Section, api.HardResourceRequirement):
 
 class ResultType(enum.Enum):
     request_exception = "request_exception"
-    json_decode_error = "json_decode_error"
     validation_error = "validation_error"
     response_error = "response_error"
     response_invalid_data = "reponse_invalid_data"
@@ -648,8 +646,6 @@ class PrometheusResult(BaseModel):
         match result:
             case requests.exceptions.RequestException():
                 return ResultType.request_exception, type(result).__name__
-            case json.JSONDecodeError():
-                return ResultType.json_decode_error, None
             case ValidationError():
                 return ResultType.validation_error, None
             case prometheus_api.ResponseError():
@@ -666,8 +662,6 @@ class PrometheusResult(BaseModel):
         match self.type_:
             case ResultType.request_exception:
                 return f"Request Exception: {self.details}"
-            case ResultType.json_decode_error:
-                return "Invalid response: did not receive JSON"
             case ResultType.validation_error:
                 return "Invalid response: did not match Prometheus HTTP API"
             case ResultType.response_error:

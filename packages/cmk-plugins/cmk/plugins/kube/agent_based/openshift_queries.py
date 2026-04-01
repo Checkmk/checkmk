@@ -35,7 +35,6 @@ def discover(section: OpenShiftEndpoint) -> DiscoveryResult:
 
 SEVERITY = {
     ResultType.request_exception: State.CRIT,
-    ResultType.json_decode_error: State.CRIT,
     ResultType.validation_error: State.CRIT,
     ResultType.response_error: State.CRIT,
     ResultType.response_empty_result: State.CRIT,
@@ -45,12 +44,11 @@ SEVERITY = {
 
 RANK_ORDER = {
     ResultType.request_exception: 0,
-    ResultType.json_decode_error: 1,
-    ResultType.validation_error: 2,
-    ResultType.response_error: 3,
-    ResultType.response_empty_result: 4,
-    ResultType.response_invalid_data: 5,
-    ResultType.success: 6,
+    ResultType.validation_error: 1,
+    ResultType.response_error: 2,
+    ResultType.response_empty_result: 3,
+    ResultType.response_invalid_data: 4,
+    ResultType.success: 5,
 }
 
 

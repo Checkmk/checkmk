@@ -7,7 +7,6 @@
 import datetime
 import enum
 from collections.abc import Mapping, Sequence
-from json import JSONDecodeError
 from typing import Annotated, Literal, NewType
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
@@ -111,8 +110,8 @@ RESPONSE_ADAPTER: TypeAdapter[Response] = TypeAdapter(Response)
 
 def parse_raw_response(
     response: bytes | str,
-) -> Response | ValidationError | JSONDecodeError:
+) -> Response | ValidationError:
     try:
         return RESPONSE_ADAPTER.validate_json(response)
-    except (ValidationError, JSONDecodeError) as e:
+    except ValidationError as e:
         return e

@@ -810,14 +810,40 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     # --purge only needs the site root path, not full site resolution.
-    # This allows purging even if the site is partially deleted.
+    # This allows purging even if the site is partially deleted (or removed
+    # via ``omd rm``).  We try the lightweight find_site_root first, then
+    # fall back to the normal name resolution chain (.site file, $SITE,
+    # omd sites), and finally scan the overlay directory for orphaned data.
     if args.purge:
-        from cmk.dev_deploy.site.site_resolver import find_site_root
+        from cmk.dev_deploy.site.site_resolver import find_site_root, resolve_site_name
 
-        site_root = find_site_root(args.site)
+        site_name = resolve_site_name(args.site, repo_root, Path.cwd())
+        site_root = find_site_root(site_name)
+
+        # Last resort: scan overlay base dir for orphaned site overlays.
         if site_root is None:
-            output.error(f"Site root not found for '{args.site}'")
+            overlay_base = Path("/var/tmp/cmk-dev-deploy")  # nosec B108
+            if overlay_base.is_dir():
+                candidates = [d.name for d in overlay_base.iterdir() if d.is_dir()]
+                if len(candidates) == 1:
+                    site_root = Path("/omd/sites") / candidates[0]
+                    output.info(f"Site deleted but overlay data found for '{candidates[0]}'")
+                elif len(candidates) > 1:
+                    output.error(
+                        f"Multiple orphaned overlays found: {', '.join(sorted(candidates))}\n"
+                        "  Specify which to purge: cmk-dev-deploy --purge --site SITENAME"
+                    )
+                    return 1
+
+        if site_root is None:
+            output.error(
+                "No site found to purge.\n"
+                "  Specify explicitly: cmk-dev-deploy --purge --site SITENAME"
+            )
             return 1
+        from cmk.dev_deploy.site.privilege import ensure_sudo
+
+        ensure_sudo()
         try:
             teardown_overlay(site_root)
         except OverlayError as e:

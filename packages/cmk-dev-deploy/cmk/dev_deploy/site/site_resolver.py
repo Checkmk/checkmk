@@ -52,6 +52,19 @@ def find_site_root(site_name: str | None) -> Path | None:
     return None
 
 
+def resolve_site_name(cli_site: str | None, repo_root: Path, cwd: Path) -> str | None:
+    """Resolve site name using the fallback chain, returning None on failure.
+
+    Unlike :func:`resolve_site`, this does not validate the site directory
+    and never raises.  Useful for ``--purge`` where the site may already be
+    deleted.
+    """
+    try:
+        return _resolve_site_name(cli_site, repo_root, cwd)
+    except SiteNotFoundError:
+        return None
+
+
 def resolve_site(cli_site: str | None, repo_root: Path, cwd: Path) -> SiteInfo:
     """Resolve and validate an OMD site, returning full SiteInfo."""
     site_name = _resolve_site_name(cli_site, repo_root, cwd)

@@ -4,6 +4,7 @@ load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:pip.bzl", "whl_filegroup")
+load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
 
 def _package_wheel_impl(
         name,
@@ -11,6 +12,7 @@ def _package_wheel_impl(
         excludes,
         additional_files,
         prefix,
+        rpath,
         visibility):
     """Packages a python wheel into our omd site-packages."""
     whl_filegroup_name = name + "_fg"
@@ -28,20 +30,31 @@ def _package_wheel_impl(
         excludes = excludes,
     )
 
+    if rpath:
+        runpath_name = name + "_runpath"
+        set_runpath_tree(
+            name = runpath_name,
+            src = ":" + filtered_name,
+            rpath = rpath,
+        )
+        pkg_files_src = runpath_name
+    else:
+        pkg_files_src = filtered_name
+
     # Filter_directory creates TreeArtifacts and Stripping
     # of TreeArtifacts is not working.
     # Dus we need to create pkg_files first which then can be
     # stripped and prefixed in the next pkg_files
     pkg_files(
         name = pkg_files_name + "1",
-        srcs = [filtered_name],
+        srcs = [pkg_files_src],
     )
 
     pkg_files(
         name = pkg_files_name + "2",
         srcs = [pkg_files_name + "1"],
         prefix = prefix,
-        strip_prefix = filtered_name,
+        strip_prefix = pkg_files_src,
     )
 
     pkg_tar(
@@ -60,6 +73,10 @@ package_wheel = macro(
         "prefix": attr.string(
             default = "lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR,
             doc = "Where will the python packages be deployed.",
+        ),
+        "rpath": attr.string(
+            default = "",
+            doc = "When non-empty, patch all ELF .so files in the wheel with this RUNPATH via set_runpath_tree.",
         ),
         "whl": attr.label(mandatory = True, doc = "Wheel to be packaged."),
     },

@@ -90,6 +90,7 @@ pkg_tar(
 
 package_wheel(
     name = "rrdtool_python_tar",
+    rpath = "$ORIGIN/../..",
     visibility = ["//visibility:public"],
     whl = "@rrdtool_native//:rrdtool_python_wheel",
 )

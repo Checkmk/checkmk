@@ -576,6 +576,7 @@ allows = ["@ccc", "@plugin_apis", "cmk.discover_plugins"]
 [components."cmk.telemetry"]
 allows = [
   "@ccc",
+  "@plugin_apis",
   "cmk.base.config",
   "cmk.discover_plugins",
   "cmk.fetchers",

@@ -1039,6 +1039,7 @@ py_library(
         "//non-free/packages/cmk-liveproxyd:__pkg__",
         "//non-free/packages/cmk-otel-collector:__pkg__",
         "//non-free/packages/cmk-robotmk:__pkg__",
+        "//non-free/packages/cmk-telemetry:__subpackages__",
         "//omd/packages:__subpackages__",
         "//tests:__subpackages__",
     ],

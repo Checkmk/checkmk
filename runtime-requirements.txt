@@ -2103,6 +2103,7 @@ opentelemetry-proto==1.39.1 \
     --hash=sha256:6c8e05144fc0d3ed4d22c2289c6b126e03bcd0e6a7da0f16cedd2e1c2772e2c8
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-telemetry/requirements.in
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -2495,6 +2496,7 @@ protobuf==6.33.4 \
     #   -c bazel-requirements-constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-telemetry/requirements.in
     #   google-api-core
     #   google-cloud-access-context-manager
     #   google-cloud-asset

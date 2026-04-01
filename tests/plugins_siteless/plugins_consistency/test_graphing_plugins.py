@@ -329,7 +329,6 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
     {
         # we cannot have sub-modules below the cee folder, so we have to allow the following violations
         "cmk.plugins.azure_v2.graphing.nonfree",
-        "cmk.plugins.otel.graphing.nonfree",
     }
     if is_non_free_repo()
     else set()

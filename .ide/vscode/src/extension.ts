@@ -30,7 +30,7 @@ import {
 import { registerSnippets } from './profiles/python/snippets'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
-import { refreshAll, registerSidebar } from './sidebar'
+import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
 
 function toggleSettings(disableSettings: Record<string, unknown>): vscode.Disposable {
   ;(async () => {
@@ -91,7 +91,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerBuildCommands(context, commands)
   registerIdePickers(context, extensionSets, settingsSets)
   registerGerritPush(context)
-  registerOmd(context, refreshAll)
+  registerOmd(context, refreshAll, refreshOmd)
 
   // cmk-dev-site: create site command + update check
   vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', isDevSiteInstalled())

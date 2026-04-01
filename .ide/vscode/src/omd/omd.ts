@@ -234,9 +234,15 @@ function detectBranchVersion(): string {
 
 let _refreshInterval: ReturnType<typeof setInterval> | null = null
 let _onRefresh: (() => void) | null = null
+let _onOmdRefresh: (() => void) | null = null
 
-export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => void): void {
+export function registerOmd(
+  context: vscode.ExtensionContext,
+  onRefresh: () => void,
+  onOmdRefresh?: () => void
+): void {
   _onRefresh = onRefresh
+  _onOmdRefresh = onOmdRefresh ?? onRefresh
 
   const initialSites = detectOmdSites()
   vscode.commands.executeCommand('setContext', 'cmk.omdAvailable', initialSites.length > 0)
@@ -337,7 +343,7 @@ export function registerOmd(context: vscode.ExtensionContext, onRefresh: () => v
     })
   )
 
-  _refreshInterval = setInterval(() => triggerRefresh(), 30000)
+  _refreshInterval = setInterval(() => _onOmdRefresh?.(), 30000)
   context.subscriptions.push({
     dispose: () => {
       if (_refreshInterval) clearInterval(_refreshInterval)

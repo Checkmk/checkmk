@@ -193,6 +193,18 @@ async function handleMessage(msg: WebviewMessage): Promise<void> {
 
 // ── Public API ──
 
+export function refreshOmd(): void {
+  if (!_stateCache) return
+  const omdSites = detectOmdSites().map((site) => ({
+    ...site,
+    status: getOmdStatus(site.name)
+  }))
+  const activeProxies = getActiveProxies()
+  _stateCache = { ..._stateCache, omdSites, activeProxies }
+  updateIssues(_issuesView, _issuesProvider, _stateCache)
+  _providers['omd']?.refresh()
+}
+
 export function refreshAll(): void {
   refreshStateCache()
   for (const p of Object.values(_providers)) {

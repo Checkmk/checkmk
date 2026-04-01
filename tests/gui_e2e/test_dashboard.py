@@ -272,7 +272,7 @@ def test_top_list_widgets_settings(
 ) -> None:
     """Check settings of 'Top list' widgets on 'Linux Hosts' dashboard page.
 
-    Check that 'Service (exact match)' and 'Metric' fields contain expected values
+    Check that 'Service name (exact match)' and 'Metric' fields contain expected values
     for some of the 'Top list' widgets.
 
     Steps:
@@ -281,7 +281,7 @@ def test_top_list_widgets_settings(
         3. Enter "edit widgets" mode.
         4. Open settings of the 'Top 10: Memory utilization' or 'Top 10: Disk utilization' widget
            properties.
-        5. Check that 'Service (exact match)' filter contains expected service name.
+        5. Check that 'Service name (exact match)' filter contains expected service name.
         6. Check that 'Service metric' field contains expected metric name.
     """
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
@@ -291,10 +291,10 @@ def test_top_list_widgets_settings(
 
     expect(
         service_filter_combobox := widget_wizard.get_service_filter_combobox(
-            "Service (exact match)"
+            "Service name (exact match)"
         ),
         message=(
-            f"Unexpected value in 'Service (exact match)' filter combobox."
+            f"Unexpected value in 'Service name (exact match)' filter combobox."
             f" Expected '{expected_service_name}'"
             f"; actual text is '{service_filter_combobox.text_content()}"
         ),

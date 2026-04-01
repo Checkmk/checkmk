@@ -67,10 +67,12 @@ const inventoryPaths = ref<Suggestion[]>([])
 onBeforeMount(async () => {
   const result = await dashboardAPI.listAvailableInventory()
   inventoryPaths.value = Array.isArray(result.value)
-    ? result.value.map((item) => ({
-        name: item.id ?? null,
-        title: untranslated(item.title ?? '')
-      }))
+    ? result.value
+        .map((item) => ({
+          name: item.id ?? null,
+          title: untranslated(item.title ?? '')
+        }))
+        .sort((a, b) => a.title.localeCompare(b.title))
     : []
 })
 
@@ -149,7 +151,7 @@ const recapAndNext = () => {
 
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     customValue: inventoryPathLabel,
-    customValueTitle: _t('Inventory property'),
+    customValueTitle: _t('Inventory single value'),
     contextConfiguredFilters: contextConfiguredFilters.value,
     widgetFilters: widgetFilterManager.getConfiguredFilters()
   })

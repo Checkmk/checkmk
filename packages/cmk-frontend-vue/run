@@ -22,7 +22,7 @@ usage() {
     echo "  -T, --tsc                  run type checker"
     echo "  -l, --lint                 run configured linters"
     echo "  -f, --format               format sources"
-    echo "  -a, --all                  shortcut for -b -B -t -F -T -d"
+    echo "  -a, --all                  shortcut for -b -B -t -F -T -l -d"
     echo "  -h, --help                 show this help"
 }
 
@@ -88,6 +88,7 @@ parse_options() {
                 RUN_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_TSC=yes
+                RUN_LINT=yes
                 shift
                 continue
                 ;;

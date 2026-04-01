@@ -88,7 +88,10 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
-        quicksearch_manager = QuicksearchManager(row_limit=ctx.config.quicksearch_dropdown_limit)
+        quicksearch_manager = QuicksearchManager(
+            row_limit=ctx.config.quicksearch_dropdown_limit,
+            search_order=ctx.config.quicksearch_search_order,
+        )
 
         search_objects: list[ABCQuicksearchConductor] = []
         try:
@@ -127,7 +130,10 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
-        quicksearch_manager = QuicksearchManager(row_limit=ctx.config.quicksearch_dropdown_limit)
+        quicksearch_manager = QuicksearchManager(
+            row_limit=ctx.config.quicksearch_dropdown_limit,
+            search_order=ctx.config.quicksearch_search_order,
+        )
 
         raise HTTPRedirect(
             quicksearch_manager.generate_search_url(

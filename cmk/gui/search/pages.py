@@ -45,6 +45,8 @@ class PageUnifiedSearch(AjaxPage):
             monitoring_engine=MonitoringSearchEngine(
                 user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
                 row_limit=_MONITORING_ENGINE_ROW_LIMIT,
+                # TODO: this probably shouldn't be tied to the same setting as quicksearch.
+                search_order=ctx.config.quicksearch_search_order,
             ),
             customize_engine=CustomizeSearchEngine(),
         )

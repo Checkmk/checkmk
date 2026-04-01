@@ -521,8 +521,15 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 class QuicksearchManager:
     """Producing the results for the given search query"""
 
-    def __init__(self, *, row_limit: int, raise_too_many_rows_error: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        row_limit: int,
+        search_order: Iterable[tuple[str, str]],
+        raise_too_many_rows_error: bool = True,
+    ) -> None:
         self._row_limit = row_limit
+        self._search_order = search_order
         self.raise_too_many_rows_error = raise_too_many_rows_error
 
     def generate_results(
@@ -599,7 +606,7 @@ class QuicksearchManager:
                 FilterBehaviour[filter_behaviour_str.upper()],
                 user_permissions,
             )
-            for filter_name, filter_behaviour_str in active_config.quicksearch_search_order
+            for filter_name, filter_behaviour_str in self._search_order
         ]
 
     @staticmethod
@@ -1388,9 +1395,16 @@ match_plugin_registry.register(MonitorMenuMatchPlugin())
 
 # TODO: rework monitoring search façade to return correct payload for unified search.
 class MonitoringSearchEngine:
-    def __init__(self, *, user_permissions: UserPermissions, row_limit: int) -> None:
+    def __init__(
+        self,
+        *,
+        user_permissions: UserPermissions,
+        row_limit: int,
+        search_order: Iterable[tuple[str, str]],
+    ) -> None:
         self._legacy_engine = QuicksearchManager(
             row_limit=row_limit,
+            search_order=search_order,
             raise_too_many_rows_error=False,
         )
         self._user_permissions = user_permissions

@@ -80,7 +80,7 @@ Translate the user's request into one of these commands:
 Before running any query, check if a cached token exists and is valid:
 
 ```bash
-test -f ~/.cache/cmk-crash-reporting/token.json && .venv/bin/python -c "import json,time; t=json.load(open('$HOME/.cache/cmk-crash-reporting/token.json')); exit(0 if t['expires_at']>time.time()+60 else 1)"
+PYTHONPATH=.github/skills .venv/bin/python -m crash_report check-auth
 ```
 
 If the token is missing or expired (non-zero exit), run the authenticate command first:

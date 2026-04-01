@@ -555,6 +555,17 @@ def cmd_group(args: argparse.Namespace) -> None:
             )
 
 
+def cmd_check_auth(_args: argparse.Namespace) -> None:
+    """Exit 0 if a valid cached token exists, 1 otherwise."""
+    token = get_cached_bearer_token()
+    if token:
+        print("Authenticated (cached token valid).")
+        sys.exit(0)
+    else:
+        print("Not authenticated (no valid cached token).")
+        sys.exit(1)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Fetch and anonymize crash report data from crash.checkmk.com"
@@ -597,6 +608,9 @@ def main() -> None:
         "--type", help="Crash type filter (check, gui, rest_api, section, etc.)"
     )
 
+    # check-auth
+    subparsers.add_parser("check-auth", help="Check if a valid auth token is cached (exit 0/1)")
+
     args = parser.parse_args()
 
     commands = {
@@ -606,6 +620,7 @@ def main() -> None:
         "show": cmd_show,
         "group": cmd_group,
         "local": cmd_local,
+        "check-auth": cmd_check_auth,
     }
 
     try:

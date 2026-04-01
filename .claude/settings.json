@@ -1,7 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
       "Skill(bazel)",
       "Skill(gerrit)",
@@ -11,10 +14,9 @@
       "Skill(jira-read-ticket)",
       "Skill(backport)",
       "Skill(readme)",
-
+      "Skill(crash-report)",
       "Bash(bazel *)",
       "Bash(make *)",
-
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
@@ -34,7 +36,6 @@
       "Bash(git worktree *)",
       "Bash(git stash push *)",
       "Bash(git stash pop *)",
-
       "Bash(pytest *)",
       "Bash(mypy *)",
       "Bash(ruff *)",
@@ -44,7 +45,6 @@
       "Bash(python -m pytest *)",
       "Bash(python -m mypy *)",
       "Bash(npx prettier *)",
-
       "Bash(find *)",
       "Bash(grep *)",
       "Bash(rg *)",
@@ -65,7 +65,6 @@
       "Bash(diff *)",
       "Bash(patch *)",
       "Bash(clickhouse client *)",
-
       "Bash(/tmp/cmk-master-venv/.venv/bin/werk *)",
       "Bash(gerrit-change-log *)",
       "Bash(jenkins_build_data.py *)",
@@ -74,14 +73,11 @@
       "Bash(tar -xf /tmp/jenkins-artifacts/*)",
       "Read(//tmp/jenkins-artifacts/**)",
       "Bash(.venv/bin/python .github/skills/jira-read-ticket/read_ticket.py *)",
-
+      "Bash(PYTHONPATH=.github/skills .venv/bin/python -m crash_report*)",
       "WebFetch(domain:*.tribe29.com)",
       "WebFetch(domain:*.checkmk.net)"
     ],
-    "ask": ["Bash(find *--exec*)", "Bash(git remote *)", "Bash(git config *)"]
-  },
-  "attribution": {
-    "commit": "",
-    "pr": ""
+    "ask": ["Bash(find *--exec*)", "Bash(git remote *)", "Bash(git config *)"],
+    "defaultMode": "acceptEdits"
   }
 }

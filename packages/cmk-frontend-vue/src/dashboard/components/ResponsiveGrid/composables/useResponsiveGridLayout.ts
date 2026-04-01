@@ -271,7 +271,9 @@ export function useResponsiveGridLayout(
   )
 
   watch(widgetContentTypes, (newTypes, oldTypes) => {
-    if (!oldTypes) return
+    if (!oldTypes) {
+      return
+    }
     const columnsPerBreakpoint = breakpointConfig.value.columns
     for (const [widgetId, newType] of Object.entries(newTypes)) {
       if (oldTypes[widgetId] !== undefined && oldTypes[widgetId] !== newType) {

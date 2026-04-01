@@ -188,7 +188,9 @@ const grpcAddressErrors = computed((): string[] => {
   return validateAddress(grpcEndpoint.value.address)
 })
 const grpcPortErrors = computed((): string[] => {
-  if (!displayErrors.value) return []
+  if (!displayErrors.value) {
+    return []
+  }
   if (grpcEndpoint.value.port !== undefined || grpcEndpoint.value.address.trim()) {
     return validatePort(grpcEndpoint.value.port)
   }
@@ -204,7 +206,9 @@ const httpAddressErrors = computed((): string[] => {
   return validateAddress(httpEndpoint.value.address)
 })
 const httpPortErrors = computed((): string[] => {
-  if (!displayErrors.value) return []
+  if (!displayErrors.value) {
+    return []
+  }
   if (httpEndpoint.value.port !== undefined || httpEndpoint.value.address.trim()) {
     return validatePort(httpEndpoint.value.port)
   }

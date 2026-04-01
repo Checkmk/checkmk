@@ -31,7 +31,8 @@ function explainThis() {
       props.template.id,
       props.user_id,
       props.template.context_data,
-      props.site_name
+      props.site_name,
+      props.template.legal
     )
   } else {
     // When reopening, disable animations on all existing elements
@@ -70,7 +71,8 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
         props.template.id,
         props.user_id,
         incoming,
-        props.site_name
+        props.site_name,
+        props.template.legal
       )
     }
     conversationOpen.value = true

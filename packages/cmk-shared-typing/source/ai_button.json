@@ -14,12 +14,22 @@
   },
   "required": ["button_text", "template", "user_id", "site_name"],
   "$defs": {
+    "legal": {
+      "type": "object",
+      "properties": {
+        "footer_text_template": { "type": "string" },
+        "disclaimer_title": { "type": "string" },
+        "disclaimer_body_template": { "type": "string" }
+      },
+      "required": ["footer_text_template", "disclaimer_title", "disclaimer_body_template"]
+    },
     "ai_template": {
       "type": "object",
       "properties": {
-        "title": { "type": "string" }
+        "title": { "type": "string" },
+        "legal": { "$ref": "#/$defs/legal" }
       },
-      "required": ["title"]
+      "required": ["title", "legal"]
     }
   },
   "$templates": {

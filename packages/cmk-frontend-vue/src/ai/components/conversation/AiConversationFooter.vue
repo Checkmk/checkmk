@@ -15,15 +15,15 @@ import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
 
 const { _t } = usei18n()
 const aiTemplate = getInjectedAiTemplate()
+const legal = aiTemplate.value!.legal
 
 const aiInfo = ref<string | null>(null)
 
 function loadAiInfo() {
   if (aiTemplate.value?.info) {
-    aiInfo.value = _t(
-      `This feature uses ${aiTemplate.value.info.models.join(', ')} by ${aiTemplate.value.info.provider}. ` +
-        'The generated output can contain errors or inaccuracies and must be carefully reviewed by a human for factual correctness. '
-    )
+    aiInfo.value = legal.footer_text_template
+      .replace(/\{models\}/g, aiTemplate.value.info.models.join(', '))
+      .replace(/\{provider\}/g, aiTemplate.value.info.provider)
   }
 }
 

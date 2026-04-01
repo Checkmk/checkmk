@@ -1,0 +1,18 @@
+#!/bin/bash
+# Wrapper for git that unsets LD_LIBRARY_PATH before execution.
+# During Python module builds, LD_LIBRARY_PATH is set to point at our bundled
+# OpenSSL and Python libraries. This conflicts with system git, which is
+# dynamically linked against the system OpenSSL. This wrapper unsets
+# LD_LIBRARY_PATH so that git uses the system libraries as intended.
+
+_self=$(readlink -f "$0")
+_name=$(basename "${_self}")
+for _exec in $(type -ap "${_name}" 2>/dev/null); do
+    if [ "${_exec}" != "${_self}" ]; then
+        unset LD_LIBRARY_PATH
+        exec "${_exec}" "$@"
+    fi
+done
+
+echo "No ${_name} executable found other than wrapper" >&2
+exit 1

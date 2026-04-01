@@ -118,7 +118,7 @@ export const useInventory = async (
   }
 
   watch(
-    [widgetGeneralSettings, inventoryPath, linkType, linkTarget],
+    [widgetGeneralSettings, inventoryPath, linkType, linkTarget, showWidgetBackground],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),

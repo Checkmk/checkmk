@@ -14,7 +14,7 @@ import type { DashboardConstants } from '@/dashboard/types/dashboard'
 import type { WidgetSpec } from '@/dashboard/types/widget'
 
 import type { WidgetFilterManager } from './components/filter/composables/useWidgetFilterManager'
-import type { TitleSpec, WidgetContentType, WidgetFiltersType, WidgetProps } from './types'
+import type { WidgetFiltersType } from './types'
 import { ElementSelection } from './types'
 
 export const isUrl = (text: string): boolean => {
@@ -24,28 +24,6 @@ export const isUrl = (text: string): boolean => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
     return false
-  }
-}
-
-/**
- * Generates WidgetProps
- * To be removed once all widgets use the new system
- * @deprecated
- * @returns WidgetProps
- */
-export const generateWidgetProps = (
-  titleSpec: TitleSpec,
-  widgetContent: WidgetContentType,
-  filters: ConfiguredFilters
-): WidgetProps => {
-  return {
-    general_settings: {
-      title: titleSpec,
-      render_background: false
-    },
-    content: widgetContent,
-    effectiveTitle: titleSpec?.text,
-    effective_filter_context: generateEffectiveFilterContext(filters)
   }
 }
 

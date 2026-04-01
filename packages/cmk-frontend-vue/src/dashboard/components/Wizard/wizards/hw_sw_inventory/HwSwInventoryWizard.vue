@@ -37,7 +37,7 @@ import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import { useWidgetFilterManager } from '../../components/filter/composables/useWidgetFilterManager'
 import type { InventoryContent, WidgetContentType, WidgetProps } from '../../types'
 import { ElementSelection } from '../../types'
-import { generateWidgetProps } from '../../utils'
+import { generateEffectiveFilterContext } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -80,11 +80,14 @@ const editWidget = computed<WidgetProps | null>(() => {
   if (!props.editWidgetSpec) {
     return null
   }
-  return generateWidgetProps(
-    props.editWidgetSpec.general_settings.title || { text: '', render_mode: 'hidden' },
-    props.editWidgetSpec.content as WidgetContentType,
-    props.editWidgetSpec.filter_context.filters as ConfiguredFilters
-  )
+  return {
+    general_settings: props.editWidgetSpec.general_settings,
+    content: props.editWidgetSpec.content as WidgetContentType,
+    effectiveTitle: props.editWidgetSpec.general_settings.title?.text,
+    effective_filter_context: generateEffectiveFilterContext(
+      props.editWidgetSpec.filter_context.filters as ConfiguredFilters
+    )
+  }
 })
 
 const filterDefinitions = useFilterDefinitions()

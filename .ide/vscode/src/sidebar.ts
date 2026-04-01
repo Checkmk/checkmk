@@ -293,7 +293,6 @@ export function registerSidebar(
     vscode.commands.registerCommand(
       'cmk.applySetting',
       async (key: string, expected: unknown, scope: string) => {
-        showSectionLoading('ideHealth')
         try {
           await ideHealthSection.writeMismatchSetting(key, expected, scope)
           notifyInfo(`CMK ▸ IDE: Applied ${key}`, `${JSON.stringify(expected)} [${scope}]`)
@@ -314,7 +313,6 @@ export function registerSidebar(
   context.subscriptions.push(
     vscode.commands.registerCommand('cmk.installDevSite', async () => {
       log('Install cmk-dev-site')
-      showSectionLoading('omd')
       const exec = runCommand('Install cmk-dev-site', 'pipx install cmk-dev-site')
       if (exec) {
         await waitForTask(exec)

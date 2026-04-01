@@ -146,6 +146,18 @@ body {
   background: var(--vscode-button-hoverBackground);
 }
 
+.btn[disabled] {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn .spinner {
+  font-size: 14px;
+  line-height: 1;
+  margin-right: 2px;
+}
+
 .btn-small {
   padding: 3px 8px;
 }

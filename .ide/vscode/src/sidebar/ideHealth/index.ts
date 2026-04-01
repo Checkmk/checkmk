@@ -159,7 +159,7 @@ export async function writeMismatchSetting(
 
 export async function handleMessage(
   msg: WebviewMessage,
-  { refreshAll, showSectionLoading }: SectionContext
+  { refreshAll }: SectionContext
 ): Promise<boolean> {
   switch (msg.type) {
     case 'installExtension':
@@ -167,7 +167,6 @@ export async function handleMessage(
       await vscode.commands.executeCommand('workbench.extensions.search', msg.extensionId)
       return true
     case 'applySingleSetting': {
-      showSectionLoading('ideHealth')
       try {
         await writeMismatchSetting(msg.key as string, msg.expected, msg.scope as string)
         notifyInfo(
@@ -187,7 +186,6 @@ export async function handleMessage(
         notifyInfo(`CMK ▸ IDE: All ${family} settings already match.`)
         return true
       }
-      showSectionLoading('ideHealth')
       let applied = 0
       const failed: string[] = []
       for (const m of mismatches) {
@@ -215,7 +213,6 @@ export async function handleMessage(
         notifyInfo('CMK ▸ IDE: All settings already match.')
         return true
       }
-      showSectionLoading('ideHealth')
       let applied = 0
       const failed: string[] = []
       for (const m of mismatches) {

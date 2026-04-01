@@ -83,6 +83,31 @@ ${body}
     e.stopPropagation();
     const action = el.dataset.action;
     const id = el.dataset.id;
+    const ASYNC_ACTIONS = new Set([
+      'omd-site-action',
+      'omd-service-action',
+      'omd-install-devsite',
+      'apply-setting',
+      'apply-family-mismatches',
+      'apply-all-mismatches',
+      'toggle-profile',
+    ]);
+    if (ASYNC_ACTIONS.has(action)) {
+      el.setAttribute('disabled', 'true');
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0.5';
+      const icon = el.querySelector('.codicon');
+      if (icon) {
+        icon.className = 'spinner';
+        icon.textContent = '\u21BB';
+      } else {
+        const sp = document.createElement('span');
+        sp.className = 'spinner';
+        sp.textContent = '\u21BB';
+        sp.style.marginRight = '4px';
+        el.prepend(sp);
+      }
+    }
     switch (action) {
       case 'exec': vscode.postMessage({ type: 'executeCommand', commandId: id }); break;
       case 'toggle-profile': vscode.postMessage({ type: 'toggleProfile', name: id }); break;

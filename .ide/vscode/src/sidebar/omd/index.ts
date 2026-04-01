@@ -22,17 +22,15 @@ export async function handleMessage(
   switch (msg.type) {
     case 'omdSiteAction': {
       log(`OMD site ${msg.action}: ${msg.site}`)
-      showSectionLoading('omd')
       const exec = omdServiceCommand(msg.action as string, msg.site as string, '')
       if (exec) {
         await waitForTask(exec)
-        refreshAll()
       }
+      refreshAll()
       return true
     }
     case 'omdServiceAction': {
       log(`OMD service ${msg.action}: ${msg.service} on ${msg.site}`)
-      showSectionLoading('omd')
       const exec = omdServiceCommand(
         msg.action as string,
         msg.site as string,
@@ -40,8 +38,8 @@ export async function handleMessage(
       )
       if (exec) {
         await waitForTask(exec)
-        refreshAll()
       }
+      refreshAll()
       return true
     }
     case 'omdOpenBrowser': {

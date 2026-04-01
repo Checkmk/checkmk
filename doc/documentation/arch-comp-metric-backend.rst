@@ -31,6 +31,17 @@ In the cloud deployment, this value may be configured differently by the operato
 In the future, we might move the data currently stored in the RRDs to the metric backend as well.
 However, this requires further evaluation and there are no concrete plans yet.
 
+Components
+==========
+
+.. toctree::
+   :maxdepth: 1
+
+   arch-comp-metric-backend-internals.rst
+   arch-comp-metric-backend-table-layout.rst
+   arch-comp-metric-backend-instant-query.rst
+   arch-comp-metric-backend-range-query.rst
+
 Architecture
 ============
 
@@ -53,6 +64,7 @@ Cross-site queries are not supported at the moment.
 Each site can only access its own, local ClickHouse instance (on-premise) or the shared ClickHouse instance (cloud).
 
 See the topology diagram for an overview of how the metric backend fits into the :doc:`overall architecture <arch-index>` (on-premise).
+For a description of the internal software components, see :doc:`arch-comp-metric-backend-internals`.
 
 Interfaces
 ----------

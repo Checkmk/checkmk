@@ -71,8 +71,7 @@ py_test(
 
 py_test(
     name = "repo_community",
-    # https://bazel.build/reference/be/common-definitions#test.size
-    size = "large",
+    size = "small",
     # This is the "catch all" target. Don't add new stuff here.
     srcs = [
         "__init__.py",

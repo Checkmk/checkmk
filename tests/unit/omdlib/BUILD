@@ -12,6 +12,7 @@ py_pytest_main(
 
 py_test(
     name = "omdlib",
+    size = "small",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
         "--config-file=$(location @//:pyproject.toml)",

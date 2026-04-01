@@ -18,8 +18,7 @@ py_pytest_main(
 
 py_test(
     name = "base",
-    # https://bazel.build/reference/be/common-definitions#test.size
-    size = "large",
+    size = "small",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
         "--config-file=$(location @//:pyproject.toml)",

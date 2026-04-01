@@ -10,7 +10,6 @@ py_pytest_main(
 
 py_test(
     name = "component",
-    size = "medium",
     srcs = glob(["**/*.py"]) + [":__component_test__.py"],
     args = [
         "--random-order",

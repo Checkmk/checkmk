@@ -29,6 +29,7 @@ py_pytest_main(
 
 py_test(
     name = "post_rename_site",
+    size = "small",
     srcs = ["__test__.py"] + glob(
         include = ["**/*.py"],
         exclude = [

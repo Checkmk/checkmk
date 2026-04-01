@@ -52,7 +52,6 @@ py_pytest_main(
 
 py_test(
     name = "unit_testlib",
-    size = "medium",
     srcs = glob(["testlib/**/*.py"]) + [":__testlib_test__.py"],
     args = [
         "--random-order",

@@ -27,8 +27,6 @@ py_pytest_main(
 
 py_test(
     name = "gui",
-    # https://bazel.build/reference/be/common-definitions#test.size
-    size = "large",
     srcs = ["__test__.py"] + glob(
         include = ["**/*.py"],
         exclude = ["conftest.py"],

@@ -129,6 +129,7 @@ export async function stop(name: string): Promise<void> {
 }
 
 export async function toggle(name: string): Promise<void> {
+  if (families[name]?.loading) return
   if (families[name]?.active) {
     await stop(name)
   } else {

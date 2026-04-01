@@ -2,9 +2,10 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import importlib
+import pkgutil
 from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
 
 from cmk.ccc.version import Edition
 from cmk.discover_plugins import (
@@ -49,6 +50,14 @@ def load_discovered_rule_specs(
     return discovered_plugins.errors, loaded
 
 
+def _discover_modules_from(*names: str) -> set[str]:
+    return {
+        m.name
+        for name in names
+        for m in pkgutil.iter_modules(importlib.import_module(name).__path__, f"{name}.")
+    }
+
+
 def load_api_v1_rule_specs(
     raise_errors: bool,
     edition: Edition,
@@ -71,59 +80,25 @@ def load_api_v1_rule_specs(
     )
 
     # HACK for migrating plugins: also search in certain modules that are not yet moved.
-    # This datastructure should only be filled for one commit in a chain, and be emptied
-    # right away. This is for convenience of the reviewer of a plugin migration only:
+    # This is for convenience of the reviewer of a plugin migration only:
     # This way we can separate migration and moving.
-    # For example:
-
-    not_yet_moved_plugins: set[str] = set()
-    import cmk.gui.plugins.wato.check_parameters  # astrein: disable=cmk-module-layer-violation
-
-    community_check_parameters_paths = set(cmk.gui.plugins.wato.check_parameters.__path__)
-    for community_check_parameters_path in community_check_parameters_paths:
-        for plugin in Path(community_check_parameters_path).glob("*.py"):
-            if plugin.stem != "__init__":
-                not_yet_moved_plugins.add(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
-
+    not_yet_moved_plugins = set[str]()
     match edition:
         case Edition.COMMUNITY:
-            pass
+            not_yet_moved_plugins = _discover_modules_from(
+                "cmk.gui.plugins.wato.check_parameters",
+            )
         case Edition.PRO:
-            import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
-
-            pro_bakery_ruleset_paths = set(
-                cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__
+            not_yet_moved_plugins = _discover_modules_from(
+                "cmk.gui.plugins.wato.check_parameters",
+                "cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs",
             )
-            for pro_bakery_ruleset_path in pro_bakery_ruleset_paths:
-                for plugin in Path(pro_bakery_ruleset_path).glob("*.py"):
-                    if plugin.stem != "__init__":
-                        not_yet_moved_plugins.add(
-                            f"cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.{plugin.stem}"
-                        )
         case Edition.ULTIMATE | Edition.ULTIMATEMT | Edition.CLOUD:
-            import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
-
-            pro_bakery_ruleset_paths = set(
-                cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__
+            not_yet_moved_plugins = _discover_modules_from(
+                "cmk.gui.plugins.wato.check_parameters",
+                "cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs",
+                "cmk.gui.nonfree.ultimate.plugins.wato.check_parameters",
             )
-            for pro_bakery_ruleset_path in pro_bakery_ruleset_paths:
-                for plugin in Path(pro_bakery_ruleset_path).glob("*.py"):
-                    if plugin.stem != "__init__":
-                        not_yet_moved_plugins.add(
-                            f"cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.{plugin.stem}"
-                        )
-
-            import cmk.gui.nonfree.ultimate.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
-
-            ultimate_check_parameters_paths = set(
-                cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.__path__
-            )
-            for ultimate_check_parameters_path in ultimate_check_parameters_paths:
-                for plugin in Path(ultimate_check_parameters_path).glob("*.py"):
-                    if plugin.stem != "__init__":
-                        not_yet_moved_plugins.add(
-                            f"cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.{plugin.stem}"
-                        )
 
     if not_yet_moved_plugins:
         more_discovered_plugins = discover_plugins_from_modules(

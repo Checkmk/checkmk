@@ -3022,6 +3022,10 @@ def _restore_backup_from_tar_site(
             )
 
         site = SiteContext(site_name_from_uid())
+        user_verify(version_info, site, allow_populated=True)
+        sitename_must_be_valid(
+            site.name, Path(SitePaths.from_site_name(site.name).home), reuse=True
+        )
 
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
         sys.stdout.flush()

@@ -23,6 +23,7 @@ eslint_bin.eslint_binary(
         "//:node_modules/eslint",
         "//:node_modules/eslint-plugin-vue",
     ],
+    env = {"NODE_OPTIONS": "--max-old-space-size=8192"},
     visibility = ["//visibility:public"],
 )
 

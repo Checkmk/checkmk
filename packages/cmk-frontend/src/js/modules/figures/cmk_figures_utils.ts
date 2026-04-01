@@ -6,6 +6,17 @@
 import type { BaseType, Path, Selection } from 'd3'
 import { extent, path, select } from 'd3'
 
+import {
+  AutoPrecision,
+  DecimalFormatter,
+  EngineeringScientificFormatter,
+  IECFormatter,
+  SIFormatter,
+  StandardScientificFormatter,
+  StrictPrecision,
+  TimeFormatter
+} from '@/modules/number_format'
+
 import type { FigureBase } from './cmk_figures'
 import type {
   Bounds,
@@ -296,10 +307,34 @@ export function get_function(render_string: string) {
   return new Function(`"use strict"; return ${render_string}`)()
 }
 
-export function plot_render_function(plot: any) {
+type FormatterConstructor = new (
+  symbol: string,
+  precision: AutoPrecision | StrictPrecision
+) => { render: (v: number) => string }
+
+const _FORMATTER_CLASSES: Record<string, FormatterConstructor> = {
+  DecimalFormatter,
+  SIFormatter,
+  IECFormatter,
+  StandardScientificFormatter,
+  EngineeringScientificFormatter,
+  TimeFormatter
+}
+
+export function plot_render_function(plot: any): (v: number) => string {
+  const unit = getIn(plot, 'metric', 'unit')
+  if (unit?.formatter_type && unit.formatter_type in _FORMATTER_CLASSES) {
+    const FormatterClass = _FORMATTER_CLASSES[unit.formatter_type]
+    const precision =
+      unit.precision_type === 'auto'
+        ? new AutoPrecision(unit.precision_digits)
+        : new StrictPrecision(unit.precision_digits)
+    const formatter = new FormatterClass(unit.symbol, precision)
+    return (v: number) => formatter.render(v)
+  }
+  // Fallback for legacy js_render (e.g. ntop dashlets)
   const js_render = getIn(plot, 'metric', 'unit', 'js_render')
   if (js_render) return get_function(js_render)
-  //TODO: replace this function from string with a better solution
   return get_function(
     'function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }'
   )

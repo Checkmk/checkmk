@@ -27,10 +27,10 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
             ),
             {
                 "unit": {
-                    "js_render": "v => new cmk.number_format.DecimalFormatter(\n"
-                    '    "Hz",\n'
-                    "    new cmk.number_format.AutoPrecision(3),\n"
-                    ").render(v)",
+                    "formatter_type": "DecimalFormatter",
+                    "symbol": "Hz",
+                    "precision_type": "auto",
+                    "precision_digits": 3,
                     "stepping": None,
                 },
             },
@@ -43,10 +43,10 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
             ),
             {
                 "unit": {
-                    "js_render": "v => new cmk.number_format.IECFormatter(\n"
-                    '    "X",\n'
-                    "    new cmk.number_format.StrictPrecision(2),\n"
-                    ").render(v)",
+                    "formatter_type": "IECFormatter",
+                    "symbol": "X",
+                    "precision_type": "strict",
+                    "precision_digits": 2,
                     "stepping": "binary",
                 },
             },

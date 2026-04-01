@@ -13,7 +13,11 @@ export interface TimeseriesFigureDataPlotDefinition {
   plot_type: string
   metric: {
     unit: {
-      js_render: string
+      formatter_type: string
+      symbol: string
+      precision_type: 'auto' | 'strict'
+      precision_digits: number
+      stepping?: string | null
     }
   }
   label: string

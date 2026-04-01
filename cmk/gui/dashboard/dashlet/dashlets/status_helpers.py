@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterable, Mapping
-from typing import assert_never
 
 from livestatus import LivestatusResponse
 
@@ -25,7 +24,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, VisualContext
-from cmk.gui.unit_formatter import AutoPrecision, IECFormatter, StrictPrecision
+from cmk.gui.unit_formatter import IECFormatter
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -116,18 +115,11 @@ def _purge_unit_spec_for_js(
 def _transform_user_specific_unit_for_js(
     unit_for_current_user: UserSpecificUnit,
 ) -> dict[str, object]:
-    match unit_for_current_user.formatter.precision:
-        case AutoPrecision():
-            js_precision = "AutoPrecision"
-        case StrictPrecision():
-            js_precision = "StrictPrecision"
-        case _:
-            assert_never(unit_for_current_user.formatter)
     return {
-        "js_render": f"""v => new cmk.number_format.{unit_for_current_user.formatter.js_formatter_name}(
-    "{unit_for_current_user.formatter.symbol}",
-    new cmk.number_format.{js_precision}({unit_for_current_user.formatter.precision.digits}),
-).render(v)""",
+        "formatter_type": unit_for_current_user.formatter.js_formatter_name,
+        "symbol": unit_for_current_user.formatter.symbol,
+        "precision_type": unit_for_current_user.formatter.precision.type,
+        "precision_digits": unit_for_current_user.formatter.precision.digits,
         "stepping": "binary" if isinstance(unit_for_current_user.formatter, IECFormatter) else None,
     }
 

@@ -11,6 +11,7 @@ import UclCmkButton from './basic-elements/UclCmkButton.vue'
 import UclCmkChip from './basic-elements/UclCmkChip.vue'
 import UclCmkCode from './basic-elements/UclCmkCode.vue'
 import UclCmkColorPicker from './basic-elements/UclCmkColorPicker.vue'
+import UclCmkIconButton from './basic-elements/UclCmkIconButton.vue'
 import UclCmkInlineButton from './basic-elements/UclCmkInlineButton.vue'
 import UclCmkSwitch from './basic-elements/UclCmkSwitch.vue'
 import UclCmkTag from './basic-elements/UclCmkTag.vue'
@@ -60,6 +61,7 @@ import UclHelp from './system-feedback/UclHelp.vue'
 const basicElementsPages = [
   new Page('CmkBadge', UclCmkBadge),
   new Page('CmkButton', UclCmkButton),
+  new Page('CmkIconButton', UclCmkIconButton),
   new Page('CmkInlineButton', UclCmkInlineButton),
   new Page('CmkChip', UclCmkChip),
   new Page('CmkCode', UclCmkCode),

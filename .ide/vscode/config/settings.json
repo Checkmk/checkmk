@@ -134,7 +134,7 @@
   },
   "bazel": {
     "folder": {
-      "bazel.buildifierExecutable": "${HOME}/go/bin/buildifier"
+      "bazel.buildifierExecutable": "${which:buildifier}"
     }
   },
   "general": {

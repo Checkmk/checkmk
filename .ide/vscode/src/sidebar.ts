@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { checkBuildStatus } from './build/buildStatus'
+import { type BuildStatus, checkBuildStatus } from './build/buildStatus'
 import type { SettingsEntry } from './build/settings'
 import { type ExtensionSets, loadConfig } from './core/config'
 import { log, notifyInfo, notifyWarn } from './core/log'
@@ -44,7 +44,7 @@ let _stateCache: StateCache | null = null
 let _commands: Record<string, unknown> | null = null
 let _issuesView: vscode.TreeView<IssueItem> | null = null
 let _issuesProvider: IssuesProvider | null = null
-let _refreshStatusBar: (() => void) | null = null
+let _refreshStatusBar: ((precomputed?: BuildStatus) => void) | null = null
 const _providers: Record<string, SectionViewProvider> = {}
 
 // ── State cache ──
@@ -198,13 +198,13 @@ export function refreshAll(): void {
   for (const p of Object.values(_providers)) {
     p.refresh()
   }
-  _refreshStatusBar?.()
+  _refreshStatusBar?.(_stateCache?.buildStatus)
 }
 
 export function registerSidebar(
   context: vscode.ExtensionContext,
   commands: Record<string, unknown>,
-  refreshStatusBar?: () => void
+  refreshStatusBar?: (precomputed?: BuildStatus) => void
 ): void {
   _context = context
   _onboardingDismissed = context.globalState.get('cmk.onboardingDismissed', false) as boolean

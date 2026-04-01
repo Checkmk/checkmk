@@ -116,7 +116,7 @@ export function createStatusBar(
   context: vscode.ExtensionContext,
   commands: Record<string, CommandEntry>,
   onBuildComplete?: () => void
-): { refreshStatus: () => void } {
+): { refreshStatus: (precomputed?: BuildStatus) => void } {
   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50)
   statusBarItem.command = 'cmk.statusBarMenu'
   statusBarItem.show()
@@ -124,11 +124,14 @@ export function createStatusBar(
 
   let currentStatus: BuildStatus = {}
 
-  function refreshStatus(): void {
-    const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-    if (!wsPath) return
-
-    currentStatus = checkBuildStatus(wsPath)
+  function refreshStatus(precomputed?: BuildStatus): void {
+    if (precomputed) {
+      currentStatus = precomputed
+    } else {
+      const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+      if (!wsPath) return
+      currentStatus = checkBuildStatus(wsPath)
+    }
     const stale = getStaleTargets(currentStatus)
 
     const pythonIssues = !currentStatus.venv?.ok || !currentStatus.sharedTypingPy?.ok

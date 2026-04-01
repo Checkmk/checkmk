@@ -7,7 +7,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { log } from '../../core/log'
-import { runCommand, waitForTask } from '../../core/tasks'
+import { waitForTask } from '../../core/tasks'
 import { createSite, omdServiceCommand } from '../../omd/omd'
 import { KNOWN_SOCKETS, promptAndStartProxy, promptSocketProxy, stopProxy } from '../../omd/proxy'
 import { esc, getNonce, wrap } from '../html'
@@ -67,17 +67,9 @@ export async function handleMessage(
       await createSite()
       refreshAll()
       return true
-    case 'omdInstallDevSite': {
-      log('Install cmk-dev-site')
-      showSectionLoading('omd')
-      const exec = runCommand('Install cmk-dev-site', 'pipx install cmk-dev-site')
-      if (exec) {
-        await waitForTask(exec)
-        vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', true)
-        refreshAll()
-      }
+    case 'omdInstallDevSite':
+      await vscode.commands.executeCommand('cmk.installDevSite')
       return true
-    }
     case 'omdProxyStart': {
       const service = msg.service as string
       const socketRel = KNOWN_SOCKETS[service]

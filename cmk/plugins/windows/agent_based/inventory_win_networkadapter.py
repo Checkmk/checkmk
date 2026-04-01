@@ -102,8 +102,8 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
         if result.get("Name"):
             yield result
 
-    for adapter in group_adapters(string_table):
-        yield IPNetworkAdapter(
+    return [
+        IPNetworkAdapter(
             type=adapter.get("AdapterType", ""),
             macaddress=adapter.get("MACAddress", ""),
             name=adapter["Name"],
@@ -119,6 +119,8 @@ def parse_win_networkadapter(string_table: StringTable) -> Section:
                 for is_temporary in ("random" in (adapter["params"].get(address) or []),)
             ],
         )
+        for adapter in group_adapters(string_table)
+    ]
 
 
 agent_section_win_networkadapter = AgentSection(

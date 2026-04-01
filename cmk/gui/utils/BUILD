@@ -382,6 +382,41 @@ py_library(
     ],
 )
 
+py_library(
+    name = "urls",
+    srcs = ["urls.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":escaping",
+        ":transaction_manager",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:type_defs",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+        requirement("flask"),
+    ],
+)
+
+py_library(
+    name = "popups",
+    srcs = ["popups.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":urls",
+        "//cmk/gui:type_defs",
+    ],
+)
+
 # The remaining utils files are tightly coupled with the monolithic cmk/gui:gui target
 # (circular imports). They are exported as a filegroup so gui can include them in its srcs
 # as a temporary measure and boiled down by following steps.
@@ -407,6 +442,7 @@ filegroup(
             "mobile.py",
             "output_funnel.py",
             "permission_verification.py",
+            "popups.py",
             "product_usage_analytics_popup_cookie.py",
             "request_context.py",
             "security_log_events.py",
@@ -417,6 +453,7 @@ filegroup(
             "time.py",
             "timeout_manager.py",
             "transaction_manager.py",
+            "urls.py",
             "user_errors.py",
             "user_frontend_settings_cookie.py",
         ],

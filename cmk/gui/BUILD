@@ -476,6 +476,16 @@ py_library(
     ],
 )
 
+py_library(
+    name = "page_menu_entry",
+    srcs = ["page_menu_entry.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -504,6 +514,7 @@ py_library(
             "log.py",
             "ntop.py",
             "num_split.py",
+            "page_menu_entry.py",
             "pdf.py",
             "permissions.py",
             "pseudo_users.py",
@@ -552,6 +563,7 @@ py_library(
         ":log",
         ":ntop",
         ":num_split",
+        ":page_menu_entry",
         ":pdf",
         ":permissions",
         ":pseudo_users",
@@ -570,6 +582,12 @@ py_library(
         "//cmk/diagnostics",
         "//cmk/diskspace",
         "//cmk/fields",
+        "//cmk/gui/htmllib:debug_vars",
+        "//cmk/gui/htmllib:foldable_container",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/htmllib:tag_rendering",
+        "//cmk/gui/htmllib:type_defs",
         "//cmk/gui/utils:agent",
         "//cmk/gui/utils:agent_registration",
         "//cmk/gui/utils:autocompleter_config",
@@ -587,6 +605,7 @@ py_library(
         "//cmk/gui/utils:mobile",
         "//cmk/gui/utils:output_funnel",
         "//cmk/gui/utils:permission_verification",
+        "//cmk/gui/utils:popups",
         "//cmk/gui/utils:product_usage_analytics_popup_cookie",
         "//cmk/gui/utils:request_context",
         "//cmk/gui/utils:security_log_events",
@@ -597,6 +616,7 @@ py_library(
         "//cmk/gui/utils:time",
         "//cmk/gui/utils:timeout_manager",
         "//cmk/gui/utils:transaction_manager",
+        "//cmk/gui/utils:urls",
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/utils:user_frontend_settings_cookie",
         "//cmk/inventory",

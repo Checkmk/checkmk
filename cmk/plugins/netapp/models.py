@@ -536,6 +536,27 @@ class ShelfTemperatureModel(ShelfObjectModel):
     high_warning: int | None = None
     high_critical: int | None = None
 
+    def _has_sensor_data(self) -> bool:
+        """Return True only if the sensor reports a real temperature AND at least one threshold.
+
+        NetApp firmware reports installed=true for DAC-only ports (no SFP transceiver present),
+        setting state=error and all values to null. These are not real errors and must be skipped.
+        This appears as a firmware/API bug in NetApp: the hardware detection does not differentiate
+        between "not installed" and "error".
+        """
+        if self.temperature is None:
+            return False
+
+        return None not in (
+            self.low_warning,
+            self.low_critical,
+            self.high_warning,
+            self.high_critical,
+        )
+
+    def consider_installed(self) -> bool:
+        return super().consider_installed() and self._has_sensor_data()
+
 
 class ShelfPsuModel(ShelfObjectModel):
     """

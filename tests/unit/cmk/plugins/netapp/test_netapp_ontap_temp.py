@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -16,6 +18,7 @@ from cmk.plugins.lib.temperature import TempParamDict
 from cmk.plugins.netapp.agent_based.netapp_ontap_temp import (
     _check_netapp_ontap_temp,
     discovery_netapp_ontap_temp,
+    parse_netapp_ontap_temp,
 )
 from cmk.plugins.netapp.models import ShelfTemperatureModel
 
@@ -30,79 +33,68 @@ SENSORS_SECTION = {
             list_id="2",
             state="ok",
             id=111,
-            temperature=20.0,
+            temperature=20,
             ambient=True,
-            low_warning=None,
-            low_critical=None,
-            high_warning=None,
-            high_critical=None,
+            low_warning=5,
+            low_critical=0,
+            high_warning=55,
+            high_critical=60,
         ),
     ],
     "Internal Shelf 2": [
         ShelfTemperatureModelFactory.build(
             list_id="2",
             state="ok",
-            temperature=50.0,
+            temperature=50,
             ambient=False,
-            low_warning=None,
-            low_critical=None,
-            high_warning=None,
-            high_critical=None,
+            low_warning=5,
+            low_critical=0,
+            high_warning=95,
+            high_critical=105,
         ),
     ],
     "Ambient Shelf 1": [
         ShelfTemperatureModelFactory.build(
             list_id="1",
             state="ok",
-            temperature=50.0,
+            temperature=50,
             ambient=True,
-            low_warning=None,
-            low_critical=None,
-            high_warning=None,
-            high_critical=None,
+            low_warning=5,
+            low_critical=0,
+            high_warning=95,
+            high_critical=105,
         ),
         ShelfTemperatureModelFactory.build(
             list_id="1",
             state="ok",
-            temperature=10.0,
+            temperature=10,
             ambient=True,
-            low_warning=None,
-            low_critical=None,
-            high_warning=None,
-            high_critical=None,
+            low_warning=5,
+            low_critical=0,
+            high_warning=95,
+            high_critical=105,
         ),
         ShelfTemperatureModelFactory.build(
             list_id="1",
             state="ok",
-            temperature=20.0,
+            temperature=20,
             ambient=True,
-            low_warning=None,
-            low_critical=None,
-            high_warning=None,
-            high_critical=None,
-        ),
-        ShelfTemperatureModelFactory.build(
-            list_id="1",
-            id=20,
-            state="error",
-            temperature=None,
-            ambient=True,
-            low_warning=None,
-            low_critical=None,
-            high_warning=None,
-            high_critical=None,
+            low_warning=5,
+            low_critical=0,
+            high_warning=95,
+            high_critical=105,
         ),
     ],
     "Internal Shelf 1": [
         ShelfTemperatureModelFactory.build(
             list_id="1",
             state="ok",
-            temperature=30.0,
+            temperature=30,
             ambient=False,
-            low_warning=None,
-            low_critical=None,
-            high_warning=None,
-            high_critical=None,
+            low_warning=5,
+            low_critical=0,
+            high_warning=95,
+            high_critical=105,
         ),
     ],
 }
@@ -140,7 +132,6 @@ def test_check_netapp_ontap_temp_() -> None:
         Metric("temp", 50.0),
         Result(state=State.OK, summary="Average: 26.7 °C"),
         Result(state=State.OK, summary="Lowest: 10 °C"),
-        Result(state=State.CRIT, summary="Additional failed sensors: 1 (1/20)"),
     ]
 
 
@@ -216,3 +207,35 @@ def test_check_netapp_ontap_temp_trend(
         )
 
         assert result[-1] == expected_trend_result
+
+
+@pytest.mark.parametrize(
+    "json_line, expected_count",
+    [
+        pytest.param(
+            # Valid sensor: temperature and thresholds present
+            '{"list_id":"1","id":8,"state":"ok","installed":true,"temperature":57,"ambient":false,'
+            '"low_warning":5,"low_critical":0,"high_warning":95,"high_critical":105}',
+            1,
+            id="valid sensor is kept",
+        ),
+        pytest.param(
+            # DAC-only sensor: installed=true but no SFP — all values null (NetApp firmware bug)
+            '{"list_id":"1","id":10,"state":"error","installed":true,"temperature":null,"ambient":false,'
+            '"low_warning":null,"low_critical":null,"high_warning":null,"high_critical":null}',
+            0,
+            id="DAC sensor with null temperature and null thresholds is filtered",
+        ),
+        pytest.param(
+            # Sensor with temperature but no thresholds is filtered
+            '{"list_id":"1","id":12,"state":"ok","installed":true,"temperature":45,"ambient":false,'
+            '"low_warning":null,"low_critical":null,"high_warning":null,"high_critical":null}',
+            0,
+            id="sensor with temperature but no thresholds is filtered",
+        ),
+    ],
+)
+def test_parse_netapp_ontap_temp_filters_dac_sensors(json_line: str, expected_count: int) -> None:
+    section = parse_netapp_ontap_temp([[json_line]])
+    total = sum(len(sensors) for sensors in section.values())
+    assert total == expected_count

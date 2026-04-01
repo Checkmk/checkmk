@@ -9,13 +9,15 @@ a structured JSON file with environment info, Bazel state, manifest state,
 deploy state, and the tail of the deploy log.  Developers share this file
 with the tool maintainer instead of describing what happened.
 
-Storage: ``~/.cmk-dev-deploy/diagnostics/`` — outside the OverlayFS area
+Storage: ``$XDG_CACHE_HOME/cmk-dev-deploy/diagnostics/`` (defaults to
+``~/.cache/cmk-dev-deploy/diagnostics/``) — outside the OverlayFS area
 so bundles survive ``--purge`` and ``--full`` operations.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -32,7 +34,8 @@ if TYPE_CHECKING:
 
 
 def _diagnostics_dir() -> Path:
-    return Path.home() / ".cmk-dev-deploy" / "diagnostics"
+    cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    return cache / "cmk-dev-deploy" / "diagnostics"
 
 
 _MAX_CRASH_FILES = 20

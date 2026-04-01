@@ -104,8 +104,9 @@ _refresh_ansi()
 
 
 def open_log_file(site_name: str) -> None:
-    """Open a deploy log file at ``~/.cmk-dev-deploy/logs/<site>/deploy.log``."""
-    log_dir = Path.home() / ".cmk-dev-deploy" / "logs" / site_name
+    """Open a deploy log file under ``$XDG_CACHE_HOME/cmk-dev-deploy/logs/<site>/``."""
+    cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    log_dir = cache / "cmk-dev-deploy" / "logs" / site_name
     try:
         log_dir.mkdir(parents=True, exist_ok=True)
     except OSError:

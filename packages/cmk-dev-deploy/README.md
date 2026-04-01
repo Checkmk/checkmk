@@ -300,7 +300,7 @@ If SSH is unavailable, the tool falls back to `sudo --login -u <site>` for servi
 
 ## Troubleshooting
 
-On any error, the tool automatically captures a diagnostic bundle at `~/.cmk-dev-deploy/diagnostics/crash-<timestamp>.json`. This includes environment info, Bazel state, manifest state, deploy state, and log tail. Share this file when reporting issues.
+On any error, the tool automatically captures a diagnostic bundle at `~/.cache/cmk-dev-deploy/diagnostics/crash-<timestamp>.json` (respects `$XDG_CACHE_HOME`). This includes environment info, Bazel state, manifest state, deploy state, and log tail. Share this file when reporting issues.
 
 Use `--json-errors` to also print the bundle to stdout (useful for CI/automation).
 

@@ -41,7 +41,8 @@ _INOTIFY_MIN_WATCHES = 524288
 
 def _pid_file() -> Path:
     """PID file for orphaned iBazel process detection."""
-    return Path.home() / ".cache" / "cmk-dev-deploy" / "ibazel-frontend.pid"
+    cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    return cache / "cmk-dev-deploy" / "ibazel-frontend.pid"
 
 
 # ---------------------------------------------------------------------------

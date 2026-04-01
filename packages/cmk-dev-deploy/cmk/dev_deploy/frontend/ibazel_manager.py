@@ -53,7 +53,8 @@ _GITHUB_RELEASES_URL = "https://github.com/bazelbuild/bazel-watcher/releases/dow
 
 
 def _cache_dir() -> Path:
-    return Path.home() / ".cache" / "cmk-dev-deploy"
+    cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    return cache / "cmk-dev-deploy"
 
 
 _PLATFORM_MAP: MappingProxyType[tuple[str, str], str] = MappingProxyType(

@@ -6,6 +6,8 @@
 from collections.abc import Callable
 
 from cmk.gui.data_source import DataSourceRegistry
+from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pagetypes import BuiltinPagetypeTopicRegistry
 from cmk.gui.painter.v0 import PainterRegistry
@@ -38,6 +40,7 @@ from ._find_usage import (
     UsagesOfContactGroupInMkeventdNotifyContactGroupFinder,
 )
 from ._openapi import register as openapi_register
+from ._openapi.historical_events._registration import register as historical_events_register
 from ._sidebar_snapin import SidebarSnapinEventConsole
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
 from .icon import MkeventdIcon
@@ -70,6 +73,8 @@ def register(
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
     endpoint_registry: EndpointRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
+    endpoint_family_registry: EndpointFamilyRegistry,
     replication_path_registry: ReplicationPathRegistry,
     builtin_pagetype_topic_registry: BuiltinPagetypeTopicRegistry,
     save_active_config: Callable[[], None],
@@ -116,3 +121,7 @@ def register(
     )
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_ec_rules)
     openapi_register(endpoint_registry)
+    historical_events_register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )

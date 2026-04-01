@@ -3905,6 +3905,53 @@ class IconClient(RestApiClient):
         )
 
 
+class HistoricalEventConsole(RestApiClient):
+    domain: DomainType = "historical_event"
+    default_version = APIVersion.UNSTABLE
+
+    def get(
+        self,
+        event_id: str,
+        site_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{event_id}?site_id={site_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(
+        self,
+        *,
+        site_id: str | None = None,
+        event_ids: Sequence[int] | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        phase: Literal["open", "ack", "closed", "delayed", "counting"] | None = None,
+        query: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+            query_params=_only_set_keys(
+                {
+                    "event_ids": event_ids,
+                    "query": query,
+                    "host": host,
+                    "application": application,
+                    "state": state,
+                    "phase": phase,
+                    "site_id": site_id,
+                }
+            ),
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3970,6 +4017,7 @@ class ClientRegistry:
     MetricBackendClient: MetricBackendClient
     PagetypeTopicClient: PagetypeTopicClient
     IconClient: IconClient
+    HistoricalEventConsole: HistoricalEventConsole
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -4027,4 +4075,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
         PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
         IconClient=IconClient(request_handler, url_prefix),
+        HistoricalEventConsole=HistoricalEventConsole(request_handler, url_prefix),
     )

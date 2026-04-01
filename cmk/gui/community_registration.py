@@ -308,6 +308,8 @@ def register(edition: Edition) -> None:
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
         endpoint_registry,
+        versioned_endpoint_registry,
+        endpoint_family_registry,
         replication_path_registry,
         builtin_pagetype_topic_registry,
         save_active_config,

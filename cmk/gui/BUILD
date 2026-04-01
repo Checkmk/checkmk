@@ -105,16 +105,6 @@ py_library(
 )
 
 py_library(
-    name = "speaklater",
-    srcs = ["utils/speaklater.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-)
-
-py_library(
     name = "type_defs",
     srcs = ["type_defs.py"],
     imports = ["../.."],
@@ -124,7 +114,7 @@ py_library(
     ],
     deps = [
         ":exceptions",
-        ":speaklater",
+        "//cmk/gui/utils:speaklater",
         "//cmk/inventory",
         "//cmk/utils",
         "//packages/cmk-ccc:cpu-tracking",
@@ -147,7 +137,7 @@ py_library(
     deps = [
         ":ctx_stack",
         ":hooks",
-        ":speaklater",
+        "//cmk/gui/utils:speaklater",
         "//cmk/utils",
     ],
 )
@@ -194,8 +184,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":speaklater",
         ":type_defs",
+        "//cmk/gui/utils:speaklater",
         "//packages/cmk-ccc:plugin-registry",
     ],
 )
@@ -285,9 +275,11 @@ py_library(
             "theme/**/*.py",
             "type_defs.py",
             "user_connection_config_types.py",
-            "utils/speaklater.py",
         ],
-    ) + ["wsgi/applications/index.wsgi"],
+    ) + [
+        "wsgi/applications/index.wsgi",
+        "//cmk/gui/utils:gui_srcs",
+    ],
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -312,7 +304,6 @@ py_library(
         ":permissions",
         ":role_types",
         ":site_config",
-        ":speaklater",
         ":theme",
         ":type_defs",
         ":user_connection_config_types",
@@ -322,6 +313,13 @@ py_library(
         "//cmk/diagnostics",
         "//cmk/diskspace",
         "//cmk/fields",
+        "//cmk/gui/utils:misc",
+        "//cmk/gui/utils:permission_verification",
+        "//cmk/gui/utils:security_log_events",
+        "//cmk/gui/utils:selection_id",
+        "//cmk/gui/utils:speaklater",
+        "//cmk/gui/utils:temperate_unit",
+        "//cmk/gui/utils:transaction_manager",
         "//cmk/inventory",
         "//cmk/piggyback:backend",
         "//cmk/piggyback:hub",

@@ -349,7 +349,6 @@ private:
 
     // all pre operation required for normal functionality
     void preStartBinaries();
-    void detachedPluginsStart();
 
     TheMiniProcess ohm_process_;
     void updateMaxWaitTime(int timeout_seconds) noexcept;

@@ -37,7 +37,6 @@ public:
     void updateSectionStatus() override = 0;
     bool isAllowedByCurrentConfig() const override;
     void preStart() override;
-    void detachedStart();
     void updateCommandLine();
     std::vector<std::string> gatherAllowedExtensions() const;
 

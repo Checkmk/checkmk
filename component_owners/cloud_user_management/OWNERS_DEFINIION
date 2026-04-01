@@ -1,0 +1,9 @@
+baris.leenders@checkmk.com  # component lead
+
+charly.laurent@checkmk.com
+akhil.tummala@checkmk.com
+hojjat.afsharan@checkmk.com
+
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

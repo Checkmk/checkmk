@@ -1,0 +1,12 @@
+type = "Component"
+display_name = "Cloud User Management"
+has_support_component = true
+members_required = 2
+description = """
+For cloud we use our own authentication service. The service is used for us and customer to login to the
+cloud platform.
+"""
+external_code_location = [
+  "https://gitlab.infra.checkmk.cloud/checkmk-saas/cloudmk/-/tree/main/auth_backend_service?ref_type=heads",
+  "https://gitlab.infra.checkmk.cloud/checkmk-saas/cloudmk/-/tree/main/auth_frontend_service?ref_type=heads",
+]

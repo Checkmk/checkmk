@@ -3,7 +3,6 @@
   "strip_prefix": "shunit2-e35296d3be2bcde770f2989d9c09fd1a2af6b567",
   "url": "https://github.com/kward/shunit2/archive/e35296d3be2bcde770f2989d9c09fd1a2af6b567.tar.gz",
   "overlay": {
-    "BUILD.bazel": "sha256-EBeqk87aEJvSPQGdeDQDDQ2rr1Dq5cm11jVGD5f4NnI=",
-    "MODULE.bazel": "sha256-sth8ht8YV/1719FbF6FO9IXH5BBSeraiFT1F4ZaMqrw="
+    "BUILD.bazel": "sha256-EBeqk87aEJvSPQGdeDQDDQ2rr1Dq5cm11jVGD5f4NnI="
   }
 }

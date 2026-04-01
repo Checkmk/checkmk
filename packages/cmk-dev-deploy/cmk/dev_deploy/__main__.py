@@ -901,6 +901,16 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
     if args.commit:
         output.info(f"Deploying state at commit {args.commit}")
 
+    # --dry-run only needs the manifest (for change categorization) and
+    # deploy state (in /var/tmp/, not on the overlay).  Skip sudo and
+    # overlay setup entirely — dry-run never writes to the site.
+    if args.dry_run:
+        t0 = _time.monotonic()
+        ensure_manifest(repo_root, force_rebuild=args.rebuild_manifest)
+        _manifest_elapsed = _time.monotonic() - t0
+        ssh_state = SSHState()
+        return _run_deploy_cycle(args, repo_root, site, ssh_state, _manifest_elapsed).exit_code
+
     # Pre-authenticate sudo early — before the manifest rebuild which
     # can take minutes and would otherwise expire the sudo timestamp.
     if not is_overlay_active(site.root) or args.full:

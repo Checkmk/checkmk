@@ -8,3 +8,17 @@
   opacity: 0.7;
   pointer-events: none;
 }
+
+.card.profile.issues {
+  border-color: var(--cmk-yellow);
+  background: var(--cmk-yellow-dim);
+}
+
+.card.profile.issues .card-icon {
+  color: var(--cmk-yellow);
+}
+
+.card.profile.issues .card-badge {
+  background: var(--cmk-yellow);
+  color: #000;
+}

@@ -39,12 +39,13 @@ export function render(state: StateCache): string {
         <span class="card-badge">…</span>
       </div>`
       }
-      const cls = p.active ? 'active' : 'inactive'
-      const icon = p.active ? '&#10003;' : '&#9675;'
+      const cls = p.active && p.hasIssues ? 'active issues' : p.active ? 'active' : 'inactive'
+      const icon = p.active && p.hasIssues ? '&#9888;' : p.active ? '&#10003;' : '&#9675;'
+      const badge = p.active && p.hasIssues ? 'STALE' : p.active ? 'ON' : 'OFF'
       return `<div class="card profile ${cls}" data-action="toggle-profile" data-id="${p.name}">
       <span class="card-icon">${icon}</span>
       <span class="card-label">${p.label} <i>(${p.fullName})</i></span>
-      <span class="card-badge">${p.active ? 'ON' : 'OFF'}</span>
+      <span class="card-badge">${badge}</span>
     </div>`
     })
     .join('')

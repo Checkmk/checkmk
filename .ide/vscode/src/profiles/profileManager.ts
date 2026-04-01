@@ -23,6 +23,7 @@ export interface ProfileInfo {
   name: string
   active: boolean
   loading: boolean
+  hasIssues: boolean
   label: string
   fullName: string
 }
@@ -144,6 +145,7 @@ export function getAll(): ProfileInfo[] {
     name,
     active: families[name].active,
     loading: families[name].loading,
+    hasIssues: families[name].hasIssues,
     label: PROFILE_LABELS[name] || name,
     fullName: name.charAt(0).toUpperCase() + name.slice(1)
   }))

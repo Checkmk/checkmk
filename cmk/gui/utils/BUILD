@@ -478,6 +478,42 @@ py_library(
 )
 
 py_library(
+    name = "regex",
+    srcs = ["regex.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":urls",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:i18n",
+        "//cmk/gui:logged_in",
+        "//cmk/gui/htmllib:html",
+    ],
+)
+
+py_library(
+    name = "csrf_token",
+    srcs = ["csrf_token.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:logged_in",
+        "//cmk/utils",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:user",
+        requirement("flask"),
+    ],
+)
+
+py_library(
     name = "popups",
     srcs = ["popups.py"],
     imports = ["../../.."],
@@ -504,6 +540,7 @@ filegroup(
             "autocompleter_config.py",
             "compatibility.py",
             "confirm_with_preview.py",
+            "csrf_token.py",
             "dataclasses.py",
             "encrypter.py",
             "escaping.py",
@@ -520,6 +557,7 @@ filegroup(
             "permission_verification.py",
             "popups.py",
             "product_usage_analytics_popup_cookie.py",
+            "regex.py",
             "rendering.py",
             "request_context.py",
             "roles.py",

@@ -122,7 +122,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
         results = quicksearch_manager._evaluate_results(search_objects)
 
-        QuicksearchResultRenderer().show(results, query)
+        render_quicksearch_results(results, query)
 
     def _page_search_open(self, ctx: PageContext) -> None:
         """Generate the URL to the view that is opened when confirming the search field"""
@@ -141,25 +141,19 @@ class QuicksearchSnapin(SidebarSnapin):
         raise HTTPRedirect(search_url)
 
 
-class QuicksearchResultRenderer:
-    """HTML rendering the matched results"""
+def render_quicksearch_results(results_by_topic: SearchResultsByTopic, query: SearchQuery) -> None:
+    sorted_results = sorted(results_by_topic, key=lambda x: x[0])
+    # Show search topic if at least two search objects provide elements
+    show_match_topics = len(sorted_results) > 1
 
-    def show(self, results_by_topic: SearchResultsByTopic, query: SearchQuery) -> None:
-        """Renders the elements
+    for match_topic, results in sorted_results:
+        if show_match_topics:
+            html.div(match_topic, class_="topic")
 
-        Show search topic if at least two search objects provide elements
-        """
-        sorted_results = sorted(results_by_topic, key=lambda x: x[0])
-        show_match_topics = len(sorted_results) > 1
-
-        for match_topic, results in sorted_results:
-            if show_match_topics:
-                html.div(match_topic, class_="topic")
-
-            for result in sorted(results, key=lambda x: x.title):
-                html.open_a(id_="result_%s" % query, href=result.url, target="main")
-                html.write_text_permissive(
-                    result.title
-                    + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
-                )
-                html.close_a()
+        for result in sorted(results, key=lambda x: x.title):
+            html.open_a(id_="result_%s" % query, href=result.url, target="main")
+            html.write_text_permissive(
+                result.title
+                + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")
+            )
+            html.close_a()

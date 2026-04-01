@@ -254,13 +254,9 @@ export function registerMypyConfigWatcher(): vscode.Disposable[] {
 
   const disposables: vscode.Disposable[] = []
 
-  const t1 = setTimeout(() => killDmypyDaemons(wsPath), 10000)
-  const t2 = setTimeout(() => killDmypyDaemons(wsPath), 30000)
   const cleanupInterval = setInterval(() => killDmypyDaemons(wsPath), 5 * 60 * 1000)
   disposables.push({
     dispose: () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
       clearInterval(cleanupInterval)
     }
   })

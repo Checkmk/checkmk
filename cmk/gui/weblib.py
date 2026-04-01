@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -39,7 +40,7 @@ def ajax_tree_openclose(ctx: PageContext) -> None:
 
 def init_selection() -> None:
     """Generate the initial selection_id"""
-    user.cleanup_old_selections()
+    user.cleanup_old_selections(active_config.selection_livetime)
 
 
 def ajax_set_rowselection(ctx: PageContext) -> None:

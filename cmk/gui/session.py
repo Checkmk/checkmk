@@ -32,7 +32,13 @@ from cmk.gui.auth import (
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
+from cmk.gui.logged_in import (
+    LoggedInNobody,
+    LoggedInRemoteSite,
+    LoggedInSuperUser,
+    LoggedInUser,
+    UserDefaultConfig,
+)
 from cmk.gui.permissions import permission_registry
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.type_defs import AuthType, SessionInfo, SessionState, SessionStateMachine
@@ -46,6 +52,14 @@ from cmk.gui.wsgi.utils import dict_property
 from cmk.utils.security_event import log_security_event
 
 tracer = trace.get_tracer()
+
+
+def _user_defaults() -> UserDefaultConfig:
+    return UserDefaultConfig(
+        users=config.active_config.multisite_users,
+        default_language=config.active_config.default_language,
+        default_show_mode=config.active_config.show_mode,
+    )
 
 
 class CheckmkFileBasedSession(dict, SessionMixin):
@@ -99,7 +113,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         # check single-session-mode and timeouts, might raise
         userdb.session.ensure_user_can_init_session(user_name, now)
         self.is_secure = secure_flag
-        self.user = LoggedInUser(user_name, user_permissions)
+        self.user = LoggedInUser(user_name, user_permissions, defaults=_user_defaults())
 
         self.session_info = SessionInfo(
             session_id=userdb.session.create_session_id(),
@@ -175,7 +189,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             raise MKAuthException("You have been logged out.")
 
         sess = cls()
-        sess.user = LoggedInUser(user_name, user_permissions)
+        sess.user = LoggedInUser(user_name, user_permissions, defaults=_user_defaults())
         sess.session_info = info
         sess.session_info.auth_type = "cookie"
         sess.new = False
@@ -187,7 +201,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         self, username: UserId, user_permissions: UserPermissions, secure_flag: bool
     ) -> SessionState:
         userdb.session.on_succeeded_login(username, datetime.now())
-        self.user = LoggedInUser(username, user_permissions)
+        self.user = LoggedInUser(username, user_permissions, defaults=_user_defaults())
         self.is_secure = secure_flag
         return self.check_and_update_session_state()
 
@@ -545,6 +559,7 @@ def UserContext(
         LoggedInUser(
             user_id,
             user_permissions,
+            defaults=_user_defaults(),
             explicitly_given_permissions=explicit_permissions,
         )
     )

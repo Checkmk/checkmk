@@ -25,7 +25,13 @@ from cmk.gui.config import (
     default_unauthorized_builtin_role_ids,
 )
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
+from cmk.gui.logged_in import (
+    LoggedInNobody,
+    LoggedInRemoteSite,
+    LoggedInSuperUser,
+    LoggedInUser,
+    UserDefaultConfig,
+)
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import CustomUserRole
@@ -137,18 +143,20 @@ def test_unauthenticated_users(
         user.save_site_config()
 
 
-@pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
 @pytest.mark.usefixtures("request_context")
-def test_unauthenticated_users_language(monkeypatch: MonkeyPatch, user: LoggedInUser) -> None:
-    with monkeypatch.context() as m:
-        m.setattr(active_config, "default_language", "esperanto")
-        assert user.language == "esperanto"
+def test_unauthenticated_users_language() -> None:
+    defaults = UserDefaultConfig(
+        users={}, default_language="esperanto", default_show_mode="default_show_less"
+    )
+    user = LoggedInUser(None, UserPermissions({}, {}, {}, []), defaults=defaults)
 
-        user.language = "sindarin"
-        assert user.language == "sindarin"
+    assert user.language == "esperanto"
 
-        user.reset_language()
-        assert user.language == "esperanto"
+    user.language = "sindarin"
+    assert user.language == "sindarin"
+
+    user.reset_language()
+    assert user.language == "esperanto"
 
 
 @pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
@@ -306,7 +314,15 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     assert builtin_role_ids == ["user", "admin", "guest", "agent_registration", "no_permissions"]
 
     with create_and_destroy_user(username="test", config=active_config) as user:
-        yield LoggedInUser(user[0], UserPermissions.from_config(active_config, permission_registry))
+        yield LoggedInUser(
+            user[0],
+            UserPermissions.from_config(active_config, permission_registry),
+            defaults=UserDefaultConfig(
+                users=active_config.multisite_users,
+                default_language=active_config.default_language,
+                default_show_mode=active_config.show_mode,
+            ),
+        )
 
 
 def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -> None:

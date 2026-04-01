@@ -14,6 +14,7 @@ import logging
 import os
 import time
 from collections.abc import Container, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Literal, NewType, override, TypedDict
 
@@ -24,7 +25,6 @@ from cmk.ccc import store
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import hooks
-from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
@@ -89,6 +89,18 @@ class UserUIConfig(TypedDict, total=False):
     dismissed_warnings: set[DismissableWarning]
 
 
+@dataclass(frozen=True)
+class UserDefaultConfig:
+    users: dict[str, UserSpec]
+    default_language: str
+    default_show_mode: str
+
+
+_NO_USERS = UserDefaultConfig(
+    users={}, default_language="en", default_show_mode="default_show_less"
+)
+
+
 class LoggedInUser:
     """Manage the currently logged-in user
 
@@ -101,9 +113,11 @@ class LoggedInUser:
         user_id: UserId | None,
         user_permissions: UserPermissions,
         *,
+        defaults: UserDefaultConfig,
         explicitly_given_permissions: Container[str] = frozenset(),
     ) -> None:
         self.id = user_id
+        self._defaults = defaults
         self.transactions = TransactionManager(user_id, self.transids, self.save_transids)
         self._user_permissions = user_permissions
 
@@ -144,7 +158,7 @@ class LoggedInUser:
             return {"roles": role_ids}
         attributes: UserSpec | None = self.load_file("cached_profile", None)
         if attributes is None:
-            attributes = active_config.multisite_users.get(
+            attributes = self._defaults.users.get(
                 user_id,
                 {
                     "roles": role_ids,
@@ -167,7 +181,7 @@ class LoggedInUser:
 
     @property
     def language(self) -> str:
-        return self.get_attribute("language", active_config.default_language)
+        return self.get_attribute("language", self._defaults.default_language)
 
     @language.setter
     def language(self, value: str) -> None:
@@ -186,7 +200,7 @@ class LoggedInUser:
 
     @property
     def show_mode(self) -> str:
-        return self.get_attribute("show_mode") or active_config.show_mode
+        return self.get_attribute("show_mode") or self._defaults.default_show_mode
 
     @property
     def show_more_mode(self) -> bool:
@@ -399,7 +413,7 @@ class LoggedInUser:
 
         self.save_file(row_selection, vo)
 
-    def cleanup_old_selections(self) -> None:
+    def cleanup_old_selections(self, selection_livetime: int) -> None:
         # Delete all selection files older than the defined livetime.
         if self.confdir is None:
             return
@@ -409,7 +423,7 @@ class LoggedInUser:
             for f in os.listdir(path):
                 if f[1] != "." and f.endswith(".mk"):
                     p = path / f
-                    if time.time() - p.stat().st_mtime > active_config.selection_livetime:
+                    if time.time() - p.stat().st_mtime > selection_livetime:
                         p.unlink()
         except OSError:
             pass  # no directory -> no cleanup
@@ -517,7 +531,7 @@ class LoggedInUser:
 # TODO: Can we somehow get rid of this?
 class LoggedInSuperUser(LoggedInUser):
     def __init__(self) -> None:
-        super().__init__(None, UserPermissions({}, {}, {}, []))
+        super().__init__(None, UserPermissions({}, {}, {}, []), defaults=_NO_USERS)
         self.alias = "Superuser for internal use"
         self.email = "admin"
 
@@ -537,7 +551,7 @@ class LoggedInSuperUser(LoggedInUser):
 
 class LoggedInRemoteSite(LoggedInUser):
     def __init__(self, *, site_name: str) -> None:
-        super().__init__(None, UserPermissions({}, {}, {}, []))
+        super().__init__(None, UserPermissions({}, {}, {}, []), defaults=_NO_USERS)
         self.alias = f"Remote site {site_name}"
         self.email = "?"
         self.site_name = site_name
@@ -558,7 +572,7 @@ class LoggedInRemoteSite(LoggedInUser):
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self) -> None:
-        super().__init__(None, UserPermissions({}, {}, {}, []))
+        super().__init__(None, UserPermissions({}, {}, {}, []), defaults=_NO_USERS)
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 

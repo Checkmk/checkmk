@@ -9,11 +9,10 @@ import traceback
 import livestatus
 
 from cmk.ccc.exceptions import MKException, MKGeneralException
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import PageContext
@@ -86,7 +85,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def _ajax_search(self, ctx: PageContext) -> None:
         """Generate the search result list"""
-        query = _maybe_strip(request.get_str_input("q"))
+        query = _maybe_strip(ctx.request.get_str_input("q"))
         if not query:
             return
 
@@ -110,7 +109,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
         except Exception:
             logger.exception("error generating quicksearch results")
-            if active_config.debug:
+            if ctx.config.debug:
                 raise
             html.show_error(traceback.format_exc())
 
@@ -123,7 +122,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def _page_search_open(self, ctx: PageContext) -> None:
         """Generate the URL to the view that is opened when confirming the search field"""
-        query = _maybe_strip(request.var("q"))
+        query = _maybe_strip(ctx.request.var("q"))
         if not query:
             return
 

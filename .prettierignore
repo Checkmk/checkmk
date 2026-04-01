@@ -6,9 +6,6 @@ trace_profile.json
 .werks/
 **/.mypy_cache/**
 
-# release script generated
-tests/update/base_versions_current_branch.json
-
 *.jsonl
 
 # 3rd party

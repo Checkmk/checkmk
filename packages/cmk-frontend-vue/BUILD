@@ -258,6 +258,7 @@ eslint_bin.eslint_test(
     ],
     chdir = package_name(),
     data = TOOLING + SRCS_AND_TESTS,
+    env = {"NODE_OPTIONS": "--max-old-space-size=8192"},
 )
 
 stylelint_bin.stylelint_test(

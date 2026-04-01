@@ -15156,8 +15156,8 @@ msgid "Computation type"
 msgstr "Tipo de cálculo"
 
 #, fuzzy
-msgid "Compute a rate"
-msgstr "Tasa de mensajes entregados"
+msgid "Compute a rate (excluding histograms)"
+msgstr "Reclasificar el estado completo"
 
 msgid "Compute average over last "
 msgstr "Calcular la media de los últimos "
@@ -20283,10 +20283,6 @@ msgid "Deploy the MySQL plug-in"
 msgstr "Implementar el complemento de MySQL"
 
 #, fuzzy
-msgid "Deploy the Plesk plug-ins"
-msgstr "Implemente los complementos de plesk"
-
-#, fuzzy
 msgid "Deploy the SAP HANA plug-in"
 msgstr "Implemente el complemento de SAP HANA"
 
@@ -20352,6 +20348,14 @@ msgstr ""
 "Implemente el complemento de agente <tt>zorp</tt> en su sistema de destino."
 
 #, fuzzy
+msgid ""
+"Deploy the agent plug-ins <tt>plesk_backups</tt> and <tt>plesk_domains</tt> "
+"on your target system."
+msgstr ""
+"Esto desplegará los dos plugins de agente <tt>plesk_backup</tt> y "
+"<tt>plesk_domain</tt>, utilizados para monitorizar Plesk."
+
+#, fuzzy
 msgid "Deploy the mk_filehandler plug-in"
 msgstr "Implementar el complemento docker"
 
@@ -20369,6 +20373,14 @@ msgstr "Despliegue del plugin MTR de forma asíncrona"
 
 #, fuzzy
 msgid "Deploy the plug-in and run it synchronously"
+msgstr "Despliegue del plugin MTR de forma asíncrona"
+
+#, fuzzy
+msgid "Deploy the plug-ins and run them asynchronously"
+msgstr "Despliegue del plugin MTR de forma asíncrona"
+
+#, fuzzy
+msgid "Deploy the plug-ins and run them synchronously"
 msgstr "Despliegue del plugin MTR de forma asíncrona"
 
 msgid "Deploy without authentication."
@@ -22041,10 +22053,6 @@ msgid "Do not deploy the NGINX status plug-in"
 msgstr "No despliegue el plugin NGINX Status"
 
 #, fuzzy
-msgid "Do not deploy the Plesk plug-ins"
-msgstr "No despliegue los plugins de plesk"
-
-#, fuzzy
 msgid "Do not deploy the Redis plug-in"
 msgstr "No despliegue el plugin de Redis"
 
@@ -22090,6 +22098,10 @@ msgstr "No despliegue el plugin de agente nvidia_smi"
 
 #, fuzzy
 msgid "Do not deploy the plug-in"
+msgstr "No despliegue el plugin %s"
+
+#, fuzzy
+msgid "Do not deploy the plug-ins"
 msgstr "No despliegue el plugin %s"
 
 msgid "Do not deploy."
@@ -36593,9 +36605,6 @@ msgstr "Intervalo en el que <b>esperar</b> regular heart beats"
 
 msgid "Interval at which to <b>send</b> regular heart beats"
 msgstr "Intervalo en el que <b>enviar</b> regular heart beats"
-
-msgid "Interval for checking Plesk backups:"
-msgstr "Intervalo para comprobar las copias de seguridad de Plesk:"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "Intervalo de comprobación de las notificaciones masivas maduras"
@@ -63211,7 +63220,7 @@ msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
 "dropped network packages, for example). The uptime, for example, would be "
 "reported as '1.0 s/s', which is not too useful. You can override the default "
-"behavior here."
+"behavior here. This does not apply to histograms."
 msgstr ""
 
 msgid ""
@@ -77436,14 +77445,6 @@ msgid ""
 msgstr ""
 "Esto desplegará el plugin de agente <tt>nvidia_smi</tt> utilizado para "
 "monitorizar las GPUs Nvidia."
-
-#, fuzzy
-msgid ""
-"This will deploy the two agent plug-ins <tt>plesk_backup</tt> and "
-"<tt>plesk_domain</tt>, used for monitoring Plesk."
-msgstr ""
-"Esto desplegará los dos plugins de agente <tt>plesk_backup</tt> y "
-"<tt>plesk_domain</tt>, utilizados para monitorizar Plesk."
 
 msgid "This will replace your local configuration"
 msgstr "Esto sustituirá a su configuración local"
@@ -97644,6 +97645,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Compute a rate"
+#~ msgstr "Tasa de mensajes entregados"
+
+#, fuzzy
+#~ msgid "Deploy the Plesk plug-ins"
+#~ msgstr "Implemente los complementos de plesk"
+
+#, fuzzy
+#~ msgid "Do not deploy the Plesk plug-ins"
+#~ msgstr "No despliegue los plugins de plesk"
+
+#~ msgid "Interval for checking Plesk backups:"
+#~ msgstr "Intervalo para comprobar las copias de seguridad de Plesk:"
 
 #, fuzzy
 #~ msgid "Capacity"

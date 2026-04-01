@@ -15058,8 +15058,8 @@ msgid "Computation type"
 msgstr "Tip de calcul"
 
 #, fuzzy
-msgid "Compute a rate"
-msgstr "Rata mesajelor livrate"
+msgid "Compute a rate (excluding histograms)"
+msgstr "Reclasificarea statului complet"
 
 msgid "Compute average over last "
 msgstr "Calculați media pe ultima "
@@ -20159,10 +20159,6 @@ msgid "Deploy the MySQL plug-in"
 msgstr "Implementați plugin-ul MySQL"
 
 #, fuzzy
-msgid "Deploy the Plesk plug-ins"
-msgstr "Implementați plugin-urile plesk"
-
-#, fuzzy
 msgid "Deploy the SAP HANA plug-in"
 msgstr "Implementați extensia SAP HANA"
 
@@ -20224,6 +20220,14 @@ msgid "Deploy the agent plug-in <tt>zorp</tt> on your target system."
 msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
 
 #, fuzzy
+msgid ""
+"Deploy the agent plug-ins <tt>plesk_backups</tt> and <tt>plesk_domains</tt> "
+"on your target system."
+msgstr ""
+"Aceasta va implementa cele două plugin-uri agent <tt>plesk_backup</tt> și "
+"<tt>plesk_domain</tt>, utilizate pentru monitorizarea Plesk."
+
+#, fuzzy
 msgid "Deploy the mk_filehandler plug-in"
 msgstr "Implementați plugin-ul mk_filehandler"
 
@@ -20241,6 +20245,14 @@ msgstr "Implementarea pluginului MTR în mod asincron"
 
 #, fuzzy
 msgid "Deploy the plug-in and run it synchronously"
+msgstr "Implementarea pluginului MTR în mod asincron"
+
+#, fuzzy
+msgid "Deploy the plug-ins and run them asynchronously"
+msgstr "Implementarea pluginului MTR în mod asincron"
+
+#, fuzzy
+msgid "Deploy the plug-ins and run them synchronously"
 msgstr "Implementarea pluginului MTR în mod asincron"
 
 msgid "Deploy without authentication."
@@ -21900,10 +21912,6 @@ msgid "Do not deploy the NGINX status plug-in"
 msgstr "Nu implementați plugin-ul NGINX Status"
 
 #, fuzzy
-msgid "Do not deploy the Plesk plug-ins"
-msgstr "Nu implementați plugin-urile plesk"
-
-#, fuzzy
 msgid "Do not deploy the Redis plug-in"
 msgstr "Nu implementați extensia Redis"
 
@@ -21949,6 +21957,10 @@ msgstr "Nu implementați plugin-ul agentului nvidia_smi"
 
 #, fuzzy
 msgid "Do not deploy the plug-in"
+msgstr "Nu implementați plugin-ul %s."
+
+#, fuzzy
+msgid "Do not deploy the plug-ins"
 msgstr "Nu implementați plugin-ul %s."
 
 msgid "Do not deploy."
@@ -36413,9 +36425,6 @@ msgstr "Intervalul la care să <b>se aștepte</b> bătăi regulate ale inimii"
 
 msgid "Interval at which to <b>send</b> regular heart beats"
 msgstr "Intervalul la care să <b>trimiteți</b> bătăile regulate ale inimii"
-
-msgid "Interval for checking Plesk backups:"
-msgstr "Intervalul de verificare a copiilor de rezervă Plesk:"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "Intervalul de verificare a notificărilor în masă coapte"
@@ -62783,7 +62792,7 @@ msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
 "dropped network packages, for example). The uptime, for example, would be "
 "reported as '1.0 s/s', which is not too useful. You can override the default "
-"behavior here."
+"behavior here. This does not apply to histograms."
 msgstr ""
 
 msgid ""
@@ -76994,14 +77003,6 @@ msgid ""
 msgstr ""
 "Aceasta va implementa pluginul agentului <tt>nvidia_smi</tt> utilizat pentru "
 "monitorizarea GPU-urilor Nvidia."
-
-#, fuzzy
-msgid ""
-"This will deploy the two agent plug-ins <tt>plesk_backup</tt> and "
-"<tt>plesk_domain</tt>, used for monitoring Plesk."
-msgstr ""
-"Aceasta va implementa cele două plugin-uri agent <tt>plesk_backup</tt> și "
-"<tt>plesk_domain</tt>, utilizate pentru monitorizarea Plesk."
 
 msgid "This will replace your local configuration"
 msgstr "Aceasta va înlocui configurația locală"
@@ -97074,6 +97075,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Compute a rate"
+#~ msgstr "Rata mesajelor livrate"
+
+#, fuzzy
+#~ msgid "Deploy the Plesk plug-ins"
+#~ msgstr "Implementați plugin-urile plesk"
+
+#, fuzzy
+#~ msgid "Do not deploy the Plesk plug-ins"
+#~ msgstr "Nu implementați plugin-urile plesk"
+
+#~ msgid "Interval for checking Plesk backups:"
+#~ msgstr "Intervalul de verificare a copiilor de rezervă Plesk:"
 
 #, fuzzy
 #~ msgid "Capacity"

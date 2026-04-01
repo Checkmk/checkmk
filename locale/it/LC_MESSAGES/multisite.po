@@ -14924,8 +14924,8 @@ msgid "Computation type"
 msgstr "Tipo di calcolo"
 
 #, fuzzy
-msgid "Compute a rate"
-msgstr "Tasso di messaggi consegnati"
+msgid "Compute a rate (excluding histograms)"
+msgstr "Riclassificare lo stato completo"
 
 msgid "Compute average over last "
 msgstr "Calcolare la media sull'ultimo "
@@ -19997,10 +19997,6 @@ msgid "Deploy the MySQL plug-in"
 msgstr "Distribuire il plugin MySQL"
 
 #, fuzzy
-msgid "Deploy the Plesk plug-ins"
-msgstr "Distribuire i plugin plesk"
-
-#, fuzzy
 msgid "Deploy the SAP HANA plug-in"
 msgstr "Distribuire il plugin SAP HANA"
 
@@ -20070,6 +20066,14 @@ msgstr ""
 "destinazione."
 
 #, fuzzy
+msgid ""
+"Deploy the agent plug-ins <tt>plesk_backups</tt> and <tt>plesk_domains</tt> "
+"on your target system."
+msgstr ""
+"Questo distribuirà i due plugin agente <tt>plesk_backup</tt> e "
+"<tt>plesk_domain</tt>, usati per monitorare Plesk."
+
+#, fuzzy
 msgid "Deploy the mk_filehandler plug-in"
 msgstr "Distribuire il plugin mk_filehandler"
 
@@ -20087,6 +20091,14 @@ msgstr "Distribuire il plugin MTR in modo asincrono"
 
 #, fuzzy
 msgid "Deploy the plug-in and run it synchronously"
+msgstr "Distribuire il plugin MTR in modo asincrono"
+
+#, fuzzy
+msgid "Deploy the plug-ins and run them asynchronously"
+msgstr "Distribuire il plugin MTR in modo asincrono"
+
+#, fuzzy
+msgid "Deploy the plug-ins and run them synchronously"
 msgstr "Distribuire il plugin MTR in modo asincrono"
 
 msgid "Deploy without authentication."
@@ -21738,10 +21750,6 @@ msgid "Do not deploy the NGINX status plug-in"
 msgstr "Non distribuire il plugin NGINX Status"
 
 #, fuzzy
-msgid "Do not deploy the Plesk plug-ins"
-msgstr "Non distribuire i plugin plesk"
-
-#, fuzzy
 msgid "Do not deploy the Redis plug-in"
 msgstr "Non distribuire il plugin Redis"
 
@@ -21787,6 +21795,10 @@ msgstr "Non distribuire il plugin dell'agente nvidia_smi"
 
 #, fuzzy
 msgid "Do not deploy the plug-in"
+msgstr "Non distribuire il plugin %s"
+
+#, fuzzy
+msgid "Do not deploy the plug-ins"
 msgstr "Non distribuire il plugin %s"
 
 msgid "Do not deploy."
@@ -36180,9 +36192,6 @@ msgstr "Intervallo in cui <b>aspettarsi</b> battiti cardiaci regolari"
 
 msgid "Interval at which to <b>send</b> regular heart beats"
 msgstr "Intervallo al quale <b>inviare</b> i battiti cardiaci regolari"
-
-msgid "Interval for checking Plesk backups:"
-msgstr "Intervallo per il controllo dei backup di Plesk:"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "Intervallo per il controllo delle notifiche di massa mature"
@@ -62442,7 +62451,7 @@ msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
 "dropped network packages, for example). The uptime, for example, would be "
 "reported as '1.0 s/s', which is not too useful. You can override the default "
-"behavior here."
+"behavior here. This does not apply to histograms."
 msgstr ""
 
 msgid ""
@@ -76611,14 +76620,6 @@ msgid ""
 msgstr ""
 "Questo distribuirà il plugin dell'agente <tt>nvidia_smi</tt> usato per "
 "monitorare le GPU Nvidia."
-
-#, fuzzy
-msgid ""
-"This will deploy the two agent plug-ins <tt>plesk_backup</tt> and "
-"<tt>plesk_domain</tt>, used for monitoring Plesk."
-msgstr ""
-"Questo distribuirà i due plugin agente <tt>plesk_backup</tt> e "
-"<tt>plesk_domain</tt>, usati per monitorare Plesk."
 
 msgid "This will replace your local configuration"
 msgstr "Questo sostituirà la configurazione locale"
@@ -96616,6 +96617,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Compute a rate"
+#~ msgstr "Tasso di messaggi consegnati"
+
+#, fuzzy
+#~ msgid "Deploy the Plesk plug-ins"
+#~ msgstr "Distribuire i plugin plesk"
+
+#, fuzzy
+#~ msgid "Do not deploy the Plesk plug-ins"
+#~ msgstr "Non distribuire i plugin plesk"
+
+#~ msgid "Interval for checking Plesk backups:"
+#~ msgstr "Intervallo per il controllo dei backup di Plesk:"
 
 #, fuzzy
 #~ msgid "Capacity"

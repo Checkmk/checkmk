@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-03-31 15:32+0000\n"
+"PO-Revision-Date: 2026-04-01 05:35+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -15057,8 +15057,8 @@ msgid "Computation type"
 msgstr "Tipo de Computação"
 
 #, fuzzy
-msgid "Compute a rate"
-msgstr "Taxa de mensagens entregues"
+msgid "Compute a rate (excluding histograms)"
+msgstr "Reclassificar o estado completo"
 
 msgid "Compute average over last "
 msgstr "Calcule a média do último "
@@ -20144,10 +20144,6 @@ msgid "Deploy the MySQL plug-in"
 msgstr "Implementar o plugin MySQL"
 
 #, fuzzy
-msgid "Deploy the Plesk plug-ins"
-msgstr "Implantar os plugins plesk"
-
-#, fuzzy
 msgid "Deploy the SAP HANA plug-in"
 msgstr "Implantar o plug-in SAP HANA"
 
@@ -20209,6 +20205,14 @@ msgid "Deploy the agent plug-in <tt>zorp</tt> on your target system."
 msgstr "Implante o plugin de agente <tt>zorp</tt> no seu sistema alvo."
 
 #, fuzzy
+msgid ""
+"Deploy the agent plug-ins <tt>plesk_backups</tt> and <tt>plesk_domains</tt> "
+"on your target system."
+msgstr ""
+"Isto irá implementar os dois plugins de agente <tt>plesk_backup</tt> e "
+"<tt>plesk_domain</tt>, usados para monitorar o Plesk."
+
+#, fuzzy
 msgid "Deploy the mk_filehandler plug-in"
 msgstr "Implementar o plugin mk_filehandler"
 
@@ -20226,6 +20230,14 @@ msgstr "Implantar o plugin MTR de forma assíncrona"
 
 #, fuzzy
 msgid "Deploy the plug-in and run it synchronously"
+msgstr "Implantar o plugin MTR de forma assíncrona"
+
+#, fuzzy
+msgid "Deploy the plug-ins and run them asynchronously"
+msgstr "Implantar o plugin MTR de forma assíncrona"
+
+#, fuzzy
+msgid "Deploy the plug-ins and run them synchronously"
 msgstr "Implantar o plugin MTR de forma assíncrona"
 
 msgid "Deploy without authentication."
@@ -21876,10 +21888,6 @@ msgid "Do not deploy the NGINX status plug-in"
 msgstr "Não implante o plug-in de status NGINX"
 
 #, fuzzy
-msgid "Do not deploy the Plesk plug-ins"
-msgstr "Não utilize os plugins plesk"
-
-#, fuzzy
 msgid "Do not deploy the Redis plug-in"
 msgstr "Não utilize o plug-in Redis"
 
@@ -21925,6 +21933,10 @@ msgstr "Não implantar o plug-in do agente nvidia_smi"
 
 #, fuzzy
 msgid "Do not deploy the plug-in"
+msgstr "Não utilize o plug-in %s"
+
+#, fuzzy
+msgid "Do not deploy the plug-ins"
 msgstr "Não utilize o plug-in %s"
 
 msgid "Do not deploy."
@@ -36322,9 +36334,6 @@ msgstr "Intervalo no qual a <b>expectativa</b> batimentos cardíacos regulares"
 
 msgid "Interval at which to <b>send</b> regular heart beats"
 msgstr "Intervalo no qual para <b>send</b> batimentos cardíacos regulares"
-
-msgid "Interval for checking Plesk backups:"
-msgstr "Intervalo para verificar os backups Plesk:"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "Intervalo para verificação de notificações a granel maduras"
@@ -62686,7 +62695,7 @@ msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
 "dropped network packages, for example). The uptime, for example, would be "
 "reported as '1.0 s/s', which is not too useful. You can override the default "
-"behavior here."
+"behavior here. This does not apply to histograms."
 msgstr ""
 
 msgid ""
@@ -76762,14 +76771,6 @@ msgid ""
 msgstr ""
 "Isso implantará o plug-in de agente <tt>nvidia_smi</tt> usado para monitorar "
 "as GPUs da Nvidia."
-
-#, fuzzy
-msgid ""
-"This will deploy the two agent plug-ins <tt>plesk_backup</tt> and "
-"<tt>plesk_domain</tt>, used for monitoring Plesk."
-msgstr ""
-"Isto irá implementar os dois plugins de agente <tt>plesk_backup</tt> e "
-"<tt>plesk_domain</tt>, usados para monitorar o Plesk."
 
 msgid "This will replace your local configuration"
 msgstr "Isto substituirá a sua configuração local"
@@ -96816,6 +96817,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Compute a rate"
+#~ msgstr "Taxa de mensagens entregues"
+
+#, fuzzy
+#~ msgid "Deploy the Plesk plug-ins"
+#~ msgstr "Implantar os plugins plesk"
+
+#, fuzzy
+#~ msgid "Do not deploy the Plesk plug-ins"
+#~ msgstr "Não utilize os plugins plesk"
+
+#~ msgid "Interval for checking Plesk backups:"
+#~ msgstr "Intervalo para verificar os backups Plesk:"
 
 #, fuzzy
 #~ msgid "Capacity"

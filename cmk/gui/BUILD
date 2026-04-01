@@ -477,6 +477,34 @@ py_library(
 )
 
 py_library(
+    name = "logged_in",
+    srcs = ["logged_in.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":ctx_stack",
+        ":exceptions",
+        ":hooks",
+        ":i18n",
+        ":type_defs",
+        "//cmk/gui/utils:permission_verification",
+        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:security_log_events",
+        "//cmk/gui/utils:selection_id",
+        "//cmk/gui/utils:transaction_manager",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
     name = "page_menu_entry",
     srcs = ["page_menu_entry.py"],
     imports = ["../.."],
@@ -511,6 +539,7 @@ py_library(
             "ifaceoper.py",
             "job_scheduler_client.py",
             "legacy_plugins.py",
+            "logged_in.py",
             "log.py",
             "ntop.py",
             "num_split.py",
@@ -561,6 +590,7 @@ py_library(
         ":job_scheduler_client",
         ":legacy_plugins",
         ":log",
+        ":logged_in",
         ":ntop",
         ":num_split",
         ":page_menu_entry",
@@ -611,6 +641,7 @@ py_library(
         "//cmk/gui/utils:product_usage_analytics_popup_cookie",
         "//cmk/gui/utils:rendering",
         "//cmk/gui/utils:request_context",
+        "//cmk/gui/utils:roles",
         "//cmk/gui/utils:security_log_events",
         "//cmk/gui/utils:selection_id",
         "//cmk/gui/utils:sort",

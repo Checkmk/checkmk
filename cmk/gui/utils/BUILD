@@ -460,6 +460,24 @@ py_library(
 )
 
 py_library(
+    name = "roles",
+    srcs = ["roles.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:permissions",
+        "//cmk/gui:role_types",
+        "//cmk/gui:type_defs",
+        "//cmk/utils",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:user",
+    ],
+)
+
+py_library(
     name = "popups",
     srcs = ["popups.py"],
     imports = ["../../.."],
@@ -504,6 +522,7 @@ filegroup(
             "product_usage_analytics_popup_cookie.py",
             "rendering.py",
             "request_context.py",
+            "roles.py",
             "security_log_events.py",
             "selection_id.py",
             "sort.py",

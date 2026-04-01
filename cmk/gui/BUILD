@@ -251,6 +251,134 @@ py_library(
     ],
 )
 
+py_library(
+    name = "groups",
+    srcs = ["groups.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+)
+
+py_library(
+    name = "figures",
+    srcs = ["figures.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/utils",
+    ],
+)
+
+py_library(
+    name = "unit_formatter",
+    srcs = ["unit_formatter.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "default_name",
+    srcs = ["default_name.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+)
+
+py_library(
+    name = "cert_info",
+    srcs = ["cert_info.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-ccc:plugin-registry",
+    ],
+)
+
+py_library(
+    name = "ifaceoper",
+    srcs = ["ifaceoper.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-ccc:i18n",
+    ],
+)
+
+py_library(
+    name = "validate",
+    srcs = ["validate.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":exceptions",
+        ":i18n",
+    ],
+)
+
+py_library(
+    name = "pseudo_users",
+    srcs = ["pseudo_users.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-ccc:site",
+    ],
+)
+
+py_library(
+    name = "validation_utils",
+    srcs = ["validation_utils.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":exceptions",
+        "//packages/cmk-ccc:tty",
+        requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "single_global_setting",
+    srcs = ["single_global_setting.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/utils",
+        "//packages/cmk-ccc:store",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -259,22 +387,32 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            "cert_info.py",
             "ctx_stack.py",
+            "default_name.py",
             "dynamic_icon.py",
             "exceptions.py",
             "features.py",
+            "figures.py",
             "flask_app.py",
+            "groups.py",
             "hooks.py",
             "http.py",
             "i18n.py",
+            "ifaceoper.py",
             "log.py",
             "num_split.py",
             "permissions.py",
+            "pseudo_users.py",
             "role_types.py",
+            "single_global_setting.py",
             "site_config.py",
             "theme/**/*.py",
             "type_defs.py",
+            "unit_formatter.py",
             "user_connection_config_types.py",
+            "validate.py",
+            "validation_utils.py",
         ],
     ) + [
         "wsgi/applications/index.wsgi",
@@ -291,34 +429,56 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":cert_info",
         ":ctx_stack",
+        ":default_name",
         ":dynamic_icon",
         ":exceptions",
         ":features",
+        ":figures",
         ":flask_app",
+        ":groups",
         ":hooks",
         ":http",
         ":i18n",
+        ":ifaceoper",
         ":log",
         ":num_split",
         ":permissions",
+        ":pseudo_users",
         ":role_types",
+        ":single_global_setting",
         ":site_config",
         ":theme",
         ":type_defs",
+        ":unit_formatter",
         ":user_connection_config_types",
+        ":validate",
+        ":validation_utils",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/checkengine",
         "//cmk/diagnostics",
         "//cmk/diskspace",
         "//cmk/fields",
+        "//cmk/gui/utils:agent",
+        "//cmk/gui/utils:agent_registration",
+        "//cmk/gui/utils:autocompleter_config",
+        "//cmk/gui/utils:compatibility",
+        "//cmk/gui/utils:dataclasses",
+        "//cmk/gui/utils:encrypter",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:htpasswd",
+        "//cmk/gui/utils:json",
         "//cmk/gui/utils:misc",
         "//cmk/gui/utils:permission_verification",
+        "//cmk/gui/utils:request_context",
         "//cmk/gui/utils:security_log_events",
         "//cmk/gui/utils:selection_id",
+        "//cmk/gui/utils:sort",
         "//cmk/gui/utils:speaklater",
         "//cmk/gui/utils:temperate_unit",
+        "//cmk/gui/utils:time",
         "//cmk/gui/utils:transaction_manager",
         "//cmk/inventory",
         "//cmk/piggyback:backend",

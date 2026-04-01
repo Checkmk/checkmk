@@ -42,7 +42,6 @@ def _maybe_strip(param: str | None) -> str | None:
 
 class QuicksearchSnapin(SidebarSnapin):
     def __init__(self) -> None:
-        self._quicksearch_manager = QuicksearchManager()
         super().__init__()
 
     @classmethod
@@ -89,13 +88,15 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
+        quicksearch_manager = QuicksearchManager()
+
         search_objects: list[ABCQuicksearchConductor] = []
         try:
-            search_objects = self._quicksearch_manager._determine_search_objects(
+            search_objects = quicksearch_manager._determine_search_objects(
                 livestatus.lqencode(query),
                 UserPermissions.from_config(ctx.config, permission_registry),
             )
-            self._quicksearch_manager._conduct_search(search_objects)
+            quicksearch_manager._conduct_search(search_objects)
 
         except TooManyRowsError as e:
             html.show_warning(str(e))
@@ -117,7 +118,7 @@ class QuicksearchSnapin(SidebarSnapin):
             return
 
         QuicksearchResultRenderer().show(
-            self._quicksearch_manager._evaluate_results(search_objects), query
+            quicksearch_manager._evaluate_results(search_objects), query
         )
 
     def _page_search_open(self, ctx: PageContext) -> None:
@@ -126,8 +127,10 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
+        quicksearch_manager = QuicksearchManager()
+
         raise HTTPRedirect(
-            self._quicksearch_manager.generate_search_url(
+            quicksearch_manager.generate_search_url(
                 query, UserPermissions.from_config(ctx.config, permission_registry)
             )
         )

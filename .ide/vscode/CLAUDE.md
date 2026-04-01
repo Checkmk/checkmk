@@ -11,11 +11,9 @@
 
 ## Build & Install
 
-After **every** code change, bump the patch version, rebuild, and reinstall the VSIX:
+After **every** code change, rebuild and reinstall the VSIX:
 
-1. **Bump the patch version** in `package.json` (e.g. `0.1.12` → `0.1.13`). This ensures
-   VS Code treats the package as a new version and fully reloads the extension code.
-2. **Build the VSIX** via Bazel, then **install** into the active VS Code profile.
+1. **Build the VSIX** via Bazel, then **install** into the active VS Code profile.
    The profile must be passed via `--profile` so the extension is installed into the correct
    profile (not the default one). Resolve it from VS Code's `storage.json`:
 
@@ -43,7 +41,7 @@ code --profile "$PROFILE" --install-extension bazel-bin/.ide/vscode/cmk-vscode.v
 ```
 
 The user must reload VS Code (`Ctrl+Shift+P` → "Developer: Reload Window") to pick up changes.
-Always run all three steps together. Never skip the version bump or install step.
+Always run both steps together. Never skip the install step.
 
 ## Architecture
 
@@ -309,9 +307,11 @@ to full-key `getConfiguration(undefined, wsFolder)` handles edge cases.
 
 ### Loading States
 
-All webview actions that await tasks (OMD start/stop, settings apply, profile toggle) show
-a loading spinner on the affected section(s) via `showSectionLoading()` before the async
-operation begins. The spinner remains until `refreshAll()` re-renders the section.
+Async webview actions (OMD start/stop, settings apply, profile toggle) show a per-button
+loading spinner: the clicked button is disabled and its icon replaced with a spinning ↻.
+The spinner is applied client-side in the `<script>` block of `wrap()` for actions listed
+in the `ASYNC_ACTIONS` set. When the host calls `refreshAll()`, the section HTML is replaced,
+clearing the spinner. `showSectionLoading()` is reserved for destructive or full-section ops.
 
 ## Key Patterns
 
@@ -321,3 +321,32 @@ operation begins. The spinner remains until `refreshAll()` re-renders the sectio
 - **`refreshAll()`**: Refreshes state cache + all section providers. Exported from `sidebar.ts` and passed to `registerOmd()` as callback.
 - **Context keys**: Set via `vscode.commands.executeCommand('setContext', key, value)` to control `when` clauses in `package.json`
 - **CSP**: Webviews use nonce-based Content-Security-Policy. All inline styles and scripts must carry the nonce. External resources require explicit CSP directives (e.g. `font-src` for codicons). CSS is imported as text at build time and injected into the `<style>` tag with nonce.
+
+## Commits
+
+Bump the patch version in `package.json` with every commit.
+
+Use conventional commit format with `(vscode)` scope. First line must be **≤ 50 chars**.
+Second line is the new extension version. Third line is the Jira ticket ID.
+Body follows after a blank line.
+
+```text
+<type>(vscode): <short summary>
+v<extension-version>
+<JIRA-TICKET-ID>
+
+<optional detailed description>
+```
+
+**Types**: `feat`, `fix`, `refactor`, `style`, `test`, `docs`, `chore`, `perf`
+
+Example:
+
+```text
+feat(vscode): add per-button spinner
+v0.1.43
+CMK-33200
+
+Replace whole-section loading with per-button spinners
+for async actions like OMD start/stop and settings apply.
+```

@@ -213,12 +213,6 @@ void PluginsBaseProvider::preStart() {
     RunAsyncPlugins(pm_, true);
 }
 
-void PluginsBaseProvider::detachedStart() {
-    loadConfig();
-    int last_count = 0;
-    RunDetachedPlugins(pm_, last_count);
-}
-
 std::string PluginsBaseProvider::makeBody() { return section_last_output_; }
 
 void PluginsProvider::updateSectionStatus() {

@@ -345,17 +345,10 @@ void ServiceProcessor::preStartBinaries() {
     auto &plugins = plugins_provider_.getEngine();
     plugins.registerOwner(this);
     plugins.preStart();
-    plugins.detachedStart();
 
     auto &local = local_provider_.getEngine();
     local.preStart();
     XLOG::d.i("Pre Start actions ended");
-}
-
-void ServiceProcessor::detachedPluginsStart() {
-    XLOG::t.i("Detached Start");
-    auto &plugins = plugins_provider_.getEngine();
-    plugins.detachedStart();
 }
 
 void ServiceProcessor::resetOhm() noexcept {
@@ -523,7 +516,6 @@ void ServiceProcessor::prepareAnswer(const std::string &ip_from,
     ohm_started_ = conditionallyStartOhm();  // start may happen when
                                              // config changed
 
-    detachedPluginsStart();  // cmk agent update
     informDevice(rt_device, ip_from);
 }
 

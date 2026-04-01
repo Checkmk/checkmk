@@ -1522,9 +1522,6 @@ std::pair<std::vector<char>, int> RunSyncPlugins(PluginMap &plugins,
     return {out, delivered_count};
 }
 
-void RunDetachedPlugins(const PluginMap & /*plugins_map*/,
-                        int & /*start_count*/) {}
-
 // To get data from async plugins with cache_age=0
 void PickupAsync0data(int timeout, PluginMap &plugins, std::vector<char> &out,
                       std::vector<std::pair<bool, std::string>> &async_nul_s) {

@@ -68,6 +68,11 @@ const families: Record<string, FamilyState> = {
 }
 
 let _context: vscode.ExtensionContext | null = null
+let _onRefresh: (() => void) | null = null
+
+export function setOnRefresh(fn: () => void): void {
+  _onRefresh = fn
+}
 
 export function register(
   name: string,
@@ -218,8 +223,9 @@ function createProfileStatusBarItems(context: vscode.ExtensionContext): void {
     context.subscriptions.push(item)
 
     context.subscriptions.push(
-      vscode.commands.registerCommand(`cmk.toggleProfile.${name}`, () => {
-        toggle(name)
+      vscode.commands.registerCommand(`cmk.toggleProfile.${name}`, async () => {
+        await toggle(name)
+        _onRefresh?.()
       })
     )
   }

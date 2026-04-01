@@ -179,6 +179,7 @@ export function activate(context: vscode.ExtensionContext): void {
     rustDisable
   )
 
+  profileManager.setOnRefresh(refreshAll)
   profileManager.init(context)
   registerProfileDetector(context)
   checkVersionMismatch(context)

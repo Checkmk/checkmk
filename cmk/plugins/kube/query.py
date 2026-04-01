@@ -12,7 +12,6 @@
 
 import argparse
 import enum
-import json
 import logging
 import os
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping
@@ -29,9 +28,7 @@ from cmk.plugins.lib import node_exporter
 
 TCPTimeout = NewType("TCPTimeout", tuple[int, int])
 
-HTTPResult = (
-    Response | ValidationError | json.JSONDecodeError | requests.exceptions.RequestException
-)
+HTTPResult = Response | ValidationError | requests.exceptions.RequestException
 
 
 class PrometheusEndpoints(enum.StrEnum):

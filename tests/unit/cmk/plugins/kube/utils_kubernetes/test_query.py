@@ -54,7 +54,6 @@ CONNECTIONERROR = requests.exceptions.ConnectionError(
         ),
     )
 )
-JSONERROR = prometheus_api.parse_raw_response("{")
 VALIDATIONERROR = prometheus_api.parse_raw_response("{}")
 EMPTY_DATA = ResponseSuccessFactory.build(data=VectorFactory.build(result=[]))
 SUCCESS = ResponseSuccessFactory.build(data=VectorFactory.build(result=SampleFactory.batch(size=3)))
@@ -63,45 +62,47 @@ SUCCESS = ResponseSuccessFactory.build(data=VectorFactory.build(result=SampleFac
 @pytest.mark.parametrize(
     "result, expected_details, expected_type",
     [
-        (
+        pytest.param(
             SSLERROR,
             "SSLError",
             section.ResultType.request_exception,
+            id="ssl error",
         ),
-        (
+        pytest.param(
             PROXYERROR,
             "ProxyError",
             section.ResultType.request_exception,
+            id="proxy error",
         ),
-        (
+        pytest.param(
             CONNECTIONERROR,
             "ConnectionError",
             section.ResultType.request_exception,
+            id="connection error",
         ),
-        (
-            JSONERROR,
-            None,
-            section.ResultType.json_decode_error,
-        ),
-        (
+        pytest.param(
             VALIDATIONERROR,
             None,
             section.ResultType.validation_error,
+            id="validation error",
         ),
-        (
+        pytest.param(
             EMPTY_DATA,
             None,
             section.ResultType.response_empty_result,
+            id="empty data",
         ),
-        (
+        pytest.param(
             SUCCESS,
             None,
             section.ResultType.success,
+            id="success",
         ),
-        (
+        pytest.param(
             RESPONSEERROR,
             f"{RESPONSEERROR.error_type}: {RESPONSEERROR.error}",
             section.ResultType.response_error,
+            id="response error",
         ),
     ],
 )
@@ -118,7 +119,7 @@ def test_prometheus__from_result(
 
 @pytest.mark.parametrize(
     "result",
-    [SSLERROR, PROXYERROR, CONNECTIONERROR, JSONERROR, VALIDATIONERROR, EMPTY_DATA, SUCCESS],
+    [SSLERROR, PROXYERROR, CONNECTIONERROR, VALIDATIONERROR, EMPTY_DATA, SUCCESS],
 )
 def test_prometheus_result_from_response(result: query.HTTPResult) -> None:
     # Assemble

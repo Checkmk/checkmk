@@ -321,9 +321,16 @@ def _process_request(
         resp = _render_exception(ctx, e, title=_("Request too large"))
 
     except Exception as e:
-        if debug or testing:
+        if isinstance(e, OSError) and "mod_wsgi" in str(e):
+            # Apache/mod_wsgi raises OSError when the request body cannot be read
+            # (e.g. client disconnected during upload).  At this point request.values
+            # is broken, so we must NOT call _is_ajax_request(), plain_error(),
+            # fail_silently(), or _render_exception() — they all re-access form data.
+            logger.error("OSError while reading request data (mod_wsgi): %s", e)
+            resp = Response(status=http_client.BAD_REQUEST)
+        elif debug or testing:
             raise
-        if _is_ajax_request():
+        elif _is_ajax_request():
             resp = _json_error_response(f"{_('Internal error')}: {e}")
         else:
             resp = handle_unhandled_exception(ctx.config)

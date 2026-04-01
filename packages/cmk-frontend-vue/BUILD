@@ -24,6 +24,13 @@ js_library(
     deps = ["//:node_modules/stylelint"],
 )
 
+js_library(
+    name = "eslintrc",
+    srcs = ["eslint.config.mjs"],
+    tags = ["no-lint"],
+    visibility = ["//visibility:public"],
+)
+
 npm_link_all_packages(name = "node_modules")
 
 vue_gettext_bin.vue_gettext_extract_binary(
@@ -59,9 +66,40 @@ LOCALE_OUTS = [
 ]
 
 filegroup(
-    name = "src_vue",
+    name = "tsconfig",
+    srcs = [
+        "tsconfig.app.json",
+        "tsconfig.json",
+        "tsconfig.node.json",
+        "tsconfig.test.json",
+        "tsconfig.ucl.json",
+    ],
+)
+
+# aspect_rules_lint's stylelint aspect only visits filegroup targets
+# (via filegroup_tags), not js_library. Separate filegroups let stylelint
+# lint .vue <style> blocks while js_library handles eslint/TS.
+filegroup(
+    name = "src_vue_files",
     srcs = glob(["src/**/*.vue"]),
     tags = ["stylelint"],
+)
+
+js_library(
+    name = "src_vue",
+    srcs = [
+        ":src_vue_files",
+        ":tsconfig",
+    ],
+    deps = [
+        ":src_ts",
+        "//:node_modules/vue",
+    ],
+)
+
+js_library(
+    name = "src_ts",
+    srcs = glob(["src/**/*.ts"]) + [":tsconfig"],
 )
 
 filegroup(
@@ -71,9 +109,21 @@ filegroup(
 )
 
 filegroup(
-    name = "demo_vue",
+    name = "demo_vue_files",
     srcs = glob(["ui-component-library/**/*.vue"]),
     tags = ["stylelint"],
+)
+
+js_library(
+    name = "demo_vue",
+    srcs = [
+        ":demo_vue_files",
+        ":tsconfig",
+    ],
+    deps = [
+        ":demo_ts",
+        "//:node_modules/vue",
+    ],
 )
 
 filegroup(
@@ -82,17 +132,19 @@ filegroup(
     tags = ["stylelint"],
 )
 
+js_library(
+    name = "demo_ts",
+    srcs = glob(["ui-component-library/**/*.ts"]) + [":tsconfig"],
+)
+
 js_run_binary(
     name = "extract_pot_file",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.vue",
-        "ui-component-library/**/*.ts",
-        "ui-component-library/**/*.vue",
-    ]) + [
+    srcs = [
         "gettext.config.js",
+        ":demo_ts",
         ":demo_vue",
         ":node_modules/vue3-gettext",
+        ":src_ts",
         ":src_vue",
     ],
     outs = ["locale/messages.pot"],
@@ -160,16 +212,13 @@ SRCS = [
     "scripts/stylelint-vue-bem-naming-convention.js",
     "index.html",
     "package.json",
-    "tsconfig.app.json",
-    "tsconfig.json",
-    "tsconfig.ucl.json",
-    "tsconfig.node.json",
-    "tsconfig.test.json",
     "vite.config.ucl.ts",
     "vite.config.ts",
     "ui-component-library/index.html",
+    ":demo_ts",
     ":demo_vue",
     ":demo_css",
+    ":src_ts",
     ":src_vue",
     ":src_css",
     ":compile_i18n",
@@ -194,25 +243,28 @@ SRCS = [
     ":node_modules/vue-component-type-helpers",
     ":node_modules/vue-router",
 ] + LOCALE_OUTS + glob([
-    "src/**/*.ts",
     "src/**/*.svg",
-    "ui-component-library/**/*.ts",
-    "ui-component-library/**/*.vue",
-    "ui-component-library/**/*.css",
     "ui-component-library/**/*.png",
     "ui-component-library/**/*.svg",
     "ui-component-library/public/*",
 ])
 
-filegroup(
+js_library(
     name = "test_vue",
-    srcs = glob(["tests/**/*.vue"]),
-    tags = ["stylelint"],
+    srcs = glob(["tests/**/*.vue"]) + [":tsconfig"],
+    deps = [
+        ":src_ts",
+        ":test_ts",
+        "//:node_modules/vue",
+    ],
 )
 
-SRCS_AND_TESTS = SRCS + glob([
-    "tests/**/*.ts",
-])
+js_library(
+    name = "test_ts",
+    srcs = glob(["tests/**/*.ts"]) + [":tsconfig"],
+)
+
+SRCS_AND_TESTS = SRCS + [":test_ts"]
 
 npm_link_package(
     name = "node_modules/cmk-shared-typing-bzl",

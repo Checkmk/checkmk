@@ -431,10 +431,14 @@ js_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":node_modules/@eslint/js",
+        ":node_modules/@typescript-eslint/parser",
         ":node_modules/@vue/eslint-config-prettier",
         ":node_modules/@vue/eslint-config-typescript",
         ":node_modules/eslint-plugin-vue",
         ":node_modules/typescript-eslint",
+        # TODO CMK-33211: Root-level eslint.config.mjs dynamically imports package configs via
+        # fs.readdirSync, which means we need to make this dependency explicit for the sandbox
+        "//packages/cmk-frontend-vue:eslintrc",
     ],
 )
 

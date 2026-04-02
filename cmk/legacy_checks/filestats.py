@@ -3,24 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="var-annotated"
-
 import ast
 import re
 from collections.abc import Generator, Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
-    LegacyResult,
-    STATE_MARKERS,
+from cmk.agent_based.legacy.conversion import convert_legacy_results
+from cmk.agent_based.legacy.v0_unstable import check_levels, STATE_MARKERS
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResults,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import render, StringTable
-
-check_info = {}
 
 # params = {
 #     "mincount": (tuple, integer),
@@ -37,6 +39,8 @@ check_info = {}
 
 # 'additional_rules': [('/var/log/sys*', {'maxsize_largest': (1, 2)})]
 
+LegacyResult = tuple[int, str, list[Any]]
+
 # .
 #   .--Parsing-------------------------------------------------------------.
 #   |                  ____                _                               |
@@ -52,7 +56,7 @@ check_info = {}
 
 def parse_filestats(string_table: StringTable) -> dict[str, tuple[str, list[dict[str, Any]]]]:
     sections_info: dict[tuple[str, str], list[str]] = {}
-    current = []  # should never be used, but better safe than sorry
+    current: list[str] = []  # should never be used, but better safe than sorry
     for line in string_table:
         if not line:
             continue
@@ -118,7 +122,7 @@ def check_filestats_extremes(
     """common check result - used by main and extremes_only check"""
     if not files:
         return []
-    long_output = {}
+    long_output: dict[str, str] = {}
     for key, hr_function, minlabel, maxlabel in (
         ("size", render.disksize, "smallest", "largest"),
         ("age", render.timespan, "newest", "oldest"),
@@ -181,7 +185,20 @@ def check_filestats_extremes(
                 )
                 long_output[efile["path"]] = text
 
-    return ["[%s] %s" % key_text for key_text in sorted(long_output.items())]
+    return [f"[{key}] {text}" for key, text in sorted(long_output.items())]
+
+
+def _yield_from_extremes(
+    files: list[dict[str, Any]], params: Mapping[str, Any], show_files: bool
+) -> Generator[Result | Metric | IgnoreResults, None, list[str]]:
+    """Wrapper that converts legacy results from check_filestats_extremes to v2."""
+    gen = check_filestats_extremes(files, params, show_files)
+    try:
+        while True:
+            legacy_result = next(gen)
+            yield from convert_legacy_results([legacy_result])
+    except StopIteration as e:
+        return e.value  # type: ignore[no-any-return]
 
 
 # .
@@ -198,9 +215,9 @@ def check_filestats_extremes(
 
 
 def check_filestats(
-    item: str, params: Mapping[str, Any], parsed: dict[str, tuple[str, list[dict[str, Any]]]]
-) -> LegacyCheckResult:
-    if not (data := parsed.get(item)):
+    item: str, params: Mapping[str, Any], section: dict[str, tuple[str, list[dict[str, Any]]]]
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
     _output_variety, reported_lines = data
     sumry = [s for s in reported_lines if s.get("type") == "summary"]
@@ -210,7 +227,9 @@ def check_filestats(
     show_files = bool(params.get("show_all_files", False))
 
     if count is not None:
-        yield check_filestats_count(count, params, show_files, reported_lines)
+        yield from convert_legacy_results(
+            [check_filestats_count(count, params, show_files, reported_lines)]
+        )
 
     files = [i for i in reported_lines if i.get("type") == "file"]
 
@@ -222,7 +241,7 @@ def check_filestats(
 
     additional_rules = params.get("additional_rules", {})
 
-    matching_files = {}
+    matching_files: dict[str, dict[str, Any]] = {}
     remaining_files = []
     for efile in files:
         for display_name, file_expression, rules in additional_rules:
@@ -239,14 +258,14 @@ def check_filestats(
         else:
             remaining_files.append(efile)
 
-    remaining_files_output = yield from check_filestats_extremes(
+    remaining_files_output = yield from _yield_from_extremes(
         remaining_files,
         params,
         show_files,
     )
 
     if count is not None and additional_rules:
-        yield 0, "Additional rules enabled"
+        yield Result(state=State.OK, summary="Additional rules enabled")
 
         remaining_files_count = count  # for display in service details
 
@@ -254,82 +273,97 @@ def check_filestats(
             file_list = file_details["file_list"]
             file_count = len(file_list)
             remaining_files_count -= file_count
-            yield 0, "\n%s" % file_details["display_name"]
-            yield 0, "Pattern: %r" % file_expression
-            yield 0, "Files in total: %d" % file_count
-            output = yield from check_filestats_extremes(
+            if file_details["display_name"]:
+                yield Result(state=State.OK, notice=file_details["display_name"])
+            yield Result(state=State.OK, summary=f"Pattern: {file_expression!r}")
+            yield Result(state=State.OK, summary=f"Files in total: {file_count}")
+            output = yield from _yield_from_extremes(
                 file_list,
                 file_details["rules"],
                 show_files,
             )
-            yield 0, "\n".join(output)
+            if output:
+                yield Result(state=State.OK, notice="\n".join(output))
 
-        yield 0, "\nRemaining files: %d" % remaining_files_count
+        yield Result(state=State.OK, summary=f"Remaining files: {remaining_files_count}")
 
-    yield 0, "\n" + "\n".join(remaining_files_output)
+    if remaining_files_output:
+        yield Result(state=State.OK, notice="\n".join(remaining_files_output))
 
 
 def check_filestats_single(
-    item: str, params: Mapping[str, Any], parsed: dict[str, tuple[str, list[dict[str, Any]]]]
-) -> LegacyCheckResult:
-    if not (data := parsed.get(item)):
+    item: str, params: Mapping[str, Any], section: dict[str, tuple[str, list[dict[str, Any]]]]
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
     _output_variety, reported_lines = data
     if len(reported_lines) != 1:
-        yield (
-            1,
-            "Received multiple filestats per single file service. Please check agent plug-in configuration (mk_filestats). For example, if there are multiple non-utf-8 filenames, then they may be mapped to the same file service.",
+        yield Result(
+            state=State.WARN,
+            summary="Received multiple filestats per single file service. Please check agent plug-in configuration (mk_filestats). For example, if there are multiple non-utf-8 filenames, then they may be mapped to the same file service.",
         )
 
     single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
     if single_stat.get("size") is None and single_stat.get("age") is None:
-        yield 0, f"Status: {single_stat.get('stat_status')}"
+        yield Result(state=State.OK, summary=f"Status: {single_stat.get('stat_status')}")
         return
 
     for key, hr_function in (("size", render.disksize), ("age", render.timespan)):
         if (value := single_stat.get(key)) is None:
             continue
 
-        yield check_levels(
-            value,
-            key if key == "size" else None,
-            (
-                params.get("max_%s" % key, (None, None))[0],
-                params.get("max_%s" % key, (None, None))[1],
-                params.get("min_%s" % key, (None, None))[0],
-                params.get("min_%s" % key, (None, None))[1],
-            ),
-            human_readable_func=hr_function,
-            infoname=key.title(),
+        yield from convert_legacy_results(
+            [
+                check_levels(
+                    value,
+                    key if key == "size" else None,
+                    (
+                        params.get(f"max_{key}", (None, None))[0],
+                        params.get(f"max_{key}", (None, None))[1],
+                        params.get(f"min_{key}", (None, None))[0],
+                        params.get(f"min_{key}", (None, None))[1],
+                    ),
+                    human_readable_func=hr_function,
+                    infoname=key.title(),
+                )
+            ]
         )
 
 
 def discover_filestats(
     section: dict[str, tuple[str, list[dict[str, Any]]]],
-) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item, data in section.items() if data[0] != "single_file")
+) -> DiscoveryResult:
+    yield from (Service(item=item) for item, data in section.items() if data[0] != "single_file")
 
 
 def discover_filestats_single(
     section: dict[str, tuple[str, list[dict[str, Any]]]],
-) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item, data in section.items() if data[0] == "single_file")
+) -> DiscoveryResult:
+    yield from (Service(item=item) for item, data in section.items() if data[0] == "single_file")
 
 
-check_info["filestats.single"] = LegacyCheckDefinition(
+agent_section_filestats = AgentSection(
+    name="filestats",
+    parse_function=parse_filestats,
+)
+
+
+check_plugin_filestats_single = CheckPlugin(
     name="filestats_single",
     service_name="File %s",
     sections=["filestats"],
     discovery_function=discover_filestats_single,
     check_function=check_filestats_single,
     check_ruleset_name="filestats_single",
+    check_default_parameters={},
 )
 
-check_info["filestats"] = LegacyCheckDefinition(
+
+check_plugin_filestats = CheckPlugin(
     name="filestats",
-    parse_function=parse_filestats,
     service_name="File group %s",
     discovery_function=discover_filestats,
     check_function=check_filestats,
     check_ruleset_name="filestats",
+    check_default_parameters={},
 )

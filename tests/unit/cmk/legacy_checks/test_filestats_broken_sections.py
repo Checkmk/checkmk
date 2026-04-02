@@ -14,6 +14,7 @@ from typing import Any
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.filestats import (
     check_filestats,
     discover_filestats,
@@ -49,27 +50,29 @@ def test_discover_filestats(parsed: dict[str, Any]) -> None:
     assert len(discovered) == 4
 
     # Should discover all subsections
-    subsection_names = [item[0] for item in discovered]
+    subsection_names = [item.item for item in discovered]
     assert "ok subsection" in subsection_names
     assert "missing count" in subsection_names
     assert "complete mess" in subsection_names
     assert "empty subsection" in subsection_names
 
-    # All should have empty parameters
-    for _, params in discovered:
-        assert params == {}
+    # All should be Service objects
+    for service in discovered:
+        assert isinstance(service, Service)
 
 
 def test_check_filestats_ok_subsection(parsed: dict[str, Any]) -> None:
     """Test filestats check for working subsection with count"""
     result = list(check_filestats("ok subsection", {}, parsed))
-    assert len(result) == 1
+    assert len(result) == 2  # Result + Metric
 
-    state, message, metrics = result[0]
-    assert state == 0  # OK
-    assert message == "Files in total: 23"
-    assert len(metrics) == 1
-    assert metrics[0] == ("file_count", 23, None, None)
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.OK
+    assert result[0].summary == "Files in total: 23"
+
+    assert isinstance(result[1], Metric)
+    assert result[1].name == "file_count"
+    assert result[1].value == 23.0
 
 
 def test_check_filestats_missing_count(parsed: dict[str, Any]) -> None:
@@ -151,12 +154,16 @@ def test_check_filestats_with_parameters() -> None:
     }
 
     result = list(check_filestats("test files", params, parsed))
-    assert len(result) == 1
+    assert len(result) == 2  # Result + Metric
 
-    state, message, metrics = result[0]
-    assert state == 0  # Should be OK (150 is within 100-200 range)
-    assert "Files in total: 150" in message
-    assert ("file_count", 150, 200, 300) in metrics
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.OK
+    assert "Files in total: 150" in result[0].summary
+
+    assert isinstance(result[1], Metric)
+    assert result[1].name == "file_count"
+    assert result[1].value == 150.0
+    assert result[1].levels == (200.0, 300.0)
 
 
 def test_filestats_parsing_error_handling() -> None:

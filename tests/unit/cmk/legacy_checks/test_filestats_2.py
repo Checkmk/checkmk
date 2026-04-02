@@ -10,6 +10,7 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
+from cmk.agent_based.v2 import Result, Service
 from cmk.legacy_checks.filestats import check_filestats, discover_filestats, parse_filestats
 
 
@@ -40,7 +41,7 @@ def test_filestats_2_discovery():
     parsed = parse_filestats(string_table)
     discovery = list(discover_filestats(parsed))
     assert len(discovery) == 1
-    assert discovery[0][0] == "foo"
+    assert discovery[0] == Service(item="foo")
 
 
 def test_filestats_2_check():
@@ -71,11 +72,16 @@ def test_filestats_2_check():
     parsed = parse_filestats(string_table)
     results = list(check_filestats("foo", params, parsed))
 
+    # Filter to only Result objects for text-based assertions
+    result_objects = [r for r in results if isinstance(r, Result)]
+
     # Should report file counts, size violations, and detailed file listing
     assert len(results) >= 6
-    assert "Files in total: 5" in results[0][1]
-    assert "Smallest: 0 B" in results[1][1]
-    assert "Largest:" in results[2][1] and "warn/crit" in results[2][1]
-    assert "Newest:" in results[3][1]
-    assert "Oldest:" in results[4][1]
-    assert "/var/log/syslog.1" in results[5][1]  # File details
+    assert "Files in total: 5" in result_objects[0].summary
+    assert "Smallest: 0 B" in result_objects[1].summary
+    assert "Largest:" in result_objects[2].summary and "warn/crit" in result_objects[2].summary
+    assert "Newest:" in result_objects[3].summary
+    assert "Oldest:" in result_objects[4].summary
+    # File details are now in a notice field
+    detail_results = [r for r in result_objects if r.details and "/var/log/syslog.1" in r.details]
+    assert len(detail_results) >= 1

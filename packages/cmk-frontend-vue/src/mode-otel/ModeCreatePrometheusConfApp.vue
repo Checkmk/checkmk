@@ -20,6 +20,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import ConfigureGeneralProperties from './otel-configuration-steps/ConfigureGeneralProperties.vue'
 import ConfigureHosts from './otel-configuration-steps/ConfigureHosts.vue'
 import ConfigurePrometheusScraper from './otel-configuration-steps/ConfigurePrometheusScraper.vue'
+import type { PrometheusScraperConfig } from './otel-configuration-steps/ConfigurePrometheusScraper.vue'
 
 const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')
@@ -27,11 +28,13 @@ const currentStep = ref(1)
 
 const configName = ref<string>('')
 const siteId = ref<string | null>(null)
-const jobName = ref<string>('')
-const metricsPath = ref<string>('')
-const address = ref<string>('')
-const port = ref<number | undefined>(undefined)
-const encryption = ref<boolean>(false)
+const scraperConfig = ref<PrometheusScraperConfig>({
+  jobName: '',
+  metricsPath: '',
+  address: '',
+  port: undefined,
+  encryption: false
+})
 
 const generalPropertiesRef =
   useTemplateRef<InstanceType<typeof ConfigureGeneralProperties>>('generalProperties')
@@ -42,12 +45,12 @@ async function validateGeneralProperties(): Promise<boolean> {
   return (await generalPropertiesRef.value?.validate()) ?? false
 }
 
-async function validateStep2(): Promise<boolean> {
+async function validatePrometheusScraper(): Promise<boolean> {
   return prometheusScraperRef.value?.validate() ?? false
 }
 
 const close = () => {
-  console.log('Activate changes')
+  // TODO: trigger activate changes
 }
 </script>
 
@@ -91,17 +94,10 @@ const close = () => {
         <CmkParagraph>{{ _t('Specify the Prometheus target you want to scrape.') }}</CmkParagraph>
       </template>
       <template #content>
-        <ConfigurePrometheusScraper
-          ref="prometheusScraper"
-          v-model:job-name="jobName"
-          v-model:metrics-path="metricsPath"
-          v-model:address="address"
-          v-model:port="port"
-          v-model:encryption="encryption"
-        />
+        <ConfigurePrometheusScraper ref="prometheusScraper" v-model:config="scraperConfig" />
       </template>
       <template #actions>
-        <CmkWizardButton type="next" :validation-cb="validateStep2" />
+        <CmkWizardButton type="next" :validation-cb="validatePrometheusScraper" />
         <CmkWizardButton type="previous" />
       </template>
     </CmkWizardStep>

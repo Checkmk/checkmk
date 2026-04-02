@@ -3,6 +3,16 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+export interface PrometheusScraperConfig {
+  jobName: string
+  metricsPath: string
+  address: string
+  port: number | undefined
+  encryption: boolean
+}
+</script>
+
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
@@ -13,24 +23,19 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
+import { validateAddress, validatePort } from './validation.ts'
+
 const { _t } = usei18n()
 
-const jobName = defineModel<string>('jobName', { required: true })
-const metricsPath = defineModel<string>('metricsPath', { required: true })
-const address = defineModel<string>('address', { required: true })
-const port = defineModel<number | undefined>('port', { required: true })
-const encryption = defineModel<boolean>('encryption', { required: true })
+const config = defineModel<PrometheusScraperConfig>('config', { required: true })
 
 const displayErrors = ref(false)
-
-const HOSTNAME_PATTERN =
-  /^(?:(?:\d{1,3}\.){3}\d{1,3}|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?|::1?|::ffff:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|[0-9a-fA-F:]+)$/
 
 const jobNameErrors = computed<string[]>(() => {
   if (!displayErrors.value) {
     return []
   }
-  if (!jobName.value.trim()) {
+  if (!config.value.jobName.trim()) {
     return [_t('Enter a name for your job.')]
   }
   return []
@@ -40,10 +45,10 @@ const metricsPathErrors = computed<string[]>(() => {
   if (!displayErrors.value) {
     return []
   }
-  if (!metricsPath.value.trim()) {
+  if (!config.value.metricsPath.trim()) {
     return [_t('Metrics path is required but not specified.')]
   }
-  if (!metricsPath.value.startsWith('/')) {
+  if (!config.value.metricsPath.startsWith('/')) {
     return [_t("Metrics path must start with a '/'.")]
   }
   return []
@@ -53,29 +58,14 @@ const addressErrors = computed<string[]>(() => {
   if (!displayErrors.value) {
     return []
   }
-  if (!address.value.trim()) {
-    return [_t('Enter a valid IP address or host name.')]
-  }
-  if (!HOSTNAME_PATTERN.test(address.value.trim())) {
-    return [_t('Your input is not a valid host name or IP address.')]
-  }
-  return []
+  return validateAddress(config.value.address, _t)
 })
 
 const portErrors = computed<string[]>(() => {
   if (!displayErrors.value) {
     return []
   }
-  if (port.value === undefined) {
-    return [_t('Enter a valid port number (example: 1234).')]
-  }
-  if (!Number.isInteger(port.value)) {
-    return [_t('Port must be a whole number.')]
-  }
-  if (port.value < 1 || port.value > 65535) {
-    return [_t('Port must be between 1 and 65535.')]
-  }
-  return []
+  return validatePort(config.value.port, _t)
 })
 
 function validate(): boolean {
@@ -94,7 +84,12 @@ defineExpose({ validate })
 <template>
   <div class="mode-otel-configure-prometheus-scraper__form">
     <CmkLabel>{{ _t('Job name') }} <CmkLabelRequired /></CmkLabel>
-    <CmkInput v-model="jobName" type="text" field-size="MEDIUM" :external-errors="jobNameErrors" />
+    <CmkInput
+      v-model="config.jobName"
+      type="text"
+      field-size="MEDIUM"
+      :external-errors="jobNameErrors"
+    />
 
     <CmkLabel
       :help="
@@ -105,7 +100,7 @@ defineExpose({ validate })
       >{{ _t('Metrics path') }} <CmkLabelRequired
     /></CmkLabel>
     <CmkInput
-      v-model="metricsPath"
+      v-model="config.metricsPath"
       type="text"
       field-size="MEDIUM"
       placeholder="/metrics"
@@ -118,10 +113,10 @@ defineExpose({ validate })
           'The IP address or host name the OpenTelemetry Collector should listen on. To listen only locally, use \'127.0.0.1\' or \'::1\'. To listen on all interfaces, use \'0.0.0.0\' or \'::\'.'
         )
       "
-      >{{ _t('IP address or hostname') }} <CmkLabelRequired
+      >{{ _t('IP address or host name') }} <CmkLabelRequired
     /></CmkLabel>
     <CmkInput
-      v-model="address"
+      v-model="config.address"
       type="text"
       field-size="MEDIUM"
       placeholder="0.0.0.0"
@@ -129,10 +124,15 @@ defineExpose({ validate })
     />
 
     <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
-    <CmkInput v-model="port" type="number" placeholder="0" :external-errors="portErrors" />
+    <CmkInput
+      v-model="config.port"
+      type="number"
+      placeholder="9090"
+      :external-errors="portErrors"
+    />
 
     <CmkLabel>{{ _t('Encryption') }}</CmkLabel>
-    <CmkCheckbox v-model="encryption" :label="_t('Encrypt communication with TLS')" />
+    <CmkCheckbox v-model="config.encryption" :label="_t('Encrypt communication with TLS')" />
   </div>
 </template>
 
@@ -142,5 +142,6 @@ defineExpose({ validate })
   grid-template-columns: auto 1fr;
   gap: var(--spacing) var(--dimension-6);
   align-items: start;
+  margin-top: var(--spacing);
 }
 </style>

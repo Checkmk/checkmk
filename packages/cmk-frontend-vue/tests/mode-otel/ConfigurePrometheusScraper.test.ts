@@ -7,6 +7,7 @@ import { cleanup, render, screen } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import ConfigurePrometheusScraper from '@/mode-otel/otel-configuration-steps/ConfigurePrometheusScraper.vue'
+import type { PrometheusScraperConfig } from '@/mode-otel/otel-configuration-steps/ConfigurePrometheusScraper.vue'
 
 interface RenderOptions {
   jobName?: string
@@ -25,22 +26,24 @@ function renderComponent(options: RenderOptions = {}) {
     encryption: initialEncryption = false
   } = options
 
-  const jobName = ref(initialJobName)
-  const metricsPath = ref(initialMetricsPath)
-  const address = ref(initialAddress)
-  const port = ref(initialPort)
-  const encryption = ref(initialEncryption)
+  const config = ref<PrometheusScraperConfig>({
+    jobName: initialJobName,
+    metricsPath: initialMetricsPath,
+    address: initialAddress,
+    port: initialPort,
+    encryption: initialEncryption
+  })
   const compRef = ref<InstanceType<typeof ConfigurePrometheusScraper>>()
 
   render(
     defineComponent({
       components: { ConfigurePrometheusScraper },
-      setup: () => ({ jobName, metricsPath, address, port, encryption, compRef }),
-      template: `<ConfigurePrometheusScraper ref="compRef" v-model:job-name="jobName" v-model:metrics-path="metricsPath" v-model:address="address" v-model:port="port" v-model:encryption="encryption" />`
+      setup: () => ({ config, compRef }),
+      template: `<ConfigurePrometheusScraper ref="compRef" v-model:config="config" />`
     })
   )
 
-  return { jobName, metricsPath, address, port, encryption, compRef }
+  return { config, compRef }
 }
 
 const VALID_INPUT: RenderOptions = {
@@ -206,6 +209,24 @@ describe('ConfigurePrometheusScraper', () => {
       expect(result).toBe(true)
     })
 
+    test('shows error for malformed IPv6 with triple colon', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, address: ':::' })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Your input is not a valid host name or IP address.')
+    })
+
+    test('shows error for incomplete IPv6 without double colon', async () => {
+      const { compRef } = renderComponent({ ...VALID_INPUT, address: '1:2' })
+
+      const result = compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText('Your input is not a valid host name or IP address.')
+    })
+
     test('shows error for hostname starting with hyphen', async () => {
       const { compRef } = renderComponent({ ...VALID_INPUT, address: '-invalid.com' })
 
@@ -241,7 +262,7 @@ describe('ConfigurePrometheusScraper', () => {
       const result = compRef.value!.validate()
 
       expect(result).toBe(false)
-      await screen.findByText('Port must be a whole number.')
+      await screen.findByText('Enter a valid port number (example: 1234).')
     })
 
     test('shows error for port below 1', async () => {
@@ -250,7 +271,7 @@ describe('ConfigurePrometheusScraper', () => {
       const result = compRef.value!.validate()
 
       expect(result).toBe(false)
-      await screen.findByText('Port must be between 1 and 65535.')
+      await screen.findByText('Enter a valid port number (example: 1234).')
     })
 
     test('shows error for negative port', async () => {
@@ -259,7 +280,7 @@ describe('ConfigurePrometheusScraper', () => {
       const result = compRef.value!.validate()
 
       expect(result).toBe(false)
-      await screen.findByText('Port must be between 1 and 65535.')
+      await screen.findByText('Enter a valid port number (example: 1234).')
     })
 
     test('accepts port at lower boundary', () => {
@@ -284,21 +305,21 @@ describe('ConfigurePrometheusScraper', () => {
       const result = compRef.value!.validate()
 
       expect(result).toBe(false)
-      await screen.findByText('Port must be between 1 and 65535.')
+      await screen.findByText('Enter a valid port number (example: 1234).')
     })
   })
 
   describe('encryption', () => {
     test('defaults to unchecked', () => {
-      const { encryption } = renderComponent(VALID_INPUT)
+      const { config } = renderComponent(VALID_INPUT)
 
-      expect(encryption.value).toBe(false)
+      expect(config.value.encryption).toBe(false)
     })
 
     test('can be set to true', () => {
-      const { encryption } = renderComponent({ ...VALID_INPUT, encryption: true })
+      const { config } = renderComponent({ ...VALID_INPUT, encryption: true })
 
-      expect(encryption.value).toBe(true)
+      expect(config.value.encryption).toBe(true)
     })
   })
 

@@ -3,25 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Mapping
-from dataclasses import asdict, dataclass
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
-    LegacyResult,
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer untile we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
 )
-from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, StringTable
-from cmk.legacy_includes.elphase import check_elphase
-from cmk.legacy_includes.temperature import check_temperature, TempParamType
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    get_value_store,
+    render,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # 508 and 604 have the same mib
 janitza_umg_device_map = {
@@ -38,23 +42,14 @@ class Total:
 
 
 @dataclass(frozen=True)
-class Phase:
-    voltage: float
-    current: float
-    power: int
-    appower: int
-    energy: float
-
-
-@dataclass(frozen=True)
 class Section:
-    phases: Mapping[str, Phase]
+    phases: Mapping[str, ElPhase]
     total: Total
-    frequency: int
+    frequency: float
     temperature: Mapping[str, float]
 
 
-def parse_janitza_umg_inphase(string_table: list[StringTable]) -> Section | None:
+def parse_janitza_umg_inphase(string_table: Sequence[StringTable]) -> Section | None:
     if not string_table[0] or not string_table[0][0]:
         return None
 
@@ -89,7 +84,7 @@ def parse_janitza_umg_inphase(string_table: list[StringTable]) -> Section | None
     if dev_type in ["508", "604"]:
         num_phases = 4
         num_currents = 4
-    elif dev_type == "96":
+    else:
         num_phases = 3
         num_currents = 6
 
@@ -110,12 +105,12 @@ def parse_janitza_umg_inphase(string_table: list[StringTable]) -> Section | None
 
     # voltages are in 100mv, currents in 1mA, power in Watts / VA
     phases = {
-        "Phase %d" % (phase + 1): Phase(
-            voltage=int(rmsphase[offset(0, phase)]) / 10.0,
-            current=int(rmsphase[offset(2, phase)]) / 1000.0,
-            power=int(rmsphase[offset(3, phase)]),
-            appower=int(rmsphase[offset(5, phase)]),
-            energy=int(energy[phase]) / 10,
+        "Phase %d" % (phase + 1): ElPhase(
+            voltage=ReadingWithState(value=int(rmsphase[offset(0, phase)]) / 10.0),
+            current=ReadingWithState(value=int(rmsphase[offset(2, phase)]) / 1000.0),
+            power=ReadingWithState(value=int(rmsphase[offset(3, phase)])),
+            appower=ReadingWithState(value=int(rmsphase[offset(5, phase)])),
+            energy=ReadingWithState(value=int(energy[phase]) / 10),
         )
         for phase in range(num_phases)
     }
@@ -128,25 +123,12 @@ def parse_janitza_umg_inphase(string_table: list[StringTable]) -> Section | None
     return Section(
         phases=phases,
         total=total,
-        frequency=int(raw_frequency),
+        frequency=int(raw_frequency) / 100.0,
         temperature={str(num): int(v) / 10.0 for num, v in enumerate(raw_temperatures, start=1)},
     )
 
 
-def discover_janitza_umg_inphase(section: Section) -> LegacyDiscoveryResult:
-    for item in section.phases:
-        yield item, {}
-
-
-def check_janitza_umg_inphase(
-    item: str, params: Mapping[str, Any], section: Section
-) -> LegacyCheckResult:
-    if not (phase := section.phases.get(item)):
-        return
-    yield from check_elphase(item, params, {item: asdict(phase)})
-
-
-check_info["janitza_umg"] = LegacyCheckDefinition(
+snmp_section_janitza_umg = SNMPSection(
     name="janitza_umg",
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.8.6"),
@@ -192,6 +174,24 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_janitza_umg_inphase,
+)
+
+
+def discover_janitza_umg_inphase(section: Section) -> DiscoveryResult:
+    for item in section.phases:
+        yield Service(item=item)
+
+
+def check_janitza_umg_inphase(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (phase := section.phases.get(item)):
+        return
+    yield from check_elphase(params, phase)
+
+
+check_plugin_janitza_umg = CheckPlugin(
+    name="janitza_umg",
     service_name="Input %s",
     discovery_function=discover_janitza_umg_inphase,
     check_function=check_janitza_umg_inphase,
@@ -200,16 +200,13 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
 )
 
 
-def discover_janitza_umg_freq(section: Section) -> LegacyDiscoveryResult:
-    yield "1", {}  # why?? :-(
+def discover_janitza_umg_freq(section: Section) -> DiscoveryResult:
+    yield Service(item="1")  # why?? :-(
 
 
-def check_janitza_umg_freq(
-    item: str, params: Mapping[str, Any], section: Section
-) -> LegacyResult | None:
-
-    return check_levels(
-        section.frequency / 100.0,
+def check_janitza_umg_freq(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_levels(
+        section.frequency,
         "in_freq",
         (None, None) + params["levels_lower"],
         human_readable_func=render.frequency,
@@ -217,7 +214,7 @@ def check_janitza_umg_freq(
     )
 
 
-check_info["janitza_umg.freq"] = LegacyCheckDefinition(
+check_plugin_janitza_umg_freq = CheckPlugin(
     name="janitza_umg_freq",
     service_name="Frequency %s",
     sections=["janitza_umg"],
@@ -228,21 +225,24 @@ check_info["janitza_umg.freq"] = LegacyCheckDefinition(
 )
 
 
-def discover_janitza_umg_temp(section: Section) -> LegacyDiscoveryResult:
+def discover_janitza_umg_temp(section: Section) -> DiscoveryResult:
     for num, temp in section.temperature.items():
         if temp != -1000:
-            yield num, {}
+            yield Service(item=num)
 
 
-def check_janitza_umg_temp(
-    item: str, params: TempParamType, section: Section
-) -> LegacyResult | None:
+def check_janitza_umg_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
     if (reading := section.temperature.get(item)) is None:
-        return None
-    return check_temperature(reading, params, "janitza_umg_%s" % item)
+        return
+    yield from check_temperature(
+        reading,
+        params,
+        unique_name="janitza_umg_%s" % item,
+        value_store=get_value_store(),
+    )
 
 
-check_info["janitza_umg.temp"] = LegacyCheckDefinition(
+check_plugin_janitza_umg_temp = CheckPlugin(
     name="janitza_umg_temp",
     service_name="Temperature External %s",
     sections=["janitza_umg"],

@@ -15,7 +15,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import enum
 import logging
+from sphinx.application import Sphinx
 
 # -- Project information -----------------------------------------------------
 
@@ -94,3 +96,18 @@ html_show_sourcelink = False
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+
+# -- Enum member listing -----------------------------------------------------
+
+def _append_enum_members(
+    _app: object, what: str, _name: object, obj: object, _options: object, lines: list[str]
+) -> None:
+    """Append a compact member list to enum docstrings."""
+    if what == "class" and isinstance(obj, type) and issubclass(obj, enum.Enum):
+        lines.append("")
+        lines.append("**Members:** " + ", ".join(f"``{m.name}``" for m in obj))
+
+
+def setup(app: Sphinx) -> None:
+    app.connect("autodoc-process-docstring", _append_enum_members)

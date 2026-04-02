@@ -189,6 +189,7 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
 def iter_relevant_files(basepath: Path) -> Iterable[Path]:
     exclusions = [
         basepath / "agents",  # There are so many optional imports...
+        basepath / "doc/plugin-api/source",  # only build time dependencies
         basepath / "node_modules",
         basepath / "omd/license_sources",  # update_licenses.py contains imports
         basepath / "packages/cmk-shared-typing/utils",  # only build time dependencies

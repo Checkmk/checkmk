@@ -8,10 +8,11 @@ from pathlib import Path
 
 def bazel_repo_root() -> Path:
     """Resolve the repo root from Bazel runfiles."""
-    test_srcdir = os.environ.get("TEST_SRCDIR")
-    test_workspace = os.environ.get("TEST_WORKSPACE")
-    if not test_srcdir or not test_workspace:
+    try:
+        test_srcdir = os.environ["TEST_SRCDIR"]
+        test_workspace = os.environ["TEST_WORKSPACE"]
+    except KeyError as exc:
         raise RuntimeError(
             "TEST_SRCDIR and TEST_WORKSPACE must be set. This test must be run via Bazel."
-        )
+        ) from exc
     return Path(test_srcdir) / test_workspace

@@ -88,6 +88,13 @@ export interface FinishEvent {
 
 export type StreamEvent = MetadataEvent | ThinkingEvent | AnswerEvent | ErrorEvent | FinishEvent
 
+export class RateLimitError extends Error {
+  constructor() {
+    super('Rate limit exceeded')
+    this.name = 'RateLimitError'
+  }
+}
+
 // Must exceed the ai_service keepalive ping interval (currently 15s).
 const STREAM_TIMEOUT_MS = 20_000
 
@@ -125,7 +132,7 @@ export class AiApiClient extends Api {
     action: AiServiceAction,
     contextData: unknown,
     onEvent: (event: StreamEvent) => void,
-    onError?: (error: Error) => void,
+    onError?: (error: Error) => void | Promise<void>,
     onComplete?: () => void,
     signal?: AbortSignal
   ): Promise<void> {
@@ -146,6 +153,9 @@ export class AiApiClient extends Api {
       })
 
       if (!res.ok) {
+        if (res.status === 429) {
+          throw new RateLimitError()
+        }
         const errorText = await res.text()
         throw new Error(`Stream inference request failed: ${errorText}`)
       }
@@ -171,7 +181,7 @@ export class AiApiClient extends Api {
         throw new Error('Stream did not complete successfully')
       }
     } catch (e) {
-      onError?.(e instanceof Error ? e : new Error(String(e)))
+      await onError?.(e instanceof Error ? e : new Error(String(e)))
     }
   }
 

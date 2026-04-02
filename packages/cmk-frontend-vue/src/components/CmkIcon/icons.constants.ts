@@ -583,6 +583,7 @@ import lightIconTransSvg from '~cmk-frontend/themes/facelift/images/icon_trans.s
 import lightIconTreeClosedSvg from '~cmk-frontend/themes/facelift/images/icon_tree_closed.svg?url&no-inline'
 import lightIconTrustPng from '~cmk-frontend/themes/facelift/images/icon_trust.png?url&no-inline'
 import lightIconUnacknowledgeTestPng from '~cmk-frontend/themes/facelift/images/icon_unacknowledge_test.png?url&no-inline'
+import lightIconUnavailableSvg from '~cmk-frontend/themes/facelift/images/icon_unavailable.svg?url&no-inline'
 import lightIconUndecidedServiceSvg from '~cmk-frontend/themes/facelift/images/icon_undecided_service.svg?url&no-inline'
 import lightIconUndoSvg from '~cmk-frontend/themes/facelift/images/icon_undo.svg?url&no-inline'
 import lightIconUnpackagedFilesPng from '~cmk-frontend/themes/facelift/images/icon_unpackaged_files.png?url&no-inline'
@@ -700,6 +701,7 @@ import darkIconTableActionsOnSvg from '~cmk-frontend/themes/modern-dark/images/i
 import darkIconTickSvg from '~cmk-frontend/themes/modern-dark/images/icon_tick.svg?url&no-inline'
 import darkIconToggleOffSvg from '~cmk-frontend/themes/modern-dark/images/icon_toggle_off.svg?url&no-inline'
 import darkIconTreeClosedSvg from '~cmk-frontend/themes/modern-dark/images/icon_tree_closed.svg?url&no-inline'
+import darkIconUnavailableSvg from '~cmk-frontend/themes/modern-dark/images/icon_unavailable.svg?url&no-inline'
 import darkReleaseAutomatedSvg from '~cmk-frontend/themes/modern-dark/images/release_automated.svg?url&no-inline'
 import darkSpeedometerSvg from '~cmk-frontend/themes/modern-dark/images/speedometer.svg?url&no-inline'
 
@@ -1444,7 +1446,8 @@ export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
     'table-actions-on': lightIconTableActionsOnSvg,
     tick: lightIconTickSvg,
     'toggle-off': lightIconToggleOffSvg,
-    'tree-closed': lightIconTreeClosedSvg
+    'tree-closed': lightIconTreeClosedSvg,
+    unavailable: lightIconUnavailableSvg
   },
   dark: {
     'add-rule': darkIconAddRuleSvg,
@@ -1516,6 +1519,7 @@ export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
     'table-actions-on': darkIconTableActionsOnSvg,
     tick: darkIconTickSvg,
     'toggle-off': darkIconToggleOffSvg,
-    'tree-closed': darkIconTreeClosedSvg
+    'tree-closed': darkIconTreeClosedSvg,
+    unavailable: darkIconUnavailableSvg
   }
 }

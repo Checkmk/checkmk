@@ -109,6 +109,7 @@ onBeforeUnmount(() => {
         :key="index"
         :element-index="index"
         v-bind="element"
+        @close="emit('close')"
       />
       <AiUserAction v-if="showUserActions" />
     </template>

@@ -47,7 +47,10 @@ function renderAiConversationElement(props: IAiConversationElement) {
         CodeContent: true,
         ListContent: true,
         DialogContent: true,
-        ImageContent: true
+        ImageContent: true,
+        RateLimitContent: {
+          template: '<div data-testid="ai-rate-limit-content"></div>'
+        }
       }
     }
   })
@@ -82,6 +85,19 @@ test('does not show copy button while still thinking', () => {
   })
 
   expect(screen.queryByTitle('Copy response')).not.toBeInTheDocument()
+})
+
+test('renders RateLimitContent when content_type is rate_limit', async () => {
+  renderAiConversationElement({
+    role: AiRole.ai,
+    streaming: false,
+    noAnimation: true,
+    content: [{ content_type: 'rate_limit' }]
+  })
+
+  await waitFor(() => {
+    expect(screen.getByTestId('ai-rate-limit-content')).toBeInTheDocument()
+  })
 })
 
 test('builds copy text from answer chunks and excludes thinking', async () => {

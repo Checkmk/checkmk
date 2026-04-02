@@ -698,6 +698,7 @@
         "twofa",
         "twofa-backup-codes",
         "unacknowledge-test",
+        "unavailable",
         "undecided-service",
         "undo",
         "unpackaged-files",

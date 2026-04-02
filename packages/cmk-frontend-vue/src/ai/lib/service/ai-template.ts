@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
-import { type Ref, reactive, ref } from 'vue'
+import { type Ref, nextTick, reactive, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
@@ -17,6 +17,7 @@ import {
   AiApiClient,
   type AiServiceAction,
   type InfoResponse,
+  RateLimitError,
   type StreamEvent
 } from '@/ai/lib/ai-api-client'
 import { AiRole } from '@/ai/lib/utils'
@@ -39,7 +40,7 @@ export interface IAiConversationConfig<T> {
   userActions: IAiUserActionConfig
 }
 
-export type TBaseConversationElementEmits = { (e: 'done'): void }
+export type TBaseConversationElementEmits = { done: [] }
 
 export interface BaseConversationElementContent {
   content_type: string
@@ -95,6 +96,10 @@ export interface TextConversationElementContent extends BaseConversationElementC
   text: string
 }
 
+export interface RateLimitConversationElementContent extends BaseConversationElementContent {
+  content_type: 'rate_limit'
+}
+
 export type TAiConversationElementContent =
   | AlertConversationElementContent
   | CodeBlockConversationElementContent
@@ -102,6 +107,7 @@ export type TAiConversationElementContent =
   | ImageConversationElementContent
   | ListConversationElementContent
   | MarkdownConversationElementContent
+  | RateLimitConversationElementContent
   | TextConversationElementContent
   | SystemContextConversationElementContent
 
@@ -344,15 +350,22 @@ export class AiTemplateService extends ServiceBase {
           }
         }
       },
-      (_error: Error) => {
+      async (_error: Error) => {
         if (signal.aborted) {
           return
         }
-        contents.value.push({
-          content_type: 'alert',
-          variant: 'error',
-          text: _t('Something went wrong. Please try again later.')
-        } as AlertConversationElementContent)
+        if (_error instanceof RateLimitError) {
+          contents.value.push({
+            content_type: 'rate_limit'
+          } as RateLimitConversationElementContent)
+        } else {
+          contents.value.push({
+            content_type: 'alert',
+            variant: 'error',
+            text: _t('Something went wrong. Please try again later.')
+          } as AlertConversationElementContent)
+        }
+        await nextTick()
         element.streaming = false
         element.noAnimation = false
       },

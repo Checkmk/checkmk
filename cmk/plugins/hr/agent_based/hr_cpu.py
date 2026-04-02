@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -10,6 +11,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
     Result,
     Service,
     SimpleSNMPSection,
@@ -17,8 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.legacy_includes.cpu_util import check_cpu_util
 from cmk.plugins.lib import ucd_hr_detection
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 # .1.3.6.1.2.1.25.3.3.1.2.768 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.768
 # .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769
@@ -42,7 +44,13 @@ def check_hr_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult
         yield Result(state=State.UNKNOWN, summary="No data found in SNMP output")
         return
     util = float(util) / num_cpus
-    yield from check_cpu_util(util, params, cores=cores)  # type: ignore[no-untyped-call]
+    yield from check_cpu_util(
+        util=util,
+        params=params,
+        cores=cores,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
 # Migration NOTE: Create a separate section, but a common check plug-in for

@@ -86,7 +86,7 @@ class ElementTopList(CmkPage):
 
     @property
     def service_exact_match_search_field(self) -> Locator:
-        return self.service_filter("Service (exact match)").get_by_role("textbox")
+        return self.service_filter("Service name (exact match)").get_by_role("textbox")
 
     @property
     def metric_search_field(self) -> Locator:

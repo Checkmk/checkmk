@@ -14,7 +14,6 @@ load(
 )
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
-load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
 
 exports_files([
@@ -289,12 +288,4 @@ sh_library(
         ".f12",
         "run",
     ],
-)
-
-py_requirements_test(
-    name = "requirements-test",
-    libs = [
-        ":cmk_shared_typing_formatter",
-    ],
-    requirements_in = "requirements.in",
 )

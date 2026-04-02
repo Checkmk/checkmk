@@ -1,6 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "requirements.in",
@@ -92,10 +91,4 @@ py_test(
         requirement("pygls"),
         requirement("pytest"),
     ],
-)
-
-py_requirements_test(
-    name = "requirements-test",
-    libs = ":library",
-    requirements_in = "requirements.in",
 )

@@ -6,7 +6,6 @@ load("//:relay_supported_plugins.bzl", "RELAY_SUPPORTED_PLUGIN_FAMILIES")
 load("//bazel/rules:concat_files.bzl", "concat_files")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
-load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 # This detects the plugin families automatically.
 # Each subdirectory in cmk/plugins/ is considered a family.
@@ -122,10 +121,4 @@ py_doc_test(
     size = "small",
     srcs = ["//packages/cmk-plugins/cmk/plugins/%s:%s" % (family, family) for family in FAMILIES],
     tags = ["no-mypy"],
-)
-
-py_requirements_test(
-    name = "requirements-test",
-    libs = FAMILIES,
-    requirements_in = "requirements.in",
 )

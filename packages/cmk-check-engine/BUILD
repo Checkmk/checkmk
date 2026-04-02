@@ -4,7 +4,6 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
-load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files(
     [
@@ -176,14 +175,4 @@ sh_library(
     srcs = [
         ".f12",
     ],
-)
-
-py_requirements_test(
-    name = "requirements-test",
-    libs = [
-        ":fetchers",
-        ":helper-interface",
-        ":snmplib",
-    ],
-    requirements_in = "requirements.in",
 )

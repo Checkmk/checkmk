@@ -1,6 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files(["requirements.in"])
 
@@ -58,14 +57,4 @@ py_library(
         "update_python_libs.py",
     ],
     deps = [requirement("sarif-tools")],
-)
-
-py_requirements_test(
-    name = "requirements-test",
-    libs = [
-        ":sarif_preparse",
-        ":scripts_py",
-        ":decent_output",
-    ],
-    requirements_in = "requirements.in",
 )

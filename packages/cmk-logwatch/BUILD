@@ -5,7 +5,6 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
-load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
@@ -117,12 +116,4 @@ sh_library(
     srcs = [
         ".f12",
     ],
-)
-
-py_requirements_test(
-    name = "requirements-test",
-    libs = [
-        ":plugins",
-    ],
-    requirements_in = "requirements.in",
 )

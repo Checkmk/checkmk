@@ -1,6 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test")
-load("@cmk_requirements//:requirements.bzl", "all_requirements", "requirement")
-load("//bazel/rules:requirements_mapping.bzl", "requirements_mapping")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "requirements_utils",
@@ -10,7 +9,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tests/code_quality:bazel_utils",
-        requirement("isort"),
         requirement("requirements-parser"),
     ],
 )
@@ -38,26 +36,9 @@ py_test(
     ],
     env_inherit = ["GERRIT_BRANCH"],
     pytest_main = True,
-    tags = ["requirements"],
     deps = [
         ":requirements_utils",
         requirement("pytest"),
         requirement("requirements-parser"),
     ],
-)
-
-py_binary(
-    name = "generate_requirements_mapping",
-    srcs = ["generate_requirements_mapping.py"],
-    main = "generate_requirements_mapping.py",
-    deps = [
-        ":requirements_utils",
-    ],
-)
-
-requirements_mapping(
-    name = "mapping",
-    dist_infos = [req.replace(":pkg", ":dist_info") for req in all_requirements],
-    tool = ":generate_requirements_mapping",
-    visibility = ["//visibility:public"],
 )

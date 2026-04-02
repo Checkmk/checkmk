@@ -333,6 +333,7 @@ def test_ec_rule_no_match_snmp_trap(
     assert not queried_event_messages
 
 
+@pytest.mark.skip(reason="CMK-33230")
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
 def test_ec_global_settings(
     site: Site,

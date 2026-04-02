@@ -30,6 +30,8 @@ from buildscripts.scripts.lib.registry import (
     Registry,
 )
 
+HTTP_STATUS_OK = 200
+
 MetaFileExtension = Literal["json", "csv"]
 
 DOWNLOAD_SERVER_BASE_URL = "https://download.checkmk.com/checkmk"
@@ -144,7 +146,7 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
             auth=(credentials.username, credentials.password),
             timeout=10,
         ).status_code
-        != 200
+        != HTTP_STATUS_OK
     ):
         sys.stdout.write(" MISSING\n")
         return False

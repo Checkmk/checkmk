@@ -526,7 +526,7 @@ class QuicksearchManager:
         *,
         row_limit: int,
         search_order: Iterable[tuple[str, str]],
-        raise_too_many_rows_error: bool = True,
+        raise_too_many_rows_error: bool,
     ) -> None:
         self._row_limit = row_limit
         self._search_order = search_order

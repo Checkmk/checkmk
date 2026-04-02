@@ -91,6 +91,7 @@ class QuicksearchSnapin(SidebarSnapin):
         quicksearch_manager = QuicksearchManager(
             row_limit=ctx.config.quicksearch_dropdown_limit,
             search_order=ctx.config.quicksearch_search_order,
+            raise_too_many_rows_error=True,
         )
 
         search_objects: list[ABCQuicksearchConductor] = []
@@ -133,6 +134,7 @@ class QuicksearchSnapin(SidebarSnapin):
         quicksearch_manager = QuicksearchManager(
             row_limit=ctx.config.quicksearch_dropdown_limit,
             search_order=ctx.config.quicksearch_search_order,
+            raise_too_many_rows_error=True,
         )
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)

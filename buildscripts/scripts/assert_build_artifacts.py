@@ -146,13 +146,13 @@ def build_source_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tupl
         yield hash_file(file_name), internal_only
 
 
-def build_docker_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+def build_docker_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
         if edition == "managed":
             # For CME we don't build any container images
             continue
 
-        file_name = f"check-mk-{edition}-docker-{args.version}.tar.gz"
+        file_name = f"check-mk-{edition}-docker-{version.version_without_rc}.tar.gz"
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only
@@ -293,7 +293,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
         assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
 
-    for artifact_name, internal_only in build_docker_artifacts(args, loaded_yaml):
+    for artifact_name, internal_only in build_docker_artifacts(version, loaded_yaml):
         assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
 
     for image_name, edition, registry in build_docker_image_name_and_registry(

@@ -100,7 +100,7 @@ const api: API<string, PasswordConfig> = {
         validation_error: _t('Could not validate form, errors are shown in the form'),
         fatal_error: _t('A fatal error occurred:'),
         permanent_choice_warning: _t(
-          'Changes submitted through this form will be immediately applied to your configuration. However, you may still need to activate them for them to take effect.'
+          'Changes submitted through this form will be immediately applied to your configuration when completing the setup. However, you may still need to activate them for them to take effect.'
         ),
         permanent_choice_warning_dismissal: _t('Do not show again')
       }"

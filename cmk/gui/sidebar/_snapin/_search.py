@@ -89,12 +89,7 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
-        quicksearch_manager = QuicksearchManager(
-            row_limit=ctx.config.quicksearch_dropdown_limit,
-            search_order=ctx.config.quicksearch_search_order,
-            build_url=get_url_builder(ctx.request),
-            raise_too_many_rows_error=True,
-        )
+        quicksearch_manager = _build_quicksearch_manager_from_context(ctx)
 
         search_objects: list[ABCQuicksearchConductor] = []
         try:
@@ -133,17 +128,21 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
-        quicksearch_manager = QuicksearchManager(
-            row_limit=ctx.config.quicksearch_dropdown_limit,
-            search_order=ctx.config.quicksearch_search_order,
-            build_url=get_url_builder(ctx.request),
-            raise_too_many_rows_error=True,
-        )
+        quicksearch_manager = _build_quicksearch_manager_from_context(ctx)
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         search_url = quicksearch_manager.generate_search_url(query, user_permissions)
 
         raise HTTPRedirect(search_url)
+
+
+def _build_quicksearch_manager_from_context(ctx: PageContext) -> QuicksearchManager:
+    return QuicksearchManager(
+        row_limit=ctx.config.quicksearch_dropdown_limit,
+        search_order=ctx.config.quicksearch_search_order,
+        build_url=get_url_builder(ctx.request),
+        raise_too_many_rows_error=True,
+    )
 
 
 def _render_quicksearch_results(results_by_topic: SearchResultsByTopic, query: SearchQuery) -> None:

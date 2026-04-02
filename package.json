@@ -1,28 +1,29 @@
 {
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@typescript-eslint/parser": "^8.46.3",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/parser": "^8.58.0",
     "@vue/compiler-dom": "3.5.31",
     "@vue/eslint-config-prettier": "^10.2.0",
-    "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/eslint-config-typescript": "^14.7.0",
     "@vue/server-renderer": "3.5.31",
     "@vue/test-utils": "^2.4.6",
-    "eslint": "^9.39.1",
-    "eslint-plugin-vue": "^10.5.1",
-    "jsdom": "^27.1.0",
-    "postcss-html": "^1.8.0",
-    "sass-embedded": "^1.86.3",
-    "stylelint": "^16.25.0",
-    "stylelint-config-standard": "^39.0.1",
-    "typescript-eslint": "^8.46.3",
-    "vitest": "^3.2.4",
-    "vitest-fail-on-console": "^0.7.1",
+    "eslint": "^10.1.0",
+    "eslint-plugin-vue": "^10.8.0",
+    "jsdom": "^29.0.1",
+    "postcss-html": "^1.8.1",
+    "sass-embedded": "^1.98.0",
+    "stylelint": "^17.6.0",
+    "stylelint-config-standard": "^40.0.0",
+    "typescript-eslint": "^8.58.0",
+    "vitest": "^4.1.2",
+    "vitest-fail-on-console": "^0.10.1",
     "vue": "3.5.31",
-    "vue-tsc": "^3.1.8",
+    "vue-tsc": "^3.2.6",
     "vue3-gettext": "4.0.0-beta.1"
   },
   "pnpm": {
     "overrides": {
+      "vite-plugin-inspect": "^12.0.0-beta.1",
       "glob": "^11.1.0",
       "js-yaml": "^4.1.0"
     }

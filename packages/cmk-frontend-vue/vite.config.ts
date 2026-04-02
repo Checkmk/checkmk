@@ -4,16 +4,42 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import vue from '@vitejs/plugin-vue'
+import fs from 'node:fs'
 import path from 'node:path'
 import { type RollupLog } from 'rollup'
-import { type UserConfig, defineConfig } from 'vite'
+import { type Plugin, type UserConfig, defineConfig } from 'vite'
 import VueDevTools from 'vite-plugin-vue-devtools'
+
+// Workaround for https://github.com/vitejs/vite/issues/21955
+// should be removed once the issue is closed
+function bazelManifestPathFix(): Plugin {
+  return {
+    name: 'bazel-manifest-path-fix',
+    apply: 'build',
+    closeBundle() {
+      const manifestPath = path.resolve('./dist/.manifest.json')
+      if (!fs.existsSync(manifestPath)) return
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as Record<
+        string,
+        { src?: string }
+      >
+      const strip = (s: string) => s.replace(/^.*?packages\/cmk-frontend-vue\//, '')
+      const fixed: typeof manifest = {}
+      for (const [key, entry] of Object.entries(manifest)) {
+        if (entry.src) entry.src = strip(entry.src)
+        fixed[strip(key)] = entry
+      }
+      fs.writeFileSync(manifestPath, JSON.stringify(fixed, null, 2))
+    }
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
   const resultBuild: UserConfig = {
     clearScreen: false,
     plugins: [
+      bazelManifestPathFix(),
       vue({
         template: {
           transformAssetUrls: {
@@ -43,6 +69,9 @@ export default defineConfig(({ command }) => {
       rollupOptions: {
         onwarn: function (message: string | RollupLog) {
           if (typeof message === 'object') {
+            if (message.code === 'PLUGIN_TIMINGS') {
+              return
+            }
             if (message.code === 'CIRCULAR_DEPENDENCY') {
               const external_circular_dependency = message.ids!.filter((id: any) =>
                 id.includes('/node_modules/')
@@ -87,12 +116,15 @@ export default defineConfig(({ command }) => {
     // we are in serve mode here, supporting auto hot reload
     return {
       ...resultBuild,
+      resolve: {
+        ...resultBuild.resolve,
+        preserveSymlinks: true // bazel ...
+      },
       plugins: [
         ...(resultBuild.plugins ?? []),
-        VueDevTools({
-          componentInspector: true,
-          appendTo: /main\.ts$/
-        })
+        ...(!process.env.VITEST
+          ? [VueDevTools({ componentInspector: true, appendTo: /main\.ts$/ })]
+          : [])
       ],
       test: {
         // enable jest-like global test APIs

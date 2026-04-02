@@ -1162,6 +1162,117 @@ class TestPerformDiscoverySingleUpdate:
         assert len(remove_disabled_rule) == 0
         assert add_disabled_rule == {"Description B"}
 
+    def test_ignored_nonexistent_service_set_to_undecided_is_removed_from_autochecks(
+        self,
+        mocker: MockerFixture,
+        sample_host_name: HostName,
+        sample_host: Host,
+        mock_set_autochecks: MagicMock,
+    ) -> None:
+        """A disabled (ignored) service that no longer exists stays 'ignored' rather than
+        'vanished' because a disabled rule matches it.  Setting it to 'undecided' must remove
+        the disabled rule and drop the service from autochecks.
+
+        Note: this test uses its own simple check_table (single ignored service + one unrelated
+        unchanged service) instead of the class-level check_table.  The class-level table has two
+        entries sharing the same description, which causes old_autochecks to lose track of the
+        ignored entry and makes the removal assertion vacuous."""
+        mock_save_function = mocker.patch(
+            "cmk.gui.watolib.services.Discovery._save_host_service_enable_disable_rules",
+            return_value=None,
+        )
+        check_table = [
+            CheckPreviewEntry(
+                check_source="ignored",
+                check_plugin_name="ignored_plugin",
+                ruleset_name="some_rule",
+                discovery_ruleset_name=None,
+                item="X",
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
+                description="Ignored Service",
+                state=0,
+                output="",
+                metrics=[],
+                old_labels={},
+                new_labels={},
+                found_on_nodes=[sample_host_name],
+            ),
+            CheckPreviewEntry(
+                check_source="unchanged",
+                check_plugin_name="kept_plugin",
+                ruleset_name="some_rule",
+                discovery_ruleset_name=None,
+                item=None,
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
+                description="Kept Service",
+                state=0,
+                output="",
+                metrics=[],
+                old_labels={},
+                new_labels={},
+                found_on_nodes=[sample_host_name],
+            ),
+        ]
+        mocker.patch(
+            "cmk.gui.watolib.services.local_discovery_preview",
+            return_value=ServiceDiscoveryPreviewResult(
+                output="",
+                check_table=check_table,
+                nodes_check_table={},
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
+                source_results={},
+                labels_by_host={},
+                config_warnings=[],
+            ),
+        )
+        perform_service_discovery(
+            action=DiscoveryAction.SINGLE_UPDATE,
+            discovery_result=DiscoveryResult(
+                job_status={
+                    "state": "finished",
+                    "started": 0.0,
+                    "pid": None,
+                    "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+                    "is_active": False,
+                },
+                check_table_created=0,
+                check_table=check_table,
+                nodes_check_table={},
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
+                labels_by_host={sample_host_name: []},
+                sources={},
+                config_warnings=[],
+            ),
+            selected_services=(("ignored_plugin", "X"),),
+            update_source="ignored",
+            update_target="new",
+            host=sample_host,
+            automation_config=LocalAutomationConfig(),
+            pprint_value=False,
+            debug=False,
+            use_git=False,
+        )
+
+        mock_save_function.assert_called_once()
+        remove_disabled_rule, add_disabled_rule, *_ = mock_save_function.call_args_list[0][0]
+        assert remove_disabled_rule == {"Ignored Service"}
+        assert len(add_disabled_rule) == 0
+
+        # The service was removed from autochecks (it was present as 'ignored'; now it is gone).
+        saved_input = mock_set_autochecks.call_args.args[1]
+        assert "Ignored Service" not in saved_input.target_services
+        assert "Kept Service" in saved_input.target_services
+
 
 def test_perform_discovery_action_update_services(
     mocker: MockerFixture,
@@ -1655,3 +1766,161 @@ class TestDiscovery:
                 },
             ),
         )
+
+    def test_ignored_service_set_to_undecided_removes_disabled_rule_and_drops_from_autochecks(
+        self,
+    ) -> None:
+        """A disabled (ignored) service that no longer exists stays 'ignored' rather than
+        'vanished' because a disabled rule matches it.  Setting it to 'undecided' must remove
+        the disabled rule and drop the service from autochecks (it was present before as
+        'ignored'; now it should be gone)."""
+        target_host = HostName("myhost")
+        discovery_result = _make_discovery_result(
+            check_table=[
+                _make_preview_entry(
+                    check_source="ignored",
+                    old_params={},
+                    new_params={},
+                    found_on_nodes=[target_host],
+                )
+            ],
+            nodes_check_table={},
+        )
+        assert Discovery(
+            host=object(),  # type: ignore[arg-type]
+            action=DiscoveryAction.SINGLE_UPDATE,
+            update_target="new",
+            selected_services=(("dummy_plugin", None),),
+            user_need_permission=_grant_all_permissions,
+        ).compute_discovery_transition(discovery_result, target_host) == DiscoveryTransition(
+            need_sync=True,
+            remove_disabled_rule={"my-description"},
+            add_disabled_rule=set(),
+            old_autochecks=SetAutochecksInput(
+                discovered_host=target_host,
+                target_services={
+                    "my-description": AutocheckEntry(
+                        check_plugin_name=CheckPluginName("dummy_plugin"),
+                        item=None,
+                        parameters={},
+                        service_labels={},
+                    )
+                },
+                nodes_services={},
+            ),
+            new_autochecks=SetAutochecksInput(
+                discovered_host=target_host,
+                target_services={},
+                nodes_services={},
+            ),
+        )
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_perform_discovery_bulk_update__ignored_service_set_to_undecided(
+    mocker: MockerFixture,
+    sample_host_name: HostName,
+    sample_host: Host,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    """Same case as the SINGLE_UPDATE test but via BULK_UPDATE: a disabled (ignored)
+    service that no longer exists must have its disabled rule removed and must be dropped
+    from autochecks when the user targets it to 'undecided'."""
+    mock_save_function = mocker.patch(
+        "cmk.gui.watolib.services.Discovery._save_host_service_enable_disable_rules",
+        return_value=None,
+    )
+    check_table = [
+        CheckPreviewEntry(
+            check_source="ignored",
+            check_plugin_name="some_plugin",
+            ruleset_name="some_rule",
+            discovery_ruleset_name=None,
+            item="A",
+            old_discovered_parameters={},
+            new_discovered_parameters={},
+            effective_parameters={},
+            description="Disabled Service",
+            state=0,
+            output="",
+            metrics=[],
+            old_labels={},
+            new_labels={},
+            found_on_nodes=[sample_host_name],
+        ),
+        CheckPreviewEntry(
+            check_source="unchanged",
+            check_plugin_name="other_plugin",
+            ruleset_name="other_rule",
+            discovery_ruleset_name=None,
+            item=None,
+            old_discovered_parameters={},
+            new_discovered_parameters={},
+            effective_parameters={},
+            description="Running Service",
+            state=0,
+            output="",
+            metrics=[],
+            old_labels={},
+            new_labels={},
+            found_on_nodes=[sample_host_name],
+        ),
+    ]
+    mocker.patch(
+        "cmk.gui.watolib.services.local_discovery_preview",
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
+            check_table=check_table,
+            nodes_check_table={},
+            host_labels={},
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+            source_results={},
+            labels_by_host={},
+            config_warnings=[],
+        ),
+    )
+    result = perform_service_discovery(
+        action=DiscoveryAction.BULK_UPDATE,
+        discovery_result=DiscoveryResult(
+            job_status={
+                "state": "finished",
+                "started": 0.0,
+                "pid": None,
+                "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+                "is_active": False,
+            },
+            check_table_created=0,
+            check_table=check_table,
+            nodes_check_table={},
+            host_labels={},
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+            labels_by_host={sample_host_name: []},
+            sources={},
+            config_warnings=[],
+        ),
+        selected_services=(("some_plugin", "A"),),
+        update_source="ignored",
+        update_target="new",
+        host=sample_host,
+        automation_config=LocalAutomationConfig(),
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+    )
+
+    mock_save_function.assert_called_once()
+    remove_disabled_rule, add_disabled_rule, *_ = mock_save_function.call_args_list[0][0]
+    assert remove_disabled_rule == {"Disabled Service"}
+    assert len(add_disabled_rule) == 0
+
+    # The entry transitions to 'new' (undecided) in the result view.
+    (transitioned,) = [e for e in result.check_table if e.check_plugin_name == "some_plugin"]
+    assert transitioned.check_source == "new"
+
+    # The service was removed from autochecks (it was present as 'ignored'; now it is gone).
+    saved_input = mock_set_autochecks.call_args.args[1]
+    assert "Disabled Service" not in saved_input.target_services

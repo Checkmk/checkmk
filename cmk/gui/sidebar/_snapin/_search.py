@@ -123,7 +123,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
         results = quicksearch_manager._evaluate_results(search_objects)
 
-        render_quicksearch_results(results, query)
+        _render_quicksearch_results(results, query)
 
     def _page_search_open(self, ctx: PageContext) -> None:
         """Generate the URL to the view that is opened when confirming the search field"""
@@ -143,7 +143,7 @@ class QuicksearchSnapin(SidebarSnapin):
         raise HTTPRedirect(search_url)
 
 
-def render_quicksearch_results(results_by_topic: SearchResultsByTopic, query: SearchQuery) -> None:
+def _render_quicksearch_results(results_by_topic: SearchResultsByTopic, query: SearchQuery) -> None:
     sorted_results = sorted(results_by_topic, key=lambda x: x[0])
     # Show search topic if at least two search objects provide elements
     show_match_topics = len(sorted_results) > 1

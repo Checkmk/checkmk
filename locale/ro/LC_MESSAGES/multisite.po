@@ -19944,10 +19944,6 @@ msgid "Deploy MSSQL Server plug-in"
 msgstr "Implementarea plugin-ului MSSQL Server"
 
 #, fuzzy
-msgid "Deploy MTR plug-in asynchronously"
-msgstr "Implementarea pluginului MTR în mod asincron"
-
-#, fuzzy
 msgid "Deploy Mailman plug-in"
 msgstr "Implementați plugin-ul Mailman"
 
@@ -20210,6 +20206,15 @@ msgstr "Implementați plugin-ul agent <tt>mk_sshd_config</tt>."
 #, fuzzy
 msgid "Deploy the agent plug-in <tt>mk_suseconnect</tt>."
 msgstr "Implementați pluginul agent <tt>mk_suseconnect</tt>."
+
+#, fuzzy
+msgid ""
+"Deploy the agent plug-in <tt>mtr</tt> on your target system. Note that "
+"<tt>mtr</tt> must be installed on the monitored system."
+msgstr ""
+"Aceasta va implementa pluginul agent <tt>mk_oracle</tt> pe sistemul țintă. "
+"În prezent, nu toate opțiunile sunt disponibile în toate sistemele de "
+"operare."
 
 #, fuzzy
 msgid "Deploy the agent plug-in <tt>rds_licenses</tt> on your target system."
@@ -21702,10 +21707,6 @@ msgstr "Nu implementați pluginul de cote pentru sistemele de fișiere Linux"
 #, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "Nu implementați pluginul Check SQL Server"
-
-#, fuzzy
-msgid "Do not deploy MTR plug-in"
-msgstr "Nu implementați pluginul MTR"
 
 #, fuzzy
 msgid "Do not deploy Mailman plug-in"
@@ -46820,9 +46821,6 @@ msgstr "Adnotare: %s"
 msgid "Note down the generated access key ID and secret access key."
 msgstr ""
 
-msgid "Note that <tt>mtr</tt> must be installed on the monitored system."
-msgstr ""
-
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -53007,9 +53005,6 @@ msgstr "Vă rugăm să specificați un nume de cale absolută"
 msgid "Please specify an application name"
 msgstr "Vă rugăm să specificați un nume de aplicație"
 
-msgid "Please specify at least on address"
-msgstr "Vă rugăm să specificați cel puțin o adresă"
-
 msgid "Please specify at least one condition or this rule will never match."
 msgstr ""
 "Vă rugăm să specificați cel puțin o condiție, altfel această regulă nu se va "
@@ -53134,10 +53129,6 @@ msgstr "Model de fișier plug-in"
 #, fuzzy
 msgid "Plug-in heartbeat timeout"
 msgstr "Timpul de expirare a bătăilor inimii plugin-ului"
-
-#, fuzzy
-msgid "Plug-in is disabled"
-msgstr "Plugin-ul este dezactivat"
 
 #, fuzzy
 msgid "Plug-in name"
@@ -94548,8 +94539,8 @@ msgid "The selected HW/SW inventory property is invalid."
 msgstr "Inventarul HW/SW"
 
 #, fuzzy
-msgid "Inventory property"
-msgstr "Inventarul HW/SW"
+msgid "Inventory single value"
+msgstr "Reguli de inventariere HW/SW"
 
 #, fuzzy
 msgid "HW/SW Inventory"
@@ -95989,10 +95980,6 @@ msgid "No passwords available"
 msgstr "Porturi disponibile"
 
 #, fuzzy
-msgid "+ Create"
-msgstr "Creați"
-
-#, fuzzy
 msgid "Send log messages to event console"
 msgstr "Trimiterea evenimentelor către consola locală de evenimente"
 
@@ -96062,6 +96049,10 @@ msgstr ""
 #, fuzzy
 msgid "IP address or hostname"
 msgstr "Adresa IP a gazdei"
+
+#, fuzzy
+msgid "Unexpected form data shape."
+msgstr "Starea modului așteptat."
 
 msgid "Run the installation script"
 msgstr ""
@@ -97075,6 +97066,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy MTR plug-in asynchronously"
+#~ msgstr "Implementarea pluginului MTR în mod asincron"
+
+#, fuzzy
+#~ msgid "Do not deploy MTR plug-in"
+#~ msgstr "Nu implementați pluginul MTR"
+
+#~ msgid "Please specify at least on address"
+#~ msgstr "Vă rugăm să specificați cel puțin o adresă"
+
+#, fuzzy
+#~ msgid "Plug-in is disabled"
+#~ msgstr "Plugin-ul este dezactivat"
+
+#, fuzzy
+#~ msgid "Inventory property"
+#~ msgstr "Inventarul HW/SW"
+
+#, fuzzy
+#~ msgid "+ Create"
+#~ msgstr "Creați"
 
 #, fuzzy
 #~ msgid "Compute a rate"

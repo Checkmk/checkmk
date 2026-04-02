@@ -20064,10 +20064,6 @@ msgid "Deploy MSSQL Server plug-in"
 msgstr "Implementar el complemento del servidor MSSQL"
 
 #, fuzzy
-msgid "Deploy MTR plug-in asynchronously"
-msgstr "Despliegue del plugin MTR de forma asíncrona"
-
-#, fuzzy
 msgid "Deploy Mailman plug-in"
 msgstr "Implementar el complemento Mailman"
 
@@ -20336,6 +20332,15 @@ msgstr "Implemente el complemento del agente <tt>mk_sshd_config</tt>."
 #, fuzzy
 msgid "Deploy the agent plug-in <tt>mk_suseconnect</tt>."
 msgstr "Implemente el complemento de agente <tt>mk_suseconnect</tt>."
+
+#, fuzzy
+msgid ""
+"Deploy the agent plug-in <tt>mtr</tt> on your target system. Note that "
+"<tt>mtr</tt> must be installed on the monitored system."
+msgstr ""
+"Esto desplegará el plugin de agente <tt>mk_oracle</tt> en su sistema de "
+"destino. Actualmente no todas las opciones están disponibles en todos los "
+"sistemas operativos."
 
 #, fuzzy
 msgid "Deploy the agent plug-in <tt>rds_licenses</tt> on your target system."
@@ -21842,10 +21847,6 @@ msgstr "No implementar el plugin de cuotas del sistema de archivos de Linux"
 #, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "No despliegue el plugin de MySQL"
-
-#, fuzzy
-msgid "Do not deploy MTR plug-in"
-msgstr "No desplegar el plugin SMART"
 
 #, fuzzy
 msgid "Do not deploy Mailman plug-in"
@@ -47100,9 +47101,6 @@ msgstr "Anotaciones: %s"
 msgid "Note down the generated access key ID and secret access key."
 msgstr ""
 
-msgid "Note that <tt>mtr</tt> must be installed on the monitored system."
-msgstr ""
-
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -53348,9 +53346,6 @@ msgstr "Especifique un nombre de ruta absoluta"
 msgid "Please specify an application name"
 msgstr "Especifique un nombre de aplicación"
 
-msgid "Please specify at least on address"
-msgstr "Por favor, especifique al menos una dirección"
-
 msgid "Please specify at least one condition or this rule will never match."
 msgstr ""
 "Por favor, especifique al menos una condición o esta regla nunca coincidirá."
@@ -53472,10 +53467,6 @@ msgstr "Patrón de archivo de los plugins"
 #, fuzzy
 msgid "Plug-in heartbeat timeout"
 msgstr "Tiempo de espera de los latidos del plugin"
-
-#, fuzzy
-msgid "Plug-in is disabled"
-msgstr "El plugin está desactivado"
 
 #, fuzzy
 msgid "Plug-in name"
@@ -95127,8 +95118,8 @@ msgid "The selected HW/SW inventory property is invalid."
 msgstr "Inventario de HW/SW"
 
 #, fuzzy
-msgid "Inventory property"
-msgstr "Inventario de HW/SW"
+msgid "Inventory single value"
+msgstr "reglas de inventario de HW/SW"
 
 #, fuzzy
 msgid "HW/SW Inventory"
@@ -96566,10 +96557,6 @@ msgid "No passwords available"
 msgstr "Puertos disponibles"
 
 #, fuzzy
-msgid "+ Create"
-msgstr "Crear"
-
-#, fuzzy
 msgid "Send log messages to event console"
 msgstr "Enviar eventos a la consola de eventos local"
 
@@ -96638,6 +96625,10 @@ msgstr ""
 #, fuzzy
 msgid "IP address or hostname"
 msgstr "Dirección IP del host"
+
+#, fuzzy
+msgid "Unexpected form data shape."
+msgstr "Estado de modo esperado."
 
 msgid "Run the installation script"
 msgstr ""
@@ -97645,6 +97636,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy MTR plug-in asynchronously"
+#~ msgstr "Despliegue del plugin MTR de forma asíncrona"
+
+#, fuzzy
+#~ msgid "Do not deploy MTR plug-in"
+#~ msgstr "No desplegar el plugin SMART"
+
+#~ msgid "Please specify at least on address"
+#~ msgstr "Por favor, especifique al menos una dirección"
+
+#, fuzzy
+#~ msgid "Plug-in is disabled"
+#~ msgstr "El plugin está desactivado"
+
+#, fuzzy
+#~ msgid "Inventory property"
+#~ msgstr "Inventario de HW/SW"
+
+#, fuzzy
+#~ msgid "+ Create"
+#~ msgstr "Crear"
 
 #, fuzzy
 #~ msgid "Compute a rate"

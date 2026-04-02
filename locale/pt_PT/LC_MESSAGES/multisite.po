@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-01 05:35+0000\n"
+"PO-Revision-Date: 2026-04-02 07:41+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -19931,10 +19931,6 @@ msgid "Deploy MSSQL Server plug-in"
 msgstr "Implementar plugin MSSQL Server"
 
 #, fuzzy
-msgid "Deploy MTR plug-in asynchronously"
-msgstr "Implantar o plugin MTR de forma assíncrona"
-
-#, fuzzy
 msgid "Deploy Mailman plug-in"
 msgstr "Implementar o plugin Mailman"
 
@@ -20195,6 +20191,15 @@ msgstr "Implementar o plugin de agente <tt>mk_sshd_config</tt>."
 #, fuzzy
 msgid "Deploy the agent plug-in <tt>mk_suseconnect</tt>."
 msgstr "Implantar o plugin de agente <tt>mk_suseconnect</tt>."
+
+#, fuzzy
+msgid ""
+"Deploy the agent plug-in <tt>mtr</tt> on your target system. Note that "
+"<tt>mtr</tt> must be installed on the monitored system."
+msgstr ""
+"Isso implantará o plug-in de agente <tt>mk_oracle</tt> no sistema de "
+"destino. Actualmente, nem todas as opções estão disponíveis em todos os "
+"sistemas operativos."
 
 #, fuzzy
 msgid "Deploy the agent plug-in <tt>rds_licenses</tt> on your target system."
@@ -21679,10 +21684,6 @@ msgstr "Não implante o plugin de quota do sistema de arquivos Linux"
 #, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "Não implante o plugin MySQL"
-
-#, fuzzy
-msgid "Do not deploy MTR plug-in"
-msgstr "Não implementar o plugin MTR"
 
 #, fuzzy
 msgid "Do not deploy Mailman plug-in"
@@ -46743,9 +46744,6 @@ msgstr "Anotação: %s"
 msgid "Note down the generated access key ID and secret access key."
 msgstr ""
 
-msgid "Note that <tt>mtr</tt> must be installed on the monitored system."
-msgstr ""
-
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -52924,9 +52922,6 @@ msgstr "Por favor, especifique um nome de caminho absoluto"
 msgid "Please specify an application name"
 msgstr "Por favor, especifique um nome de aplicação"
 
-msgid "Please specify at least on address"
-msgstr "Especificar pelo menos um endereço"
-
 msgid "Please specify at least one condition or this rule will never match."
 msgstr ""
 "Por favor, especifique pelo menos uma condição ou esta regra nunca irá "
@@ -53049,10 +53044,6 @@ msgstr "Padrão de arquivo de plugin"
 #, fuzzy
 msgid "Plug-in heartbeat timeout"
 msgstr "Tempo limite de batimento cardíaco do plugin"
-
-#, fuzzy
-msgid "Plug-in is disabled"
-msgstr "O plugin está desactivado"
 
 #, fuzzy
 msgid "Plug-in name"
@@ -94305,8 +94296,8 @@ msgid "The selected HW/SW inventory property is invalid."
 msgstr "Inventário HW/SW"
 
 #, fuzzy
-msgid "Inventory property"
-msgstr "Inventário HW/SW"
+msgid "Inventory single value"
+msgstr "Regras de inventário HW/SW"
 
 #, fuzzy
 msgid "HW/SW Inventory"
@@ -95737,10 +95728,6 @@ msgid "No passwords available"
 msgstr "Portos disponíveis"
 
 #, fuzzy
-msgid "+ Create"
-msgstr "Criar"
-
-#, fuzzy
 msgid "Send log messages to event console"
 msgstr "Enviar eventos para o console de eventos local"
 
@@ -95809,6 +95796,10 @@ msgstr ""
 #, fuzzy
 msgid "IP address or hostname"
 msgstr "Endereço IP do Host"
+
+#, fuzzy
+msgid "Unexpected form data shape."
+msgstr "Estado do modo esperado."
 
 msgid "Run the installation script"
 msgstr ""
@@ -96817,6 +96808,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy MTR plug-in asynchronously"
+#~ msgstr "Implantar o plugin MTR de forma assíncrona"
+
+#, fuzzy
+#~ msgid "Do not deploy MTR plug-in"
+#~ msgstr "Não implementar o plugin MTR"
+
+#~ msgid "Please specify at least on address"
+#~ msgstr "Especificar pelo menos um endereço"
+
+#, fuzzy
+#~ msgid "Plug-in is disabled"
+#~ msgstr "O plugin está desactivado"
+
+#, fuzzy
+#~ msgid "Inventory property"
+#~ msgstr "Inventário HW/SW"
+
+#, fuzzy
+#~ msgid "+ Create"
+#~ msgstr "Criar"
 
 #, fuzzy
 #~ msgid "Compute a rate"

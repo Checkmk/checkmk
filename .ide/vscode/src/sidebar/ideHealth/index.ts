@@ -307,7 +307,10 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
               m.actual === undefined
                 ? '<i>not set</i>'
                 : `<code title="${esc(JSON.stringify(m.actual))}">${esc(truncate(m.actual))}</code>`
-            const expectedStr = `<code title="${esc(JSON.stringify(m.expected))}">${esc(truncate(m.expected))}</code>`
+            const expectedStr =
+              m.expected === undefined
+                ? '<i>remove</i>'
+                : `<code title="${esc(JSON.stringify(m.expected))}">${esc(truncate(m.expected))}</code>`
             const copyValue = esc(JSON.stringify({ [m.key]: m.expected }))
             const applyData = esc(
               JSON.stringify({ key: m.key, expected: m.expected, scope: m.scope })

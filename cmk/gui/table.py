@@ -738,7 +738,7 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
 
         for cell in row.cells:
             # Filter out buttons
-            if cell.css is not None and "buttons" in cell.css:
+            if cell.css is not None and any("buttons" in css.split() for css in cell.css):
                 continue
 
             cell_string = str(cell.content)

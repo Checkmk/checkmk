@@ -8,10 +8,12 @@ import path from 'node:path'
 import { defineConfig } from 'vite'
 import VueDevTools from 'vite-plugin-vue-devtools'
 
+import { generateUclApiPlugin } from './ui-component-library/_ucl/vite-plugin-ucl-mcp'
+
 // https://vitejs.dev/config/
 export default defineConfig(() => {
   return {
-    plugins: [vue(), VueDevTools()],
+    plugins: [vue(), VueDevTools(), generateUclApiPlugin()],
     clearScreen: false,
     root: './ui-component-library/',
     build: {

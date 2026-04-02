@@ -5,7 +5,9 @@
     "vitest.config.*",
     "cypress.config.*",
     "nightwatch.conf.*",
-    "playwright.config.*"
+    "playwright.config.*",
+    "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
+    "ui-component-library/_ucl/types/prop-def.ts"
   ],
   "compilerOptions": {
     "composite": true,

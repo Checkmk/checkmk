@@ -194,6 +194,7 @@ SRCS = [
     "env.d.ts",
     "weaki18nString.d.ts",
     "scripts/stylelint-vue-bem-naming-convention.js",
+    "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
     "index.html",
     "package.json",
     "vite.config.ucl.ts",
@@ -211,6 +212,7 @@ SRCS = [
     ":node_modules/@vitejs",
     ":node_modules/@internationalized",
     ":node_modules/@types",
+    ":node_modules/acorn",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",
     ":node_modules/cmk-shared-typing-bzl",
@@ -225,6 +227,7 @@ SRCS = [
     ":node_modules/uuid",
     ":node_modules/vite",
     ":node_modules/vite-plugin-vue-devtools",
+    ":node_modules/typescript",
     ":node_modules/vue-component-type-helpers",
     ":node_modules/vue-router",
 ] + LOCALE_OUTS + glob([

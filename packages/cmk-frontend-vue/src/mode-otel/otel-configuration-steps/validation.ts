@@ -9,7 +9,27 @@ export function isValidIpOrHostname(value: string): boolean {
     return ipv4Match.slice(1).every((p) => parseInt(p, 10) <= 255)
   }
   if (value.includes(':')) {
-    return /^[0-9a-fA-F:]+$/.test(value) && value.split(':').length >= 2
+    // Reject triple or more consecutive colons (e.g. :::)
+    if (/:{3,}/.test(value)) {
+      return false
+    }
+    // At most one :: is allowed
+    if ((value.match(/::/g) ?? []).length > 1) {
+      return false
+    }
+    const parts = value.split(':')
+    if (!value.includes('::')) {
+      // Without ::, a full IPv6 address needs exactly 8 non-empty groups
+      if (parts.length !== 8 || parts.some((p) => p === '')) {
+        return false
+      }
+    } else {
+      // With ::, the non-empty groups must leave room for :: to expand (≤ 7)
+      if (parts.filter((p) => p !== '').length > 7) {
+        return false
+      }
+    }
+    return parts.every((p) => p === '' || /^[0-9a-fA-F]{1,4}$/.test(p))
   }
   const h = value.endsWith('.') ? value.slice(0, -1) : value
   if (!h || h.length > 253) {

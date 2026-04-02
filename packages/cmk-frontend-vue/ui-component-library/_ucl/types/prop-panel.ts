@@ -5,60 +5,31 @@
  */
 import type { Suggestion } from '@/components/CmkSuggestions'
 
+import type {
+  BoolPropDef,
+  ListPropDef,
+  MultilineStringPropDef,
+  NumberPropDef,
+  PanelConfig,
+  PropDef,
+  StringArrayPropDef,
+  StringPropDef
+} from './prop-def'
+
+export type { PanelConfig, PropDef } from './prop-def'
+export type {
+  BoolPropDef,
+  ListPropDef,
+  MultilineStringPropDef,
+  NumberPropDef,
+  StringArrayPropDef,
+  StringPropDef
+} from './prop-def'
+
 export type Options<T> = { title: string; name: NonNullable<T> }
 
-export interface BoolPropDef {
-  type: 'boolean'
-  title: string
-  initialState: boolean
-  help?: string
-}
-
-export interface StringPropDef {
-  type: 'string'
-  title: string
-  initialState: string
-  help?: string
-}
-
-export interface ListPropDef<T extends string = string> {
-  type: 'list'
-  title: string
-  options: Suggestion[]
-  initialState: T
-  help?: string
-}
-
-export interface NumberPropDef {
-  type: 'number'
-  title: string
-  initialState: number
-  help?: string
-}
-
-export interface MultilineStringPropDef {
-  type: 'multiline-string'
-  title: string
-  initialState: string
-  help?: string
-}
-
-export interface StringArrayPropDef {
-  type: 'string-array'
-  title: string
-  initialState: string[]
-  help?: string
-}
-
-export type PropDef =
-  | BoolPropDef
-  | StringPropDef
-  | NumberPropDef
-  | ListPropDef<string>
-  | MultilineStringPropDef
-  | StringArrayPropDef
-
-export type PanelConfig = Record<string, PropDef>
+// Suggestion-typed alias kept for components that use CmkSuggestions as options source
+export type SuggestionOptions = Suggestion[]
 
 export type PanelState = Record<string, boolean | string | number | string[]>
 

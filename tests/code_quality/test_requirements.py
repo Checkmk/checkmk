@@ -25,6 +25,8 @@ import pytest
 import requirements
 
 from tests.testlib.common.repo import (
+    branch_from_env,
+    current_base_branch_name,
     is_pro_repo,
     repo_path,
 )
@@ -127,6 +129,20 @@ def load_requirements(requirements_type: str) -> dict[str, str]:
 @pytest.fixture(name="loaded_requirements")
 def loaded_requirements():
     return load_requirements("all")
+
+
+@pytest.mark.skipif(
+    branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) == "master",
+    reason="pinning is only enforced in release branches",
+)
+def test_all_packages_pinned(loaded_requirements: dict[str, str]) -> None:
+    # Test implements process as described in:
+    # https://wiki.lan.tribe29.com/books/how-to/page/creating-a-new-beta-branch#bkmrk-pin-dev-dependencies
+    unpinned_packages = [req for req in loaded_requirements.keys() if not loaded_requirements[req]]
+    assert not unpinned_packages, (
+        "The following packages are not pinned: %s. "
+        "For the sake of reproducibility, all packages must be pinned to a version!"
+    ) % " ,".join(unpinned_packages)
 
 
 def is_python_file(file_path: Path) -> bool:
@@ -493,6 +509,26 @@ def test_dependencies_are_declared() -> None:
     )
 
 
+def test_runtime_requirements_are_a_strict_subset_of_all_requirements() -> None:
+    reqs = frozenset(parse_requirements_file(repo_path() / "requirements.txt").items())
+    runtime = frozenset(parse_requirements_file(repo_path() / "runtime-requirements.txt").items())
+    assert runtime.issubset(reqs), (
+        f"The following dependencies are incorrectly pinned: {dict(runtime - reqs)}"
+    )
+
+
+def test_constraints() -> None:
+    """Make sure all constraints have a ticket to be removed"""
+    offenses = []
+    with (repo_path() / "constraints.txt").open() as constraint_file:
+        req = requirements.parse(constraint_file)
+        for r in req:
+            if re.search(r"\bCMK-\d{5}\b", r.line):
+                continue
+            offenses.append(f"Constraint for {r.name} has no ticket to be removed")
+    assert not offenses, "\n".join(offenses)
+
+
 # Packages intentionally excluded from the python_requirements filegroups
 # because they are development-only tools, not part of the product build.
 _PYTHON_REQUIREMENTS_EXCLUDED: dict[str, set[str]] = {
@@ -578,3 +614,21 @@ def _packages_with_requirements(packages_dir: Path, filename: str) -> set[str]:
             result.add(d.name)
 
     return result
+
+
+def test_no_development_packages_in_runtime_requirements() -> None:
+    """Test that development/testing libraries are not included in runtime requirements"""
+    runtime_requirements = get_requirements_libs(repo_path())
+
+    forbidden_prefixes = ["pytest-", "types-"]
+    offending_packages = []
+
+    for package_name in runtime_requirements.keys():
+        for prefix in forbidden_prefixes:
+            if package_name.startswith(prefix):
+                offending_packages.append(package_name)
+
+    assert not offending_packages, (
+        f"The following development/testing libraries should not be "
+        f"in runtime requirements: {offending_packages}"
+    )

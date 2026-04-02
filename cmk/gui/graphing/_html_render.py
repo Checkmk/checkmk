@@ -61,6 +61,7 @@ from ._artwork import (
     GraphArtworkAnnotations,
     GraphArtworkOrErrors,
     LayoutedCurve,
+    Scalars,
 )
 from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import metrics_from_api, RegisteredMetric
@@ -196,6 +197,7 @@ def _order_graph_curves_for_legend_and_mouse_hover[TCurveType: (LayoutedCurve, C
     - lower-simple-2
     - Sum of lower-compound-1 & lower-compound-2
     """
+    assert len(curves) == len(curve_annotations)
     lines: list[tuple[TCurveType, CurveAnnotations]] = []
     areas: list[tuple[TCurveType, CurveAnnotations]] = []
     mirrored_lines: list[tuple[TCurveType, CurveAnnotations]] = []
@@ -1402,6 +1404,21 @@ def render_graph_values_at_time(
     """Write the JSON graph hover response for a pre-built recipe and data range."""
     response.set_content_type("application/json")
     try:
+        curves = compute_curves_at_timestamp(
+            [
+                result.ok
+                for result in fetch_augmented_time_series(
+                    registered_metrics,
+                    recipe,
+                    time_range,
+                    temperature_unit=temperature_unit,
+                    backend_time_series_fetcher=backend_time_series_fetcher,
+                )
+                if result.is_ok()
+            ],
+            user_specific_unit(recipe.unit_spec, temperature_unit).formatter.render,
+            hover_time,
+        )
         response.set_data(
             json.dumps(
                 {
@@ -1409,24 +1426,22 @@ def render_graph_values_at_time(
                     "curves": [
                         c
                         for c, _a in _order_graph_curves_for_legend_and_mouse_hover(
-                            compute_curves_at_timestamp(
-                                [
-                                    result.ok
-                                    for result in fetch_augmented_time_series(
-                                        registered_metrics,
-                                        recipe,
-                                        time_range,
-                                        temperature_unit=temperature_unit,
-                                        backend_time_series_fetcher=backend_time_series_fetcher,
-                                    )
-                                    if result.is_ok()
-                                ],
-                                user_specific_unit(
-                                    recipe.unit_spec, temperature_unit
-                                ).formatter.render,
-                                hover_time,
-                            ),
-                            [],
+                            curves,
+                            # TODO Dummy annotations due to zip
+                            [
+                                CurveAnnotations(
+                                    scalars=Scalars(
+                                        pin=(None, ""),
+                                        first=(None, ""),
+                                        last=(None, ""),
+                                        max=(None, ""),
+                                        min=(None, ""),
+                                        average=(None, ""),
+                                    ),
+                                    attributes={},
+                                )
+                                for _ in range(len(curves))
+                            ],
                         )
                     ],
                 }

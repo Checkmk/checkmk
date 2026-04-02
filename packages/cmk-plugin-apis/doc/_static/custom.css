@@ -1,0 +1,258 @@
+/* Checkmk brand overrides for sphinx_rtd_theme */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/inter-latin-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/inter-latin-italic.woff2') format('woff2');
+}
+
+body,
+.wy-body-for-nav {
+  font-family: 'Inter', Verdana, Arial, Helvetica, sans-serif;
+}
+
+:root {
+  --cmk-green: #15d1a0;
+  --cmk-green-dark: #0f9472;
+  --cmk-green-light: #b6f1e2;
+  --cmk-yellow: #ffd703;
+  --cmk-yellow-light: #fffbe6;
+  --cmk-bg: #fff;
+  --cmk-bg-secondary: #fcfcfc;
+  --cmk-text: #404040;
+  --cmk-heading: #2b2b2b;
+  --cmk-sidebar: #343131;
+  --cmk-sidebar-header: #2b2b2b;
+  --cmk-sidebar-text: #d9d9d9;
+  --cmk-border: #e1e4e5;
+  --cmk-code-text: var(--cmk-green-dark);
+  --cmk-code-border: var(--cmk-green-light);
+  --cmk-yellow-dark: #ac7c02;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cmk-bg: #1c2228;
+    --cmk-bg-secondary: #202730;
+    --cmk-text: #c8cdd3;
+    --cmk-heading: #e0e4e8;
+    --cmk-sidebar: #0f1215;
+    --cmk-sidebar-header: #11181d;
+    --cmk-sidebar-text: #9aa5b0;
+    --cmk-border: #263038;
+    --cmk-code-text: var(--cmk-green);
+    --cmk-code-border: var(--cmk-green-dark);
+    --cmk-yellow-light: #332b00;
+    --cmk-yellow-dark: #ffd703;
+  }
+}
+
+/* Links */
+a {
+  color: var(--cmk-green-dark);
+}
+a:hover {
+  color: var(--cmk-green);
+}
+@media (prefers-color-scheme: dark) {
+  a {
+    color: var(--cmk-green);
+  }
+  a:hover {
+    color: var(--cmk-green-light);
+  }
+}
+
+/* Sidebar */
+.wy-side-nav-search {
+  background-color: var(--cmk-sidebar-header);
+}
+.wy-side-nav-search a {
+  color: #fff;
+}
+.wy-nav-side {
+  background-color: var(--cmk-sidebar);
+}
+.wy-menu-vertical a,
+.wy-menu-vertical li.current > a {
+  color: var(--cmk-sidebar-text);
+}
+.wy-menu-vertical a:hover {
+  background-color: rgba(21, 209, 160, 0.1);
+}
+.wy-menu-vertical li.current > a {
+  border-right: 3px solid var(--cmk-green);
+}
+.wy-menu-vertical li.toctree-l1.current > a {
+  border-bottom-color: var(--cmk-green-dark);
+}
+
+/* Content area */
+.wy-nav-content-wrap,
+.wy-nav-content {
+  background-color: var(--cmk-bg);
+}
+.rst-content {
+  color: var(--cmk-text);
+}
+
+/* Headings */
+.rst-content h1,
+.rst-content h2,
+.rst-content h3 {
+  color: var(--cmk-heading);
+}
+
+/* Admonitions */
+.rst-content .warning {
+  background-color: var(--cmk-yellow-light);
+}
+.rst-content .warning .admonition-title {
+  background-color: var(--cmk-yellow);
+  color: #513a01;
+}
+
+/* Code */
+.rst-content code.literal {
+  color: var(--cmk-code-text);
+  background-color: transparent;
+  border: 1px solid var(--cmk-code-border);
+}
+
+/* Dark mode: code blocks, tables, signatures */
+@media (prefers-color-scheme: dark) {
+  .rst-content pre {
+    background-color: var(--cmk-bg-secondary);
+    color: var(--cmk-text);
+    border-color: var(--cmk-border);
+  }
+  /* Must match the theme's high-specificity selector */
+  html.writer-html5
+    .rst-content
+    dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(
+      .simple
+    )
+    > dt {
+    background-color: var(--cmk-bg-secondary);
+    color: var(--cmk-heading);
+    border-top-color: var(--cmk-border);
+  }
+  html.writer-html5
+    .rst-content
+    dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(
+      .simple
+    )
+    > dt
+    .sig-name.descname {
+    color: var(--cmk-green);
+  }
+  html.writer-html5
+    .rst-content
+    dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(
+      .simple
+    )
+    > dt:before {
+    color: var(--cmk-border);
+  }
+  /* Nested definition lists */
+  html.writer-html5
+    .rst-content
+    dl[class]
+    dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple)
+    > dt {
+    background-color: var(--cmk-bg-secondary);
+    color: var(--cmk-text);
+    border-left-color: var(--cmk-border);
+  }
+  .rst-content table.docutils td,
+  .rst-content table.docutils th {
+    border-color: var(--cmk-border);
+  }
+  .rst-content table.docutils thead {
+    background-color: var(--cmk-bg-secondary);
+  }
+  .rst-content .note {
+    background-color: var(--cmk-bg-secondary);
+  }
+  .rst-content .note .admonition-title {
+    background-color: var(--cmk-border);
+  }
+  /* Breadcrumbs and footer */
+  .wy-breadcrumbs li a,
+  .rst-footer-buttons a {
+    color: var(--cmk-green);
+  }
+  hr {
+    border-color: var(--cmk-border);
+  }
+  /* Pygments syntax highlighting */
+  .highlight {
+    background: var(--cmk-bg-secondary);
+  }
+  .highlight .gp {
+    color: #62e0bf;
+  } /* Prompt >>> */
+  .highlight .k,
+  .highlight .kn,
+  .highlight .kc,
+  .highlight .kd,
+  .highlight .kr {
+    color: #62e0bf;
+  } /* Keywords */
+  .highlight .nn {
+    color: #6ab0de;
+  } /* Name.Namespace */
+  .highlight .n,
+  .highlight .nb,
+  .highlight .bp {
+    color: var(--cmk-text);
+  } /* Names */
+  .highlight .nc,
+  .highlight .nf,
+  .highlight .fm {
+    color: #62e0bf;
+  } /* Class/Function names */
+  .highlight .s,
+  .highlight .s1,
+  .highlight .s2,
+  .highlight .sa,
+  .highlight .sb,
+  .highlight .sc,
+  .highlight .dl,
+  .highlight .sh {
+    color: #f0c674;
+  } /* Strings */
+  .highlight .o,
+  .highlight .p {
+    color: var(--cmk-text);
+  } /* Operators, punctuation */
+  .highlight .c,
+  .highlight .c1,
+  .highlight .ch,
+  .highlight .cm,
+  .highlight .cs,
+  .highlight .cpf {
+    color: #6a7c95;
+  } /* Comments */
+  .highlight .m,
+  .highlight .mi,
+  .highlight .mf,
+  .highlight .mh,
+  .highlight .mo,
+  .highlight .mb,
+  .highlight .il {
+    color: #de935f;
+  } /* Numbers */
+  .highlight .ow {
+    color: #81a2be;
+  } /* Operator.Word */
+}

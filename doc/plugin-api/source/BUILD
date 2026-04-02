@@ -48,6 +48,7 @@ py_library(
         "__init__.py",
         "conf.py",
     ],
+    deps = [requirement("sphinx")],
 )
 
 filegroup(

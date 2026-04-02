@@ -39,6 +39,19 @@ def test_parsing_multiple_switch_ports() -> None:
     assert len(section) == 3
 
 
+@pytest.mark.xfail(strict=True, reason="CMK-33235")
+def test_invalid_port_ids_ignored() -> None:
+    switch_ports_status = [
+        _RawSwitchPortsStatusFactory.build(portId=1),
+        _RawSwitchPortsStatusFactory.build(portId="2"),  # digit string okay
+        _RawSwitchPortsStatusFactory.build(portId="3.0"),  # floats ignored
+        _RawSwitchPortsStatusFactory.build(portId="abc"),  # non-digit strings ignored
+    ]
+    string_table = [[f"{json.dumps(switch_ports_status)}"]]
+    section = parse_switch_ports_statuses(string_table)
+    assert len(section) == 2
+
+
 class TestDiscovery:
     @pytest.fixture
     def params(self) -> DiscoveryParams:

@@ -60,7 +60,7 @@ const checkAccordionState = async (
     expect(expectedOpen.indexOf(key)).toBe(index) // check for existence and corecct order
     expect(expectedClosed).not.toContain(key)
 
-    const node = (await screen.findByText(`Content of ${key}`)).parentElement
+    const node = (await screen.findByText(`Content of ${key}`)).closest('[data-state]')
     expect(node).toHaveAttribute('data-state', 'open')
   }
 

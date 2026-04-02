@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import { TabsTrigger } from 'radix-vue'
+import { TabsTrigger } from 'reka-ui'
 
 const propsCva = cva('', {
   variants: {

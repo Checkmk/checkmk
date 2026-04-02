@@ -13,7 +13,7 @@ import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 const helpTextComp = `<CmkHelpText :help="'some help'" />`
 
 // We need to test the slideout specifically with and without a nested tooltip
-// because the nested portals (dialog & tooltip) from radix break their auto
+// because the nested portals (dialog & tooltip) from reka-ui break their auto
 // focus functionality.
 const createCmkSlideInDialogComp = (addHelp: boolean) =>
   defineComponent({

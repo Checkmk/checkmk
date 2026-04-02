@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { AccordionRoot } from 'radix-vue'
+import { AccordionRoot } from 'reka-ui'
 import { provide } from 'vue'
 
 import { expandedItemKey, triggerItemKey } from './trigger-item'
@@ -52,6 +52,7 @@ function toggleItem(id: string): void {
 <template>
   <AccordionRoot
     v-model="openedItems"
+    type="multiple"
     orientation="vertical"
     :collapsible="minOpen === 0"
     class="cmk-accordion-root"

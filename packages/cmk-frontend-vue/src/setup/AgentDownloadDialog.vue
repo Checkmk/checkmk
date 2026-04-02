@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
-import { TooltipArrow } from 'radix-vue'
+import { TooltipArrow } from 'reka-ui'
 import { ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
@@ -156,6 +156,6 @@ const triggerRescan = () => {
 /* Unscoped, portal -> body */
 .setup-agent-download-dialog__tooltip-content {
   z-index: var(--z-index-modal);
-  max-width: var(--radix-tooltip-content-available-width);
+  max-width: var(--reka-tooltip-content-available-width);
 }
 </style>

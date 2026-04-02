@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { TooltipTrigger } from 'radix-vue'
+import { TooltipTrigger } from 'reka-ui'
 
 defineEmits(['click'])
 

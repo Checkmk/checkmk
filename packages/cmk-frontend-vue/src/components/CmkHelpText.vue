@@ -92,7 +92,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
-        <CmkScrollContainer :max-height="`${SCROLL_MAX_HEIGHT_PX}px`">
+        <CmkScrollContainer :max-height="`${SCROLL_MAX_HEIGHT_PX}px`" role="tooltip">
           <div class="cmk-help-text__content">
             <CmkHtml :html="props.help" />
           </div>

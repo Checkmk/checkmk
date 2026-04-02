@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { AccordionContent, AccordionHeader, AccordionItem } from 'radix-vue'
+import { AccordionContent, AccordionHeader, AccordionItem } from 'reka-ui'
 
 import CmkAccordionTrigger from './CmkAccordionTrigger.vue'
 
@@ -118,14 +118,14 @@ body[data-theme='modern-dark'] {
 
   to {
     opacity: 1;
-    height: var(--radix-accordion-content-height);
+    height: var(--reka-accordion-content-height);
   }
 }
 
 @keyframes cmk-accordion-item__slide-up {
   from {
     opacity: 1;
-    height: var(--radix-accordion-content-height);
+    height: var(--reka-accordion-content-height);
   }
 
   to {

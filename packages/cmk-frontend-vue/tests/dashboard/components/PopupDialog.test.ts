@@ -9,9 +9,9 @@ import { defineComponent, h } from 'vue'
 
 import PopupDialog from '@/dashboard/components/PopupDialog.vue'
 
-// radix-vue DialogPortal renders outside the jsdom document body hierarchy,
+// reka-ui DialogPortal renders outside the jsdom document body hierarchy,
 // so we stub all Dialog* primitives to render their children inline.
-vi.mock('radix-vue', () => ({
+vi.mock('reka-ui', () => ({
   DialogRoot: defineComponent({
     name: 'DialogRoot',
     props: { open: Boolean },

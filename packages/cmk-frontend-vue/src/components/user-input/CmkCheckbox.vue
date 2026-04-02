@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
+import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
 import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
@@ -54,7 +54,7 @@ const hasValidationErrors = computed(() => {
     >
       <CheckboxRoot
         :id="id"
-        v-model:checked="value"
+        v-model="value"
         class="cmk-checkbox__button"
         :class="{ 'cmk-checkbox__button--error': hasValidationErrors }"
         :disabled="disabled"

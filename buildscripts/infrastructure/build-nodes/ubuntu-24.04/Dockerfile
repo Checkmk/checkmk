@@ -81,6 +81,8 @@ RUN apt-get install -y --fix-missing \
     netcat-openbsd \
     openssh-client \
     patch \
+    rpm \
+    cpio \
     rpcbind \
     rsync \
     smbclient \

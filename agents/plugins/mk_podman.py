@@ -29,7 +29,7 @@ except ImportError:
         return func
 
 
-__version__ = "2.5.0b3"
+__version__ = "2.5.0b4"
 
 LOGGER = logging.getLogger(__name__)
 

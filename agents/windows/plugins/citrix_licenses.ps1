@@ -35,14 +35,14 @@
     PVSD_STD_CCS    42 0
 
 .NOTES
-    Version: 2.5.0b3
+    Version: 2.5.0b4
     Date: 04.03.2025
     Requires: Citrix Licensing Server installed on the machine.
     If "root\CitrixLicensing" is missing, Citrix Licensing might not be installed.
 
 #>
 
-$CMK_VERSION = "2.5.0b3"
+$CMK_VERSION = "2.5.0b4"
 
 $computer = "."
 

@@ -13,6 +13,7 @@ OS_PACKAGES    += libgd3
 OS_PACKAGES    += graphviz
 OS_PACKAGES    += libpng16-16
 OS_PACKAGES    += libevent-2_1-7
+OS_PACKAGES    += libexslt0
 OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libreadline8
 OS_PACKAGES    += libuuid1

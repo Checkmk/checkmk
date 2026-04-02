@@ -23,6 +23,7 @@ from cmk.gui.search import (
     QuicksearchManager,
     TooManyRowsError,
 )
+from cmk.gui.search.engines.monitoring import get_url_builder
 from cmk.gui.type_defs import (
     IconNames,
     SearchQuery,
@@ -91,6 +92,7 @@ class QuicksearchSnapin(SidebarSnapin):
         quicksearch_manager = QuicksearchManager(
             row_limit=ctx.config.quicksearch_dropdown_limit,
             search_order=ctx.config.quicksearch_search_order,
+            build_url=get_url_builder(ctx.request),
             raise_too_many_rows_error=True,
         )
 
@@ -134,6 +136,7 @@ class QuicksearchSnapin(SidebarSnapin):
         quicksearch_manager = QuicksearchManager(
             row_limit=ctx.config.quicksearch_dropdown_limit,
             search_order=ctx.config.quicksearch_search_order,
+            build_url=get_url_builder(ctx.request),
             raise_too_many_rows_error=True,
         )
 

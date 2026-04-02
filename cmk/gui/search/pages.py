@@ -42,6 +42,7 @@ class PageUnifiedSearch(AjaxPage):
             setup_engine=SetupSearchEngine(ctx.config, ctx.request),
             monitoring_engine=MonitoringSearchEngine(
                 ctx.config,
+                ctx.request,
                 row_limit=_MONITORING_ENGINE_ROW_LIMIT,
             ),
             customize_engine=CustomizeSearchEngine(),

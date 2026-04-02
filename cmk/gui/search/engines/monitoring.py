@@ -9,7 +9,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import override
+from typing import override, Protocol
 
 import livestatus
 
@@ -18,7 +18,7 @@ from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, main_menu_registry
 from cmk.gui.permissions import permission_registry
@@ -100,11 +100,20 @@ class IncorrectLabelInputError(MKUserError):
     pass
 
 
-def _build_url(url_params: HTTPVariables) -> str:
-    new_params = url_params[:]
-    return makeuri(
-        request, new_params, delvars=["q", "sort", "collapse", "provider"], filename="view.py"
-    )
+class UrlBuilder(Protocol):
+    def __call__(self, addvars: HTTPVariables) -> str: ...
+
+
+def get_url_builder(request: Request) -> UrlBuilder:
+    def build_url(addvars: HTTPVariables) -> str:
+        return makeuri(
+            request=request,
+            addvars=addvars,
+            delvars=["q", "sort", "collapse", "provider"],
+            filename="view.py",
+        )
+
+    return build_url
 
 
 class ABCQuicksearchConductor(abc.ABC):
@@ -146,7 +155,7 @@ class ABCQuicksearchConductor(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_results(self) -> list[SearchResult]:
+    def create_results(self, build_url: UrlBuilder) -> list[SearchResult]:
         """Returns the results for the given query"""
         raise NotImplementedError()
 
@@ -213,7 +222,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         raise NotImplementedError()  # TODO: Implement this
 
     @override
-    def create_results(self) -> list[SearchResult]:
+    def create_results(self, build_url: UrlBuilder) -> list[SearchResult]:
         return self._results[: self._row_limit]
 
 
@@ -398,7 +407,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         return url_params
 
     @override
-    def create_results(self) -> list[SearchResult]:
+    def create_results(self, build_url: UrlBuilder) -> list[SearchResult]:
         elements: list[LivestatusResult] = []
 
         if not self._rows:
@@ -437,7 +446,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             elements.append(
                 LivestatusResult(
                     text_tokens=text_tokens,
-                    url=_build_url(url_tokens),
+                    url=build_url(url_tokens),
                     row=row,
                     display_text="",  # Is created later by self._generate_display_texts
                 )
@@ -527,10 +536,12 @@ class QuicksearchManager:
         *,
         row_limit: int,
         search_order: Iterable[tuple[str, str]],
+        build_url: UrlBuilder,
         raise_too_many_rows_error: bool,
     ) -> None:
         self._row_limit = row_limit
         self._search_order = search_order
+        self._build_url = build_url
         self.raise_too_many_rows_error = raise_too_many_rows_error
 
     def generate_results(
@@ -571,7 +582,7 @@ class QuicksearchManager:
                 ]
             )
 
-        return _build_url(url_params)
+        return self._build_url(url_params)
 
     def _determine_search_objects(
         self, query: SearchQuery, user_permissions: UserPermissions
@@ -706,7 +717,7 @@ class QuicksearchManager:
                 results,
             )
             for search_object in search_objects
-            for results in [search_object.create_results()]
+            for results in [search_object.create_results(self._build_url)]
             if results
         )
 
@@ -1399,6 +1410,7 @@ class MonitoringSearchEngine:
     def __init__(
         self,
         config: Config,
+        request: Request,
         *,
         row_limit: int,
         search_order: Iterable[tuple[str, str]] | None = None,
@@ -1408,6 +1420,7 @@ class MonitoringSearchEngine:
             row_limit=row_limit,
             # TODO: this probably shouldn't be tied to the same setting as quicksearch.
             search_order=search_order or config.quicksearch_search_order,
+            build_url=get_url_builder(request),
             raise_too_many_rows_error=False,
         )
         self._user_permissions = user_permissions or UserPermissions.from_config(

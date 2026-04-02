@@ -80,7 +80,7 @@ from omdlib.options import (
     SuCommand,
 )
 from omdlib.options_legacy import ArgsToDispatch, DispatcherError, parse_arguments_dispatcher
-from omdlib.package_manager import PackageManager
+from omdlib.package_manager import package_manager_factory
 from omdlib.restore import prepare_restore_as_site_user
 from omdlib.scripts import _call_script, call_scripts
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
@@ -3125,7 +3125,7 @@ def main_cleanup(
     _options: object,
     versions_path: Path = Path("/omd/versions/"),
 ) -> None:
-    package_manager = PackageManager.factory(version_info.DISTRO_CODE)
+    package_manager = package_manager_factory(version_info.DISTRO_CODE)
     if package_manager is None:
         sys.exit("Command is not supported on this platform")
 

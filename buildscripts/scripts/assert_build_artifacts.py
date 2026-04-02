@@ -26,6 +26,8 @@ from cmk.utils.version import Edition, Version
 
 from buildscripts.scripts.lib.common import flatten, load_editions_file
 
+HTTP_STATUS_OK = 200
+
 MetaFileExtension = Literal["json", "csv"]
 
 
@@ -256,7 +258,7 @@ def file_exists_on_download_server(
             auth=(credentials.username, credentials.password),
             timeout=10,
         ).status_code
-        != 200
+        != HTTP_STATUS_OK
     ):
         sys.stdout.write(" MISSING\n")
         return False

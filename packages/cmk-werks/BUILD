@@ -37,13 +37,9 @@ py_library(
         "cmk/werks/in_out_elements.py",
         "cmk/werks/load.py",
         "cmk/werks/markup.py",
-        "cmk/werks/meisterwerk.py",
         "cmk/werks/models.py",
         "cmk/werks/parse.py",
         "cmk/werks/schemas/__init__.py",
-        "cmk/werks/schemas/evaluations.py",
-        "cmk/werks/schemas/requests.py",
-        "cmk/werks/schemas/responses.py",
         "cmk/werks/schemas/werk.py",
         "cmk/werks/utils/__init__.py",
         "cmk/werks/utils/__main__.py",
@@ -63,8 +59,6 @@ py_library(
         requirement("lxml"),
         requirement("markdown"),
         requirement("pydantic"),
-        requirement("httpx"),
-        requirement("rich"),
     ],
 )
 
@@ -84,7 +78,6 @@ py_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    data = glob(["tests/cassettes/**/*.yaml"]),
     main = ":__test__.py",
     deps = [
         ":__test__",
@@ -92,9 +85,6 @@ py_test(
         requirement("pytest"),
         requirement("gitpython"),
         requirement("vcrpy"),
-        requirement("httpx"),
-        requirement("rich"),
-        requirement("pydantic"),
         requirement("pytest-recording"),
     ],
 )

@@ -51,6 +51,7 @@ py_test(
         requirement("fakeredis"),
         requirement("fastapi"),
         requirement("flask"),
+        requirement("httpx"),
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),
         requirement("openapi-spec-validator"),

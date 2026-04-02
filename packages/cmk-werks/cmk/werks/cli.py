@@ -39,18 +39,8 @@ from .in_out_elements import (
     TTY_NORMAL,
     TTY_RED,
 )
-from .meisterwerk import (
-    build_meisterwerk_payload,
-    display_evaluation,
-    display_rewritten_werk,
-    display_user_understanding,
-    evaluate_werk,
-    rewrite_werk,
-    user_understanding_of_werk,
-)
 from .models import EditionV2, EditionV3
 from .parse import WerkV3ParseResult
-from .schemas.requests import Werk as WerkRequest
 from .schemas.werk import Stash, Werk, WerkId
 
 WerkVersion = Literal["v1", "markdown"]
@@ -243,46 +233,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser_preview.set_defaults(func=main_preview)
 
-    # MEISTERWERK
+    # MEISTERWERK (removed)
     parser_meisterwerk = subparsers.add_parser(
-        "meisterwerk", help="Use the ai tool to evaluate or rewrite a Werk"
+        "meisterwerk", help="[Removed] The meisterwerk service has been shut down"
     )
-    parser_meisterwerk.set_defaults(func=lambda *_: parser_meisterwerk.print_usage())
-    meisterwerk_subparser = parser_meisterwerk.add_subparsers(dest="meisterwerk_command")
-
-    evaluate_parser = meisterwerk_subparser.add_parser("evaluate", help="Evaluate a Werk")
-    evaluate_parser.add_argument(
-        "id",
-        type=int,
-        help="Werk ID",
-    )
-
-    rewrite_parser = meisterwerk_subparser.add_parser("rewrite", help="Rewrite a Werk")
-    rewrite_parser.add_argument(
-        "id",
-        type=int,
-        help="Werk ID",
-    )
-    rewrite_parser.add_argument(
-        "-a",
-        "--append",
-        action="store_true",
-        help="append the rewrite to the existing Werk printing it to stdout",
-    )
-
-    user_understanding_parser = meisterwerk_subparser.add_parser(
-        "user-understanding",
-        help="Produce a simulated understanding of the current Werk from a user perspective",
-    )
-    user_understanding_parser.add_argument(
-        "id",
-        type=int,
-        help="Werk ID",
-    )
-
-    evaluate_parser.set_defaults(func=main_evaluate)
-    rewrite_parser.set_defaults(func=main_rewrite_werk)
-    user_understanding_parser.set_defaults(func=main_user_understanding)
+    parser_meisterwerk.set_defaults(func=main_meisterwerk_removed)
 
     # URL
     parser_url = subparsers.add_parser("url", help="Show the online URL of a Werk")
@@ -799,55 +754,12 @@ def main_new(args: argparse.Namespace) -> None:
     )
 
 
-def _meisterwerk_deprecation_warning() -> None:
+def main_meisterwerk_removed(_args: argparse.Namespace) -> None:
     sys.stderr.write(
-        "WARNING: The 'meisterwerk' subcommand is deprecated and will be removed in a future release.\n"
+        "ERROR: The 'meisterwerk' service has been shut down and this subcommand has been removed.\n"
         "Please use the '/werk' skill in Claude Code instead.\n"
     )
-
-
-def main_evaluate(args: argparse.Namespace) -> None:
-    _meisterwerk_deprecation_warning()
-    _, _, payload, _ = prepare_for_meisterwerk(args)
-    evaluation = evaluate_werk(payload)
-    display_evaluation(evaluation)
-
-
-def main_user_understanding(args: argparse.Namespace) -> None:
-    _meisterwerk_deprecation_warning()
-    _, _, payload, werk_id = prepare_for_meisterwerk(args)
-    understanding = user_understanding_of_werk(payload)
-    display_user_understanding(understanding)
-
-
-def main_rewrite_werk(args: argparse.Namespace) -> None:
-    _meisterwerk_deprecation_warning()
-    append_rewritten_werk: bool = args.append
-    werk_path, _, payload, werk_id = prepare_for_meisterwerk(args)
-    evaluation = evaluate_werk(payload)
-    rewritten_werk = rewrite_werk(payload, evaluation)
-    if append_rewritten_werk:
-        text_to_append = f"\n\n\n<<<<<--- Rewritten Werk --->>>>\n\n{rewritten_werk.rewritten_text}"
-        with werk_path.open("a", encoding="utf-8") as f:
-            f.write(text_to_append)
-        edit_werk(werk_path, None, commit=False)
-        save_last_werkid(werk_id)
-    else:
-        display_rewritten_werk(rewritten_werk)
-
-
-def prepare_for_meisterwerk(
-    args: argparse.Namespace,
-) -> tuple[Path, Werk, WerkRequest, WerkId]:
-    werk_id = WerkId(args.id) if args.id else get_last_werk()
-    werk_path = werk_path_by_id(werk_id)
-    if not werk_path.exists():
-        bail_out("No Werk with this id.")
-    if werk_path.suffix != ".md":
-        bail_out("Can only evaluate Werk markdown files (with .md suffix).")
-    werk = load_werk(werk_path)
-    payload = build_meisterwerk_payload(werk)
-    return werk_path, werk, payload, werk_id
+    sys.exit(1)
 
 
 def get_werk_arg(arg: WerkId | None) -> WerkId:

@@ -53,6 +53,7 @@ py_test(
         requirement("pytest-random-order"),
         requirement("fakeredis"),
         requirement("fastapi"),
+        requirement("httpx"),
         requirement("starlette"),
         requirement("time-machine"),
         requirement("requests"),

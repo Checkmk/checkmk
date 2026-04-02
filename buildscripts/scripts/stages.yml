@@ -45,12 +45,6 @@ VARIABLES:
     - NAME: CHANGED_PYTHON_FILES
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-python-files --filter --with-packages"
 
-    - NAME: CHANGED_GROOVY_LINT_RC
-      SH: "echo '${CHANGED_FILES_REL}' | grep '.groovylintrc.json$' || true"
-
-    - NAME: CHANGED_PYPROJECT_TOML_FILE
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^pyproject.toml' || true"
-
     - NAME: CHANGED_PYTHON_REQUIREMENTS
       SH: "echo '${CHANGED_FILES_REL}' | grep 'requirements.txt\\|requirements.in\\|constraints.txt' || true"
 
@@ -123,21 +117,6 @@ VARIABLES:
 
     - NAME: CHANGED_MK_ORACLE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^packages/[^/]*$' || true"
-
-    - NAME: CHANGED_CMK_CCC_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-ccc/' || true"
-
-    - NAME: CHANGED_CMK_EC_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-ec/' || true"
-
-    - NAME: CHANGED_CMK_WERKS_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks/' || true"
-
-    - NAME: CHANGED_CMK_TRACE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-trace/' || true"
-
-    - NAME: CHANGED_CMK_UPDATE_AGENT_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-update-agent/' || true"
 
     - NAME: CHANGED_FRONTEND_VUE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"

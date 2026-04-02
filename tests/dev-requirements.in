@@ -4,6 +4,7 @@ bandit[toml,sarif]  # linter
 beautifulsoup4  # used by the GUI crawler and various tests
 bson  # used by test_mk_mongodb unit test
 checkmk-dev-tools  # provides tooling for build artifacts
+cmk-werk-zeug  # provides wrappers for Gerrit, Jenkins, Jira and the cmk-components CLI
 datamodel-code-generator  # used for cmk-shared-typing generation
 dill
 djlint  # jinja template linter and formatter

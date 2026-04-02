@@ -33,6 +33,8 @@ exports_files(
         ".cargo/config.toml",
         "module_layers.toml",
         "defines.make",
+        "constraints.txt",
+        "runtime-requirements.txt",
     ],
     visibility = ["//:__subpackages__"],
 )

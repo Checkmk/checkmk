@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output from agent
 # <<<jar_signature>>>
 # [[[bluecove-1.2.3-signed.jar]]]
@@ -25,32 +23,34 @@
 #                     This jar contains entries whose signer certificate has expired.
 
 
-# mypy: disable-error-code="var-annotated"
-
 import time
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
 
-
-def discover_jar_signature(info):
-    inventory = []
-    for line in info:
+def discover_jar_signature(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if line[0].startswith("[[["):
-            f = line[0][3:-3]
-            inventory.append((f, {}))
-    return inventory
+            yield Service(item=line[0][3:-3])
 
 
-def check_jar_signature(item, _no_params, info):
+def check_jar_signature(item: str, section: StringTable) -> CheckResult:
     in_block = False
     details = []
     in_cert = False
     cert = []
-    for line in info:
-        line = (" ".join(line)).strip()
+    for raw_line in section:
+        line = (" ".join(raw_line)).strip()
         if line == "[[[%s]]]" % item:
             in_block = True
         elif in_block and line.startswith("[[["):
@@ -69,7 +69,8 @@ def check_jar_signature(item, _no_params, info):
             details.append(cert)
 
     if not details:
-        return (2, "No certificate found")
+        yield Result(state=State.CRIT, summary="No certificate found")
+        return
 
     _cert_dn, cert_valid = details[0]
 
@@ -105,16 +106,21 @@ def check_jar_signature(item, _no_params, info):
         if state:
             status_text += f" (warn/crit below {render.timespan(warn)}/{render.timespan(crit)})"
 
-    return state, status_text
+    yield Result(state=State(state), summary=status_text)
 
 
 def parse_jar_signature(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["jar_signature"] = LegacyCheckDefinition(
+agent_section_jar_signature = AgentSection(
     name="jar_signature",
     parse_function=parse_jar_signature,
+)
+
+
+check_plugin_jar_signature = CheckPlugin(
+    name="jar_signature",
     service_name="Jar-Signature %s",
     discovery_function=discover_jar_signature,
     check_function=check_jar_signature,

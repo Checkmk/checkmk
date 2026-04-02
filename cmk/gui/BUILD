@@ -505,6 +505,74 @@ py_library(
 )
 
 py_library(
+    name = "breadcrumb",
+    srcs = ["breadcrumb.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:speaklater",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
+    name = "display_options",
+    srcs = ["display_options.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":ctx_stack",
+        ":http",
+        "//cmk/gui/htmllib:html",
+    ],
+)
+
+py_library(
+    name = "main_menu_types",
+    srcs = ["main_menu_types.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":http",
+        ":logged_in",
+        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:speaklater",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
+    name = "color",
+    srcs = ["color.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":ctx_stack",
+        ":i18n",
+        ":type_defs",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/utils:html",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:inventory_ui",
+    ],
+)
+
+py_library(
     name = "page_menu_entry",
     srcs = ["page_menu_entry.py"],
     imports = ["../.."],
@@ -522,9 +590,12 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            "breadcrumb.py",
             "cert_info.py",
+            "color.py",
             "ctx_stack.py",
             "default_name.py",
+            "display_options.py",
             "dynamic_icon.py",
             "exceptions.py",
             "features.py",
@@ -541,6 +612,7 @@ py_library(
             "legacy_plugins.py",
             "logged_in.py",
             "log.py",
+            "main_menu_types.py",
             "ntop.py",
             "num_split.py",
             "page_menu_entry.py",
@@ -571,9 +643,12 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":breadcrumb",
         ":cert_info",
+        ":color",
         ":ctx_stack",
         ":default_name",
+        ":display_options",
         ":dynamic_icon",
         ":exceptions",
         ":features",
@@ -590,6 +665,7 @@ py_library(
         ":legacy_plugins",
         ":log",
         ":logged_in",
+        ":main_menu_types",
         ":ntop",
         ":num_split",
         ":page_menu_entry",

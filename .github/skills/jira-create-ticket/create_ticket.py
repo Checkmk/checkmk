@@ -145,6 +145,7 @@ def find_epics(jira: Any) -> list[dict[str, str]]:
 CUSTOM_FIELDS = {
     "developer_team": "customfield_11500",  # select
     "storypoints": "customfield_10106",  # number
+    "epic_link": "customfield_10100",  # any (Epic Link on Stories/Bugs/Tasks)
     "epic_name": "customfield_10102",  # text
     "technical_owner": "customfield_13601",  # user
     "initiative_owner": "customfield_13600",  # user
@@ -192,14 +193,10 @@ def create_issue(
     if issue_type == "Epic":
         fields[CUSTOM_FIELDS["epic_name"]] = summary
 
-    issue = jira.create_issue(fields=fields)
-
     if link_epic:
-        jira.create_issue_link(
-            type="is child of",
-            inwardIssue=issue.key,
-            outwardIssue=link_epic,
-        )
+        fields[CUSTOM_FIELDS["epic_link"]] = link_epic
+
+    issue = jira.create_issue(fields=fields)
 
     return issue
 

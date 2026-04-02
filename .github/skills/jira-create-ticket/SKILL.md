@@ -176,5 +176,5 @@ If an epic was linked, also mention it.
 
 - The `--dry-run` flag prints the payload without creating the ticket.
 - The script is self-contained (only depends on `jira` library). Configure it via `JIRA_API_TOKEN` environment variable.
-- `--link-epic` creates an "is child of" link between the new ticket and the specified epic.
+- `--link-epic` sets the Epic Link field on the new ticket, making it a child of the specified epic.
 - `--find-epics` searches open epics filtered by component and ranked by keyword match against the summary.

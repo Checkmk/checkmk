@@ -92,7 +92,7 @@ sh_library(
     srcs = [
         "bazel_execution_log_parser.sh",
         "bazel_mypy.sh",
-        "bazel_test_non_cpp.sh",
+        "bazel_test_ci.sh",
         "bazel_test_post_archive_xunit.sh",
         "create_unsign_msi_patch.sh",
         "sign-packages.sh",

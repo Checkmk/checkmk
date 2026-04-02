@@ -716,6 +716,62 @@ py_library(
     ],
 )
 
+py_library(
+    name = "table",
+    srcs = ["table.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":http",
+        ":i18n",
+        ":logged_in",
+        ":num_split",
+        ":type_defs",
+        "//cmk/gui/htmllib:foldable_container",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/htmllib:tag_rendering",
+        "//cmk/gui/htmllib:type_defs",
+        "//cmk/gui/utils:escaping",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:output_funnel",
+        "//cmk/gui/utils:rendering",
+        "//cmk/gui/utils:selection_id",
+        "//cmk/gui/utils:urls",
+    ],
+)
+
+py_library(
+    name = "view_utils",
+    srcs = ["view_utils.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":http",
+        ":i18n",
+        ":log",
+        ":logged_in",
+        ":theme",
+        ":type_defs",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:escaping",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:labels",
+        "//cmk/gui/utils:loading_transition",
+        "//cmk/gui/utils:urls",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-livestatus-client",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -762,6 +818,7 @@ py_library(
             "search_menu.py",
             "single_global_setting.py",
             "site_config.py",
+            "table.py",
             "theme/**/*.py",
             "top_heading.py",
             "type_defs.py",
@@ -769,6 +826,7 @@ py_library(
             "user_connection_config_types.py",
             "validate.py",
             "validation_utils.py",
+            "view_utils.py",
         ],
     ) + [
         "wsgi/applications/index.wsgi",
@@ -822,6 +880,7 @@ py_library(
         ":search_menu",
         ":single_global_setting",
         ":site_config",
+        ":table",
         ":theme",
         ":top_heading",
         ":type_defs",
@@ -829,6 +888,7 @@ py_library(
         ":user_connection_config_types",
         ":validate",
         ":validation_utils",
+        ":view_utils",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/checkengine",

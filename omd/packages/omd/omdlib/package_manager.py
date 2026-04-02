@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import os
 import subprocess
 import sys
-from typing import override, Protocol
+from typing import Protocol
 
 
 class _CommandError:
@@ -53,36 +52,30 @@ def _stream(cmd: list[str]) -> _CommandError | None:
     return None
 
 
-class PackageManager(abc.ABC):
-    @classmethod
-    def factory(cls, distro_code: str) -> "PackageManager | None":
-        if os.path.exists("/etc/cma"):
-            return None
+class PackageManager(Protocol):
+    def uninstall(self, package_name: str, verbose: bool) -> None: ...
 
-        if distro_code.startswith("el") or distro_code.startswith("sles"):
-            return _PackageManagerRPM()
-        return _PackageManagerDEB()
-
-    @abc.abstractmethod
-    def uninstall(self, package_name: str, verbose: bool) -> None:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
     def get_package(
         self, version_path: str, verbose: bool, _completed_run: _CompletedProcess | None = None
-    ) -> list[str]:
-        raise NotImplementedError()
+    ) -> list[str]: ...
 
 
-class _PackageManagerDEB(PackageManager):
-    @override
+def package_manager_factory(distro_code: str) -> PackageManager | None:
+    if os.path.exists("/etc/cma"):
+        return None
+
+    if distro_code.startswith("el") or distro_code.startswith("sles"):
+        return _PackageManagerRPM()
+    return _PackageManagerDEB()
+
+
+class _PackageManagerDEB:
     def uninstall(self, package_name: str, verbose: bool) -> None:
         cmd = ["apt-get", "-y", "purge", package_name]
         error = _stream(cmd) if verbose else _run(cmd, verbose)
         if isinstance(error, _CommandError):
             sys.exit(error.show("Failed to uninstall package"))
 
-    @override
     def get_package(
         self, version_path: str, verbose: bool, _completed_run: _CompletedProcess | None = None
     ) -> list[str]:
@@ -92,15 +85,13 @@ class _PackageManagerDEB(PackageManager):
         return result.split(":", maxsplit=1)[0].split(",")
 
 
-class _PackageManagerRPM(PackageManager):
-    @override
+class _PackageManagerRPM:
     def uninstall(self, package_name: str, verbose: bool) -> None:
         cmd = ["rpm", "-e", package_name]
         error = _stream(cmd) if verbose else _run(cmd, verbose)
         if isinstance(error, _CommandError):
             sys.exit(error.show("Failed to uninstall package"))
 
-    @override
     def get_package(
         self, version_path: str, verbose: bool, _completed_run: _CompletedProcess | None = None
     ) -> list[str]:

@@ -3,40 +3,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.legacy_includes.cpu_util import check_cpu_util
 from cmk.plugins.lib import ucd_hr_detection
-
-check_info = {}
 
 # .1.3.6.1.2.1.25.3.3.1.2.768 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.768
 # .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769
 
 
-def discover_hr_cpu(info):
-    if len(info) >= 1:
-        return [(None, {})]
-    return []
+def discover_hr_cpu(section: StringTable) -> DiscoveryResult:
+    if len(section) >= 1:
+        yield Service()
 
 
-def check_hr_cpu(_no_item, params, info):
+def check_hr_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     num_cpus = 0
     util = 0.0
     cores = []
-    for line in info:
+    for line in section:
         core_util = int(line[0])
         cores.append(("core%d" % num_cpus, core_util))
         util += core_util
         num_cpus += 1
     if num_cpus == 0:
-        return 3, "No data found in SNMP output"
+        yield Result(state=State.UNKNOWN, summary="No data found in SNMP output")
+        return
     util = float(util) / num_cpus
-    return check_cpu_util(util, params, cores=cores)
+    yield from check_cpu_util(util, params, cores=cores)  # type: ignore[no-untyped-call]
 
 
 # Migration NOTE: Create a separate section, but a common check plug-in for
@@ -47,14 +53,19 @@ def parse_hr_cpu(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hr_cpu"] = LegacyCheckDefinition(
+snmp_section_hr_cpu = SimpleSNMPSection(
     name="hr_cpu",
-    parse_function=parse_hr_cpu,
     detect=ucd_hr_detection.HR,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.25.3.3.1",
         oids=["2"],
     ),
+    parse_function=parse_hr_cpu,
+)
+
+
+check_plugin_hr_cpu = CheckPlugin(
+    name="hr_cpu",
     service_name="CPU utilization",
     discovery_function=discover_hr_cpu,
     check_function=check_hr_cpu,

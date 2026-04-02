@@ -8,7 +8,7 @@ export type AuthMethod = 'none' | 'basicauth'
 
 export interface Credential {
   username: string
-  password: string // password store ID
+  password: string | null // password store ID
 }
 
 export interface AuthConfig {
@@ -73,6 +73,7 @@ const activeTab = ref('grpc')
 const availablePasswords = ref<Suggestion[]>([])
 const displayErrors = ref(false)
 const passwordStoreSlideInOpen = ref(false)
+const passwordTargetAuth = ref<'grpc' | 'http'>('grpc')
 
 onMounted(async () => {
   try {
@@ -104,7 +105,7 @@ watch(
   () => grpcAuth.value.method,
   (method) => {
     if (method === 'basicauth' && grpcAuth.value.credential === null) {
-      grpcAuth.value.credential = { username: '', password: '' }
+      grpcAuth.value.credential = { username: '', password: null }
     }
   },
   { immediate: true }
@@ -114,7 +115,7 @@ watch(
   () => httpAuth.value.method,
   (method) => {
     if (method === 'basicauth' && httpAuth.value.credential === null) {
-      httpAuth.value.credential = { username: '', password: '' }
+      httpAuth.value.credential = { username: '', password: null }
     }
   },
   { immediate: true }
@@ -332,6 +333,11 @@ function validate(): boolean {
   return isValid
 }
 
+function openPasswordSlideIn(target: 'grpc' | 'http') {
+  passwordTargetAuth.value = target
+  passwordStoreSlideInOpen.value = true
+}
+
 function onPasswordCreated(password: PasswordConfig) {
   passwordStoreSlideInOpen.value = false
   // TODO: properly handle the created password
@@ -339,6 +345,14 @@ function onPasswordCreated(password: PasswordConfig) {
     name: password.general_props.id,
     title: password.general_props.title as TranslatedString
   })
+  const triggeringAuth = passwordTargetAuth.value === 'grpc' ? grpcAuth.value : httpAuth.value
+  if (triggeringAuth.credential !== null) {
+    triggeringAuth.credential.password = password.general_props.id
+  }
+  const otherAuth = passwordTargetAuth.value === 'grpc' ? httpAuth.value : grpcAuth.value
+  if (otherAuth.credential !== null && !otherAuth.credential.password) {
+    otherAuth.credential.password = password.general_props.id
+  }
 }
 
 defineExpose({ validate })
@@ -397,6 +411,7 @@ defineExpose({ validate })
               <CmkLabel>{{ _t('Password') }} <CmkLabelRequired /></CmkLabel>
               <div class="mode-otel-configure-collector__password-row">
                 <CmkDropdown
+                  :key="availablePasswords.length"
                   v-model:selected-option="grpcAuth.credential.password"
                   :options="{ type: 'fixed', suggestions: availablePasswords }"
                   :input-hint="_t('Select password')"
@@ -404,7 +419,7 @@ defineExpose({ validate })
                   :form-validation="grpcPasswordErrors.length > 0"
                   :no-elements-text="_t('No passwords available')"
                 />
-                <CmkInlineButton @click="passwordStoreSlideInOpen = true">{{
+                <CmkInlineButton @click="openPasswordSlideIn('grpc')">{{
                   _t('Create')
                 }}</CmkInlineButton>
               </div>
@@ -493,6 +508,7 @@ defineExpose({ validate })
               <CmkLabel>{{ _t('Password') }} <CmkLabelRequired /></CmkLabel>
               <div class="mode-otel-configure-collector__password-row">
                 <CmkDropdown
+                  :key="availablePasswords.length"
                   v-model:selected-option="httpAuth.credential.password"
                   :options="{ type: 'fixed', suggestions: availablePasswords }"
                   :input-hint="_t('Select password')"
@@ -500,7 +516,7 @@ defineExpose({ validate })
                   :form-validation="httpPasswordErrors.length > 0"
                   :no-elements-text="_t('No passwords available')"
                 />
-                <CmkInlineButton @click="passwordStoreSlideInOpen = true">{{
+                <CmkInlineButton @click="openPasswordSlideIn('http')">{{
                   _t('Create')
                 }}</CmkInlineButton>
               </div>

@@ -682,6 +682,40 @@ py_library(
     ],
 )
 
+py_library(
+    name = "icon_helpers",
+    srcs = ["icon_helpers.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":type_defs",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
+    name = "search_menu",
+    srcs = ["search_menu.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":http",
+        ":i18n",
+        ":logged_in",
+        ":main_menu",
+        ":main_menu_types",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -718,12 +752,14 @@ py_library(
             "ntop.py",
             "num_split.py",
             "page_menu.py",
+            "icon_helpers.py",
             "page_menu_entry.py",
             "page_state.py",
             "pdf.py",
             "permissions.py",
             "pseudo_users.py",
             "role_types.py",
+            "search_menu.py",
             "single_global_setting.py",
             "site_config.py",
             "theme/**/*.py",
@@ -765,6 +801,7 @@ py_library(
         ":hooks",
         ":http",
         ":i18n",
+        ":icon_helpers",
         ":icons",
         ":ifaceoper",
         ":job_scheduler_client",
@@ -782,6 +819,7 @@ py_library(
         ":permissions",
         ":pseudo_users",
         ":role_types",
+        ":search_menu",
         ":single_global_setting",
         ":site_config",
         ":theme",

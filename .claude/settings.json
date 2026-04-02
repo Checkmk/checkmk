@@ -15,6 +15,7 @@
       "Skill(backport)",
       "Skill(readme)",
       "Skill(crash-report)",
+      "Skill(report-flaky-test)",
       "Bash(bazel *)",
       "Bash(make *)",
       "Bash(git status *)",

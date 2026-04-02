@@ -101,6 +101,28 @@ Check browser console errors:
 playwright-trace-analyzer console /tmp/jenkins-artifacts/<trace>.zip
 ```
 
+# Marking a build to keep forever
+
+To prevent Jenkins from garbage-collecting a build (e.g. to preserve evidence of a flaky test), use the `toggleLogKeep` API endpoint. Auth is via `~/.netrc` (same as `jenkins_build_data.py`):
+
+```python
+python3 -c "
+import netrc, urllib.request, base64
+n = netrc.netrc()
+login, _, password = n.authenticators('ci.lan.tribe29.com')
+url = '<BUILD_URL>/toggleLogKeep'
+req = urllib.request.Request(url, method='POST', data=b'')
+credentials = base64.b64encode(f'{login}:{password}'.encode()).decode()
+req.add_header('Authorization', f'Basic {credentials}')
+resp = urllib.request.urlopen(req)
+print(f'Status: {resp.status}')
+"
+```
+
+Replace `<BUILD_URL>` with the full Jenkins build URL (e.g. `https://ci.lan.tribe29.com/job/checkmk/job/master/.../123`). This is a toggle — calling it again removes the "keep forever" flag.
+
+Do NOT use `curl` with `$JENKINS_API_TOKEN` — it won't work. Use `~/.netrc` credentials with Basic auth as shown above.
+
 # In case the commands jenkins_build_data.py is missing
 
 Ask the user to clone the zeug_cmk git repository and add it to their PATH.

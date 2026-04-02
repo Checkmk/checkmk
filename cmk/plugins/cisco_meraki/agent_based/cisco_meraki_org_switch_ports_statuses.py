@@ -85,7 +85,7 @@ class SwitchPortsStatus(BaseModel, frozen=True):
     enabled: bool
     errors: list[str]
     is_uplink: bool = Field(alias="isUplink")
-    port_id: int = Field(alias="portId")
+    raw_port_id: int | str = Field(alias="portId")
     speed: str
     status: str
     warnings: list[str]
@@ -97,6 +97,21 @@ class SwitchPortsStatus(BaseModel, frozen=True):
     secure_port: PossiblyMissing[SecurePort] = Field(default=None, alias="securePort")
     spanning_tree: PossiblyMissing[SpanningTree] = Field(default=None, alias="spanningTree")
     traffic_in_kbps: PossiblyMissing[UsageInKbps] = Field(default=None, alias="trafficInKbps")
+
+    @property
+    def port_id(self) -> int:
+        return int(self.raw_port_id)
+
+    @computed_field
+    @property
+    def has_valid_port_id(self) -> bool:
+        match self.raw_port_id:
+            case int():
+                return True
+            case str(port_id) if port_id.isdigit():
+                return True
+            case _:
+                return False
 
     @computed_field
     @property
@@ -171,7 +186,11 @@ def parse_switch_ports_statuses(string_table: StringTable) -> Section:
     match string_table:
         case [[payload]] if payload:
             statuses = (SwitchPortsStatus.model_validate(data) for data in json.loads(payload))
-            return {str(switch_port.port_id): switch_port for switch_port in statuses}
+            return {
+                str(switch_port.port_id): switch_port
+                for switch_port in statuses
+                if switch_port.has_valid_port_id
+            }
         case _:
             return {}
 

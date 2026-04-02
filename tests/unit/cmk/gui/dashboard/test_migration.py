@@ -322,6 +322,26 @@ class TestMigrateWidgetsViewWidget:
         assert "play_sounds" not in ev
         assert "inventory_join_macros" not in ev
 
+    def test_view_widget_missing_embedded_view_fields_get_defaults(
+        self, mock_dashlet_registry: MagicMock
+    ) -> None:
+        view_widget = _make_view_widget()
+
+        # Explicitly delete the fields
+        for key in ("group_painters", "browser_reload", "num_columns", "column_headers", "sorters"):
+            view_widget.pop(key, None)  # type: ignore[misc]
+
+        dashboard = _make_dashboard(widgets={"w1": view_widget})
+
+        result = migrate_dashboard_config(dashboard)
+
+        ev = result["embedded_views"]["test_view"]
+        assert ev["group_painters"] == []
+        assert ev["browser_reload"] == 0
+        assert ev["num_columns"] == 1
+        assert ev["column_headers"] == "pergroup"
+        assert ev["sorters"] == []
+
     def test_existing_embedded_views_preserved(self, mock_dashlet_registry: MagicMock) -> None:
         existing_ev: DashboardEmbeddedViewSpec = {
             "single_infos": [],

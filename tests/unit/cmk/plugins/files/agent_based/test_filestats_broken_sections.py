@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.filestats import (
+from cmk.plugins.files.agent_based.filestats import (
     check_filestats,
     discover_filestats,
     parse_filestats,

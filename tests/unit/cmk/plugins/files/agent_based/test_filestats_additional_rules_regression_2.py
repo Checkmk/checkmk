@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.filestats import (
+from cmk.plugins.files.agent_based.filestats import (
     check_filestats,
     discover_filestats,
     parse_filestats,
@@ -52,7 +52,7 @@ def _parsed(
     return parse_filestats(string_table)
 
 
-def test_parse_filestats_additional_rules_regression(
+def test_parse_filestats_additional_rules_regression_2(
     parsed: dict[str, tuple[str, list[dict[str, Any]]]],
 ) -> None:
     assert "foo" in parsed
@@ -87,7 +87,7 @@ def test_parse_filestats_additional_rules_regression(
     assert apport_log["stat_status"] == "ok"
 
 
-def test_discover_filestats_additional_rules_regression(
+def test_discover_filestats_additional_rules_regression_2(
     parsed: dict[str, tuple[str, list[dict[str, Any]]]],
 ) -> None:
     result = list(discover_filestats(parsed))
@@ -101,12 +101,15 @@ def _get_text(r: Result | Metric) -> str:
     return ""
 
 
-def test_check_filestats_additional_rules_regression_basic(
+def test_check_filestats_additional_rules_regression_2_basic(
     parsed: dict[str, tuple[str, list[dict[str, Any]]]],
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
-        "additional_rules": [("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)})],
+        "additional_rules": [
+            ("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)}),
+            ("", "/var/log/app*", {"maxsize_largest": (100, 200)}),
+        ],
         "show_all_files": True,
     }
 
@@ -134,12 +137,15 @@ def test_check_filestats_additional_rules_regression_basic(
     assert additional_rules_msg[0].state == State.OK
 
 
-def test_check_filestats_additional_rules_regression_size_thresholds(
+def test_check_filestats_additional_rules_regression_2_size_thresholds(
     parsed: dict[str, tuple[str, list[dict[str, Any]]]],
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),  # Very small thresholds to trigger alerts
-        "additional_rules": [("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)})],
+        "additional_rules": [
+            ("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)}),
+            ("", "/var/log/app*", {"maxsize_largest": (100, 200)}),
+        ],
         "show_all_files": True,
     }
 
@@ -147,21 +153,24 @@ def test_check_filestats_additional_rules_regression_size_thresholds(
 
     # Should have critical alerts due to small size thresholds
     critical_results = [r for r in result if isinstance(r, Result) and r.state == State.CRIT]
-    assert len(critical_results) >= 2  # At least 2 critical size violations
+    assert len(critical_results) >= 3  # At least 3 critical size violations
 
     # Check that threshold messages are present
     threshold_messages = [
         r for r in result if isinstance(r, Result) and "warn/crit at" in _get_text(r)
     ]
-    assert len(threshold_messages) >= 2
+    assert len(threshold_messages) >= 3
 
 
-def test_check_filestats_additional_rules_regression_sys_related_files(
+def test_check_filestats_additional_rules_regression_2_sys_related_files(
     parsed: dict[str, tuple[str, list[dict[str, Any]]]],
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
-        "additional_rules": [("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)})],
+        "additional_rules": [
+            ("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)}),
+            ("", "/var/log/app*", {"maxsize_largest": (100, 200)}),
+        ],
         "show_all_files": True,
     }
 
@@ -204,46 +213,99 @@ def test_check_filestats_additional_rules_regression_sys_related_files(
     assert "warn/crit at 1 B/2 B" in size_critical_msg[0].summary
 
 
-def test_check_filestats_additional_rules_regression_remaining_files(
+def test_check_filestats_additional_rules_regression_2_app_related_files(
     parsed: dict[str, tuple[str, list[dict[str, Any]]]],
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
-        "additional_rules": [("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)})],
+        "additional_rules": [
+            ("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)}),
+            ("", "/var/log/app*", {"maxsize_largest": (100, 200)}),
+        ],
         "show_all_files": True,
     }
 
     result = list(check_filestats("foo", params, parsed))
 
-    # Find remaining files message (should be 2 files: boot.log and apport.log.2.gz)
+    # Find app* pattern section
+    app_pattern_results = [
+        r
+        for r in result
+        if isinstance(r, Result) and "Pattern:" in _get_text(r) and "app*" in _get_text(r)
+    ]
+    assert len(app_pattern_results) == 1
+    assert "'/var/log/app*'" in app_pattern_results[0].summary
+
+    # Find the index of app pattern and check surrounding results
+    app_pattern_index = None
+    for i, result_obj in enumerate(result):
+        if (
+            isinstance(result_obj, Result)
+            and "Pattern:" in _get_text(result_obj)
+            and "app*" in _get_text(result_obj)
+        ):
+            app_pattern_index = i
+            break
+
+    assert app_pattern_index is not None
+
+    # Check app-related files section
+    app_results = result[app_pattern_index - 2 : app_pattern_index + 8]  # Include some context
+
+    # Should find 1 app-related file (apport.log.2.gz)
+    files_total_msg = [
+        r for r in app_results if isinstance(r, Result) and "Files in total: 1" in _get_text(r)
+    ]
+    assert len(files_total_msg) == 1
+
+    # Should have critical size alert (479 bytes over 100-200 byte thresholds)
+    size_critical_msg = [
+        r
+        for r in app_results
+        if isinstance(r, Result) and r.state == State.CRIT and "Largest:" in _get_text(r)
+    ]
+    assert len(size_critical_msg) == 1
+    assert "warn/crit at 100 B/200 B" in size_critical_msg[0].summary
+
+
+def test_check_filestats_additional_rules_regression_2_remaining_files(
+    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
+) -> None:
+    params = {
+        "maxsize_largest": (4, 5),
+        "additional_rules": [
+            ("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)}),
+            ("", "/var/log/app*", {"maxsize_largest": (100, 200)}),
+        ],
+        "show_all_files": True,
+    }
+
+    result = list(check_filestats("foo", params, parsed))
+
+    # Find remaining files message (should be 1 file: boot.log)
     remaining_msg = [
-        r for r in result if isinstance(r, Result) and "Remaining files: 2" in _get_text(r)
+        r for r in result if isinstance(r, Result) and "Remaining files: 1" in _get_text(r)
     ]
     assert len(remaining_msg) == 1
     assert remaining_msg[0].state == State.OK
 
-    # Find boot.log and apport.log in remaining files section (now in details/notice)
+    # Find boot.log in remaining files section (now in details/notice)
     boot_log_msg = [
         r for r in result if isinstance(r, Result) and "/var/log/boot.log" in (r.details or "")
     ]
     assert len(boot_log_msg) == 1
     assert "142 kB" in boot_log_msg[0].details
 
-    apport_log_msg = [
-        r
-        for r in result
-        if isinstance(r, Result) and "/var/log/apport.log.2.gz" in (r.details or "")
-    ]
-    assert len(apport_log_msg) == 1
-    assert "479 B" in apport_log_msg[0].details
 
-
-def test_check_filestats_additional_rules_regression_file_details(
+def test_check_filestats_additional_rules_regression_2_file_details(
     parsed: dict[str, tuple[str, list[dict[str, Any]]]],
 ) -> None:
     params = {
         "maxsize_largest": (4, 5),
-        "additional_rules": [("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)})],
+        "additional_rules": [
+            ("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)}),
+            ("", "/var/log/app*", {"maxsize_largest": (100, 200)}),
+        ],
         "show_all_files": True,
     }
 
@@ -267,43 +329,8 @@ def test_check_filestats_additional_rules_regression_file_details(
     assert "Age:" in detail_text
     assert "Size:" in detail_text
 
-    # Check remaining files details
-    remaining_files_detail = [
-        r
-        for r in result
-        if isinstance(r, Result)
-        and "/var/log/boot.log" in (r.details or "")
-        and "Age:" in (r.details or "")
-    ]
-    assert len(remaining_files_detail) == 1
 
-    remaining_detail_text = remaining_files_detail[0].details
-    assert "/var/log/boot.log" in remaining_detail_text
-    assert "/var/log/apport.log.2.gz" in remaining_detail_text
-    assert "Age:" in remaining_detail_text
-    assert "Size:" in remaining_detail_text
-
-
-def test_check_filestats_additional_rules_regression_age_thresholds(
-    parsed: dict[str, tuple[str, list[dict[str, Any]]]],
-) -> None:
-    params = {
-        "maxsize_largest": (4, 5),
-        "additional_rules": [("Sys-related files", "/var/log/sys*", {"maxsize_largest": (1, 2)})],
-        "show_all_files": True,
-    }
-
-    result = list(check_filestats("foo", params, parsed))
-
-    # Check age information is present
-    newest_msg = [r for r in result if isinstance(r, Result) and "Newest:" in _get_text(r)]
-    assert len(newest_msg) >= 2  # Should have overall and sys-specific messages
-
-    oldest_msg = [r for r in result if isinstance(r, Result) and "Oldest:" in _get_text(r)]
-    assert len(oldest_msg) >= 2  # Should have overall and sys-specific messages
-
-
-def test_check_filestats_additional_rules_regression_missing_item(
+def test_check_filestats_additional_rules_regression_2_missing_item(
     parsed: dict[str, tuple[str, list[dict[str, Any]]]],
 ) -> None:
     result = list(check_filestats("NonExistent", {}, parsed))

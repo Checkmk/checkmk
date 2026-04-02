@@ -10,7 +10,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.filestats import (
+from cmk.plugins.files.agent_based.filestats import (
     check_filestats,
     check_filestats_single,
     discover_filestats,

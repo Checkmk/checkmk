@@ -11,7 +11,11 @@
 # test by something more appropriate.
 
 from cmk.agent_based.v2 import Result, Service
-from cmk.legacy_checks.filestats import check_filestats, discover_filestats, parse_filestats
+from cmk.plugins.files.agent_based.filestats import (
+    check_filestats,
+    discover_filestats,
+    parse_filestats,
+)
 
 
 def test_filestats_2_discovery():

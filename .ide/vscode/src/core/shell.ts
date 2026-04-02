@@ -12,3 +12,12 @@ export function safeExec(cmd: string, options?: { timeout?: number; cwd?: string
     return ''
   }
 }
+
+/** Like safeExec but falls back to the user's interactive shell when the
+ *  command isn't found on the extension host's minimal PATH. */
+export function shellExec(cmd: string, options?: { timeout?: number; cwd?: string }): string {
+  const direct = safeExec(cmd, options)
+  if (direct) return direct
+  const shell = process.env.SHELL || '/bin/bash'
+  return safeExec(`${shell} -ic '${cmd.replace(/'/g, "'\\''")}'`, options)
+}

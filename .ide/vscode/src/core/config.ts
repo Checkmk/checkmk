@@ -8,7 +8,7 @@ import * as os from 'os'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { safeExec } from './shell'
+import { shellExec } from './shell'
 
 // ── Config types ──
 
@@ -86,12 +86,7 @@ export function resolveVariables(value: SettingValue): SettingValue {
     return value
       .replace(/\$\{workspaceFolder\}/g, wsPath)
       .replace(/\$\{HOME\}/g, os.homedir())
-      .replace(/\$\{which:([^}]+)\}/g, (_m, bin) => {
-        const direct = safeExec(`which ${bin}`)
-        if (direct) return direct
-        const shell = process.env.SHELL || '/bin/bash'
-        return safeExec(`${shell} -ic 'which ${bin}'`)
-      })
+      .replace(/\$\{which:([^}]+)\}/g, (_m, bin) => shellExec(`which ${bin}`))
   }
   if (Array.isArray(value)) {
     return value.map((v) => resolveVariables(v))

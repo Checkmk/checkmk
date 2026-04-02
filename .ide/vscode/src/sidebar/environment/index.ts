@@ -10,7 +10,7 @@ import * as vscode from 'vscode'
 
 import type { BuildStatus } from '../../build/buildStatus'
 import { log } from '../../core/log'
-import { safeExec } from '../../core/shell'
+import { safeExec, shellExec } from '../../core/shell'
 import { getNonce, wrap } from '../html'
 import type {
   EnvironmentInfo,
@@ -63,15 +63,15 @@ export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
   } else {
     env.bazel = 'not found'
   }
-  const bazeliskRaw = safeExec('bazelisk version', { cwd: wsPath })
+  const bazeliskRaw = shellExec('bazelisk version', { cwd: wsPath })
   const bazeliskMatch = bazeliskRaw.match(/Bazelisk version:\s*(\S+)/)
   env.bazelisk = bazeliskMatch ? bazeliskMatch[1] : 'not found'
   env.docker =
-    safeExec('docker --version', { cwd: wsPath })
+    shellExec('docker --version', { cwd: wsPath })
       .replace(/Docker version\s+/, '')
       .replace(/,.*/, '') || 'not found'
   env.gcc =
-    safeExec('gcc --version', { cwd: wsPath })
+    shellExec('gcc --version', { cwd: wsPath })
       .split('\n')[0]
       .replace(/.*\)\s*/, '') || 'not found'
   env.pyenv = fs.existsSync(path.join(os.homedir(), '.pyenv', 'bin', 'pyenv'))

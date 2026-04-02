@@ -155,7 +155,8 @@
   },
   "bazel": {
     "folder": {
-      "bazel.buildifierExecutable": "${which:buildifier}"
+      "bazel.buildifierExecutable": "${which:buildifier}",
+      "bazel.executable": "${which:bazelisk}"
     }
   },
   "general": {

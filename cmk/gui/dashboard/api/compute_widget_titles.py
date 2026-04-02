@@ -6,7 +6,6 @@ from typing import Literal
 
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.type_defs import DashletConfig
-from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
     EndpointDoc,
@@ -20,7 +19,7 @@ from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import PERMISSIONS_DASHBOARD
+from ._utils import PERMISSIONS_DASHBOARD_READ
 from .model.widget import BaseWidgetRequest
 
 
@@ -61,7 +60,6 @@ def _compute_title(widget_request: ComputeWidgetTitleWidgetRequest) -> str:
 
 def compute_widget_titles_v1(body: ComputeWidgetTitlesRequest) -> ComputeWidgetTitlesResponse:
     """Compute multiple widget titles."""
-    user.need_permission("general.edit_dashboards")
     return ComputeWidgetTitlesResponse(
         domainType="dashboard-widget-titles",
         extensions=ComputeWidgetTitlesExtensions(
@@ -80,7 +78,7 @@ ENDPOINT_COMPUTE_WIDGET_TITLES = VersionedEndpoint(
         link_relation="cmk/compute_dashboard_widget_titles",
         method="post",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
+    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD_READ),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=compute_widget_titles_v1)},
 )

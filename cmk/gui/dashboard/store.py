@@ -293,12 +293,12 @@ def _migrate_view_widget(
         "single_infos": config["single_infos"],
         "datasource": config["datasource"],
         "layout": config["layout"],
-        "group_painters": config["group_painters"],
         "painters": config["painters"],
-        "browser_reload": config["browser_reload"],
-        "num_columns": config["num_columns"],
-        "column_headers": config["column_headers"],
-        "sorters": config["sorters"],
+        "group_painters": config.get("group_painters", []),
+        "browser_reload": config.get("browser_reload", 0),
+        "num_columns": config.get("num_columns", 1),
+        "column_headers": config.get("column_headers", "pergroup"),
+        "sorters": config.get("sorters", []),
     }
 
     if "add_headers" in config:

@@ -138,9 +138,18 @@ _PERMISSIONS_GRAPH_WIDGET = permissions.Optional(
     )
 )
 
+PERMISSIONS_DASHBOARD_READ = permissions.AllPerm(
+    [
+        permissions.PrefixPerm("dashboard"),
+        _PERMISSIONS_VIEW_WIDGET,
+        _PERMISSIONS_GRAPH_WIDGET,
+        _PERMISSIONS_MISC,
+    ]
+)
+
 PERMISSIONS_DASHBOARD = permissions.AllPerm(
     [
-        permissions.Perm("general.edit_dashboards"),  # always required, even for reads
+        permissions.Perm("general.edit_dashboards"),
         # these 4 are optional, allowing access to more dashboards the user doesn't own
         permissions.Optional(permissions.Perm("general.force_dashboards")),
         permissions.Optional(permissions.Perm("general.see_user_dashboards")),

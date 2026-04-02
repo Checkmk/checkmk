@@ -42,19 +42,15 @@ git checkout -b <BACKPORT_BRANCH> origin/<TARGET_BRANCH>
 
 Always use `werk cherry-pick` instead of plain `git cherry-pick`. It handles the cherry-pick **and** automatically updates the `version` field in any werk files to the correct version for the target branch.
 
-The `werk` tool must come from **master's venv**, not the stable branch's venv, to ensure the latest version is used. Use a temporary git worktree so you don't need to switch branches:
+The `werk` tool must come from **the backport branch's venv**, not master's venv, to ensure the werk version is correct for the target branch. Install the venv on the backport branch first:
 
 ```bash
-# Create a temporary master worktree and build its venv
-git worktree add /tmp/cmk-master-venv master
-make -C /tmp/cmk-master-venv .venv
+# Build the venv on the backport branch
+make .venv
 
-# Run werk cherry-pick from the backport branch using master's venv
+# Run werk cherry-pick using the backport branch's venv
 # (werk calls git cherry-pick in the current working directory)
-/tmp/cmk-master-venv/.venv/bin/werk cherry-pick <COMMIT_HASH>
-
-# Clean up
-git worktree remove /tmp/cmk-master-venv
+.venv/bin/werk cherry-pick <COMMIT_HASH>
 ```
 
 If the commit contains no werk files, `werk cherry-pick` behaves identically to `git cherry-pick`.

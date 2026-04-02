@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
@@ -18,10 +18,11 @@ MAX_FILENAME_LENGTH: Final = os.pathconf(paths.omd_root, "PC_NAME_MAX")
 @dataclass(frozen=True)
 class Storage:
     _path: Path
+    max_filename_length: int = field(kw_only=True)
 
     def path(self, suffix: str) -> Path | None:
         path = self.get_expected_path(suffix)
-        if len(os.fsencode(path)) >= MAX_FILENAME_LENGTH:
+        if len(os.fsencode(path)) >= self.max_filename_length:
             return None
         return path
 
@@ -44,7 +45,9 @@ def cmc_host_dir(hostname: HostName) -> Path:
 
 
 def cmc_storage(hostname: HostName, service_name: str) -> Storage:
-    return Storage(cmc_host_dir(hostname) / pnp_cleanup(service_name))
+    return Storage(
+        cmc_host_dir(hostname) / pnp_cleanup(service_name), max_filename_length=MAX_FILENAME_LENGTH
+    )
 
 
 def pnp_storage(hostname: HostName, service_name: str, *, metric: str) -> Storage:
@@ -53,8 +56,10 @@ def pnp_storage(hostname: HostName, service_name: str, *, metric: str) -> Storag
 
 def pnp_xml_storage(hostname: HostName, servicedesc: str) -> Storage:
     host_dir = pnp_host_dir(hostname)
-    return Storage(host_dir / pnp_cleanup(servicedesc))
+    return Storage(host_dir / pnp_cleanup(servicedesc), max_filename_length=MAX_FILENAME_LENGTH)
 
 
 def pnp_custom_storage(host_dir: Path, prefix: str, *, metric: str) -> Storage:
-    return Storage(host_dir / (prefix + "_" + pnp_cleanup(metric)))
+    return Storage(
+        host_dir / (prefix + "_" + pnp_cleanup(metric)), max_filename_length=MAX_FILENAME_LENGTH
+    )

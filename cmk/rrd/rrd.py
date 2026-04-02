@@ -42,6 +42,7 @@ from ._crash import create_crash_report
 from ._fs import (
     cmc_host_dir,
     cmc_storage,
+    MAX_FILENAME_LENGTH,
     pnp_custom_storage,
     pnp_host_dir,
     pnp_storage,
@@ -539,7 +540,9 @@ class RRDConverter:
                 console.verbose(f"..{tty.blue}{tty.bold}uptodate{tty.normal}")
 
         if need_split:
-            xml_file = Storage(host_dir / file_prefix).path(".xml")
+            xml_file = Storage(
+                host_dir / file_prefix, max_filename_length=MAX_FILENAME_LENGTH
+            ).path(".xml")
             if xml_file is not None:
                 _fixup_pnp_xml_file(xml_file)
             os.remove(old_rrd_path)

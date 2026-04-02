@@ -15,6 +15,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     contains,
     DiscoveryResult,
+    get_value_store,
     Metric,
     Result,
     Service,
@@ -22,7 +23,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     State,
 )
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict, TempParamType
 
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
@@ -210,13 +211,14 @@ def discover_icom_repeater_temp(section: Any) -> DiscoveryResult:
         yield Service(item="System")
 
 
-def check_icom_repeater_temp(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
-    yield from check_temperature(  # type: ignore[misc]
-        section["temp"],
-        params,  # type: ignore[arg-type]
-        "icom_repeater_temp",
+def check_icom_repeater_temp(item: str, params: TempParamType, section: Any) -> CheckResult:
+    yield from check_temperature(
+        reading=section["temp"],
+        params=params,
+        unique_name="icom_repeater_temp",
         dev_unit=section["temp_devunit"],
         dev_status=section["temp_devstatus"],
+        value_store=get_value_store(),
     )
 
 
@@ -227,10 +229,10 @@ check_plugin_icom_repeater_temp = CheckPlugin(
     discovery_function=discover_icom_repeater_temp,
     check_function=check_icom_repeater_temp,
     check_ruleset_name="temperature",
-    check_default_parameters={
-        "levels": (50.0, 55.0),
-        "levels_lower": (-20.0, -25.0),
-    },
+    check_default_parameters=TempParamDict(
+        levels=(50.0, 55.0),
+        levels_lower=(-20.0, -25.0),
+    ),
 )
 
 # .

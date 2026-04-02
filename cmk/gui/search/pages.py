@@ -10,8 +10,6 @@ from typing import Final, override
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.permissions import permission_registry
-from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.unified_search import (
     MessageVariant,
     ProviderName,
@@ -43,10 +41,8 @@ class PageUnifiedSearch(AjaxPage):
         unified_search_engine = UnifiedSearch(
             setup_engine=SetupSearchEngine(ctx.config, ctx.request),
             monitoring_engine=MonitoringSearchEngine(
-                user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+                ctx.config,
                 row_limit=_MONITORING_ENGINE_ROW_LIMIT,
-                # TODO: this probably shouldn't be tied to the same setting as quicksearch.
-                search_order=ctx.config.quicksearch_search_order,
             ),
             customize_engine=CustomizeSearchEngine(),
         )

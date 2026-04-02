@@ -16,11 +16,12 @@ import livestatus
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.gui import sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, main_menu_registry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     HTTPVariables,
     Row,
@@ -1397,17 +1398,21 @@ match_plugin_registry.register(MonitorMenuMatchPlugin())
 class MonitoringSearchEngine:
     def __init__(
         self,
+        config: Config,
         *,
-        user_permissions: UserPermissions,
         row_limit: int,
-        search_order: Iterable[tuple[str, str]],
+        search_order: Iterable[tuple[str, str]] | None = None,
+        user_permissions: UserPermissions | None = None,
     ) -> None:
         self._legacy_engine = QuicksearchManager(
             row_limit=row_limit,
-            search_order=search_order,
+            # TODO: this probably shouldn't be tied to the same setting as quicksearch.
+            search_order=search_order or config.quicksearch_search_order,
             raise_too_many_rows_error=False,
         )
-        self._user_permissions = user_permissions
+        self._user_permissions = user_permissions or UserPermissions.from_config(
+            config, permission_registry
+        )
 
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
         if self._is_invalid_regex(query):

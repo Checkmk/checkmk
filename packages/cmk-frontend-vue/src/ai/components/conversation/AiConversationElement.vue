@@ -23,6 +23,7 @@ import type {
   ImageConversationElementContent,
   ListConversationElementContent,
   MarkdownConversationElementContent,
+  RateLimitConversationElementContent,
   TAiConversationElementContent
 } from '@/ai/lib/service/ai-template'
 import { loadUserActions } from '@/ai/lib/user-actions'
@@ -34,15 +35,19 @@ import DialogContent from './content/DialogContent.vue'
 import ImageContent from './content/ImageContent.vue'
 import ListContent from './content/ListContent.vue'
 import MarkdownContent from './content/MarkdownContent.vue'
+import RateLimitContent from './content/RateLimitContent.vue'
 
 const { _t } = usei18n()
 const props = defineProps<IAiConversationElement & { elementIndex?: number }>()
+const emit = defineEmits<{ close: [] }>()
 const aiTemplate = getInjectedAiTemplate()
 
 function filterThinkingForReopen(
   items: TAiConversationElementContent[]
 ): TAiConversationElementContent[] {
-  const hasAnswer = items.some((c) => c.title === 'answer' || c.content_type === 'alert')
+  const hasAnswer = items.some(
+    (c) => c.title === 'answer' || c.content_type === 'alert' || c.content_type === 'rate_limit'
+  )
   if (hasAnswer) {
     return items.filter((c) => c.title !== 'thinking')
   }
@@ -107,7 +112,10 @@ const copyableAnswerText = computed(() => {
 })
 const hasFinalAnswerChunk = computed(() => {
   const items = Array.isArray(props.content) ? props.content : []
-  return items.some((item) => item.title === 'answer' || item.content_type === 'alert')
+  return items.some(
+    (item) =>
+      item.title === 'answer' || item.content_type === 'alert' || item.content_type === 'rate_limit'
+  )
 })
 const showExtraButtons = computed(
   () =>
@@ -325,7 +333,10 @@ watch(
       currentState.value = newItem.title || ''
 
       const isThinkingItem = newItem.title === 'thinking'
-      const isFinalChunk = newItem.title === 'answer' || newItem.content_type === 'alert'
+      const isFinalChunk =
+        newItem.title === 'answer' ||
+        newItem.content_type === 'alert' ||
+        newItem.content_type === 'rate_limit'
 
       // Prune previous thinking items: replace with the latest during thinking,
       // and clear all of them once the final answer/error chunk arrives.
@@ -403,6 +414,12 @@ watch(
             :no-animation="props.noAnimation"
             :streaming="props.streaming"
             @done="onContentDone"
+          />
+          <RateLimitContent
+            v-else-if="cnt.content_type === 'rate_limit'"
+            v-bind="cnt as RateLimitConversationElementContent"
+            @done="onContentDone"
+            @close="emit('close')"
           />
           <div
             v-else-if="cnt.content_type === 'system_context'"

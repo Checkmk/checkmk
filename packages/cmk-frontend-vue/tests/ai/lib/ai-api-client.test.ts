@@ -5,7 +5,7 @@
  */
 import { afterEach, beforeEach, vi } from 'vitest'
 
-import { AiApiClient } from '@/ai/lib/ai-api-client'
+import { AiApiClient, RateLimitError } from '@/ai/lib/ai-api-client'
 import type { AiServiceAction, InfoResponse, StreamEvent } from '@/ai/lib/ai-api-client'
 
 const SITE_NAME = 'test-site'
@@ -271,6 +271,22 @@ describe('streamInference', () => {
 
     expect(onError).toHaveBeenCalledOnce()
     expect(onError).toHaveBeenCalledWith(networkError)
+  })
+
+  test('calls onError with a RateLimitError when res.status is 429', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 429,
+      text: vi.fn().mockResolvedValue('Too Many Requests'),
+      body: null
+    } as unknown as Response)
+    const onError = vi.fn()
+    const client = new AiApiClient(SITE_NAME)
+
+    await client.streamInference(ACTION, CONTEXT_DATA, vi.fn(), onError)
+
+    expect(onError).toHaveBeenCalledOnce()
+    expect(onError.mock.calls[0]![0]).toBeInstanceOf(RateLimitError)
   })
 
   test('calls onError when res.ok is false and includes the response text in the error message', async () => {

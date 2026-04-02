@@ -2,5 +2,9 @@ type = "Component"
 has_support_component = true
 members_required = 1
 description = """
--
+System to collect and forward product usage analytics information.
+Besides the checkmk component there is also a cloud hosted endpoint to collect the usage data.
 """
+external_code_location = [
+  "https://gitlab.infra.checkmk.cloud/checkmk-saas/checkmk-analytics",
+]

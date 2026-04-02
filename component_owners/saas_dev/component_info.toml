@@ -3,5 +3,8 @@ display_name = "SaaS Dev"
 has_support_component = true
 members_required = 2
 description = """
--
+This component is there for general tooling needed to allow our cloud edition to work.
 """
+external_code_location = [
+  "https://gitlab.infra.checkmk.cloud/checkmk-saas/cloudmk",
+]

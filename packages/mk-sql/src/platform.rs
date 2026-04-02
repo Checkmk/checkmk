@@ -95,28 +95,32 @@ pub struct InstanceInfo {
     tcp: Option<Tcp>,
 }
 
+fn first_non_zero_port(first: &Option<Port>, second: &Option<Port>) -> Option<Port> {
+    if let Some(p) = first {
+        if p.value() != 0 {
+            return Some(p.clone());
+        }
+    }
+    if let Some(dp) = second {
+        if dp.value() != 0 {
+            return Some(dp.clone());
+        }
+    }
+    None
+}
+
 impl Tcp {
     pub fn port(&self) -> Option<Port> {
         if !self.listen_all_ips {
             for peer in &self.peers {
-                if peer.port.is_some() && peer.port.as_ref().unwrap().value() != 0 {
-                    return peer.port.clone();
-                }
-                if peer.dynamic_port.is_some() && peer.dynamic_port.as_ref().unwrap().value() != 0 {
-                    return peer.dynamic_port.clone();
+                if let Some(p) = first_non_zero_port(&peer.port, &peer.dynamic_port) {
+                    return Some(p);
                 }
             }
             return None;
         }
 
-        if self.port.is_some() && self.port.as_ref().unwrap().value() != 0 {
-            return self.port.clone();
-        }
-        if self.dynamic_port.is_some() && self.dynamic_port.as_ref().unwrap().value() != 0 {
-            return self.dynamic_port.clone();
-        }
-
-        None
+        first_non_zero_port(&self.port, &self.dynamic_port)
     }
 
     pub fn hostname(&self) -> Option<HostName> {
@@ -125,7 +129,9 @@ impl Tcp {
         }
 
         for peer in &self.peers {
-            if peer.enabled_and_active {
+            if peer.enabled_and_active
+                && first_non_zero_port(&peer.port, &peer.dynamic_port).is_some()
+            {
                 return Some(peer.hostname.clone());
             }
         }
@@ -174,9 +180,48 @@ impl InstanceInfo {
 #[cfg(test)]
 mod tests {
     use crate::{
-        platform::{InstanceInfo, Tcp},
+        platform::{first_non_zero_port, InstanceInfo, Tcp},
         types::{InstanceName, Port},
     };
+
+    #[test]
+    fn test_first_non_zero_port() {
+        // both ports ar non-zero => returns first port
+        assert_eq!(
+            first_non_zero_port(&Some(Port::from(1433)), &Some(Port::from(5000))),
+            Some(Port::from(1433))
+        );
+
+        // first port is zero, second is non-zero => returns second port
+        assert_eq!(
+            first_non_zero_port(&Some(Port::from(0)), &Some(Port::from(5000))),
+            Some(Port::from(5000))
+        );
+        // both are zero => returns None
+        assert_eq!(
+            first_non_zero_port(&Some(Port::from(0)), &Some(Port::from(0))),
+            None
+        );
+
+        // first port is non-zero, second is None => returns first
+        assert_eq!(
+            first_non_zero_port(&Some(Port::from(1433)), &None),
+            Some(Port::from(1433))
+        );
+        // first port is None, second is non-zero => returns second
+        assert_eq!(
+            first_non_zero_port(&None, &Some(Port::from(5000))),
+            Some(Port::from(5000))
+        );
+
+        // first port is zero, second is None => returns None
+        assert_eq!(first_non_zero_port(&Some(Port::from(0)), &None), None);
+        // first is None, second is zero => returns None
+        assert_eq!(first_non_zero_port(&None, &Some(Port::from(0))), None);
+
+        // both are None => returns None
+        assert_eq!(first_non_zero_port(&None, &None), None);
+    }
 
     #[test]
     fn test_instance_final_port() {

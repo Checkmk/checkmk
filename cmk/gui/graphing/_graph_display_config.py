@@ -83,6 +83,7 @@ class _GraphDisplayConfigBase(BaseModel):
     show_graph_time: bool = True
     show_legend: bool = True
     show_margin: bool = True
+    show_time_axis: bool = True
     show_vertical_axis: bool = True
     size: tuple[float, float] = (70, 16)
 
@@ -125,7 +126,6 @@ class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
 
 class GraphDisplayConfigImage(_GraphDisplayConfigBase):
     border_width: SizeMM = 0.05
-    show_time_axis: bool = True
     show_title: bool = True
     title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"

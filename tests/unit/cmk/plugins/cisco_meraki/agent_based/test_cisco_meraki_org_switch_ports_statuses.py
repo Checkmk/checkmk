@@ -39,7 +39,6 @@ def test_parsing_multiple_switch_ports() -> None:
     assert len(section) == 3
 
 
-@pytest.mark.xfail(strict=True, reason="CMK-33235")
 def test_invalid_port_ids_ignored() -> None:
     switch_ports_status = [
         _RawSwitchPortsStatusFactory.build(portId=1),

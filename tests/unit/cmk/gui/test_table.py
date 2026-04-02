@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import re
-from typing import Literal
 
 import bs4
 import pytest
@@ -55,7 +54,9 @@ def test_basic() -> None:
     title = " TEST "
 
     with output_funnel.plugged():
-        with table_element("%d" % table_id, title, searchable=False, sortable=False) as table:
+        with table_element(
+            "%d" % table_id, title, searchable=False, sortable=False, limit=100
+        ) as table:
             table.row()
             table.cell("A", "1")
             table.cell("B", "2")
@@ -70,7 +71,7 @@ def test_basic() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_cell_content_escaping() -> None:
     with output_funnel.plugged():
-        with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
+        with table_element("ding", "TITLE", searchable=False, sortable=False, limit=100) as table:
             table.row()
             table.cell("A", "<script>alert('A')</script>")
             table.cell("B", HTML.without_escaping("<script>alert('B')</script>"))
@@ -86,7 +87,7 @@ def test_cell_content_escaping() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_cell_title_escaping() -> None:
     with output_funnel.plugged():
-        with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
+        with table_element("ding", "TITLE", searchable=False, sortable=False, limit=100) as table:
             table.row()
             table.cell("<script>alert('A')</script>")
             table.cell(HTML.without_escaping("<script>alert('B')</script>"))
@@ -105,7 +106,9 @@ def test_plug() -> None:
     title = " TEST "
 
     with output_funnel.plugged():
-        with table_element("%d" % table_id, title, searchable=False, sortable=False) as table:
+        with table_element(
+            "%d" % table_id, title, searchable=False, sortable=False, limit=100
+        ) as table:
             table.row()
             table.cell("A", "1")
             html.write_text_permissive("a")
@@ -127,7 +130,9 @@ def test_context() -> None:
     rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
     with output_funnel.plugged():
-        with table_element(table_id="%d" % table_id, searchable=False, sortable=False) as table:
+        with table_element(
+            table_id="%d" % table_id, searchable=False, sortable=False, limit=100
+        ) as table:
             for row in rows:
                 table.row()
                 for h, r in zip(header, row):
@@ -147,7 +152,7 @@ def test_action_message() -> None:
 
     with output_funnel.plugged():
         with table_element(
-            "%d" % table_id, searchable=False, sortable=False, action_message=message
+            "%d" % table_id, searchable=False, sortable=False, limit=100, action_message=message
         ) as table1:
             table1.row()
             table1.cell("A", "1")
@@ -190,12 +195,14 @@ def test_nesting() -> None:
     title = " TEST "
 
     with output_funnel.plugged():
-        with table_element("%d" % table_id, title, searchable=False, sortable=False) as table1:
+        with table_element(
+            "%d" % table_id, title, searchable=False, sortable=False, limit=100
+        ) as table1:
             table1.row()
             table1.cell("A", "1")
             table1.cell("B", "")
             with table_element(
-                "%d" % (table_id + 1), title + "2", searchable=False, sortable=False
+                "%d" % (table_id + 1), title + "2", searchable=False, sortable=False, limit=100
             ) as table2:
                 table2.row()
                 table2.cell("_", "+")
@@ -231,13 +238,13 @@ def test_nesting_context() -> None:
 
     with output_funnel.plugged():
         with table_element(
-            table_id="%d" % table_id, title=title, searchable=False, sortable=False
+            table_id="%d" % table_id, title=title, searchable=False, sortable=False, limit=100
         ) as table1:
             table1.row()
             table1.cell("A", "1")
             table1.cell("B", "")
             with table_element(
-                "%d" % (table_id + 1), title + "2", searchable=False, sortable=False
+                "%d" % (table_id + 1), title + "2", searchable=False, sortable=False, limit=100
             ) as table2:
                 table2.row()
                 table2.cell("_", "+")
@@ -269,13 +276,13 @@ def test_nesting_context() -> None:
 @pytest.mark.usefixtures("request_context", "patch_theme")
 @pytest.mark.parametrize("sortable", [True, False])
 @pytest.mark.parametrize("searchable", [True, False])
-@pytest.mark.parametrize("limit", [None, 2])
+@pytest.mark.parametrize("limit", [100, 2])
 @pytest.mark.parametrize("output_format", ["html", "csv"])
 def test_table_cubical(
     monkeypatch: MonkeyPatch,
     sortable: bool,
     searchable: bool,
-    limit: int | Literal[False] | None,
+    limit: int,
     output_format: str,
 ) -> None:
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
@@ -324,8 +331,7 @@ def test_table_cubical(
 
     # Reconstruct table data
     data = [tuple(map(int, row)) for row in data if row and row[0]]
-    if limit is None:
-        limit = len(rows)
+    limit = min(len(rows), limit)
 
     # Assert data correctness
     assert len(data) <= limit, f"Wrong number of rows: Got {len(data)}, should be <= {limit}"

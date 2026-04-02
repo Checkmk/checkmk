@@ -589,7 +589,12 @@ def _render_availability_timeline(
 
     # Table with detailed events
     with table_element(
-        "av_timeline", "", css="timelineevents", sortable=False, searchable=False
+        "av_timeline",
+        "",
+        css="timelineevents",
+        sortable=False,
+        searchable=False,
+        limit=active_config.table_row_limit,
     ) as table:
         for row_nr, row in enumerate(timeline_layout["table"]):
             table.row(
@@ -696,8 +701,8 @@ def render_availability_table(
         av_table["title"],
         css="availability",
         searchable=False,
-        limit=None,
         omit_headers="omit_headers" in avoptions["labelling"],
+        limit=0,
     ) as table:
         show_urls, show_timeline = False, False
         for row in av_table["rows"]:
@@ -1082,7 +1087,9 @@ def show_annotations(
     )
     render_date = availability.get_annotation_date_render_function(annos_to_render, avoptions)
 
-    with table_element(title=_("Annotations"), omit_if_empty=True) as table:
+    with table_element(
+        title=_("Annotations"), omit_if_empty=True, limit=active_config.table_row_limit
+    ) as table:
         for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
             table.row()
             table.cell("#", css=["narrow nowrap"])
@@ -1438,6 +1445,7 @@ def _output_availability_timelines_csv(
         "av_timeline",
         "",
         output_format="csv",
+        limit=active_config.table_row_limit,
     ) as table:
         for av_entry in av_data:
             _output_availability_timeline_csv(table, what, av_entry, avoptions)
@@ -1499,7 +1507,9 @@ def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVO
 
     _av_output_set_content_disposition("Checkmk-Availability")
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
-    with table_element("av_items", output_format="csv") as table:
+    with table_element(
+        "av_items", output_format="csv", limit=active_config.table_row_limit
+    ) as table:
         for group_title, availability_table in availability_tables:
             av_table = availability.layout_availability_table(
                 what, group_title, availability_table, avoptions

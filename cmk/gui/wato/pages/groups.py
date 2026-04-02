@@ -14,7 +14,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupName, GroupSpec, GroupType
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -210,7 +210,7 @@ class ModeGroups(WatoMode, abc.ABC):
 
         self._collect_additional_data()
 
-        with table_element(self.type_name + "groups") as table:
+        with table_element(self.type_name + "groups", limit=active_config.table_row_limit) as table:
             for nr, (name, group) in enumerate(
                 sorted(self._groups.items(), key=lambda x: x[1]["alias"])
             ):

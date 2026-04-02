@@ -477,7 +477,10 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
     def _display_log(self, log: list[AuditLogStore.Entry]) -> None:
         with table_element(
-            css="data wato auditlog audit", limit=None, sortable=False, searchable=False
+            css="data wato auditlog audit",
+            limit=0,
+            sortable=False,
+            searchable=False,
         ) as table:
             for entry in log:
                 table.row()

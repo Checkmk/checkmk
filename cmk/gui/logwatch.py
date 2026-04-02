@@ -320,7 +320,9 @@ def list_logs(
     debug: bool,
 ) -> None:
     """Displays a table of logfiles"""
-    with table_element(empty_text=_("No logs found for this host.")) as table:
+    with table_element(
+        empty_text=_("No logs found for this host."), limit=active_config.table_row_limit
+    ) as table:
         for file_name in logfile_names:
             table.row()
             file_display = form_file_to_ext(file_name)

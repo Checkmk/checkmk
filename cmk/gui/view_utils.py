@@ -11,8 +11,9 @@ import re
 from collections.abc import Iterator, Mapping
 from typing import Any, Literal
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.site import SiteId
-from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
@@ -83,7 +84,7 @@ _URL_PATTERN = (
 _STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
-def determine_must_escape(config: Config, row: Row) -> bool:
+def determine_must_escape(sites_config: SiteConfigurations, row: Row) -> bool:
     """determine if we must escape the output
 
     When the row comes from a remote site the output might be malicious. We don't care if that site
@@ -96,11 +97,11 @@ def determine_must_escape(config: Config, row: Row) -> bool:
         # We have no idea if the origin site is trusted
         return True
 
-    if (siteid := row["site"]) not in config.sites:
+    if (siteid := row["site"]) not in sites_config:
         logger.warning("Unknown siteid in row: %r", siteid)
         return True
 
-    return not config.sites[row["site"]]["is_trusted"]
+    return not sites_config[row["site"]]["is_trusted"]
 
 
 def format_plugin_output(

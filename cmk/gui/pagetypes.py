@@ -1166,7 +1166,7 @@ class ListPage[T: Overridable](Page):
         *,
         deletable: bool,
     ) -> None:
-        with table_element(limit=None) as table:
+        with table_element(limit=0) as table:
             for instance in scope_instances:
                 table.row()
 

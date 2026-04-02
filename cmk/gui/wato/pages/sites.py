@@ -37,7 +37,7 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -1213,6 +1213,7 @@ class ModeDistributedMonitoring(WatoMode):
                 "sites, please do not forget to add your local monitoring site also, if "
                 "you want to display its data."
             ),
+            limit=active_config.table_row_limit,
         ) as table:
             for site_id, site in sites:
                 table.row()
@@ -1232,6 +1233,7 @@ class ModeDistributedMonitoring(WatoMode):
                 "brokers_connections",
                 _("Peer-to-peer message broker connections"),
                 empty_text=_("You have not configured any peer-to-peer connections."),
+                limit=active_config.table_row_limit,
             ) as table:
                 for conn_id, connection in connections.items():
                     table.row()
@@ -1980,7 +1982,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
             html.close_tr()
         html.close_table()
 
-        with table_element("certificate_chain", _("Certificate chain")) as table:
+        with table_element(
+            "certificate_chain", _("Certificate chain"), limit=active_config.table_row_limit
+        ) as table:
             for cert_detail in reversed(cert_details[1:]):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])

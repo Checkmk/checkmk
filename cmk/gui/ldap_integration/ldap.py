@@ -927,7 +927,9 @@ class ModeEditLDAPConnection(WatoMode):
 
             for address in connection.servers():
                 html.h3("{}: {}".format(_("Server"), address))
-                with table_element("test", searchable=False) as table:
+                with table_element(
+                    "test", searchable=False, limit=active_config.table_row_limit
+                ) as table:
                     for title, test_func in self._tests():
                         table.row()
                         try:

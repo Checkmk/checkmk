@@ -44,7 +44,7 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.totp import TOTP
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -558,7 +558,11 @@ class UserTwoFactorOverview(Page):
         html.div("", id_="webauthn_message")
         html.open_div(class_="two_factor_overview")
 
-        with table_element(sortable=False, omit_headers=not bool(totp_credentials)) as table:
+        with table_element(
+            sortable=False,
+            omit_headers=not bool(totp_credentials),
+            limit=active_config.table_row_limit,
+        ) as table:
             self._render_credentials_table_rows(request, totp_credentials, "totp", table)
             if totp_credentials and webauthn_credentials:  # render both in one table
                 self._render_credentials_table_rows(
@@ -567,13 +571,17 @@ class UserTwoFactorOverview(Page):
 
         if not (totp_credentials and webauthn_credentials):
             with table_element(
-                sortable=False, omit_headers=(not bool(webauthn_credentials))
+                sortable=False,
+                omit_headers=(not bool(webauthn_credentials)),
+                limit=active_config.table_row_limit,
             ) as table:
                 self._render_credentials_table_rows(
                     request, webauthn_credentials, "webauthn", table
                 )
 
-        with table_element(sortable=False, omit_headers=True) as table:
+        with table_element(
+            sortable=False, omit_headers=True, limit=active_config.table_row_limit
+        ) as table:
             self._render_backup_codes_table_rows(request, backup_codes, table)
 
         html.close_div()
@@ -766,7 +774,11 @@ class UserTwoFactorEnforce(Page):
         )
         html.open_div(class_="two_factor_overview")
 
-        with table_element(sortable=False, omit_headers=not bool(totp_credentials)) as table:
+        with table_element(
+            sortable=False,
+            omit_headers=not bool(totp_credentials),
+            limit=active_config.table_row_limit,
+        ) as table:
             self._render_credentials_table_rows(totp_credentials, "totp", table)
             self._render_credentials_table_rows(webauthn_credentials, "webauthn", table)
 

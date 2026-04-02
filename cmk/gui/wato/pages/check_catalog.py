@@ -358,7 +358,9 @@ def _render_manpage_list(
         return titles.get(t, t)
 
     html.h3(heading)
-    with table_element(searchable=False, sortable=False, css="check_catalog") as table:
+    with table_element(
+        searchable=False, sortable=False, css="check_catalog", limit=active_config.table_row_limit
+    ) as table:
         for entry in sorted(manpage_list, key=lambda x: x["title"]):
             if not isinstance(entry, dict):
                 continue

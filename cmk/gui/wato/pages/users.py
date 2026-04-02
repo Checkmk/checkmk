@@ -526,7 +526,12 @@ class ModeUsers(WatoMode):
         html.div("", id_="row_info")
 
         customer = customer_api()
-        with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
+        with table_element(
+            "users",
+            None,
+            empty_text=_("No users are defined yet."),
+            limit=active_config.table_row_limit,
+        ) as table:
             online_threshold = time.time() - user_online_maxage
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
                 table.row()

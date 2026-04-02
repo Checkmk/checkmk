@@ -24,7 +24,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import (
@@ -312,7 +312,9 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         self._show_table(self._store.filter_editable_entries(self._store.load_for_reading()))
 
     def _show_table(self, entries: dict[str, T]) -> None:
-        with table_element(self._mode_type.type_name(), self._table_title()) as table:
+        with table_element(
+            self._mode_type.type_name(), self._table_title(), limit=active_config.table_row_limit
+        ) as table:
             for nr, (ident, entry) in enumerate(
                 sorted(entries.items(), key=lambda e: e[1]["title"])
             ):

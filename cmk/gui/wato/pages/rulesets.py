@@ -1306,7 +1306,7 @@ class ModeEditRuleset(WatoMode):
                 ),
                 css="ruleset",
                 searchable=False,
-                limit=None,
+                limit=0,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
                 omit_update_header=True,
             ) as table:
@@ -3695,7 +3695,7 @@ class ModeUnknownRulesets(WatoMode):
                 title=None,
                 searchable=False,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
-                limit=None,
+                limit=0,
             ) as table:
                 for unknown_check_parameter_ruleset in unknown_check_parameter_rulesets:
                     table.groupheader(

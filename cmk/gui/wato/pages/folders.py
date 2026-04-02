@@ -17,7 +17,7 @@ import cmk.gui.view_utils
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpecs
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -1040,7 +1040,12 @@ class ModeFolder(WatoMode):
         )
         # Show table of hosts in this folder
         with html.form_context("hosts", method="POST"):
-            with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
+            with table_element(
+                "hosts",
+                title=_("Hosts"),
+                omit_empty_columns=True,
+                limit=active_config.table_row_limit,
+            ) as table:
                 # Compute colspan for bulk actions
                 colspan = 6
                 for attr in host_attributes.values():

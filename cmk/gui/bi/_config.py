@@ -590,7 +590,9 @@ class ModeBIPacks(ABCBIMode):
         return redirect(self.mode_url())
 
     def page(self, config: Config) -> None:
-        with table_element("bi_packs", title=_("BI Configuration Packs")) as table:
+        with table_element(
+            "bi_packs", title=_("BI Configuration Packs"), limit=active_config.table_row_limit
+        ) as table:
             for nr, pack in enumerate(sorted(self._bi_packs.packs.values(), key=lambda x: x.id)):
                 if not may_use_rules_in_pack(pack):
                     continue
@@ -972,7 +974,7 @@ class ModeBIRules(ABCBIMode):
         ]
         rules_refs.sort(key=lambda x: (x[1].properties.title, x[2][2]))
 
-        with table_element("bi_rules", title) as table:
+        with table_element("bi_rules", title, limit=active_config.table_row_limit) as table:
             for nr, (rule_id, bi_rule, (aggr_refs, rule_refs, level)) in enumerate(rules_refs):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
@@ -2268,7 +2270,9 @@ class BIModeAggregations(ABCBIMode):
 
     def _render_aggregations(self) -> None:
         customer = customer_api()
-        with table_element("bi_aggr", _("Aggregations")) as table:
+        with table_element(
+            "bi_aggr", _("Aggregations"), limit=active_config.table_row_limit
+        ) as table:
             for nr, (aggregation_id, bi_aggregation) in enumerate(
                 self.bi_pack.get_aggregations().items()
             ):
@@ -2429,7 +2433,9 @@ class ModeBIRuleTree(ABCBIMode):
     def page(self, config: Config) -> None:
         _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)
         if rule_refs == 0:
-            with table_element(sortable=False, searchable=False) as table:
+            with table_element(
+                sortable=False, searchable=False, limit=active_config.table_row_limit
+            ) as table:
                 table.row()
                 table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_rule_tree(self._rule_id, self._rule_id)

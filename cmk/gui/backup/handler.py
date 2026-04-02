@@ -601,7 +601,9 @@ class PageBackup:
     def _show_job_list(self, backup_jobs: Sequence[Job]) -> None:
         html.h3(_("Jobs"))
 
-        with table_element(sortable=False, searchable=False) as table:
+        with table_element(
+            sortable=False, searchable=False, limit=active_config.table_row_limit
+        ) as table:
             for nr, job in enumerate(backup_jobs):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
@@ -1733,7 +1735,9 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
             )
         )
 
-    with table_element(sortable=False, searchable=False) as table:
+    with table_element(
+        sortable=False, searchable=False, limit=active_config.table_row_limit
+    ) as table:
         for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
             table.cell("#", css=["narrow nowrap"])
@@ -2451,7 +2455,9 @@ class PageBackupRestore:
                 "backups are listed, remove unneeded files "
                 "at the remote target."
             )
-        with table_element(sortable=False, searchable=False) as table:
+        with table_element(
+            sortable=False, searchable=False, limit=active_config.table_row_limit
+        ) as table:
             for backup_ident, info in sorted(self._backups.backups.items()):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])

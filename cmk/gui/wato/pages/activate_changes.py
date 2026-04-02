@@ -315,7 +315,7 @@ def _change_table(
         sortable=False,
         searchable=False,
         css="changes",
-        limit=None,
+        limit=0,
         empty_text=_("Currently there are no changes to activate."),
         foldable=Foldable.FOLDABLE_STATELESS,
     ) as table:
@@ -731,6 +731,7 @@ class ModeActivateChanges(WatoMode):
             sortable=False,
             css="activation",
             foldable=Foldable.FOLDABLE_STATELESS,
+            limit=active_config.table_row_limit,
         ) as table:
             for site_id, site in sort_sites(activation_sites):
                 table.row()

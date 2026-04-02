@@ -17,7 +17,7 @@ from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.password import Password as PasswordType
 from cmk.crypto.pem import PEMDecodingError
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, request, response
@@ -153,7 +153,12 @@ class PageKeyManagement:
         raise NotImplementedError()
 
     def page(self, config: Config) -> None:
-        with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
+        with table_element(
+            title=self._table_title(),
+            searchable=False,
+            sortable=False,
+            limit=active_config.table_row_limit,
+        ) as table:
             for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])

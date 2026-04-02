@@ -20,7 +20,7 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -180,6 +180,7 @@ class ModeAnalyzeConfig(WatoMode):
                 css="data analyze_config",
                 sortable=False,
                 searchable=False,
+                limit=active_config.table_row_limit,
             ) as table:
                 for test_id, row_data in sorted(results_by_test.items(), key=lambda x: x[1].title):
                     self._show_test_row(table, test_id, row_data, site_ids)

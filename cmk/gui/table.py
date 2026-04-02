@@ -20,7 +20,6 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import auto, Enum
 from typing import Any, Final, Literal, NamedTuple
 
-from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -87,7 +86,6 @@ def table_element(
     searchable: bool = True,
     sortable: bool = True,
     foldable: Foldable = Foldable.NOT_FOLDABLE,
-    limit: None | int | Literal[False] = None,
     output_format: str = "html",
     omit_if_empty: bool = False,
     omit_empty_columns: bool = False,
@@ -98,6 +96,7 @@ def table_element(
     css: str | None = None,
     isopen: bool = True,
     *,
+    limit: int,
     action_message: str | HTML | None = None,
     action_message_type: Literal["success", "warning"] = "success",
 ) -> Iterator[Table]:
@@ -140,7 +139,7 @@ def table_element(
 #   |                                                                      |
 #   | Usage:                                                               |
 #   |                                                                      |
-#   |        with table_element() as table:                                |
+#   |        with table_element(limit=active_config.table_row_limit) as table:                                |
 #   |            table.row()                                               |
 #   |            table.cell("header", "content")                           |
 #   |                                                                      |
@@ -155,7 +154,6 @@ class Table:
         searchable: bool = True,
         sortable: bool = True,
         foldable: Foldable = Foldable.NOT_FOLDABLE,
-        limit: None | int | Literal[False] = None,
         output_format: str = "html",
         omit_if_empty: bool = False,
         omit_empty_columns: bool = False,
@@ -166,6 +164,7 @@ class Table:
         css: str | None = None,
         isopen: bool = True,
         *,
+        limit: int,
         action_message: str | HTML | None = None,
         action_message_type: Literal["success", "warning"],
     ):
@@ -177,16 +176,15 @@ class Table:
         table_id = table_id if table_id is not None else requested_file_name(request)
         assert table_id is not None
 
-        # determine row limit
-        if limit is None:
-            limit = active_config.table_row_limit
+        # determine row limit (0 means unlimited)
+        effective_limit: int | None = limit or None
         if request.get_ascii_input("limit") == "none" or output_format != "html":
-            limit = None
+            effective_limit = None
 
         self.id = table_id
         self.title = title
         self.rows: TableRows = []
-        self.limit = limit
+        self.limit = effective_limit
         self.limit_reached = False
         self.limit_hint: int | None = None
         self.headers: list[TableHeader] = []

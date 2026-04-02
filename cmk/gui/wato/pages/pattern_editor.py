@@ -258,7 +258,7 @@ class ModePatternEditor(WatoMode):
                 css="logwatch",
                 searchable=False,
                 sortable=False,
-                limit=None,
+                limit=0,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
                 omit_update_header=True,
             ) as table:

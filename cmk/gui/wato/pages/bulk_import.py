@@ -24,7 +24,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -711,7 +711,10 @@ class ModeBulkImport(WatoMode):
             num_columns = csv_bulk_import.row_length
 
             with table_element(
-                sortable=False, searchable=False, omit_headers=not csv_bulk_import.has_title_line
+                sortable=False,
+                searchable=False,
+                omit_headers=not csv_bulk_import.has_title_line,
+                limit=active_config.table_row_limit,
             ) as table:
                 # Render attribute selection fields
                 table.row()

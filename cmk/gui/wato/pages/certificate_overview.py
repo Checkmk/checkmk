@@ -17,7 +17,7 @@ from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.x509 import X509Name
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.cert_info import cert_info_registry, CertificateInfo
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -142,7 +142,9 @@ class ModeCertificateOverview(WatoMode):
         self._render_table(certificates)
 
     def _render_table(self, certificates: list[CertificateView]) -> None:
-        with table_element(sortable=True, searchable=True) as table:
+        with table_element(
+            sortable=True, searchable=True, limit=active_config.table_row_limit
+        ) as table:
             for cert in certificates:
                 table.row()
                 for title, value in cert.get_fields().items():

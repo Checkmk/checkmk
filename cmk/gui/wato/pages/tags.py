@@ -19,7 +19,7 @@ import cmk.utils.tags
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -379,6 +379,7 @@ class ModeTags(ABCTagMode):
             ),
             empty_text=_("You haven't defined any tag groups yet."),
             searchable=False,
+            limit=active_config.table_row_limit,
         ) as table:
             host_attributes = all_host_attributes(
                 host_attribute_specs, self._effective_config.get_tag_groups_by_topic()
@@ -436,6 +437,7 @@ class ModeTags(ABCTagMode):
             ),
             empty_text=_("You haven't defined any auxiliary tags."),
             searchable=True,
+            limit=active_config.table_row_limit,
         ) as table:
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 table.row()
@@ -563,7 +565,7 @@ class ModeTagUsage(ABCTagMode):
         )
 
     def _show_tag_list(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
-        with table_element("tag_usage", _("Tags")) as table:
+        with table_element("tag_usage", _("Tags"), limit=active_config.table_row_limit) as table:
             for tag_group in self._effective_config.tag_groups:
                 for tag in tag_group.tags:
                     self._show_tag_row(
@@ -634,7 +636,9 @@ class ModeTagUsage(ABCTagMode):
         html.icon_button(edit_url, _("Edit this tag group"), StaticIcon(IconNames.edit))
 
     def _show_aux_tag_list(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
-        with table_element("aux_tag_usage", _("Auxiliary tags")) as table:
+        with table_element(
+            "aux_tag_usage", _("Auxiliary tags"), limit=active_config.table_row_limit
+        ) as table:
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 self._show_aux_tag_row(
                     table, aux_tag, pprint_value=pprint_value, debug=debug, use_git=use_git

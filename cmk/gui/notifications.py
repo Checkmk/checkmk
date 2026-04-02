@@ -259,7 +259,7 @@ class ClearFailedNotificationPage(Page):
         html.footer()
 
     def _show_notification_table(self, failed_notifications: LivestatusResponse) -> None:
-        with table_element() as table:
+        with table_element(limit=active_config.table_row_limit) as table:
             header = {name: idx for idx, name in enumerate(g_columns)}
             for row in failed_notifications:
                 table.row()

@@ -2024,7 +2024,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 pack_hits += rule_stats.get(rule["id"], 0)
             rule_pack_hits[rp["id"]] = pack_hits
 
-        with table_element(css="ruleset", limit=None, title=title) as table:
+        with table_element(css="ruleset", limit=0, title=title) as table:
             for nr, rule_pack in enumerate(self._rule_packs):
                 id_ = rule_pack["id"]
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
@@ -2484,7 +2484,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         facilities = dict(_deref(syslog_facilities))
 
         # Show content of the rule pack
-        with table_element(title=_("Rules"), css="ruleset", limit=None) as table:
+        with table_element(title=_("Rules"), css="ruleset", limit=0) as table:
             have_match = False
             hits = _get_rule_stats_from_ec()
             for nr, rule in enumerate(rules):
@@ -3472,7 +3472,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 self._show_mib_table(mib_path, title, deletable)
 
     def _show_mib_table(self, path: Path, title: str, deletable: bool) -> None:
-        with table_element("mibs_%s" % path, title, searchable=False) as table:
+        with table_element(
+            "mibs_%s" % path, title, searchable=False, limit=active_config.table_row_limit
+        ) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
                 table.row()
 

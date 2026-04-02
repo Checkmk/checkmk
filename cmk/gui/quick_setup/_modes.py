@@ -371,9 +371,9 @@ class ModeEditConfigurationBundles(WatoMode):
             title="Configurations",
             searchable=False,
             sortable=False,
-            limit=None,
             foldable=Foldable.FOLDABLE_SAVE_STATE,
             omit_update_header=True,
+            limit=0,
         ) as table:
             for index, (bundle_id, bundle) in enumerate(sorted(bundles.items())):
                 if not valid_special_agent_bundle(bundle):

@@ -651,7 +651,11 @@ def render_werks_table(request: Request, werk_table_options: WerkTableOptions) -
     groups = itertools.groupby(list_of_werks, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):
         with table_element(
-            title=group_title, limit=None, searchable=False, sortable=False, css="werks"
+            title=group_title,
+            limit=0,
+            searchable=False,
+            sortable=False,
+            css="werks",
         ) as table:
             for werk in werks:
                 number_of_werks += 1

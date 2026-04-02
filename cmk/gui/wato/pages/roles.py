@@ -20,7 +20,7 @@ from collections.abc import Collection
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -143,7 +143,7 @@ class ModeRoles(WatoMode):
         return redirect(self.mode_url())
 
     def page(self, config: Config) -> None:
-        with table_element("roles") as table:
+        with table_element("roles", limit=active_config.table_row_limit) as table:
             users = userdb.load_users()
             for nr, role in enumerate(
                 sorted(userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name))
@@ -515,7 +515,7 @@ class ModeRoleMatrix(WatoMode):
                 section.name,
                 section.title,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
-                limit=max(200, config.table_row_limit),
+                limit=max(200, active_config.table_row_limit),
             ) as table:
                 permission_list = permission_registry.get_sorted_permissions(section)
 

@@ -528,7 +528,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
         all_users = userdb.load_users()
         title = self._table_title(show_title, profilemode, userid)
-        with table_element(title=title, limit=None) as table:
+        with table_element(title=title, limit=0) as table:
             if analyse:
                 analyse_rules, _analyse_plugins = analyse
 
@@ -1189,7 +1189,11 @@ class ModeNotifications(ABCNotificationsMode):
         )
 
     def _show_resulting_notifications(self, result: NotifyAnalysisInfo) -> None:
-        with table_element(table_id="plugins", title=_("Predicted notifications")) as table:
+        with table_element(
+            table_id="plugins",
+            title=_("Predicted notifications"),
+            limit=active_config.table_row_limit,
+        ) as table:
             for contact, plugin, parameters, bulk in result[1]:
                 table.row()
                 if contact.startswith("mailto:"):
@@ -1568,7 +1572,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
             return False
 
         title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
-        with table_element(title=title) as table:
+        with table_element(title=title, limit=active_config.table_row_limit) as table:
             for directory, age, interval, timeperiod, maxcount, uuids in bulks:
                 dirparts = directory.split("/")
                 contact = dirparts[-3]
@@ -1607,6 +1611,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         with table_element(
             table_id="backlog",
             title=_("Analysis: Recent notifications"),
+            limit=active_config.table_row_limit,
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
@@ -2078,6 +2083,7 @@ class ModeTestNotifications(ModeNotifications):
         with table_element(
             table_id="notification_test",
             title=_("Analysis: Test notifications"),
+            limit=active_config.table_row_limit,
         ) as table:
             table.row()
             table.cell("&nbsp;", css=["buttons"])
@@ -4186,7 +4192,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
     ) -> None:
         spec = self._spec()
         method_name = self._method_name()
-        with table_element(title=_("Parameters"), limit=None) as table:
+        with table_element(title=_("Parameters"), limit=0) as table:
             for nr, (parameter_id, parameter) in enumerate(parameters.items()):
                 table.row()
 

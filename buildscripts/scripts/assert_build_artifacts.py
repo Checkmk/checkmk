@@ -35,6 +35,8 @@ from cmk.ccc.version import Version
 from tests.testlib.package_manager import ABCPackageManager, code_name
 from tests.testlib.version import CMKEdition
 
+HTTP_STATUS_OK = 200
+
 MetaFileExtension = Literal["json", "csv"]
 
 DOWNLOAD_SERVER_BASE_URL = "https://download.checkmk.com/checkmk"
@@ -145,7 +147,7 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
             auth=(credentials.username, credentials.password),
             timeout=10,
         ).status_code
-        != 200
+        != HTTP_STATUS_OK
     ):
         sys.stdout.write(" MISSING\n")
         return False

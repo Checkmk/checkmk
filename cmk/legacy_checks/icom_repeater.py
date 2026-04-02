@@ -3,15 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import contains, SNMPTree
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer untile we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+)
 from cmk.legacy_includes.temperature import check_temperature
-
-check_info = {}
 
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
@@ -25,8 +36,8 @@ check_info = {}
 #   '----------------------------------------------------------------------'
 
 
-def parse_icom_repeater(string_table):
-    parsed: dict[str, int | dict | float] = {}
+def parse_icom_repeater(string_table: list[list[str]]) -> dict[str, Any]:
+    parsed: dict[str, Any] = {}
     for line in string_table:
         if line[1] == "Temperature":
             parsed["temp"] = float(line[2][:-1])
@@ -93,21 +104,21 @@ def parse_icom_repeater(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def discover_icom_repeater_ps_volt(parsed):
-    if "ps_voltage" in parsed:
-        yield None, {}
+def discover_icom_repeater_ps_volt(section: Any) -> DiscoveryResult:
+    if "ps_voltage" in section:
+        yield Service()
 
 
-def check_icom_repeater_ps_volt(_no_item, params, parsed):
-    return check_levels(
-        parsed["ps_voltage"],
+def check_icom_repeater_ps_volt(params: Mapping[str, Any], section: Any) -> CheckResult:
+    yield from check_levels(
+        section["ps_voltage"],
         "voltage",
         params["levels_upper"] + params["levels_lower"],
         human_readable_func=lambda x: f"{x:.1f} V",
     )
 
 
-check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
+check_plugin_icom_repeater_ps_volt = CheckPlugin(
     name="icom_repeater_ps_volt",
     service_name="Power Supply Voltage",
     sections=["icom_repeater"],
@@ -133,20 +144,22 @@ check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_icom_repeater_pll_volt(parsed):
-    if "rx_pll_lock_voltage" in parsed:
-        yield "RX", {}
-    if "tx_pll_lock_voltage" in parsed:
-        yield "TX", {}
+def discover_icom_repeater_pll_volt(section: Any) -> DiscoveryResult:
+    if "rx_pll_lock_voltage" in section:
+        yield Service(item="RX")
+    if "tx_pll_lock_voltage" in section:
+        yield Service(item="TX")
 
 
-def check_icom_repeater_pll_volt(item, params, parsed):
-    voltage = parsed[item.lower() + "_pll_lock_voltage"]
-    freq = parsed["repeater_frequency"][item.lower()]
+def check_icom_repeater_pll_volt(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+    voltage = section[item.lower() + "_pll_lock_voltage"]
+    freq = section["repeater_frequency"][item.lower()]
     paramlist = params.get(item.lower(), None)
 
     if not paramlist:
-        return 1, "Please specify parameters for PLL voltage", [("voltage", voltage)]
+        yield Result(state=State.WARN, summary="Please specify parameters for PLL voltage")
+        yield Metric("voltage", voltage)
+        return
 
     i = 0
     while i < len(paramlist):
@@ -154,7 +167,7 @@ def check_icom_repeater_pll_volt(item, params, parsed):
             warn_lower, crit_lower, warn, crit = paramlist[i - 1][1:]
 
     infotext = "%.1f V" % voltage
-    levelstext = f" (warn/crit below {warn_lower:.1f}/{crit_lower:.1f} V and at or above {warn:.1f}/{crit:.1f} V)"
+    levelstext = f" (warn/crit below {warn_lower:.1f}/{crit_lower:.1f} V and at or above {warn:.1f}/{crit:.1f} V)"  # type: ignore[possibly-undefined]  # pre-existing bug
     if voltage < crit_lower or voltage >= crit:
         status = 2
     elif voltage < warn_lower or voltage >= warn:
@@ -164,18 +177,19 @@ def check_icom_repeater_pll_volt(item, params, parsed):
     if status:
         infotext += levelstext
 
-    perfdata = [("voltage", voltage, warn, crit, warn_lower, crit_lower)]
+    yield Result(state=State(status), summary=infotext)
+    yield Metric("voltage", voltage, levels=(warn, crit))
+    return
 
-    return status, infotext, perfdata
 
-
-check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
+check_plugin_icom_repeater_pll_volt = CheckPlugin(
     name="icom_repeater_pll_volt",
     service_name="%s PLL Lock Voltage",
     sections=["icom_repeater"],
     discovery_function=discover_icom_repeater_pll_volt,
     check_function=check_icom_repeater_pll_volt,
     check_ruleset_name="pll_lock_voltage",
+    check_default_parameters={},
 )
 
 # .
@@ -191,23 +205,22 @@ check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_icom_repeater_temp(parsed):
-    if "temp" in parsed:
-        return [("System", {})]
-    return []
+def discover_icom_repeater_temp(section: Any) -> DiscoveryResult:
+    if "temp" in section:
+        yield Service(item="System")
 
 
-def check_icom_repeater_temp(_no_item, params, parsed):
-    return check_temperature(
-        parsed["temp"],
-        params,
+def check_icom_repeater_temp(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+    yield from check_temperature(  # type: ignore[misc]
+        section["temp"],
+        params,  # type: ignore[arg-type]
         "icom_repeater_temp",
-        dev_unit=parsed["temp_devunit"],
-        dev_status=parsed["temp_devstatus"],
+        dev_unit=section["temp_devunit"],
+        dev_status=section["temp_devstatus"],
     )
 
 
-check_info["icom_repeater.temp"] = LegacyCheckDefinition(
+check_plugin_icom_repeater_temp = CheckPlugin(
     name="icom_repeater_temp",
     service_name="Temperature %s",
     sections=["icom_repeater"],
@@ -233,25 +246,24 @@ check_info["icom_repeater.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_icom_repeater(parsed):
-    if parsed:
-        return [(None, None)]
-    return []
+def discover_icom_repeater(section: Any) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_icom_repeater(_no_item, _no_params, parsed):
-    yield 0, "ESN Number: %s" % parsed["esnno"]
+def check_icom_repeater(section: Any) -> CheckResult:
+    yield Result(state=State.OK, summary="ESN Number: %s" % section["esnno"])
 
-    infotext = "Repeater operation status: %s" % parsed["repop"]
-    if parsed["repop"] == "off":
-        yield 2, infotext
-    elif parsed["repop"] == "on":
-        yield 0, infotext
+    infotext = "Repeater operation status: %s" % section["repop"]
+    if section["repop"] == "off":
+        yield Result(state=State.CRIT, summary=infotext)
+    elif section["repop"] == "on":
+        yield Result(state=State.OK, summary=infotext)
     else:
-        yield 3, "Repeater operation status unknown"
+        yield Result(state=State.UNKNOWN, summary="Repeater operation status unknown")
 
 
-check_info["icom_repeater"] = LegacyCheckDefinition(
+snmp_section_icom_repeater = SimpleSNMPSection(
     name="icom_repeater",
     detect=contains(".1.3.6.1.2.1.1.1.0", "fr5000"),
     fetch=SNMPTree(
@@ -259,6 +271,11 @@ check_info["icom_repeater"] = LegacyCheckDefinition(
         oids=["1", "2", "101"],
     ),
     parse_function=parse_icom_repeater,
+)
+
+
+check_plugin_icom_repeater = CheckPlugin(
+    name="icom_repeater",
     service_name="Repeater Info",
     discovery_function=discover_icom_repeater,
     check_function=check_icom_repeater,

@@ -210,13 +210,12 @@ impl<'a> ClientBuilder<'a> {
             port,
         };
         log::info!(
-            "Local connection by port `{}:{}`",
+            "Local connection by port `{}:{:?}`",
             &local_connection.host,
             &local_connection
                 .port
                 .as_ref()
                 .map(|p| p.value().to_string())
-                .unwrap_or_default()
         );
         self.client_connection = Some(ClientConnection::Local(local_connection));
         self
@@ -332,12 +331,19 @@ pub async fn connect_custom_endpoint(
             conn.timeout()
         )
     };
-    let use_port = if some_port.is_some() {
+    let mut use_port = if some_port.is_some() {
         some_port
     } else if endpoint.port().is_some() {
         endpoint.port().clone()
     } else {
         Some(Port(defaults::STANDARD_PORT))
+    };
+    if use_port == Some(Port::from(0)) {
+        log::warn!(
+            "Port 0 is not valid for connection, switch to default port {}",
+            defaults::STANDARD_PORT,
+        );
+        use_port = Some(Port(defaults::STANDARD_PORT))
     };
     let client = match auth.auth_type() {
         AuthType::SqlServer | AuthType::Windows => {

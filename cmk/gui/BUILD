@@ -582,6 +582,106 @@ py_library(
     ],
 )
 
+py_library(
+    name = "page_state",
+    srcs = ["page_state.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":type_defs",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/htmllib:type_defs",
+        "//cmk/gui/utils:html",
+    ],
+)
+
+py_library(
+    name = "page_menu",
+    srcs = ["page_menu.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":breadcrumb",
+        ":http",
+        ":i18n",
+        ":logged_in",
+        ":type_defs",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:escaping",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:loading_transition",
+        "//cmk/gui/utils:output_funnel",
+        "//cmk/gui/utils:popups",
+        "//cmk/gui/utils:selection_id",
+        "//cmk/gui/utils:urls",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+    ],
+)
+
+py_library(
+    name = "main_menu",
+    srcs = ["main_menu.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":main_menu_types",
+        "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
+    name = "top_heading",
+    srcs = ["top_heading.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":breadcrumb",
+        ":http",
+        ":i18n",
+        ":page_menu",
+        ":page_state",
+        ":type_defs",
+        "//cmk/gui/htmllib:debug_vars",
+        "//cmk/gui/htmllib:foldable_container",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:urls",
+        "//cmk/utils",
+        "//packages/cmk-licensing",
+    ],
+)
+
+py_library(
+    name = "header",
+    srcs = ["header.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":breadcrumb",
+        ":page_menu",
+        ":top_heading",
+        "//cmk/gui/htmllib:html",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -611,11 +711,15 @@ py_library(
             "job_scheduler_client.py",
             "legacy_plugins.py",
             "logged_in.py",
+            "header.py",
             "log.py",
+            "main_menu.py",
             "main_menu_types.py",
             "ntop.py",
             "num_split.py",
+            "page_menu.py",
             "page_menu_entry.py",
+            "page_state.py",
             "pdf.py",
             "permissions.py",
             "pseudo_users.py",
@@ -623,6 +727,7 @@ py_library(
             "single_global_setting.py",
             "site_config.py",
             "theme/**/*.py",
+            "top_heading.py",
             "type_defs.py",
             "unit_formatter.py",
             "user_connection_config_types.py",
@@ -656,6 +761,7 @@ py_library(
         ":flask_app",
         ":global_config",
         ":groups",
+        ":header",
         ":hooks",
         ":http",
         ":i18n",
@@ -665,10 +771,13 @@ py_library(
         ":legacy_plugins",
         ":log",
         ":logged_in",
+        ":main_menu",
         ":main_menu_types",
         ":ntop",
         ":num_split",
+        ":page_menu",
         ":page_menu_entry",
+        ":page_state",
         ":pdf",
         ":permissions",
         ":pseudo_users",
@@ -676,6 +785,7 @@ py_library(
         ":single_global_setting",
         ":site_config",
         ":theme",
+        ":top_heading",
         ":type_defs",
         ":unit_formatter",
         ":user_connection_config_types",

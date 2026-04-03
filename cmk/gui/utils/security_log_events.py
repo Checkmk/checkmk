@@ -65,6 +65,27 @@ class AuthenticationSuccessEvent(SecurityEvent):
 
 
 @dataclass
+class AuthenticationInitiatedEvent(SecurityEvent):
+    """Indicates an authentication flow has been initiated"""
+
+    def __init__(
+        self,
+        *,
+        auth_method: AuthType | Literal["token"],
+        remote_ip: str | None,
+    ) -> None:
+        super().__init__(
+            "authentication initiated",
+            {
+                "method": auth_method,
+                "user": "Unknown user",
+                "remote_ip": remote_ip,
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
 class TwoFAFailureEvent(SecurityEvent):
     """Indicates a failed 2FA attempt"""
 

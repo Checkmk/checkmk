@@ -1,6 +1,6 @@
 ---
 name: readme
-description: Creates and updates README.md files for packages in the repository
+description: Use when creating or updating a README.md for any package under packages/, non-free/packages/, omd/packages/, or omd/non-free/. Also trigger when the user mentions "package documentation" or asks to document a Checkmk package.
 ---
 
 # Package README Skill
@@ -44,7 +44,7 @@ If a package does not provide the necessary information to write a README, ask t
   - Assume a general understanding overall project; broad, but not deep.
   - Don't state the obvious. For larger packages, give a high-level description of the internal structure, but skip trivial details; especially don't mention single files.
 - Focus on the cheat-sheet level information that developers might need to look up frequently.
-- Use puml diagrams where appropriate
+- Use puml diagrams for non-trivial data flows, component interactions, or request lifecycles; skip for simple packages
 - Use one sentence per line.
 
 ## Workflow
@@ -55,11 +55,13 @@ Gather context by reading key files in the package directory:
 
 - `BUILD` — Bazel build targets, test targets, visibility
 - `OWNERS` — owning team (if present)
-- `run` script — developer convenience commands
+- `run` script — read to understand available commands, then derive equivalent Bazel commands for the README; do not recommend `./run` in the output
 - Source directories (`cmk/`, `src/`, `lib/`) — public modules, main entry points
 - `tests/` — test structure and coverage areas
 - Existing `README.md` — content to preserve or improve
 - `.f12` / `ci.json` / `setup.cfg` — deployment and CI hints
+- `pyproject.toml` — package metadata and dependencies; read for context but do not repeat in the README what is already clear from this file
+- `git log --oneline packages/<name>` — scan recent commits to identify new features or deprecations worth noting
 - Consider whether the package is a library, CLI tool, server, plugin, framework component or a wrapper for packaging
 
 #### Embedded context
@@ -78,7 +80,7 @@ as an HTML comment starting with `<!-- CONTEXT` at the bottom of the file.
 
 ### Step 2: Draft the README
 
-Write the README following the structure and quality guidelines below.
+Plan the content first: decide which sections apply, which files contain the key information, and how to structure the narrative. Then write the README following the structure and quality guidelines below.
 
 When updating an existing README:
 
@@ -180,7 +182,7 @@ Common pitfalls, known issues, or frequently asked questions. Only include this 
 - **Use real paths**: All file paths, module names, and import paths must match the actual codebase
 - **Keep it current**: When updating, remove outdated information rather than appending contradictions
 - **Write for the team**: The audience is Checkmk developers — assume the following:
-  - familiarity with Bazel, but little knowledge
+  - familiarity with Bazel generally, but not with this package's specific Bazel targets
   - knowledge of programming language (most likely Python) used in the package
   - the repo structure, but not with this specific package
 

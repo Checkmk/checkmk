@@ -1,5 +1,4 @@
 pluggy<1.6.0  # test-unit target fails with some weird constraint error CMK-24026
-pytest<8.4 # breaking changes with pytest-playwright CMK-24472
 marshmallow<4 # breaking changes CMK-25251
 datamodel-code-generator==0.42.0 #CMK-29509
 mypy-protobuf==3.7.0  # CMK-28939

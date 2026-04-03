@@ -3987,6 +3987,7 @@ pygments==2.19.2 \
     #   accessible-pygments
     #   exchangelib
     #   furo
+    #   pytest
     #   readme-renderer
     #   rich
     #   sphinx
@@ -4228,11 +4229,10 @@ pyspnego==0.12.0 \
     # via
     #   -c requirements.txt
     #   requests-ntlm
-pytest==8.3.5 \
-    --hash=sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820 \
-    --hash=sha256:f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845
+pytest==8.4.2 \
+    --hash=sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01 \
+    --hash=sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
     #   meraki

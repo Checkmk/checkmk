@@ -772,6 +772,26 @@ py_library(
     ],
 )
 
+py_library(
+    name = "forms",
+    srcs = ["forms.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":http",
+        ":logged_in",
+        ":theme",
+        "//cmk/gui/htmllib:foldable_container",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:escaping",
+        "//cmk/gui/utils:html",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -791,6 +811,7 @@ py_library(
             "features.py",
             "figures.py",
             "flask_app.py",
+            "forms.py",
             "global_config.py",
             "groups.py",
             "hooks.py",
@@ -853,6 +874,7 @@ py_library(
         ":features",
         ":figures",
         ":flask_app",
+        ":forms",
         ":global_config",
         ":groups",
         ":header",

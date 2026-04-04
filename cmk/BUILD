@@ -400,6 +400,7 @@ py_wheel(
         "//cmk/gui:features",
         "//cmk/gui:figures",
         "//cmk/gui:flask_app",
+        "//cmk/gui:forms",
         "//cmk/gui:global_config",
         "//cmk/gui:groups",
         "//cmk/gui:header",

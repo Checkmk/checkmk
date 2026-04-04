@@ -7573,6 +7573,10 @@ msgid "Ascending"
 msgstr "Ascendant"
 
 #, fuzzy
+msgid "Ask (in the quick activation slideout)"
+msgstr "Activation automatique"
+
+#, fuzzy
 msgid "Ask Checkmk AI"
 msgstr "Agent de contrôle"
 
@@ -19005,6 +19009,11 @@ msgid ""
 "can especially specify the UID/GID as a security measure, but please be "
 "aware that the agent installation might remain in an unusable state when the "
 "agent user installation script fails."
+msgstr ""
+
+msgid ""
+"Decide whether to show the quick activation slideout, the full page view or "
+"being asked every time."
 msgstr ""
 
 #, python-format
@@ -36723,6 +36732,10 @@ msgid "Invalid URL scheme. Must be one of: %s"
 msgstr "Schéma d'URL non valide. Doit être l'un de : %s"
 
 msgid "Invalid action"
+msgstr "Action non valide"
+
+#, fuzzy, python-format
+msgid "Invalid action: %s"
 msgstr "Action non valide"
 
 #, fuzzy
@@ -54885,7 +54898,7 @@ msgid "Quick Setup"
 msgstr "Installation rapide"
 
 #, fuzzy
-msgid "Quick activation"
+msgid "Quick activation slideout"
 msgstr "Activation automatique"
 
 msgid "Quick search"
@@ -59092,6 +59105,10 @@ msgstr "Sauvegarder la réponse"
 msgid "Save this host and go to"
 msgstr "Sauvegardez cet hôte et allez à"
 
+#, fuzzy
+msgid "Save without version change"
+msgstr "Ne pas activer les changements"
+
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
@@ -62151,10 +62168,6 @@ msgstr "Montrer l'épingle"
 
 msgid "Show the service problems contained in this branch"
 msgstr "Montrez les problèmes de service contenus dans cette branche"
-
-msgid ""
-"Show the slideout for activating changes or show the full page view instead."
-msgstr ""
 
 msgid "Show this attribute in host tables of the setup menu"
 msgstr "Afficher cet attribut dans les tables d'hôtes du menu de configuration"
@@ -70781,6 +70794,11 @@ msgid "The package is now enabled, but not active on this site:"
 msgstr ""
 "Le paquet est maintenant activé, mais n'a pas pu être installé sur ce site : "
 "%s"
+
+msgid ""
+"The package was modified without a version change. Please confirm this "
+"action after clicking 'Save'."
+msgstr ""
 
 msgid "The pager address is optional "
 msgstr "L'adresse du pager est facultative "
@@ -89220,6 +89238,14 @@ msgstr "Hier"
 msgid "You already have an element with the ID <b>%s</b>"
 msgstr "Vous avez déjà un élément avec l'ID <b>%s</b>"
 
+#, python-format
+msgid ""
+"You are about to modify the package <b>%s</b> without changing the version "
+"number (<b>%s</b>). However you changed the metadata. This may lead to "
+"unexpected behavior when distributing or updating the package. Consider "
+"increasing the version number."
+msgstr ""
+
 msgid "You are analysing this notification"
 msgstr "Vous analysez cette notification"
 
@@ -96744,6 +96770,12 @@ msgstr "Adresse IP de l'hôte"
 #, fuzzy
 msgid "Unexpected form data shape."
 msgstr "État du mode attendu."
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration when completing the setup. However, you may still need to "
+"activate them for them to take effect."
+msgstr ""
 
 msgid "Run the installation script"
 msgstr ""

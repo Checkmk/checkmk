@@ -7514,6 +7514,10 @@ msgid "Ascending"
 msgstr "Oplopend"
 
 #, fuzzy
+msgid "Ask (in the quick activation slideout)"
+msgstr "Automatische activering"
+
+#, fuzzy
 msgid "Ask Checkmk AI"
 msgstr "Checkmk agent"
 
@@ -18868,6 +18872,11 @@ msgid ""
 "can especially specify the UID/GID as a security measure, but please be "
 "aware that the agent installation might remain in an unusable state when the "
 "agent user installation script fails."
+msgstr ""
+
+msgid ""
+"Decide whether to show the quick activation slideout, the full page view or "
+"being asked every time."
 msgstr ""
 
 #, python-format
@@ -36415,6 +36424,10 @@ msgid "Invalid URL scheme. Must be one of: %s"
 msgstr "Ongeldig URL-schema. Moet een van zijn: %s"
 
 msgid "Invalid action"
+msgstr "Ongeldige actie"
+
+#, fuzzy, python-format
+msgid "Invalid action: %s"
 msgstr "Ongeldige actie"
 
 #, fuzzy
@@ -54446,7 +54459,7 @@ msgid "Quick Setup"
 msgstr "Snelle installatie"
 
 #, fuzzy
-msgid "Quick activation"
+msgid "Quick activation slideout"
 msgstr "Automatische activering"
 
 msgid "Quick search"
@@ -58602,6 +58615,10 @@ msgstr "Reactie opslaan"
 msgid "Save this host and go to"
 msgstr "Sla deze host op en ga naar"
 
+#, fuzzy
+msgid "Save without version change"
+msgstr "Veranderingen niet activeren"
+
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
@@ -61628,10 +61645,6 @@ msgstr "Toon de speld"
 
 msgid "Show the service problems contained in this branch"
 msgstr "Toon de dienstproblemen in deze tak"
-
-msgid ""
-"Show the slideout for activating changes or show the full page view instead."
-msgstr ""
 
 msgid "Show this attribute in host tables of the setup menu"
 msgstr "Toon dit attribuut in host tabellen van het setup menu"
@@ -70181,6 +70194,11 @@ msgid "The package is now enabled, but not active on this site:"
 msgstr ""
 "Het pakket is nu ingeschakeld, maar kon niet worden geïnstalleerd op deze "
 "site: %s"
+
+msgid ""
+"The package was modified without a version change. Please confirm this "
+"action after clicking 'Save'."
+msgstr ""
 
 msgid "The pager address is optional "
 msgstr "Het pager adres is optioneel "
@@ -88436,6 +88454,14 @@ msgstr "Gisteren"
 msgid "You already have an element with the ID <b>%s</b>"
 msgstr "U heeft al een element met de ID <b>%s</b>"
 
+#, python-format
+msgid ""
+"You are about to modify the package <b>%s</b> without changing the version "
+"number (<b>%s</b>). However you changed the metadata. This may lead to "
+"unexpected behavior when distributing or updating the package. Consider "
+"increasing the version number."
+msgstr ""
+
 msgid "You are analysing this notification"
 msgstr "U analyseert deze kennisgeving"
 
@@ -95901,6 +95927,12 @@ msgstr "IP-adres van gastheer"
 #, fuzzy
 msgid "Unexpected form data shape."
 msgstr "Verwachte modus status."
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration when completing the setup. However, you may still need to "
+"activate them for them to take effect."
+msgstr ""
 
 msgid "Run the installation script"
 msgstr ""

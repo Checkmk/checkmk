@@ -7438,6 +7438,10 @@ msgid "Ascending"
 msgstr "Ascendente"
 
 #, fuzzy
+msgid "Ask (in the quick activation slideout)"
+msgstr "Attivazione automatica"
+
+#, fuzzy
 msgid "Ask Checkmk AI"
 msgstr "Agente Checkmk"
 
@@ -18723,6 +18727,11 @@ msgid ""
 "can especially specify the UID/GID as a security measure, but please be "
 "aware that the agent installation might remain in an unusable state when the "
 "agent user installation script fails."
+msgstr ""
+
+msgid ""
+"Decide whether to show the quick activation slideout, the full page view or "
+"being asked every time."
 msgstr ""
 
 #, python-format
@@ -36282,6 +36291,10 @@ msgid "Invalid URL scheme. Must be one of: %s"
 msgstr "Schema URL non valido. Deve essere uno di: %s"
 
 msgid "Invalid action"
+msgstr "Azione non valida"
+
+#, fuzzy, python-format
+msgid "Invalid action: %s"
 msgstr "Azione non valida"
 
 msgid "Invalid activation_id"
@@ -54233,7 +54246,7 @@ msgid "Quick Setup"
 msgstr "Impostazione rapida"
 
 #, fuzzy
-msgid "Quick activation"
+msgid "Quick activation slideout"
 msgstr "Attivazione automatica"
 
 msgid "Quick search"
@@ -58389,6 +58402,10 @@ msgstr "Salva la risposta"
 msgid "Save this host and go to"
 msgstr "Salva questo host e vai a"
 
+#, fuzzy
+msgid "Save without version change"
+msgstr "Non attivare le modifiche"
+
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
@@ -61392,10 +61409,6 @@ msgstr "Mostra il perno"
 
 msgid "Show the service problems contained in this branch"
 msgstr "Mostra i problemi di servizio contenuti in questo ramo"
-
-msgid ""
-"Show the slideout for activating changes or show the full page view instead."
-msgstr ""
 
 msgid "Show this attribute in host tables of the setup menu"
 msgstr ""
@@ -69948,6 +69961,11 @@ msgid "The package is now enabled, but not active on this site:"
 msgstr ""
 "Il pacchetto è ora abilitato, ma non è stato possibile installarlo su questo "
 "sito: %s"
+
+msgid ""
+"The package was modified without a version change. Please confirm this "
+"action after clicking 'Save'."
+msgstr ""
 
 msgid "The pager address is optional "
 msgstr "L'indirizzo del cercapersone è opzionale "
@@ -88147,6 +88165,14 @@ msgstr "Ieri"
 msgid "You already have an element with the ID <b>%s</b>"
 msgstr "Hai già un elemento con l'ID <b>%s</b>"
 
+#, python-format
+msgid ""
+"You are about to modify the package <b>%s</b> without changing the version "
+"number (<b>%s</b>). However you changed the metadata. This may lead to "
+"unexpected behavior when distributing or updating the package. Consider "
+"increasing the version number."
+msgstr ""
+
 msgid "You are analysing this notification"
 msgstr "Stai analizzando questa notifica"
 
@@ -95597,6 +95623,12 @@ msgstr "Indirizzo IP dell'host"
 #, fuzzy
 msgid "Unexpected form data shape."
 msgstr "Stato di modalità previsto."
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration when completing the setup. However, you may still need to "
+"activate them for them to take effect."
+msgstr ""
 
 msgid "Run the installation script"
 msgstr ""

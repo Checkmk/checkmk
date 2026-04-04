@@ -7528,6 +7528,10 @@ msgid "Ascending"
 msgstr "Ascendant"
 
 #, fuzzy
+msgid "Ask (in the quick activation slideout)"
+msgstr "Activare automată"
+
+#, fuzzy
 msgid "Ask Checkmk AI"
 msgstr "Agent Checkmk"
 
@@ -18875,6 +18879,11 @@ msgid ""
 "can especially specify the UID/GID as a security measure, but please be "
 "aware that the agent installation might remain in an unusable state when the "
 "agent user installation script fails."
+msgstr ""
+
+msgid ""
+"Decide whether to show the quick activation slideout, the full page view or "
+"being asked every time."
 msgstr ""
 
 #, python-format
@@ -36516,6 +36525,10 @@ msgid "Invalid URL scheme. Must be one of: %s"
 msgstr "Schemă URL invalidă. Trebuie să fie una dintre următoarele: %s"
 
 msgid "Invalid action"
+msgstr "Acțiune invalidă"
+
+#, fuzzy, python-format
+msgid "Invalid action: %s"
 msgstr "Acțiune invalidă"
 
 msgid "Invalid activation_id"
@@ -54524,7 +54537,7 @@ msgid "Quick Setup"
 msgstr "Configurare rapidă"
 
 #, fuzzy
-msgid "Quick activation"
+msgid "Quick activation slideout"
 msgstr "Activare automată"
 
 msgid "Quick search"
@@ -58680,6 +58693,10 @@ msgstr "Salvați răspunsul"
 msgid "Save this host and go to"
 msgstr "Salvați această gazdă și mergeți la"
 
+#, fuzzy
+msgid "Save without version change"
+msgstr "Nu activați modificările"
+
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
@@ -61735,10 +61752,6 @@ msgstr "Afișați știftul"
 
 msgid "Show the service problems contained in this branch"
 msgstr "Arătați problemele de serviciu conținute în această ramură"
-
-msgid ""
-"Show the slideout for activating changes or show the full page view instead."
-msgstr ""
 
 msgid "Show this attribute in host tables of the setup menu"
 msgstr "Afișarea acestui atribut în tabelele gazdă din meniul de configurare"
@@ -70308,6 +70321,11 @@ msgstr ""
 msgid "The package is now enabled, but not active on this site:"
 msgstr ""
 "Pachetul este acum activat, dar nu a putut fi instalat pe acest site: %s."
+
+msgid ""
+"The package was modified without a version change. Please confirm this "
+"action after clicking 'Save'."
+msgstr ""
 
 msgid "The pager address is optional "
 msgstr "Adresa pagerului este opțională "
@@ -88563,6 +88581,14 @@ msgstr "Ieri"
 msgid "You already have an element with the ID <b>%s</b>"
 msgstr "Aveți deja un element cu ID-ul <b>%s</b>."
 
+#, python-format
+msgid ""
+"You are about to modify the package <b>%s</b> without changing the version "
+"number (<b>%s</b>). However you changed the metadata. This may lead to "
+"unexpected behavior when distributing or updating the package. Consider "
+"increasing the version number."
+msgstr ""
+
 msgid "You are analysing this notification"
 msgstr "Analizați această notificare"
 
@@ -96053,6 +96079,12 @@ msgstr "Adresa IP a gazdei"
 #, fuzzy
 msgid "Unexpected form data shape."
 msgstr "Starea modului așteptat."
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration when completing the setup. However, you may still need to "
+"activate them for them to take effect."
+msgstr ""
 
 msgid "Run the installation script"
 msgstr ""

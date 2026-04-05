@@ -204,7 +204,6 @@ export function generateUclApiPlugin(): Plugin {
     },
 
     generateBundle() {
-      // Combined JSON for dev docs — downloadable as a Lovable knowledge attachment
       this.emitFile({
         type: 'asset',
         fileName: 'api/ucl-components.json',

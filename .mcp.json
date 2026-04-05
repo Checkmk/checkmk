@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ucl": {
+      "command": "bazel",
+      "args": ["run", "//packages/cmk-frontend-vue:ucl-mcp-server"]
+    }
+  }
+}

@@ -117,6 +117,7 @@ CHECKER = {
     ".py": Checker(previous_lines=["#!/usr/bin/env python3"], remove_prefix="# "),
     ".ts": Checker(previous_lines=["/**"], remove_prefix=" * ", next_lines=[" */"]),
     ".js": Checker(previous_lines=["/**"], remove_prefix=" * ", next_lines=[" */"]),
+    ".mjs": Checker(previous_lines=["/**"], remove_prefix=" * ", next_lines=[" */"]),
     ".sh": Checker(omit_start_lines=1, remove_prefix="# "),
     ".vue": Checker(previous_lines=["<!--"], next_lines=["-->"]),
     ".css": Checker(previous_lines=["/**"], remove_prefix=" * ", next_lines=[" */"]),

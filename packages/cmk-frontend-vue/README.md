@@ -75,6 +75,26 @@ The hosted UI component library is built from the master branch daily. It can al
 be manually deployed by triggering the "Build and deploy ui-component-library"
 jenkins job.
 
+### AI tooling (MCP server)
+
+The UCL MCP server exposes component data to AI tools (e.g. Claude Code) via
+the MCP protocol. It is configured in `.mcp.json` at the repo root and runs via
+Bazel:
+
+```sh
+bazel run //packages/cmk-frontend-vue:ucl-mcp-server
+```
+
+The component data is auto-generated from the UCL build and not checked in.
+Bazel builds it automatically as a dependency when running the server.
+
+#### Technical implementation
+
+`vite-plugin-ucl-mcp` collects component data during the UCL build and emits
+it as `ucl-components.json`. The static `ucl-mcp-runtime.mjs` server script
+loads this JSON at startup and serves it over the MCP protocol.
+
+
 ## Package management
 
 If you need to change the dependencies you can do so by running pnpm

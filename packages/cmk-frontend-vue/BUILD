@@ -1,4 +1,4 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library", "js_run_binary", "js_run_devserver")
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_py//py:defs.bzl", "py_test")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
@@ -195,6 +195,7 @@ SRCS = [
     "weaki18nString.d.ts",
     "scripts/stylelint-vue-bem-naming-convention.js",
     "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
+    "ui-component-library/_ucl/ucl-mcp-runtime.mjs",
     "index.html",
     "package.json",
     "vite.config.ucl.ts",
@@ -370,6 +371,21 @@ pkg_tar(
     srcs = [":frontend_vue_dist_pkg"],
     stamp = 1,
     visibility = ["//omd:__pkg__"],
+)
+
+genrule(
+    name = "ucl-mcp-server-data",
+    srcs = [":dist-ucl-hosted"],
+    outs = ["ucl-components.json"],
+    cmd = "cp $(execpath :dist-ucl-hosted)/api/ucl-components.json $(OUTS)",
+    tags = ["manual"],
+)
+
+js_binary(
+    name = "ucl-mcp-server",
+    data = [":ucl-mcp-server-data"],
+    entry_point = "ui-component-library/_ucl/ucl-mcp-runtime.mjs",
+    tags = ["manual"],
 )
 
 py_test(

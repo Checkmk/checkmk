@@ -321,7 +321,11 @@ class GUIViewRenderer(ABCViewRenderer):
 
             # Play alarm sounds, if critical events have been displayed
             if display_options.enabled(display_options.S) and view_spec.get("play_sounds"):
-                play_alarm_sounds()
+                play_alarm_sounds(
+                    enable_sounds=active_config.enable_sounds,
+                    sounds=active_config.sounds,
+                    sound_url=active_config.sound_url,
+                )
         else:
             # Always hide action related context links in this situation
             toggle_page_menu_entries(html, css_class="command", state=False)

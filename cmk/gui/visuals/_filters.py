@@ -829,7 +829,10 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
             sort_index=232,
             info="host",
             query_filter=query_filters.TristateQuery(
-                ident="host_staleness", filter_code=query_filters.staleness("host")
+                ident="host_staleness",
+                filter_code=query_filters.staleness(
+                    "host", lambda: active_config.staleness_threshold
+                ),
             ),
             is_show_more=True,
             group=FilterGroup.HOST_IS,
@@ -842,7 +845,10 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
             sort_index=232,
             info="service",
             query_filter=query_filters.TristateQuery(
-                ident="service_staleness", filter_code=query_filters.staleness("service")
+                ident="service_staleness",
+                filter_code=query_filters.staleness(
+                    "service", lambda: active_config.staleness_threshold
+                ),
             ),
             is_show_more=True,
             group=FilterGroup.SERVICE_IS,
@@ -1476,14 +1482,18 @@ def register_tag_and_label_filters(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         TagFilter(
             title=_l("Host tags"),
-            query_filter=query_filters.TagsQuery(object_type="host"),
+            query_filter=query_filters.TagsQuery(
+                object_type="host", tags=lambda: active_config.tags
+            ),
         )
     )
 
     filter_registry.register(
         TagFilter(
             title=_l("Service tags"),
-            query_filter=query_filters.TagsQuery(object_type="service"),
+            query_filter=query_filters.TagsQuery(
+                object_type="service", tags=lambda: active_config.tags
+            ),
             is_show_more=True,
         )
     )

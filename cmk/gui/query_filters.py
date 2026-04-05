@@ -15,7 +15,6 @@ from typing import Literal, override
 
 import livestatus
 
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -31,7 +30,7 @@ from cmk.gui.utils.labels import (
 )
 from cmk.gui.utils.user_errors import user_errors
 from cmk.utils.labels import LabelGroups
-from cmk.utils.tags import TagGroupID
+from cmk.utils.tags import TagConfig, TagGroupID
 
 SitesOptions = list[tuple[str, str]]
 
@@ -194,10 +193,12 @@ def host_service_perfdata_toggle(on: bool) -> FilterHeader:
     return "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"
 
 
-def staleness(obj: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
+def staleness(
+    obj: Literal["host", "service"], staleness_threshold: Callable[[], float]
+) -> Callable[[bool], FilterHeader]:
     def toggler(on: bool) -> FilterHeader:
         operator = ">=" if on else "<"
-        return f"Filter: {obj}_staleness {operator} {active_config.staleness_threshold:0.2f}\n"
+        return f"Filter: {obj}_staleness {operator} {staleness_threshold():0.2f}\n"
 
     return toggler
 
@@ -693,9 +694,11 @@ class TagsQuery(ABCTagsQuery):
         self,
         *,
         object_type: Literal["host", "service"],
+        tags: Callable[[], TagConfig],
     ):
         self.object_type = object_type
         self.column = f"{object_type}_tags"
+        self._get_tags = tags
 
         self.count = 3
         self.var_prefix = "%s_tag" % object_type
@@ -719,7 +722,7 @@ class TagsQuery(ABCTagsQuery):
             num += 1
 
             op = value.get(prefix + "_op")
-            tag_group = active_config.tags.get_tag_group(TagGroupID(value.get(prefix + "_grp", "")))
+            tag_group = self._get_tags().get_tag_group(TagGroupID(value.get(prefix + "_grp", "")))
 
             if tag_group and op:
                 tag = value.get(prefix + "_val", "")

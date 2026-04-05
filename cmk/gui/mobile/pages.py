@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 from typing import override
 
 import cmk.gui.utils
@@ -373,6 +374,14 @@ class MobileViewRenderer(ABCViewRenderer):
         user_permissions: UserPermissions,
         *,
         debug: bool,
+        inject_js_profiling_code: bool,
+        load_frontend_vue: str,
+        custom_style_sheet: str | None,
+        screenshotmode: bool,
+        show_livestatus_errors: bool,
+        enable_sounds: bool,
+        sounds: Sequence[tuple[str, str]],
+        sound_url: str,
     ) -> None:
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")

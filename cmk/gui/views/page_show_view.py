@@ -456,6 +456,14 @@ def _show_view(
             unfiltered_amount_of_rows,
             user_permissions,
             debug=debug,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+            show_livestatus_errors=active_config.show_livestatus_errors,
+            enable_sounds=active_config.enable_sounds,
+            sounds=active_config.sounds,
+            sound_url=active_config.sound_url,
         )
     view.process_tracking.duration_view_render = view_render_tracker.duration
 

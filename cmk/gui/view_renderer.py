@@ -6,7 +6,7 @@
 import abc
 import collections
 import json
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import override
 
 import cmk.ccc.version as cmk_version
@@ -16,7 +16,6 @@ import cmk.utils.paths
 from cmk.gui import sites, visuals, weblib
 from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -98,6 +97,14 @@ class ABCViewRenderer(abc.ABC):
         user_permissions: UserPermissions,
         *,
         debug: bool,
+        inject_js_profiling_code: bool,
+        load_frontend_vue: str,
+        custom_style_sheet: str | None,
+        screenshotmode: bool,
+        show_livestatus_errors: bool,
+        enable_sounds: bool,
+        sounds: Sequence[tuple[str, str]],
+        sound_url: str,
     ) -> None:
         raise NotImplementedError()
 
@@ -130,6 +137,14 @@ class GUIViewRenderer(ABCViewRenderer):
         user_permissions: UserPermissions,
         *,
         debug: bool,
+        inject_js_profiling_code: bool,
+        load_frontend_vue: str,
+        custom_style_sheet: str | None,
+        screenshotmode: bool,
+        show_livestatus_errors: bool,
+        enable_sounds: bool,
+        sounds: Sequence[tuple[str, str]],
+        sound_url: str,
     ) -> None:
         view_spec = self.view.spec
 
@@ -141,10 +156,10 @@ class GUIViewRenderer(ABCViewRenderer):
             html.body_start(
                 view_title(view_spec, self.view.context),
                 lang=user.language,
-                inject_js_profiling_code=active_config.inject_js_profiling_code,
-                load_frontend_vue=active_config.load_frontend_vue,
-                custom_style_sheet=active_config.custom_style_sheet,
-                screenshotmode=active_config.screenshotmode,
+                inject_js_profiling_code=inject_js_profiling_code,
+                load_frontend_vue=load_frontend_vue,
+                custom_style_sheet=custom_style_sheet,
+                screenshotmode=screenshotmode,
                 inline_help_as_text=user.inline_help_as_text,
             )
 
@@ -243,7 +258,7 @@ class GUIViewRenderer(ABCViewRenderer):
         # In multi site setups error messages of single sites do not block the
         # output and raise now exception. We simply print error messages here.
         # In case of the web service we show errors only on single site installations.
-        if active_config.show_livestatus_errors and display_options.enabled(display_options.W):
+        if show_livestatus_errors and display_options.enabled(display_options.W):
             for info in sites.live().dead_sites().values():
                 if isinstance(info["site"], dict):
                     html.show_error(
@@ -322,9 +337,9 @@ class GUIViewRenderer(ABCViewRenderer):
             # Play alarm sounds, if critical events have been displayed
             if display_options.enabled(display_options.S) and view_spec.get("play_sounds"):
                 play_alarm_sounds(
-                    enable_sounds=active_config.enable_sounds,
-                    sounds=active_config.sounds,
-                    sound_url=active_config.sound_url,
+                    enable_sounds=enable_sounds,
+                    sounds=sounds,
+                    sound_url=sound_url,
                 )
         else:
             # Always hide action related context links in this situation

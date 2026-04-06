@@ -159,6 +159,31 @@ def test_default_config_from_plugins() -> None:
     assert sorted(default_config2.keys()) == sorted(expected)
 
 
+def test_raw_config_stored_by_make_config_object() -> None:
+    raw = cmk.gui.config.get_default_config()
+    config = cmk.gui.config.make_config_object(raw)
+    assert config.raw is raw
+
+
+def test_raw_config_returns_mapping() -> None:
+    raw = cmk.gui.config.get_default_config()
+    config = cmk.gui.config.make_config_object(raw)
+    assert config.raw["quicksearch_dropdown_limit"] == raw["quicksearch_dropdown_limit"]
+
+
+def test_raw_config_default_is_empty_dict() -> None:
+    config = Config()
+    assert config.raw == {}
+
+
+def test_raw_config_with_custom_keys() -> None:
+    raw = cmk.gui.config.get_default_config()
+    raw["my_custom_plugin_var"] = "hello"
+    config = cmk.gui.config.make_config_object(raw)
+    assert config.raw is raw
+    assert config.raw["my_custom_plugin_var"] == "hello"
+
+
 def test_load_config(request_context: None) -> None:
     config_path = cmk.utils.paths.default_config_dir / "multisite.mk"
     config_path.unlink(missing_ok=True)

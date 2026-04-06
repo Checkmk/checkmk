@@ -103,6 +103,13 @@ class Config(CREConfig, CEEConfig, CMEConfig, CloudConfig):  # type: ignore[misc
 
     tags: cmk.utils.tags.TagConfig = cmk.utils.tags.TagConfig()
 
+    def __post_init__(self) -> None:
+        self._raw_config: Mapping[str, Any] = {}
+
+    @property
+    def raw(self) -> Mapping[str, Any]:
+        return self._raw_config
+
 
 active_config = request_local_attr("config", Config)
 
@@ -221,7 +228,7 @@ def load_config() -> Config:
     return config
 
 
-def make_config_object(raw_config: dict[str, Any]) -> Config:
+def make_config_object(raw_config: Mapping[str, Any]) -> Config:
     """Create the runtime config object
 
     In case there are some custom extensions installed which introduce new config variables, we make
@@ -244,7 +251,9 @@ def make_config_object(raw_config: dict[str, Any]) -> Config:
             bases=(Config,),
         )
 
-    return cls(**raw_config)
+    config = cls(**raw_config)
+    config._raw_config = raw_config
+    return config
 
 
 def execute_post_config_load_hooks(config: Config) -> None:

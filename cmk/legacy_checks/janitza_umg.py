@@ -7,11 +7,13 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
+from dataclasses import asdict, dataclass
 from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import (
     check_levels,
     LegacyCheckDefinition,
+    LegacyCheckResult,
     LegacyDiscoveryResult,
     LegacyResult,
 )
@@ -29,7 +31,30 @@ janitza_umg_device_map = {
 }
 
 
-def parse_janitza_umg_inphase(string_table: list[StringTable]) -> dict[str, Any] | None:
+@dataclass(frozen=True)
+class Total:
+    power: int
+    energy: int
+
+
+@dataclass(frozen=True)
+class Phase:
+    voltage: float
+    current: float
+    power: int
+    appower: int
+    energy: float
+
+
+@dataclass(frozen=True)
+class Section:
+    phases: Mapping[str, Phase]
+    total: Total
+    frequency: int
+    temperature: Mapping[str, float]
+
+
+def parse_janitza_umg_inphase(string_table: list[StringTable]) -> Section | None:
     if not string_table[0] or not string_table[0][0]:
         return None
 
@@ -84,33 +109,41 @@ def parse_janitza_umg_inphase(string_table: list[StringTable]) -> dict[str, Any]
         return sum(counts[:block_id], phase)
 
     # voltages are in 100mv, currents in 1mA, power in Watts / VA
-    result: dict[str, float | list | int | dict] = {}
+    phases = {
+        "Phase %d" % (phase + 1): Phase(
+            voltage=int(rmsphase[offset(0, phase)]) / 10.0,
+            current=int(rmsphase[offset(2, phase)]) / 1000.0,
+            power=int(rmsphase[offset(3, phase)]),
+            appower=int(rmsphase[offset(5, phase)]),
+            energy=int(energy[phase]) / 10,
+        )
+        for phase in range(num_phases)
+    }
 
-    for phase in range(num_phases):
-        result["Phase %d" % (phase + 1)] = {
-            "voltage": int(rmsphase[offset(0, phase)]) / 10.0,
-            "current": int(rmsphase[offset(2, phase)]) / 1000.0,
-            "power": int(rmsphase[offset(3, phase)]),
-            "appower": int(rmsphase[offset(5, phase)]),
-            "energy": int(energy[phase]) / 10,
-        }
+    total = Total(power=int(sumphase[0]), energy=int(sumenergy[0]))
 
-    result["Total"] = {"power": int(sumphase[0]), "energy": int(sumenergy[0])}
-
-    misc = flatten(string_table[info_offsets["misc"]])
-    result["Frequency"] = int(misc[0])
     # temperature not present in UMG508 and UMG604
-    if len(misc) > 1:
-        result["Temperature"] = list(map(int, misc[1:]))
-    else:
-        result["Temperature"] = []
-    return result
+    raw_frequency, *raw_temperatures = flatten(string_table[info_offsets["misc"]])
+
+    return Section(
+        phases=phases,
+        total=total,
+        frequency=int(raw_frequency),
+        temperature={str(num): int(v) / 10.0 for num, v in enumerate(raw_temperatures, start=1)},
+    )
 
 
-def discover_janitza_umg_inphase(parsed: dict[str, Any]) -> LegacyDiscoveryResult:
-    for item in parsed:
-        if item.startswith("Phase"):
-            yield item, {}
+def discover_janitza_umg_inphase(section: Section) -> LegacyDiscoveryResult:
+    for item in section.phases:
+        yield item, {}
+
+
+def check_janitza_umg_inphase(
+    item: str, params: Mapping[str, Any], section: Section
+) -> LegacyCheckResult:
+    if not (phase := section.phases.get(item)):
+        return
+    yield from check_elphase(item, params, {item: asdict(phase)})
 
 
 check_info["janitza_umg"] = LegacyCheckDefinition(
@@ -161,26 +194,22 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
     parse_function=parse_janitza_umg_inphase,
     service_name="Input %s",
     discovery_function=discover_janitza_umg_inphase,
-    check_function=check_elphase,
+    check_function=check_janitza_umg_inphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={},
 )
 
 
-def discover_janitza_umg_freq(parsed: dict[str, Any]) -> LegacyDiscoveryResult:
-    # info[0] is frequency, info[1] is first temperature reading, info[2] is second.
-    if "Frequency" in parsed:
-        yield "1", {}  # why?? :-(
+def discover_janitza_umg_freq(section: Section) -> LegacyDiscoveryResult:
+    yield "1", {}  # why?? :-(
 
 
 def check_janitza_umg_freq(
-    item: str, params: Mapping[str, Any], parsed: dict[str, Any]
+    item: str, params: Mapping[str, Any], section: Section
 ) -> LegacyResult | None:
-    if "Frequency" not in parsed:
-        return None
 
     return check_levels(
-        float(parsed["Frequency"]) / 100.0,
+        section.frequency / 100.0,
         "in_freq",
         (None, None) + params["levels_lower"],
         human_readable_func=render.frequency,
@@ -199,23 +228,18 @@ check_info["janitza_umg.freq"] = LegacyCheckDefinition(
 )
 
 
-def discover_janitza_umg_temp(parsed: dict[str, Any]) -> LegacyDiscoveryResult:
-    ctr = 1
-    for temp in parsed["Temperature"]:
+def discover_janitza_umg_temp(section: Section) -> LegacyDiscoveryResult:
+    for num, temp in section.temperature.items():
         if temp != -1000:
-            yield str(ctr), {}
-        ctr += 1
+            yield num, {}
 
 
 def check_janitza_umg_temp(
-    item: str, params: TempParamType, parsed: dict[str, Any]
+    item: str, params: TempParamType, section: Section
 ) -> LegacyResult | None:
-    idx = int(item) - 1
-    if len(parsed["Temperature"]) > idx:
-        return check_temperature(
-            float(parsed["Temperature"][idx]) / 10.0, params, "janitza_umg_%s" % item
-        )
-    return None
+    if (reading := section.temperature.get(item)) is None:
+        return None
+    return check_temperature(reading, params, "janitza_umg_%s" % item)
 
 
 check_info["janitza_umg.temp"] = LegacyCheckDefinition(

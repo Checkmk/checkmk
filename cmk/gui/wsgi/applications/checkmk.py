@@ -110,12 +110,12 @@ def _page_not_found(ctx: pages.PageContext) -> Response:
                     ),
                 ]
             ),
-            debug=active_config.debug,
+            debug=ctx.config.debug,
             lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
             inline_help_as_text=user.inline_help_as_text,
             hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             user_role_ids=user.role_ids,
@@ -127,7 +127,7 @@ def _page_not_found(ctx: pages.PageContext) -> Response:
     return response
 
 
-def _render_exception(e: Exception, title: str) -> Response:
+def _render_exception(ctx: pages.PageContext, e: Exception, title: str) -> Response:
     status_code: int | None = e.status if isinstance(e, MKHTTPException) else None
     if _is_ajax_request():
         return _json_error_response(
@@ -148,12 +148,12 @@ def _render_exception(e: Exception, title: str) -> Response:
             html,
             title,
             Breadcrumb(),
-            debug=active_config.debug,
+            debug=ctx.config.debug,
             lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
             inline_help_as_text=user.inline_help_as_text,
             hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             user_role_ids=user.role_ids,
@@ -274,7 +274,7 @@ def _process_request(
         return flask.redirect(exc.url)(environ, start_response)
 
     except MKMethodNotAllowed as e:
-        resp = _render_exception(e, title=_("Method not allowed"))
+        resp = _render_exception(ctx, e, title=_("Method not allowed"))
 
     except FinalizeRequest as exc:
         # TODO: Remove all FinalizeRequest exceptions from all pages and replace it with a `return`.
@@ -285,40 +285,40 @@ def _process_request(
         resp.status_code = exc.status
 
     except livestatus.MKLivestatusNotFoundError as e:
-        resp = _render_exception(e, title=_("Data not found"))
+        resp = _render_exception(ctx, e, title=_("Data not found"))
 
     except MKUserError as e:
-        resp = _render_exception(e, title=_("Invalid user input"))
+        resp = _render_exception(ctx, e, title=_("Invalid user input"))
 
     except MKTokenExpiredOrRevokedException as e:
         if e.token_type == "dashboard":
             resp = page_dashboard_token_invalid()
         else:
-            resp = _render_exception(e, title=_("Token invalid"))
+            resp = _render_exception(ctx, e, title=_("Token invalid"))
         logger.error("MKTokenExpiredOrRevokedException: %s", e)
 
     except MKUnauthenticatedException as e:
-        resp = _render_exception(e, title=_("Not authenticated"))
+        resp = _render_exception(ctx, e, title=_("Not authenticated"))
 
     except MKAuthException as e:
-        resp = _render_exception(e, title=_("Permission denied"))
+        resp = _render_exception(ctx, e, title=_("Permission denied"))
 
     except livestatus.MKLivestatusException as e:
-        resp = _render_exception(e, title=_("Livestatus problem"))
+        resp = _render_exception(ctx, e, title=_("Livestatus problem"))
         if not _is_ajax_request():
             resp.status_code = http_client.BAD_GATEWAY
 
     except MKConfigError as e:
-        resp = _render_exception(e, title=_("Configuration error"))
+        resp = _render_exception(ctx, e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
     # I added MKGeneralException during a refactoring, but I did not check if it is needed.
     except (MKException, MKCryptoException, MKGeneralException) as e:
-        resp = _render_exception(e, title=_("General error"))
+        resp = _render_exception(ctx, e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
 
     except RequestEntityTooLarge as e:
-        resp = _render_exception(e, title=_("Request too large"))
+        resp = _render_exception(ctx, e, title=_("Request too large"))
 
     except Exception as e:
         if debug or testing:
@@ -326,7 +326,7 @@ def _process_request(
         if _is_ajax_request():
             resp = _json_error_response(f"{_('Internal error')}: {e}")
         else:
-            resp = handle_unhandled_exception()
+            resp = handle_unhandled_exception(ctx.config)
 
     resp.set_caching_headers()
     return resp(environ, start_response)

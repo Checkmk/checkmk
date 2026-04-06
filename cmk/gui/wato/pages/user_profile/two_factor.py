@@ -44,7 +44,7 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.totp import TOTP
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -561,7 +561,7 @@ class UserTwoFactorOverview(Page):
         with table_element(
             sortable=False,
             omit_headers=not bool(totp_credentials),
-            limit=active_config.table_row_limit,
+            limit=config.table_row_limit,
         ) as table:
             self._render_credentials_table_rows(request, totp_credentials, "totp", table)
             if totp_credentials and webauthn_credentials:  # render both in one table
@@ -573,14 +573,14 @@ class UserTwoFactorOverview(Page):
             with table_element(
                 sortable=False,
                 omit_headers=(not bool(webauthn_credentials)),
-                limit=active_config.table_row_limit,
+                limit=config.table_row_limit,
             ) as table:
                 self._render_credentials_table_rows(
                     request, webauthn_credentials, "webauthn", table
                 )
 
         with table_element(
-            sortable=False, omit_headers=True, limit=active_config.table_row_limit
+            sortable=False, omit_headers=True, limit=config.table_row_limit
         ) as table:
             self._render_backup_codes_table_rows(request, backup_codes, table)
 
@@ -777,7 +777,7 @@ class UserTwoFactorEnforce(Page):
         with table_element(
             sortable=False,
             omit_headers=not bool(totp_credentials),
-            limit=active_config.table_row_limit,
+            limit=config.table_row_limit,
         ) as table:
             self._render_credentials_table_rows(totp_credentials, "totp", table)
             self._render_credentials_table_rows(webauthn_credentials, "webauthn", table)
@@ -1173,6 +1173,11 @@ class JsonPage(Page, abc.ABC):
             handle_exception_as_gui_crash_report(
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
+                debug=ctx.config.debug,
+                inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+                load_frontend_vue=ctx.config.load_frontend_vue,
+                custom_style_sheet=ctx.config.custom_style_sheet,
+                screenshotmode=ctx.config.screenshotmode,
             )
             response.set_data(str(e))
 

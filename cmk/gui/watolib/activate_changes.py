@@ -672,7 +672,14 @@ def _handle_activation_changes_exception(
         exc_logger.exception("error activating changes")
         message = str(exception)
     else:
-        crash = handle_exception_as_gui_crash_report(fail_silently=True)
+        crash = handle_exception_as_gui_crash_report(
+            fail_silently=True,
+            debug=active_config.debug,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+        )
         message = crash_dump_message(crash, user.may("general.see_crash_reports"))
     # The text of following exception will be rendered in the GUI and the error message may
     # contain some remotely-fetched data (including HTML) so we are escaping it to avoid
@@ -2517,7 +2524,14 @@ def _sync_and_activate(
             )
 
     except Exception:
-        handle_exception_as_gui_crash_report(fail_silently=True)
+        handle_exception_as_gui_crash_report(
+            fail_silently=True,
+            debug=active_config.debug,
+            inject_js_profiling_code=active_config.inject_js_profiling_code,
+            load_frontend_vue=active_config.load_frontend_vue,
+            custom_style_sheet=active_config.custom_style_sheet,
+            screenshotmode=active_config.screenshotmode,
+        )
     finally:
         for activation_site_id in site_activation_states:
             _finalize_activation(activation_site_id, activation_id, source)

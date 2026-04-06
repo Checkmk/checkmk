@@ -88,6 +88,11 @@ class AjaxPage(Page, abc.ABC):
             handle_exception_as_gui_crash_report(
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
+                debug=ctx.config.debug,
+                inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+                load_frontend_vue=ctx.config.load_frontend_vue,
+                custom_style_sheet=ctx.config.custom_style_sheet,
+                screenshotmode=ctx.config.screenshotmode,
             )
             html.write_text_permissive(str(e))
 
@@ -110,6 +115,11 @@ class AjaxPage(Page, abc.ABC):
             handle_exception_as_gui_crash_report(
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
+                debug=ctx.config.debug,
+                inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+                load_frontend_vue=ctx.config.load_frontend_vue,
+                custom_style_sheet=ctx.config.custom_style_sheet,
+                screenshotmode=ctx.config.screenshotmode,
             )
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 

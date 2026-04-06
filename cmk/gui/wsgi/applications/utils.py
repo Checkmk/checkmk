@@ -10,13 +10,12 @@ from collections.abc import Callable
 from typing import final
 from wsgiref.types import StartResponse, WSGIEnvironment
 
-import cmk.ccc.store
-import cmk.gui.auth
-import cmk.gui.session
-import cmk.utils.paths
+import cmk.gui.i18n
+import cmk.gui.userdb
 from cmk import trace
 from cmk.ccc.site import url_prefix
 from cmk.gui import login, pages
+from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
@@ -222,11 +221,16 @@ def _localize_request() -> None:
         cmk.gui.i18n.localize(user_language)
 
 
-def handle_unhandled_exception() -> Response:
+def handle_unhandled_exception(config: Config) -> Response:
     handle_exception_as_gui_crash_report(
         plain_error=plain_error(),
         fail_silently=fail_silently(),
         show_crash_link=getattr(g, "may_see_crash_reports", False),
+        debug=config.debug,
+        inject_js_profiling_code=config.inject_js_profiling_code,
+        load_frontend_vue=config.load_frontend_vue,
+        custom_style_sheet=config.custom_style_sheet,
+        screenshotmode=config.screenshotmode,
     )
     # This needs to be cleaned up.
     return response

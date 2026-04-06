@@ -16,7 +16,6 @@ from cmk.ccc.crash_reporting import (
 )
 from cmk.ccc.site import omd_site
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -135,10 +134,26 @@ def handle_exception_as_gui_crash_report(
     plain_error: bool = False,
     fail_silently: bool = False,
     show_crash_link: bool | None = None,
+    *,
+    debug: bool,
+    inject_js_profiling_code: bool,
+    load_frontend_vue: str,
+    custom_style_sheet: str | None,
+    screenshotmode: bool,
 ) -> GUICrashReport:
     crash = create_gui_crash_report(details)
     logger.exception("Unhandled exception (Crash ID: %s)", crash.ident_to_text())
-    _show_crash_dump_message(crash, plain_error, fail_silently, show_crash_link)
+    _show_crash_dump_message(
+        crash,
+        plain_error,
+        fail_silently,
+        show_crash_link,
+        debug=debug,
+        inject_js_profiling_code=inject_js_profiling_code,
+        load_frontend_vue=load_frontend_vue,
+        custom_style_sheet=custom_style_sheet,
+        screenshotmode=screenshotmode,
+    )
     return crash
 
 
@@ -155,7 +170,16 @@ def create_gui_crash_report(
 
 
 def _show_crash_dump_message(
-    crash: "GUICrashReport", plain_text: bool, fail_silently: bool, show_crash_link: bool | None
+    crash: "GUICrashReport",
+    plain_text: bool,
+    fail_silently: bool,
+    show_crash_link: bool | None,
+    *,
+    debug: bool,
+    inject_js_profiling_code: bool,
+    load_frontend_vue: str,
+    custom_style_sheet: str | None,
+    screenshotmode: bool,
 ) -> None:
     """Create a crash dump from a GUI exception and display a message to the user"""
 
@@ -176,12 +200,12 @@ def _show_crash_dump_message(
         html,
         title,
         Breadcrumb(),
-        debug=active_config.debug,
+        debug=debug,
         lang=user.language,
-        inject_js_profiling_code=active_config.inject_js_profiling_code,
-        load_frontend_vue=active_config.load_frontend_vue,
-        custom_style_sheet=active_config.custom_style_sheet,
-        screenshotmode=active_config.screenshotmode,
+        inject_js_profiling_code=inject_js_profiling_code,
+        load_frontend_vue=load_frontend_vue,
+        custom_style_sheet=custom_style_sheet,
+        screenshotmode=screenshotmode,
         inline_help_as_text=user.inline_help_as_text,
         hide_suggestions=not user.get_tree_state("suggestions", "all", True),
         user_role_ids=user.role_ids,

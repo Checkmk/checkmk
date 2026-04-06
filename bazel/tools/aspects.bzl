@@ -14,7 +14,6 @@ load("@rules_mypy//mypy:mypy.bzl", "mypy")
 load("//bazel/tools:lint_astrein.bzl", "lint_astrein_aspect")
 load("//bazel/tools:lint_license_header.bzl", "lint_license_header_aspect")
 load("//bazel/tools:lint_py_import_cycles.bzl", "lint_py_import_cycles_aspect")
-load("//bazel/tools:lint_python_extensions.bzl", "lint_python_extension_aspect")
 
 eslint = lint_eslint_aspect(
     binary = Label(":eslint"),
@@ -99,8 +98,4 @@ stylelint = lint_stylelint_aspect(
 
 license_header_checker = lint_license_header_aspect(
     binary = Label("//bazel/tools:license_header_checker"),
-)
-
-python_extension_checker = lint_python_extension_aspect(
-    binary = Label("//bazel/tools:python_extension_checker"),
 )

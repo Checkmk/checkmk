@@ -141,13 +141,6 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
-py_binary(
-    name = "python_extension_checker",
-    srcs = ["python_extension_checker.py"],
-    main = "python_extension_checker.py",
-    visibility = ["//visibility:public"],
-)
-
 [
     sh_expand_template(
         name = name,

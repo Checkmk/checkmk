@@ -5,7 +5,6 @@
 from collections.abc import Sequence
 from typing import override
 
-import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.ccc.site import omd_site
 from cmk.gui import visuals
@@ -279,7 +278,7 @@ def _page_index(request: Request, config: Config) -> None:
             if not view_spec.get("mustsearch"):
                 painter_options = PainterOptions.get_instance()
                 painter_options.load(view_name)
-                count = '<span class="ui-li-count">%d</span>' % get_row_count(view)
+                count = '<span class="ui-li-count">%d</span>' % get_row_count(view, config)
 
             topic = PagetypeTopics.get_topic(view_spec.get("topic", ""), user_permissions)
             items.append(
@@ -352,7 +351,7 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
     painter_options.load(view_name)
 
     try:
-        process_view(MobileViewRenderer(view), user_permissions, debug=debug)
+        process_view(MobileViewRenderer(view), user_permissions, config=config)
     except Exception as e:
         logger.exception("error showing mobile view")
         if debug:

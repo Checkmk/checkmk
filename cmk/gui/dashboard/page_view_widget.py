@@ -10,6 +10,7 @@ from typing import Annotated, cast, get_args, Literal, override, Self
 from pydantic import BaseModel, Json, model_validator, ValidationError
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, get_all_dashboards
 from cmk.gui.dashboard.dashlet.dashlets.view import EmbeddedViewDashlet, LinkedViewDashlet
 from cmk.gui.dashboard.page_show_shared_dashboard import SharedDashboardPageComponents
@@ -158,6 +159,7 @@ class ViewWidgetIFramePageHelper:
         row_limit: int | None,
         context: VisualContext,
         user_permissions: UserPermissions,
+        config: Config,
         *,
         is_reload: bool,
         is_debug: bool,
@@ -186,7 +188,7 @@ class ViewWidgetIFramePageHelper:
                     ),
                 ),
                 user_permissions=user_permissions,
-                debug=is_debug,
+                config=config,
             )
 
     @staticmethod
@@ -437,6 +439,7 @@ class ViewWidgetIFramePage(Page):
             row_limit,
             parameters.get_context(),
             user_permissions,
+            ctx.config,
             is_reload=parameters.is_reload(),
             is_debug=parameters.is_debug(),
             is_preview=parameters.is_preview,
@@ -535,6 +538,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
                 # includes dashboard context via _get_view_spec_by_widget_id
                 context=widget.context,
                 user_permissions=user_permissions,
+                config=ctx.config,
                 is_reload=parameters.is_reload(),
                 is_debug=False,
                 is_public=True,

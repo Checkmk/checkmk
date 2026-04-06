@@ -24,7 +24,7 @@ from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import log, visuals
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
@@ -121,7 +121,7 @@ def page_show_view(
                 page_menu_dropdowns_callback=page_menu_dropdowns_callback,
             ),
             user_permissions,
-            debug=ctx.config.debug,
+            config=ctx.config,
         )
 
     _may_create_slow_view_log_entry(
@@ -195,23 +195,24 @@ def _patch_view_context(view_spec: ViewSpec) -> None:
 
 
 def process_view(
-    view_renderer: ABCViewRenderer, user_permissions: UserPermissions, *, debug: bool
+    view_renderer: ABCViewRenderer, user_permissions: UserPermissions, config: Config
 ) -> None:
     """Rendering all kind of views"""
     if request.var("mode") == "availability":
-        _process_availability_view(view_renderer, debug=debug)
+        _process_availability_view(view_renderer, config)
     else:
-        _process_regular_view(view_renderer, user_permissions, debug=debug)
+        _process_regular_view(view_renderer, user_permissions, config)
 
 
 def _process_regular_view(
-    view_renderer: ABCViewRenderer, user_permissions: UserPermissions, *, debug: bool
+    view_renderer: ABCViewRenderer, user_permissions: UserPermissions, config: Config
 ) -> None:
     all_active_filters = get_all_active_filters(view_renderer.view)
     with livestatus.intercept_queries() as queries:
         unfiltered_amount_of_rows, rows = _get_view_rows(
             view_renderer.view,
             all_active_filters,
+            config,
             only_count=False,
         )
         intercepted_queries = queries
@@ -221,7 +222,7 @@ def _process_regular_view(
         return
 
     _add_rest_api_menu_entries(view_renderer, intercepted_queries)
-    _show_view(view_renderer, unfiltered_amount_of_rows, rows, user_permissions, debug=debug)
+    _show_view(view_renderer, unfiltered_amount_of_rows, rows, user_permissions, config=config)
 
 
 def _add_rest_api_menu_entries(view_renderer: ABCViewRenderer, queries: list[str]) -> None:
@@ -294,7 +295,7 @@ def _create_url(site: SiteId, query: Query) -> str:
     return url
 
 
-def _process_availability_view(view_renderer: ABCViewRenderer, *, debug: bool) -> None:
+def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -> None:
     view = view_renderer.view
     all_active_filters = get_all_active_filters(view)
 
@@ -312,7 +313,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer, *, debug: bool) -
 
     else:
         _unfiltered_amount_of_rows, rows = _get_view_rows(
-            view, all_active_filters, only_count=False
+            view, all_active_filters, config, only_count=False
         )
         # 'amount_rows_after_limit' will be set in:
         show_view_func = functools.partial(
@@ -322,12 +323,12 @@ def _process_availability_view(view_renderer: ABCViewRenderer, *, debug: bool) -
         )
 
     with CPUTracker(log.logger.debug) as view_render_tracker:
-        show_view_func(debug=debug)
+        show_view_func(debug=config.debug)
     view.process_tracking.duration_view_render = view_render_tracker.duration
 
 
 # TODO: Use livestatus Stats: instead of fetching rows?
-def get_row_count(view: View) -> int:
+def get_row_count(view: View, config: Config) -> int:
     """Returns the number of rows shown by a view"""
 
     all_active_filters = get_all_active_filters(view)
@@ -342,12 +343,14 @@ def get_row_count(view: View) -> int:
             % (", ".join(view.missing_single_infos)),
         )
 
-    _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=True)
+    _unfiltered_amount_of_rows, rows = _get_view_rows(
+        view, all_active_filters, config, only_count=True
+    )
     return len(rows)
 
 
 def _get_view_rows(
-    view: View, all_active_filters: list[Filter], only_count: bool = False
+    view: View, all_active_filters: list[Filter], config: Config, only_count: bool = False
 ) -> tuple[int, Rows]:
     with CPUTracker(log.logger.debug) as fetch_rows_tracker:
         # Fetch data. Some views show data only after pressing [Search]
@@ -364,7 +367,7 @@ def _get_view_rows(
         post_process_rows(view, all_active_filters, rows)
 
     # Sorting - use view sorters and URL supplied sorters
-    _sort_data(rows, view.sorters)
+    _sort_data(rows, view.sorters, config)
 
     with CPUTracker(log.logger.debug) as filter_rows_tracker:
         # Apply non-Livestatus filters
@@ -421,7 +424,7 @@ def _show_view(
     rows: Rows,
     user_permissions: UserPermissions,
     *,
-    debug: bool,
+    config: Config,
 ) -> None:
     view = view_renderer.view
 
@@ -441,7 +444,7 @@ def _show_view(
     if browser_reload and display_options.enabled(display_options.R):
         html.browser_reload = browser_reload
 
-    if active_config.enable_sounds and active_config.sounds:
+    if config.enable_sounds and config.sounds:
         for row in rows:
             save_state_for_playing_alarm_sounds(row)
 
@@ -455,15 +458,15 @@ def _show_view(
             show_filters,
             unfiltered_amount_of_rows,
             user_permissions,
-            debug=debug,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
-            show_livestatus_errors=active_config.show_livestatus_errors,
-            enable_sounds=active_config.enable_sounds,
-            sounds=active_config.sounds,
-            sound_url=active_config.sound_url,
+            debug=config.debug,
+            inject_js_profiling_code=config.inject_js_profiling_code,
+            load_frontend_vue=config.load_frontend_vue,
+            custom_style_sheet=config.custom_style_sheet,
+            screenshotmode=config.screenshotmode,
+            show_livestatus_errors=config.show_livestatus_errors,
+            enable_sounds=config.enable_sounds,
+            sounds=config.sounds,
+            sound_url=config.sound_url,
         )
     view.process_tracking.duration_view_render = view_render_tracker.duration
 
@@ -565,9 +568,6 @@ def _get_needed_regular_columns(
 
 
 def save_state_for_playing_alarm_sounds(row: Row) -> None:
-    if not active_config.enable_sounds or not active_config.sounds:
-        return
-
     # TODO: Move this to a generic place. What about -1?
     host_state_map = {0: "up", 1: "down", 2: "unreachable"}
     service_state_map = {0: "up", 1: "warning", 2: "critical", 3: "unknown"}
@@ -683,7 +683,7 @@ def _link_to_folder_by_path(path: str) -> str:
     )
 
 
-def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:
+def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
     """Sort data according to list of sorters."""
     if not sorters:
         return
@@ -721,7 +721,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:
                     e1["JOIN"].get(entry.join_key),
                     e2["JOIN"].get(entry.join_key),
                     entry.parameters,
-                    active_config,
+                    config,
                     request,
                 )
             else:
@@ -729,7 +729,7 @@ def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:
                     e1,
                     e2,
                     parameters=entry.parameters,
-                    config=active_config,
+                    config=config,
                     request=request,
                 )
 

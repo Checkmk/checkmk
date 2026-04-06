@@ -184,6 +184,18 @@ def test_raw_config_with_custom_keys() -> None:
     assert config.raw["my_custom_plugin_var"] == "hello"
 
 
+def test_feature_config_defaults_appear_in_default_config() -> None:
+    cmk.gui.config.register_feature_config_defaults({"_test_feature_var": 42})
+    try:
+        default_config = cmk.gui.config.get_default_config()
+        assert default_config["_test_feature_var"] == 42
+
+        config = cmk.gui.config.make_config_object(default_config)
+        assert config.raw["_test_feature_var"] == 42
+    finally:
+        cmk.gui.config._feature_config_defaults.pop("_test_feature_var", None)
+
+
 def test_load_config(request_context: None) -> None:
     config_path = cmk.utils.paths.default_config_dir / "multisite.mk"
     config_path.unlink(missing_ok=True)

@@ -54,16 +54,6 @@ else:
         pass
 
 
-if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:
-    from cmk.gui.nonfree.cloud.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
-        CloudConfig,
-    )
-else:
-    # Stub needed for non cloud edition
-    class CloudConfig:  # type: ignore[no-redef]
-        pass
-
-
 tracer = trace.get_tracer()
 
 #   .--Declarations--------------------------------------------------------.
@@ -90,7 +80,7 @@ builtin_role_ids: Final[list[RoleName]] = [
 
 
 @dataclass
-class Config(CREConfig, CEEConfig, CMEConfig, CloudConfig):  # type: ignore[misc, unused-ignore]
+class Config(CREConfig, CEEConfig, CMEConfig):  # type: ignore[misc, unused-ignore]
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.
@@ -268,8 +258,22 @@ def register_post_config_load_hook(func: Callable[[Config], None]) -> None:
     _post_config_load_hooks.append(func)
 
 
+_feature_config_defaults: dict[str, Any] = {}
+
+
+def register_feature_config_defaults(defaults: dict[str, Any]) -> None:
+    """Register default values for feature config variables.
+
+    These defaults are needed so that .mk config files can reference the
+    variables (e.g. via .update()) during exec-based config loading in
+    _load_config_file_to.
+    """
+    _feature_config_defaults.update(defaults)
+
+
 def get_default_config() -> dict[str, Any]:
     default_config = asdict(Config())  # First apply the built-in config
+    default_config.update(_feature_config_defaults)
     default_config.update(_get_default_config_from_legacy_plugins())
     default_config.update(_get_default_config_from_module_plugins())
     return default_config

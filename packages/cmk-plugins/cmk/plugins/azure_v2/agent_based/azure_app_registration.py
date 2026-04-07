@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    FixedLevelsT,
+    LevelsT,
     render,
     Result,
     Service,
@@ -27,22 +27,36 @@ from cmk.plugins.azure_v2.agent_based.lib import parse_azure_datetime
 
 THIRTY_DAYS = 30 * 24 * 60 * 60.0
 SEVEN_DAYS = 7 * 24 * 60 * 60.0
+ONE_YEAR = 365 * 24 * 60 * 60.0
+TWO_YEARS = 2 * ONE_YEAR
 
 
-class Params(TypedDict):
-    expiration_time_secrets: FixedLevelsT[float]
-    expiration_time_certificates: FixedLevelsT[float]
+class _CredentialParams(TypedDict, total=False):
+    remaining_validity: LevelsT[float]
+    max_validity: LevelsT[float]
+
+
+class Params(TypedDict, total=False):
+    secrets: _CredentialParams
+    certificates: _CredentialParams
 
 
 DEFAULT_PARAMS = Params(
-    expiration_time_secrets=("fixed", (THIRTY_DAYS, SEVEN_DAYS)),
-    expiration_time_certificates=("fixed", (THIRTY_DAYS, SEVEN_DAYS)),
+    secrets=_CredentialParams(
+        remaining_validity=("fixed", (THIRTY_DAYS, SEVEN_DAYS)),
+        max_validity=("fixed", (ONE_YEAR, TWO_YEARS)),
+    ),
+    certificates=_CredentialParams(
+        remaining_validity=("fixed", (THIRTY_DAYS, SEVEN_DAYS)),
+        max_validity=("fixed", (ONE_YEAR, TWO_YEARS)),
+    ),
 )
 
 
 class Credential(BaseModel):
     appId: str
     appName: str
+    startDateTime: str | None = None
     endDateTime: str
     keyId: str
     customKeyIdentifier: str | None = None
@@ -110,7 +124,8 @@ def discover_certificates(section: Section) -> DiscoveryResult:
 
 def _check_credential_expiration(
     credential: Credential,
-    params: FixedLevelsT[float],
+    remaining_validity: LevelsT[float] | None,
+    max_validity: LevelsT[float] | None,
     credential_type: Literal["Secret", "Certificate"],
 ) -> CheckResult:
     expiration_date = parse_azure_datetime(credential.endDateTime)
@@ -121,11 +136,27 @@ def _check_credential_expiration(
             state=State.CRIT,
             summary=f"{credential_type} expired: {render.timespan(abs(age))} ago",
         )
-    else:
+    elif remaining_validity is not None:
         yield from check_levels(
             age,
-            levels_lower=params,
+            levels_lower=remaining_validity,
             label="Remaining time",
+            render_func=render.timespan,
+        )
+    else:
+        yield Result(state=State.OK, summary=f"Remaining time: {render.timespan(age)}")
+
+    if (
+        max_validity is not None
+        and credential.startDateTime is not None  # None with old agents output
+        and max_validity[0] != "no_levels"
+    ):
+        start_date = parse_azure_datetime(credential.startDateTime)
+        total_validity = expiration_date.timestamp() - start_date.timestamp()
+        yield from check_levels(
+            total_validity,
+            levels_upper=max_validity,
+            label="Max validity",
             render_func=render.timespan,
         )
 
@@ -133,9 +164,11 @@ def _check_credential_expiration(
 def check_app_registration_secret(item: str, params: Params, section: Section) -> CheckResult:
     if (credential := section.secrets.get(item)) is None:
         return
+    cred_params = params.get("secrets", {})
     yield from _check_credential_expiration(
         credential,
-        params["expiration_time_secrets"],
+        remaining_validity=cred_params.get("remaining_validity"),
+        max_validity=cred_params.get("max_validity"),
         credential_type="Secret",
     )
 
@@ -143,9 +176,11 @@ def check_app_registration_secret(item: str, params: Params, section: Section) -
 def check_app_registration_certificate(item: str, params: Params, section: Section) -> CheckResult:
     if (credential := section.certificates.get(item)) is None:
         return
+    cred_params = params.get("certificates", {})
     yield from _check_credential_expiration(
         credential,
-        params["expiration_time_certificates"],
+        remaining_validity=cred_params.get("remaining_validity"),
+        max_validity=cred_params.get("max_validity"),
         credential_type="Certificate",
     )
 

@@ -1069,7 +1069,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     ],
 )
 def test_convert_to_legacy_valuespec(
-    new_valuespec: FormSpec, expected: legacy_valuespecs.ValueSpec
+    new_valuespec: FormSpec, expected: legacy_valuespecs.ValueSpec, request_context: None
 ) -> None:
     _compare_specs(
         convert_to_legacy_valuespec(new_valuespec, translate_to_current_language), expected

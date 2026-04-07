@@ -31,7 +31,7 @@ def migrate(old: object) -> object:
     return _check_mail_vs().transform_value(old)
 
 
-def test_minimal_migration_validation() -> None:
+def test_minimal_migration_validation(request_context: None) -> None:
     rule = {
         "service_description": "Email",
         "connect_timeout": 10,

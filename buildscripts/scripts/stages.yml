@@ -197,23 +197,6 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cpp/**/test.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/(root)/"
 
-    - NAME: "Python only Py-Extensions"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
-      DIR: "tests"
-      ENV_VARS:
-          PYTEST_ADDOPTS: "--color=no"
-      # CHANGED_FILES_WITH_MODE can be huge, so we use a file to transport the list
-      # also we need to explicitly handover the path variable to make test-py-extensions
-      COMMAND: |
-          CHANGED_FILES_WITH_MODE_FILE=$(mktemp)
-          echo "${CHANGED_FILES_WITH_MODE}" > $CHANGED_FILES_WITH_MODE_FILE
-          trap "rm -f $CHANGED_FILES_WITH_MODE_FILE" EXIT
-          CHANGED_FILES_WITH_MODE_FILE=$CHANGED_FILES_WITH_MODE_FILE RESULTS_FILE=${RESULTS}/python-extensions.txt make test-py-extensions
-      BAZEL_LOCKS_AMOUNT: 1
-      RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/python-extensions.txt"
-      JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_py_extensions/"
-
     - NAME: "Python Werks Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES
       DIR: "tests"

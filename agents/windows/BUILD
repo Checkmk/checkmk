@@ -41,5 +41,6 @@ filegroup(
         "@//:use_fake_artifacts_enabled": [artifact + ".faked" for artifact in WINDOWS_ARTIFACTS],
         "//conditions:default": WINDOWS_ARTIFACTS,
     }),
+    tags = ["no-python-extension-checker"],
     visibility = ["//omd:__subpackages__"],
 )

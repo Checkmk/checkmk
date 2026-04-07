@@ -561,6 +561,7 @@ pkg_files(
     ],
     prefix = "agents/windows",
     strip_prefix = strip_prefix.from_pkg(""),
+    tags = ["no-python-extension-checker"],
 )
 
 pkg_tar(
@@ -574,6 +575,7 @@ pkg_tar(
     package_dir = "share/check_mk",
     stamp = 1,
     strip_prefix = ".",
+    tags = ["no-python-extension-checker"],
 )
 
 pkg_files(

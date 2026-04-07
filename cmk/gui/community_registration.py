@@ -315,6 +315,8 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
         endpoint_registry,
+        versioned_endpoint_registry,
+        endpoint_family_registry,
         replication_path_registry,
         save_active_config,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,

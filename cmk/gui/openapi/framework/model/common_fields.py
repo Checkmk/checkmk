@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
 import ipaddress
+import json
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
@@ -16,6 +17,7 @@ from pydantic import (
     GetJsonSchemaHandler,
     model_validator,
     PlainSerializer,
+    PlainValidator,
 )
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema, CoreSchema
@@ -24,12 +26,15 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
+from cmk.gui.fields.utils import tree_to_expr
 from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.valuespec import TimerangeValue
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.livestatus_client.expressions import QueryExpression
+from cmk.livestatus_client.types import Table
 
 type AnnotatedHostName = Annotated[
     HostName,
@@ -404,3 +409,38 @@ def timerange_from_internal(
                 end=dt.datetime.fromtimestamp(end, dt.UTC),
             )
     raise ValueError(f"Invalid timerange value: {timerange}")
+
+
+def query_expression_validator(table: type[Table]) -> PlainValidator:
+    """Returns a pydantic PlainValidator that parses and validates a JSON Livestatus query expression string.
+
+    Equivalent to the marshmallow-based `query_field` for use in the new dataclass-based
+    framework. Intended to be used inside an Annotated type alias:
+
+        type MyQueryAlias = Annotated[QueryExpression, query_expression_validator(MyTable)]
+
+    Accepts a JSON string from a query parameter, parses it, validates the column
+    names against the given table, and returns a QueryExpression.
+
+    Note: The table class must be exported from `cmk.livestatus_client.tables` for column
+    validation to work.
+
+    Args:
+        table: A Livestatus Table class used to validate column names in the expression.
+
+    Example JSON value:
+        '{"op": "=", "left": "event_host", "right": "myhost"}'
+        '{"op": "and", "expr": [{"op": "=", "left": "event_host", "right": "myhost"}, {"op": "~", "left": "event_text", "right": "error"}]}'
+    """
+
+    def _parse(value: str) -> QueryExpression:
+        try:
+            data = json.loads(value)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON query expression: {e}") from e
+        try:
+            return tree_to_expr(data, table)
+        except (ValueError, KeyError) as e:
+            raise ValueError(str(e)) from e
+
+    return TypedPlainValidator(str, _parse)

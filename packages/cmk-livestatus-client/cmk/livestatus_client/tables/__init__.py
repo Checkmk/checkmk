@@ -6,6 +6,7 @@
 from cmk.livestatus_client.tables.comments import Comments
 from cmk.livestatus_client.tables.downtimes import Downtimes
 from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
+from cmk.livestatus_client.tables.eventconsolehistory import Eventconsolehistory
 from cmk.livestatus_client.tables.hostgroups import Hostgroups
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.livestatus_client.tables.servicegroups import Servicegroups
@@ -24,6 +25,7 @@ REST_API_DOC_TABLES = [
 
 __all__ = [
     "Downtimes",
+    "Eventconsolehistory",
     "Hostgroups",
     "Hosts",
     "Servicegroups",

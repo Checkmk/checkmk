@@ -89,7 +89,7 @@ ActivateChangesCommentMode = Literal["enforce", "optional", "disabled"]
 
 
 @dataclass
-class CREConfig:
+class GeneralConfig:
     # .
     #   .--Generic-------------------------------------------------------------.
     #   |                   ____                      _                        |

@@ -67,7 +67,6 @@ def test_load_legacy_views_plugin() -> None:
         "sidebar",
         "dashboard",
         "visuals",
-        "config",
         "views",
         "views/icons",
     ],

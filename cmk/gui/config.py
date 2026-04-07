@@ -23,11 +23,9 @@ from cmk import trace
 from cmk.gui import log
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
+from cmk.gui.general_config import GeneralConfig
 from cmk.gui.i18n import _
 from cmk.gui.legacy_plugins import load_web_plugins
-from cmk.gui.plugins.config.base import (  # astrein: disable=cmk-module-layer-violation
-    CREConfig,
-)
 from cmk.gui.type_defs import RoleName
 from cmk.utils.experimental_config import load_experimental_config
 from cmk.utils.keypair_store import KeypairStore
@@ -58,7 +56,7 @@ builtin_role_ids: Final[list[RoleName]] = [
 
 
 @dataclass
-class Config(CREConfig):
+class Config(GeneralConfig):
     """Holds the loaded configuration during GUI processing
 
     This class is extended by `load_config` to support custom config variables which may
@@ -273,7 +271,7 @@ def _get_default_config_from_module_plugins() -> dict[str, Any]:
 
     default_config: dict[str, Any] = {}
     for k, v in config_plugin_vars.items():
-        if k[0] == "_" or k in ("CREConfig",):
+        if k[0] == "_" or k in ("GeneralConfig",):
             continue
 
         if isinstance(v, dict | list):
@@ -287,7 +285,5 @@ def _config_plugin_modules() -> list[ModuleType]:
     return [
         module
         for name, module in list(sys.modules.items())
-        if name.startswith("cmk.gui.plugins.config.")
-        and name != "cmk.gui.plugins.config.base"
-        and module is not None
+        if name.startswith("cmk.gui.plugins.config.") and module is not None
     ]

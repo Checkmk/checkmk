@@ -40,10 +40,7 @@ def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     assert f"{site_name}/test123" in names
 
 
-def test_backup_site_to_tarfile_broken_link(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(omdlib, "__version__", "1.3.3i7.cee")
+def test_backup_site_to_tarfile_broken_link(tmp_path: Path) -> None:
     site_name = "site"
     site_home = tmp_path / site_name
 
@@ -67,7 +64,6 @@ def test_backup_site_to_tarfile_broken_link(
 def test_backup_site_to_tarfile_vanishing_files(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(omdlib, "__version__", "1.3.3i7.cee")
     site_name = "site"
     site_home = tmp_path / site_name
     site_home.mkdir(parents=True, exist_ok=True)

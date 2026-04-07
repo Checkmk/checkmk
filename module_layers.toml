@@ -223,6 +223,7 @@ allows = [
   "cmk.metric_backend",
   "cmk.otel_collector",
   "cmk.shared_typing.vue_formspec_components",
+  "cmk.telemetry.metric_backend_section",
   "cmk.utils.paths",
 ]
 

@@ -5,9 +5,11 @@
 
 
 from collections.abc import Sequence
+from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 from cmk.rrd.config import read_hostnames, RRDConfig
+from cmk.rrd.fs import RRDPaths
 from cmk.rrd.interface import RRDInterface
 from cmk.rrd.rrd import RRDConverter
 
@@ -17,12 +19,14 @@ def convert_rrds(
     hostnames: Sequence[HostName],
     split: bool,
     delete: bool,
+    omd_root: Path,
 ) -> None:
     if not hostnames:
         hostnames = read_hostnames()
 
+    rrd_paths = RRDPaths.from_omd_root(omd_root)
     for hostname in hostnames:
-        RRDConverter(rrd_interface, hostname).convert_rrds_of_host(
+        RRDConverter(rrd_interface, hostname, rrd_paths).convert_rrds_of_host(
             RRDConfig(hostname),
             split=split,
             delete=delete,

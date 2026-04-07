@@ -11,6 +11,7 @@ from typing import NoReturn
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.rrd.config import RRDConfig
+from cmk.rrd.fs import RRDPaths
 from cmk.rrd.interface import RRDInterface
 from cmk.rrd.rrd import RRDCreator
 
@@ -20,6 +21,6 @@ def _handle_keepalive_interrupt(signum: int, frame: FrameType | None) -> NoRetur
     raise MKTerminate()
 
 
-def create_rrd(rrd_interface: RRDInterface, omd_root: Path) -> None:
+def create_rrd(rrd_interface: RRDInterface, omd_root: Path, rrd_paths: RRDPaths) -> None:
     signal.signal(signal.SIGINT, _handle_keepalive_interrupt)
-    RRDCreator(rrd_interface, omd_root).create_rrds_keepalive(RRDConfig)
+    RRDCreator(rrd_interface, omd_root, rrd_paths).create_rrds_keepalive(RRDConfig)

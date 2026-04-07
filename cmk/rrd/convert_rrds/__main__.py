@@ -5,6 +5,8 @@
 
 import argparse
 import logging
+import os
+from pathlib import Path
 
 import rrdtool  # type: ignore[import-not-found]
 
@@ -44,7 +46,13 @@ def main() -> None:
 
     _set_log_level(args.verbose)
 
-    convert_rrds(rrdtool, args.hostnames, args.split_rrds, args.delete_rrds)
+    convert_rrds(
+        rrdtool,
+        args.hostnames,
+        args.split_rrds,
+        args.delete_rrds,
+        omd_root=Path(os.environ.get("OMD_ROOT", "")),
+    )
 
 
 if __name__ == "__main__":

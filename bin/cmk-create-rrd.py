@@ -11,7 +11,8 @@ from pathlib import Path
 
 import rrdtool  # type: ignore[import-not-found]
 
-from cmk.rrd.create_rrd.main import create_rrd  # astrein: disable=cmk-module-layer-violation
+from cmk.rrd.create_rrd.main import create_rrd
+from cmk.rrd.fs import RRDPaths
 from cmk.utils.log import verbosity_to_log_level  # astrein: disable=cmk-module-layer-violation
 
 
@@ -27,7 +28,8 @@ def main() -> None:
     args = parser.parse_args()
     _set_log_level(args.verbose)
 
-    create_rrd(rrdtool, Path(os.environ.get("OMD_ROOT", "")))
+    omd_root = Path(os.environ.get("OMD_ROOT", ""))
+    create_rrd(rrdtool, omd_root, RRDPaths.from_omd_root(omd_root))
 
 
 if __name__ == "__main__":

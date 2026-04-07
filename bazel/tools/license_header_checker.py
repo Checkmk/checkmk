@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
+import pathlib
 import re
 import sys
 
@@ -139,7 +140,7 @@ def write_sarif_output(machine_path: str, violations: list[tuple[str, str]]) -> 
         {
             "ruleId": "license-header",
             "level": "error",
-            "message": {"text": reason},
+            "message": {"text": f"{src_path}: {reason}"},
             "locations": [
                 {
                     "physicalLocation": {
@@ -207,7 +208,7 @@ def main() -> int:
             continue
         res = check_for_license_header_violation(src_path)
         if res:
-            violations.append((src_path, res))
+            violations.append((str(pathlib.Path(src_path).resolve()), res))
 
     write_sarif_output(machine_out_path, violations)
     write_human_output(human_out_path, violations)

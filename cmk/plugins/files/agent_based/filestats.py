@@ -38,8 +38,6 @@ from cmk.agent_based.v2 import (
 
 # 'additional_rules': [('/var/log/sys*', {'maxsize_largest': (1, 2)})]
 
-LegacyResult = tuple[int, str, list[Any]]
-
 
 def _fixed_levels(levels: tuple[float | None, float | None]) -> FixedLevelsT[float] | None:
     warn, crit = levels

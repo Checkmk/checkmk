@@ -1,5 +1,6 @@
 ---
 lint:
+  quiet: true
   aspects:
     - //bazel/tools:aspects.bzl%astrein
     - //bazel/tools:aspects.bzl%bandit

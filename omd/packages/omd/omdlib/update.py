@@ -278,6 +278,7 @@ class ManageUpdate:
                     "unknown state and both, restarting or updating the site, can have unknown effects.\n"
                 )
         shutil.rmtree(self.backup_dir)
+        sys.stdout.write("The update was rolled back successfully.\n")
         return False  # Don't suppress the exception
 
 

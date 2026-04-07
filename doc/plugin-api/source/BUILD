@@ -60,10 +60,7 @@ filegroup(
 
 sphinx_html(
     name = "plugin-api",
-    srcs = glob(["_static/**/*"]) + [":srcs"] + select({
-        "@cmk//edition:community": [],
-        "//conditions:default": ["//doc/plugin-api/source/nonfree/pro"],
-    }),
+    srcs = glob(["_static/**/*"]) + [":srcs"],
     args = ["--fail-on-warning"],
     config = "conf.py",
     index = "index.rst",
